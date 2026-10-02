@@ -3,8 +3,9 @@ import { Game, type RunSummary } from './game/game';
 import { InputController } from './game/input';
 import { canRemoveNode, canSelectNode, getNode, skillNodes, spentPoints, TOTAL_META_POINTS, type School } from './game/skillTree';
 
-const app = document.querySelector<HTMLDivElement>('#app');
-if (!app) throw new Error('Missing #app element.');
+const appElement = document.querySelector<HTMLDivElement>('#app');
+if (!appElement) throw new Error('Missing #app element.');
+const app: HTMLDivElement = appElement;
 
 const selectedNodes = new Set<string>();
 let bestScore = Number(localStorage.getItem('wyrmforge.bestScore') ?? 0);
