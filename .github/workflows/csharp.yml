@@ -1,0 +1,39 @@
+name: C# foundation
+
+on:
+  push:
+    branches: [csharp-foundation]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Wyrmforge.slnx'
+      - 'Directory.Build.props'
+      - '.github/workflows/csharp.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'Wyrmforge.slnx'
+      - 'Directory.Build.props'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        run: dotnet restore Wyrmforge.slnx
+      - name: Build
+        run: dotnet build Wyrmforge.slnx -c Release --no-restore
+      - name: Test
+        run: dotnet test Wyrmforge.slnx -c Release --no-build
+      - name: Publish Web
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore

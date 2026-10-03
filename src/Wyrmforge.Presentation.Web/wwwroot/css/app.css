@@ -1,0 +1,9 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #eee9f4; background: #0c0a10; }
+* { box-sizing: border-box; }
+html, body, #app { min-height: 100%; margin: 0; }
+body { min-width: 320px; min-height: 100dvh; }
+.shell { min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% -10%, #281a36 0, #120f18 38%, #0c0a10 76%); }
+.migration-card { width: min(720px, 100%); padding: 32px; border: 1px solid #352a40; border-radius: 24px; background: rgba(18, 14, 24, .9); box-shadow: 0 30px 90px rgba(0, 0, 0, .35); }
+.eyebrow { color: #b887ff; font-size: .72rem; font-weight: 800; letter-spacing: .16em; }
+h1 { margin: 10px 0 14px; font-size: clamp(2.1rem, 7vw, 4rem); line-height: 1; letter-spacing: -.04em; }
+p { margin: 0; color: #aaa0b5; line-height: 1.6; }
