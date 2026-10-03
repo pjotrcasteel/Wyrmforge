@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.10 — Death Feedback
+## Prototype 0.0.11 — Push or Extract
 
 The current playable slice contains:
 
@@ -12,11 +12,11 @@ The current playable slice contains:
 - four spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
 - Ashfang, the first two-phase dragon hunt with a telegraphed fire-breath attack;
 - a paused post-dragon harvest where one of three body-part essences is bound into the current build;
-- Cinder Heart, Molten Fang and Ashen Wing as behavior-changing dragon rewards;
-- health-bar-free enemy damage feedback through hit flashes, progressive hurt states and visible splash pulses;
-- distinct Arcane, Fire, Frost and Storm impact signatures without changing combat balance;
-- brief renderer-neutral enemy death bursts so kills remain readable after the target is removed;
-- score, best-score persistence and run summaries that track dragons and essences;
+- a post-harvest risk decision: extract safely or descend to a harsher depth;
+- Depth II enemies with +35% health, +15% speed, 20% faster spawn cadence and ×1.5 enemy-kill score;
+- extraction-aware run outcomes so stolen essence is only considered secured after a successful extraction;
+- health-bar-free enemy damage feedback, elemental impact signatures, splash pulses and death cues;
+- score, best-score persistence and run summaries that track depth, dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
 
 ## Technology
@@ -30,11 +30,11 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters and dragon essences are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences and run-depth risk/reward rules are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. Combat feedback is emitted by the Application simulation as renderer-neutral events; the browser presentation decides how hits, elemental impacts and deaths look.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `Runs/Depth` owns the renderer-independent push/extract risk state; Presentation only exposes the decision and current depth.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -67,3 +67,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 12. Prefer cohesive feature folders over broad technical dumping grounds.
 13. Dragon rewards must change how a run plays, not merely add another percentage stat.
 14. Combat feedback should explain impact without requiring health bars or damage numbers.
+15. Extraction should turn survival into a decision instead of letting every successful kill automatically become permanent progress.

@@ -75,7 +75,8 @@ public sealed partial class RunSimulation
             case EnemyState defeatedEnemy:
                 RegisterEnemyDeath(defeatedEnemy);
                 kills++;
-                score += 100 + (int)(elapsed * 2);
+                var baseScore = 100 + (int)(elapsed * 2);
+                score += (int)(baseScore * depthState.ScoreMultiplier);
                 GainExperience(1);
                 break;
             case DragonState defeatedDragon:

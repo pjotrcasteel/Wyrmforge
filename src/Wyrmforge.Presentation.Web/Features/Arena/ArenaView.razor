@@ -1,10 +1,14 @@
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
-    <button class="leave-run" @onclick="EndRunAsync">End run</button>
+    <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
 
-    @if (CurrentEssences.Count > 0)
+    @if (CurrentEssences.Count > 0 || CurrentDepth > 1)
     {
-        <div class="essence-strip" aria-label="Harvested dragon essences">
+        <div class="essence-strip" aria-label="Current run state">
+            @if (CurrentDepth > 1)
+            {
+                <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") SCORE</span>
+            }
             @foreach (var essence in CurrentEssences)
             {
                 <span title="@essence.Effect">@essence.Icon @essence.Name</span>
@@ -15,6 +19,10 @@
     @if (CurrentEssenceChoices.Count > 0)
     {
         <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
+    }
+    else if (PendingPushOrExtract)
+    {
+        <PushOrExtractOverlay NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" OnExtract="ExtractRunAsync" OnPush="PushDeeperAsync" />
     }
     else if (CurrentChoices.Count > 0)
     {

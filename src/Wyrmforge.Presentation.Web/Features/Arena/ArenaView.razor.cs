@@ -34,6 +34,12 @@ public partial class ArenaView : IAsyncDisposable
 
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssences => simulation?.SelectedDragonEssences ?? Array.Empty<DragonEssenceDefinition>();
 
+    private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
+
+    private int CurrentDepth => simulation?.Depth ?? 1;
+
+    private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
+
     private int CurrentLevel => simulation?.CreateSnapshot().Hud.Level ?? 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -75,11 +81,25 @@ public partial class ArenaView : IAsyncDisposable
         if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged);
     }
 
-    private async Task EndRunAsync()
+    private async Task PushDeeperAsync()
+    {
+        if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ExtractRunAsync()
+    {
+        if (simulation is null || gameOverSent) return;
+        var summary = simulation.ExtractRun();
+        if (summary is null) return;
+        gameOverSent = true;
+        await OnGameOver.InvokeAsync(summary);
+    }
+
+    private async Task AbandonRunAsync()
     {
         if (simulation is null || gameOverSent) return;
         gameOverSent = true;
-        await OnGameOver.InvokeAsync(simulation.EndRun());
+        await OnGameOver.InvokeAsync(simulation.AbandonRun());
     }
 
     public async ValueTask DisposeAsync()

@@ -1,0 +1,45 @@
+@namespace Wyrmforge.Presentation.Web.Features.RunDecision
+
+<div class="dragon-harvest">
+    <section class="dragon-harvest-card">
+        <div class="eyebrow">ESSENCE BOUND • AN EXIT OPENS</div>
+        <h2>Leave with what you stole, or go deeper.</h2>
+        <p>Extraction secures the harvested essence. Pushing deeper keeps the run alive, but dying means leaving the Wyrmrealm empty-handed.</p>
+        <div class="essence-choices">
+            <button class="essence-choice" @onclick="ExtractAsync">
+                <span class="essence-source">SAFE CHOICE</span>
+                <span class="essence-icon">◈</span>
+                <strong>Extract now</strong>
+                <span class="essence-effect">Secure the harvested essence and end the run successfully.</span>
+                <small>Your current score and build are locked into the run summary.</small>
+                <span class="essence-footer">EXTRACT SAFELY</span>
+            </button>
+            <button class="essence-choice" @onclick="PushAsync">
+                <span class="essence-source">RISK CHOICE</span>
+                <span class="essence-icon">▼</span>
+                <strong>Descend to Depth @NextDepth</strong>
+                <span class="essence-effect">Enemies become tougher and arrive faster.</span>
+                <small>Keep the stolen essence active and earn ×@ScoreMultiplier.ToString("0.0") score from enemy kills.</small>
+                <span class="essence-footer">PUSH DEEPER</span>
+            </button>
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter]
+    public int NextDepth { get; set; }
+
+    [Parameter]
+    public double ScoreMultiplier { get; set; }
+
+    [Parameter]
+    public EventCallback OnExtract { get; set; }
+
+    [Parameter]
+    public EventCallback OnPush { get; set; }
+
+    private Task ExtractAsync() => OnExtract.InvokeAsync();
+
+    private Task PushAsync() => OnPush.InvokeAsync();
+}

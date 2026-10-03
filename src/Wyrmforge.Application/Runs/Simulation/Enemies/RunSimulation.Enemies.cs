@@ -11,7 +11,8 @@ public sealed partial class RunSimulation
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
         SpawnEnemy(width, height);
-        spawnTimer = Math.Max(0.28, 0.9 - elapsed / 120);
+        var baseInterval = Math.Max(0.28, 0.9 - elapsed / 120);
+        spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier;
     }
 
     private void SpawnEnemy(double width, double height)
@@ -26,7 +27,9 @@ public sealed partial class RunSimulation
             _ => new Vector2D(-margin, randomSource.NextDouble() * height),
         };
         var scale = 1 + elapsed / 80;
-        enemies.Add(new EnemyState(++enemyId, position, 11, 36 * scale, 48 + Math.Min(52, elapsed * 0.4)));
+        var health = 36 * scale * depthState.EnemyHealthMultiplier;
+        var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier;
+        enemies.Add(new EnemyState(++enemyId, position, 11, health, speed));
     }
 
     private void UpdateEnemies(double delta)

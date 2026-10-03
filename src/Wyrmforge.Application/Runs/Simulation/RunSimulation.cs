@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
@@ -29,6 +30,7 @@ public sealed partial class RunSimulation
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
     private readonly RunBuildState build = new();
+    private readonly RunDepthState depthState = new();
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
     private readonly List<ProjectileState> projectiles = [];
@@ -42,6 +44,7 @@ public sealed partial class RunSimulation
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
     private DragonState? dragon;
+    private RunOutcome outcome = RunOutcome.InProgress;
     private double elapsed;
     private double spawnTimer;
     private double ashenWingMovementTime;
@@ -77,11 +80,17 @@ public sealed partial class RunSimulation
 
     public IReadOnlyList<DragonEssenceDefinition> SelectedDragonEssences => build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get).ToArray();
 
+    public bool PendingPushOrExtract => depthState.DecisionPending;
+
+    public int Depth => depthState.Depth;
+
+    public double ScoreMultiplier => depthState.ScoreMultiplier;
+
     public bool IsEnded { get; private set; }
 
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
-        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0) return CreateSnapshot();
+        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
         UpdateCombatFeedback(delta);
         elapsed += delta;
@@ -95,7 +104,11 @@ public sealed partial class RunSimulation
         UpdateLightning(delta);
         ResolveProjectileHits();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
-        if (player.Health <= 0) IsEnded = true;
+        if (player.Health <= 0)
+        {
+            outcome = RunOutcome.Defeated;
+            IsEnded = true;
+        }
         return CreateSnapshot();
     }
 
@@ -115,16 +128,46 @@ public sealed partial class RunSimulation
         var choice = pendingDragonEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || !build.DragonEssences.Select(id)) return false;
         pendingDragonEssenceChoices = [];
+        depthState.OfferDecision();
         return true;
     }
 
-    public RunSummary EndRun()
+    public bool PushDeeper()
     {
+        if (!depthState.PushDeeper()) return false;
+        spawnTimer = Math.Min(spawnTimer, 0.35);
+        return true;
+    }
+
+    public RunSummary? ExtractRun()
+    {
+        if (!depthState.Extract()) return null;
+        outcome = RunOutcome.Extracted;
         IsEnded = true;
         return CreateSummary();
     }
 
-    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, build.DragonEssences.Count, (int)elapsed, level, choiceCount, build.Spells.LearnedCount, build.Synergies.Count);
+    public RunSummary AbandonRun()
+    {
+        outcome = RunOutcome.Abandoned;
+        IsEnded = true;
+        return CreateSummary();
+    }
+
+    public RunSummary EndRun() => AbandonRun();
+
+    public RunSummary CreateSummary() => new(
+        score,
+        kills,
+        dragonsSlain,
+        build.DragonEssences.Count,
+        (int)elapsed,
+        level,
+        choiceCount,
+        build.Spells.LearnedCount,
+        build.Synergies.Count,
+        depthState.Depth,
+        outcome);
 
     public RunRenderSnapshot CreateSnapshot()
     {
@@ -156,7 +199,7 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell.ToString(), projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
-            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0,
+            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending,
             IsEnded);
     }
 }
