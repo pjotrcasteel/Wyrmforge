@@ -2,14 +2,16 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.17 — Performance Baseline
+## Prototype 0.0.18 — Performance Scalability
 
 The current playable slice contains:
 
 - responsive arena combat for desktop and touch;
-- a live arena performance counter showing effective FPS and average C# simulation/snapshot time;
-- allocation-reduced combat targeting with one-pass nearest-target and collision lookup instead of repeated LINQ sorting/filtering on hot paths;
-- cached spell/synergy HUD data that is rebuilt only when the run build changes instead of on every render snapshot;
+- an always-visible Canvas performance panel showing FPS, simulation updates/sec, C# frame cost, JS↔.NET bridge cost and live enemy/projectile counts;
+- a browser render loop decoupled from the async C# simulation round-trip so requestAnimationFrame no longer waits for interop before drawing again;
+- spatial collision indexing for projectile hits and splash effects, avoiding full enemy scans for every projectile as runs become crowded;
+- compact numeric spell kinds in render snapshots instead of repeated per-projectile/per-impact string allocations;
+- cached spell/synergy HUD data that is rebuilt only when the run build changes;
 - a pre-run passive tree with Minor, Major, Epic and Legendary nodes;
 - XP, runes, spell learning/upgrades and cross-spell synergies;
 - four spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
@@ -38,11 +40,11 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, offerings, run depth, depth hazards and extraction rules are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, offerings, run depth, depth hazards and extraction rules are implemented in C#. The browser adapter handles Canvas drawing, keyboard/touch input, diagnostics and browser storage.
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress; simulation only supplies player position and exposes render state. Performance instrumentation stays in the web presentation layer, while simulation hot-path improvements remain renderer-independent C#.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -81,4 +83,5 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 18. Spending permanent resources should create a clear decision without turning early metaprogression into permanent stat inflation.
 19. Deeper depths should change how the player moves or fights, not only scale enemy numbers.
 20. Extraction tension should come from positioning and exposure, not from erasing already-earned ritual progress.
-21. Measure frame rate and simulation cost before adopting invasive runtime optimizations; preserve C# as the canonical gameplay layer.
+21. Measure frame rate, simulation cost, bridge cost and entity counts before adopting invasive runtime optimizations.
+22. Performance work must preserve C# as the canonical gameplay layer and scale by reducing algorithmic work before reducing gameplay density.

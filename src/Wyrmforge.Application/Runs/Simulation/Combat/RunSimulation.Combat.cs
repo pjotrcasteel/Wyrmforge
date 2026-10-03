@@ -94,14 +94,8 @@ public sealed partial class RunSimulation
     private void Splash(Vector2D position, double damage, double radius, int ignoreId)
     {
         RegisterSplashPulse(position, radius);
-        foreach (var enemy in enemies)
-        {
-            if (enemy.Health <= 0 || enemy.Id == ignoreId || Vector2D.Distance(position, enemy.Position) > radius) continue;
-            DamageTarget(enemy, damage);
-        }
-
-        if (dragon is not { Health: > 0 } activeDragon || activeDragon.Id == ignoreId || Vector2D.Distance(position, activeDragon.Position) > radius) return;
-        DamageTarget(activeDragon, damage);
+        combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
+        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage);
     }
 
     private void ChainFrom(Vector2D position, ProjectileState source, ICollection<ProjectileState> spawned)

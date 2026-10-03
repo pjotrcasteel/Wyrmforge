@@ -6,6 +6,9 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private readonly CombatSpatialIndex combatSpatialIndex = new();
+    private readonly List<ICombatTarget> spatialQueryBuffer = [];
+
     private bool HasCombatTargets
     {
         get
@@ -19,16 +22,7 @@ public sealed partial class RunSimulation
         }
     }
 
-    private ICombatTarget? FirstCollidingTarget(Vector2D position, double radius)
-    {
-        foreach (var enemy in enemies)
-        {
-            if (enemy.Health > 0 && Vector2D.Distance(position, enemy.Position) <= radius + enemy.Radius) return enemy;
-        }
-
-        if (dragon is { Health: > 0 } activeDragon && Vector2D.Distance(position, activeDragon.Position) <= radius + activeDragon.Radius) return activeDragon;
-        return null;
-    }
+    private ICombatTarget? FirstCollidingTarget(Vector2D position, double radius) => combatSpatialIndex.FirstCollidingTarget(position, radius);
 
     private ICombatTarget? NearestTarget(Vector2D position, IReadOnlySet<int>? excludedIds = null, double minimumDistance = 0)
     {
@@ -49,6 +43,8 @@ public sealed partial class RunSimulation
         if (dragonDistance <= minimumDistance || dragonDistance >= nearestDistance) return nearest;
         return activeDragon;
     }
+
+    private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, dragon);
 
     private static void ApplyFreeze(ICombatTarget target, double duration)
     {

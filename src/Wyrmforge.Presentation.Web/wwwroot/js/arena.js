@@ -5,7 +5,9 @@ export function initializeArena(canvas, dotNetReference) {
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     attachInput(state);
-    state.lastFrame = performance.now();
+    const now = performance.now();
+    state.lastSimulationTimestamp = now;
+    state.performanceWindowStarted = now;
     state.animationFrame = requestAnimationFrame(timestamp => frame(state, timestamp));
 }
 
@@ -29,12 +31,22 @@ function createState(canvas, dotNetReference) {
         context: canvas.getContext('2d'),
         dotNetReference,
         active: true,
-        busy: false,
+        simulationBusy: false,
+        latestSnapshot: null,
         keys: new Set(),
         pointerId: null,
         touchOrigin: { x: 0, y: 0 },
         touchCurrent: { x: 0, y: 0 },
-        lastFrame: 0,
+        lastSimulationTimestamp: 0,
+        performanceWindowStarted: 0,
+        renderFrameCount: 0,
+        simulationFrameCount: 0,
+        simulationMillisecondsTotal: 0,
+        bridgeMillisecondsTotal: 0,
+        displayFps: 0,
+        displaySimulationHz: 0,
+        displaySimulationMilliseconds: 0,
+        displayBridgeMilliseconds: 0,
         animationFrame: 0,
     };
 }
@@ -69,26 +81,56 @@ function attachInput(state) {
     state.canvas.addEventListener('pointercancel', state.onPointerUp);
 }
 
-async function frame(state, timestamp) {
+function frame(state, timestamp) {
     if (!state.active) return;
-    if (!state.busy) {
-        state.busy = true;
-        const delta = Math.min((timestamp - state.lastFrame) / 1000, 0.05);
-        state.lastFrame = timestamp;
-        const rect = state.canvas.getBoundingClientRect();
-        const movement = getMovement(state);
-        try {
-            const snapshot = await state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y);
-            resizeCanvas(state, rect);
-            draw(state, snapshot, rect.width, rect.height);
-        } catch (error) {
+    const rect = state.canvas.getBoundingClientRect();
+    resizeCanvas(state, rect);
+    recordRenderFrame(state, timestamp);
+
+    if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
+    else drawWaiting(state, rect.width, rect.height);
+
+    startSimulationFrame(state, timestamp, rect);
+    if (state.active) state.animationFrame = requestAnimationFrame(next => frame(state, next));
+}
+
+function startSimulationFrame(state, timestamp, rect) {
+    if (state.simulationBusy) return;
+    state.simulationBusy = true;
+    const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
+    state.lastSimulationTimestamp = timestamp;
+    const movement = getMovement(state);
+    const bridgeStarted = performance.now();
+
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y)
+        .then(snapshot => {
+            if (!state.active) return;
+            state.latestSnapshot = snapshot;
+            state.simulationFrameCount++;
+            state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
+            state.bridgeMillisecondsTotal += performance.now() - bridgeStarted;
+        })
+        .catch(error => {
             console.error('Wyrmforge arena frame failed.', error);
             state.active = false;
-        } finally {
-            state.busy = false;
-        }
-    }
-    if (state.active) state.animationFrame = requestAnimationFrame(next => frame(state, next));
+        })
+        .finally(() => state.simulationBusy = false);
+}
+
+function recordRenderFrame(state, timestamp) {
+    state.renderFrameCount++;
+    const seconds = (timestamp - state.performanceWindowStarted) / 1000;
+    if (seconds < 0.75) return;
+
+    state.displayFps = Math.round(state.renderFrameCount / seconds);
+    state.displaySimulationHz = Math.round(state.simulationFrameCount / seconds);
+    state.displaySimulationMilliseconds = state.simulationFrameCount === 0 ? 0 : state.simulationMillisecondsTotal / state.simulationFrameCount;
+    state.displayBridgeMilliseconds = state.simulationFrameCount === 0 ? 0 : state.bridgeMillisecondsTotal / state.simulationFrameCount;
+    state.renderFrameCount = 0;
+    state.simulationFrameCount = 0;
+    state.simulationMillisecondsTotal = 0;
+    state.bridgeMillisecondsTotal = 0;
+    state.performanceWindowStarted = timestamp;
 }
 
 function getMovement(state) {
@@ -121,6 +163,15 @@ function resizeCanvas(state, rect) {
         state.canvas.height = height;
     }
     state.context.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function drawWaiting(state, width, height) {
+    const ctx = state.context;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#14111b';
+    ctx.fillRect(0, 0, width, height);
+    drawGrid(ctx, width, height);
+    drawPerformanceCounter(state, ctx, null, width, height);
 }
 
 function draw(state, snapshot, width, height) {
@@ -186,6 +237,35 @@ function draw(state, snapshot, width, height) {
     drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
     if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, width);
     drawTouchIndicator(state, ctx);
+    drawPerformanceCounter(state, ctx, snapshot, width, height);
+}
+
+function drawPerformanceCounter(state, ctx, snapshot, width, height) {
+    const panelWidth = Math.min(218, Math.max(160, width - 24));
+    const panelHeight = 68;
+    const x = Math.max(12, width - panelWidth - 14);
+    const y = Math.max(12, height - panelHeight - 14);
+    const enemies = snapshot?.enemies?.length ?? 0;
+    const projectiles = snapshot?.projectiles?.length ?? 0;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(8, 6, 12, 0.78)';
+    roundRect(ctx, x, y, panelWidth, panelHeight, 10);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#e8e0ef';
+    ctx.font = '800 11px system-ui, sans-serif';
+    ctx.fillText(`FPS ${state.displayFps}  •  SIM ${state.displaySimulationHz}/s`, x + 10, y + 18);
+    ctx.fillStyle = '#a99db3';
+    ctx.font = '700 10px system-ui, sans-serif';
+    ctx.fillText(`C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`, x + 10, y + 37);
+    ctx.fillStyle = '#82768c';
+    ctx.fillText(`ENEMIES ${enemies}  •  PROJECTILES ${projectiles}`, x + 10, y + 55);
+    ctx.restore();
 }
 
 function drawEnemy(ctx, enemy) {
@@ -235,15 +315,15 @@ function drawSplashPulse(ctx, pulse) {
 function drawElementalImpact(ctx, impact) {
     const progress = Math.min(1, Math.max(0, impact.progress));
     const alpha = 1 - progress;
-    if (impact.kind === 'FireBolt') {
+    if (impact.spell === 1) {
         drawImpactBurst(ctx, impact.x, impact.y, 7 + progress * 12, `rgba(255, 116, 54, ${alpha})`, 6);
         return;
     }
-    if (impact.kind === 'FrostShard') {
+    if (impact.spell === 2) {
         drawImpactCross(ctx, impact.x, impact.y, 5 + progress * 10, `rgba(151, 224, 255, ${alpha})`, Math.PI / 4);
         return;
     }
-    if (impact.kind === 'ChainLightning') {
+    if (impact.spell === 3) {
         drawImpactCross(ctx, impact.x, impact.y, 6 + progress * 11, `rgba(255, 232, 101, ${alpha})`, 0);
         return;
     }
@@ -486,23 +566,21 @@ function drawTouchIndicator(state, ctx) {
 function drawGrid(ctx, width, height) {
     ctx.strokeStyle = 'rgba(255,255,255,0.035)';
     ctx.lineWidth = 1;
+    ctx.beginPath();
     for (let x = 0; x < width; x += 44) {
-        ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
-        ctx.stroke();
     }
     for (let y = 0; y < height; y += 44) {
-        ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
-        ctx.stroke();
     }
+    ctx.stroke();
 }
 
 function projectileColor(spell) {
-    if (spell === 'FireBolt') return '#ff7a45';
-    if (spell === 'FrostShard') return '#8fdcff';
+    if (spell === 1) return '#ff7a45';
+    if (spell === 2) return '#8fdcff';
     return '#b887ff';
 }
 

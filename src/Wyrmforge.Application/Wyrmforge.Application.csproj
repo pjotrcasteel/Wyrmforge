@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../Wyrmforge.Domain/Wyrmforge.Domain.csproj" />
+    <InternalsVisibleTo Include="Wyrmforge.Application.Tests" />
   </ItemGroup>
 </Project>

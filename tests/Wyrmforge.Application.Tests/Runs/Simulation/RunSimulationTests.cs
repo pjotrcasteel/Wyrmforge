@@ -3,6 +3,7 @@ using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Application.Tests.TestDoubles;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Simulation;
 
@@ -41,7 +42,7 @@ public sealed class RunSimulationTests
         Assert.IsLessThan(1, damagedEnemy.HealthRatio);
         Assert.IsGreaterThan(0, damagedEnemy.HealthRatio);
         Assert.IsNotNull(impact);
-        Assert.AreEqual("ArcaneOrb", impact.Kind);
+        Assert.AreEqual(SpellId.ArcaneOrb, impact.Spell);
         Assert.IsTrue(impact.Progress >= 0 && impact.Progress <= 1);
     }
 

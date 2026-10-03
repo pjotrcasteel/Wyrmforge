@@ -113,6 +113,7 @@ public sealed partial class RunSimulation
         UpdateSpawn(delta, width, height);
         UpdateSpellcasting(delta, movement.IsMoving);
         UpdateEnemies(delta);
+        RebuildCombatSpatialIndex();
         UpdateProjectiles(delta, width, height);
         UpdateLightning(delta);
         ResolveProjectileHits();
@@ -216,11 +217,11 @@ public sealed partial class RunSimulation
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
-            elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell.ToString(), impact.Progress)).ToArray(),
+            elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)).ToArray(),
             deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress)).ToArray(),
             essenceBursts.Select(burst => new EssenceBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Life)).ToArray(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
-            projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell.ToString(), projectile.Inferno)).ToArray(),
+            projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
             pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending,

@@ -15,4 +15,5 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<LightningRenderSnapshot> Lightning,
     RunHudSnapshot Hud,
     bool Paused,
-    bool Ended);
+    bool Ended,
+    double SimulationMilliseconds = 0);
