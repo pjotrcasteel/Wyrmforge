@@ -2,7 +2,7 @@ import type { InputController } from './input';
 import { applyLevelChoice, rollLevelChoices, type LevelChoice } from './levelChoices';
 import { createRunUpgradeLevels, experienceRequiredForLevel, getRunModifiers, type RunModifiers, type RunUpgradeId } from './runUpgrades';
 import { createSpellLevels, spells, type SpellId, type SpellLevels } from './spells';
-import type { SynergyId } from './synergies';
+import { getSynergy, type SynergyId } from './synergies';
 
 interface Vec2 { x: number; y: number }
 interface Enemy { id: number; position: Vec2; radius: number; hp: number; speed: number; frozenFor: number }
@@ -426,9 +426,11 @@ export class Game {
 
   private drawHud(ctx: CanvasRenderingContext2D, width: number): void {
     const pad = 18;
-    const barWidth = Math.min(260, width - pad * 2);
+    const barWidth = Math.min(285, width - pad * 2);
+    const hasSynergies = this.synergies.size > 0;
+    const hudHeight = hasSynergies ? 178 : 154;
     ctx.fillStyle = 'rgba(8, 6, 12, 0.72)';
-    roundRect(ctx, pad, pad, barWidth + 24, 142, 12);
+    roundRect(ctx, pad, pad, barWidth + 24, hudHeight, 12);
     ctx.fill();
     ctx.fillStyle = '#ede8f5';
     ctx.font = '600 14px system-ui, sans-serif';
@@ -452,10 +454,22 @@ export class Game {
     roundRect(ctx, pad + 12, pad + 97, barWidth * Math.min(1, this.experience / this.experienceToNext), 8, 4);
     ctx.fill();
 
-    const spellText = spells.filter((spell) => this.spellLevels[spell.id] > 0).map((spell) => `${spell.icon}${this.spellLevels[spell.id]}`).join('   ');
-    ctx.fillStyle = '#a99db4';
-    ctx.font = '600 12px system-ui, sans-serif';
-    ctx.fillText(spellText, pad + 12, pad + 126);
+    const spellText = spells.filter((spell) => this.spellLevels[spell.id] > 0).map((spell) => `${spell.icon} ${spell.name} ${romanRank(this.spellLevels[spell.id])}`).join('   ');
+    ctx.fillStyle = '#776d81';
+    ctx.font = '800 9px system-ui, sans-serif';
+    ctx.fillText('SPELLS', pad + 12, pad + 124);
+    ctx.fillStyle = '#c5b8d0';
+    ctx.font = '600 10px system-ui, sans-serif';
+    ctx.fillText(spellText, pad + 12, pad + 142);
+
+    if (!hasSynergies) return;
+    const synergyText = [...this.synergies].map((id) => `✦ ${getSynergy(id).name}`).join('   ');
+    ctx.fillStyle = '#9b7d48';
+    ctx.font = '800 9px system-ui, sans-serif';
+    ctx.fillText('SYNERGIES', pad + 12, pad + 160);
+    ctx.fillStyle = '#e1bd75';
+    ctx.font = '650 10px system-ui, sans-serif';
+    ctx.fillText(synergyText, pad + 12, pad + 176);
   }
 
   private drawTouchIndicator(ctx: CanvasRenderingContext2D): void {
@@ -587,6 +601,11 @@ function rotate(vector: Vec2, radians: number): Vec2 {
 
 function distance(a: Vec2, b: Vec2): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function romanRank(value: number): string {
+  const numerals = ['0', 'I', 'II', 'III', 'IV', 'V'];
+  return numerals[value] ?? String(value);
 }
 
 function drawGrid(ctx: CanvasRenderingContext2D, width: number, height: number): void {
