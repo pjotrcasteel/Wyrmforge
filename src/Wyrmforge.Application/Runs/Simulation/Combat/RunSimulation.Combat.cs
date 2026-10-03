@@ -81,6 +81,7 @@ public sealed partial class RunSimulation
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 GainExperience(1);
+                RegisterDepthTrialKill();
                 break;
             case DragonState defeatedDragon:
                 DefeatDragon(defeatedDragon);

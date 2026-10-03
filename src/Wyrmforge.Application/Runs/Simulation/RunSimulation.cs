@@ -33,6 +33,7 @@ public sealed partial class RunSimulation
     private readonly PassiveCombatProfile passiveProfile;
     private readonly RunBuildState build = new();
     private readonly RunDepthState depthState = new();
+    private readonly RunDepthTrialState depthTrialState = new();
     private readonly RunExtractionState extractionState = new();
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
@@ -91,6 +92,14 @@ public sealed partial class RunSimulation
     public DragonEssenceId? Offering { get; }
 
     public bool PendingPushOrExtract => depthState.DecisionPending;
+
+    public bool CanPushDeeper => depthState.CanPushDeeper;
+
+    public bool DepthTrialActive => depthTrialState.IsActive;
+
+    public int DepthTrialKills => depthTrialState.Kills;
+
+    public int DepthTrialKillsRequired => RunDepthTrialState.KillsRequired;
 
     public int Depth => depthState.Depth;
 
@@ -157,6 +166,7 @@ public sealed partial class RunSimulation
     public bool PushDeeper()
     {
         if (!depthState.PushDeeper()) return false;
+        depthTrialState.Start(depthState.Depth);
         spawnTimer = Math.Min(spawnTimer, 0.35);
         return true;
     }
@@ -193,7 +203,7 @@ public sealed partial class RunSimulation
         depthState.Depth,
         outcome)
     {
-        SynergyIds = build.Synergies.Snapshot().ToArray(),
+        SynergyIds = build.Synergies.Snapshot(),
     };
 
     public RunRenderSnapshot CreateSnapshot()

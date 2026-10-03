@@ -14,6 +14,10 @@
             {
                 <span>DEPTH @CurrentDepth • RIFTS ACTIVE • ×@CurrentScoreMultiplier.ToString("0.0") SCORE</span>
             }
+            @if (DepthTrialActive)
+            {
+                <span>RIFT TRIAL • @DepthTrialKills/@DepthTrialKillsRequired KILLS</span>
+            }
             @foreach (var essence in CurrentEssences)
             {
                 <span title="@essence.Effect">@essence.Icon @essence.Name</span>
@@ -27,7 +31,7 @@
     }
     else if (PendingPushOrExtract)
     {
-        <PushOrExtractOverlay NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" OnExtract="StartExtractionAsync" OnPush="PushDeeperAsync" />
+        <PushOrExtractOverlay CanPushDeeper="CanPushDeeper" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" OnExtract="StartExtractionAsync" OnPush="PushDeeperAsync" />
     }
     else if (CurrentChoices.Count > 0)
     {

@@ -43,6 +43,14 @@ public partial class ArenaView : IAsyncDisposable
 
     private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
 
+    private bool CanPushDeeper => simulation?.CanPushDeeper == true;
+
+    private bool DepthTrialActive => simulation?.DepthTrialActive == true;
+
+    private int DepthTrialKills => simulation?.DepthTrialKills ?? 0;
+
+    private int DepthTrialKillsRequired => simulation?.DepthTrialKillsRequired ?? 0;
+
     private int CurrentDepth => simulation?.Depth ?? 1;
 
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
@@ -65,11 +73,17 @@ public partial class ArenaView : IAsyncDisposable
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
+        var hadDepthDecision = current.PendingPushOrExtract;
+        var previousTrialKills = current.DepthTrialKills;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var hasChoices = current.PendingChoices.Count > 0;
         var hasEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
-        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices) await InvokeAsync(StateHasChanged);
+        var hasDepthDecision = current.PendingPushOrExtract;
+        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices || hadDepthDecision != hasDepthDecision || previousTrialKills != current.DepthTrialKills)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
 
         if (snapshot.Ended && !gameOverSent)
         {

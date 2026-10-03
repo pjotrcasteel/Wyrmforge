@@ -2,9 +2,9 @@
 
 <div class="dragon-harvest">
     <section class="dragon-harvest-card">
-        <div class="eyebrow">ESSENCE BOUND • AN EXIT OPENS</div>
-        <h2>Leave with what you stole, or go deeper.</h2>
-        <p>Opening the way out takes four dangerous seconds inside a fixed ritual circle. Or keep the essence active and descend for greater rewards.</p>
+        <div class="eyebrow">@(CanPushDeeper ? "ESSENCE BOUND • AN EXIT OPENS" : "RIFT TRIAL CLEARED • EXIT STABILIZED")</div>
+        <h2>@(CanPushDeeper ? "Leave with what you stole, or go deeper." : "You survived the deeper trial. Bring your essence home.")</h2>
+        <p>@(CanPushDeeper ? "Opening the way out takes four dangerous seconds inside a fixed ritual circle. Or keep the essence active and descend for greater rewards." : "The deeper realm has yielded. Open the extraction ritual and survive one final hold to secure everything you carried into the trial.")</p>
         <div class="essence-choices">
             <button class="essence-choice" @onclick="ExtractAsync">
                 <span class="essence-source">EXIT ROUTE</span>
@@ -14,19 +14,25 @@
                 <small>Combat continues. Leaving the circle pauses the ritual without resetting progress; return to resume it.</small>
                 <span class="essence-footer">HOLD YOUR GROUND</span>
             </button>
-            <button class="essence-choice" @onclick="PushAsync">
-                <span class="essence-source">RISK CHOICE</span>
-                <span class="essence-icon">▼</span>
-                <strong>Descend to Depth @NextDepth</strong>
-                <span class="essence-effect">Enemies become tougher, arrive faster, and unstable rifts begin opening beneath you.</span>
-                <small>Keep the stolen essence active and earn ×@ScoreMultiplier.ToString("0.0") score from enemy kills. Move out of a rift before its warning ring closes.</small>
-                <span class="essence-footer">PUSH DEEPER</span>
-            </button>
+            @if (CanPushDeeper)
+            {
+                <button class="essence-choice" @onclick="PushAsync">
+                    <span class="essence-source">RISK CHOICE</span>
+                    <span class="essence-icon">▼</span>
+                    <strong>Descend to Depth @NextDepth</strong>
+                    <span class="essence-effect">Enemies become tougher, arrive faster, and unstable rifts begin opening beneath you.</span>
+                    <small>Keep the stolen essence active and earn ×@ScoreMultiplier.ToString("0.0") score from enemy kills. Complete the Rift Trial to reopen an exit.</small>
+                    <span class="essence-footer">PUSH DEEPER</span>
+                </button>
+            }
         </div>
     </section>
 </div>
 
 @code {
+    [Parameter]
+    public bool CanPushDeeper { get; set; }
+
     [Parameter]
     public int NextDepth { get; set; }
 
