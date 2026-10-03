@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.22 — Frost Mastery
+## Prototype 0.0.23 — Storm Mastery
 
 The current playable slice contains:
 
@@ -13,6 +13,8 @@ The current playable slice contains:
 - Arcane Orb mastery: Rank III orbs grow visibly larger and pierce through their first target before disappearing on the next hit;
 - Fire Bolt mastery: Rank III impacts keep their blast and also leave 2.4 seconds of Burning Ground that damages targets inside every 0.3 seconds;
 - Frost Shard mastery: Rank III impacts release an 82-radius Frost Nova that freezes nearby enemies for 0.45 seconds without adding bonus damage;
+- Chain Lightning mastery: Rank III first hits fork into one additional unhit nearby target for 65% base jump damage while the original chain continues;
+- mastered Chain Lightning reuses the existing hit set and Stormglass rules, so the branch cannot immediately duplicate a target and still composes with frozen-target synergies;
 - Frost Nova reuses normal freeze rules, including reduced freeze duration on dragons, and visually reuses the existing icy impact language;
 - Burning Ground scales from the projectile that created it, can overlap, can damage dragons and uses the normal target-damage path for kills, XP and score;
 - Rift Stalkers as the first normal-enemy behavior variant: every sixth spawn is larger, pauses for a 0.65s warning, locks a direction toward the player's position and then lunges along that fixed line;
@@ -51,7 +53,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and exposes mastery impact data. Burning Ground lives with spell simulation as a timed area effect and reuses the central target damage path rather than creating Fire-specific kill rules. Frost Nova is an instantaneous spell-impact behavior that reuses the spatial index and normal freeze rules instead of introducing a parallel crowd-control system. Enemy-specific behavior state is kept with the enemy concept rather than growing one central movement manager. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and exposes mastery impact data. Burning Ground lives with spell simulation as a timed area effect and reuses the central target damage path rather than creating Fire-specific kill rules. Frost Nova is an instantaneous spell-impact behavior that reuses the spatial index and normal freeze rules instead of introducing a parallel crowd-control system. Chain Lightning mastery stays inside spell simulation, reuses the existing chain hit set and lightning trace feedback, and applies normal damage and Stormglass rules to its fork rather than creating a second lightning system. Enemy-specific behavior state is kept with the enemy concept rather than growing one central movement manager. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
 
 Folders represent cohesive game concepts rather than broad technical dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -96,3 +98,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 24. Enemy variants should introduce a readable movement or dodge question before they introduce stat variation.
 25. Persistent area effects should tick at bounded intervals and reuse existing combat paths rather than adding frame-rate-dependent damage logic.
 26. Crowd-control masteries should reuse existing status rules so new spell identities compose with established synergies instead of creating isolated mechanics.
+27. Propagation masteries should change target topology and reuse existing hit rules instead of becoming disguised area damage.
