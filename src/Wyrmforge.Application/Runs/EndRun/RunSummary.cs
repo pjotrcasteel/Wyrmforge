@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Runs.EndRun;
 
@@ -14,4 +15,7 @@ public sealed record RunSummary(
     int Spells,
     int Synergies,
     int Depth,
-    RunOutcome Outcome);
+    RunOutcome Outcome)
+{
+    public IReadOnlyList<SynergyId> SynergyIds { get; init; } = Array.Empty<SynergyId>();
+}

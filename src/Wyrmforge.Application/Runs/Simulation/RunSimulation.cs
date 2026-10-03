@@ -191,7 +191,10 @@ public sealed partial class RunSimulation
         build.Spells.LearnedCount,
         build.Synergies.Count,
         depthState.Depth,
-        outcome);
+        outcome)
+    {
+        SynergyIds = build.Synergies.Snapshot().ToArray(),
+    };
 
     public RunRenderSnapshot CreateSnapshot()
     {

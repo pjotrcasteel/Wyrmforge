@@ -3,8 +3,10 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Domain.Progression.Codex;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.PassiveTree;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Presentation.Web.Pages;
 
@@ -12,8 +14,10 @@ public partial class Home
 {
     private const string BestScoreKey = "wyrmforge.bestScore";
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
+    private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
     private readonly PassiveTreeSelection selection = new();
     private readonly DragonEssenceVault essenceVault = new();
+    private readonly ArcaneCodex arcaneCodex = new();
     private RunSummary? summary;
     private DragonEssenceId? selectedOffering;
     private DragonEssenceId? activeOffering;
@@ -30,6 +34,7 @@ public partial class Home
 
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
+        await TryLoadArcaneCodexAsync();
         StateHasChanged();
     }
 
@@ -52,6 +57,11 @@ public partial class Home
     private async Task HandleGameOverAsync(RunSummary value)
     {
         summary = value;
+
+        var codexChanged = false;
+        foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
+        if (codexChanged) await TrySetArcaneCodexAsync();
+
         if (value.Outcome == RunOutcome.Extracted && value.EssenceIds.Count > 0)
         {
             foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId);
@@ -109,6 +119,32 @@ public partial class Home
         }
     }
 
+    private async Task TryLoadArcaneCodexAsync()
+    {
+        try
+        {
+            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneCodexKey);
+            if (string.IsNullOrWhiteSpace(storedValue)) return;
+            var storedDiscoveries = JsonSerializer.Deserialize<string[]>(storedValue);
+            if (storedDiscoveries is null) return;
+
+            var synergyIds = new List<SynergyId>();
+            foreach (var storedDiscovery in storedDiscoveries)
+            {
+                if (Enum.TryParse<SynergyId>(storedDiscovery, out var synergyId)) synergyIds.Add(synergyId);
+            }
+            arcaneCodex.Restore(synergyIds);
+        }
+        catch (JSException)
+        {
+            // Codex persistence is optional. Browser restrictions must never break gameplay.
+        }
+        catch (JsonException)
+        {
+            // Invalid old browser data is ignored rather than preventing the game from starting.
+        }
+    }
+
     private async Task TrySetEssenceVaultAsync()
     {
         try
@@ -119,6 +155,19 @@ public partial class Home
         catch (JSException)
         {
             // Vault persistence is optional. Browser restrictions must never break gameplay.
+        }
+    }
+
+    private async Task TrySetArcaneCodexAsync()
+    {
+        try
+        {
+            var storedDiscoveries = SynergyCatalog.All.Where(synergy => arcaneCodex.Contains(synergy.Id)).Select(synergy => synergy.Id.ToString()).ToArray();
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneCodexKey, JsonSerializer.Serialize(storedDiscoveries));
+        }
+        catch (JSException)
+        {
+            // Codex persistence is optional. Browser restrictions must never break gameplay.
         }
     }
 

@@ -1,17 +1,20 @@
 @using Wyrmforge.Application.Runs.Offerings
+@using Wyrmforge.Domain.Progression.Codex
+@using Wyrmforge.Domain.Spells.Synergies
 
 <main class="forge-screen">
     <header class="hero">
         <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.23 • STORM MASTERY</div>
-            <h1>Forge spells that change how magic moves through the battlefield.</h1>
-            <p>Chain Lightning now gains a true Rank III mastery: its first hit forks into an additional nearby target while the original chain continues, turning Storm into the strongest propagation path so far.</p>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.24 • ARCANE CODEX</div>
+            <h1>Remember the magic you have actually discovered.</h1>
+            <p>Named spell synergies now become permanent Codex knowledge when you assemble them in a run. The Codex records discovery only: it grants no bonuses, unlocks or power yet.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
 
     <section class="tree-panel">
         <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
+        <div class="tree-hint"><strong>ARCANE CODEX</strong> • @CodexSummary</div>
         <div class="tree-toolbar">
             <div>
                 <strong>WYRM OFFERING</strong>
@@ -54,7 +57,7 @@
             }
         </div>
     </section>
-    <footer>Choose passives • optionally burn one secured essence • hunt Ashfang • hold the extraction ritual or push into unstable depths</footer>
+    <footer>Choose passives • discover spell combinations • optionally burn one secured essence • hunt Ashfang • hold the extraction ritual or push into unstable depths</footer>
 </main>
 
 @code {
@@ -63,6 +66,9 @@
 
     [Parameter, EditorRequired]
     public DragonEssenceVault Vault { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public ArcaneCodex Codex { get; set; } = null!;
 
     [Parameter]
     public DragonEssenceId? SelectedOffering { get; set; }
@@ -83,6 +89,10 @@
         : string.Join("   •   ", DragonEssenceCatalog.All
             .Where(essence => Vault.Count(essence.Id) > 0)
             .Select(essence => $"{essence.Icon} {essence.Name} ×{Vault.Count(essence.Id)}"));
+
+    private string CodexSummary => $"{Codex.Count}/{SynergyCatalog.All.Count} discovered   •   {string.Join("   •   ", SynergyCatalog.All.Select(SynergyCodexLabel))}";
+
+    private string SynergyCodexLabel(SynergyDefinition synergy) => Codex.Contains(synergy.Id) ? $"{synergy.Icon} {synergy.Name}" : "???";
 
     private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
 
