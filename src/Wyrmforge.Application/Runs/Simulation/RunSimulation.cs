@@ -102,6 +102,7 @@ public sealed partial class RunSimulation
         UpdateCombatFeedback(delta);
         elapsed += delta;
         UpdatePlayer(delta, movement, width, height);
+        UpdateDepthRift(delta);
         UpdateDragonEssenceEffects(delta, movement.IsMoving);
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);

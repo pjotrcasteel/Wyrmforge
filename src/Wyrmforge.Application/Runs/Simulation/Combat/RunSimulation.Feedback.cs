@@ -36,7 +36,7 @@ public sealed partial class RunSimulation
         if (target is EnemyState) hitFlashRemaining[target.Id] = HitFlashSeconds;
     }
 
-    private void RegisterSplashPulse(Vector2D position, double radius) => splashPulses.Add(new SplashPulseState(position, radius, SplashPulseSeconds));
+    private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 
     private void RegisterElementalImpact(Vector2D position, SpellId spell) => elementalImpacts.Add(new ElementalImpactState(position, spell, ElementalImpactSeconds));
 

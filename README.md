@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.14 — Wyrm Offerings
+## Prototype 0.0.15 — Rift Pressure
 
 The current playable slice contains:
 
@@ -19,6 +19,7 @@ The current playable slice contains:
 - Cinder Heart starts with Fire Bolt I, Molten Fang starts with Potency I and Ashen Wing starts with Fleetfoot I;
 - repeated extractions stack in the vault, while defeated or abandoned runs secure nothing;
 - Depth II enemies with +35% health, +15% speed, 20% faster spawn cadence and ×1.5 enemy-kill score;
+- Depth II rift pressure: a locked warning zone periodically appears at the player's position and detonates for 28 raw damage unless dodged;
 - health-bar-free enemy damage feedback, elemental impact signatures, splash pulses and death cues;
 - score, best-score persistence and run summaries that track depth, dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
@@ -34,11 +35,11 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, offerings, run depth and extraction rules are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, offerings, run depth, depth hazards and extraction rules are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. The web host only selects an offering, persists the changed vault and passes the selected essence into the simulation.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns both risk/reward multipliers and the renderer-independent rift cadence/target position; simulation applies rift damage through the same player-damage path as other combat sources.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -75,3 +76,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 16. Choosing extraction should still require one final moment of survival before rewards become safe.
 17. Persistent rewards should first prove the earn-and-secure loop before gaining spending or crafting systems.
 18. Spending permanent resources should create a clear decision without turning early metaprogression into permanent stat inflation.
+19. Deeper depths should change how the player moves or fights, not only scale enemy numbers.
