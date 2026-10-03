@@ -11,7 +11,8 @@ public sealed partial class RunSimulation
     private void UpdateDepthRift(double delta)
     {
         var wasTelegraphing = depthRiftState.IsTelegraphing;
-        var detonated = depthRiftState.Tick(delta, depthState.Depth >= 2, player.Position);
+        var riftsActive = depthState.Depth >= 2 && dragon is null && !deepDragonPending;
+        var detonated = depthRiftState.Tick(delta, riftsActive, player.Position);
 
         if (!wasTelegraphing && depthRiftState.IsTelegraphing)
         {

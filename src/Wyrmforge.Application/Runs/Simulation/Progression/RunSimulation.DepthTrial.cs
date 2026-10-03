@@ -8,6 +8,6 @@ public sealed partial class RunSimulation
     {
         if (!depthTrialState.RegisterKill()) return;
         score += RunDepthTrialState.ScoreReward;
-        depthState.OfferDecision();
+        deepDragonPending = true;
     }
 }
