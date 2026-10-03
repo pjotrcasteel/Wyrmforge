@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
@@ -5,10 +6,10 @@ using Wyrmforge.Domain.Progression.PassiveTree;
 
 namespace Wyrmforge.Presentation.Web.Pages;
 
-public partial class Home : IAsyncDisposable
+public partial class Home
 {
+    private const string BestScoreKey = "wyrmforge.bestScore";
     private readonly PassiveTreeSelection selection = new();
-    private IJSObjectReference? storageModule;
     private RunSummary? summary;
     private int bestScore;
     private int runNumber;
@@ -20,8 +21,8 @@ public partial class Home : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        storageModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/storage.js");
-        bestScore = await storageModule.InvokeAsync<int>("getBestScore", CancellationToken.None);
+
+        bestScore = await TryGetBestScoreAsync();
         StateHasChanged();
     }
 
@@ -36,8 +37,9 @@ public partial class Home : IAsyncDisposable
     {
         summary = value;
         if (value.Score <= bestScore) return;
+
         bestScore = value.Score;
-        if (storageModule is not null) await storageModule.InvokeVoidAsync("setBestScore", CancellationToken.None, bestScore);
+        await TrySetBestScoreAsync(bestScore);
     }
 
     private void ReturnToForge()
@@ -46,9 +48,28 @@ public partial class Home : IAsyncDisposable
         runActive = false;
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task<int> TryGetBestScoreAsync()
     {
-        if (storageModule is not null) await storageModule.DisposeAsync();
-        GC.SuppressFinalize(this);
+        try
+        {
+            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, BestScoreKey);
+            return int.TryParse(storedValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 0;
+        }
+        catch (JSException)
+        {
+            return 0;
+        }
+    }
+
+    private async Task TrySetBestScoreAsync(int value)
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, BestScoreKey, value.ToString(CultureInfo.InvariantCulture));
+        }
+        catch (JSException)
+        {
+            // Score persistence is optional. Browser restrictions must never break gameplay.
+        }
     }
 }
