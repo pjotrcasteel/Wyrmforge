@@ -1,39 +1,39 @@
-name: C# foundation
+name: Validate Wyrmforge
 
 on:
-  push:
-    branches: [csharp-foundation]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'Wyrmforge.slnx'
-      - 'Directory.Build.props'
-      - '.github/workflows/csharp.yml'
   pull_request:
+    branches: [main]
     paths:
       - 'src/**'
       - 'tests/**'
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
+      - '.github/workflows/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
+
       - name: Restore
         run: dotnet restore Wyrmforge.slnx
+
       - name: Build
         run: dotnet build Wyrmforge.slnx -c Release --no-restore
+
       - name: Test
         run: dotnet test Wyrmforge.slnx -c Release --no-build
-      - name: Publish Web
+
+      - name: Publish web
         run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore

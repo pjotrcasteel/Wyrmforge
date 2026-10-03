@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.4 — Choice Clarity
+## Prototype 0.0.5 — C# Foundation
 
 The current playable slice contains:
 
@@ -12,42 +12,75 @@ The current playable slice contains:
 - XP, level-ups and three-choice in-run progression;
 - four distinct spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
 - spell ranks that improve behavior as well as numbers;
-- three first cross-spell synergies: Frostfire, Stormglass and Arcane Conduit;
-- general runes that compound with the spell system;
-- clearly differentiated Rune, New Spell, Spell Upgrade and Synergy choice cards;
-- explicit rank transitions and before/after effect information on level-up choices;
+- three cross-spell synergies: Frostfire, Stormglass and Arcane Conduit;
+- runes that compound with the spell system;
+- clearly differentiated Rune, New Spell, Spell Upgrade and Synergy choices;
 - score, best-score persistence and run summaries;
-- automated tests and GitHub Pages deployment.
+- automated .NET tests and GitHub Pages deployment.
 
 ## Technology
 
-The game has **no paid runtime libraries**.
+Wyrmforge has no paid runtime libraries.
 
-- TypeScript
-- HTML5 Canvas
-- Vite (MIT)
-- Vitest (MIT)
+- .NET 10
+- C#
+- Blazor WebAssembly
+- HTML5 Canvas through a thin JavaScript rendering/input adapter
+- MSTest
 - GitHub Pages
 
-Game rules, rendering and input remain separated so we can keep the browser demo lightweight and later package the same web build for iOS and Android with Capacitor (MIT), rather than rewrite the game.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules and run simulation are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+
+## Architecture
+
+The codebase follows Onion Architecture with feature-based grouping inside each layer:
+
+```text
+src/
+├── Wyrmforge.Domain/
+├── Wyrmforge.Application/
+├── Wyrmforge.Infrastructure/
+├── Wyrmforge.Bootstrap/
+└── Wyrmforge.Presentation.Web/
+
+tests/
+├── Wyrmforge.Domain.Tests/
+└── Wyrmforge.Application.Tests/
+```
+
+Dependency direction stays inward:
+
+```text
+Presentation ─┐
+              ↓
+Application → Domain
+              ↑
+Infrastructure┘
+```
+
+Folders represent cohesive game concepts rather than generic dumping grounds such as `Services`, `Managers` or `Models`. Large systems are split by concern as they grow; for example run simulation is separated into Combat, Enemies, Movement, Progression, Spells and Snapshots.
+
+A future mobile presentation can reuse the same Domain and Application assemblies for iOS and Android without moving gameplay rules out of C#.
 
 ## Local development
 
+Restore, build and test:
+
 ```bash
-npm install
-npm run dev
+dotnet restore Wyrmforge.slnx
+dotnet build Wyrmforge.slnx
+dotnet test Wyrmforge.slnx
 ```
 
-Tests and production build:
+Run the browser version locally:
 
 ```bash
-npm test
-npm run build
+dotnet run --project src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
 ```
 
 ## Demo deployment
 
-Pushes to `main` run tests, build the static site and deploy `dist/` through GitHub Pages.
+Pushes to `main` restore, build and test the .NET solution, publish the Blazor WebAssembly app and deploy it through GitHub Pages.
 
 ## Foundation rules
 
@@ -61,3 +94,5 @@ Pushes to `main` run tests, build the static site and deploy `dist/` through Git
 8. Mobile input and responsive layout remain first-class requirements.
 9. New content must create decisions or combinations, not merely inflate a list.
 10. A player should understand the type and consequence of a level-up choice before needing to read its full description.
+11. Domain and application logic remain independent of browser, rendering and future mobile hosts.
+12. Prefer cohesive feature folders over broad technical dumping grounds.

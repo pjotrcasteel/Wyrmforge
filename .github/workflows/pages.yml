@@ -20,22 +20,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Setup Node
-        uses: actions/setup-node@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         with:
-          node-version: 24
-      - name: Install
-        run: npm install --no-audit --no-fund
-      - name: Test
-        run: npm test
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Wyrmforge.slnx
+
       - name: Build
-        run: npm run build
+        run: dotnet build Wyrmforge.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Wyrmforge.slnx -c Release --no-build
+
+      - name: Publish web
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
+
+      - name: Prepare GitHub Pages
+        run: |
+          sed -i 's#<base href="/" />#<base href="/Wyrmforge/" />#' ./artifacts/web/wwwroot/index.html
+          touch ./artifacts/web/wwwroot/.nojekyll
+          test -f ./artifacts/web/wwwroot/_framework/blazor.webassembly.js
+          grep -q '<base href="/Wyrmforge/" />' ./artifacts/web/wwwroot/index.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist
+          path: ./artifacts/web/wwwroot
 
   deploy:
     environment:
