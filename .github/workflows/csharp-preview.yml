@@ -1,0 +1,79 @@
+name: Deploy C# preview
+
+on:
+  push:
+    branches: [csharp-foundation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install stable web dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Test stable web demo
+        run: npm test
+
+      - name: Build stable web demo
+        run: npm run build
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore C# solution
+        run: dotnet restore Wyrmforge.slnx
+
+      - name: Build C# solution
+        run: dotnet build Wyrmforge.slnx -c Release --no-restore
+
+      - name: Test C# solution
+        run: dotnet test Wyrmforge.slnx -c Release --no-build
+
+      - name: Publish C# web app
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/csharp
+
+      - name: Add C# preview to stable site
+        run: |
+          mkdir -p ./dist/csharp-preview
+          cp -R ./artifacts/csharp/wwwroot/. ./dist/csharp-preview/
+          sed -i 's#<base href="/" />#<base href="/Wyrmforge/csharp-preview/" />#' ./dist/csharp-preview/index.html
+          touch ./dist/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
