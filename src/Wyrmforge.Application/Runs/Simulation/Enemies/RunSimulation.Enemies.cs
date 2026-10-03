@@ -7,6 +7,7 @@ public sealed partial class RunSimulation
 {
     private void UpdateSpawn(double delta, double width, double height)
     {
+        if (dragon is { Health: > 0 }) return;
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
         SpawnEnemy(width, height);

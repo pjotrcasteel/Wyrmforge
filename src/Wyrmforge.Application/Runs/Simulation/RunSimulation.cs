@@ -2,6 +2,7 @@ using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Domain.Combat.Projectiles;
@@ -34,6 +35,7 @@ public sealed partial class RunSimulation
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
     private RunUpgradeModifiers modifiers;
     private IReadOnlyList<LevelChoice> pendingChoices = [];
+    private DragonState? dragon;
     private double elapsed;
     private double spawnTimer;
     private int castCount;
@@ -43,11 +45,13 @@ public sealed partial class RunSimulation
     private int enemyId;
     private int score;
     private int kills;
+    private int dragonsSlain;
     private int level = 1;
     private int experience;
     private int experienceToNext = ExperienceCurve.RequiredForLevel(1);
     private int choiceCount;
     private bool playerPositionInitialized;
+    private bool dragonEncounterStarted;
 
     public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource)
     {
@@ -69,6 +73,7 @@ public sealed partial class RunSimulation
         delta = Math.Clamp(delta, 0, 0.05);
         elapsed += delta;
         UpdatePlayer(delta, movement, width, height);
+        UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateSpellcasting(delta, movement.IsMoving);
         UpdateEnemies(delta);
@@ -97,7 +102,7 @@ public sealed partial class RunSimulation
         return CreateSummary();
     }
 
-    public RunSummary CreateSummary() => new(score, kills, (int)elapsed, level, choiceCount, build.Spells.LearnedCount, build.Synergies.Count);
+    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, (int)elapsed, level, choiceCount, build.Spells.LearnedCount, build.Synergies.Count);
 
     public RunRenderSnapshot CreateSnapshot()
     {
@@ -113,6 +118,8 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0)).ToArray(),
+            CreateDragonSnapshot(),
+            CreateDragonBreathSnapshot(),
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell.ToString(), projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,

@@ -14,7 +14,7 @@ public sealed partial class RunSimulation
             var rank = build.Spells[spell.Id];
             if (rank <= 0) continue;
             spellCooldowns[spell.Id] -= delta;
-            if (spellCooldowns[spell.Id] > 0 || enemies.Count == 0) continue;
+            if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) continue;
             CastSpell(spell.Id, rank, 1, false);
             spellCooldowns[spell.Id] = GetSpellCooldown(spell.Id, rank, moving);
         }
@@ -47,7 +47,7 @@ public sealed partial class RunSimulation
 
     private void CastProjectileSpell(SpellId id, int rank, double damageScale)
     {
-        var target = NearestEnemy(player.Position, enemies);
+        var target = NearestTarget(player.Position, CombatTargets());
         if (target is null) return;
         var inferno = passiveProfile.Inferno && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
@@ -85,7 +85,7 @@ public sealed partial class RunSimulation
 
         for (var jump = 0; jump < jumps; jump++)
         {
-            var target = NearestEnemy(current, enemies.Where(enemy => enemy.Health > 0 && !hit.Contains(enemy.Id)));
+            var target = NearestTarget(current, CombatTargets().Where(target => !hit.Contains(target.Id)));
             if (target is null) break;
             hit.Add(target.Id);
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
@@ -99,7 +99,7 @@ public sealed partial class RunSimulation
                     stormglassTriggered = true;
                 }
             }
-            DamageEnemy(target, hitDamage);
+            DamageTarget(target, hitDamage);
             current = target.Position;
             damage *= 0.84;
         }

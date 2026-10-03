@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.5 — C# Foundation
+## Prototype 0.0.6 — First Dragon Hunt
 
 The current playable slice contains:
 
@@ -15,7 +15,10 @@ The current playable slice contains:
 - three cross-spell synergies: Frostfire, Stormglass and Arcane Conduit;
 - runes that compound with the spell system;
 - clearly differentiated Rune, New Spell, Spell Upgrade and Synergy choices;
-- score, best-score persistence and run summaries;
+- the first dragon boss, Ashfang the Cinder Wyrm, arriving during the run;
+- a dedicated dragon health bar, two combat phases and telegraphed fire-breath attacks;
+- frost affecting dragons at reduced strength rather than fully locking a boss down;
+- score, dragon-kill tracking, best-score persistence and run summaries;
 - automated .NET tests and GitHub Pages deployment.
 
 ## Technology
@@ -29,7 +32,7 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules and run simulation are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragons and run simulation are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
 
 ## Architecture
 
@@ -38,7 +41,19 @@ The codebase follows Onion Architecture with feature-based grouping inside each 
 ```text
 src/
 ├── Wyrmforge.Domain/
+│   └── Combat/
+│       ├── Dragons/
+│       ├── Enemies/
+│       └── Targets/
 ├── Wyrmforge.Application/
+│   └── Runs/Simulation/
+│       ├── Combat/
+│       ├── Dragons/
+│       ├── Enemies/
+│       ├── Movement/
+│       ├── Progression/
+│       ├── Snapshots/
+│       └── Spells/
 ├── Wyrmforge.Infrastructure/
 ├── Wyrmforge.Bootstrap/
 └── Wyrmforge.Presentation.Web/
@@ -58,7 +73,7 @@ Application → Domain
 Infrastructure┘
 ```
 
-Folders represent cohesive game concepts rather than generic dumping grounds such as `Services`, `Managers` or `Models`. Large systems are split by concern as they grow; for example run simulation is separated into Combat, Enemies, Movement, Progression, Spells and Snapshots.
+Folders represent cohesive game concepts rather than generic dumping grounds such as `Services`, `Managers` or `Models`. Dragons already have their own domain and simulation boundaries so future lineages, attacks and essences do not inflate the normal-enemy implementation.
 
 A future mobile presentation can reuse the same Domain and Application assemblies for iOS and Android without moving gameplay rules out of C#.
 
