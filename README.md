@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.19 — Arcane Mastery
+## Prototype 0.0.20 — Encounter Variation
 
 The current playable slice contains:
 
@@ -11,6 +11,8 @@ The current playable slice contains:
 - a browser render loop decoupled from the async C# simulation round-trip so requestAnimationFrame no longer waits for interop before drawing again;
 - spatial collision indexing for projectile hits and splash effects, avoiding full enemy scans for every projectile as runs become crowded;
 - Arcane Orb mastery: Rank III orbs grow visibly larger and pierce through their first target before disappearing on the next hit;
+- Rift Stalkers as the first normal-enemy behavior variant: every sixth spawn is larger, pauses for a 0.65s warning, locks a direction toward the player's position and then lunges along that fixed line;
+- Rift Stalker wind-up/lunge state pauses while frozen, matching the rest of the combat movement rules;
 - compact projectile effect state that groups chains, splash, freeze, inferno and piercing without expanding projectile constructors;
 - cached spell/synergy HUD data that is rebuilt only when the run build changes;
 - a pre-run passive tree with Minor, Major, Epic and Legendary nodes;
@@ -41,11 +43,11 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, offerings, run depth, depth hazards and extraction rules are implemented in C#. The browser adapter handles Canvas drawing, keyboard/touch input, diagnostics and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, offerings, run depth, depth hazards, extraction rules and normal-enemy behaviors are implemented in C#. The browser adapter handles Canvas drawing, keyboard/touch input, diagnostics and browser storage.
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and the last pierced target. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and the last pierced target. Enemy-specific behavior state is kept with the enemy concept rather than growing one central movement manager. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -87,3 +89,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 21. Measure frame rate, simulation cost, bridge cost and entity counts before adopting invasive runtime optimizations.
 22. Performance work must preserve C# as the canonical gameplay layer and scale by reducing algorithmic work before reducing gameplay density.
 23. Max-rank spell upgrades should gain a distinct behavioral mastery instead of ending as another numeric increase.
+24. Enemy variants should introduce a readable movement or dodge question before they introduce stat variation.
