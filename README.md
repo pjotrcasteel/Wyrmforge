@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.15 — Rift Pressure
+## Prototype 0.0.16 — Hold the Ritual
 
 The current playable slice contains:
 
@@ -13,7 +13,7 @@ The current playable slice contains:
 - Ashfang, the first two-phase dragon hunt with a telegraphed fire-breath attack;
 - a paused post-dragon harvest where one of three body-part essences is bound into the current build;
 - a post-harvest risk decision: begin extraction or descend to a harsher depth;
-- a 4-second extraction ritual where combat continues and death still loses the stolen essence;
+- a fixed extraction ritual circle: remain inside for four seconds to escape, step out to dodge and the timer pauses until you return;
 - a persistent Essence Vault that stores exact essences recovered through successful extraction;
 - Wyrm Offerings: optionally consume one secured essence before a run for one small starting boon;
 - Cinder Heart starts with Fire Bolt I, Molten Fang starts with Potency I and Ashen Wing starts with Fleetfoot I;
@@ -39,7 +39,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns both risk/reward multipliers and the renderer-independent rift cadence/target position; simulation applies rift damage through the same player-damage path as other combat sources.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress; simulation only supplies player position and exposes render state.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -77,3 +77,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 17. Persistent rewards should first prove the earn-and-secure loop before gaining spending or crafting systems.
 18. Spending permanent resources should create a clear decision without turning early metaprogression into permanent stat inflation.
 19. Deeper depths should change how the player moves or fights, not only scale enemy numbers.
+20. Extraction tension should come from positioning and exposure, not from erasing already-earned ritual progress.

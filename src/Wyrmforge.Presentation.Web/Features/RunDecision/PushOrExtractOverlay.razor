@@ -4,15 +4,15 @@
     <section class="dragon-harvest-card">
         <div class="eyebrow">ESSENCE BOUND • AN EXIT OPENS</div>
         <h2>Leave with what you stole, or go deeper.</h2>
-        <p>Opening the way out takes four dangerous seconds. Or keep the essence active and descend for greater rewards.</p>
+        <p>Opening the way out takes four dangerous seconds inside a fixed ritual circle. Or keep the essence active and descend for greater rewards.</p>
         <div class="essence-choices">
             <button class="essence-choice" @onclick="ExtractAsync">
                 <span class="essence-source">EXIT ROUTE</span>
                 <span class="essence-icon">◈</span>
                 <strong>Begin extraction</strong>
-                <span class="essence-effect">Survive a 4-second extraction ritual to secure the harvested essence.</span>
-                <small>Combat continues during the ritual. Die before it finishes and the essence is lost.</small>
-                <span class="essence-footer">OPEN THE WAY OUT</span>
+                <span class="essence-effect">Hold the ritual circle for 4 seconds to secure the harvested essence.</span>
+                <small>Combat continues. Leaving the circle pauses the ritual without resetting progress; return to resume it.</small>
+                <span class="essence-footer">HOLD YOUR GROUND</span>
             </button>
             <button class="essence-choice" @onclick="PushAsync">
                 <span class="essence-source">RISK CHOICE</span>

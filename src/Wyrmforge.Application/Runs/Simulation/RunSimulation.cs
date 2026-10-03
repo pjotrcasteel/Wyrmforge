@@ -118,7 +118,7 @@ public sealed partial class RunSimulation
             outcome = RunOutcome.Defeated;
             IsEnded = true;
         }
-        else if (extractionState.Tick(delta))
+        else if (extractionState.Tick(delta, player.Position))
         {
             outcome = RunOutcome.Extracted;
             IsEnded = true;
@@ -156,7 +156,7 @@ public sealed partial class RunSimulation
     public bool StartExtraction()
     {
         if (!depthState.Extract()) return false;
-        if (extractionState.Start()) return true;
+        if (extractionState.Start(player.Position)) return true;
         depthState.OfferDecision();
         return false;
     }
@@ -197,7 +197,13 @@ public sealed partial class RunSimulation
             .ToArray();
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
         var extraction = extractionState.IsActive
-            ? new ExtractionRenderSnapshot(1 - (extractionState.RemainingSeconds / RunExtractionState.DurationSeconds), extractionState.RemainingSeconds)
+            ? new ExtractionRenderSnapshot(
+                extractionState.Position.X,
+                extractionState.Position.Y,
+                RunExtractionState.Radius,
+                1 - (extractionState.RemainingSeconds / RunExtractionState.DurationSeconds),
+                extractionState.RemainingSeconds,
+                extractionState.IsProgressing)
             : null;
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),

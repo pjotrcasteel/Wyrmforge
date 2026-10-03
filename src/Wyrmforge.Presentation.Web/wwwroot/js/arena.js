@@ -173,6 +173,8 @@ function draw(state, snapshot, width, height) {
         ctx.stroke();
     }
 
+    if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
+
     ctx.beginPath();
     ctx.arc(snapshot.player.x, snapshot.player.y, snapshot.player.radius, 0, Math.PI * 2);
     ctx.fillStyle = snapshot.player.barrier ? '#b6efff' : '#f4e9ff';
@@ -180,7 +182,6 @@ function draw(state, snapshot, width, height) {
     ctx.strokeStyle = '#7f56c2';
     ctx.lineWidth = 3;
     ctx.stroke();
-    if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.player, snapshot.extraction);
 
     drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
     if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, width);
@@ -285,33 +286,41 @@ function drawDeathBurst(ctx, death) {
     }
 }
 
-function drawExtractionRitual(ctx, player, extraction) {
+function drawExtractionRitual(ctx, extraction) {
     const progress = Math.min(1, Math.max(0, extraction.progress));
-    const radius = player.radius + 22;
+    const alpha = extraction.isProgressing ? 1 : 0.48;
     ctx.save();
+
     ctx.beginPath();
-    ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(198, 154, 255, 0.22)';
+    ctx.arc(extraction.x, extraction.y, extraction.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(157, 94, 226, ${0.06 * alpha})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(198, 154, 255, ${0.35 * alpha})`;
     ctx.lineWidth = 3;
+    if (!extraction.isProgressing) ctx.setLineDash([7, 6]);
     ctx.stroke();
+    ctx.setLineDash([]);
 
     ctx.beginPath();
-    ctx.arc(player.x, player.y, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
-    ctx.strokeStyle = '#d9b7ff';
-    ctx.lineWidth = 5;
+    ctx.arc(extraction.x, extraction.y, extraction.radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.strokeStyle = `rgba(217, 183, 255, ${alpha})`;
+    ctx.lineWidth = 6;
     ctx.stroke();
 
-    const pulseRadius = radius + 7 + Math.sin(progress * Math.PI * 10) * 2;
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, pulseRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(184, 135, 255, 0.28)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    if (extraction.isProgressing) {
+        const pulseRadius = extraction.radius + 7 + Math.sin(progress * Math.PI * 10) * 2;
+        ctx.beginPath();
+        ctx.arc(extraction.x, extraction.y, pulseRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(184, 135, 255, 0.28)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
 
-    ctx.fillStyle = '#e8d7ff';
+    ctx.fillStyle = extraction.isProgressing ? '#e8d7ff' : '#b8a6c9';
     ctx.font = '800 10px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`EXTRACTING ${Math.max(0, extraction.remainingSeconds).toFixed(1)}s`, player.x, player.y - radius - 12);
+    const label = extraction.isProgressing ? 'EXTRACTING' : 'RETURN TO RITUAL';
+    ctx.fillText(`${label} ${Math.max(0, extraction.remainingSeconds).toFixed(1)}s`, extraction.x, extraction.y - extraction.radius - 12);
     ctx.restore();
 }
 
