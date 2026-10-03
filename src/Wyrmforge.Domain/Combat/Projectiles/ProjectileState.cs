@@ -23,6 +23,8 @@ public sealed class ProjectileState(Vector2D position, Vector2D velocity, double
 
     public double FreezeDuration => effects.FreezeDuration;
 
+    public double FrostNovaRadius => effects.FrostNovaRadius;
+
     public int PiercesRemaining { get; private set; } = effects.Pierces;
 
     public int IgnoredTargetId { get; private set; }

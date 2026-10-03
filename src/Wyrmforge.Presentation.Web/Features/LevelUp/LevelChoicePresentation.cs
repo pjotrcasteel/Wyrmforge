@@ -115,10 +115,11 @@ public static class LevelChoicePresentation
     {
         var nextDamage = Math.Round(12 * (1 + (nextRank - 1) * 0.25));
         var nextFreeze = 0.35 + nextRank * 0.18;
-        if (currentRank == 0) return $"{nextDamage:0} damage • freezes {nextFreeze:0.00}s";
+        var mastery = nextRank == 3 ? " • MASTERED: frost nova freezes nearby enemies" : string.Empty;
+        if (currentRank == 0) return $"{nextDamage:0} damage • freezes {nextFreeze:0.00}s{mastery}";
         var currentDamage = Math.Round(12 * (1 + (currentRank - 1) * 0.25));
         var currentFreeze = 0.35 + currentRank * 0.18;
-        return $"{currentDamage:0} → {nextDamage:0} damage • freeze {currentFreeze:0.00} → {nextFreeze:0.00}s";
+        return $"{currentDamage:0} → {nextDamage:0} damage • freeze {currentFreeze:0.00} → {nextFreeze:0.00}s{mastery}";
     }
 
     private static string ChainLightningDelta(int currentRank, int nextRank)

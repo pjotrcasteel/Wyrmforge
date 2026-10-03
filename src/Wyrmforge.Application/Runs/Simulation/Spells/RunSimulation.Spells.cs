@@ -59,6 +59,7 @@ public sealed partial class RunSimulation
         var damage = GetSpellDamage(id, rank) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * damageScale;
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + modifiers.BonusChains;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= 3;
+        var masteredFrostShard = id == SpellId.FrostShard && FrostShardMastery.IsActive(rank);
 
         for (var index = 0; index < count; index++)
         {
@@ -70,7 +71,8 @@ public sealed partial class RunSimulation
                 chains,
                 id == SpellId.FireBolt && rank >= 3 ? 56 : 0,
                 id == SpellId.FrostShard ? 0.35 + rank * 0.18 : 0,
-                masteredArcaneOrb ? 1 : 0);
+                masteredArcaneOrb ? 1 : 0,
+                masteredFrostShard ? FrostShardMastery.NovaRadius : 0);
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }
     }
