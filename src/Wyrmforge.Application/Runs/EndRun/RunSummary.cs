@@ -1,3 +1,5 @@
+using Wyrmforge.Domain.Progression.DragonEssences;
+
 namespace Wyrmforge.Application.Runs.EndRun;
 
 public sealed record RunSummary(
@@ -5,6 +7,7 @@ public sealed record RunSummary(
     int Kills,
     int DragonsSlain,
     int DragonEssences,
+    IReadOnlyList<DragonEssenceId> EssenceIds,
     int Seconds,
     int Level,
     int Choices,

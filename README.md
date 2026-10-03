@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.12 — Extraction Ritual
+## Prototype 0.0.13 — Essence Vault
 
 The current playable slice contains:
 
@@ -14,6 +14,8 @@ The current playable slice contains:
 - a paused post-dragon harvest where one of three body-part essences is bound into the current build;
 - a post-harvest risk decision: begin extraction or descend to a harsher depth;
 - a 4-second extraction ritual where combat continues and death still loses the stolen essence;
+- a persistent Essence Vault that stores the exact essences recovered through successful extraction;
+- repeated extractions stack in the vault, while defeated or abandoned runs secure nothing;
 - Depth II enemies with +35% health, +15% speed, 20% faster spawn cadence and ×1.5 enemy-kill score;
 - health-bar-free enemy damage feedback, elemental impact signatures, splash pulses and death cues;
 - score, best-score persistence and run summaries that track depth, dragons and essences;
@@ -34,7 +36,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `Runs/Depth` owns the push-or-descend decision, while `Runs/Extraction` owns the renderer-independent timed escape state. Presentation receives ritual progress and only decides how to draw it.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts in Domain. The web host serializes only the secured essence IDs to local browser storage; blocked or invalid storage data never prevents gameplay.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -69,3 +71,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 14. Combat feedback should explain impact without requiring health bars or damage numbers.
 15. Extraction should turn survival into a decision instead of letting every successful kill automatically become permanent progress.
 16. Choosing extraction should still require one final moment of survival before rewards become safe.
+17. Persistent rewards should first prove the earn-and-secure loop before gaining spending or crafting systems.

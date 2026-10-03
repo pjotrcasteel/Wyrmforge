@@ -170,6 +170,7 @@ public sealed partial class RunSimulation
         kills,
         dragonsSlain,
         build.DragonEssences.Count,
+        build.DragonEssences.Selected.ToArray(),
         (int)elapsed,
         level,
         choiceCount,
