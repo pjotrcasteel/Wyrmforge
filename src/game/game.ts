@@ -1,4 +1,14 @@
 import type { InputController } from './input';
+import {
+  applyRunUpgrade,
+  createRunUpgradeLevels,
+  experienceRequiredForLevel,
+  getRunModifiers,
+  rollRunUpgradeChoices,
+  type RunModifiers,
+  type RunUpgradeChoice,
+  type RunUpgradeId,
+} from './runUpgrades';
 
 interface Vec2 { x: number; y: number }
 interface Enemy { id: number; position: Vec2; radius: number; hp: number; speed: number; frozenFor: number }
@@ -8,13 +18,19 @@ export interface RunSummary {
   score: number;
   kills: number;
   seconds: number;
+  level: number;
+  upgrades: number;
 }
+
+export type LevelUpHandler = (level: number, choices: readonly RunUpgradeChoice[], choose: (id: RunUpgradeId) => void) => void;
 
 export class Game {
   private readonly context: CanvasRenderingContext2D;
   private readonly player = { position: { x: 0, y: 0 }, radius: 14, health: 100, maxHealth: 100, speed: 190, barrier: false };
   private readonly enemies: Enemy[] = [];
   private readonly projectiles: Projectile[] = [];
+  private readonly runUpgradeLevels = createRunUpgradeLevels();
+  private runModifiers: RunModifiers = getRunModifiers(this.runUpgradeLevels);
   private lastFrame = 0;
   private elapsed = 0;
   private spawnTimer = 0;
@@ -24,7 +40,12 @@ export class Game {
   private enemyId = 0;
   private score = 0;
   private kills = 0;
+  private level = 1;
+  private experience = 0;
+  private experienceToNext = experienceRequiredForLevel(1);
+  private upgradeCount = 0;
   private running = false;
+  private pausedForUpgrade = false;
   private animationFrame = 0;
   private readonly stats: ReturnType<typeof createStats>;
 
@@ -32,6 +53,7 @@ export class Game {
     private readonly canvas: HTMLCanvasElement,
     private readonly input: InputController,
     selectedNodes: ReadonlySet<string>,
+    private readonly onLevelUp: LevelUpHandler,
     private readonly onGameOver: (summary: RunSummary) => void,
   ) {
     const context = canvas.getContext('2d');
@@ -60,7 +82,7 @@ export class Game {
     if (!this.running) return;
     const delta = Math.min((timestamp - this.lastFrame) / 1000, 0.05);
     this.lastFrame = timestamp;
-    this.update(delta);
+    if (!this.pausedForUpgrade) this.update(delta);
     this.render();
     this.animationFrame = requestAnimationFrame(this.frame);
   };
@@ -70,7 +92,7 @@ export class Game {
     const movement = this.input.getMovement();
     const moving = movement.x !== 0 || movement.y !== 0;
     const moveBonus = this.stats.tempestStep ? Math.min(this.elapsed / 6, 1) * 0.25 : 0;
-    const speed = this.player.speed * (1 + moveBonus);
+    const speed = this.player.speed * this.runModifiers.moveSpeedMultiplier * (1 + moveBonus);
     this.player.position.x += movement.x * speed * delta;
     this.player.position.y += movement.y * speed * delta;
     this.clampPlayer();
@@ -81,7 +103,7 @@ export class Game {
       this.spawnTimer = Math.max(0.28, 0.9 - this.elapsed / 120);
     }
 
-    let castInterval = this.stats.castInterval;
+    let castInterval = this.stats.castInterval * this.runModifiers.castIntervalMultiplier;
     if (this.stats.lightningForm && moving) castInterval /= 1.5;
     this.castTimer -= delta;
     if (this.castTimer <= 0 && this.enemies.length > 0) {
@@ -146,17 +168,28 @@ export class Game {
     const pad = 18;
     const barWidth = Math.min(220, width - pad * 2);
     ctx.fillStyle = 'rgba(8, 6, 12, 0.72)';
-    roundRect(ctx, pad, pad, barWidth + 24, 82, 12);
+    roundRect(ctx, pad, pad, barWidth + 24, 118, 12);
     ctx.fill();
     ctx.fillStyle = '#ede8f5';
     ctx.font = '600 14px system-ui, sans-serif';
     ctx.fillText(`Score ${this.score}`, pad + 12, pad + 22);
     ctx.fillText(`${Math.floor(this.elapsed)}s  •  ${this.kills} kills`, pad + 12, pad + 43);
+
     ctx.fillStyle = '#332a3e';
     roundRect(ctx, pad + 12, pad + 55, barWidth, 10, 5);
     ctx.fill();
     ctx.fillStyle = '#9ed6a2';
     roundRect(ctx, pad + 12, pad + 55, barWidth * Math.max(0, this.player.health / this.player.maxHealth), 10, 5);
+    ctx.fill();
+
+    ctx.fillStyle = '#bdb3c7';
+    ctx.font = '600 12px system-ui, sans-serif';
+    ctx.fillText(`Level ${this.level}  •  XP ${this.experience}/${this.experienceToNext}`, pad + 12, pad + 88);
+    ctx.fillStyle = '#332a3e';
+    roundRect(ctx, pad + 12, pad + 97, barWidth, 8, 4);
+    ctx.fill();
+    ctx.fillStyle = '#b887ff';
+    roundRect(ctx, pad + 12, pad + 97, barWidth * Math.min(1, this.experience / this.experienceToNext), 8, 4);
     ctx.fill();
   }
 
@@ -179,24 +212,44 @@ export class Game {
     this.castCount++;
     const isInferno = this.stats.inferno && this.castCount % 5 === 0;
     const isVolley = this.stats.prismatic && this.castCount % 5 === 0;
-    const projectileCount = isVolley ? (this.stats.astralBarrage ? 5 : 3) : 1;
+    const baseProjectileCount = isVolley ? (this.stats.astralBarrage ? 5 : 3) : 1;
+    const projectileCount = baseProjectileCount + this.runModifiers.extraProjectiles;
     const baseDirection = directionTo(this.player.position, target.position);
+    const baseDamage = this.stats.damage * this.runModifiers.damageMultiplier;
+    const projectileSpeed = this.stats.projectileSpeed * this.runModifiers.projectileSpeedMultiplier;
+    const baseChains = (this.stats.livingStorm ? 4 : this.stats.chainstorm ? 1 : 0) + this.runModifiers.bonusChains;
+
     for (let index = 0; index < projectileCount; index++) {
       const offset = projectileCount === 1 ? 0 : (index - (projectileCount - 1) / 2) * 0.16;
       const direction = rotate(baseDirection, offset);
       this.projectiles.push({
         position: { ...this.player.position },
-        velocity: { x: direction.x * this.stats.projectileSpeed, y: direction.y * this.stats.projectileSpeed },
+        velocity: { x: direction.x * projectileSpeed, y: direction.y * projectileSpeed },
         radius: isInferno ? 9 : 5,
-        damage: this.stats.damage * (isInferno ? 4 : 1),
+        damage: baseDamage * (isInferno ? 4 : 1),
         inferno: isInferno,
-        chainsLeft: this.stats.livingStorm ? 4 : this.stats.chainstorm ? 1 : 0,
+        chainsLeft: baseChains,
       });
     }
+
     if (this.stats.arcaneEcho && this.castCount % 6 === 0) {
-      const echoDamage = this.stats.echoChamber ? this.stats.damage : this.stats.damage * 0.6;
-      this.projectiles.push({ position: { ...this.player.position }, velocity: { x: baseDirection.x * this.stats.projectileSpeed, y: baseDirection.y * this.stats.projectileSpeed }, radius: 4, damage: echoDamage, inferno: false, chainsLeft: 0 });
+      this.spawnEcho(baseDirection, this.stats.echoChamber ? 1 : 0.6);
     }
+    if (this.runModifiers.echoEveryCasts > 0 && this.castCount % this.runModifiers.echoEveryCasts === 0) {
+      this.spawnEcho(baseDirection, this.runModifiers.echoDamageMultiplier);
+    }
+  }
+
+  private spawnEcho(direction: Vec2, damageMultiplier: number): void {
+    const projectileSpeed = this.stats.projectileSpeed * this.runModifiers.projectileSpeedMultiplier;
+    this.projectiles.push({
+      position: { ...this.player.position },
+      velocity: { x: direction.x * projectileSpeed, y: direction.y * projectileSpeed },
+      radius: 4,
+      damage: this.stats.damage * this.runModifiers.damageMultiplier * damageMultiplier,
+      inferno: false,
+      chainsLeft: this.runModifiers.bonusChains,
+    });
   }
 
   private resolveProjectileHits(): void {
@@ -208,23 +261,35 @@ export class Game {
       let damage = projectile.damage;
       if (this.stats.detonation && this.hitCount % 4 === 0) damage *= this.stats.volcanic ? 2.5 : 2;
       if (this.stats.absoluteZero && enemy.frozenFor > 0) damage *= 2;
-      enemy.hp -= damage;
-      if (this.stats.deepFreeze && this.hitCount % 4 === 0) enemy.frozenFor = 1.25;
+      const killed = this.damageEnemy(enemy, damage, projectile);
+      const runFreeze = this.runModifiers.freezeEveryHits > 0 && this.hitCount % this.runModifiers.freezeEveryHits === 0;
+      if (!killed && ((this.stats.deepFreeze && this.hitCount % 4 === 0) || runFreeze)) {
+        enemy.frozenFor = Math.max(enemy.frozenFor, runFreeze ? this.runModifiers.freezeDuration : 1.25);
+      }
       if (this.stats.wildfire) this.splash(enemy.position, damage * 0.35, this.stats.volcanic ? 90 : 64, enemy.id);
       consumed.add(projectile);
-
-      if (enemy.hp <= 0) {
-        this.kills++;
-        this.score += 100 + Math.floor(this.elapsed * 2);
-        if (projectile.chainsLeft > 0) this.chainFrom(enemy.position, projectile);
-      }
     }
     this.projectiles.splice(0, this.projectiles.length, ...this.projectiles.filter((projectile) => !consumed.has(projectile)));
   }
 
+  private damageEnemy(enemy: Enemy, damage: number, source?: Projectile): boolean {
+    if (enemy.hp <= 0) return false;
+    enemy.hp -= damage;
+    if (enemy.hp > 0) return false;
+    this.registerKill(enemy.position, source);
+    return true;
+  }
+
+  private registerKill(position: Vec2, source?: Projectile): void {
+    this.kills++;
+    this.score += 100 + Math.floor(this.elapsed * 2);
+    this.gainExperience(1);
+    if (source && source.chainsLeft > 0) this.chainFrom(position, source);
+  }
+
   private splash(position: Vec2, damage: number, radius: number, ignoreId: number): void {
     for (const enemy of this.enemies) {
-      if (enemy.id !== ignoreId && distance(position, enemy.position) <= radius) enemy.hp -= damage;
+      if (enemy.id !== ignoreId && enemy.hp > 0 && distance(position, enemy.position) <= radius) this.damageEnemy(enemy, damage);
     }
   }
 
@@ -232,7 +297,56 @@ export class Game {
     const target = nearestEnemy(position, this.enemies.filter((enemy) => enemy.hp > 0 && distance(position, enemy.position) > 12));
     if (!target) return;
     const direction = directionTo(position, target.position);
-    this.projectiles.push({ position: { ...position }, velocity: { x: direction.x * this.stats.projectileSpeed * 1.2, y: direction.y * this.stats.projectileSpeed * 1.2 }, radius: 4, damage: source.damage * 0.82, inferno: false, chainsLeft: source.chainsLeft - 1 });
+    const projectileSpeed = this.stats.projectileSpeed * this.runModifiers.projectileSpeedMultiplier;
+    this.projectiles.push({
+      position: { ...position },
+      velocity: { x: direction.x * projectileSpeed * 1.2, y: direction.y * projectileSpeed * 1.2 },
+      radius: 4,
+      damage: source.damage * 0.82,
+      inferno: false,
+      chainsLeft: source.chainsLeft - 1,
+    });
+  }
+
+  private gainExperience(amount: number): void {
+    this.experience += amount;
+    this.tryLevelUp();
+  }
+
+  private tryLevelUp(): void {
+    if (this.pausedForUpgrade || this.experience < this.experienceToNext) return;
+    const choices = rollRunUpgradeChoices(this.runUpgradeLevels);
+    if (choices.length === 0) {
+      this.completeLevelUp();
+      return;
+    }
+
+    this.pausedForUpgrade = true;
+    const offeredIds = new Set(choices.map((choice) => choice.upgrade.id));
+    let selected = false;
+    this.onLevelUp(this.level + 1, choices, (id) => {
+      if (selected || !this.running || !offeredIds.has(id)) return;
+      if (!applyRunUpgrade(this.runUpgradeLevels, id)) return;
+      selected = true;
+      this.upgradeCount++;
+      this.applyRunModifiers(id);
+      this.completeLevelUp();
+    });
+  }
+
+  private applyRunModifiers(id: RunUpgradeId): void {
+    const previousMaxHealth = this.player.maxHealth;
+    this.runModifiers = getRunModifiers(this.runUpgradeLevels);
+    this.player.maxHealth = this.stats.maxHealth + this.runModifiers.maxHealthBonus;
+    if (id === 'vitality') this.player.health = Math.min(this.player.maxHealth, this.player.health + (this.player.maxHealth - previousMaxHealth));
+  }
+
+  private completeLevelUp(): void {
+    this.experience -= this.experienceToNext;
+    this.level++;
+    this.experienceToNext = experienceRequiredForLevel(this.level);
+    this.pausedForUpgrade = false;
+    this.tryLevelUp();
   }
 
   private damagePlayer(rawDamage: number): void {
@@ -284,7 +398,7 @@ export class Game {
   private endRun(): void {
     if (!this.running) return;
     this.stop();
-    this.onGameOver({ score: this.score, kills: this.kills, seconds: Math.floor(this.elapsed) });
+    this.onGameOver({ score: this.score, kills: this.kills, seconds: Math.floor(this.elapsed), level: this.level, upgrades: this.upgradeCount });
   }
 }
 
