@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Infrastructure.Randomness;
 
 namespace Wyrmforge.Bootstrap;
@@ -11,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IRandomSource, SystemRandomSource>();
         services.AddSingleton<LevelChoiceService>();
+        services.AddSingleton<RunSimulationFactory>();
         return services;
     }
 }

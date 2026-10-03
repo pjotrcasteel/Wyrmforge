@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.LevelUp;
@@ -30,10 +30,5 @@ public sealed class LevelChoiceServiceTests
 
         Assert.AreEqual(LevelChoiceKind.Synergy, choices[0].Kind);
         Assert.AreEqual("Frostfire", choices[0].Name);
-    }
-
-    private sealed class FirstRandomSource : IRandomSource
-    {
-        public int Next(int exclusiveMax) => 0;
     }
 }
