@@ -10,13 +10,14 @@ public sealed class RunDepthRiftState
     public const double InitialDelaySeconds = 3.2;
     public const double IntervalSeconds = 6.5;
 
+    private const double TimerEpsilon = 1e-9;
     private double cooldown = InitialDelaySeconds;
 
     public Vector2D Position { get; private set; } = Vector2D.Zero;
 
     public double TelegraphRemaining { get; private set; }
 
-    public bool IsTelegraphing => TelegraphRemaining > 0;
+    public bool IsTelegraphing => TelegraphRemaining > TimerEpsilon;
 
     public bool Tick(double delta, bool enabled, Vector2D targetPosition)
     {
@@ -30,14 +31,15 @@ public sealed class RunDepthRiftState
         if (IsTelegraphing)
         {
             TelegraphRemaining = Math.Max(0, TelegraphRemaining - delta);
-            if (TelegraphRemaining > 0) return false;
+            if (TelegraphRemaining > TimerEpsilon) return false;
+            TelegraphRemaining = 0;
             cooldown = IntervalSeconds;
             return true;
         }
 
         cooldown = Math.Max(0, cooldown - delta);
-        if (cooldown > 0) return false;
-
+        if (cooldown > TimerEpsilon) return false;
+        cooldown = 0;
         Position = targetPosition;
         TelegraphRemaining = TelegraphSeconds;
         return false;
