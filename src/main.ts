@@ -1,7 +1,7 @@
 import './style.css';
 import { Game, type RunSummary } from './game/game';
 import { InputController } from './game/input';
-import { describeChoiceRank, type LevelChoice } from './game/levelChoices';
+import { choiceAction, choiceBadge, choiceFooter, choicePresentationKind, describeChoiceDelta, describeChoiceRank, type LevelChoice } from './game/levelChoices';
 import { canRemoveNode, canSelectNode, getNode, skillNodes, spentPoints, TOTAL_META_POINTS, type School } from './game/skillTree';
 
 const appElement = document.querySelector<HTMLDivElement>('#app');
@@ -25,7 +25,7 @@ function renderForge(): void {
     <main class="forge-screen">
       <header class="hero">
         <div>
-          <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.3</div>
+          <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.4</div>
           <h1>Forge a mage, then discover the build.</h1>
           <p>Shape your permanent tree, learn distinct spells during the run, and discover synergies when their magic schools collide.</p>
         </div>
@@ -107,14 +107,11 @@ function showLevelUp(level: number, choices: readonly LevelChoice[], choose: (id
       <section class="level-up-card">
         <div class="eyebrow">LEVEL ${level}</div>
         <h2>Choose what your magic becomes</h2>
-        <p>Learn spells, rank them up, strengthen your mage, or lock in a discovered synergy.</p>
-        <div class="upgrade-choices">${choices.map((choice) => `
-          <button class="run-upgrade choice-${choice.kind}" data-choice="${choice.id}">
-            <span class="upgrade-icon">${choice.icon}</span>
-            <span class="upgrade-rank">${describeChoiceRank(choice)}</span>
-            <strong>${choice.name}</strong>
-            <small>${choice.description}</small>
-          </button>`).join('')}</div>
+        <p>Card types are intentionally distinct: strengthen with a Rune, learn or upgrade a Spell, or discover a Synergy.</p>
+        <div class="upgrade-legend" aria-label="Choice types">
+          <span class="legend-rune">RUNE</span><span class="legend-new-spell">NEW SPELL</span><span class="legend-spell-upgrade">SPELL UPGRADE</span><span class="legend-synergy">SYNERGY</span>
+        </div>
+        <div class="upgrade-choices">${choices.map(renderLevelChoice).join('')}</div>
       </section>
     </div>`);
 
@@ -126,6 +123,23 @@ function showLevelUp(level: number, choices: readonly LevelChoice[], choose: (id
       choose(id);
     }, { once: true });
   });
+}
+
+function renderLevelChoice(choice: LevelChoice): string {
+  const kind = choicePresentationKind(choice);
+  return `
+    <button class="run-upgrade choice-${kind}" data-choice="${choice.id}">
+      <span class="choice-card-header">
+        <span class="choice-badge">${choiceBadge(choice)}</span>
+        <span class="choice-action">${choiceAction(choice)}</span>
+      </span>
+      <span class="upgrade-icon">${choice.icon}</span>
+      <span class="upgrade-rank">${describeChoiceRank(choice)}</span>
+      <strong>${choice.name}</strong>
+      <span class="choice-delta">${describeChoiceDelta(choice)}</span>
+      <small>${choice.description}</small>
+      <span class="choice-footer">${choiceFooter(choice)}</span>
+    </button>`;
 }
 
 function showGameOver(summary: RunSummary): void {

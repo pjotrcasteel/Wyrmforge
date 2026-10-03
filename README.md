@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.3 — Spellcraft
+## Prototype 0.0.4 — Choice Clarity
 
 The current playable slice contains:
 
@@ -14,6 +14,8 @@ The current playable slice contains:
 - spell ranks that improve behavior as well as numbers;
 - three first cross-spell synergies: Frostfire, Stormglass and Arcane Conduit;
 - general runes that compound with the spell system;
+- clearly differentiated Rune, New Spell, Spell Upgrade and Synergy choice cards;
+- explicit rank transitions and before/after effect information on level-up choices;
 - score, best-score persistence and run summaries;
 - automated tests and GitHub Pages deployment.
 
@@ -58,3 +60,4 @@ Pushes to `main` run tests, build the static site and deploy `dist/` through Git
 7. Tree choices may lock competing paths.
 8. Mobile input and responsive layout remain first-class requirements.
 9. New content must create decisions or combinations, not merely inflate a list.
+10. A player should understand the type and consequence of a level-up choice before needing to read its full description.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyLevelChoice, rollLevelChoices } from './levelChoices';
+import { applyLevelChoice, choicePresentationKind, describeChoiceDelta, describeChoiceRank, rollLevelChoices, type LevelChoice } from './levelChoices';
 import { createRunUpgradeLevels } from './runUpgrades';
 import { createSpellLevels } from './spells';
 import type { SynergyId } from './synergies';
@@ -34,5 +34,21 @@ describe('level choices', () => {
     expect(applyLevelChoice(synergy!, upgrades, spells, selected)).toBe(true);
     expect(selected.has('frostfire')).toBe(true);
     expect(applyLevelChoice(synergy!, upgrades, spells, selected)).toBe(false);
+  });
+
+  it('distinguishes new spells from spell upgrades in presentation', () => {
+    const newSpell: LevelChoice = { id: 'spell:fire-bolt', kind: 'spell', sourceId: 'fire-bolt', name: 'Fire Bolt', description: '', icon: '🔥', currentRank: 0, maxRank: 3, badge: 'NEW SPELL' };
+    const spellUpgrade: LevelChoice = { ...newSpell, currentRank: 2, badge: 'SPELL UPGRADE' };
+    expect(choicePresentationKind(newSpell)).toBe('new-spell');
+    expect(choicePresentationKind(spellUpgrade)).toBe('spell-upgrade');
+    expect(describeChoiceRank(newSpell)).toBe('RANK I');
+    expect(describeChoiceRank(spellUpgrade)).toBe('II → III');
+  });
+
+  it('shows concrete before and after information for upgrades', () => {
+    const rune: LevelChoice = { id: 'upgrade:potency', kind: 'upgrade', sourceId: 'potency', name: 'Potency', description: '', icon: '✦', currentRank: 1, maxRank: 5, badge: 'RUNE' };
+    const spell: LevelChoice = { id: 'spell:chain-lightning', kind: 'spell', sourceId: 'chain-lightning', name: 'Chain Lightning', description: '', icon: '⚡', currentRank: 1, maxRank: 3, badge: 'SPELL UPGRADE' };
+    expect(describeChoiceDelta(rune)).toBe('Spell damage +18% → +36%');
+    expect(describeChoiceDelta(spell)).toContain('2 → 3 base jumps');
   });
 });
