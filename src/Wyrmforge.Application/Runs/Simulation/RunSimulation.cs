@@ -203,7 +203,7 @@ public sealed partial class RunSimulation
         depthState.Depth,
         outcome)
     {
-        SynergyIds = build.Synergies.Snapshot(),
+        SynergyIds = build.Synergies.Snapshot().ToArray(),
     };
 
     public RunRenderSnapshot CreateSnapshot()
