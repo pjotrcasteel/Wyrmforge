@@ -55,8 +55,7 @@ public sealed class RunSimulationTests
 
         Assert.IsNotNull(splashPulse);
         Assert.AreEqual(64d, splashPulse.Radius);
-        Assert.IsGreaterThanOrEqualTo(splashPulse.Progress, 0);
-        Assert.IsLessThanOrEqualTo(splashPulse.Progress, 1);
+        Assert.IsTrue(splashPulse.Progress >= 0 && splashPulse.Progress <= 1);
     }
 
     [TestMethod]
