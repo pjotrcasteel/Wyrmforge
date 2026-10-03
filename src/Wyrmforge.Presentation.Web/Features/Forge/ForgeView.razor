@@ -1,0 +1,84 @@
+<main class="forge-screen">
+    <header class="hero">
+        <div>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.5 • C#</div>
+            <h1>Forge a mage, then discover the build.</h1>
+            <p>The same Wyrmforge loop now runs on a C# domain and application core. Respec freely before entering the realm.</p>
+        </div>
+        <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
+    </header>
+
+    <section class="tree-panel">
+        <div class="tree-toolbar">
+            <div><strong>@PointsLeft / @Selection.PointBudget</strong><span> available</span></div>
+            <div class="toolbar-actions">
+                <button class="secondary" @onclick="Reset">Respec</button>
+                <button class="primary" @onclick="StartAsync">Enter the Wyrmrealm</button>
+            </div>
+        </div>
+        <div class="tree-hint">Minor = additive • Major = multiplicative • Epic = build changing • Legendary = rule changing</div>
+        <div class="schools">
+            @foreach (var school in Enum.GetValues<PassiveSchool>())
+            {
+                <section class="school school-@school.ToString().ToLowerInvariant()">
+                    <h2>@SchoolIcon(school) @school</h2>
+                    <div class="node-stack">
+                        @foreach (var node in Nodes(school))
+                        {
+                            <button class="@NodeClass(node)" disabled="@IsDisabled(node)" @onclick="() => Toggle(node)">
+                                <span class="tier-label">@node.Tier • @node.Cost pt@(node.Cost == 1 ? string.Empty : "s")</span>
+                                <strong>@node.Name</strong>
+                                <small>@node.Description</small>
+                            </button>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+    </section>
+    <footer>WASD / arrows or touch drag • Spells auto-target • Level-ups pause the run • Spell combinations can reveal synergies</footer>
+</main>
+
+@code {
+    [Parameter, EditorRequired]
+    public PassiveTreeSelection Selection { get; set; } = null!;
+
+    [Parameter]
+    public int BestScore { get; set; }
+
+    [Parameter]
+    public EventCallback OnStart { get; set; }
+
+    private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
+
+    private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
+
+    private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
+
+    private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
+
+    private string NodeClass(PassiveNodeDefinition node)
+    {
+        var selected = IsSelected(node) ? " selected" : string.Empty;
+        var locked = !IsSelected(node) && !Selection.CanSelect(node.Id) ? " locked" : string.Empty;
+        return $"skill-node tier-{node.Tier.ToString().ToLowerInvariant()}{selected}{locked}";
+    }
+
+    private void Toggle(PassiveNodeDefinition node)
+    {
+        if (IsSelected(node)) Selection.Remove(node.Id);
+        else Selection.Select(node.Id);
+    }
+
+    private void Reset() => Selection.Reset();
+
+    private Task StartAsync() => OnStart.InvokeAsync();
+
+    private static string SchoolIcon(PassiveSchool school) => school switch
+    {
+        PassiveSchool.Fire => "🔥",
+        PassiveSchool.Frost => "❄️",
+        PassiveSchool.Storm => "⚡",
+        _ => "✨",
+    };
+}

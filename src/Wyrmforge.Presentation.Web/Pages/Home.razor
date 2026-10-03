@@ -1,7 +1,15 @@
 @page "/"
 
-<section class="migration-card">
-    <div class="eyebrow">WYRMFORGE • C# FOUNDATION</div>
-    <h1>The forge is being rebuilt in C#.</h1>
-    <p>The playable 0.0.4 demo remains on main while the domain, application and presentation layers are migrated behind this branch.</p>
-</section>
+@if (!runActive)
+{
+    <ForgeView Selection="selection" BestScore="bestScore" OnStart="StartRun" />
+}
+else
+{
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" OnGameOver="HandleGameOverAsync" />
+}
+
+@if (summary is not null)
+{
+    <RunSummaryOverlay Summary="summary" OnReturn="ReturnToForge" />
+}
