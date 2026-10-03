@@ -11,19 +11,19 @@ public sealed partial class RunSimulation
     private const double DragonArrivalSeconds = 30;
     private const double DragonBreathRange = 340;
     private const double DragonBreathHalfAngle = 0.4;
+    private bool initialDragonEncounterStarted;
     private bool deepDragonPending;
-    private bool stormcoilEncounterStarted;
+    private bool deepDragonEncounterStarted;
 
     private void UpdateDragonEncounter(double delta, double width, double height)
     {
-        if (!dragonEncounterStarted && elapsed >= DragonArrivalSeconds) SpawnDragon(DragonCatalog.Ashfang, width);
-        if (deepDragonPending && !stormcoilEncounterStarted && dragon is null) SpawnDragon(DragonCatalog.Stormcoil, width);
+        if (!initialDragonEncounterStarted && elapsed >= DragonArrivalSeconds) SpawnDragon(DragonCatalog.Get(huntRoute.First), width, false);
+        if (deepDragonPending && !deepDragonEncounterStarted && dragon is null) SpawnDragon(DragonCatalog.Get(huntRoute.Deep), width, true);
         if (dragon is not { Health: > 0 } activeDragon) return;
 
         activeDragon.FrozenFor = Math.Max(0, activeDragon.FrozenFor - delta);
         var timeScale = activeDragon.FrozenFor > 0 ? 0.45 : 1;
         var scaledDelta = delta * timeScale;
-
         if (activeDragon.Definition.Id == DragonId.Stormcoil) UpdateStormcoil(activeDragon, scaledDelta);
         else UpdateAshfang(activeDragon, scaledDelta);
 
@@ -39,7 +39,6 @@ public sealed partial class RunSimulation
             if (activeDragon.TelegraphRemaining <= 0) ResolveDragonBreath(activeDragon);
             return;
         }
-
         activeDragon.AttackCooldown -= delta;
         if (activeDragon.AttackCooldown <= 0) StartDragonBreath(activeDragon);
         else MoveAshfang(activeDragon, delta);
@@ -53,20 +52,19 @@ public sealed partial class RunSimulation
             if (activeDragon.TelegraphRemaining <= 0) ResolveStormPulse(activeDragon);
             return;
         }
-
         activeDragon.AttackCooldown -= delta;
         if (activeDragon.AttackCooldown <= 0) StartStormPulse(activeDragon);
         else MoveStormcoil(activeDragon, delta);
     }
 
-    private void SpawnDragon(DragonDefinition definition, double width)
+    private void SpawnDragon(DragonDefinition definition, double width, bool deep)
     {
-        if (definition.Id == DragonId.Ashfang) dragonEncounterStarted = true;
-        else
+        if (deep)
         {
-            stormcoilEncounterStarted = true;
+            deepDragonEncounterStarted = true;
             deepDragonPending = false;
         }
+        else initialDragonEncounterStarted = true;
 
         enemies.Clear();
         projectiles.Clear();
@@ -94,8 +92,7 @@ public sealed partial class RunSimulation
             < 160 => (towardPlayer * -1 + tangent * 0.55).Normalized(),
             _ => tangent,
         };
-        var phaseSpeed = activeDragon.Speed * (activeDragon.Phase == 2 ? 1.2 : 1);
-        activeDragon.Position += movement * phaseSpeed * delta;
+        activeDragon.Position += movement * activeDragon.Speed * (activeDragon.Phase == 2 ? 1.2 : 1) * delta;
     }
 
     private void StartDragonBreath(DragonState activeDragon)
@@ -148,27 +145,12 @@ public sealed partial class RunSimulation
     private DragonRenderSnapshot? CreateDragonSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
-        return new DragonRenderSnapshot(
-            activeDragon.Definition.Name,
-            activeDragon.Definition.Title,
-            activeDragon.Position.X,
-            activeDragon.Position.Y,
-            activeDragon.Radius,
-            activeDragon.Health,
-            activeDragon.MaxHealth,
-            activeDragon.Phase,
-            activeDragon.FrozenFor > 0);
+        return new DragonRenderSnapshot(activeDragon.Definition.Name, activeDragon.Definition.Title, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.FrozenFor > 0);
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
     {
         if (dragon is not { IsTelegraphing: true } activeDragon || activeDragon.Definition.Id != DragonId.Ashfang) return null;
-        return new DragonBreathRenderSnapshot(
-            activeDragon.Position.X,
-            activeDragon.Position.Y,
-            activeDragon.BreathDirection.X,
-            activeDragon.BreathDirection.Y,
-            DragonBreathRange,
-            DragonBreathHalfAngle);
+        return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y, DragonBreathRange, DragonBreathHalfAngle);
     }
 }

@@ -2,11 +2,11 @@
 
 @if (!runActive)
 {
-    <ForgeView Selection="selection" Vault="essenceVault" Codex="arcaneCodex" SelectedOffering="selectedOffering" BestScore="bestScore" OnOfferingChanged="SelectOffering" OnStart="StartRunAsync" />
+    <ForgeView Selection="selection" Vault="essenceVault" Codex="arcaneCodex" HuntTarget="selectedHuntTarget" SelectedOffering="selectedOffering" BestScore="bestScore" OnHuntTargetChanged="SelectHuntTarget" OnOfferingChanged="SelectOffering" OnStart="StartRunAsync" />
 }
 else
 {
-    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" RunOffering="activeOffering" OnGameOver="HandleGameOverAsync" />
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" RunOffering="activeOffering" HuntTarget="selectedHuntTarget" OnGameOver="HandleGameOverAsync" />
 }
 
 @if (summary is not null)

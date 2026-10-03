@@ -6,6 +6,7 @@ using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
@@ -18,49 +19,30 @@ public partial class ArenaView : IAsyncDisposable
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
 
-    [Inject]
-    public RunSimulationFactory SimulationFactory { get; set; } = null!;
-
-    [Inject]
-    public IJSRuntime JavaScript { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
-
-    [Parameter]
-    public DragonEssenceId? RunOffering { get; set; }
-
-    [Parameter]
-    public EventCallback<RunSummary> OnGameOver { get; set; }
+    [Inject] public RunSimulationFactory SimulationFactory { get; set; } = null!;
+    [Inject] public IJSRuntime JavaScript { get; set; } = null!;
+    [Parameter, EditorRequired] public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
+    [Parameter] public DragonEssenceId? RunOffering { get; set; }
+    [Parameter] public DragonId HuntTarget { get; set; } = DragonId.Ashfang;
+    [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
-
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
-
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssences => simulation?.SelectedDragonEssences ?? Array.Empty<DragonEssenceDefinition>();
-
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
-
     private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
-
     private bool CanPushDeeper => simulation?.CanPushDeeper == true;
-
     private bool DepthTrialActive => simulation?.DepthTrialActive == true;
-
     private int DepthTrialKills => simulation?.DepthTrialKills ?? 0;
-
     private int DepthTrialKillsRequired => simulation?.DepthTrialKillsRequired ?? 0;
-
     private int CurrentDepth => simulation?.Depth ?? 1;
-
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
-
     private int CurrentLevel => simulation?.Level ?? 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, HuntTarget);
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena.js");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
@@ -80,39 +62,20 @@ public partial class ArenaView : IAsyncDisposable
         var hasChoices = current.PendingChoices.Count > 0;
         var hasEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
         var hasDepthDecision = current.PendingPushOrExtract;
-        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices || hadDepthDecision != hasDepthDecision || previousTrialKills != current.DepthTrialKills)
-        {
-            await InvokeAsync(StateHasChanged);
-        }
+        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices || hadDepthDecision != hasDepthDecision || previousTrialKills != current.DepthTrialKills) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
         {
             gameOverSent = true;
             await OnGameOver.InvokeAsync(current.CreateSummary());
         }
-
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
     }
 
-    private async Task ChooseAsync(string id)
-    {
-        if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task ChooseEssenceAsync(DragonEssenceId id)
-    {
-        if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task PushDeeperAsync()
-    {
-        if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task StartExtractionAsync()
-    {
-        if (simulation?.StartExtraction() == true) await InvokeAsync(StateHasChanged);
-    }
+    private async Task ChooseAsync(string id) { if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task ChooseEssenceAsync(DragonEssenceId id) { if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task PushDeeperAsync() { if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged); }
+    private async Task StartExtractionAsync() { if (simulation?.StartExtraction() == true) await InvokeAsync(StateHasChanged); }
 
     private async Task AbandonRunAsync()
     {

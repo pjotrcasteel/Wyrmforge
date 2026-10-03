@@ -1,13 +1,14 @@
 @using Wyrmforge.Application.Runs.Offerings
+@using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Spells.Synergies
 
 <main class="forge-screen">
     <header class="hero">
         <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.28 • TEMPEST ESSENCES</div>
-            <h1>Stormcoil now leaves something worth surviving for.</h1>
-            <p>Defeat the Tempest Wyrm and steal one of three new body essences: chain through the pack, blunt heavy hits, or turn continuous movement into an echoed spell.</p>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.29 • DRAGON HUNT ROUTES</div>
+            <h1>Choose what you are hunting before you enter.</h1>
+            <p>Your selected dragon becomes the first hunt. Steal its essence and push through the Rift Trial to track the other wyrm deeper into the realm.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
@@ -16,10 +17,16 @@
         <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
         <div class="tree-hint"><strong>ARCANE CODEX</strong> • @CodexSummary</div>
         <div class="tree-toolbar">
-            <div>
-                <strong>WYRM OFFERING</strong>
-                <span> • @(SelectedOffering is null ? "None selected — enter without spending an essence." : RunOfferingCatalog.Get(SelectedOffering.Value).Effect)</span>
+            <div><strong>DRAGON HUNT</strong><span> • First prey: @DragonCatalog.Get(HuntTarget).Name. The other dragon waits beyond the Rift Trial.</span></div>
+            <div class="toolbar-actions">
+                @foreach (var dragon in DragonCatalog.All)
+                {
+                    <button class="@(HuntTarget == dragon.Id ? "primary" : "secondary")" @onclick="() => SelectHuntTargetAsync(dragon.Id)">@dragon.Name • @dragon.Title</button>
+                }
             </div>
+        </div>
+        <div class="tree-toolbar">
+            <div><strong>WYRM OFFERING</strong><span> • @(SelectedOffering is null ? "None selected — enter without spending an essence." : RunOfferingCatalog.Get(SelectedOffering.Value).Effect)</span></div>
             @if (Vault.TotalCount > 0)
             {
                 <div class="toolbar-actions">
@@ -32,10 +39,7 @@
         </div>
         <div class="tree-toolbar">
             <div><strong>@PointsLeft / @Selection.PointBudget</strong><span> available</span></div>
-            <div class="toolbar-actions">
-                <button class="secondary" @onclick="Reset">Respec</button>
-                <button class="primary" @onclick="StartAsync">Enter the Wyrmrealm</button>
-            </div>
+            <div class="toolbar-actions"><button class="secondary" @onclick="Reset">Respec</button><button class="primary" @onclick="StartAsync">Enter the Wyrmrealm</button></div>
         </div>
         <div class="tree-hint">Minor = additive • Major = multiplicative • Epic = build changing • Legendary = rule changing</div>
         <div class="schools">
@@ -46,84 +50,44 @@
                     <div class="node-stack">
                         @foreach (var node in Nodes(school))
                         {
-                            <button class="@NodeClass(node)" disabled="@IsDisabled(node)" @onclick="() => Toggle(node)">
-                                <span class="tier-label">@node.Tier • @node.Cost pt@(node.Cost == 1 ? string.Empty : "s")</span>
-                                <strong>@node.Name</strong>
-                                <small>@node.Description</small>
-                            </button>
+                            <button class="@NodeClass(node)" disabled="@IsDisabled(node)" @onclick="() => Toggle(node)"><span class="tier-label">@node.Tier • @node.Cost pt@(node.Cost == 1 ? string.Empty : "s")</span><strong>@node.Name</strong><small>@node.Description</small></button>
                         }
                     </div>
                 </section>
             }
         </div>
     </section>
-    <footer>Choose passives • hunt Ashfang • steal an essence • push through the Rift Trial • hunt Stormcoil • steal a second essence • extract alive</footer>
+    <footer>Choose a hunt route • forge a build • steal the first dragon's essence • decide whether the second wyrm is worth the deeper risk</footer>
 </main>
 
 @code {
-    [Parameter, EditorRequired]
-    public PassiveTreeSelection Selection { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public DragonEssenceVault Vault { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public ArcaneCodex Codex { get; set; } = null!;
-
-    [Parameter]
-    public DragonEssenceId? SelectedOffering { get; set; }
-
-    [Parameter]
-    public int BestScore { get; set; }
-
-    [Parameter]
-    public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
-
-    [Parameter]
-    public EventCallback OnStart { get; set; }
+    [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
+    [Parameter] public DragonId HuntTarget { get; set; } = DragonId.Ashfang;
+    [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
+    [Parameter] public int BestScore { get; set; }
+    [Parameter] public EventCallback<DragonId> OnHuntTargetChanged { get; set; }
+    [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
+    [Parameter] public EventCallback OnStart { get; set; }
 
     private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
-
-    private string VaultSummary => Vault.TotalCount == 0
-        ? "Empty — successfully extract an essence to secure it here."
-        : string.Join("   •   ", DragonEssenceCatalog.All
-            .Where(essence => Vault.Count(essence.Id) > 0)
-            .Select(essence => $"{essence.Icon} {essence.Name} ×{Vault.Count(essence.Id)}"));
-
+    private string VaultSummary => Vault.TotalCount == 0 ? "Empty — successfully extract an essence to secure it here." : string.Join("   •   ", DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0).Select(essence => $"{essence.Icon} {essence.Name} ×{Vault.Count(essence.Id)}"));
     private string CodexSummary => $"{Codex.Count}/{SynergyCatalog.All.Count} discovered   •   {string.Join("   •   ", SynergyCatalog.All.Select(SynergyCodexLabel))}";
-
     private string SynergyCodexLabel(SynergyDefinition synergy) => Codex.Contains(synergy.Id) ? $"{synergy.Icon} {synergy.Name}" : "???";
-
     private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
-
     private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
-
     private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
-
     private string NodeClass(PassiveNodeDefinition node)
     {
         var selected = IsSelected(node) ? " selected" : string.Empty;
         var locked = !IsSelected(node) && !Selection.CanSelect(node.Id) ? " locked" : string.Empty;
         return $"skill-node tier-{node.Tier.ToString().ToLowerInvariant()}{selected}{locked}";
     }
-
-    private void Toggle(PassiveNodeDefinition node)
-    {
-        if (IsSelected(node)) Selection.Remove(node.Id);
-        else Selection.Select(node.Id);
-    }
-
+    private void Toggle(PassiveNodeDefinition node) { if (IsSelected(node)) Selection.Remove(node.Id); else Selection.Select(node.Id); }
     private void Reset() => Selection.Reset();
-
+    private Task SelectHuntTargetAsync(DragonId id) => OnHuntTargetChanged.InvokeAsync(id);
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
-
     private Task StartAsync() => OnStart.InvokeAsync();
-
-    private static string SchoolIcon(PassiveSchool school) => school switch
-    {
-        PassiveSchool.Fire => "🔥",
-        PassiveSchool.Frost => "❄️",
-        PassiveSchool.Storm => "⚡",
-        _ => "✨",
-    };
+    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄️", PassiveSchool.Storm => "⚡", _ => "✨" };
 }

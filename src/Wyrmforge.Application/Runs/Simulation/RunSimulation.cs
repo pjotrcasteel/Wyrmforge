@@ -31,6 +31,7 @@ public sealed partial class RunSimulation
     private readonly LevelChoiceService levelChoiceService;
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
+    private readonly DragonHuntRoute huntRoute;
     private readonly RunBuildState build = new();
     private readonly RunDepthState depthState = new();
     private readonly RunDepthTrialState depthTrialState = new();
@@ -68,13 +69,13 @@ public sealed partial class RunSimulation
     private int experienceToNext = ExperienceCurve.RequiredForLevel(1);
     private int choiceCount;
     private bool playerPositionInitialized;
-    private bool dragonEncounterStarted;
 
-    public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource, DragonEssenceId? offering = null)
+    public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource, DragonEssenceId? offering = null, DragonId huntTarget = DragonId.Ashfang)
     {
         this.levelChoiceService = levelChoiceService;
         this.randomSource = randomSource;
         Offering = offering;
+        huntRoute = DragonHuntRoute.For(huntTarget);
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
         RefreshBuildHud();
@@ -84,29 +85,18 @@ public sealed partial class RunSimulation
     }
 
     public IReadOnlyList<LevelChoice> PendingChoices => pendingChoices;
-
     public IReadOnlyList<DragonEssenceDefinition> PendingDragonEssenceChoices => pendingDragonEssenceChoices;
-
     public IReadOnlyList<DragonEssenceDefinition> SelectedDragonEssences => build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get).ToArray();
-
     public DragonEssenceId? Offering { get; }
-
+    public DragonId HuntTarget => huntRoute.First;
     public bool PendingPushOrExtract => depthState.DecisionPending;
-
     public bool CanPushDeeper => depthState.CanPushDeeper;
-
     public bool DepthTrialActive => depthTrialState.IsActive;
-
     public int DepthTrialKills => depthTrialState.Kills;
-
     public int DepthTrialKillsRequired => RunDepthTrialState.KillsRequired;
-
     public int Depth => depthState.Depth;
-
     public int Level => level;
-
     public double ScoreMultiplier => depthState.ScoreMultiplier;
-
     public bool IsEnded { get; private set; }
 
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
@@ -189,19 +179,7 @@ public sealed partial class RunSimulation
 
     public RunSummary EndRun() => AbandonRun();
 
-    public RunSummary CreateSummary() => new(
-        score,
-        kills,
-        dragonsSlain,
-        build.DragonEssences.Count,
-        build.DragonEssences.Selected.ToArray(),
-        (int)elapsed,
-        level,
-        choiceCount,
-        build.Spells.LearnedCount,
-        build.Synergies.Count,
-        depthState.Depth,
-        outcome)
+    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, build.DragonEssences.Count, build.DragonEssences.Selected.ToArray(), (int)elapsed, level, choiceCount, build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
         SynergyIds = build.Synergies.Snapshot().ToArray(),
     };
@@ -210,24 +188,12 @@ public sealed partial class RunSimulation
     {
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
         var extraction = extractionState.IsActive
-            ? new ExtractionRenderSnapshot(
-                extractionState.Position.X,
-                extractionState.Position.Y,
-                RunExtractionState.Radius,
-                1 - (extractionState.RemainingSeconds / RunExtractionState.DurationSeconds),
-                extractionState.RemainingSeconds,
-                extractionState.IsProgressing)
+            ? new ExtractionRenderSnapshot(extractionState.Position.X, extractionState.Position.Y, RunExtractionState.Radius, 1 - (extractionState.RemainingSeconds / RunExtractionState.DurationSeconds), extractionState.RemainingSeconds, extractionState.IsProgressing)
             : null;
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
             extraction,
-            enemies.Select(enemy => new EnemyRenderSnapshot(
-                enemy.Position.X,
-                enemy.Position.Y,
-                enemy.Radius,
-                enemy.FrozenFor > 0,
-                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1),
-                hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
+            enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0, Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
@@ -252,13 +218,7 @@ public sealed partial class RunSimulation
 
     private void RefreshBuildHud()
     {
-        spellHud = SpellCatalog.All
-            .Where(spell => build.Spells[spell.Id] > 0)
-            .Select(spell => new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id]))
-            .ToArray();
-        synergyHud = SynergyCatalog.All
-            .Where(synergy => build.Synergies.Contains(synergy.Id))
-            .Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name))
-            .ToArray();
+        spellHud = SpellCatalog.All.Where(spell => build.Spells[spell.Id] > 0).Select(spell => new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id])).ToArray();
+        synergyHud = SynergyCatalog.All.Where(synergy => build.Synergies.Contains(synergy.Id)).Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name)).ToArray();
     }
 }
