@@ -3,7 +3,7 @@ using Wyrmforge.Domain.Combat.Targets;
 
 namespace Wyrmforge.Domain.Combat.Enemies;
 
-public sealed class EnemyState(int id, Vector2D position, double radius, double health, double speed) : ICombatTarget
+public sealed class EnemyState(int id, Vector2D position, double radius, double health, double speed, EnemyKind kind = EnemyKind.Chaser) : ICombatTarget
 {
     public int Id { get; } = id;
 
@@ -16,6 +16,10 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
     public double MaxHealth { get; } = health;
 
     public double Speed { get; } = speed;
+
+    public EnemyKind Kind { get; } = kind;
+
+    public RiftStalkerBehaviorState? RiftStalker { get; } = kind == EnemyKind.RiftStalker ? new RiftStalkerBehaviorState() : null;
 
     public double FrozenFor { get; set; }
 }
