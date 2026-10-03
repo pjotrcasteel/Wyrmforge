@@ -28,7 +28,7 @@ public sealed partial class RunSimulation
         List<ProjectileState>? spawned = null;
         foreach (var projectile in projectiles)
         {
-            var target = FirstCollidingTarget(projectile.Position, projectile.Radius);
+            var target = FirstCollidingTarget(projectile.Position, projectile.Radius, projectile.IgnoredTargetId);
             if (target is null) continue;
             hitCount++;
             var damage = projectile.Damage;
@@ -58,7 +58,7 @@ public sealed partial class RunSimulation
                 arcaneHitCount++;
                 if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0) CastChainLightning(1, target.Position, 0.55, 1);
             }
-            (consumed ??= []).Add(projectile);
+            if (!projectile.ContinueAfterHit(target.Id)) (consumed ??= []).Add(projectile);
         }
         if (consumed is not null) projectiles.RemoveAll(consumed.Contains);
         if (spawned is not null) projectiles.AddRange(spawned);
@@ -104,7 +104,8 @@ public sealed partial class RunSimulation
         if (target is null) return;
         var direction = Vector2D.DirectionTo(position, target.Position);
         var speed = source.Velocity.Length * 1.2;
-        spawned.Add(new ProjectileState(position, direction * speed, Math.Max(4, source.Radius - 1), source.Damage * 0.82, source.Spell, false, source.ChainsLeft - 1, source.SplashRadius, source.FreezeDuration));
+        var effects = new ProjectileEffects(false, source.ChainsLeft - 1, source.SplashRadius, source.FreezeDuration, 0);
+        spawned.Add(new ProjectileState(position, direction * speed, Math.Max(4, source.Radius - 1), source.Damage * 0.82, source.Spell, effects));
     }
 
     private static bool IsOnScreen(Vector2D position, double width, double height, double margin) => position.X >= -margin && position.Y >= -margin && position.X <= width + margin && position.Y <= height + margin;

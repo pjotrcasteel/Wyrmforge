@@ -58,21 +58,20 @@ public sealed partial class RunSimulation
         var speed = GetSpellProjectileSpeed(id, rank) * passiveProfile.ProjectileSpeedMultiplier * modifiers.ProjectileSpeedMultiplier;
         var damage = GetSpellDamage(id, rank) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * damageScale;
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + modifiers.BonusChains;
+        var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= 3;
 
         for (var index = 0; index < count; index++)
         {
             var offset = count == 1 ? 0 : (index - (count - 1) / 2d) * 0.16;
             var direction = Vector2D.Rotate(baseDirection, offset);
-            projectiles.Add(new ProjectileState(
-                player.Position,
-                direction * speed,
-                inferno ? 9 : id == SpellId.FireBolt ? 7 : 5,
-                damage * (inferno ? 4 : 1),
-                id,
+            var radius = inferno ? 9 : masteredArcaneOrb ? 7 : id == SpellId.FireBolt ? 7 : 5;
+            var effects = new ProjectileEffects(
                 inferno,
                 chains,
                 id == SpellId.FireBolt && rank >= 3 ? 56 : 0,
-                id == SpellId.FrostShard ? 0.35 + rank * 0.18 : 0));
+                id == SpellId.FrostShard ? 0.35 + rank * 0.18 : 0,
+                masteredArcaneOrb ? 1 : 0);
+            projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }
     }
 

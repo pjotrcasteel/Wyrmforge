@@ -3,16 +3,7 @@ using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Domain.Combat.Projectiles;
 
-public sealed class ProjectileState(
-    Vector2D position,
-    Vector2D velocity,
-    double radius,
-    double damage,
-    SpellId spell,
-    bool inferno,
-    int chainsLeft,
-    double splashRadius,
-    double freezeDuration)
+public sealed class ProjectileState(Vector2D position, Vector2D velocity, double radius, double damage, SpellId spell, ProjectileEffects effects)
 {
     public Vector2D Position { get; set; } = position;
 
@@ -24,11 +15,23 @@ public sealed class ProjectileState(
 
     public SpellId Spell { get; } = spell;
 
-    public bool Inferno { get; } = inferno;
+    public bool Inferno => effects.Inferno;
 
-    public int ChainsLeft { get; } = chainsLeft;
+    public int ChainsLeft => effects.ChainsLeft;
 
-    public double SplashRadius { get; } = splashRadius;
+    public double SplashRadius => effects.SplashRadius;
 
-    public double FreezeDuration { get; } = freezeDuration;
+    public double FreezeDuration => effects.FreezeDuration;
+
+    public int PiercesRemaining { get; private set; } = effects.Pierces;
+
+    public int IgnoredTargetId { get; private set; }
+
+    public bool ContinueAfterHit(int targetId)
+    {
+        if (PiercesRemaining <= 0) return false;
+        PiercesRemaining--;
+        IgnoredTargetId = targetId;
+        return true;
+    }
 }

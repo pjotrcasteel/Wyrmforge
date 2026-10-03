@@ -84,11 +84,17 @@ public static class LevelChoicePresentation
         var nextRank = currentRank + 1;
         return id switch
         {
-            SpellId.ArcaneOrb => ProjectileSpellDelta(18, 0.28, currentRank, nextRank, " • casts faster"),
+            SpellId.ArcaneOrb => ArcaneOrbDelta(currentRank, nextRank),
             SpellId.FireBolt => FireBoltDelta(currentRank, nextRank),
             SpellId.FrostShard => FrostShardDelta(currentRank, nextRank),
             _ => ChainLightningDelta(currentRank, nextRank),
         };
+    }
+
+    private static string ArcaneOrbDelta(int currentRank, int nextRank)
+    {
+        var suffix = nextRank == 3 ? " • casts faster • MASTERED: pierces 1 target" : " • casts faster";
+        return ProjectileSpellDelta(18, 0.28, currentRank, nextRank, suffix);
     }
 
     private static string ProjectileSpellDelta(double baseDamage, double growth, int currentRank, int nextRank, string suffix)

@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.18 — Performance Scalability
+## Prototype 0.0.19 — Arcane Mastery
 
 The current playable slice contains:
 
@@ -10,7 +10,8 @@ The current playable slice contains:
 - an always-visible Canvas performance panel showing FPS, simulation updates/sec, C# frame cost, JS↔.NET bridge cost and live enemy/projectile counts;
 - a browser render loop decoupled from the async C# simulation round-trip so requestAnimationFrame no longer waits for interop before drawing again;
 - spatial collision indexing for projectile hits and splash effects, avoiding full enemy scans for every projectile as runs become crowded;
-- compact numeric spell kinds in render snapshots instead of repeated per-projectile/per-impact string allocations;
+- Arcane Orb mastery: Rank III orbs grow visibly larger and pierce through their first target before disappearing on the next hit;
+- compact projectile effect state that groups chains, splash, freeze, inferno and piercing without expanding projectile constructors;
 - cached spell/synergy HUD data that is rebuilt only when the run build changes;
 - a pre-run passive tree with Minor, Major, Epic and Legendary nodes;
 - XP, runes, spell learning/upgrades and cross-spell synergies;
@@ -44,7 +45,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and the last pierced target. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -85,3 +86,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 20. Extraction tension should come from positioning and exposure, not from erasing already-earned ritual progress.
 21. Measure frame rate, simulation cost, bridge cost and entity counts before adopting invasive runtime optimizations.
 22. Performance work must preserve C# as the canonical gameplay layer and scale by reducing algorithmic work before reducing gameplay density.
+23. Max-rank spell upgrades should gain a distinct behavioral mastery instead of ending as another numeric increase.

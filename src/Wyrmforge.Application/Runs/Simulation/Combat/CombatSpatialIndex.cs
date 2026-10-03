@@ -23,7 +23,7 @@ internal sealed class CombatSpatialIndex
         if (dragon is { Health: > 0 } activeDragon) Add(activeDragon);
     }
 
-    public ICombatTarget? FirstCollidingTarget(Vector2D position, double radius)
+    public ICombatTarget? FirstCollidingTarget(Vector2D position, double radius, int ignoreId = 0)
     {
         ICombatTarget? first = null;
         var queryRadius = radius + MaxTargetRadius;
@@ -39,7 +39,7 @@ internal sealed class CombatSpatialIndex
                 if (!cells.TryGetValue(Key(x, y), out var targets)) continue;
                 foreach (var target in targets)
                 {
-                    if (target.Health <= 0 || Vector2D.Distance(position, target.Position) > radius + target.Radius) continue;
+                    if (target.Health <= 0 || target.Id == ignoreId || Vector2D.Distance(position, target.Position) > radius + target.Radius) continue;
                     if (first is null || target.Id < first.Id) first = target;
                 }
             }

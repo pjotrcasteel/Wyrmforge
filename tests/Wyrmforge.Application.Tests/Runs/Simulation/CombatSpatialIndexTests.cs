@@ -23,6 +23,19 @@ public sealed class CombatSpatialIndexTests
     }
 
     [TestMethod]
+    public void FirstCollidingTarget_WithIgnoredTarget_ReturnsNextOverlappingEnemy()
+    {
+        var index = new CombatSpatialIndex();
+        var ignored = new EnemyState(1, new Vector2D(100, 100), 11, 100, 0);
+        var next = new EnemyState(2, new Vector2D(102, 100), 11, 100, 0);
+        index.Rebuild([ignored, next], null);
+
+        var target = index.FirstCollidingTarget(new Vector2D(100, 100), 5, ignored.Id);
+
+        Assert.AreSame(next, target);
+    }
+
+    [TestMethod]
     public void CollectWithinRadius_ExcludesIgnoredAndDeadTargets()
     {
         var index = new CombatSpatialIndex();

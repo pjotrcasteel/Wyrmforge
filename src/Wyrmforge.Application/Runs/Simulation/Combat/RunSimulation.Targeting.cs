@@ -22,7 +22,7 @@ public sealed partial class RunSimulation
         }
     }
 
-    private ICombatTarget? FirstCollidingTarget(Vector2D position, double radius) => combatSpatialIndex.FirstCollidingTarget(position, radius);
+    private ICombatTarget? FirstCollidingTarget(Vector2D position, double radius, int ignoreId = 0) => combatSpatialIndex.FirstCollidingTarget(position, radius, ignoreId);
 
     private ICombatTarget? NearestTarget(Vector2D position, IReadOnlySet<int>? excludedIds = null, double minimumDistance = 0)
     {
