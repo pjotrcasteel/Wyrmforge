@@ -1,49 +1,73 @@
 import type { InputController } from './input';
-import {
-  applyRunUpgrade,
-  createRunUpgradeLevels,
-  experienceRequiredForLevel,
-  getRunModifiers,
-  rollRunUpgradeChoices,
-  type RunModifiers,
-  type RunUpgradeChoice,
-  type RunUpgradeId,
-} from './runUpgrades';
+import { applyLevelChoice, rollLevelChoices, type LevelChoice } from './levelChoices';
+import { createRunUpgradeLevels, experienceRequiredForLevel, getRunModifiers, type RunModifiers, type RunUpgradeId } from './runUpgrades';
+import { createSpellLevels, spells, type SpellId, type SpellLevels } from './spells';
+import type { SynergyId } from './synergies';
 
 interface Vec2 { x: number; y: number }
 interface Enemy { id: number; position: Vec2; radius: number; hp: number; speed: number; frozenFor: number }
-interface Projectile { position: Vec2; velocity: Vec2; radius: number; damage: number; inferno: boolean; chainsLeft: number }
+interface Projectile {
+  position: Vec2;
+  velocity: Vec2;
+  radius: number;
+  damage: number;
+  spell: Exclude<SpellId, 'chain-lightning'>;
+  inferno: boolean;
+  chainsLeft: number;
+  splashRadius: number;
+  freezeDuration: number;
+}
+interface LightningTrace { from: Vec2; to: Vec2; life: number }
 
 export interface RunSummary {
   score: number;
   kills: number;
   seconds: number;
   level: number;
-  upgrades: number;
+  choices: number;
+  spells: number;
+  synergies: number;
 }
 
-export type LevelUpHandler = (level: number, choices: readonly RunUpgradeChoice[], choose: (id: RunUpgradeId) => void) => void;
+export type LevelUpHandler = (level: number, choices: readonly LevelChoice[], choose: (id: string) => void) => void;
+
+const BASE_SPELL_COOLDOWNS: Record<SpellId, number> = {
+  'arcane-orb': 0.65,
+  'fire-bolt': 1.15,
+  'frost-shard': 0.95,
+  'chain-lightning': 1.35,
+};
 
 export class Game {
   private readonly context: CanvasRenderingContext2D;
   private readonly player = { position: { x: 0, y: 0 }, radius: 14, health: 100, maxHealth: 100, speed: 190, barrier: false };
   private readonly enemies: Enemy[] = [];
   private readonly projectiles: Projectile[] = [];
+  private readonly lightningTraces: LightningTrace[] = [];
   private readonly runUpgradeLevels = createRunUpgradeLevels();
+  private readonly spellLevels: SpellLevels = createSpellLevels();
+  private readonly synergies = new Set<SynergyId>();
+  private readonly spellCooldowns: Record<SpellId, number> = {
+    'arcane-orb': 0,
+    'fire-bolt': 0,
+    'frost-shard': 0,
+    'chain-lightning': 0,
+  };
   private runModifiers: RunModifiers = getRunModifiers(this.runUpgradeLevels);
   private lastFrame = 0;
   private elapsed = 0;
   private spawnTimer = 0;
-  private castTimer = 0;
   private castCount = 0;
+  private projectileCastCount = 0;
   private hitCount = 0;
+  private arcaneHitCount = 0;
   private enemyId = 0;
   private score = 0;
   private kills = 0;
   private level = 1;
   private experience = 0;
-  private experienceToNext = experienceRequiredForLevel(1);
-  private upgradeCount = 0;
+  private experienceToNext = 5;
+  private choiceCount = 0;
   private running = false;
   private pausedForUpgrade = false;
   private animationFrame = 0;
@@ -62,6 +86,7 @@ export class Game {
     this.stats = createStats(selectedNodes);
     this.player.maxHealth = this.stats.maxHealth;
     this.player.health = this.stats.maxHealth;
+    this.experienceToNext = experienceRequiredForLevel(this.level);
   }
 
   public start(): void {
@@ -103,13 +128,7 @@ export class Game {
       this.spawnTimer = Math.max(0.28, 0.9 - this.elapsed / 120);
     }
 
-    let castInterval = this.stats.castInterval * this.runModifiers.castIntervalMultiplier;
-    if (this.stats.lightningForm && moving) castInterval /= 1.5;
-    this.castTimer -= delta;
-    if (this.castTimer <= 0 && this.enemies.length > 0) {
-      this.cast();
-      this.castTimer = castInterval;
-    }
+    this.updateSpellcasting(delta, moving);
 
     for (const enemy of this.enemies) {
       enemy.frozenFor = Math.max(0, enemy.frozenFor - delta);
@@ -124,100 +143,58 @@ export class Game {
       projectile.position.x += projectile.velocity.x * delta;
       projectile.position.y += projectile.velocity.y * delta;
     }
+    for (const trace of this.lightningTraces) trace.life -= delta;
 
     this.resolveProjectileHits();
     this.projectiles.splice(0, this.projectiles.length, ...this.projectiles.filter((projectile) => this.isOnScreen(projectile.position, 80)));
+    this.lightningTraces.splice(0, this.lightningTraces.length, ...this.lightningTraces.filter((trace) => trace.life > 0));
     this.enemies.splice(0, this.enemies.length, ...this.enemies.filter((enemy) => enemy.hp > 0));
     if (this.player.health <= 0) this.endRun();
   }
 
-  private render(): void {
-    const { width, height } = this.canvas.getBoundingClientRect();
-    const ctx = this.context;
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#14111b';
-    ctx.fillRect(0, 0, width, height);
-    drawGrid(ctx, width, height);
-
-    for (const enemy of this.enemies) {
-      ctx.beginPath();
-      ctx.arc(enemy.position.x, enemy.position.y, enemy.radius, 0, Math.PI * 2);
-      ctx.fillStyle = enemy.frozenFor > 0 ? '#9fdfff' : '#c14b54';
-      ctx.fill();
+  private updateSpellcasting(delta: number, moving: boolean): void {
+    for (const spell of spells) {
+      const rank = this.spellLevels[spell.id];
+      if (rank <= 0) continue;
+      this.spellCooldowns[spell.id] -= delta;
+      if (this.spellCooldowns[spell.id] > 0 || this.enemies.length === 0) continue;
+      this.castSpell(spell.id, rank, 1, false);
+      this.spellCooldowns[spell.id] = this.getSpellCooldown(spell.id, rank, moving);
     }
+  }
 
-    for (const projectile of this.projectiles) {
-      ctx.beginPath();
-      ctx.arc(projectile.position.x, projectile.position.y, projectile.radius, 0, Math.PI * 2);
-      ctx.fillStyle = projectile.inferno ? '#ffb04a' : '#b887ff';
-      ctx.fill();
+  private getSpellCooldown(id: SpellId, rank: number, moving: boolean): number {
+    const rankMultiplier = 1 - Math.max(0, rank - 1) * 0.06;
+    const lightningFormMultiplier = this.stats.lightningForm && moving ? 1 / 1.5 : 1;
+    return BASE_SPELL_COOLDOWNS[id] * rankMultiplier * this.stats.castIntervalMultiplier * this.runModifiers.castIntervalMultiplier * lightningFormMultiplier;
+  }
+
+  private castSpell(id: SpellId, rank: number, damageScale: number, echo: boolean): void {
+    if (!echo) {
+      this.castCount++;
+      if (id !== 'chain-lightning') this.projectileCastCount++;
     }
+    if (id === 'chain-lightning') this.castChainLightning(rank, this.player.position, damageScale);
+    else this.castProjectileSpell(id, rank, damageScale);
 
-    ctx.beginPath();
-    ctx.arc(this.player.position.x, this.player.position.y, this.player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.player.barrier ? '#b6efff' : '#f4e9ff';
-    ctx.fill();
-    ctx.strokeStyle = '#7f56c2';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    this.drawHud(ctx, width);
-    this.drawTouchIndicator(ctx);
+    if (echo) return;
+    const treeEcho = this.stats.arcaneEcho && this.castCount % 6 === 0;
+    const runEcho = this.runModifiers.echoEveryCasts > 0 && this.castCount % this.runModifiers.echoEveryCasts === 0;
+    if (treeEcho) this.castSpell(id, rank, this.stats.echoChamber ? damageScale : damageScale * 0.6, true);
+    if (runEcho) this.castSpell(id, rank, damageScale * this.runModifiers.echoDamageMultiplier, true);
   }
 
-  private drawHud(ctx: CanvasRenderingContext2D, width: number): void {
-    const pad = 18;
-    const barWidth = Math.min(220, width - pad * 2);
-    ctx.fillStyle = 'rgba(8, 6, 12, 0.72)';
-    roundRect(ctx, pad, pad, barWidth + 24, 118, 12);
-    ctx.fill();
-    ctx.fillStyle = '#ede8f5';
-    ctx.font = '600 14px system-ui, sans-serif';
-    ctx.fillText(`Score ${this.score}`, pad + 12, pad + 22);
-    ctx.fillText(`${Math.floor(this.elapsed)}s  •  ${this.kills} kills`, pad + 12, pad + 43);
-
-    ctx.fillStyle = '#332a3e';
-    roundRect(ctx, pad + 12, pad + 55, barWidth, 10, 5);
-    ctx.fill();
-    ctx.fillStyle = '#9ed6a2';
-    roundRect(ctx, pad + 12, pad + 55, barWidth * Math.max(0, this.player.health / this.player.maxHealth), 10, 5);
-    ctx.fill();
-
-    ctx.fillStyle = '#bdb3c7';
-    ctx.font = '600 12px system-ui, sans-serif';
-    ctx.fillText(`Level ${this.level}  •  XP ${this.experience}/${this.experienceToNext}`, pad + 12, pad + 88);
-    ctx.fillStyle = '#332a3e';
-    roundRect(ctx, pad + 12, pad + 97, barWidth, 8, 4);
-    ctx.fill();
-    ctx.fillStyle = '#b887ff';
-    roundRect(ctx, pad + 12, pad + 97, barWidth * Math.min(1, this.experience / this.experienceToNext), 8, 4);
-    ctx.fill();
-  }
-
-  private drawTouchIndicator(ctx: CanvasRenderingContext2D): void {
-    const touch = this.input.getTouchIndicator();
-    if (!touch) return;
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(touch.originX, touch.originY, 34, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(touch.currentX, touch.currentY, 16, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  private cast(): void {
+  private castProjectileSpell(id: Exclude<SpellId, 'chain-lightning'>, rank: number, damageScale: number): void {
     const target = nearestEnemy(this.player.position, this.enemies);
     if (!target) return;
-    this.castCount++;
-    const isInferno = this.stats.inferno && this.castCount % 5 === 0;
-    const isVolley = this.stats.prismatic && this.castCount % 5 === 0;
-    const baseProjectileCount = isVolley ? (this.stats.astralBarrage ? 5 : 3) : 1;
-    const projectileCount = baseProjectileCount + this.runModifiers.extraProjectiles;
+    const isInferno = this.stats.inferno && this.projectileCastCount > 0 && this.projectileCastCount % 5 === 0;
+    const isPrismatic = this.stats.prismatic && this.projectileCastCount > 0 && this.projectileCastCount % 5 === 0;
+    const baseCount = isPrismatic ? (this.stats.astralBarrage ? 5 : 3) : 1;
+    const projectileCount = baseCount + this.runModifiers.extraProjectiles;
     const baseDirection = directionTo(this.player.position, target.position);
-    const baseDamage = this.stats.damage * this.runModifiers.damageMultiplier;
-    const projectileSpeed = this.stats.projectileSpeed * this.runModifiers.projectileSpeedMultiplier;
-    const baseChains = (this.stats.livingStorm ? 4 : this.stats.chainstorm ? 1 : 0) + this.runModifiers.bonusChains;
+    const projectileSpeed = getSpellProjectileSpeed(id, rank) * this.stats.projectileSpeedMultiplier * this.runModifiers.projectileSpeedMultiplier;
+    const baseDamage = getSpellDamage(id, rank) * this.stats.damageMultiplier * this.runModifiers.damageMultiplier * damageScale;
+    const chains = (this.stats.livingStorm ? 4 : this.stats.chainstorm ? 1 : 0) + this.runModifiers.bonusChains;
 
     for (let index = 0; index < projectileCount; index++) {
       const offset = projectileCount === 1 ? 0 : (index - (projectileCount - 1) / 2) * 0.16;
@@ -225,31 +202,41 @@ export class Game {
       this.projectiles.push({
         position: { ...this.player.position },
         velocity: { x: direction.x * projectileSpeed, y: direction.y * projectileSpeed },
-        radius: isInferno ? 9 : 5,
+        radius: isInferno ? 9 : id === 'fire-bolt' ? 7 : id === 'frost-shard' ? 5 : 5,
         damage: baseDamage * (isInferno ? 4 : 1),
+        spell: id,
         inferno: isInferno,
-        chainsLeft: baseChains,
+        chainsLeft: chains,
+        splashRadius: id === 'fire-bolt' && rank >= 3 ? 56 : 0,
+        freezeDuration: id === 'frost-shard' ? 0.35 + rank * 0.18 : 0,
       });
-    }
-
-    if (this.stats.arcaneEcho && this.castCount % 6 === 0) {
-      this.spawnEcho(baseDirection, this.stats.echoChamber ? 1 : 0.6);
-    }
-    if (this.runModifiers.echoEveryCasts > 0 && this.castCount % this.runModifiers.echoEveryCasts === 0) {
-      this.spawnEcho(baseDirection, this.runModifiers.echoDamageMultiplier);
     }
   }
 
-  private spawnEcho(direction: Vec2, damageMultiplier: number): void {
-    const projectileSpeed = this.stats.projectileSpeed * this.runModifiers.projectileSpeedMultiplier;
-    this.projectiles.push({
-      position: { ...this.player.position },
-      velocity: { x: direction.x * projectileSpeed, y: direction.y * projectileSpeed },
-      radius: 4,
-      damage: this.stats.damage * this.runModifiers.damageMultiplier * damageMultiplier,
-      inferno: false,
-      chainsLeft: this.runModifiers.bonusChains,
-    });
+  private castChainLightning(rank: number, origin: Vec2, damageScale: number, bonusJumps = 0): void {
+    let current = { ...origin };
+    let damage = (15 + (rank - 1) * 5) * this.stats.damageMultiplier * this.runModifiers.damageMultiplier * damageScale;
+    let jumps = rank + 1 + this.runModifiers.bonusChains + bonusJumps;
+    const hit = new Set<number>();
+    let stormglassTriggered = false;
+
+    for (let jump = 0; jump < jumps; jump++) {
+      const target = nearestEnemy(current, this.enemies.filter((enemy) => enemy.hp > 0 && !hit.has(enemy.id)));
+      if (!target) break;
+      hit.add(target.id);
+      this.lightningTraces.push({ from: { ...current }, to: { ...target.position }, life: 0.12 });
+      let hitDamage = damage;
+      if (this.synergies.has('stormglass') && target.frozenFor > 0) {
+        hitDamage *= 1.5;
+        if (!stormglassTriggered) {
+          jumps += 2;
+          stormglassTriggered = true;
+        }
+      }
+      this.damageEnemy(target, hitDamage);
+      current = { ...target.position };
+      damage *= 0.84;
+    }
   }
 
   private resolveProjectileHits(): void {
@@ -258,15 +245,31 @@ export class Game {
       const enemy = this.enemies.find((candidate) => candidate.hp > 0 && distance(projectile.position, candidate.position) <= projectile.radius + candidate.radius);
       if (!enemy) continue;
       this.hitCount++;
+
       let damage = projectile.damage;
+      let synergySplash = 0;
+      if (projectile.spell === 'fire-bolt' && this.synergies.has('frostfire') && enemy.frozenFor > 0) {
+        damage *= 2;
+        synergySplash = 92;
+      }
       if (this.stats.detonation && this.hitCount % 4 === 0) damage *= this.stats.volcanic ? 2.5 : 2;
       if (this.stats.absoluteZero && enemy.frozenFor > 0) damage *= 2;
+
       const killed = this.damageEnemy(enemy, damage, projectile);
+      if (!killed && projectile.freezeDuration > 0) enemy.frozenFor = Math.max(enemy.frozenFor, projectile.freezeDuration);
       const runFreeze = this.runModifiers.freezeEveryHits > 0 && this.hitCount % this.runModifiers.freezeEveryHits === 0;
       if (!killed && ((this.stats.deepFreeze && this.hitCount % 4 === 0) || runFreeze)) {
         enemy.frozenFor = Math.max(enemy.frozenFor, runFreeze ? this.runModifiers.freezeDuration : 1.25);
       }
+
+      if (projectile.splashRadius > 0) this.splash(enemy.position, damage * 0.4, projectile.splashRadius, enemy.id);
+      if (synergySplash > 0) this.splash(enemy.position, damage * 0.45, synergySplash, enemy.id);
       if (this.stats.wildfire) this.splash(enemy.position, damage * 0.35, this.stats.volcanic ? 90 : 64, enemy.id);
+
+      if (projectile.spell === 'arcane-orb') {
+        this.arcaneHitCount++;
+        if (this.synergies.has('arcane-conduit') && this.arcaneHitCount % 4 === 0) this.castChainLightning(1, enemy.position, 0.55, 1);
+      }
       consumed.add(projectile);
     }
     this.projectiles.splice(0, this.projectiles.length, ...this.projectiles.filter((projectile) => !consumed.has(projectile)));
@@ -297,14 +300,17 @@ export class Game {
     const target = nearestEnemy(position, this.enemies.filter((enemy) => enemy.hp > 0 && distance(position, enemy.position) > 12));
     if (!target) return;
     const direction = directionTo(position, target.position);
-    const projectileSpeed = this.stats.projectileSpeed * this.runModifiers.projectileSpeedMultiplier;
+    const speed = Math.hypot(source.velocity.x, source.velocity.y) * 1.2;
     this.projectiles.push({
       position: { ...position },
-      velocity: { x: direction.x * projectileSpeed * 1.2, y: direction.y * projectileSpeed * 1.2 },
-      radius: 4,
+      velocity: { x: direction.x * speed, y: direction.y * speed },
+      radius: Math.max(4, source.radius - 1),
       damage: source.damage * 0.82,
+      spell: source.spell,
       inferno: false,
       chainsLeft: source.chainsLeft - 1,
+      splashRadius: source.splashRadius,
+      freezeDuration: source.freezeDuration,
     });
   }
 
@@ -315,30 +321,32 @@ export class Game {
 
   private tryLevelUp(): void {
     if (this.pausedForUpgrade || this.experience < this.experienceToNext) return;
-    const choices = rollRunUpgradeChoices(this.runUpgradeLevels);
+    const choices = rollLevelChoices(this.runUpgradeLevels, this.spellLevels, this.synergies);
     if (choices.length === 0) {
       this.completeLevelUp();
       return;
     }
 
     this.pausedForUpgrade = true;
-    const offeredIds = new Set(choices.map((choice) => choice.upgrade.id));
+    const offered = new Map(choices.map((choice) => [choice.id, choice]));
     let selected = false;
     this.onLevelUp(this.level + 1, choices, (id) => {
-      if (selected || !this.running || !offeredIds.has(id)) return;
-      if (!applyRunUpgrade(this.runUpgradeLevels, id)) return;
+      if (selected || !this.running) return;
+      const choice = offered.get(id);
+      if (!choice || !applyLevelChoice(choice, this.runUpgradeLevels, this.spellLevels, this.synergies)) return;
       selected = true;
-      this.upgradeCount++;
-      this.applyRunModifiers(id);
+      this.choiceCount++;
+      this.applyChoiceEffects(choice);
       this.completeLevelUp();
     });
   }
 
-  private applyRunModifiers(id: RunUpgradeId): void {
+  private applyChoiceEffects(choice: LevelChoice): void {
+    if (choice.kind !== 'upgrade') return;
     const previousMaxHealth = this.player.maxHealth;
     this.runModifiers = getRunModifiers(this.runUpgradeLevels);
     this.player.maxHealth = this.stats.maxHealth + this.runModifiers.maxHealthBonus;
-    if (id === 'vitality') this.player.health = Math.min(this.player.maxHealth, this.player.health + (this.player.maxHealth - previousMaxHealth));
+    if ((choice.sourceId as RunUpgradeId) === 'vitality') this.player.health = Math.min(this.player.maxHealth, this.player.health + (this.player.maxHealth - previousMaxHealth));
   }
 
   private completeLevelUp(): void {
@@ -374,6 +382,95 @@ export class Game {
     this.enemies.push({ id: ++this.enemyId, position, radius: 11, hp: 36 * scale, speed: 48 + Math.min(52, this.elapsed * 0.4), frozenFor: 0 });
   }
 
+  private render(): void {
+    const { width, height } = this.canvas.getBoundingClientRect();
+    const ctx = this.context;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#14111b';
+    ctx.fillRect(0, 0, width, height);
+    drawGrid(ctx, width, height);
+
+    for (const enemy of this.enemies) {
+      ctx.beginPath();
+      ctx.arc(enemy.position.x, enemy.position.y, enemy.radius, 0, Math.PI * 2);
+      ctx.fillStyle = enemy.frozenFor > 0 ? '#9fdfff' : '#c14b54';
+      ctx.fill();
+    }
+
+    for (const projectile of this.projectiles) {
+      ctx.beginPath();
+      ctx.arc(projectile.position.x, projectile.position.y, projectile.radius, 0, Math.PI * 2);
+      ctx.fillStyle = projectile.inferno ? '#ffb04a' : projectileColor(projectile.spell);
+      ctx.fill();
+    }
+
+    for (const trace of this.lightningTraces) {
+      ctx.beginPath();
+      ctx.moveTo(trace.from.x, trace.from.y);
+      ctx.lineTo(trace.to.x, trace.to.y);
+      ctx.strokeStyle = `rgba(255, 229, 105, ${Math.min(1, trace.life / 0.12)})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(this.player.position.x, this.player.position.y, this.player.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.player.barrier ? '#b6efff' : '#f4e9ff';
+    ctx.fill();
+    ctx.strokeStyle = '#7f56c2';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    this.drawHud(ctx, width);
+    this.drawTouchIndicator(ctx);
+  }
+
+  private drawHud(ctx: CanvasRenderingContext2D, width: number): void {
+    const pad = 18;
+    const barWidth = Math.min(260, width - pad * 2);
+    ctx.fillStyle = 'rgba(8, 6, 12, 0.72)';
+    roundRect(ctx, pad, pad, barWidth + 24, 142, 12);
+    ctx.fill();
+    ctx.fillStyle = '#ede8f5';
+    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.fillText(`Score ${this.score}`, pad + 12, pad + 22);
+    ctx.fillText(`${Math.floor(this.elapsed)}s  •  ${this.kills} kills`, pad + 12, pad + 43);
+
+    ctx.fillStyle = '#332a3e';
+    roundRect(ctx, pad + 12, pad + 55, barWidth, 10, 5);
+    ctx.fill();
+    ctx.fillStyle = '#9ed6a2';
+    roundRect(ctx, pad + 12, pad + 55, barWidth * Math.max(0, this.player.health / this.player.maxHealth), 10, 5);
+    ctx.fill();
+
+    ctx.fillStyle = '#bdb3c7';
+    ctx.font = '600 12px system-ui, sans-serif';
+    ctx.fillText(`Level ${this.level}  •  XP ${this.experience}/${this.experienceToNext}`, pad + 12, pad + 88);
+    ctx.fillStyle = '#332a3e';
+    roundRect(ctx, pad + 12, pad + 97, barWidth, 8, 4);
+    ctx.fill();
+    ctx.fillStyle = '#b887ff';
+    roundRect(ctx, pad + 12, pad + 97, barWidth * Math.min(1, this.experience / this.experienceToNext), 8, 4);
+    ctx.fill();
+
+    const spellText = spells.filter((spell) => this.spellLevels[spell.id] > 0).map((spell) => `${spell.icon}${this.spellLevels[spell.id]}`).join('   ');
+    ctx.fillStyle = '#a99db4';
+    ctx.font = '600 12px system-ui, sans-serif';
+    ctx.fillText(spellText, pad + 12, pad + 126);
+  }
+
+  private drawTouchIndicator(ctx: CanvasRenderingContext2D): void {
+    const touch = this.input.getTouchIndicator();
+    if (!touch) return;
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(touch.originX, touch.originY, 34, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(touch.currentX, touch.currentY, 16, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   private readonly resize = (): void => {
     const rect = this.canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -398,22 +495,49 @@ export class Game {
   private endRun(): void {
     if (!this.running) return;
     this.stop();
-    this.onGameOver({ score: this.score, kills: this.kills, seconds: Math.floor(this.elapsed), level: this.level, upgrades: this.upgradeCount });
+    const learned = spells.filter((spell) => this.spellLevels[spell.id] > 0).length;
+    this.onGameOver({
+      score: this.score,
+      kills: this.kills,
+      seconds: Math.floor(this.elapsed),
+      level: this.level,
+      choices: this.choiceCount,
+      spells: learned,
+      synergies: this.synergies.size,
+    });
   }
+}
+
+function getSpellDamage(id: Exclude<SpellId, 'chain-lightning'>, rank: number): number {
+  if (id === 'arcane-orb') return 18 * (1 + (rank - 1) * 0.28);
+  if (id === 'fire-bolt') return 30 * (1 + (rank - 1) * 0.3);
+  return 12 * (1 + (rank - 1) * 0.25);
+}
+
+function getSpellProjectileSpeed(id: Exclude<SpellId, 'chain-lightning'>, rank: number): number {
+  if (id === 'fire-bolt') return 330 + (rank - 1) * 20;
+  if (id === 'frost-shard') return 500 + (rank - 1) * 25;
+  return 410 + (rank - 1) * 20;
+}
+
+function projectileColor(id: Exclude<SpellId, 'chain-lightning'>): string {
+  if (id === 'fire-bolt') return '#ff7a45';
+  if (id === 'frost-shard') return '#8fdcff';
+  return '#b887ff';
 }
 
 function createStats(selected: ReadonlySet<string>) {
   const count = (ids: readonly string[]) => ids.filter((id) => selected.has(id)).length;
-  let damage = 18 * (1 + count(['fire-1', 'fire-2']) * 0.05);
-  if (selected.has('fire-major')) damage *= 1.25;
-  let castInterval = 0.65 / (1 + count(['storm-1', 'storm-2']) * 0.04);
-  if (selected.has('storm-major')) castInterval *= 0.75;
-  let projectileSpeed = 410 * (1 + count(['arcane-1', 'arcane-2']) * 0.05);
-  if (selected.has('arcane-major')) projectileSpeed *= 1.3;
+  let damageMultiplier = 1 + count(['fire-1', 'fire-2']) * 0.05;
+  if (selected.has('fire-major')) damageMultiplier *= 1.25;
+  let castIntervalMultiplier = 1 / (1 + count(['storm-1', 'storm-2']) * 0.04);
+  if (selected.has('storm-major')) castIntervalMultiplier *= 0.75;
+  let projectileSpeedMultiplier = 1 + count(['arcane-1', 'arcane-2']) * 0.05;
+  if (selected.has('arcane-major')) projectileSpeedMultiplier *= 1.3;
   return {
-    damage,
-    castInterval,
-    projectileSpeed,
+    damageMultiplier,
+    castIntervalMultiplier,
+    projectileSpeedMultiplier,
     maxHealth: 100 + count(['frost-1', 'frost-2']) * 4,
     damageTakenMultiplier: selected.has('frost-major') ? 0.85 : 1,
     wildfire: selected.has('wildfire'),

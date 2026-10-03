@@ -1,7 +1,7 @@
 import './style.css';
 import { Game, type RunSummary } from './game/game';
 import { InputController } from './game/input';
-import type { RunUpgradeChoice, RunUpgradeId } from './game/runUpgrades';
+import { describeChoiceRank, type LevelChoice } from './game/levelChoices';
 import { canRemoveNode, canSelectNode, getNode, skillNodes, spentPoints, TOTAL_META_POINTS, type School } from './game/skillTree';
 
 const appElement = document.querySelector<HTMLDivElement>('#app');
@@ -25,9 +25,9 @@ function renderForge(): void {
     <main class="forge-screen">
       <header class="hero">
         <div>
-          <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.2</div>
-          <h1>Forge your path. Grow inside the run.</h1>
-          <p>Shape your permanent tree, then gain levels during combat and choose upgrades that compound with it.</p>
+          <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.3</div>
+          <h1>Forge a mage, then discover the build.</h1>
+          <p>Shape your permanent tree, learn distinct spells during the run, and discover synergies when their magic schools collide.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>${bestScore.toLocaleString()}</strong></div>
       </header>
@@ -43,7 +43,7 @@ function renderForge(): void {
         <div class="tree-hint">Minor = additive • Major = multiplicative • Epic = build changing • Legendary = rule changing</div>
         <div class="schools">${(['fire', 'frost', 'storm', 'arcane'] as const).map(renderSchool).join('')}</div>
       </section>
-      <footer>Keyboard: WASD / arrows • Touch: drag anywhere to move • Spells auto-target • Level-ups pause the run</footer>
+      <footer>WASD / arrows or touch drag • Spells auto-target • Level-ups pause the run • Spell combinations can reveal synergies</footer>
     </main>`;
 
   updateTreeUi();
@@ -100,27 +100,27 @@ function startRun(): void {
   document.querySelector('#leave-run')?.addEventListener('click', renderForge);
 }
 
-function showLevelUp(level: number, choices: readonly RunUpgradeChoice[], choose: (id: RunUpgradeId) => void): void {
+function showLevelUp(level: number, choices: readonly LevelChoice[], choose: (id: string) => void): void {
   document.querySelector('#level-up')?.remove();
   app.insertAdjacentHTML('beforeend', `
     <div class="level-up" id="level-up">
       <section class="level-up-card">
         <div class="eyebrow">LEVEL ${level}</div>
-        <h2>Choose your next rune</h2>
-        <p>The run is paused. Pick one upgrade; ranks can stack until their cap.</p>
+        <h2>Choose what your magic becomes</h2>
+        <p>Learn spells, rank them up, strengthen your mage, or lock in a discovered synergy.</p>
         <div class="upgrade-choices">${choices.map((choice) => `
-          <button class="run-upgrade" data-upgrade="${choice.upgrade.id}">
-            <span class="upgrade-icon">${choice.upgrade.icon}</span>
-            <span class="upgrade-rank">RANK ${choice.currentRank + 1} / ${choice.upgrade.maxRank}</span>
-            <strong>${choice.upgrade.name}</strong>
-            <small>${choice.upgrade.description}</small>
+          <button class="run-upgrade choice-${choice.kind}" data-choice="${choice.id}">
+            <span class="upgrade-icon">${choice.icon}</span>
+            <span class="upgrade-rank">${describeChoiceRank(choice)}</span>
+            <strong>${choice.name}</strong>
+            <small>${choice.description}</small>
           </button>`).join('')}</div>
       </section>
     </div>`);
 
-  document.querySelectorAll<HTMLButtonElement>('[data-upgrade]').forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>('[data-choice]').forEach((button) => {
     button.addEventListener('click', () => {
-      const id = button.dataset.upgrade as RunUpgradeId | undefined;
+      const id = button.dataset.choice;
       if (!id) return;
       document.querySelector('#level-up')?.remove();
       choose(id);
@@ -132,6 +132,6 @@ function showGameOver(summary: RunSummary): void {
   bestScore = Math.max(bestScore, summary.score);
   localStorage.setItem('wyrmforge.bestScore', String(bestScore));
   document.querySelector('#level-up')?.remove();
-  app.insertAdjacentHTML('beforeend', `<div class="game-over"><div class="game-over-card"><div class="eyebrow">RUN ENDED</div><h2>${summary.score.toLocaleString()} score</h2><p>Level ${summary.level} • ${summary.upgrades} upgrades • ${summary.kills} kills • ${summary.seconds}s survived</p><button class="primary" id="return-forge">Return to Wyrmforge</button></div></div>`);
+  app.insertAdjacentHTML('beforeend', `<div class="game-over"><div class="game-over-card"><div class="eyebrow">RUN ENDED</div><h2>${summary.score.toLocaleString()} score</h2><p>Level ${summary.level} • ${summary.spells} spells • ${summary.synergies} synergies • ${summary.choices} choices • ${summary.kills} kills • ${summary.seconds}s survived</p><button class="primary" id="return-forge">Return to Wyrmforge</button></div></div>`);
   document.querySelector('#return-forge')?.addEventListener('click', renderForge);
 }
