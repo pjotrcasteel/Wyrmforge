@@ -1,18 +1,30 @@
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private double chargedScaleCooldown;
+    private double tempestWingMovementTime;
+    private bool tempestWingCharged;
+
     private void UpdateDragonEssenceEffects(double delta, bool moving)
     {
         foreach (var burst in essenceBursts) burst.Life -= delta;
         essenceBursts.RemoveAll(burst => burst.Life <= 0);
         foreach (var bolt in essenceBolts) bolt.Life -= delta;
         essenceBolts.RemoveAll(bolt => bolt.Life <= 0);
+        chargedScaleCooldown = Math.Max(0, chargedScaleCooldown - delta);
 
+        UpdateAshenWing(delta, moving);
+        UpdateTempestWing(delta, moving);
+    }
+
+    private void UpdateAshenWing(double delta, bool moving)
+    {
         if (!build.DragonEssences.Contains(DragonEssenceId.AshenWing)) return;
         if (!moving)
         {
@@ -33,19 +45,59 @@ public sealed partial class RunSimulation
         ashenWingCooldown = 1.2;
     }
 
-    private void ApplyDragonEssenceCastEffects()
+    private void UpdateTempestWing(double delta, bool moving)
     {
-        if (!build.DragonEssences.Contains(DragonEssenceId.CinderHeart) || castCount % 6 != 0) return;
-        const double radius = 125;
-        var damage = 56 * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier;
-        essenceBursts.Add(new EssenceBurstState(player.Position, radius, 0.24));
-
-        foreach (var enemy in enemies)
+        if (!build.DragonEssences.Contains(DragonEssenceId.TempestWing) || tempestWingCharged) return;
+        if (!moving)
         {
-            if (enemy.Health > 0 && Vector2D.Distance(player.Position, enemy.Position) <= radius) DamageTarget(enemy, damage);
+            tempestWingMovementTime = 0;
+            return;
         }
 
-        if (dragon is { Health: > 0 } activeDragon && Vector2D.Distance(player.Position, activeDragon.Position) <= radius) DamageTarget(activeDragon, damage);
+        tempestWingMovementTime += delta;
+        if (tempestWingMovementTime >= StormEssenceProfile.TempestWingChargeSeconds) tempestWingCharged = true;
+    }
+
+    private void ApplyDragonEssenceCastEffects()
+    {
+        if (build.DragonEssences.Contains(DragonEssenceId.CinderHeart) && castCount % 6 == 0)
+        {
+            const double radius = 125;
+            var damage = 56 * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier;
+            essenceBursts.Add(new EssenceBurstState(player.Position, radius, 0.24));
+
+            foreach (var enemy in enemies)
+            {
+                if (enemy.Health > 0 && Vector2D.Distance(player.Position, enemy.Position) <= radius) DamageTarget(enemy, damage);
+            }
+
+            if (dragon is { Health: > 0 } activeDragon && Vector2D.Distance(player.Position, activeDragon.Position) <= radius) DamageTarget(activeDragon, damage);
+        }
+
+        if (build.DragonEssences.Contains(DragonEssenceId.StormHeart) && castCount % StormEssenceProfile.StormHeartCastInterval == 0)
+        {
+            CastChainLightning(1, player.Position, StormEssenceProfile.StormHeartDamageScale, StormEssenceProfile.StormHeartBonusJumps);
+        }
+    }
+
+    private bool ConsumeTempestWingEcho()
+    {
+        if (!tempestWingCharged) return false;
+        tempestWingCharged = false;
+        tempestWingMovementTime = 0;
+        return true;
+    }
+
+    private double ApplyChargedScale(double rawDamage)
+    {
+        if (!build.DragonEssences.Contains(DragonEssenceId.ChargedScale) || chargedScaleCooldown > 0 || rawDamage <= StormEssenceProfile.ChargedScaleHeavyHitThreshold)
+        {
+            return rawDamage;
+        }
+
+        chargedScaleCooldown = StormEssenceProfile.ChargedScaleCooldownSeconds;
+        RegisterElementalImpact(player.Position, SpellId.ChainLightning);
+        return rawDamage * StormEssenceProfile.ChargedScaleDamageMultiplier;
     }
 
     private void ApplyDragonEssenceImpactEffects(ICombatTarget target, double damage, ref bool killed)

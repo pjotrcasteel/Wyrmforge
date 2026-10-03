@@ -1,6 +1,7 @@
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Targets;
+using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -41,6 +42,7 @@ public sealed partial class RunSimulation
         else CastProjectileSpell(id, rank, damageScale);
         if (echo) return;
 
+        if (ConsumeTempestWingEcho()) CastSpell(id, rank, damageScale * StormEssenceProfile.TempestWingEchoDamageScale, true);
         var treeEcho = passiveProfile.ArcaneEcho && castCount % 6 == 0;
         var runEcho = modifiers.EchoEveryCasts > 0 && castCount % modifiers.EchoEveryCasts == 0;
         if (treeEcho) CastSpell(id, rank, passiveProfile.EchoChamber ? damageScale : damageScale * 0.6, true);

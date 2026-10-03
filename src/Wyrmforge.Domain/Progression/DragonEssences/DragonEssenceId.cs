@@ -5,4 +5,7 @@ public enum DragonEssenceId
     CinderHeart,
     MoltenFang,
     AshenWing,
+    StormHeart,
+    ChargedScale,
+    TempestWing,
 }

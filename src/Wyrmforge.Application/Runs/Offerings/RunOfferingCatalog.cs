@@ -13,5 +13,7 @@ public static class RunOfferingCatalog
         new(DragonEssenceId.AshenWing, "Begin the run with Fleetfoot I: +10% movement speed.", StartingUpgrade: RunUpgradeId.Fleetfoot),
     ];
 
+    public static bool CanOffer(DragonEssenceId id) => All.Any(offering => offering.EssenceId == id);
+
     public static RunOfferingDefinition Get(DragonEssenceId id) => All.Single(offering => offering.EssenceId == id);
 }

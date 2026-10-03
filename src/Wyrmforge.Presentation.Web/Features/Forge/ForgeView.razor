@@ -5,9 +5,9 @@
 <main class="forge-screen">
     <header class="hero">
         <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.27 • STORMCOIL</div>
-            <h1>There is finally something hunting back in the deeper realm.</h1>
-            <p>Clear the Depth II Rift Trial and Stormcoil, the Tempest Wyrm, enters the arena. It circles at range and charges expanding storm pulses instead of Ashfang's directional breath.</p>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.28 • TEMPEST ESSENCES</div>
+            <h1>Stormcoil now leaves something worth surviving for.</h1>
+            <p>Defeat the Tempest Wyrm and steal one of three new body essences: chain through the pack, blunt heavy hits, or turn continuous movement into an echoed spell.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
@@ -23,7 +23,7 @@
             @if (Vault.TotalCount > 0)
             {
                 <div class="toolbar-actions">
-                    @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0))
+                    @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id)))
                     {
                         <button class="@(SelectedOffering == essence.Id ? "primary" : "secondary")" @onclick="() => SelectOfferingAsync(essence.Id)">@essence.Icon @essence.Name ×@Vault.Count(essence.Id)</button>
                     }
@@ -57,7 +57,7 @@
             }
         </div>
     </section>
-    <footer>Choose passives • hunt Ashfang • steal an essence • push through the Rift Trial • hunt Stormcoil • extract alive</footer>
+    <footer>Choose passives • hunt Ashfang • steal an essence • push through the Rift Trial • hunt Stormcoil • steal a second essence • extract alive</footer>
 </main>
 
 @code {

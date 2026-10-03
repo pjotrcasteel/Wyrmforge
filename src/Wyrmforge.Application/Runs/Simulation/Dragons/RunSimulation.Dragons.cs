@@ -141,16 +141,8 @@ public sealed partial class RunSimulation
         score += defeatedId == DragonId.Stormcoil ? 4000 + (int)(elapsed * 12) : 2500 + (int)(elapsed * 10);
         dragon = null;
         spawnTimer = 1.2;
-
-        if (defeatedId == DragonId.Ashfang)
-        {
-            pendingDragonEssenceChoices = DragonEssenceCatalog.AshfangChoices.Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
-            GainExperience(5);
-            return;
-        }
-
-        GainExperience(8);
-        depthState.OfferDecision();
+        pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(defeatedId).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
+        GainExperience(defeatedId == DragonId.Stormcoil ? 8 : 5);
     }
 
     private DragonRenderSnapshot? CreateDragonSnapshot()

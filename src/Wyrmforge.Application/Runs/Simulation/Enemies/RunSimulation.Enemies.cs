@@ -84,6 +84,7 @@ public sealed partial class RunSimulation
             return;
         }
 
+        rawDamage = ApplyChargedScale(rawDamage);
         player.Health -= rawDamage * passiveProfile.DamageTakenMultiplier;
         if (!passiveProfile.IceArmor || player.Barrier) return;
         player.Barrier = true;

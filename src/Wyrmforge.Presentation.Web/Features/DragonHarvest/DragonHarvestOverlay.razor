@@ -2,7 +2,7 @@
 
 <div class="dragon-harvest">
     <section class="dragon-harvest-card">
-        <div class="eyebrow">DRAGON SLAIN • HARVEST ASHFANG</div>
+        <div class="eyebrow">DRAGON SLAIN • HARVEST @SourceName.ToUpperInvariant()</div>
         <h2>Take something that should have died with it.</h2>
         <p>The Wyrmrealm is paused. Choose one part to bind into this run.</p>
         <div class="essence-choices">
@@ -27,6 +27,8 @@
 
     [Parameter]
     public EventCallback<DragonEssenceId> OnChoose { get; set; }
+
+    private string SourceName => Choices.FirstOrDefault()?.Source ?? "Wyrm";
 
     private Task ChooseAsync(DragonEssenceId id) => OnChoose.InvokeAsync(id);
 }
