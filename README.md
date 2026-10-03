@@ -2,20 +2,22 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.21 — Fire Mastery
+## Prototype 0.0.22 — Frost Mastery
 
 The current playable slice contains:
 
 - responsive arena combat for desktop and touch;
 - an always-visible Canvas performance panel showing FPS, simulation updates/sec, C# frame cost, JS↔.NET bridge cost and live enemy/projectile counts;
 - a browser render loop decoupled from the async C# simulation round-trip so requestAnimationFrame no longer waits for interop before drawing again;
-- spatial collision indexing for projectile hits, splash effects and lingering damage zones as runs become crowded;
+- spatial collision indexing for projectile hits, splash effects, lingering damage zones and Frost Nova crowd control as runs become crowded;
 - Arcane Orb mastery: Rank III orbs grow visibly larger and pierce through their first target before disappearing on the next hit;
 - Fire Bolt mastery: Rank III impacts keep their blast and also leave 2.4 seconds of Burning Ground that damages targets inside every 0.3 seconds;
+- Frost Shard mastery: Rank III impacts release an 82-radius Frost Nova that freezes nearby enemies for 0.45 seconds without adding bonus damage;
+- Frost Nova reuses normal freeze rules, including reduced freeze duration on dragons, and visually reuses the existing icy impact language;
 - Burning Ground scales from the projectile that created it, can overlap, can damage dragons and uses the normal target-damage path for kills, XP and score;
 - Rift Stalkers as the first normal-enemy behavior variant: every sixth spawn is larger, pauses for a 0.65s warning, locks a direction toward the player's position and then lunges along that fixed line;
 - Rift Stalker wind-up/lunge state pauses while frozen, matching the rest of the combat movement rules;
-- compact projectile effect state that groups chains, splash, freeze, inferno and piercing without expanding projectile constructors;
+- compact projectile effect state that groups chains, splash, freeze, inferno, piercing and mastery-specific impact behavior without expanding projectile constructors;
 - cached spell/synergy HUD data that is rebuilt only when the run build changes;
 - a pre-run passive tree with Minor, Major, Epic and Legendary nodes;
 - XP, runes, spell learning/upgrades and cross-spell synergies;
@@ -49,7 +51,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and the last pierced target. Burning Ground lives with spell simulation as a timed area effect and reuses the central target damage path rather than creating Fire-specific kill rules. Enemy-specific behavior state is kept with the enemy concept rather than growing one central movement manager. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress. `ProjectileEffects` keeps projectile behavior cohesive while `ProjectileState` owns remaining pierces and exposes mastery impact data. Burning Ground lives with spell simulation as a timed area effect and reuses the central target damage path rather than creating Fire-specific kill rules. Frost Nova is an instantaneous spell-impact behavior that reuses the spatial index and normal freeze rules instead of introducing a parallel crowd-control system. Enemy-specific behavior state is kept with the enemy concept rather than growing one central movement manager. Combat spatial indexing remains inside the Application simulation layer, while browser frame pacing and diagnostics remain presentation concerns.
 
 Folders represent cohesive game concepts rather than broad technical dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -93,3 +95,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 23. Max-rank spell upgrades should gain a distinct behavioral mastery instead of ending as another numeric increase.
 24. Enemy variants should introduce a readable movement or dodge question before they introduce stat variation.
 25. Persistent area effects should tick at bounded intervals and reuse existing combat paths rather than adding frame-rate-dependent damage logic.
+26. Crowd-control masteries should reuse existing status rules so new spell identities compose with established synergies instead of creating isolated mechanics.
