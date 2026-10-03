@@ -1,3 +1,4 @@
+@using Wyrmforge.Domain.Combat.Dragons
 @namespace Wyrmforge.Presentation.Web.Features.RunResults
 
 <div class="game-over">
@@ -5,6 +6,7 @@
         <div class="eyebrow">@OutcomeLabel</div>
         <h2>@Summary.Score.ToString("N0") score</h2>
         <p>@OutcomeMessage</p>
+        <p>Hunt route • @FirstDragon.Name → @DeepDragon.Name</p>
         <p>Depth @Summary.Depth • Level @Summary.Level • @Summary.Spells spells • @Summary.Synergies synergies • @Summary.DragonEssences essences • @Summary.DragonsSlain dragons • @Summary.Choices choices • @Summary.Kills kills • @Summary.Seconds s survived</p>
         <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
     </div>
@@ -15,7 +17,14 @@
     public Wyrmforge.Application.Runs.EndRun.RunSummary Summary { get; set; } = null!;
 
     [Parameter]
+    public DragonId HuntTarget { get; set; } = DragonId.Ashfang;
+
+    [Parameter]
     public EventCallback OnReturn { get; set; }
+
+    private DragonDefinition FirstDragon => DragonCatalog.Get(HuntTarget);
+
+    private DragonDefinition DeepDragon => DragonCatalog.Get(HuntTarget == DragonId.Ashfang ? DragonId.Stormcoil : DragonId.Ashfang);
 
     private string OutcomeLabel => Summary.Outcome switch
     {
@@ -27,10 +36,13 @@
 
     private string OutcomeMessage => Summary.Outcome switch
     {
-        RunOutcome.Extracted when Summary.DragonEssences > 0 => "You escaped the Wyrmrealm with the stolen essence secured.",
+        RunOutcome.Extracted when Summary.DragonEssences == 1 => "You escaped the Wyrmrealm with one stolen essence secured.",
+        RunOutcome.Extracted when Summary.DragonEssences > 1 => $"You escaped the Wyrmrealm with {Summary.DragonEssences} stolen essences secured.",
         RunOutcome.Extracted => "You escaped the Wyrmrealm safely.",
-        RunOutcome.Defeated when Summary.DragonEssences > 0 => "The Wyrmrealm kept the essence you stole.",
-        RunOutcome.Abandoned when Summary.DragonEssences > 0 => "You left without completing an extraction. The stolen essence was not secured.",
+        RunOutcome.Defeated when Summary.DragonEssences == 1 => "The Wyrmrealm kept the essence you stole.",
+        RunOutcome.Defeated when Summary.DragonEssences > 1 => $"The Wyrmrealm kept all {Summary.DragonEssences} essences you stole.",
+        RunOutcome.Abandoned when Summary.DragonEssences == 1 => "You left without completing an extraction. The stolen essence was not secured.",
+        RunOutcome.Abandoned when Summary.DragonEssences > 1 => $"You left without extracting. All {Summary.DragonEssences} stolen essences were lost.",
         RunOutcome.Defeated => "The Wyrmrealm ended this run.",
         _ => "The run ended before extraction.",
     };
