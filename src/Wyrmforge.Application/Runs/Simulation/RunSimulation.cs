@@ -35,6 +35,8 @@ public sealed partial class RunSimulation
     private readonly List<LightningTrace> lightning = [];
     private readonly List<EssenceBurstState> essenceBursts = [];
     private readonly List<EssenceBoltState> essenceBolts = [];
+    private readonly Dictionary<int, double> hitFlashRemaining = [];
+    private readonly List<SplashPulseState> splashPulses = [];
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
     private RunUpgradeModifiers modifiers;
     private IReadOnlyList<LevelChoice> pendingChoices = [];
@@ -81,6 +83,7 @@ public sealed partial class RunSimulation
     {
         if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
+        UpdateCombatFeedback(delta);
         elapsed += delta;
         UpdatePlayer(delta, movement, width, height);
         UpdateDragonEssenceEffects(delta, movement.IsMoving);
@@ -136,9 +139,16 @@ public sealed partial class RunSimulation
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
-            enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0)).ToArray(),
+            enemies.Select(enemy => new EnemyRenderSnapshot(
+                enemy.Position.X,
+                enemy.Position.Y,
+                enemy.Radius,
+                enemy.FrozenFor > 0,
+                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1),
+                hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
+            splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
             essenceBursts.Select(burst => new EssenceBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Life)).ToArray(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell.ToString(), projectile.Inferno)).ToArray(),

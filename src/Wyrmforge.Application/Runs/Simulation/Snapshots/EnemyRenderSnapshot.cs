@@ -1,3 +1,3 @@
 namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
-public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool Frozen);
+public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool Frozen, double HealthRatio, bool HitFlash);

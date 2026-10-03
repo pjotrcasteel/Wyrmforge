@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.7 — Dragon Essence
+## Prototype 0.0.8 — Combat Readability
 
 The current playable slice contains:
 
@@ -13,6 +13,7 @@ The current playable slice contains:
 - Ashfang, the first two-phase dragon hunt with a telegraphed fire-breath attack;
 - a paused post-dragon harvest where one of three body-part essences is bound into the current build;
 - Cinder Heart, Molten Fang and Ashen Wing as behavior-changing dragon rewards;
+- health-bar-free enemy damage feedback through hit flashes, progressive hurt states and visible splash pulses;
 - score, best-score persistence and run summaries that track dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
 
@@ -31,7 +32,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. Dragon combat and dragon-essence progression are intentionally separate concepts: `Combat/Dragons` owns the encounter, while `Progression/DragonEssences` owns what the player steals from it.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. Short-lived combat presentation state such as hit flashes and splash pulses lives with the Application simulation feedback, while actual health remains domain state.
 
 ```text
 src/
@@ -40,6 +41,7 @@ src/
 │   └── Progression/DragonEssences/
 ├── Wyrmforge.Application/
 │   └── Runs/Simulation/
+│       ├── Combat/
 │       ├── Dragons/
 │       └── DragonEssences/
 ├── Wyrmforge.Infrastructure/
@@ -83,3 +85,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 11. Domain and application logic remain independent of browser, rendering and future mobile hosts.
 12. Prefer cohesive feature folders over broad technical dumping grounds.
 13. Dragon rewards must change how a run plays, not merely add another percentage stat.
+14. Combat feedback should explain impact without requiring health bars or damage numbers.

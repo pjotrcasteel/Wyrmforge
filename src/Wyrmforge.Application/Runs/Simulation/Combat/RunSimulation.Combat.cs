@@ -64,8 +64,9 @@ public sealed partial class RunSimulation
 
     private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
     {
-        if (target.Health <= 0) return false;
+        if (target.Health <= 0 || damage <= 0) return false;
         target.Health -= damage;
+        RegisterTargetHit(target);
         if (target.Health > 0) return false;
 
         switch (target)
@@ -88,6 +89,7 @@ public sealed partial class RunSimulation
 
     private void Splash(Vector2D position, double damage, double radius, int ignoreId)
     {
+        RegisterSplashPulse(position, radius);
         foreach (var target in CombatTargets().Where(target => target.Id != ignoreId && Vector2D.Distance(position, target.Position) <= radius).ToArray()) DamageTarget(target, damage);
     }
 

@@ -22,6 +22,44 @@ public sealed class RunSimulationTests
     }
 
     [TestMethod]
+    public void Tick_WhenEnemyTakesDamage_ExposesHitAndHealthFeedback()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        EnemyRenderSnapshot? damagedEnemy = null;
+
+        for (var tick = 0; tick < 20 && damagedEnemy is null; tick++)
+        {
+            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            damagedEnemy = snapshot.Enemies.FirstOrDefault(enemy => enemy.HealthRatio < 1);
+        }
+
+        Assert.IsNotNull(damagedEnemy);
+        Assert.IsTrue(damagedEnemy.HitFlash);
+        Assert.IsLessThan(1, damagedEnemy.HealthRatio);
+        Assert.IsGreaterThan(0, damagedEnemy.HealthRatio);
+    }
+
+    [TestMethod]
+    public void Tick_WithWildfireHit_ExposesSplashPulse()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string> { "wildfire" }, new LevelChoiceService(random), random);
+        SplashPulseRenderSnapshot? splashPulse = null;
+
+        for (var tick = 0; tick < 20 && splashPulse is null; tick++)
+        {
+            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            splashPulse = snapshot.SplashPulses.FirstOrDefault();
+        }
+
+        Assert.IsNotNull(splashPulse);
+        Assert.AreEqual(64d, splashPulse.Radius);
+        Assert.IsGreaterThanOrEqualTo(splashPulse.Progress, 0);
+        Assert.IsLessThanOrEqualTo(splashPulse.Progress, 1);
+    }
+
+    [TestMethod]
     public void Tick_AfterThirtySeconds_StartsAshfangEncounter()
     {
         var random = new FirstRandomSource();

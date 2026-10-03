@@ -131,14 +131,8 @@ function draw(state, snapshot, width, height) {
     drawGrid(ctx, width, height);
 
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath);
-
-    for (const enemy of snapshot.enemies) {
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-        ctx.fillStyle = enemy.frozen ? '#9fdfff' : '#c14b54';
-        ctx.fill();
-    }
-
+    for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse);
+    for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
     if (snapshot.dragon) drawDragon(ctx, snapshot.dragon);
 
     for (const projectile of snapshot.projectiles) {
@@ -168,6 +162,50 @@ function draw(state, snapshot, width, height) {
     drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
     if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, width);
     drawTouchIndicator(state, ctx);
+}
+
+function drawEnemy(ctx, enemy) {
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+    ctx.fillStyle = enemyColor(enemy);
+    ctx.fill();
+
+    if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
+    const damage = 1 - enemy.healthRatio;
+    ctx.strokeStyle = `rgba(255, 190, 174, ${0.18 + damage * 0.48})`;
+    ctx.lineWidth = 1.2 + damage * 1.4;
+    ctx.beginPath();
+    ctx.moveTo(enemy.x - enemy.radius * 0.45, enemy.y - enemy.radius * 0.18);
+    ctx.lineTo(enemy.x - enemy.radius * 0.06, enemy.y + enemy.radius * 0.08);
+    ctx.lineTo(enemy.x + enemy.radius * 0.25, enemy.y - enemy.radius * 0.34);
+    ctx.stroke();
+    if (enemy.healthRatio > 0.35) return;
+    ctx.beginPath();
+    ctx.moveTo(enemy.x + enemy.radius * 0.04, enemy.y + enemy.radius * 0.18);
+    ctx.lineTo(enemy.x + enemy.radius * 0.4, enemy.y + enemy.radius * 0.44);
+    ctx.stroke();
+}
+
+function enemyColor(enemy) {
+    if (enemy.hitFlash) return '#fff1df';
+    if (enemy.frozen) return '#9fdfff';
+    if (enemy.healthRatio <= 0.25) return '#68262e';
+    if (enemy.healthRatio <= 0.55) return '#913640';
+    if (enemy.healthRatio <= 0.78) return '#ab414a';
+    return '#c14b54';
+}
+
+function drawSplashPulse(ctx, pulse) {
+    const progress = Math.min(1, Math.max(0, pulse.progress));
+    const radius = pulse.radius * (0.35 + progress * 0.65);
+    const alpha = (1 - progress) * 0.72;
+    ctx.beginPath();
+    ctx.arc(pulse.x, pulse.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 118, 55, ${alpha * 0.08})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 145, 78, ${alpha})`;
+    ctx.lineWidth = 4 - progress * 2;
+    ctx.stroke();
 }
 
 function drawDragonBreath(ctx, breath) {
