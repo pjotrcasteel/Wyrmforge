@@ -30,7 +30,7 @@ public sealed class PassiveTreeSelectionTests
     [TestMethod]
     public void Select_WhenLegendaryAlreadySelected_RejectsSecondLegendary()
     {
-        var selection = CreateFireMajorSelection();
+        var selection = CreateFireMajorSelection(30);
         Assert.IsTrue(selection.Select("wildfire"));
         Assert.IsTrue(selection.Select("inferno"));
         Assert.IsTrue(selection.Select("frost-1"));
@@ -39,11 +39,25 @@ public sealed class PassiveTreeSelectionTests
         Assert.IsTrue(selection.Select("deep-freeze"));
 
         Assert.IsFalse(selection.CanSelect("absolute-zero"));
+        Assert.IsFalse(selection.Select("absolute-zero"));
     }
 
-    private static PassiveTreeSelection CreateFireMajorSelection()
+    [TestMethod]
+    public void Select_WhenPointBudgetWouldBeExceeded_RejectsNode()
     {
-        var selection = new PassiveTreeSelection();
+        var selection = CreateFireMajorSelection();
+        Assert.IsTrue(selection.Select("wildfire"));
+        Assert.IsTrue(selection.Select("inferno"));
+        Assert.IsTrue(selection.Select("frost-1"));
+        Assert.IsTrue(selection.Select("frost-2"));
+
+        Assert.AreEqual(14, selection.SpentPoints);
+        Assert.IsFalse(selection.CanSelect("frost-major"));
+    }
+
+    private static PassiveTreeSelection CreateFireMajorSelection(int pointBudget = PassiveTreeCatalog.TotalPoints)
+    {
+        var selection = new PassiveTreeSelection(pointBudget);
         Assert.IsTrue(selection.Select("fire-1"));
         Assert.IsTrue(selection.Select("fire-2"));
         Assert.IsTrue(selection.Select("fire-major"));
