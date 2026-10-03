@@ -72,7 +72,8 @@ public sealed partial class RunSimulation
 
         switch (target)
         {
-            case EnemyState:
+            case EnemyState defeatedEnemy:
+                RegisterEnemyDeath(defeatedEnemy);
                 kills++;
                 score += 100 + (int)(elapsed * 2);
                 GainExperience(1);

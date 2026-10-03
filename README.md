@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.9 — Elemental Impact
+## Prototype 0.0.10 — Death Feedback
 
 The current playable slice contains:
 
@@ -15,6 +15,7 @@ The current playable slice contains:
 - Cinder Heart, Molten Fang and Ashen Wing as behavior-changing dragon rewards;
 - health-bar-free enemy damage feedback through hit flashes, progressive hurt states and visible splash pulses;
 - distinct Arcane, Fire, Frost and Storm impact signatures without changing combat balance;
+- brief renderer-neutral enemy death bursts so kills remain readable after the target is removed;
 - score, best-score persistence and run summaries that track dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
 
@@ -33,7 +34,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. Combat feedback is emitted by the Application simulation as renderer-neutral events; the browser presentation decides how each element looks.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. Combat feedback is emitted by the Application simulation as renderer-neutral events; the browser presentation decides how hits, elemental impacts and deaths look.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 

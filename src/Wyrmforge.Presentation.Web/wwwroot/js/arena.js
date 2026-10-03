@@ -135,6 +135,7 @@ function draw(state, snapshot, width, height) {
     for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
     if (snapshot.dragon) drawDragon(ctx, snapshot.dragon);
     for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
+    for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
     for (const projectile of snapshot.projectiles) {
         ctx.beginPath();
@@ -255,6 +256,32 @@ function drawElementalImpact(ctx, impact) {
     ctx.arc(impact.x, impact.y, Math.max(1, 4 * alpha), 0, Math.PI * 2);
     ctx.fillStyle = `rgba(224, 195, 255, ${alpha})`;
     ctx.fill();
+}
+
+function drawDeathBurst(ctx, death) {
+    const progress = Math.min(1, Math.max(0, death.progress));
+    const alpha = 1 - progress;
+    const ringRadius = death.radius * (0.65 + progress * 1.25);
+    ctx.beginPath();
+    ctx.arc(death.x, death.y, ringRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 218, 211, ${alpha * 0.75})`;
+    ctx.lineWidth = 3 - progress * 1.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(death.x, death.y, Math.max(1, death.radius * 0.72 * alpha), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 242, 235, ${alpha * 0.55})`;
+    ctx.fill();
+
+    const distance = death.radius * (0.3 + progress * 1.7);
+    const size = Math.max(1, death.radius * 0.28 * alpha);
+    ctx.fillStyle = `rgba(210, 91, 101, ${alpha})`;
+    for (let index = 0; index < 4; index++) {
+        const angle = Math.PI / 4 + index * Math.PI / 2;
+        const x = death.x + Math.cos(angle) * distance;
+        const y = death.y + Math.sin(angle) * distance;
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
+    }
 }
 
 function drawImpactBurst(ctx, x, y, radius, color, rays) {

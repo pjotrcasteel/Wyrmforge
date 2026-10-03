@@ -46,6 +46,24 @@ public sealed class RunSimulationTests
     }
 
     [TestMethod]
+    public void Tick_WhenEnemyDies_ExposesDeathBurst()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        DeathBurstRenderSnapshot? deathBurst = null;
+
+        for (var tick = 0; tick < 80 && deathBurst is null; tick++)
+        {
+            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            deathBurst = snapshot.DeathBursts.FirstOrDefault();
+        }
+
+        Assert.IsNotNull(deathBurst);
+        Assert.IsGreaterThan(0, deathBurst.Radius);
+        Assert.IsTrue(deathBurst.Progress >= 0 && deathBurst.Progress <= 1);
+    }
+
+    [TestMethod]
     public void Tick_WithWildfireHit_ExposesSplashPulse()
     {
         var random = new FirstRandomSource();
