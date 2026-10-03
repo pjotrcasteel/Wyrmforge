@@ -42,6 +42,7 @@ public sealed partial class RunSimulation
             if (passiveProfile.AbsoluteZero && target.FrozenFor > 0) damage *= 2;
 
             RegisterElementalImpact(target.Position, projectile.Spell);
+            RegisterBurningGround(projectile, target.Position);
             var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
             var killed = DamageTarget(target, damage, projectile, spawnedForHit);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);

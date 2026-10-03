@@ -107,7 +107,7 @@ public static class LevelChoicePresentation
 
     private static string FireBoltDelta(int currentRank, int nextRank)
     {
-        var suffix = nextRank == 3 ? " • unlocks impact blast" : string.Empty;
+        var suffix = nextRank == 3 ? " • impact blast • MASTERED: leaves burning ground" : string.Empty;
         return ProjectileSpellDelta(30, 0.3, currentRank, nextRank, suffix);
     }
 
