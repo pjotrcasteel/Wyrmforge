@@ -25,7 +25,7 @@ public sealed partial class RunSimulation
         ashenWingCooldown -= delta;
         if (ashenWingCooldown > 0 || !HasCombatTargets) return;
 
-        var target = NearestTarget(player.Position, CombatTargets());
+        var target = NearestTarget(player.Position);
         if (target is null) return;
         var damage = 34 * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier;
         essenceBolts.Add(new EssenceBoltState(player.Position, target.Position, 0.18));
@@ -39,7 +39,13 @@ public sealed partial class RunSimulation
         const double radius = 125;
         var damage = 56 * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier;
         essenceBursts.Add(new EssenceBurstState(player.Position, radius, 0.24));
-        foreach (var target in CombatTargets().Where(target => Vector2D.Distance(player.Position, target.Position) <= radius).ToArray()) DamageTarget(target, damage);
+
+        foreach (var enemy in enemies)
+        {
+            if (enemy.Health > 0 && Vector2D.Distance(player.Position, enemy.Position) <= radius) DamageTarget(enemy, damage);
+        }
+
+        if (dragon is { Health: > 0 } activeDragon && Vector2D.Distance(player.Position, activeDragon.Position) <= radius) DamageTarget(activeDragon, damage);
     }
 
     private void ApplyDragonEssenceImpactEffects(ICombatTarget target, double damage, ref bool killed)
