@@ -180,6 +180,7 @@ function draw(state, snapshot, width, height) {
     ctx.strokeStyle = '#7f56c2';
     ctx.lineWidth = 3;
     ctx.stroke();
+    if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.player, snapshot.extraction);
 
     drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
     if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, width);
@@ -282,6 +283,36 @@ function drawDeathBurst(ctx, death) {
         const y = death.y + Math.sin(angle) * distance;
         ctx.fillRect(x - size / 2, y - size / 2, size, size);
     }
+}
+
+function drawExtractionRitual(ctx, player, extraction) {
+    const progress = Math.min(1, Math.max(0, extraction.progress));
+    const radius = player.radius + 22;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(198, 154, 255, 0.22)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.strokeStyle = '#d9b7ff';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    const pulseRadius = radius + 7 + Math.sin(progress * Math.PI * 10) * 2;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, pulseRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(184, 135, 255, 0.28)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#e8d7ff';
+    ctx.font = '800 10px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`EXTRACTING ${Math.max(0, extraction.remainingSeconds).toFixed(1)}s`, player.x, player.y - radius - 12);
+    ctx.restore();
 }
 
 function drawImpactBurst(ctx, x, y, radius, color, rays) {

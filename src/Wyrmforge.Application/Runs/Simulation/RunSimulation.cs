@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Application.Runs.Extraction;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
@@ -31,6 +32,7 @@ public sealed partial class RunSimulation
     private readonly PassiveCombatProfile passiveProfile;
     private readonly RunBuildState build = new();
     private readonly RunDepthState depthState = new();
+    private readonly RunExtractionState extractionState = new();
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
     private readonly List<ProjectileState> projectiles = [];
@@ -106,7 +108,13 @@ public sealed partial class RunSimulation
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         if (player.Health <= 0)
         {
+            extractionState.Cancel();
             outcome = RunOutcome.Defeated;
+            IsEnded = true;
+        }
+        else if (extractionState.Tick(delta))
+        {
+            outcome = RunOutcome.Extracted;
             IsEnded = true;
         }
         return CreateSnapshot();
@@ -139,16 +147,17 @@ public sealed partial class RunSimulation
         return true;
     }
 
-    public RunSummary? ExtractRun()
+    public bool StartExtraction()
     {
-        if (!depthState.Extract()) return null;
-        outcome = RunOutcome.Extracted;
-        IsEnded = true;
-        return CreateSummary();
+        if (!depthState.Extract()) return false;
+        if (extractionState.Start()) return true;
+        depthState.OfferDecision();
+        return false;
     }
 
     public RunSummary AbandonRun()
     {
+        extractionState.Cancel();
         outcome = RunOutcome.Abandoned;
         IsEnded = true;
         return CreateSummary();
@@ -180,8 +189,12 @@ public sealed partial class RunSimulation
             .Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name))
             .ToArray();
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
+        var extraction = extractionState.IsActive
+            ? new ExtractionRenderSnapshot(1 - (extractionState.RemainingSeconds / RunExtractionState.DurationSeconds), extractionState.RemainingSeconds)
+            : null;
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
+            extraction,
             enemies.Select(enemy => new EnemyRenderSnapshot(
                 enemy.Position.X,
                 enemy.Position.Y,

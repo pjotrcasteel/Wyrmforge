@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.11 — Push or Extract
+## Prototype 0.0.12 — Extraction Ritual
 
 The current playable slice contains:
 
@@ -12,9 +12,9 @@ The current playable slice contains:
 - four spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
 - Ashfang, the first two-phase dragon hunt with a telegraphed fire-breath attack;
 - a paused post-dragon harvest where one of three body-part essences is bound into the current build;
-- a post-harvest risk decision: extract safely or descend to a harsher depth;
+- a post-harvest risk decision: begin extraction or descend to a harsher depth;
+- a 4-second extraction ritual where combat continues and death still loses the stolen essence;
 - Depth II enemies with +35% health, +15% speed, 20% faster spawn cadence and ×1.5 enemy-kill score;
-- extraction-aware run outcomes so stolen essence is only considered secured after a successful extraction;
 - health-bar-free enemy damage feedback, elemental impact signatures, splash pulses and death cues;
 - score, best-score persistence and run summaries that track depth, dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
@@ -30,11 +30,11 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences and run-depth risk/reward rules are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters, dragon essences, run depth and extraction rules are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `Runs/Depth` owns the renderer-independent push/extract risk state; Presentation only exposes the decision and current depth.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `Runs/Depth` owns the push-or-descend decision, while `Runs/Extraction` owns the renderer-independent timed escape state. Presentation receives ritual progress and only decides how to draw it.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -68,3 +68,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 13. Dragon rewards must change how a run plays, not merely add another percentage stat.
 14. Combat feedback should explain impact without requiring health bars or damage numbers.
 15. Extraction should turn survival into a decision instead of letting every successful kill automatically become permanent progress.
+16. Choosing extraction should still require one final moment of survival before rewards become safe.

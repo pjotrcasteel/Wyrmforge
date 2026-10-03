@@ -2,6 +2,7 @@ namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 public sealed record RunRenderSnapshot(
     PlayerRenderSnapshot Player,
+    ExtractionRenderSnapshot? Extraction,
     IReadOnlyList<EnemyRenderSnapshot> Enemies,
     DragonRenderSnapshot? Dragon,
     DragonBreathRenderSnapshot? DragonBreath,

@@ -86,13 +86,9 @@ public partial class ArenaView : IAsyncDisposable
         if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged);
     }
 
-    private async Task ExtractRunAsync()
+    private async Task StartExtractionAsync()
     {
-        if (simulation is null || gameOverSent) return;
-        var summary = simulation.ExtractRun();
-        if (summary is null) return;
-        gameOverSent = true;
-        await OnGameOver.InvokeAsync(summary);
+        if (simulation?.StartExtraction() == true) await InvokeAsync(StateHasChanged);
     }
 
     private async Task AbandonRunAsync()
