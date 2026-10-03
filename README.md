@@ -2,11 +2,14 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.16 — Hold the Ritual
+## Prototype 0.0.17 — Performance Baseline
 
 The current playable slice contains:
 
 - responsive arena combat for desktop and touch;
+- a live arena performance counter showing effective FPS and average C# simulation/snapshot time;
+- allocation-reduced combat targeting with one-pass nearest-target and collision lookup instead of repeated LINQ sorting/filtering on hot paths;
+- cached spell/synergy HUD data that is rebuilt only when the run build changes instead of on every render snapshot;
 - a pre-run passive tree with Minor, Major, Epic and Legendary nodes;
 - XP, runes, spell learning/upgrades and cross-spell synergies;
 - four spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
@@ -39,7 +42,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress; simulation only supplies player position and exposes render state.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. `DragonEssenceVault` owns permanent essence counts and consumption in Domain. `Runs/Offerings` owns the data-driven mapping from a consumed essence to its temporary run-start boon. `Runs/Depth` owns risk/reward multipliers and renderer-independent rift cadence. `Runs/Extraction` owns the anchored ritual position, radius and pause/resume progress; simulation only supplies player position and exposes render state. Performance instrumentation stays in the web presentation layer, while simulation hot-path improvements remain renderer-independent C#.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -78,3 +81,4 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 18. Spending permanent resources should create a clear decision without turning early metaprogression into permanent stat inflation.
 19. Deeper depths should change how the player moves or fights, not only scale enemy numbers.
 20. Extraction tension should come from positioning and exposure, not from erasing already-earned ritual progress.
+21. Measure frame rate and simulation cost before adopting invasive runtime optimizations; preserve C# as the canonical gameplay layer.

@@ -24,11 +24,11 @@ public sealed partial class RunSimulation
 
     private void ResolveProjectileHits()
     {
-        var consumed = new HashSet<ProjectileState>();
-        var spawned = new List<ProjectileState>();
+        HashSet<ProjectileState>? consumed = null;
+        List<ProjectileState>? spawned = null;
         foreach (var projectile in projectiles)
         {
-            var target = CombatTargets().FirstOrDefault(candidate => Vector2D.Distance(projectile.Position, candidate.Position) <= projectile.Radius + candidate.Radius);
+            var target = FirstCollidingTarget(projectile.Position, projectile.Radius);
             if (target is null) continue;
             hitCount++;
             var damage = projectile.Damage;
@@ -42,7 +42,8 @@ public sealed partial class RunSimulation
             if (passiveProfile.AbsoluteZero && target.FrozenFor > 0) damage *= 2;
 
             RegisterElementalImpact(target.Position, projectile.Spell);
-            var killed = DamageTarget(target, damage, projectile, spawned);
+            var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
+            var killed = DamageTarget(target, damage, projectile, spawnedForHit);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed && projectile.FreezeDuration > 0) ApplyFreeze(target, projectile.FreezeDuration);
             var runFreeze = modifiers.FreezeEveryHits > 0 && hitCount % modifiers.FreezeEveryHits == 0;
@@ -57,10 +58,10 @@ public sealed partial class RunSimulation
                 arcaneHitCount++;
                 if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0) CastChainLightning(1, target.Position, 0.55, 1);
             }
-            consumed.Add(projectile);
+            (consumed ??= []).Add(projectile);
         }
-        projectiles.RemoveAll(consumed.Contains);
-        projectiles.AddRange(spawned);
+        if (consumed is not null) projectiles.RemoveAll(consumed.Contains);
+        if (spawned is not null) projectiles.AddRange(spawned);
     }
 
     private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
@@ -93,12 +94,19 @@ public sealed partial class RunSimulation
     private void Splash(Vector2D position, double damage, double radius, int ignoreId)
     {
         RegisterSplashPulse(position, radius);
-        foreach (var target in CombatTargets().Where(target => target.Id != ignoreId && Vector2D.Distance(position, target.Position) <= radius).ToArray()) DamageTarget(target, damage);
+        foreach (var enemy in enemies)
+        {
+            if (enemy.Health <= 0 || enemy.Id == ignoreId || Vector2D.Distance(position, enemy.Position) > radius) continue;
+            DamageTarget(enemy, damage);
+        }
+
+        if (dragon is not { Health: > 0 } activeDragon || activeDragon.Id == ignoreId || Vector2D.Distance(position, activeDragon.Position) > radius) return;
+        DamageTarget(activeDragon, damage);
     }
 
     private void ChainFrom(Vector2D position, ProjectileState source, ICollection<ProjectileState> spawned)
     {
-        var target = NearestTarget(position, CombatTargets().Where(target => Vector2D.Distance(position, target.Position) > 12));
+        var target = NearestTarget(position, minimumDistance: 12);
         if (target is null) return;
         var direction = Vector2D.DirectionTo(position, target.Position);
         var speed = source.Velocity.Length * 1.2;

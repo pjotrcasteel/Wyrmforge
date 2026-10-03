@@ -1,0 +1,27 @@
+.performance-counter {
+    position: fixed;
+    z-index: 3;
+    top: max(70px, calc(env(safe-area-inset-top) + 64px));
+    right: max(18px, calc(env(safe-area-inset-right) + 12px));
+    display: grid;
+    min-width: 108px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #d9d0e2;
+    background: rgba(17, 13, 22, 0.72);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.performance-counter strong {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+}
+
+.performance-counter span {
+    margin-top: 2px;
+    color: #8f8499;
+    font-size: 0.62rem;
+}

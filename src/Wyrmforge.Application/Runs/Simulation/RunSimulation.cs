@@ -46,6 +46,8 @@ public sealed partial class RunSimulation
     private RunUpgradeModifiers modifiers;
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
+    private IReadOnlyList<SpellHudSnapshot> spellHud = [];
+    private IReadOnlyList<SynergyHudSnapshot> synergyHud = [];
     private DragonState? dragon;
     private RunOutcome outcome = RunOutcome.InProgress;
     private double elapsed;
@@ -74,6 +76,7 @@ public sealed partial class RunSimulation
         Offering = offering;
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
+        RefreshBuildHud();
         modifiers = RunUpgradeModifiers.Create(build.RunUpgrades);
         player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus;
         player.Health = player.MaxHealth;
@@ -90,6 +93,8 @@ public sealed partial class RunSimulation
     public bool PendingPushOrExtract => depthState.DecisionPending;
 
     public int Depth => depthState.Depth;
+
+    public int Level => level;
 
     public double ScoreMultiplier => depthState.ScoreMultiplier;
 
@@ -132,6 +137,7 @@ public sealed partial class RunSimulation
         if (choice is null || !levelChoiceService.Apply(build, choice)) return false;
         choiceCount++;
         ApplyChoiceEffects(choice);
+        RefreshBuildHud();
         pendingChoices = [];
         CompleteLevelUp();
         return true;
@@ -187,14 +193,6 @@ public sealed partial class RunSimulation
 
     public RunRenderSnapshot CreateSnapshot()
     {
-        var spellHud = SpellCatalog.All
-            .Where(spell => build.Spells[spell.Id] > 0)
-            .Select(spell => new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id]))
-            .ToArray();
-        var synergyHud = SynergyCatalog.All
-            .Where(synergy => build.Synergies.Contains(synergy.Id))
-            .Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name))
-            .ToArray();
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
         var extraction = extractionState.IsActive
             ? new ExtractionRenderSnapshot(
@@ -235,5 +233,17 @@ public sealed partial class RunSimulation
         var offering = RunOfferingCatalog.Get(offeringId);
         if (offering.StartingSpell is { } startingSpell) build.Spells.LearnOrUpgrade(startingSpell);
         if (offering.StartingUpgrade is { } startingUpgrade) build.RunUpgrades.Apply(startingUpgrade);
+    }
+
+    private void RefreshBuildHud()
+    {
+        spellHud = SpellCatalog.All
+            .Where(spell => build.Spells[spell.Id] > 0)
+            .Select(spell => new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id]))
+            .ToArray();
+        synergyHud = SynergyCatalog.All
+            .Where(synergy => build.Synergies.Contains(synergy.Id))
+            .Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name))
+            .ToArray();
     }
 }

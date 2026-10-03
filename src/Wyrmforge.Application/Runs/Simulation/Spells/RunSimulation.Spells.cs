@@ -48,7 +48,7 @@ public sealed partial class RunSimulation
 
     private void CastProjectileSpell(SpellId id, int rank, double damageScale)
     {
-        var target = NearestTarget(player.Position, CombatTargets());
+        var target = NearestTarget(player.Position);
         if (target is null) return;
         var inferno = passiveProfile.Inferno && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
@@ -86,7 +86,7 @@ public sealed partial class RunSimulation
 
         for (var jump = 0; jump < jumps; jump++)
         {
-            var target = NearestTarget(current, CombatTargets().Where(target => !hit.Contains(target.Id)));
+            var target = NearestTarget(current, hit);
             if (target is null) break;
             hit.Add(target.Id);
             lightning.Add(new LightningTrace(current, target.Position, 0.12));

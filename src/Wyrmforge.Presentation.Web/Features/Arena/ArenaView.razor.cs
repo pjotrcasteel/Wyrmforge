@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
@@ -15,6 +16,11 @@ public partial class ArenaView : IAsyncDisposable
     private RunSimulation? simulation;
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
+    private long performanceWindowStarted = Stopwatch.GetTimestamp();
+    private int performanceFrameCount;
+    private double performanceSimulationMilliseconds;
+    private int framesPerSecond;
+    private double averageSimulationMilliseconds;
     private bool gameOverSent;
 
     [Inject]
@@ -46,7 +52,11 @@ public partial class ArenaView : IAsyncDisposable
 
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
 
-    private int CurrentLevel => simulation?.CreateSnapshot().Hud.Level ?? 1;
+    private int CurrentLevel => simulation?.Level ?? 1;
+
+    private int FramesPerSecond => framesPerSecond;
+
+    private double AverageSimulationMilliseconds => averageSimulationMilliseconds;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -54,19 +64,22 @@ public partial class ArenaView : IAsyncDisposable
         simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena.js");
         dotNetReference = DotNetObjectReference.Create(this);
+        performanceWindowStarted = Stopwatch.GetTimestamp();
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
     }
 
     [JSInvokable]
     public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY)
     {
+        var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
+        var performanceChanged = RecordPerformance(frameStarted);
         var hasChoices = current.PendingChoices.Count > 0;
         var hasEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
-        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices) await InvokeAsync(StateHasChanged);
+        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices || performanceChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
         {
@@ -102,6 +115,21 @@ public partial class ArenaView : IAsyncDisposable
         if (simulation is null || gameOverSent) return;
         gameOverSent = true;
         await OnGameOver.InvokeAsync(simulation.AbandonRun());
+    }
+
+    private bool RecordPerformance(long frameStarted)
+    {
+        performanceFrameCount++;
+        performanceSimulationMilliseconds += Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
+        var window = Stopwatch.GetElapsedTime(performanceWindowStarted);
+        if (window.TotalSeconds < 0.75) return false;
+
+        framesPerSecond = (int)Math.Round(performanceFrameCount / window.TotalSeconds);
+        averageSimulationMilliseconds = performanceSimulationMilliseconds / performanceFrameCount;
+        performanceFrameCount = 0;
+        performanceSimulationMilliseconds = 0;
+        performanceWindowStarted = Stopwatch.GetTimestamp();
+        return true;
     }
 
     public async ValueTask DisposeAsync()

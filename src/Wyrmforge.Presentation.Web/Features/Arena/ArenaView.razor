@@ -1,6 +1,10 @@
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
+    <div class="performance-counter" aria-label="Performance counter">
+        <strong>FPS @FramesPerSecond</strong>
+        <span>SIM @AverageSimulationMilliseconds.ToString("0.0") ms</span>
+    </div>
 
     @if (CurrentEssences.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {
