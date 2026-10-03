@@ -33,6 +33,7 @@ public sealed partial class RunSimulation
         {
             castCount++;
             if (id != SpellId.ChainLightning) projectileCastCount++;
+            ApplyDragonEssenceCastEffects();
         }
 
         if (id == SpellId.ChainLightning) CastChainLightning(rank, player.Position, damageScale);

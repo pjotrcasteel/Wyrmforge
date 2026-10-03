@@ -2,23 +2,18 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.6 — First Dragon Hunt
+## Prototype 0.0.7 — Dragon Essence
 
 The current playable slice contains:
 
 - responsive arena combat for desktop and touch;
 - a pre-run passive tree with Minor, Major, Epic and Legendary nodes;
-- free pre-run respec;
-- XP, level-ups and three-choice in-run progression;
-- four distinct spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
-- spell ranks that improve behavior as well as numbers;
-- three cross-spell synergies: Frostfire, Stormglass and Arcane Conduit;
-- runes that compound with the spell system;
-- clearly differentiated Rune, New Spell, Spell Upgrade and Synergy choices;
-- the first dragon boss, Ashfang the Cinder Wyrm, arriving during the run;
-- a dedicated dragon health bar, two combat phases and telegraphed fire-breath attacks;
-- frost affecting dragons at reduced strength rather than fully locking a boss down;
-- score, dragon-kill tracking, best-score persistence and run summaries;
+- XP, runes, spell learning/upgrades and cross-spell synergies;
+- four spells: Arcane Orb, Fire Bolt, Frost Shard and Chain Lightning;
+- Ashfang, the first two-phase dragon hunt with a telegraphed fire-breath attack;
+- a paused post-dragon harvest where one of three body-part essences is bound into the current build;
+- Cinder Heart, Molten Fang and Ashen Wing as behavior-changing dragon rewards;
+- score, best-score persistence and run summaries that track dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
 
 ## Technology
@@ -32,64 +27,40 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragons and run simulation are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
+Game rules do not live in JavaScript. Combat, progression, spells, synergies, passive-tree rules, dragon encounters and dragon essences are implemented in C#. The browser adapter only handles Canvas drawing, keyboard/touch input and browser storage.
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer:
+The codebase follows Onion Architecture with feature-based grouping inside each layer. Dragon combat and dragon-essence progression are intentionally separate concepts: `Combat/Dragons` owns the encounter, while `Progression/DragonEssences` owns what the player steals from it.
 
 ```text
 src/
 ├── Wyrmforge.Domain/
-│   └── Combat/
-│       ├── Dragons/
-│       ├── Enemies/
-│       └── Targets/
+│   ├── Combat/Dragons/
+│   └── Progression/DragonEssences/
 ├── Wyrmforge.Application/
 │   └── Runs/Simulation/
-│       ├── Combat/
 │       ├── Dragons/
-│       ├── Enemies/
-│       ├── Movement/
-│       ├── Progression/
-│       ├── Snapshots/
-│       └── Spells/
+│       └── DragonEssences/
 ├── Wyrmforge.Infrastructure/
 ├── Wyrmforge.Bootstrap/
 └── Wyrmforge.Presentation.Web/
+    └── Features/
+        └── DragonHarvest/
 
 tests/
 ├── Wyrmforge.Domain.Tests/
 └── Wyrmforge.Application.Tests/
 ```
 
-Dependency direction stays inward:
-
-```text
-Presentation ─┐
-              ↓
-Application → Domain
-              ↑
-Infrastructure┘
-```
-
-Folders represent cohesive game concepts rather than generic dumping grounds such as `Services`, `Managers` or `Models`. Dragons already have their own domain and simulation boundaries so future lineages, attacks and essences do not inflate the normal-enemy implementation.
-
-A future mobile presentation can reuse the same Domain and Application assemblies for iOS and Android without moving gameplay rules out of C#.
+Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
 ## Local development
-
-Restore, build and test:
 
 ```bash
 dotnet restore Wyrmforge.slnx
 dotnet build Wyrmforge.slnx
 dotnet test Wyrmforge.slnx
-```
-
-Run the browser version locally:
-
-```bash
 dotnet run --project src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
 ```
 
@@ -108,6 +79,7 @@ Pushes to `main` restore, build and test the .NET solution, publish the Blazor W
 7. Tree choices may lock competing paths.
 8. Mobile input and responsive layout remain first-class requirements.
 9. New content must create decisions or combinations, not merely inflate a list.
-10. A player should understand the type and consequence of a level-up choice before needing to read its full description.
+10. A player should understand the type and consequence of a choice before needing to read its full description.
 11. Domain and application logic remain independent of browser, rendering and future mobile hosts.
 12. Prefer cohesive feature folders over broad technical dumping grounds.
+13. Dragon rewards must change how a run plays, not merely add another percentage stat.

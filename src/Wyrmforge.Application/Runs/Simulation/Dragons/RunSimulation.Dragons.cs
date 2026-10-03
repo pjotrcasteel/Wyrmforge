@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -77,9 +78,10 @@ public sealed partial class RunSimulation
         if (!ReferenceEquals(dragon, defeatedDragon)) return;
         dragonsSlain++;
         score += 2500 + (int)(elapsed * 10);
-        GainExperience(5);
         dragon = null;
         spawnTimer = 1.2;
+        pendingDragonEssenceChoices = DragonEssenceCatalog.AshfangChoices.Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
+        GainExperience(5);
     }
 
     private DragonRenderSnapshot? CreateDragonSnapshot()

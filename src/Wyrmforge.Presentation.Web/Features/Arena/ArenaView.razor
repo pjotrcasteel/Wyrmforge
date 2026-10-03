@@ -2,7 +2,21 @@
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <button class="leave-run" @onclick="EndRunAsync">End run</button>
 
-    @if (CurrentChoices.Count > 0)
+    @if (CurrentEssences.Count > 0)
+    {
+        <div class="essence-strip" aria-label="Harvested dragon essences">
+            @foreach (var essence in CurrentEssences)
+            {
+                <span title="@essence.Effect">@essence.Icon @essence.Name</span>
+            }
+        </div>
+    }
+
+    @if (CurrentEssenceChoices.Count > 0)
+    {
+        <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
+    }
+    else if (CurrentChoices.Count > 0)
     {
         <LevelUpOverlay Level="CurrentLevel + 1" Choices="CurrentChoices" OnChoose="ChooseAsync" />
     }

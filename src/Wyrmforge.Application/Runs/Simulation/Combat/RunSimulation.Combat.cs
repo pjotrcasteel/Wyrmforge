@@ -42,6 +42,7 @@ public sealed partial class RunSimulation
             if (passiveProfile.AbsoluteZero && target.FrozenFor > 0) damage *= 2;
 
             var killed = DamageTarget(target, damage, projectile, spawned);
+            ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed && projectile.FreezeDuration > 0) ApplyFreeze(target, projectile.FreezeDuration);
             var runFreeze = modifiers.FreezeEveryHits > 0 && hitCount % modifiers.FreezeEveryHits == 0;
             if (!killed && ((passiveProfile.DeepFreeze && hitCount % 4 == 0) || runFreeze)) ApplyFreeze(target, runFreeze ? modifiers.FreezeDuration : 1.25);

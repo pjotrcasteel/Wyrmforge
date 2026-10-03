@@ -4,6 +4,7 @@ using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
 
@@ -29,6 +30,10 @@ public partial class ArenaView : IAsyncDisposable
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
 
+    private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
+
+    private IReadOnlyList<DragonEssenceDefinition> CurrentEssences => simulation?.SelectedDragonEssences ?? Array.Empty<DragonEssenceDefinition>();
+
     private int CurrentLevel => simulation?.CreateSnapshot().Hud.Level ?? 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -45,9 +50,11 @@ public partial class ArenaView : IAsyncDisposable
     {
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         var hadChoices = current.PendingChoices.Count > 0;
+        var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var hasChoices = current.PendingChoices.Count > 0;
-        if (hadChoices != hasChoices) await InvokeAsync(StateHasChanged);
+        var hasEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
+        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
         {
@@ -61,6 +68,11 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChooseAsync(string id)
     {
         if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ChooseEssenceAsync(DragonEssenceId id)
+    {
+        if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged);
     }
 
     private async Task EndRunAsync()
