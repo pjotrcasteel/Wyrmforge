@@ -41,6 +41,7 @@ public sealed partial class RunSimulation
             if (passiveProfile.Detonation && hitCount % 4 == 0) damage *= passiveProfile.Volcanic ? 2.5 : 2;
             if (passiveProfile.AbsoluteZero && target.FrozenFor > 0) damage *= 2;
 
+            RegisterElementalImpact(target.Position, projectile.Spell);
             var killed = DamageTarget(target, damage, projectile, spawned);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed && projectile.FreezeDuration > 0) ApplyFreeze(target, projectile.FreezeDuration);

@@ -2,7 +2,7 @@
 
 Wyrmforge is an experimental magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.8 — Combat Readability
+## Prototype 0.0.9 — Elemental Impact
 
 The current playable slice contains:
 
@@ -14,6 +14,7 @@ The current playable slice contains:
 - a paused post-dragon harvest where one of three body-part essences is bound into the current build;
 - Cinder Heart, Molten Fang and Ashen Wing as behavior-changing dragon rewards;
 - health-bar-free enemy damage feedback through hit flashes, progressive hurt states and visible splash pulses;
+- distinct Arcane, Fire, Frost and Storm impact signatures without changing combat balance;
 - score, best-score persistence and run summaries that track dragons and essences;
 - automated .NET tests and GitHub Pages deployment.
 
@@ -32,28 +33,7 @@ Game rules do not live in JavaScript. Combat, progression, spells, synergies, pa
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. Short-lived combat presentation state such as hit flashes and splash pulses lives with the Application simulation feedback, while actual health remains domain state.
-
-```text
-src/
-├── Wyrmforge.Domain/
-│   ├── Combat/Dragons/
-│   └── Progression/DragonEssences/
-├── Wyrmforge.Application/
-│   └── Runs/Simulation/
-│       ├── Combat/
-│       ├── Dragons/
-│       └── DragonEssences/
-├── Wyrmforge.Infrastructure/
-├── Wyrmforge.Bootstrap/
-└── Wyrmforge.Presentation.Web/
-    └── Features/
-        └── DragonHarvest/
-
-tests/
-├── Wyrmforge.Domain.Tests/
-└── Wyrmforge.Application.Tests/
-```
+The codebase follows Onion Architecture with feature-based grouping inside each layer. Combat feedback is emitted by the Application simulation as renderer-neutral events; the browser presentation decides how each element looks.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 

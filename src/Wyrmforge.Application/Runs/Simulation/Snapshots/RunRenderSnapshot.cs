@@ -6,6 +6,7 @@ public sealed record RunRenderSnapshot(
     DragonRenderSnapshot? Dragon,
     DragonBreathRenderSnapshot? DragonBreath,
     IReadOnlyList<SplashPulseRenderSnapshot> SplashPulses,
+    IReadOnlyList<ElementalImpactRenderSnapshot> ElementalImpacts,
     IReadOnlyList<EssenceBurstRenderSnapshot> EssenceBursts,
     IReadOnlyList<EssenceBoltRenderSnapshot> EssenceBolts,
     IReadOnlyList<ProjectileRenderSnapshot> Projectiles,

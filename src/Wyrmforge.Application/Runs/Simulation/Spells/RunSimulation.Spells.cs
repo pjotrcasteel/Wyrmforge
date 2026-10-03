@@ -100,6 +100,7 @@ public sealed partial class RunSimulation
                     stormglassTriggered = true;
                 }
             }
+            RegisterElementalImpact(target.Position, SpellId.ChainLightning);
             DamageTarget(target, hitDamage);
             current = target.Position;
             damage *= 0.84;

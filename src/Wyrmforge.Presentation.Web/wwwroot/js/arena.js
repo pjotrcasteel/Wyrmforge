@@ -134,6 +134,7 @@ function draw(state, snapshot, width, height) {
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse);
     for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
     if (snapshot.dragon) drawDragon(ctx, snapshot.dragon);
+    for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
 
     for (const projectile of snapshot.projectiles) {
         ctx.beginPath();
@@ -148,6 +149,26 @@ function draw(state, snapshot, width, height) {
         ctx.lineTo(trace.toX, trace.toY);
         ctx.strokeStyle = `rgba(255, 229, 105, ${Math.min(1, trace.life / 0.12)})`;
         ctx.lineWidth = 3;
+        ctx.stroke();
+    }
+
+    for (const burst of snapshot.essenceBursts) {
+        const alpha = Math.min(1, burst.life / 0.2);
+        ctx.beginPath();
+        ctx.arc(burst.x, burst.y, burst.radius * (1.08 - alpha * 0.08), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 93, 42, ${alpha * 0.08})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255, 139, 72, ${alpha * 0.85})`;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+    }
+
+    for (const bolt of snapshot.essenceBolts) {
+        ctx.beginPath();
+        ctx.moveTo(bolt.fromX, bolt.fromY);
+        ctx.lineTo(bolt.toX, bolt.toY);
+        ctx.strokeStyle = `rgba(255, 126, 57, ${Math.min(1, bolt.life / 0.18)})`;
+        ctx.lineWidth = 4;
         ctx.stroke();
     }
 
@@ -206,6 +227,61 @@ function drawSplashPulse(ctx, pulse) {
     ctx.strokeStyle = `rgba(255, 145, 78, ${alpha})`;
     ctx.lineWidth = 4 - progress * 2;
     ctx.stroke();
+}
+
+function drawElementalImpact(ctx, impact) {
+    const progress = Math.min(1, Math.max(0, impact.progress));
+    const alpha = 1 - progress;
+    if (impact.kind === 'FireBolt') {
+        drawImpactBurst(ctx, impact.x, impact.y, 7 + progress * 12, `rgba(255, 116, 54, ${alpha})`, 6);
+        return;
+    }
+    if (impact.kind === 'FrostShard') {
+        drawImpactCross(ctx, impact.x, impact.y, 5 + progress * 10, `rgba(151, 224, 255, ${alpha})`, Math.PI / 4);
+        return;
+    }
+    if (impact.kind === 'ChainLightning') {
+        drawImpactCross(ctx, impact.x, impact.y, 6 + progress * 11, `rgba(255, 232, 101, ${alpha})`, 0);
+        return;
+    }
+
+    const radius = 5 + progress * 14;
+    ctx.beginPath();
+    ctx.arc(impact.x, impact.y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(190, 132, 255, ${alpha})`;
+    ctx.lineWidth = 2.5 - progress;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(impact.x, impact.y, Math.max(1, 4 * alpha), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(224, 195, 255, ${alpha})`;
+    ctx.fill();
+}
+
+function drawImpactBurst(ctx, x, y, radius, color, rays) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    for (let index = 0; index < rays; index++) {
+        const angle = index * Math.PI * 2 / rays;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(angle) * radius * 0.35, y + Math.sin(angle) * radius * 0.35);
+        ctx.lineTo(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius);
+        ctx.stroke();
+    }
+}
+
+function drawImpactCross(ctx, x, y, radius, color, rotation) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-radius, 0);
+    ctx.lineTo(radius, 0);
+    ctx.moveTo(0, -radius);
+    ctx.lineTo(0, radius);
+    ctx.stroke();
+    ctx.restore();
 }
 
 function drawDragonBreath(ctx, breath) {
