@@ -12,6 +12,14 @@ public sealed class DragonEssenceVault
 
     public void Store(DragonEssenceId id) => securedEssences.Add(id);
 
+    public bool Consume(DragonEssenceId id)
+    {
+        var index = securedEssences.IndexOf(id);
+        if (index < 0) return false;
+        securedEssences.RemoveAt(index);
+        return true;
+    }
+
     public void Restore(IEnumerable<DragonEssenceId> essences)
     {
         ArgumentNullException.ThrowIfNull(essences);

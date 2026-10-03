@@ -3,6 +3,7 @@ using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Extraction;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
@@ -66,13 +67,15 @@ public sealed partial class RunSimulation
     private bool playerPositionInitialized;
     private bool dragonEncounterStarted;
 
-    public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource)
+    public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource, DragonEssenceId? offering = null)
     {
         this.levelChoiceService = levelChoiceService;
         this.randomSource = randomSource;
+        Offering = offering;
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
+        ApplyOffering();
         modifiers = RunUpgradeModifiers.Create(build.RunUpgrades);
-        player.MaxHealth = passiveProfile.MaxHealth;
+        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus;
         player.Health = player.MaxHealth;
     }
 
@@ -81,6 +84,8 @@ public sealed partial class RunSimulation
     public IReadOnlyList<DragonEssenceDefinition> PendingDragonEssenceChoices => pendingDragonEssenceChoices;
 
     public IReadOnlyList<DragonEssenceDefinition> SelectedDragonEssences => build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get).ToArray();
+
+    public DragonEssenceId? Offering { get; }
 
     public bool PendingPushOrExtract => depthState.DecisionPending;
 
@@ -215,5 +220,13 @@ public sealed partial class RunSimulation
             hud,
             pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending,
             IsEnded);
+    }
+
+    private void ApplyOffering()
+    {
+        if (Offering is not { } offeringId) return;
+        var offering = RunOfferingCatalog.Get(offeringId);
+        if (offering.StartingSpell is { } startingSpell) build.Spells.LearnOrUpgrade(startingSpell);
+        if (offering.StartingUpgrade is { } startingUpgrade) build.RunUpgrades.Apply(startingUpgrade);
     }
 }

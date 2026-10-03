@@ -2,9 +2,14 @@
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
 
-    @if (CurrentEssences.Count > 0 || CurrentDepth > 1)
+    @if (CurrentEssences.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {
         <div class="essence-strip" aria-label="Current run state">
+            @if (CurrentOffering is not null && RunOffering is { } offeringId)
+            {
+                var source = DragonEssenceCatalog.Get(offeringId);
+                <span title="@CurrentOffering.Effect">🔥 OFFERING • @source.Icon @source.Name</span>
+            }
             @if (CurrentDepth > 1)
             {
                 <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") SCORE</span>

@@ -15,6 +15,8 @@ public partial class Home
     private readonly PassiveTreeSelection selection = new();
     private readonly DragonEssenceVault essenceVault = new();
     private RunSummary? summary;
+    private DragonEssenceId? selectedOffering;
+    private DragonEssenceId? activeOffering;
     private int bestScore;
     private int runNumber;
     private bool runActive;
@@ -31,9 +33,18 @@ public partial class Home
         StateHasChanged();
     }
 
-    private void StartRun()
+    private void SelectOffering(DragonEssenceId id) => selectedOffering = selectedOffering == id ? null : id;
+
+    private async Task StartRunAsync()
     {
         summary = null;
+        activeOffering = null;
+        if (selectedOffering is { } offering && essenceVault.Consume(offering))
+        {
+            activeOffering = offering;
+            await TrySetEssenceVaultAsync();
+        }
+        selectedOffering = null;
         runNumber++;
         runActive = true;
     }
@@ -55,6 +66,7 @@ public partial class Home
     private void ReturnToForge()
     {
         summary = null;
+        activeOffering = null;
         runActive = false;
     }
 

@@ -1,15 +1,32 @@
+@using Wyrmforge.Application.Runs.Offerings
+
 <main class="forge-screen">
     <header class="hero">
         <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.13 • ESSENCE VAULT</div>
-            <h1>Forge a mage, hunt dragons, and bring their power home.</h1>
-            <p>Successful extraction now secures the exact dragon essence you stole. The vault remembers it between runs, but cannot spend it yet.</p>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.14 • WYRM OFFERINGS</div>
+            <h1>Forge a mage, hunt dragons, and decide what power is worth spending.</h1>
+            <p>Extracted essences can now be burned before a run for one small starting boon. Selecting is free; the essence is consumed only when you enter the Wyrmrealm.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
 
     <section class="tree-panel">
         <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
+        <div class="tree-toolbar">
+            <div>
+                <strong>WYRM OFFERING</strong>
+                <span> • @(SelectedOffering is null ? "None selected — enter without spending an essence." : RunOfferingCatalog.Get(SelectedOffering.Value).Effect)</span>
+            </div>
+            @if (Vault.TotalCount > 0)
+            {
+                <div class="toolbar-actions">
+                    @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0))
+                    {
+                        <button class="@(SelectedOffering == essence.Id ? "primary" : "secondary")" @onclick="() => SelectOfferingAsync(essence.Id)">@essence.Icon @essence.Name ×@Vault.Count(essence.Id)</button>
+                    }
+                </div>
+            }
+        </div>
         <div class="tree-toolbar">
             <div><strong>@PointsLeft / @Selection.PointBudget</strong><span> available</span></div>
             <div class="toolbar-actions">
@@ -37,7 +54,7 @@
             }
         </div>
     </section>
-    <footer>WASD / arrows or touch drag • Hunt Ashfang • Harvest essence • Survive extraction • Secured essence returns to the vault</footer>
+    <footer>Choose passives • optionally burn one secured essence • enter the Wyrmrealm • hunt Ashfang • extract or push deeper</footer>
 </main>
 
 @code {
@@ -48,7 +65,13 @@
     public DragonEssenceVault Vault { get; set; } = null!;
 
     [Parameter]
+    public DragonEssenceId? SelectedOffering { get; set; }
+
+    [Parameter]
     public int BestScore { get; set; }
+
+    [Parameter]
+    public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
 
     [Parameter]
     public EventCallback OnStart { get; set; }
@@ -81,6 +104,8 @@
     }
 
     private void Reset() => Selection.Reset();
+
+    private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
 
     private Task StartAsync() => OnStart.InvokeAsync();
 

@@ -19,6 +19,31 @@ public sealed class DragonEssenceVaultTests
     }
 
     [TestMethod]
+    public void Consume_ExistingEssence_RemovesExactlyOne()
+    {
+        var vault = new DragonEssenceVault();
+        vault.Restore([DragonEssenceId.CinderHeart, DragonEssenceId.CinderHeart, DragonEssenceId.AshenWing]);
+
+        Assert.IsTrue(vault.Consume(DragonEssenceId.CinderHeart));
+
+        Assert.AreEqual(2, vault.TotalCount);
+        Assert.AreEqual(1, vault.Count(DragonEssenceId.CinderHeart));
+        Assert.AreEqual(1, vault.Count(DragonEssenceId.AshenWing));
+    }
+
+    [TestMethod]
+    public void Consume_MissingEssence_DoesNotChangeVault()
+    {
+        var vault = new DragonEssenceVault();
+        vault.Store(DragonEssenceId.MoltenFang);
+
+        Assert.IsFalse(vault.Consume(DragonEssenceId.CinderHeart));
+
+        Assert.AreEqual(1, vault.TotalCount);
+        Assert.AreEqual(1, vault.Count(DragonEssenceId.MoltenFang));
+    }
+
+    [TestMethod]
     public void Restore_ReplacesExistingVaultContents()
     {
         var vault = new DragonEssenceVault();

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.DragonEssences;
@@ -26,6 +27,9 @@ public partial class ArenaView : IAsyncDisposable
     public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
 
     [Parameter]
+    public DragonEssenceId? RunOffering { get; set; }
+
+    [Parameter]
     public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
@@ -33,6 +37,8 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
 
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssences => simulation?.SelectedDragonEssences ?? Array.Empty<DragonEssenceDefinition>();
+
+    private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
 
     private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
 
@@ -45,7 +51,7 @@ public partial class ArenaView : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes));
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena.js");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
