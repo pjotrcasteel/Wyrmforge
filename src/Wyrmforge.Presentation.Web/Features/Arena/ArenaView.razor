@@ -1,0 +1,9 @@
+<main class="game-screen">
+    <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
+    <button class="leave-run" @onclick="EndRunAsync">End run</button>
+
+    @if (CurrentChoices.Count > 0)
+    {
+        <LevelUpOverlay Level="CurrentLevel + 1" Choices="CurrentChoices" OnChoose="ChooseAsync" />
+    }
+</main>

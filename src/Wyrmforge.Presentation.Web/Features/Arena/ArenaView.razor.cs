@@ -1,0 +1,83 @@
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
+
+namespace Wyrmforge.Presentation.Web.Features.Arena;
+
+public partial class ArenaView : IAsyncDisposable
+{
+    private ElementReference canvas;
+    private RunSimulation? simulation;
+    private IJSObjectReference? arenaModule;
+    private DotNetObjectReference<ArenaView>? dotNetReference;
+    private bool gameOverSent;
+
+    [Inject]
+    public RunSimulationFactory SimulationFactory { get; set; } = null!;
+
+    [Inject]
+    public IJSRuntime JavaScript { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
+
+    [Parameter]
+    public EventCallback<RunSummary> OnGameOver { get; set; }
+
+    private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
+
+    private int CurrentLevel => simulation?.CreateSnapshot().Hud.Level ?? 1;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes));
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena.js");
+        dotNetReference = DotNetObjectReference.Create(this);
+        await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
+    }
+
+    [JSInvokable]
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY)
+    {
+        var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
+        var hadChoices = current.PendingChoices.Count > 0;
+        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
+        var hasChoices = current.PendingChoices.Count > 0;
+        if (hadChoices != hasChoices) await InvokeAsync(StateHasChanged);
+
+        if (snapshot.Ended && !gameOverSent)
+        {
+            gameOverSent = true;
+            await OnGameOver.InvokeAsync(current.CreateSummary());
+        }
+
+        return snapshot;
+    }
+
+    private async Task ChooseAsync(string id)
+    {
+        if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task EndRunAsync()
+    {
+        if (simulation is null || gameOverSent) return;
+        gameOverSent = true;
+        await OnGameOver.InvokeAsync(simulation.EndRun());
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (arenaModule is not null)
+        {
+            await arenaModule.InvokeVoidAsync("disposeArena", CancellationToken.None, canvas);
+            await arenaModule.DisposeAsync();
+        }
+        dotNetReference?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

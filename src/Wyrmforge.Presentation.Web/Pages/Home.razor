@@ -1,0 +1,15 @@
+@page "/"
+
+@if (!runActive)
+{
+    <ForgeView Selection="selection" BestScore="bestScore" OnStart="StartRun" />
+}
+else
+{
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" OnGameOver="HandleGameOverAsync" />
+}
+
+@if (summary is not null)
+{
+    <RunSummaryOverlay Summary="summary" OnReturn="ReturnToForge" />
+}

@@ -1,5 +1,9 @@
-node_modules/
-dist/
-.vite/
+**/bin/
+**/obj/
+artifacts/
+.vs/
+.idea/
+*.user
+*.suo
 .DS_Store
 *.log

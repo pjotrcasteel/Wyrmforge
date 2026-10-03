@@ -18,52 +18,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout stable demo
+      - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      - name: Install stable demo
-        run: npm install --no-audit --no-fund
-
-      - name: Test stable demo
-        run: npm test
-
-      - name: Build stable demo
-        run: npm run build
-
-      - name: Checkout C# migration
-        uses: actions/checkout@v6
-        with:
-          ref: csharp-foundation
-          path: csharp-preview-source
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore C# migration
-        run: dotnet restore csharp-preview-source/Wyrmforge.slnx
+      - name: Restore
+        run: dotnet restore Wyrmforge.slnx
 
-      - name: Build C# migration
-        run: dotnet build csharp-preview-source/Wyrmforge.slnx -c Release --no-restore
+      - name: Build
+        run: dotnet build Wyrmforge.slnx -c Release --no-restore
 
-      - name: Test C# migration
-        run: dotnet test csharp-preview-source/Wyrmforge.slnx -c Release --no-build
+      - name: Test
+        run: dotnet test Wyrmforge.slnx -c Release --no-build
 
-      - name: Publish C# migration
-        run: dotnet publish csharp-preview-source/src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./csharp-preview-artifacts
+      - name: Publish web
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
 
-      - name: Add C# preview under stable site
+      - name: Prepare GitHub Pages
         run: |
-          mkdir -p ./dist/csharp-preview
-          cp -R ./csharp-preview-artifacts/wwwroot/. ./dist/csharp-preview/
-          sed -i 's#<base href="/" />#<base href="/Wyrmforge/csharp-preview/" />#' ./dist/csharp-preview/index.html
-          touch ./dist/.nojekyll
+          sed -i 's#<base href="/" />#<base href="/Wyrmforge/" />#' ./artifacts/web/wwwroot/index.html
+          touch ./artifacts/web/wwwroot/.nojekyll
+          test -f ./artifacts/web/wwwroot/_framework/blazor.webassembly.js
+          grep -q '<base href="/Wyrmforge/" />' ./artifacts/web/wwwroot/index.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -71,7 +51,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist
+          path: ./artifacts/web/wwwroot
 
   deploy:
     environment:

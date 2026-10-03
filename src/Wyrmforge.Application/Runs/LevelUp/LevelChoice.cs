@@ -1,0 +1,3 @@
+namespace Wyrmforge.Application.Runs.LevelUp;
+
+public sealed record LevelChoice(string Id, LevelChoiceKind Kind, string Name, string Description, string Icon, int CurrentRank, int MaxRank);

@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Wyrmforge.Domain/Wyrmforge.Domain.csproj" />
+    <Project Path="src/Wyrmforge.Application/Wyrmforge.Application.csproj" />
+    <Project Path="src/Wyrmforge.Infrastructure/Wyrmforge.Infrastructure.csproj" />
+    <Project Path="src/Wyrmforge.Bootstrap/Wyrmforge.Bootstrap.csproj" />
+    <Project Path="src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wyrmforge.Domain.Tests/Wyrmforge.Domain.Tests.csproj" />
+    <Project Path="tests/Wyrmforge.Application.Tests/Wyrmforge.Application.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+</Solution>
