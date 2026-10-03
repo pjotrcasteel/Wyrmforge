@@ -5,17 +5,30 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private EnemyEncounterPattern encounterPattern = EnemyEncounterPattern.Mixed;
+    private int encounterSpawnIndex = EnemyEncounterComposition.SpawnsPerPattern;
+
     private void UpdateSpawn(double delta, double width, double height)
     {
         if (dragon is { Health: > 0 }) return;
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
-        SpawnEnemy(width, height);
+
+        EnsureEncounterPattern();
+        SpawnEnemy(width, height, EnemyEncounterComposition.GetEnemyKind(encounterPattern, encounterSpawnIndex));
         var baseInterval = Math.Max(0.28, 0.9 - elapsed / 120);
-        spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier;
+        spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern);
+        encounterSpawnIndex++;
     }
 
-    private void SpawnEnemy(double width, double height)
+    private void EnsureEncounterPattern()
+    {
+        if (encounterSpawnIndex < EnemyEncounterComposition.SpawnsPerPattern) return;
+        encounterPattern = EnemyEncounterComposition.SelectNext(encounterPattern, randomSource.Next(2));
+        encounterSpawnIndex = 0;
+    }
+
+    private void SpawnEnemy(double width, double height, EnemyKind kind)
     {
         const double margin = 30;
         var edge = randomSource.Next(4);
@@ -30,7 +43,6 @@ public sealed partial class RunSimulation
         var health = 36 * scale * depthState.EnemyHealthMultiplier;
         var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier;
         var id = ++enemyId;
-        var kind = id % 6 == 0 ? EnemyKind.RiftStalker : EnemyKind.Chaser;
         var radius = kind == EnemyKind.RiftStalker ? 14 : 11;
         enemies.Add(new EnemyState(id, position, radius, health, speed, kind));
     }
