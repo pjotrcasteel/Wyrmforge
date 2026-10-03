@@ -125,9 +125,10 @@ public static class LevelChoicePresentation
     private static string ChainLightningDelta(int currentRank, int nextRank)
     {
         var nextDamage = 15 + (nextRank - 1) * 5;
-        if (currentRank == 0) return $"{nextDamage} damage • {nextRank + 1} base jumps";
+        var mastery = nextRank == 3 ? " • MASTERED: first hit forks to another target" : string.Empty;
+        if (currentRank == 0) return $"{nextDamage} damage • {nextRank + 1} base jumps{mastery}";
         var currentDamage = 15 + (currentRank - 1) * 5;
-        return $"{currentDamage} → {nextDamage} damage • {currentRank + 1} → {nextRank + 1} base jumps";
+        return $"{currentDamage} → {nextDamage} damage • {currentRank + 1} → {nextRank + 1} base jumps{mastery}";
     }
 
     private static string SynergyDelta(SynergyId id)

@@ -1,5 +1,6 @@
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Projectiles;
+using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -84,6 +85,7 @@ public sealed partial class RunSimulation
         var jumps = rank + 1 + modifiers.BonusChains + bonusJumps;
         var hit = new HashSet<int>();
         var stormglassTriggered = false;
+        var forkPending = ChainLightningMastery.IsActive(rank);
 
         for (var jump = 0; jump < jumps; jump++)
         {
@@ -91,21 +93,41 @@ public sealed partial class RunSimulation
             if (target is null) break;
             hit.Add(target.Id);
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
-            var hitDamage = damage;
-            if (build.Synergies.Contains(SynergyId.Stormglass) && target.FrozenFor > 0)
-            {
-                hitDamage *= 1.5;
-                if (!stormglassTriggered)
-                {
-                    jumps += 2;
-                    stormglassTriggered = true;
-                }
-            }
+            var hitDamage = ApplyStormglass(target, damage, ref jumps, ref stormglassTriggered);
             RegisterElementalImpact(target.Position, SpellId.ChainLightning);
             DamageTarget(target, hitDamage);
+
+            if (forkPending)
+            {
+                CastChainLightningFork(target.Position, damage, hit, ref jumps, ref stormglassTriggered);
+                forkPending = false;
+            }
+
             current = target.Position;
             damage *= 0.84;
         }
+    }
+
+    private void CastChainLightningFork(Vector2D origin, double damage, HashSet<int> hit, ref int jumps, ref bool stormglassTriggered)
+    {
+        var target = NearestTarget(origin, hit);
+        if (target is null) return;
+        hit.Add(target.Id);
+        lightning.Add(new LightningTrace(origin, target.Position, 0.16));
+        var forkDamage = ApplyStormglass(target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref stormglassTriggered);
+        RegisterElementalImpact(target.Position, SpellId.ChainLightning);
+        DamageTarget(target, forkDamage);
+    }
+
+    private double ApplyStormglass(ICombatTarget target, double damage, ref int jumps, ref bool stormglassTriggered)
+    {
+        if (!build.Synergies.Contains(SynergyId.Stormglass) || target.FrozenFor <= 0) return damage;
+        if (!stormglassTriggered)
+        {
+            jumps += 2;
+            stormglassTriggered = true;
+        }
+        return damage * 1.5;
     }
 
     private static double GetSpellDamage(SpellId id, int rank)
