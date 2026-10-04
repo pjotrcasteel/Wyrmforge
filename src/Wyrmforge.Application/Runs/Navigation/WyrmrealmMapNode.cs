@@ -5,12 +5,15 @@ namespace Wyrmforge.Application.Runs.Navigation;
 public sealed record WyrmrealmMapNode(
     string Id,
     string Name,
-    int Stage,
-    int Lane,
+    WyrmrealmNodePosition Position,
     WyrmrealmNodeType Type,
-    WyrmrealmRouteProfile? Route)
+    WyrmrealmRouteProfile? Route,
+    WyrmrealmNodeGraph Graph)
 {
+    public int Stage => Position.Stage;
+    public int Lane => Position.Lane;
+    public IReadOnlyList<string> PreviousNodeIds => Graph.PreviousNodeIds;
+    public WyrmrealmNodeRarity Rarity => Graph.Rarity;
     public WyrmrealmEncounterKind? EncounterKind => Route?.Encounter.Kind;
-
     public SpellSchool? AttunementSchool => Route?.Reward.AttunementSchool;
 }
