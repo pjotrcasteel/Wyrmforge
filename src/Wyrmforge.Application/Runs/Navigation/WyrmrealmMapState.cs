@@ -1,4 +1,3 @@
-using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Navigation;
@@ -11,9 +10,8 @@ public sealed class WyrmrealmMapState
     private readonly List<WyrmrealmMapNode> completedNodes = [];
     private int completedCombatStages;
 
-    public WyrmrealmMapState(DragonDefinition target)
+    public WyrmrealmMapState()
     {
-        ArgumentNullException.ThrowIfNull(target);
         Nodes =
         [
             new("scorched-hollow", "Scorched Hollow", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Fire),

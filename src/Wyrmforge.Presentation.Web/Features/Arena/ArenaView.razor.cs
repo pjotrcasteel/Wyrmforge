@@ -8,6 +8,7 @@ using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
@@ -33,6 +34,8 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<RunResonanceEntry> CurrentResonance => simulation?.Resonance ?? Array.Empty<RunResonanceEntry>();
+    private IReadOnlyList<DragonAttractionEntry> CurrentDragonAttraction => simulation?.DragonAttraction ?? Array.Empty<DragonAttractionEntry>();
+    private DragonId? CurrentAttractedDragon => simulation?.AttractedDragon;
     private WyrmrealmMapNode? CurrentMapNode => simulation?.CurrentMapNode;
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
     private bool PendingMapChoice => simulation?.PendingMapChoice == true;

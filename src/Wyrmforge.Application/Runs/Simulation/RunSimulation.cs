@@ -32,7 +32,7 @@ public sealed partial class RunSimulation
     private readonly LevelChoiceService levelChoiceService;
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
-    private readonly DragonHuntRoute huntRoute;
+    private DragonHuntRoute huntRoute;
     private readonly WyrmrealmMapState mapState;
     private readonly RunBuildState build = new();
     private readonly RunDepthState depthState = new();
@@ -72,13 +72,13 @@ public sealed partial class RunSimulation
     private int choiceCount;
     private bool playerPositionInitialized;
 
-    public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource, DragonEssenceId? offering = null, DragonId huntTarget = DragonId.Ashfang)
+    public RunSimulation(IReadOnlySet<string> selectedNodes, LevelChoiceService levelChoiceService, IRandomSource randomSource, DragonEssenceId? offering = null)
     {
         this.levelChoiceService = levelChoiceService;
         this.randomSource = randomSource;
         Offering = offering;
-        huntRoute = DragonHuntRoute.For(huntTarget);
-        mapState = new WyrmrealmMapState(DragonCatalog.Get(huntRoute.First));
+        huntRoute = DragonHuntRoute.For(DragonId.Ashfang);
+        mapState = new WyrmrealmMapState();
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
         RefreshBuildHud();
@@ -95,7 +95,7 @@ public sealed partial class RunSimulation
     public IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => mapState.CompletedNodes;
     public WyrmrealmMapNode? CurrentMapNode => mapState.CurrentNode;
     public DragonEssenceId? Offering { get; }
-    public DragonId HuntTarget => huntRoute.First;
+    public DragonId? HuntTarget => AttractedDragon;
     public bool PendingMapChoice => mapState.DecisionPending && depthState.Depth == 1 && !initialDragonEncounterStarted;
     public bool PendingPushOrExtract => depthState.DecisionPending;
     public bool CanPushDeeper => depthState.CanPushDeeper;

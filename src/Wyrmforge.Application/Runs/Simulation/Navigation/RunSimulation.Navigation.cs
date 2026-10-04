@@ -21,6 +21,7 @@ public sealed partial class RunSimulation
         ClearMapEncounterField();
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
+            ResolveDragonAttraction();
             initialDragonPending = true;
             return true;
         }
@@ -37,6 +38,7 @@ public sealed partial class RunSimulation
         var completedNode = mapState.CurrentNode;
         if (!mapState.RegisterKill()) return;
         if (completedNode?.AttunementSchool is { } school) pendingAttunements.Enqueue(school);
+        if (completedNode?.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;
     }
 

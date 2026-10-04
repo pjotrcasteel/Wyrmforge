@@ -1,7 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
-using Wyrmforge.Domain.Combat.Dragons;
-using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -11,7 +9,7 @@ public sealed class WyrmrealmMapStateTests
     [TestMethod]
     public void NewMap_OffersTwoFirstStageCombatNodesWithDifferentAttunements()
     {
-        var state = new WyrmrealmMapState(DragonCatalog.Ashfang);
+        var state = new WyrmrealmMapState();
 
         Assert.IsTrue(state.DecisionPending);
         Assert.AreEqual(2, state.AvailableNodes.Count);
@@ -23,7 +21,7 @@ public sealed class WyrmrealmMapStateTests
     [TestMethod]
     public void RegisterKill_TracksVisibleProgressUntilCombatNodeCompletes()
     {
-        var state = new WyrmrealmMapState(DragonCatalog.Ashfang);
+        var state = new WyrmrealmMapState();
         var chosen = state.Choose(state.AvailableNodes[0].Id);
 
         Assert.IsNotNull(chosen);
@@ -44,7 +42,7 @@ public sealed class WyrmrealmMapStateTests
     [TestMethod]
     public void CompletingFourCombatNodes_RevealsUnknownDragonTrail()
     {
-        var state = new WyrmrealmMapState(DragonCatalog.Stormcoil);
+        var state = new WyrmrealmMapState();
 
         for (var stage = 0; stage < WyrmrealmMapState.CombatStages; stage++)
         {
