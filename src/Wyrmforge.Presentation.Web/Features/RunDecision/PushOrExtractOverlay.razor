@@ -2,27 +2,27 @@
 
 <div class="dragon-harvest">
     <section class="dragon-harvest-card">
-        <div class="eyebrow">@(CanPushDeeper ? "ESSENCE BOUND • AN EXIT OPENS" : "RIFT TRIAL CLEARED • EXIT STABILIZED")</div>
-        <h2>@(CanPushDeeper ? "Leave with what you stole, or go deeper." : "You survived the deeper trial. Bring your essence home.")</h2>
-        <p>@(CanPushDeeper ? "Opening the way out takes four dangerous seconds inside a fixed ritual circle. Or keep the essence active and descend for greater rewards." : "The deeper realm has yielded. Open the extraction ritual and survive one final hold to secure everything you carried into the trial.")</p>
+        <div class="eyebrow">@(CanPushDeeper ? "EVACUATION COMPLETE • SAFE INTERMISSION" : "EVACUATION COMPLETE • RETURN PASSAGE STABLE")</div>
+        <h2>@(CanPushDeeper ? "You made it out. Decide whether the run ends here." : "You made it out. Bring everything home.")</h2>
+        <p>@(CanPushDeeper ? "This is a safe checkpoint between dives. For now you can return to the Forge or descend again; later this is where recovery, items and build changes can live." : "No deeper realm is implemented yet. Leave the Wyrmrealm to secure every essence you carried through the evacuation surge.")</p>
         <div class="essence-choices">
             <button class="essence-choice" @onclick="ExtractAsync">
-                <span class="essence-source">EXIT ROUTE</span>
+                <span class="essence-source">SAFE EXIT</span>
                 <span class="essence-icon">◈</span>
-                <strong>Begin extraction</strong>
-                <span class="essence-effect">Hold the ritual circle for 4 seconds to secure the harvested essence.</span>
-                <small>Combat continues. Leaving the circle pauses the ritual without resetting progress; return to resume it.</small>
-                <span class="essence-footer">HOLD YOUR GROUND</span>
+                <strong>Return to the Forge</strong>
+                <span class="essence-effect">End the run safely and secure every carried essence.</span>
+                <small>The dangerous part is already over. This checkpoint is the clean boundary between one dive and the next.</small>
+                <span class="essence-footer">LEAVE WYRMREALM</span>
             </button>
             @if (CanPushDeeper)
             {
                 <button class="essence-choice" @onclick="PushAsync">
-                    <span class="essence-source">RISK CHOICE</span>
+                    <span class="essence-source">NEXT DIVE</span>
                     <span class="essence-icon">▼</span>
                     <strong>Descend to Depth @NextDepth</strong>
-                    <span class="essence-effect">Enemies become tougher, arrive faster, and unstable rifts begin opening beneath you.</span>
-                    <small>Keep the stolen essence active and earn ×@ScoreMultiplier.ToString("0.0") score from enemy kills. Complete the Rift Trial to reopen an exit.</small>
-                    <span class="essence-footer">PUSH DEEPER</span>
+                    <span class="essence-effect">Carry your new essence back into the Wyrmrealm and face tougher enemies, faster pressure and unstable rifts.</span>
+                    <small>Enemy kills are worth ×@ScoreMultiplier.ToString("0.0") score. Complete the next objective, hunt another wyrm, then survive another evacuation.</small>
+                    <span class="essence-footer">GO BACK IN</span>
                 </button>
             }
         </div>

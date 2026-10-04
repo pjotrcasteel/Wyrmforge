@@ -37,10 +37,12 @@ public partial class ArenaView : IAsyncDisposable
     private WyrmrealmMapNode? CurrentMapNode => simulation?.CurrentMapNode;
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
     private bool PendingMapChoice => simulation?.PendingMapChoice == true;
-    private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
+    private bool PendingCheckpointDecision => simulation?.PendingCheckpointDecision == true;
     private bool CanPushDeeper => simulation?.CanPushDeeper == true;
     private bool DepthTrialActive => simulation?.DepthTrialActive == true;
+    private bool EvacuationActive => simulation?.EvacuationActive == true;
     private bool MapCombatActive => CurrentMapNode?.Type == WyrmrealmNodeType.Combat && !PendingMapChoice;
+    private double EvacuationRemainingSeconds => simulation?.EvacuationRemainingSeconds ?? 0;
     private int CurrentMapNodeKills => simulation?.CurrentMapNodeKills ?? 0;
     private int CurrentMapNodeKillsRequired => simulation?.CurrentMapNodeKillsRequired ?? WyrmrealmMapState.KillsPerCombatNode;
     private int DepthTrialKills => simulation?.DepthTrialKills ?? 0;
@@ -69,20 +71,24 @@ public partial class ArenaView : IAsyncDisposable
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
-        var hadDepthDecision = current.PendingPushOrExtract;
+        var hadDepthDecision = current.PendingCheckpointDecision;
         var hadMapChoice = current.PendingMapChoice;
         var previousMapCompleted = current.CompletedMapNodes.Count;
         var previousMapKills = current.CurrentMapNodeKills;
         var previousTrialKills = current.DepthTrialKills;
+        var previousEvacuation = current.EvacuationActive;
+        var previousEvacuationSecond = (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
-            || hadDepthDecision != current.PendingPushOrExtract
+            || hadDepthDecision != current.PendingCheckpointDecision
             || hadMapChoice != current.PendingMapChoice
             || previousMapCompleted != current.CompletedMapNodes.Count
             || previousMapKills != current.CurrentMapNodeKills
-            || previousTrialKills != current.DepthTrialKills;
+            || previousTrialKills != current.DepthTrialKills
+            || previousEvacuation != current.EvacuationActive
+            || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
@@ -97,7 +103,7 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChooseEssenceAsync(DragonEssenceId id) { if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task ChooseMapNodeAsync(string id) { if (simulation?.ChooseMapNode(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task PushDeeperAsync() { if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged); }
-    private async Task StartExtractionAsync() { if (simulation?.StartExtraction() == true) await InvokeAsync(StateHasChanged); }
+    private async Task LeaveRealmAsync() { if (simulation?.LeaveRealm() == true) await InvokeAsync(StateHasChanged); }
 
     private async Task AbandonRunAsync()
     {

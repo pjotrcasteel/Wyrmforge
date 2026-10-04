@@ -9,6 +9,13 @@
             <strong>@CurrentMapNodeKills / @CurrentMapNodeKillsRequired KILLS</strong>
         </div>
     }
+    else if (EvacuationActive)
+    {
+        <div class="encounter-objective" aria-label="Evacuation countdown">
+            <span>EVACUATION SURGE • SURVIVE</span>
+            <strong>@Math.Ceiling(EvacuationRemainingSeconds).ToString("0")s</strong>
+        </div>
+    }
 
     @if (CurrentEssences.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {
@@ -37,9 +44,9 @@
     {
         <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
     }
-    else if (PendingPushOrExtract)
+    else if (PendingCheckpointDecision)
     {
-        <PushOrExtractOverlay CanPushDeeper="CanPushDeeper" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" OnExtract="StartExtractionAsync" OnPush="PushDeeperAsync" />
+        <PushOrExtractOverlay CanPushDeeper="CanPushDeeper" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" OnExtract="LeaveRealmAsync" OnPush="PushDeeperAsync" />
     }
     else if (CurrentChoices.Count > 0)
     {

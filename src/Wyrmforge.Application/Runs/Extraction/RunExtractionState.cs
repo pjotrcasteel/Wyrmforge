@@ -4,7 +4,7 @@ namespace Wyrmforge.Application.Runs.Extraction;
 
 public sealed class RunExtractionState
 {
-    public const double DurationSeconds = 4;
+    public const double DurationSeconds = 10;
     public const double Radius = 96;
 
     public bool IsActive { get; private set; }
@@ -28,9 +28,8 @@ public sealed class RunExtractionState
     public bool Tick(double delta, Vector2D playerPosition)
     {
         if (!IsActive) return false;
-        IsProgressing = Vector2D.Distance(Position, playerPosition) <= Radius;
-        if (!IsProgressing) return false;
-
+        _ = playerPosition;
+        IsProgressing = true;
         RemainingSeconds = Math.Max(0, RemainingSeconds - Math.Max(0, delta));
         if (RemainingSeconds > 0) return false;
         IsActive = false;

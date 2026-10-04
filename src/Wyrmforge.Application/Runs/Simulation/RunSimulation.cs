@@ -97,9 +97,12 @@ public sealed partial class RunSimulation
     public DragonEssenceId? Offering { get; }
     public DragonId? HuntTarget => AttractedDragon;
     public bool PendingMapChoice => mapState.DecisionPending && depthState.Depth == 1 && !initialDragonEncounterStarted;
-    public bool PendingPushOrExtract => depthState.DecisionPending;
+    public bool PendingCheckpointDecision => depthState.DecisionPending;
+    public bool PendingPushOrExtract => PendingCheckpointDecision;
     public bool CanPushDeeper => depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
+    public bool EvacuationActive => extractionState.IsActive;
+    public double EvacuationRemainingSeconds => extractionState.RemainingSeconds;
     public int DepthTrialKills => depthTrialState.Kills;
     public int DepthTrialKillsRequired => RunDepthTrialState.KillsRequired;
     public int Depth => depthState.Depth;
@@ -136,8 +139,8 @@ public sealed partial class RunSimulation
         }
         else if (extractionState.Tick(delta, player.Position))
         {
-            outcome = RunOutcome.Extracted;
-            IsEnded = true;
+            ClearMapEncounterField();
+            depthState.OfferDecision();
         }
         return CreateSnapshot();
     }
@@ -159,7 +162,7 @@ public sealed partial class RunSimulation
         var choice = pendingDragonEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || !build.DragonEssences.Select(id)) return false;
         pendingDragonEssenceChoices = [];
-        depthState.OfferDecision();
+        if (!extractionState.Start(player.Position)) depthState.OfferDecision();
         return true;
     }
 
@@ -171,13 +174,15 @@ public sealed partial class RunSimulation
         return true;
     }
 
-    public bool StartExtraction()
+    public bool LeaveRealm()
     {
         if (!depthState.Extract()) return false;
-        if (extractionState.Start(player.Position)) return true;
-        depthState.OfferDecision();
-        return false;
+        outcome = RunOutcome.Extracted;
+        IsEnded = true;
+        return true;
     }
+
+    public bool StartExtraction() => LeaveRealm();
 
     public RunSummary AbandonRun()
     {
@@ -197,12 +202,9 @@ public sealed partial class RunSimulation
     public RunRenderSnapshot CreateSnapshot()
     {
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
-        var extraction = extractionState.IsActive
-            ? new ExtractionRenderSnapshot(extractionState.Position.X, extractionState.Position.Y, RunExtractionState.Radius, 1 - (extractionState.RemainingSeconds / RunExtractionState.DurationSeconds), extractionState.RemainingSeconds, extractionState.IsProgressing)
-            : null;
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
-            extraction,
+            null,
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0, Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
