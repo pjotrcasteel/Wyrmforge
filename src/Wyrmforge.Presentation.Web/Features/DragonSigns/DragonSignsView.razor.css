@@ -6,46 +6,17 @@
     background: linear-gradient(135deg, rgba(40, 29, 22, 0.45), rgba(14, 12, 20, 0.52));
 }
 
-.dragon-signs-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 9px;
-}
-
-.dragon-signs-heading strong,
-.dragon-signs-heading span { display: block; }
+.dragon-signs-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
+.dragon-signs-heading strong, .dragon-signs-heading span { display: block; }
 .dragon-signs-heading strong { color: #e3d6c4; font-size: 0.72rem; letter-spacing: 0.08em; }
 .dragon-signs-heading span { margin-top: 2px; color: #81786f; font-size: 0.63rem; }
 .dragon-signs-heading b { flex: 0 0 auto; color: #c9b088; font-size: 0.7rem; }
 .dragon-sign-list { display: grid; gap: 7px; }
 
-.dragon-sign {
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
-    align-items: start;
-    gap: 9px;
-    padding: 9px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 11px;
-    background: rgba(255, 255, 255, 0.025);
-}
-
-.dragon-sign .sign-mark {
-    display: grid;
-    width: 30px;
-    height: 30px;
-    place-items: center;
-    border-radius: 999px;
-    color: #b9a997;
-    background: rgba(255, 255, 255, 0.05);
-    font-size: 1rem;
-}
-
+.dragon-sign { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: start; gap: 9px; padding: 9px 10px; border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 11px; background: rgba(255, 255, 255, 0.025); }
+.dragon-sign .sign-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 999px; color: #b9a997; background: rgba(255, 255, 255, 0.05); font-size: 1rem; }
 .sign-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.sign-title strong,
-.dragon-sign > div > strong { color: #ddd3c8; font-size: 0.76rem; }
+.sign-title strong, .dragon-sign > div > strong { color: #ddd3c8; font-size: 0.76rem; }
 .sign-title small { color: #897d71; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.11em; }
 .dragon-sign p { margin: 3px 0 0; color: #938a82; font-size: 0.68rem; line-height: 1.45; }
 
@@ -57,11 +28,22 @@
 .dragon-sign.sign-frost .sign-mark { color: #a9e4ff; background: rgba(72, 151, 190, 0.13); }
 .dragon-sign.sign-arcane { border-color: rgba(188, 132, 255, 0.24); background: rgba(89, 48, 126, 0.13); }
 .dragon-sign.sign-arcane .sign-mark { color: #d0a6ff; background: rgba(139, 83, 193, 0.13); }
-
-.dragon-sign.intensity-ominous,
-.dragon-sign.intensity-imminent { box-shadow: inset 0 0 26px rgba(255, 255, 255, 0.018); }
+.dragon-sign.intensity-ominous, .dragon-sign.intensity-imminent { box-shadow: inset 0 0 26px rgba(255, 255, 255, 0.018); }
 .dragon-sign.quiet { color: #7f7682; }
+
+.dragon-signs.compact { margin-bottom: 8px; padding: 8px 10px; border-radius: 11px; }
+.dragon-signs.compact .dragon-signs-heading { align-items: center; margin-bottom: 6px; }
+.dragon-signs.compact .dragon-signs-heading strong { font-size: 0.62rem; }
+.dragon-signs.compact .dragon-signs-heading b { font-size: 0.59rem; }
+.dragon-signs.compact .dragon-sign-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.dragon-signs.compact .dragon-sign { grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 6px; padding: 5px 7px; border-radius: 8px; }
+.dragon-signs.compact .dragon-sign .sign-mark { width: 24px; height: 24px; font-size: 0.77rem; }
+.dragon-signs.compact .sign-title strong, .dragon-signs.compact .dragon-sign > div > strong { font-size: 0.66rem; }
+.dragon-signs.compact .sign-title small { font-size: 0.48rem; }
 
 @media (max-width: 600px) {
     .dragon-signs-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
+    .dragon-signs.compact .dragon-signs-heading { align-items: center; flex-direction: row; gap: 8px; }
+    .dragon-signs.compact .dragon-sign-list { grid-template-columns: 1fr 1fr; }
+    .dragon-signs.compact .sign-title small { display: none; }
 }

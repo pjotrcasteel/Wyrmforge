@@ -2,11 +2,14 @@
 @using Wyrmforge.Application.Runs.Resonance
 @using Wyrmforge.Domain.Spells
 
-<section class="dragon-signs" aria-label="Dragon signs">
+<section class="dragon-signs @(Compact ? "compact" : string.Empty)" aria-label="Dragon signs">
     <div class="dragon-signs-heading">
         <div>
             <strong>DRAGON SIGNS</strong>
-            <span>The realm shows attention before it gives you a name.</span>
+            @if (!Compact)
+            {
+                <span>The realm shows attention before it gives you a name.</span>
+            }
         </div>
         <b>@SignSummary</b>
     </div>
@@ -16,8 +19,11 @@
         <div class="dragon-sign quiet">
             <span class="sign-mark">◇</span>
             <div>
-                <strong>The realm is listening</strong>
-                <p>No omen has formed yet. Every spell and trail leaves something for the wyrms to notice.</p>
+                <strong>@(Compact ? "No clear omen" : "The realm is listening")</strong>
+                @if (!Compact)
+                {
+                    <p>No omen has formed yet. Every spell and trail leaves something for the wyrms to notice.</p>
+                }
             </div>
         </div>
     }
@@ -30,7 +36,10 @@
                     <span class="sign-mark">@SignIcon(sign.School)</span>
                     <div>
                         <div class="sign-title"><strong>@sign.Title</strong><small>@sign.Intensity.ToString().ToUpperInvariant()</small></div>
-                        <p>@sign.Description</p>
+                        @if (!Compact)
+                        {
+                            <p>@sign.Description</p>
+                        }
                     </div>
                 </article>
             }
@@ -40,8 +49,9 @@
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<DragonSign> Signs { get; set; } = Array.Empty<DragonSign>();
+    [Parameter] public bool Compact { get; set; }
 
-    private string SignSummary => Signs.Count == 0 ? "No clear omen" : Signs.Count == 1 ? "Something noticed you" : "More than one presence";
+    private string SignSummary => Signs.Count == 0 ? "No omen" : Signs.Count == 1 ? "Noticed" : "Competing signs";
     private static string SignClass(DragonSign sign) => $"sign-{sign.School.ToString().ToLowerInvariant()} intensity-{sign.Intensity.ToString().ToLowerInvariant()}";
 
     private static string SignIcon(SpellSchool school) => school switch
