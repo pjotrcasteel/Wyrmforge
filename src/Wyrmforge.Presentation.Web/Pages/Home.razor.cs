@@ -3,7 +3,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
-using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Codex;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.PassiveTree;
@@ -22,7 +21,6 @@ public partial class Home
     private RunSummary? summary;
     private DragonEssenceId? selectedOffering;
     private DragonEssenceId? activeOffering;
-    private DragonId selectedHuntTarget = DragonId.Ashfang;
     private int bestScore;
     private int runNumber;
     private bool runActive;
@@ -39,7 +37,6 @@ public partial class Home
     }
 
     private void SelectOffering(DragonEssenceId id) => selectedOffering = selectedOffering == id ? null : id;
-    private void SelectHuntTarget(DragonId id) => selectedHuntTarget = id;
 
     private async Task StartRunAsync()
     {

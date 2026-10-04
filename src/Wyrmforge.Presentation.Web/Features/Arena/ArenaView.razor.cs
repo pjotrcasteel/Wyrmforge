@@ -7,7 +7,6 @@ using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
-using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
@@ -24,7 +23,6 @@ public partial class ArenaView : IAsyncDisposable
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, EditorRequired] public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
-    [Parameter] public DragonId HuntTarget { get; set; } = DragonId.Ashfang;
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
@@ -44,14 +42,17 @@ public partial class ArenaView : IAsyncDisposable
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
 
+    protected override void OnInitialized()
+    {
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, HuntTarget);
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena.js");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
-        await InvokeAsync(StateHasChanged);
     }
 
     [JSInvokable]

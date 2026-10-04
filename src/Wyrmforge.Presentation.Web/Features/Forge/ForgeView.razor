@@ -1,14 +1,13 @@
 @using Wyrmforge.Application.Runs.Offerings
-@using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Spells.Synergies
 
 <main class="forge-screen">
     <header class="hero">
         <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.31 • WYRMREALM MAP</div>
-            <h1>Forge a mage, enter the realm, and choose the trail that carries your magic toward prey.</h1>
-            <p>The first hunt is no longer triggered by an invisible timer. A short branching route now separates the Forge from the dragon, with distinct Swarm, Mixed and Stalker-pressure combat paths.</p>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.31.1 • MAP HOTFIX</div>
+            <h1>Forge a mage, enter the realm, and choose the trail your magic cuts through it.</h1>
+            <p>The Forge no longer selects a dragon. Runs now begin on the Wyrmrealm map immediately; later resonance milestones will determine which wyrm your magic attracts.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
@@ -16,15 +15,6 @@
     <section class="tree-panel">
         <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
         <div class="tree-hint"><strong>ARCANE CODEX</strong> • @CodexSummary</div>
-        <div class="tree-toolbar">
-            <div><strong>DRAGON HUNT</strong><span> • First prey: @DragonCatalog.Get(HuntTarget).Name. The route map now leads to its trail.</span></div>
-            <div class="toolbar-actions">
-                @foreach (var dragon in DragonCatalog.All)
-                {
-                    <button class="@(HuntTarget == dragon.Id ? "primary" : "secondary")" @onclick="() => SelectHuntTargetAsync(dragon.Id)">@dragon.Name • @dragon.Title</button>
-                }
-            </div>
-        </div>
         <div class="tree-toolbar">
             <div><strong>WYRM OFFERING</strong><span> • @(SelectedOffering is null ? "None selected — enter without spending an essence." : RunOfferingCatalog.Get(SelectedOffering.Value).Effect)</span></div>
             @if (Vault.TotalCount > 0)
@@ -57,17 +47,15 @@
             }
         </div>
     </section>
-    <footer>Forge a build • choose a Wyrmrealm trail • clear four short encounters • call the dragon hunt • extract or push deeper</footer>
+    <footer>Forge a build • enter the Wyrmrealm map • choose a trail • clear encounters • follow the wyrm signs • extract or push deeper</footer>
 </main>
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
-    [Parameter] public DragonId HuntTarget { get; set; } = DragonId.Ashfang;
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public int BestScore { get; set; }
-    [Parameter] public EventCallback<DragonId> OnHuntTargetChanged { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
 
@@ -78,15 +66,16 @@
     private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
     private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
     private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
+
     private string NodeClass(PassiveNodeDefinition node)
     {
         var selected = IsSelected(node) ? " selected" : string.Empty;
         var locked = !IsSelected(node) && !Selection.CanSelect(node.Id) ? " locked" : string.Empty;
         return $"skill-node tier-{node.Tier.ToString().ToLowerInvariant()}{selected}{locked}";
     }
+
     private void Toggle(PassiveNodeDefinition node) { if (IsSelected(node)) Selection.Remove(node.Id); else Selection.Select(node.Id); }
     private void Reset() => Selection.Reset();
-    private Task SelectHuntTargetAsync(DragonId id) => OnHuntTargetChanged.InvokeAsync(id);
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task StartAsync() => OnStart.InvokeAsync();
     private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄️", PassiveSchool.Storm => "⚡", _ => "✨" };

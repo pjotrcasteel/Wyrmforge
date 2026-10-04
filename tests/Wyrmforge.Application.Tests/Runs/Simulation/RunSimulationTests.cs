@@ -11,6 +11,17 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class RunSimulationTests
 {
     [TestMethod]
+    public void Construction_StartsWithMapDecisionPending()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+
+        Assert.IsTrue(simulation.PendingMapChoice);
+        Assert.AreEqual(2, simulation.AvailableMapNodes.Count);
+        Assert.AreEqual(0, simulation.CompletedMapNodes.Count);
+    }
+
+    [TestMethod]
     public void Tick_OnFirstFrame_CentersPlayerInArenaWhileMapIsOpen()
     {
         var random = new FirstRandomSource();
