@@ -2,7 +2,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Resonance;
-using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -16,7 +15,7 @@ public sealed class RunResonanceStateTests
     {
         var build = new RunBuildState();
         Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.ChainLightning));
-        var map = new WyrmrealmMapState(DragonCatalog.Ashfang);
+        var map = new WyrmrealmMapState();
         var stormNode = map.AvailableNodes.Single(node => node.AttunementSchool == SpellSchool.Storm);
         Assert.IsNotNull(map.Choose(stormNode.Id));
         for (var kill = 0; kill < WyrmrealmMapState.KillsPerCombatNode; kill++) map.RegisterKill();
