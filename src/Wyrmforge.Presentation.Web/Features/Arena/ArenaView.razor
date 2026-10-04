@@ -37,4 +37,8 @@
     {
         <LevelUpOverlay Level="CurrentLevel + 1" Choices="CurrentChoices" OnChoose="ChooseAsync" />
     }
+    else if (PendingMapChoice)
+    {
+        <WyrmrealmMapView Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" OnChoose="ChooseMapNodeAsync" />
+    }
 </main>

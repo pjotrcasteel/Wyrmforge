@@ -1,0 +1,68 @@
+@namespace Wyrmforge.Presentation.Web.Features.Map
+@using Wyrmforge.Application.Runs.Navigation
+
+<div class="realm-map-overlay">
+    <section class="realm-map-card">
+        <div class="eyebrow">WYRMREALM ROUTE</div>
+        <h2>Choose where your magic cuts through the realm.</h2>
+        <p>Each path is a short combat pocket. Clear it and the realm branches again. Reach the final trail to call the dragon hunt.</p>
+
+        <div class="realm-route" aria-label="Wyrmrealm route map">
+            @foreach (var stage in Nodes.GroupBy(node => node.Stage).OrderBy(group => group.Key))
+            {
+                <div class="route-stage">
+                    <span class="stage-label">@(stage.Key <= WyrmrealmMapState.CombatStages ? $"TRAIL {stage.Key}" : "DRAGON TRAIL")</span>
+                    <div class="route-nodes">
+                        @foreach (var node in stage.OrderBy(node => node.Lane))
+                        {
+                            <button class="@NodeClass(node)" disabled="@(!IsAvailable(node))" @onclick="() => ChooseAsync(node.Id)">
+                                <span class="node-icon">@NodeIcon(node)</span>
+                                <strong>@node.Name</strong>
+                                <small>@NodeDescription(node)</small>
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> Nodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
+    [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> AvailableNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
+    [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> CompletedNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
+    [Parameter] public EventCallback<string> OnChoose { get; set; }
+
+    private bool IsAvailable(WyrmrealmMapNode node) => AvailableNodes.Any(candidate => candidate.Id == node.Id);
+    private bool IsCompleted(WyrmrealmMapNode node) => CompletedNodes.Any(candidate => candidate.Id == node.Id);
+    private bool IsBypassed(WyrmrealmMapNode node) => CompletedNodes.Any(completed => completed.Stage == node.Stage) && !IsCompleted(node);
+
+    private string NodeClass(WyrmrealmMapNode node)
+    {
+        if (IsCompleted(node)) return "route-node completed";
+        if (IsAvailable(node)) return "route-node available";
+        if (IsBypassed(node)) return "route-node bypassed";
+        return "route-node future";
+    }
+
+    private static string NodeIcon(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon
+        ? "🐉"
+        : node.EncounterKind switch
+        {
+            WyrmrealmEncounterKind.Swarm => "⚔",
+            WyrmrealmEncounterKind.StalkerPressure => "◆",
+            _ => "✦",
+        };
+
+    private static string NodeDescription(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon
+        ? "The trail ends here. Something enormous is waiting."
+        : node.EncounterKind switch
+        {
+            WyrmrealmEncounterKind.Swarm => "Fast chaser pressure",
+            WyrmrealmEncounterKind.StalkerPressure => "Rift Stalkers dominate",
+            _ => "Mixed enemy pressure",
+        };
+
+    private Task ChooseAsync(string id) => OnChoose.InvokeAsync(id);
+}

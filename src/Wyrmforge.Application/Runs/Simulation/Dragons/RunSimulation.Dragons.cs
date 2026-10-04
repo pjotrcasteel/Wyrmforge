@@ -8,16 +8,16 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
-    private const double DragonArrivalSeconds = 30;
     private const double DragonBreathRange = 340;
     private const double DragonBreathHalfAngle = 0.4;
+    private bool initialDragonPending;
     private bool initialDragonEncounterStarted;
     private bool deepDragonPending;
     private bool deepDragonEncounterStarted;
 
     private void UpdateDragonEncounter(double delta, double width, double height)
     {
-        if (!initialDragonEncounterStarted && elapsed >= DragonArrivalSeconds) SpawnDragon(DragonCatalog.Get(huntRoute.First), width, false);
+        if (initialDragonPending && !initialDragonEncounterStarted) SpawnDragon(DragonCatalog.Get(huntRoute.First), width, false);
         if (deepDragonPending && !deepDragonEncounterStarted && dragon is null) SpawnDragon(DragonCatalog.Get(huntRoute.Deep), width, true);
         if (dragon is not { Health: > 0 } activeDragon) return;
 
@@ -64,7 +64,11 @@ public sealed partial class RunSimulation
             deepDragonEncounterStarted = true;
             deepDragonPending = false;
         }
-        else initialDragonEncounterStarted = true;
+        else
+        {
+            initialDragonEncounterStarted = true;
+            initialDragonPending = false;
+        }
 
         enemies.Clear();
         projectiles.Clear();
@@ -138,6 +142,7 @@ public sealed partial class RunSimulation
         score += defeatedId == DragonId.Stormcoil ? 4000 + (int)(elapsed * 12) : 2500 + (int)(elapsed * 10);
         dragon = null;
         spawnTimer = 1.2;
+        if (depthState.Depth == 1) mapState.CompleteDragon();
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(defeatedId).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
         GainExperience(defeatedId == DragonId.Stormcoil ? 8 : 5);
     }

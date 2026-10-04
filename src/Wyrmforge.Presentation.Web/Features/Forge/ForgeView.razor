@@ -6,9 +6,9 @@
 <main class="forge-screen">
     <header class="hero">
         <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.30 • CORE LOOP REVIEW</div>
-            <h1>Choose a mage, choose prey, decide how much of the Wyrmrealm you dare to keep.</h1>
-            <p>The first vertical loop is now coherent end to end: route selection, build growth, distinct encounters, dragon harvesting, a deeper trial and second hunt, extraction, persistent essences and Codex knowledge.</p>
+            <div class="eyebrow">WYRMFORGE • PROTOTYPE 0.0.31 • WYRMREALM MAP</div>
+            <h1>Forge a mage, enter the realm, and choose the trail that carries your magic toward prey.</h1>
+            <p>The first hunt is no longer triggered by an invisible timer. A short branching route now separates the Forge from the dragon, with distinct Swarm, Mixed and Stalker-pressure combat paths.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
@@ -17,7 +17,7 @@
         <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
         <div class="tree-hint"><strong>ARCANE CODEX</strong> • @CodexSummary</div>
         <div class="tree-toolbar">
-            <div><strong>DRAGON HUNT</strong><span> • First prey: @DragonCatalog.Get(HuntTarget).Name. The other dragon waits beyond the Rift Trial.</span></div>
+            <div><strong>DRAGON HUNT</strong><span> • First prey: @DragonCatalog.Get(HuntTarget).Name. The route map now leads to its trail.</span></div>
             <div class="toolbar-actions">
                 @foreach (var dragon in DragonCatalog.All)
                 {
@@ -57,7 +57,7 @@
             }
         </div>
     </section>
-    <footer>Choose a hunt route • forge a build • harvest a dragon • extract or push • survive the deeper hunt • bring knowledge and essence home</footer>
+    <footer>Forge a build • choose a Wyrmrealm trail • clear four short encounters • call the dragon hunt • extract or push deeper</footer>
 </main>
 
 @code {

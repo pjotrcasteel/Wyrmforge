@@ -11,7 +11,7 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class RunSimulationTests
 {
     [TestMethod]
-    public void Tick_OnFirstFrame_CentersPlayerInArena()
+    public void Tick_OnFirstFrame_CentersPlayerInArenaWhileMapIsOpen()
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
@@ -20,6 +20,7 @@ public sealed class RunSimulationTests
 
         Assert.AreEqual(400, snapshot.Player.X);
         Assert.AreEqual(300, snapshot.Player.Y);
+        Assert.IsTrue(simulation.PendingMapChoice);
     }
 
     [TestMethod]
@@ -27,6 +28,7 @@ public sealed class RunSimulationTests
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        StartFirstMapEncounter(simulation);
         EnemyRenderSnapshot? damagedEnemy = null;
         ElementalImpactRenderSnapshot? impact = null;
 
@@ -51,6 +53,7 @@ public sealed class RunSimulationTests
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        StartFirstMapEncounter(simulation);
         DeathBurstRenderSnapshot? deathBurst = null;
 
         for (var tick = 0; tick < 80 && deathBurst is null; tick++)
@@ -69,6 +72,7 @@ public sealed class RunSimulationTests
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string> { "wildfire" }, new LevelChoiceService(random), random);
+        StartFirstMapEncounter(simulation);
         SplashPulseRenderSnapshot? splashPulse = null;
 
         for (var tick = 0; tick < 20 && splashPulse is null; tick++)
@@ -83,23 +87,32 @@ public sealed class RunSimulationTests
     }
 
     [TestMethod]
-    public void Tick_AfterThirtySeconds_StartsAshfangEncounter()
+    public void Tick_WithoutMapSelection_DoesNotStartHiddenTimedDragonEncounter()
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
         RunRenderSnapshot snapshot = simulation.CreateSnapshot();
 
-        for (var tick = 0; tick < 610; tick++)
-        {
-            snapshot = simulation.Tick(0.05, default, 6000, 6000);
-            while (simulation.PendingChoices.Count > 0) Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
-        }
+        for (var tick = 0; tick < 610; tick++) snapshot = simulation.Tick(0.05, default, 6000, 6000);
 
-        Assert.IsFalse(snapshot.Ended);
-        Assert.IsNotNull(snapshot.Dragon);
-        Assert.AreEqual("Ashfang", snapshot.Dragon.Name);
-        Assert.AreEqual("Cinder Wyrm", snapshot.Dragon.Title);
-        Assert.AreEqual(1100d, snapshot.Dragon.MaxHealth);
+        Assert.IsTrue(simulation.PendingMapChoice);
+        Assert.IsNull(snapshot.Dragon);
         Assert.AreEqual(0, snapshot.Enemies.Count);
     }
+
+    [TestMethod]
+    public void ChooseMapNode_CombatNode_StartsEncounterInsteadOfDragon()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+
+        StartFirstMapEncounter(simulation);
+        var snapshot = simulation.Tick(0.2, default, 800, 600);
+
+        Assert.IsFalse(simulation.PendingMapChoice);
+        Assert.IsNull(snapshot.Dragon);
+        Assert.IsGreaterThan(0, snapshot.Enemies.Count);
+    }
+
+    private static void StartFirstMapEncounter(RunSimulation simulation) => Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
 }

@@ -11,10 +11,13 @@ public sealed partial class RunSimulation
     private void UpdateSpawn(double delta, double width, double height)
     {
         if (dragon is { Health: > 0 }) return;
+        var mapEncounter = depthState.Depth == 1 && !initialDragonEncounterStarted;
+        if (mapEncounter && !mapState.EncounterActive) return;
+
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
 
-        EnsureEncounterPattern();
+        if (!mapEncounter) EnsureEncounterPattern();
         SpawnEnemy(width, height, EnemyEncounterComposition.GetEnemyKind(encounterPattern, encounterSpawnIndex));
         var baseInterval = Math.Max(0.28, 0.9 - elapsed / 120);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern);

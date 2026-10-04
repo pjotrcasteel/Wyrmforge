@@ -1,0 +1,134 @@
+.realm-map-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 8;
+    display: grid;
+    place-items: center;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+    overflow: auto;
+    background: rgba(8, 6, 12, 0.92);
+    backdrop-filter: blur(12px);
+}
+
+.realm-map-card {
+    width: min(760px, 100%);
+    padding: 26px;
+    border: 1px solid rgba(203, 170, 255, 0.22);
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(35, 26, 48, 0.98), rgba(17, 13, 24, 0.98));
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46);
+}
+
+.realm-map-card h2 {
+    margin: 6px 0 8px;
+    color: #f4eaff;
+}
+
+.realm-map-card p {
+    margin: 0 0 22px;
+    color: #a99db3;
+    line-height: 1.5;
+}
+
+.realm-route {
+    display: grid;
+    gap: 0;
+}
+
+.route-stage {
+    position: relative;
+    padding: 11px 0 22px;
+}
+
+.route-stage:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    width: 1px;
+    height: 24px;
+    background: linear-gradient(rgba(171, 121, 232, 0.62), rgba(171, 121, 232, 0.14));
+}
+
+.stage-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #756981;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-align: center;
+}
+
+.route-nodes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.route-stage:last-child .route-nodes {
+    grid-template-columns: minmax(0, 0.58fr);
+    justify-content: center;
+}
+
+.route-node {
+    display: grid;
+    min-height: 92px;
+    padding: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    color: #e6ddec;
+    background: rgba(255, 255, 255, 0.035);
+    text-align: left;
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.route-node strong {
+    margin-top: 3px;
+    font-size: 0.88rem;
+}
+
+.route-node small {
+    margin-top: 4px;
+    color: #8e8199;
+}
+
+.node-icon {
+    font-size: 1.05rem;
+}
+
+.route-node.available {
+    border-color: rgba(194, 139, 255, 0.72);
+    background: rgba(137, 79, 198, 0.18);
+    cursor: pointer;
+}
+
+.route-node.available:hover {
+    transform: translateY(-2px);
+    background: rgba(150, 89, 218, 0.25);
+}
+
+.route-node.completed {
+    border-color: rgba(123, 207, 161, 0.44);
+    background: rgba(68, 143, 101, 0.12);
+}
+
+.route-node.bypassed,
+.route-node.future {
+    opacity: 0.34;
+}
+
+@media (max-width: 600px) {
+    .realm-map-card {
+        padding: 18px 14px;
+    }
+
+    .route-nodes {
+        gap: 9px;
+    }
+
+    .route-node {
+        min-height: 82px;
+        padding: 10px;
+    }
+}

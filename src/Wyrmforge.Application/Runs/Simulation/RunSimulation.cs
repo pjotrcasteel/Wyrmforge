@@ -3,6 +3,7 @@ using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Extraction;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
@@ -32,6 +33,7 @@ public sealed partial class RunSimulation
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
     private readonly DragonHuntRoute huntRoute;
+    private readonly WyrmrealmMapState mapState;
     private readonly RunBuildState build = new();
     private readonly RunDepthState depthState = new();
     private readonly RunDepthTrialState depthTrialState = new();
@@ -76,6 +78,7 @@ public sealed partial class RunSimulation
         this.randomSource = randomSource;
         Offering = offering;
         huntRoute = DragonHuntRoute.For(huntTarget);
+        mapState = new WyrmrealmMapState(DragonCatalog.Get(huntRoute.First));
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
         RefreshBuildHud();
@@ -87,8 +90,13 @@ public sealed partial class RunSimulation
     public IReadOnlyList<LevelChoice> PendingChoices => pendingChoices;
     public IReadOnlyList<DragonEssenceDefinition> PendingDragonEssenceChoices => pendingDragonEssenceChoices;
     public IReadOnlyList<DragonEssenceDefinition> SelectedDragonEssences => build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get).ToArray();
+    public IReadOnlyList<WyrmrealmMapNode> MapNodes => mapState.Nodes;
+    public IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => mapState.AvailableNodes;
+    public IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => mapState.CompletedNodes;
+    public WyrmrealmMapNode? CurrentMapNode => mapState.CurrentNode;
     public DragonEssenceId? Offering { get; }
     public DragonId HuntTarget => huntRoute.First;
+    public bool PendingMapChoice => mapState.DecisionPending && depthState.Depth == 1 && !initialDragonEncounterStarted;
     public bool PendingPushOrExtract => depthState.DecisionPending;
     public bool CanPushDeeper => depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
@@ -101,7 +109,8 @@ public sealed partial class RunSimulation
 
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
-        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending) return CreateSnapshot();
+        EnsurePlayerPosition(width, height);
+        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending || mapState.DecisionPending) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
         UpdateCombatFeedback(delta);
         elapsed += delta;
@@ -118,6 +127,7 @@ public sealed partial class RunSimulation
         UpdateLightning(delta);
         ResolveProjectileHits();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
+        CompleteMapEncounterCleanup();
         if (player.Health <= 0)
         {
             extractionState.Cancel();
@@ -204,7 +214,7 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
-            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending,
+            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending || mapState.DecisionPending,
             IsEnded);
     }
 

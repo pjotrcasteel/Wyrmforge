@@ -2,11 +2,21 @@
 
 Wyrmforge is an experimental C# magic roguelike built in small, playable milestones. Mechanics and architecture come before visual fidelity.
 
-## Prototype 0.0.30 — Core Loop Review
+## Prototype 0.0.31 — Wyrmrealm Map Foundation
 
 The current playable loop is:
 
-**Choose a passive build + hunt route → enter the Wyrmrealm → grow spells and synergies → hunt a dragon → steal one body essence → extract or push → clear the Depth II Rift Trial → hunt the second dragon → steal a second essence → survive extraction → bring secured essences and discovered knowledge back to the Forge.**
+**Choose a passive build + provisional hunt target → enter the Wyrmrealm map → choose and clear four short combat trails → open the dragon trail → hunt and harvest the dragon → extract or push → clear the Depth II Rift Trial → hunt the second dragon → steal a second essence → survive extraction → bring secured essences and discovered knowledge back to the Forge.**
+
+### Wyrmrealm navigation
+
+- A run now opens on a branching route map instead of immediately starting an invisible boss timer.
+- Four short combat stages separate the Forge from the first dragon, with two route choices at each stage.
+- Route nodes reuse the existing Swarm, Mixed and Stalker Pressure encounter compositions, so a branch already changes the combat problem rather than being cosmetic.
+- Each combat node currently completes after five kills, keeping the first boss in the same fast prototype-testing window as before.
+- Completing a node clears leftover enemies, projectiles and lingering combat areas before returning to the map.
+- After four combat nodes, the only available route is the dragon trail. The first dragon appears only when that node is deliberately entered; the old hidden 30-second arrival trigger is gone.
+- Exact in-combat node progress becomes player-facing in 0.0.32; this milestone establishes the navigation/state boundary first.
 
 ### Build identity
 
@@ -17,47 +27,37 @@ The current playable loop is:
 
 ### Encounter structure
 
-- Normal pressure arrives in six-spawn encounter phrases rather than one endless uniform stream.
-- Swarm phrases emphasize rapid chasers, Stalker Pressure mixes repeated Rift Stalker lunges, and Mixed phrases combine both.
+- Normal pressure uses Swarm, Stalker Pressure and Mixed compositions.
 - Rift Stalkers visibly wind up before committing to a fixed-direction lunge, so their threat is read and dodged rather than merely out-statted.
 - The Canvas renderer uses spatial collision indexing and a decoupled simulation/render loop; the in-game performance panel exposes FPS, SIM/s, C# time, bridge time and entity counts.
 
 ### Dragon hunting
 
-- The Forge lets the player choose Ashfang or Stormcoil as the first hunt target.
-- If the player pushes after harvesting the first dragon, the other dragon becomes the deeper prey.
+- The Forge still lets the player choose Ashfang or Stormcoil as the first hunt target while the upcoming resonance/attraction system is being built.
+- The selected first dragon now sits at the end of the Wyrmrealm map instead of arriving on a timer.
+- If the player pushes after harvesting the first dragon, the other dragon becomes the deeper prey for now.
 - Ashfang is a two-phase Cinder Wyrm built around a directional breath cone and approach/retreat spacing.
-- Stormcoil is a two-phase Tempest Wyrm that orbits at range and telegraphs large radial storm pulses; phase II increases pulse radius/damage while shortening the warning and cooldown.
+- Stormcoil is a two-phase Tempest Wyrm that orbits at range and telegraphs large radial storm pulses.
 - Ambient Depth II rifts pause during dragon fights so each boss's own spatial question remains readable.
 
 ### Dragon essences
 
-Ashfang offers:
-- **Cinder Heart** — every sixth cast erupts around the player.
-- **Molten Fang** — projectile impacts gain fiery direct and splash damage.
-- **Ashen Wing** — sustained movement periodically launches a cinder strike.
+Ashfang offers **Cinder Heart**, **Molten Fang** and **Ashen Wing**. Stormcoil offers **Storm Heart**, **Charged Scale** and **Tempest Wing**. Exact harvested essence IDs stay active for the current run. Successful extraction stores every carried essence in the persistent browser-local Essence Vault; defeat or abandonment stores none.
 
-Stormcoil offers:
-- **Storm Heart** — every fifth cast releases a multi-target lightning chain.
-- **Charged Scale** — periodically blunts the next genuinely heavy hit without being wasted by tiny contact ticks.
-- **Tempest Wing** — sustained movement charges the next spell to echo at partial damage.
-
-Exact harvested essence IDs stay active for the current run. Successful extraction stores every carried essence in the persistent browser-local Essence Vault; defeat or abandonment stores none. Wyrm Offerings are an explicit recipe system: currently only Ashfang essences have offering recipes, so future/new vault resources are not assumed to be spendable automatically.
+Wyrm Offerings are explicit recipes: currently only Ashfang essences have offering recipes, so future/new vault resources are not assumed to be spendable automatically.
 
 ### Push, Depth II and extraction
 
 - After the first dragon harvest, the player chooses extraction or deeper risk.
 - Extraction creates a fixed ritual circle. The four-second timer progresses only while the player remains inside; leaving pauses progress without resetting it.
-- Depth II has +35% enemy health, +15% enemy speed, faster spawns and ×1.5 normal-enemy score.
-- Periodic telegraphed rifts lock onto the player's position and detonate if not dodged.
+- Depth II has tougher/faster enemies, periodic telegraphed rifts and ×1.5 normal-enemy score.
 - Pushing starts a finite **12-kill Rift Trial**. Completing it grants +750 score and reveals the second dragon rather than opening unsupported infinite depths.
 - Depth III is intentionally unavailable until it has real content.
 
 ### Persistent knowledge
 
-- The Arcane Codex records Frostfire, Stormglass and Arcane Conduit when the player actually assembles them in a run.
+- The Arcane Codex records Frostfire, Stormglass and Arcane Conduit when assembled in a run.
 - Codex knowledge survives extracted, defeated and abandoned runs because it represents discovery, not secured loot.
-- The Codex currently grants no stats, currency or unlock power.
 - Best score, Essence Vault and Codex persistence use browser localStorage and safely ignore unavailable/corrupt values.
 
 ## Technology
@@ -75,9 +75,9 @@ Gameplay rules remain in C# Domain/Application code. JavaScript handles Canvas r
 
 ## Architecture
 
-The codebase follows Onion Architecture with feature-based grouping inside each layer. Domain owns reusable gameplay state and definitions such as spells, dragons, essences, the passive tree and persistent Codex/Vault models. Application owns run orchestration, encounters, combat simulation, depth/trial rules, extraction and dragon-hunt routing. Presentation owns Blazor composition and the thin Canvas adapter.
+The codebase follows Onion Architecture with feature-based grouping inside each layer. Domain owns reusable gameplay state and definitions. Application owns run orchestration, navigation state, encounter composition, combat simulation, depth/trial rules, extraction and dragon-hunt routing. Presentation owns Blazor composition and the thin Canvas adapter.
 
-Repeated behavior is kept near its cohesive concept: dragon-specific profiles stay with dragons, encounter composition stays with enemies, spell mastery behavior stays with spell simulation, and persistent resources do not implicitly share spending rules. Combat spatial indexing remains an Application concern; browser frame pacing remains a Presentation concern.
+`Runs/Navigation` now owns the renderer-independent Wyrmrealm route state. The simulation translates selected navigation encounter kinds into existing enemy compositions; the Blazor map only visualizes available/completed nodes and forwards the player's selection.
 
 Folders represent cohesive game concepts rather than broad dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -116,3 +116,4 @@ Pushes to `main` restore, build and test the solution, publish the Blazor WebAss
 18. Permanent resources only become spendable through explicit recipes; adding a resource must not silently expand every economy.
 19. Hunt-route choice should alter the order and risk context of known prey before procedural route complexity is added.
 20. Stop at assessment milestones and improve cohesion before expanding the feature surface again.
+21. Wyrmrealm progression should be visible as route state; bosses should be reached through player-visible progress rather than hidden timers.

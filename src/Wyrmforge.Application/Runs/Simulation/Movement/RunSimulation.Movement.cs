@@ -4,14 +4,16 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private void EnsurePlayerPosition(double width, double height)
+    {
+        if (playerPositionInitialized) return;
+        player.Position = new Vector2D(width / 2, height / 2);
+        playerPositionInitialized = true;
+    }
+
     private void UpdatePlayer(double delta, MovementInput movement, double width, double height)
     {
-        if (!playerPositionInitialized)
-        {
-            player.Position = new Vector2D(width / 2, height / 2);
-            playerPositionInitialized = true;
-        }
-
+        EnsurePlayerPosition(width, height);
         var direction = movement.Direction;
         var moveBonus = passiveProfile.TempestStep ? Math.Min(elapsed / 6, 1) * 0.25 : 0;
         var speed = player.Speed * modifiers.MoveSpeedMultiplier * (1 + moveBonus);

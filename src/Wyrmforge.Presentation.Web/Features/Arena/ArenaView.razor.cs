@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
@@ -29,7 +30,11 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssences => simulation?.SelectedDragonEssences ?? Array.Empty<DragonEssenceDefinition>();
+    private IReadOnlyList<WyrmrealmMapNode> MapNodes => simulation?.MapNodes ?? Array.Empty<WyrmrealmMapNode>();
+    private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
+    private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
+    private bool PendingMapChoice => simulation?.PendingMapChoice == true;
     private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
     private bool CanPushDeeper => simulation?.CanPushDeeper == true;
     private bool DepthTrialActive => simulation?.DepthTrialActive == true;
@@ -46,6 +51,7 @@ public partial class ArenaView : IAsyncDisposable
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena.js");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
+        await InvokeAsync(StateHasChanged);
     }
 
     [JSInvokable]
@@ -56,13 +62,18 @@ public partial class ArenaView : IAsyncDisposable
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
         var hadDepthDecision = current.PendingPushOrExtract;
+        var hadMapChoice = current.PendingMapChoice;
+        var previousMapCompleted = current.CompletedMapNodes.Count;
         var previousTrialKills = current.DepthTrialKills;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
-        var hasChoices = current.PendingChoices.Count > 0;
-        var hasEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
-        var hasDepthDecision = current.PendingPushOrExtract;
-        if (hadChoices != hasChoices || hadEssenceChoices != hasEssenceChoices || hadDepthDecision != hasDepthDecision || previousTrialKills != current.DepthTrialKills) await InvokeAsync(StateHasChanged);
+        var stateChanged = hadChoices != current.PendingChoices.Count > 0
+            || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
+            || hadDepthDecision != current.PendingPushOrExtract
+            || hadMapChoice != current.PendingMapChoice
+            || previousMapCompleted != current.CompletedMapNodes.Count
+            || previousTrialKills != current.DepthTrialKills;
+        if (stateChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
         {
@@ -74,6 +85,7 @@ public partial class ArenaView : IAsyncDisposable
 
     private async Task ChooseAsync(string id) { if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task ChooseEssenceAsync(DragonEssenceId id) { if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task ChooseMapNodeAsync(string id) { if (simulation?.ChooseMapNode(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task PushDeeperAsync() { if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged); }
     private async Task StartExtractionAsync() { if (simulation?.StartExtraction() == true) await InvokeAsync(StateHasChanged); }
 

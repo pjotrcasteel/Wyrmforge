@@ -81,6 +81,7 @@ public sealed partial class RunSimulation
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 GainExperience(1);
+                RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
                 break;
             case DragonState defeatedDragon:
@@ -116,9 +117,7 @@ public sealed partial class RunSimulation
     private sealed class LightningTrace(Vector2D from, Vector2D to, double life)
     {
         public Vector2D From { get; } = from;
-
         public Vector2D To { get; } = to;
-
         public double Life { get; set; } = life;
     }
 }
