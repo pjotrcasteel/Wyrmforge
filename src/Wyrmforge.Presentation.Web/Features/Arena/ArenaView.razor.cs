@@ -11,6 +11,7 @@ using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Relics;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
 
@@ -30,7 +31,10 @@ public partial class ArenaView : IAsyncDisposable
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
+    private IReadOnlyList<RelicDefinition> CurrentRelicChoices => simulation?.PendingRelicChoices ?? Array.Empty<RelicDefinition>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssences => simulation?.SelectedDragonEssences ?? Array.Empty<DragonEssenceDefinition>();
+    private IReadOnlyList<RelicDefinition> CurrentRelics => simulation?.EquippedRelics ?? Array.Empty<RelicDefinition>();
+    private IReadOnlyList<RelicDefinition> OwnedRelics => simulation?.OwnedRelics ?? Array.Empty<RelicDefinition>();
     private IReadOnlyList<WyrmrealmMapNode> MapNodes => simulation?.MapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
@@ -42,7 +46,6 @@ public partial class ArenaView : IAsyncDisposable
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
     private bool PendingMapChoice => simulation?.PendingMapChoice == true;
     private bool AtRefuge => simulation?.AtCheckpoint == true;
-    private bool DepthTrialActive => simulation?.DepthTrialActive == true;
     private bool EvacuationActive => simulation?.EvacuationActive == true;
     private bool MapCombatActive => CurrentMapNode?.Type == WyrmrealmNodeType.Combat && !PendingMapChoice;
     private double EvacuationRemainingSeconds => simulation?.EvacuationRemainingSeconds ?? 0;
@@ -50,17 +53,13 @@ public partial class ArenaView : IAsyncDisposable
     private double CurrentMaxHealth => simulation?.MaxHealth ?? 1;
     private int CurrentMapNodeKills => simulation?.CurrentMapNodeKills ?? 0;
     private int CurrentMapNodeKillsRequired => simulation?.CurrentMapNodeKillsRequired ?? WyrmrealmMapState.KillsPerCombatNode;
-    private int DepthTrialKills => simulation?.DepthTrialKills ?? 0;
-    private int DepthTrialKillsRequired => simulation?.DepthTrialKillsRequired ?? 0;
     private int CurrentDepth => simulation?.Depth ?? 1;
     private int CheckpointVisit => simulation?.CheckpointVisit ?? 0;
+    private int RelicSlots => simulation?.RelicSlots ?? 0;
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
 
-    protected override void OnInitialized()
-    {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
-    }
+    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -77,22 +76,22 @@ public partial class ArenaView : IAsyncDisposable
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
+        var hadRelicChoices = current.PendingRelicChoices.Count > 0;
         var wasAtCheckpoint = current.AtCheckpoint;
         var hadMapChoice = current.PendingMapChoice;
         var previousMapCompleted = current.CompletedMapNodes.Count;
         var previousMapKills = current.CurrentMapNodeKills;
-        var previousTrialKills = current.DepthTrialKills;
         var previousEvacuation = current.EvacuationActive;
         var previousEvacuationSecond = (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
+            || hadRelicChoices != current.PendingRelicChoices.Count > 0
             || wasAtCheckpoint != current.AtCheckpoint
             || hadMapChoice != current.PendingMapChoice
             || previousMapCompleted != current.CompletedMapNodes.Count
             || previousMapKills != current.CurrentMapNodeKills
-            || previousTrialKills != current.DepthTrialKills
             || previousEvacuation != current.EvacuationActive
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (stateChanged) await InvokeAsync(StateHasChanged);
@@ -107,8 +106,11 @@ public partial class ArenaView : IAsyncDisposable
 
     private async Task ChooseAsync(string id) { if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task ChooseEssenceAsync(DragonEssenceId id) { if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task ChooseRelicAsync(RelicId id) { if (simulation?.ApplyRelicChoice(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task ChooseMapNodeAsync(string id) { if (simulation?.ChooseMapNode(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task UseCheckpointActionAsync(RunCheckpointActionId id) { if (simulation?.UseCheckpointAction(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task EquipRelicAsync(RelicId id) { if (simulation?.EquipRelic(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task UnequipRelicAsync(RelicId id) { if (simulation?.UnequipRelic(id) == true) await InvokeAsync(StateHasChanged); }
 
     private async Task AbandonRunAsync()
     {

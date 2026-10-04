@@ -24,7 +24,7 @@ public sealed partial class RunSimulation
         if (choice.Kind != LevelChoiceKind.Rune) return;
         var previousMaxHealth = player.MaxHealth;
         modifiers = RunUpgradeModifiers.Create(build.RunUpgrades);
-        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus;
+        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus + relicModifiers.MaxHealthBonus;
         if (choice.Id == $"rune:{RunUpgradeId.Vitality}") player.Health = Math.Min(player.MaxHealth, player.Health + (player.MaxHealth - previousMaxHealth));
     }
 

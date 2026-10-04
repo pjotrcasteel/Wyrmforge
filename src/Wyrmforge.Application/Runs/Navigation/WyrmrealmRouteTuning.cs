@@ -5,4 +5,5 @@ public sealed record WyrmrealmRouteTuning(
     double SpawnIntervalMultiplier = 1,
     double EnemyHealthMultiplier = 1,
     double EnemySpeedMultiplier = 1,
-    WyrmrealmHazardProfile? Hazard = null);
+    WyrmrealmHazardProfile? Hazard = null,
+    WyrmrealmRelicRewardProfile? Relic = null);

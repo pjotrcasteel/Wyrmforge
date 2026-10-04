@@ -18,7 +18,7 @@
         </div>
     }
 
-    @if (CurrentEssences.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
+    @if (CurrentEssences.Count > 0 || CurrentRelics.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {
         <div class="essence-strip" aria-label="Current run state">
             @if (CurrentOffering is not null && RunOffering is { } offeringId)
@@ -30,9 +30,9 @@
             {
                 <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") BASE SCORE</span>
             }
-            @if (DepthTrialActive)
+            @foreach (var relic in CurrentRelics)
             {
-                <span>TRIAL • @DepthTrialKills/@DepthTrialKillsRequired</span>
+                <span title="@relic.Description">@relic.Icon @relic.Name</span>
             }
             @foreach (var essence in CurrentEssences)
             {
@@ -45,9 +45,13 @@
     {
         <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
     }
+    else if (CurrentRelicChoices.Count > 0)
+    {
+        <RelicChoiceOverlay Choices="CurrentRelicChoices" OnChoose="ChooseRelicAsync" />
+    }
     else if (AtRefuge)
     {
-        <RefugeOverlay Actions="CurrentCheckpointActions" Visit="CheckpointVisit" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" Health="CurrentHealth" MaxHealth="CurrentMaxHealth" OnUse="UseCheckpointActionAsync" />
+        <RefugeOverlay Actions="CurrentCheckpointActions" Visit="CheckpointVisit" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" Health="CurrentHealth" MaxHealth="CurrentMaxHealth" OwnedRelics="OwnedRelics" EquippedRelics="CurrentRelics" RelicSlots="RelicSlots" OnUse="UseCheckpointActionAsync" OnEquipRelic="EquipRelicAsync" OnUnequipRelic="UnequipRelicAsync" />
     }
     else if (CurrentChoices.Count > 0)
     {

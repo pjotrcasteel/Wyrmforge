@@ -120,7 +120,7 @@ public sealed partial class RunSimulation
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
         EnsurePlayerPosition(width, height);
-        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || AtCheckpoint || mapState.DecisionPending) return CreateSnapshot();
+        if (IsEnded || HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
         UpdateCombatFeedback(delta);
         elapsed += delta;
@@ -235,9 +235,11 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
-            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || AtCheckpoint || mapState.DecisionPending,
+            HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending,
             IsEnded);
     }
+
+    private bool HasPendingRunChoice => pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || pendingRelicChoices.Count > 0;
 
     private RunCheckpointActionState[] CreateCheckpointActions() =>
     [

@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -14,4 +15,6 @@ public sealed class RunBuildState
     public SynergySelection Synergies { get; } = new();
 
     public DragonEssenceSelection DragonEssences { get; } = new();
+
+    public RelicInventoryState Relics { get; } = new();
 }
