@@ -13,6 +13,7 @@ public sealed class WyrmrealmMapState
 
     public WyrmrealmMapState(DragonDefinition target)
     {
+        ArgumentNullException.ThrowIfNull(target);
         Nodes =
         [
             new("scorched-hollow", "Scorched Hollow", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Fire),
@@ -23,7 +24,7 @@ public sealed class WyrmrealmMapState
             new("thunder-maw", "Thunder Maw", 3, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Storm),
             new("winter-wyrmroad", "Winter Wyrmroad", 4, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Frost),
             new("arcane-scar", "Arcane Scar", 4, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Arcane),
-            new("dragon-trail", target.Name, 5, 0, WyrmrealmNodeType.Dragon, null, null),
+            new("dragon-trail", "Unknown Wyrm", 5, 0, WyrmrealmNodeType.Dragon, null, null),
         ];
     }
 
