@@ -188,6 +188,7 @@ public sealed partial class RunSimulation
         attractedDragon = null;
         dragonPending = false;
         dragonEncounterStarted = false;
+        ResetDragonHunt();
         mapEncounterCleanupPending = false;
         ClearMapEncounterField();
         spawnTimer = 0;
@@ -237,7 +238,9 @@ public sealed partial class RunSimulation
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
             HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending,
-            IsEnded);
+            IsEnded,
+            CreateDragonHuntSnapshot(),
+            CreateDragonHuntHazardSnapshots());
     }
 
     private bool HasPendingRunChoice => pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || pendingRelicChoices.Count > 0;

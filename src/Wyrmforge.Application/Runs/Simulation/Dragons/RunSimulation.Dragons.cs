@@ -1,26 +1,119 @@
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private readonly DragonHuntState dragonHuntState = new();
+    private readonly List<DragonHuntHazardState> dragonHuntHazards = [];
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
     private void UpdateDragonEncounter(double delta, double width, double height)
     {
-        if (dragonPending && !dragonEncounterStarted && attractedDragon is { } target) SpawnDragon(DragonCatalog.Get(target), width);
+        if (dragonPending && !dragonEncounterStarted && attractedDragon is { } target) SpawnDragon(DragonCatalog.Get(target), width, height);
         if (dragon is not { Health: > 0 } activeDragon) return;
 
+        if (dragonHuntState.Stage == DragonHuntStage.Entrance)
+        {
+            UpdateDragonEntrance(activeDragon, delta, width, height);
+            return;
+        }
+
+        if (dragonHuntState.Stage == DragonHuntStage.PhaseBreak)
+        {
+            if (dragonHuntState.TickStage(delta)) activeDragon.AttackCooldown = 0.8;
+            return;
+        }
+
+        if (dragonHuntState.TryStartPhaseBreak(activeDragon.Phase))
+        {
+            BeginDragonPhaseBreak(activeDragon);
+            return;
+        }
+
+        UpdateDragonHuntPressure(delta, activeDragon, width, height);
         activeDragon.FrozenFor = Math.Max(0, activeDragon.FrozenFor - delta);
         var scaledDelta = delta * (activeDragon.FrozenFor > 0 ? 0.45 : 1);
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond;
         if (Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayer(contactDamage * delta);
+    }
+
+    private void UpdateDragonEntrance(DragonState activeDragon, double delta, double width, double height)
+    {
+        var entrance = dragonHuntState.Profile?.Entrance ?? throw new InvalidOperationException("Active dragon hunt requires an entrance profile.");
+        dragonHuntState.TickStage(delta);
+        var progress = dragonHuntState.Stage == DragonHuntStage.Entrance ? EaseOutCubic(dragonHuntState.StageProgress) : 1;
+        var from = ArenaPoint(entrance.Start, width, height);
+        var to = ArenaPoint(entrance.Destination, width, height);
+        activeDragon.Position = from + ((to - from) * progress);
+        if (dragonHuntState.Stage == DragonHuntStage.Battle) activeDragon.AttackCooldown = 1.15;
+    }
+
+    private void BeginDragonPhaseBreak(DragonState activeDragon)
+    {
+        activeDragon.TelegraphRemaining = 0;
+        activeDragon.AttackCooldown = 1;
+        dragonHuntHazards.Clear();
+    }
+
+    private void UpdateDragonHuntPressure(double delta, DragonState activeDragon, double width, double height)
+    {
+        for (var index = dragonHuntHazards.Count - 1; index >= 0; index--)
+        {
+            var hazard = dragonHuntHazards[index];
+            hazard.Remaining -= delta;
+            if (hazard.Remaining > 0) continue;
+            ResolveDragonHuntHazard(hazard);
+            dragonHuntHazards.RemoveAt(index);
+        }
+
+        if (!dragonHuntState.TickPressure(delta, activeDragon.Phase)) return;
+        ScheduleDragonHuntPressure(activeDragon, width, height);
+    }
+
+    private void ScheduleDragonHuntPressure(DragonState activeDragon, double width, double height)
+    {
+        var profile = dragonHuntState.Profile?.Pressure ?? throw new InvalidOperationException("Active dragon hunt requires a pressure profile.");
+        var radius = profile.Radius.For(activeDragon.Phase);
+        var damage = profile.Damage.For(activeDragon.Phase);
+        var telegraph = profile.Cadence.TelegraphSeconds.For(activeDragon.Phase);
+
+        for (var strike = 0; strike < profile.Strikes; strike++)
+        {
+            var position = HuntPressurePosition(profile.Origin, activeDragon, width, height, radius);
+            dragonHuntHazards.Add(new DragonHuntHazardState(position, radius, damage, telegraph, profile.VisualSpell, activeDragon.Definition.School));
+        }
+    }
+
+    private Vector2D HuntPressurePosition(DragonHuntPressureOrigin origin, DragonState activeDragon, double width, double height, double radius) => origin switch
+    {
+        DragonHuntPressureOrigin.Player => player.Position,
+        DragonHuntPressureOrigin.Dragon => activeDragon.Position,
+        DragonHuntPressureOrigin.ArenaRandom => RandomArenaPosition(width, height, radius),
+        _ => player.Position,
+    };
+
+    private Vector2D RandomArenaPosition(double width, double height, double radius)
+    {
+        var maximumMargin = Math.Min(width, height) * 0.22;
+        var margin = Math.Min(radius + 18, maximumMargin);
+        var usableWidth = Math.Max(1, width - margin * 2);
+        var usableHeight = Math.Max(1, height - margin * 2);
+        return new Vector2D(margin + randomSource.NextDouble() * usableWidth, margin + randomSource.NextDouble() * usableHeight);
+    }
+
+    private void ResolveDragonHuntHazard(DragonHuntHazardState hazard)
+    {
+        RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
+        if (Vector2D.Distance(player.Position, hazard.Position) <= hazard.Radius) DamagePlayer(hazard.Damage);
     }
 
     private void UpdateDragonCombat(DragonState activeDragon, double delta)
@@ -37,14 +130,17 @@ public sealed partial class RunSimulation
         else MoveDragon(activeDragon, delta);
     }
 
-    private void SpawnDragon(DragonDefinition definition, double width)
+    private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
         dragonEncounterStarted = true;
         dragonPending = false;
         enemies.Clear();
         projectiles.Clear();
         lightning.Clear();
-        dragon = new DragonState(++enemyId, definition, new Vector2D(width / 2, -definition.Radius - 18));
+        var hunt = DragonHuntCatalog.Get(definition.Id);
+        dragonHuntState.Start(hunt);
+        dragonHuntHazards.Clear();
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height));
     }
 
     private void MoveDragon(DragonState activeDragon, double delta)
@@ -144,11 +240,19 @@ public sealed partial class RunSimulation
         var reward = definition.Combat.Reward;
         score += reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
         dragon = null;
+        dragonHuntHazards.Clear();
+        dragonHuntState.Reset();
         spawnTimer = 1.2;
         mapState.CompleteDragon();
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(definition.Id).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
         GainExperience(reward.Experience);
         if (pendingDragonEssenceChoices.Count == 0 && !extractionState.Start(player.Position)) checkpointState.Enter();
+    }
+
+    private void ResetDragonHunt()
+    {
+        dragonHuntHazards.Clear();
+        dragonHuntState.Reset();
     }
 
     private DragonRenderSnapshot? CreateDragonSnapshot()
@@ -161,10 +265,46 @@ public sealed partial class RunSimulation
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
     {
-        if (dragon is not { IsTelegraphing: true } activeDragon) return null;
+        if (dragon is not { IsTelegraphing: true } activeDragon || !dragonHuntState.CanDragonAct) return null;
         var attack = activeDragon.Definition.Combat.Attack;
         if (attack.Pattern != DragonAttackPattern.Cone) return null;
         return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y,
             attack.Geometry.Range, attack.Geometry.HalfAngle);
+    }
+
+    private DragonHuntRenderSnapshot? CreateDragonHuntSnapshot()
+    {
+        if (dragon is not { Health: > 0 } activeDragon || dragonHuntState.Profile is not { } hunt) return null;
+        return new DragonHuntRenderSnapshot(activeDragon.Definition.School, dragonHuntState.Stage, hunt.Arena, hunt.Entrance.Style, dragonHuntState.StageProgress);
+    }
+
+    private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards
+        .Select(hazard => new DragonHuntHazardRenderSnapshot(hazard.Position.X, hazard.Position.Y, hazard.Radius, hazard.Progress, hazard.School))
+        .ToArray();
+
+    private static Vector2D ArenaPoint(DragonHuntPoint point, double width, double height) => new(point.X * width, point.Y * height);
+
+    private static double EaseOutCubic(double value)
+    {
+        var inverse = 1 - Math.Clamp(value, 0, 1);
+        return 1 - inverse * inverse * inverse;
+    }
+
+    private sealed class DragonHuntHazardState(
+        Vector2D position,
+        double radius,
+        double damage,
+        double duration,
+        SpellId visualSpell,
+        SpellSchool school)
+    {
+        public Vector2D Position { get; } = position;
+        public double Radius { get; } = radius;
+        public double Damage { get; } = damage;
+        public double Duration { get; } = duration;
+        public double Remaining { get; set; } = duration;
+        public SpellId VisualSpell { get; } = visualSpell;
+        public SpellSchool School { get; } = school;
+        public double Progress => 1 - Math.Clamp(Remaining / Duration, 0, 1);
     }
 }

@@ -18,7 +18,7 @@ public sealed partial class RunSimulation
                 if (enemy.Health > 0) return true;
             }
 
-            return dragon is { Health: > 0 };
+            return dragonHuntState.CanTargetDragon && dragon is { Health: > 0 };
         }
     }
 
@@ -38,13 +38,13 @@ public sealed partial class RunSimulation
             nearestDistance = distance;
         }
 
-        if (dragon is not { Health: > 0 } activeDragon || excludedIds?.Contains(activeDragon.Id) == true) return nearest;
+        if (!dragonHuntState.CanTargetDragon || dragon is not { Health: > 0 } activeDragon || excludedIds?.Contains(activeDragon.Id) == true) return nearest;
         var dragonDistance = Vector2D.Distance(position, activeDragon.Position);
         if (dragonDistance <= minimumDistance || dragonDistance >= nearestDistance) return nearest;
         return activeDragon;
     }
 
-    private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, dragon);
+    private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, dragonHuntState.CanTargetDragon ? dragon : null);
 
     private static void ApplyFreeze(ICombatTarget target, double duration)
     {

@@ -69,6 +69,18 @@ public sealed partial class RunSimulation
     private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
     {
         if (target.Health <= 0 || damage <= 0) return false;
+        if (target is DragonState protectedDragon)
+        {
+            if (!dragonHuntState.CanTargetDragon) return false;
+            if (dragonHuntState.TryStartPhaseBreakForDamage(protectedDragon.Health, damage, protectedDragon.MaxHealth))
+            {
+                protectedDragon.Health = protectedDragon.MaxHealth * 0.5;
+                RegisterTargetHit(protectedDragon);
+                BeginDragonPhaseBreak(protectedDragon);
+                return false;
+            }
+        }
+
         target.Health -= damage;
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
