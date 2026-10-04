@@ -12,7 +12,6 @@ public sealed class RunDepthStateTests
         var state = new RunDepthState();
 
         Assert.AreEqual(1, state.Depth);
-        Assert.IsFalse(state.DecisionPending);
         Assert.AreEqual(1d, state.EnemyHealthMultiplier, 0.001);
         Assert.AreEqual(1d, state.EnemySpeedMultiplier, 0.001);
         Assert.AreEqual(1d, state.SpawnIntervalMultiplier, 0.001);
@@ -20,16 +19,14 @@ public sealed class RunDepthStateTests
     }
 
     [TestMethod]
-    public void PushDeeper_AfterDecision_IncreasesRiskAndReward()
+    public void PushDeeper_WhenAnotherDepthExists_IncreasesRiskAndReward()
     {
         var state = new RunDepthState();
-        state.OfferDecision();
 
         var pushed = state.PushDeeper();
 
         Assert.IsTrue(pushed);
         Assert.AreEqual(2, state.Depth);
-        Assert.IsFalse(state.DecisionPending);
         Assert.AreEqual(1.35, state.EnemyHealthMultiplier, 0.001);
         Assert.AreEqual(1.15, state.EnemySpeedMultiplier, 0.001);
         Assert.AreEqual(0.8, state.SpawnIntervalMultiplier, 0.001);
@@ -37,15 +34,12 @@ public sealed class RunDepthStateTests
     }
 
     [TestMethod]
-    public void Extract_AfterDecision_DoesNotIncreaseDepth()
+    public void PushDeeper_AtMaximumImplementedDepth_ReturnsFalse()
     {
         var state = new RunDepthState();
-        state.OfferDecision();
+        Assert.IsTrue(state.PushDeeper());
 
-        var extracted = state.Extract();
-
-        Assert.IsTrue(extracted);
-        Assert.AreEqual(1, state.Depth);
-        Assert.IsFalse(state.DecisionPending);
+        Assert.IsFalse(state.PushDeeper());
+        Assert.AreEqual(RunDepthState.MaxImplementedDepth, state.Depth);
     }
 }

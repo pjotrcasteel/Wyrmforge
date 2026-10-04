@@ -145,6 +145,7 @@ public sealed partial class RunSimulation
         mapState.CompleteDragon();
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(defeatedId).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
         GainExperience(defeatedId == DragonId.Stormcoil ? 8 : 5);
+        if (pendingDragonEssenceChoices.Count == 0 && !extractionState.Start(player.Position)) checkpointState.Enter();
     }
 
     private DragonRenderSnapshot? CreateDragonSnapshot()

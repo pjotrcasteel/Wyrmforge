@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Extraction;
@@ -39,6 +40,7 @@ public sealed partial class RunSimulation
     private readonly RunDepthState depthState = new();
     private readonly RunDepthTrialState depthTrialState = new();
     private readonly RunExtractionState extractionState = new();
+    private readonly RunCheckpointState checkpointState = new();
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
     private readonly List<ProjectileState> projectiles = [];
@@ -98,8 +100,7 @@ public sealed partial class RunSimulation
     public DragonEssenceId? Offering { get; }
     public DragonId? HuntTarget => AttractedDragon;
     public bool PendingMapChoice => mapState.DecisionPending && (depthState.Depth == 1 ? !initialDragonEncounterStarted : !deepDragonEncounterStarted);
-    public bool PendingCheckpointDecision => depthState.DecisionPending;
-    public bool PendingPushOrExtract => PendingCheckpointDecision;
+    public bool AtCheckpoint => checkpointState.IsOpen;
     public bool CanPushDeeper => depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
     public bool EvacuationActive => extractionState.IsActive;
@@ -108,13 +109,18 @@ public sealed partial class RunSimulation
     public int DepthTrialKillsRequired => RunDepthTrialState.KillsRequired;
     public int Depth => depthState.Depth;
     public int Level => level;
+    public int CheckpointVisit => checkpointState.Visit;
+    public double Health => player.Health;
+    public double MaxHealth => player.MaxHealth;
     public double ScoreMultiplier => depthState.ScoreMultiplier;
     public bool IsEnded { get; private set; }
+
+    public IReadOnlyList<RunCheckpointActionState> CheckpointActions => AtCheckpoint ? CreateCheckpointActions() : Array.Empty<RunCheckpointActionState>();
 
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
         EnsurePlayerPosition(width, height);
-        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending || mapState.DecisionPending) return CreateSnapshot();
+        if (IsEnded || pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || AtCheckpoint || mapState.DecisionPending) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
         UpdateCombatFeedback(delta);
         elapsed += delta;
@@ -141,7 +147,7 @@ public sealed partial class RunSimulation
         else if (extractionState.Tick(delta, player.Position))
         {
             ClearMapEncounterField();
-            depthState.OfferDecision();
+            checkpointState.Enter();
         }
         return CreateSnapshot();
     }
@@ -163,13 +169,22 @@ public sealed partial class RunSimulation
         var choice = pendingDragonEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || !build.DragonEssences.Select(id)) return false;
         pendingDragonEssenceChoices = [];
-        if (!extractionState.Start(player.Position)) depthState.OfferDecision();
+        if (!extractionState.Start(player.Position)) checkpointState.Enter();
         return true;
     }
 
+    public bool UseCheckpointAction(RunCheckpointActionId action) => action switch
+    {
+        RunCheckpointActionId.MendWounds => MendWounds(),
+        RunCheckpointActionId.Descend => PushDeeper(),
+        RunCheckpointActionId.LeaveRealm => LeaveRealm(),
+        _ => false,
+    };
+
     public bool PushDeeper()
     {
-        if (!depthState.PushDeeper()) return false;
+        if (!AtCheckpoint || !depthState.CanPushDeeper || !depthState.PushDeeper()) return false;
+        if (!checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
         mapState = new WyrmrealmMapState(depthState.Depth);
         attractedDragon = huntRoute.Deep;
         deepDragonPending = false;
@@ -182,13 +197,11 @@ public sealed partial class RunSimulation
 
     public bool LeaveRealm()
     {
-        if (!depthState.Extract()) return false;
+        if (!checkpointState.TryUse(RunCheckpointActionId.LeaveRealm)) return false;
         outcome = RunOutcome.Extracted;
         IsEnded = true;
         return true;
     }
-
-    public bool StartExtraction() => LeaveRealm();
 
     public RunSummary AbandonRun()
     {
@@ -222,8 +235,22 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
-            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || depthState.DecisionPending || mapState.DecisionPending,
+            pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || AtCheckpoint || mapState.DecisionPending,
             IsEnded);
+    }
+
+    private RunCheckpointActionState[] CreateCheckpointActions() =>
+    [
+        new(RunCheckpointActionId.MendWounds, checkpointState.CanUse(RunCheckpointActionId.MendWounds) && player.Health < player.MaxHealth, checkpointState.HasUsed(RunCheckpointActionId.MendWounds)),
+        new(RunCheckpointActionId.Descend, depthState.CanPushDeeper),
+        new(RunCheckpointActionId.LeaveRealm, true),
+    ];
+
+    private bool MendWounds()
+    {
+        if (!AtCheckpoint || player.Health >= player.MaxHealth || !checkpointState.TryUse(RunCheckpointActionId.MendWounds)) return false;
+        player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth * RunCheckpointState.MendFraction);
+        return true;
     }
 
     private void ApplyOffering()

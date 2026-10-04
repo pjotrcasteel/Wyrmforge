@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
@@ -36,20 +37,23 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<RunResonanceEntry> CurrentResonance => simulation?.Resonance ?? Array.Empty<RunResonanceEntry>();
     private IReadOnlyList<DragonSign> CurrentDragonSigns => simulation?.DragonSigns ?? Array.Empty<DragonSign>();
     private IReadOnlyList<RealmInfluenceCue> CurrentRealmInfluences => simulation?.RealmInfluences ?? Array.Empty<RealmInfluenceCue>();
+    private IReadOnlyList<RunCheckpointActionState> CurrentCheckpointActions => simulation?.CheckpointActions ?? Array.Empty<RunCheckpointActionState>();
     private WyrmrealmMapNode? CurrentMapNode => simulation?.CurrentMapNode;
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
     private bool PendingMapChoice => simulation?.PendingMapChoice == true;
-    private bool PendingCheckpointDecision => simulation?.PendingCheckpointDecision == true;
-    private bool CanPushDeeper => simulation?.CanPushDeeper == true;
+    private bool AtRefuge => simulation?.AtCheckpoint == true;
     private bool DepthTrialActive => simulation?.DepthTrialActive == true;
     private bool EvacuationActive => simulation?.EvacuationActive == true;
     private bool MapCombatActive => CurrentMapNode?.Type == WyrmrealmNodeType.Combat && !PendingMapChoice;
     private double EvacuationRemainingSeconds => simulation?.EvacuationRemainingSeconds ?? 0;
+    private double CurrentHealth => simulation?.Health ?? 0;
+    private double CurrentMaxHealth => simulation?.MaxHealth ?? 1;
     private int CurrentMapNodeKills => simulation?.CurrentMapNodeKills ?? 0;
     private int CurrentMapNodeKillsRequired => simulation?.CurrentMapNodeKillsRequired ?? WyrmrealmMapState.KillsPerCombatNode;
     private int DepthTrialKills => simulation?.DepthTrialKills ?? 0;
     private int DepthTrialKillsRequired => simulation?.DepthTrialKillsRequired ?? 0;
     private int CurrentDepth => simulation?.Depth ?? 1;
+    private int CheckpointVisit => simulation?.CheckpointVisit ?? 0;
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
 
@@ -73,7 +77,7 @@ public partial class ArenaView : IAsyncDisposable
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
-        var hadDepthDecision = current.PendingCheckpointDecision;
+        var wasAtCheckpoint = current.AtCheckpoint;
         var hadMapChoice = current.PendingMapChoice;
         var previousMapCompleted = current.CompletedMapNodes.Count;
         var previousMapKills = current.CurrentMapNodeKills;
@@ -84,7 +88,7 @@ public partial class ArenaView : IAsyncDisposable
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0
-            || hadDepthDecision != current.PendingCheckpointDecision
+            || wasAtCheckpoint != current.AtCheckpoint
             || hadMapChoice != current.PendingMapChoice
             || previousMapCompleted != current.CompletedMapNodes.Count
             || previousMapKills != current.CurrentMapNodeKills
@@ -104,8 +108,7 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChooseAsync(string id) { if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task ChooseEssenceAsync(DragonEssenceId id) { if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task ChooseMapNodeAsync(string id) { if (simulation?.ChooseMapNode(id) == true) await InvokeAsync(StateHasChanged); }
-    private async Task PushDeeperAsync() { if (simulation?.PushDeeper() == true) await InvokeAsync(StateHasChanged); }
-    private async Task LeaveRealmAsync() { if (simulation?.LeaveRealm() == true) await InvokeAsync(StateHasChanged); }
+    private async Task UseCheckpointActionAsync(RunCheckpointActionId id) { if (simulation?.UseCheckpointAction(id) == true) await InvokeAsync(StateHasChanged); }
 
     private async Task AbandonRunAsync()
     {

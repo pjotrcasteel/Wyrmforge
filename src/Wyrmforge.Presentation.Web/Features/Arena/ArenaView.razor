@@ -28,7 +28,7 @@
             }
             @if (CurrentDepth > 1)
             {
-                <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") SCORE</span>
+                <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") BASE SCORE</span>
             }
             @if (DepthTrialActive)
             {
@@ -45,9 +45,9 @@
     {
         <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
     }
-    else if (PendingCheckpointDecision)
+    else if (AtRefuge)
     {
-        <PushOrExtractOverlay CanPushDeeper="CanPushDeeper" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" OnExtract="LeaveRealmAsync" OnPush="PushDeeperAsync" />
+        <RefugeOverlay Actions="CurrentCheckpointActions" Visit="CheckpointVisit" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" Health="CurrentHealth" MaxHealth="CurrentMaxHealth" OnUse="UseCheckpointActionAsync" />
     }
     else if (CurrentChoices.Count > 0)
     {

@@ -6,8 +6,6 @@ public sealed class RunDepthState
 
     public int Depth { get; private set; } = 1;
 
-    public bool DecisionPending { get; private set; }
-
     public bool CanPushDeeper => Depth < MaxImplementedDepth;
 
     public double EnemyHealthMultiplier => 1 + Math.Max(0, Depth - 1) * 0.35;
@@ -18,20 +16,10 @@ public sealed class RunDepthState
 
     public double ScoreMultiplier => 1 + Math.Max(0, Depth - 1) * 0.5;
 
-    public void OfferDecision() => DecisionPending = true;
-
     public bool PushDeeper()
     {
-        if (!DecisionPending || !CanPushDeeper) return false;
+        if (!CanPushDeeper) return false;
         Depth++;
-        DecisionPending = false;
-        return true;
-    }
-
-    public bool Extract()
-    {
-        if (!DecisionPending) return false;
-        DecisionPending = false;
         return true;
     }
 }
