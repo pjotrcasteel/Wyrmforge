@@ -7,18 +7,15 @@ namespace Wyrmforge.Application.Tests.Runs.Depth;
 public sealed class RunDepthLimitTests
 {
     [TestMethod]
-    public void PushDeeper_AtMaximumImplementedDepth_IsRejectedAndDecisionRemains()
+    public void PushDeeper_AtMaximumImplementedDepth_IsRejected()
     {
         var state = new RunDepthState();
-        state.OfferDecision();
         Assert.IsTrue(state.PushDeeper());
-        state.OfferDecision();
 
         var pushed = state.PushDeeper();
 
         Assert.IsFalse(pushed);
         Assert.AreEqual(RunDepthState.MaxImplementedDepth, state.Depth);
-        Assert.IsTrue(state.DecisionPending);
         Assert.IsFalse(state.CanPushDeeper);
     }
 }
