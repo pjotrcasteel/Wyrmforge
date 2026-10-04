@@ -105,9 +105,10 @@ public sealed class RunSimulationTests
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
-
         StartFirstMapEncounter(simulation);
-        var snapshot = simulation.Tick(0.2, default, 800, 600);
+        RunRenderSnapshot snapshot = simulation.CreateSnapshot();
+
+        for (var tick = 0; tick < 4; tick++) snapshot = simulation.Tick(0.05, default, 800, 600);
 
         Assert.IsFalse(simulation.PendingMapChoice);
         Assert.IsNull(snapshot.Dragon);
