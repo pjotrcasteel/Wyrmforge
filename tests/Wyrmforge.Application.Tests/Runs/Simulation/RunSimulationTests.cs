@@ -17,7 +17,7 @@ public sealed class RunSimulationTests
         var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
 
         Assert.IsTrue(simulation.PendingMapChoice);
-        Assert.AreEqual(2, simulation.AvailableMapNodes.Count);
+        Assert.AreEqual(3, simulation.AvailableMapNodes.Count);
         Assert.AreEqual(0, simulation.CompletedMapNodes.Count);
     }
 
