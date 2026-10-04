@@ -7,7 +7,7 @@
     <section class="realm-map-card">
         <div class="eyebrow">WYRMREALM • DEPTH @Depth</div>
         <h2>@(Depth <= 1 ? "Choose where your magic cuts through the realm." : "Choose the next route into the deeper realm.")</h2>
-        <p>@(Depth <= 1 ? "Each cleared trail changes both your next upgrade opportunity and the elemental signature you leave behind." : "The route begins again, but the pressure does not. Deeper enemies are stronger, rifts are unstable, and every trail keeps shaping your resonance.")</p>
+        <p>Routes now carry different pressure, hazards and rewards. Choose what your current build can afford rather than only chasing an element.</p>
 
         <div class="resonance-panel" aria-label="Current magic resonance">
             <div class="resonance-heading">
@@ -47,9 +47,15 @@
                                 <span class="node-icon">@NodeIcon(node)</span>
                                 <strong>@node.Name</strong>
                                 <small>@NodeDescription(node)</small>
-                                @if (node.AttunementSchool is { } school)
+                                @if (node.Route is { } route)
                                 {
-                                    <span class="node-reward">@SchoolIcon(school) @school • +@RunResonanceState.RouteWeight resonance • biases next spell choice</span>
+                                    <div class="node-traits">
+                                        <span class="node-reward">@RewardDescription(route.Reward)</span>
+                                        @if (route.Hazard is { } hazard)
+                                        {
+                                            <span class="node-hazard">⚠ @HazardDescription(hazard)</span>
+                                        }
+                                    </div>
                                 }
                             </button>
                         }
@@ -89,14 +95,44 @@
     private static string NodeDescription(WyrmrealmMapNode node)
     {
         if (node.Type == WyrmrealmNodeType.Dragon) return "Something enormous waits beyond the trail. The realm has stopped whispering.";
-
-        return node.EncounterKind switch
-        {
-            WyrmrealmEncounterKind.Swarm => "5 kills • fast chaser pressure",
-            WyrmrealmEncounterKind.StalkerPressure => "5 kills • Rift Stalkers dominate",
-            _ => "5 kills • mixed enemy pressure",
-        };
+        var encounter = node.Route?.Encounter ?? throw new InvalidOperationException("Combat routes require an encounter profile.");
+        var pressure = PressureDescription(encounter);
+        return $"{WyrmrealmMapState.KillsPerCombatNode} kills • {EncounterDescription(encounter.Kind)}{pressure}";
     }
+
+    private static string EncounterDescription(WyrmrealmEncounterKind kind) => kind switch
+    {
+        WyrmrealmEncounterKind.Swarm => "swarm",
+        WyrmrealmEncounterKind.StalkerPressure => "stalker pressure",
+        _ => "mixed pressure",
+    };
+
+    private static string PressureDescription(WyrmrealmEncounterProfile encounter)
+    {
+        var traits = new List<string>();
+        if (encounter.SpawnIntervalMultiplier < 0.9) traits.Add("fast spawns");
+        if (encounter.EnemyHealthMultiplier > 1.1) traits.Add("tougher enemies");
+        if (encounter.EnemySpeedMultiplier > 1.1) traits.Add("faster enemies");
+        return traits.Count == 0 ? string.Empty : $" • {string.Join(" + ", traits)}";
+    }
+
+    private static string RewardDescription(WyrmrealmRewardProfile reward)
+    {
+        var parts = new List<string>
+        {
+            $"{SchoolIcon(reward.AttunementSchool)} {reward.AttunementSchool} • +{RunResonanceState.RouteWeight} resonance",
+        };
+        if (reward.ScoreBonus > 0) parts.Add($"+{reward.ScoreBonus} base score");
+        if (reward.RecoveryFraction > 0) parts.Add($"restore {reward.RecoveryFraction * 100:0}% health");
+        return string.Join(" • ", parts);
+    }
+
+    private static string HazardDescription(WyrmrealmHazardProfile hazard) => hazard.Kind switch
+    {
+        WyrmrealmHazardKind.UnstableRifts when hazard.IntervalMultiplier < 0.8 => "volatile rifts • frequent",
+        WyrmrealmHazardKind.UnstableRifts => "unstable rifts",
+        _ => "unknown hazard",
+    };
 
     private static string NodeIcon(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon
         ? "🐉"

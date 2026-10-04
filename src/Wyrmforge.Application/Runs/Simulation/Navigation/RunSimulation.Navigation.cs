@@ -12,6 +12,8 @@ public sealed partial class RunSimulation
     public int CurrentMapNodeKillsRequired => WyrmrealmMapState.KillsPerCombatNode;
     public IReadOnlyList<SpellSchool> PendingAttunements => pendingAttunements.ToArray();
 
+    private WyrmrealmRouteProfile? CurrentRoute => mapState.EncounterActive ? mapState.CurrentNode?.Route : null;
+
     public bool ChooseMapNode(string id)
     {
         var dragonEncounterStarted = depthState.Depth == 1 ? initialDragonEncounterStarted : deepDragonEncounterStarted;
@@ -28,7 +30,8 @@ public sealed partial class RunSimulation
             return true;
         }
 
-        encounterPattern = ToEnemyEncounterPattern(node.EncounterKind ?? throw new InvalidOperationException("Combat nodes require an encounter kind."));
+        var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
+        encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterSpawnIndex = 0;
         spawnTimer = 0.15;
         return true;
@@ -40,10 +43,21 @@ public sealed partial class RunSimulation
         if (dragonEncounterStarted || !mapState.EncounterActive) return;
         var completedNode = mapState.CurrentNode;
         if (!mapState.RegisterKill()) return;
-        if (completedNode is not null) completedRouteNodes.Add(completedNode);
-        if (completedNode?.AttunementSchool is { } school) pendingAttunements.Enqueue(school);
-        if (completedNode?.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
+        if (completedNode is null) return;
+
+        completedRouteNodes.Add(completedNode);
+        ApplyRouteReward(completedNode.Route?.Reward);
+        if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;
+    }
+
+    private void ApplyRouteReward(WyrmrealmRewardProfile? reward)
+    {
+        if (reward is null) return;
+        pendingAttunements.Enqueue(reward.AttunementSchool);
+        score += (int)(reward.ScoreBonus * depthState.ScoreMultiplier);
+        if (reward.RecoveryFraction <= 0 || player.Health <= 0) return;
+        player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth * reward.RecoveryFraction);
     }
 
     private void CompleteMapEncounterCleanup()
@@ -65,6 +79,7 @@ public sealed partial class RunSimulation
         splashPulses.Clear();
         elementalImpacts.Clear();
         deathBursts.Clear();
+        unstableRiftState.Reset();
     }
 
     private static EnemyEncounterPattern ToEnemyEncounterPattern(WyrmrealmEncounterKind kind) => kind switch

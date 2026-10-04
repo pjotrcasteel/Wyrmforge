@@ -19,7 +19,8 @@ public sealed partial class RunSimulation
         if (!mapEncounter) EnsureEncounterPattern();
         SpawnEnemy(width, height, EnemyEncounterComposition.GetEnemyKind(encounterPattern, encounterSpawnIndex));
         var baseInterval = Math.Max(0.28, 0.9 - elapsed / 120);
-        spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern);
+        var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
+        spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier;
         encounterSpawnIndex++;
     }
 
@@ -42,8 +43,10 @@ public sealed partial class RunSimulation
             _ => new Vector2D(-margin, randomSource.NextDouble() * height),
         };
         var scale = 1 + elapsed / 80;
-        var health = 36 * scale * depthState.EnemyHealthMultiplier;
-        var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier;
+        var routeHealth = Math.Max(0.25, CurrentRoute?.Encounter.EnemyHealthMultiplier ?? 1);
+        var routeSpeed = Math.Max(0.25, CurrentRoute?.Encounter.EnemySpeedMultiplier ?? 1);
+        var health = 36 * scale * depthState.EnemyHealthMultiplier * routeHealth;
+        var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier * routeSpeed;
         var id = ++enemyId;
         var radius = kind == EnemyKind.RiftStalker ? 14 : 11;
         enemies.Add(new EnemyState(id, position, radius, health, speed, kind));

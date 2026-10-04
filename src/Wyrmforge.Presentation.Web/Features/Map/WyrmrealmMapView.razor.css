@@ -11,7 +11,7 @@
 }
 
 .realm-map-card {
-    width: min(760px, 100%);
+    width: min(800px, 100%);
     padding: 26px;
     border: 1px solid rgba(203, 170, 255, 0.22);
     border-radius: 22px;
@@ -19,16 +19,8 @@
     box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46);
 }
 
-.realm-map-card h2 {
-    margin: 6px 0 8px;
-    color: #f4eaff;
-}
-
-.realm-map-card > p {
-    margin: 0 0 16px;
-    color: #a99db3;
-    line-height: 1.5;
-}
+.realm-map-card h2 { margin: 6px 0 8px; color: #f4eaff; }
+.realm-map-card > p { margin: 0 0 16px; color: #a99db3; line-height: 1.5; }
 
 .resonance-panel {
     margin: 0 0 16px;
@@ -38,142 +30,33 @@
     background: rgba(8, 6, 12, 0.34);
 }
 
-.resonance-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-
-.resonance-heading strong,
-.resonance-heading span {
-    display: block;
-}
-
-.resonance-heading strong {
-    color: #ddd1e8;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-}
-
-.resonance-heading span,
-.resonance-panel > small {
-    margin-top: 2px;
-    color: #81758b;
-    font-size: 0.63rem;
-}
-
-.resonance-heading b {
-    flex: 0 0 auto;
-    color: #d9baff;
-    font-size: 0.7rem;
-}
-
-.resonance-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 14px;
-    margin-bottom: 9px;
-}
-
-.resonance-item {
-    display: grid;
-    grid-template-columns: 76px minmax(0, 1fr) 24px;
-    align-items: center;
-    gap: 7px;
-    color: #aaa0b5;
-    font-size: 0.66rem;
-}
-
-.resonance-item strong {
-    color: #d8cfe0;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-.resonance-track {
-    height: 5px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07);
-}
-
-.resonance-track i {
-    display: block;
-    height: 100%;
-    min-width: 0;
-    border-radius: inherit;
-    background: #b887ff;
-}
-
+.resonance-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.resonance-heading strong, .resonance-heading span { display: block; }
+.resonance-heading strong { color: #ddd1e8; font-size: 0.72rem; letter-spacing: 0.08em; }
+.resonance-heading span, .resonance-panel > small { margin-top: 2px; color: #81758b; font-size: 0.63rem; }
+.resonance-heading b { flex: 0 0 auto; color: #d9baff; font-size: 0.7rem; }
+.resonance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; margin-bottom: 9px; }
+.resonance-item { display: grid; grid-template-columns: 76px minmax(0, 1fr) 24px; align-items: center; gap: 7px; color: #aaa0b5; font-size: 0.66rem; }
+.resonance-item strong { color: #d8cfe0; text-align: right; font-variant-numeric: tabular-nums; }
+.resonance-track { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, 0.07); }
+.resonance-track i { display: block; height: 100%; min-width: 0; border-radius: inherit; background: #b887ff; }
 .resonance-fire .resonance-track i { background: #e7775d; }
 .resonance-frost .resonance-track i { background: #8bd3f7; }
 .resonance-storm .resonance-track i { background: #d8cb61; }
 .resonance-arcane .resonance-track i { background: #b887ff; }
 
-.route-cleared {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 0 0 14px;
-    padding: 9px 11px;
-    border: 1px solid rgba(123, 207, 161, 0.32);
-    border-radius: 11px;
-    color: #b4dcc5;
-    background: rgba(68, 143, 101, 0.1);
-    font-size: 0.72rem;
-}
-
-.route-cleared span {
-    color: #8eaa9a;
-}
-
-.realm-route {
-    display: grid;
-    gap: 0;
-}
-
-.route-stage {
-    position: relative;
-    padding: 11px 0 22px;
-}
-
-.route-stage:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: -2px;
-    width: 1px;
-    height: 24px;
-    background: linear-gradient(rgba(171, 121, 232, 0.62), rgba(171, 121, 232, 0.14));
-}
-
-.stage-label {
-    display: block;
-    margin-bottom: 8px;
-    color: #756981;
-    font-size: 0.64rem;
-    font-weight: 800;
-    letter-spacing: 0.13em;
-    text-align: center;
-}
-
-.route-nodes {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-}
-
-.route-stage:last-child .route-nodes {
-    grid-template-columns: minmax(0, 0.58fr);
-    justify-content: center;
-}
+.route-cleared { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; padding: 9px 11px; border: 1px solid rgba(123, 207, 161, 0.32); border-radius: 11px; color: #b4dcc5; background: rgba(68, 143, 101, 0.1); font-size: 0.72rem; }
+.route-cleared span { color: #8eaa9a; }
+.realm-route { display: grid; gap: 0; }
+.route-stage { position: relative; padding: 11px 0 22px; }
+.route-stage:not(:last-child)::after { position: absolute; left: 50%; bottom: -2px; width: 1px; height: 24px; content: ""; background: linear-gradient(rgba(171, 121, 232, 0.62), rgba(171, 121, 232, 0.14)); }
+.stage-label { display: block; margin-bottom: 8px; color: #756981; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.13em; text-align: center; }
+.route-nodes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.route-stage:last-child .route-nodes { grid-template-columns: minmax(0, 0.58fr); justify-content: center; }
 
 .route-node {
     display: grid;
-    min-height: 108px;
+    min-height: 126px;
     padding: 13px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
@@ -183,72 +66,24 @@
     transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
-.route-node strong {
-    margin-top: 3px;
-    font-size: 0.88rem;
-}
+.route-node strong { margin-top: 3px; font-size: 0.88rem; }
+.route-node small { margin-top: 4px; color: #8e8199; line-height: 1.35; }
+.node-icon { font-size: 1.05rem; }
+.node-traits { display: grid; align-content: end; gap: 5px; margin-top: 8px; }
+.node-reward, .node-hazard { display: block; font-size: 0.62rem; font-weight: 750; line-height: 1.35; }
+.node-reward { color: #c8ace8; }
+.node-hazard { color: #e0a16f; }
 
-.route-node small {
-    margin-top: 4px;
-    color: #8e8199;
-}
-
-.node-reward {
-    margin-top: 7px;
-    color: #c8ace8;
-    font-size: 0.64rem;
-    font-weight: 750;
-    line-height: 1.35;
-}
-
-.node-icon {
-    font-size: 1.05rem;
-}
-
-.route-node.available {
-    border-color: rgba(194, 139, 255, 0.72);
-    background: rgba(137, 79, 198, 0.18);
-    cursor: pointer;
-}
-
-.route-node.available:hover {
-    transform: translateY(-2px);
-    background: rgba(150, 89, 218, 0.25);
-}
-
-.route-node.completed {
-    border-color: rgba(123, 207, 161, 0.44);
-    background: rgba(68, 143, 101, 0.12);
-}
-
-.route-node.bypassed,
-.route-node.future {
-    opacity: 0.34;
-}
+.route-node.available { border-color: rgba(194, 139, 255, 0.72); background: rgba(137, 79, 198, 0.18); cursor: pointer; }
+.route-node.available:hover { transform: translateY(-2px); background: rgba(150, 89, 218, 0.25); }
+.route-node.completed { border-color: rgba(123, 207, 161, 0.44); background: rgba(68, 143, 101, 0.12); }
+.route-node.bypassed, .route-node.future { opacity: 0.34; }
 
 @media (max-width: 600px) {
-    .realm-map-card {
-        padding: 18px 14px;
-    }
-
-    .resonance-heading,
-    .route-cleared {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-    .resonance-grid {
-        grid-template-columns: 1fr;
-        gap: 6px;
-    }
-
-    .route-nodes {
-        gap: 9px;
-    }
-
-    .route-node {
-        min-height: 104px;
-        padding: 10px;
-    }
+    .realm-map-card { padding: 18px 14px; }
+    .resonance-heading, .route-cleared { align-items: flex-start; flex-direction: column; gap: 3px; }
+    .resonance-grid { grid-template-columns: 1fr; gap: 6px; }
+    .route-nodes { gap: 9px; }
+    .route-node { min-height: 122px; padding: 10px; }
+    .node-reward, .node-hazard { font-size: 0.58rem; }
 }

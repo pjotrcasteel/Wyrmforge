@@ -1,8 +1,8 @@
 using Wyrmforge.Domain.Combat.Geometry;
 
-namespace Wyrmforge.Application.Runs.Depth;
+namespace Wyrmforge.Application.Runs.Hazards;
 
-public sealed class RunDepthRiftState
+public sealed class UnstableRiftState
 {
     public const double Radius = 74;
     public const double Damage = 28;
@@ -19,9 +19,10 @@ public sealed class RunDepthRiftState
 
     public bool IsTelegraphing => TelegraphRemaining > TimerEpsilon;
 
-    public bool Tick(double delta, bool enabled, Vector2D targetPosition)
+    public bool Tick(double delta, bool enabled, Vector2D targetPosition, double intervalMultiplier = 1)
     {
         delta = Math.Max(0, delta);
+        intervalMultiplier = Math.Clamp(intervalMultiplier, 0.35, 3);
         if (!enabled)
         {
             Reset();
@@ -33,7 +34,7 @@ public sealed class RunDepthRiftState
             TelegraphRemaining = Math.Max(0, TelegraphRemaining - delta);
             if (TelegraphRemaining > TimerEpsilon) return false;
             TelegraphRemaining = 0;
-            cooldown = IntervalSeconds;
+            cooldown = IntervalSeconds * intervalMultiplier;
             return true;
         }
 
@@ -45,7 +46,7 @@ public sealed class RunDepthRiftState
         return false;
     }
 
-    private void Reset()
+    public void Reset()
     {
         cooldown = InitialDelaySeconds;
         TelegraphRemaining = 0;

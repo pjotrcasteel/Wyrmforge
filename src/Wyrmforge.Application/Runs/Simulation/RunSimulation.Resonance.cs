@@ -19,7 +19,10 @@ public sealed partial class RunSimulation
     public IReadOnlyList<RealmInfluenceCue> RealmInfluences => realmInfluenceState.Calculate(CurrentDragonAttention);
     public DragonId? AttractedDragon => attractedDragon;
 
-    private IReadOnlyList<DragonAttention> CurrentDragonAttention => dragonAttentionState.Calculate(DragonAttraction, mapState.CompletedNodes.Count, attractedDragon);
+    private bool CurrentDragonHuntCompleted => (depthState.Depth == 1 ? initialDragonEncounterStarted : deepDragonEncounterStarted) && dragon is null;
+    private IReadOnlyList<DragonAttention> CurrentDragonAttention => CurrentDragonHuntCompleted
+        ? Array.Empty<DragonAttention>()
+        : dragonAttentionState.Calculate(DragonAttraction, mapState.CompletedNodes.Count, attractedDragon);
 
     internal void InitializeResonance(IReadOnlySet<string> selectedNodes) => resonanceState = new RunResonanceState(selectedNodes);
 

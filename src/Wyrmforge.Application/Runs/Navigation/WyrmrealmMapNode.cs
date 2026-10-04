@@ -8,5 +8,9 @@ public sealed record WyrmrealmMapNode(
     int Stage,
     int Lane,
     WyrmrealmNodeType Type,
-    WyrmrealmEncounterKind? EncounterKind,
-    SpellSchool? AttunementSchool);
+    WyrmrealmRouteProfile? Route)
+{
+    public WyrmrealmEncounterKind? EncounterKind => Route?.Encounter.Kind;
+
+    public SpellSchool? AttunementSchool => Route?.Reward.AttunementSchool;
+}
