@@ -31,11 +31,15 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<WyrmrealmMapNode> MapNodes => simulation?.MapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
+    private WyrmrealmMapNode? CurrentMapNode => simulation?.CurrentMapNode;
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
     private bool PendingMapChoice => simulation?.PendingMapChoice == true;
     private bool PendingPushOrExtract => simulation?.PendingPushOrExtract == true;
     private bool CanPushDeeper => simulation?.CanPushDeeper == true;
     private bool DepthTrialActive => simulation?.DepthTrialActive == true;
+    private bool MapCombatActive => CurrentMapNode?.Type == WyrmrealmNodeType.Combat && !PendingMapChoice;
+    private int CurrentMapNodeKills => simulation?.CurrentMapNodeKills ?? 0;
+    private int CurrentMapNodeKillsRequired => simulation?.CurrentMapNodeKillsRequired ?? WyrmrealmMapState.KillsPerCombatNode;
     private int DepthTrialKills => simulation?.DepthTrialKills ?? 0;
     private int DepthTrialKillsRequired => simulation?.DepthTrialKillsRequired ?? 0;
     private int CurrentDepth => simulation?.Depth ?? 1;
@@ -65,6 +69,7 @@ public partial class ArenaView : IAsyncDisposable
         var hadDepthDecision = current.PendingPushOrExtract;
         var hadMapChoice = current.PendingMapChoice;
         var previousMapCompleted = current.CompletedMapNodes.Count;
+        var previousMapKills = current.CurrentMapNodeKills;
         var previousTrialKills = current.DepthTrialKills;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
@@ -73,6 +78,7 @@ public partial class ArenaView : IAsyncDisposable
             || hadDepthDecision != current.PendingPushOrExtract
             || hadMapChoice != current.PendingMapChoice
             || previousMapCompleted != current.CompletedMapNodes.Count
+            || previousMapKills != current.CurrentMapNodeKills
             || previousTrialKills != current.DepthTrialKills;
         if (stateChanged) await InvokeAsync(StateHasChanged);
 

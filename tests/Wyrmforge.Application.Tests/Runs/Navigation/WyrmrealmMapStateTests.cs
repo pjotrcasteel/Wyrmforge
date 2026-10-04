@@ -19,14 +19,20 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
-    public void RegisterKill_AfterFiveKills_CompletesCombatNodeAndOpensNextStage()
+    public void RegisterKill_TracksVisibleProgressUntilCombatNodeCompletes()
     {
         var state = new WyrmrealmMapState(DragonCatalog.Ashfang);
         var chosen = state.Choose(state.AvailableNodes[0].Id);
 
         Assert.IsNotNull(chosen);
-        for (var kill = 0; kill < WyrmrealmMapState.KillsPerCombatNode - 1; kill++) Assert.IsFalse(state.RegisterKill());
+        for (var kill = 1; kill < WyrmrealmMapState.KillsPerCombatNode; kill++)
+        {
+            Assert.IsFalse(state.RegisterKill());
+            Assert.AreEqual(kill, state.CurrentNodeKills);
+        }
+
         Assert.IsTrue(state.RegisterKill());
+        Assert.AreEqual(0, state.CurrentNodeKills);
         Assert.IsTrue(state.DecisionPending);
         Assert.AreEqual(1, state.CompletedNodes.Count);
         Assert.AreEqual(2, state.AvailableNodes.Count);

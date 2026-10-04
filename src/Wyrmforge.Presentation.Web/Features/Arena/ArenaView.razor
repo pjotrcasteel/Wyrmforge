@@ -2,6 +2,14 @@
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
 
+    @if (MapCombatActive && CurrentMapNode is { } activeNode)
+    {
+        <div class="encounter-objective" aria-label="Current encounter objective">
+            <span>TRAIL @activeNode.Stage • @activeNode.Name</span>
+            <strong>@CurrentMapNodeKills / @CurrentMapNodeKillsRequired KILLS</strong>
+        </div>
+    }
+
     @if (CurrentEssences.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {
         <div class="essence-strip" aria-label="Current run state">
@@ -12,11 +20,11 @@
             }
             @if (CurrentDepth > 1)
             {
-                <span>DEPTH @CurrentDepth • RIFTS ACTIVE • ×@CurrentScoreMultiplier.ToString("0.0") SCORE</span>
+                <span>DEPTH @CurrentDepth • RIFTS • ×@CurrentScoreMultiplier.ToString("0.0")</span>
             }
             @if (DepthTrialActive)
             {
-                <span>RIFT TRIAL • @DepthTrialKills/@DepthTrialKillsRequired KILLS</span>
+                <span>TRIAL • @DepthTrialKills/@DepthTrialKillsRequired</span>
             }
             @foreach (var essence in CurrentEssences)
             {

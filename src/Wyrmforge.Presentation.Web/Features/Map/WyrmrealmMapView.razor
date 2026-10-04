@@ -7,6 +7,12 @@
         <h2>Choose where your magic cuts through the realm.</h2>
         <p>Each path is a short combat pocket. Clear it and the realm branches again. Reach the final trail to call the dragon hunt.</p>
 
+        @if (CompletedNodes.Count > 0)
+        {
+            var cleared = CompletedNodes[^1];
+            <div class="route-cleared"><strong>✓ @cleared.Name cleared</strong><span>Choose the next trail.</span></div>
+        }
+
         <div class="realm-route" aria-label="Wyrmrealm route map">
             @foreach (var stage in Nodes.GroupBy(node => node.Stage).OrderBy(group => group.Key))
             {
@@ -59,9 +65,9 @@
         ? "The trail ends here. Something enormous is waiting."
         : node.EncounterKind switch
         {
-            WyrmrealmEncounterKind.Swarm => "Fast chaser pressure",
-            WyrmrealmEncounterKind.StalkerPressure => "Rift Stalkers dominate",
-            _ => "Mixed enemy pressure",
+            WyrmrealmEncounterKind.Swarm => "5 kills • fast chaser pressure",
+            WyrmrealmEncounterKind.StalkerPressure => "5 kills • Rift Stalkers dominate",
+            _ => "5 kills • mixed enemy pressure",
         };
 
     private Task ChooseAsync(string id) => OnChoose.InvokeAsync(id);

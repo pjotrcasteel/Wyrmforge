@@ -6,6 +6,9 @@ public sealed partial class RunSimulation
 {
     private bool mapEncounterCleanupPending;
 
+    public int CurrentMapNodeKills => mapState.CurrentNodeKills;
+    public int CurrentMapNodeKillsRequired => WyrmrealmMapState.KillsPerCombatNode;
+
     public bool ChooseMapNode(string id)
     {
         if (depthState.Depth != 1 || initialDragonEncounterStarted) return false;

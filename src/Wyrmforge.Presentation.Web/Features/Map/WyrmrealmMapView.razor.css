@@ -25,9 +25,27 @@
 }
 
 .realm-map-card p {
-    margin: 0 0 22px;
+    margin: 0 0 18px;
     color: #a99db3;
     line-height: 1.5;
+}
+
+.route-cleared {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 9px 11px;
+    border: 1px solid rgba(123, 207, 161, 0.32);
+    border-radius: 11px;
+    color: #b4dcc5;
+    background: rgba(68, 143, 101, 0.1);
+    font-size: 0.72rem;
+}
+
+.route-cleared span {
+    color: #8eaa9a;
 }
 
 .realm-route {
@@ -121,6 +139,12 @@
 @media (max-width: 600px) {
     .realm-map-card {
         padding: 18px 14px;
+    }
+
+    .route-cleared {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
     }
 
     .route-nodes {

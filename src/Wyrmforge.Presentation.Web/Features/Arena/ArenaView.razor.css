@@ -25,3 +25,58 @@
     color: #8f8499;
     font-size: 0.62rem;
 }
+
+.encounter-objective {
+    position: fixed;
+    z-index: 4;
+    top: max(18px, calc(env(safe-area-inset-top) + 12px));
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(420px, calc(100vw - 250px));
+    padding: 8px 12px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(198, 154, 255, 0.34);
+    border-radius: 12px;
+    color: #cbbfd6;
+    background: rgba(17, 13, 22, 0.82);
+    backdrop-filter: blur(10px);
+    pointer-events: none;
+}
+
+.encounter-objective span {
+    overflow: hidden;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.encounter-objective strong {
+    flex: 0 0 auto;
+    color: #e9d8ff;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 680px) {
+    .encounter-objective {
+        top: max(204px, calc(env(safe-area-inset-top) + 198px));
+        left: max(18px, calc(env(safe-area-inset-left) + 12px));
+        right: max(18px, calc(env(safe-area-inset-right) + 12px));
+        justify-content: space-between;
+        max-width: none;
+        transform: none;
+        padding: 7px 9px;
+    }
+
+    .encounter-objective span {
+        font-size: 0.6rem;
+    }
+
+    .encounter-objective strong {
+        font-size: 0.66rem;
+    }
+}
