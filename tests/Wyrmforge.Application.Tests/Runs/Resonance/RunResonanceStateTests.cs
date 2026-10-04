@@ -15,13 +15,16 @@ public sealed class RunResonanceStateTests
     {
         var build = new RunBuildState();
         Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.ChainLightning));
-        var map = new WyrmrealmMapState();
-        var stormNode = map.AvailableNodes.Single(node => node.AttunementSchool == SpellSchool.Storm);
-        Assert.IsNotNull(map.Choose(stormNode.Id));
-        for (var kill = 0; kill < WyrmrealmMapState.KillsPerCombatNode; kill++) map.RegisterKill();
+        var stormNode = new WyrmrealmMapNode(
+            "storm-trail",
+            "Storm Trail",
+            new WyrmrealmNodePosition(1, 0),
+            WyrmrealmNodeType.Combat,
+            new WyrmrealmRouteProfile(new WyrmrealmEncounterProfile(WyrmrealmEncounterKind.Mixed), new WyrmrealmRewardProfile(SpellSchool.Storm)),
+            new WyrmrealmNodeGraph(Array.Empty<string>()));
         var state = new RunResonanceState(new HashSet<string> { "storm-1" });
 
-        var resonance = state.Calculate(build, map.CompletedNodes);
+        var resonance = state.Calculate(build, [stormNode]);
 
         Assert.AreEqual(8, resonance.Single(entry => entry.School == SpellSchool.Storm).Value);
         Assert.AreEqual(3, resonance.Single(entry => entry.School == SpellSchool.Arcane).Value);
