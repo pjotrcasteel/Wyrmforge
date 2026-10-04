@@ -9,60 +9,45 @@ namespace Wyrmforge.Application.Tests.Runs.Resonance;
 public sealed class DragonSignStateTests
 {
     [TestMethod]
-    public void Calculate_BeforeFirstTrail_ReturnsNoSigns()
+    public void Calculate_FaintAshfangAttention_ReturnsWarmAshSign()
     {
         var state = new DragonSignState();
 
-        var signs = state.Calculate(Attraction(86, 14), 0, null);
+        var sign = state.Calculate([new DragonAttention(DragonId.Ashfang, DragonAttentionIntensity.Faint)]).Single();
 
-        Assert.AreEqual(0, signs.Count);
-    }
-
-    [TestMethod]
-    public void Calculate_StrongAshfangAttentionAfterFirstTrail_ReturnsFaintFireSign()
-    {
-        var state = new DragonSignState();
-
-        var sign = state.Calculate(Attraction(86, 14), 1, null).Single();
-
+        Assert.AreEqual(DragonId.Ashfang, sign.Dragon);
         Assert.AreEqual(SpellSchool.Fire, sign.School);
-        Assert.AreEqual(DragonSignIntensity.Faint, sign.Intensity);
+        Assert.AreEqual(DragonAttentionIntensity.Faint, sign.Intensity);
         Assert.AreEqual("Warm ash", sign.Title);
     }
 
     [TestMethod]
-    public void Calculate_CloseAttentionAfterThirdTrail_ReturnsCompetingSigns()
+    public void Calculate_CompetingAttention_ReturnsNarrativeSignsInAttentionOrder()
     {
         var state = new DragonSignState();
+        DragonAttention[] attention =
+        [
+            new(DragonId.Ashfang, DragonAttentionIntensity.Ominous),
+            new(DragonId.Stormcoil, DragonAttentionIntensity.Growing),
+        ];
 
-        var signs = state.Calculate(Attraction(54, 46), 3, null);
+        var signs = state.Calculate(attention);
 
         Assert.AreEqual(2, signs.Count);
-        Assert.AreEqual(SpellSchool.Fire, signs[0].School);
-        Assert.AreEqual(DragonSignIntensity.Ominous, signs[0].Intensity);
-        Assert.AreEqual(SpellSchool.Storm, signs[1].School);
-        Assert.AreEqual(DragonSignIntensity.Growing, signs[1].Intensity);
+        Assert.AreEqual("A furnace breath", signs[0].Title);
+        Assert.AreEqual("Distant thunder", signs[1].Title);
     }
 
     [TestMethod]
-    public void Calculate_ResolvedStormcoilAfterFourthTrail_ReturnsOnlyImminentStormSign()
+    public void Calculate_ImminentStormcoilAttention_ReturnsStormCirclesSign()
     {
         var state = new DragonSignState();
 
-        var sign = state.Calculate(Attraction(86, 14), 4, DragonId.Stormcoil).Single();
+        var sign = state.Calculate([new DragonAttention(DragonId.Stormcoil, DragonAttentionIntensity.Imminent)]).Single();
 
+        Assert.AreEqual(DragonId.Stormcoil, sign.Dragon);
         Assert.AreEqual(SpellSchool.Storm, sign.School);
-        Assert.AreEqual(DragonSignIntensity.Imminent, sign.Intensity);
+        Assert.AreEqual(DragonAttentionIntensity.Imminent, sign.Intensity);
         Assert.AreEqual("The storm circles", sign.Title);
-    }
-
-    private static IReadOnlyList<DragonAttractionEntry> Attraction(int ashfangWeight, int stormcoilWeight)
-    {
-        var total = ashfangWeight + stormcoilWeight;
-        return
-        [
-            new DragonAttractionEntry(DragonId.Ashfang, ashfangWeight, ashfangWeight / (double)total),
-            new DragonAttractionEntry(DragonId.Stormcoil, stormcoilWeight, stormcoilWeight / (double)total),
-        ];
     }
 }

@@ -1,0 +1,103 @@
+@namespace Wyrmforge.Presentation.Web.Features.RealmInfluence
+@using System.Globalization
+@using Wyrmforge.Application.Runs.RealmInfluence
+
+@if (Influences.Count > 0)
+{
+    <div class="realm-influence-layer" aria-hidden="true">
+        @foreach (var influence in Influences)
+        {
+            <div class="@EffectClass(influence.Effect)" style="@StrengthStyle(influence.Strength)">
+                @if (influence.Effect == RealmInfluenceEffect.Ashfall)
+                {
+                    @foreach (var index in Enumerable.Range(0, 28))
+                    {
+                        <span class="ash-particle" style="@AshStyle(index)"></span>
+                    }
+                }
+                else if (influence.Effect == RealmInfluenceEffect.ScorchMarks)
+                {
+                    @foreach (var index in Enumerable.Range(0, 7))
+                    {
+                        <span class="scorch-mark" style="@MarkStyle(index)"></span>
+                    }
+                }
+                else if (influence.Effect == RealmInfluenceEffect.WyrmShadow)
+                {
+                    <span class="wyrm-shadow-body"></span>
+                    <span class="wyrm-shadow-wing wing-left"></span>
+                    <span class="wyrm-shadow-wing wing-right"></span>
+                }
+                else if (influence.Effect == RealmInfluenceEffect.StaticArcs)
+                {
+                    @foreach (var index in Enumerable.Range(0, 10))
+                    {
+                        <span class="static-arc" style="@ArcStyle(index)"></span>
+                    }
+                }
+                else if (influence.Effect == RealmInfluenceEffect.ChargedGround)
+                {
+                    @foreach (var index in Enumerable.Range(0, 16))
+                    {
+                        <span class="charge-point" style="@ChargeStyle(index)"></span>
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<RealmInfluenceCue> Influences { get; set; } = Array.Empty<RealmInfluenceCue>();
+
+    private static string StrengthStyle(double strength) => $"--strength:{Math.Clamp(strength, 0, 1).ToString("0.##", CultureInfo.InvariantCulture)}";
+
+    private static string EffectClass(RealmInfluenceEffect effect) => effect switch
+    {
+        RealmInfluenceEffect.Ashfall => "realm-influence influence-ashfall",
+        RealmInfluenceEffect.ScorchMarks => "realm-influence influence-scorch",
+        RealmInfluenceEffect.HeatHaze => "realm-influence influence-heat",
+        RealmInfluenceEffect.WyrmShadow => "realm-influence influence-shadow",
+        RealmInfluenceEffect.StaticArcs => "realm-influence influence-static",
+        RealmInfluenceEffect.LightningFlashes => "realm-influence influence-lightning",
+        RealmInfluenceEffect.ChargedGround => "realm-influence influence-charge",
+        RealmInfluenceEffect.StormPulse => "realm-influence influence-storm-pulse",
+        _ => "realm-influence",
+    };
+
+    private static string AshStyle(int index)
+    {
+        var x = (index * 37 + 11) % 100;
+        var delay = -((index * 13) % 12);
+        var duration = 8 + (index * 7 % 8);
+        var drift = (index % 2 == 0 ? 1 : -1) * (18 + index * 5 % 42);
+        var size = 2 + index % 3;
+        return $"--x:{x}%;--delay:{delay}s;--duration:{duration}s;--drift:{drift}px;--size:{size}px";
+    }
+
+    private static string MarkStyle(int index)
+    {
+        var x = 12 + (index * 29 % 76);
+        var y = 18 + (index * 41 % 68);
+        var rotation = -32 + index * 17 % 64;
+        var scale = 72 + index * 19 % 65;
+        return $"--x:{x}%;--y:{y}%;--rotation:{rotation}deg;--scale:{scale}px";
+    }
+
+    private static string ArcStyle(int index)
+    {
+        var x = 7 + (index * 31 % 86);
+        var y = 10 + (index * 43 % 78);
+        var rotation = -65 + index * 29 % 130;
+        var delay = -((index * 17) % 7);
+        return $"--x:{x}%;--y:{y}%;--rotation:{rotation}deg;--delay:{delay}s";
+    }
+
+    private static string ChargeStyle(int index)
+    {
+        var x = 5 + (index * 47 % 90);
+        var y = 10 + (index * 37 % 80);
+        var delay = -((index * 11) % 5);
+        return $"--x:{x}%;--y:{y}%;--delay:{delay}s";
+    }
+}

@@ -1,0 +1,234 @@
+.realm-influence-layer {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.realm-influence {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.influence-ashfall {
+    opacity: calc(0.25 + var(--strength) * 0.55);
+}
+
+.ash-particle {
+    position: absolute;
+    top: -8vh;
+    left: var(--x);
+    width: var(--size);
+    height: calc(var(--size) * 0.65);
+    border-radius: 50%;
+    background: rgba(210, 115, 70, 0.82);
+    box-shadow: 0 0 4px rgba(255, 118, 58, 0.26);
+    animation: ash-fall var(--duration) linear infinite;
+    animation-delay: var(--delay);
+}
+
+.influence-scorch {
+    opacity: calc(var(--strength) * 0.62);
+}
+
+.scorch-mark {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: var(--scale);
+    height: 2px;
+    transform: rotate(var(--rotation));
+    transform-origin: left center;
+    background: linear-gradient(90deg, transparent, rgba(112, 33, 18, 0.85) 15%, rgba(244, 89, 32, 0.72) 55%, transparent);
+    filter: drop-shadow(0 0 5px rgba(255, 75, 25, 0.32));
+}
+
+.scorch-mark::before,
+.scorch-mark::after {
+    position: absolute;
+    width: 42%;
+    height: 1px;
+    content: '';
+    background: rgba(168, 55, 24, 0.72);
+    transform-origin: left center;
+}
+
+.scorch-mark::before {
+    left: 28%;
+    transform: rotate(34deg);
+}
+
+.scorch-mark::after {
+    left: 54%;
+    transform: rotate(-29deg);
+}
+
+.influence-heat {
+    background: radial-gradient(circle at 50% 70%, rgba(255, 87, 34, 0.14), transparent 62%);
+    opacity: calc(var(--strength) * 0.72);
+    animation: heat-breathe 2.8s ease-in-out infinite;
+    backdrop-filter: blur(calc(var(--strength) * 0.45px));
+}
+
+.influence-shadow {
+    opacity: calc(var(--strength) * 0.72);
+    animation: shadow-pass 9s ease-in-out infinite;
+}
+
+.wyrm-shadow-body,
+.wyrm-shadow-wing {
+    position: absolute;
+    top: 11%;
+    left: 50%;
+    display: block;
+    background: rgba(8, 5, 8, 0.68);
+    filter: blur(7px);
+}
+
+.wyrm-shadow-body {
+    width: 100px;
+    height: 34px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+.wyrm-shadow-wing {
+    width: 180px;
+    height: 58px;
+    border-radius: 80% 12% 80% 16%;
+}
+
+.wing-left {
+    transform: translateX(-92%) rotate(-11deg);
+}
+
+.wing-right {
+    transform: translateX(-8%) scaleX(-1) rotate(-11deg);
+}
+
+.influence-static {
+    opacity: calc(0.2 + var(--strength) * 0.62);
+}
+
+.static-arc {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: 34px;
+    height: 2px;
+    transform: rotate(var(--rotation));
+    background: rgba(175, 225, 255, 0.78);
+    box-shadow: 0 0 7px rgba(104, 190, 255, 0.62);
+    animation: static-flicker 2.1s steps(1, end) infinite;
+    animation-delay: var(--delay);
+}
+
+.static-arc::before,
+.static-arc::after {
+    position: absolute;
+    top: 0;
+    width: 16px;
+    height: 2px;
+    content: '';
+    background: inherit;
+    box-shadow: inherit;
+    transform-origin: left center;
+}
+
+.static-arc::before {
+    left: 9px;
+    transform: rotate(48deg);
+}
+
+.static-arc::after {
+    left: 20px;
+    transform: rotate(-54deg);
+}
+
+.influence-lightning {
+    background: rgba(170, 218, 255, 0.22);
+    mix-blend-mode: screen;
+    opacity: 0;
+    animation: lightning-flash 6.4s linear infinite;
+}
+
+.influence-charge {
+    opacity: calc(0.16 + var(--strength) * 0.58);
+}
+
+.charge-point {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #d8f2ff;
+    box-shadow: 0 0 10px 3px rgba(90, 178, 255, 0.52);
+    animation: charge-pulse 2.6s ease-in-out infinite;
+    animation-delay: var(--delay);
+}
+
+.influence-storm-pulse::before,
+.influence-storm-pulse::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24vmin;
+    height: 24vmin;
+    content: '';
+    border: 2px solid rgba(112, 196, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: storm-pulse 4s ease-out infinite;
+}
+
+.influence-storm-pulse::after {
+    animation-delay: -2s;
+}
+
+@keyframes ash-fall {
+    from { transform: translate3d(0, -8vh, 0) rotate(0deg); }
+    to { transform: translate3d(var(--drift), 116vh, 0) rotate(420deg); }
+}
+
+@keyframes heat-breathe {
+    0%, 100% { transform: scale(1); opacity: calc(var(--strength) * 0.48); }
+    50% { transform: scale(1.035); opacity: calc(var(--strength) * 0.78); }
+}
+
+@keyframes shadow-pass {
+    0%, 47% { transform: translate3d(-75vw, -4vh, 0) scale(0.72); opacity: 0; }
+    52% { opacity: calc(var(--strength) * 0.72); }
+    67% { transform: translate3d(75vw, 7vh, 0) scale(1.18); opacity: calc(var(--strength) * 0.58); }
+    72%, 100% { transform: translate3d(92vw, 9vh, 0) scale(1.22); opacity: 0; }
+}
+
+@keyframes static-flicker {
+    0%, 12%, 18%, 55%, 61%, 100% { opacity: 0; }
+    13%, 17%, 56%, 60% { opacity: 1; }
+}
+
+@keyframes lightning-flash {
+    0%, 58%, 61%, 63%, 100% { opacity: 0; }
+    59% { opacity: calc(var(--strength) * 0.46); }
+    62% { opacity: calc(var(--strength) * 0.2); }
+}
+
+@keyframes charge-pulse {
+    0%, 100% { transform: scale(0.55); opacity: 0.18; }
+    50% { transform: scale(1.35); opacity: 1; }
+}
+
+@keyframes storm-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.35); opacity: calc(var(--strength) * 0.48); }
+    100% { transform: translate(-50%, -50%) scale(5); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .realm-influence * {
+        animation-duration: 20s !important;
+    }
+}

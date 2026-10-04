@@ -1,11 +1,12 @@
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
+    <RealmInfluenceView Influences="CurrentRealmInfluences" />
     <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
 
     @if (MapCombatActive && CurrentMapNode is { } activeNode)
     {
         <div class="encounter-objective" aria-label="Current encounter objective">
-            <span>DEPTH @CurrentDepth • TRAIL @activeNode.Stage • @activeNode.Name • @activeNode.AttunementSchool</span>
+            <span>TRAIL @activeNode.Stage • @activeNode.Name • @activeNode.AttunementSchool</span>
             <strong>@CurrentMapNodeKills / @CurrentMapNodeKillsRequired KILLS</strong>
         </div>
     }

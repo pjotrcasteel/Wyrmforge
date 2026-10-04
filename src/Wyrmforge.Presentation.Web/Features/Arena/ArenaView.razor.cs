@@ -5,6 +5,7 @@ using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
+using Wyrmforge.Application.Runs.RealmInfluence;
 using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
@@ -34,6 +35,7 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<RunResonanceEntry> CurrentResonance => simulation?.Resonance ?? Array.Empty<RunResonanceEntry>();
     private IReadOnlyList<DragonSign> CurrentDragonSigns => simulation?.DragonSigns ?? Array.Empty<DragonSign>();
+    private IReadOnlyList<RealmInfluenceCue> CurrentRealmInfluences => simulation?.RealmInfluences ?? Array.Empty<RealmInfluenceCue>();
     private WyrmrealmMapNode? CurrentMapNode => simulation?.CurrentMapNode;
     private RunOfferingDefinition? CurrentOffering => RunOffering is { } offering ? RunOfferingCatalog.Get(offering) : null;
     private bool PendingMapChoice => simulation?.PendingMapChoice == true;
