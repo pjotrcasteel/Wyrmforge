@@ -5,9 +5,9 @@
 
 <div class="realm-map-overlay">
     <section class="realm-map-card">
-        <div class="eyebrow">WYRMREALM ROUTE</div>
-        <h2>Choose where your magic cuts through the realm.</h2>
-        <p>Each cleared trail changes both your next upgrade opportunity and the elemental signature you leave behind.</p>
+        <div class="eyebrow">WYRMREALM • DEPTH @Depth</div>
+        <h2>@(Depth <= 1 ? "Choose where your magic cuts through the realm." : "Choose the next route into the deeper realm.")</h2>
+        <p>@(Depth <= 1 ? "Each cleared trail changes both your next upgrade opportunity and the elemental signature you leave behind." : "The route begins again, but the pressure does not. Deeper enemies are stronger, rifts are unstable, and every trail keeps shaping your resonance.")</p>
 
         <div class="resonance-panel" aria-label="Current magic resonance">
             <div class="resonance-heading">
@@ -61,6 +61,7 @@
 </div>
 
 @code {
+    [Parameter] public int Depth { get; set; } = 1;
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> Nodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> AvailableNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> CompletedNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();

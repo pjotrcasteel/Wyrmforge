@@ -10,21 +10,13 @@ public sealed class WyrmrealmMapState
     private readonly List<WyrmrealmMapNode> completedNodes = [];
     private int completedCombatStages;
 
-    public WyrmrealmMapState()
+    public WyrmrealmMapState(int depth = 1)
     {
-        Nodes =
-        [
-            new("scorched-hollow", "Scorched Hollow", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Fire),
-            new("static-crossing", "Static Crossing", 1, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Storm),
-            new("frozen-vein", "Frozen Vein", 2, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Frost),
-            new("arcane-causeway", "Arcane Causeway", 2, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Arcane),
-            new("ember-confluence", "Ember Confluence", 3, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Fire),
-            new("thunder-maw", "Thunder Maw", 3, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Storm),
-            new("winter-wyrmroad", "Winter Wyrmroad", 4, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Frost),
-            new("arcane-scar", "Arcane Scar", 4, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Arcane),
-            new("dragon-trail", "Unknown Wyrm", 5, 0, WyrmrealmNodeType.Dragon, null, null),
-        ];
+        Depth = depth;
+        Nodes = depth <= 1 ? CreateSurfaceNodes() : CreateDeepNodes(depth);
     }
+
+    public int Depth { get; }
 
     public IReadOnlyList<WyrmrealmMapNode> Nodes { get; }
 
@@ -79,4 +71,30 @@ public sealed class WyrmrealmMapState
         completedNodes.Add(dragonNode);
         CurrentNode = null;
     }
+
+    private static IReadOnlyList<WyrmrealmMapNode> CreateSurfaceNodes() =>
+    [
+        new("scorched-hollow", "Scorched Hollow", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Fire),
+        new("static-crossing", "Static Crossing", 1, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Storm),
+        new("frozen-vein", "Frozen Vein", 2, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Frost),
+        new("arcane-causeway", "Arcane Causeway", 2, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Arcane),
+        new("ember-confluence", "Ember Confluence", 3, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Fire),
+        new("thunder-maw", "Thunder Maw", 3, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Storm),
+        new("winter-wyrmroad", "Winter Wyrmroad", 4, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Frost),
+        new("arcane-scar", "Arcane Scar", 4, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Arcane),
+        new("dragon-trail", "Unknown Wyrm", 5, 0, WyrmrealmNodeType.Dragon, null, null),
+    ];
+
+    private static IReadOnlyList<WyrmrealmMapNode> CreateDeepNodes(int depth) =>
+    [
+        new($"depth-{depth}-ashen-fall", "Ashen Fall", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Fire),
+        new($"depth-{depth}-stormglass-rift", "Stormglass Rift", 1, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Storm),
+        new($"depth-{depth}-frostbound-vault", "Frostbound Vault", 2, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Frost),
+        new($"depth-{depth}-aether-break", "Aether Break", 2, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Arcane),
+        new($"depth-{depth}-cinder-abyss", "Cinder Abyss", 3, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Fire),
+        new($"depth-{depth}-tempest-spine", "Tempest Spine", 3, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Storm),
+        new($"depth-{depth}-rime-descent", "Rime Descent", 4, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Frost),
+        new($"depth-{depth}-void-conduit", "Void Conduit", 4, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Arcane),
+        new($"depth-{depth}-dragon-trail", "Unknown Wyrm", 5, 0, WyrmrealmNodeType.Dragon, null, null),
+    ];
 }

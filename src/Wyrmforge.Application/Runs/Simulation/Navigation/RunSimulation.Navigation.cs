@@ -14,7 +14,8 @@ public sealed partial class RunSimulation
 
     public bool ChooseMapNode(string id)
     {
-        if (depthState.Depth != 1 || initialDragonEncounterStarted) return false;
+        var dragonEncounterStarted = depthState.Depth == 1 ? initialDragonEncounterStarted : deepDragonEncounterStarted;
+        if (dragonEncounterStarted) return false;
         var node = mapState.Choose(id);
         if (node is null) return false;
 
@@ -22,7 +23,8 @@ public sealed partial class RunSimulation
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();
-            initialDragonPending = true;
+            if (depthState.Depth == 1) initialDragonPending = true;
+            else deepDragonPending = true;
             return true;
         }
 
@@ -34,9 +36,11 @@ public sealed partial class RunSimulation
 
     private void RegisterMapEncounterKill()
     {
-        if (depthState.Depth != 1 || initialDragonEncounterStarted || !mapState.EncounterActive) return;
+        var dragonEncounterStarted = depthState.Depth == 1 ? initialDragonEncounterStarted : deepDragonEncounterStarted;
+        if (dragonEncounterStarted || !mapState.EncounterActive) return;
         var completedNode = mapState.CurrentNode;
         if (!mapState.RegisterKill()) return;
+        if (completedNode is not null) completedRouteNodes.Add(completedNode);
         if (completedNode?.AttunementSchool is { } school) pendingAttunements.Enqueue(school);
         if (completedNode?.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;

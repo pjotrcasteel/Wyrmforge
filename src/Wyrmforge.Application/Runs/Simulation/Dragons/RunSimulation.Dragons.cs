@@ -142,7 +142,7 @@ public sealed partial class RunSimulation
         score += defeatedId == DragonId.Stormcoil ? 4000 + (int)(elapsed * 12) : 2500 + (int)(elapsed * 10);
         dragon = null;
         spawnTimer = 1.2;
-        if (depthState.Depth == 1) mapState.CompleteDragon();
+        mapState.CompleteDragon();
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(defeatedId).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
         GainExperience(defeatedId == DragonId.Stormcoil ? 8 : 5);
     }

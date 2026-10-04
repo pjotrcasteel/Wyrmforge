@@ -33,7 +33,8 @@ public sealed partial class RunSimulation
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
     private DragonHuntRoute huntRoute;
-    private readonly WyrmrealmMapState mapState;
+    private WyrmrealmMapState mapState;
+    private readonly List<WyrmrealmMapNode> completedRouteNodes = [];
     private readonly RunBuildState build = new();
     private readonly RunDepthState depthState = new();
     private readonly RunDepthTrialState depthTrialState = new();
@@ -96,7 +97,7 @@ public sealed partial class RunSimulation
     public WyrmrealmMapNode? CurrentMapNode => mapState.CurrentNode;
     public DragonEssenceId? Offering { get; }
     public DragonId? HuntTarget => AttractedDragon;
-    public bool PendingMapChoice => mapState.DecisionPending && depthState.Depth == 1 && !initialDragonEncounterStarted;
+    public bool PendingMapChoice => mapState.DecisionPending && (depthState.Depth == 1 ? !initialDragonEncounterStarted : !deepDragonEncounterStarted);
     public bool PendingCheckpointDecision => depthState.DecisionPending;
     public bool PendingPushOrExtract => PendingCheckpointDecision;
     public bool CanPushDeeper => depthState.CanPushDeeper;
@@ -169,8 +170,13 @@ public sealed partial class RunSimulation
     public bool PushDeeper()
     {
         if (!depthState.PushDeeper()) return false;
-        depthTrialState.Start(depthState.Depth);
-        spawnTimer = Math.Min(spawnTimer, 0.35);
+        mapState = new WyrmrealmMapState(depthState.Depth);
+        attractedDragon = huntRoute.Deep;
+        deepDragonPending = false;
+        deepDragonEncounterStarted = false;
+        mapEncounterCleanupPending = false;
+        ClearMapEncounterField();
+        spawnTimer = 0;
         return true;
     }
 

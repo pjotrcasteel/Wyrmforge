@@ -19,6 +19,20 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
+    public void NewMap_AtDepthTwo_OffersFreshDeeperRoute()
+    {
+        var state = new WyrmrealmMapState(2);
+
+        Assert.AreEqual(2, state.Depth);
+        Assert.IsTrue(state.DecisionPending);
+        Assert.AreEqual(2, state.AvailableNodes.Count);
+        Assert.IsTrue(state.AvailableNodes.All(node => node.Stage == 1));
+        Assert.IsTrue(state.AvailableNodes.All(node => node.Id.StartsWith("depth-2-", StringComparison.Ordinal)));
+        Assert.AreEqual("Ashen Fall", state.AvailableNodes[0].Name);
+        Assert.AreEqual("Stormglass Rift", state.AvailableNodes[1].Name);
+    }
+
+    [TestMethod]
     public void RegisterKill_TracksVisibleProgressUntilCombatNodeCompletes()
     {
         var state = new WyrmrealmMapState();
