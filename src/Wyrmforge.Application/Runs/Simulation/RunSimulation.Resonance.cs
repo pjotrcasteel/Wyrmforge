@@ -6,11 +6,13 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private readonly DragonAttractionState dragonAttractionState = new();
+    private readonly DragonSignState dragonSignState = new();
     private RunResonanceState? resonanceState;
     private DragonId? attractedDragon;
 
     public IReadOnlyList<RunResonanceEntry> Resonance => resonanceState?.Calculate(build, mapState.CompletedNodes) ?? Array.Empty<RunResonanceEntry>();
     public IReadOnlyList<DragonAttractionEntry> DragonAttraction => dragonAttractionState.Calculate(Resonance);
+    public IReadOnlyList<DragonSign> DragonSigns => dragonSignState.Calculate(DragonAttraction, mapState.CompletedNodes.Count, attractedDragon);
     public DragonId? AttractedDragon => attractedDragon;
 
     internal void InitializeResonance(IReadOnlySet<string> selectedNodes) => resonanceState = new RunResonanceState(selectedNodes);

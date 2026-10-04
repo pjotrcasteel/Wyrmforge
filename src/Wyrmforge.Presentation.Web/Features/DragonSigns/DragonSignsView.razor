@@ -1,0 +1,53 @@
+@namespace Wyrmforge.Presentation.Web.Features.DragonSigns
+@using Wyrmforge.Application.Runs.Resonance
+@using Wyrmforge.Domain.Spells
+
+<section class="dragon-signs" aria-label="Dragon signs">
+    <div class="dragon-signs-heading">
+        <div>
+            <strong>DRAGON SIGNS</strong>
+            <span>The realm shows attention before it gives you a name.</span>
+        </div>
+        <b>@SignSummary</b>
+    </div>
+
+    @if (Signs.Count == 0)
+    {
+        <div class="dragon-sign quiet">
+            <span class="sign-mark">◇</span>
+            <div>
+                <strong>The realm is listening</strong>
+                <p>No omen has formed yet. Every spell and trail leaves something for the wyrms to notice.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="dragon-sign-list">
+            @foreach (var sign in Signs)
+            {
+                <article class="dragon-sign @SignClass(sign)">
+                    <span class="sign-mark">@SignIcon(sign.School)</span>
+                    <div>
+                        <div class="sign-title"><strong>@sign.Title</strong><small>@sign.Intensity.ToString().ToUpperInvariant()</small></div>
+                        <p>@sign.Description</p>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<DragonSign> Signs { get; set; } = Array.Empty<DragonSign>();
+
+    private string SignSummary => Signs.Count == 0 ? "No clear omen" : Signs.Count == 1 ? "Something noticed you" : "More than one presence";
+    private static string SignClass(DragonSign sign) => $"sign-{sign.School.ToString().ToLowerInvariant()} intensity-{sign.Intensity.ToString().ToLowerInvariant()}";
+
+    private static string SignIcon(SpellSchool school) => school switch
+    {
+        SpellSchool.Fire => "✹",
+        SpellSchool.Storm => "ϟ",
+        _ => "◇",
+    };
+}

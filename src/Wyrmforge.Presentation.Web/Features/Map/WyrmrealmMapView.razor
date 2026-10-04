@@ -1,7 +1,6 @@
 @namespace Wyrmforge.Presentation.Web.Features.Map
 @using Wyrmforge.Application.Runs.Navigation
 @using Wyrmforge.Application.Runs.Resonance
-@using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Spells
 
 <div class="realm-map-overlay">
@@ -26,8 +25,9 @@
                 }
             </div>
             <small>1 per Wyrmweb point • +3 per spell rank • +2 per synergy school • +@RunResonanceState.RouteWeight per cleared elemental trail</small>
-            <small><strong>WYRM ATTENTION</strong> • @string.Join(" • ", Attraction.Select(AttractionLabel))</small>
         </div>
+
+        <DragonSignsView Signs="Signs" />
 
         @if (CompletedNodes.Count > 0)
         {
@@ -45,7 +45,7 @@
                         {
                             <button class="@NodeClass(node)" disabled="@(!IsAvailable(node))" @onclick="() => ChooseAsync(node.Id)">
                                 <span class="node-icon">@NodeIcon(node)</span>
-                                <strong>@NodeName(node)</strong>
+                                <strong>@node.Name</strong>
                                 <small>@NodeDescription(node)</small>
                                 @if (node.AttunementSchool is { } school)
                                 {
@@ -65,8 +65,7 @@
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> AvailableNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> CompletedNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
     [Parameter, EditorRequired] public IReadOnlyList<RunResonanceEntry> Resonance { get; set; } = Array.Empty<RunResonanceEntry>();
-    [Parameter, EditorRequired] public IReadOnlyList<DragonAttractionEntry> Attraction { get; set; } = Array.Empty<DragonAttractionEntry>();
-    [Parameter] public DragonId? AttractedDragon { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<DragonSign> Signs { get; set; } = Array.Empty<DragonSign>();
     [Parameter] public EventCallback<string> OnChoose { get; set; }
 
     private int TotalResonance => Resonance.Sum(entry => entry.Value);
@@ -77,7 +76,6 @@
     private bool IsCompleted(WyrmrealmMapNode node) => CompletedNodes.Any(candidate => candidate.Id == node.Id);
     private bool IsBypassed(WyrmrealmMapNode node) => CompletedNodes.Any(completed => completed.Stage == node.Stage) && !IsCompleted(node);
     private string ResonanceStyle(int value) => $"width: {(TotalResonance == 0 ? 0 : value * 100d / TotalResonance):0.#}%";
-    private string AttractionLabel(DragonAttractionEntry entry) => $"{DragonCatalog.Get(entry.Dragon).Name} {entry.Probability:P0}";
 
     private string NodeClass(WyrmrealmMapNode node)
     {
@@ -87,18 +85,9 @@
         return "route-node future";
     }
 
-    private string NodeName(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon && AttractedDragon is { } dragonId
-        ? DragonCatalog.Get(dragonId).Name
-        : node.Name;
-
-    private string NodeDescription(WyrmrealmMapNode node)
+    private static string NodeDescription(WyrmrealmMapNode node)
     {
-        if (node.Type == WyrmrealmNodeType.Dragon)
-        {
-            return AttractedDragon is { } dragonId
-                ? $"Your resonance drew {DragonCatalog.Get(dragonId).Name} to this trail."
-                : "Something enormous waits beyond the trail.";
-        }
+        if (node.Type == WyrmrealmNodeType.Dragon) return "Something enormous waits beyond the trail. The realm has stopped whispering.";
 
         return node.EncounterKind switch
         {
