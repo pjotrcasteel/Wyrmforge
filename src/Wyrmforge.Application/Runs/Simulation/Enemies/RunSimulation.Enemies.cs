@@ -90,7 +90,7 @@ public sealed partial class RunSimulation
         }
 
         rawDamage = ApplyChargedScale(rawDamage);
-        player.Health -= rawDamage * passiveProfile.DamageTakenMultiplier;
+        player.Health -= rawDamage * passiveProfile.DamageTakenMultiplier * dragonEssenceModifiers.DamageTakenMultiplier;
         if (!passiveProfile.IceArmor || player.Barrier) return;
         player.Barrier = true;
         player.BarrierRemaining = 1.2;

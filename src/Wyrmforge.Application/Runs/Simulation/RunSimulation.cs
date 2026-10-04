@@ -33,7 +33,6 @@ public sealed partial class RunSimulation
     private readonly LevelChoiceService levelChoiceService;
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
-    private DragonHuntRoute huntRoute;
     private WyrmrealmMapState mapState;
     private readonly List<WyrmrealmMapNode> completedRouteNodes = [];
     private readonly RunBuildState build = new();
@@ -80,7 +79,6 @@ public sealed partial class RunSimulation
         this.levelChoiceService = levelChoiceService;
         this.randomSource = randomSource;
         Offering = offering;
-        huntRoute = DragonHuntRoute.For(DragonId.Ashfang);
         mapState = new WyrmrealmMapState();
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
@@ -99,7 +97,7 @@ public sealed partial class RunSimulation
     public WyrmrealmMapNode? CurrentMapNode => mapState.CurrentNode;
     public DragonEssenceId? Offering { get; }
     public DragonId? HuntTarget => AttractedDragon;
-    public bool PendingMapChoice => mapState.DecisionPending && (depthState.Depth == 1 ? !initialDragonEncounterStarted : !deepDragonEncounterStarted);
+    public bool PendingMapChoice => mapState.DecisionPending && !dragonEncounterStarted;
     public bool AtCheckpoint => checkpointState.IsOpen;
     public bool CanPushDeeper => depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
@@ -169,6 +167,7 @@ public sealed partial class RunSimulation
         var choice = pendingDragonEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || !build.DragonEssences.Select(id)) return false;
         pendingDragonEssenceChoices = [];
+        RefreshDragonEssenceModifiers();
         if (!extractionState.Start(player.Position)) checkpointState.Enter();
         return true;
     }
@@ -186,9 +185,9 @@ public sealed partial class RunSimulation
         if (!AtCheckpoint || !depthState.CanPushDeeper || !depthState.PushDeeper()) return false;
         if (!checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
         mapState = new WyrmrealmMapState(depthState.Depth);
-        attractedDragon = huntRoute.Deep;
-        deepDragonPending = false;
-        deepDragonEncounterStarted = false;
+        attractedDragon = null;
+        dragonPending = false;
+        dragonEncounterStarted = false;
         mapEncounterCleanupPending = false;
         ClearMapEncounterField();
         spawnTimer = 0;
@@ -213,7 +212,8 @@ public sealed partial class RunSimulation
 
     public RunSummary EndRun() => AbandonRun();
 
-    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, build.DragonEssences.Count, build.DragonEssences.Selected.ToArray(), (int)elapsed, level, choiceCount, build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
+    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, build.DragonEssences.Count, build.DragonEssences.Selected.ToArray(), (int)elapsed, level, choiceCount,
+        build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
         SynergyIds = build.Synergies.Snapshot().ToArray(),
     };
@@ -224,7 +224,8 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
             null,
-            enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0, Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
+            enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0,
+                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
@@ -243,7 +244,8 @@ public sealed partial class RunSimulation
 
     private RunCheckpointActionState[] CreateCheckpointActions() =>
     [
-        new(RunCheckpointActionId.MendWounds, checkpointState.CanUse(RunCheckpointActionId.MendWounds) && player.Health < player.MaxHealth, checkpointState.HasUsed(RunCheckpointActionId.MendWounds)),
+        new(RunCheckpointActionId.MendWounds, checkpointState.CanUse(RunCheckpointActionId.MendWounds) && player.Health < player.MaxHealth,
+            checkpointState.HasUsed(RunCheckpointActionId.MendWounds)),
         new(RunCheckpointActionId.Descend, depthState.CanPushDeeper),
         new(RunCheckpointActionId.LeaveRealm, true),
     ];

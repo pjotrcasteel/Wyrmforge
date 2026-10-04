@@ -10,16 +10,17 @@ public sealed partial class RunSimulation
     private readonly DragonAttentionState dragonAttentionState = new();
     private readonly DragonSignState dragonSignState = new();
     private readonly RealmInfluenceState realmInfluenceState = new();
+    private readonly HashSet<DragonId> defeatedDragonIds = [];
     private RunResonanceState? resonanceState;
     private DragonId? attractedDragon;
 
     public IReadOnlyList<RunResonanceEntry> Resonance => resonanceState?.Calculate(build, completedRouteNodes) ?? Array.Empty<RunResonanceEntry>();
-    public IReadOnlyList<DragonAttractionEntry> DragonAttraction => dragonAttractionState.Calculate(Resonance);
+    public IReadOnlyList<DragonAttractionEntry> DragonAttraction => dragonAttractionState.Calculate(Resonance, defeatedDragonIds);
     public IReadOnlyList<DragonSign> DragonSigns => dragonSignState.Calculate(CurrentDragonAttention);
     public IReadOnlyList<RealmInfluenceCue> RealmInfluences => realmInfluenceState.Calculate(CurrentDragonAttention);
     public DragonId? AttractedDragon => attractedDragon;
 
-    private bool CurrentDragonHuntCompleted => (depthState.Depth == 1 ? initialDragonEncounterStarted : deepDragonEncounterStarted) && dragon is null;
+    private bool CurrentDragonHuntCompleted => dragonEncounterStarted && dragon is null;
     private IReadOnlyList<DragonAttention> CurrentDragonAttention => CurrentDragonHuntCompleted
         ? Array.Empty<DragonAttention>()
         : dragonAttentionState.Calculate(DragonAttraction, mapState.CompletedNodes.Count, attractedDragon);
@@ -29,7 +30,6 @@ public sealed partial class RunSimulation
     private void ResolveDragonAttraction()
     {
         if (attractedDragon is not null) return;
-        attractedDragon = dragonAttractionState.Roll(Resonance, randomSource);
-        huntRoute = DragonHuntRoute.For(attractedDragon.Value);
+        attractedDragon = dragonAttractionState.Roll(Resonance, randomSource, defeatedDragonIds);
     }
 }

@@ -7,6 +7,7 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private DragonEssenceModifiers dragonEssenceModifiers = DragonEssenceModifiers.None;
     private double chargedScaleCooldown;
     private double tempestWingMovementTime;
     private bool tempestWingCharged;
@@ -109,21 +110,27 @@ public sealed partial class RunSimulation
         Splash(target.Position, damage * 0.35, radius, target.Id);
     }
 
+    private void RefreshDragonEssenceModifiers()
+    {
+        var previousMaxHealth = player.MaxHealth;
+        var definitions = build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get);
+        dragonEssenceModifiers = DragonEssenceModifiers.Aggregate(definitions.Select(definition => definition.Modifiers));
+        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus + relicModifiers.MaxHealthBonus + dragonEssenceModifiers.MaxHealthBonus;
+        if (player.MaxHealth > previousMaxHealth) player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth - previousMaxHealth);
+        else player.Health = Math.Min(player.Health, player.MaxHealth);
+    }
+
     private sealed class EssenceBurstState(Vector2D position, double radius, double life)
     {
         public Vector2D Position { get; } = position;
-
         public double Radius { get; } = radius;
-
         public double Life { get; set; } = life;
     }
 
     private sealed class EssenceBoltState(Vector2D from, Vector2D to, double life)
     {
         public Vector2D From { get; } = from;
-
         public Vector2D To { get; } = to;
-
         public double Life { get; set; } = life;
     }
 }

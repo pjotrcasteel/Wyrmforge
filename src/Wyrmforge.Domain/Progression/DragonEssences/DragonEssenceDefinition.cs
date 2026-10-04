@@ -6,4 +6,5 @@ public sealed record DragonEssenceDefinition(
     string Source,
     string Icon,
     string Effect,
-    string Description);
+    string Description,
+    DragonEssenceModifiers? Modifiers = null);

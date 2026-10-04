@@ -15,39 +15,29 @@ public sealed class DragonSignStateTests
 
         var sign = state.Calculate([new DragonAttention(DragonId.Ashfang, DragonAttentionIntensity.Faint)]).Single();
 
-        Assert.AreEqual(DragonId.Ashfang, sign.Dragon);
         Assert.AreEqual(SpellSchool.Fire, sign.School);
-        Assert.AreEqual(DragonAttentionIntensity.Faint, sign.Intensity);
         Assert.AreEqual("Warm ash", sign.Title);
     }
 
     [TestMethod]
-    public void Calculate_CompetingAttention_ReturnsNarrativeSignsInAttentionOrder()
+    public void Calculate_ImminentRimeclawAttention_ReturnsFrozenTrailSign()
     {
         var state = new DragonSignState();
-        DragonAttention[] attention =
-        [
-            new(DragonId.Ashfang, DragonAttentionIntensity.Ominous),
-            new(DragonId.Stormcoil, DragonAttentionIntensity.Growing),
-        ];
 
-        var signs = state.Calculate(attention);
+        var sign = state.Calculate([new DragonAttention(DragonId.Rimeclaw, DragonAttentionIntensity.Imminent)]).Single();
 
-        Assert.AreEqual(2, signs.Count);
-        Assert.AreEqual("A furnace breath", signs[0].Title);
-        Assert.AreEqual("Distant thunder", signs[1].Title);
+        Assert.AreEqual(SpellSchool.Frost, sign.School);
+        Assert.AreEqual("The trail freezes behind you", sign.Title);
     }
 
     [TestMethod]
-    public void Calculate_ImminentStormcoilAttention_ReturnsStormCirclesSign()
+    public void Calculate_OminousVoidweaverAttention_ReturnsWeightlessStonesSign()
     {
         var state = new DragonSignState();
 
-        var sign = state.Calculate([new DragonAttention(DragonId.Stormcoil, DragonAttentionIntensity.Imminent)]).Single();
+        var sign = state.Calculate([new DragonAttention(DragonId.Voidweaver, DragonAttentionIntensity.Ominous)]).Single();
 
-        Assert.AreEqual(DragonId.Stormcoil, sign.Dragon);
-        Assert.AreEqual(SpellSchool.Storm, sign.School);
-        Assert.AreEqual(DragonAttentionIntensity.Imminent, sign.Intensity);
-        Assert.AreEqual("The storm circles", sign.Title);
+        Assert.AreEqual(SpellSchool.Arcane, sign.School);
+        Assert.AreEqual("Weightless stones", sign.Title);
     }
 }

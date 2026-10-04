@@ -26,7 +26,8 @@ public sealed partial class RunSimulation
     {
         var rankMultiplier = 1 - Math.Max(0, rank - 1) * 0.06;
         var lightningFormMultiplier = passiveProfile.LightningForm && moving ? 1 / 1.5 : 1;
-        return BaseSpellCooldowns[id] * rankMultiplier * passiveProfile.CastIntervalMultiplier * modifiers.CastIntervalMultiplier * relicModifiers.CastIntervalMultiplier * lightningFormMultiplier;
+        return BaseSpellCooldowns[id] * rankMultiplier * passiveProfile.CastIntervalMultiplier * modifiers.CastIntervalMultiplier * relicModifiers.CastIntervalMultiplier
+            * dragonEssenceModifiers.CastIntervalMultiplier * lightningFormMultiplier;
     }
 
     private void CastSpell(SpellId id, int rank, double damageScale, bool echo)
@@ -59,7 +60,8 @@ public sealed partial class RunSimulation
         var count = baseCount + modifiers.ExtraProjectiles;
         var baseDirection = Vector2D.DirectionTo(player.Position, target.Position);
         var speed = GetSpellProjectileSpeed(id, rank) * passiveProfile.ProjectileSpeedMultiplier * modifiers.ProjectileSpeedMultiplier;
-        var damage = GetSpellDamage(id, rank) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * relicModifiers.DamageMultiplier * damageScale;
+        var damage = GetSpellDamage(id, rank) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * relicModifiers.DamageMultiplier
+            * dragonEssenceModifiers.DamageMultiplier * damageScale;
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + modifiers.BonusChains;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= 3;
         var masteredFrostShard = id == SpellId.FrostShard && FrostShardMastery.IsActive(rank);
@@ -83,7 +85,8 @@ public sealed partial class RunSimulation
     private void CastChainLightning(int rank, Vector2D origin, double damageScale, int bonusJumps = 0)
     {
         var current = origin;
-        var damage = (15 + (rank - 1) * 5) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * relicModifiers.DamageMultiplier * damageScale;
+        var damage = (15 + (rank - 1) * 5) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * relicModifiers.DamageMultiplier
+            * dragonEssenceModifiers.DamageMultiplier * damageScale;
         var jumps = rank + 1 + modifiers.BonusChains + bonusJumps;
         var hit = new HashSet<int>();
         var stormglassTriggered = false;

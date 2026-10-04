@@ -15,32 +15,11 @@
 }
 
 .dragon-signs-heading strong,
-.dragon-signs-heading span {
-    display: block;
-}
-
-.dragon-signs-heading strong {
-    color: #e3d6c4;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-}
-
-.dragon-signs-heading span {
-    margin-top: 2px;
-    color: #81786f;
-    font-size: 0.63rem;
-}
-
-.dragon-signs-heading b {
-    flex: 0 0 auto;
-    color: #c9b088;
-    font-size: 0.7rem;
-}
-
-.dragon-sign-list {
-    display: grid;
-    gap: 7px;
-}
+.dragon-signs-heading span { display: block; }
+.dragon-signs-heading strong { color: #e3d6c4; font-size: 0.72rem; letter-spacing: 0.08em; }
+.dragon-signs-heading span { margin-top: 2px; color: #81786f; font-size: 0.63rem; }
+.dragon-signs-heading b { flex: 0 0 auto; color: #c9b088; font-size: 0.7rem; }
+.dragon-sign-list { display: grid; gap: 7px; }
 
 .dragon-sign {
     display: grid;
@@ -64,67 +43,25 @@
     font-size: 1rem;
 }
 
-.sign-title {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-}
-
+.sign-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .sign-title strong,
-.dragon-sign > div > strong {
-    color: #ddd3c8;
-    font-size: 0.76rem;
-}
+.dragon-sign > div > strong { color: #ddd3c8; font-size: 0.76rem; }
+.sign-title small { color: #897d71; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.11em; }
+.dragon-sign p { margin: 3px 0 0; color: #938a82; font-size: 0.68rem; line-height: 1.45; }
 
-.sign-title small {
-    color: #897d71;
-    font-size: 0.56rem;
-    font-weight: 800;
-    letter-spacing: 0.11em;
-}
-
-.dragon-sign p {
-    margin: 3px 0 0;
-    color: #938a82;
-    font-size: 0.68rem;
-    line-height: 1.45;
-}
-
-.dragon-sign.sign-fire {
-    border-color: rgba(227, 112, 76, 0.2);
-    background: rgba(111, 43, 27, 0.12);
-}
-
-.dragon-sign.sign-fire .sign-mark {
-    color: #e78b68;
-    background: rgba(178, 73, 43, 0.12);
-}
-
-.dragon-sign.sign-storm {
-    border-color: rgba(209, 196, 103, 0.2);
-    background: rgba(81, 76, 30, 0.12);
-}
-
-.dragon-sign.sign-storm .sign-mark {
-    color: #d8cf78;
-    background: rgba(159, 151, 58, 0.12);
-}
+.dragon-sign.sign-fire { border-color: rgba(227, 112, 76, 0.2); background: rgba(111, 43, 27, 0.12); }
+.dragon-sign.sign-fire .sign-mark { color: #e78b68; background: rgba(178, 73, 43, 0.12); }
+.dragon-sign.sign-storm { border-color: rgba(209, 196, 103, 0.2); background: rgba(81, 76, 30, 0.12); }
+.dragon-sign.sign-storm .sign-mark { color: #d8cf78; background: rgba(159, 151, 58, 0.12); }
+.dragon-sign.sign-frost { border-color: rgba(137, 211, 242, 0.24); background: rgba(42, 91, 116, 0.13); }
+.dragon-sign.sign-frost .sign-mark { color: #a9e4ff; background: rgba(72, 151, 190, 0.13); }
+.dragon-sign.sign-arcane { border-color: rgba(188, 132, 255, 0.24); background: rgba(89, 48, 126, 0.13); }
+.dragon-sign.sign-arcane .sign-mark { color: #d0a6ff; background: rgba(139, 83, 193, 0.13); }
 
 .dragon-sign.intensity-ominous,
-.dragon-sign.intensity-imminent {
-    border-width: 1px;
-    box-shadow: inset 0 0 26px rgba(255, 255, 255, 0.018);
-}
-
-.dragon-sign.quiet {
-    color: #7f7682;
-}
+.dragon-sign.intensity-imminent { box-shadow: inset 0 0 26px rgba(255, 255, 255, 0.018); }
+.dragon-sign.quiet { color: #7f7682; }
 
 @media (max-width: 600px) {
-    .dragon-signs-heading {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 3px;
-    }
+    .dragon-signs-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
 }

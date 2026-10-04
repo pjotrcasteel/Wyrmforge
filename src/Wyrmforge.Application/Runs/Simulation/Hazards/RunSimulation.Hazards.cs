@@ -13,7 +13,7 @@ public sealed partial class RunSimulation
     {
         var wasTelegraphing = unstableRiftState.IsTelegraphing;
         var hazard = CurrentRoute?.Hazard;
-        var riftsActive = hazard?.Kind == WyrmrealmHazardKind.UnstableRifts && dragon is null && !deepDragonPending;
+        var riftsActive = hazard?.Kind == WyrmrealmHazardKind.UnstableRifts && dragon is null && !dragonPending;
         var detonated = unstableRiftState.Tick(delta, riftsActive, player.Position, hazard?.IntervalMultiplier ?? 1);
 
         if (!wasTelegraphing && unstableRiftState.IsTelegraphing)
@@ -22,7 +22,6 @@ public sealed partial class RunSimulation
         }
 
         if (!detonated) return;
-
         RegisterSplashPulse(unstableRiftState.Position, UnstableRiftState.Radius);
         RegisterElementalImpact(unstableRiftState.Position, SpellId.ArcaneOrb);
         if (Vector2D.Distance(player.Position, unstableRiftState.Position) <= UnstableRiftState.Radius) DamagePlayer(UnstableRiftState.Damage);

@@ -48,7 +48,7 @@ public sealed partial class RunSimulation
     {
         var previousMaxHealth = player.MaxHealth;
         relicModifiers = RelicModifiers.Aggregate(build.Relics.Equipped);
-        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus + relicModifiers.MaxHealthBonus;
+        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus + relicModifiers.MaxHealthBonus + dragonEssenceModifiers.MaxHealthBonus;
         if (player.MaxHealth > previousMaxHealth) player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth - previousMaxHealth);
         else player.Health = Math.Min(player.Health, player.MaxHealth);
     }

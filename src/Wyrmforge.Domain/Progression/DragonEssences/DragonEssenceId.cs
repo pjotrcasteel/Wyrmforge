@@ -8,4 +8,10 @@ public enum DragonEssenceId
     StormHeart,
     ChargedScale,
     TempestWing,
+    RimeHeart,
+    GlacialScale,
+    HoarfrostWing,
+    VoidHeart,
+    NullScale,
+    PhaseWing,
 }

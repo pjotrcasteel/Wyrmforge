@@ -9,22 +9,19 @@ public sealed class DragonAttractionState
     public const int BaseWeight = 6;
     public const int MatchingResonanceWeight = 4;
 
-    public IReadOnlyList<DragonAttractionEntry> Calculate(IReadOnlyList<RunResonanceEntry> resonance)
+    public IReadOnlyList<DragonAttractionEntry> Calculate(IReadOnlyList<RunResonanceEntry> resonance, IReadOnlySet<DragonId>? excluded = null)
     {
-        var ashfangWeight = BaseWeight + (Value(resonance, SpellSchool.Fire) * MatchingResonanceWeight);
-        var stormcoilWeight = BaseWeight + (Value(resonance, SpellSchool.Storm) * MatchingResonanceWeight);
-        var totalWeight = ashfangWeight + stormcoilWeight;
+        var candidates = DragonCatalog.All.Where(dragon => excluded is null || !excluded.Contains(dragon.Id)).ToArray();
+        if (candidates.Length == 0) candidates = DragonCatalog.All.ToArray();
 
-        return
-        [
-            new DragonAttractionEntry(DragonId.Ashfang, ashfangWeight, ashfangWeight / (double)totalWeight),
-            new DragonAttractionEntry(DragonId.Stormcoil, stormcoilWeight, stormcoilWeight / (double)totalWeight),
-        ];
+        var weights = candidates.Select(dragon => new { dragon.Id, Weight = BaseWeight + Value(resonance, dragon.School) * MatchingResonanceWeight }).ToArray();
+        var totalWeight = weights.Sum(entry => entry.Weight);
+        return weights.Select(entry => new DragonAttractionEntry(entry.Id, entry.Weight, entry.Weight / (double)totalWeight)).ToArray();
     }
 
-    public DragonId Roll(IReadOnlyList<RunResonanceEntry> resonance, IRandomSource randomSource)
+    public DragonId Roll(IReadOnlyList<RunResonanceEntry> resonance, IRandomSource randomSource, IReadOnlySet<DragonId>? excluded = null)
     {
-        var entries = Calculate(resonance);
+        var entries = Calculate(resonance, excluded);
         var roll = randomSource.Next(entries.Sum(entry => entry.Weight));
         var cumulative = 0;
 

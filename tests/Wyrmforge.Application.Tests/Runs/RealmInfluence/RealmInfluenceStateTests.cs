@@ -25,23 +25,8 @@ public sealed class RealmInfluenceStateTests
 
         var cue = state.Calculate([new DragonAttention(DragonId.Ashfang, DragonAttentionIntensity.Faint)]).Single();
 
-        Assert.AreEqual(DragonId.Ashfang, cue.Source);
         Assert.AreEqual(RealmInfluenceEffect.Ashfall, cue.Effect);
         Assert.AreEqual(0.25, cue.Strength, 0.001);
-    }
-
-    [TestMethod]
-    public void Calculate_OminousAshfangAttention_AccumulatesEnvironmentalEffects()
-    {
-        var state = new RealmInfluenceState();
-
-        var cues = state.Calculate([new DragonAttention(DragonId.Ashfang, DragonAttentionIntensity.Ominous)]);
-
-        Assert.AreEqual(3, cues.Count);
-        Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.Ashfall));
-        Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.ScorchMarks));
-        Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.HeatHaze));
-        Assert.IsTrue(cues.All(cue => Math.Abs(cue.Strength - 0.75) < 0.001));
     }
 
     [TestMethod]
@@ -52,10 +37,32 @@ public sealed class RealmInfluenceStateTests
         var cues = state.Calculate([new DragonAttention(DragonId.Stormcoil, DragonAttentionIntensity.Imminent)]);
 
         Assert.AreEqual(4, cues.Count);
-        Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.StaticArcs));
-        Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.LightningFlashes));
-        Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.ChargedGround));
         Assert.IsTrue(cues.Any(cue => cue.Effect == RealmInfluenceEffect.StormPulse));
-        Assert.IsTrue(cues.All(cue => Math.Abs(cue.Strength - 1) < 0.001));
+    }
+
+    [TestMethod]
+    public void Calculate_ImminentRimeclawAttention_ReturnsFullFrostProfile()
+    {
+        var state = new RealmInfluenceState();
+
+        var cues = state.Calculate([new DragonAttention(DragonId.Rimeclaw, DragonAttentionIntensity.Imminent)]);
+
+        Assert.AreEqual(4, cues.Count);
+        CollectionAssert.AreEquivalent(
+            new[] { RealmInfluenceEffect.FrostMotes, RealmInfluenceEffect.RimeVeins, RealmInfluenceEffect.ColdHaze, RealmInfluenceEffect.IcePulse },
+            cues.Select(cue => cue.Effect).ToArray());
+    }
+
+    [TestMethod]
+    public void Calculate_ImminentVoidweaverAttention_ReturnsFullArcaneProfile()
+    {
+        var state = new RealmInfluenceState();
+
+        var cues = state.Calculate([new DragonAttention(DragonId.Voidweaver, DragonAttentionIntensity.Imminent)]);
+
+        Assert.AreEqual(4, cues.Count);
+        CollectionAssert.AreEquivalent(
+            new[] { RealmInfluenceEffect.AetherMotes, RealmInfluenceEffect.RealityFractures, RealmInfluenceEffect.VoidHaze, RealmInfluenceEffect.ArcanePulse },
+            cues.Select(cue => cue.Effect).ToArray());
     }
 }

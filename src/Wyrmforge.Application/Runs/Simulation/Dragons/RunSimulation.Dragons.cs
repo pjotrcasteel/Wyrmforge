@@ -2,161 +2,169 @@ using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Progression.DragonEssences;
-using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
-    private const double DragonBreathRange = 340;
-    private const double DragonBreathHalfAngle = 0.4;
-    private bool initialDragonPending;
-    private bool initialDragonEncounterStarted;
-    private bool deepDragonPending;
-    private bool deepDragonEncounterStarted;
+    private bool dragonPending;
+    private bool dragonEncounterStarted;
 
     private void UpdateDragonEncounter(double delta, double width, double height)
     {
-        if (initialDragonPending && !initialDragonEncounterStarted) SpawnDragon(DragonCatalog.Get(huntRoute.First), width, false);
-        if (deepDragonPending && !deepDragonEncounterStarted && dragon is null) SpawnDragon(DragonCatalog.Get(huntRoute.Deep), width, true);
+        if (dragonPending && !dragonEncounterStarted && attractedDragon is { } target) SpawnDragon(DragonCatalog.Get(target), width);
         if (dragon is not { Health: > 0 } activeDragon) return;
 
         activeDragon.FrozenFor = Math.Max(0, activeDragon.FrozenFor - delta);
-        var timeScale = activeDragon.FrozenFor > 0 ? 0.45 : 1;
-        var scaledDelta = delta * timeScale;
-        if (activeDragon.Definition.Id == DragonId.Stormcoil) UpdateStormcoil(activeDragon, scaledDelta);
-        else UpdateAshfang(activeDragon, scaledDelta);
+        var scaledDelta = delta * (activeDragon.FrozenFor > 0 ? 0.45 : 1);
+        UpdateDragonCombat(activeDragon, scaledDelta);
 
-        var contactDamagePerSecond = activeDragon.Definition.Id == DragonId.Stormcoil ? 30 : 24;
-        if (Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayer(contactDamagePerSecond * delta);
+        var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond;
+        if (Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayer(contactDamage * delta);
     }
 
-    private void UpdateAshfang(DragonState activeDragon, double delta)
+    private void UpdateDragonCombat(DragonState activeDragon, double delta)
     {
         if (activeDragon.IsTelegraphing)
         {
             activeDragon.TelegraphRemaining -= delta;
-            if (activeDragon.TelegraphRemaining <= 0) ResolveDragonBreath(activeDragon);
+            if (activeDragon.TelegraphRemaining <= 0) ResolveDragonAttack(activeDragon);
             return;
         }
+
         activeDragon.AttackCooldown -= delta;
-        if (activeDragon.AttackCooldown <= 0) StartDragonBreath(activeDragon);
-        else MoveAshfang(activeDragon, delta);
+        if (activeDragon.AttackCooldown <= 0) StartDragonAttack(activeDragon);
+        else MoveDragon(activeDragon, delta);
     }
 
-    private void UpdateStormcoil(DragonState activeDragon, double delta)
+    private void SpawnDragon(DragonDefinition definition, double width)
     {
-        if (activeDragon.IsTelegraphing)
-        {
-            activeDragon.TelegraphRemaining -= delta;
-            if (activeDragon.TelegraphRemaining <= 0) ResolveStormPulse(activeDragon);
-            return;
-        }
-        activeDragon.AttackCooldown -= delta;
-        if (activeDragon.AttackCooldown <= 0) StartStormPulse(activeDragon);
-        else MoveStormcoil(activeDragon, delta);
-    }
-
-    private void SpawnDragon(DragonDefinition definition, double width, bool deep)
-    {
-        if (deep)
-        {
-            deepDragonEncounterStarted = true;
-            deepDragonPending = false;
-        }
-        else
-        {
-            initialDragonEncounterStarted = true;
-            initialDragonPending = false;
-        }
-
+        dragonEncounterStarted = true;
+        dragonPending = false;
         enemies.Clear();
         projectiles.Clear();
         lightning.Clear();
         dragon = new DragonState(++enemyId, definition, new Vector2D(width / 2, -definition.Radius - 18));
     }
 
-    private void MoveAshfang(DragonState activeDragon, double delta)
+    private void MoveDragon(DragonState activeDragon, double delta)
     {
-        var distance = Vector2D.Distance(activeDragon.Position, player.Position);
-        var direction = Vector2D.DirectionTo(activeDragon.Position, player.Position);
-        var phaseSpeed = activeDragon.Speed * (activeDragon.Phase == 2 ? 1.25 : 1);
-        if (distance > 190) activeDragon.Position += direction * phaseSpeed * delta;
-        else if (distance < 120) activeDragon.Position -= direction * phaseSpeed * 0.65 * delta;
-    }
-
-    private void MoveStormcoil(DragonState activeDragon, double delta)
-    {
+        var profile = activeDragon.Definition.Combat.Movement;
         var distance = Vector2D.Distance(activeDragon.Position, player.Position);
         var towardPlayer = Vector2D.DirectionTo(activeDragon.Position, player.Position);
+        var direction = MovementDirection(profile, distance, towardPlayer);
+        var speed = activeDragon.Speed * profile.SpeedMultiplier.For(activeDragon.Phase);
+        activeDragon.Position += direction * speed * delta;
+    }
+
+    private static Vector2D MovementDirection(DragonMovementProfile profile, double distance, Vector2D towardPlayer)
+    {
         var tangent = new Vector2D(-towardPlayer.Y, towardPlayer.X);
-        var movement = distance switch
+        return profile.Style switch
         {
-            > 235 => (towardPlayer + tangent * 0.55).Normalized(),
-            < 160 => (towardPlayer * -1 + tangent * 0.55).Normalized(),
+            DragonMovementStyle.Pursue when distance > profile.MaximumRange => towardPlayer,
+            DragonMovementStyle.Pursue when distance < profile.MinimumRange => towardPlayer * -0.65,
+            DragonMovementStyle.Pursue => Vector2D.Zero,
+            DragonMovementStyle.Kite when distance > profile.MaximumRange => towardPlayer,
+            DragonMovementStyle.Kite when distance < profile.MinimumRange => towardPlayer * -1,
+            DragonMovementStyle.Kite => tangent * profile.TangentWeight,
+            DragonMovementStyle.Orbit when distance > profile.MaximumRange => (towardPlayer + tangent * profile.TangentWeight).Normalized(),
+            DragonMovementStyle.Orbit when distance < profile.MinimumRange => (towardPlayer * -1 + tangent * profile.TangentWeight).Normalized(),
             _ => tangent,
         };
-        activeDragon.Position += movement * activeDragon.Speed * (activeDragon.Phase == 2 ? 1.2 : 1) * delta;
     }
 
-    private void StartDragonBreath(DragonState activeDragon)
+    private void StartDragonAttack(DragonState activeDragon)
     {
-        activeDragon.BreathDirection = Vector2D.DirectionTo(activeDragon.Position, player.Position);
-        activeDragon.TelegraphRemaining = activeDragon.Phase == 2 ? 0.55 : 0.8;
+        var attack = activeDragon.Definition.Combat.Attack;
+        activeDragon.TelegraphRemaining = attack.TelegraphSeconds.For(activeDragon.Phase);
+        switch (attack.Pattern)
+        {
+            case DragonAttackPattern.Cone:
+                activeDragon.BreathDirection = Vector2D.DirectionTo(activeDragon.Position, player.Position);
+                break;
+            case DragonAttackPattern.SelfBurst:
+                RegisterSplashPulse(activeDragon.Position, attack.Geometry.Radius.For(activeDragon.Phase), activeDragon.TelegraphRemaining);
+                break;
+            case DragonAttackPattern.TargetBurst:
+                activeDragon.AttackTarget = player.Position;
+                RegisterSplashPulse(activeDragon.AttackTarget, attack.Geometry.Radius.For(activeDragon.Phase), activeDragon.TelegraphRemaining);
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported dragon attack pattern {attack.Pattern}.");
+        }
     }
 
-    private void ResolveDragonBreath(DragonState activeDragon)
+    private void ResolveDragonAttack(DragonState activeDragon)
     {
+        var attack = activeDragon.Definition.Combat.Attack;
         activeDragon.TelegraphRemaining = 0;
-        activeDragon.AttackCooldown = activeDragon.Phase == 2 ? 2.4 : 3.2;
+        activeDragon.AttackCooldown = attack.CooldownSeconds.For(activeDragon.Phase);
+        switch (attack.Pattern)
+        {
+            case DragonAttackPattern.Cone:
+                ResolveConeAttack(activeDragon, attack);
+                break;
+            case DragonAttackPattern.SelfBurst:
+                ResolveBurstAttack(activeDragon.Position, activeDragon, attack);
+                break;
+            case DragonAttackPattern.TargetBurst:
+                ResolveBurstAttack(activeDragon.AttackTarget, activeDragon, attack);
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported dragon attack pattern {attack.Pattern}.");
+        }
+    }
+
+    private void ResolveConeAttack(DragonState activeDragon, DragonAttackProfile attack)
+    {
         var offset = player.Position - activeDragon.Position;
         var distance = offset.Length;
-        if (distance > DragonBreathRange || distance <= double.Epsilon) return;
+        if (distance > attack.Geometry.Range || distance <= double.Epsilon) return;
         var playerDirection = offset.Normalized();
-        var dot = (playerDirection.X * activeDragon.BreathDirection.X) + (playerDirection.Y * activeDragon.BreathDirection.Y);
-        if (dot < Math.Cos(DragonBreathHalfAngle)) return;
-        DamagePlayer(activeDragon.Phase == 2 ? 50 : 38);
+        var dot = playerDirection.X * activeDragon.BreathDirection.X + playerDirection.Y * activeDragon.BreathDirection.Y;
+        if (dot < Math.Cos(attack.Geometry.HalfAngle)) return;
+        RegisterElementalImpact(player.Position, attack.VisualSpell);
+        DamagePlayer(attack.Damage.For(activeDragon.Phase));
     }
 
-    private void StartStormPulse(DragonState activeDragon)
+    private void ResolveBurstAttack(Vector2D center, DragonState activeDragon, DragonAttackProfile attack)
     {
-        var telegraphSeconds = StormcoilProfile.TelegraphSeconds(activeDragon.Phase);
-        activeDragon.TelegraphRemaining = telegraphSeconds;
-        RegisterSplashPulse(activeDragon.Position, StormcoilProfile.PulseRadius(activeDragon.Phase), telegraphSeconds);
-    }
-
-    private void ResolveStormPulse(DragonState activeDragon)
-    {
-        activeDragon.TelegraphRemaining = 0;
-        activeDragon.AttackCooldown = StormcoilProfile.CooldownSeconds(activeDragon.Phase);
-        var radius = StormcoilProfile.PulseRadius(activeDragon.Phase);
-        RegisterElementalImpact(activeDragon.Position, SpellId.ChainLightning);
-        if (Vector2D.Distance(activeDragon.Position, player.Position) <= radius) DamagePlayer(StormcoilProfile.PulseDamage(activeDragon.Phase));
+        var radius = attack.Geometry.Radius.For(activeDragon.Phase);
+        RegisterElementalImpact(center, attack.VisualSpell);
+        if (Vector2D.Distance(player.Position, center) <= radius) DamagePlayer(attack.Damage.For(activeDragon.Phase));
     }
 
     private void DefeatDragon(DragonState defeatedDragon)
     {
         if (!ReferenceEquals(dragon, defeatedDragon)) return;
         dragonsSlain++;
-        var defeatedId = defeatedDragon.Definition.Id;
-        score += defeatedId == DragonId.Stormcoil ? 4000 + (int)(elapsed * 12) : 2500 + (int)(elapsed * 10);
+        var definition = defeatedDragon.Definition;
+        defeatedDragonIds.Add(definition.Id);
+        var reward = definition.Combat.Reward;
+        score += reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
         dragon = null;
         spawnTimer = 1.2;
         mapState.CompleteDragon();
-        pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(defeatedId).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
-        GainExperience(defeatedId == DragonId.Stormcoil ? 8 : 5);
+        pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(definition.Id).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
+        GainExperience(reward.Experience);
         if (pendingDragonEssenceChoices.Count == 0 && !extractionState.Start(player.Position)) checkpointState.Enter();
     }
 
     private DragonRenderSnapshot? CreateDragonSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
-        return new DragonRenderSnapshot(activeDragon.Definition.Name, activeDragon.Definition.Title, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.FrozenFor > 0);
+        var definition = activeDragon.Definition;
+        return new DragonRenderSnapshot(definition.Name, definition.Title, definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius,
+            activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.FrozenFor > 0);
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
     {
-        if (dragon is not { IsTelegraphing: true } activeDragon || activeDragon.Definition.Id != DragonId.Ashfang) return null;
-        return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y, DragonBreathRange, DragonBreathHalfAngle);
+        if (dragon is not { IsTelegraphing: true } activeDragon) return null;
+        var attack = activeDragon.Definition.Combat.Attack;
+        if (attack.Pattern != DragonAttackPattern.Cone) return null;
+        return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y,
+            attack.Geometry.Range, attack.Geometry.HalfAngle);
     }
 }
