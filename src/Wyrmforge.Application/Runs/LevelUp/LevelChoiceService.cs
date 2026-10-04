@@ -7,7 +7,19 @@ namespace Wyrmforge.Application.Runs.LevelUp;
 
 public sealed class LevelChoiceService(IRandomSource randomSource)
 {
-    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, int count = 3)
+    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, int count = 3) => RollInternal(build, null, count);
+
+    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, int count = 3) => RollInternal(build, preferredSchool, count);
+
+    public bool Apply(RunBuildState build, LevelChoice choice)
+    {
+        if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
+        if (choice.Id.StartsWith("spell:", StringComparison.Ordinal)) return build.Spells.LearnOrUpgrade(ParseSpell(choice.Id));
+        if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return build.Synergies.Select(ParseSynergy(choice.Id), build.Spells);
+        return false;
+    }
+
+    private IReadOnlyList<LevelChoice> RollInternal(RunBuildState build, SpellSchool? preferredSchool, int count)
     {
         var pool = CreatePool(build);
         var choices = new List<LevelChoice>();
@@ -24,17 +36,20 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
         }
 
         var used = choices.Select(choice => choice.Id).ToHashSet();
+        if (preferredSchool is { } school && choices.Count < count)
+        {
+            var preferredChoices = pool.Where(choice => !used.Contains(choice.Id) && IsSpellChoiceForSchool(choice, school)).ToList();
+            if (preferredChoices.Count > 0)
+            {
+                var preferred = TakeRandom(preferredChoices);
+                choices.Add(preferred);
+                used.Add(preferred.Id);
+            }
+        }
+
         var remainder = pool.Where(choice => !used.Contains(choice.Id)).ToList();
         while (remainder.Count > 0 && choices.Count < count) choices.Add(TakeRandom(remainder));
         return choices;
-    }
-
-    public bool Apply(RunBuildState build, LevelChoice choice)
-    {
-        if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
-        if (choice.Id.StartsWith("spell:", StringComparison.Ordinal)) return build.Spells.LearnOrUpgrade(ParseSpell(choice.Id));
-        if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return build.Synergies.Select(ParseSynergy(choice.Id), build.Spells);
-        return false;
     }
 
     private static List<LevelChoice> CreatePool(RunBuildState build)
@@ -51,6 +66,8 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
             .Select(synergy => new LevelChoice($"synergy:{synergy.Id}", LevelChoiceKind.Synergy, synergy.Name, synergy.Description, synergy.Icon, 0, 1)));
         return choices;
     }
+
+    private static bool IsSpellChoiceForSchool(LevelChoice choice, SpellSchool school) => choice.Id.StartsWith("spell:", StringComparison.Ordinal) && SpellCatalog.Get(ParseSpell(choice.Id)).School == school;
 
     private LevelChoice TakeRandom(List<LevelChoice> choices)
     {

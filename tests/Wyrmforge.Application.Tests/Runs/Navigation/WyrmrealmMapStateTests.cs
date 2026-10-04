@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -8,7 +9,7 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WyrmrealmMapStateTests
 {
     [TestMethod]
-    public void NewMap_OffersTwoFirstStageCombatNodes()
+    public void NewMap_OffersFireAndStormAttunementRoutesFirst()
     {
         var state = new WyrmrealmMapState(DragonCatalog.Ashfang);
 
@@ -16,6 +17,7 @@ public sealed class WyrmrealmMapStateTests
         Assert.AreEqual(2, state.AvailableNodes.Count);
         Assert.IsTrue(state.AvailableNodes.All(node => node.Stage == 1));
         Assert.IsTrue(state.AvailableNodes.All(node => node.Type == WyrmrealmNodeType.Combat));
+        CollectionAssert.AreEquivalent(new[] { SpellSchool.Fire, SpellSchool.Storm }, state.AvailableNodes.Select(node => node.AttunementSchool!.Value).ToArray());
     }
 
     [TestMethod]

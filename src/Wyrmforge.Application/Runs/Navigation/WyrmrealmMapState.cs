@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Navigation;
 
@@ -14,15 +15,15 @@ public sealed class WyrmrealmMapState
     {
         Nodes =
         [
-            new("fractured-fields", "Fractured Fields", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm),
-            new("rift-crossing", "Rift Crossing", 1, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed),
-            new("hunters-vein", "Hunter's Vein", 2, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure),
-            new("glass-causeway", "Glass Causeway", 2, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm),
-            new("shattered-confluence", "Shattered Confluence", 3, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed),
-            new("silent-maw", "Silent Maw", 3, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure),
-            new("wyrmroad", "Wyrmroad", 4, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm),
-            new("arcane-scar", "Arcane Scar", 4, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed),
-            new("dragon-trail", target.Name, 5, 0, WyrmrealmNodeType.Dragon, null),
+            new("scorched-hollow", "Scorched Hollow", 1, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Fire),
+            new("static-crossing", "Static Crossing", 1, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Storm),
+            new("frozen-vein", "Frozen Vein", 2, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Frost),
+            new("arcane-causeway", "Arcane Causeway", 2, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Arcane),
+            new("ember-confluence", "Ember Confluence", 3, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Fire),
+            new("thunder-maw", "Thunder Maw", 3, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.StalkerPressure, SpellSchool.Storm),
+            new("winter-wyrmroad", "Winter Wyrmroad", 4, -1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Swarm, SpellSchool.Frost),
+            new("arcane-scar", "Arcane Scar", 4, 1, WyrmrealmNodeType.Combat, WyrmrealmEncounterKind.Mixed, SpellSchool.Arcane),
+            new("dragon-trail", target.Name, 5, 0, WyrmrealmNodeType.Dragon, null, null),
         ];
     }
 

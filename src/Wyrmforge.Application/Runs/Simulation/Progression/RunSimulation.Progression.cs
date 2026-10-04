@@ -15,7 +15,7 @@ public sealed partial class RunSimulation
     private void TryLevelUp()
     {
         if (pendingChoices.Count > 0 || experience < experienceToNext) return;
-        pendingChoices = levelChoiceService.Roll(build);
+        pendingChoices = pendingAttunements.Count > 0 ? levelChoiceService.Roll(build, pendingAttunements.Dequeue()) : levelChoiceService.Roll(build);
         if (pendingChoices.Count == 0) CompleteLevelUp();
     }
 

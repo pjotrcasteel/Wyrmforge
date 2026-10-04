@@ -1,13 +1,16 @@
 using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private readonly Queue<SpellSchool> pendingAttunements = new();
     private bool mapEncounterCleanupPending;
 
     public int CurrentMapNodeKills => mapState.CurrentNodeKills;
     public int CurrentMapNodeKillsRequired => WyrmrealmMapState.KillsPerCombatNode;
+    public IReadOnlyList<SpellSchool> PendingAttunements => pendingAttunements.ToArray();
 
     public bool ChooseMapNode(string id)
     {
@@ -31,7 +34,10 @@ public sealed partial class RunSimulation
     private void RegisterMapEncounterKill()
     {
         if (depthState.Depth != 1 || initialDragonEncounterStarted || !mapState.EncounterActive) return;
-        if (mapState.RegisterKill()) mapEncounterCleanupPending = true;
+        var completedNode = mapState.CurrentNode;
+        if (!mapState.RegisterKill()) return;
+        if (completedNode?.AttunementSchool is { } school) pendingAttunements.Enqueue(school);
+        mapEncounterCleanupPending = true;
     }
 
     private void CompleteMapEncounterCleanup()

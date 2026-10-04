@@ -31,4 +31,14 @@ public sealed class LevelChoiceServiceTests
         Assert.AreEqual(LevelChoiceKind.Synergy, choices[0].Kind);
         Assert.AreEqual("Frostfire", choices[0].Name);
     }
+
+    [TestMethod]
+    public void Roll_WithPreferredSchool_GuaranteesMatchingSpellChoice()
+    {
+        var service = new LevelChoiceService(new FirstRandomSource());
+
+        var choices = service.Roll(new RunBuildState(), SpellSchool.Storm);
+
+        Assert.IsTrue(choices.Any(choice => choice.Id == $"spell:{SpellId.ChainLightning}"));
+    }
 }

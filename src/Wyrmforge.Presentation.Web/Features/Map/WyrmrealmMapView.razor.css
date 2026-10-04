@@ -91,7 +91,7 @@
 
 .route-node {
     display: grid;
-    min-height: 92px;
+    min-height: 112px;
     padding: 13px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
@@ -115,15 +115,43 @@
     font-size: 1.05rem;
 }
 
+.node-reward {
+    align-self: end;
+    margin-top: 8px;
+    color: #cdbbdd;
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.035em;
+}
+
 .route-node.available {
     border-color: rgba(194, 139, 255, 0.72);
     background: rgba(137, 79, 198, 0.18);
     cursor: pointer;
 }
 
+.route-node.available.school-fire {
+    border-color: rgba(231, 119, 93, 0.78);
+    background: rgba(126, 54, 38, 0.2);
+}
+
+.route-node.available.school-frost {
+    border-color: rgba(139, 211, 247, 0.78);
+    background: rgba(51, 102, 128, 0.2);
+}
+
+.route-node.available.school-storm {
+    border-color: rgba(216, 203, 97, 0.76);
+    background: rgba(118, 105, 34, 0.18);
+}
+
+.route-node.available.school-arcane {
+    border-color: rgba(184, 135, 255, 0.78);
+    background: rgba(103, 62, 153, 0.2);
+}
+
 .route-node.available:hover {
     transform: translateY(-2px);
-    background: rgba(150, 89, 218, 0.25);
 }
 
 .route-node.completed {
@@ -152,7 +180,11 @@
     }
 
     .route-node {
-        min-height: 82px;
+        min-height: 104px;
         padding: 10px;
+    }
+
+    .node-reward {
+        font-size: 0.57rem;
     }
 }
