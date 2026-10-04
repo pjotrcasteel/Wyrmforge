@@ -10,7 +10,7 @@
                 <div class="eyebrow">WYRMREALM • DEPTH @Depth</div>
                 <h2>Choose your trail.</h2>
             </div>
-            <p>Follow the bright trails. Tap a node to inspect it before entering.</p>
+            <p>Follow the marked routes. Tap a symbol to inspect it before entering.</p>
         </header>
 
         <div class="resonance-panel" aria-label="Current magic resonance">
@@ -38,15 +38,16 @@
             <div class="route-cleared"><strong>✓ @cleared.Name</strong><span>Choose a connected trail.</span></div>
         }
 
-        <div class="map-legend" aria-label="Map legend">
-            <span>⚔ combat</span>
-            <span>✦ rare</span>
-            <span>💎 relic</span>
-            <span>♥ recovery</span>
-            <span>⚠ hazard</span>
-        </div>
-
         <div class="realm-route" aria-label="Generated Wyrmrealm route map">
+            <aside class="map-legend" aria-label="Map legend">
+                <strong>KEY</strong>
+                <span><i>⚔︎</i> Combat</span>
+                <span><i>✦</i> Rare</span>
+                <span><i>💎</i> Relic</span>
+                <span><i>♥</i> Recovery</span>
+                <span><i>⚠</i> Hazard</span>
+            </aside>
+
             <div class="map-entry @(CompletedNodes.Count == 0 ? "current" : string.Empty)" aria-label="Realm entry">
                 <span class="entry-point"></span>
                 <small>ENTRY</small>
@@ -161,10 +162,9 @@
     {
         var state = IsCompleted(node) ? "completed" : IsAvailable(node) ? "available" : IsBypassed(node) ? "bypassed" : "future";
         var rarity = node.Rarity == WyrmrealmNodeRarity.Rare ? " rare" : string.Empty;
-        var school = node.AttunementSchool is { } attunement ? $" school-{attunement.ToString().ToLowerInvariant()}" : " dragon";
         var selected = selectedNode?.Id == node.Id ? " selected" : string.Empty;
         var current = IsCurrent(node) ? " current" : string.Empty;
-        return $"route-node {state}{rarity}{school}{selected}{current}";
+        return $"route-node {state}{rarity}{selected}{current}";
     }
 
     private string ConnectionClass(WyrmrealmMapNode from, WyrmrealmMapNode to)
@@ -190,32 +190,34 @@
         if (node.Type == WyrmrealmNodeType.Dragon) return 50;
         var stageNodes = Nodes.Where(candidate => candidate.Stage == node.Stage).OrderBy(candidate => candidate.Lane).ToArray();
         var index = Array.FindIndex(stageNodes, candidate => candidate.Id == node.Id);
-        var baseX = stageNodes.Length switch
+        var noise = UnitNoise($"x:{node.Id}");
+        return stageNodes.Length switch
         {
-            <= 1 => 50,
-            2 => index == 0 ? 28 : 72,
-            _ => index switch { 0 => 15, 1 => 50, _ => 85 },
+            <= 1 => 42 + noise * 16,
+            2 => index == 0 ? 16 + noise * 25 : 59 + noise * 25,
+            _ => index switch { 0 => 9 + noise * 22, 1 => 36 + noise * 28, _ => 69 + noise * 22 },
         };
-        return Math.Clamp(baseX + StableNoise(node.Id) * 6, 10, 90);
     }
 
     private static double NodeY(WyrmrealmMapNode node)
     {
         if (node.Type == WyrmrealmNodeType.Dragon) return 92;
-        var baseY = 17 + (node.Stage - 1) * 19.5;
-        return Math.Clamp(baseY + StableNoise($"vertical:{node.Id}") * 2.8, 13, 78);
+        var baseY = 18 + (node.Stage - 1) * 19.2;
+        return Math.Clamp(baseY + StableNoise($"y:{node.Id}") * 4.2, 13, 79);
     }
 
     private static string Curve(string key, double x1, double y1, double x2, double y2)
     {
         var height = y2 - y1;
-        var bend = StableNoise(key) * 8;
-        var firstControlX = Math.Clamp(x1 + bend, 5, 95);
-        var secondControlX = Math.Clamp(x2 - bend * 0.65, 5, 95);
-        var firstControlY = y1 + height * 0.38;
-        var secondControlY = y1 + height * 0.64;
+        var bend = StableNoise(key) * 13;
+        var firstControlX = Math.Clamp(x1 + bend, 4, 96);
+        var secondControlX = Math.Clamp(x2 - bend * 0.55, 4, 96);
+        var firstControlY = y1 + height * 0.34;
+        var secondControlY = y1 + height * 0.7;
         return FormattableString.Invariant($"M {x1:0.#} {y1:0.#} C {firstControlX:0.#} {firstControlY:0.#}, {secondControlX:0.#} {secondControlY:0.#}, {x2:0.#} {y2:0.#}");
     }
+
+    private static double UnitNoise(string value) => (StableNoise(value) + 1) / 2;
 
     private static double StableNoise(string value)
     {
@@ -264,12 +266,12 @@
     private static string NodeIcon(WyrmrealmMapNode node)
     {
         if (node.Type == WyrmrealmNodeType.Dragon) return "🐉";
-        return node.Rarity == WyrmrealmNodeRarity.Rare ? "✦" : "⚔";
+        return node.Rarity == WyrmrealmNodeRarity.Rare ? "✦" : "⚔︎";
     }
 
     private static string EncounterIcon(WyrmrealmEncounterKind kind) => kind switch
     {
-        WyrmrealmEncounterKind.Swarm => "⚔",
+        WyrmrealmEncounterKind.Swarm => "⚔︎",
         WyrmrealmEncounterKind.StalkerPressure => "◈",
         _ => "◎",
     };
