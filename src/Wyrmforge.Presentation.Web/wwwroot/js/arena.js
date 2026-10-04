@@ -179,10 +179,12 @@ function draw(state, snapshot, width, height) {
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#14111b';
     ctx.fillRect(0, 0, width, height);
+    if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, width, height);
     drawGrid(ctx, width, height);
 
-    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath);
-    for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse);
+    for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
+    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
+    for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
     if (snapshot.dragon) drawDragon(ctx, snapshot.dragon);
     for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
@@ -236,8 +238,131 @@ function draw(state, snapshot, width, height) {
 
     drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
     if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, width);
+    if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);
+}
+
+function drawHuntArena(ctx, hunt, width, height) {
+    const palette = schoolPalette(hunt.school);
+    const gradient = ctx.createRadialGradient(width * 0.5, height * 0.58, 20, width * 0.5, height * 0.58, Math.max(width, height) * 0.72);
+    gradient.addColorStop(0, `rgba(${palette.rgb}, 0.08)`);
+    gradient.addColorStop(1, 'rgba(10, 8, 15, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    if (hunt.arena === 1) drawCinderScar(ctx, width, height, palette);
+    else if (hunt.arena === 2) drawStormField(ctx, width, height, palette);
+    else if (hunt.arena === 3) drawFrozenBasin(ctx, width, height, palette);
+    else if (hunt.arena === 4) drawAetherFracture(ctx, width, height, palette);
+}
+
+function drawCinderScar(ctx, width, height, palette) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(${palette.rgb}, 0.13)`;
+    ctx.lineWidth = 2;
+    for (let index = 0; index < 7; index++) {
+        const x = width * (0.08 + index * 0.14);
+        ctx.beginPath();
+        ctx.moveTo(x, height);
+        ctx.lineTo(x + 22, height * 0.72);
+        ctx.lineTo(x - 8, height * 0.56);
+        ctx.stroke();
+    }
+    ctx.fillStyle = `rgba(${palette.rgb}, 0.035)`;
+    ctx.fillRect(0, height * 0.78, width, height * 0.22);
+    ctx.restore();
+}
+
+function drawStormField(ctx, width, height, palette) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(${palette.rgb}, 0.1)`;
+    ctx.lineWidth = 1;
+    for (let index = -4; index < 14; index++) {
+        ctx.beginPath();
+        ctx.moveTo(index * 90, 0);
+        ctx.lineTo(index * 90 + height * 0.48, height);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawFrozenBasin(ctx, width, height, palette) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(${palette.rgb}, 0.12)`;
+    ctx.lineWidth = 1.5;
+    const centerX = width * 0.5;
+    const centerY = height * 0.55;
+    for (let ring = 1; ring <= 4; ring++) {
+        const radius = Math.min(width, height) * (0.12 * ring);
+        drawPolygon(ctx, centerX, centerY, radius, 6, Math.PI / 6);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawAetherFracture(ctx, width, height, palette) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(${palette.rgb}, 0.13)`;
+    ctx.lineWidth = 1.5;
+    for (let index = 0; index < 6; index++) {
+        const x = width * (0.1 + index * 0.16);
+        const y = height * (0.18 + (index % 3) * 0.24);
+        ctx.beginPath();
+        ctx.moveTo(x - 24, y - 58);
+        ctx.lineTo(x + 8, y - 18);
+        ctx.lineTo(x - 10, y + 14);
+        ctx.lineTo(x + 30, y + 62);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawHuntHazard(ctx, hazard) {
+    const palette = schoolPalette(hazard.school);
+    const progress = Math.min(1, Math.max(0, hazard.progress));
+    const radius = hazard.radius * (1.12 - progress * 0.12);
+    const alpha = 0.2 + progress * 0.62;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(hazard.x, hazard.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${palette.rgb}, ${0.035 + progress * 0.07})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${palette.rgb}, ${alpha})`;
+    ctx.lineWidth = 2 + progress * 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(hazard.x, hazard.y, radius * (0.35 + progress * 0.5), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${0.2 + progress * 0.5})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
+    const palette = schoolPalette(hunt.school);
+    const progress = Math.min(1, Math.max(0, hunt.stageProgress));
+    const fade = Math.min(1, progress * 5, Math.max(0.25, (1 - progress) * 5));
+    const entering = hunt.stage === 1;
+    const headline = entering ? 'WYRM HUNT' : 'PHASE BREAK';
+    const detail = entering
+        ? `${dragon?.name?.toUpperCase() ?? 'UNKNOWN WYRM'} • ${dragon?.title?.toUpperCase() ?? 'THE REALM ANSWERS'}`
+        : `${dragon?.name?.toUpperCase() ?? 'THE WYRM'} UNLEASHES ITS TRUE POWER`;
+
+    ctx.save();
+    ctx.fillStyle = `rgba(5, 4, 8, ${0.26 * fade})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = `rgba(${palette.rgb}, ${0.05 * fade})`;
+    ctx.fillRect(0, height * 0.41, width, height * 0.18);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.95 * fade})`;
+    ctx.font = '900 12px system-ui, sans-serif';
+    ctx.fillText(headline, width / 2, height * 0.47);
+    ctx.fillStyle = `rgba(244, 238, 248, ${0.95 * fade})`;
+    ctx.font = '900 21px system-ui, sans-serif';
+    ctx.fillText(detail, width / 2, height * 0.52);
+    ctx.restore();
 }
 
 function drawPerformanceCounter(state, ctx, snapshot, width, height) {
@@ -299,15 +424,16 @@ function enemyColor(enemy) {
     return '#c14b54';
 }
 
-function drawSplashPulse(ctx, pulse) {
+function drawSplashPulse(ctx, pulse, school) {
+    const palette = school === undefined || school === null ? schoolPalette(1) : schoolPalette(school);
     const progress = Math.min(1, Math.max(0, pulse.progress));
     const radius = pulse.radius * (0.35 + progress * 0.65);
     const alpha = (1 - progress) * 0.72;
     ctx.beginPath();
     ctx.arc(pulse.x, pulse.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 118, 55, ${alpha * 0.08})`;
+    ctx.fillStyle = `rgba(${palette.rgb}, ${alpha * 0.08})`;
     ctx.fill();
-    ctx.strokeStyle = `rgba(255, 145, 78, ${alpha})`;
+    ctx.strokeStyle = `rgba(${palette.rgb}, ${alpha})`;
     ctx.lineWidth = 4 - progress * 2;
     ctx.stroke();
 }
@@ -431,66 +557,154 @@ function drawImpactCross(ctx, x, y, radius, color, rotation) {
     ctx.restore();
 }
 
-function drawDragonBreath(ctx, breath) {
+function drawDragonBreath(ctx, breath, school) {
+    const palette = schoolPalette(school ?? 1);
     const angle = Math.atan2(breath.directionY, breath.directionX);
     ctx.beginPath();
     ctx.moveTo(breath.x, breath.y);
     ctx.arc(breath.x, breath.y, breath.range, angle - breath.halfAngle, angle + breath.halfAngle);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(255, 96, 46, 0.16)';
+    ctx.fillStyle = `rgba(${palette.rgb}, 0.16)`;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 132, 76, 0.65)';
+    ctx.strokeStyle = `rgba(${palette.rgb}, 0.65)`;
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
 function drawDragon(ctx, dragon) {
+    const palette = schoolPalette(dragon.school);
+    ctx.save();
+    ctx.translate(dragon.x, dragon.y);
+
     if (dragon.phase === 2) {
         ctx.beginPath();
-        ctx.arc(dragon.x, dragon.y, dragon.radius + 9, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 126, 58, 0.48)';
+        ctx.arc(0, 0, dragon.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${palette.rgb}, 0.5)`;
         ctx.lineWidth = 5;
         ctx.stroke();
     }
 
+    if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
+    else if (dragon.school === 1) drawFireWyrm(ctx, dragon, palette);
+    else if (dragon.school === 2) drawFrostWyrm(ctx, dragon, palette);
+    else drawStormWyrm(ctx, dragon, palette);
+
+    ctx.restore();
+}
+
+function drawFireWyrm(ctx, dragon, palette) {
+    const radius = dragon.radius;
+    drawDragonCore(ctx, dragon, palette, 1, 1);
+    ctx.fillStyle = palette.edge;
+    drawTriangle(ctx, -radius * 0.66, -radius * 0.55, -radius * 0.28, -radius * 1.38, -radius * 0.08, -radius * 0.62);
+    drawTriangle(ctx, radius * 0.66, -radius * 0.55, radius * 0.28, -radius * 1.38, radius * 0.08, -radius * 0.62);
+    ctx.fillStyle = palette.phase;
+    for (let index = -1; index <= 1; index++) {
+        drawTriangle(ctx, index * radius * 0.38 - 5, radius * 0.72, index * radius * 0.38, radius * 1.25, index * radius * 0.38 + 5, radius * 0.72);
+    }
+    drawDragonEyes(ctx, radius, palette);
+}
+
+function drawStormWyrm(ctx, dragon, palette) {
+    const radius = dragon.radius;
+    drawDragonCore(ctx, dragon, palette, 1.12, 0.78);
+    ctx.strokeStyle = palette.edge;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.arc(dragon.x, dragon.y, dragon.radius, 0, Math.PI * 2);
-    ctx.fillStyle = dragon.frozen ? '#86cce4' : dragon.phase === 2 ? '#e14d32' : '#9f3b31';
+    ctx.moveTo(-radius * 0.85, -radius * 0.1);
+    ctx.lineTo(-radius * 1.45, -radius * 0.65);
+    ctx.lineTo(-radius * 1.1, radius * 0.15);
+    ctx.moveTo(radius * 0.85, -radius * 0.1);
+    ctx.lineTo(radius * 1.45, -radius * 0.65);
+    ctx.lineTo(radius * 1.1, radius * 0.15);
+    ctx.stroke();
+    ctx.fillStyle = palette.edge;
+    drawTriangle(ctx, -radius * 0.42, -radius * 0.55, -radius * 0.12, -radius * 1.22, -radius * 0.02, -radius * 0.52);
+    drawTriangle(ctx, radius * 0.42, -radius * 0.55, radius * 0.12, -radius * 1.22, radius * 0.02, -radius * 0.52);
+    drawDragonEyes(ctx, radius, palette);
+}
+
+function drawFrostWyrm(ctx, dragon, palette) {
+    const radius = dragon.radius;
+    ctx.beginPath();
+    for (let index = 0; index < 8; index++) {
+        const angle = -Math.PI / 2 + index * Math.PI / 4;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = dragon.frozen ? '#d8f5ff' : dragon.phase === 2 ? palette.phase : palette.body;
     ctx.fill();
-    ctx.strokeStyle = '#f0a25d';
+    ctx.strokeStyle = palette.edge;
     ctx.lineWidth = 4;
     ctx.stroke();
+    ctx.fillStyle = palette.edge;
+    drawTriangle(ctx, -radius * 0.68, -radius * 0.42, -radius * 0.3, -radius * 1.55, -radius * 0.08, -radius * 0.6);
+    drawTriangle(ctx, radius * 0.68, -radius * 0.42, radius * 0.3, -radius * 1.55, radius * 0.08, -radius * 0.6);
+    drawDragonEyes(ctx, radius, palette);
+}
 
-    ctx.fillStyle = '#e7bf81';
-    drawTriangle(ctx, dragon.x - 22, dragon.y - 24, dragon.x - 9, dragon.y - 47, dragon.x - 3, dragon.y - 25);
-    drawTriangle(ctx, dragon.x + 22, dragon.y - 24, dragon.x + 9, dragon.y - 47, dragon.x + 3, dragon.y - 25);
-
-    ctx.fillStyle = '#fff2ba';
+function drawArcaneWyrm(ctx, dragon, palette) {
+    const radius = dragon.radius;
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, 0.45)`;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(dragon.x - 11, dragon.y - 4, 3, 0, Math.PI * 2);
-    ctx.arc(dragon.x + 11, dragon.y - 4, 3, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, radius * 1.55, radius * 0.72, Math.PI / 5, 0, Math.PI * 2);
+    ctx.stroke();
+    drawDragonCore(ctx, dragon, palette, 0.9, 0.9);
+    ctx.fillStyle = palette.edge;
+    for (let index = 0; index < 3; index++) {
+        const angle = index * Math.PI * 2 / 3 + 0.35;
+        ctx.beginPath();
+        ctx.arc(Math.cos(angle) * radius * 1.35, Math.sin(angle) * radius * 0.72, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    drawDragonEyes(ctx, radius, palette);
+}
+
+function drawDragonCore(ctx, dragon, palette, scaleX, scaleY) {
+    ctx.save();
+    ctx.scale(scaleX, scaleY);
+    ctx.beginPath();
+    ctx.arc(0, 0, dragon.radius, 0, Math.PI * 2);
+    ctx.fillStyle = dragon.frozen ? '#bdeeff' : dragon.phase === 2 ? palette.phase : palette.body;
+    ctx.fill();
+    ctx.strokeStyle = palette.edge;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawDragonEyes(ctx, radius, palette) {
+    ctx.fillStyle = palette.eye;
+    ctx.beginPath();
+    ctx.arc(-radius * 0.32, -radius * 0.12, 3, 0, Math.PI * 2);
+    ctx.arc(radius * 0.32, -radius * 0.12, 3, 0, Math.PI * 2);
     ctx.fill();
 }
 
 function drawBossBar(ctx, dragon, width) {
+    const palette = schoolPalette(dragon.school);
     const outerWidth = Math.min(430, width - 36);
     const x = (width - outerWidth) / 2;
     const y = 16;
-    ctx.fillStyle = 'rgba(20, 8, 7, 0.9)';
+    ctx.fillStyle = palette.dark;
     roundRect(ctx, x, y, outerWidth, 48, 12);
     ctx.fill();
 
-    ctx.fillStyle = '#f1d3b5';
+    ctx.fillStyle = palette.text;
     ctx.font = '800 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`${dragon.name.toUpperCase()} • ${dragon.title.toUpperCase()} • PHASE ${dragon.phase}`, width / 2, y + 17);
 
     const innerX = x + 12;
     const innerWidth = outerWidth - 24;
-    ctx.fillStyle = '#3b1915';
+    ctx.fillStyle = 'rgba(9, 7, 12, 0.72)';
     roundRect(ctx, innerX, y + 27, innerWidth, 10, 5);
     ctx.fill();
-    ctx.fillStyle = dragon.phase === 2 ? '#f0643d' : '#cf7048';
+    ctx.fillStyle = dragon.phase === 2 ? palette.phase : palette.body;
     roundRect(ctx, innerX, y + 27, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 10, 5);
     ctx.fill();
     ctx.textAlign = 'start';
@@ -578,9 +792,17 @@ function drawGrid(ctx, width, height) {
     ctx.stroke();
 }
 
+function schoolPalette(school) {
+    if (school === 1) return { body: '#a44031', phase: '#ef5f35', edge: '#efaa63', eye: '#fff0b0', text: '#f4d6bb', dark: 'rgba(29, 10, 7, 0.92)', rgb: '238, 91, 48', lightRgb: '255, 188, 112' };
+    if (school === 2) return { body: '#5a8ea3', phase: '#88d8ec', edge: '#b9eff8', eye: '#f2fdff', text: '#d8f6fb', dark: 'rgba(7, 20, 28, 0.92)', rgb: '128, 216, 238', lightRgb: '208, 248, 255' };
+    if (school === 3) return { body: '#6f6d38', phase: '#d4c83e', edge: '#fff18a', eye: '#fffbd2', text: '#f3edbd', dark: 'rgba(20, 19, 6, 0.92)', rgb: '236, 220, 75', lightRgb: '255, 246, 164' };
+    return { body: '#68458f', phase: '#a35de0', edge: '#d9b5ff', eye: '#f7edff', text: '#ead8f8', dark: 'rgba(18, 8, 27, 0.92)', rgb: '176, 103, 232', lightRgb: '226, 190, 255' };
+}
+
 function projectileColor(spell) {
     if (spell === 1) return '#ff7a45';
     if (spell === 2) return '#8fdcff';
+    if (spell === 3) return '#ffe765';
     return '#b887ff';
 }
 
@@ -595,6 +817,18 @@ function drawTriangle(ctx, x1, y1, x2, y2, x3, y3) {
     ctx.lineTo(x3, y3);
     ctx.closePath();
     ctx.fill();
+}
+
+function drawPolygon(ctx, x, y, radius, sides, rotation) {
+    ctx.beginPath();
+    for (let index = 0; index < sides; index++) {
+        const angle = rotation + index * Math.PI * 2 / sides;
+        const px = x + Math.cos(angle) * radius;
+        const py = y + Math.sin(angle) * radius;
+        if (index === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
