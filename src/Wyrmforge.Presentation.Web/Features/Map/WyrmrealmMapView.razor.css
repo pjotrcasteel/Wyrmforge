@@ -43,29 +43,71 @@
 
 .route-cleared { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; padding: 7px 9px; border-radius: 9px; color: #b4dcc5; background: rgba(68, 143, 101, 0.09); font-size: 0.66rem; }
 .route-cleared span { color: #748f7e; }
-.map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; margin: 7px 0 3px; color: #756b80; font-size: 0.58rem; font-weight: 750; }
+.map-legend { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px 12px; margin: 7px 0 7px; color: #756b80; font-size: 0.58rem; font-weight: 750; }
 .map-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .legend-node { display: inline-block; width: 8px; height: 8px; border: 1px solid #8b74a4; border-radius: 50%; }
 .legend-node.rare { border-color: #e6c765; box-shadow: 0 0 6px rgba(230, 199, 101, 0.35); }
 
-.realm-route { display: grid; width: 100%; padding: 4px 4px 12px; }
-.route-stage { position: relative; padding: 5px 0 7px; }
-.stage-label { display: block; margin-bottom: 5px; color: #685d73; font-size: 0.57rem; font-weight: 850; letter-spacing: 0.16em; text-align: center; }
-.route-nodes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
-.route-links { display: block; width: 100%; height: 32px; margin: -1px 0; overflow: visible; }
-.route-link { vector-effect: non-scaling-stroke; stroke: rgba(150, 112, 190, 0.18); stroke-width: 1.25; }
-.route-link.active { stroke: rgba(203, 154, 255, 0.9); stroke-width: 2.8; filter: drop-shadow(0 0 3px rgba(184, 135, 255, 0.46)); }
-.route-link.traversed { stroke: rgba(114, 208, 157, 0.72); stroke-width: 2.2; }
+.realm-route {
+    position: relative;
+    width: 100%;
+    height: 720px;
+    overflow: hidden;
+    border: 1px solid rgba(170, 139, 195, 0.12);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 16% 11%, rgba(94, 58, 124, 0.12), transparent 27%),
+        radial-gradient(circle at 83% 74%, rgba(51, 71, 91, 0.1), transparent 30%),
+        linear-gradient(180deg, rgba(13, 10, 19, 0.78), rgba(20, 15, 28, 0.92));
+    box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.24);
+    isolation: isolate;
+}
+
+.realm-route::before {
+    position: absolute;
+    z-index: 0;
+    inset: -12%;
+    content: '';
+    opacity: 0.6;
+    background:
+        repeating-radial-gradient(ellipse at 14% 26%, transparent 0 34px, rgba(188, 155, 215, 0.05) 35px 36px, transparent 37px 68px),
+        repeating-radial-gradient(ellipse at 86% 66%, transparent 0 44px, rgba(151, 180, 197, 0.035) 45px 46px, transparent 47px 88px);
+    pointer-events: none;
+}
+
+.realm-route::after {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    content: '';
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.12), transparent 20% 80%, rgba(0, 0, 0, 0.12));
+    pointer-events: none;
+}
+
+.route-links { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.route-link { fill: none; vector-effect: non-scaling-stroke; stroke: rgba(151, 118, 177, 0.22); stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2.2 3.8; }
+.route-link.active { stroke: rgba(204, 157, 245, 0.88); stroke-width: 2.5; stroke-dasharray: 4 3; filter: drop-shadow(0 0 3px rgba(184, 135, 255, 0.36)); }
+.route-link.traversed { stroke: rgba(108, 205, 151, 0.74); stroke-width: 2.65; stroke-dasharray: none; filter: drop-shadow(0 0 2px rgba(87, 180, 128, 0.26)); }
+
+.map-entry { position: absolute; z-index: 4; top: 3%; left: 50%; display: grid; justify-items: center; gap: 4px; transform: translate(-50%, -50%); color: #71667b; }
+.entry-point { display: block; width: 12px; height: 12px; border: 2px solid rgba(180, 143, 211, 0.62); border-radius: 50%; background: #181020; box-shadow: 0 0 0 4px rgba(164, 111, 207, 0.08); }
+.map-entry small { font-size: 0.47rem; font-weight: 850; letter-spacing: 0.12em; }
+.map-entry.current .entry-point { border-color: rgba(211, 169, 255, 0.95); box-shadow: 0 0 0 5px rgba(181, 116, 238, 0.12), 0 0 16px rgba(181, 116, 238, 0.24); }
+.map-entry.current::after { position: absolute; top: 21px; content: 'YOU'; color: #ceb1eb; font-size: 0.43rem; font-weight: 900; letter-spacing: 0.1em; }
+
+.stage-marker { position: absolute; z-index: 2; left: 8px; display: grid; width: 22px; height: 18px; place-items: center; transform: translateY(-50%); border: 1px solid rgba(154, 124, 177, 0.13); border-radius: 999px; color: #675b70; background: rgba(13, 10, 19, 0.65); font-size: 0.48rem; font-weight: 900; }
 
 .route-node {
-    justify-self: center;
+    position: absolute;
+    z-index: 3;
     display: grid;
+    width: 112px;
     justify-items: center;
-    width: min(116px, 92%);
-    padding: 5px 3px 2px;
+    padding: 0;
     border: 0;
     color: #a99eaf;
     background: transparent;
+    transform: translate(-50%, -50%);
     cursor: pointer;
     appearance: none;
 }
@@ -79,26 +121,27 @@
     border: 2px solid rgba(170, 143, 196, 0.34);
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.07), rgba(24, 18, 33, 0.98) 68%);
-    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.34);
     transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
 }
 
 .node-main-icon { font-size: 1.24rem; line-height: 1; filter: saturate(0.72); }
 .node-school { position: absolute; right: -7px; bottom: -5px; display: grid; width: 22px; height: 22px; place-items: center; border: 2px solid #17111f; border-radius: 50%; background: #251b30; font-size: 0.69rem; }
 .node-rare-mark { position: absolute; top: -8px; left: -5px; color: #efd16f; font-size: 0.82rem; text-shadow: 0 0 8px rgba(239, 209, 111, 0.65); }
-.node-name { max-width: 110px; margin-top: 6px; overflow: hidden; color: #9b909f; font-size: 0.65rem; font-weight: 730; line-height: 1.15; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-.node-badges { display: flex; min-height: 19px; justify-content: center; gap: 3px; margin-top: 3px; }
+.current-marker { position: absolute; z-index: 5; top: -19px; left: 50%; padding: 2px 5px; border: 1px solid rgba(117, 214, 162, 0.34); border-radius: 999px; color: #9cdbb9; background: rgba(17, 31, 23, 0.92); transform: translateX(-50%); font-size: 0.43rem; font-weight: 900; letter-spacing: 0.08em; }
+.node-name { max-width: 108px; margin-top: 6px; overflow: hidden; color: #9b909f; font-size: 0.64rem; font-weight: 730; line-height: 1.15; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.node-badges { display: flex; min-height: 18px; justify-content: center; gap: 3px; margin-top: 3px; }
 .node-badge { display: grid; min-width: 18px; height: 18px; padding: 0 3px; place-items: center; border-radius: 999px; color: #a99dac; background: rgba(255, 255, 255, 0.055); font-size: 0.58rem; font-weight: 800; }
 .node-badge.reward { color: #e6d0ff; }
 .node-badge.heal { color: #8fd1aa; }
 .node-badge.hazard { color: #e0a16f; }
-.node-badge.pressure { color: #b7a8c2; }
 
 .route-node.available .node-core { border-color: rgba(191, 129, 255, 0.94); box-shadow: 0 0 0 4px rgba(167, 98, 231, 0.09), 0 0 20px rgba(174, 101, 239, 0.26); }
 .route-node.available:hover .node-core, .route-node.selected .node-core { transform: translateY(-2px) scale(1.06); }
 .route-node.selected .node-core { box-shadow: 0 0 0 5px rgba(214, 176, 255, 0.12), 0 0 24px rgba(194, 132, 255, 0.34); }
-.route-node.completed .node-core { border-color: rgba(105, 203, 149, 0.62); background: rgba(57, 119, 83, 0.15); }
-.route-node.bypassed, .route-node.future { opacity: 0.29; }
+.route-node.completed .node-core { border-color: rgba(105, 203, 149, 0.7); background: rgba(57, 119, 83, 0.15); }
+.route-node.current .node-core { box-shadow: 0 0 0 4px rgba(84, 189, 132, 0.1), 0 0 18px rgba(84, 189, 132, 0.22); }
+.route-node.bypassed, .route-node.future { opacity: 0.26; }
 .route-node.bypassed.selected, .route-node.future.selected { opacity: 0.62; }
 .route-node.rare .node-core { border-color: rgba(230, 195, 91, 0.7); box-shadow: 0 0 16px rgba(224, 181, 71, 0.14); }
 .route-node.rare.available .node-core { border-color: rgba(247, 213, 107, 1); box-shadow: 0 0 0 4px rgba(224, 181, 71, 0.09), 0 0 22px rgba(224, 181, 71, 0.27); }
@@ -156,18 +199,19 @@
     .resonance-item strong { font-size: 0.55rem; }
     .route-cleared { margin-bottom: 4px; padding: 5px 7px; }
     .route-cleared span { display: none; }
-    .map-legend { justify-content: center; gap: 5px 9px; margin: 5px 0 1px; font-size: 0.52rem; }
-    .realm-route { padding-inline: 0; }
-    .route-stage { padding-block: 2px 4px; }
-    .stage-label { margin-bottom: 2px; font-size: 0.51rem; }
-    .route-links { height: 26px; }
-    .route-node { width: 100%; padding: 2px 0; }
+    .map-legend { gap: 5px 10px; margin: 5px 0 6px; font-size: 0.52rem; }
+    .realm-route { height: 620px; border-radius: 14px; }
+    .stage-marker { left: 5px; width: 18px; height: 16px; font-size: 0.43rem; }
+    .route-node { width: 86px; }
     .node-core { width: 50px; height: 50px; }
     .route-node.dragon .node-core { width: 58px; height: 58px; }
     .node-name { display: none; }
-    .node-badges { min-height: 17px; margin-top: 2px; gap: 2px; }
+    .node-badges { min-height: 17px; margin-top: 3px; gap: 2px; }
     .node-badge { min-width: 16px; height: 16px; padding: 0 2px; font-size: 0.52rem; }
     .node-school { right: -5px; bottom: -5px; width: 20px; height: 20px; font-size: 0.61rem; }
+    .current-marker { top: -17px; }
+    .map-entry small { display: none; }
+    .map-entry.current::after { top: 17px; }
     .node-sheet { position: fixed; right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); left: 8px; grid-template-columns: minmax(0, 1fr); gap: 9px; margin: 0; padding: 12px; border-radius: 17px; }
     .sheet-heading { padding-right: 28px; }
     .sheet-traits { grid-column: 1; }
