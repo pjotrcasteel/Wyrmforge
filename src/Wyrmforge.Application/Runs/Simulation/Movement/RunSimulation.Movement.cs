@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Modifiers;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -16,7 +17,7 @@ public sealed partial class RunSimulation
         EnsurePlayerPosition(width, height);
         var direction = movement.Direction;
         var moveBonus = passiveProfile.TempestStep ? Math.Min(elapsed / 6, 1) * 0.25 : 0;
-        var speed = player.Speed * modifiers.MoveSpeedMultiplier * relicModifiers.MoveSpeedMultiplier * dragonEssenceModifiers.MoveSpeedMultiplier * (1 + moveBonus);
+        var speed = buildModifiers.Apply(BuildStatId.MoveSpeed, player.Speed) * (1 + moveBonus);
         player.Position += direction * speed * delta;
         player.Position = new Vector2D(
             Math.Clamp(player.Position.X, player.Radius, Math.Max(player.Radius, width - player.Radius)),
