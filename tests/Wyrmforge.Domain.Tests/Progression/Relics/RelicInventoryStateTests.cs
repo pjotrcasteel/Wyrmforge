@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Progression.Relics;
 
 namespace Wyrmforge.Domain.Tests.Progression.Relics;
@@ -34,10 +35,14 @@ public sealed class RelicInventoryStateTests
     [TestMethod]
     public void Aggregate_EquippedRelics_ComposesIndependentModifiers()
     {
-        var modifiers = RelicModifiers.Aggregate([RelicId.EmberheartCharm, RelicId.GalefootSigil]);
+        var modifiers = BuildModifierSet.Aggregate(
+        [
+            RelicCatalog.Get(RelicId.EmberheartCharm).Modifiers,
+            RelicCatalog.Get(RelicId.GalefootSigil).Modifiers,
+        ]);
 
-        Assert.AreEqual(1.18, modifiers.DamageMultiplier, 0.001);
-        Assert.AreEqual(1.12, modifiers.MoveSpeedMultiplier, 0.001);
-        Assert.AreEqual(1, modifiers.CastIntervalMultiplier, 0.001);
+        Assert.AreEqual(1.18d, modifiers.Apply(BuildStatId.Damage, 1), 0.001);
+        Assert.AreEqual(1.12d, modifiers.Apply(BuildStatId.MoveSpeed, 1), 0.001);
+        Assert.AreEqual(1d, modifiers.Apply(BuildStatId.CastInterval, 1), 0.001);
     }
 }

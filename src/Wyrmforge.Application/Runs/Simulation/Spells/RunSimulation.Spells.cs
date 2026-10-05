@@ -1,5 +1,6 @@
 using Wyrmforge.Domain.Combat.Abilities;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
@@ -25,8 +26,8 @@ public sealed partial class RunSimulation
     private double GetSpellCooldown(SpellDefinition spell, int rank, bool moving)
     {
         var lightningFormMultiplier = passiveProfile.LightningForm && moving ? 1 / 1.5 : 1;
-        return spell.Ability.CalculateCooldownSeconds(rank) * passiveProfile.CastIntervalMultiplier * modifiers.CastIntervalMultiplier
-            * relicModifiers.CastIntervalMultiplier * dragonEssenceModifiers.CastIntervalMultiplier * lightningFormMultiplier;
+        var baseCooldown = spell.Ability.CalculateCooldownSeconds(rank) * passiveProfile.CastIntervalMultiplier;
+        return buildModifiers.Apply(BuildStatId.CastInterval, baseCooldown) * lightningFormMultiplier;
     }
 
     private void CastSpell(SpellDefinition spell, int rank, double damageScale, bool echo)
@@ -52,10 +53,13 @@ public sealed partial class RunSimulation
 
         if (echo) return;
         if (ConsumeTempestWingEcho()) CastSpell(spell, rank, damageScale * StormEssenceProfile.TempestWingEchoDamageScale, true);
-        var treeEcho = passiveProfile.ArcaneEcho && castCount % 6 == 0;
-        var runEcho = modifiers.EchoEveryCasts > 0 && castCount % modifiers.EchoEveryCasts == 0;
-        if (treeEcho) CastSpell(spell, rank, passiveProfile.EchoChamber ? damageScale : damageScale * 0.6, true);
-        if (runEcho) CastSpell(spell, rank, damageScale * modifiers.EchoDamageMultiplier, true);
+        if (passiveProfile.ArcaneEcho && castCount % 6 == 0) CastSpell(spell, rank, passiveProfile.EchoChamber ? damageScale : damageScale * 0.6, true);
+
+        var rules = ResolveBuildRules(new CombatRuleContext(CombatRuleTrigger.Cast, castCount, spell.Id, spell.School));
+        foreach (var rule in rules)
+        {
+            if (rule.Effect is EchoCastRuleEffect echoEffect) CastSpell(spell, rank, damageScale * echoEffect.DamageMultiplier, true);
+        }
     }
 
     private void CastProjectileSpell(SpellDefinition spell, ProjectileAbilityProfile profile, int rank, double damageScale)
@@ -66,12 +70,13 @@ public sealed partial class RunSimulation
         var inferno = passiveProfile.Inferno && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var baseCount = prismatic ? passiveProfile.AstralBarrage ? 5 : 3 : 1;
-        var count = baseCount + modifiers.ExtraProjectiles;
+        var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles);
         var baseDirection = Vector2D.DirectionTo(player.Position, target.Position);
-        var speed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier * modifiers.ProjectileSpeedMultiplier;
-        var damage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * relicModifiers.DamageMultiplier
-            * dragonEssenceModifiers.DamageMultiplier * damageScale;
-        var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + modifiers.BonusChains;
+        var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier;
+        var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed);
+        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier;
+        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale;
+        var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
         var masteredFrostShard = id == SpellId.FrostShard && FrostShardMastery.IsActive(rank);
 
@@ -101,9 +106,9 @@ public sealed partial class RunSimulation
     private void CastChainSpell(SpellDefinition spell, ChainAbilityProfile profile, int rank, Vector2D origin, double damageScale, int bonusJumps = 0)
     {
         var current = origin;
-        var damage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier * relicModifiers.DamageMultiplier
-            * dragonEssenceModifiers.DamageMultiplier * damageScale;
-        var jumps = profile.CalculateJumps(rank) + modifiers.BonusChains + bonusJumps;
+        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier;
+        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale;
+        var jumps = profile.CalculateJumps(rank) + buildModifiers.ApplyInt(BuildStatId.BonusChains) + bonusJumps;
         var hit = new HashSet<int>();
         var bonusJumpsTriggered = false;
         var forkPending = spell.Id == SpellId.ChainLightning && ChainLightningMastery.IsActive(rank);

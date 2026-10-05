@@ -47,10 +47,12 @@ public sealed partial class RunSimulation
 
     private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, dragonHuntState.CanTargetDragon ? dragon : null);
 
-    private static void ApplyFreeze(ICombatTarget target, double duration)
+    private static void ApplyStatus(ICombatTarget target, CombatStatusId status, double duration)
     {
-        var definition = CombatStatusCatalog.Get(CombatStatusId.Frozen);
+        var definition = CombatStatusCatalog.Get(status);
         var adjustedDuration = target is DragonState ? duration * definition.BossDurationMultiplier : duration;
         target.Statuses.Apply(definition, adjustedDuration);
     }
+
+    private static void ApplyFreeze(ICombatTarget target, double duration) => ApplyStatus(target, CombatStatusId.Frozen, duration);
 }

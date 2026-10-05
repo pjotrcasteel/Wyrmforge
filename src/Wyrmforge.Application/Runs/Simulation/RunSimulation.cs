@@ -15,7 +15,6 @@ using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
-using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -42,7 +41,6 @@ public sealed partial class RunSimulation
     private readonly Dictionary<int, double> hitFlashRemaining = [];
     private readonly List<SplashPulseState> splashPulses = [];
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
-    private RunUpgradeModifiers modifiers;
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
     private IReadOnlyList<SpellHudSnapshot> spellHud = [];
@@ -76,8 +74,7 @@ public sealed partial class RunSimulation
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
         RefreshBuildHud();
-        modifiers = RunUpgradeModifiers.Create(build.RunUpgrades);
-        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus;
+        RefreshBuildModifiers();
         player.Health = player.MaxHealth;
     }
 

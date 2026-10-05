@@ -1,5 +1,6 @@
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Modifiers;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -92,7 +93,7 @@ public sealed partial class RunSimulation
         }
 
         rawDamage = ApplyChargedScale(rawDamage);
-        player.Health -= rawDamage * passiveProfile.DamageTakenMultiplier * dragonEssenceModifiers.DamageTakenMultiplier;
+        player.Health -= buildModifiers.Apply(BuildStatId.DamageTaken, rawDamage * passiveProfile.DamageTakenMultiplier);
         if (!passiveProfile.IceArmor || player.Barrier) return;
         player.Barrier = true;
         player.BarrierRemaining = 1.2;
