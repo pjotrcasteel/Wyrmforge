@@ -1,5 +1,6 @@
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Combat.Targets;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -48,7 +49,8 @@ public sealed partial class RunSimulation
 
     private static void ApplyFreeze(ICombatTarget target, double duration)
     {
-        var adjustedDuration = target is DragonState ? duration * 0.35 : duration;
-        target.FrozenFor = Math.Max(target.FrozenFor, adjustedDuration);
+        var definition = CombatStatusCatalog.Get(CombatStatusId.Frozen);
+        var adjustedDuration = target is DragonState ? duration * definition.BossDurationMultiplier : duration;
+        target.Statuses.Apply(definition, adjustedDuration);
     }
 }
