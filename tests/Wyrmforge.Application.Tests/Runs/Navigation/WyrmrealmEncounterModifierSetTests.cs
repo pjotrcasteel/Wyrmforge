@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -37,6 +38,18 @@ public sealed class WyrmrealmEncounterModifierSetTests
 
         Assert.IsTrue(result.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var interval));
         Assert.AreEqual(0.6d, interval, 0.0001);
+    }
+
+    [TestMethod]
+    public void RouteProfile_EncounterModifiers_AreAvailableThroughModifierSet()
+    {
+        var route = new WyrmrealmRouteProfile(
+            new WyrmrealmEncounterProfile(WyrmrealmEncounterKind.Mixed),
+            new WyrmrealmRewardProfile(SpellSchool.Arcane),
+            [new("unstable-rifts", HazardKind: WyrmrealmHazardKind.UnstableRifts, HazardIntervalMultiplier: 0.7)]);
+
+        Assert.IsTrue(route.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var interval));
+        Assert.AreEqual(0.7d, interval, 0.0001);
     }
 
     [TestMethod]
