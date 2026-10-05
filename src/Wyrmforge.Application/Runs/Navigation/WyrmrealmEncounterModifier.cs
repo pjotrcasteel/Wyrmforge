@@ -7,5 +7,7 @@ public sealed record WyrmrealmEncounterModifier(
     double EnemySpeedMultiplier = 1,
     double ThreatBudgetMultiplier = 1,
     double RecoveryMultiplier = 1,
+    double PlayerMoveSpeedMultiplier = 1,
+    double DamageTakenMultiplier = 1,
     WyrmrealmHazardKind? HazardKind = null,
     double HazardIntervalMultiplier = 1);

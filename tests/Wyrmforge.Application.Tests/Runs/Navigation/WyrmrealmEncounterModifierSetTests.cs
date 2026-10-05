@@ -12,8 +12,10 @@ public sealed class WyrmrealmEncounterModifierSetTests
     {
         WyrmrealmEncounterModifier[] modifiers =
         [
-            new("first", SpawnIntervalMultiplier: 0.8, EnemyHealthMultiplier: 1.2, EnemySpeedMultiplier: 1.1, ThreatBudgetMultiplier: 1.25, RecoveryMultiplier: 0.5),
-            new("second", SpawnIntervalMultiplier: 0.9, EnemyHealthMultiplier: 1.1, EnemySpeedMultiplier: 1.05, ThreatBudgetMultiplier: 1.2),
+            new("first", SpawnIntervalMultiplier: 0.8, EnemyHealthMultiplier: 1.2, EnemySpeedMultiplier: 1.1, ThreatBudgetMultiplier: 1.25,
+                RecoveryMultiplier: 0.5, PlayerMoveSpeedMultiplier: 0.9, DamageTakenMultiplier: 1.1),
+            new("second", SpawnIntervalMultiplier: 0.9, EnemyHealthMultiplier: 1.1, EnemySpeedMultiplier: 1.05, ThreatBudgetMultiplier: 1.2,
+                PlayerMoveSpeedMultiplier: 0.95, DamageTakenMultiplier: 1.05),
         ];
 
         var result = WyrmrealmEncounterModifierSet.Aggregate(modifiers);
@@ -23,6 +25,8 @@ public sealed class WyrmrealmEncounterModifierSetTests
         Assert.AreEqual(1.155d, result.EnemySpeedMultiplier, 0.0001);
         Assert.AreEqual(1.5d, result.ThreatBudgetMultiplier, 0.0001);
         Assert.AreEqual(0.5d, result.RecoveryMultiplier, 0.0001);
+        Assert.AreEqual(0.855d, result.PlayerMoveSpeedMultiplier, 0.0001);
+        Assert.AreEqual(1.155d, result.DamageTakenMultiplier, 0.0001);
     }
 
     [TestMethod]
@@ -62,6 +66,8 @@ public sealed class WyrmrealmEncounterModifierSetTests
         Assert.AreEqual(1d, result.EnemySpeedMultiplier, 0.0001);
         Assert.AreEqual(1d, result.ThreatBudgetMultiplier, 0.0001);
         Assert.AreEqual(1d, result.RecoveryMultiplier, 0.0001);
+        Assert.AreEqual(1d, result.PlayerMoveSpeedMultiplier, 0.0001);
+        Assert.AreEqual(1d, result.DamageTakenMultiplier, 0.0001);
         Assert.IsFalse(result.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out _));
     }
 }
