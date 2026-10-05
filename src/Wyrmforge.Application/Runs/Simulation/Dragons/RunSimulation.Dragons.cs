@@ -2,6 +2,7 @@ using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
 
@@ -38,8 +39,8 @@ public sealed partial class RunSimulation
         }
 
         UpdateDragonHuntPressure(delta, activeDragon, width, height);
-        activeDragon.FrozenFor = Math.Max(0, activeDragon.FrozenFor - delta);
-        var scaledDelta = delta * (activeDragon.FrozenFor > 0 ? 0.45 : 1);
+        activeDragon.Statuses.Tick(delta);
+        var scaledDelta = delta * activeDragon.Statuses.TimeScale(true);
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond;
@@ -260,7 +261,7 @@ public sealed partial class RunSimulation
         if (dragon is not { Health: > 0 } activeDragon) return null;
         var definition = activeDragon.Definition;
         return new DragonRenderSnapshot(definition.Name, definition.Title, definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius,
-            activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.FrozenFor > 0);
+            activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen));
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
