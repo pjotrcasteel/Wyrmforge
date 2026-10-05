@@ -30,9 +30,15 @@ public sealed partial class RunSimulation
 
         var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
-        encounterModifiers = route.ModifierSet;
+        encounterModifiers = ResolveEncounterModifiers(route);
         spawnTimer = 0.15;
         return true;
+    }
+
+    private WyrmrealmEncounterModifierSet ResolveEncounterModifiers(WyrmrealmRouteProfile route)
+    {
+        var influenceModifiers = realmInfluenceState.CalculateEncounterModifiers(CurrentDragonAttention);
+        return WyrmrealmEncounterModifierSet.Aggregate([.. route.EncounterModifiers ?? [], .. influenceModifiers]);
     }
 
     private void RegisterMapEncounterKill()
