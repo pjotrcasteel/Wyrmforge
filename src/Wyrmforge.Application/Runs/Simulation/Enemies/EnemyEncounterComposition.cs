@@ -1,28 +1,88 @@
+using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Domain.Combat.Enemies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public static class EnemyEncounterComposition
 {
-    public const int SpawnsPerPattern = 6;
+    private static readonly IReadOnlyDictionary<EnemyEncounterPattern, EnemyCompositionProfile> Profiles =
+        new Dictionary<EnemyEncounterPattern, EnemyCompositionProfile>
+        {
+            [EnemyEncounterPattern.Swarm] = new(6, 0.55, new Dictionary<EnemyRole, double>
+            {
+                [EnemyRole.Pressure] = 1,
+            }),
+            [EnemyEncounterPattern.StalkerPressure] = new(9, 0.9, new Dictionary<EnemyRole, double>
+            {
+                [EnemyRole.Pressure] = 0.6,
+                [EnemyRole.Ambusher] = 1.4,
+            }, new Dictionary<EnemyRole, int>
+            {
+                [EnemyRole.Ambusher] = 2,
+            }),
+            [EnemyEncounterPattern.Mixed] = new(8, 0.75, new Dictionary<EnemyRole, double>
+            {
+                [EnemyRole.Pressure] = 1,
+                [EnemyRole.Ambusher] = 0.7,
+            }, new Dictionary<EnemyRole, int>
+            {
+                [EnemyRole.Ambusher] = 1,
+            }),
+        };
 
-    public static EnemyKind GetEnemyKind(EnemyEncounterPattern pattern, int spawnIndex) => pattern switch
+    public static EnemyCompositionPlan CreatePlan(EnemyEncounterPattern pattern, int depth, IRandomSource randomSource, double threatBudgetMultiplier = 1)
     {
-        EnemyEncounterPattern.Swarm => EnemyKind.Chaser,
-        EnemyEncounterPattern.StalkerPressure => spawnIndex % 2 == 0 ? EnemyKind.RiftStalker : EnemyKind.Chaser,
-        _ => spawnIndex is 2 or 5 ? EnemyKind.RiftStalker : EnemyKind.Chaser,
-    };
+        var profile = GetProfile(pattern);
+        var budget = Math.Max(1, (int)Math.Round(profile.BaseThreatBudget * Math.Max(0.25, threatBudgetMultiplier)));
+        var plan = new List<EnemyKind>();
+        var spent = 0;
 
-    public static double GetSpawnIntervalMultiplier(EnemyEncounterPattern pattern) => pattern switch
-    {
-        EnemyEncounterPattern.Swarm => 0.55,
-        EnemyEncounterPattern.StalkerPressure => 0.9,
-        _ => 0.75,
-    };
+        foreach (var role in Enum.GetValues<EnemyRole>())
+        {
+            for (var count = 0; count < profile.MinimumFor(role); count++)
+            {
+                var required = EligibleEnemies(profile, depth, budget - spent).Where(definition => definition.Role == role).ToArray();
+                if (required.Length == 0) break;
+                var selected = required[randomSource.Next(required.Length)];
+                plan.Add(selected.Kind);
+                spent += selected.ThreatCost;
+            }
+        }
+
+        while (true)
+        {
+            var eligible = EligibleEnemies(profile, depth, budget - spent).ToArray();
+            if (eligible.Length == 0) break;
+            var selected = SelectWeighted(eligible, profile, randomSource);
+            plan.Add(selected.Kind);
+            spent += selected.ThreatCost;
+        }
+
+        return new EnemyCompositionPlan(plan, spent);
+    }
+
+    public static EnemyCompositionProfile GetProfile(EnemyEncounterPattern pattern) => Profiles[pattern];
+
+    public static double GetSpawnIntervalMultiplier(EnemyEncounterPattern pattern) => GetProfile(pattern).SpawnIntervalMultiplier;
 
     public static EnemyEncounterPattern SelectNext(EnemyEncounterPattern previous, int alternativeIndex)
     {
         if (alternativeIndex is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(alternativeIndex));
         return (EnemyEncounterPattern)(((int)previous + 1 + alternativeIndex) % 3);
+    }
+
+    private static IEnumerable<EnemyDefinition> EligibleEnemies(EnemyCompositionProfile profile, int depth, int remainingBudget) =>
+        EnemyCatalog.All.Where(definition => definition.MinimumDepth <= depth && definition.ThreatCost <= remainingBudget && profile.WeightFor(definition.Role) > 0);
+
+    private static EnemyDefinition SelectWeighted(IReadOnlyList<EnemyDefinition> eligible, EnemyCompositionProfile profile, IRandomSource randomSource)
+    {
+        var totalWeight = eligible.Sum(definition => profile.WeightFor(definition.Role));
+        var roll = randomSource.NextDouble() * totalWeight;
+        foreach (var definition in eligible)
+        {
+            roll -= profile.WeightFor(definition.Role);
+            if (roll < 0) return definition;
+        }
+        return eligible[^1];
     }
 }

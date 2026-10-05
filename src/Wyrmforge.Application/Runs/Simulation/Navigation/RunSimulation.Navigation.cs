@@ -29,7 +29,6 @@ public sealed partial class RunSimulation
 
         var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
-        encounterSpawnIndex = 0;
         spawnTimer = 0.15;
         return true;
     }
@@ -74,6 +73,8 @@ public sealed partial class RunSimulation
         elementalImpacts.Clear();
         deathBursts.Clear();
         unstableRiftState.Reset();
+        encounterPlan = null;
+        encounterPlanIndex = 0;
     }
 
     private static EnemyEncounterPattern ToEnemyEncounterPattern(WyrmrealmEncounterKind kind) => kind switch
