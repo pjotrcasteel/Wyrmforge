@@ -22,14 +22,6 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
-    private static readonly IReadOnlyDictionary<SpellId, double> BaseSpellCooldowns = new Dictionary<SpellId, double>
-    {
-        [SpellId.ArcaneOrb] = 0.65,
-        [SpellId.FireBolt] = 1.15,
-        [SpellId.FrostShard] = 0.95,
-        [SpellId.ChainLightning] = 1.35,
-    };
-
     private readonly LevelChoiceService levelChoiceService;
     private readonly IRandomSource randomSource;
     private readonly PassiveCombatProfile passiveProfile;
