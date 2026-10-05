@@ -31,7 +31,8 @@ public sealed partial class RunSimulation
     {
         if (encounterPlan is not null && encounterPlanIndex < encounterPlan.Enemies.Count) return;
         if (!mapEncounter) encounterPattern = EnemyEncounterComposition.SelectNext(encounterPattern, randomSource.Next(2));
-        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, encounterModifiers.ThreatBudgetMultiplier);
+        var threatBudget = depthState.ThreatBudgetMultiplier * encounterModifiers.ThreatBudgetMultiplier;
+        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget);
         encounterPlanIndex = 0;
     }
 
