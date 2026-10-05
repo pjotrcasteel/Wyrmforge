@@ -1,7 +1,7 @@
 import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js';
 
 const frameStates = new WeakMap();
-const activeSimulationIntervalMilliseconds = 1000 / 30;
+const activeSimulationIntervalMilliseconds = 1000 / 60;
 const pausedSimulationIntervalMilliseconds = 100;
 
 export function initializeArena(canvas, dotNetReference) {
