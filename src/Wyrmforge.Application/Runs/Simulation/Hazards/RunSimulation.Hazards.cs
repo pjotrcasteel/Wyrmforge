@@ -12,9 +12,8 @@ public sealed partial class RunSimulation
     private void UpdateRouteHazards(double delta)
     {
         var wasTelegraphing = unstableRiftState.IsTelegraphing;
-        var hazard = CurrentRoute?.Hazard;
-        var riftsActive = hazard?.Kind == WyrmrealmHazardKind.UnstableRifts && dragon is null && !dragonPending;
-        var detonated = unstableRiftState.Tick(delta, riftsActive, player.Position, hazard?.IntervalMultiplier ?? 1);
+        var riftsActive = encounterModifiers.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var intervalMultiplier) && dragon is null && !dragonPending;
+        var detonated = unstableRiftState.Tick(delta, riftsActive, player.Position, riftsActive ? intervalMultiplier : 1);
 
         if (!wasTelegraphing && unstableRiftState.IsTelegraphing)
         {
