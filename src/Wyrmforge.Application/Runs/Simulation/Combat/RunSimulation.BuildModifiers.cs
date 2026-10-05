@@ -8,11 +8,14 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private BuildModifierSet buildModifiers = BuildModifierSet.Empty;
+    private BuildModifierSet runUpgradeModifiers = BuildModifierSet.Empty;
 
     private void RefreshBuildModifiers(bool healMaximumHealthIncrease = false)
     {
         var previousMaxHealth = player.MaxHealth;
-        buildModifiers = BuildModifierSet.Aggregate(ActiveBuildModifierProfiles());
+        var runProfiles = ActiveRunUpgradeModifierProfiles().ToArray();
+        runUpgradeModifiers = BuildModifierSet.Aggregate(runProfiles);
+        buildModifiers = BuildModifierSet.Aggregate([.. runProfiles, .. ActiveEquippedModifierProfiles()]);
         player.MaxHealth = buildModifiers.Apply(BuildStatId.MaxHealth, passiveProfile.MaxHealth);
         if (healMaximumHealthIncrease && player.MaxHealth > previousMaxHealth)
         {
@@ -22,13 +25,17 @@ public sealed partial class RunSimulation
         player.Health = Math.Min(player.Health, player.MaxHealth);
     }
 
-    private IEnumerable<BuildModifierProfile?> ActiveBuildModifierProfiles()
+    private IEnumerable<BuildModifierProfile> ActiveRunUpgradeModifierProfiles()
     {
         foreach (var upgrade in RunUpgradeCatalog.All)
         {
             var rank = build.RunUpgrades[upgrade.Id];
             if (rank > 0) yield return upgrade.ProfileForRank(rank);
         }
+    }
+
+    private IEnumerable<BuildModifierProfile?> ActiveEquippedModifierProfiles()
+    {
         foreach (var relic in build.Relics.Equipped) yield return RelicCatalog.Get(relic).Modifiers;
         foreach (var essence in build.DragonEssences.Selected) yield return DragonEssenceCatalog.Get(essence).Modifiers;
     }
