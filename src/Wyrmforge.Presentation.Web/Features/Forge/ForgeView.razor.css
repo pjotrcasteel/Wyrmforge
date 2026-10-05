@@ -1,0 +1,17 @@
+.forge-knowledge { padding: 16px 20px; border-bottom: 1px solid #231d2b; background: rgba(184,135,255,.035); }
+.forge-knowledge-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 12px; }
+.forge-knowledge-heading div { display: grid; gap: 3px; }
+.forge-knowledge-heading strong { font-size: .82rem; letter-spacing: .08em; }
+.forge-knowledge-heading span { color: #83798f; font-size: .72rem; }
+.forge-knowledge-heading b { color: #b887ff; font-size: .7rem; white-space: nowrap; }
+.forge-discovery-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; }
+.forge-discovery { display: grid; min-width: 0; padding: 11px; border: 1px solid #32293b; border-radius: 12px; background: #17131d; }
+.forge-discovery.unlocked { border-color: rgba(184,135,255,.42); background: rgba(43,31,55,.72); }
+.forge-discovery.locked { opacity: .48; }
+.forge-discovery > span { color: #786d83; font-size: .55rem; font-weight: 900; letter-spacing: .11em; }
+.forge-discovery.unlocked > span { color: #b887ff; }
+.forge-discovery strong { margin-top: 5px; font-size: .82rem; }
+.forge-discovery small { margin-top: 5px; color: #918699; line-height: 1.35; }
+.forge-discovery em { margin-top: 9px; color: #746a7d; font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .05em; }
+@media (max-width:880px) { .forge-discovery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width:560px) { .forge-knowledge-heading { align-items: flex-start; flex-direction: column; gap: 5px; } .forge-discovery-grid { grid-template-columns: 1fr; } }

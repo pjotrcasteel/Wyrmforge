@@ -1,5 +1,6 @@
 @using Wyrmforge.Application.Runs.Offerings
 @using Wyrmforge.Domain.Progression.Codex
+@using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Spells.Synergies
 
 <main class="forge-screen">
@@ -7,7 +8,7 @@
         <div>
             <div class="eyebrow">WYRMFORGE • PROTOTYPE @AppBuildInfo.Version</div>
             <h1>Forge a mage, shape a magical trail, and see which wyrm answers it.</h1>
-            <p>Resonance now shapes your build bonuses, biases future rewards, and influences which wyrm is drawn toward your trail.</p>
+            <p>Resonance shapes your build, Wyrm Essence unlocks permanent Forge knowledge, and every run expands the ways future runs can begin.</p>
         </div>
         <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
     </header>
@@ -15,12 +16,32 @@
     <section class="tree-panel">
         <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
         <div class="tree-hint"><strong>ARCANE CODEX</strong> • @CodexSummary</div>
+
+        <section class="forge-knowledge" aria-label="Forge discoveries">
+            <div class="forge-knowledge-heading">
+                <div><strong>FORGE KNOWLEDGE</strong><span>Permanent horizontal unlocks learned from secured Wyrm Essence.</span></div>
+                <b>@Progression.Count / @ForgeDiscoveryCatalog.All.Count learned</b>
+            </div>
+            <div class="forge-discovery-grid">
+                @foreach (var discovery in ForgeDiscoveryCatalog.All)
+                {
+                    var unlocked = Progression.Contains(discovery.Id);
+                    <article class="forge-discovery @(unlocked ? "unlocked" : "locked")">
+                        <span>@(unlocked ? "LEARNED" : "UNDISCOVERED")</span>
+                        <strong>@discovery.Name</strong>
+                        <small>@(unlocked ? discovery.Description : "Secure any Essence from this Wyrm lineage to learn its offering recipes permanently.")</small>
+                        <em>@OfferingUnlockSummary(discovery)</em>
+                    </article>
+                }
+            </div>
+        </section>
+
         <div class="tree-toolbar">
             <div><strong>WYRM OFFERING</strong><span> • @(SelectedOffering is null ? "None selected — enter without spending an essence." : RunOfferingCatalog.Get(SelectedOffering.Value).Effect)</span></div>
-            @if (Vault.TotalCount > 0)
+            @if (AvailableOfferings.Count > 0)
             {
                 <div class="toolbar-actions">
-                    @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id)))
+                    @foreach (var essence in AvailableOfferings)
                     {
                         <button class="@(SelectedOffering == essence.Id ? "primary" : "secondary")" @onclick="() => SelectOfferingAsync(essence.Id)">@essence.Icon @essence.Name ×@Vault.Count(essence.Id)</button>
                     }
@@ -47,22 +68,31 @@
             }
         </div>
     </section>
-    <footer>Forge a build • choose elemental trails • shape resonance • attract a wyrm • extract or push deeper</footer>
+    <footer>Forge a build • choose elemental trails • shape resonance • secure Wyrm Essence • unlock new possibilities • decide how deep to risk</footer>
 </main>
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
+    [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public int BestScore { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
 
     private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
+    private IReadOnlyList<DragonEssenceDefinition> AvailableOfferings => DragonEssenceCatalog.All
+        .Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id, Progression))
+        .ToArray();
     private string VaultSummary => Vault.TotalCount == 0 ? "Empty — successfully extract an essence to secure it here." : string.Join("   •   ", DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0).Select(essence => $"{essence.Icon} {essence.Name} ×{Vault.Count(essence.Id)}"));
     private string CodexSummary => $"{Codex.Count}/{SynergyCatalog.All.Count} discovered   •   {string.Join("   •   ", SynergyCatalog.All.Select(SynergyCodexLabel))}";
     private string SynergyCodexLabel(SynergyDefinition synergy) => Codex.Contains(synergy.Id) ? $"{synergy.Icon} {synergy.Name}" : "???";
+    private static string OfferingUnlockSummary(ForgeDiscoveryDefinition discovery)
+    {
+        var count = discovery.Unlocks.OfType<RunOfferingUnlock>().Count();
+        return $"{count} offering recipe{(count == 1 ? string.Empty : "s")}";
+    }
     private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
     private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
     private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
