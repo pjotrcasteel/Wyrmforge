@@ -55,22 +55,22 @@ internal static class WyrmrealmRouteGenerator
         if (rare) score *= 2;
         var recovery = rare ? 0.12 : random.NextDouble() < 0.28 ? 0.05 + random.Next(0, 5) / 100d : 0;
         var relic = rare || random.NextDouble() < 0.16 ? RelicCache : null;
-        var hazard = CreateHazard(depth, layout.Stage, rare, random);
+        var modifiers = CreateModifiers(depth, layout.Stage, rare, random);
         var route = new WyrmrealmRouteProfile(
             new WyrmrealmEncounterProfile(encounter, spawnInterval, enemyHealth, enemySpeed),
             new WyrmrealmRewardProfile(school, score, recovery, relic),
-            hazard);
+            modifiers);
         var name = rare ? RareNames[school] : CommonNames[school][random.Next(CommonNames[school].Length)];
         return new WyrmrealmMapNode(layout.Id, name, new WyrmrealmNodePosition(layout.Stage, layout.Lane), WyrmrealmNodeType.Combat, route,
             new WyrmrealmNodeGraph(layout.PreviousNodeIds, layout.Rarity));
     }
 
-    private static WyrmrealmHazardProfile? CreateHazard(int depth, int stage, bool rare, Random random)
+    private static IReadOnlyList<WyrmrealmEncounterModifier> CreateModifiers(int depth, int stage, bool rare, Random random)
     {
         var chance = rare ? 1 : Math.Clamp(0.08 + depth * 0.12 + stage * 0.04, 0, 0.72);
-        if (random.NextDouble() >= chance) return null;
+        if (random.NextDouble() >= chance) return [];
         var interval = rare ? 0.62 + random.NextDouble() * 0.16 : 0.75 + random.NextDouble() * 0.42;
-        return new WyrmrealmHazardProfile(WyrmrealmHazardKind.UnstableRifts, interval);
+        return [new WyrmrealmEncounterModifier(WyrmrealmEncounterModifierIds.UnstableRifts, HazardKind: WyrmrealmHazardKind.UnstableRifts, HazardIntervalMultiplier: interval)];
     }
 
     private static SpellSchool[] ShuffleSchools(Random random)
