@@ -29,7 +29,7 @@ public sealed class EnemyEncounterCompositionTests
         var ambushers = plan.Enemies.Count(kind => EnemyCatalog.Get(kind).Role == EnemyRole.Ambusher);
 
         Assert.AreEqual(profile.BaseThreatBudget, plan.ThreatSpent);
-        Assert.IsGreaterThanOrEqualTo(profile.MinimumFor(EnemyRole.Ambusher), ambushers);
+        Assert.IsTrue(ambushers >= profile.MinimumFor(EnemyRole.Ambusher));
     }
 
     [TestMethod]
@@ -40,9 +40,11 @@ public sealed class EnemyEncounterCompositionTests
         var expectedBudget = (int)Math.Round(profile.BaseThreatBudget * multiplier);
 
         var plan = EnemyEncounterComposition.CreatePlan(EnemyEncounterPattern.Mixed, 1, new FirstRandomSource(), multiplier);
+        var calculatedThreat = plan.Enemies.Sum(kind => EnemyCatalog.Get(kind).ThreatCost);
 
         Assert.AreEqual(expectedBudget, plan.ThreatSpent);
-        Assert.IsLessThanOrEqualTo(expectedBudget, plan.Enemies.Sum(kind => EnemyCatalog.Get(kind).ThreatCost));
+        Assert.AreEqual(plan.ThreatSpent, calculatedThreat);
+        Assert.IsTrue(plan.ThreatSpent <= expectedBudget);
     }
 
     [TestMethod]
