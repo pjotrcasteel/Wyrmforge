@@ -72,7 +72,7 @@ internal static class WyrmrealmRouteGenerator
         if (random.NextDouble() >= chance) return [];
         var interval = rare ? 0.62 + random.NextDouble() * 0.16 : 0.75 + random.NextDouble() * 0.42;
         return [new WyrmrealmEncounterModifier(WyrmrealmEncounterModifierIds.UnstableRifts, HazardKind: WyrmrealmHazardKind.UnstableRifts,
-            HazardIntervalMultiplier: interval * difficulty.HazardIntervalMultiplier)];
+            HazardIntervalMultiplier: interval)];
     }
 
     private static SpellSchool[] ShuffleSchools(Random random)
