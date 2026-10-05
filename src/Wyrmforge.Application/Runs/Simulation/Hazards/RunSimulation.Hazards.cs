@@ -13,7 +13,8 @@ public sealed partial class RunSimulation
     {
         var wasTelegraphing = unstableRiftState.IsTelegraphing;
         var riftsActive = encounterModifiers.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var intervalMultiplier) && dragon is null && !dragonPending;
-        var detonated = unstableRiftState.Tick(delta, riftsActive, player.Position, riftsActive ? intervalMultiplier : 1);
+        var difficultyInterval = riftsActive ? intervalMultiplier * depthState.HazardIntervalMultiplier : 1;
+        var detonated = unstableRiftState.Tick(delta, riftsActive, player.Position, difficultyInterval);
 
         if (!wasTelegraphing && unstableRiftState.IsTelegraphing)
         {
