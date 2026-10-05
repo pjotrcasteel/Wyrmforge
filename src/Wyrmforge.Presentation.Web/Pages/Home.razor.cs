@@ -3,8 +3,10 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Domain.Progression.Codex;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -15,9 +17,11 @@ public partial class Home
     private const string BestScoreKey = "wyrmforge.bestScore";
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
+    private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
     private readonly PassiveTreeSelection selection = new();
     private readonly DragonEssenceVault essenceVault = new();
     private readonly ArcaneCodex arcaneCodex = new();
+    private readonly ForgeProgressionState forgeProgression = new();
     private RunSummary? summary;
     private DragonEssenceId? selectedOffering;
     private DragonEssenceId? activeOffering;
@@ -32,17 +36,23 @@ public partial class Home
         if (!firstRender) return;
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
+        await TryLoadForgeProgressionAsync();
+        if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
         StateHasChanged();
     }
 
-    private void SelectOffering(DragonEssenceId id) => selectedOffering = selectedOffering == id ? null : id;
+    private void SelectOffering(DragonEssenceId id)
+    {
+        if (essenceVault.Count(id) <= 0 || !RunOfferingCatalog.CanOffer(id, forgeProgression)) return;
+        selectedOffering = selectedOffering == id ? null : id;
+    }
 
     private async Task StartRunAsync()
     {
         summary = null;
         activeOffering = null;
-        if (selectedOffering is { } offering && essenceVault.Consume(offering))
+        if (selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Consume(offering))
         {
             activeOffering = offering;
             await TrySetEssenceVaultAsync();
@@ -63,6 +73,7 @@ public partial class Home
         {
             foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId);
             await TrySetEssenceVaultAsync();
+            if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
         }
         if (value.Score <= bestScore) return;
         bestScore = value.Score;
@@ -102,6 +113,22 @@ public partial class Home
         catch (JsonException) { }
     }
 
+    private async Task TryLoadForgeProgressionAsync()
+    {
+        try
+        {
+            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ForgeProgressionKey);
+            if (string.IsNullOrWhiteSpace(storedValue)) return;
+            var storedDiscoveries = JsonSerializer.Deserialize<string[]>(storedValue);
+            if (storedDiscoveries is null) return;
+            var discoveryIds = new List<ForgeDiscoveryId>();
+            foreach (var storedDiscovery in storedDiscoveries) if (Enum.TryParse<ForgeDiscoveryId>(storedDiscovery, out var discoveryId)) discoveryIds.Add(discoveryId);
+            forgeProgression.Restore(discoveryIds);
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
     private async Task TryLoadArcaneCodexAsync()
     {
         try
@@ -124,6 +151,16 @@ public partial class Home
         {
             var storedEssences = essenceVault.SecuredEssences.Select(essence => essence.ToString()).ToArray();
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceVaultKey, JsonSerializer.Serialize(storedEssences));
+        }
+        catch (JSException) { }
+    }
+
+    private async Task TrySetForgeProgressionAsync()
+    {
+        try
+        {
+            var discoveries = forgeProgression.Discovered.Select(discovery => discovery.ToString()).ToArray();
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ForgeProgressionKey, JsonSerializer.Serialize(discoveries));
         }
         catch (JSException) { }
     }
