@@ -1,3 +1,5 @@
+using Wyrmforge.Domain.Combat.Modifiers;
+
 namespace Wyrmforge.Domain.Progression.DragonEssences;
 
 public sealed record DragonEssenceDefinition(
@@ -7,4 +9,4 @@ public sealed record DragonEssenceDefinition(
     string Icon,
     string Effect,
     string Description,
-    DragonEssenceModifiers? Modifiers = null);
+    BuildModifierProfile? Modifiers = null);
