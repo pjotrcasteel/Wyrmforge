@@ -15,14 +15,16 @@ public sealed partial class RunSimulation
     private void TryLevelUp()
     {
         if (pendingChoices.Count > 0 || experience < experienceToNext) return;
-        pendingChoices = pendingAttunements.Count > 0 ? levelChoiceService.Roll(build, pendingAttunements.Dequeue()) : levelChoiceService.Roll(build);
+        pendingChoices = pendingAttunements.Count > 0
+            ? levelChoiceService.Roll(build, pendingAttunements.Dequeue(), Resonance)
+            : levelChoiceService.Roll(build, Resonance);
         if (pendingChoices.Count == 0) CompleteLevelUp();
     }
 
     private void ApplyChoiceEffects(LevelChoice choice)
     {
-        if (choice.Kind != LevelChoiceKind.Rune) return;
-        RefreshBuildModifiers(choice.Id == $"rune:{RunUpgradeId.Vitality}");
+        var healMaximumHealthIncrease = choice.Kind == LevelChoiceKind.Rune && choice.Id == $"rune:{RunUpgradeId.Vitality}";
+        RefreshBuildModifiers(healMaximumHealthIncrease || choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade or LevelChoiceKind.Synergy);
     }
 
     private void CompleteLevelUp()

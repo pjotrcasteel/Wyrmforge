@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
@@ -8,11 +9,18 @@ namespace Wyrmforge.Application.Runs.LevelUp;
 
 public sealed class LevelChoiceService(IRandomSource randomSource)
 {
+    private const double SpellResonanceWeightPerPoint = 0.04;
+    private const double SynergyResonanceWeightPerPoint = 0.03;
     private readonly RewardChoiceEngine rewardChoiceEngine = new(randomSource);
 
-    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, int count = 3) => RollInternal(build, null, count);
+    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, int count = 3) => RollInternal(build, null, null, count);
 
-    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, int count = 3) => RollInternal(build, preferredSchool, count);
+    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, int count = 3) => RollInternal(build, preferredSchool, null, count);
+
+    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, IReadOnlyList<RunResonanceEntry> resonance, int count = 3) => RollInternal(build, null, resonance, count);
+
+    public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, IReadOnlyList<RunResonanceEntry> resonance, int count = 3) =>
+        RollInternal(build, preferredSchool, resonance, count);
 
     public bool Apply(RunBuildState build, LevelChoice choice)
     {
@@ -22,7 +30,7 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
         return false;
     }
 
-    private IReadOnlyList<LevelChoice> RollInternal(RunBuildState build, SpellSchool? preferredSchool, int count)
+    private IReadOnlyList<LevelChoice> RollInternal(RunBuildState build, SpellSchool? preferredSchool, IReadOnlyList<RunResonanceEntry>? resonance, int count)
     {
         var pool = CreatePool(build);
         var choices = new List<LevelChoice>();
@@ -30,12 +38,12 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
         var synergies = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy).ToList();
         if (synergies.Count > 0)
         {
-            choices.Add(TakeReward(synergies));
+            choices.Add(TakeReward(synergies, resonance));
         }
         else if (build.Spells.LearnedCount < 2)
         {
             var newSpells = pool.Where(choice => choice.Kind == LevelChoiceKind.NewSpell).ToList();
-            if (newSpells.Count > 0) choices.Add(TakeReward(newSpells));
+            if (newSpells.Count > 0) choices.Add(TakeReward(newSpells, resonance));
         }
 
         var used = choices.Select(choice => choice.Id).ToHashSet();
@@ -44,14 +52,14 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
             var preferredChoices = pool.Where(choice => !used.Contains(choice.Id) && IsSpellChoiceForSchool(choice, school)).ToList();
             if (preferredChoices.Count > 0)
             {
-                var preferred = TakeReward(preferredChoices);
+                var preferred = TakeReward(preferredChoices, resonance);
                 choices.Add(preferred);
                 used.Add(preferred.Id);
             }
         }
 
         var remainder = pool.Where(choice => !used.Contains(choice.Id)).ToList();
-        while (remainder.Count > 0 && choices.Count < count) choices.Add(TakeReward(remainder));
+        while (remainder.Count > 0 && choices.Count < count) choices.Add(TakeReward(remainder, resonance));
         return choices;
     }
 
@@ -70,14 +78,32 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
         return choices;
     }
 
-    private static bool IsSpellChoiceForSchool(LevelChoice choice, SpellSchool school) => choice.Id.StartsWith("spell:", StringComparison.Ordinal) && SpellCatalog.Get(ParseSpell(choice.Id)).School == school;
+    private static bool IsSpellChoiceForSchool(LevelChoice choice, SpellSchool school) =>
+        choice.Id.StartsWith("spell:", StringComparison.Ordinal) && SpellCatalog.Get(ParseSpell(choice.Id)).School == school;
 
-    private LevelChoice TakeReward(List<LevelChoice> choices)
+    private LevelChoice TakeReward(List<LevelChoice> choices, IReadOnlyList<RunResonanceEntry>? resonance)
     {
-        var selected = rewardChoiceEngine.Roll(choices.Select(choice => new RewardCandidate<LevelChoice>(choice.Id, choice)), 1).Single().Value;
+        var candidates = choices.Select(choice => new RewardCandidate<LevelChoice>(choice.Id, choice, Weight: CalculateWeight(choice, resonance)));
+        var selected = rewardChoiceEngine.Roll(candidates, 1).Single().Value;
         choices.RemoveAll(choice => choice.Id == selected.Id);
         return selected;
     }
+
+    private static double CalculateWeight(LevelChoice choice, IReadOnlyList<RunResonanceEntry>? resonance)
+    {
+        if (resonance is null) return 1;
+        if (choice.Id.StartsWith("spell:", StringComparison.Ordinal))
+        {
+            var school = SpellCatalog.Get(ParseSpell(choice.Id)).School;
+            return 1 + ResonanceValue(resonance, school) * SpellResonanceWeightPerPoint;
+        }
+        if (!choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return 1;
+        var synergy = SynergyCatalog.Get(ParseSynergy(choice.Id));
+        var schools = synergy.RequiredSpells.Select(id => SpellCatalog.Get(id).School).Distinct().ToArray();
+        return 1 + schools.Average(school => ResonanceValue(resonance, school)) * SynergyResonanceWeightPerPoint;
+    }
+
+    private static int ResonanceValue(IReadOnlyList<RunResonanceEntry> resonance, SpellSchool school) => resonance.FirstOrDefault(entry => entry.School == school)?.Value ?? 0;
 
     private static RunUpgradeId ParseRunUpgrade(string id) => Enum.Parse<RunUpgradeId>(id[5..]);
     private static SpellId ParseSpell(string id) => Enum.Parse<SpellId>(id[6..]);

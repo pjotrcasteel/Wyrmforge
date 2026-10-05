@@ -1,5 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Spells;
 
@@ -40,5 +42,26 @@ public sealed class LevelChoiceServiceTests
         var choices = service.Roll(new RunBuildState(), SpellSchool.Storm);
 
         Assert.IsTrue(choices.Any(choice => choice.Id == $"spell:{SpellId.ChainLightning}"));
+    }
+
+    [TestMethod]
+    public void Roll_WithStrongResonance_SoftlyBiasesMatchingSpellChoice()
+    {
+        var build = new RunBuildState();
+        var neutralService = new LevelChoiceService(new FixedRandomSource(0.6));
+        var resonantService = new LevelChoiceService(new FixedRandomSource(0.6));
+        RunResonanceEntry[] resonance = [new(SpellSchool.Storm, 20)];
+
+        var neutral = neutralService.Roll(build, count: 1);
+        var resonant = resonantService.Roll(build, resonance, count: 1);
+
+        Assert.AreEqual($"spell:{SpellId.FrostShard}", neutral[0].Id);
+        Assert.AreEqual($"spell:{SpellId.ChainLightning}", resonant[0].Id);
+    }
+
+    private sealed class FixedRandomSource(double value) : IRandomSource
+    {
+        public int Next(int exclusiveMax) => 0;
+        public double NextDouble() => value;
     }
 }

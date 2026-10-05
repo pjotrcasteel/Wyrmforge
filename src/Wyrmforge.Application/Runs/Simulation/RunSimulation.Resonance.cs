@@ -15,6 +15,7 @@ public sealed partial class RunSimulation
     private DragonId? attractedDragon;
 
     public IReadOnlyList<RunResonanceEntry> Resonance => resonanceState?.Calculate(build, completedRouteNodes) ?? Array.Empty<RunResonanceEntry>();
+    public IReadOnlyList<ResonanceThresholdDefinition> ResonanceThresholds => ResonanceThresholdResolver.Resolve(Resonance);
     public IReadOnlyList<DragonAttractionEntry> DragonAttraction => dragonAttractionState.Calculate(Resonance, defeatedDragonIds);
     public IReadOnlyList<DragonSign> DragonSigns => dragonSignState.Calculate(CurrentDragonAttention);
     public IReadOnlyList<RealmInfluenceCue> RealmInfluences => realmInfluenceState.Calculate(CurrentDragonAttention);
@@ -25,7 +26,11 @@ public sealed partial class RunSimulation
         ? Array.Empty<DragonAttention>()
         : dragonAttentionState.Calculate(DragonAttraction, mapState.CompletedNodes.Count, attractedDragon);
 
-    internal void InitializeResonance(IReadOnlySet<string> selectedNodes) => resonanceState = new RunResonanceState(selectedNodes);
+    internal void InitializeResonance(IReadOnlySet<string> selectedNodes)
+    {
+        resonanceState = new RunResonanceState(selectedNodes);
+        RefreshBuildModifiers(true);
+    }
 
     private void ResolveDragonAttraction()
     {

@@ -15,7 +15,7 @@ public sealed partial class RunSimulation
         var previousMaxHealth = player.MaxHealth;
         var runProfiles = ActiveRunUpgradeModifierProfiles().ToArray();
         runUpgradeModifiers = BuildModifierSet.Aggregate(runProfiles);
-        buildModifiers = BuildModifierSet.Aggregate([.. runProfiles, .. ActiveEquippedModifierProfiles()]);
+        buildModifiers = BuildModifierSet.Aggregate([.. runProfiles, .. ActiveEquippedModifierProfiles(), .. ActiveResonanceModifierProfiles()]);
         player.MaxHealth = buildModifiers.Apply(BuildStatId.MaxHealth, passiveProfile.MaxHealth);
         if (healMaximumHealthIncrease && player.MaxHealth > previousMaxHealth)
         {
@@ -39,6 +39,8 @@ public sealed partial class RunSimulation
         foreach (var relic in build.Relics.Equipped) yield return RelicCatalog.Get(relic).Modifiers;
         foreach (var essence in build.DragonEssences.Selected) yield return DragonEssenceCatalog.Get(essence).Modifiers;
     }
+
+    private IEnumerable<BuildModifierProfile> ActiveResonanceModifierProfiles() => ResonanceThresholds.Select(threshold => threshold.Modifiers);
 
     private IReadOnlyList<CombatRuleDefinition> ResolveBuildRules(CombatRuleContext context) => CombatRuleResolver.Resolve(buildModifiers.Rules, context);
 }
