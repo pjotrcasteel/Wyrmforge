@@ -13,6 +13,11 @@
             <div class="refuge-health"><span>VITALITY</span><strong>@Math.Ceiling(Health) / @Math.Ceiling(MaxHealth)</strong><div class="health-track"><i style="@HealthStyle"></i></div></div>
         </div>
 
+        <div class="refuge-secured" aria-label="Secured Essence">
+            <div><span>ESSENCE SECURED</span><strong>@SecuredEssenceCount</strong></div>
+            <p>@SecuredEssenceMessage</p>
+        </div>
+
         @if (OwnedRelics.Count > 0)
         {
             <section class="relic-loadout">
@@ -51,6 +56,7 @@
     [Parameter] public int Visit { get; set; }
     [Parameter] public int NextDepth { get; set; }
     [Parameter] public int RelicSlots { get; set; }
+    [Parameter] public int SecuredEssenceCount { get; set; }
     [Parameter] public double ScoreMultiplier { get; set; }
     [Parameter] public double Health { get; set; }
     [Parameter] public double MaxHealth { get; set; }
@@ -59,13 +65,19 @@
     [Parameter] public EventCallback<RelicId> OnUnequipRelic { get; set; }
 
     private string HealthStyle => $"width:{(MaxHealth <= 0 ? 0 : Math.Clamp(Health / MaxHealth * 100, 0, 100)):0.#}%";
+    private string SecuredEssenceMessage => SecuredEssenceCount switch
+    {
+        0 => "Nothing is banked yet. Secure a Wyrm Essence before taking deeper risks.",
+        1 => "This Essence is safe. A deeper defeat cannot take it away.",
+        _ => $"These {SecuredEssenceCount} Essences are safe. A deeper defeat cannot take them away.",
+    };
     private Task UseAsync(RunCheckpointActionId id) => OnUse.InvokeAsync(id);
     private Task ToggleRelicAsync(RelicId id, bool equipped) => equipped ? OnUnequipRelic.InvokeAsync(id) : OnEquipRelic.InvokeAsync(id);
     private static string ActionClass(RunCheckpointActionState action) => $"refuge-action action-{action.Id.ToString().ToLowerInvariant()}{(action.Used ? " used" : string.Empty)}";
     private static string ActionLabel(RunCheckpointActionState action) => action.Id switch { RunCheckpointActionId.MendWounds => action.Used ? "RESTED" : "REFUGE SERVICE", RunCheckpointActionId.Descend => action.Enabled ? "NEXT DIVE" : "SEALED PASSAGE", _ => "SAFE EXIT" };
     private static string ActionIcon(RunCheckpointActionId id) => id switch { RunCheckpointActionId.MendWounds => "✚", RunCheckpointActionId.Descend => "▼", _ => "◈" };
     private string ActionTitle(RunCheckpointActionId id) => id switch { RunCheckpointActionId.MendWounds => "Mend wounds", RunCheckpointActionId.Descend => $"Descend to Depth {NextDepth}", _ => "Return to the Forge" };
-    private string ActionEffect(RunCheckpointActionState action) => action.Id switch { RunCheckpointActionId.MendWounds when action.Used => "The ward has already restored you during this visit.", RunCheckpointActionId.MendWounds when Health >= MaxHealth => "You are already at full vitality.", RunCheckpointActionId.MendWounds => $"Restore {RunCheckpointState.MendFraction * 100:0}% of maximum vitality.", RunCheckpointActionId.Descend when action.Enabled => $"Enter the next map at ×{ScoreMultiplier:0.0} base depth reward.", RunCheckpointActionId.Descend => "No deeper passage is stable yet.", _ => "End the run safely and secure everything you carried out." };
-    private static string ActionDescription(RunCheckpointActionState action) => action.Id switch { RunCheckpointActionId.MendWounds => "The Refuge gathers enough strength to close your wounds once each time you arrive.", RunCheckpointActionId.Descend => "Carry your build and stolen essence into another map with stronger pressure and new route choices.", _ => "The evacuation is complete. Leaving from the Refuge is always safe." };
+    private string ActionEffect(RunCheckpointActionState action) => action.Id switch { RunCheckpointActionId.MendWounds when action.Used => "The ward has already restored you during this visit.", RunCheckpointActionId.MendWounds when Health >= MaxHealth => "You are already at full vitality.", RunCheckpointActionId.MendWounds => $"Restore {RunCheckpointState.MendFraction * 100:0}% of maximum vitality.", RunCheckpointActionId.Descend when action.Enabled => $"Enter the next map at ×{ScoreMultiplier:0.0} base depth reward.", RunCheckpointActionId.Descend => "No deeper passage is stable yet.", _ when SecuredEssenceCount == 0 => "End the run safely and return to the Forge.", _ => $"End the run and bank {SecuredEssenceCount} secured Essence{(SecuredEssenceCount == 1 ? string.Empty : "s")}." };
+    private static string ActionDescription(RunCheckpointActionState action) => action.Id switch { RunCheckpointActionId.MendWounds => "The Refuge gathers enough strength to close your wounds once each time you arrive.", RunCheckpointActionId.Descend => "Your secured Essence stays safe. Carry your build into a new map and put only the next haul at risk.", _ => "Everything secured at Refuge is already safe. Returning now ends the run without further risk." };
     private static string ActionFooter(RunCheckpointActionState action) => action.Id switch { RunCheckpointActionId.MendWounds when action.Enabled => "REST AT THE REFUGE", RunCheckpointActionId.MendWounds => "UNAVAILABLE", RunCheckpointActionId.Descend when action.Enabled => "OPEN THE PASSAGE", RunCheckpointActionId.Descend => "MAX DEPTH REACHED", _ => "LEAVE WYRMREALM" };
 }

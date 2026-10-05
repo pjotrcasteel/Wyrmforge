@@ -31,6 +31,7 @@ public sealed partial class RunSimulation
     private readonly RunDepthState depthState = new();
     private readonly RunDepthTrialState depthTrialState = new();
     private readonly RunExtractionState extractionState = new();
+    private readonly RunEssenceCargoState essenceCargoState = new();
     private readonly RunCheckpointState checkpointState = new();
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
@@ -128,12 +129,14 @@ public sealed partial class RunSimulation
         CompleteMapEncounterCleanup();
         if (player.Health <= 0)
         {
+            essenceCargoState.LosePending();
             extractionState.Cancel();
             outcome = RunOutcome.Defeated;
             IsEnded = true;
         }
         else if (extractionState.Tick(delta, player.Position))
         {
+            essenceCargoState.SecurePending();
             ClearMapEncounterField();
             checkpointState.Enter();
         }
@@ -155,10 +158,10 @@ public sealed partial class RunSimulation
     public bool ApplyDragonEssence(DragonEssenceId id)
     {
         var choice = pendingDragonEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
-        if (choice is null || !build.DragonEssences.Select(id)) return false;
+        if (choice is null || extractionState.IsActive || !build.DragonEssences.Select(id) || !essenceCargoState.Carry(id)) return false;
         pendingDragonEssenceChoices = [];
         RefreshDragonEssenceModifiers();
-        if (!extractionState.Start(player.Position)) checkpointState.Enter();
+        if (!extractionState.Start(player.Position)) throw new InvalidOperationException("Selected Essence must start an evacuation ritual.");
         return true;
     }
 
@@ -196,6 +199,7 @@ public sealed partial class RunSimulation
 
     public RunSummary AbandonRun()
     {
+        essenceCargoState.LosePending();
         extractionState.Cancel();
         outcome = RunOutcome.Abandoned;
         IsEnded = true;
@@ -204,7 +208,7 @@ public sealed partial class RunSimulation
 
     public RunSummary EndRun() => AbandonRun();
 
-    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, build.DragonEssences.Count, build.DragonEssences.Selected.ToArray(), (int)elapsed, level, choiceCount,
+    public RunSummary CreateSummary() => new(score, kills, dragonsSlain, essenceCargoState.SecuredCount, essenceCargoState.Secured, (int)elapsed, level, choiceCount,
         build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
         SynergyIds = build.Synergies.Snapshot().ToArray(),
@@ -215,7 +219,7 @@ public sealed partial class RunSimulation
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
-            null,
+            CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
                 Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
             CreateDragonSnapshot(),
@@ -232,6 +236,14 @@ public sealed partial class RunSimulation
             IsEnded,
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots());
+    }
+
+    private ExtractionRenderSnapshot? CreateExtractionSnapshot()
+    {
+        if (!extractionState.IsActive) return null;
+        var progress = 1 - extractionState.RemainingSeconds / RunExtractionState.DurationSeconds;
+        return new ExtractionRenderSnapshot(extractionState.Position.X, extractionState.Position.Y, RunExtractionState.Radius, progress,
+            extractionState.RemainingSeconds, extractionState.IsProgressing);
     }
 
     private bool HasPendingRunChoice => pendingChoices.Count > 0 || pendingDragonEssenceChoices.Count > 0 || pendingRelicChoices.Count > 0;

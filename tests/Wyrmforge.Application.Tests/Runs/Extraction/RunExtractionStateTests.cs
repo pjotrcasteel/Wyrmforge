@@ -23,7 +23,7 @@ public sealed class RunExtractionStateTests
     }
 
     [TestMethod]
-    public void Tick_AfterTenSeconds_CompletesEvacuation()
+    public void Tick_AfterTenSecondsInsideRitual_CompletesEvacuation()
     {
         var state = new RunExtractionState();
         var anchor = new Vector2D(120, 80);
@@ -40,16 +40,20 @@ public sealed class RunExtractionStateTests
     }
 
     [TestMethod]
-    public void Tick_AwayFromAnchor_ContinuesEvacuationCountdown()
+    public void Tick_OutsideRitual_PausesCountdownUntilPlayerReturns()
     {
         var state = new RunExtractionState();
         var anchor = new Vector2D(120, 80);
         Assert.IsTrue(state.Start(anchor));
+        Assert.IsFalse(state.Tick(3, anchor));
 
-        Assert.IsFalse(state.Tick(3, new Vector2D(900, 900)));
-
-        Assert.IsTrue(state.IsProgressing);
+        Assert.IsFalse(state.Tick(4, new Vector2D(900, 900)));
+        Assert.IsFalse(state.IsProgressing);
         Assert.AreEqual(7d, state.RemainingSeconds, 0.001);
+
+        Assert.IsFalse(state.Tick(2, anchor));
+        Assert.IsTrue(state.IsProgressing);
+        Assert.AreEqual(5d, state.RemainingSeconds, 0.001);
     }
 
     [TestMethod]

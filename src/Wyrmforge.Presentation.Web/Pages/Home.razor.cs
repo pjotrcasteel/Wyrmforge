@@ -59,7 +59,7 @@ public partial class Home
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
         if (codexChanged) await TrySetArcaneCodexAsync();
 
-        if (value.Outcome == RunOutcome.Extracted && value.EssenceIds.Count > 0)
+        if (value.EssenceIds.Count > 0)
         {
             foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId);
             await TrySetEssenceVaultAsync();
