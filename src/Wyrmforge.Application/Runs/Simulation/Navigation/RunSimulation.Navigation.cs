@@ -37,8 +37,9 @@ public sealed partial class RunSimulation
 
     private WyrmrealmEncounterModifierSet ResolveEncounterModifiers(WyrmrealmRouteProfile route)
     {
+        var routeModifiers = route.EncounterModifiers ?? Array.Empty<WyrmrealmEncounterModifier>();
         var influenceModifiers = realmInfluenceState.CalculateEncounterModifiers(CurrentDragonAttention);
-        return WyrmrealmEncounterModifierSet.Aggregate([.. route.EncounterModifiers ?? [], .. influenceModifiers]);
+        return WyrmrealmEncounterModifierSet.Aggregate([.. routeModifiers, .. influenceModifiers]);
     }
 
     private void RegisterMapEncounterKill()
