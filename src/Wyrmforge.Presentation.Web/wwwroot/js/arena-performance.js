@@ -5,17 +5,35 @@ const activeSimulationIntervalMilliseconds = 1000 / 60;
 const pausedSimulationIntervalMilliseconds = 100;
 
 export function initializeArena(canvas, dotNetReference) {
+    const originalGetBoundingClientRect = canvas.getBoundingClientRect.bind(canvas);
     const state = {
         dotNetReference,
         lastSimulationTimestamp: performance.now() - activeSimulationIntervalMilliseconds,
         latestSnapshot: null,
+        originalGetBoundingClientRect,
+        canvasRect: originalGetBoundingClientRect(),
+        resizeObserver: null,
+        onViewportChanged: null,
     };
+    state.onViewportChanged = () => state.canvasRect = state.originalGetBoundingClientRect();
+    canvas.getBoundingClientRect = () => state.canvasRect;
+    state.resizeObserver = new ResizeObserver(state.onViewportChanged);
+    state.resizeObserver.observe(canvas);
+    window.addEventListener('resize', state.onViewportChanged);
+    window.addEventListener('scroll', state.onViewportChanged, { passive: true });
     frameStates.set(canvas, state);
     initializeBaseArena(canvas, createThrottledReference(state));
 }
 
 export function disposeArena(canvas) {
-    frameStates.delete(canvas);
+    const state = frameStates.get(canvas);
+    if (state) {
+        state.resizeObserver?.disconnect();
+        window.removeEventListener('resize', state.onViewportChanged);
+        window.removeEventListener('scroll', state.onViewportChanged);
+        canvas.getBoundingClientRect = state.originalGetBoundingClientRect;
+        frameStates.delete(canvas);
+    }
     disposeBaseArena(canvas);
 }
 
