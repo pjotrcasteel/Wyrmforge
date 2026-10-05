@@ -50,11 +50,11 @@ public sealed class CombatRuleResolverTests
     [TestMethod]
     public void Condition_RequiredStatus_MatchesOnlyWhenTargetHasStatus()
     {
-        var statuses = new CombatStatusCollection();
         var rule = new CombatRuleDefinition(CombatRuleTrigger.Hit, 1, new EchoCastRuleEffect(1), new CombatRuleCondition(RequiredTargetStatus: CombatStatusId.Frozen));
-        var withoutStatus = new CombatRuleContext(CombatRuleTrigger.Hit, 1, TargetStatuses: statuses);
-        statuses.Apply(CombatStatusCatalog.Get(CombatStatusId.Frozen), 1);
-        var withStatus = new CombatRuleContext(CombatRuleTrigger.Hit, 1, TargetStatuses: statuses);
+        var withoutStatus = new CombatRuleContext(CombatRuleTrigger.Hit, 1, TargetStatuses: new CombatStatusCollection());
+        var frozenStatuses = new CombatStatusCollection();
+        frozenStatuses.Apply(CombatStatusCatalog.Get(CombatStatusId.Frozen), 1);
+        var withStatus = new CombatRuleContext(CombatRuleTrigger.Hit, 1, TargetStatuses: frozenStatuses);
 
         Assert.IsEmpty(CombatRuleResolver.Resolve([rule], withoutStatus));
         Assert.HasCount(1, CombatRuleResolver.Resolve([rule], withStatus));
