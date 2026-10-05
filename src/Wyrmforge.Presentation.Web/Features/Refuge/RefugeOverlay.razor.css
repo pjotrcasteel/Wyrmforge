@@ -1,6 +1,6 @@
 .refuge-overlay { position: fixed; z-index: 8; inset: 0; display: grid; place-items: center; padding: 18px; overflow: auto; background: radial-gradient(circle at 50% 48%, rgba(60, 91, 74, 0.18), rgba(6, 7, 8, 0.94) 48%, rgba(4, 4, 5, 0.98)); backdrop-filter: blur(10px); }
 .refuge-card { width: min(980px, 100%); padding: 30px; border: 1px solid rgba(150, 210, 174, 0.22); border-radius: 24px; background: linear-gradient(155deg, rgba(18, 27, 23, 0.98), rgba(13, 15, 16, 0.98) 58%, rgba(21, 18, 15, 0.98)); box-shadow: 0 36px 100px rgba(0, 0, 0, 0.58); }
-.refuge-heading { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 28px; align-items: end; margin-bottom: 20px; }
+.refuge-heading { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 28px; align-items: end; margin-bottom: 14px; }
 .refuge-heading h2 { margin: 7px 0; color: #edf7f0; }
 .refuge-heading p { margin: 0; color: #91a198; line-height: 1.5; }
 .refuge-health { padding: 12px 13px; border: 1px solid rgba(150, 210, 174, 0.18); border-radius: 13px; background: rgba(7, 12, 9, 0.46); }
@@ -9,6 +9,11 @@
 .refuge-health strong { margin: 4px 0 8px; color: #d9eadf; font-size: .82rem; }
 .health-track { height: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.07); }
 .health-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6fa683, #a8d6b5); }
+.refuge-secured { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; padding: 11px 13px; border: 1px solid rgba(150,210,174,.16); border-radius: 13px; background: rgba(74,120,91,.08); }
+.refuge-secured div { display: flex; align-items: baseline; gap: 9px; white-space: nowrap; }
+.refuge-secured span { color: #789083; font-size: .6rem; font-weight: 900; letter-spacing: .13em; }
+.refuge-secured strong { color: #b9dcc5; font-size: 1.05rem; }
+.refuge-secured p { margin: 0; color: #7f9186; font-size: .76rem; line-height: 1.4; text-align: right; }
 .relic-loadout { margin-bottom: 20px; padding: 14px; border: 1px solid rgba(222,190,120,.18); border-radius: 16px; background: rgba(20,17,12,.35); }
 .loadout-heading { display: flex; justify-content: space-between; margin-bottom: 10px; color: #d8c9a9; font-size: .72rem; letter-spacing: .08em; }
 .relic-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
@@ -28,4 +33,4 @@
 .refuge-action-effect { margin-top: 8px; color: #cad8ce; font-size: .77rem; line-height: 1.4; }
 .refuge-action small { margin-top: 8px; color: #7f8c84; line-height: 1.45; }
 .refuge-action-footer { margin-top: auto; padding-top: 18px; color: #6e7e74; font-size: .59rem; font-weight: 900; letter-spacing: .1em; }
-@media (max-width:760px) { .refuge-card { padding: 20px 14px; } .refuge-heading, .relic-grid, .refuge-actions { grid-template-columns: 1fr; } .refuge-action { min-height: 0; } }
+@media (max-width:760px) { .refuge-card { padding: 20px 14px; } .refuge-heading, .relic-grid, .refuge-actions { grid-template-columns: 1fr; } .refuge-secured { align-items: flex-start; flex-direction: column; gap: 4px; } .refuge-secured p { text-align: left; } .refuge-action { min-height: 0; } }
