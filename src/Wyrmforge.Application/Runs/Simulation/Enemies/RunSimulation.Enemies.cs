@@ -7,7 +7,8 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private EnemyEncounterPattern encounterPattern = EnemyEncounterPattern.Mixed;
-    private int encounterSpawnIndex = EnemyEncounterComposition.SpawnsPerPattern;
+    private EnemyCompositionPlan? encounterPlan;
+    private int encounterPlanIndex;
 
     private void UpdateSpawn(double delta, double width, double height)
     {
@@ -17,19 +18,20 @@ public sealed partial class RunSimulation
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
 
-        if (!mapEncounter) EnsureEncounterPattern();
-        SpawnEnemy(width, height, EnemyEncounterComposition.GetEnemyKind(encounterPattern, encounterSpawnIndex));
+        EnsureEncounterPlan(mapEncounter);
+        if (encounterPlan is null || encounterPlanIndex >= encounterPlan.Enemies.Count) return;
+        SpawnEnemy(width, height, encounterPlan.Enemies[encounterPlanIndex++]);
         var baseInterval = Math.Max(0.28, 0.9 - elapsed / 120);
         var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier;
-        encounterSpawnIndex++;
     }
 
-    private void EnsureEncounterPattern()
+    private void EnsureEncounterPlan(bool mapEncounter)
     {
-        if (encounterSpawnIndex < EnemyEncounterComposition.SpawnsPerPattern) return;
-        encounterPattern = EnemyEncounterComposition.SelectNext(encounterPattern, randomSource.Next(2));
-        encounterSpawnIndex = 0;
+        if (encounterPlan is not null && encounterPlanIndex < encounterPlan.Enemies.Count) return;
+        if (!mapEncounter) encounterPattern = EnemyEncounterComposition.SelectNext(encounterPattern, randomSource.Next(2));
+        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource);
+        encounterPlanIndex = 0;
     }
 
     private void SpawnEnemy(double width, double height, EnemyKind kind)
@@ -49,8 +51,8 @@ public sealed partial class RunSimulation
         var health = 36 * scale * depthState.EnemyHealthMultiplier * routeHealth;
         var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier * routeSpeed;
         var id = ++enemyId;
-        var radius = kind == EnemyKind.RiftStalker ? 14 : 11;
-        enemies.Add(new EnemyState(id, position, radius, health, speed, kind));
+        var definition = EnemyCatalog.Get(kind);
+        enemies.Add(new EnemyState(id, position, definition.Radius, health, speed, kind));
     }
 
     private void UpdateEnemies(double delta)
