@@ -2,17 +2,17 @@ namespace Wyrmforge.Application.Runs.Depth;
 
 public sealed class RunDepthTrialState
 {
-    public const int KillsRequired = 12;
-    public const int ScoreReward = 750;
-
     public bool IsActive { get; private set; }
-
     public int Kills { get; private set; }
+    public int KillsRequired { get; private set; }
+    public int ScoreReward { get; private set; }
 
-    public void Start(int depth)
+    public void Start(RunDifficultyProfile difficulty)
     {
         Kills = 0;
-        IsActive = depth >= 2;
+        KillsRequired = difficulty.TrialKillsRequired;
+        ScoreReward = difficulty.TrialScoreReward;
+        IsActive = difficulty.DepthTrialEnabled;
     }
 
     public bool RegisterKill()
