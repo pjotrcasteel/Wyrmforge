@@ -44,4 +44,25 @@ public sealed class RunResonanceStateTests
         Assert.AreEqual(5, resonance.Single(entry => entry.School == SpellSchool.Fire).Value);
         Assert.AreEqual(5, resonance.Single(entry => entry.School == SpellSchool.Frost).Value);
     }
+
+    [TestMethod]
+    public void Calculate_MultipleCompletedRoutes_StacksRouteResonance()
+    {
+        var build = new RunBuildState();
+        var first = RouteNode("fire-one", 1, SpellSchool.Fire);
+        var second = RouteNode("fire-two", 2, SpellSchool.Fire);
+        var state = new RunResonanceState(new HashSet<string>());
+
+        var resonance = state.Calculate(build, [first, second]);
+
+        Assert.AreEqual(RunResonanceState.RouteWeight * 2, resonance.Single(entry => entry.School == SpellSchool.Fire).Value);
+    }
+
+    private static WyrmrealmMapNode RouteNode(string id, int stage, SpellSchool school) => new(
+        id,
+        id,
+        new WyrmrealmNodePosition(stage, 0),
+        WyrmrealmNodeType.Combat,
+        new WyrmrealmRouteProfile(new WyrmrealmEncounterProfile(WyrmrealmEncounterKind.Mixed), new WyrmrealmRewardProfile(school)),
+        new WyrmrealmNodeGraph(Array.Empty<string>()));
 }
