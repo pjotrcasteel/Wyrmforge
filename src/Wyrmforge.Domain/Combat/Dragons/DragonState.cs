@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Combat.Targets;
 
 namespace Wyrmforge.Domain.Combat.Dragons;
@@ -12,7 +13,7 @@ public sealed class DragonState(int id, DragonDefinition definition, Vector2D po
     public double Health { get; set; } = definition.MaxHealth;
     public double MaxHealth => Definition.MaxHealth;
     public double Speed => Definition.Speed;
-    public double FrozenFor { get; set; }
+    public CombatStatusCollection Statuses { get; } = new();
     public double AttackCooldown { get; set; } = 2;
     public double TelegraphRemaining { get; set; }
     public Vector2D BreathDirection { get; set; } = new(0, 1);
