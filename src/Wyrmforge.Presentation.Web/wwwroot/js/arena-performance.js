@@ -44,6 +44,7 @@ function createThrottledReference(state) {
             const now = performance.now();
             const interval = state.latestSnapshot?.paused ? pausedSimulationIntervalMilliseconds : activeSimulationIntervalMilliseconds;
             const wait = Math.max(0, interval - (now - state.lastSimulationTimestamp));
+            if (wait <= 0.5) return invokeFrame(state, args);
             return new Promise((resolve, reject) => {
                 window.setTimeout(() => invokeFrame(state, args).then(resolve, reject), wait);
             });
