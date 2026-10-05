@@ -94,7 +94,7 @@ public sealed partial class RunSimulation
     public bool EvacuationActive => extractionState.IsActive;
     public double EvacuationRemainingSeconds => extractionState.RemainingSeconds;
     public int DepthTrialKills => depthTrialState.Kills;
-    public int DepthTrialKillsRequired => RunDepthTrialState.KillsRequired;
+    public int DepthTrialKillsRequired => depthTrialState.KillsRequired;
     public int Depth => depthState.Depth;
     public int Level => level;
     public int CheckpointVisit => checkpointState.Visit;
@@ -172,9 +172,10 @@ public sealed partial class RunSimulation
 
     public bool PushDeeper()
     {
-        if (!AtCheckpoint || !depthState.CanPushDeeper || !depthState.PushDeeper()) return false;
-        if (!checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
+        if (!AtCheckpoint || !depthState.CanPushDeeper || !checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
+        if (!depthState.PushDeeper()) return false;
         mapState = new WyrmrealmMapState(depthState.Depth);
+        depthTrialState.Start(depthState.Difficulty);
         attractedDragon = null;
         dragonPending = false;
         dragonEncounterStarted = false;
