@@ -21,8 +21,8 @@ public sealed partial class RunSimulation
 
     private void ApplyChoiceEffects(LevelChoice choice)
     {
-        if (choice.Kind != LevelChoiceKind.Rune) return;
-        RefreshBuildModifiers(choice.Id == $"rune:{RunUpgradeId.Vitality}");
+        var healMaximumHealthIncrease = choice.Kind == LevelChoiceKind.Rune && choice.Id == $"rune:{RunUpgradeId.Vitality}";
+        RefreshBuildModifiers(healMaximumHealthIncrease || choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade or LevelChoiceKind.Synergy);
     }
 
     private void CompleteLevelUp()
