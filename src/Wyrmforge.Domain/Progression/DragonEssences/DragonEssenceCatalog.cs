@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Modifiers;
 
 namespace Wyrmforge.Domain.Progression.DragonEssences;
 
@@ -20,16 +21,22 @@ public static class DragonEssenceCatalog
 
     public static IReadOnlyList<DragonEssenceDefinition> RimeclawChoices { get; } =
     [
-        new(DragonEssenceId.RimeHeart, "Rime Heart", "Rimeclaw", "❄♥", "+42 maximum vitality.", "The Glacier Wyrm's heart refuses to thaw. Its impossible density hardens your body against the deeper realm.", new DragonEssenceModifiers(MaxHealthBonus: 42)),
-        new(DragonEssenceId.GlacialScale, "Glacial Scale", "Rimeclaw", "◇❄", "Take 16% less damage.", "A plate of living ice turns killing force into spreading frost before it can reach your bones.", new DragonEssenceModifiers(DamageTakenMultiplier: 0.84)),
-        new(DragonEssenceId.HoarfrostWing, "Hoarfrost Wing", "Rimeclaw", "🪽❄", "+14% movement speed.", "The torn wing catches currents that do not exist. Your steps glide across the realm instead of fighting it.", new DragonEssenceModifiers(MoveSpeedMultiplier: 1.14)),
+        new(DragonEssenceId.RimeHeart, "Rime Heart", "Rimeclaw", "❄♥", "+42 maximum vitality.", "The Glacier Wyrm's heart refuses to thaw. Its impossible density hardens your body against the deeper realm.",
+            Stats(Flat(BuildStatId.MaxHealth, 42))),
+        new(DragonEssenceId.GlacialScale, "Glacial Scale", "Rimeclaw", "◇❄", "Take 16% less damage.", "A plate of living ice turns killing force into spreading frost before it can reach your bones.",
+            Stats(Multiply(BuildStatId.DamageTaken, 0.84))),
+        new(DragonEssenceId.HoarfrostWing, "Hoarfrost Wing", "Rimeclaw", "🪽❄", "+14% movement speed.", "The torn wing catches currents that do not exist. Your steps glide across the realm instead of fighting it.",
+            Stats(Multiply(BuildStatId.MoveSpeed, 1.14))),
     ];
 
     public static IReadOnlyList<DragonEssenceDefinition> VoidweaverChoices { get; } =
     [
-        new(DragonEssenceId.VoidHeart, "Void Heart", "Voidweaver", "✦♥", "+20% spell damage.", "A knot of condensed aether bends every spell around itself, forcing more power through the same cast.", new DragonEssenceModifiers(DamageMultiplier: 1.2)),
-        new(DragonEssenceId.NullScale, "Null Scale", "Voidweaver", "◈", "Cast intervals are 16% shorter.", "The scale exists a fraction of a second ahead of you. Your spell rhythm follows it into the gap.", new DragonEssenceModifiers(CastIntervalMultiplier: 0.84)),
-        new(DragonEssenceId.PhaseWing, "Phase Wing", "Voidweaver", "🪽✨", "+10% movement speed and +8% spell damage.", "Part of the wing is always elsewhere. Following it makes both your movement and spellwork slip through resistance.", new DragonEssenceModifiers(DamageMultiplier: 1.08, MoveSpeedMultiplier: 1.1)),
+        new(DragonEssenceId.VoidHeart, "Void Heart", "Voidweaver", "✦♥", "+20% spell damage.", "A knot of condensed aether bends every spell around itself, forcing more power through the same cast.",
+            Stats(Multiply(BuildStatId.Damage, 1.2))),
+        new(DragonEssenceId.NullScale, "Null Scale", "Voidweaver", "◈", "Cast intervals are 16% shorter.", "The scale exists a fraction of a second ahead of you. Your spell rhythm follows it into the gap.",
+            Stats(Multiply(BuildStatId.CastInterval, 0.84))),
+        new(DragonEssenceId.PhaseWing, "Phase Wing", "Voidweaver", "🪽✨", "+10% movement speed and +8% spell damage.", "Part of the wing is always elsewhere. Following it makes both your movement and spellwork slip through resistance.",
+            Stats(Multiply(BuildStatId.Damage, 1.08), Multiply(BuildStatId.MoveSpeed, 1.1))),
     ];
 
     public static IReadOnlyList<DragonEssenceDefinition> All { get; } = [.. AshfangChoices, .. StormcoilChoices, .. RimeclawChoices, .. VoidweaverChoices];
@@ -44,4 +51,10 @@ public static class DragonEssenceCatalog
     };
 
     public static DragonEssenceDefinition Get(DragonEssenceId id) => All.Single(essence => essence.Id == id);
+
+    private static BuildModifierProfile Stats(params BuildStatModifier[] stats) => new(stats);
+
+    private static BuildStatModifier Flat(BuildStatId stat, double value) => new(stat, BuildStatOperation.FlatAdd, value);
+
+    private static BuildStatModifier Multiply(BuildStatId stat, double value) => new(stat, BuildStatOperation.Multiply, value);
 }
