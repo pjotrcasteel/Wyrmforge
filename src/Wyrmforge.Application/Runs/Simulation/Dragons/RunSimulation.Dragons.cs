@@ -43,7 +43,7 @@ public sealed partial class RunSimulation
         var scaledDelta = delta * activeDragon.Statuses.TimeScale(true);
         UpdateDragonCombat(activeDragon, scaledDelta);
 
-        var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond;
+        var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond * depthState.DragonDamageMultiplier;
         if (Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayer(contactDamage * delta);
     }
 
@@ -84,7 +84,7 @@ public sealed partial class RunSimulation
     {
         var profile = dragonHuntState.Profile?.Pressure ?? throw new InvalidOperationException("Active dragon hunt requires a pressure profile.");
         var radius = profile.Radius.For(activeDragon.Phase);
-        var damage = profile.Damage.For(activeDragon.Phase);
+        var damage = profile.Damage.For(activeDragon.Phase) * depthState.DragonDamageMultiplier;
         var telegraph = profile.Cadence.TelegraphSeconds.For(activeDragon.Phase);
 
         for (var strike = 0; strike < profile.Strikes; strike++)
@@ -141,7 +141,7 @@ public sealed partial class RunSimulation
         var hunt = DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
-        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height));
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier);
     }
 
     private void MoveDragon(DragonState activeDragon, double delta)
@@ -222,14 +222,14 @@ public sealed partial class RunSimulation
         var dot = playerDirection.X * activeDragon.BreathDirection.X + playerDirection.Y * activeDragon.BreathDirection.Y;
         if (dot < Math.Cos(attack.Geometry.HalfAngle)) return;
         RegisterElementalImpact(player.Position, attack.VisualSpell);
-        DamagePlayer(attack.Damage.For(activeDragon.Phase));
+        DamagePlayer(attack.Damage.For(activeDragon.Phase) * depthState.DragonDamageMultiplier);
     }
 
     private void ResolveBurstAttack(Vector2D center, DragonState activeDragon, DragonAttackProfile attack)
     {
         var radius = attack.Geometry.Radius.For(activeDragon.Phase);
         RegisterElementalImpact(center, attack.VisualSpell);
-        if (Vector2D.Distance(player.Position, center) <= radius) DamagePlayer(attack.Damage.For(activeDragon.Phase));
+        if (Vector2D.Distance(player.Position, center) <= radius) DamagePlayer(attack.Damage.For(activeDragon.Phase) * depthState.DragonDamageMultiplier);
     }
 
     private void DefeatDragon(DragonState defeatedDragon)
@@ -239,7 +239,8 @@ public sealed partial class RunSimulation
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
         var reward = definition.Combat.Reward;
-        score += reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
+        var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
+        score += (int)(dragonScore * depthState.ScoreMultiplier);
         dragon = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();

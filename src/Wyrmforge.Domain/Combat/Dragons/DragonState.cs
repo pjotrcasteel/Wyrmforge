@@ -4,14 +4,23 @@ using Wyrmforge.Domain.Combat.Targets;
 
 namespace Wyrmforge.Domain.Combat.Dragons;
 
-public sealed class DragonState(int id, DragonDefinition definition, Vector2D position) : ICombatTarget
+public sealed class DragonState : ICombatTarget
 {
-    public int Id { get; } = id;
-    public DragonDefinition Definition { get; } = definition;
-    public Vector2D Position { get; set; } = position;
+    public DragonState(int id, DragonDefinition definition, Vector2D position, double healthMultiplier = 1)
+    {
+        Id = id;
+        Definition = definition;
+        Position = position;
+        MaxHealth = definition.MaxHealth * healthMultiplier;
+        Health = MaxHealth;
+    }
+
+    public int Id { get; }
+    public DragonDefinition Definition { get; }
+    public Vector2D Position { get; set; }
     public double Radius => Definition.Radius;
-    public double Health { get; set; } = definition.MaxHealth;
-    public double MaxHealth => Definition.MaxHealth;
+    public double Health { get; set; }
+    public double MaxHealth { get; }
     public double Speed => Definition.Speed;
     public CombatStatusCollection Statuses { get; } = new();
     public double AttackCooldown { get; set; } = 2;
