@@ -65,7 +65,7 @@ public sealed class RewardChoiceEngineTests
             new("same", "B"),
         ];
 
-        Assert.Throws<InvalidOperationException>(() => engine.Roll(candidates, 1));
+        Assert.ThrowsException<InvalidOperationException>(() => engine.Roll(candidates, 1));
     }
 
     private sealed class FixedRandomSource(double value) : IRandomSource
