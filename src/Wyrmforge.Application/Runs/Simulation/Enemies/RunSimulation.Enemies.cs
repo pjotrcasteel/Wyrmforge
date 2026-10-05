@@ -96,7 +96,8 @@ public sealed partial class RunSimulation
         }
 
         rawDamage = ApplyChargedScale(rawDamage);
-        player.Health -= buildModifiers.Apply(BuildStatId.DamageTaken, rawDamage * passiveProfile.DamageTakenMultiplier);
+        var encounterDamage = rawDamage * passiveProfile.DamageTakenMultiplier * encounterModifiers.DamageTakenMultiplier;
+        player.Health -= buildModifiers.Apply(BuildStatId.DamageTaken, encounterDamage);
         if (!passiveProfile.IceArmor || player.Barrier) return;
         player.Barrier = true;
         player.BarrierRemaining = 1.2;
