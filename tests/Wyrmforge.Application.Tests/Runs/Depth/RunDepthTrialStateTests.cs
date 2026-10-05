@@ -7,29 +7,41 @@ namespace Wyrmforge.Application.Tests.Runs.Depth;
 public sealed class RunDepthTrialStateTests
 {
     [TestMethod]
-    public void Start_AtDepthTwo_ActivatesFreshTrial()
+    public void Start_AtDepthTwo_ActivatesCompatibilityTrial()
     {
         var state = new RunDepthTrialState();
 
-        state.Start(2);
+        state.Start(RunDifficultyCatalog.Get(2));
 
         Assert.IsTrue(state.IsActive);
         Assert.AreEqual(0, state.Kills);
-        Assert.AreEqual(12, RunDepthTrialState.KillsRequired);
-        Assert.AreEqual(750, RunDepthTrialState.ScoreReward);
+        Assert.AreEqual(12, state.KillsRequired);
+        Assert.AreEqual(750, state.ScoreReward);
     }
 
     [TestMethod]
-    public void RegisterKill_TwelfthKill_CompletesTrialExactlyOnce()
+    public void Start_AtDepthFour_UsesDirectorTrialPressure()
     {
         var state = new RunDepthTrialState();
-        state.Start(2);
 
-        for (var index = 0; index < RunDepthTrialState.KillsRequired - 1; index++) Assert.IsFalse(state.RegisterKill());
+        state.Start(RunDifficultyCatalog.Get(4));
+
+        Assert.IsTrue(state.IsActive);
+        Assert.AreEqual(16, state.KillsRequired);
+        Assert.AreEqual(1600, state.ScoreReward);
+    }
+
+    [TestMethod]
+    public void RegisterKill_RequiredKill_CompletesTrialExactlyOnce()
+    {
+        var state = new RunDepthTrialState();
+        state.Start(RunDifficultyCatalog.Get(3));
+
+        for (var index = 0; index < state.KillsRequired - 1; index++) Assert.IsFalse(state.RegisterKill());
 
         Assert.IsTrue(state.RegisterKill());
         Assert.IsFalse(state.IsActive);
-        Assert.AreEqual(RunDepthTrialState.KillsRequired, state.Kills);
+        Assert.AreEqual(state.KillsRequired, state.Kills);
         Assert.IsFalse(state.RegisterKill());
     }
 }
