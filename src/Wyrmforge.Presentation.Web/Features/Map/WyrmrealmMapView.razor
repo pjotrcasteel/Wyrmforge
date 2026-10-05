@@ -242,7 +242,7 @@
         var badges = new List<NodeBadge>();
         if (route.Reward.Relic is not null) badges.Add(new("💎", "Relic cache", "reward"));
         if (route.Reward.RecoveryFraction > 0) badges.Add(new("♥", $"Restore {route.Reward.RecoveryFraction * 100:0}% health", "heal"));
-        if (route.Hazard is not null) badges.Add(new("⚠", "Unstable rifts", "hazard"));
+        if (route.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out _)) badges.Add(new("⚠", "Unstable rifts", "hazard"));
         return badges;
     }
 
@@ -254,7 +254,10 @@
         if (route.Encounter.EnemySpeedMultiplier > 1.1) traits.Add("➤ Faster enemies");
         if (route.Reward.Relic is not null) traits.Add("💎 Relic cache");
         if (route.Reward.RecoveryFraction > 0) traits.Add($"♥ Restore {route.Reward.RecoveryFraction * 100:0}% health");
-        if (route.Hazard is not null) traits.Add(route.Hazard.IntervalMultiplier < 0.8 ? "⚠ Frequent unstable rifts" : "⚠ Unstable rifts");
+        if (route.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var hazardInterval))
+        {
+            traits.Add(hazardInterval < 0.8 ? "⚠ Frequent unstable rifts" : "⚠ Unstable rifts");
+        }
         if (route.Reward.ScoreBonus > 0) traits.Add($"✦ +{route.Reward.ScoreBonus} base score");
         return traits;
     }
