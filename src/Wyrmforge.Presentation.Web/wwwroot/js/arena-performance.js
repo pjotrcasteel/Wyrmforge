@@ -1,0 +1,77 @@
+import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js';
+
+const frameStates = new WeakMap();
+const activeSimulationIntervalMilliseconds = 1000 / 60;
+const pausedSimulationIntervalMilliseconds = 100;
+
+export function initializeArena(canvas, dotNetReference) {
+    const originalGetBoundingClientRect = canvas.getBoundingClientRect.bind(canvas);
+    const state = {
+        dotNetReference,
+        active: true,
+        lastSimulationTimestamp: performance.now() - activeSimulationIntervalMilliseconds,
+        latestSnapshot: null,
+        originalGetBoundingClientRect,
+        canvasRect: originalGetBoundingClientRect(),
+        resizeObserver: null,
+        onViewportChanged: null,
+        pendingTimer: 0,
+        pendingResolve: null,
+    };
+    state.onViewportChanged = () => state.canvasRect = state.originalGetBoundingClientRect();
+    canvas.getBoundingClientRect = () => state.canvasRect;
+    state.resizeObserver = new ResizeObserver(state.onViewportChanged);
+    state.resizeObserver.observe(canvas);
+    window.addEventListener('resize', state.onViewportChanged);
+    window.addEventListener('scroll', state.onViewportChanged, { passive: true });
+    frameStates.set(canvas, state);
+    initializeBaseArena(canvas, createThrottledReference(state));
+}
+
+export function disposeArena(canvas) {
+    const state = frameStates.get(canvas);
+    if (state) {
+        state.active = false;
+        state.resizeObserver?.disconnect();
+        window.removeEventListener('resize', state.onViewportChanged);
+        window.removeEventListener('scroll', state.onViewportChanged);
+        canvas.getBoundingClientRect = state.originalGetBoundingClientRect;
+        if (state.pendingTimer) window.clearTimeout(state.pendingTimer);
+        state.pendingResolve?.(state.latestSnapshot);
+        frameStates.delete(canvas);
+    }
+    disposeBaseArena(canvas);
+}
+
+function createThrottledReference(state) {
+    return {
+        invokeMethodAsync(method, ...args) {
+            if (method !== 'Frame') return state.dotNetReference.invokeMethodAsync(method, ...args);
+            const now = performance.now();
+            const interval = state.latestSnapshot?.paused ? pausedSimulationIntervalMilliseconds : activeSimulationIntervalMilliseconds;
+            const wait = Math.max(0, interval - (now - state.lastSimulationTimestamp));
+            if (wait <= 0.5) return invokeFrame(state, args);
+            return new Promise((resolve, reject) => {
+                state.pendingResolve = resolve;
+                state.pendingTimer = window.setTimeout(() => {
+                    state.pendingTimer = 0;
+                    state.pendingResolve = null;
+                    if (!state.active) {
+                        resolve(state.latestSnapshot);
+                        return;
+                    }
+                    invokeFrame(state, args).then(resolve, reject);
+                }, wait);
+            });
+        },
+    };
+}
+
+async function invokeFrame(state, args) {
+    const now = performance.now();
+    const delta = Math.min((now - state.lastSimulationTimestamp) / 1000, 0.05);
+    state.lastSimulationTimestamp = now;
+    const snapshot = await state.dotNetReference.invokeMethodAsync('Frame', delta, args[1], args[2], args[3], args[4]);
+    if (state.active) state.latestSnapshot = snapshot;
+    return snapshot;
+}

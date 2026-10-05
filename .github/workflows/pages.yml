@@ -36,7 +36,7 @@ jobs:
         run: dotnet test Wyrmforge.slnx -c Release --no-build
 
       - name: Publish web
-        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web -p:SourceRevisionId=${GITHUB_SHA}
 
       - name: Prepare GitHub Pages
         run: |
