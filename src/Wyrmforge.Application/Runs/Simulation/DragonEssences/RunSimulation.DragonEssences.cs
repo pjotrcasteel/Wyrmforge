@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
@@ -7,7 +8,6 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
-    private DragonEssenceModifiers dragonEssenceModifiers = DragonEssenceModifiers.None;
     private double chargedScaleCooldown;
     private double tempestWingMovementTime;
     private bool tempestWingCharged;
@@ -40,7 +40,7 @@ public sealed partial class RunSimulation
 
         var target = NearestTarget(player.Position);
         if (target is null) return;
-        var damage = 34 * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier;
+        var damage = buildModifiers.Apply(BuildStatId.Damage, 34 * passiveProfile.DamageMultiplier);
         essenceBolts.Add(new EssenceBoltState(player.Position, target.Position, 0.18));
         DamageTarget(target, damage);
         ashenWingCooldown = 1.2;
@@ -64,7 +64,7 @@ public sealed partial class RunSimulation
         if (build.DragonEssences.Contains(DragonEssenceId.CinderHeart) && castCount % 6 == 0)
         {
             const double radius = 125;
-            var damage = 56 * passiveProfile.DamageMultiplier * modifiers.DamageMultiplier;
+            var damage = buildModifiers.Apply(BuildStatId.Damage, 56 * passiveProfile.DamageMultiplier);
             essenceBursts.Add(new EssenceBurstState(player.Position, radius, 0.24));
 
             foreach (var enemy in enemies)
@@ -110,15 +110,7 @@ public sealed partial class RunSimulation
         Splash(target.Position, damage * 0.35, radius, target.Id);
     }
 
-    private void RefreshDragonEssenceModifiers()
-    {
-        var previousMaxHealth = player.MaxHealth;
-        var definitions = build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get);
-        dragonEssenceModifiers = DragonEssenceModifiers.Aggregate(definitions.Select(definition => definition.Modifiers));
-        player.MaxHealth = passiveProfile.MaxHealth + modifiers.MaxHealthBonus + relicModifiers.MaxHealthBonus + dragonEssenceModifiers.MaxHealthBonus;
-        if (player.MaxHealth > previousMaxHealth) player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth - previousMaxHealth);
-        else player.Health = Math.Min(player.Health, player.MaxHealth);
-    }
+    private void RefreshDragonEssenceModifiers() => RefreshBuildModifiers(true);
 
     private sealed class EssenceBurstState(Vector2D position, double radius, double life)
     {
