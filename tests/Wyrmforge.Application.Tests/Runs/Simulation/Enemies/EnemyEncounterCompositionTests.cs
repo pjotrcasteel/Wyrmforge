@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Combat.Enemies;
 
 namespace Wyrmforge.Application.Tests.Runs.Simulation.Enemies;
@@ -8,26 +9,50 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation.Enemies;
 public sealed class EnemyEncounterCompositionTests
 {
     [TestMethod]
-    public void Swarm_ContainsOnlyChasersAndUsesFastCadence()
+    public void CreatePlan_Swarm_SpendsBudgetOnPressureEnemies()
     {
-        for (var index = 0; index < EnemyEncounterComposition.SpawnsPerPattern; index++)
-        {
-            Assert.AreEqual(EnemyKind.Chaser, EnemyEncounterComposition.GetEnemyKind(EnemyEncounterPattern.Swarm, index));
-        }
+        var profile = EnemyEncounterComposition.GetProfile(EnemyEncounterPattern.Swarm);
 
-        Assert.AreEqual(0.55d, EnemyEncounterComposition.GetSpawnIntervalMultiplier(EnemyEncounterPattern.Swarm));
+        var plan = EnemyEncounterComposition.CreatePlan(EnemyEncounterPattern.Swarm, 1, new FirstRandomSource());
+
+        Assert.AreEqual(profile.BaseThreatBudget, plan.ThreatSpent);
+        Assert.IsTrue(plan.Enemies.All(kind => EnemyCatalog.Get(kind).Role == EnemyRole.Pressure));
+        Assert.AreEqual(0.55d, profile.SpawnIntervalMultiplier, 0.0001);
     }
 
     [TestMethod]
-    public void StalkerPressure_AlternatesStalkersAndChasers()
+    public void CreatePlan_StalkerPressure_GuaranteesAmbusherPresence()
     {
-        var kinds = Enumerable.Range(0, EnemyEncounterComposition.SpawnsPerPattern)
-            .Select(index => EnemyEncounterComposition.GetEnemyKind(EnemyEncounterPattern.StalkerPressure, index))
-            .ToArray();
+        var profile = EnemyEncounterComposition.GetProfile(EnemyEncounterPattern.StalkerPressure);
 
-        CollectionAssert.AreEqual(
-            new[] { EnemyKind.RiftStalker, EnemyKind.Chaser, EnemyKind.RiftStalker, EnemyKind.Chaser, EnemyKind.RiftStalker, EnemyKind.Chaser },
-            kinds);
+        var plan = EnemyEncounterComposition.CreatePlan(EnemyEncounterPattern.StalkerPressure, 1, new FirstRandomSource());
+        var ambushers = plan.Enemies.Count(kind => EnemyCatalog.Get(kind).Role == EnemyRole.Ambusher);
+
+        Assert.AreEqual(profile.BaseThreatBudget, plan.ThreatSpent);
+        Assert.IsGreaterThanOrEqualTo(profile.MinimumFor(EnemyRole.Ambusher), ambushers);
+    }
+
+    [TestMethod]
+    public void CreatePlan_ThreatMultiplier_ChangesAvailableBudgetWithoutOverspending()
+    {
+        var profile = EnemyEncounterComposition.GetProfile(EnemyEncounterPattern.Mixed);
+        const double multiplier = 1.5;
+        var expectedBudget = (int)Math.Round(profile.BaseThreatBudget * multiplier);
+
+        var plan = EnemyEncounterComposition.CreatePlan(EnemyEncounterPattern.Mixed, 1, new FirstRandomSource(), multiplier);
+
+        Assert.AreEqual(expectedBudget, plan.ThreatSpent);
+        Assert.IsLessThanOrEqualTo(expectedBudget, plan.Enemies.Sum(kind => EnemyCatalog.Get(kind).ThreatCost));
+    }
+
+    [TestMethod]
+    public void CreatePlan_AllEnemies_AreEligibleForRequestedDepth()
+    {
+        const int depth = 1;
+
+        var plan = EnemyEncounterComposition.CreatePlan(EnemyEncounterPattern.Mixed, depth, new FirstRandomSource());
+
+        Assert.IsTrue(plan.Enemies.All(kind => EnemyCatalog.Get(kind).MinimumDepth <= depth));
     }
 
     [TestMethod]
