@@ -8,11 +8,8 @@ public sealed class RunExtractionState
     public const double Radius = 96;
 
     public bool IsActive { get; private set; }
-
     public bool IsProgressing { get; private set; }
-
     public Vector2D Position { get; private set; } = Vector2D.Zero;
-
     public double RemainingSeconds { get; private set; }
 
     public bool Start(Vector2D position)
@@ -28,8 +25,8 @@ public sealed class RunExtractionState
     public bool Tick(double delta, Vector2D playerPosition)
     {
         if (!IsActive) return false;
-        _ = playerPosition;
-        IsProgressing = true;
+        IsProgressing = Vector2D.Distance(playerPosition, Position) <= Radius;
+        if (!IsProgressing) return false;
         RemainingSeconds = Math.Max(0, RemainingSeconds - Math.Max(0, delta));
         if (RemainingSeconds > 0) return false;
         IsActive = false;
