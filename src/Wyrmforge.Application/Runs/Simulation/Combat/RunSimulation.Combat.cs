@@ -2,6 +2,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Projectiles;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -32,14 +33,10 @@ public sealed partial class RunSimulation
             if (target is null) continue;
             hitCount++;
             var damage = projectile.Damage;
-            var synergySplash = 0d;
-            if (projectile.Spell == SpellId.FireBolt && build.Synergies.Contains(SynergyId.Frostfire) && target.FrozenFor > 0)
-            {
-                damage *= 2;
-                synergySplash = 92;
-            }
+            var interactions = ResolveStatusInteractions(projectile.Spell, target);
+            foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
             if (passiveProfile.Detonation && hitCount % 4 == 0) damage *= passiveProfile.Volcanic ? 2.5 : 2;
-            if (passiveProfile.AbsoluteZero && target.FrozenFor > 0) damage *= 2;
+            if (passiveProfile.AbsoluteZero && target.Statuses.Has(CombatStatusId.Frozen)) damage *= 2;
 
             RegisterElementalImpact(target.Position, projectile.Spell);
             RegisterBurningGround(projectile, target.Position);
@@ -52,7 +49,13 @@ public sealed partial class RunSimulation
             if (!killed && ((passiveProfile.DeepFreeze && hitCount % 4 == 0) || runFreeze)) ApplyFreeze(target, runFreeze ? modifiers.FreezeDuration : 1.25);
 
             if (projectile.SplashRadius > 0) Splash(target.Position, damage * 0.4, projectile.SplashRadius, target.Id);
-            if (synergySplash > 0) Splash(target.Position, damage * 0.45, synergySplash, target.Id);
+            foreach (var interaction in interactions)
+            {
+                if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0)
+                {
+                    Splash(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id);
+                }
+            }
             if (passiveProfile.Wildfire) Splash(target.Position, damage * 0.35, passiveProfile.Volcanic ? 90 : 64, target.Id);
 
             if (projectile.Spell == SpellId.ArcaneOrb)
