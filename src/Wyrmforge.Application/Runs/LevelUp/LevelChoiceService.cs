@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -7,6 +8,8 @@ namespace Wyrmforge.Application.Runs.LevelUp;
 
 public sealed class LevelChoiceService(IRandomSource randomSource)
 {
+    private readonly RewardChoiceEngine rewardChoiceEngine = new(randomSource);
+
     public IReadOnlyList<LevelChoice> Roll(RunBuildState build, int count = 3) => RollInternal(build, null, count);
 
     public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, int count = 3) => RollInternal(build, preferredSchool, count);
@@ -27,12 +30,12 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
         var synergies = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy).ToList();
         if (synergies.Count > 0)
         {
-            choices.Add(TakeRandom(synergies));
+            choices.Add(TakeReward(synergies));
         }
         else if (build.Spells.LearnedCount < 2)
         {
             var newSpells = pool.Where(choice => choice.Kind == LevelChoiceKind.NewSpell).ToList();
-            if (newSpells.Count > 0) choices.Add(TakeRandom(newSpells));
+            if (newSpells.Count > 0) choices.Add(TakeReward(newSpells));
         }
 
         var used = choices.Select(choice => choice.Id).ToHashSet();
@@ -41,14 +44,14 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
             var preferredChoices = pool.Where(choice => !used.Contains(choice.Id) && IsSpellChoiceForSchool(choice, school)).ToList();
             if (preferredChoices.Count > 0)
             {
-                var preferred = TakeRandom(preferredChoices);
+                var preferred = TakeReward(preferredChoices);
                 choices.Add(preferred);
                 used.Add(preferred.Id);
             }
         }
 
         var remainder = pool.Where(choice => !used.Contains(choice.Id)).ToList();
-        while (remainder.Count > 0 && choices.Count < count) choices.Add(TakeRandom(remainder));
+        while (remainder.Count > 0 && choices.Count < count) choices.Add(TakeReward(remainder));
         return choices;
     }
 
@@ -69,12 +72,11 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
 
     private static bool IsSpellChoiceForSchool(LevelChoice choice, SpellSchool school) => choice.Id.StartsWith("spell:", StringComparison.Ordinal) && SpellCatalog.Get(ParseSpell(choice.Id)).School == school;
 
-    private LevelChoice TakeRandom(List<LevelChoice> choices)
+    private LevelChoice TakeReward(List<LevelChoice> choices)
     {
-        var index = randomSource.Next(choices.Count);
-        var choice = choices[index];
-        choices.RemoveAt(index);
-        return choice;
+        var selected = rewardChoiceEngine.Roll(choices.Select(choice => new RewardCandidate<LevelChoice>(choice.Id, choice)), 1).Single().Value;
+        choices.RemoveAll(choice => choice.Id == selected.Id);
+        return selected;
     }
 
     private static RunUpgradeId ParseRunUpgrade(string id) => Enum.Parse<RunUpgradeId>(id[5..]);
