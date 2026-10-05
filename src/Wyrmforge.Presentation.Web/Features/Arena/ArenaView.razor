@@ -13,7 +13,7 @@
     else if (EvacuationActive)
     {
         <div class="encounter-objective" aria-label="Evacuation countdown">
-            <span>EVACUATION SURGE • SURVIVE</span>
+            <span>EVACUATION RITUAL • HOLD THE CIRCLE</span>
             <strong>@Math.Ceiling(EvacuationRemainingSeconds).ToString("0")s</strong>
         </div>
     }
@@ -51,7 +51,9 @@
     }
     else if (AtRefuge)
     {
-        <RefugeOverlay Actions="CurrentCheckpointActions" Visit="CheckpointVisit" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="@(1 + CurrentDepth * 0.5)" Health="CurrentHealth" MaxHealth="CurrentMaxHealth" OwnedRelics="OwnedRelics" EquippedRelics="CurrentRelics" RelicSlots="RelicSlots" OnUse="UseCheckpointActionAsync" OnEquipRelic="EquipRelicAsync" OnUnequipRelic="UnequipRelicAsync" />
+        <RefugeOverlay Actions="CurrentCheckpointActions" Visit="CheckpointVisit" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="NextDepthScoreMultiplier"
+            SecuredEssenceCount="SecuredEssenceCount" Health="CurrentHealth" MaxHealth="CurrentMaxHealth" OwnedRelics="OwnedRelics" EquippedRelics="CurrentRelics"
+            RelicSlots="RelicSlots" OnUse="UseCheckpointActionAsync" OnEquipRelic="EquipRelicAsync" OnUnequipRelic="UnequipRelicAsync" />
     }
     else if (CurrentChoices.Count > 0)
     {
