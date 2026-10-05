@@ -1,6 +1,7 @@
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Combat.Targets;
@@ -45,8 +46,7 @@ public sealed partial class RunSimulation
             var killed = DamageTarget(target, damage, projectile, spawnedForHit);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed && projectile.FreezeDuration > 0) ApplyFreeze(target, projectile.FreezeDuration);
-            var runFreeze = modifiers.FreezeEveryHits > 0 && hitCount % modifiers.FreezeEveryHits == 0;
-            if (!killed && ((passiveProfile.DeepFreeze && hitCount % 4 == 0) || runFreeze)) ApplyFreeze(target, runFreeze ? modifiers.FreezeDuration : 1.25);
+            if (!killed) ApplyHitRules(projectile.Spell, target);
 
             if (projectile.SplashRadius > 0) Splash(target.Position, damage * 0.4, projectile.SplashRadius, target.Id);
             foreach (var interaction in interactions)
@@ -67,6 +67,20 @@ public sealed partial class RunSimulation
         }
         if (consumed is not null) projectiles.RemoveAll(consumed.Contains);
         if (spawned is not null) projectiles.AddRange(spawned);
+    }
+
+    private void ApplyHitRules(SpellId spellId, ICombatTarget target)
+    {
+        var spell = SpellCatalog.Get(spellId);
+        var rules = ResolveBuildRules(new CombatRuleContext(CombatRuleTrigger.Hit, hitCount, spellId, spell.School, target.Statuses));
+        var statusApplied = false;
+        foreach (var rule in rules)
+        {
+            if (rule.Effect is not ApplyStatusRuleEffect statusEffect) continue;
+            ApplyStatus(target, statusEffect.Status, statusEffect.DurationSeconds);
+            statusApplied = true;
+        }
+        if (!statusApplied && passiveProfile.DeepFreeze && hitCount % 4 == 0) ApplyFreeze(target, 1.25);
     }
 
     private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
