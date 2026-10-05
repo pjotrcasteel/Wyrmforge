@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Combat.Targets;
 
 namespace Wyrmforge.Domain.Combat.Enemies;
@@ -21,5 +22,5 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public RiftStalkerBehaviorState? RiftStalker { get; } = kind == EnemyKind.RiftStalker ? new RiftStalkerBehaviorState() : null;
 
-    public double FrozenFor { get; set; }
+    public CombatStatusCollection Statuses { get; } = new();
 }

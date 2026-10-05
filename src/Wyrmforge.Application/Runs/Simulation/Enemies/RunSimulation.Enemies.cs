@@ -56,15 +56,17 @@ public sealed partial class RunSimulation
     {
         foreach (var enemy in enemies)
         {
-            enemy.FrozenFor = Math.Max(0, enemy.FrozenFor - delta);
-            if (enemy.FrozenFor > 0) continue;
+            enemy.Statuses.Tick(delta);
+            var statusTimeScale = enemy.Statuses.TimeScale(false);
+            if (statusTimeScale <= 0) continue;
 
+            var scaledDelta = delta * statusTimeScale;
             var direction = Vector2D.DirectionTo(enemy.Position, player.Position);
             var speed = enemy.Speed;
             var contactDamagePerSecond = 18d;
             if (enemy.RiftStalker is { } stalker)
             {
-                var windupStarted = stalker.Tick(delta, enemy.Position, player.Position);
+                var windupStarted = stalker.Tick(scaledDelta, enemy.Position, player.Position);
                 if (windupStarted) RegisterSplashPulse(enemy.Position, 44, RiftStalkerBehaviorState.WindupSeconds);
                 if (stalker.IsWindingUp) continue;
                 if (stalker.IsLunging)
@@ -75,8 +77,8 @@ public sealed partial class RunSimulation
                 }
             }
 
-            enemy.Position += direction * speed * delta;
-            if (Vector2D.Distance(enemy.Position, player.Position) <= enemy.Radius + player.Radius) DamagePlayer(contactDamagePerSecond * delta);
+            enemy.Position += direction * speed * scaledDelta;
+            if (Vector2D.Distance(enemy.Position, player.Position) <= enemy.Radius + player.Radius) DamagePlayer(contactDamagePerSecond * scaledDelta);
         }
     }
 

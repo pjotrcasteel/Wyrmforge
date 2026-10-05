@@ -12,6 +12,7 @@ using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Stats;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Progression.RunUpgrades;
@@ -217,7 +218,7 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
             null,
-            enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.FrozenFor > 0,
+            enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
                 Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),

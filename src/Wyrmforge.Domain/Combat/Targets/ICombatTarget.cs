@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Combat.Statuses;
 
 namespace Wyrmforge.Domain.Combat.Targets;
 
@@ -14,5 +15,5 @@ public interface ICombatTarget
 
     double MaxHealth { get; }
 
-    double FrozenFor { get; set; }
+    CombatStatusCollection Statuses { get; }
 }
