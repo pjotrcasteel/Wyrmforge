@@ -39,6 +39,7 @@ public sealed partial class RunSimulation
         var completedNode = mapState.CurrentNode;
         if (!mapState.RegisterKill() || completedNode is null) return;
         completedRouteNodes.Add(completedNode);
+        RefreshBuildModifiers(true);
         ApplyRouteReward(completedNode.Route?.Reward);
         if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;
