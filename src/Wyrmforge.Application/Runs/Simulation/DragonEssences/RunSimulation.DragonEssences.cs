@@ -40,7 +40,7 @@ public sealed partial class RunSimulation
 
         var target = NearestTarget(player.Position);
         if (target is null) return;
-        var damage = buildModifiers.Apply(BuildStatId.Damage, 34 * passiveProfile.DamageMultiplier);
+        var damage = runUpgradeModifiers.Apply(BuildStatId.Damage, 34 * passiveProfile.DamageMultiplier);
         essenceBolts.Add(new EssenceBoltState(player.Position, target.Position, 0.18));
         DamageTarget(target, damage);
         ashenWingCooldown = 1.2;
@@ -64,7 +64,7 @@ public sealed partial class RunSimulation
         if (build.DragonEssences.Contains(DragonEssenceId.CinderHeart) && castCount % 6 == 0)
         {
             const double radius = 125;
-            var damage = buildModifiers.Apply(BuildStatId.Damage, 56 * passiveProfile.DamageMultiplier);
+            var damage = runUpgradeModifiers.Apply(BuildStatId.Damage, 56 * passiveProfile.DamageMultiplier);
             essenceBursts.Add(new EssenceBurstState(player.Position, radius, 0.24));
 
             foreach (var enemy in enemies)
