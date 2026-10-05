@@ -1,7 +1,7 @@
 namespace Wyrmforge.Domain.Combat.Abilities;
 
 public sealed record AbilityProfile(double BaseCooldownSeconds, double CooldownReductionPerRank, double BaseDamage, double DamageIncreasePerRank,
-    AbilityDeliveryProfile Delivery)
+    AbilityDeliveryProfile Delivery, AbilityStatusProfile? Status = null)
 {
     public double CalculateCooldownSeconds(int rank)
     {
