@@ -67,8 +67,8 @@ public sealed class WyrmrealmMapStateTests
 
         Assert.IsTrue(rare.PreviousNodeIds.Count >= 2);
         Assert.IsNotNull(rare.Route?.Reward.Relic);
-        Assert.IsNotNull(rare.Route?.Hazard);
-        Assert.IsTrue(rare.Route!.Reward.RecoveryFraction >= 0.1);
+        Assert.IsTrue(rare.Route!.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out _));
+        Assert.IsTrue(rare.Route.Reward.RecoveryFraction >= 0.1);
     }
 
     [TestMethod]
