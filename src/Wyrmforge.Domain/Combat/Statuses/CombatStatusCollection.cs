@@ -10,6 +10,17 @@ public sealed class CombatStatusCollection
 
     public double RemainingSeconds(CombatStatusId id) => active.TryGetValue(id, out var status) && status.IsActive ? status.RemainingSeconds : 0;
 
+    public double TimeScale(bool boss)
+    {
+        var result = 1d;
+        foreach (var status in active.Values)
+        {
+            if (!status.IsActive) continue;
+            result *= boss ? status.Definition.BossTimeScale : status.Definition.TimeScale;
+        }
+        return Math.Clamp(result, 0, 1);
+    }
+
     public void Apply(CombatStatusDefinition definition, double durationSeconds, int stacks = 1)
     {
         if (durationSeconds <= 0 || stacks <= 0) return;
