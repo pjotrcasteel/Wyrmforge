@@ -262,7 +262,7 @@ public sealed partial class RunSimulation
         if (dragon is not { Health: > 0 } activeDragon) return null;
         var definition = activeDragon.Definition;
         return new DragonRenderSnapshot(definition.Name, definition.Title, definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius,
-            activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen));
+            activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses));
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
