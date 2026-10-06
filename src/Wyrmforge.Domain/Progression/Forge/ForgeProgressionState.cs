@@ -64,8 +64,14 @@ public sealed class ForgeProgressionState
     public void RestoreMasteries(IEnumerable<ForgeMasteryId> masteries)
     {
         ArgumentNullException.ThrowIfNull(masteries);
+        var requested = masteries.ToHashSet();
         forged.Clear();
-        foreach (var mastery in masteries.Where(id => ForgeMasteryCatalog.All.Any(definition => definition.Id == id))) forged.Add(mastery);
+        foreach (var definition in ForgeMasteryCatalog.All.OrderBy(definition => definition.Tier))
+        {
+            if (!requested.Contains(definition.Id) || !discovered.Contains(definition.Lineage)) continue;
+            if (definition.Prerequisite is { } prerequisite && !forged.Contains(prerequisite)) continue;
+            forged.Add(definition.Id);
+        }
     }
 
     private IEnumerable<TUnlock> ForgedUnlocks<TUnlock>() where TUnlock : ForgeFeatureUnlock => ForgeMasteryCatalog.All
