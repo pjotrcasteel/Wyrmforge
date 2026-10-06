@@ -14,7 +14,7 @@ public sealed partial class RunSimulation
             if (stacks <= 0) continue;
             (result ??= []).Add(new CombatStatusRenderSnapshot(definition.Id, stacks));
         }
-        return result ?? Array.Empty<CombatStatusRenderSnapshot>();
+        return result is null ? Array.Empty<CombatStatusRenderSnapshot>() : result;
     }
 
     private void UpdateStatusDamage(double delta)
