@@ -25,6 +25,7 @@ public partial class Home
     private RunSummary? summary;
     private DragonEssenceId? selectedOffering;
     private DragonEssenceId? activeOffering;
+    private int? activeRunSeed;
     private int bestScore;
     private int runNumber;
     private bool runActive;
@@ -52,6 +53,7 @@ public partial class Home
     {
         summary = null;
         activeOffering = null;
+        activeRunSeed = null;
         if (selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Consume(offering))
         {
             activeOffering = offering;
@@ -80,10 +82,21 @@ public partial class Home
         await TrySetBestScoreAsync(bestScore);
     }
 
+    private Task ReplayRunAsync()
+    {
+        if (summary is null) return Task.CompletedTask;
+        activeRunSeed = summary.Seed;
+        summary = null;
+        runNumber++;
+        runActive = true;
+        return Task.CompletedTask;
+    }
+
     private void ReturnToForge()
     {
         summary = null;
         activeOffering = null;
+        activeRunSeed = null;
         runActive = false;
     }
 
