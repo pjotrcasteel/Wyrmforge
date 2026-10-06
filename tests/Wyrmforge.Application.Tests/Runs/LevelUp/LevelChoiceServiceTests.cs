@@ -62,6 +62,23 @@ public sealed class LevelChoiceServiceTests
         Assert.AreEqual(SpellSchool.Storm, resonantSchool);
     }
 
+    [TestMethod]
+    public void Roll_WithForgeContentPool_NeverOffersLockedSpell()
+    {
+        HashSet<SpellId> available = [SpellId.ArcaneOrb, SpellId.FireBolt, SpellId.FrostShard, SpellId.ChainLightning];
+        var service = new LevelChoiceService(new FirstRandomSource(), available);
+
+        var choices = service.Roll(new RunBuildState(), count: 20);
+        var spellIds = choices
+            .Where(choice => choice.Id.StartsWith("spell:", StringComparison.Ordinal))
+            .Select(choice => Enum.Parse<SpellId>(choice.Id[6..]))
+            .ToArray();
+
+        Assert.IsTrue(spellIds.Length > 0);
+        Assert.IsTrue(spellIds.All(available.Contains));
+        Assert.IsFalse(spellIds.Contains(SpellId.CinderNeedle));
+    }
+
     private sealed class FixedRandomSource(double value) : IRandomSource
     {
         public int Next(int exclusiveMax) => 0;

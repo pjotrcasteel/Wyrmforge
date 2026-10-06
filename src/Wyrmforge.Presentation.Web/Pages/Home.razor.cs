@@ -18,6 +18,7 @@ public partial class Home
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
     private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
+    private const string ForgeMasteryKey = "wyrmforge.forgeMastery";
     private readonly PassiveTreeSelection selection = new();
     private readonly DragonEssenceVault essenceVault = new();
     private readonly ArcaneCodex arcaneCodex = new();
@@ -38,6 +39,7 @@ public partial class Home
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
         await TryLoadForgeProgressionAsync();
+        await TryLoadForgeMasteryAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
         StateHasChanged();
@@ -47,6 +49,15 @@ public partial class Home
     {
         if (essenceVault.Count(id) <= 0 || !RunOfferingCatalog.CanOffer(id, forgeProgression)) return;
         selectedOffering = selectedOffering == id ? null : id;
+    }
+
+    private async Task ForgeMasteryAsync(ForgeMasteryId id)
+    {
+        var cost = ForgeMasteryCatalog.Get(id).Cost;
+        if (!forgeProgression.Forge(id, essenceVault)) return;
+        if (selectedOffering == cost && essenceVault.Count(cost) == 0) selectedOffering = null;
+        await TrySetEssenceVaultAsync();
+        await TrySetForgeMasteryAsync();
     }
 
     private async Task StartRunAsync()
@@ -142,6 +153,22 @@ public partial class Home
         catch (JsonException) { }
     }
 
+    private async Task TryLoadForgeMasteryAsync()
+    {
+        try
+        {
+            var storedValue = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ForgeMasteryKey);
+            if (string.IsNullOrWhiteSpace(storedValue)) return;
+            var storedMasteries = JsonSerializer.Deserialize<string[]>(storedValue);
+            if (storedMasteries is null) return;
+            var masteryIds = new List<ForgeMasteryId>();
+            foreach (var storedMastery in storedMasteries) if (Enum.TryParse<ForgeMasteryId>(storedMastery, out var masteryId)) masteryIds.Add(masteryId);
+            forgeProgression.RestoreMasteries(masteryIds);
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
     private async Task TryLoadArcaneCodexAsync()
     {
         try
@@ -174,6 +201,16 @@ public partial class Home
         {
             var discoveries = forgeProgression.Discovered.Select(discovery => discovery.ToString()).ToArray();
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ForgeProgressionKey, JsonSerializer.Serialize(discoveries));
+        }
+        catch (JSException) { }
+    }
+
+    private async Task TrySetForgeMasteryAsync()
+    {
+        try
+        {
+            var masteries = forgeProgression.Forged.Select(mastery => mastery.ToString()).ToArray();
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ForgeMasteryKey, JsonSerializer.Serialize(masteries));
         }
         catch (JSException) { }
     }

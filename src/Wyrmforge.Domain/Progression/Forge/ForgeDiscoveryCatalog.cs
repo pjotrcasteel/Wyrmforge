@@ -9,31 +9,27 @@ public static class ForgeDiscoveryCatalog
         Create(
             ForgeDiscoveryId.Ashcraft,
             "Ashcraft",
-            "Ashfang's stolen furnace teaches the Forge how to shape fire-aligned offerings.",
+            "Ashfang's stolen furnace reveals a permanent craft lineage built from heart, fang, and wing.",
             [DragonEssenceId.CinderHeart, DragonEssenceId.MoltenFang, DragonEssenceId.AshenWing]),
         Create(
             ForgeDiscoveryId.Stormcraft,
             "Stormcraft",
-            "Stormcoil's living charge teaches the Forge how to bind momentum and lightning into offerings.",
+            "Stormcoil's living charge reveals a permanent craft lineage built from heart, scale, and wing.",
             [DragonEssenceId.StormHeart, DragonEssenceId.ChargedScale, DragonEssenceId.TempestWing]),
         Create(
             ForgeDiscoveryId.Rimecraft,
             "Rimecraft",
-            "Rimeclaw's impossible frost teaches the Forge how to preserve glacial power between runs.",
+            "Rimeclaw's impossible frost reveals a permanent craft lineage built from heart, scale, and wing.",
             [DragonEssenceId.RimeHeart, DragonEssenceId.GlacialScale, DragonEssenceId.HoarfrostWing]),
         Create(
             ForgeDiscoveryId.Voidcraft,
             "Voidcraft",
-            "Voidweaver's aether teaches the Forge how to anchor unstable arcane offerings.",
+            "Voidweaver's aether reveals a permanent craft lineage built from heart, scale, and wing.",
             [DragonEssenceId.VoidHeart, DragonEssenceId.NullScale, DragonEssenceId.PhaseWing]),
     ];
 
     public static ForgeDiscoveryDefinition Get(ForgeDiscoveryId id) => All.Single(definition => definition.Id == id);
 
-    private static ForgeDiscoveryDefinition Create(ForgeDiscoveryId id, string name, string description, DragonEssenceId[] essences)
-    {
-        var essenceSet = new HashSet<DragonEssenceId>(essences);
-        return new ForgeDiscoveryDefinition(id, name, description, new AnySecuredEssenceRequirement(essenceSet),
-            essences.Select(essence => (ForgeFeatureUnlock)new RunOfferingUnlock(essence)).ToArray());
-    }
+    private static ForgeDiscoveryDefinition Create(ForgeDiscoveryId id, string name, string description, DragonEssenceId[] essences) =>
+        new(id, name, description, new AnySecuredEssenceRequirement(new HashSet<DragonEssenceId>(essences)), []);
 }

@@ -11,6 +11,7 @@ using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Relics;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
@@ -26,6 +27,7 @@ public partial class ArenaView : IAsyncDisposable
     [Inject] public RunSimulationFactory SimulationFactory { get; set; } = null!;
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, EditorRequired] public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
+    [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
     [Parameter] public int? RunSeed { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
@@ -60,7 +62,7 @@ public partial class ArenaView : IAsyncDisposable
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
 
-    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed);
+    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
