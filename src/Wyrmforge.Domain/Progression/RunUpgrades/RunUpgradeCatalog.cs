@@ -57,6 +57,28 @@ public static class RunUpgradeCatalog
             Rules(new CombatRuleDefinition(CombatRuleTrigger.Cast, 7, new EchoCastRuleEffect(0.55))),
             Rules(new CombatRuleDefinition(CombatRuleTrigger.Cast, 5, new EchoCastRuleEffect(0.8))),
         ]),
+        new(RunUpgradeId.Bulwark, "Bulwark", "Harden your warding. Take 8% less damage per rank.", "⬟",
+        [
+            Stats(Multiply(BuildStatId.DamageTaken, 0.92)),
+            Stats(Multiply(BuildStatId.DamageTaken, 0.84)),
+            Stats(Multiply(BuildStatId.DamageTaken, 0.76)),
+        ]),
+        new(RunUpgradeId.Velocity, "Velocity", "Projectiles travel 20% faster per rank.", "➤",
+        [
+            Stats(Percent(BuildStatId.ProjectileSpeed, 0.20)),
+            Stats(Percent(BuildStatId.ProjectileSpeed, 0.40)),
+            Stats(Percent(BuildStatId.ProjectileSpeed, 0.60)),
+        ]),
+        new(RunUpgradeId.Emberbrand, "Emberbrand", "Repeated hits brand enemies with Burning.", "♨",
+        [
+            Rules(new CombatRuleDefinition(CombatRuleTrigger.Hit, 6, new ApplyStatusRuleEffect(CombatStatusId.Burning, 3.5))),
+            Rules(new CombatRuleDefinition(CombatRuleTrigger.Hit, 4, new ApplyStatusRuleEffect(CombatStatusId.Burning, 4.5))),
+        ]),
+        new(RunUpgradeId.StaticCharge, "Static Charge", "Repeated hits Shock enemies, making follow-up damage stronger.", "↯",
+        [
+            Rules(new CombatRuleDefinition(CombatRuleTrigger.Hit, 7, new ApplyStatusRuleEffect(CombatStatusId.Shocked, 3))),
+            Rules(new CombatRuleDefinition(CombatRuleTrigger.Hit, 5, new ApplyStatusRuleEffect(CombatStatusId.Shocked, 4))),
+        ]),
     ];
 
     public static RunUpgradeDefinition Get(RunUpgradeId id) => All.Single(upgrade => upgrade.Id == id);
