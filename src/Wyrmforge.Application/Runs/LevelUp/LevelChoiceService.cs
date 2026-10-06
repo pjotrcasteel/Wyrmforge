@@ -103,7 +103,7 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
     {
         var representedSchools = LearnedSchools(build);
         var candidates = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade
-            || choice.Kind == LevelChoiceKind.Rune && (RuneSchool(ParseRunUpgrade(choice.Id)) is not { } school || representedSchools.Contains(school))).ToList();
+            || choice.Kind == LevelChoiceKind.Rune && RuneFitsRepresentedSchools(choice, representedSchools)).ToList();
         if (candidates.Count == 0) candidates = pool.Where(choice => choice.Kind != LevelChoiceKind.Synergy).ToList();
         TakeInto(result, pool, candidates, resonance, LevelChoiceDraftRole.Reinforce, choice => ReinforceHint(choice, representedSchools));
     }
@@ -206,6 +206,12 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
         .Where(spell => build.Spells[spell.Id] > 0)
         .Select(spell => spell.School)
         .ToHashSet();
+
+    private static bool RuneFitsRepresentedSchools(LevelChoice choice, IReadOnlySet<SpellSchool> representedSchools)
+    {
+        var school = RuneSchool(ParseRunUpgrade(choice.Id));
+        return school is null || representedSchools.Contains(school.Value);
+    }
 
     private static string ReinforceHint(LevelChoice choice, IReadOnlySet<SpellSchool> representedSchools)
     {
