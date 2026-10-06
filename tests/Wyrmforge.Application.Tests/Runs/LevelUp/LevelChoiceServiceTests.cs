@@ -49,8 +49,8 @@ public sealed class LevelChoiceServiceTests
     public void Roll_WithStrongResonance_SoftlyBiasesMatchingSpellChoice()
     {
         var build = new RunBuildState();
-        var neutralService = new LevelChoiceService(new FixedRandomSource(0.6));
-        var resonantService = new LevelChoiceService(new FixedRandomSource(0.6));
+        var neutralService = new LevelChoiceService(new FixedRandomSource(0.25));
+        var resonantService = new LevelChoiceService(new FixedRandomSource(0.25));
         RunResonanceEntry[] resonance = [new(SpellSchool.Storm, 20)];
 
         var neutral = neutralService.Roll(build, count: 1);
