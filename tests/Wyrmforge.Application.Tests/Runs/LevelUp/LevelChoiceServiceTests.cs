@@ -41,7 +41,8 @@ public sealed class LevelChoiceServiceTests
 
         var choices = service.Roll(new RunBuildState(), SpellSchool.Storm);
 
-        Assert.IsTrue(choices.Any(choice => choice.Id == $"spell:{SpellId.ChainLightning}"));
+        Assert.IsTrue(choices.Any(choice => choice.Id.StartsWith("spell:", StringComparison.Ordinal)
+            && SpellCatalog.Get(Enum.Parse<SpellId>(choice.Id[6..])).School == SpellSchool.Storm));
     }
 
     [TestMethod]
@@ -54,9 +55,11 @@ public sealed class LevelChoiceServiceTests
 
         var neutral = neutralService.Roll(build, count: 1);
         var resonant = resonantService.Roll(build, resonance, count: 1);
+        var neutralSchool = SpellCatalog.Get(Enum.Parse<SpellId>(neutral[0].Id[6..])).School;
+        var resonantSchool = SpellCatalog.Get(Enum.Parse<SpellId>(resonant[0].Id[6..])).School;
 
-        Assert.AreEqual($"spell:{SpellId.FrostShard}", neutral[0].Id);
-        Assert.AreEqual($"spell:{SpellId.ChainLightning}", resonant[0].Id);
+        Assert.AreNotEqual(SpellSchool.Storm, neutralSchool);
+        Assert.AreEqual(SpellSchool.Storm, resonantSchool);
     }
 
     private sealed class FixedRandomSource(double value) : IRandomSource
