@@ -13,7 +13,7 @@ public sealed class RunVarietyCatalogTests
     [TestMethod]
     public void SpellCatalog_VarietyPass_ProvidesTwoSpellsPerSchool()
     {
-        Assert.HasCount(8, SpellCatalog.All);
+        Assert.AreEqual(8, SpellCatalog.All.Count);
         foreach (var school in Enum.GetValues<SpellSchool>()) Assert.AreEqual(2, SpellCatalog.All.Count(spell => spell.School == school));
     }
 
@@ -29,7 +29,7 @@ public sealed class RunVarietyCatalogTests
     [TestMethod]
     public void RunUpgradeCatalog_VarietyPass_ExpandsChoicePool()
     {
-        Assert.HasCount(12, RunUpgradeCatalog.All);
+        Assert.AreEqual(12, RunUpgradeCatalog.All.Count);
         Assert.IsNotNull(RunUpgradeCatalog.Get(RunUpgradeId.Bulwark));
         Assert.IsNotNull(RunUpgradeCatalog.Get(RunUpgradeId.Velocity));
         Assert.IsNotNull(RunUpgradeCatalog.Get(RunUpgradeId.Emberbrand));
@@ -39,7 +39,7 @@ public sealed class RunVarietyCatalogTests
     [TestMethod]
     public void RelicCatalog_VarietyPass_ExpandsChoicePool()
     {
-        Assert.HasCount(8, RelicCatalog.All);
+        Assert.AreEqual(8, RelicCatalog.All.Count);
         Assert.AreEqual(RelicCatalog.All.Count, RelicCatalog.All.Select(relic => relic.Id).Distinct().Count());
     }
 
