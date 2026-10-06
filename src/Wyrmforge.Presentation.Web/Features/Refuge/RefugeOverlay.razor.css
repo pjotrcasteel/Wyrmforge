@@ -34,3 +34,18 @@
 .refuge-action small { margin-top: 8px; color: #7f8c84; line-height: 1.45; }
 .refuge-action-footer { margin-top: auto; padding-top: 18px; color: #6e7e74; font-size: .59rem; font-weight: 900; letter-spacing: .1em; }
 @media (max-width:760px) { .refuge-card { padding: 20px 14px; } .refuge-heading, .relic-grid, .refuge-actions { grid-template-columns: 1fr; } .refuge-secured { align-items: flex-start; flex-direction: column; gap: 4px; } .refuge-secured p { text-align: left; } .refuge-action { min-height: 0; } }
+
+.refuge-decision { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:stretch; gap:10px; margin-bottom:20px; }
+.refuge-decision > b { align-self:center; color:#59645d; font-size:.58rem; letter-spacing:.12em; }
+.refuge-decision section { display:grid; gap:4px; padding:12px 13px; border-radius:13px; }
+.refuge-decision section > span { font-size:.56rem; font-weight:900; letter-spacing:.12em; }
+.refuge-decision section > strong { font-size:.86rem; }
+.refuge-decision section > small { line-height:1.4; }
+.decision-safe { border:1px solid rgba(111,190,143,.24); background:rgba(61,117,82,.09); }
+.decision-safe > span { color:#83b896; }
+.decision-safe > small { color:#7d9184; }
+.decision-risk { border:1px solid rgba(220,132,93,.26); background:rgba(117,60,39,.08); }
+.decision-risk > span { color:#c58a6d; }
+.decision-risk > small { color:#927d73; }
+.decision-risk.sealed { opacity:.48; border-color:rgba(255,255,255,.09); background:rgba(255,255,255,.025); }
+@media (max-width:760px) { .refuge-decision { grid-template-columns:1fr; } .refuge-decision > b { justify-self:center; } }
