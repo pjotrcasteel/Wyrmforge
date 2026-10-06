@@ -10,4 +10,8 @@ public enum RunUpgradeId
     FrostTouch,
     ChainSpark,
     ArcaneEcho,
+    Bulwark,
+    Velocity,
+    Emberbrand,
+    StaticCharge,
 }
