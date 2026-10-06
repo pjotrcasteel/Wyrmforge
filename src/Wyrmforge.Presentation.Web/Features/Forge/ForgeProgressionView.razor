@@ -1,0 +1,126 @@
+@using Wyrmforge.Application.Runs.Offerings
+@using Wyrmforge.Domain.Progression.Forge
+@using Wyrmforge.Domain.Progression.Relics
+@using Wyrmforge.Domain.Spells
+
+<section class="forge-view">
+    <header class="forge-heading">
+        <div>
+            <span class="section-kicker">THE FORGE</span>
+            <h1>Turn stolen power into possibilities.</h1>
+            <p>Essence survives only when you extract. Spend it here to unlock new offerings, spells and relics for future runs.</p>
+        </div>
+        <div class="forge-count"><strong>@Progression.MasteryCount</strong><span>of @ForgeMasteryCatalog.All.Count masteries forged</span></div>
+    </header>
+
+    <section class="vault-panel">
+        <div class="panel-heading"><span class="section-kicker">ESSENCE VAULT</span><strong>@Vault.TotalCount secured</strong></div>
+        <div class="vault-items">
+            @if (Vault.TotalCount == 0)
+            {
+                <span class="empty-copy">Empty — successfully extract Wyrm Essence to bring it home.</span>
+            }
+            else
+            {
+                @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0))
+                {
+                    <span class="essence-chip"><b>@essence.Icon</b>@essence.Name <strong>×@Vault.Count(essence.Id)</strong></span>
+                }
+            }
+        </div>
+    </section>
+
+    <section class="offering-panel">
+        <div class="panel-heading">
+            <div><span class="section-kicker">NEXT RUN OFFERING</span><small>Spend one secured Essence when the run begins.</small></div>
+            @if (SelectedOffering is not null) { <button class="clear-offering" @onclick="ClearOfferingAsync">CLEAR</button> }
+        </div>
+        <div class="offering-grid">
+            @foreach (var essence in AvailableOfferings)
+            {
+                var selected = SelectedOffering == essence.Id;
+                <button class="offering-card @(selected ? "selected" : string.Empty)" @onclick="() => SelectOfferingAsync(essence.Id)">
+                    <span class="offering-icon">@essence.Icon</span>
+                    <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(essence.Id).Effect</small></div>
+                    <b>×@Vault.Count(essence.Id)</b>
+                </button>
+            }
+            @if (AvailableOfferings.Count == 0)
+            {
+                <span class="empty-copy">Forge an offering recipe and keep matching Essence in the vault to use it here.</span>
+            }
+        </div>
+    </section>
+
+    <div class="lineage-grid">
+        @foreach (var discovery in ForgeDiscoveryCatalog.All)
+        {
+            var discovered = Progression.Contains(discovery.Id);
+            <article class="lineage-card @(discovered ? "discovered" : "locked")">
+                <header>
+                    <span>@(discovered ? "DISCOVERED LINEAGE" : "UNKNOWN LINEAGE")</span>
+                    <h2>@discovery.Name</h2>
+                    <p>@(discovered ? discovery.Description : "Secure any Essence from this Wyrm lineage to reveal its Forge path.")</p>
+                </header>
+                <div class="mastery-stack">
+                    @foreach (var mastery in ForgeMasteryCatalog.For(discovery.Id))
+                    {
+                        var cost = DragonEssenceCatalog.Get(mastery.Cost);
+                        var forged = Progression.IsForged(mastery.Id);
+                        <section class="mastery-node @MasteryClass(mastery)">
+                            <div class="mastery-title"><span>TIER @mastery.Tier</span><strong>@mastery.Name</strong></div>
+                            @if (discovered)
+                            {
+                                <p>@mastery.Description</p>
+                                <em>@UnlockSummary(mastery)</em>
+                                <button disabled="@(forged || !Progression.CanForge(mastery.Id, Vault))" @onclick="() => ForgeAsync(mastery.Id)">@MasteryAction(mastery, cost)</button>
+                            }
+                            else
+                            {
+                                <p>Blueprint hidden until this lineage is discovered.</p>
+                            }
+                        </section>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
+    [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
+    [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
+
+    private IReadOnlyList<DragonEssenceDefinition> AvailableOfferings => DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id, Progression)).ToArray();
+
+    private string MasteryClass(ForgeMasteryDefinition mastery)
+    {
+        if (Progression.IsForged(mastery.Id)) return "forged";
+        if (!Progression.Contains(mastery.Lineage)) return "hidden";
+        if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return "blocked";
+        return Vault.Count(mastery.Cost) > 0 ? "ready" : "available";
+    }
+
+    private string MasteryAction(ForgeMasteryDefinition mastery, DragonEssenceDefinition cost)
+    {
+        if (Progression.IsForged(mastery.Id)) return "FORGED";
+        if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return "LOCKED BY PREVIOUS TIER";
+        return Vault.Count(mastery.Cost) > 0 ? $"FORGE • {cost.Icon} {cost.Name}" : $"NEED • {cost.Icon} {cost.Name}";
+    }
+
+    private static string UnlockSummary(ForgeMasteryDefinition mastery) => string.Join(" • ", mastery.Unlocks.Select(UnlockLabel));
+    private static string UnlockLabel(ForgeFeatureUnlock unlock) => unlock switch
+    {
+        RunOfferingUnlock offering => $"Offering: {DragonEssenceCatalog.Get(offering.EssenceId).Name}",
+        SpellPoolUnlock spell => $"Spell: {SpellCatalog.Get(spell.SpellId).Name}",
+        RelicPoolUnlock relic => $"Relic: {RelicCatalog.Get(relic.RelicId).Name}",
+        _ => "New possibility",
+    };
+
+    private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
+    private Task ClearOfferingAsync() => SelectedOffering is { } id ? OnOfferingChanged.InvokeAsync(id) : Task.CompletedTask;
+    private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
+}
