@@ -81,3 +81,8 @@
         grid-template-columns: 1fr;
     }
 }
+
+.run-story { margin:0 0 10px; padding:13px 14px; border:1px solid rgba(184,135,255,.18); border-radius:12px; background:linear-gradient(145deg,rgba(80,50,103,.1),rgba(255,255,255,.018)); }
+.run-story > span { display:block; margin-bottom:5px; color:#a17ac6; font-size:.59rem; font-weight:900; letter-spacing:.12em; }
+.run-story > strong { display:block; color:#eadff1; font-size:.9rem; }
+.run-story > small { display:block; margin-top:4px; color:#918498; line-height:1.4; }
