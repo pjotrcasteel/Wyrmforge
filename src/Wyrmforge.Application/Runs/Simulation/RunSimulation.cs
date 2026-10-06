@@ -179,7 +179,7 @@ public sealed partial class RunSimulation
     {
         if (!AtCheckpoint || !depthState.CanPushDeeper || !checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
         if (!depthState.PushDeeper()) return false;
-        mapState = new WyrmrealmMapState(depthState.Depth);
+        mapState = CreateSeededMapState(depthState.Depth);
         depthTrialState.Start(depthState.Difficulty);
         attractedDragon = null;
         dragonPending = false;
