@@ -28,6 +28,17 @@ public sealed class RelicChoiceServiceTests
         Assert.IsFalse(choices.Any(choice => choice.Id == RelicId.EmberheartCharm));
     }
 
+    [TestMethod]
+    public void Roll_WithForgeContentPool_NeverOffersLockedRelic()
+    {
+        HashSet<RelicId> available = [RelicId.ChronoglassShard, RelicId.GalefootSigil, RelicId.Vitalstone];
+
+        var choices = new RelicChoiceService().Roll(new RelicInventoryState(), new FirstRandomSource(), available);
+
+        CollectionAssert.AreEquivalent(available.ToArray(), choices.Select(choice => choice.Id).ToArray());
+        Assert.IsFalse(choices.Any(choice => choice.Id == RelicId.Stormhook));
+    }
+
     private sealed class FirstRandomSource : IRandomSource
     {
         public int Next(int exclusiveMax) => 0;
