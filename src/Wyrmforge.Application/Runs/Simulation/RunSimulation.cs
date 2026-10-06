@@ -116,6 +116,8 @@ public sealed partial class RunSimulation
         UpdatePlayer(delta, movement, width, height);
         UpdateRouteHazards(delta);
         UpdateDragonEssenceEffects(delta, movement.IsMoving);
+        UpdateStatusDamage(delta);
+        enemies.RemoveAll(enemy => enemy.Health <= 0);
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateSpellcasting(delta, movement.IsMoving);
@@ -221,7 +223,7 @@ public sealed partial class RunSimulation
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier),
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
-                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id))).ToArray(),
+                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),

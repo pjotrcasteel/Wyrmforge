@@ -51,7 +51,7 @@ public sealed partial class RunSimulation
         var scale = 1 + elapsed / 80;
         var routeHealth = Math.Max(0.25, CurrentRoute?.Encounter.EnemyHealthMultiplier ?? 1) * encounterModifiers.EnemyHealthMultiplier;
         var routeSpeed = Math.Max(0.25, CurrentRoute?.Encounter.EnemySpeedMultiplier ?? 1) * encounterModifiers.EnemySpeedMultiplier;
-        var health = 36 * scale * depthState.EnemyHealthMultiplier * routeHealth * definition.HealthMultiplier;
+        var health = 60 * scale * depthState.EnemyHealthMultiplier * routeHealth * definition.HealthMultiplier;
         var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier * routeSpeed * definition.SpeedMultiplier;
         enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, kind));
     }
