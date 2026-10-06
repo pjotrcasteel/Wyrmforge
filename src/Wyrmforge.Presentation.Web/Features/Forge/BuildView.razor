@@ -1,0 +1,54 @@
+<section class="build-view">
+    <header class="build-heading">
+        <div>
+            <span class="section-kicker">ARCANE BUILD</span>
+            <h1>Shape your starting intent.</h1>
+            <p>The current tree remains intact for 0.0.60. The Arcane Web replaces it in 0.0.61.</p>
+        </div>
+        <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points left</span></div>
+    </header>
+
+    <div class="build-toolbar">
+        <div class="build-legend"><span>Minor = additive</span><span>Major = multiplicative</span><span>Epic = build changing</span><span>Legendary = rule changing</span></div>
+        <button class="secondary" @onclick="Reset">Respec all</button>
+    </div>
+
+    <div class="schools">
+        @foreach (var school in Enum.GetValues<PassiveSchool>())
+        {
+            <section class="school school-@school.ToString().ToLowerInvariant()">
+                <h2><span>@SchoolIcon(school)</span>@school</h2>
+                <div class="node-stack">
+                    @foreach (var node in Nodes(school))
+                    {
+                        <button class="@NodeClass(node)" disabled="@IsDisabled(node)" @onclick="() => Toggle(node)">
+                            <span class="tier-label">@node.Tier • @node.Cost pt@(node.Cost == 1 ? string.Empty : "s")</span>
+                            <strong>@node.Name</strong>
+                            <small>@node.Description</small>
+                        </button>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+
+    private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
+    private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
+    private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
+    private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
+
+    private string NodeClass(PassiveNodeDefinition node)
+    {
+        var selected = IsSelected(node) ? " selected" : string.Empty;
+        var locked = !IsSelected(node) && !Selection.CanSelect(node.Id) ? " locked" : string.Empty;
+        return $"skill-node tier-{node.Tier.ToString().ToLowerInvariant()}{selected}{locked}";
+    }
+
+    private void Toggle(PassiveNodeDefinition node) { if (IsSelected(node)) Selection.Remove(node.Id); else Selection.Select(node.Id); }
+    private void Reset() => Selection.Reset();
+    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄", PassiveSchool.Storm => "⚡", _ => "✦" };
+}

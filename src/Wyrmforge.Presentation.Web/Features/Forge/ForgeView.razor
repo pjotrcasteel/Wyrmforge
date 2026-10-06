@@ -1,106 +1,60 @@
-@using Wyrmforge.Application.Runs.Offerings
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Forge
-@using Wyrmforge.Domain.Progression.Relics
-@using Wyrmforge.Domain.Spells
-@using Wyrmforge.Domain.Spells.Synergies
 
-<main class="forge-screen">
-    <header class="hero">
-        <div>
-            <div class="eyebrow">WYRMFORGE • PROTOTYPE @AppBuildInfo.Version</div>
-            <h1>Forge a mage, shape a magical trail, and see which wyrm answers it.</h1>
-            <p>Hunt Wyrms for Essence, then decide which discoveries deserve to become permanent Forge knowledge.</p>
-        </div>
-        <div class="score-card"><span>BEST SCORE</span><strong>@BestScore.ToString("N0")</strong></div>
-    </header>
-
-    <section class="tree-panel">
-        <div class="tree-hint"><strong>ESSENCE VAULT</strong> • @VaultSummary</div>
-        <div class="tree-hint"><strong>ARCANE CODEX</strong> • @CodexSummary</div>
-
-        <section class="forge-knowledge" aria-label="Forge mastery">
-            <div class="forge-knowledge-heading">
-                <div>
-                    <strong>FORGE MASTERY</strong>
-                    <span>Discover a Wyrm lineage by securing its Essence. Spend specific Essence to permanently forge new future-run possibilities.</span>
-                </div>
-                <b>@Progression.MasteryCount / @ForgeMasteryCatalog.All.Count forged</b>
-            </div>
-            <div class="forge-discovery-grid">
-                @foreach (var discovery in ForgeDiscoveryCatalog.All)
-                {
-                    var discovered = Progression.Contains(discovery.Id);
-                    <article class="forge-discovery @(discovered ? "unlocked" : "locked")">
-                        <span>@(discovered ? "DISCOVERED" : "UNKNOWN LINEAGE")</span>
-                        <strong>@discovery.Name</strong>
-                        <small>@(discovered ? discovery.Description : "Secure any Essence from this Wyrm lineage to reveal its Forge tree.")</small>
-                        <div class="mastery-stack">
-                            @foreach (var mastery in ForgeMasteryCatalog.For(discovery.Id))
-                            {
-                                var cost = DragonEssenceCatalog.Get(mastery.Cost);
-                                var forged = Progression.IsForged(mastery.Id);
-                                <section class="mastery-node @MasteryClass(mastery)">
-                                    <div class="mastery-title">
-                                        <span>TIER @mastery.Tier</span>
-                                        <b>@mastery.Name</b>
-                                    </div>
-                                    @if (discovered)
-                                    {
-                                        <small>@mastery.Description</small>
-                                        <em>@UnlockSummary(mastery)</em>
-                                        <button class="@(forged ? "mastery-forged" : "secondary")" disabled="@(forged || !Progression.CanForge(mastery.Id, Vault))"
-                                            @onclick="() => ForgeAsync(mastery.Id)">@MasteryAction(mastery, cost)</button>
-                                    }
-                                    else
-                                    {
-                                        <small>Blueprint hidden until this lineage is discovered.</small>
-                                    }
-                                </section>
-                            }
-                        </div>
-                    </article>
-                }
-            </div>
-        </section>
-
-        <div class="tree-toolbar">
-            <div><strong>WYRM OFFERING</strong><span> • @(SelectedOffering is null ? "None selected — enter without spending an essence." : RunOfferingCatalog.Get(SelectedOffering.Value).Effect)</span></div>
-            @if (AvailableOfferings.Count > 0)
+<main class="game-shell">
+    <aside class="shell-rail" aria-label="Wyrmforge navigation">
+        <button class="brand-mark" @onclick="() => Navigate(ShellSection.Run)" aria-label="Wyrmforge home">W</button>
+        <nav class="rail-nav">
+            @foreach (var item in Navigation)
             {
-                <div class="toolbar-actions">
-                    @foreach (var essence in AvailableOfferings)
-                    {
-                        <button class="@(SelectedOffering == essence.Id ? "primary" : "secondary")" @onclick="() => SelectOfferingAsync(essence.Id)">@essence.Icon @essence.Name ×@Vault.Count(essence.Id)</button>
-                    }
-                </div>
+                <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty)" @onclick="() => Navigate(item.Section)">
+                    <span class="nav-icon">@item.Icon</span>
+                    <span>@item.Label</span>
+                </button>
             }
-            else
+        </nav>
+        <div class="rail-meta"><span>BEST</span><strong>@BestScore.ToString("N0")</strong></div>
+    </aside>
+
+    <section class="shell-stage">
+        <header class="shell-topbar">
+            <div class="mobile-brand"><span class="brand-rune">W</span><div><strong>WYRMFORGE</strong><small>@SectionTitle</small></div></div>
+            <div class="desktop-section"><span class="section-kicker">WYRMFORGE</span><strong>@SectionTitle</strong></div>
+            <div class="resource-strip">
+                <span title="Secured Essence">◇ <b>@Vault.TotalCount</b></span>
+                <span title="Forge masteries">◆ <b>@Progression.MasteryCount/@ForgeMasteryCatalog.All.Count</b></span>
+                <span title="Arcane build points">✦ <b>@Selection.SpentPoints/@Selection.PointBudget</b></span>
+            </div>
+        </header>
+
+        <div class="shell-content">
+            @switch (section)
             {
-                <span class="offering-empty">Forge an offering recipe and keep a matching Essence in the vault to use it here.</span>
-            }
-        </div>
-        <div class="tree-toolbar">
-            <div><strong>@PointsLeft / @Selection.PointBudget</strong><span> available</span></div>
-            <div class="toolbar-actions"><a class="secondary lab-link" href="combat-lab">Combat Lab</a><button class="secondary" @onclick="Reset">Respec</button><button class="primary" @onclick="StartAsync">Enter the Wyrmrealm</button></div>
-        </div>
-        <div class="tree-hint">Minor = additive • Major = multiplicative • Epic = build changing • Legendary = rule changing</div>
-        <div class="schools">
-            @foreach (var school in Enum.GetValues<PassiveSchool>())
-            {
-                <section class="school school-@school.ToString().ToLowerInvariant()">
-                    <h2>@SchoolIcon(school) @school</h2>
-                    <div class="node-stack">
-                        @foreach (var node in Nodes(school))
-                        {
-                            <button class="@NodeClass(node)" disabled="@IsDisabled(node)" @onclick="() => Toggle(node)"><span class="tier-label">@node.Tier • @node.Cost pt@(node.Cost == 1 ? string.Empty : "s")</span><strong>@node.Name</strong><small>@node.Description</small></button>
-                        }
-                    </div>
-                </section>
+                case ShellSection.Run:
+                    <RunHubView Selection="Selection" Progression="Progression" SelectedOffering="SelectedOffering" BestScore="BestScore" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
+                    break;
+                case ShellSection.Build:
+                    <BuildView Selection="Selection" />
+                    break;
+                case ShellSection.Forge:
+                    <ForgeProgressionView Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" />
+                    break;
+                case ShellSection.Codex:
+                    <CodexView Codex="Codex" />
+                    break;
             }
         </div>
     </section>
-    <footer>Hunt • secure Essence • forge permanent possibilities • shape a build • decide how deep to risk</footer>
+
+    <nav class="mobile-nav" aria-label="Wyrmforge navigation">
+        @foreach (var item in Navigation)
+        {
+            <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty)" @onclick="() => Navigate(item.Section)">
+                <span class="nav-icon">@item.Icon</span>
+                <span>@item.Label</span>
+            </button>
+        }
+    </nav>
 </main>
 
 @code {
@@ -114,54 +68,22 @@
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
 
-    private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
-    private IReadOnlyList<DragonEssenceDefinition> AvailableOfferings => DragonEssenceCatalog.All
-        .Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id, Progression))
-        .ToArray();
-    private string VaultSummary => Vault.TotalCount == 0 ? "Empty — successfully extract an essence to secure it here." : string.Join("   •   ", DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0).Select(essence => $"{essence.Icon} {essence.Name} ×{Vault.Count(essence.Id)}"));
-    private string CodexSummary => $"{Codex.Count}/{SynergyCatalog.All.Count} discovered   •   {string.Join("   •   ", SynergyCatalog.All.Select(SynergyCodexLabel))}";
-    private string SynergyCodexLabel(SynergyDefinition synergy) => Codex.Contains(synergy.Id) ? $"{synergy.Icon} {synergy.Name}" : "???";
+    private ShellSection section = ShellSection.Run;
+    private static readonly NavigationItem[] Navigation =
+    [
+        new(ShellSection.Run, "⚔", "Run"),
+        new(ShellSection.Build, "✦", "Build"),
+        new(ShellSection.Forge, "◆", "Forge"),
+        new(ShellSection.Codex, "▣", "Codex"),
+    ];
 
-    private string MasteryClass(ForgeMasteryDefinition mastery)
-    {
-        if (Progression.IsForged(mastery.Id)) return "forged";
-        if (!Progression.Contains(mastery.Lineage)) return "hidden";
-        if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return "blocked";
-        return Vault.Count(mastery.Cost) > 0 ? "ready" : "available";
-    }
-
-    private string MasteryAction(ForgeMasteryDefinition mastery, DragonEssenceDefinition cost)
-    {
-        if (Progression.IsForged(mastery.Id)) return "FORGED";
-        if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return "LOCKED BY PREVIOUS TIER";
-        return Vault.Count(mastery.Cost) > 0 ? $"FORGE • {cost.Icon} {cost.Name}" : $"NEED • {cost.Icon} {cost.Name}";
-    }
-
-    private static string UnlockSummary(ForgeMasteryDefinition mastery) => string.Join(" • ", mastery.Unlocks.Select(UnlockLabel));
-
-    private static string UnlockLabel(ForgeFeatureUnlock unlock) => unlock switch
-    {
-        RunOfferingUnlock offering => $"Offering: {DragonEssenceCatalog.Get(offering.EssenceId).Name}",
-        SpellPoolUnlock spell => $"Spell pool: {SpellCatalog.Get(spell.SpellId).Name}",
-        RelicPoolUnlock relic => $"Relic pool: {RelicCatalog.Get(relic.RelicId).Name}",
-        _ => "New possibility",
-    };
-
-    private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
-    private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
-    private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
-
-    private string NodeClass(PassiveNodeDefinition node)
-    {
-        var selected = IsSelected(node) ? " selected" : string.Empty;
-        var locked = !IsSelected(node) && !Selection.CanSelect(node.Id) ? " locked" : string.Empty;
-        return $"skill-node tier-{node.Tier.ToString().ToLowerInvariant()}{selected}{locked}";
-    }
-
-    private void Toggle(PassiveNodeDefinition node) { if (IsSelected(node)) Selection.Remove(node.Id); else Selection.Select(node.Id); }
-    private void Reset() => Selection.Reset();
+    private string SectionTitle => Navigation.Single(item => item.Section == section).Label;
+    private void Navigate(ShellSection value) => section = value;
+    private Task NavigateAsync(ShellSection value) { Navigate(value); return Task.CompletedTask; }
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
     private Task StartAsync() => OnStart.InvokeAsync();
-    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄️", PassiveSchool.Storm => "⚡", _ => "✨" };
+
+    private enum ShellSection { Run, Build, Forge, Codex }
+    private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
 }

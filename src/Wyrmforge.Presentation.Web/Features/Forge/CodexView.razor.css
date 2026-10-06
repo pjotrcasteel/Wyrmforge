@@ -1,0 +1,24 @@
+.codex-view { display: grid; gap: 14px; }
+.section-kicker { color: #9e78ce; font-size: .66rem; font-weight: 900; letter-spacing: .18em; }
+.codex-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 24px; border: 1px solid #2e2637; border-radius: 20px; background: linear-gradient(145deg,rgba(31,24,40,.94),rgba(18,14,23,.94)); }
+.codex-heading h1 { margin: 7px 0 8px; font-size: clamp(2rem,4vw,3.7rem); line-height: .96; letter-spacing: -.045em; }
+.codex-heading p { max-width: 690px; margin: 0; color: #9f94a8; line-height: 1.5; }
+.codex-count { display: grid; min-width: 160px; padding: 14px 16px; border: 1px solid #3a3045; border-radius: 14px; background: #17131d; }
+.codex-count strong { font-size: 1.75rem; }
+.codex-count span { color: #85798e; font-size: .68rem; }
+.codex-section { padding: 17px; border: 1px solid #2e2637; border-radius: 16px; background: rgba(18,14,23,.86); }
+.section-heading { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.section-heading small { color: #7f7488; }
+.codex-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; margin-top: 12px; }
+.codex-grid.compact { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.codex-card { display: flex; min-width: 0; gap: 10px; padding: 12px; border: 1px solid #342b3e; border-radius: 12px; background: #17131d; }
+.codex-card.unknown { opacity: .48; }
+.codex-card.known { border-color: rgba(184,135,255,.42); background: #21182a; }
+.codex-icon { display: grid; flex: 0 0 38px; width: 38px; aspect-ratio: 1; place-items: center; border-radius: 10px; color: #d7b8ff; background: #251c30; font-size: 1.25rem; }
+.codex-card > div { display: grid; align-content: start; gap: 3px; min-width: 0; }
+.codex-card strong { font-size: .8rem; }
+.codex-card small { color: #8c8195; font-size: .67rem; line-height: 1.35; }
+.combat-lab-link { justify-self: end; color: #72667c; font-size: .67rem; text-decoration: none; }
+.combat-lab-link:hover { color: #b58ae8; }
+@media (max-width: 1050px) { .codex-grid,.codex-grid.compact { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 680px) { .codex-heading { align-items: stretch; flex-direction: column; padding: 20px; } .codex-count { width: fit-content; } .codex-grid,.codex-grid.compact { grid-template-columns: 1fr; } }
