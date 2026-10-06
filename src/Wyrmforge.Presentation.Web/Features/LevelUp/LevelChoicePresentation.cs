@@ -15,20 +15,14 @@ public static class LevelChoicePresentation
         _ => "synergy",
     };
 
+    public static string RarityClass(LevelChoice choice) => choice.Rarity.ToString().ToLowerInvariant();
+
     public static string Badge(LevelChoice choice) => choice.Kind switch
     {
         LevelChoiceKind.Rune => "RUNE",
         LevelChoiceKind.NewSpell => "NEW SPELL",
         LevelChoiceKind.SpellUpgrade => "SPELL UPGRADE",
         _ => "SYNERGY",
-    };
-
-    public static string Action(LevelChoice choice) => choice.Kind switch
-    {
-        LevelChoiceKind.Rune => "STRENGTHEN",
-        LevelChoiceKind.NewSpell => "LEARN",
-        LevelChoiceKind.SpellUpgrade => "UPGRADE",
-        _ => "DISCOVER",
     };
 
     public static string Rank(LevelChoice choice)
@@ -48,10 +42,10 @@ public static class LevelChoicePresentation
 
     public static string Footer(LevelChoice choice) => choice.Kind switch
     {
-        LevelChoiceKind.Rune => "STRENGTHENS THIS RUN",
-        LevelChoiceKind.NewSpell => "ADDS A NEW SPELL",
-        LevelChoiceKind.SpellUpgrade => "IMPROVES AN EXISTING SPELL",
-        _ => "CHANGES HOW SPELLS INTERACT",
+        LevelChoiceKind.Rune => "TEMPORARY • THIS RUN ONLY",
+        LevelChoiceKind.NewSpell => "TEMPORARY • ADDS A SPELL",
+        LevelChoiceKind.SpellUpgrade => "TEMPORARY • DEEPENS A SPELL",
+        _ => "TEMPORARY • CHANGES INTERACTIONS",
     };
 
     private static string RuneDelta(RunUpgradeId id, int currentRank)
@@ -63,12 +57,24 @@ public static class LevelChoicePresentation
             RunUpgradeId.Quickening => $"Cast rate ×{1 + currentRank * 0.12:0.00} → ×{1 + nextRank * 0.12:0.00}",
             RunUpgradeId.Vitality => $"Max health +{currentRank * 18} → +{nextRank * 18} • heal 18",
             RunUpgradeId.Fleetfoot => $"Move speed +{currentRank * 10}% → +{nextRank * 10}%",
-            RunUpgradeId.Multicast => $"Extra projectiles +{currentRank} → +{nextRank} • projectile damage ×0.90",
+            RunUpgradeId.Multicast => currentRank == 0 ? "+1 projectile • damage ×0.90" : "+1 → +2 projectiles • damage ×0.81",
             RunUpgradeId.FrostTouch => FrostTouchDelta(currentRank, nextRank),
             RunUpgradeId.ChainSpark => $"Bonus chains +{currentRank} → +{nextRank}",
-            _ => currentRank == 0 ? "Echo every 7 casts at 55% damage" : "Echo every 7 → 5 casts • 55% → 80% damage",
+            RunUpgradeId.ArcaneEcho => currentRank == 0 ? "Echo every 7 casts at 55% damage" : "Echo every 7 → 5 casts • 55% → 80% damage",
+            RunUpgradeId.Bulwark => $"Damage taken ×{DamageTakenMultiplier(nextRank):0.00}",
+            RunUpgradeId.Velocity => $"Projectile speed +{currentRank * 20}% → +{nextRank * 20}%",
+            RunUpgradeId.Emberbrand => currentRank == 0 ? "Burn every 6 hits • 3.5s" : "Burn every 6 → 4 hits • 3.5 → 4.5s",
+            RunUpgradeId.StaticCharge => currentRank == 0 ? "Shock every 7 hits • 3s" : "Shock every 7 → 5 hits • 3 → 4s",
+            _ => "Build effect improves",
         };
     }
+
+    private static double DamageTakenMultiplier(int rank) => rank switch
+    {
+        1 => 0.92,
+        2 => 0.84,
+        _ => 0.76,
+    };
 
     private static string FrostTouchDelta(int currentRank, int nextRank)
     {
@@ -81,54 +87,16 @@ public static class LevelChoicePresentation
 
     private static string SpellDelta(SpellId id, int currentRank)
     {
+        var spell = SpellCatalog.Get(id);
         var nextRank = currentRank + 1;
-        return id switch
-        {
-            SpellId.ArcaneOrb => ArcaneOrbDelta(currentRank, nextRank),
-            SpellId.FireBolt => FireBoltDelta(currentRank, nextRank),
-            SpellId.FrostShard => FrostShardDelta(currentRank, nextRank),
-            _ => ChainLightningDelta(currentRank, nextRank),
-        };
-    }
+        var nextDamage = spell.Ability.CalculateDamage(nextRank);
+        var nextCooldown = spell.Ability.CalculateCooldownSeconds(nextRank);
+        var mastery = nextRank == spell.MaxRank ? " • MASTERY RANK" : string.Empty;
+        if (currentRank == 0) return $"{nextDamage:0.#} damage • {nextCooldown:0.00}s interval{mastery}";
 
-    private static string ArcaneOrbDelta(int currentRank, int nextRank)
-    {
-        var suffix = nextRank == 3 ? " • casts faster • MASTERED: pierces 1 target" : " • casts faster";
-        return ProjectileSpellDelta(18, 0.28, currentRank, nextRank, suffix);
-    }
-
-    private static string ProjectileSpellDelta(double baseDamage, double growth, int currentRank, int nextRank, string suffix)
-    {
-        var nextDamage = Math.Round(baseDamage * (1 + (nextRank - 1) * growth));
-        if (currentRank == 0) return $"{nextDamage:0} damage{suffix}";
-        var currentDamage = Math.Round(baseDamage * (1 + (currentRank - 1) * growth));
-        return $"{currentDamage:0} → {nextDamage:0} damage{suffix}";
-    }
-
-    private static string FireBoltDelta(int currentRank, int nextRank)
-    {
-        var suffix = nextRank == 3 ? " • impact blast • MASTERED: leaves burning ground" : string.Empty;
-        return ProjectileSpellDelta(30, 0.3, currentRank, nextRank, suffix);
-    }
-
-    private static string FrostShardDelta(int currentRank, int nextRank)
-    {
-        var nextDamage = Math.Round(12 * (1 + (nextRank - 1) * 0.25));
-        var nextFreeze = 0.35 + nextRank * 0.18;
-        var mastery = nextRank == 3 ? " • MASTERED: frost nova freezes nearby enemies" : string.Empty;
-        if (currentRank == 0) return $"{nextDamage:0} damage • freezes {nextFreeze:0.00}s{mastery}";
-        var currentDamage = Math.Round(12 * (1 + (currentRank - 1) * 0.25));
-        var currentFreeze = 0.35 + currentRank * 0.18;
-        return $"{currentDamage:0} → {nextDamage:0} damage • freeze {currentFreeze:0.00} → {nextFreeze:0.00}s{mastery}";
-    }
-
-    private static string ChainLightningDelta(int currentRank, int nextRank)
-    {
-        var nextDamage = 15 + (nextRank - 1) * 5;
-        var mastery = nextRank == 3 ? " • MASTERED: first hit forks to another target" : string.Empty;
-        if (currentRank == 0) return $"{nextDamage} damage • {nextRank + 1} base jumps{mastery}";
-        var currentDamage = 15 + (currentRank - 1) * 5;
-        return $"{currentDamage} → {nextDamage} damage • {currentRank + 1} → {nextRank + 1} base jumps{mastery}";
+        var currentDamage = spell.Ability.CalculateDamage(currentRank);
+        var currentCooldown = spell.Ability.CalculateCooldownSeconds(currentRank);
+        return $"{currentDamage:0.#} → {nextDamage:0.#} damage • {currentCooldown:0.00} → {nextCooldown:0.00}s{mastery}";
     }
 
     private static string SynergyDelta(SynergyId id)
@@ -138,9 +106,7 @@ public static class LevelChoicePresentation
     }
 
     private static RunUpgradeId ParseRunUpgrade(string id) => Enum.Parse<RunUpgradeId>(id[5..]);
-
     private static SpellId ParseSpell(string id) => Enum.Parse<SpellId>(id[6..]);
-
     private static SynergyId ParseSynergy(string id) => Enum.Parse<SynergyId>(id[8..]);
 
     private static string Roman(int value) => value switch
