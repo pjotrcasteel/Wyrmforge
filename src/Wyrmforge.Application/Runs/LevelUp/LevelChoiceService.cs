@@ -156,14 +156,14 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
             return;
         }
 
-        var rareRunes = pool.Where(choice => choice.Kind == LevelChoiceKind.Rune && choice.Rarity >= RewardRarity.Rare).ToList();
+        var rareRunes = pool.Where(choice => choice.Kind == LevelChoiceKind.Rune && IsAtLeastRare(choice.Rarity)).ToList();
         if (rareRunes.Count > 0)
         {
             TakeInto(result, pool, rareRunes, resonance, LevelChoiceDraftRole.Venture, _ => "A rarer rule-changing direction for this run.", choice => 1.6);
             return;
         }
 
-        TakeInto(result, pool, pool.ToList(), resonance, LevelChoiceDraftRole.Venture, _ => "The wildcard: take the run somewhere less expected.", choice => choice.Rarity >= RewardRarity.Rare ? 1.5 : 1);
+        TakeInto(result, pool, pool.ToList(), resonance, LevelChoiceDraftRole.Venture, _ => "The wildcard: take the run somewhere less expected.", choice => IsAtLeastRare(choice.Rarity) ? 1.5 : 1);
     }
 
     private void AddFallbackChoice(List<LevelChoice> result, List<LevelChoice> pool, RunBuildState build, IReadOnlyList<RunResonanceEntry>? resonance, int count)
@@ -267,6 +267,8 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
         var schools = synergy.RequiredSpells.Select(id => SpellCatalog.Get(id).School).Distinct().ToArray();
         return 1 + schools.Average(school => ResonanceValue(resonance, school)) * SynergyResonanceWeightPerPoint;
     }
+
+    private static bool IsAtLeastRare(RewardRarity rarity) => rarity is RewardRarity.Rare or RewardRarity.Legendary;
 
     private static RewardRarity SpellRarity(SpellDefinition spell, int currentRank)
     {
