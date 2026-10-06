@@ -1,0 +1,11 @@
+@namespace Wyrmforge.Presentation.Web.Features.Arena
+
+<div class="run-moment tone-@Moment.Tone.ToString().ToLowerInvariant()" role="status" aria-live="polite">
+    <span>@Moment.Eyebrow</span>
+    <strong>@Moment.Title</strong>
+    <small>@Moment.Detail</small>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public RunMoment Moment { get; set; } = null!;
+}
