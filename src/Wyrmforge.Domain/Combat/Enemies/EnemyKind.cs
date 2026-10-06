@@ -4,4 +4,6 @@ public enum EnemyKind
 {
     Chaser,
     RiftStalker,
+    Skitter,
+    Brute,
 }
