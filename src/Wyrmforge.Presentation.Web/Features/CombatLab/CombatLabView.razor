@@ -1,0 +1,251 @@
+@implements IAsyncDisposable
+@using Wyrmforge.Domain.Combat.Enemies
+@using Wyrmforge.Domain.Combat.Statuses
+@using Wyrmforge.Domain.Spells
+
+<main class="combat-lab">
+    <header class="lab-header">
+        <div>
+            <div class="eyebrow">WYRMFORGE • COMBAT LAB</div>
+            <h1>Test combat mechanics without RNG.</h1>
+            <p>Spawn an immortal stationary target, enable any spell combination, and inspect the real status engine while it runs.</p>
+        </div>
+        <button class="secondary" @onclick="BackToForge">← Forge</button>
+    </header>
+
+    <section class="lab-layout">
+        <aside class="control-panel">
+            <div class="panel-heading">
+                <div><strong>SPELL RACK</strong><span>Toggle auto-cast or fire a spell once.</span></div>
+                <div class="panel-actions"><button @onclick="EnableAll">Enable all</button><button @onclick="DisableAll">Disable all</button></div>
+            </div>
+
+            <div class="spell-grid">
+                @foreach (var spell in SpellCatalog.All)
+                {
+                    var state = spellStates[spell.Id];
+                    <article class="spell-card @(state.Enabled ? "enabled" : string.Empty)">
+                        <div class="spell-title"><span>@spell.Icon</span><div><strong>@spell.Name</strong><small>@spell.School</small></div></div>
+                        <p>@spell.Description</p>
+                        <div class="spell-controls">
+                            <button class="toggle @(state.Enabled ? "on" : string.Empty)" @onclick="() => Toggle(spell.Id)">@(state.Enabled ? "AUTO ON" : "AUTO OFF")</button>
+                            <button @onclick="() => CastOnce(spell.Id)" disabled="@(!dummySpawned)">Cast</button>
+                        </div>
+                        <div class="rank-controls" aria-label="@spell.Name rank">
+                            <span>Rank</span>
+                            @for (var rank = 1; rank <= spell.MaxRank; rank++)
+                            {
+                                var selectedRank = rank;
+                                <button class="@(state.Rank == selectedRank ? "selected" : string.Empty)" @onclick="() => SetRank(spell.Id, selectedRank)">@selectedRank</button>
+                            }
+                        </div>
+                        <small class="spell-readout">@SpellReadout(spell, state)</small>
+                    </article>
+                }
+            </div>
+        </aside>
+
+        <section class="arena-panel">
+            <div class="dummy-toolbar">
+                <label>Dummy
+                    <select @bind="selectedEnemyKind">
+                        @foreach (var kind in Enum.GetValues<EnemyKind>())
+                        {
+                            <option value="@kind">@kind</option>
+                        }
+                    </select>
+                </label>
+                <button class="primary" @onclick="SpawnDummy">Spawn / reset</button>
+                <button @onclick="ClearStatuses" disabled="@(!dummySpawned)">Clear statuses</button>
+                <button @onclick="DespawnDummy" disabled="@(!dummySpawned)">Despawn</button>
+            </div>
+
+            <div class="arena-stage">
+                @if (!dummySpawned)
+                {
+                    <div class="empty-stage">Spawn a dummy to begin.</div>
+                }
+                else
+                {
+                    var enemy = EnemyCatalog.Get(selectedEnemyKind);
+                    <div class="dummy-wrap">
+                        <div class="dummy @DummyStatusClasses" style="width:@DummySize(enemy)px;height:@DummySize(enemy)px;">
+                            <span class="dummy-name">@selectedEnemyKind</span>
+                            <span class="dummy-health">∞ HP</span>
+                            @if (statuses.Has(CombatStatusId.Burning)) { <span class="status-vfx burning">✹</span> }
+                            @if (statuses.Has(CombatStatusId.Frozen)) { <span class="status-vfx frozen">❄</span> }
+                            @if (statuses.Has(CombatStatusId.Chilled)) { <span class="status-vfx chilled">◆</span> }
+                            @if (statuses.Has(CombatStatusId.Shocked)) { <span class="status-vfx shocked">ϟ</span> }
+                            @if (statuses.Has(CombatStatusId.ArcaneMark)) { <span class="status-vfx arcane">◇</span> }
+                            @if (lastImpactRemaining > 0 && lastSpell is { } lastSpellId)
+                            {
+                                <span class="impact">@SpellCatalog.Get(lastSpellId).Icon</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="telemetry-grid">
+                <article><span>HITS</span><strong>@hitCount</strong></article>
+                <article><span>DIRECT DAMAGE</span><strong>@directDamage.ToString("0.0")</strong></article>
+                <article><span>DOT DAMAGE</span><strong>@dotDamage.ToString("0.0")</strong></article>
+                <article><span>DAMAGE TAKEN</span><strong>×@statuses.DamageTakenMultiplier().ToString("0.00")</strong></article>
+                <article><span>TIME SCALE</span><strong>×@statuses.TimeScale(false).ToString("0.00")</strong></article>
+                <article><span>DOT / SEC</span><strong>@statuses.DamagePerSecond().ToString("0.0")</strong></article>
+            </div>
+
+            <section class="status-panel">
+                <div class="panel-heading"><div><strong>ACTIVE STATUSES</strong><span>Exact state from CombatStatusCollection.</span></div></div>
+                @if (ActiveStatuses.Count == 0)
+                {
+                    <div class="no-status">No active status effects.</div>
+                }
+                else
+                {
+                    <div class="status-list">
+                        @foreach (var status in ActiveStatuses)
+                        {
+                            <div class="status-row status-@status.Id.ToString().ToLowerInvariant()">
+                                <span class="status-icon">@StatusIcon(status.Id)</span>
+                                <div><strong>@status.Name</strong><small>@StatusEffectText(status)</small></div>
+                                <b>×@statuses.Stacks(status.Id)</b>
+                                <time>@statuses.RemainingSeconds(status.Id).ToString("0.0")s</time>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        </section>
+    </section>
+</main>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+
+    private readonly Dictionary<SpellId, SpellLabState> spellStates = SpellCatalog.All.ToDictionary(spell => spell.Id, _ => new SpellLabState());
+    private readonly CancellationTokenSource cancellation = new();
+    private CombatStatusCollection statuses = new();
+    private Task? loopTask;
+    private EnemyKind selectedEnemyKind = EnemyKind.Chaser;
+    private SpellId? lastSpell;
+    private double lastImpactRemaining;
+    private double directDamage;
+    private double dotDamage;
+    private int hitCount;
+    private bool dummySpawned = true;
+
+    private IReadOnlyList<CombatStatusDefinition> ActiveStatuses => CombatStatusCatalog.All.Where(status => statuses.Has(status.Id)).ToArray();
+    private string DummyStatusClasses => string.Join(' ', ActiveStatuses.Select(status => $"has-{status.Id.ToString().ToLowerInvariant()}"));
+
+    protected override void OnInitialized() => loopTask = RunLoopAsync(cancellation.Token);
+
+    private async Task RunLoopAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                Tick(0.1);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+    }
+
+    private void Tick(double delta)
+    {
+        if (!dummySpawned) return;
+        var periodicDamage = statuses.DamagePerSecond() * delta;
+        dotDamage += periodicDamage;
+        statuses.Tick(delta);
+        lastImpactRemaining = Math.Max(0, lastImpactRemaining - delta);
+
+        foreach (var spell in SpellCatalog.All)
+        {
+            var state = spellStates[spell.Id];
+            if (!state.Enabled) continue;
+            state.CooldownRemaining -= delta;
+            if (state.CooldownRemaining > 0) continue;
+            Cast(spell, state.Rank);
+            state.CooldownRemaining = spell.Ability.CalculateCooldownSeconds(state.Rank);
+        }
+    }
+
+    private void CastOnce(SpellId id)
+    {
+        if (!dummySpawned) return;
+        var spell = SpellCatalog.Get(id);
+        Cast(spell, spellStates[id].Rank);
+    }
+
+    private void Cast(SpellDefinition spell, int rank)
+    {
+        var damage = spell.Ability.CalculateDamage(rank) * statuses.DamageTakenMultiplier();
+        directDamage += damage;
+        hitCount++;
+        lastSpell = spell.Id;
+        lastImpactRemaining = 0.28;
+
+        if (spell.Ability.Status is not { } status) return;
+        statuses.Apply(CombatStatusCatalog.Get(status.Status), status.CalculateDurationSeconds(rank), status.Stacks);
+    }
+
+    private void SpawnDummy()
+    {
+        dummySpawned = true;
+        ResetDummy();
+    }
+
+    private void DespawnDummy()
+    {
+        dummySpawned = false;
+        ResetDummy();
+    }
+
+    private void ResetDummy()
+    {
+        statuses = new CombatStatusCollection();
+        directDamage = 0;
+        dotDamage = 0;
+        hitCount = 0;
+        lastSpell = null;
+        lastImpactRemaining = 0;
+        foreach (var state in spellStates.Values) state.CooldownRemaining = 0;
+    }
+
+    private void ClearStatuses() => statuses = new CombatStatusCollection();
+    private void Toggle(SpellId id) { var state = spellStates[id]; state.Enabled = !state.Enabled; state.CooldownRemaining = 0; }
+    private void SetRank(SpellId id, int rank) { var state = spellStates[id]; state.Rank = rank; state.CooldownRemaining = 0; }
+    private void EnableAll() { foreach (var state in spellStates.Values) { state.Enabled = true; state.CooldownRemaining = 0; } }
+    private void DisableAll() { foreach (var state in spellStates.Values) state.Enabled = false; }
+    private void BackToForge() => Navigation.NavigateTo(string.Empty);
+
+    private static double DummySize(EnemyDefinition definition) => Math.Clamp(definition.Radius * 6, 84, 128);
+    private static string SpellReadout(SpellDefinition spell, SpellLabState state) => $"{spell.Ability.CalculateDamage(state.Rank):0.#} dmg • {spell.Ability.CalculateCooldownSeconds(state.Rank):0.00}s cooldown";
+    private static string StatusIcon(CombatStatusId id) => id switch { CombatStatusId.Burning => "✹", CombatStatusId.Frozen => "❄", CombatStatusId.Chilled => "◆", CombatStatusId.Shocked => "ϟ", _ => "◇" };
+
+    private static string StatusEffectText(CombatStatusDefinition status)
+    {
+        var parts = new List<string>();
+        if (status.DamagePerSecondPerStack > 0) parts.Add($"{status.DamagePerSecondPerStack:0.#} damage/sec per stack");
+        if (status.TimeScale < 1) parts.Add($"{status.TimeScale:P0} action speed");
+        if (status.DamageTakenMultiplierPerStack > 1) parts.Add($"+{status.DamageTakenMultiplierPerStack - 1:P0} damage taken per stack");
+        return parts.Count == 0 ? "Control effect" : string.Join(" • ", parts);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        cancellation.Cancel();
+        if (loopTask is not null) await loopTask;
+        cancellation.Dispose();
+    }
+
+    private sealed class SpellLabState
+    {
+        public bool Enabled { get; set; }
+        public int Rank { get; set; } = 1;
+        public double CooldownRemaining { get; set; }
+    }
+}
