@@ -251,3 +251,8 @@
     .sheet-traits { grid-column: 1; }
     .enter-trail { grid-column: 1; grid-row: auto; min-height: 44px; }
 }
+
+.rare-trail-callout { grid-column:1 / 2; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:8px 9px; border:1px solid rgba(215,168,93,.28); border-radius:9px; background:rgba(105,77,30,.12); }
+.rare-trail-callout strong { color:#d4aa61; font-size:.58rem; letter-spacing:.1em; }
+.rare-trail-callout span { color:#a48f6c; font-size:.62rem; }
+@media (max-width:600px) { .rare-trail-callout { grid-column:1; } }
