@@ -114,6 +114,10 @@
                 }
                 else if (selected.Route is { } route)
                 {
+                    @if (selected.Rarity == WyrmrealmNodeRarity.Rare)
+                    {
+                        <div class="rare-trail-callout"><strong>✦ RARE TRAIL</strong><span>Stronger enemies • doubled route score • guaranteed relic cache</span></div>
+                    }
                     <div class="sheet-traits">
                         <span>@SchoolIcon(route.Reward.AttunementSchool) +@RunResonanceState.RouteWeight resonance</span>
                         <span>@EncounterIcon(route.Encounter.Kind) @EncounterLabel(route.Encounter.Kind)</span>
@@ -125,7 +129,9 @@
                 }
 
                 <button class="enter-trail" disabled="@(!IsAvailable(selected))" @onclick="ConfirmSelectedAsync">
-                    @(IsAvailable(selected) ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : "Enter trail" : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")
+                    @(IsAvailable(selected)
+                        ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : selected.Rarity == WyrmrealmNodeRarity.Rare ? "Enter rare trail" : "Enter trail"
+                        : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")
                 </button>
             </aside>
         }
