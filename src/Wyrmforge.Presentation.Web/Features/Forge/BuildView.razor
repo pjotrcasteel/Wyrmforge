@@ -1,54 +1,181 @@
+@using System.Globalization
+@inject IJSRuntime JavaScript
+
 <section class="build-view">
     <header class="build-heading">
         <div>
-            <span class="section-kicker">ARCANE BUILD</span>
-            <h1>Shape your starting intent.</h1>
-            <p>The current tree remains intact for 0.0.60. The Arcane Web replaces it in 0.0.61.</p>
+            <span class="section-kicker">ARCANE WEB</span>
+            <h1>Every point is a direction.</h1>
+            <p>Travel outward from the Wyrmheart, specialize through Notables and Masteries, or pay the distance to reach multiple rule-changing Keystones.</p>
         </div>
         <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points left</span></div>
     </header>
 
     <div class="build-toolbar">
-        <div class="build-legend"><span>Minor = additive</span><span>Major = multiplicative</span><span>Epic = build changing</span><span>Legendary = rule changing</span></div>
-        <button class="secondary" @onclick="Reset">Respec all</button>
+        <div class="build-legend">
+            <span><i class="legend-dot travel"></i>Travel</span>
+            <span><i class="legend-dot notable"></i>Notable</span>
+            <span><i class="legend-dot mastery"></i>Mastery</span>
+            <span><i class="legend-dot keystone"></i>Keystone</span>
+        </div>
+        <div class="build-actions">
+            <button class="secondary compact" @onclick="() => ZoomAsync(-0.15)">−</button>
+            <button class="secondary compact" @onclick="ResetViewAsync">CENTER</button>
+            <button class="secondary compact" @onclick="() => ZoomAsync(0.15)">+</button>
+            <button class="secondary" @onclick="Reset">Respec all</button>
+        </div>
     </div>
 
-    <div class="schools">
-        @foreach (var school in Enum.GetValues<PassiveSchool>())
-        {
-            <section class="school school-@school.ToString().ToLowerInvariant()">
-                <h2><span>@SchoolIcon(school)</span>@school</h2>
-                <div class="node-stack">
-                    @foreach (var node in Nodes(school))
+    <div class="web-layout">
+        <div class="arcane-web-viewport" @ref="viewport">
+            <div class="web-pan-space">
+                <div class="arcane-web-canvas">
+                    <svg class="web-connections" viewBox="0 0 1200 900" aria-hidden="true">
+                        @foreach (var connection in PassiveTreeCatalog.Connections)
+                        {
+                            var from = PassiveTreeCatalog.Get(connection.From);
+                            var to = PassiveTreeCatalog.Get(connection.To);
+                            <line class="@ConnectionClass(connection)" x1="@Coordinate(from.X)" y1="@Coordinate(from.Y)" x2="@Coordinate(to.X)" y2="@Coordinate(to.Y)" />
+                        }
+                    </svg>
+
+                    <span class="web-school-label fire">FIRE</span>
+                    <span class="web-school-label frost">FROST</span>
+                    <span class="web-school-label storm">STORM</span>
+                    <span class="web-school-label arcane">ARCANE</span>
+
+                    @foreach (var node in PassiveTreeCatalog.All)
                     {
-                        <button class="@NodeClass(node)" disabled="@IsDisabled(node)" @onclick="() => Toggle(node)">
-                            <span class="tier-label">@node.Tier • @node.Cost pt@(node.Cost == 1 ? string.Empty : "s")</span>
-                            <strong>@node.Name</strong>
-                            <small>@node.Description</small>
+                        <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")" aria-pressed="@IsSelected(node)"
+                            @onclick="() => HandleNode(node)">
+                            <span class="node-glyph">@NodeGlyph(node)</span>
+                            <span class="node-label">@node.Name</span>
                         </button>
                     }
                 </div>
-            </section>
-        }
+            </div>
+        </div>
+
+        <aside class="node-inspector">
+            <div class="inspector-heading">
+                <span class="node-kind">@KindLabel(FocusedNode)</span>
+                <span class="node-state @NodeStateClass(FocusedNode)">@NodeState(FocusedNode)</span>
+            </div>
+            <div class="inspector-title">
+                <span class="inspector-glyph">@NodeGlyph(FocusedNode)</span>
+                <div>
+                    <h2>@FocusedNode.Name</h2>
+                    <small>@SchoolLabel(FocusedNode)</small>
+                </div>
+            </div>
+            <p>@FocusedNode.Description</p>
+            @if (FocusedNode.Kind != PassiveNodeKind.Origin)
+            {
+                <div class="inspector-cost"><strong>@FocusedNode.Cost</strong><span>Arcane point@(FocusedNode.Cost == 1 ? string.Empty : "s")</span></div>
+            }
+            @if (FocusedNode.MasteryGroup is not null)
+            {
+                <div class="mastery-warning">Mastery choice — allocating this locks the competing node in this cluster.</div>
+            }
+            <div class="inspector-help">@InspectorHelp(FocusedNode)</div>
+        </aside>
     </div>
 </section>
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
 
+    private ElementReference viewport;
+    private string focusedId = PassiveTreeCatalog.OriginId;
     private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
-    private static IReadOnlyList<PassiveNodeDefinition> Nodes(PassiveSchool school) => PassiveTreeCatalog.All.Where(node => node.School == school).ToArray();
-    private bool IsSelected(PassiveNodeDefinition node) => Selection.Selected.Contains(node.Id);
-    private bool IsDisabled(PassiveNodeDefinition node) => IsSelected(node) ? !Selection.CanRemove(node.Id) : !Selection.CanSelect(node.Id);
+    private PassiveNodeDefinition FocusedNode => PassiveTreeCatalog.Get(focusedId);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.initialize", viewport);
+    }
+
+    private bool IsSelected(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin || Selection.Selected.Contains(node.Id);
+
+    private void HandleNode(PassiveNodeDefinition node)
+    {
+        focusedId = node.Id;
+        if (node.Kind == PassiveNodeKind.Origin) return;
+        if (Selection.Selected.Contains(node.Id)) Selection.Remove(node.Id);
+        else Selection.Select(node.Id);
+    }
 
     private string NodeClass(PassiveNodeDefinition node)
     {
-        var selected = IsSelected(node) ? " selected" : string.Empty;
-        var locked = !IsSelected(node) && !Selection.CanSelect(node.Id) ? " locked" : string.Empty;
-        return $"skill-node tier-{node.Tier.ToString().ToLowerInvariant()}{selected}{locked}";
+        var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}" };
+        if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
+        else classes.Add("school-hybrid");
+        if (IsSelected(node)) classes.Add("selected");
+        else if (Selection.CanSelect(node.Id)) classes.Add("available");
+        else classes.Add("locked");
+        if (focusedId == node.Id) classes.Add("focused");
+        return string.Join(' ', classes);
     }
 
-    private void Toggle(PassiveNodeDefinition node) { if (IsSelected(node)) Selection.Remove(node.Id); else Selection.Select(node.Id); }
-    private void Reset() => Selection.Reset();
-    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄", PassiveSchool.Storm => "⚡", _ => "✦" };
+    private string ConnectionClass(PassiveTreeConnection connection)
+    {
+        var fromAllocated = IsAllocated(connection.From);
+        var toAllocated = IsAllocated(connection.To);
+        if (fromAllocated && toAllocated) return "web-edge active";
+        if (fromAllocated && CanAllocate(connection.To) || toAllocated && CanAllocate(connection.From)) return "web-edge available";
+        return "web-edge";
+    }
+
+    private bool IsAllocated(string id) => id == PassiveTreeCatalog.OriginId || Selection.Selected.Contains(id);
+    private bool CanAllocate(string id) => id != PassiveTreeCatalog.OriginId && Selection.CanSelect(id);
+    private string NodeStyle(PassiveNodeDefinition node) => FormattableString.Invariant($"left:{node.X}px;top:{node.Y}px;");
+    private static string Coordinate(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string NodeGlyph(PassiveNodeDefinition node) => node.Kind switch
+    {
+        PassiveNodeKind.Origin => "W",
+        PassiveNodeKind.Notable => "◆",
+        PassiveNodeKind.Mastery => "✦",
+        PassiveNodeKind.Keystone => "⬢",
+        _ => "•",
+    };
+
+    private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
+    {
+        PassiveNodeKind.Origin => "ORIGIN",
+        PassiveNodeKind.Travel => "TRAVEL NODE",
+        PassiveNodeKind.Notable => "NOTABLE",
+        PassiveNodeKind.Mastery => "MASTERY",
+        _ => "KEYSTONE",
+    };
+
+    private string NodeState(PassiveNodeDefinition node)
+    {
+        if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
+        if (Selection.Selected.Contains(node.Id)) return "ALLOCATED";
+        if (Selection.CanSelect(node.Id)) return "AVAILABLE";
+        if (node.MasteryGroup is { } group && Selection.Selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group)) return "CHOICE LOCKED";
+        return "UNREACHABLE";
+    }
+
+    private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
+
+    private static string SchoolLabel(PassiveNodeDefinition node) => node.School?.ToString() ?? "Wyrmheart / Hybrid paths";
+
+    private string InspectorHelp(PassiveNodeDefinition node)
+    {
+        if (node.Kind == PassiveNodeKind.Origin) return "Drag the Web to pan. Pinch, Ctrl/⌘ + wheel, or use the toolbar to zoom.";
+        if (Selection.Selected.Contains(node.Id)) return Selection.CanRemove(node.Id) ? "Tap again to refund this point." : "This node supports another allocated path and cannot be refunded yet.";
+        if (Selection.CanSelect(node.Id)) return "Connected to your current path — tap to allocate.";
+        return "Build a connected path from the Wyrmheart to reach this node.";
+    }
+
+    private void Reset()
+    {
+        Selection.Reset();
+        focusedId = PassiveTreeCatalog.OriginId;
+    }
+
+    private ValueTask ZoomAsync(double delta) => JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.zoom", viewport, delta);
+    private ValueTask ResetViewAsync() => JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.reset", viewport);
 }
