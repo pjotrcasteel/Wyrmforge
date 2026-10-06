@@ -1,27 +1,32 @@
 <div class="level-up">
     <section class="level-up-card">
-        <div class="eyebrow">LEVEL @Level</div>
-        <h2>Choose what your magic becomes</h2>
-        <p>Strengthen with a Rune, learn or upgrade a Spell, or discover a Synergy.</p>
-        <div class="upgrade-legend" aria-label="Choice types">
-            <span class="legend-rune">RUNE</span>
-            <span class="legend-new-spell">NEW SPELL</span>
-            <span class="legend-spell-upgrade">SPELL UPGRADE</span>
-            <span class="legend-synergy">SYNERGY</span>
+        <div class="eyebrow">LEVEL @Level • RUN DRAFT</div>
+        <h2>Choose what this run becomes</h2>
+        <p>Your Arcane Web set the intent. The realm now asks whether you deepen it, converge on an interaction, or pivot.</p>
+        <div class="draft-legend" aria-label="Draft directions">
+            <span><b>REINFORCE</b> deepen what already works</span>
+            <span><b>CONVERGE</b> chase route or synergy</span>
+            <span><b>VENTURE</b> open a new direction</span>
         </div>
         <div class="upgrade-choices">
             @foreach (var choice in Choices)
             {
-                <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice)" @onclick="() => ChooseAsync(choice.Id)">
+                <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice)"
+                    @onclick="() => ChooseAsync(choice.Id)">
+                    <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
                     <span class="choice-card-header">
                         <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
-                        <span class="choice-action">@LevelChoicePresentation.Action(choice)</span>
+                        <span class="choice-rarity">@choice.Rarity</span>
                     </span>
                     <span class="upgrade-icon">@choice.Icon</span>
                     <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
                     <strong>@choice.Name</strong>
                     <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>
                     <small>@choice.Description</small>
+                    @if (!string.IsNullOrWhiteSpace(choice.Hint))
+                    {
+                        <span class="draft-hint">@choice.Hint</span>
+                    }
                     <span class="choice-footer">@LevelChoicePresentation.Footer(choice)</span>
                 </button>
             }
@@ -30,14 +35,9 @@
 </div>
 
 @code {
-    [Parameter]
-    public int Level { get; set; }
-
-    [Parameter, EditorRequired]
-    public IReadOnlyList<LevelChoice> Choices { get; set; } = Array.Empty<LevelChoice>();
-
-    [Parameter]
-    public EventCallback<string> OnChoose { get; set; }
+    [Parameter] public int Level { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<LevelChoice> Choices { get; set; } = Array.Empty<LevelChoice>();
+    [Parameter] public EventCallback<string> OnChoose { get; set; }
 
     private Task ChooseAsync(string id) => OnChoose.InvokeAsync(id);
 }

@@ -1,0 +1,17 @@
+.draft-legend { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0 0 18px; }
+.draft-legend span { display:grid; gap:3px; padding:9px 10px; border:1px solid #30283a; border-radius:10px; color:#7f7488; background:#141019; font-size:.62rem; line-height:1.3; }
+.draft-legend b { color:#b8a8c5; font-size:.58rem; letter-spacing:.1em; }
+.draft-role { display:block; margin:-3px 0 10px 5px; color:#8e8199; font-size:.58rem; font-weight:950; letter-spacing:.14em; }
+.role-converge { color:#b887ff; }
+.role-venture { color:#d3aa66; }
+.choice-rarity { color:#746a7d; font-size:.57rem; font-weight:950; letter-spacing:.1em; text-transform:uppercase; }
+.rarity-uncommon { border-color:#475d69; }
+.rarity-uncommon::before { background:#7198aa; }
+.rarity-rare { border-color:#684f86; box-shadow:inset 0 0 26px rgba(139,96,183,.055); }
+.rarity-rare::before { background:#a575d2; }
+.rarity-legendary { border-color:#a27b3f; box-shadow:inset 0 0 34px rgba(226,182,100,.08); }
+.rarity-legendary::before { background:#e2b664; }
+.rarity-legendary .choice-rarity { color:#d5ae6c; }
+.draft-hint { display:block; margin:14px 0 0 5px; padding:9px 10px; border-left:2px solid #604979; color:#9c8ba9; background:rgba(75,52,91,.14); font-size:.66rem; line-height:1.4; }
+.role-venture + .choice-card-header .choice-rarity { color:#b89662; }
+@media (max-width:680px) { .draft-legend { grid-template-columns:1fr; gap:5px; } .draft-legend span { display:flex; gap:8px; } .draft-role { margin-bottom:7px; } }
