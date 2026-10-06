@@ -8,11 +8,11 @@ public sealed class RelicChoiceService
 {
     public const int ChoiceCount = 3;
 
-    public IReadOnlyList<RelicDefinition> Roll(RelicInventoryState inventory, IRandomSource randomSource)
+    public IReadOnlyList<RelicDefinition> Roll(RelicInventoryState inventory, IRandomSource randomSource, IReadOnlySet<RelicId>? availableRelics = null)
     {
         var engine = new RewardChoiceEngine(randomSource);
         var candidates = RelicCatalog.All
-            .Where(definition => !inventory.IsOwned(definition.Id))
+            .Where(definition => (availableRelics is null || availableRelics.Contains(definition.Id)) && !inventory.IsOwned(definition.Id))
             .Select(definition => new RewardCandidate<RelicDefinition>($"relic:{definition.Id}", definition, ToRewardRarity(definition.Rarity)));
         return engine.Roll(candidates, ChoiceCount).Select(candidate => candidate.Value).ToArray();
     }
