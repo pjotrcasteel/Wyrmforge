@@ -80,3 +80,25 @@
         font-size: 0.66rem;
     }
 }
+
+.encounter-objective.evacuation {
+    border-color: rgba(224, 139, 108, .52);
+    background: rgba(38, 20, 22, .88);
+    box-shadow: 0 0 28px rgba(191, 83, 64, .12);
+}
+
+.encounter-objective.evacuation strong {
+    color: #ffb199;
+}
+
+.essence-strip .cargo-pending {
+    border-color: rgba(219, 114, 87, .34);
+    color: #e7a08d;
+    background: rgba(84, 37, 31, .34);
+}
+
+.essence-strip .cargo-secured {
+    border-color: rgba(111, 190, 143, .32);
+    color: #9dd2b1;
+    background: rgba(34, 75, 51, .3);
+}
