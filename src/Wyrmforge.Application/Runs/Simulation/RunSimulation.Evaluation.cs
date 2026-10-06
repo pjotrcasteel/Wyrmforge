@@ -10,7 +10,11 @@ public sealed partial class RunSimulation
 {
     private int runSeed;
 
-    internal void InitializeRunSeed(int seed) => runSeed = seed;
+    internal void InitializeRunSeed(int seed)
+    {
+        runSeed = seed;
+        mapState = CreateSeededMapState(depthState.Depth);
+    }
 
     public RunSummary CreateEvaluationSummary()
     {
@@ -43,5 +47,11 @@ public sealed partial class RunSimulation
             RelicLoadout = relicLoadout,
             Resonance = resonance,
         };
+    }
+
+    private WyrmrealmMapState CreateSeededMapState(int depth)
+    {
+        var mapSeed = unchecked((runSeed * 397) ^ (depth * 7919)) & int.MaxValue;
+        return new WyrmrealmMapState(depth, mapSeed);
     }
 }
