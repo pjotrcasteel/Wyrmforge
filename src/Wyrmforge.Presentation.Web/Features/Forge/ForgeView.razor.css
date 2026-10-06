@@ -13,5 +13,6 @@
 .forge-discovery strong { margin-top: 5px; font-size: .82rem; }
 .forge-discovery small { margin-top: 5px; color: #918699; line-height: 1.35; }
 .forge-discovery em { margin-top: 9px; color: #746a7d; font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .05em; }
+.lab-link { display:inline-flex; align-items:center; text-decoration:none; border:1px solid #4a3b57; border-radius:8px; padding:7px 10px; color:#ddd2e5; background:transparent; }
 @media (max-width:880px) { .forge-discovery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width:560px) { .forge-knowledge-heading { align-items: flex-start; flex-direction: column; gap: 5px; } .forge-discovery-grid { grid-template-columns: 1fr; } }
