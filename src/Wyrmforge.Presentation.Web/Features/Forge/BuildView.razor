@@ -1,4 +1,5 @@
 @using System.Globalization
+@using Microsoft.JSInterop
 @inject IJSRuntime JavaScript
 
 <section class="build-view">
@@ -122,7 +123,7 @@
         var fromAllocated = IsAllocated(connection.From);
         var toAllocated = IsAllocated(connection.To);
         if (fromAllocated && toAllocated) return "web-edge active";
-        if (fromAllocated && CanAllocate(connection.To) || toAllocated && CanAllocate(connection.From)) return "web-edge available";
+        if ((fromAllocated && CanAllocate(connection.To)) || (toAllocated && CanAllocate(connection.From))) return "web-edge available";
         return "web-edge";
     }
 
@@ -176,6 +177,6 @@
         focusedId = PassiveTreeCatalog.OriginId;
     }
 
-    private ValueTask ZoomAsync(double delta) => JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.zoom", viewport, delta);
-    private ValueTask ResetViewAsync() => JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.reset", viewport);
+    private async Task ZoomAsync(double delta) => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.zoom", viewport, delta);
+    private async Task ResetViewAsync() => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.reset", viewport);
 }
