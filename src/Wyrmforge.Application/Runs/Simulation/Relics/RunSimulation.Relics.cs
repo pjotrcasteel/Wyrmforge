@@ -40,7 +40,7 @@ public sealed partial class RunSimulation
     private void OfferRelicChoice()
     {
         if (pendingRelicChoices.Count > 0) return;
-        pendingRelicChoices = relicChoiceService.Roll(build.Relics, randomSource);
+        pendingRelicChoices = relicChoiceService.Roll(build.Relics, randomSource, availableRelics);
     }
 
     private void RefreshRelicEffects() => RefreshBuildModifiers(true);
