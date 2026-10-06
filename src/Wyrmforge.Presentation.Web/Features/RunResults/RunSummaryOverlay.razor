@@ -25,6 +25,12 @@
             </section>
         </div>
 
+        <section class="run-story">
+            <span>RUN STORY</span>
+            <strong>@RunStory</strong>
+            <small>@RunStoryDetail</small>
+        </section>
+
         <div class="run-report-section">
             <span>SPELLS</span>
             <div class="run-report-chips">
@@ -120,6 +126,28 @@
                 return $"{first.School} / {Summary.Resonance[1].School} hybrid";
             }
             return $"{first.School} attuned";
+        }
+    }
+
+    private string RunStory
+    {
+        get
+        {
+            var wyrms = Summary.DragonIds.Count;
+            var wyrmText = wyrms switch { 0 => "no Wyrms slain", 1 => "1 Wyrm slain", _ => $"{wyrms} Wyrms slain" };
+            return $"{BuildIdentity} • Depth {Summary.Depth} • {wyrmText}";
+        }
+    }
+
+    private string RunStoryDetail
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (Summary.SynergyIds.Count > 0) parts.Add($"{Summary.SynergyIds.Count} Synerg{(Summary.SynergyIds.Count == 1 ? "y" : "ies")} awakened");
+            if (Summary.RareRouteNodes > 0) parts.Add($"{Summary.RareRouteNodes} rare trail{(Summary.RareRouteNodes == 1 ? string.Empty : "s")} cleared");
+            if (Summary.DragonEssences > 0) parts.Add($"{Summary.DragonEssences} Essence secured");
+            return parts.Count == 0 ? "The build never found a defining breakthrough this time." : string.Join(" • ", parts);
         }
     }
 
