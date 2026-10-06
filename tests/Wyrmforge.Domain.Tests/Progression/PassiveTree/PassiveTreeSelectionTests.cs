@@ -7,20 +7,27 @@ namespace Wyrmforge.Domain.Tests.Progression.PassiveTree;
 public sealed class PassiveTreeSelectionTests
 {
     [TestMethod]
-    public void Select_WhenPrerequisitesAreMet_SelectsNode()
+    public void Select_WhenNodeTouchesOrigin_SelectsNode()
     {
         var selection = new PassiveTreeSelection();
 
-        Assert.IsTrue(selection.Select("fire-1"));
-        Assert.IsTrue(selection.Select("fire-2"));
-        Assert.IsTrue(selection.Select("fire-major"));
-        Assert.AreEqual(4, selection.SpentPoints);
+        Assert.IsTrue(selection.Select("fire-start"));
+        Assert.AreEqual(1, selection.SpentPoints);
     }
 
     [TestMethod]
-    public void Select_WhenCompetingEpicIsSelected_RejectsOtherPath()
+    public void Select_WhenNodeIsNotConnected_RejectsNode()
     {
-        var selection = CreateFireMajorSelection();
+        var selection = new PassiveTreeSelection();
+
+        Assert.IsFalse(selection.CanSelect("fire-major"));
+        Assert.IsFalse(selection.Select("fire-major"));
+    }
+
+    [TestMethod]
+    public void Select_WhenCompetingMasteryIsSelected_RejectsOtherMastery()
+    {
+        var selection = CreateFireNotableSelection();
         Assert.IsTrue(selection.Select("wildfire"));
 
         Assert.IsFalse(selection.CanSelect("detonation"));
@@ -28,39 +35,73 @@ public sealed class PassiveTreeSelectionTests
     }
 
     [TestMethod]
-    public void Select_WhenLegendaryAlreadySelected_RejectsSecondLegendary()
+    public void Remove_WhenNodeWouldDisconnectAllocatedPath_RejectsRemoval()
     {
-        var selection = CreateFireMajorSelection(30);
+        var selection = CreateFireNotableSelection();
         Assert.IsTrue(selection.Select("wildfire"));
-        Assert.IsTrue(selection.Select("inferno"));
-        Assert.IsTrue(selection.Select("frost-1"));
-        Assert.IsTrue(selection.Select("frost-2"));
-        Assert.IsTrue(selection.Select("frost-major"));
-        Assert.IsTrue(selection.Select("deep-freeze"));
 
-        Assert.IsFalse(selection.CanSelect("absolute-zero"));
-        Assert.IsFalse(selection.Select("absolute-zero"));
+        Assert.IsFalse(selection.CanRemove("fire-1"));
+        Assert.IsFalse(selection.Remove("fire-1"));
+    }
+
+    [TestMethod]
+    public void Select_WhenHybridPathIsAllocated_EntersAdjacentSchoolWithoutReturningToOrigin()
+    {
+        var selection = new PassiveTreeSelection(40);
+        Assert.IsTrue(selection.Select("fire-start"));
+        Assert.IsTrue(selection.Select("fire-1"));
+        Assert.IsTrue(selection.Select("fire-frost-gate"));
+        Assert.IsTrue(selection.Select("hybrid-fire-frost-1"));
+        Assert.IsTrue(selection.Select("hybrid-fire-frost-2"));
+        Assert.IsTrue(selection.Select("frost-fire-gate"));
+        Assert.IsTrue(selection.Select("frost-1"));
+
+        Assert.IsTrue(selection.CanSelect("frost-2"));
+    }
+
+    [TestMethod]
+    public void Select_WhenBudgetAllows_CanReachMultipleKeystones()
+    {
+        var selection = new PassiveTreeSelection(60);
+        AllocateFireKeystone(selection);
+        Assert.IsTrue(selection.Select("storm-start"));
+        Assert.IsTrue(selection.Select("storm-1"));
+        Assert.IsTrue(selection.Select("storm-2"));
+        Assert.IsTrue(selection.Select("storm-major"));
+        Assert.IsTrue(selection.Select("chainstorm"));
+
+        Assert.IsTrue(selection.Select("living-storm"));
+        Assert.AreEqual(2, selection.Selected.Select(PassiveTreeCatalog.Get).Count(node => node.Kind == PassiveNodeKind.Keystone));
     }
 
     [TestMethod]
     public void Select_WhenPointBudgetWouldBeExceeded_RejectsNode()
     {
-        var selection = CreateFireMajorSelection();
-        Assert.IsTrue(selection.Select("wildfire"));
-        Assert.IsTrue(selection.Select("inferno"));
-        Assert.IsTrue(selection.Select("frost-1"));
-        Assert.IsTrue(selection.Select("frost-2"));
+        var selection = new PassiveTreeSelection(4);
+        Assert.IsTrue(selection.Select("fire-start"));
+        Assert.IsTrue(selection.Select("fire-1"));
+        Assert.IsTrue(selection.Select("fire-2"));
 
-        Assert.AreEqual(14, selection.SpentPoints);
-        Assert.IsFalse(selection.CanSelect("frost-major"));
+        Assert.IsFalse(selection.CanSelect("fire-major"));
     }
 
-    private static PassiveTreeSelection CreateFireMajorSelection(int pointBudget = PassiveTreeCatalog.TotalPoints)
+    private static PassiveTreeSelection CreateFireNotableSelection()
     {
-        var selection = new PassiveTreeSelection(pointBudget);
+        var selection = new PassiveTreeSelection();
+        Assert.IsTrue(selection.Select("fire-start"));
         Assert.IsTrue(selection.Select("fire-1"));
         Assert.IsTrue(selection.Select("fire-2"));
         Assert.IsTrue(selection.Select("fire-major"));
         return selection;
+    }
+
+    private static void AllocateFireKeystone(PassiveTreeSelection selection)
+    {
+        Assert.IsTrue(selection.Select("fire-start"));
+        Assert.IsTrue(selection.Select("fire-1"));
+        Assert.IsTrue(selection.Select("fire-2"));
+        Assert.IsTrue(selection.Select("fire-major"));
+        Assert.IsTrue(selection.Select("wildfire"));
+        Assert.IsTrue(selection.Select("inferno"));
     }
 }

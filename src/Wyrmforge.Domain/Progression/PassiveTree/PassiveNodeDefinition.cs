@@ -1,11 +1,15 @@
+using Wyrmforge.Domain.Combat.Modifiers;
+
 namespace Wyrmforge.Domain.Progression.PassiveTree;
 
 public sealed record PassiveNodeDefinition(
     string Id,
     string Name,
     string Description,
-    NodeTier Tier,
-    PassiveSchool School,
+    PassiveNodeKind Kind,
+    PassiveSchool? School,
     int Cost,
-    IReadOnlyList<string> Requires,
-    IReadOnlyList<string> Excludes);
+    double X,
+    double Y,
+    BuildModifierProfile Modifiers,
+    string? MasteryGroup = null);
