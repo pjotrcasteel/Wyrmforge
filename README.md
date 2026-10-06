@@ -2,23 +2,52 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.60 — Game Shell
+## Prototype 0.0.61 — Arcane Web
 
-0.0.60 turns the existing prototype systems into a cohesive game-facing shell without changing combat balance or starting the art pass.
+0.0.61 replaces the original four vertical passive lists with a real connected build graph inspired by the design grammar of large ARPG passive trees.
 
-The current top-level flow is:
+The Web is intentionally not enormous yet. The goal is to make **pathing, distance and opportunity cost** meaningful before adding hundreds of nodes.
+
+### Arcane Web
+
+- 49 total graph nodes arranged around a central **Wyrmheart** origin.
+- 24 spendable Arcane points.
+- Four elemental regions: Fire, Frost, Storm and Arcane.
+- Travel nodes provide small additive or multiplicative improvements.
+- Notables anchor each elemental specialization.
+- Masteries create mutually exclusive choices inside a cluster.
+- Keystones change combat rules and are limited by pathing/point economy rather than an arbitrary one-Keystone cap.
+- Four two-node hybrid bridges connect adjacent schools, allowing cross-school builds without always routing back through the center.
+- Removing a node is rejected when it would disconnect another allocated node from the Wyrmheart.
+- Existing rule-changing combat effects such as Wildfire, Deep Freeze, Chainstorm and Arcane Echo now live inside the graph rather than a prerequisite list.
+
+### Build UX
+
+The Build destination now renders the actual Web:
+
+- active paths and immediately reachable paths are visually distinct;
+- node state and effects are shown in a focused inspector;
+- desktop supports drag-pan, toolbar zoom and Ctrl/⌘ + wheel zoom;
+- mobile supports drag-pan and pinch zoom;
+- the Web recenters with one action;
+- the Run hub summarizes reached Keystones instead of the old single Legendary node.
+
+This remains a **fun-ugly** interface. The graph hierarchy and interaction are the product work in this milestone; final node art, VFX and environmental presentation come later.
+
+## Current top-level flow
 
 **Run → Build → Forge → Codex**
 
-- **Run** is the home screen. It summarizes the prepared build and selected Wyrm Offering and makes **Enter Wyrmrealm** the dominant action.
-- **Build** contains the current pre-run passive system. It is intentionally preserved for 0.0.60 and will be replaced by the graph-based **Arcane Web** in 0.0.61.
-- **Forge** owns persistent progression: secured Essence, lineage discoveries, Forge Mastery and Wyrm Offerings.
-- **Codex** owns discovery/reference information for synergies, spells, relics and Wyrms. Combat Lab remains available as a developer tool rather than primary game navigation.
-- Mobile uses bottom navigation and safe-area-aware layouts. Desktop uses a persistent navigation rail and wider contextual surfaces instead of stretching the mobile layout.
+- **Run** is the home screen and entry point into the Wyrmrealm.
+- **Build** is the Arcane Web used to define pre-run intent.
+- **Forge** owns secured Essence, lineage discoveries, Forge Mastery and Wyrm Offerings.
+- **Codex** owns discovery/reference information for synergies, spells, relics and Wyrms.
+
+Mobile uses bottom navigation and safe-area-aware layouts. Desktop uses a persistent navigation rail and wider contextual surfaces.
 
 ## Current game loop
 
-A run begins from a prepared Arcane Build and optional forged Wyrm Offering.
+A run begins from an allocated Arcane Web and optional forged Wyrm Offering.
 
 Inside the Wyrmrealm the player:
 
@@ -34,7 +63,7 @@ Run progression is temporary. Forge progression is persistent and primarily hori
 
 ## Current content and systems
 
-### Combat and build systems
+### Combat and run building
 
 - 8 spells across Fire, Frost, Storm and Arcane.
 - 12 run upgrades including additive, multiplicative and rule-changing effects.
@@ -73,9 +102,6 @@ Each Wyrm has its own movement profile, attack geometry, pressure pattern and Es
 
 ## Roadmap from here
 
-The next milestones are deliberately focused on the missing roguelite/build identity rather than final art:
-
-- **0.0.61 — Arcane Web:** replace the current vertical passive lists with a Path-of-Exile-inspired graph of travel nodes, notables, masteries, keystones and cross-school routes.
 - **0.0.62 — Roguelike Draft:** refine temporary in-run progression into a coherent draft with weighted choices, pivots, synergies, rarity and build-aware reward pools.
 - **0.0.63 — Run Flow & Reward Moments:** improve the UX/game-feel of level-ups, Wyrm kills, Essence harvests, rare nodes, extraction and synergy activation.
 - **0.0.64 — Fun Ugly Gate:** judge whether the complete loop is fun enough to deserve the real visual production pass.
@@ -91,16 +117,16 @@ Wyrmforge has no paid runtime libraries.
 - MSTest
 - GitHub Pages
 
-Gameplay rules remain in C# Domain/Application code. JavaScript handles Canvas rendering, input, diagnostics and browser storage only.
+Gameplay rules remain in C# Domain/Application code. JavaScript handles Canvas rendering, input, diagnostics, Arcane Web viewport interaction and browser storage only.
 
 ## Architecture
 
 The codebase follows Onion Architecture with feature-based grouping inside each layer.
 
-- **Domain** owns reusable gameplay state, definitions and rules.
+- **Domain** owns reusable gameplay state, definitions, graph connectivity and rules.
 - **Application** owns run orchestration, progression, navigation, encounter composition and combat simulation.
 - **Infrastructure** owns external/runtime implementations.
-- **Presentation** owns Blazor composition and the thin Canvas/input adapter.
+- **Presentation** owns Blazor composition and thin browser adapters.
 
 Folders represent cohesive game concepts rather than broad technical dumping grounds such as `Services`, `Managers` or `Models`.
 
@@ -133,4 +159,5 @@ Pushes to `main` restore, build and test the solution, publish the Blazor WebAss
 12. Permanent resources only become spendable through explicit recipes; adding a resource must not silently expand every economy.
 13. Wyrmrealm progression should be visible as route state; bosses should be reached through player-visible progress rather than hidden timers.
 14. Persistent progression should primarily widen future possibilities rather than create an unavoidable permanent-stat treadmill.
-15. Stop at assessment milestones and improve cohesion before expanding the feature surface again.
+15. Pre-run build power should come from connected pathing and opportunity cost rather than isolated menu choices.
+16. Stop at assessment milestones and improve cohesion before expanding the feature surface again.
