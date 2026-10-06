@@ -18,6 +18,20 @@
             <p>@SecuredEssenceMessage</p>
         </div>
 
+        <div class="refuge-decision" aria-label="Extraction versus descent">
+            <section class="decision-safe">
+                <span>SAFE NOW</span>
+                <strong>Return to the Forge</strong>
+                <small>@SafeDecisionCopy</small>
+            </section>
+            <b>OR</b>
+            <section class="decision-risk @(CanDescend ? string.Empty : "sealed")">
+                <span>@(CanDescend ? "RISK NEXT" : "NO DEEPER PASSAGE")</span>
+                <strong>@(CanDescend ? $"Descend to Depth {NextDepth}" : "Maximum depth reached")</strong>
+                <small>@(CanDescend ? $"Keep all secured Essence safe and chase ×{ScoreMultiplier:0.0} base rewards with a fresh haul at risk." : "This run can only return safely from here.")</small>
+            </section>
+        </div>
+
         @if (OwnedRelics.Count > 0)
         {
             <section class="relic-loadout">
@@ -63,6 +77,11 @@
     [Parameter] public EventCallback<RunCheckpointActionId> OnUse { get; set; }
     [Parameter] public EventCallback<RelicId> OnEquipRelic { get; set; }
     [Parameter] public EventCallback<RelicId> OnUnequipRelic { get; set; }
+
+    private bool CanDescend => Actions.Any(action => action.Id == RunCheckpointActionId.Descend && action.Enabled);
+    private string SafeDecisionCopy => SecuredEssenceCount == 0
+        ? "End the run safely. Nothing is banked yet."
+        : $"End the run with {SecuredEssenceCount} Essence{(SecuredEssenceCount == 1 ? string.Empty : "s")} permanently banked.";
 
     private string HealthStyle => $"width:{(MaxHealth <= 0 ? 0 : Math.Clamp(Health / MaxHealth * 100, 0, 100)):0.#}%";
     private string SecuredEssenceMessage => SecuredEssenceCount switch

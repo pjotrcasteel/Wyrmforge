@@ -3,6 +3,11 @@
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
     <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
 
+    @if (runMoment is { } moment)
+    {
+        <RunMomentOverlay Moment="moment" />
+    }
+
     @if (MapCombatActive && CurrentMapNode is { } activeNode)
     {
         <div class="encounter-objective" aria-label="Current encounter objective">
@@ -12,7 +17,7 @@
     }
     else if (EvacuationActive)
     {
-        <div class="encounter-objective" aria-label="Evacuation countdown">
+        <div class="encounter-objective evacuation" aria-label="Evacuation countdown">
             <span>EVACUATION RITUAL • HOLD THE CIRCLE</span>
             <strong>@Math.Ceiling(EvacuationRemainingSeconds).ToString("0")s</strong>
         </div>
@@ -29,6 +34,14 @@
             @if (CurrentDepth > 1)
             {
                 <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") BASE SCORE</span>
+            }
+            @if (PendingEssenceCount > 0)
+            {
+                <span class="cargo-pending">◇ @PendingEssenceCount ESSENCE AT RISK</span>
+            }
+            @if (SecuredEssenceCount > 0)
+            {
+                <span class="cargo-secured">✓ @SecuredEssenceCount ESSENCE SECURED</span>
             }
             @foreach (var relic in CurrentRelics)
             {
@@ -61,6 +74,7 @@
     }
     else if (PendingMapChoice)
     {
-        <WyrmrealmMapView Depth="CurrentDepth" Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" Resonance="CurrentResonance" Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" />
+        <WyrmrealmMapView Depth="CurrentDepth" Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" Resonance="CurrentResonance"
+            Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" />
     }
 </main>

@@ -1,0 +1,24 @@
+.dragon-harvest { position:fixed; z-index:10; inset:0; display:grid; place-items:center; padding:18px; overflow:auto; background:radial-gradient(circle at 50% 34%,rgba(137,63,47,.15),rgba(6,5,8,.94) 50%); backdrop-filter:blur(12px); }
+.dragon-harvest-card { width:min(980px,100%); padding:27px; border:1px solid rgba(221,118,89,.27); border-radius:22px; background:linear-gradient(160deg,rgba(39,23,23,.98),rgba(18,14,18,.99) 54%,rgba(24,17,14,.99)); box-shadow:0 30px 90px rgba(0,0,0,.52); }
+.harvest-flow { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+.harvest-flow span { padding:5px 8px; border:1px solid rgba(255,255,255,.08); border-radius:999px; color:#6f646c; font-size:.55rem; font-weight:900; letter-spacing:.08em; }
+.harvest-flow .done { color:#8fb69b; border-color:rgba(111,190,143,.22); }
+.harvest-flow .active { color:#e49b84; border-color:rgba(221,118,89,.35); background:rgba(106,47,37,.18); }
+.dragon-harvest-card h2 { margin:6px 0 8px; color:#f5e9e5; font-size:clamp(1.6rem,4vw,2.5rem); }
+.dragon-harvest-card > p { margin:0; color:#a8979a; line-height:1.5; }
+.dragon-harvest-card > p strong { color:#e9a28e; }
+.harvest-risk { display:flex; align-items:center; gap:11px; margin:16px 0; padding:11px 13px; border:1px solid rgba(221,118,89,.22); border-radius:12px; background:rgba(105,43,34,.13); }
+.harvest-risk > span { color:#dd8269; font-size:1.15rem; }
+.harvest-risk div { display:grid; gap:2px; }
+.harvest-risk strong { color:#cf9b8d; font-size:.61rem; letter-spacing:.1em; }
+.harvest-risk small { color:#8f7b7d; line-height:1.35; }
+.essence-choices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; }
+.essence-choice { display:flex; min-height:250px; padding:17px; flex-direction:column; border:1px solid rgba(255,255,255,.11); border-radius:16px; color:#eee3df; background:rgba(255,255,255,.035); text-align:left; cursor:pointer; transition:transform .12s ease,border-color .12s ease,background .12s ease; }
+.essence-choice:hover { transform:translateY(-3px); border-color:rgba(226,134,104,.54); background:rgba(132,61,42,.08); }
+.essence-source { color:#8f7470; font-size:.56rem; font-weight:900; letter-spacing:.1em; }
+.essence-icon { margin:16px 0 9px; font-size:2.2rem; }
+.essence-choice strong { font-size:1rem; }
+.essence-effect { margin-top:8px; color:#dfb0a2; font-size:.78rem; line-height:1.4; }
+.essence-choice small { margin-top:8px; color:#8e8082; line-height:1.4; }
+.essence-footer { margin-top:auto; padding-top:18px; color:#a27265; font-size:.58rem; font-weight:900; letter-spacing:.08em; }
+@media (max-width:700px) { .dragon-harvest-card { padding:20px 14px; } .essence-choices { grid-template-columns:1fr; } .essence-choice { min-height:0; } .harvest-flow span { flex:1 1 auto; text-align:center; } }
