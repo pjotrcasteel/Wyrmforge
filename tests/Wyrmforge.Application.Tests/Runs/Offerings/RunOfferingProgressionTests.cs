@@ -11,22 +11,24 @@ namespace Wyrmforge.Application.Tests.Runs.Offerings;
 public sealed class RunOfferingProgressionTests
 {
     [TestMethod]
-    public void CanOffer_BeforeLineageDiscovery_ReturnsFalse()
+    public void CanOffer_BeforeMasteryForged_ReturnsFalse()
     {
         var progression = new ForgeProgressionState();
+        progression.Restore([ForgeDiscoveryId.Stormcraft]);
 
         Assert.IsFalse(RunOfferingCatalog.CanOffer(DragonEssenceId.StormHeart, progression));
     }
 
     [TestMethod]
-    public void CanOffer_AfterLineageDiscovery_ReturnsTrueForAllRecipesInLineage()
+    public void CanOffer_AfterEachMasteryForged_UnlocksOnlyForgedRecipes()
     {
         var progression = new ForgeProgressionState();
-        progression.Discover(ForgeDiscoveryContext.FromEssences([DragonEssenceId.StormHeart]));
+        progression.Restore([ForgeDiscoveryId.Stormcraft]);
+        progression.RestoreMasteries([ForgeMasteryId.StormheartBinding, ForgeMasteryId.ChargedSmithing]);
 
         Assert.IsTrue(RunOfferingCatalog.CanOffer(DragonEssenceId.StormHeart, progression));
         Assert.IsTrue(RunOfferingCatalog.CanOffer(DragonEssenceId.ChargedScale, progression));
-        Assert.IsTrue(RunOfferingCatalog.CanOffer(DragonEssenceId.TempestWing, progression));
+        Assert.IsFalse(RunOfferingCatalog.CanOffer(DragonEssenceId.TempestWing, progression));
     }
 
     [TestMethod]
