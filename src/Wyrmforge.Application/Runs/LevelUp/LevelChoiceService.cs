@@ -7,7 +7,7 @@ using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Runs.LevelUp;
 
-public sealed class LevelChoiceService(IRandomSource randomSource)
+public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<SpellId>? availableSpells = null)
 {
     private const double SpellResonanceWeightPerPoint = 0.04;
     private const double SynergyResonanceWeightPerPoint = 0.03;
@@ -63,14 +63,14 @@ public sealed class LevelChoiceService(IRandomSource randomSource)
         return choices;
     }
 
-    private static List<LevelChoice> CreatePool(RunBuildState build)
+    private List<LevelChoice> CreatePool(RunBuildState build)
     {
         var choices = new List<LevelChoice>();
         choices.AddRange(RunUpgradeCatalog.All
             .Where(upgrade => build.RunUpgrades[upgrade.Id] < upgrade.MaxRank)
             .Select(upgrade => new LevelChoice($"rune:{upgrade.Id}", LevelChoiceKind.Rune, upgrade.Name, upgrade.Description, upgrade.Icon, build.RunUpgrades[upgrade.Id], upgrade.MaxRank)));
         choices.AddRange(SpellCatalog.All
-            .Where(spell => build.Spells[spell.Id] < spell.MaxRank)
+            .Where(spell => (availableSpells is null || availableSpells.Contains(spell.Id)) && build.Spells[spell.Id] < spell.MaxRank)
             .Select(spell => new LevelChoice($"spell:{spell.Id}", build.Spells[spell.Id] == 0 ? LevelChoiceKind.NewSpell : LevelChoiceKind.SpellUpgrade, spell.Name, spell.Description, spell.Icon, build.Spells[spell.Id], spell.MaxRank)));
         choices.AddRange(SynergyCatalog.All
             .Where(synergy => build.Synergies.IsAvailable(synergy.Id, build.Spells))
