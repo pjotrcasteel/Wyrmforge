@@ -79,6 +79,7 @@ public sealed partial class RunSimulation
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
         var masteredFrostShard = id == SpellId.FrostShard && FrostShardMastery.IsActive(rank);
+        var status = CreateProjectileStatus(spell, rank);
 
         for (var index = 0; index < count; index++)
         {
@@ -89,7 +90,7 @@ public sealed partial class RunSimulation
                 inferno,
                 chains,
                 id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0,
-                id == SpellId.FrostShard ? 0.35 + rank * 0.18 : 0,
+                status,
                 masteredArcaneOrb ? 1 : 0,
                 masteredFrostShard ? FrostShardMastery.NovaRadius : 0);
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
@@ -121,11 +122,12 @@ public sealed partial class RunSimulation
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
             RegisterElementalImpact(target.Position, spell.Id);
-            DamageTarget(target, hitDamage);
+            var killed = DamageTarget(target, hitDamage);
+            if (!killed) ApplyAbilityStatus(spell, rank, target);
 
             if (forkPending)
             {
-                CastChainFork(spell.Id, target.Position, damage, hit, ref jumps, ref bonusJumpsTriggered);
+                CastChainFork(spell, rank, target.Position, damage, hit, ref jumps, ref bonusJumpsTriggered);
                 forkPending = false;
             }
 
@@ -134,15 +136,16 @@ public sealed partial class RunSimulation
         }
     }
 
-    private void CastChainFork(SpellId spellId, Vector2D origin, double damage, HashSet<int> hit, ref int jumps, ref bool bonusJumpsTriggered)
+    private void CastChainFork(SpellDefinition spell, int rank, Vector2D origin, double damage, HashSet<int> hit, ref int jumps, ref bool bonusJumpsTriggered)
     {
         var target = NearestTarget(origin, hit);
         if (target is null) return;
         hit.Add(target.Id);
         lightning.Add(new LightningTrace(origin, target.Position, 0.16));
-        var forkDamage = ApplyChainInteractions(spellId, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
-        RegisterElementalImpact(target.Position, spellId);
-        DamageTarget(target, forkDamage);
+        var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
+        RegisterElementalImpact(target.Position, spell.Id);
+        var killed = DamageTarget(target, forkDamage);
+        if (!killed) ApplyAbilityStatus(spell, rank, target);
     }
 
     private double ApplyChainInteractions(SpellId spellId, ICombatTarget target, double damage, ref int jumps, ref bool bonusJumpsTriggered)

@@ -47,14 +47,13 @@ public sealed partial class RunSimulation
             2 => new Vector2D(randomSource.NextDouble() * width, height + margin),
             _ => new Vector2D(-margin, randomSource.NextDouble() * height),
         };
+        var definition = EnemyCatalog.Get(kind);
         var scale = 1 + elapsed / 80;
         var routeHealth = Math.Max(0.25, CurrentRoute?.Encounter.EnemyHealthMultiplier ?? 1) * encounterModifiers.EnemyHealthMultiplier;
         var routeSpeed = Math.Max(0.25, CurrentRoute?.Encounter.EnemySpeedMultiplier ?? 1) * encounterModifiers.EnemySpeedMultiplier;
-        var health = 36 * scale * depthState.EnemyHealthMultiplier * routeHealth;
-        var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier * routeSpeed;
-        var id = ++enemyId;
-        var definition = EnemyCatalog.Get(kind);
-        enemies.Add(new EnemyState(id, position, definition.Radius, health, speed, kind));
+        var health = 36 * scale * depthState.EnemyHealthMultiplier * routeHealth * definition.HealthMultiplier;
+        var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier * routeSpeed * definition.SpeedMultiplier;
+        enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, kind));
     }
 
     private void UpdateEnemies(double delta)
@@ -68,7 +67,7 @@ public sealed partial class RunSimulation
             var scaledDelta = delta * statusTimeScale;
             var direction = Vector2D.DirectionTo(enemy.Position, player.Position);
             var speed = enemy.Speed;
-            var contactDamagePerSecond = 18d;
+            var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier;
             if (enemy.RiftStalker is { } stalker)
             {
                 var windupStarted = stalker.Tick(scaledDelta, enemy.Position, player.Position);
@@ -78,7 +77,7 @@ public sealed partial class RunSimulation
                 {
                     direction = stalker.LungeDirection;
                     speed *= 4;
-                    contactDamagePerSecond = 72;
+                    contactDamagePerSecond *= 4;
                 }
             }
 

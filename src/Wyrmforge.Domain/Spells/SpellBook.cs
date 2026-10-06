@@ -2,13 +2,7 @@ namespace Wyrmforge.Domain.Spells;
 
 public sealed class SpellBook
 {
-    private readonly Dictionary<SpellId, int> ranks = new()
-    {
-        [SpellId.ArcaneOrb] = 1,
-        [SpellId.FireBolt] = 0,
-        [SpellId.FrostShard] = 0,
-        [SpellId.ChainLightning] = 0,
-    };
+    private readonly Dictionary<SpellId, int> ranks = SpellCatalog.All.ToDictionary(spell => spell.Id, spell => spell.Id == SpellId.ArcaneOrb ? 1 : 0);
 
     public int this[SpellId id] => ranks[id];
 

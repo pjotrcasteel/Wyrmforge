@@ -21,6 +21,27 @@ public sealed class CombatStatusCollection
         return Math.Clamp(result, 0, 1);
     }
 
+    public double DamagePerSecond()
+    {
+        var result = 0d;
+        foreach (var status in active.Values)
+        {
+            if (status.IsActive) result += status.Definition.DamagePerSecondPerStack * status.Stacks;
+        }
+        return result;
+    }
+
+    public double DamageTakenMultiplier()
+    {
+        var result = 1d;
+        foreach (var status in active.Values)
+        {
+            if (!status.IsActive || status.Definition.DamageTakenMultiplierPerStack == 1) continue;
+            result *= Math.Pow(status.Definition.DamageTakenMultiplierPerStack, status.Stacks);
+        }
+        return result;
+    }
+
     public void Apply(CombatStatusDefinition definition, double durationSeconds, int stacks = 1)
     {
         if (durationSeconds <= 0 || stacks <= 0) return;

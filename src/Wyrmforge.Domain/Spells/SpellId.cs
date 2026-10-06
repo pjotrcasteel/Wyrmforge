@@ -6,4 +6,8 @@ public enum SpellId
     FireBolt,
     FrostShard,
     ChainLightning,
+    CinderNeedle,
+    IceLance,
+    BallLightning,
+    AetherDart,
 }
