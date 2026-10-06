@@ -2,9 +2,15 @@
 
 <div class="dragon-harvest">
     <section class="dragon-harvest-card">
-        <div class="eyebrow">DRAGON SLAIN • HARVEST @SourceName.ToUpperInvariant()</div>
+        <div class="harvest-flow" aria-label="Wyrm harvest flow">
+            <span class="done">1 • WYRM SLAIN</span>
+            <span class="active">2 • CHOOSE ESSENCE</span>
+            <span>3 • HOLD EVACUATION</span>
+        </div>
+        <div class="eyebrow">HARVEST @SourceName.ToUpperInvariant()</div>
         <h2>Take something that should have died with it.</h2>
-        <p>The Wyrmrealm is paused. Choose one part to bind into this run.</p>
+        <p>Choose one part. Its power becomes active immediately, but the Essence itself is <strong>not safe yet</strong>.</p>
+        <div class="harvest-risk"><span>⚠</span><div><strong>THE NEXT STEP IS THE RISK</strong><small>Choosing Essence starts an evacuation ritual. Stay inside the circle until it is secured at Refuge.</small></div></div>
         <div class="essence-choices">
             @foreach (var essence in Choices)
             {
@@ -14,7 +20,7 @@
                     <strong>@essence.Name</strong>
                     <span class="essence-effect">@essence.Effect</span>
                     <small>@essence.Description</small>
-                    <span class="essence-footer">HARVEST THIS PART</span>
+                    <span class="essence-footer">TAKE ESSENCE • BEGIN EVACUATION</span>
                 </button>
             }
         </div>
