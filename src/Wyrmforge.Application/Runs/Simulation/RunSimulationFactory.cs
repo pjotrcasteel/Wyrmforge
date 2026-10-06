@@ -11,7 +11,8 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
         var levelChoiceService = new LevelChoiceService(randomSource);
-        var simulation = new RunSimulation(selectedNodes, levelChoiceService, randomSource, offering, runSeed);
+        var simulation = new RunSimulation(selectedNodes, levelChoiceService, randomSource, offering);
+        simulation.InitializeRunSeed(runSeed);
         simulation.InitializeResonance(selectedNodes);
         return simulation;
     }
