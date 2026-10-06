@@ -1,0 +1,105 @@
+@using Wyrmforge.Application.Runs.Offerings
+@using Wyrmforge.Domain.Progression.Forge
+
+<section class="run-hub">
+    <header class="run-hero">
+        <div class="run-hero-copy">
+            <span class="section-kicker">THE WYRMREALM</span>
+            <h1>The realm is listening.</h1>
+            <p>Shape your mage, carry an offering if you dare, then push as deep as your build can survive.</p>
+            <div class="run-status-row">
+                <span>@Selection.SpentPoints / @Selection.PointBudget arcane points</span>
+                <span>@OfferingLabel</span>
+                <span>Best @BestScore.ToString("N0")</span>
+            </div>
+            <button class="enter-realm" @onclick="StartAsync">
+                <span>ENTER WYRMREALM</span>
+                <small>Begin a new run</small>
+            </button>
+        </div>
+        <div class="realm-placeholder" aria-hidden="true">
+            <div class="realm-ring ring-outer"></div>
+            <div class="realm-ring ring-middle"></div>
+            <div class="realm-ring ring-inner"></div>
+            <div class="realm-mark">W</div>
+        </div>
+    </header>
+
+    <div class="run-dashboard">
+        <article class="loadout-card">
+            <div class="card-heading">
+                <div>
+                    <span class="section-kicker">CURRENT BUILD</span>
+                    <h2>@BuildTitle</h2>
+                </div>
+                <button class="text-action" @onclick="EditBuildAsync">EDIT</button>
+            </div>
+            <div class="school-summary">
+                @foreach (var school in Enum.GetValues<PassiveSchool>())
+                {
+                    var points = SchoolPoints(school);
+                    if (points <= 0) continue;
+                    <span class="school-pill school-@school.ToString().ToLowerInvariant()">@SchoolIcon(school) @school <b>@points</b></span>
+                }
+                @if (Selection.SpentPoints == 0)
+                {
+                    <span class="empty-copy">No arcane path chosen yet.</span>
+                }
+            </div>
+            @if (SelectedLegendary is { } legendary)
+            {
+                <div class="keystone-summary"><span>LEGENDARY</span><strong>@legendary.Name</strong><small>@legendary.Description</small></div>
+            }
+            else
+            {
+                <p class="support-copy">Your permanent Arcane Build sets the direction. Run rewards decide what it becomes.</p>
+            }
+        </article>
+
+        <article class="loadout-card">
+            <div class="card-heading">
+                <div>
+                    <span class="section-kicker">WYRM OFFERING</span>
+                    <h2>@OfferingTitle</h2>
+                </div>
+                <button class="text-action" @onclick="EditForgeAsync">CHANGE</button>
+            </div>
+            @if (SelectedOffering is { } offering)
+            {
+                var essence = DragonEssenceCatalog.Get(offering);
+                <div class="offering-display">
+                    <span class="offering-icon">@essence.Icon</span>
+                    <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(offering).Effect</small></div>
+                </div>
+            }
+            else
+            {
+                <div class="offering-display muted">
+                    <span class="offering-icon">◇</span>
+                    <div><strong>Enter empty-handed</strong><small>No secured Essence will be consumed when this run begins.</small></div>
+                </div>
+            }
+        </article>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
+    [Parameter] public int BestScore { get; set; }
+    [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnEditBuild { get; set; }
+    [Parameter] public EventCallback OnEditForge { get; set; }
+
+    private PassiveNodeDefinition? SelectedLegendary => Selection.Selected.Select(PassiveTreeCatalog.Get).FirstOrDefault(node => node.Tier == NodeTier.Legendary);
+    private string BuildTitle => Selection.SpentPoints == 0 ? "Unshaped mage" : SelectedLegendary?.Name ?? "Arcane path prepared";
+    private string OfferingTitle => SelectedOffering is { } offering ? DragonEssenceCatalog.Get(offering).Name : "No offering selected";
+    private string OfferingLabel => SelectedOffering is { } offering ? $"Offering: {DragonEssenceCatalog.Get(offering).Name}" : "No offering";
+
+    private int SchoolPoints(PassiveSchool school) => Selection.Selected.Where(id => PassiveTreeCatalog.Get(id).School == school).Sum(id => PassiveTreeCatalog.Get(id).Cost);
+    private Task StartAsync() => OnStart.InvokeAsync();
+    private Task EditBuildAsync() => OnEditBuild.InvokeAsync();
+    private Task EditForgeAsync() => OnEditForge.InvokeAsync();
+    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄", PassiveSchool.Storm => "⚡", _ => "✦" };
+}
