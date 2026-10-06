@@ -1,3 +1,6 @@
+using Wyrmforge.Domain.Combat.Modifiers;
+using Wyrmforge.Domain.Progression.PassiveTree;
+
 namespace Wyrmforge.Domain.Combat.Stats;
 
 public sealed record PassiveCombatProfile(
@@ -25,21 +28,13 @@ public sealed record PassiveCombatProfile(
 {
     public static PassiveCombatProfile Create(IReadOnlySet<string> selected)
     {
-        var damageMultiplier = 1 + Count(selected, "fire-1", "fire-2") * 0.05;
-        if (selected.Contains("fire-major")) damageMultiplier *= 1.25;
-
-        var castIntervalMultiplier = 1 / (1 + Count(selected, "storm-1", "storm-2") * 0.04);
-        if (selected.Contains("storm-major")) castIntervalMultiplier *= 0.75;
-
-        var projectileSpeedMultiplier = 1 + Count(selected, "arcane-1", "arcane-2") * 0.05;
-        if (selected.Contains("arcane-major")) projectileSpeedMultiplier *= 1.3;
-
+        var modifiers = BuildModifierSet.Aggregate(selected.Select(id => PassiveTreeCatalog.Get(id).Modifiers));
         return new PassiveCombatProfile(
-            damageMultiplier,
-            castIntervalMultiplier,
-            projectileSpeedMultiplier,
-            100 + Count(selected, "frost-1", "frost-2") * 4,
-            selected.Contains("frost-major") ? 0.85 : 1,
+            modifiers.Apply(BuildStatId.Damage, 1),
+            modifiers.Apply(BuildStatId.CastInterval, 1),
+            modifiers.Apply(BuildStatId.ProjectileSpeed, 1),
+            modifiers.Apply(BuildStatId.MaxHealth, 100),
+            modifiers.Apply(BuildStatId.DamageTaken, 1),
             selected.Contains("wildfire"),
             selected.Contains("detonation"),
             selected.Contains("inferno"),
@@ -57,6 +52,4 @@ public sealed record PassiveCombatProfile(
             selected.Contains("echo-chamber"),
             selected.Contains("astral-barrage"));
     }
-
-    private static int Count(IReadOnlySet<string> selected, params string[] ids) => ids.Count(selected.Contains);
 }

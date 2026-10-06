@@ -43,16 +43,20 @@
                 }
                 @if (Selection.SpentPoints == 0)
                 {
-                    <span class="empty-copy">No arcane path chosen yet.</span>
+                    <span class="empty-copy">No Arcane Web path chosen yet.</span>
                 }
             </div>
-            @if (SelectedLegendary is { } legendary)
+            @if (SelectedKeystones.Count > 0)
             {
-                <div class="keystone-summary"><span>LEGENDARY</span><strong>@legendary.Name</strong><small>@legendary.Description</small></div>
+                <div class="keystone-summary">
+                    <span>KEYSTONE@(SelectedKeystones.Count == 1 ? string.Empty : "S")</span>
+                    <strong>@string.Join(" • ", SelectedKeystones.Select(node => node.Name))</strong>
+                    <small>Rule-changing endpoints reached through your allocated path.</small>
+                </div>
             }
             else
             {
-                <p class="support-copy">Your permanent Arcane Build sets the direction. Run rewards decide what it becomes.</p>
+                <p class="support-copy">Your Arcane Web sets the starting intent. Run rewards decide what it becomes.</p>
             }
         </article>
 
@@ -92,8 +96,8 @@
     [Parameter] public EventCallback OnEditBuild { get; set; }
     [Parameter] public EventCallback OnEditForge { get; set; }
 
-    private PassiveNodeDefinition? SelectedLegendary => Selection.Selected.Select(PassiveTreeCatalog.Get).FirstOrDefault(node => node.Tier == NodeTier.Legendary);
-    private string BuildTitle => Selection.SpentPoints == 0 ? "Unshaped mage" : SelectedLegendary?.Name ?? "Arcane path prepared";
+    private IReadOnlyList<PassiveNodeDefinition> SelectedKeystones => Selection.Selected.Select(PassiveTreeCatalog.Get).Where(node => node.Kind == PassiveNodeKind.Keystone).ToArray();
+    private string BuildTitle => Selection.SpentPoints == 0 ? "Unshaped mage" : SelectedKeystones.Count > 0 ? SelectedKeystones[0].Name : "Arcane path prepared";
     private string OfferingTitle => SelectedOffering is { } offering ? DragonEssenceCatalog.Get(offering).Name : "No offering selected";
     private string OfferingLabel => SelectedOffering is { } offering ? $"Offering: {DragonEssenceCatalog.Get(offering).Name}" : "No offering";
 

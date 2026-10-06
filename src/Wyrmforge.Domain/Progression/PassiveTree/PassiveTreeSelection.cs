@@ -19,13 +19,11 @@ public sealed class PassiveTreeSelection
 
     public bool CanSelect(string id)
     {
-        if (selected.Contains(id)) return false;
+        if (id == PassiveTreeCatalog.OriginId || selected.Contains(id)) return false;
         var node = PassiveTreeCatalog.Get(id);
         if (SpentPoints + node.Cost > pointBudget) return false;
-        if (!node.Requires.All(selected.Contains)) return false;
-        if (node.Excludes.Any(selected.Contains)) return false;
-        if (node.Tier == NodeTier.Legendary && selected.Any(selectedId => PassiveTreeCatalog.Get(selectedId).Tier == NodeTier.Legendary)) return false;
-        return true;
+        if (node.MasteryGroup is { } group && selected.Any(selectedId => PassiveTreeCatalog.Get(selectedId).MasteryGroup == group)) return false;
+        return PassiveTreeCatalog.Neighbors(id).Any(IsConnectedAnchor);
     }
 
     public bool Select(string id)
@@ -37,7 +35,22 @@ public sealed class PassiveTreeSelection
     public bool CanRemove(string id)
     {
         if (!selected.Contains(id)) return false;
-        return !PassiveTreeCatalog.All.Any(node => selected.Contains(node.Id) && node.Requires.Contains(id));
+        var remaining = selected.Where(selectedId => selectedId != id).ToHashSet();
+        if (remaining.Count == 0) return true;
+
+        var reachable = new HashSet<string> { PassiveTreeCatalog.OriginId };
+        var queue = new Queue<string>();
+        queue.Enqueue(PassiveTreeCatalog.OriginId);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var neighbor in PassiveTreeCatalog.Neighbors(current))
+            {
+                if (!remaining.Contains(neighbor) || !reachable.Add(neighbor)) continue;
+                queue.Enqueue(neighbor);
+            }
+        }
+        return remaining.All(reachable.Contains);
     }
 
     public bool Remove(string id)
@@ -47,4 +60,6 @@ public sealed class PassiveTreeSelection
     }
 
     public void Reset() => selected.Clear();
+
+    private bool IsConnectedAnchor(string id) => id == PassiveTreeCatalog.OriginId || selected.Contains(id);
 }

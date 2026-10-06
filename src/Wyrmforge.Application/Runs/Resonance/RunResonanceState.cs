@@ -21,7 +21,7 @@ public sealed class RunResonanceState(IReadOnlySet<string> selectedNodes)
         foreach (var nodeId in selectedNodeIds)
         {
             var node = PassiveTreeCatalog.Get(nodeId);
-            values[ToSpellSchool(node.School)] += node.Cost;
+            if (node.School is { } school) values[ToSpellSchool(school)] += node.Cost;
         }
 
         foreach (var spell in SpellCatalog.All)
