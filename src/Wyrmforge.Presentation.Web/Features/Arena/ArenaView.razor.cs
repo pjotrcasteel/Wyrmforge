@@ -61,6 +61,7 @@ public partial class ArenaView : IAsyncDisposable
     private int RelicSlots => simulation?.RelicSlots ?? 0;
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
+    private int PendingEssenceCount => Math.Max(0, CurrentEssences.Count - SecuredEssenceCount);
 
     protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression);
 
@@ -97,6 +98,7 @@ public partial class ArenaView : IAsyncDisposable
             || previousMapKills != current.CurrentMapNodeKills
             || previousEvacuation != current.EvacuationActive
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
+        if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
@@ -107,11 +109,44 @@ public partial class ArenaView : IAsyncDisposable
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
     }
 
-    private async Task ChooseAsync(string id) { if (simulation?.ApplyChoice(id) == true) await InvokeAsync(StateHasChanged); }
-    private async Task ChooseEssenceAsync(DragonEssenceId id) { if (simulation?.ApplyDragonEssence(id) == true) await InvokeAsync(StateHasChanged); }
-    private async Task ChooseRelicAsync(RelicId id) { if (simulation?.ApplyRelicChoice(id) == true) await InvokeAsync(StateHasChanged); }
-    private async Task ChooseMapNodeAsync(string id) { if (simulation?.ChooseMapNode(id) == true) await InvokeAsync(StateHasChanged); }
-    private async Task UseCheckpointActionAsync(RunCheckpointActionId id) { if (simulation?.UseCheckpointAction(id) == true) await InvokeAsync(StateHasChanged); }
+    private async Task ChooseAsync(string id)
+    {
+        var choice = CurrentChoices.SingleOrDefault(candidate => candidate.Id == id);
+        if (choice is null || simulation?.ApplyChoice(id) != true) return;
+        ShowChoiceMoment(choice);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ChooseEssenceAsync(DragonEssenceId id)
+    {
+        var essence = CurrentEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
+        if (essence is null || simulation?.ApplyDragonEssence(id) != true) return;
+        ShowEssenceMoment(essence);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ChooseRelicAsync(RelicId id)
+    {
+        var relic = CurrentRelicChoices.SingleOrDefault(candidate => candidate.Id == id);
+        if (relic is null || simulation?.ApplyRelicChoice(id) != true) return;
+        ShowRelicMoment(relic);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ChooseMapNodeAsync(string id)
+    {
+        var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
+        if (node is null || simulation?.ChooseMapNode(id) != true) return;
+        ShowMapMoment(node);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UseCheckpointActionAsync(RunCheckpointActionId id)
+    {
+        if (simulation?.UseCheckpointAction(id) != true) return;
+        ShowCheckpointMoment(id);
+        await InvokeAsync(StateHasChanged);
+    }
     private async Task EquipRelicAsync(RelicId id) { if (simulation?.EquipRelic(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task UnequipRelicAsync(RelicId id) { if (simulation?.UnequipRelic(id) == true) await InvokeAsync(StateHasChanged); }
 
@@ -125,6 +160,7 @@ public partial class ArenaView : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        disposed = true;
         if (arenaModule is not null)
         {
             await arenaModule.InvokeVoidAsync("disposeArena", CancellationToken.None, canvas);
