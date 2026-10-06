@@ -7,12 +7,12 @@
 }
 else
 {
-    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" RunOffering="activeOffering" OnGameOver="HandleGameOverAsync" />
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" RunOffering="activeOffering" RunSeed="activeRunSeed" OnGameOver="HandleGameOverAsync" />
 }
 
 @if (summary is not null)
 {
-    <RunSummaryOverlay Summary="summary" OnReturn="ReturnToForge" />
+    <RunSummaryOverlay Summary="summary" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" />
 }
 
 <div style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>

@@ -27,6 +27,7 @@ public partial class ArenaView : IAsyncDisposable
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
     [Parameter, EditorRequired] public IReadOnlySet<string> SelectedNodes { get; set; } = new HashSet<string>();
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
+    [Parameter] public int? RunSeed { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
@@ -59,7 +60,7 @@ public partial class ArenaView : IAsyncDisposable
     private double CurrentScoreMultiplier => simulation?.ScoreMultiplier ?? 1;
     private int CurrentLevel => simulation?.Level ?? 1;
 
-    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering);
+    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -99,7 +100,7 @@ public partial class ArenaView : IAsyncDisposable
         if (snapshot.Ended && !gameOverSent)
         {
             gameOverSent = true;
-            await OnGameOver.InvokeAsync(current.CreateSummary());
+            await OnGameOver.InvokeAsync(current.CreateEvaluationSummary());
         }
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
     }
@@ -116,7 +117,8 @@ public partial class ArenaView : IAsyncDisposable
     {
         if (simulation is null || gameOverSent) return;
         gameOverSent = true;
-        await OnGameOver.InvokeAsync(simulation.AbandonRun());
+        simulation.AbandonRun();
+        await OnGameOver.InvokeAsync(simulation.CreateEvaluationSummary());
     }
 
     public async ValueTask DisposeAsync()

@@ -1,30 +1,135 @@
 @using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Progression.Relics
+@using Wyrmforge.Domain.Progression.RunUpgrades
+@using Wyrmforge.Domain.Spells
+@using Wyrmforge.Domain.Spells.Synergies
 @namespace Wyrmforge.Presentation.Web.Features.RunResults
 
 <div class="game-over">
-    <div class="game-over-card">
-        <div class="eyebrow">@OutcomeLabel</div>
+    <div class="game-over-card run-report-card">
+        <div class="eyebrow">@OutcomeLabel • RUN SEED @Summary.Seed</div>
         <h2>@Summary.Score.ToString("N0") score</h2>
         <p>@OutcomeMessage</p>
-        <p>Hunt route • @FirstDragon.Name → @DeepDragon.Name</p>
-        <p>Depth @Summary.Depth • Level @Summary.Level • @Summary.Spells spells • @Summary.Synergies synergies • @Summary.DragonEssences secured essences • @Summary.DragonsSlain dragons • @Summary.Choices choices • @Summary.Kills kills • @Summary.Seconds s survived</p>
-        <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
+
+        <div class="run-report-grid">
+            <section>
+                <span>BUILD DNA</span>
+                <strong>@BuildIdentity</strong>
+                <small>@ResonanceSummary</small>
+            </section>
+            <section>
+                <span>JOURNEY</span>
+                <strong>Depth @Summary.Depth • Level @Summary.Level</strong>
+                <small>@Summary.CompletedRouteNodes routes • @Summary.RareRouteNodes rare • @Summary.Kills kills • @Summary.Seconds s</small>
+            </section>
+        </div>
+
+        <div class="run-report-section">
+            <span>SPELLS</span>
+            <div class="run-report-chips">
+                @foreach (var spell in Summary.SpellLoadout)
+                {
+                    var definition = SpellCatalog.Get(spell.Id);
+                    <b>@definition.Icon @definition.Name @Roman(spell.Rank)</b>
+                }
+            </div>
+        </div>
+
+        @if (Summary.UpgradeLoadout.Count > 0)
+        {
+            <div class="run-report-section">
+                <span>RUN UPGRADES</span>
+                <div class="run-report-chips">
+                    @foreach (var upgrade in Summary.UpgradeLoadout)
+                    {
+                        var definition = RunUpgradeCatalog.Get(upgrade.Id);
+                        <b>@definition.Icon @definition.Name @Roman(upgrade.Rank)</b>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Summary.SynergyIds.Count > 0)
+        {
+            <div class="run-report-section">
+                <span>SYNERGIES</span>
+                <div class="run-report-chips">
+                    @foreach (var id in Summary.SynergyIds)
+                    {
+                        var synergy = SynergyCatalog.Get(id);
+                        <b>@synergy.Icon @synergy.Name</b>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Summary.RelicLoadout.Count > 0)
+        {
+            <div class="run-report-section">
+                <span>RELICS</span>
+                <div class="run-report-chips">
+                    @foreach (var relic in Summary.RelicLoadout)
+                    {
+                        var definition = RelicCatalog.Get(relic.Id);
+                        <b>@definition.Icon @definition.Name@(relic.Equipped ? " • equipped" : string.Empty)</b>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Summary.DragonIds.Count > 0 || Summary.EssenceIds.Count > 0)
+        {
+            <div class="run-report-section">
+                <span>WYRM HUNT</span>
+                <p>@WyrmSummary</p>
+                @if (Summary.EssenceIds.Count > 0)
+                {
+                    <div class="run-report-chips">
+                        @foreach (var essenceId in Summary.EssenceIds)
+                        {
+                            var essence = DragonEssenceCatalog.Get(essenceId);
+                            <b>@essence.Icon @essence.Name</b>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <p class="run-report-meta">@Summary.Choices build choices • @Summary.DragonEssences secured Essence • seed @Summary.Seed</p>
+        <div class="run-report-actions">
+            <button class="secondary" @onclick="ReplayAsync">Replay same seed</button>
+            <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
+        </div>
     </div>
 </div>
 
 @code {
-    [Parameter, EditorRequired]
-    public Wyrmforge.Application.Runs.EndRun.RunSummary Summary { get; set; } = null!;
+    [Parameter, EditorRequired] public Wyrmforge.Application.Runs.EndRun.RunSummary Summary { get; set; } = null!;
+    [Parameter] public EventCallback OnReplay { get; set; }
+    [Parameter] public EventCallback OnReturn { get; set; }
 
-    [Parameter]
-    public DragonId HuntTarget { get; set; } = DragonId.Ashfang;
+    private string BuildIdentity
+    {
+        get
+        {
+            if (Summary.Resonance.Count == 0) return "Unshaped mage";
+            var first = Summary.Resonance[0];
+            if (Summary.Resonance.Count > 1 && Summary.Resonance[1].Value >= first.Value * 0.75)
+            {
+                return $"{first.School} / {Summary.Resonance[1].School} hybrid";
+            }
+            return $"{first.School} attuned";
+        }
+    }
 
-    [Parameter]
-    public EventCallback OnReturn { get; set; }
+    private string ResonanceSummary => Summary.Resonance.Count == 0
+        ? "No meaningful resonance formed."
+        : string.Join(" • ", Summary.Resonance.Select(entry => $"{entry.School} {entry.Value}"));
 
-    private DragonDefinition FirstDragon => DragonCatalog.Get(HuntTarget);
-
-    private DragonDefinition DeepDragon => DragonCatalog.Get(HuntTarget == DragonId.Ashfang ? DragonId.Stormcoil : DragonId.Ashfang);
+    private string WyrmSummary => Summary.DragonIds.Count == 0
+        ? "No Wyrm was slain."
+        : $"Slain: {string.Join(" • ", Summary.DragonIds.Select(id => DragonCatalog.Get(id).Name))}";
 
     private string OutcomeLabel => Summary.Outcome switch
     {
@@ -48,5 +153,7 @@
         _ => "The run ended before extraction.",
     };
 
+    private static string Roman(int value) => value switch { 1 => "I", 2 => "II", 3 => "III", 4 => "IV", 5 => "V", _ => value.ToString() };
+    private Task ReplayAsync() => OnReplay.InvokeAsync();
     private Task ReturnAsync() => OnReturn.InvokeAsync();
 }
