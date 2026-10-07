@@ -6,11 +6,13 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed partial class RunSimulation
 {
     private readonly Queue<SpellSchool> pendingAttunements = new();
+    private readonly EncounterDirector encounterDirector = new();
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
 
     public int CurrentMapNodeKills => mapState.CurrentNodeKills;
     public int CurrentMapNodeKillsRequired => mapState.CurrentNodeKillsRequired;
+    public EncounterPhase? CurrentEncounterPhase => encounterDirector.Active ? encounterDirector.Phase : null;
     public IReadOnlyList<SpellSchool> PendingAttunements => pendingAttunements.ToArray();
 
     private WyrmrealmRouteProfile? CurrentRoute => mapState.EncounterActive ? mapState.CurrentNode?.Route : null;
@@ -31,6 +33,7 @@ public sealed partial class RunSimulation
         var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
+        encounterDirector.Start(encounterPattern, depthState.Depth);
         spawnTimer = 0.15;
         return true;
     }
@@ -46,6 +49,7 @@ public sealed partial class RunSimulation
     {
         if (dragonEncounterStarted || !mapState.EncounterActive) return;
         var completedNode = mapState.CurrentNode;
+        encounterDirector.RegisterProgress(mapState.CurrentNodeKills + 1, mapState.CurrentNodeKillsRequired);
         if (!mapState.RegisterKill() || completedNode is null) return;
         completedRouteNodes.Add(completedNode);
         RefreshBuildModifiers(true);
@@ -87,6 +91,7 @@ public sealed partial class RunSimulation
         unstableRiftState.Reset();
         encounterPlan = null;
         encounterPlanIndex = 0;
+        encounterDirector.Reset();
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     }
 

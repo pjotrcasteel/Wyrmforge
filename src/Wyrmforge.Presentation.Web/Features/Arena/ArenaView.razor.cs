@@ -56,6 +56,16 @@ public partial class ArenaView : IAsyncDisposable
     private double CurrentMaxHealth => simulation?.MaxHealth ?? 1;
     private int CurrentMapNodeKills => simulation?.CurrentMapNodeKills ?? 0;
     private int CurrentMapNodeKillsRequired => simulation?.CurrentMapNodeKillsRequired ?? 0;
+    private EncounterPhase? CurrentEncounterPhase => simulation?.CurrentEncounterPhase;
+    private string EncounterPhaseLabel => CurrentEncounterPhase switch
+    {
+        EncounterPhase.Pressure => "PRESSURE",
+        EncounterPhase.Escalation => "ESCALATION",
+        EncounterPhase.BreathingRoom => "BREATHE",
+        EncounterPhase.Surge => "SURGE",
+        EncounterPhase.Climax => "CLIMAX",
+        _ => "TRAIL",
+    };
     private int CurrentDepth => simulation?.Depth ?? 1;
     private int CheckpointVisit => simulation?.CheckpointVisit ?? 0;
     private int RelicSlots => simulation?.RelicSlots ?? 0;
@@ -85,6 +95,7 @@ public partial class ArenaView : IAsyncDisposable
         var hadMapChoice = current.PendingMapChoice;
         var previousMapCompleted = current.CompletedMapNodes.Count;
         var previousMapKills = current.CurrentMapNodeKills;
+        var previousEncounterPhase = current.CurrentEncounterPhase;
         var previousEvacuation = current.EvacuationActive;
         var previousEvacuationSecond = (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
@@ -96,6 +107,7 @@ public partial class ArenaView : IAsyncDisposable
             || hadMapChoice != current.PendingMapChoice
             || previousMapCompleted != current.CompletedMapNodes.Count
             || previousMapKills != current.CurrentMapNodeKills
+            || previousEncounterPhase != current.CurrentEncounterPhase
             || previousEvacuation != current.EvacuationActive
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
