@@ -70,6 +70,7 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         if (ContainsAny(searchable, "health", "vitality", "barrier", "damage taken", "freeze")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
         if (ContainsAny(searchable, "move speed", "cast speed", "cooldown")) score += personality == RunAgentPersonality.Kiter ? 1.8 : 0.8;
         if (choice.Kind == LevelChoiceKind.Synergy) score += 2.4;
+        if (choice.Kind == LevelChoiceKind.Evolution) score += 3.2;
 
         if (preferredSchool is { } school && searchable.Contains(school.ToString(), StringComparison.OrdinalIgnoreCase))
             score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
