@@ -109,7 +109,7 @@ public sealed partial class RunSimulation
                 kills++;
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);
-                GainExperience(1);
+                experienceShards.Drop(defeatedEnemy.Position, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost);
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
                 break;
