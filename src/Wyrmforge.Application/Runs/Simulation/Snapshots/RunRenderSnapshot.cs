@@ -18,4 +18,5 @@ public sealed record RunRenderSnapshot(
     bool Ended,
     DragonHuntRenderSnapshot? Hunt = null,
     IReadOnlyList<DragonHuntHazardRenderSnapshot>? HuntHazards = null,
-    double SimulationMilliseconds = 0);
+    double SimulationMilliseconds = 0,
+    IReadOnlyList<ExperienceShardRenderSnapshot>? ExperienceShards = null);

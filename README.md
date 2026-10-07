@@ -17,6 +17,8 @@ Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting W
 
 The first fix establishes a shared overlay contract: the viewport layer owns scrolling, cards never create nested scroll traps, dynamic viewport height and safe-area insets are honored, and iOS momentum scrolling remains enabled.
 
+The second fix moves XP into the battlefield. Enemy deaths now drop physical Experience Shards valued by enemy threat, shards magnetize toward the player within collection range, compact without losing XP when the loose-shard cap is reached, and remaining route XP is vacuumed before the next map decision. Level progression therefore follows **kill → collect → level → draft** instead of granting XP invisibly at death time.
+
 ### Moment feedback
 
 Short non-blocking callouts now mark the events that should matter during combat:

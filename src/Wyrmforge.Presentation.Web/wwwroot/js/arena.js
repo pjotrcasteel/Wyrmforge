@@ -183,6 +183,7 @@ function draw(state, snapshot, width, height) {
     drawGrid(ctx, width, height);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
+    for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
@@ -365,6 +366,22 @@ function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
     ctx.restore();
 }
 
+function drawExperienceShard(ctx, shard) {
+    const valueScale = Math.min(1, Math.log2(Math.max(1, shard.value)) / 4);
+    const size = 5 + valueScale * 5;
+    ctx.save();
+    ctx.translate(shard.x, shard.y);
+    ctx.rotate(Math.PI / 4);
+    ctx.shadowColor = 'rgba(188, 135, 255, 0.55)';
+    ctx.shadowBlur = 7 + valueScale * 7;
+    ctx.fillStyle = shard.value >= 6 ? '#e7c874' : shard.value >= 3 ? '#c698ff' : '#a878e0';
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+    ctx.strokeStyle = shard.value >= 6 ? '#fff0b8' : '#e4caff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-size / 2, -size / 2, size, size);
+    ctx.restore();
+}
+
 function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     const panelWidth = Math.min(218, Math.max(160, width - 24));
     const panelHeight = 68;
@@ -372,6 +389,7 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     const y = Math.max(12, height - panelHeight - 14);
     const enemies = snapshot?.enemies?.length ?? 0;
     const projectiles = snapshot?.projectiles?.length ?? 0;
+    const experienceShards = snapshot?.experienceShards?.length ?? 0;
 
     ctx.save();
     ctx.fillStyle = 'rgba(8, 6, 12, 0.78)';
@@ -389,7 +407,7 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.font = '700 10px system-ui, sans-serif';
     ctx.fillText(`C# ${state.displaySimulationMilliseconds.toFixed(1)} ms  •  BRIDGE ${state.displayBridgeMilliseconds.toFixed(1)} ms`, x + 10, y + 37);
     ctx.fillStyle = '#82768c';
-    ctx.fillText(`ENEMIES ${enemies}  •  PROJECTILES ${projectiles}`, x + 10, y + 55);
+    ctx.fillText(`ENEMIES ${enemies}  •  PROJECTILES ${projectiles}  •  XP ${experienceShards}`, x + 10, y + 55);
     ctx.restore();
 }
 

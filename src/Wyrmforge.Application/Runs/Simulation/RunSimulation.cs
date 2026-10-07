@@ -33,6 +33,7 @@ public sealed partial class RunSimulation
     private readonly RunExtractionState extractionState = new();
     private readonly RunEssenceCargoState essenceCargoState = new();
     private readonly RunCheckpointState checkpointState = new();
+    private readonly ExperienceShardField experienceShards = new();
     private readonly PlayerState player = new();
     private readonly List<EnemyState> enemies = [];
     private readonly List<ProjectileState> projectiles = [];
@@ -114,6 +115,7 @@ public sealed partial class RunSimulation
         UpdateCombatFeedback(delta);
         elapsed += delta;
         UpdatePlayer(delta, movement, width, height);
+        UpdateExperienceShards(delta);
         UpdateRouteHazards(delta);
         UpdateDragonEssenceEffects(delta, movement.IsMoving);
         UpdateStatusDamage(delta);
@@ -237,7 +239,8 @@ public sealed partial class RunSimulation
             HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending,
             IsEnded,
             CreateDragonHuntSnapshot(),
-            CreateDragonHuntHazardSnapshots());
+            CreateDragonHuntHazardSnapshots(),
+            ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray());
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()

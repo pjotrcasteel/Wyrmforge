@@ -6,6 +6,18 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private void UpdateExperienceShards(double delta)
+    {
+        var collected = experienceShards.Update(delta, player.Position);
+        if (collected > 0) GainExperience(collected);
+    }
+
+    private void CollectLooseExperienceShards()
+    {
+        var collected = experienceShards.CollectAll();
+        if (collected > 0) GainExperience(collected);
+    }
+
     private void GainExperience(int amount)
     {
         experience += amount;
