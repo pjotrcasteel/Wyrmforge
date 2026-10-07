@@ -13,8 +13,20 @@ public sealed class RunSelfPlayTests
     {
         foreach (var build in SelfPlayBuildCatalog.All)
         {
-            Assert.IsLessThanOrEqualTo(24, build.SelectedNodes.Sum(id => Wyrmforge.Domain.Progression.PassiveTree.PassiveTreeCatalog.Get(id).Cost), build.Name);
+            Assert.IsLessThanOrEqualTo(24, build.SpentPoints, build.Name);
+            Assert.AreEqual(build.SpentPoints, build.SelectedNodes.Sum(id => Wyrmforge.Domain.Progression.PassiveTree.PassiveTreeCatalog.Get(id).Cost), build.Name);
             foreach (var goal in build.Goals) Assert.IsTrue(build.SelectedNodes.Contains(goal), $"{build.Name} does not contain {goal}.");
+        }
+    }
+
+    [TestMethod]
+    public void BuildCatalog_EachCohortUsesEqualArcaneBudget()
+    {
+        foreach (var cohort in Enum.GetValues<SelfPlayBuildCohort>())
+        {
+            var builds = SelfPlayBuildCatalog.All.Where(build => build.Cohort == cohort).ToArray();
+            Assert.IsGreaterThan(1, builds.Length, cohort.ToString());
+            Assert.AreEqual(1, builds.Select(build => build.SpentPoints).Distinct().Count(), $"{cohort} mixes unequal Arcane budgets.");
         }
     }
 
@@ -54,6 +66,6 @@ public sealed class RunSelfPlayTests
         var factory = new RunSimulationFactory(new SeededRandomSource(1));
         var simulation = factory.Create(build.SelectedNodes, seed: seed);
         var agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
-        return new RunSelfPlayDriver().Play(build.Name, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 240));
+        return new RunSelfPlayDriver().Play(build, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 240));
     }
 }
