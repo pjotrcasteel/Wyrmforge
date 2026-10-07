@@ -977,8 +977,9 @@ function drawBossBar(ctx, dragon, hunt, width) {
 }
 function drawHud(ctx, hud, width, dragonActive) {
     const x = 10;
-    const y = dragonActive ? 54 : 10;
-    const panelWidth = Math.min(width <= 520 ? 210 : 260, width - 72);
+    const compactViewport = width <= 520;
+    const y = dragonActive ? 54 : compactViewport ? 46 : 10;
+    const panelWidth = Math.min(compactViewport ? 210 : 260, width - 72);
     const panelHeight = hud.synergies.length > 0 ? 86 : 70;
 
     ctx.save();
