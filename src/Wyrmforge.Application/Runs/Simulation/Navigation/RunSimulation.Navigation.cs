@@ -73,6 +73,7 @@ public sealed partial class RunSimulation
 
     private void ClearMapEncounterField()
     {
+        CollectLooseExperienceShards();
         enemies.Clear();
         projectiles.Clear();
         lightning.Clear();
