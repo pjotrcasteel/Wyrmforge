@@ -15,6 +15,12 @@ public sealed partial class RunSimulation
     {
         if (dragon is { Health: > 0 }) return;
         var mapEncounter = mapState.EncounterActive;
+        if (mapEncounter) encounterDirector.Tick(delta);
+        if (mapEncounter && encounterDirector.Directive.SuppressSpawns)
+        {
+            spawnTimer = Math.Max(spawnTimer, 0.08);
+            return;
+        }
 
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
@@ -26,8 +32,16 @@ public sealed partial class RunSimulation
             return;
         }
 
-        var batchSize = EnemyEncounterComposition.GetSpawnBatchSize(encounterPattern, randomSource);
-        for (var index = 0; index < batchSize && enemies.Count < activeCap; index++)
+        var directive = mapEncounter ? encounterDirector.Directive : EncounterDirective.Default;
+        var batchSize = EnemyEncounterComposition.GetSpawnBatchSize(encounterPattern, randomSource) + directive.BatchSizeBonus;
+        var spawned = 0;
+        if (mapEncounter && enemies.Count < activeCap && encounterDirector.TryTakeInsert(out var insert))
+        {
+            SpawnEnemy(width, height, insert);
+            spawned++;
+        }
+
+        for (var index = spawned; index < batchSize && enemies.Count < activeCap; index++)
         {
             EnsureEncounterPlan(mapEncounter);
             if (encounterPlan is null || encounterPlanIndex >= encounterPlan.Enemies.Count) break;
@@ -38,7 +52,7 @@ public sealed partial class RunSimulation
         var baseInterval = EnemyStagePressure.SpawnIntervalSeconds(stage);
         var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier
-            * encounterModifiers.SpawnIntervalMultiplier;
+            * encounterModifiers.SpawnIntervalMultiplier * directive.SpawnIntervalMultiplier;
     }
 
     private void EnsureEncounterPlan(bool mapEncounter)
