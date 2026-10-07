@@ -2,6 +2,7 @@
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Spells
+@using Wyrmforge.Domain.Spells.Evolutions
 @using Wyrmforge.Domain.Spells.Synergies
 
 <section class="codex-view">
@@ -33,7 +34,15 @@
         <div class="codex-grid compact">
             @foreach (var spell in SpellCatalog.All)
             {
-                <article class="codex-card"><span class="codex-icon">@spell.Icon</span><div><strong>@spell.Name</strong><small>@spell.Description</small></div></article>
+                var evolutions = SpellEvolutionCatalog.For(spell.Id);
+                <article class="codex-card">
+                    <span class="codex-icon">@spell.Icon</span>
+                    <div>
+                        <strong>@spell.Name</strong>
+                        <small>@spell.Description</small>
+                        <small>Rank III → @string.Join(" / ", evolutions.Select(evolution => $"{evolution.Icon} {evolution.Name}"))</small>
+                    </div>
+                </article>
             }
         </div>
     </section>
