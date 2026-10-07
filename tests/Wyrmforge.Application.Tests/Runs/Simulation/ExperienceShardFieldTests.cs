@@ -44,6 +44,18 @@ public sealed class ExperienceShardFieldTests
     }
 
     [TestMethod]
+    public void Update_StationaryPlayerWhenAttractionReachesPickupRadius_CollectsShard()
+    {
+        var field = new ExperienceShardField();
+        field.Drop(new Vector2D(100, 0), 3);
+
+        var collected = field.Update(1, Vector2D.Zero);
+
+        Assert.AreEqual(3, collected);
+        Assert.AreEqual(0, field.Shards.Count);
+    }
+
+    [TestMethod]
     public void Update_WhenShardIsOutsideAttractionRadius_LeavesItInPlace()
     {
         var field = new ExperienceShardField();

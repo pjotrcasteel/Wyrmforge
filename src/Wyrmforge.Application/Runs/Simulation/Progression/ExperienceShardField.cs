@@ -44,10 +44,18 @@ public sealed class ExperienceShardField
             }
             if (distance > AttractionRadius) continue;
 
-            var direction = Vector2D.DirectionTo(shard.Position, playerPosition);
             var acceleration = 1 + (AttractionRadius - distance) / AttractionRadius * 1.8;
-            var travel = Math.Min(Math.Max(0, distance - PickupRadius), AttractionSpeed * acceleration * delta);
-            shard.Position += direction * travel;
+            var maximumTravel = AttractionSpeed * acceleration * delta;
+            var pickupGap = distance - PickupRadius;
+            if (maximumTravel >= pickupGap)
+            {
+                collected += shard.Value;
+                shards.RemoveAt(index);
+                continue;
+            }
+
+            var direction = Vector2D.DirectionTo(shard.Position, playerPosition);
+            shard.Position += direction * maximumTravel;
         }
         return collected + CollectTouching(playerPosition);
     }
