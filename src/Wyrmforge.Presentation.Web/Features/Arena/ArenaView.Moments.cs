@@ -30,6 +30,12 @@ public partial class ArenaView
 
     private void ShowChoiceMoment(LevelChoice choice)
     {
+        if (choice.Kind == LevelChoiceKind.Evolution)
+        {
+            ShowRunMoment(new RunMoment("SPELL EVOLVED", choice.Name, choice.Description, RunMomentTone.Legendary));
+            return;
+        }
+
         if (choice.Kind == LevelChoiceKind.Synergy)
         {
             ShowRunMoment(new RunMoment("SYNERGY AWAKENED", choice.Name, choice.Description, RunMomentTone.Legendary));
@@ -42,11 +48,7 @@ public partial class ArenaView
             return;
         }
 
-        if (choice.Kind == LevelChoiceKind.SpellUpgrade && choice.CurrentRank + 1 == choice.MaxRank)
-        {
-            ShowRunMoment(new RunMoment("SPELL MASTERED", choice.Name, "Rank III reached — its mastery behavior is now active.", RunMomentTone.Legendary));
-            return;
-        }
+        if (choice.Kind == LevelChoiceKind.SpellUpgrade && choice.CurrentRank + 1 == choice.MaxRank) return;
 
         if (choice.Kind == LevelChoiceKind.Rune && choice.Rarity is RewardRarity.Rare or RewardRarity.Legendary)
         {

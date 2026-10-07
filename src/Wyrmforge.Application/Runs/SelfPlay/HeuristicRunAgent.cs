@@ -14,6 +14,8 @@ namespace Wyrmforge.Application.Runs.SelfPlay;
 public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed, SpellSchool? preferredSchool = null) : IRunAgent
 {
     private readonly IRandomSource random = new SeededRandomSource(unchecked(seed * 486187739 + 31));
+    private readonly int evolutionBranchOffset = unchecked(seed + (int)personality);
+    private int evolutionDecisionIndex;
 
     public string Name => personality.ToString();
 
@@ -61,8 +63,17 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         return score;
     }).Id;
 
-    public LevelChoice ChooseLevelChoice(RunAgentObservation observation) => PickBest(observation.LevelChoices, choice =>
+    public LevelChoice ChooseLevelChoice(RunAgentObservation observation)
     {
+        if (observation.LevelChoices.Count > 0 && observation.LevelChoices.All(choice => choice.Kind == LevelChoiceKind.Evolution))
+        {
+            var branches = observation.LevelChoices.OrderBy(choice => choice.Id, StringComparer.Ordinal).ToArray();
+            var index = (int)((uint)(evolutionBranchOffset + evolutionDecisionIndex++) % (uint)branches.Length);
+            return branches[index];
+        }
+
+        return PickBest(observation.LevelChoices, choice =>
+        {
         var score = RoleScore(choice.Role) + RarityScore(choice.Rarity);
         var searchable = $"{choice.Name} {choice.Description} {choice.Hint}";
 
@@ -70,12 +81,14 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         if (ContainsAny(searchable, "health", "vitality", "barrier", "damage taken", "freeze")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
         if (ContainsAny(searchable, "move speed", "cast speed", "cooldown")) score += personality == RunAgentPersonality.Kiter ? 1.8 : 0.8;
         if (choice.Kind == LevelChoiceKind.Synergy) score += 2.4;
+        if (choice.Kind == LevelChoiceKind.Evolution) score += 3.2;
 
         if (preferredSchool is { } school && searchable.Contains(school.ToString(), StringComparison.OrdinalIgnoreCase))
             score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
 
-        return score;
-    });
+            return score;
+        });
+    }
 
     public RelicId ChooseRelic(RunAgentObservation observation) => PickBest(observation.RelicChoices, relic =>
     {

@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Presentation.Web.Features.LevelUp;
@@ -12,6 +13,7 @@ public static class LevelChoicePresentation
         LevelChoiceKind.Rune => "rune",
         LevelChoiceKind.NewSpell => "new-spell",
         LevelChoiceKind.SpellUpgrade => "spell-upgrade",
+        LevelChoiceKind.Evolution => "evolution",
         _ => "synergy",
     };
 
@@ -22,12 +24,14 @@ public static class LevelChoicePresentation
         LevelChoiceKind.Rune => "RUNE",
         LevelChoiceKind.NewSpell => "NEW SPELL",
         LevelChoiceKind.SpellUpgrade => "SPELL UPGRADE",
+        LevelChoiceKind.Evolution => "EVOLUTION",
         _ => "SYNERGY",
     };
 
     public static string Rank(LevelChoice choice)
     {
         if (choice.Kind == LevelChoiceKind.Synergy) return "NEW INTERACTION";
+        if (choice.Kind == LevelChoiceKind.Evolution) return "EVOLVED FORM";
         if (choice.Kind == LevelChoiceKind.NewSpell) return "RANK I";
         if (choice.CurrentRank == 0) return $"RANK I / {Roman(choice.MaxRank)}";
         return $"{Roman(choice.CurrentRank)} → {Roman(choice.CurrentRank + 1)}";
@@ -37,6 +41,7 @@ public static class LevelChoicePresentation
     {
         if (choice.Kind == LevelChoiceKind.Rune) return RuneDelta(ParseRunUpgrade(choice.Id), choice.CurrentRank);
         if (choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade) return SpellDelta(ParseSpell(choice.Id), choice.CurrentRank);
+        if (choice.Kind == LevelChoiceKind.Evolution) return EvolutionDelta(ParseEvolution(choice.Id));
         return SynergyDelta(ParseSynergy(choice.Id));
     }
 
@@ -45,6 +50,7 @@ public static class LevelChoicePresentation
         LevelChoiceKind.Rune => "TEMPORARY • THIS RUN ONLY",
         LevelChoiceKind.NewSpell => "TEMPORARY • ADDS A SPELL",
         LevelChoiceKind.SpellUpgrade => "TEMPORARY • DEEPENS A SPELL",
+        LevelChoiceKind.Evolution => "TEMPORARY • DEFINES THIS SPELL",
         _ => "TEMPORARY • CHANGES INTERACTIONS",
     };
 
@@ -99,6 +105,26 @@ public static class LevelChoicePresentation
         return $"{currentDamage:0.#} → {nextDamage:0.#} damage • {currentCooldown:0.00} → {nextCooldown:0.00}s{mastery}";
     }
 
+    public static string EvolutionSpellName(LevelChoice choice) =>
+        SpellCatalog.Get(SpellEvolutionCatalog.Get(ParseEvolution(choice.Id)).Spell).Name;
+
+    private static string EvolutionDelta(SpellEvolutionId id)
+    {
+        var profile = SpellEvolutionCatalog.Get(id).Profile;
+        var effects = new List<string>();
+        if (profile.DamageMultiplier != 1) effects.Add($"damage ×{profile.DamageMultiplier:0.00}");
+        if (profile.CastIntervalMultiplier < 1) effects.Add($"{(1 / profile.CastIntervalMultiplier - 1):P0} faster");
+        if (profile.CastIntervalMultiplier > 1) effects.Add($"{(profile.CastIntervalMultiplier - 1):P0} slower");
+        if (profile.ExtraProjectiles > 0) effects.Add($"+{profile.ExtraProjectiles} projectiles");
+        if (profile.BonusPierces > 0) effects.Add($"+{profile.BonusPierces} pierce");
+        if (profile.BonusChains > 0) effects.Add($"+{profile.BonusChains} chains");
+        if (profile.SplashRadius > 0) effects.Add($"{profile.SplashRadius:0} splash");
+        if (profile.FrostNovaRadius > 0) effects.Add($"{profile.FrostNovaRadius:0} nova");
+        if (profile.StatusDurationMultiplier > 1) effects.Add($"status ×{profile.StatusDurationMultiplier:0.00}");
+        if (profile.BonusStatusStacks > 0) effects.Add($"+{profile.BonusStatusStacks} status stack");
+        return string.Join(" • ", effects.Take(4));
+    }
+
     private static string SynergyDelta(SynergyId id)
     {
         var synergy = SynergyCatalog.Get(id);
@@ -107,6 +133,7 @@ public static class LevelChoicePresentation
 
     private static RunUpgradeId ParseRunUpgrade(string id) => Enum.Parse<RunUpgradeId>(id[5..]);
     private static SpellId ParseSpell(string id) => Enum.Parse<SpellId>(id[6..]);
+    private static SpellEvolutionId ParseEvolution(string id) => Enum.Parse<SpellEvolutionId>(id[10..]);
     private static SynergyId ParseSynergy(string id) => Enum.Parse<SynergyId>(id[8..]);
 
     private static string Roman(int value) => value switch

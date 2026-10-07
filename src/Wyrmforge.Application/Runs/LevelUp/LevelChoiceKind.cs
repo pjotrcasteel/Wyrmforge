@@ -5,5 +5,6 @@ public enum LevelChoiceKind
     Rune,
     NewSpell,
     SpellUpgrade,
+    Evolution,
     Synergy,
 }

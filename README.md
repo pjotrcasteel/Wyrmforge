@@ -2,7 +2,49 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.73 — Wyrm Hunt 2.0
+## Prototype 0.0.74 — Build Evolution
+
+0.0.74 turns Rank III from the end of a spell's run progression into a crossroads. Every current spell now has two mutually exclusive evolutions that change how it behaves for the rest of the run.
+
+### Spell evolution
+
+- Reaching Rank III immediately opens a dedicated **Spell Evolution** choice instead of consuming another level or waiting for a random future draft.
+- The two branches are shown together; choosing one closes the other for that run.
+- All 8 current spells have two base branches, creating 16 distinct evolved forms.
+- Evolutions are spell-scoped and stack with global runes, Atlas passives, relics, Synergies and Essence instead of replacing those systems.
+- Evolutions can alter damage, cadence, projectile count, speed, radius, pierce, chain count/falloff, splash, Frost nova radius and status behavior.
+- The HUD uses the evolved icon, the run report records the evolved form, and choosing an evolution gets a dedicated **SPELL EVOLVED** moment.
+- Balance Lab records evolution activation and per-evolution outcomes so sister branches can be compared instead of balanced by intuition alone.
+
+### Base evolution branches
+
+- **Arcane Orb:** Rift Spear / Star Swarm
+- **Fire Bolt:** Meteor Heart / Phoenix Volley
+- **Frost Shard:** Shatterglass / Winter Bloom
+- **Chain Lightning:** Tempest Web / Thunderhead
+- **Cinder Needle:** Wildfire Needles / Ashstorm
+- **Ice Lance:** Permafrost Spear / Hailbreaker
+- **Ball Lightning:** Storm Core / Overcharge
+- **Aether Dart:** Phase Barrage / Markstorm
+
+These sixteen are the always-available base evolution vocabulary. Future **Wyrmforged Lineages** can add new branches into the same crossroads without changing the run flow.
+
+### Long-term motivation contract
+
+WyrmForge's persistent progression must create **new possibilities, discoveries and aspirational goals**, not a mandatory account-level stat treadmill. The target experience is:
+
+**Goal → Run → Progress → Achievement → Celebration → New possibility → New build idea → Goal**
+
+After the meta-game is complete, a player returning from a run should normally be able to name at least three meaningful things they want to pursue next. The existing roadmap builds toward that:
+
+- **0.0.74 Build Evolution** establishes meaningful run-level transformations and the branch system future Lineages can extend.
+- **0.0.75 Forge 2.0** should make secured Essence unlock possibilities and visible goals: evolution branches, spell/relic pools, offerings, challenge access and discovery—not permanent flat damage.
+- Later existing content/endgame work should layer spell Mastery history, hidden Wyrmforged Lineage requirements, Codex hints, Wyrm feats, Ascendant/Elder hunts and Great Hunt-style objectives on the same progression model.
+- Major discoveries should be celebrated loudly and immediately create a new thing the player wants to try.
+
+The detailed contract is documented in `docs/design/long-term-progression.md`.
+
+### 0.0.73 — Wyrm Hunt 2.0
 
 0.0.73 makes the Wyrm at the end of a depth a distinct encounter rather than a larger enemy with different numbers. Existing entrances, arenas, movement styles, attacks and protected 50% phase breaks remain, but every Wyrm now adds a signature movement puzzle that escalates in phase two.
 
@@ -219,8 +261,8 @@ The detailed spell, rune, relic and Wyrm sections remain available underneath.
 
 - 49-node Arcane Web with 24 points, hybrid paths, Masteries and Keystones.
 - Structured three-role roguelike level-up draft with rarity and build-aware weighting.
-- 8 spells across Fire, Frost, Storm and Arcane.
-- 12 temporary run upgrades.
+- 8 spells across Fire, Frost, Storm and Arcane, each with two base Rank III evolution branches.
+- 16 spell evolutions plus 12 temporary run upgrades.
 - 8 relics.
 - Status/interactions including Burning, Frozen, Chilled, Shocked and Arcane Mark.
 - Cross-spell Synergies and Resonance.

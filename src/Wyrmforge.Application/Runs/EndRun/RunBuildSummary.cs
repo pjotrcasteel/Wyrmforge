@@ -1,10 +1,11 @@
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.EndRun;
 
-public sealed record RunSpellSummary(SpellId Id, int Rank);
+public sealed record RunSpellSummary(SpellId Id, int Rank, SpellEvolutionId? Evolution = null);
 
 public sealed record RunUpgradeSummary(RunUpgradeId Id, int Rank);
 

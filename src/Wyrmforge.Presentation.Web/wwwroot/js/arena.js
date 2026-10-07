@@ -1017,7 +1017,7 @@ function drawHud(ctx, hud, width, dragonActive) {
 
     ctx.fillStyle = '#c9bfd3';
     ctx.font = '700 9px system-ui, sans-serif';
-    const spells = hud.spells.map(spell => `${spell.icon}${roman(spell.rank)}`).join('  ');
+    const spells = hud.spells.map(spell => `${spell.evolutionIcon ?? spell.icon}${roman(spell.rank)}`).join('  ');
     ctx.fillText(spells, barX, y + 56);
 
     if (hud.synergies.length > 0) {

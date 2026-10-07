@@ -1,19 +1,31 @@
-<div class="level-up run-overlay">
+<div class="level-up run-overlay @(EvolutionDraft ? "evolution-draft" : string.Empty)">
     <section class="level-up-card run-overlay-surface">
-        <div class="eyebrow">LEVEL @Level • RUN DRAFT</div>
-        <h2>Choose what this run becomes</h2>
-        <p>Your Arcane Web set the intent. The realm now asks whether you deepen it, converge on an interaction, or pivot.</p>
-        <div class="draft-legend" aria-label="Draft directions">
-            <span><b>REINFORCE</b> deepen what already works</span>
-            <span><b>CONVERGE</b> chase route or synergy</span>
-            <span><b>VENTURE</b> open a new direction</span>
-        </div>
+        @if (EvolutionDraft)
+        {
+            <div class="eyebrow">SPELL EVOLUTION • @EvolutionSpellName</div>
+            <h2>Choose what the spell becomes</h2>
+            <p>Rank III is only the beginning. Choose one branch for this run; the other path closes.</p>
+        }
+        else
+        {
+            <div class="eyebrow">LEVEL @Level • RUN DRAFT</div>
+            <h2>Choose what this run becomes</h2>
+            <p>Your Arcane Web set the intent. The realm now asks whether you deepen it, converge on an interaction, or pivot.</p>
+            <div class="draft-legend" aria-label="Draft directions">
+                <span><b>REINFORCE</b> deepen what already works</span>
+                <span><b>CONVERGE</b> chase route or synergy</span>
+                <span><b>VENTURE</b> open a new direction</span>
+            </div>
+        }
         <div class="upgrade-choices">
             @foreach (var choice in Choices)
             {
                 <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice)"
                     @onclick="() => ChooseAsync(choice.Id)">
-                    <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
+                    @if (!EvolutionDraft)
+                    {
+                        <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
+                    }
                     <span class="choice-card-header">
                         <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
                         <span class="choice-rarity">@choice.Rarity</span>
@@ -39,5 +51,7 @@
     [Parameter, EditorRequired] public IReadOnlyList<LevelChoice> Choices { get; set; } = Array.Empty<LevelChoice>();
     [Parameter] public EventCallback<string> OnChoose { get; set; }
 
+    private bool EvolutionDraft => Choices.Count > 0 && Choices.All(choice => choice.Kind == LevelChoiceKind.Evolution);
+    private string EvolutionSpellName => EvolutionDraft ? LevelChoicePresentation.EvolutionSpellName(Choices[0]) : string.Empty;
     private Task ChooseAsync(string id) => OnChoose.InvokeAsync(id);
 }

@@ -3,6 +3,7 @@
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Progression.RunUpgrades
 @using Wyrmforge.Domain.Spells
+@using Wyrmforge.Domain.Spells.Evolutions
 @using Wyrmforge.Domain.Spells.Synergies
 @namespace Wyrmforge.Presentation.Web.Features.RunResults
 
@@ -37,7 +38,8 @@
                 @foreach (var spell in Summary.SpellLoadout)
                 {
                     var definition = SpellCatalog.Get(spell.Id);
-                    <b>@definition.Icon @definition.Name @Roman(spell.Rank)</b>
+                    var evolution = spell.Evolution is { } evolutionId ? SpellEvolutionCatalog.Get(evolutionId) : null;
+                    <b>@(evolution?.Icon ?? definition.Icon) @(evolution?.Name ?? definition.Name) @Roman(spell.Rank)@(evolution is null ? string.Empty : $" • {definition.Name}")</b>
                 }
             </div>
         </div>
@@ -144,6 +146,8 @@
         get
         {
             var parts = new List<string>();
+            var evolutions = Summary.SpellLoadout.Count(spell => spell.Evolution is not null);
+            if (evolutions > 0) parts.Add($"{evolutions} spell evolution{(evolutions == 1 ? string.Empty : "s")} forged");
             if (Summary.SynergyIds.Count > 0) parts.Add($"{Summary.SynergyIds.Count} Synerg{(Summary.SynergyIds.Count == 1 ? "y" : "ies")} awakened");
             if (Summary.RareRouteNodes > 0) parts.Add($"{Summary.RareRouteNodes} rare trail{(Summary.RareRouteNodes == 1 ? string.Empty : "s")} cleared");
             if (Summary.DragonEssences > 0) parts.Add($"{Summary.DragonEssences} Essence secured");

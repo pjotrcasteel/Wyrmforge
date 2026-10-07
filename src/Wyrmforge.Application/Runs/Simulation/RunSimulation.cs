@@ -16,6 +16,7 @@ using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -155,6 +156,18 @@ public sealed partial class RunSimulation
         choiceCount++;
         ApplyChoiceEffects(choice);
         RefreshBuildHud();
+
+        if (choice.Kind == LevelChoiceKind.SpellUpgrade)
+        {
+            var spellId = Enum.Parse<SpellId>(choice.Id[6..]);
+            var evolutionDraft = levelChoiceService.CreateEvolutionDraft(build, spellId);
+            if (evolutionDraft.Count > 0)
+            {
+                pendingChoices = evolutionDraft;
+                return true;
+            }
+        }
+
         pendingChoices = [];
         CompleteLevelUp();
         return true;
@@ -280,7 +293,12 @@ public sealed partial class RunSimulation
 
     private void RefreshBuildHud()
     {
-        spellHud = SpellCatalog.All.Where(spell => build.Spells[spell.Id] > 0).Select(spell => new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id])).ToArray();
+        spellHud = SpellCatalog.All.Where(spell => build.Spells[spell.Id] > 0).Select(spell =>
+        {
+            var evolutionId = build.Evolutions.For(spell.Id);
+            var evolution = evolutionId is { } id ? SpellEvolutionCatalog.Get(id) : null;
+            return new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id], evolution?.Icon, evolution?.Name);
+        }).ToArray();
         synergyHud = SynergyCatalog.All.Where(synergy => build.Synergies.Contains(synergy.Id)).Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name)).ToArray();
     }
 }

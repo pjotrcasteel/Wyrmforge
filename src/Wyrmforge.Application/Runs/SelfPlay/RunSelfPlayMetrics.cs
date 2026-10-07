@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.SelfPlay;
 
@@ -26,6 +27,8 @@ public sealed record RunSelfPlayMetrics(
     int PeakLooseExperience,
     int Choices,
     int Synergies,
+    int Evolutions,
+    IReadOnlyList<SpellEvolutionId> EvolutionIds,
     int DragonsSlain,
     int WyrmsReached,
     string? FirstWyrm,

@@ -204,6 +204,8 @@ public sealed class RunSelfPlayDriver
                 peakLooseExperience,
                 summary.Choices,
                 summary.Synergies,
+                summary.SpellLoadout.Count(spell => spell.Evolution is not null),
+                summary.SpellLoadout.Where(spell => spell.Evolution is not null).Select(spell => spell.Evolution!.Value).ToArray(),
                 summary.DragonsSlain,
                 wyrmsReached,
                 firstWyrm,

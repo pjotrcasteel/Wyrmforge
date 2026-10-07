@@ -47,7 +47,14 @@ var wyrms = results
     .OrderBy(row => row.Wyrm, StringComparer.Ordinal)
     .ToArray();
 
-var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, results);
+var evolutions = results
+    .SelectMany(run => run.EvolutionIds.Select(evolution => (Evolution: evolution, Run: run)))
+    .GroupBy(item => item.Evolution)
+    .Select(group => EvolutionAggregate.Create(group.Key, group.Select(item => item.Run).ToArray()))
+    .OrderBy(row => row.Evolution)
+    .ToArray();
+
+var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, evolutions, results);
 await BalanceReportWriter.WriteAsync(report, options.OutputDirectory);
 
 Console.WriteLine($"Balance report written to {Path.GetFullPath(options.OutputDirectory)}");

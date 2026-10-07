@@ -3,11 +3,15 @@ using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Runs.LevelUp;
 
-public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<SpellId>? availableSpells = null)
+public sealed class LevelChoiceService(
+    IRandomSource randomSource,
+    IReadOnlySet<SpellId>? availableSpells = null,
+    IReadOnlySet<SpellEvolutionId>? availableEvolutions = null)
 {
     private const double SpellResonanceWeightPerPoint = 0.04;
     private const double SynergyResonanceWeightPerPoint = 0.03;
@@ -29,8 +33,29 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
     {
         if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
         if (choice.Id.StartsWith("spell:", StringComparison.Ordinal)) return build.Spells.LearnOrUpgrade(ParseSpell(choice.Id));
+        if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal)) return build.Evolutions.Select(ParseEvolution(choice.Id), build.Spells);
         if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return build.Synergies.Select(ParseSynergy(choice.Id), build.Spells);
         return false;
+    }
+
+    public IReadOnlyList<LevelChoice> CreateEvolutionDraft(RunBuildState build, SpellId spell)
+    {
+        if (build.Evolutions.For(spell) is not null || build.Spells[spell] < SpellCatalog.Get(spell).MaxRank) return Array.Empty<LevelChoice>();
+
+        return SpellEvolutionCatalog.For(spell)
+            .Where(evolution => availableEvolutions is null || availableEvolutions.Contains(evolution.Id))
+            .Select(evolution => new LevelChoice(
+                $"evolution:{evolution.Id}",
+                LevelChoiceKind.Evolution,
+                evolution.Name,
+                evolution.Description,
+                evolution.Icon,
+                0,
+                1,
+                RewardRarity.Legendary,
+                LevelChoiceDraftRole.Converge,
+                $"{SpellCatalog.Get(spell).Name} has reached Rank III. Choose one transformation for this run."))
+            .ToArray();
     }
 
     private IReadOnlyList<LevelChoice> RollInternal(RunBuildState build, SpellSchool? preferredSchool, IReadOnlyList<RunResonanceEntry>? resonance, int count)
@@ -249,6 +274,7 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
     private static string FallbackHint(RunBuildState build, LevelChoice choice)
     {
         if (choice.Kind == LevelChoiceKind.NewSpell) return ConvergeSpellHint(build, choice) ?? "Adds another spell to this run.";
+        if (choice.Kind == LevelChoiceKind.Evolution) return "Transforms a mastered spell for the rest of this run.";
         if (choice.Kind == LevelChoiceKind.Synergy) return ReadySynergyHint(choice);
         return "A valid remaining direction for this run.";
     }
@@ -267,6 +293,11 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
         if (choice.Id.StartsWith("rune:", StringComparison.Ordinal) && RuneSchool(ParseRunUpgrade(choice.Id)) is { } runeSchool)
         {
             return 1 + ResonanceValue(resonance, runeSchool) * SpellResonanceWeightPerPoint * 0.75;
+        }
+        if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal))
+        {
+            var school = SpellCatalog.Get(SpellEvolutionCatalog.Get(ParseEvolution(choice.Id)).Spell).School;
+            return 1 + ResonanceValue(resonance, school) * SpellResonanceWeightPerPoint;
         }
         if (!choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return 1;
         var synergy = SynergyCatalog.Get(ParseSynergy(choice.Id));
@@ -301,5 +332,6 @@ public sealed class LevelChoiceService(IRandomSource randomSource, IReadOnlySet<
     private static int ResonanceValue(IReadOnlyList<RunResonanceEntry> resonance, SpellSchool school) => resonance.FirstOrDefault(entry => entry.School == school)?.Value ?? 0;
     private static RunUpgradeId ParseRunUpgrade(string id) => Enum.Parse<RunUpgradeId>(id[5..]);
     private static SpellId ParseSpell(string id) => Enum.Parse<SpellId>(id[6..]);
+    private static SpellEvolutionId ParseEvolution(string id) => Enum.Parse<SpellEvolutionId>(id[10..]);
     private static SynergyId ParseSynergy(string id) => Enum.Parse<SynergyId>(id[8..]);
 }

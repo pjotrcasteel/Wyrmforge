@@ -1,5 +1,6 @@
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.SelfPlay;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.BalanceLab;
 
@@ -9,7 +10,39 @@ internal sealed record BalanceReport(
     int TotalRuns,
     IReadOnlyList<BalanceAggregate> Aggregates,
     IReadOnlyList<WyrmAggregate> Wyrms,
+    IReadOnlyList<EvolutionAggregate> Evolutions,
     IReadOnlyList<RunSelfPlayMetrics> Runs);
+
+internal sealed record EvolutionAggregate(
+    SpellEvolutionId Evolution,
+    int Selections,
+    double ExtractionRate,
+    double WyrmReachRate,
+    double MedianDepth)
+{
+    public static EvolutionAggregate Create(SpellEvolutionId evolution, IReadOnlyList<RunSelfPlayMetrics> runs)
+    {
+        if (runs.Count == 0) throw new ArgumentException("Evolution aggregate requires at least one run.", nameof(runs));
+        return new EvolutionAggregate(
+            evolution,
+            runs.Count,
+            runs.Count(run => run.Outcome == RunOutcome.Extracted) / (double)runs.Count,
+            runs.Count(run => run.WyrmsReached > 0) / (double)runs.Count,
+            Percentile(runs.Select(run => (double)run.Depth), 0.5));
+    }
+
+    private static double Percentile(IEnumerable<double> values, double percentile)
+    {
+        var sorted = values.OrderBy(value => value).ToArray();
+        if (sorted.Length == 0) return 0;
+        var position = (sorted.Length - 1) * Math.Clamp(percentile, 0, 1);
+        var lower = (int)Math.Floor(position);
+        var upper = (int)Math.Ceiling(position);
+        if (lower == upper) return sorted[lower];
+        var weight = position - lower;
+        return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+    }
+}
 
 internal sealed record WyrmAggregate(
     string Wyrm,
@@ -69,7 +102,9 @@ internal sealed record BalanceAggregate(
     double MedianFirstWyrmSeconds,
     double MedianEncounterBreathingRooms,
     double MedianEncounterClimaxes,
-    double SynergyActivationRate)
+    double SynergyActivationRate,
+    double EvolutionActivationRate,
+    double MedianEvolutions)
 {
     public static BalanceAggregate Create(string build, SelfPlayBuildCohort cohort, int spentArcanePoints, string agent, IReadOnlyList<RunSelfPlayMetrics> runs)
     {
@@ -102,7 +137,9 @@ internal sealed record BalanceAggregate(
             Percentile(runs.Where(run => run.FirstWyrmSeconds.HasValue).Select(run => run.FirstWyrmSeconds!.Value), 0.5),
             Percentile(runs.Select(run => (double)run.EncounterBreathingRooms), 0.5),
             Percentile(runs.Select(run => (double)run.EncounterClimaxes), 0.5),
-            Rate(runs, run => run.Synergies > 0));
+            Rate(runs, run => run.Synergies > 0),
+            Rate(runs, run => run.Evolutions > 0),
+            Percentile(runs.Select(run => (double)run.Evolutions), 0.5));
     }
 
     private static double Rate(IEnumerable<RunSelfPlayMetrics> runs, Func<RunSelfPlayMetrics, bool> predicate)
