@@ -2,9 +2,20 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.68 — Balance Baseline Integrity
+## Prototype 0.0.69 — Passive Fidelity
 
-0.0.68 hardens the Balance Lab before the first gameplay tuning pass. The original baseline mixed 10-point single-Keystone routes with 20-point hybrid plans, which made cross-build conclusions misleading. Balance evidence is now split into equal-budget cohorts and every run/report records its Arcane point investment. No combat values are changed in this milestone.
+0.0.69 fixes passive-tree effects whose runtime behavior did not match the promise shown in the Arcane Atlas. The clean 0.0.68 baseline showed large school differences, but several of those differences were caused by incomplete mechanics rather than tuning values. This milestone fixes those mechanics before changing raw balance numbers.
+
+### Passive fidelity fixes
+
+- **Detonation** now creates an actual area explosion every 4th hit instead of only multiplying the direct target's damage.
+- **Volcanic Heart** upgrades that Detonation explosion to a larger radius and ×2.5 damage.
+- **Ice Armor** now grants a real 1.35-second barrier that reduces incoming damage by 40%; previously its barrier flag was visual only.
+- **Winter Shell** now begins charged, absorbs one full hit, and independently recharges after 5 seconds instead of accidentally interacting with Ice Armor's short barrier.
+- **Arcane Echo** explicitly fires one 60%-damage echo every 6th cast.
+- **Echo Chamber** now fulfills its Keystone promise by firing two full-damage echoes on the Arcane Echo trigger.
+- Shared passive-effect resolution is unit-tested, while Winter Shell readiness and Detonation splash are covered through the live simulation.
+- No Fire/Storm/Frost/Arcane travel-node percentages are changed yet; Balance Lab reruns after these correctness fixes decide whether number tuning is still required.
 
 ### Baseline integrity
 

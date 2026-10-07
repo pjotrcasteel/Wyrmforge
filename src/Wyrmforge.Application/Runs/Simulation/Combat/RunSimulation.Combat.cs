@@ -4,6 +4,7 @@ using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Statuses;
+using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -36,7 +37,8 @@ public sealed partial class RunSimulation
             var damage = projectile.Damage;
             var interactions = ResolveStatusInteractions(projectile.Spell, target);
             foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
-            if (passiveProfile.Detonation && hitCount % 4 == 0) damage *= passiveProfile.Volcanic ? 2.5 : 2;
+            var detonation = PassiveEffectResolver.ResolveDetonation(passiveProfile, hitCount);
+            if (detonation is not null) damage *= detonation.DamageMultiplier;
             if (passiveProfile.AbsoluteZero && target.Statuses.Has(CombatStatusId.Frozen)) damage *= 2;
 
             RegisterElementalImpact(target.Position, projectile.Spell);
@@ -44,6 +46,7 @@ public sealed partial class RunSimulation
             RegisterFrostNova(projectile, target.Position, target.Id);
             var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
             var killed = DamageTarget(target, damage, projectile, spawnedForHit);
+            if (detonation is not null) Splash(target.Position, damage, detonation.Radius, target.Id);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed) ApplyProjectileStatus(projectile, target);
             if (!killed) ApplyHitRules(projectile.Spell, target);

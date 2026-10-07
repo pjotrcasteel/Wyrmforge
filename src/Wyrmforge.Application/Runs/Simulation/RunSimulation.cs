@@ -78,6 +78,7 @@ public sealed partial class RunSimulation
         RefreshBuildHud();
         RefreshBuildModifiers();
         player.Health = player.MaxHealth;
+        if (passiveProfile.WinterShell) player.Barrier = true;
     }
 
     public IReadOnlyList<LevelChoice> PendingChoices => pendingChoices;

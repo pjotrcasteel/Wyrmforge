@@ -79,6 +79,35 @@ public sealed class RunSimulationTests
     }
 
     [TestMethod]
+    public void Construction_WithWinterShell_StartsWithWardReady()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string> { "winter-shell" }, new LevelChoiceService(random), random);
+
+        var snapshot = simulation.CreateSnapshot();
+
+        Assert.IsTrue(snapshot.Player.Barrier);
+    }
+
+    [TestMethod]
+    public void Tick_WithDetonationFourthHit_ExposesExplosionPulse()
+    {
+        var random = new FirstRandomSource();
+        var simulation = new RunSimulation(new HashSet<string> { "detonation" }, new LevelChoiceService(random), random);
+        StartFirstMapEncounter(simulation);
+        SplashPulseRenderSnapshot? detonation = null;
+
+        for (var tick = 0; tick < 120 && detonation is null; tick++)
+        {
+            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            detonation = snapshot.SplashPulses.FirstOrDefault(pulse => Math.Abs(pulse.Radius - 58) < 0.01);
+        }
+
+        Assert.IsNotNull(detonation);
+        Assert.AreEqual(58d, detonation.Radius);
+    }
+
+    [TestMethod]
     public void Tick_WithWildfireHit_ExposesSplashPulse()
     {
         var random = new FirstRandomSource();
