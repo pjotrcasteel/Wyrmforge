@@ -228,6 +228,7 @@ function draw(state, snapshot, width, height) {
     }
 
     if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
+    for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
 
     ctx.beginPath();
     ctx.arc(snapshot.player.x, snapshot.player.y, snapshot.player.radius, 0, Math.PI * 2);
@@ -368,7 +369,8 @@ function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
 
 function drawExperienceShard(ctx, shard) {
     const valueScale = Math.min(1, Math.log2(Math.max(1, shard.value)) / 4);
-    const size = 5 + valueScale * 5;
+    const pulse = 0.9 + Math.sin(performance.now() / 130 + shard.x * 0.03 + shard.y * 0.02) * 0.1;
+    const size = (5 + valueScale * 5) * pulse;
     ctx.save();
     ctx.translate(shard.x, shard.y);
     ctx.rotate(Math.PI / 4);
@@ -379,6 +381,31 @@ function drawExperienceShard(ctx, shard) {
     ctx.strokeStyle = shard.value >= 6 ? '#fff0b8' : '#e4caff';
     ctx.lineWidth = 1;
     ctx.strokeRect(-size / 2, -size / 2, size, size);
+    ctx.restore();
+}
+
+function drawExperiencePickup(ctx, pickup) {
+    const progress = Math.min(1, Math.max(0, pickup.progress));
+    const alpha = 1 - progress;
+    const valueScale = Math.min(1.5, Math.log2(Math.max(1, pickup.value) + 1) * 0.32);
+    const radius = 18 + progress * (28 + valueScale * 16);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pickup.x, pickup.y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(201, 153, 255, ${alpha * 0.75})`;
+    ctx.lineWidth = 3 - progress * 1.4;
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(236, 215, 255, ${alpha * 0.72})`;
+    ctx.lineWidth = 1.5;
+    const rays = 4 + Math.min(4, pickup.value);
+    for (let index = 0; index < rays; index++) {
+        const angle = index * Math.PI * 2 / rays;
+        ctx.beginPath();
+        ctx.moveTo(pickup.x + Math.cos(angle) * radius * 0.45, pickup.y + Math.sin(angle) * radius * 0.45);
+        ctx.lineTo(pickup.x + Math.cos(angle) * radius, pickup.y + Math.sin(angle) * radius);
+        ctx.stroke();
+    }
     ctx.restore();
 }
 
@@ -412,14 +439,35 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
 }
 
 function drawEnemy(ctx, enemy) {
-    ctx.beginPath();
-    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y);
     ctx.fillStyle = enemyColor(enemy);
-    ctx.fill();
+    ctx.strokeStyle = enemy.hitFlash ? '#fff7eb' : enemyEdgeColor(enemy.kind);
+    ctx.lineWidth = enemy.kind === 3 ? 2.5 : 1.4;
+
+    if (enemy.kind === 1) {
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-enemy.radius * 0.78, -enemy.radius * 0.78, enemy.radius * 1.56, enemy.radius * 1.56);
+        ctx.strokeRect(-enemy.radius * 0.78, -enemy.radius * 0.78, enemy.radius * 1.56, enemy.radius * 1.56);
+    } else if (enemy.kind === 2) {
+        drawPolygon(ctx, 0, 0, enemy.radius, 3, -Math.PI / 2);
+        ctx.fill();
+        ctx.stroke();
+    } else if (enemy.kind === 3) {
+        drawPolygon(ctx, 0, 0, enemy.radius, 6, Math.PI / 6);
+        ctx.fill();
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
+    ctx.restore();
 
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
-    ctx.strokeStyle = `rgba(255, 190, 174, ${0.18 + damage * 0.48})`;
+    ctx.strokeStyle = `rgba(255, 205, 190, ${0.18 + damage * 0.5})`;
     ctx.lineWidth = 1.2 + damage * 1.4;
     ctx.beginPath();
     ctx.moveTo(enemy.x - enemy.radius * 0.45, enemy.y - enemy.radius * 0.18);
@@ -436,10 +484,18 @@ function drawEnemy(ctx, enemy) {
 function enemyColor(enemy) {
     if (enemy.hitFlash) return '#fff1df';
     if (enemy.frozen) return '#9fdfff';
-    if (enemy.healthRatio <= 0.25) return '#68262e';
-    if (enemy.healthRatio <= 0.55) return '#913640';
-    if (enemy.healthRatio <= 0.78) return '#ab414a';
-    return '#c14b54';
+    if (enemy.healthRatio <= 0.25) return '#5f2731';
+    if (enemy.kind === 1) return enemy.healthRatio <= 0.55 ? '#67356f' : '#9855a4';
+    if (enemy.kind === 2) return enemy.healthRatio <= 0.55 ? '#9a472f' : '#df744c';
+    if (enemy.kind === 3) return enemy.healthRatio <= 0.55 ? '#6d2a32' : '#9d3c47';
+    return enemy.healthRatio <= 0.55 ? '#913640' : '#c14b54';
+}
+
+function enemyEdgeColor(kind) {
+    if (kind === 1) return '#d393e4';
+    if (kind === 2) return '#ffb07a';
+    if (kind === 3) return '#d56b75';
+    return '#e57b82';
 }
 
 function drawSplashPulse(ctx, pulse, school) {
@@ -487,23 +543,25 @@ function drawElementalImpact(ctx, impact) {
 function drawDeathBurst(ctx, death) {
     const progress = Math.min(1, Math.max(0, death.progress));
     const alpha = 1 - progress;
-    const ringRadius = death.radius * (0.65 + progress * 1.25);
+    const intensity = Math.max(1, death.intensity ?? 1);
+    const ringRadius = death.radius * (0.65 + progress * (1.15 + intensity * 0.18));
     ctx.beginPath();
     ctx.arc(death.x, death.y, ringRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255, 218, 211, ${alpha * 0.75})`;
-    ctx.lineWidth = 3 - progress * 1.5;
+    ctx.strokeStyle = `rgba(255, 218, 211, ${Math.min(1, alpha * (0.68 + intensity * 0.08))})`;
+    ctx.lineWidth = 2.4 + intensity * 0.45 - progress * 1.4;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(death.x, death.y, Math.max(1, death.radius * 0.72 * alpha), 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 242, 235, ${alpha * 0.55})`;
+    ctx.arc(death.x, death.y, Math.max(1, death.radius * (0.66 + intensity * 0.05) * alpha), 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 242, 235, ${alpha * 0.5})`;
     ctx.fill();
 
-    const distance = death.radius * (0.3 + progress * 1.7);
-    const size = Math.max(1, death.radius * 0.28 * alpha);
+    const distance = death.radius * (0.3 + progress * (1.6 + intensity * 0.18));
+    const size = Math.max(1, death.radius * (0.2 + intensity * 0.04) * alpha);
+    const particles = 4 + intensity * 2;
     ctx.fillStyle = `rgba(210, 91, 101, ${alpha})`;
-    for (let index = 0; index < 4; index++) {
-        const angle = Math.PI / 4 + index * Math.PI / 2;
+    for (let index = 0; index < particles; index++) {
+        const angle = Math.PI / 4 + index * Math.PI * 2 / particles;
         const x = death.x + Math.cos(angle) * distance;
         const y = death.y + Math.sin(angle) * distance;
         ctx.fillRect(x - size / 2, y - size / 2, size, size);
