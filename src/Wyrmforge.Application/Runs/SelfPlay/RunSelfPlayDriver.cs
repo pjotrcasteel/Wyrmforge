@@ -17,6 +17,7 @@ public sealed class RunSelfPlayDriver
 
         var simulatedSeconds = 0d;
         var decisionFailures = 0;
+        var stopReason = RunSelfPlayStopReason.NaturalEnd;
 
         while (!simulation.IsEnded && simulatedSeconds < options.MaximumSimulatedSeconds)
         {
@@ -33,7 +34,11 @@ public sealed class RunSelfPlayDriver
             if (HasPendingDecision(simulation))
             {
                 decisionFailures++;
-                if (decisionFailures >= 3) break;
+                if (decisionFailures >= 3)
+                {
+                    stopReason = RunSelfPlayStopReason.DecisionFailure;
+                    break;
+                }
                 continue;
             }
 
@@ -42,8 +47,12 @@ public sealed class RunSelfPlayDriver
             recorder.Observe(snapshot, simulatedSeconds);
         }
 
-        if (!simulation.IsEnded) simulation.AbandonRun();
-        return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds);
+        if (!simulation.IsEnded)
+        {
+            if (stopReason == RunSelfPlayStopReason.NaturalEnd) stopReason = RunSelfPlayStopReason.TimeLimit;
+            simulation.AbandonRun();
+        }
+        return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason);
     }
 
     private static RunAgentObservation CreateObservation(RunSimulation simulation, RunRenderSnapshot snapshot) => new(
@@ -138,17 +147,21 @@ public sealed class RunSelfPlayDriver
             }
         }
 
-        public RunSelfPlayMetrics Complete(RunSummary summary, RunRenderSnapshot finalSnapshot, double simulatedSeconds)
+        public RunSelfPlayMetrics Complete(RunSummary summary, RunRenderSnapshot finalSnapshot, double simulatedSeconds, RunSelfPlayStopReason stopReason)
         {
             var totalExperience = finalSnapshot.Hud.Experience;
             for (var level = 1; level < finalSnapshot.Hud.Level; level++) totalExperience += ExperienceCurve.RequiredForLevel(level);
 
+            var uncollectedExperience = finalSnapshot.ExperienceShards?.Sum(shard => shard.Value) ?? 0;
+            var experienceAvailable = totalExperience + uncollectedExperience;
+            var collectionRate = experienceAvailable == 0 ? 1 : totalExperience / (double)experienceAvailable;
             var minutes = Math.Max(simulatedSeconds / 60, 1d / 60);
             return new RunSelfPlayMetrics(
                 build,
                 agent,
                 seed,
                 summary.Outcome,
+                stopReason,
                 summary.Depth,
                 summary.Score,
                 summary.Kills,
@@ -157,6 +170,8 @@ public sealed class RunSelfPlayDriver
                 totalExperience,
                 summary.Kills / minutes,
                 totalExperience / minutes,
+                uncollectedExperience,
+                collectionRate,
                 minimumHealthRatio,
                 damageTaken,
                 peakEnemies,
