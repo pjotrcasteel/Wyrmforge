@@ -101,9 +101,12 @@ public sealed partial class RunSimulation
 
     private void DamagePlayer(double rawDamage)
     {
+        if (passiveProfile.WinterShell && player.WinterShellGuardRemaining > 0) return;
+
         if (passiveProfile.WinterShell && player.Barrier)
         {
             player.Barrier = false;
+            player.WinterShellGuardRemaining = PassiveEffectResolver.WinterShellGuardSeconds;
             player.WinterShellRechargeRemaining = PassiveEffectResolver.WinterShellRechargeSeconds;
             return;
         }
