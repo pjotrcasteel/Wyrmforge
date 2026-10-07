@@ -2,6 +2,7 @@ using Wyrmforge.Domain.Combat.Abilities;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
+using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
@@ -53,7 +54,10 @@ public sealed partial class RunSimulation
 
         if (echo) return;
         if (ConsumeTempestWingEcho()) CastSpell(spell, rank, damageScale * StormEssenceProfile.TempestWingEchoDamageScale, true);
-        if (passiveProfile.ArcaneEcho && castCount % 6 == 0) CastSpell(spell, rank, passiveProfile.EchoChamber ? damageScale : damageScale * 0.6, true);
+        foreach (var echoScale in PassiveEffectResolver.ResolveArcaneEchoScales(passiveProfile, castCount))
+        {
+            CastSpell(spell, rank, damageScale * echoScale, true);
+        }
 
         var rules = ResolveBuildRules(new CombatRuleContext(CombatRuleTrigger.Cast, castCount, spell.Id, spell.School));
         foreach (var rule in rules)
