@@ -8,26 +8,26 @@ public static class EnemyEncounterComposition
     private static readonly IReadOnlyDictionary<EnemyEncounterPattern, EnemyCompositionProfile> Profiles =
         new Dictionary<EnemyEncounterPattern, EnemyCompositionProfile>
         {
-            [EnemyEncounterPattern.Swarm] = new(6, 0.55, new Dictionary<EnemyRole, double>
+            [EnemyEncounterPattern.Swarm] = new(10, 0.55, new Dictionary<EnemyRole, double>
             {
                 [EnemyRole.Pressure] = 1,
-            }),
-            [EnemyEncounterPattern.StalkerPressure] = new(9, 0.9, new Dictionary<EnemyRole, double>
+            }, MinimumBatchSize: 3, MaximumBatchSize: 5),
+            [EnemyEncounterPattern.StalkerPressure] = new(10, 0.9, new Dictionary<EnemyRole, double>
             {
                 [EnemyRole.Pressure] = 0.6,
                 [EnemyRole.Ambusher] = 1.4,
             }, new Dictionary<EnemyRole, int>
             {
                 [EnemyRole.Ambusher] = 2,
-            }),
-            [EnemyEncounterPattern.Mixed] = new(8, 0.75, new Dictionary<EnemyRole, double>
+            }, MinimumBatchSize: 1, MaximumBatchSize: 2),
+            [EnemyEncounterPattern.Mixed] = new(12, 0.75, new Dictionary<EnemyRole, double>
             {
                 [EnemyRole.Pressure] = 1,
                 [EnemyRole.Ambusher] = 0.7,
             }, new Dictionary<EnemyRole, int>
             {
                 [EnemyRole.Ambusher] = 1,
-            }),
+            }, MinimumBatchSize: 2, MaximumBatchSize: 3),
         };
 
     public static EnemyCompositionPlan CreatePlan(EnemyEncounterPattern pattern, int depth, IRandomSource randomSource, double threatBudgetMultiplier = 1)
@@ -64,6 +64,15 @@ public static class EnemyEncounterComposition
     public static EnemyCompositionProfile GetProfile(EnemyEncounterPattern pattern) => Profiles[pattern];
 
     public static double GetSpawnIntervalMultiplier(EnemyEncounterPattern pattern) => GetProfile(pattern).SpawnIntervalMultiplier;
+
+    public static int GetSpawnBatchSize(EnemyEncounterPattern pattern, IRandomSource randomSource)
+    {
+        var profile = GetProfile(pattern);
+        if (profile.MaximumBatchSize <= profile.MinimumBatchSize) return profile.MinimumBatchSize;
+        return profile.MinimumBatchSize + randomSource.Next(profile.MaximumBatchSize - profile.MinimumBatchSize + 1);
+    }
+
+    public static int GetActiveEnemyCap(int depth) => 22 + Math.Max(0, depth - 1) * 10;
 
     public static EnemyEncounterPattern SelectNext(EnemyEncounterPattern previous, int alternativeIndex)
     {
