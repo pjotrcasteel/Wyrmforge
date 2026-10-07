@@ -28,14 +28,16 @@ public sealed partial class RunSimulation
 
     private void UpdatePlayerBarriers(double delta)
     {
-        if (player.BarrierRemaining > 0)
+        if (passiveProfile.WinterShell)
         {
-            player.BarrierRemaining = Math.Max(0, player.BarrierRemaining - delta);
-            if (player.BarrierRemaining == 0 && !passiveProfile.WinterShell) player.Barrier = false;
+            if (player.Barrier || player.WinterShellRechargeRemaining <= 0) return;
+            player.WinterShellRechargeRemaining = Math.Max(0, player.WinterShellRechargeRemaining - delta);
+            if (player.WinterShellRechargeRemaining == 0) player.Barrier = true;
+            return;
         }
 
-        if (player.WinterShellRechargeRemaining <= 0) return;
-        player.WinterShellRechargeRemaining = Math.Max(0, player.WinterShellRechargeRemaining - delta);
-        if (player.WinterShellRechargeRemaining == 0 && passiveProfile.WinterShell) player.Barrier = true;
+        if (!passiveProfile.IceArmor || !player.Barrier || player.BarrierRemaining <= 0) return;
+        player.BarrierRemaining = Math.Max(0, player.BarrierRemaining - delta);
+        if (player.BarrierRemaining == 0) player.Barrier = false;
     }
 }
