@@ -45,6 +45,24 @@ public sealed partial class RunSimulation
         return activeDragon;
     }
 
+    private IReadOnlyList<ICombatTarget> NearestTargets(Vector2D position, int count)
+    {
+        if (count <= 0) return Array.Empty<ICombatTarget>();
+
+        var candidates = enemies
+            .Where(enemy => enemy.Health > 0)
+            .Cast<ICombatTarget>()
+            .ToList();
+
+        if (dragonHuntState.CanTargetDragon && dragon is { Health: > 0 } activeDragon) candidates.Add(activeDragon);
+
+        return candidates
+            .OrderBy(target => Vector2D.Distance(position, target.Position))
+            .ThenBy(target => target.Id)
+            .Take(count)
+            .ToArray();
+    }
+
     private void RebuildCombatSpatialIndex() => combatSpatialIndex.Rebuild(enemies, dragonHuntState.CanTargetDragon ? dragon : null);
 
     private static void ApplyStatus(ICombatTarget target, CombatStatusId status, double duration)
