@@ -61,7 +61,7 @@
             else
             {
                 <div class="result-heading">
-                    <div><span>@result.Build</span><strong>@result.Agent • seed @result.Seed</strong></div>
+                    <div><span>@result.Build</span><strong>@result.Agent • seed @result.Seed • @result.StopReason</strong></div>
                     <b>@result.Outcome</b>
                 </div>
 
@@ -70,6 +70,7 @@
                     <article><span>SCORE</span><strong>@result.Score.ToString("N0")</strong></article>
                     <article><span>KILLS / MIN</span><strong>@result.KillsPerMinute.ToString("0.0")</strong></article>
                     <article><span>XP / MIN</span><strong>@result.ExperiencePerMinute.ToString("0.0")</strong></article>
+                    <article><span>XP COLLECTED</span><strong>@result.ExperienceCollectionRate.ToString("P0")</strong></article>
                     <article><span>MIN HEALTH</span><strong>@result.MinimumHealthRatio.ToString("P0")</strong></article>
                     <article><span>PEAK ENEMIES</span><strong>@result.PeakEnemies</strong></article>
                     <article><span>LEVEL</span><strong>@result.Level</strong></article>
