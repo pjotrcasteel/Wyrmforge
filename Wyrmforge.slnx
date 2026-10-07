@@ -5,6 +5,7 @@
     <Project Path="src/Wyrmforge.Infrastructure/Wyrmforge.Infrastructure.csproj" />
     <Project Path="src/Wyrmforge.Bootstrap/Wyrmforge.Bootstrap.csproj" />
     <Project Path="src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj" />
+    <Project Path="src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Wyrmforge.Domain.Tests/Wyrmforge.Domain.Tests.csproj" />
