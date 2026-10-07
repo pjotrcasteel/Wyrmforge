@@ -2,9 +2,20 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.63 — Run Flow & Reward Moments
+## Prototype 0.0.64 — Fun Ugly Gate Fix Pass
 
-0.0.63 makes important run events read like game moments instead of silent state changes. It is still a fun-ugly milestone: hierarchy, pacing and feedback are the work here, not final illustration or VFX.
+0.0.64 is the final cohesion pass before the Fun Ugly Gate. It does not add content breadth or final art; it focuses on mobile correctness, survivor-like combat momentum, readable pickups, horde pacing and stronger spatial game UI.
+
+### Gate fix sequence
+
+1. **Mobile Overlay Contract** — one iOS-safe scrolling model for Level Up, Relic Cache, Wyrm Harvest, Refuge and Run Summary.
+2. **Experience Shards** — enemies drop physical XP that must be collected instead of granting XP directly on death.
+3. **Horde Encounter Pacing** — larger encounter targets and composition-driven spawn batches.
+4. **Combat Impact** — stronger kill, pickup and level-up feedback at horde density.
+5. **Arcane Atlas** — bring the spatial/fantasy language of the Wyrmrealm map into the Arcane Web.
+6. **Fun Ugly Gate** — repeated mobile/desktop playtests and a pass/fail decision.
+
+The first fix establishes a shared overlay contract: the viewport layer owns scrolling, cards never create nested scroll traps, dynamic viewport height and safe-area insets are honored, and iOS momentum scrolling remains enabled.
 
 ### Moment feedback
 
@@ -91,15 +102,13 @@ The detailed spell, rune, relic and Wyrm sections remain available underneath.
 - Essence Vault, Arcane Codex, four Forge lineages and 12 Forge Masteries.
 - Seeded runs, replay support, run summaries and Combat Lab tooling.
 
-## Next milestone
+## Gate target
 
-**0.0.64 — Fun Ugly Gate**
-
-No new major system is planned before the gate. The next step is repeated mobile and desktop playtesting of the complete loop:
+The complete loop remains:
 
 **Forge → Arcane Web → route choice → run draft → Wyrm hunt → Essence risk → Refuge → descend/extract → Forge**
 
-The gate passes when the prototype is enjoyable enough that starting another run is an attractive choice despite placeholder visuals.
+The gate passes when the prototype is enjoyable enough that starting another run is an attractive choice despite placeholder visuals. If a pillar fails, the next milestone targets only that failing pillar instead of adding content to hide it.
 
 ## Technology
 
