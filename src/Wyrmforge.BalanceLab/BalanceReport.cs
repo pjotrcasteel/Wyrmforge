@@ -12,6 +12,8 @@ internal sealed record BalanceReport(
 
 internal sealed record BalanceAggregate(
     string Build,
+    SelfPlayBuildCohort Cohort,
+    int SpentArcanePoints,
     string Agent,
     int Runs,
     double ExtractionRate,
@@ -32,12 +34,14 @@ internal sealed record BalanceAggregate(
     double MedianEssenceSecured,
     double SynergyActivationRate)
 {
-    public static BalanceAggregate Create(string build, string agent, IReadOnlyList<RunSelfPlayMetrics> runs)
+    public static BalanceAggregate Create(string build, SelfPlayBuildCohort cohort, int spentArcanePoints, string agent, IReadOnlyList<RunSelfPlayMetrics> runs)
     {
         if (runs.Count == 0) throw new ArgumentException("Aggregate requires at least one run.", nameof(runs));
 
         return new BalanceAggregate(
             build,
+            cohort,
+            spentArcanePoints,
             agent,
             runs.Count,
             Rate(runs, run => run.Outcome == RunOutcome.Extracted),
