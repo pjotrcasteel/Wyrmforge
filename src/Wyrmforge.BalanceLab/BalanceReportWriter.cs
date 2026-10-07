@@ -20,7 +20,7 @@ internal static class BalanceReportWriter
     private static string Csv(IReadOnlyList<RunSelfPlayMetrics> runs)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("build,agent,seed,outcome,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,dragonsSlain,essenceSecured,completedRoutes,rareRoutes");
+        builder.AppendLine("build,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,dragonsSlain,essenceSecured,completedRoutes,rareRoutes");
 
         foreach (var run in runs)
         {
@@ -29,6 +29,7 @@ internal static class BalanceReportWriter
                 Quote(run.Agent),
                 run.Seed,
                 run.Outcome,
+                run.StopReason,
                 run.Depth,
                 run.Score,
                 run.Kills,
@@ -37,6 +38,8 @@ internal static class BalanceReportWriter
                 run.TotalExperience,
                 F(run.KillsPerMinute),
                 F(run.ExperiencePerMinute),
+                run.UncollectedExperience,
+                F(run.ExperienceCollectionRate),
                 F(run.MinimumHealthRatio),
                 F(run.DamageTaken),
                 run.PeakEnemies,
@@ -61,18 +64,20 @@ internal static class BalanceReportWriter
         builder.AppendLine();
         builder.AppendLine($"Runs: **{report.TotalRuns:N0}** ({report.RunsPerCombination} per build/agent combination)");
         builder.AppendLine();
-        builder.AppendLine("| Build | Agent | Extract | Defeat | Median depth | P90 depth | Kills/min | XP/min | Min HP | Peak enemies | Level | Essence | Synergy |");
-        builder.AppendLine("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
+        builder.AppendLine("| Build | Agent | Extract | Defeat | Timeout | Decision fail | Median depth | P90 depth | Kills/min | XP/min | XP collected | Min HP | Peak enemies | Level | Essence | Synergy |");
+        builder.AppendLine("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
 
         foreach (var row in report.Aggregates)
         {
-            builder.AppendLine($"| {row.Build} | {row.Agent} | {row.ExtractionRate:P0} | {row.DefeatRate:P0} | {row.MedianDepth:0.0} | {row.P90Depth:0.0} | {row.MedianKillsPerMinute:0.0} | {row.MedianExperiencePerMinute:0.0} | {row.MedianMinimumHealthRatio:P0} | {row.MedianPeakEnemies:0} | {row.MedianLevel:0.0} | {row.MedianEssenceSecured:0.0} | {row.SynergyActivationRate:P0} |");
+            builder.AppendLine($"| {row.Build} | {row.Agent} | {row.ExtractionRate:P0} | {row.DefeatRate:P0} | {row.TimeLimitRate:P0} | {row.DecisionFailureRate:P0} | {row.MedianDepth:0.0} | {row.P90Depth:0.0} | {row.MedianKillsPerMinute:0.0} | {row.MedianExperiencePerMinute:0.0} | {row.MedianExperienceCollectionRate:P0} | {row.MedianMinimumHealthRatio:P0} | {row.MedianPeakEnemies:0} | {row.MedianLevel:0.0} | {row.MedianEssenceSecured:0.0} | {row.SynergyActivationRate:P0} |");
         }
 
         builder.AppendLine();
         builder.AppendLine("## Interpretation guardrails");
         builder.AppendLine();
         builder.AppendLine("- Compare builds within the same agent first; agents intentionally value risk differently.");
+        builder.AppendLine("- Treat TimeLimit or DecisionFailure as agent/instrumentation problems before interpreting balance.");
+        builder.AppendLine("- Check XP collection rate before blaming a build for low level cadence.");
         builder.AppendLine("- Prefer median and tail behavior over one lucky seed.");
         builder.AppendLine("- A strong build is not automatically unhealthy if it trades survival for tempo or requires a narrower play style.");
         builder.AppendLine("- Balance Lab is measurement equipment, not an automatic nerf/buff oracle.");
