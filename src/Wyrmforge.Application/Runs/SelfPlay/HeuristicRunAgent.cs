@@ -27,7 +27,7 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
             var target = new Vector2D(extraction.X, extraction.Y);
             var distance = Vector2D.Distance(player, target);
             if (distance > extraction.Radius * 0.55) return ToInput(Vector2D.DirectionTo(player, target));
-            return MovementInput.Zero;
+            return new MovementInput(0, 0);
         }
 
         var avoidance = CalculateAvoidance(snapshot, player);
