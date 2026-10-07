@@ -10,7 +10,10 @@
             <h1>Test combat mechanics without RNG.</h1>
             <p>Spawn an immortal stationary target, enable any spell combination, and inspect the real status engine while it runs.</p>
         </div>
-        <button class="secondary" @onclick="BackToForge">← Forge</button>
+        <div class="header-actions">
+            <button class="secondary" @onclick="OpenBalanceLab">Balance Lab</button>
+            <button class="secondary" @onclick="BackToForge">← Forge</button>
+        </div>
     </header>
 
     <section class="lab-layout">
@@ -220,6 +223,7 @@
     private void SetRank(SpellId id, int rank) { var state = spellStates[id]; state.Rank = rank; state.CooldownRemaining = 0; }
     private void EnableAll() { foreach (var state in spellStates.Values) { state.Enabled = true; state.CooldownRemaining = 0; } }
     private void DisableAll() { foreach (var state in spellStates.Values) state.Enabled = false; }
+    private void OpenBalanceLab() => Navigation.NavigateTo("balance-lab");
     private void BackToForge() => Navigation.NavigateTo(string.Empty);
 
     private static double DummySize(EnemyDefinition definition) => Math.Clamp(definition.Radius * 6, 84, 128);
