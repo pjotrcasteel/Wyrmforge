@@ -1,8 +1,7 @@
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
-
-namespace Wyrmforge.BalanceLab;
+using Wyrmforge.BalanceLab;
 
 var options = BalanceLabOptions.Parse(args);
 var results = new List<RunSelfPlayMetrics>();
