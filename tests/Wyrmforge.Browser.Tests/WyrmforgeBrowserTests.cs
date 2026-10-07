@@ -28,7 +28,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
             await ScreenshotAsync("mobile-atlas.png");
 
-            var inferno = Page.Locator("button[aria-label^="Dragon's Inferno."]");
+            var inferno = Page.Locator("button[aria-label^=\"Dragon's Inferno.\"]");
             await inferno.EvaluateAsync("element => element.click()");
             await Expect(Page.GetByText("ROUTE PREVIEW", new() { Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("mobile-atlas-inferno-route.png");
