@@ -75,6 +75,7 @@ public sealed partial class RunSimulation
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var baseCount = prismatic ? passiveProfile.AstralBarrage ? 5 : 3 : 1;
         var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles);
+        var volleyTargets = prismatic ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
         var baseDirection = Vector2D.DirectionTo(player.Position, target.Position);
         var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier;
         var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed);
@@ -87,15 +88,18 @@ public sealed partial class RunSimulation
 
         for (var index = 0; index < count; index++)
         {
-            var offset = count == 1 ? 0 : (index - (count - 1) / 2d) * 0.16;
-            var direction = Vector2D.Rotate(baseDirection, offset);
+            var volleyTarget = volleyTargets.Count > 0 ? volleyTargets[index % volleyTargets.Count] : target;
+            var offset = prismatic || count == 1 ? 0 : (index - (count - 1) / 2d) * 0.16;
+            var aimedDirection = Vector2D.DirectionTo(player.Position, volleyTarget.Position);
+            var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var radius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
+            var pierces = (masteredArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0);
             var effects = new ProjectileEffects(
                 inferno,
                 chains,
                 id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0,
                 status,
-                masteredArcaneOrb ? 1 : 0,
+                pierces,
                 masteredFrostShard ? FrostShardMastery.NovaRadius : 0);
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }
