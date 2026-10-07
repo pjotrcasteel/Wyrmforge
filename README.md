@@ -2,9 +2,18 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.67 — Self-Play & Balance Lab
+## Prototype 0.0.68 — Balance Baseline Integrity
 
-0.0.67 pauses balance changes and adds measurement equipment. Wyrmforge can now play deterministic headless runs with multiple player heuristics, aggregate results across build/agent/seed matrices, and capture real browser screenshots/traces in CI. The purpose is to make later tuning evidence-driven without pretending bots can decide whether the game is fun.
+0.0.68 hardens the Balance Lab before the first gameplay tuning pass. The original baseline mixed 10-point single-Keystone routes with 23-point hybrid plans, which made cross-build conclusions misleading. Balance evidence is now split into equal-budget cohorts and every run/report records its Arcane point investment. No combat values are changed in this milestone.
+
+### Baseline integrity
+
+- **KeystoneRoute** compares eight single-school Keystone routes at exactly **10 Arcane points** each.
+- **FullBuild** compares four adjacent two-school hybrid plans at exactly **23 Arcane points** each.
+- Reports include cohort and spent Arcane points so unequal-budget comparisons are visible instead of implicit.
+- Tests fail if a cohort drifts to mixed budgets.
+- Balance interpretation now explicitly requires comparing builds within the same cohort and agent.
+- The first 0.0.67 data remains useful as instrumentation validation, but is not used to nerf/buff builds.
 
 ### Self-play and balance instrumentation
 
