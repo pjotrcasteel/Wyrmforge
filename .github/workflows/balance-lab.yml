@@ -1,0 +1,64 @@
+name: Balance Lab
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Application/**'
+      - 'src/Wyrmforge.Domain/**'
+      - 'src/Wyrmforge.BalanceLab/**'
+      - '.github/workflows/balance-lab.yml'
+  workflow_dispatch:
+    inputs:
+      runs_per_combination:
+        description: Runs per build/agent combination
+        required: true
+        default: '100'
+        type: string
+      maximum_seconds:
+        description: Maximum simulated seconds per run
+        required: true
+        default: '720'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  self-play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Wyrmforge.slnx
+
+      - name: Build
+        run: dotnet build Wyrmforge.slnx -c Release --no-restore
+
+      - name: Run balance matrix
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RUNS="${{ inputs.runs_per_combination }}"
+            MAX_SECONDS="${{ inputs.maximum_seconds }}"
+          else
+            RUNS="10"
+            MAX_SECONDS="720"
+          fi
+          dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build --             --runs-per-combination "$RUNS"             --max-seconds "$MAX_SECONDS"             --output artifacts/balance
+
+      - name: Upload balance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-balance-${{ github.sha }}
+          path: artifacts/balance
+          if-no-files-found: error
+          retention-days: 30
