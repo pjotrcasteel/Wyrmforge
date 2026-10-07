@@ -59,6 +59,24 @@ public sealed class PassiveTreeSelection
         return selected.Remove(id);
     }
 
+    public bool SelectPath(IEnumerable<string> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        var original = selected.ToHashSet(StringComparer.Ordinal);
+
+        foreach (var id in ids)
+        {
+            if (selected.Contains(id)) continue;
+            if (Select(id)) continue;
+
+            selected.Clear();
+            selected.UnionWith(original);
+            return false;
+        }
+
+        return true;
+    }
+
     public void Reset() => selected.Clear();
 
     private bool IsConnectedAnchor(string id) => id == PassiveTreeCatalog.OriginId || selected.Contains(id);
