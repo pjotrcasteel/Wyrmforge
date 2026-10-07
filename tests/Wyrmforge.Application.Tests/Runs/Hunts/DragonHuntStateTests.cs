@@ -28,7 +28,7 @@ public sealed class DragonHuntStateTests
         var entrance = DragonHuntCatalog.Ashfang.Entrance;
         state.Start(DragonHuntCatalog.Ashfang);
 
-        state.TickStage(entrance.OmenSeconds);
+        state.TickStage(entrance.OmenSeconds + 0.01);
         Assert.AreEqual(DragonHuntEntranceBeat.Arrival, state.EntranceBeat);
         Assert.IsFalse(state.CanTargetDragon);
 

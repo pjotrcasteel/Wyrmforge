@@ -7,7 +7,7 @@ public static class DragonHuntCatalog
 {
     public static DragonHuntProfile Ashfang { get; } = new(
         DragonId.Ashfang,
-        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.SkyDive, 0.55, 0.85, 0.70, new DragonHuntPoint(0.5, -0.12), new DragonHuntPoint(0.5, 0.2)),
+        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.SkyDive, 0.55, 0.85, 1.20, new DragonHuntPoint(0.5, -0.12), new DragonHuntPoint(0.5, 0.2)),
         DragonHuntArenaTrait.CinderScar,
         1.05,
         new DragonHuntPressureProfile(
@@ -31,7 +31,7 @@ public static class DragonHuntCatalog
 
     public static DragonHuntProfile Stormcoil { get; } = new(
         DragonId.Stormcoil,
-        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.ThunderSweep, 0.55, 0.95, 0.70, new DragonHuntPoint(-0.12, 0.22), new DragonHuntPoint(0.5, 0.2)),
+        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.ThunderSweep, 0.55, 0.95, 1.20, new DragonHuntPoint(-0.12, 0.22), new DragonHuntPoint(0.5, 0.2)),
         DragonHuntArenaTrait.StormField,
         0.95,
         new DragonHuntPressureProfile(
@@ -55,7 +55,7 @@ public static class DragonHuntCatalog
 
     public static DragonHuntProfile Rimeclaw { get; } = new(
         DragonId.Rimeclaw,
-        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.IceBreak, 0.65, 1.00, 0.75, new DragonHuntPoint(0.5, -0.14), new DragonHuntPoint(0.5, 0.21)),
+        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.IceBreak, 0.65, 1.00, 1.20, new DragonHuntPoint(0.5, -0.14), new DragonHuntPoint(0.5, 0.21)),
         DragonHuntArenaTrait.FrozenBasin,
         1.2,
         new DragonHuntPressureProfile(
@@ -79,7 +79,7 @@ public static class DragonHuntCatalog
 
     public static DragonHuntProfile Voidweaver { get; } = new(
         DragonId.Voidweaver,
-        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.RiftPhase, 0.50, 0.80, 0.70, new DragonHuntPoint(1.12, 0.18), new DragonHuntPoint(0.62, 0.22)),
+        new DragonHuntEntranceProfile(DragonHuntEntranceStyle.RiftPhase, 0.50, 0.80, 1.20, new DragonHuntPoint(1.12, 0.18), new DragonHuntPoint(0.62, 0.22)),
         DragonHuntArenaTrait.AetherFracture,
         0.85,
         new DragonHuntPressureProfile(
