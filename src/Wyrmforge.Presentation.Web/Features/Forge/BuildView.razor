@@ -6,8 +6,8 @@
     <header class="build-heading">
         <div class="build-title">
             <span class="section-kicker">ARCANE ATLAS</span>
-            <h1>Chart a path through the Web.</h1>
-            <p>The Wyrmheart is your origin. Travel through elemental territories, claim defining landmarks and cross the old bridges when the build is worth the distance.</p>
+            <h1>Plan the build before you spend.</h1>
+            <p>Tap any landmark to inspect what it does and preview the cheapest connected route to it. Nothing is spent until you confirm the route.</p>
         </div>
         <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
     </header>
@@ -29,7 +29,7 @@
                 </div>
             </div>
 
-            <div class="atlas-caption"><span>THE WYRMHEART</span><small>Drag to chart • pinch to zoom • tap a landmark to inspect</small></div>
+            <div class="atlas-caption"><span>THE WYRMHEART</span><small>Tap a destination • inspect the route • confirm when ready</small></div>
 
             <div class="arcane-web-viewport" @ref="viewport">
                 <div class="web-pan-space">
@@ -53,9 +53,9 @@
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
                             <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")" aria-pressed="@IsSelected(node)"
-                                @onclick="() => HandleNode(node)">
+                                @onclick="() => InspectNode(node)">
                                 <span class="node-glyph">@NodeGlyph(node)</span>
-                                <span class="node-label">@node.Name</span>
+                                <span class="node-label"><b>@node.Name</b><small>@node.Description</small></span>
                             </button>
                         }
                     </div>
@@ -63,7 +63,8 @@
             </div>
         </div>
 
-        <aside class="node-inspector">
+        <aside class="node-inspector @(inspectorOpen ? "open" : string.Empty)">
+            <button class="inspector-close" aria-label="Close node inspector" @onclick="CloseInspector">×</button>
             <div class="inspector-heading">
                 <span class="node-kind">@KindLabel(FocusedNode)</span>
                 <span class="node-state @NodeStateClass(FocusedNode)">@NodeState(FocusedNode)</span>
@@ -75,16 +76,59 @@
                     <small>@SchoolLabel(FocusedNode)</small>
                 </div>
             </div>
-            <p>@FocusedNode.Description</p>
+            <p class="inspector-effect">@FocusedNode.Description</p>
+
             @if (FocusedNode.Kind != PassiveNodeKind.Origin)
             {
-                <div class="inspector-cost"><strong>@FocusedNode.Cost</strong><span>Arcane point@(FocusedNode.Cost == 1 ? string.Empty : "s")</span></div>
+                <div class="inspector-cost"><strong>@FocusedNode.Cost</strong><span>node cost</span></div>
             }
+
             @if (FocusedNode.MasteryGroup is not null)
             {
-                <div class="mastery-warning">Mastery choice — allocating this locks the competing landmark in this cluster.</div>
+                <div class="mastery-warning">Mastery choice — claiming this locks the competing landmark in this cluster.</div>
             }
-            <div class="inspector-help">@InspectorHelp(FocusedNode)</div>
+
+            @if (IsSelected(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
+            {
+                <div class="route-summary traversed-route">
+                    <span>TRAVERSED LANDMARK</span>
+                    <strong>This effect is active in your starting build.</strong>
+                    <small>@RefundHelp</small>
+                </div>
+                <button class="route-action refund" disabled="@(!Selection.CanRemove(FocusedNode.Id))" @onclick="RefundFocused">Refund node</button>
+            }
+            else if (FocusedNode.Kind != PassiveNodeKind.Origin)
+            {
+                @if (FocusedPlan is { } plan)
+                {
+                    <div class="route-summary">
+                        <div><span>ROUTE PREVIEW</span><strong>@plan.AdditionalCost pts</strong></div>
+                        <small>@RouteSummaryCopy(plan)</small>
+                    </div>
+                    <ol class="route-steps">
+                        @foreach (var nodeId in plan.NodeIds)
+                        {
+                            var step = PassiveTreeCatalog.Get(nodeId);
+                            <li>
+                                <span class="route-step-glyph">@NodeGlyph(step)</span>
+                                <div><strong>@step.Name</strong><small>@step.Description</small></div>
+                                <b>@step.Cost</b>
+                            </li>
+                        }
+                    </ol>
+                    <button class="route-action allocate" disabled="@(plan.AdditionalCost > PointsLeft)" @onclick="AllocateFocusedRoute">
+                        @(plan.AdditionalCost > PointsLeft ? $"Need {plan.AdditionalCost - PointsLeft} more points" : $"Allocate route • {plan.AdditionalCost} pts")
+                    </button>
+                }
+                else
+                {
+                    <div class="route-summary blocked-route"><span>ROUTE BLOCKED</span><strong>No valid path from your current build.</strong><small>A competing Mastery or graph constraint blocks this destination.</small></div>
+                }
+            }
+            else
+            {
+                <div class="inspector-help">Every route begins here. Choose a Notable, Mastery or Keystone as a destination and the Atlas will show the cheapest path.</div>
+            }
         </aside>
     </div>
 </section>
@@ -94,8 +138,10 @@
 
     private ElementReference viewport;
     private string focusedId = PassiveTreeCatalog.OriginId;
+    private bool inspectorOpen;
     private int PointsLeft => Selection.PointBudget - Selection.SpentPoints;
     private PassiveNodeDefinition FocusedNode => PassiveTreeCatalog.Get(focusedId);
+    private PassiveTreeRoutePlan? FocusedPlan => PassiveTreePlanner.Plan(Selection, focusedId);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -104,23 +150,38 @@
 
     private bool IsSelected(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin || Selection.Selected.Contains(node.Id);
 
-    private void HandleNode(PassiveNodeDefinition node)
+    private void InspectNode(PassiveNodeDefinition node)
     {
         focusedId = node.Id;
-        if (node.Kind == PassiveNodeKind.Origin) return;
-        if (Selection.Selected.Contains(node.Id)) Selection.Remove(node.Id);
-        else Selection.Select(node.Id);
+        inspectorOpen = true;
     }
+
+    private void AllocateFocusedRoute()
+    {
+        var plan = FocusedPlan;
+        if (plan is null || plan.AdditionalCost > PointsLeft) return;
+        Selection.SelectPath(plan.NodeIds);
+    }
+
+    private void RefundFocused()
+    {
+        Selection.Remove(focusedId);
+    }
+
+    private void CloseInspector() => inspectorOpen = false;
 
     private string NodeClass(PassiveNodeDefinition node)
     {
         var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}" };
         if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
         else classes.Add("school-hybrid");
+
         if (IsSelected(node)) classes.Add("selected");
+        else if (IsPreviewNode(node.Id)) classes.Add("preview");
         else if (Selection.CanSelect(node.Id)) classes.Add("available");
         else classes.Add("locked");
-        if (focusedId == node.Id) classes.Add("focused");
+
+        if (focusedId == node.Id && inspectorOpen) classes.Add("focused");
         return string.Join(' ', classes);
     }
 
@@ -129,13 +190,33 @@
         var fromAllocated = IsAllocated(connection.From);
         var toAllocated = IsAllocated(connection.To);
         if (fromAllocated && toAllocated) return "web-edge active";
+        if (IsPreviewConnection(connection)) return "web-edge preview";
         if ((fromAllocated && CanAllocate(connection.To)) || (toAllocated && CanAllocate(connection.From))) return "web-edge available";
         return "web-edge";
+    }
+
+    private bool IsPreviewNode(string id) => FocusedPlan?.NodeIds.Contains(id) == true;
+
+    private bool IsPreviewConnection(PassiveTreeConnection connection)
+    {
+        var plan = FocusedPlan;
+        if (!inspectorOpen || plan is null || plan.NodeIds.Count == 0) return false;
+        var route = new HashSet<string>(plan.NodeIds, StringComparer.Ordinal) { plan.AnchorId };
+        return route.Contains(connection.From) && route.Contains(connection.To);
     }
 
     private bool IsAllocated(string id) => id == PassiveTreeCatalog.OriginId || Selection.Selected.Contains(id);
     private bool CanAllocate(string id) => id != PassiveTreeCatalog.OriginId && Selection.CanSelect(id);
     private string NodeStyle(PassiveNodeDefinition node) => FormattableString.Invariant($"left:{node.X}px;top:{node.Y}px;");
+    private string RefundHelp => Selection.CanRemove(focusedId) ? "Refunding it keeps every other travelled route connected." : "Another travelled route depends on this node, so refund that branch first.";
+
+    private string RouteSummaryCopy(PassiveTreeRoutePlan plan)
+    {
+        if (plan.NodeIds.Count == 1) return "This node touches your current route and can be claimed directly.";
+        var destination = PassiveTreeCatalog.Get(plan.NodeIds[^1]);
+        return $"{plan.NodeIds.Count} new nodes connect your current build to {destination.Name}. Review every effect before committing.";
+    }
+
     private static string Coordinate(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     private static string NodeGlyph(PassiveNodeDefinition node) => node.Kind switch
@@ -160,6 +241,7 @@
     {
         if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
         if (Selection.Selected.Contains(node.Id)) return "TRAVERSED";
+        if (IsPreviewNode(node.Id)) return "PLANNED";
         if (Selection.CanSelect(node.Id)) return "REACHABLE";
         if (node.MasteryGroup is { } group && Selection.Selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group)) return "CHOICE LOCKED";
         return "UNCHARTED";
@@ -169,18 +251,11 @@
 
     private static string SchoolLabel(PassiveNodeDefinition node) => node.School?.ToString() ?? "Wyrmheart / old bridges";
 
-    private string InspectorHelp(PassiveNodeDefinition node)
-    {
-        if (node.Kind == PassiveNodeKind.Origin) return "Every route begins here. Drag the Atlas to explore the four elemental territories.";
-        if (Selection.Selected.Contains(node.Id)) return Selection.CanRemove(node.Id) ? "Tap again to abandon this part of the route and refund its cost." : "Another traversed route depends on this landmark.";
-        if (Selection.CanSelect(node.Id)) return "This landmark touches your travelled route — tap to claim it.";
-        return "Chart a connected route from the Wyrmheart to reach this landmark.";
-    }
-
     private void Reset()
     {
         Selection.Reset();
         focusedId = PassiveTreeCatalog.OriginId;
+        inspectorOpen = false;
     }
 
     private async Task ZoomAsync(double delta) => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.zoom", viewport, delta);

@@ -2,11 +2,23 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.64 — Fun Ugly Gate Fix Pass
+## Prototype 0.0.65 — Arcane Planning Pass
 
-0.0.64 is the final cohesion pass before the Fun Ugly Gate. It does not add content breadth or final art; it focuses on mobile correctness, survivor-like combat momentum, readable pickups, horde pacing and stronger spatial game UI.
+0.0.65 is a focused response to the Fun Ugly Gate: horde combat and physical XP passed the first playtest, while the Arcane Atlas did not yet support meaningful planning. This milestone changes the build interaction from immediate point spending to **inspect → preview route → confirm**, and removes duplicate Refuge decisions.
 
-### Gate fix sequence
+### Arcane planning fixes
+
+- Tapping an Arcane node no longer spends a point.
+- Any node, including distant Keystones, can be inspected before committing.
+- The Atlas previews the cheapest valid connected route and its total point cost.
+- Every node on the preview lists its actual effect and individual cost.
+- Route allocation is explicit and atomic: either the whole planned route fits or nothing changes.
+- Planned paths are highlighted separately from reachable and already-traversed paths.
+- The mobile inspector is dismissible and no longer permanently covers the lower Atlas.
+- Travel-node effects become visible when they are part of a planned route.
+- Refuge Return/Descend comparison cards are now the actual actions, removing the duplicated choices below.
+
+### Previous gate fix sequence
 
 1. **Mobile Overlay Contract** — one iOS-safe scrolling model for Level Up, Relic Cache, Wyrm Harvest, Refuge and Run Summary.
 2. **Experience Shards** — enemies drop physical XP that must be collected instead of granting XP directly on death.

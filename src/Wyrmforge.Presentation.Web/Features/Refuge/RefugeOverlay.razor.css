@@ -49,3 +49,61 @@
 .decision-risk > small { color:#927d73; }
 .decision-risk.sealed { opacity:.48; border-color:rgba(255,255,255,.09); background:rgba(255,255,255,.025); }
 @media (max-width:760px) { .refuge-decision { grid-template-columns:1fr; } .refuge-decision > b { justify-self:center; } }
+
+
+/* 0.0.65: the safe/risk comparison is the action, not a duplicate summary. */
+.refuge-decision > em {
+    align-self: center;
+    color: #59645d;
+    font-size: .58rem;
+    font-style: normal;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+.refuge-decision button {
+    display: grid;
+    gap: 4px;
+    padding: 14px 15px;
+    border-radius: 13px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.refuge-decision button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+}
+
+.refuge-decision button:disabled {
+    cursor: not-allowed;
+}
+
+.refuge-decision button > b {
+    margin-top: 8px;
+    font-size: .56rem;
+    letter-spacing: .1em;
+}
+
+.decision-safe > b {
+    color: #82ad91;
+}
+
+.decision-risk > b {
+    color: #b98368;
+}
+
+.refuge-actions {
+    grid-template-columns: 1fr;
+}
+
+.refuge-action {
+    min-height: 0;
+}
+
+@media (max-width: 760px) {
+    .refuge-decision > em {
+        justify-self: center;
+    }
+}

@@ -19,17 +19,19 @@
         </div>
 
         <div class="refuge-decision" aria-label="Extraction versus descent">
-            <section class="decision-safe">
+            <button class="decision-safe" @onclick="() => UseAsync(RunCheckpointActionId.LeaveRealm)">
                 <span>SAFE NOW</span>
                 <strong>Return to the Forge</strong>
                 <small>@SafeDecisionCopy</small>
-            </section>
-            <b>OR</b>
-            <section class="decision-risk @(CanDescend ? string.Empty : "sealed")">
+                <b>LEAVE WYRMREALM</b>
+            </button>
+            <em>OR</em>
+            <button class="decision-risk @(CanDescend ? string.Empty : "sealed")" disabled="@(!CanDescend)" @onclick="() => UseAsync(RunCheckpointActionId.Descend)">
                 <span>@(CanDescend ? "RISK NEXT" : "NO DEEPER PASSAGE")</span>
                 <strong>@(CanDescend ? $"Descend to Depth {NextDepth}" : "Maximum depth reached")</strong>
                 <small>@(CanDescend ? $"Keep all secured Essence safe and chase ×{ScoreMultiplier:0.0} base rewards with a fresh haul at risk." : "This run can only return safely from here.")</small>
-            </section>
+                <b>@(CanDescend ? "OPEN THE PASSAGE" : "MAX DEPTH REACHED")</b>
+            </button>
         </div>
 
         @if (OwnedRelics.Count > 0)
@@ -52,7 +54,7 @@
         }
 
         <div class="refuge-actions">
-            @foreach (var action in Actions)
+            @foreach (var action in Actions.Where(action => action.Id == RunCheckpointActionId.MendWounds))
             {
                 <button class="@ActionClass(action)" disabled="@(!action.Enabled)" @onclick="() => UseAsync(action.Id)">
                     <span class="refuge-action-kind">@ActionLabel(action)</span><span class="refuge-action-icon">@ActionIcon(action.Id)</span><strong>@ActionTitle(action.Id)</strong>
