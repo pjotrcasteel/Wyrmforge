@@ -1197,3 +1197,218 @@
         width: 150px;
     }
 }
+
+
+/* 0.0.66: information-dense Atlas without text collisions. */
+.web-node.kind-travel {
+    width: 50px;
+    height: 50px;
+}
+
+.minor-node-effects {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    pointer-events: none;
+}
+
+.minor-effect {
+    display: grid;
+    place-items: center;
+    color: inherit;
+    font-style: normal;
+    line-height: 1;
+}
+
+.minor-effect i {
+    color: inherit;
+    font-size: .66rem;
+    font-style: normal;
+    font-weight: 900;
+    opacity: .92;
+}
+
+.minor-effect b {
+    margin-top: 2px;
+    color: inherit;
+    font-size: .58rem;
+    font-weight: 950;
+    letter-spacing: -.02em;
+}
+
+.minor-node-effects.multi {
+    align-content: center;
+    gap: 2px;
+    padding: 5px 2px;
+}
+
+.minor-node-effects.multi .minor-effect {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.minor-node-effects.multi .minor-effect i,
+.minor-node-effects.multi .minor-effect b {
+    margin: 0;
+    font-size: .48rem;
+}
+
+.web-node.kind-travel.locked .minor-node-effects {
+    opacity: .58;
+}
+
+.web-node.kind-travel.available .minor-node-effects,
+.web-node.kind-travel.preview .minor-node-effects,
+.web-node.kind-travel.selected .minor-node-effects {
+    opacity: 1;
+}
+
+.node-label {
+    width: 138px;
+}
+
+.node-label b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 6px;
+    border-radius: 7px;
+    background: rgba(12, 10, 14, .64);
+    box-shadow: 0 2px 9px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(4px);
+}
+
+.node-label b i {
+    color: inherit;
+    font-style: normal;
+}
+
+.web-node.kind-keystone .node-label {
+    width: 160px;
+}
+
+.web-node.kind-keystone .node-label b {
+    color: #d9b873;
+    border: 1px solid rgba(215, 168, 93, .18);
+    background: rgba(31, 24, 15, .78);
+}
+
+.web-node.kind-mastery .node-label b {
+    color: #c1a3d5;
+}
+
+.web-node.kind-notable .node-label b {
+    color: #b8aabd;
+}
+
+.route-gains,
+.route-landmarks {
+    display: grid;
+    gap: 7px;
+}
+
+.route-gains > span,
+.route-landmarks > span {
+    color: #84728e;
+    font-size: .54rem;
+    font-weight: 950;
+    letter-spacing: .12em;
+}
+
+.route-gain-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.route-gain {
+    display: grid;
+    grid-template-columns: 25px auto;
+    grid-template-rows: auto auto;
+    gap: 0 7px;
+    align-items: center;
+    padding: 7px 8px;
+    border: 1px solid rgba(174, 140, 191, .15);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .018);
+}
+
+.route-gain i {
+    grid-row: 1 / span 2;
+    color: #c49ce7;
+    font-size: 1rem;
+    font-style: normal;
+    text-align: center;
+}
+
+.route-gain strong {
+    color: #e4d8e9;
+    font-size: .73rem;
+}
+
+.route-gain small {
+    color: #7f7385;
+    font-size: .54rem;
+    line-height: 1.15;
+}
+
+.route-landmarks .route-steps {
+    max-height: 210px;
+}
+
+@media (max-width: 760px) {
+    .web-node.kind-travel {
+        width: 48px;
+        height: 48px;
+    }
+
+    .minor-effect i {
+        font-size: .7rem;
+    }
+
+    .minor-effect b {
+        font-size: .62rem;
+    }
+
+    .minor-node-effects.multi .minor-effect i,
+    .minor-node-effects.multi .minor-effect b {
+        font-size: .51rem;
+    }
+
+    .web-node.preview .node-label,
+    .web-node.focused .node-label {
+        width: 138px;
+    }
+
+    .node-label {
+        font-size: .57rem;
+    }
+
+    .node-label b {
+        padding: 3px 5px;
+    }
+
+    .route-gain-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .route-landmarks .route-steps {
+        max-height: 126px;
+    }
+}
+
+@media (max-width: 390px) {
+    .route-gain-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .route-gain {
+        grid-template-columns: 21px auto;
+        gap: 0 5px;
+        padding: 6px;
+    }
+}
