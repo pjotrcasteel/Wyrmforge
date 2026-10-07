@@ -47,7 +47,23 @@ public sealed class DragonHuntSignaturePlannerTests
 
         Assert.AreEqual(profile.StrikesFor(1), phaseOne.Count);
         Assert.AreEqual(profile.StrikesFor(2), phaseTwo.Count);
-        Assert.IsTrue(phaseOne.All(strike => Math.Abs(strike.Position.Y - Player.Y) < 0.001));
+        Assert.IsTrue(phaseOne.All(strike => Math.Abs(strike.Position.X - Player.X) < 0.001));
+        Assert.IsTrue(phaseOne.All(strike => strike.Radius is > 0 and <= 54));
+    }
+
+    [TestMethod]
+    public void Create_GlacialWall_OnPortraitArena_CutsAcrossWidthAndPreservesScaledSegments()
+    {
+        var profile = DragonHuntCatalog.Rimeclaw.Signature;
+        const double portraitWidth = 390;
+        const double portraitHeight = 844;
+        var player = new Vector2D(195, 420);
+
+        var strikes = DragonHuntSignaturePlanner.Create(profile, 2, Dragon, player, portraitWidth, portraitHeight, new FirstRandomSource());
+
+        Assert.AreEqual(profile.StrikesFor(2), strikes.Count);
+        Assert.IsTrue(strikes.All(strike => Math.Abs(strike.Position.Y - player.Y) < 0.001));
+        Assert.IsTrue(strikes.All(strike => strike.Radius is > 0 and < 62));
     }
 
     [TestMethod]

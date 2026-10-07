@@ -115,7 +115,7 @@ public sealed partial class RunSimulation
 
         foreach (var strike in strikes)
         {
-            dragonHuntHazards.Add(new DragonHuntHazardState(strike.Position, radius, damage, telegraph, strike.DelaySeconds, signature.VisualSpell,
+            dragonHuntHazards.Add(new DragonHuntHazardState(strike.Position, strike.Radius ?? radius, damage, telegraph, strike.DelaySeconds, signature.VisualSpell,
                 activeDragon.Definition.School, signature.Kind));
         }
     }

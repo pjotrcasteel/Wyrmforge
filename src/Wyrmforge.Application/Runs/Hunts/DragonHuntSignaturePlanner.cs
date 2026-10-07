@@ -3,7 +3,7 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Hunts;
 
-public sealed record DragonHuntSignatureStrike(Vector2D Position, double DelaySeconds);
+public sealed record DragonHuntSignatureStrike(Vector2D Position, double DelaySeconds, double? Radius = null);
 
 public static class DragonHuntSignaturePlanner
 {
@@ -79,9 +79,9 @@ public static class DragonHuntSignaturePlanner
     {
         var slots = strikes + 1;
         var gap = randomSource.Next(slots);
-        var alongWidth = width >= height;
+        var alongWidth = width <= height;
         var span = alongWidth ? width : height;
-        var effectiveRadius = Math.Min(radius, span / (slots * 2.25));
+        var effectiveRadius = Math.Min(radius, span / (slots * 2.1));
         var usable = Math.Max(1, span - effectiveRadius * 2);
         var result = new List<DragonHuntSignatureStrike>(strikes);
 
@@ -90,7 +90,7 @@ public static class DragonHuntSignaturePlanner
             if (slot == gap) continue;
             var coordinate = slots == 1 ? span / 2 : effectiveRadius + usable * slot / (slots - 1d);
             var position = alongWidth ? new Vector2D(coordinate, playerPosition.Y) : new Vector2D(playerPosition.X, coordinate);
-            result.Add(new DragonHuntSignatureStrike(Clamp(position, width, height, effectiveRadius), 0));
+            result.Add(new DragonHuntSignatureStrike(Clamp(position, width, height, effectiveRadius), 0, effectiveRadius));
         }
 
         return result;
