@@ -23,6 +23,8 @@ The third fix replaces five-kill skirmishes with encounter-specific horde object
 
 The fourth fix strengthens combat impact without adding final art. Chasers, Rift Stalkers, Skitters and Brutes now have distinct battlefield silhouettes and colors, higher-threat enemies produce heavier death bursts, XP collection creates player-centered pickup pulses, loose shards visibly pulse, and the level-up draft has a stronger transition moment. The intent is to make pack clears and collection readable at horde density without filling the screen with damage numbers.
 
+The fifth fix turns the Arcane Web into the **Arcane Atlas**. It borrows the Wyrmrealm map's spatial language: chart contours, elemental territories, travelled paths and landmark hierarchy. The Wyrmheart becomes the visual origin, Keystones read as destinations rather than large buttons, and mobile controls float over the Atlas instead of consuming a toolbar row. On phones the contextual node inspector becomes a compact bottom sheet above game navigation so the Web owns most of the viewport.
+
 ### Moment feedback
 
 Short non-blocking callouts now mark the events that should matter during combat:
