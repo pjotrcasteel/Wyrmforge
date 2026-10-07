@@ -109,6 +109,17 @@ public sealed class EncounterDirector
         }
 
         if (phase != EncounterPhase.Climax) return;
-        pendingInserts.Enqueue(depth >= 2 && pattern != EnemyEncounterPattern.StalkerPressure ? EnemyKind.Brute : EnemyKind.RiftStalker);
+        switch (pattern)
+        {
+            case EnemyEncounterPattern.Swarm when depth >= 2:
+                pendingInserts.Enqueue(EnemyKind.Brute);
+                break;
+            case EnemyEncounterPattern.StalkerPressure:
+                pendingInserts.Enqueue(EnemyKind.RiftStalker);
+                break;
+            case EnemyEncounterPattern.Mixed:
+                pendingInserts.Enqueue(depth >= 2 ? EnemyKind.Brute : EnemyKind.RiftStalker);
+                break;
+        }
     }
 }

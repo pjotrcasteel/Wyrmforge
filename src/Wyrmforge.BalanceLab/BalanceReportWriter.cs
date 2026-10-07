@@ -75,7 +75,8 @@ internal static class BalanceReportWriter
 
         foreach (var row in report.Aggregates)
         {
-            builder.AppendLine($"| {row.Cohort} | {row.Build} | {row.SpentArcanePoints} | {row.Agent} | {row.ExtractionRate:P0} | {row.DefeatRate:P0} | {row.WyrmReachRate:P0} | {row.MedianFirstWyrmSeconds:0}s | {row.MedianEncounterClimaxes:0.0} | {row.TimeLimitRate:P0} | {row.DecisionFailureRate:P0} | {row.MedianDepth:0.0} | {row.P90Depth:0.0} | {row.MedianKillsPerMinute:0.0} | {row.MedianExperiencePerMinute:0.0} | {row.MedianExperienceCollectionRate:P0} | {row.MedianMinimumHealthRatio:P0} | {row.MedianPeakEnemies:0} | {row.MedianLevel:0.0} | {row.MedianEssenceSecured:0.0} | {row.SynergyActivationRate:P0} |");
+            var firstWyrm = row.WyrmReachRate > 0 ? $"{row.MedianFirstWyrmSeconds:0}s" : "—";
+            builder.AppendLine($"| {row.Cohort} | {row.Build} | {row.SpentArcanePoints} | {row.Agent} | {row.ExtractionRate:P0} | {row.DefeatRate:P0} | {row.WyrmReachRate:P0} | {firstWyrm} | {row.MedianEncounterClimaxes:0.0} | {row.TimeLimitRate:P0} | {row.DecisionFailureRate:P0} | {row.MedianDepth:0.0} | {row.P90Depth:0.0} | {row.MedianKillsPerMinute:0.0} | {row.MedianExperiencePerMinute:0.0} | {row.MedianExperienceCollectionRate:P0} | {row.MedianMinimumHealthRatio:P0} | {row.MedianPeakEnemies:0} | {row.MedianLevel:0.0} | {row.MedianEssenceSecured:0.0} | {row.SynergyActivationRate:P0} |");
         }
 
         builder.AppendLine();

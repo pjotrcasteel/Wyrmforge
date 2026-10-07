@@ -58,6 +58,31 @@ public sealed class EncounterDirectorTests
     }
 
     [TestMethod]
+    public void Swarm_Climax_PreservesMassIdentityAndAddsBruteOnlyWhenEligible()
+    {
+        var depthOne = new EncounterDirector();
+        depthOne.Start(EnemyEncounterPattern.Swarm, 1);
+        depthOne.RegisterProgress(5, 20);
+        depthOne.RegisterProgress(10, 20);
+        depthOne.Tick(EncounterDirector.BreathingRoomSeconds);
+        depthOne.RegisterProgress(16, 20);
+
+        Assert.AreEqual(EncounterPhase.Climax, depthOne.Phase);
+        Assert.IsFalse(depthOne.TryTakeInsert(out _));
+        Assert.AreEqual(2, depthOne.Directive.BatchSizeBonus);
+
+        var depthTwo = new EncounterDirector();
+        depthTwo.Start(EnemyEncounterPattern.Swarm, 2);
+        depthTwo.RegisterProgress(6, 24);
+        depthTwo.RegisterProgress(12, 24);
+        depthTwo.Tick(EncounterDirector.BreathingRoomSeconds);
+        depthTwo.RegisterProgress(20, 24);
+
+        Assert.IsTrue(depthTwo.TryTakeInsert(out var insert));
+        Assert.AreEqual(EnemyKind.Brute, insert);
+    }
+
+    [TestMethod]
     public void StalkerPressure_EscalationAndSurge_QueueAmbusherComplications()
     {
         var director = new EncounterDirector();

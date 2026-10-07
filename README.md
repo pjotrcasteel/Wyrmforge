@@ -2,9 +2,31 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.71 — Encounter Pacing Fairness
+## Prototype 0.0.72 — Combat Director
 
-0.0.71 removes a hidden anti-control feedback loop from encounter scaling. Enemy health, speed and spawn cadence previously increased with total elapsed run time, so slower/control builds faced stronger and faster enemies precisely because they took longer to clear a kill objective. Pressure now scales with route stage and depth instead.
+0.0.72 turns route combat from a continuous spawn timer into deliberate, deterministic encounter pacing. Each combat trail now advances through **Pressure → Escalation → Breathing Room → Surge → Climax** according to kill-objective progress rather than elapsed run time.
+
+### Combat Director
+
+- Encounter phases are driven by objective progress, so slow/control builds are never punished merely for taking longer.
+- Pressure begins slightly restrained, Escalation tightens cadence, Breathing Room pauses new spawns briefly, Surge raises pressure and Climax closes the trail decisively.
+- Swarm preserves its mass identity with larger late batches; from Depth 2 its climax may add a Brute.
+- Stalker Pressure inserts deliberate Rift Stalker complications during escalation/surge instead of becoming a generic faster spawn stream.
+- Mixed pressure combines the normal roster with late complications, using Brutes only when they are depth-eligible.
+- Existing route modifiers, stage/depth scaling, active-enemy caps and threat-budget composition remain authoritative.
+- Enemy health, damage and school values are intentionally unchanged in this milestone.
+- The combat HUD exposes the active encounter phase so pacing transitions are readable during play.
+
+### Balance and browser evidence
+
+- Self-play now records Wyrms reached, first-Wyrm timing, breathing rooms and climaxes.
+- Balance reports expose Wyrm reach separately from extraction, distinguishing pre-hunt encounter failures from Wyrm-fight failures.
+- The browser smoke suite now captures active combat on both 390×844 mobile and 1440×900 desktop viewports in addition to the Arcane Atlas.
+- Director phase transitions and pattern-specific complications are unit-tested and remain deterministic.
+
+### 0.0.71 encounter pacing fairness
+
+0.0.71 removed a hidden anti-control feedback loop from encounter scaling. Enemy health, speed and spawn cadence previously increased with total elapsed run time, so slower/control builds faced stronger and faster enemies precisely because they took longer to clear a kill objective. Pressure now scales with route stage and depth instead.
 
 ### Encounter pacing fairness
 
