@@ -1,6 +1,7 @@
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
+using Wyrmforge.Domain.Combat.Stats;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
