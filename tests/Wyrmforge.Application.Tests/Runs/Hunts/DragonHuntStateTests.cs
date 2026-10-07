@@ -72,7 +72,7 @@ public sealed class DragonHuntStateTests
 
         Assert.AreEqual(DragonHuntStage.Battle, state.Stage);
         Assert.IsFalse(state.TryStartPhaseBreak(2));
-        Assert.IsFalse(state.TickSignature(0.64, 2));
-        Assert.IsTrue(state.TickSignature(0.01, 2));
+        Assert.IsFalse(state.TickSignature(0.60, 2));
+        Assert.IsTrue(state.TickSignature(0.06, 2));
     }
 }
