@@ -2,9 +2,20 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.69 — Passive Fidelity
+## Prototype 0.0.70 — School Identity Balance
 
-0.0.69 fixes passive-tree effects whose runtime behavior did not match the promise shown in the Arcane Atlas. The clean 0.0.68 baseline showed large school differences, but several of those differences were caused by incomplete mechanics rather than tuning values. This milestone fixes those mechanics before changing raw balance numbers.
+0.0.70 uses the clean cohort-aware baseline to lift the two weak school identities without flattening the tree. Fire and Storm remain unchanged as reference throughput. Frost converts control into damage and safer contact windows; Arcane converts projection into horde coverage instead of receiving generic spell-damage bonuses.
+
+### School identity balance
+
+- **Arcane Reservoir** now adds +1 projectile pierce alongside ×1.20 projectile speed.
+- **Prismatic Volley** seeks separate nearby enemies instead of fanning all projectiles around one target.
+- **Astral Barrage** uses the same seeking behavior with five projectiles.
+- **Arcane Echo** now triggers every 4th cast instead of every 6th; its normal echo remains 60% damage and Echo Chamber still produces two full-damage echoes.
+- **Deep Freeze** now triggers every 3rd hit and freezes for 1.75 seconds.
+- **Absolute Zero** converts that control into ×2.5 damage against Frozen enemies.
+- **Winter Shell** prevents damage for 0.65 seconds when the ward triggers, so continuous contact damage is treated as one meaningful hit window rather than dozens of 50ms ticks.
+- Fire and Storm passive values are intentionally unchanged in this pass. Balance Lab measures whether identity improvements close the gap before any ceiling nerfs are considered.
 
 ### Passive fidelity fixes
 
