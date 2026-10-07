@@ -103,15 +103,17 @@ public sealed partial class RunSimulation
         if (passiveProfile.WinterShell && player.Barrier)
         {
             player.Barrier = false;
-            player.WinterShellRechargeRemaining = 5;
+            player.WinterShellRechargeRemaining = PassiveEffectResolver.WinterShellRechargeSeconds;
             return;
         }
 
         rawDamage = ApplyChargedScale(rawDamage);
         var encounterDamage = rawDamage * passiveProfile.DamageTakenMultiplier * encounterModifiers.DamageTakenMultiplier;
+        encounterDamage = PassiveEffectResolver.ApplyIceArmor(passiveProfile, player.Barrier, encounterDamage);
         player.Health -= buildModifiers.Apply(BuildStatId.DamageTaken, encounterDamage);
-        if (!passiveProfile.IceArmor || player.Barrier) return;
+
+        if (!passiveProfile.IceArmor || passiveProfile.WinterShell || player.Barrier) return;
         player.Barrier = true;
-        player.BarrierRemaining = 1.2;
+        player.BarrierRemaining = PassiveEffectResolver.IceArmorDurationSeconds;
     }
 }
