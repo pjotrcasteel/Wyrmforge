@@ -39,7 +39,7 @@ public sealed partial class RunSimulation
             foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
             var detonation = PassiveEffectResolver.ResolveDetonation(passiveProfile, hitCount);
             if (detonation is not null) damage *= detonation.DamageMultiplier;
-            if (passiveProfile.AbsoluteZero && target.Statuses.Has(CombatStatusId.Frozen)) damage *= 2;
+            if (passiveProfile.AbsoluteZero && target.Statuses.Has(CombatStatusId.Frozen)) damage *= PassiveEffectResolver.AbsoluteZeroDamageMultiplier;
 
             RegisterElementalImpact(target.Position, projectile.Spell);
             RegisterBurningGround(projectile, target.Position);
@@ -83,7 +83,10 @@ public sealed partial class RunSimulation
             ApplyStatus(target, statusEffect.Status, statusEffect.DurationSeconds);
             statusApplied = true;
         }
-        if (!statusApplied && passiveProfile.DeepFreeze && hitCount % 4 == 0) ApplyFreeze(target, 1.25);
+        if (!statusApplied && passiveProfile.DeepFreeze && hitCount % PassiveEffectResolver.DeepFreezeHitInterval == 0)
+        {
+            ApplyFreeze(target, PassiveEffectResolver.DeepFreezeDurationSeconds);
+        }
     }
 
     private bool DamageTarget(ICombatTarget target, double damage, ProjectileState? source = null, List<ProjectileState>? spawned = null)
