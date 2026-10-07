@@ -8,10 +8,11 @@ namespace Wyrmforge.Application.Runs.SelfPlay;
 
 public sealed class RunSelfPlayDriver
 {
-    public RunSelfPlayMetrics Play(string buildName, int seed, RunSimulation simulation, IRunAgent agent, RunSelfPlayOptions? options = null)
+    public RunSelfPlayMetrics Play(SelfPlayBuildDefinition build, int seed, RunSimulation simulation, IRunAgent agent, RunSelfPlayOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(build);
         options ??= new RunSelfPlayOptions();
-        var recorder = new MetricsRecorder(buildName, agent.Name, seed);
+        var recorder = new MetricsRecorder(build.Name, build.Cohort, build.SpentPoints, agent.Name, seed);
         var snapshot = simulation.CreateSnapshot();
         recorder.Observe(snapshot, 0);
 
@@ -118,7 +119,7 @@ public sealed class RunSelfPlayDriver
         simulation.PendingMapChoice ||
         simulation.AtCheckpoint;
 
-    private sealed class MetricsRecorder(string build, string agent, int seed)
+    private sealed class MetricsRecorder(string build, SelfPlayBuildCohort cohort, int spentArcanePoints, string agent, int seed)
     {
         private readonly Dictionary<int, double> levelUpSeconds = new();
         private readonly List<string> decisions = [];
@@ -158,6 +159,8 @@ public sealed class RunSelfPlayDriver
             var minutes = Math.Max(simulatedSeconds / 60, 1d / 60);
             return new RunSelfPlayMetrics(
                 build,
+                cohort,
+                spentArcanePoints,
                 agent,
                 seed,
                 summary.Outcome,

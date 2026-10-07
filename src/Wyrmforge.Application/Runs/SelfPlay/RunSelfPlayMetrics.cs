@@ -4,6 +4,8 @@ namespace Wyrmforge.Application.Runs.SelfPlay;
 
 public sealed record RunSelfPlayMetrics(
     string Build,
+    SelfPlayBuildCohort Cohort,
+    int SpentArcanePoints,
     string Agent,
     int Seed,
     RunOutcome Outcome,

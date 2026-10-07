@@ -23,7 +23,7 @@
                 <select @bind="selectedBuildIndex">
                     @for (var index = 0; index < SelfPlayBuildCatalog.All.Count; index++)
                     {
-                        <option value="@index">@SelfPlayBuildCatalog.All[index].Name</option>
+                        <option value="@index">@SelfPlayBuildCatalog.All[index].Name • @SelfPlayBuildCatalog.All[index].SpentPoints pts</option>
                     }
                 </select>
             </label>
@@ -61,7 +61,7 @@
             else
             {
                 <div class="result-heading">
-                    <div><span>@result.Build</span><strong>@result.Agent • seed @result.Seed • @result.StopReason</strong></div>
+                    <div><span>@result.Build • @result.Cohort • @result.SpentArcanePoints pts</span><strong>@result.Agent • seed @result.Seed • @result.StopReason</strong></div>
                     <b>@result.Outcome</b>
                 </div>
 
@@ -120,7 +120,7 @@
         var factory = new RunSimulationFactory(new SeededRandomSource(1));
         var simulation = factory.Create(build.SelectedNodes, seed: seed);
         var agent = new HeuristicRunAgent(selectedPersonality, seed, build.PreferredSchool);
-        result = new RunSelfPlayDriver().Play(build.Name, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 480));
+        result = new RunSelfPlayDriver().Play(build, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 480));
         running = false;
     }
 
