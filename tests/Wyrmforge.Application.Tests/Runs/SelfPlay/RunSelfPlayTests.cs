@@ -27,6 +27,8 @@ public sealed class RunSelfPlayTests
             var builds = SelfPlayBuildCatalog.All.Where(build => build.Cohort == cohort).ToArray();
             Assert.IsGreaterThan(1, builds.Length, cohort.ToString());
             Assert.AreEqual(1, builds.Select(build => build.SpentPoints).Distinct().Count(), $"{cohort} mixes unequal Arcane budgets.");
+            var expected = cohort == SelfPlayBuildCohort.KeystoneRoute ? 10 : 23;
+            Assert.IsTrue(builds.All(build => build.SpentPoints == expected), $"{cohort} should use {expected} Arcane points.");
         }
     }
 
