@@ -61,7 +61,7 @@ footer { padding: 16px 4px 0; color: #6f6678; font-size: .78rem; text-align: cen
 
 .game-screen { position: fixed; inset: 0; background: #100d15; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 .game-canvas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; }
-.leave-run { position: fixed; z-index: 3; top: max(18px, calc(env(safe-area-inset-top) + 12px)); right: max(18px, calc(env(safe-area-inset-right) + 12px)); min-width: 88px; min-height: 42px; border: 1px solid rgba(255,255,255,.15); border-radius: 12px; color: #c9c1d1; background: rgba(17,13,22,.65); backdrop-filter: blur(10px); }
+.leave-run { position: fixed; z-index: 5; top: max(10px, calc(env(safe-area-inset-top) + 6px)); right: max(10px, calc(env(safe-area-inset-right) + 6px)); min-width: 48px; min-height: 30px; padding: 0 9px; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; color: #9f95a8; background: rgba(12,9,16,.62); backdrop-filter: blur(9px); cursor: pointer; font-size: .57rem; font-weight: 900; letter-spacing: .1em; opacity: .82; }
 
 .level-up, .game-over { position: fixed; inset: 0; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); background: rgba(5,4,7,.78); backdrop-filter: blur(8px); }
 .level-up { z-index: 8; }

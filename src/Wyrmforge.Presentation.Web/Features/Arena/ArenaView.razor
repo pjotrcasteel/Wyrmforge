@@ -1,7 +1,7 @@
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
-    <button class="leave-run" @onclick="AbandonRunAsync">Abandon run</button>
+    <button class="leave-run" title="Abandon run" aria-label="Abandon run" @onclick="AbandonRunAsync">EXIT</button>
 
     @if (runMoment is { } moment)
     {
@@ -26,33 +26,47 @@
 
     @if (CurrentEssences.Count > 0 || CurrentRelics.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {
-        <div class="essence-strip" aria-label="Current run state">
-            @if (CurrentOffering is not null && RunOffering is { } offeringId)
-            {
-                var source = DragonEssenceCatalog.Get(offeringId);
-                <span title="@CurrentOffering.Effect">🔥 OFFERING • @source.Icon @source.Name</span>
-            }
-            @if (CurrentDepth > 1)
-            {
-                <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") BASE SCORE</span>
-            }
-            @if (PendingEssenceCount > 0)
-            {
-                <span class="cargo-pending">◇ @PendingEssenceCount ESSENCE AT RISK</span>
-            }
-            @if (SecuredEssenceCount > 0)
-            {
-                <span class="cargo-secured">✓ @SecuredEssenceCount ESSENCE SECURED</span>
-            }
-            @foreach (var relic in CurrentRelics)
-            {
-                <span title="@relic.Description">@relic.Icon @relic.Name</span>
-            }
-            @foreach (var essence in CurrentEssences)
-            {
-                <span title="@essence.Effect">@essence.Icon @essence.Name</span>
-            }
-        </div>
+        <details class="run-state-dock" aria-label="Current run state">
+            <summary>
+                <b>RUN</b>
+                <span>D@CurrentDepth</span>
+                @if (PendingEssenceCount > 0)
+                {
+                    <span class="cargo-pending">◇@PendingEssenceCount</span>
+                }
+                @if (SecuredEssenceCount > 0)
+                {
+                    <span class="cargo-secured">✓@SecuredEssenceCount</span>
+                }
+            </summary>
+            <div class="run-state-popover">
+                @if (CurrentOffering is not null && RunOffering is { } offeringId)
+                {
+                    var source = DragonEssenceCatalog.Get(offeringId);
+                    <span title="@CurrentOffering.Effect">🔥 OFFERING • @source.Icon @source.Name</span>
+                }
+                @if (CurrentDepth > 1)
+                {
+                    <span>DEPTH @CurrentDepth • ×@CurrentScoreMultiplier.ToString("0.0") BASE SCORE</span>
+                }
+                @if (PendingEssenceCount > 0)
+                {
+                    <span class="cargo-pending">◇ @PendingEssenceCount ESSENCE AT RISK</span>
+                }
+                @if (SecuredEssenceCount > 0)
+                {
+                    <span class="cargo-secured">✓ @SecuredEssenceCount ESSENCE SECURED</span>
+                }
+                @foreach (var relic in CurrentRelics)
+                {
+                    <span title="@relic.Description">@relic.Icon @relic.Name</span>
+                }
+                @foreach (var essence in CurrentEssences)
+                {
+                    <span title="@essence.Effect">@essence.Icon @essence.Name</span>
+                }
+            </div>
+        </details>
     }
 
     @if (CurrentEssenceChoices.Count > 0)

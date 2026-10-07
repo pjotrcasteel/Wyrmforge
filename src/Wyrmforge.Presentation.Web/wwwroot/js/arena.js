@@ -438,62 +438,112 @@ function drawWyrmEntranceSequence(ctx, hunt, dragon, width, height) {
 
     if (hunt.entranceBeat === 1) {
         const pulse = 0.45 + Math.sin(performance.now() / 70) * 0.12;
-        ctx.fillStyle = `rgba(5, 4, 8, ${0.28 + progress * 0.22})`;
+        ctx.fillStyle = `rgba(5, 4, 8, ${0.32 + progress * 0.25})`;
         ctx.fillRect(0, 0, width, height);
         ctx.strokeStyle = `rgba(${palette.lightRgb}, ${Math.max(0.08, pulse * progress)})`;
         ctx.lineWidth = 2;
         const centerX = width / 2;
         const groundY = height * 0.78;
-        for (let index = -3; index <= 3; index++) {
-            const offset = index * 34;
+        for (let index = -4; index <= 4; index++) {
+            const offset = index * Math.max(26, width * 0.065);
             ctx.beginPath();
-            ctx.moveTo(centerX + offset - 9, groundY + (index % 2) * 5);
-            ctx.lineTo(centerX + offset, groundY - 8 - progress * 8);
-            ctx.lineTo(centerX + offset + 10, groundY + 3);
+            ctx.moveTo(centerX + offset - 11, groundY + (index % 2) * 6);
+            ctx.lineTo(centerX + offset, groundY - 9 - progress * 11);
+            ctx.lineTo(centerX + offset + 12, groundY + 4);
             ctx.stroke();
         }
         ctx.textAlign = 'center';
-        ctx.fillStyle = `rgba(225, 216, 232, ${0.48 + progress * 0.42})`;
-        ctx.font = '800 11px system-ui, sans-serif';
-        ctx.fillText('THE WYRMREALM TREMBLES...', width / 2, height * 0.57);
+        ctx.fillStyle = `rgba(225, 216, 232, ${0.5 + progress * 0.44})`;
+        ctx.font = '900 11px system-ui, sans-serif';
+        ctx.fillText('THE WYRMREALM TREMBLES', width / 2, height * 0.56);
         ctx.restore();
         return;
     }
-
-    const barHeight = Math.max(20, height * 0.055);
-    ctx.fillStyle = 'rgba(4, 3, 7, 0.72)';
-    ctx.fillRect(0, 0, width, barHeight);
-    ctx.fillRect(0, height - barHeight, width, barHeight);
 
     if (hunt.entranceBeat === 2) {
-        const flash = Math.max(0, progress - 0.7) / 0.3;
-        ctx.fillStyle = `rgba(${palette.rgb}, ${flash * 0.08})`;
+        const impact = Math.max(0, progress - 0.72) / 0.28;
+        ctx.fillStyle = `rgba(${palette.rgb}, ${impact * 0.13})`;
         ctx.fillRect(0, 0, width, height);
+        if (impact > 0) {
+            ctx.strokeStyle = `rgba(${palette.lightRgb}, ${impact * 0.7})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, height * 0.62);
+            ctx.lineTo(width, height * 0.42);
+            ctx.stroke();
+        }
         ctx.restore();
         return;
     }
 
-    const slam = Math.min(1, progress * 5);
-    const fade = Math.min(1, (1 - progress) * 5, 0.4 + slam * 0.6);
-    ctx.fillStyle = `rgba(5, 4, 8, ${0.32 * fade})`;
+    const slam = Math.min(1, progress * 7);
+    const hold = Math.min(1, (1 - progress) * 6);
+    const visibility = Math.min(slam, 0.35 + hold);
+    const kick = Math.max(0, 1 - progress * 8);
+    const shakeX = Math.sin(progress * 95) * 9 * kick;
+    const shakeY = Math.cos(progress * 78) * 5 * kick;
+    const cardY = height * 0.45;
+    const cardHeight = Math.min(190, height * 0.28);
+    const overshoot = 1 + kick * 0.11;
+
+    ctx.translate(shakeX, shakeY);
+    ctx.fillStyle = `rgba(3, 2, 5, ${0.72 * visibility})`;
     ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = `rgba(${palette.rgb}, ${0.12 * slam})`;
-    ctx.fillRect(0, height * 0.36, width, height * 0.28);
-    ctx.textAlign = 'center';
-    ctx.fillStyle = `rgba(${palette.lightRgb}, ${fade})`;
-    ctx.font = '900 12px system-ui, sans-serif';
-    ctx.fillText('WYRM HUNT', width / 2, height * 0.425);
-    ctx.fillStyle = `rgba(248, 242, 251, ${fade})`;
-    ctx.font = `900 ${Math.min(34, Math.max(24, width * 0.065))}px system-ui, sans-serif`;
-    ctx.fillText(dragon?.name?.toUpperCase() ?? 'UNKNOWN WYRM', width / 2, height * 0.49);
-    ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.88 * fade})`;
-    ctx.font = '800 12px system-ui, sans-serif';
-    ctx.fillText(dragon?.title?.toUpperCase() ?? 'THE REALM ANSWERS', width / 2, height * 0.535);
-    ctx.font = '800 10px system-ui, sans-serif';
-    ctx.fillText(`SIGNATURE • ${hunt.signatureName?.toUpperCase() ?? 'UNKNOWN'}`, width / 2, height * 0.575);
+
+    if (progress < 0.12) {
+        const flash = 1 - progress / 0.12;
+        ctx.fillStyle = `rgba(${palette.lightRgb}, ${flash * 0.34})`;
+        ctx.fillRect(0, 0, width, height);
+    }
+
+    ctx.save();
+    ctx.translate(width / 2, cardY);
+    ctx.scale(overshoot, overshoot);
+    ctx.rotate(-0.025);
+
+    ctx.fillStyle = `rgba(8, 6, 12, ${0.96 * visibility})`;
+    ctx.beginPath();
+    ctx.moveTo(-width * 0.58, -cardHeight * 0.5);
+    ctx.lineTo(width * 0.52, -cardHeight * 0.5 - 18);
+    ctx.lineTo(width * 0.58, cardHeight * 0.5 - 10);
+    ctx.lineTo(-width * 0.5, cardHeight * 0.5 + 16);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(${palette.rgb}, ${0.85 * visibility})`;
+    ctx.beginPath();
+    ctx.moveTo(-width * 0.56, -cardHeight * 0.5);
+    ctx.lineTo(-width * 0.43, -cardHeight * 0.5 - 5);
+    ctx.lineTo(width * 0.34, cardHeight * 0.5 + 2);
+    ctx.lineTo(width * 0.18, cardHeight * 0.5 + 11);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.textAlign = 'left';
+    const left = -Math.min(width * 0.42, 360);
+    ctx.fillStyle = `rgba(255,255,255,${visibility})`;
+    ctx.font = `950 ${Math.min(64, Math.max(34, width * 0.09))}px system-ui, sans-serif`;
+    ctx.fillText(dragon?.name?.toUpperCase() ?? 'UNKNOWN WYRM', left, -8);
+
+    ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.96 * visibility})`;
+    ctx.font = '900 13px system-ui, sans-serif';
+    ctx.fillText(dragon?.title?.toUpperCase() ?? 'THE REALM ANSWERS', left + 3, 19);
+
+    ctx.fillStyle = `rgba(238,232,243,${0.86 * visibility})`;
+    ctx.font = '850 10px system-ui, sans-serif';
+    ctx.fillText(`WYRM HUNT  •  SIGNATURE: ${hunt.signatureName?.toUpperCase() ?? 'UNKNOWN'}`, left + 3, 42);
+
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${0.72 * visibility})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(left, 55);
+    ctx.lineTo(Math.min(width * 0.34, 330), 55);
+    ctx.stroke();
+    ctx.restore();
+
     ctx.restore();
 }
-
 function drawExperienceShard(ctx, shard) {
     const valueScale = Math.min(1, Math.log2(Math.max(1, shard.value)) / 4);
     const pulse = 0.9 + Math.sin(performance.now() / 130 + shard.x * 0.03 + shard.y * 0.02) * 0.1;
@@ -890,86 +940,100 @@ function drawDragonEyes(ctx, radius, palette) {
 
 function drawBossBar(ctx, dragon, hunt, width) {
     const palette = schoolPalette(dragon.school);
-    const outerWidth = Math.min(430, width - 36);
+    const outerWidth = Math.min(350, width - 132);
     const x = (width - outerWidth) / 2;
-    const y = 16;
-    const panelHeight = hunt?.signatureName ? 58 : 48;
-    ctx.fillStyle = palette.dark;
-    roundRect(ctx, x, y, outerWidth, panelHeight, 12);
+    const y = 9;
+    const barY = y + 20;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(8, 6, 12, 0.74)';
+    roundRect(ctx, x, y, outerWidth, 36, 10);
     ctx.fill();
+    ctx.strokeStyle = `rgba(${palette.rgb}, 0.28)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     ctx.fillStyle = palette.text;
-    ctx.font = '800 11px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${dragon.name.toUpperCase()} • ${dragon.title.toUpperCase()} • PHASE ${dragon.phase}`, width / 2, y + 17);
+    ctx.font = '900 9px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${dragon.name.toUpperCase()} • P${dragon.phase}`, x + 9, y + 12);
+
     if (hunt?.signatureName) {
+        ctx.textAlign = 'right';
         ctx.fillStyle = palette.edge;
-        ctx.font = '800 9px system-ui, sans-serif';
-        ctx.fillText(`SIGNATURE • ${hunt.signatureName.toUpperCase()}`, width / 2, y + 31);
+        ctx.font = '800 8px system-ui, sans-serif';
+        ctx.fillText(hunt.signatureName.toUpperCase(), x + outerWidth - 9, y + 12);
     }
 
-    const innerX = x + 12;
-    const innerWidth = outerWidth - 24;
-    ctx.fillStyle = 'rgba(9, 7, 12, 0.72)';
-    const healthY = hunt?.signatureName ? y + 39 : y + 27;
-    roundRect(ctx, innerX, healthY, innerWidth, 10, 5);
+    const innerX = x + 9;
+    const innerWidth = outerWidth - 18;
+    ctx.fillStyle = 'rgba(9, 7, 12, 0.88)';
+    roundRect(ctx, innerX, barY, innerWidth, 8, 4);
     ctx.fill();
     ctx.fillStyle = dragon.phase === 2 ? palette.phase : palette.body;
-    roundRect(ctx, innerX, healthY, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 10, 5);
+    roundRect(ctx, innerX, barY, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 8, 4);
     ctx.fill();
-    ctx.textAlign = 'start';
+    ctx.restore();
 }
-
 function drawHud(ctx, hud, width, dragonActive) {
-    const x = 18;
-    const y = dragonActive ? 76 : 18;
-    const barWidth = Math.min(300, width - x * 2);
-    const hasSynergies = hud.synergies.length > 0;
-    const panelHeight = hasSynergies ? 178 : 158;
-    ctx.fillStyle = 'rgba(8, 6, 12, 0.76)';
-    roundRect(ctx, x, y, barWidth + 24, panelHeight, 12);
+    const x = 10;
+    const compactViewport = width <= 520;
+    const y = dragonActive ? 54 : compactViewport ? 46 : 10;
+    const panelWidth = Math.min(compactViewport ? 210 : 260, width - 72);
+    const panelHeight = hud.synergies.length > 0 ? 86 : 70;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(8, 6, 12, 0.62)';
+    roundRect(ctx, x, y, panelWidth, panelHeight, 10);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-    ctx.fillStyle = '#ede8f5';
-    ctx.font = '600 14px system-ui, sans-serif';
-    ctx.fillText(`Score ${hud.score}`, x + 12, y + 22);
-    ctx.fillText(`${hud.seconds}s  •  ${hud.kills} kills`, x + 12, y + 43);
+    ctx.fillStyle = '#d9d1e1';
+    ctx.font = '800 9px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`SCORE ${hud.score}   •   ${hud.seconds}s   •   ${hud.kills} KILLS`, x + 9, y + 14);
 
-    ctx.fillStyle = '#332a3e';
-    roundRect(ctx, x + 12, y + 55, barWidth, 10, 5);
+    const barX = x + 9;
+    const barWidth = panelWidth - 18;
+    ctx.fillStyle = 'rgba(51, 42, 62, 0.86)';
+    roundRect(ctx, barX, y + 21, barWidth, 7, 4);
     ctx.fill();
     ctx.fillStyle = '#9ed6a2';
-    roundRect(ctx, x + 12, y + 55, barWidth * Math.max(0, hud.health / hud.maxHealth), 10, 5);
+    roundRect(ctx, barX, y + 21, barWidth * Math.max(0, hud.health / hud.maxHealth), 7, 4);
     ctx.fill();
 
-    ctx.fillStyle = '#bdb3c7';
-    ctx.font = '600 12px system-ui, sans-serif';
-    ctx.fillText(`Level ${hud.level}  •  XP ${hud.experience}/${hud.experienceToNext}`, x + 12, y + 88);
-    ctx.fillStyle = '#332a3e';
-    roundRect(ctx, x + 12, y + 97, barWidth, 8, 4);
+    ctx.fillStyle = '#93889e';
+    ctx.font = '700 8px system-ui, sans-serif';
+    ctx.fillText(`HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}   LV ${hud.level}`, barX, y + 39);
+
+    ctx.fillStyle = 'rgba(51, 42, 62, 0.86)';
+    roundRect(ctx, barX + 88, y + 34, Math.max(40, barWidth - 88), 5, 3);
     ctx.fill();
     ctx.fillStyle = '#b887ff';
-    roundRect(ctx, x + 12, y + 97, barWidth * Math.min(1, hud.experience / hud.experienceToNext), 8, 4);
+    roundRect(ctx, barX + 88, y + 34, Math.max(40, barWidth - 88) * Math.min(1, hud.experience / hud.experienceToNext), 5, 3);
     ctx.fill();
 
-    ctx.fillStyle = '#796f83';
-    ctx.font = '800 9px system-ui, sans-serif';
-    ctx.fillText('SPELLS', x + 12, y + 124);
     ctx.fillStyle = '#c9bfd3';
-    ctx.font = '600 11px system-ui, sans-serif';
-    const spells = hud.spells.map(spell => `${spell.icon}${roman(spell.rank)}`).join('   ');
-    ctx.fillText(spells, x + 58, y + 124);
+    ctx.font = '700 9px system-ui, sans-serif';
+    const spells = hud.spells.map(spell => `${spell.icon}${roman(spell.rank)}`).join('  ');
+    ctx.fillText(spells, barX, y + 56);
 
-    if (hasSynergies) {
-        ctx.fillStyle = '#b28c4f';
-        ctx.font = '800 9px system-ui, sans-serif';
-        ctx.fillText('SYNERGIES', x + 12, y + 148);
-        ctx.fillStyle = '#e0c17b';
-        ctx.font = '600 11px system-ui, sans-serif';
-        ctx.fillText(hud.synergies.map(synergy => `${synergy.icon} ${synergy.name}`).join('   '), x + 78, y + 148);
+    if (hud.synergies.length > 0) {
+        ctx.fillStyle = '#d5b66d';
+        ctx.font = '700 8px system-ui, sans-serif';
+        const synergies = hud.synergies.map(synergy => `${synergy.icon} ${synergy.name}`).join('  •  ');
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(barX, y + 63, barWidth, 16);
+        ctx.clip();
+        ctx.fillText(synergies, barX, y + 76);
+        ctx.restore();
     }
-}
 
+    ctx.restore();
+}
 function drawTouchIndicator(state, ctx) {
     if (state.pointerId === null) return;
     const rect = state.canvas.getBoundingClientRect();
