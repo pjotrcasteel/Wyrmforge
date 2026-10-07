@@ -64,6 +64,62 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }
     }
 
+    [TestMethod]
+    public async Task Mobile_FirstTrail_RendersActiveCombatWithoutPageOverflow()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await StartTraceAsync();
+
+        try
+        {
+            await OpenAsync();
+            await EnterFirstTrailAsync();
+            await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+            await Page.WaitForTimeoutAsync(1200);
+
+            var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
+            Assert.IsLessThanOrEqualTo(1, overflow, $"Mobile combat overflows horizontally by {overflow:0.#}px.");
+            await ScreenshotAsync("mobile-combat.png");
+        }
+        finally
+        {
+            await StopTraceAsync("mobile-combat-trace.zip");
+        }
+    }
+
+    [TestMethod]
+    public async Task Desktop_FirstTrail_RendersActiveCombat()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(1440, 900);
+        await StartTraceAsync();
+
+        try
+        {
+            await OpenAsync();
+            await EnterFirstTrailAsync();
+            await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+            await Page.WaitForTimeoutAsync(1200);
+            await ScreenshotAsync("desktop-combat.png");
+        }
+        finally
+        {
+            await StopTraceAsync("desktop-combat-trace.zip");
+        }
+    }
+
+    private async Task EnterFirstTrailAsync()
+    {
+        await Page.GetByRole(AriaRole.Button, new() { Name = "ENTER WYRMREALM" }).ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+
+        var route = Page.Locator("button.route-node.available").First;
+        await route.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+    }
+
     private async Task OpenAsync()
     {
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });

@@ -32,6 +32,10 @@ internal sealed record BalanceAggregate(
     double MedianLevel,
     double MedianRunSeconds,
     double MedianEssenceSecured,
+    double WyrmReachRate,
+    double MedianFirstWyrmSeconds,
+    double MedianEncounterBreathingRooms,
+    double MedianEncounterClimaxes,
     double SynergyActivationRate)
 {
     public static BalanceAggregate Create(string build, SelfPlayBuildCohort cohort, int spentArcanePoints, string agent, IReadOnlyList<RunSelfPlayMetrics> runs)
@@ -60,6 +64,10 @@ internal sealed record BalanceAggregate(
             Percentile(runs.Select(run => (double)run.Level), 0.5),
             Percentile(runs.Select(run => run.SimulatedSeconds), 0.5),
             Percentile(runs.Select(run => (double)run.EssenceSecured), 0.5),
+            Rate(runs, run => run.WyrmsReached > 0),
+            Percentile(runs.Where(run => run.FirstWyrmSeconds.HasValue).Select(run => run.FirstWyrmSeconds!.Value), 0.5),
+            Percentile(runs.Select(run => (double)run.EncounterBreathingRooms), 0.5),
+            Percentile(runs.Select(run => (double)run.EncounterClimaxes), 0.5),
             Rate(runs, run => run.Synergies > 0));
     }
 

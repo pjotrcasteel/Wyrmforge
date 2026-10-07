@@ -14,7 +14,7 @@ public sealed class RunSelfPlayDriver
         options ??= new RunSelfPlayOptions();
         var recorder = new MetricsRecorder(build.Name, build.Cohort, build.SpentPoints, agent.Name, seed);
         var snapshot = simulation.CreateSnapshot();
-        recorder.Observe(snapshot, 0);
+        recorder.Observe(snapshot, 0, simulation.CurrentEncounterPhase);
 
         var simulatedSeconds = 0d;
         var decisionFailures = 0;
@@ -28,7 +28,7 @@ public sealed class RunSelfPlayDriver
             {
                 decisionFailures = 0;
                 snapshot = simulation.CreateSnapshot();
-                recorder.Observe(snapshot, simulatedSeconds);
+                recorder.Observe(snapshot, simulatedSeconds, simulation.CurrentEncounterPhase);
                 continue;
             }
 
@@ -45,7 +45,7 @@ public sealed class RunSelfPlayDriver
 
             snapshot = simulation.Tick(options.TickSeconds, agent.ChooseMovement(observation), options.ArenaWidth, options.ArenaHeight);
             simulatedSeconds += options.TickSeconds;
-            recorder.Observe(snapshot, simulatedSeconds);
+            recorder.Observe(snapshot, simulatedSeconds, simulation.CurrentEncounterPhase);
         }
 
         if (!simulation.IsEnded)
@@ -128,11 +128,32 @@ public sealed class RunSelfPlayDriver
         private double previousHealth = double.NaN;
         private int peakEnemies;
         private int peakLooseExperience;
+        private int wyrmsReached;
+        private double? firstWyrmSeconds;
+        private int encounterBreathingRooms;
+        private int encounterClimaxes;
+        private bool dragonVisible;
+        private EncounterPhase? previousEncounterPhase;
 
         public void Decision(string value) => decisions.Add(value);
 
-        public void Observe(RunRenderSnapshot snapshot, double simulatedSeconds)
+        public void Observe(RunRenderSnapshot snapshot, double simulatedSeconds, EncounterPhase? encounterPhase)
         {
+            var hasDragon = snapshot.Dragon is not null;
+            if (hasDragon && !dragonVisible)
+            {
+                wyrmsReached++;
+                firstWyrmSeconds ??= simulatedSeconds;
+            }
+            dragonVisible = hasDragon;
+
+            if (encounterPhase != previousEncounterPhase)
+            {
+                if (encounterPhase == EncounterPhase.BreathingRoom) encounterBreathingRooms++;
+                if (encounterPhase == EncounterPhase.Climax) encounterClimaxes++;
+                previousEncounterPhase = encounterPhase;
+            }
+
             var healthRatio = snapshot.Hud.MaxHealth <= 0 ? 0 : Math.Clamp(snapshot.Hud.Health / snapshot.Hud.MaxHealth, 0, 1);
             minimumHealthRatio = Math.Min(minimumHealthRatio, healthRatio);
 
@@ -182,6 +203,10 @@ public sealed class RunSelfPlayDriver
                 summary.Choices,
                 summary.Synergies,
                 summary.DragonsSlain,
+                wyrmsReached,
+                firstWyrmSeconds,
+                encounterBreathingRooms,
+                encounterClimaxes,
                 summary.DragonEssences,
                 summary.CompletedRouteNodes,
                 summary.RareRouteNodes,
