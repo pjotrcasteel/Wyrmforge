@@ -7,7 +7,7 @@
         <div class="build-title">
             <span class="section-kicker">ARCANE ATLAS</span>
             <h1>Plan the build before you spend.</h1>
-            <p>Tap any landmark to inspect what it does and preview the cheapest connected route to it. Nothing is spent until you confirm the route.</p>
+            <p>Minor nodes show their bonus directly. Tap a landmark to inspect it, preview the cheapest route and see everything that route adds before you commit.</p>
         </div>
         <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
     </header>
@@ -16,7 +16,7 @@
         <div class="atlas-stage">
             <div class="atlas-toolbar">
                 <div class="build-legend" aria-label="Arcane Web legend">
-                    <span title="Travel"><i class="legend-dot travel"></i><b>Travel</b></span>
+                    <span title="Minor bonus"><i class="legend-dot travel"></i><b>Minor</b></span>
                     <span title="Notable"><i class="legend-dot notable"></i><b>Notable</b></span>
                     <span title="Mastery"><i class="legend-dot mastery"></i><b>Mastery</b></span>
                     <span title="Keystone"><i class="legend-dot keystone"></i><b>Keystone</b></span>
@@ -29,7 +29,7 @@
                 </div>
             </div>
 
-            <div class="atlas-caption"><span>THE WYRMHEART</span><small>Tap a destination • inspect the route • confirm when ready</small></div>
+            <div class="atlas-caption"><span>THE WYRMHEART</span><small>Read minor bonuses at a glance • tap landmarks for details</small></div>
 
             <div class="arcane-web-viewport" @ref="viewport">
                 <div class="web-pan-space">
@@ -52,10 +52,29 @@
 
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
-                            <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")" aria-pressed="@IsSelected(node)"
-                                @onclick="() => InspectNode(node)">
-                                <span class="node-glyph">@NodeGlyph(node)</span>
-                                <span class="node-label"><b>@node.Name</b><small>@node.Description</small></span>
+                            <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
+                                aria-label="@($"{node.Name}. {node.Description}")" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
+                                @if (node.Kind == PassiveNodeKind.Travel)
+                                {
+                                    var bonuses = ArcaneNodePresentation.MinorBonuses(node);
+                                    <span class="minor-node-effects @(bonuses.Count > 1 ? "multi" : "single")">
+                                        @foreach (var bonus in bonuses)
+                                        {
+                                            <span class="minor-effect" title="@bonus.Label">
+                                                <i>@bonus.Icon</i>
+                                                <b>@CompactValue(bonus.Value)</b>
+                                            </span>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="node-glyph">@NodeGlyph(node)</span>
+                                    @if (node.Kind != PassiveNodeKind.Origin)
+                                    {
+                                        <span class="node-label"><b><i>@NodeGlyph(node)</i>@node.Name</b></span>
+                                    }
+                                }
                             </button>
                         }
                     </div>
@@ -101,21 +120,48 @@
             {
                 @if (FocusedPlan is { } plan)
                 {
+                    var minorBonuses = RouteMinorBonuses(plan);
+                    var landmarks = RouteLandmarks(plan);
+
                     <div class="route-summary">
                         <div><span>ROUTE PREVIEW</span><strong>@plan.AdditionalCost pts</strong></div>
                         <small>@RouteSummaryCopy(plan)</small>
                     </div>
-                    <ol class="route-steps">
-                        @foreach (var nodeId in plan.NodeIds)
-                        {
-                            var step = PassiveTreeCatalog.Get(nodeId);
-                            <li>
-                                <span class="route-step-glyph">@NodeGlyph(step)</span>
-                                <div><strong>@step.Name</strong><small>@step.Description</small></div>
-                                <b>@step.Cost</b>
-                            </li>
-                        }
-                    </ol>
+
+                    @if (minorBonuses.Count > 0)
+                    {
+                        <section class="route-gains">
+                            <span>MINOR BONUSES ON THIS PATH</span>
+                            <div class="route-gain-grid">
+                                @foreach (var bonus in minorBonuses)
+                                {
+                                    <div class="route-gain" title="@bonus.Label">
+                                        <i>@bonus.Icon</i>
+                                        <strong>@bonus.Value</strong>
+                                        <small>@bonus.Label</small>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+
+                    @if (landmarks.Count > 0)
+                    {
+                        <section class="route-landmarks">
+                            <span>DEFINING NODES</span>
+                            <ol class="route-steps">
+                                @foreach (var step in landmarks)
+                                {
+                                    <li>
+                                        <span class="route-step-glyph">@NodeGlyph(step)</span>
+                                        <div><strong>@step.Name</strong><small>@step.Description</small></div>
+                                        <b>@step.Cost</b>
+                                    </li>
+                                }
+                            </ol>
+                        </section>
+                    }
+
                     <button class="route-action allocate" disabled="@(plan.AdditionalCost > PointsLeft)" @onclick="AllocateFocusedRoute">
                         @(plan.AdditionalCost > PointsLeft ? $"Need {plan.AdditionalCost - PointsLeft} more points" : $"Allocate route • {plan.AdditionalCost} pts")
                     </button>
@@ -127,7 +173,7 @@
             }
             else
             {
-                <div class="inspector-help">Every route begins here. Choose a Notable, Mastery or Keystone as a destination and the Atlas will show the cheapest path.</div>
+                <div class="inspector-help">Every route begins here. Minor bonuses are visible directly on the Atlas; tap a landmark to reveal its full effect and route.</div>
             }
         </aside>
     </div>
@@ -163,11 +209,7 @@
         Selection.SelectPath(plan.NodeIds);
     }
 
-    private void RefundFocused()
-    {
-        Selection.Remove(focusedId);
-    }
-
+    private void RefundFocused() => Selection.Remove(focusedId);
     private void CloseInspector() => inspectorOpen = false;
 
     private string NodeClass(PassiveNodeDefinition node)
@@ -205,6 +247,12 @@
         return route.Contains(connection.From) && route.Contains(connection.To);
     }
 
+    private IReadOnlyList<ArcaneStatBadge> RouteMinorBonuses(PassiveTreeRoutePlan plan) =>
+        ArcaneNodePresentation.AggregateMinorBonuses(plan.NodeIds.Select(PassiveTreeCatalog.Get));
+
+    private static IReadOnlyList<PassiveNodeDefinition> RouteLandmarks(PassiveTreeRoutePlan plan) =>
+        plan.NodeIds.Select(PassiveTreeCatalog.Get).Where(node => node.Kind != PassiveNodeKind.Travel).ToArray();
+
     private bool IsAllocated(string id) => id == PassiveTreeCatalog.OriginId || Selection.Selected.Contains(id);
     private bool CanAllocate(string id) => id != PassiveTreeCatalog.OriginId && Selection.CanSelect(id);
     private string NodeStyle(PassiveNodeDefinition node) => FormattableString.Invariant($"left:{node.X}px;top:{node.Y}px;");
@@ -214,24 +262,23 @@
     {
         if (plan.NodeIds.Count == 1) return "This node touches your current route and can be claimed directly.";
         var destination = PassiveTreeCatalog.Get(plan.NodeIds[^1]);
-        return $"{plan.NodeIds.Count} new nodes connect your current build to {destination.Name}. Review every effect before committing.";
+        return $"{plan.NodeIds.Count} new nodes connect your current build to {destination.Name}. Minor gains are combined below.";
     }
 
+    private static string CompactValue(string value) => value.StartsWith('+') ? value[1..] : value;
     private static string Coordinate(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     private static string NodeGlyph(PassiveNodeDefinition node) => node.Kind switch
     {
         PassiveNodeKind.Origin => "W",
-        PassiveNodeKind.Notable => "◆",
-        PassiveNodeKind.Mastery => "✦",
-        PassiveNodeKind.Keystone => "⬢",
-        _ => "•",
+        PassiveNodeKind.Travel => ArcaneNodePresentation.MinorBonuses(node).FirstOrDefault()?.Icon ?? "•",
+        _ => ArcaneNodePresentation.SchoolIcon(node),
     };
 
     private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
     {
         PassiveNodeKind.Origin => "ORIGIN",
-        PassiveNodeKind.Travel => "TRAVEL",
+        PassiveNodeKind.Travel => "MINOR BONUS",
         PassiveNodeKind.Notable => "NOTABLE LANDMARK",
         PassiveNodeKind.Mastery => "MASTERY LANDMARK",
         _ => "KEYSTONE LANDMARK",
@@ -248,7 +295,6 @@
     }
 
     private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
-
     private static string SchoolLabel(PassiveNodeDefinition node) => node.School?.ToString() ?? "Wyrmheart / old bridges";
 
     private void Reset()
