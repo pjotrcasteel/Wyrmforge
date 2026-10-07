@@ -18,6 +18,14 @@ public sealed class PassiveCombatProfileTests
     }
 
     [TestMethod]
+    public void Create_WithArcaneReservoir_EnablesProjectilePiercingIdentity()
+    {
+        var profile = PassiveCombatProfile.Create(new HashSet<string> { "arcane-major" });
+
+        Assert.IsTrue(profile.ArcaneReservoir);
+    }
+
+    [TestMethod]
     public void Create_WithMasteryAndKeystone_EnablesBehaviorRules()
     {
         var selected = new HashSet<string> { "fire-start", "fire-1", "fire-2", "fire-major", "wildfire", "inferno" };

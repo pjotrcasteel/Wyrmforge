@@ -10,12 +10,17 @@ public static class PassiveEffectResolver
     public const double DetonationDamageMultiplier = 2;
     public const double VolcanicDetonationDamageMultiplier = 2.5;
 
-    public const int ArcaneEchoCastInterval = 6;
+    public const int ArcaneEchoCastInterval = 4;
     public const double ArcaneEchoDamageMultiplier = 0.60;
+
+    public const int DeepFreezeHitInterval = 3;
+    public const double DeepFreezeDurationSeconds = 1.75;
+    public const double AbsoluteZeroDamageMultiplier = 2.5;
 
     public const double IceArmorDamageTakenMultiplier = 0.60;
     public const double IceArmorDurationSeconds = 1.35;
     public const double WinterShellRechargeSeconds = 5;
+    public const double WinterShellGuardSeconds = 0.65;
 
     public static PassiveDetonationEffect? ResolveDetonation(PassiveCombatProfile profile, int hitCount)
     {

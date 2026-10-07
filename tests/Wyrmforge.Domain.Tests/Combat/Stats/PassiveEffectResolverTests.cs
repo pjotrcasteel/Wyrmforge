@@ -36,7 +36,7 @@ public sealed class PassiveEffectResolverTests
     {
         var profile = PassiveCombatProfile.Create(new HashSet<string> { "arcane-echo" });
 
-        var scales = PassiveEffectResolver.ResolveArcaneEchoScales(profile, 6);
+        var scales = PassiveEffectResolver.ResolveArcaneEchoScales(profile, 4);
 
         CollectionAssert.AreEqual(new[] { 0.60d }, scales.ToArray());
     }
@@ -46,9 +46,28 @@ public sealed class PassiveEffectResolverTests
     {
         var profile = PassiveCombatProfile.Create(new HashSet<string> { "arcane-echo", "echo-chamber" });
 
-        var scales = PassiveEffectResolver.ResolveArcaneEchoScales(profile, 6);
+        var scales = PassiveEffectResolver.ResolveArcaneEchoScales(profile, 4);
 
         CollectionAssert.AreEqual(new[] { 1d, 1d }, scales.ToArray());
+    }
+
+    [TestMethod]
+    public void ResolveArcaneEchoScales_BeforeFourthCast_DoesNotEcho()
+    {
+        var profile = PassiveCombatProfile.Create(new HashSet<string> { "arcane-echo" });
+
+        var scales = PassiveEffectResolver.ResolveArcaneEchoScales(profile, 3);
+
+        Assert.AreEqual(0, scales.Count);
+    }
+
+    [TestMethod]
+    public void FrostIdentity_UsesFrequentFreezeAndMeaningfulFrozenPayoff()
+    {
+        Assert.AreEqual(3, PassiveEffectResolver.DeepFreezeHitInterval);
+        Assert.AreEqual(1.75d, PassiveEffectResolver.DeepFreezeDurationSeconds);
+        Assert.AreEqual(2.5d, PassiveEffectResolver.AbsoluteZeroDamageMultiplier);
+        Assert.AreEqual(0.65d, PassiveEffectResolver.WinterShellGuardSeconds);
     }
 
     [TestMethod]
