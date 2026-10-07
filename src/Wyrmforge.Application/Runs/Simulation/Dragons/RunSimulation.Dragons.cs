@@ -303,11 +303,13 @@ public sealed partial class RunSimulation
     private DragonHuntRenderSnapshot? CreateDragonHuntSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon || dragonHuntState.Profile is not { } hunt) return null;
-        return new DragonHuntRenderSnapshot(activeDragon.Definition.School, dragonHuntState.Stage, hunt.Arena, hunt.Entrance.Style, dragonHuntState.StageProgress);
+        return new DragonHuntRenderSnapshot(activeDragon.Definition.School, dragonHuntState.Stage, hunt.Arena, hunt.Entrance.Style, dragonHuntState.StageProgress,
+            hunt.Signature.Name, hunt.PhaseTwoCallout);
     }
 
     private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards
-        .Select(hazard => new DragonHuntHazardRenderSnapshot(hazard.Position.X, hazard.Position.Y, hazard.Radius, hazard.Progress, hazard.School))
+        .Select(hazard => new DragonHuntHazardRenderSnapshot(hazard.Position.X, hazard.Position.Y, hazard.Radius, hazard.Progress, hazard.School, hazard.Signature,
+            hazard.DelayRemaining <= 0))
         .ToArray();
 
     private static Vector2D ArenaPoint(DragonHuntPoint point, double width, double height) => new(point.X * width, point.Y * height);

@@ -34,6 +34,19 @@ public sealed class DragonHuntStateTests
     }
 
     [TestMethod]
+    public void TickSignature_DuringBattle_FiresAfterOpeningDelayAndUsesSignatureCadence()
+    {
+        var state = new DragonHuntState();
+        state.Start(DragonHuntCatalog.Ashfang);
+        state.TickStage(DragonHuntCatalog.Ashfang.Entrance.DurationSeconds);
+
+        Assert.IsFalse(state.TickSignature(2.39, 1));
+        Assert.IsTrue(state.TickSignature(0.01, 1));
+        Assert.IsFalse(state.TickSignature(DragonHuntCatalog.Ashfang.Signature.IntervalSeconds.For(1) - 0.01, 1));
+        Assert.IsTrue(state.TickSignature(0.01, 1));
+    }
+
+    [TestMethod]
     public void TryStartPhaseBreakForDamage_CrossingHalfHealth_ClosesCombatWindow()
     {
         var state = new DragonHuntState();
@@ -59,5 +72,7 @@ public sealed class DragonHuntStateTests
 
         Assert.AreEqual(DragonHuntStage.Battle, state.Stage);
         Assert.IsFalse(state.TryStartPhaseBreak(2));
+        Assert.IsFalse(state.TickSignature(0.64, 2));
+        Assert.IsTrue(state.TickSignature(0.01, 2));
     }
 }

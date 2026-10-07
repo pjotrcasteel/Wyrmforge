@@ -8,4 +8,6 @@ public sealed record DragonHuntRenderSnapshot(
     DragonHuntStage Stage,
     DragonHuntArenaTrait Arena,
     DragonHuntEntranceStyle Entrance,
-    double StageProgress);
+    double StageProgress,
+    string SignatureName,
+    string PhaseTwoCallout);

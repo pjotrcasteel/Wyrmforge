@@ -33,6 +33,7 @@ internal sealed record BalanceAggregate(
     double MedianRunSeconds,
     double MedianEssenceSecured,
     double WyrmReachRate,
+    double WyrmVictoryRate,
     double MedianFirstWyrmSeconds,
     double MedianEncounterBreathingRooms,
     double MedianEncounterClimaxes,
@@ -65,6 +66,7 @@ internal sealed record BalanceAggregate(
             Percentile(runs.Select(run => run.SimulatedSeconds), 0.5),
             Percentile(runs.Select(run => (double)run.EssenceSecured), 0.5),
             Rate(runs, run => run.WyrmsReached > 0),
+            ConditionalRate(runs, run => run.WyrmsReached > 0, run => run.DragonsSlain > 0),
             Percentile(runs.Where(run => run.FirstWyrmSeconds.HasValue).Select(run => run.FirstWyrmSeconds!.Value), 0.5),
             Percentile(runs.Select(run => (double)run.EncounterBreathingRooms), 0.5),
             Percentile(runs.Select(run => (double)run.EncounterClimaxes), 0.5),
@@ -75,6 +77,15 @@ internal sealed record BalanceAggregate(
     {
         var values = runs.ToArray();
         return values.Count(predicate) / (double)values.Length;
+    }
+
+    private static double ConditionalRate(
+        IEnumerable<RunSelfPlayMetrics> runs,
+        Func<RunSelfPlayMetrics, bool> condition,
+        Func<RunSelfPlayMetrics, bool> predicate)
+    {
+        var eligible = runs.Where(condition).ToArray();
+        return eligible.Length == 0 ? 0 : eligible.Count(predicate) / (double)eligible.Length;
     }
 
     private static double Percentile(IEnumerable<double> values, double percentile)
