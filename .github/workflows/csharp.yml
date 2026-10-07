@@ -37,3 +37,15 @@ jobs:
 
       - name: Publish web
         run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore
+
+      - name: Run quick balance sample
+        run: |
+          dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build --             --runs-per-combination 2             --max-seconds 240             --output artifacts/balance-quick
+
+      - name: Upload quick balance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-balance-quick-${{ github.sha }}
+          path: artifacts/balance-quick
+          if-no-files-found: error
+          retention-days: 14

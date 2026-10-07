@@ -2,9 +2,21 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.66 — Arcane Readability Pass
+## Prototype 0.0.67 — Self-Play & Balance Lab
 
-0.0.66 builds on the successful inspect → preview → confirm planning model by making the Atlas readable without opening every node. Minor nodes now communicate their stat bonus directly with compact icon/value glyphs, while build-defining landmarks keep a short icon/name and reveal their full rule on inspection. Route previews aggregate all minor bonuses gained on the way before listing the defining Notable, Mastery and Keystone effects.
+0.0.67 pauses balance changes and adds measurement equipment. Wyrmforge can now play deterministic headless runs with multiple player heuristics, aggregate results across build/agent/seed matrices, and capture real browser screenshots/traces in CI. The purpose is to make later tuning evidence-driven without pretending bots can decide whether the game is fun.
+
+### Self-play and balance instrumentation
+
+- A public `IRunAgent` contract receives player-visible run observations and makes movement, route, draft, relic, Essence and Refuge decisions.
+- Four deterministic heuristics model different play styles: Casual, Kiter, Greedy and BuildFocused.
+- Six representative Arcane builds cover single-school and hybrid Keystone goals.
+- `RunSelfPlayDriver` executes the real `RunSimulation` without renderer shortcuts and records kills/min, XP/min, health pressure, damage taken, level cadence, peak enemies, routes, Wyrms, Essence and decisions.
+- `Wyrmforge.BalanceLab` runs build × agent × seed batches and exports JSON, CSV and Markdown summaries with medians, P90 depth and outcome rates.
+- Pull-request validation produces a small balance artifact; main builds can produce a larger baseline matrix through the Balance Lab workflow.
+- Playwright browser smoke runs the published Blazor app at phone and desktop sizes, checks mobile overflow, captures the Arcane Atlas and route preview, and uploads screenshots plus traces.
+- A developer-only `/balance-lab` screen can run a deterministic headless trial interactively next to Combat Lab.
+- 0.0.67 intentionally makes **no gameplay balance changes**; it establishes the baseline first.
 
 ### Arcane readability fixes
 
@@ -130,6 +142,19 @@ The detailed spell, rune, relic and Wyrm sections remain available underneath.
 - Four Wyrms: Ashfang, Stormcoil, Rimeclaw and Voidweaver.
 - Essence Vault, Arcane Codex, four Forge lineages and 12 Forge Masteries.
 - Seeded runs, replay support, run summaries and Combat Lab tooling.
+
+## Balance workflow
+
+Quick validation:
+
+```bash
+dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release -- \
+  --runs-per-combination 10 \
+  --max-seconds 720 \
+  --output artifacts/balance
+```
+
+The report contains raw per-seed runs plus grouped build/agent summaries. Compare builds inside the same agent first, then inspect suspicious seeds individually; the agents intentionally value survival, tempo and risk differently.
 
 ## Gate target
 

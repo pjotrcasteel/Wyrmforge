@@ -1,0 +1,75 @@
+name: Browser smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/**'
+      - 'src/Wyrmforge.Application/**'
+      - 'src/Wyrmforge.Domain/**'
+      - 'tests/Wyrmforge.Browser.Tests/**'
+      - '.github/workflows/browser-smoke.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore browser tests
+        run: dotnet restore tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj
+
+      - name: Build browser tests
+        run: dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-restore
+
+      - name: Install Chromium
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Restore web
+        run: dotnet restore src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj
+
+      - name: Publish web
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web
+
+      - name: Start local Wyrmforge
+        run: |
+          python3 -m http.server 4173 --directory ./artifacts/web/wwwroot > ./artifacts/browser-server.log 2>&1 &
+          echo $! > ./artifacts/browser-server.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat ./artifacts/browser-server.log
+          exit 1
+
+      - name: Run browser smoke
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/browser
+        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-browser-${{ github.sha }}
+          path: |
+            artifacts/browser
+            artifacts/browser-server.log
+          if-no-files-found: warn
+          retention-days: 14
