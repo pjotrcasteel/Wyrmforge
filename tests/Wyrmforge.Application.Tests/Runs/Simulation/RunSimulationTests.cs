@@ -62,14 +62,13 @@ public sealed class RunSimulationTests
     [TestMethod]
     public void Tick_WhenEnemyDies_ExposesDeathBurst()
     {
-        var random = new FirstRandomSource();
-        var simulation = new RunSimulation(new HashSet<string>(), new LevelChoiceService(random), random);
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
         StartFirstMapEncounter(simulation);
         DeathBurstRenderSnapshot? deathBurst = null;
 
-        for (var tick = 0; tick < 240 && deathBurst is null; tick++)
+        for (var tick = 0; tick < 400 && deathBurst is null; tick++)
         {
-            var snapshot = simulation.Tick(0.05, default, 200, 200);
+            var snapshot = simulation.Tick(0.05, default, 800, 600);
             deathBurst = snapshot.DeathBursts.FirstOrDefault();
         }
 
