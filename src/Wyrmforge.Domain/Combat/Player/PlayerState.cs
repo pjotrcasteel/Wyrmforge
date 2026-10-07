@@ -19,4 +19,6 @@ public sealed class PlayerState
     public double BarrierRemaining { get; set; }
 
     public double WinterShellRechargeRemaining { get; set; }
+
+    public double WinterShellGuardRemaining { get; set; }
 }
