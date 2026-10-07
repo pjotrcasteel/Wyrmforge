@@ -31,6 +31,11 @@ public sealed partial class RunSimulation
     {
         if (passiveProfile.WinterShell)
         {
+            if (player.WinterShellGuardRemaining > 0)
+            {
+                player.WinterShellGuardRemaining = Math.Max(0, player.WinterShellGuardRemaining - delta);
+            }
+
             if (player.Barrier || player.WinterShellRechargeRemaining <= 0) return;
             player.WinterShellRechargeRemaining = Math.Max(0, player.WinterShellRechargeRemaining - delta);
             if (player.WinterShellRechargeRemaining == 0) player.Barrier = true;
