@@ -18,10 +18,22 @@ public sealed partial class RunSimulation
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
 
-        EnsureEncounterPlan(mapEncounter);
-        if (encounterPlan is null || encounterPlanIndex >= encounterPlan.Enemies.Count) return;
-        SpawnEnemy(width, height, encounterPlan.Enemies[encounterPlanIndex++]);
-        var baseInterval = Math.Max(0.28, 0.9 - elapsed / 120);
+        var activeCap = EnemyEncounterComposition.GetActiveEnemyCap(depthState.Depth);
+        if (enemies.Count >= activeCap)
+        {
+            spawnTimer = 0.08;
+            return;
+        }
+
+        var batchSize = EnemyEncounterComposition.GetSpawnBatchSize(encounterPattern, randomSource);
+        for (var index = 0; index < batchSize && enemies.Count < activeCap; index++)
+        {
+            EnsureEncounterPlan(mapEncounter);
+            if (encounterPlan is null || encounterPlanIndex >= encounterPlan.Enemies.Count) break;
+            SpawnEnemy(width, height, encounterPlan.Enemies[encounterPlanIndex++]);
+        }
+
+        var baseInterval = Math.Max(0.24, 0.72 - elapsed / 180);
         var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier
             * encounterModifiers.SpawnIntervalMultiplier;
