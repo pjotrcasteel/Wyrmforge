@@ -40,7 +40,7 @@ public static class DragonHuntSignaturePlanner
     {
         var direction = Vector2D.DirectionTo(dragonPosition, playerPosition);
         if (direction.Length <= double.Epsilon) direction = new Vector2D(0, 1);
-        var spacing = radius * 1.15;
+        var spacing = radius * 2.05;
         var offset = -spacing * (strikes - 1) / 2d;
         return Enumerable.Range(0, strikes)
             .Select(index => new DragonHuntSignatureStrike(
@@ -57,7 +57,7 @@ public static class DragonHuntSignaturePlanner
         double height,
         IRandomSource randomSource)
     {
-        var ringRadius = radius * 2.05;
+        var ringRadius = radius * 2.65;
         var rotation = randomSource.NextDouble() * Math.PI * 2;
         return Enumerable.Range(0, strikes)
             .Select(index =>

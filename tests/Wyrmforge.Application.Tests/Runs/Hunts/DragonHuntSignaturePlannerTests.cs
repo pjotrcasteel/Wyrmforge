@@ -23,6 +23,7 @@ public sealed class DragonHuntSignaturePlannerTests
         Assert.AreEqual(profile.StrikesFor(1), strikes.Count);
         Assert.AreEqual(0, strikes[0].DelaySeconds, 0.001);
         Assert.IsTrue(strikes.Zip(strikes.Skip(1)).All(pair => pair.Second.DelaySeconds > pair.First.DelaySeconds));
+        Assert.IsTrue(strikes.Zip(strikes.Skip(1)).All(pair => Vector2D.Distance(pair.First.Position, pair.Second.Position) >= profile.Radius.For(1) * 1.9));
         Assert.IsTrue(strikes.All(strike => IsInsideArena(strike.Position, profile.Radius.For(1))));
     }
 
@@ -34,7 +35,9 @@ public sealed class DragonHuntSignaturePlannerTests
         var strikes = DragonHuntSignaturePlanner.Create(profile, 1, Dragon, Player, Width, Height, new FirstRandomSource());
 
         Assert.AreEqual(profile.StrikesFor(1), strikes.Count);
-        Assert.IsTrue(strikes.All(strike => Vector2D.Distance(strike.Position, Player) > profile.Radius.For(1)));
+        Assert.IsTrue(strikes.All(strike => Vector2D.Distance(strike.Position, Player) > profile.Radius.For(1) * 2));
+        Assert.IsTrue(strikes.Zip(strikes.Skip(1).Append(strikes[0]))
+            .All(pair => Vector2D.Distance(pair.First.Position, pair.Second.Position) >= profile.Radius.For(1) * 1.9));
     }
 
     [TestMethod]
