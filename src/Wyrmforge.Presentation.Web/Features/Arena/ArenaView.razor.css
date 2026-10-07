@@ -54,6 +54,19 @@
     white-space: nowrap;
 }
 
+.encounter-objective .encounter-phase {
+    flex: 0 0 auto;
+    padding: 3px 6px;
+    border: 1px solid rgba(198, 154, 255, 0.28);
+    border-radius: 999px;
+    color: #d9b9ff;
+    background: rgba(112, 70, 150, 0.2);
+    font-size: 0.58rem;
+    font-style: normal;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
 .encounter-objective strong {
     flex: 0 0 auto;
     color: #e9d8ff;
@@ -73,7 +86,13 @@
     }
 
     .encounter-objective span {
+        min-width: 0;
         font-size: 0.6rem;
+    }
+
+    .encounter-objective .encounter-phase {
+        padding: 2px 5px;
+        font-size: 0.54rem;
     }
 
     .encounter-objective strong {
