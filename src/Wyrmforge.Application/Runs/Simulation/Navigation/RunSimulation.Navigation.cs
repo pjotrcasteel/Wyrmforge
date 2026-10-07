@@ -10,7 +10,7 @@ public sealed partial class RunSimulation
     private bool mapEncounterCleanupPending;
 
     public int CurrentMapNodeKills => mapState.CurrentNodeKills;
-    public int CurrentMapNodeKillsRequired => WyrmrealmMapState.KillsPerCombatNode;
+    public int CurrentMapNodeKillsRequired => mapState.CurrentNodeKillsRequired;
     public IReadOnlyList<SpellSchool> PendingAttunements => pendingAttunements.ToArray();
 
     private WyrmrealmRouteProfile? CurrentRoute => mapState.EncounterActive ? mapState.CurrentNode?.Route : null;

@@ -3,7 +3,6 @@ namespace Wyrmforge.Application.Runs.Navigation;
 public sealed class WyrmrealmMapState
 {
     public const int CombatStages = 4;
-    public const int KillsPerCombatNode = 5;
     private readonly List<WyrmrealmMapNode> completedNodes = [];
 
     public WyrmrealmMapState(int depth = 1, int? seed = null)
@@ -20,6 +19,7 @@ public sealed class WyrmrealmMapState
     public WyrmrealmMapNode? CurrentNode { get; private set; }
     public bool DecisionPending { get; private set; } = true;
     public int CurrentNodeKills { get; private set; }
+    public int CurrentNodeKillsRequired => CurrentNode?.EncounterKind is { } kind ? WyrmrealmEncounterObjectiveCatalog.KillsRequired(kind, Depth) : 0;
     public bool EncounterActive => !DecisionPending && CurrentNode is { Type: WyrmrealmNodeType.Combat, Route: not null };
 
     public IReadOnlyList<WyrmrealmMapNode> AvailableNodes
@@ -47,8 +47,10 @@ public sealed class WyrmrealmMapState
     public bool RegisterKill()
     {
         if (!EncounterActive) return false;
+        var required = CurrentNodeKillsRequired;
+        if (required <= 0) return false;
         CurrentNodeKills++;
-        if (CurrentNodeKills < KillsPerCombatNode) return false;
+        if (CurrentNodeKills < required) return false;
         completedNodes.Add(CurrentNode!);
         CurrentNode = null;
         CurrentNodeKills = 0;

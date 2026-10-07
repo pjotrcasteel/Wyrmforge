@@ -89,7 +89,8 @@ public sealed class WyrmrealmMapStateTests
 
     private static void CompleteEncounter(WyrmrealmMapState state)
     {
-        for (var kill = 0; kill < WyrmrealmMapState.KillsPerCombatNode; kill++) state.RegisterKill();
+        var killsRequired = state.CurrentNodeKillsRequired;
+        for (var kill = 0; kill < killsRequired; kill++) state.RegisterKill();
     }
 
     private static IEnumerable<string> Snapshot(WyrmrealmMapState state) => state.Nodes.Select(node =>
