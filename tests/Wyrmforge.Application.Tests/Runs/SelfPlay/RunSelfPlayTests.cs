@@ -31,6 +31,8 @@ public sealed class RunSelfPlayTests
         Assert.AreEqual(first.Kills, second.Kills);
         Assert.AreEqual(first.Level, second.Level);
         Assert.AreEqual(first.EssenceSecured, second.EssenceSecured);
+        Assert.AreEqual(first.StopReason, second.StopReason);
+        Assert.AreEqual(first.ExperienceCollectionRate, second.ExperienceCollectionRate);
         CollectionAssert.AreEqual(first.Decisions.ToArray(), second.Decisions.ToArray());
     }
 
