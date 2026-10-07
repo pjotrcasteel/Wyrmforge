@@ -20,7 +20,7 @@ public sealed partial class RunSimulation
     {
         var spellLoadout = SpellCatalog.All
             .Where(spell => build.Spells[spell.Id] > 0)
-            .Select(spell => new RunSpellSummary(spell.Id, build.Spells[spell.Id]))
+            .Select(spell => new RunSpellSummary(spell.Id, build.Spells[spell.Id], build.Evolutions.For(spell.Id)))
             .ToArray();
         var upgradeLoadout = RunUpgradeCatalog.All
             .Where(upgrade => build.RunUpgrades[upgrade.Id] > 0)

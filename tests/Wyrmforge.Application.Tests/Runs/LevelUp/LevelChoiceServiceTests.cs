@@ -5,6 +5,7 @@ using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Tests.Runs.LevelUp;
 
@@ -126,6 +127,39 @@ public sealed class LevelChoiceServiceTests
 
         Assert.AreEqual(LevelChoiceKind.SpellUpgrade, arcaneOrb.Kind);
         Assert.AreEqual(RewardRarity.Rare, arcaneOrb.Rarity);
+    }
+
+    [TestMethod]
+    public void CreateEvolutionDraft_WhenSpellIsMastered_ReturnsTwoBranches()
+    {
+        var build = new RunBuildState();
+        Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.ArcaneOrb));
+        Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.ArcaneOrb));
+        var service = new LevelChoiceService(new FirstRandomSource());
+
+        var choices = service.CreateEvolutionDraft(build, SpellId.ArcaneOrb);
+
+        Assert.AreEqual(2, choices.Count);
+        Assert.IsTrue(choices.All(choice => choice.Kind == LevelChoiceKind.Evolution));
+        Assert.IsTrue(choices.All(choice => choice.Rarity == RewardRarity.Legendary));
+        CollectionAssert.AreEquivalent(
+            new[] { $"evolution:{SpellEvolutionId.RiftSpear}", $"evolution:{SpellEvolutionId.StarSwarm}" },
+            choices.Select(choice => choice.Id).ToArray());
+    }
+
+    [TestMethod]
+    public void Apply_EvolutionChoice_SelectsOneBranchAndClosesOtherBranch()
+    {
+        var build = new RunBuildState();
+        Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.ArcaneOrb));
+        Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.ArcaneOrb));
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var choices = service.CreateEvolutionDraft(build, SpellId.ArcaneOrb);
+
+        Assert.IsTrue(service.Apply(build, choices[0]));
+        Assert.AreEqual(SpellEvolutionId.RiftSpear, build.Evolutions.For(SpellId.ArcaneOrb));
+        Assert.AreEqual(0, service.CreateEvolutionDraft(build, SpellId.ArcaneOrb).Count);
+        Assert.IsFalse(service.Apply(build, choices[1]));
     }
 
     private sealed class FixedRandomSource(double value) : IRandomSource
