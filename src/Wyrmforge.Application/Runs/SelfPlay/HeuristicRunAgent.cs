@@ -135,7 +135,7 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         _ => 0.65,
     };
 
-    private static Vector2D CalculateAvoidance(Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)
+    private static Vector2D CalculateAvoidance(Wyrmforge.Application.Runs.Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)
     {
         var result = Vector2D.Zero;
 
@@ -167,7 +167,7 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         return result;
     }
 
-    private static Vector2D CalculatePickupAttraction(Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)
+    private static Vector2D CalculatePickupAttraction(Wyrmforge.Application.Runs.Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)
     {
         var nearest = snapshot.ExperienceShards?
             .OrderBy(shard => Vector2D.Distance(player, new Vector2D(shard.X, shard.Y)))
