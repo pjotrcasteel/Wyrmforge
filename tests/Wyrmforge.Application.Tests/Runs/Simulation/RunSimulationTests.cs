@@ -74,6 +74,7 @@ public sealed class RunSimulationTests
 
         Assert.IsNotNull(deathBurst);
         Assert.IsGreaterThan(0, deathBurst.Radius);
+        Assert.IsGreaterThanOrEqualTo(1, deathBurst.Intensity);
         Assert.IsTrue(deathBurst.Progress >= 0 && deathBurst.Progress <= 1);
     }
 

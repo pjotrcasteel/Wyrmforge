@@ -11,8 +11,10 @@ public sealed partial class RunSimulation
     private const double SplashPulseSeconds = 0.2;
     private const double ElementalImpactSeconds = 0.16;
     private const double DeathBurstSeconds = 0.26;
+    private const double ExperiencePickupPulseSeconds = 0.22;
     private readonly List<ElementalImpactState> elementalImpacts = [];
     private readonly List<DeathBurstState> deathBursts = [];
+    private readonly List<ExperiencePickupPulseState> experiencePickupPulses = [];
 
     private void UpdateCombatFeedback(double delta)
     {
@@ -29,6 +31,8 @@ public sealed partial class RunSimulation
         elementalImpacts.RemoveAll(impact => impact.Life <= 0);
         foreach (var burst in deathBursts) burst.Life -= delta;
         deathBursts.RemoveAll(burst => burst.Life <= 0);
+        foreach (var pickup in experiencePickupPulses) pickup.Life -= delta;
+        experiencePickupPulses.RemoveAll(pickup => pickup.Life <= 0);
     }
 
     private void RegisterTargetHit(ICombatTarget target)
@@ -40,7 +44,17 @@ public sealed partial class RunSimulation
 
     private void RegisterElementalImpact(Vector2D position, SpellId spell) => elementalImpacts.Add(new ElementalImpactState(position, spell, ElementalImpactSeconds));
 
-    private void RegisterEnemyDeath(EnemyState enemy) => deathBursts.Add(new DeathBurstState(enemy.Position, enemy.Radius, DeathBurstSeconds));
+    private void RegisterEnemyDeath(EnemyState enemy)
+    {
+        var intensity = EnemyCatalog.Get(enemy.Kind).ThreatCost;
+        var radius = enemy.Radius * (1 + Math.Max(0, intensity - 1) * 0.18);
+        deathBursts.Add(new DeathBurstState(enemy.Position, radius, DeathBurstSeconds, intensity));
+    }
+
+    private void RegisterExperiencePickup(int value)
+    {
+        if (value > 0) experiencePickupPulses.Add(new ExperiencePickupPulseState(player.Position, value, ExperiencePickupPulseSeconds));
+    }
 
     private sealed class SplashPulseState(Vector2D position, double radius, double duration)
     {
@@ -68,11 +82,26 @@ public sealed partial class RunSimulation
         public double Progress => 1 - Math.Clamp(Life / Duration, 0, 1);
     }
 
-    private sealed class DeathBurstState(Vector2D position, double radius, double duration)
+    private sealed class DeathBurstState(Vector2D position, double radius, double duration, int intensity)
     {
         public Vector2D Position { get; } = position;
 
         public double Radius { get; } = radius;
+
+        public double Duration { get; } = duration;
+
+        public int Intensity { get; } = intensity;
+
+        public double Life { get; set; } = duration;
+
+        public double Progress => 1 - Math.Clamp(Life / Duration, 0, 1);
+    }
+
+    private sealed class ExperiencePickupPulseState(Vector2D position, int value, double duration)
+    {
+        public Vector2D Position { get; } = position;
+
+        public int Value { get; } = value;
 
         public double Duration { get; } = duration;
 

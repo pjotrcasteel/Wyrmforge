@@ -21,6 +21,8 @@ The second fix moves XP into the battlefield. Enemy deaths now drop physical Exp
 
 The third fix replaces five-kill skirmishes with encounter-specific horde objectives. Depth-one Stalker, Mixed and Swarm trails require 12, 16 and 20 kills respectively and scale with depth. Spawning now happens in pattern-specific batches—largest for Swarm, smallest for Stalker pressure—behind a deterministic active-enemy cap that grows from 22 at Depth 1 to 52 at Depth 4. The XP curve is retuned around the larger kill volume so draft pacing does not explode with the new density.
 
+The fourth fix strengthens combat impact without adding final art. Chasers, Rift Stalkers, Skitters and Brutes now have distinct battlefield silhouettes and colors, higher-threat enemies produce heavier death bursts, XP collection creates player-centered pickup pulses, loose shards visibly pulse, and the level-up draft has a stronger transition moment. The intent is to make pack clears and collection readable at horde density without filling the screen with damage numbers.
+
 ### Moment feedback
 
 Short non-blocking callouts now mark the events that should matter during combat:
