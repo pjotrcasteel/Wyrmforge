@@ -1412,3 +1412,12 @@
         padding: 6px;
     }
 }
+
+
+/* Browser-evidence fix: route planning sections must stack in the mobile inspector. */
+@media (max-width: 760px) {
+    .route-gains,
+    .route-landmarks {
+        grid-column: 1 / -1;
+    }
+}
