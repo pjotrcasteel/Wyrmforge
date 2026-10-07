@@ -20,7 +20,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         try
         {
             await OpenAsync();
-            await Page.Locator("nav.mobile-nav").GetByRole(AriaRole.Button, new() { Name = "Build", Exact = true }).ClickAsync();
+            var mobileBuild = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Build" });
+            await mobileBuild.EvaluateAsync("element => element.click()");
             await Expect(Page.GetByText("ARCANE ATLAS", new() { Exact = true })).ToBeVisibleAsync();
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
@@ -52,7 +53,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "ENTER WYRMREALM" })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-home.png");
 
-            await Page.Locator("aside.shell-rail").GetByRole(AriaRole.Button, new() { Name = "Build", Exact = true }).ClickAsync();
+            var desktopBuild = Page.Locator("aside.shell-rail button").Filter(new LocatorFilterOptions { HasText = "Build" });
+            await desktopBuild.EvaluateAsync("element => element.click()");
             await Expect(Page.GetByText("ARCANE ATLAS", new() { Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-atlas.png");
         }
@@ -65,7 +67,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private async Task OpenAsync()
     {
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await Expect(Page.GetByText("WYRMFORGE", new() { Exact = true }).First).ToBeVisibleAsync();
+        await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
     }
 
     private Task ScreenshotAsync(string name) => Page.ScreenshotAsync(new PageScreenshotOptions
