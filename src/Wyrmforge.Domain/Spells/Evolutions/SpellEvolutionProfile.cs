@@ -12,4 +12,7 @@ public sealed record SpellEvolutionProfile(
     double FrostNovaRadius = 0,
     double StatusDurationMultiplier = 1,
     int BonusStatusStacks = 0,
-    double ChainFalloffMultiplier = 1);
+    double ChainFalloffMultiplier = 1)
+{
+    public static SpellEvolutionProfile Identity { get; } = new();
+}

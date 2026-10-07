@@ -6,6 +6,7 @@ using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -27,7 +28,8 @@ public sealed partial class RunSimulation
     private double GetSpellCooldown(SpellDefinition spell, int rank, bool moving)
     {
         var lightningFormMultiplier = passiveProfile.LightningForm && moving ? 1 / 1.5 : 1;
-        var baseCooldown = spell.Ability.CalculateCooldownSeconds(rank) * passiveProfile.CastIntervalMultiplier;
+        var evolution = EvolutionProfile(spell.Id);
+        var baseCooldown = spell.Ability.CalculateCooldownSeconds(rank) * passiveProfile.CastIntervalMultiplier * evolution.CastIntervalMultiplier;
         return buildModifiers.Apply(BuildStatId.CastInterval, baseCooldown) * lightningFormMultiplier;
     }
 
@@ -71,15 +73,16 @@ public sealed partial class RunSimulation
         var target = NearestTarget(player.Position);
         if (target is null) return;
         var id = spell.Id;
+        var evolution = EvolutionProfile(id);
         var inferno = passiveProfile.Inferno && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var baseCount = prismatic ? passiveProfile.AstralBarrage ? 5 : 3 : 1;
-        var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles);
+        var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles) + evolution.ExtraProjectiles;
         var volleyTargets = prismatic ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
         var baseDirection = Vector2D.DirectionTo(player.Position, target.Position);
-        var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier;
+        var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier * evolution.ProjectileSpeedMultiplier;
         var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed);
-        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier;
+        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
         var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale;
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
@@ -92,15 +95,18 @@ public sealed partial class RunSimulation
             var offset = prismatic || count == 1 ? 0 : (index - (count - 1) / 2d) * 0.16;
             var aimedDirection = Vector2D.DirectionTo(player.Position, volleyTarget.Position);
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
-            var radius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
-            var pierces = (masteredArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0);
+            var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
+            var radius = baseRadius * evolution.ProjectileRadiusMultiplier;
+            var pierces = (masteredArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces;
+            var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
+            var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var effects = new ProjectileEffects(
                 inferno,
-                chains,
-                id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0,
+                chains + evolution.BonusChains,
+                Math.Max(masterySplash, evolution.SplashRadius),
                 status,
                 pierces,
-                masteredFrostShard ? FrostShardMastery.NovaRadius : 0);
+                Math.Max(masteryNova, evolution.FrostNovaRadius));
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }
     }
@@ -115,9 +121,11 @@ public sealed partial class RunSimulation
     private void CastChainSpell(SpellDefinition spell, ChainAbilityProfile profile, int rank, Vector2D origin, double damageScale, int bonusJumps = 0)
     {
         var current = origin;
-        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier;
+        var evolution = EvolutionProfile(spell.Id);
+        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
         var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale;
-        var jumps = profile.CalculateJumps(rank) + buildModifiers.ApplyInt(BuildStatId.BonusChains) + bonusJumps;
+        var jumps = profile.CalculateJumps(rank) + buildModifiers.ApplyInt(BuildStatId.BonusChains) + bonusJumps + evolution.BonusChains;
+        var falloff = Math.Min(1, profile.DamageFalloff * evolution.ChainFalloffMultiplier);
         var hit = new HashSet<int>();
         var bonusJumpsTriggered = false;
         var forkPending = spell.Id == SpellId.ChainLightning && ChainLightningMastery.IsActive(rank);
@@ -140,7 +148,7 @@ public sealed partial class RunSimulation
             }
 
             current = target.Position;
-            damage *= profile.DamageFalloff;
+            damage *= falloff;
         }
     }
 
@@ -154,6 +162,12 @@ public sealed partial class RunSimulation
         RegisterElementalImpact(target.Position, spell.Id);
         var killed = DamageTarget(target, forkDamage);
         if (!killed) ApplyAbilityStatus(spell, rank, target);
+    }
+
+    private SpellEvolutionProfile EvolutionProfile(SpellId spell)
+    {
+        var evolution = build.Evolutions.For(spell);
+        return evolution is { } id ? SpellEvolutionCatalog.Get(id).Profile : SpellEvolutionProfile.Identity;
     }
 
     private double ApplyChainInteractions(SpellId spellId, ICombatTarget target, double damage, ref int jumps, ref bool bonusJumpsTriggered)
