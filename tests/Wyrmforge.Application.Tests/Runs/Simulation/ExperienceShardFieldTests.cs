@@ -44,12 +44,13 @@ public sealed class ExperienceShardFieldTests
     }
 
     [TestMethod]
-    public void Update_StationaryPlayerWhenAttractionReachesPickupRadius_CollectsShard()
+    public void Update_StationaryPlayerWhenAttractedShardReachesPickupBoundary_CollectsShard()
     {
         var field = new ExperienceShardField();
-        field.Drop(new Vector2D(100, 0), 3);
+        field.Drop(new Vector2D(100, 37), 3);
 
-        var collected = field.Update(1, Vector2D.Zero);
+        var collected = 0;
+        for (var tick = 0; tick < 30 && collected == 0; tick++) collected += field.Update(0.05, Vector2D.Zero);
 
         Assert.AreEqual(3, collected);
         Assert.AreEqual(0, field.Shards.Count);
