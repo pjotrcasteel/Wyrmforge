@@ -9,7 +9,9 @@ public sealed partial class RunSimulation
     private void UpdateExperienceShards(double delta)
     {
         var collected = experienceShards.Update(delta, player.Position);
-        if (collected > 0) GainExperience(collected);
+        if (collected <= 0) return;
+        RegisterExperiencePickup(collected);
+        GainExperience(collected);
     }
 
     private void CollectLooseExperienceShards()
