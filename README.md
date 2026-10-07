@@ -2,9 +2,18 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.65 — Arcane Planning Pass
+## Prototype 0.0.66 — Arcane Readability Pass
 
-0.0.65 is a focused response to the Fun Ugly Gate: horde combat and physical XP passed the first playtest, while the Arcane Atlas did not yet support meaningful planning. This milestone changes the build interaction from immediate point spending to **inspect → preview route → confirm**, and removes duplicate Refuge decisions.
+0.0.66 builds on the successful inspect → preview → confirm planning model by making the Atlas readable without opening every node. Minor nodes now communicate their stat bonus directly with compact icon/value glyphs, while build-defining landmarks keep a short icon/name and reveal their full rule on inspection. Route previews aggregate all minor bonuses gained on the way before listing the defining Notable, Mastery and Keystone effects.
+
+### Arcane readability fixes
+
+- Minor nodes show their effect directly inside the circle: e.g. cast speed, spell damage, vitality or projectile speed plus the value.
+- Hybrid travel nodes show both minor effects as compact icon/value rows.
+- Travel-node names and long descriptions no longer float over the graph, eliminating the overlap visible on mobile.
+- Notables, Masteries and Keystones keep a short school icon + name on the Atlas and reveal their full effect on tap.
+- Route preview now includes a **Minor bonuses on this path** aggregate before the defining landmarks.
+- Intermediate Travel nodes are summarized instead of repeated as verbose route cards, making a planned Keystone path much easier to evaluate.
 
 ### Arcane planning fixes
 
