@@ -33,9 +33,10 @@ foreach (var build in SelfPlayBuildCatalog.All)
 }
 
 var aggregates = results
-    .GroupBy(run => (run.Build, run.Agent))
-    .Select(group => BalanceAggregate.Create(group.Key.Build, group.Key.Agent, group.ToArray()))
-    .OrderBy(row => row.Build, StringComparer.Ordinal)
+    .GroupBy(run => (run.Build, run.Cohort, run.SpentArcanePoints, run.Agent))
+    .Select(group => BalanceAggregate.Create(group.Key.Build, group.Key.Cohort, group.Key.SpentArcanePoints, group.Key.Agent, group.ToArray()))
+    .OrderBy(row => row.Cohort)
+    .ThenBy(row => row.Build, StringComparer.Ordinal)
     .ThenBy(row => row.Agent, StringComparer.Ordinal)
     .ToArray();
 
