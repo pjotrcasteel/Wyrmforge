@@ -123,7 +123,7 @@ public sealed class RunSelfPlayDriver
 
         public void Observe(RunRenderSnapshot snapshot, double simulatedSeconds)
         {
-            var healthRatio = snapshot.Hud.MaxHealth <= 0 ? 0 : snapshot.Hud.Health / snapshot.Hud.MaxHealth;
+            var healthRatio = snapshot.Hud.MaxHealth <= 0 ? 0 : Math.Clamp(snapshot.Hud.Health / snapshot.Hud.MaxHealth, 0, 1);
             minimumHealthRatio = Math.Min(minimumHealthRatio, healthRatio);
 
             if (!double.IsNaN(previousHealth) && snapshot.Hud.Health < previousHealth) damageTaken += previousHealth - snapshot.Hud.Health;
