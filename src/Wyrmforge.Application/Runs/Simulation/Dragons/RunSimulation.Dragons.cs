@@ -39,6 +39,7 @@ public sealed partial class RunSimulation
         }
 
         UpdateDragonHuntPressure(delta, activeDragon, width, height);
+        UpdateDragonHuntSignature(delta, activeDragon, width, height);
         activeDragon.Statuses.Tick(delta);
         var scaledDelta = delta * activeDragon.Statuses.TimeScale(true);
         UpdateDragonCombat(activeDragon, scaledDelta);
@@ -70,7 +71,16 @@ public sealed partial class RunSimulation
         for (var index = dragonHuntHazards.Count - 1; index >= 0; index--)
         {
             var hazard = dragonHuntHazards[index];
-            hazard.Remaining -= delta;
+            var activeDelta = delta;
+            if (hazard.DelayRemaining > 0)
+            {
+                var delayDelta = Math.Min(hazard.DelayRemaining, activeDelta);
+                hazard.DelayRemaining -= delayDelta;
+                activeDelta -= delayDelta;
+                if (activeDelta <= 0) continue;
+            }
+
+            hazard.Remaining -= activeDelta;
             if (hazard.Remaining > 0) continue;
             ResolveDragonHuntHazard(hazard);
             dragonHuntHazards.RemoveAt(index);
@@ -90,7 +100,23 @@ public sealed partial class RunSimulation
         for (var strike = 0; strike < profile.Strikes; strike++)
         {
             var position = HuntPressurePosition(profile.Origin, activeDragon, width, height, radius);
-            dragonHuntHazards.Add(new DragonHuntHazardState(position, radius, damage, telegraph, profile.VisualSpell, activeDragon.Definition.School));
+            dragonHuntHazards.Add(new DragonHuntHazardState(position, radius, damage, telegraph, 0, profile.VisualSpell, activeDragon.Definition.School, null));
+        }
+    }
+
+    private void UpdateDragonHuntSignature(double delta, DragonState activeDragon, double width, double height)
+    {
+        if (!dragonHuntState.TickSignature(delta, activeDragon.Phase)) return;
+        var signature = dragonHuntState.Profile?.Signature ?? throw new InvalidOperationException("Active dragon hunt requires a signature profile.");
+        var radius = signature.Radius.For(activeDragon.Phase);
+        var damage = signature.Damage.For(activeDragon.Phase) * depthState.DragonDamageMultiplier;
+        var telegraph = signature.TelegraphSeconds.For(activeDragon.Phase);
+        var strikes = DragonHuntSignaturePlanner.Create(signature, activeDragon.Phase, activeDragon.Position, player.Position, width, height, randomSource);
+
+        foreach (var strike in strikes)
+        {
+            dragonHuntHazards.Add(new DragonHuntHazardState(strike.Position, radius, damage, telegraph, strike.DelaySeconds, signature.VisualSpell,
+                activeDragon.Definition.School, signature.Kind));
         }
     }
 
@@ -297,16 +323,21 @@ public sealed partial class RunSimulation
         double radius,
         double damage,
         double duration,
+        double delaySeconds,
         SpellId visualSpell,
-        SpellSchool school)
+        SpellSchool school,
+        DragonHuntSignatureKind? signature)
     {
         public Vector2D Position { get; } = position;
         public double Radius { get; } = radius;
         public double Damage { get; } = damage;
         public double Duration { get; } = duration;
         public double Remaining { get; set; } = duration;
+        public double DelayRemaining { get; set; } = Math.Max(0, delaySeconds);
         public SpellId VisualSpell { get; } = visualSpell;
         public SpellSchool School { get; } = school;
+        public DragonHuntSignatureKind? Signature { get; } = signature;
+        public bool IsTelegraphing => DelayRemaining <= 0;
         public double Progress => 1 - Math.Clamp(Remaining / Duration, 0, 1);
     }
 }
