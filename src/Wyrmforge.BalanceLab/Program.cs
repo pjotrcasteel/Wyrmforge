@@ -19,7 +19,7 @@ foreach (var build in SelfPlayBuildCatalog.All)
             var simulation = factory.Create(build.SelectedNodes, seed: seed);
             var agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
             var metrics = driver.Play(
-                build.Name,
+                build,
                 seed,
                 simulation,
                 agent,
