@@ -8,7 +8,9 @@
     }
 
     function defaultScale(viewport) {
-        return viewport.clientWidth < 700 ? 0.72 : viewport.clientWidth < 1100 ? 0.82 : 0.92;
+        if (viewport.clientWidth < 700) return clamp(viewport.clientWidth / 710, 0.55, 0.68);
+        if (viewport.clientWidth < 1100) return 0.82;
+        return 0.92;
     }
 
     function apply(viewport, state, scale, focusX, focusY) {

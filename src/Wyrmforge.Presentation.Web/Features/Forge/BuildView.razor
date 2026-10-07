@@ -4,55 +4,61 @@
 
 <section class="build-view">
     <header class="build-heading">
-        <div>
-            <span class="section-kicker">ARCANE WEB</span>
-            <h1>Every point is a direction.</h1>
-            <p>Travel outward from the Wyrmheart, specialize through Notables and Masteries, or pay the distance to reach multiple rule-changing Keystones.</p>
+        <div class="build-title">
+            <span class="section-kicker">ARCANE ATLAS</span>
+            <h1>Chart a path through the Web.</h1>
+            <p>The Wyrmheart is your origin. Travel through elemental territories, claim defining landmarks and cross the old bridges when the build is worth the distance.</p>
         </div>
-        <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points left</span></div>
+        <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
     </header>
 
-    <div class="build-toolbar">
-        <div class="build-legend">
-            <span><i class="legend-dot travel"></i>Travel</span>
-            <span><i class="legend-dot notable"></i>Notable</span>
-            <span><i class="legend-dot mastery"></i>Mastery</span>
-            <span><i class="legend-dot keystone"></i>Keystone</span>
-        </div>
-        <div class="build-actions">
-            <button class="secondary compact" @onclick="() => ZoomAsync(-0.15)">−</button>
-            <button class="secondary compact" @onclick="ResetViewAsync">CENTER</button>
-            <button class="secondary compact" @onclick="() => ZoomAsync(0.15)">+</button>
-            <button class="secondary" @onclick="Reset">Respec all</button>
-        </div>
-    </div>
-
     <div class="web-layout">
-        <div class="arcane-web-viewport" @ref="viewport">
-            <div class="web-pan-space">
-                <div class="arcane-web-canvas">
-                    <svg class="web-connections" viewBox="0 0 1200 900" aria-hidden="true">
-                        @foreach (var connection in PassiveTreeCatalog.Connections)
+        <div class="atlas-stage">
+            <div class="atlas-toolbar">
+                <div class="build-legend" aria-label="Arcane Web legend">
+                    <span title="Travel"><i class="legend-dot travel"></i><b>Travel</b></span>
+                    <span title="Notable"><i class="legend-dot notable"></i><b>Notable</b></span>
+                    <span title="Mastery"><i class="legend-dot mastery"></i><b>Mastery</b></span>
+                    <span title="Keystone"><i class="legend-dot keystone"></i><b>Keystone</b></span>
+                </div>
+                <div class="build-actions">
+                    <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
+                    <button class="atlas-action center-action" aria-label="Center Arcane Web" title="Center Web" @onclick="ResetViewAsync">◎</button>
+                    <button class="atlas-action" aria-label="Zoom in" title="Zoom in" @onclick="() => ZoomAsync(0.15)">+</button>
+                    <button class="atlas-action respec-action" aria-label="Respec all Arcane points" title="Respec all" @onclick="Reset">↺</button>
+                </div>
+            </div>
+
+            <div class="atlas-caption"><span>THE WYRMHEART</span><small>Drag to chart • pinch to zoom • tap a landmark to inspect</small></div>
+
+            <div class="arcane-web-viewport" @ref="viewport">
+                <div class="web-pan-space">
+                    <div class="arcane-web-canvas">
+                        <div class="atlas-contours" aria-hidden="true"></div>
+                        <div class="atlas-center-sigil" aria-hidden="true"><i></i><i></i><i></i></div>
+                        <div class="atlas-region region-fire" aria-hidden="true"><span>🔥</span><b>FIRE</b><small>Ruin • ignition • detonation</small></div>
+                        <div class="atlas-region region-frost" aria-hidden="true"><span>❄</span><b>FROST</b><small>Endurance • control • shatter</small></div>
+                        <div class="atlas-region region-storm" aria-hidden="true"><span>⚡</span><b>STORM</b><small>Tempo • chaining • momentum</small></div>
+                        <div class="atlas-region region-arcane" aria-hidden="true"><span>✦</span><b>ARCANE</b><small>Projection • echo • multiplicity</small></div>
+
+                        <svg class="web-connections" viewBox="0 0 1200 900" aria-hidden="true">
+                            @foreach (var connection in PassiveTreeCatalog.Connections)
+                            {
+                                var from = PassiveTreeCatalog.Get(connection.From);
+                                var to = PassiveTreeCatalog.Get(connection.To);
+                                <line class="@ConnectionClass(connection)" x1="@Coordinate(from.X)" y1="@Coordinate(from.Y)" x2="@Coordinate(to.X)" y2="@Coordinate(to.Y)" />
+                            }
+                        </svg>
+
+                        @foreach (var node in PassiveTreeCatalog.All)
                         {
-                            var from = PassiveTreeCatalog.Get(connection.From);
-                            var to = PassiveTreeCatalog.Get(connection.To);
-                            <line class="@ConnectionClass(connection)" x1="@Coordinate(from.X)" y1="@Coordinate(from.Y)" x2="@Coordinate(to.X)" y2="@Coordinate(to.Y)" />
+                            <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")" aria-pressed="@IsSelected(node)"
+                                @onclick="() => HandleNode(node)">
+                                <span class="node-glyph">@NodeGlyph(node)</span>
+                                <span class="node-label">@node.Name</span>
+                            </button>
                         }
-                    </svg>
-
-                    <span class="web-school-label fire">FIRE</span>
-                    <span class="web-school-label frost">FROST</span>
-                    <span class="web-school-label storm">STORM</span>
-                    <span class="web-school-label arcane">ARCANE</span>
-
-                    @foreach (var node in PassiveTreeCatalog.All)
-                    {
-                        <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")" aria-pressed="@IsSelected(node)"
-                            @onclick="() => HandleNode(node)">
-                            <span class="node-glyph">@NodeGlyph(node)</span>
-                            <span class="node-label">@node.Name</span>
-                        </button>
-                    }
+                    </div>
                 </div>
             </div>
         </div>
@@ -76,7 +82,7 @@
             }
             @if (FocusedNode.MasteryGroup is not null)
             {
-                <div class="mastery-warning">Mastery choice — allocating this locks the competing node in this cluster.</div>
+                <div class="mastery-warning">Mastery choice — allocating this locks the competing landmark in this cluster.</div>
             }
             <div class="inspector-help">@InspectorHelp(FocusedNode)</div>
         </aside>
@@ -144,31 +150,31 @@
     private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
     {
         PassiveNodeKind.Origin => "ORIGIN",
-        PassiveNodeKind.Travel => "TRAVEL NODE",
-        PassiveNodeKind.Notable => "NOTABLE",
-        PassiveNodeKind.Mastery => "MASTERY",
-        _ => "KEYSTONE",
+        PassiveNodeKind.Travel => "TRAVEL",
+        PassiveNodeKind.Notable => "NOTABLE LANDMARK",
+        PassiveNodeKind.Mastery => "MASTERY LANDMARK",
+        _ => "KEYSTONE LANDMARK",
     };
 
     private string NodeState(PassiveNodeDefinition node)
     {
         if (node.Kind == PassiveNodeKind.Origin) return "ROOTED";
-        if (Selection.Selected.Contains(node.Id)) return "ALLOCATED";
-        if (Selection.CanSelect(node.Id)) return "AVAILABLE";
+        if (Selection.Selected.Contains(node.Id)) return "TRAVERSED";
+        if (Selection.CanSelect(node.Id)) return "REACHABLE";
         if (node.MasteryGroup is { } group && Selection.Selected.Any(id => PassiveTreeCatalog.Get(id).MasteryGroup == group)) return "CHOICE LOCKED";
-        return "UNREACHABLE";
+        return "UNCHARTED";
     }
 
     private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
 
-    private static string SchoolLabel(PassiveNodeDefinition node) => node.School?.ToString() ?? "Wyrmheart / Hybrid paths";
+    private static string SchoolLabel(PassiveNodeDefinition node) => node.School?.ToString() ?? "Wyrmheart / old bridges";
 
     private string InspectorHelp(PassiveNodeDefinition node)
     {
-        if (node.Kind == PassiveNodeKind.Origin) return "Drag the Web to pan. Pinch, Ctrl/⌘ + wheel, or use the toolbar to zoom.";
-        if (Selection.Selected.Contains(node.Id)) return Selection.CanRemove(node.Id) ? "Tap again to refund this point." : "This node supports another allocated path and cannot be refunded yet.";
-        if (Selection.CanSelect(node.Id)) return "Connected to your current path — tap to allocate.";
-        return "Build a connected path from the Wyrmheart to reach this node.";
+        if (node.Kind == PassiveNodeKind.Origin) return "Every route begins here. Drag the Atlas to explore the four elemental territories.";
+        if (Selection.Selected.Contains(node.Id)) return Selection.CanRemove(node.Id) ? "Tap again to abandon this part of the route and refund its cost." : "Another traversed route depends on this landmark.";
+        if (Selection.CanSelect(node.Id)) return "This landmark touches your travelled route — tap to claim it.";
+        return "Chart a connected route from the Wyrmheart to reach this landmark.";
     }
 
     private void Reset()
