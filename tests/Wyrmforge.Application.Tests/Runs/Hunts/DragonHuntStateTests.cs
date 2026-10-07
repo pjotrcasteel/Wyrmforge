@@ -17,6 +17,29 @@ public sealed class DragonHuntStateTests
         Assert.IsFalse(state.CanTargetDragon);
         Assert.IsFalse(state.CanDragonAct);
         Assert.AreEqual(0, state.StageProgress, 0.001);
+        Assert.AreEqual(DragonHuntEntranceBeat.Omen, state.EntranceBeat);
+        Assert.AreEqual(0, state.EntranceBeatProgress, 0.001);
+    }
+
+    [TestMethod]
+    public void TickStage_EntranceTimeline_ProgressesOmenArrivalRevealBeforeBattle()
+    {
+        var state = new DragonHuntState();
+        var entrance = DragonHuntCatalog.Ashfang.Entrance;
+        state.Start(DragonHuntCatalog.Ashfang);
+
+        state.TickStage(entrance.OmenSeconds);
+        Assert.AreEqual(DragonHuntEntranceBeat.Arrival, state.EntranceBeat);
+        Assert.IsFalse(state.CanTargetDragon);
+
+        state.TickStage(entrance.TravelSeconds);
+        Assert.AreEqual(DragonHuntEntranceBeat.Reveal, state.EntranceBeat);
+        Assert.IsFalse(state.CanTargetDragon);
+
+        state.TickStage(entrance.RevealSeconds);
+        Assert.AreEqual(DragonHuntStage.Battle, state.Stage);
+        Assert.AreEqual(DragonHuntEntranceBeat.None, state.EntranceBeat);
+        Assert.IsTrue(state.CanTargetDragon);
     }
 
     [TestMethod]

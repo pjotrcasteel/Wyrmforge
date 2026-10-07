@@ -5,7 +5,16 @@ namespace Wyrmforge.Application.Runs.Hunts;
 
 public sealed record DragonHuntPoint(double X, double Y);
 
-public sealed record DragonHuntEntranceProfile(DragonHuntEntranceStyle Style, double DurationSeconds, DragonHuntPoint Start, DragonHuntPoint Destination);
+public sealed record DragonHuntEntranceProfile(
+    DragonHuntEntranceStyle Style,
+    double OmenSeconds,
+    double TravelSeconds,
+    double RevealSeconds,
+    DragonHuntPoint Start,
+    DragonHuntPoint Destination)
+{
+    public double DurationSeconds => OmenSeconds + TravelSeconds + RevealSeconds;
+}
 
 public sealed record DragonHuntPressureCadence(DragonPhaseValues IntervalSeconds, DragonPhaseValues TelegraphSeconds);
 

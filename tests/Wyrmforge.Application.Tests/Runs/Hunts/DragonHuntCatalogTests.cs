@@ -17,6 +17,9 @@ public sealed class DragonHuntCatalogTests
         Assert.AreEqual(4, DragonHuntCatalog.All.Select(profile => profile.Signature.Kind).Distinct().Count());
         Assert.IsTrue(DragonHuntCatalog.All.All(profile => !string.IsNullOrWhiteSpace(profile.Signature.Name)));
         Assert.IsTrue(DragonHuntCatalog.All.All(profile => !string.IsNullOrWhiteSpace(profile.PhaseTwoCallout)));
+        Assert.IsTrue(DragonHuntCatalog.All.All(profile => profile.Entrance.OmenSeconds >= 0.5));
+        Assert.IsTrue(DragonHuntCatalog.All.All(profile => profile.Entrance.TravelSeconds >= 0.8));
+        Assert.IsTrue(DragonHuntCatalog.All.All(profile => profile.Entrance.RevealSeconds >= 0.7));
     }
 
     [TestMethod]
