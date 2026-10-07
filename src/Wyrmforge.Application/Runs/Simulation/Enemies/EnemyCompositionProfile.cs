@@ -6,7 +6,9 @@ public sealed record EnemyCompositionProfile(
     int BaseThreatBudget,
     double SpawnIntervalMultiplier,
     IReadOnlyDictionary<EnemyRole, double> RoleWeights,
-    IReadOnlyDictionary<EnemyRole, int>? MinimumRoleCounts = null)
+    IReadOnlyDictionary<EnemyRole, int>? MinimumRoleCounts = null,
+    int MinimumBatchSize = 1,
+    int MaximumBatchSize = 1)
 {
     public double WeightFor(EnemyRole role) => RoleWeights.GetValueOrDefault(role);
 
