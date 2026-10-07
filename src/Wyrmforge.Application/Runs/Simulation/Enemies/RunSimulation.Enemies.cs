@@ -34,7 +34,8 @@ public sealed partial class RunSimulation
             SpawnEnemy(width, height, encounterPlan.Enemies[encounterPlanIndex++]);
         }
 
-        var baseInterval = Math.Max(0.24, 0.72 - elapsed / 180);
+        var stage = mapState.CurrentNode?.Stage ?? 1;
+        var baseInterval = EnemyStagePressure.SpawnIntervalSeconds(stage);
         var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier
             * encounterModifiers.SpawnIntervalMultiplier;
@@ -61,11 +62,13 @@ public sealed partial class RunSimulation
             _ => new Vector2D(-margin, randomSource.NextDouble() * height),
         };
         var definition = EnemyCatalog.Get(kind);
-        var scale = 1 + elapsed / 80;
+        var stage = mapState.CurrentNode?.Stage ?? 1;
         var routeHealth = Math.Max(0.25, CurrentRoute?.Encounter.EnemyHealthMultiplier ?? 1) * encounterModifiers.EnemyHealthMultiplier;
         var routeSpeed = Math.Max(0.25, CurrentRoute?.Encounter.EnemySpeedMultiplier ?? 1) * encounterModifiers.EnemySpeedMultiplier;
-        var health = 60 * scale * depthState.EnemyHealthMultiplier * routeHealth * definition.HealthMultiplier;
-        var speed = (48 + Math.Min(52, elapsed * 0.4)) * depthState.EnemySpeedMultiplier * routeSpeed * definition.SpeedMultiplier;
+        var health = EnemyStagePressure.BaseHealth * EnemyStagePressure.HealthMultiplier(stage) * depthState.EnemyHealthMultiplier * routeHealth
+            * definition.HealthMultiplier;
+        var speed = EnemyStagePressure.BaseSpeed * EnemyStagePressure.SpeedMultiplier(stage) * depthState.EnemySpeedMultiplier * routeSpeed
+            * definition.SpeedMultiplier;
         enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, kind));
     }
 

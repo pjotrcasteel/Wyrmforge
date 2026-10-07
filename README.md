@@ -2,9 +2,19 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.70 — School Identity Balance
+## Prototype 0.0.71 — Encounter Pacing Fairness
 
-0.0.70 uses the clean cohort-aware baseline to lift the two weak school identities without flattening the tree. Fire and Storm remain unchanged as reference throughput. Frost converts control into damage and safer contact windows; Arcane converts projection into horde coverage instead of receiving generic spell-damage bonuses.
+0.0.71 removes a hidden anti-control feedback loop from encounter scaling. Enemy health, speed and spawn cadence previously increased with total elapsed run time, so slower/control builds faced stronger and faster enemies precisely because they took longer to clear a kill objective. Pressure now scales with route stage and depth instead.
+
+### Encounter pacing fairness
+
+- Enemy health no longer scales continuously with elapsed run time.
+- Enemy speed no longer scales continuously with elapsed run time.
+- Spawn cadence no longer accelerates merely because the player took longer to clear a route.
+- Within a depth, route stages 1–4 now deliberately ramp health, speed and spawn cadence.
+- Depth multipliers, route modifiers, encounter archetypes, active-enemy caps and horde batch sizes remain intact.
+- This preserves the horde feel while removing the positive feedback loop that punished slower Frost/control builds.
+- Stage-pressure rules are explicit and unit-tested so future balance work can reason about them independently of simulation time.
 
 ### School identity balance
 
