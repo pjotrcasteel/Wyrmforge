@@ -13,6 +13,49 @@
 <body>
     <div id="app">Heating the forge…</div>
     <script src="js/arcane-web.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js?v=__WYRMFORGE_BUILD__" autostart="false"></script>
+    <script>
+        (() => {
+            const build = "__WYRMFORGE_BUILD__";
+            const app = document.getElementById("app");
+            const retryKey = `wyrmforge-boot-retry-${build}`;
+
+            const versionedResource = (type, name, defaultUri) => {
+                if (!defaultUri) return defaultUri;
+                const uri = new URL(defaultUri, document.baseURI);
+                uri.searchParams.set("v", build);
+                return uri.toString();
+            };
+
+            const fail = error => {
+                console.error("Wyrmforge failed to start.", error);
+                if (!app) return;
+                app.innerHTML = '<div style="display:grid;place-items:center;min-height:100vh;padding:24px;text-align:center;background:#0c0a10;color:#eee9f4;font-family:system-ui,sans-serif"><div><strong style="display:block;font-size:1.1rem">The forge failed to ignite.</strong><span style="display:block;margin:8px 0 16px;color:#9f95a8;font-size:.85rem">A stale deployment asset may be cached.</span><button type="button" onclick="location.reload()" style="padding:10px 16px;border:1px solid #4b3c59;border-radius:10px;color:#eee9f4;background:#211827">Retry</button></div></div>';
+            };
+
+            const recoveryTimer = window.setTimeout(() => {
+                if (!app || !app.textContent?.includes("Heating the forge")) return;
+                if (sessionStorage.getItem(retryKey)) {
+                    fail(new Error("Blazor startup timed out after automatic retry."));
+                    return;
+                }
+
+                sessionStorage.setItem(retryKey, "1");
+                const url = new URL(window.location.href);
+                url.searchParams.set("boot", build);
+                window.location.replace(url.toString());
+            }, 9000);
+
+            Blazor.start({ loadBootResource: versionedResource })
+                .then(() => {
+                    window.clearTimeout(recoveryTimer);
+                    sessionStorage.removeItem(retryKey);
+                })
+                .catch(error => {
+                    window.clearTimeout(recoveryTimer);
+                    fail(error);
+                });
+        })();
+    </script>
 </body>
 </html>
