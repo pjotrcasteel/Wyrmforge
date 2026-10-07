@@ -65,6 +65,26 @@ public sealed class EnemyEncounterCompositionTests
         Assert.IsTrue(EnemyCatalog.Get(EnemyKind.Brute).ThreatCost > EnemyCatalog.Get(EnemyKind.Chaser).ThreatCost);
     }
 
+
+    [TestMethod]
+    public void GetSpawnBatchSize_UsesPatternSpecificRanges()
+    {
+        var random = new FirstRandomSource();
+
+        Assert.AreEqual(3, EnemyEncounterComposition.GetSpawnBatchSize(EnemyEncounterPattern.Swarm, random));
+        Assert.AreEqual(2, EnemyEncounterComposition.GetSpawnBatchSize(EnemyEncounterPattern.Mixed, random));
+        Assert.AreEqual(1, EnemyEncounterComposition.GetSpawnBatchSize(EnemyEncounterPattern.StalkerPressure, random));
+    }
+
+    [TestMethod]
+    public void GetActiveEnemyCap_IncreasesWithDepth()
+    {
+        Assert.AreEqual(22, EnemyEncounterComposition.GetActiveEnemyCap(1));
+        Assert.AreEqual(32, EnemyEncounterComposition.GetActiveEnemyCap(2));
+        Assert.AreEqual(42, EnemyEncounterComposition.GetActiveEnemyCap(3));
+        Assert.AreEqual(52, EnemyEncounterComposition.GetActiveEnemyCap(4));
+    }
+
     [TestMethod]
     public void SelectNext_NeverRepeatsPreviousPattern()
     {
