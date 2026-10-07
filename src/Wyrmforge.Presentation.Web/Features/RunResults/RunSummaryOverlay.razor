@@ -6,8 +6,8 @@
 @using Wyrmforge.Domain.Spells.Synergies
 @namespace Wyrmforge.Presentation.Web.Features.RunResults
 
-<div class="game-over">
-    <div class="game-over-card run-report-card">
+<div class="game-over run-overlay">
+    <div class="game-over-card run-report-card run-overlay-surface">
         <div class="eyebrow">@OutcomeLabel • RUN SEED @Summary.Seed</div>
         <h2>@Summary.Score.ToString("N0") score</h2>
         <p>@OutcomeMessage</p>
