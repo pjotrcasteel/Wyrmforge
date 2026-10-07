@@ -1,0 +1,128 @@
+@using Wyrmforge.Application.Abstractions.Randomness
+@using Wyrmforge.Application.Runs.SelfPlay
+@using Wyrmforge.Application.Runs.Simulation
+
+<main class="balance-lab">
+    <header class="lab-header">
+        <div>
+            <div class="eyebrow">WYRMFORGE • BALANCE LAB</div>
+            <h1>Let the game play itself.</h1>
+            <p>Run the real deterministic simulation with a visible player heuristic. This is measurement equipment, not an automatic balance oracle.</p>
+        </div>
+        <div class="header-actions">
+            <button class="secondary" @onclick="OpenCombatLab">Combat Lab</button>
+            <button class="secondary" @onclick="BackToForge">← Forge</button>
+        </div>
+    </header>
+
+    <section class="lab-layout">
+        <aside class="control-panel">
+            <div class="panel-heading"><div><strong>SELF-PLAY TRIAL</strong><span>Choose a representative Arcane build and agent personality.</span></div></div>
+
+            <label>Build
+                <select @bind="selectedBuildIndex">
+                    @for (var index = 0; index < SelfPlayBuildCatalog.All.Count; index++)
+                    {
+                        <option value="@index">@SelfPlayBuildCatalog.All[index].Name</option>
+                    }
+                </select>
+            </label>
+
+            <label>Agent
+                <select @bind="selectedPersonality">
+                    @foreach (var personality in Enum.GetValues<RunAgentPersonality>())
+                    {
+                        <option value="@personality">@personality</option>
+                    }
+                </select>
+            </label>
+
+            <label>Seed
+                <input type="number" @bind="seed" />
+            </label>
+
+            <button class="primary" disabled="@running" @onclick="RunAsync">@(running ? "SIMULATING…" : "RUN HEADLESS TRIAL")</button>
+
+            <div class="agent-notes">
+                <strong>@selectedPersonality</strong>
+                <small>@AgentDescription</small>
+            </div>
+        </aside>
+
+        <section class="results-panel">
+            @if (result is null)
+            {
+                <div class="empty-results">
+                    <span>◇</span>
+                    <strong>No trial yet</strong>
+                    <small>The runner uses real RunSimulation state: movement, route choices, drafts, relics, Wyrm Essence and Refuge decisions.</small>
+                </div>
+            }
+            else
+            {
+                <div class="result-heading">
+                    <div><span>@result.Build</span><strong>@result.Agent • seed @result.Seed</strong></div>
+                    <b>@result.Outcome</b>
+                </div>
+
+                <div class="metric-grid">
+                    <article><span>DEPTH</span><strong>@result.Depth</strong></article>
+                    <article><span>SCORE</span><strong>@result.Score.ToString("N0")</strong></article>
+                    <article><span>KILLS / MIN</span><strong>@result.KillsPerMinute.ToString("0.0")</strong></article>
+                    <article><span>XP / MIN</span><strong>@result.ExperiencePerMinute.ToString("0.0")</strong></article>
+                    <article><span>MIN HEALTH</span><strong>@result.MinimumHealthRatio.ToString("P0")</strong></article>
+                    <article><span>PEAK ENEMIES</span><strong>@result.PeakEnemies</strong></article>
+                    <article><span>LEVEL</span><strong>@result.Level</strong></article>
+                    <article><span>ESSENCE</span><strong>@result.EssenceSecured</strong></article>
+                    <article><span>WYRM KILLS</span><strong>@result.DragonsSlain</strong></article>
+                    <article><span>SYNERGIES</span><strong>@result.Synergies</strong></article>
+                    <article><span>RUN TIME</span><strong>@TimeSpan.FromSeconds(result.SimulatedSeconds).ToString(@"m:ss")</strong></article>
+                    <article><span>DAMAGE TAKEN</span><strong>@result.DamageTaken.ToString("0")</strong></article>
+                </div>
+
+                <section class="decision-log">
+                    <span>DECISION TRACE</span>
+                    @foreach (var decision in result.Decisions.TakeLast(18))
+                    {
+                        <code>@decision</code>
+                    }
+                </section>
+            }
+        </section>
+    </section>
+</main>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+
+    private int selectedBuildIndex;
+    private RunAgentPersonality selectedPersonality = RunAgentPersonality.BuildFocused;
+    private int seed = 1337;
+    private bool running;
+    private RunSelfPlayMetrics? result;
+
+    private string AgentDescription => selectedPersonality switch
+    {
+        RunAgentPersonality.Casual => "Prefers understandable convergence, heals early and usually banks the first secured haul.",
+        RunAgentPersonality.Kiter => "Values survival, distance and mobility; descends only while health remains comfortable.",
+        RunAgentPersonality.Greedy => "Chases XP, damage and deeper runs; tolerates much lower health before leaving.",
+        _ => "Treats the selected Arcane school as intent and strongly prefers rewards that reinforce or converge on it.",
+    };
+
+    private async Task RunAsync()
+    {
+        running = true;
+        result = null;
+        await Task.Yield();
+
+        var build = SelfPlayBuildCatalog.All[selectedBuildIndex];
+        var factory = new RunSimulationFactory(new SeededRandomSource(1));
+        var simulation = factory.Create(build.SelectedNodes, seed: seed);
+        var agent = new HeuristicRunAgent(selectedPersonality, seed, build.PreferredSchool);
+        result = new RunSelfPlayDriver().Play(build.Name, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 480));
+        running = false;
+    }
+
+    private void OpenCombatLab() => Navigation.NavigateTo("combat-lab");
+    private void BackToForge() => Navigation.NavigateTo(string.Empty);
+}
