@@ -5,6 +5,7 @@ public sealed class DragonHuntState
     private double stageDuration;
     private double stageRemaining;
     private double pressureRemaining;
+    private double signatureRemaining;
     private bool phaseBreakTriggered;
 
     public DragonHuntProfile? Profile { get; private set; }
@@ -20,6 +21,7 @@ public sealed class DragonHuntState
         stageDuration = profile.Entrance.DurationSeconds;
         stageRemaining = stageDuration;
         pressureRemaining = 0;
+        signatureRemaining = 0;
         phaseBreakTriggered = false;
     }
 
@@ -29,7 +31,9 @@ public sealed class DragonHuntState
         stageRemaining = Math.Max(0, stageRemaining - Math.Max(0, delta));
         if (stageRemaining > 0) return false;
         Stage = DragonHuntStage.Battle;
-        pressureRemaining = Profile?.Pressure.Cadence.IntervalSeconds.For(phaseBreakTriggered ? 2 : 1) ?? 0;
+        var phase = phaseBreakTriggered ? 2 : 1;
+        pressureRemaining = Profile?.Pressure.Cadence.IntervalSeconds.For(phase) ?? 0;
+        signatureRemaining = Profile is null ? 0 : phaseBreakTriggered ? 0.65 : Math.Min(2.4, Profile.Signature.IntervalSeconds.For(phase) * 0.35);
         return true;
     }
 
@@ -58,6 +62,15 @@ public sealed class DragonHuntState
         return true;
     }
 
+    public bool TickSignature(double delta, int phase)
+    {
+        if (Stage != DragonHuntStage.Battle || Profile is null) return false;
+        signatureRemaining -= Math.Max(0, delta);
+        if (signatureRemaining > 0) return false;
+        signatureRemaining = Profile.Signature.IntervalSeconds.For(phase);
+        return true;
+    }
+
     public void Reset()
     {
         Profile = null;
@@ -65,6 +78,7 @@ public sealed class DragonHuntState
         stageDuration = 0;
         stageRemaining = 0;
         pressureRemaining = 0;
+        signatureRemaining = 0;
         phaseBreakTriggered = false;
     }
 
@@ -75,5 +89,6 @@ public sealed class DragonHuntState
         stageDuration = Profile!.PhaseBreakSeconds;
         stageRemaining = stageDuration;
         pressureRemaining = 0;
+        signatureRemaining = 0;
     }
 }

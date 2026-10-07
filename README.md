@@ -2,7 +2,32 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.72 — Combat Director
+## Prototype 0.0.73 — Wyrm Hunt 2.0
+
+0.0.73 makes the Wyrm at the end of a depth a distinct encounter rather than a larger enemy with different numbers. Existing entrances, arenas, movement styles, attacks and protected 50% phase breaks remain, but every Wyrm now adds a signature movement puzzle that escalates in phase two.
+
+### Signature hunts
+
+- **Ashfang — Cinder Sweep:** captures the hunter's position and erupts a delayed line of fire through it. The answer is lateral movement; phase two adds another eruption and tightens the cadence.
+- **Stormcoil — Tempest Cage:** forms a ring of lightning around the captured position. Phase two closes the pattern with more strikes and shorter recovery.
+- **Rimeclaw — Glacial Wall:** cuts across the arena's short axis with one deliberate escape gap. Segment radius adapts to the arena shape so the gap remains fair on mobile and desktop.
+- **Voidweaver — Rift Echo:** strikes the captured position and its mirrored point; phase two adds a delayed center echo.
+- Signature schedules are deterministic for seeded runs and coexist with each Wyrm's existing movement, normal attack and environmental pressure.
+- Phase two increases signature damage, radius, strike count and/or cadence without replacing the Wyrm's original identity.
+
+### Hunt readability and evidence
+
+- Signature telegraphs have distinct visual languages instead of reusing one generic warning circle.
+- The boss bar names the active signature mechanic.
+- Entrances introduce the signature and each Wyrm has its own phase-two callout.
+- Balance Lab now separates **Wyrm reach** from **conditional Wyrm win rate** and reports first-Wyrm outcomes individually, so pre-hunt failures and specific hunt problems can be analyzed independently.
+- Signature profiles, phase timing and all four deterministic pattern planners are unit-tested.
+
+### Future Build Evolution direction — not part of 0.0.73
+
+The planned Build Evolution / Forge work keeps **Spell Lineages / Wyrmforged Evolutions** alive as a future system. Repeated meaningful use of a spell plus thematic Wyrm achievements may unlock new evolutionary possibilities for future runs rather than permanent flat-stat power. Example direction: mastering Fireball across many runs and defeating a Fire Wyrm with a Fireball-centered build could unlock a Wyrmfire lineage. This is deliberately postponed until the Build Evolution milestone.
+
+### 0.0.72 Combat Director
 
 0.0.72 turns route combat from a continuous spawn timer into deliberate, deterministic encounter pacing. Each combat trail now advances through **Pressure → Escalation → Breathing Room → Surge → Climax** according to kill-objective progress rather than elapsed run time.
 

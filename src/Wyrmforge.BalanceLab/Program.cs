@@ -40,7 +40,14 @@ var aggregates = results
     .ThenBy(row => row.Agent, StringComparer.Ordinal)
     .ToArray();
 
-var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, results);
+var wyrms = results
+    .Where(run => run.FirstWyrm is not null)
+    .GroupBy(run => run.FirstWyrm!, StringComparer.Ordinal)
+    .Select(group => WyrmAggregate.Create(group.Key, group.ToArray()))
+    .OrderBy(row => row.Wyrm, StringComparer.Ordinal)
+    .ToArray();
+
+var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, results);
 await BalanceReportWriter.WriteAsync(report, options.OutputDirectory);
 
 Console.WriteLine($"Balance report written to {Path.GetFullPath(options.OutputDirectory)}");

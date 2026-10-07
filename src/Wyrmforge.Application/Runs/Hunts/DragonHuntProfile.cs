@@ -17,9 +17,25 @@ public sealed record DragonHuntPressureProfile(
     int Strikes,
     SpellId VisualSpell);
 
+public sealed record DragonHuntSignatureProfile(
+    DragonHuntSignatureKind Kind,
+    string Name,
+    DragonPhaseValues IntervalSeconds,
+    DragonPhaseValues TelegraphSeconds,
+    DragonPhaseValues Radius,
+    DragonPhaseValues Damage,
+    int PhaseOneStrikes,
+    int PhaseTwoStrikes,
+    SpellId VisualSpell)
+{
+    public int StrikesFor(int phase) => phase >= 2 ? PhaseTwoStrikes : PhaseOneStrikes;
+}
+
 public sealed record DragonHuntProfile(
     DragonId Dragon,
     DragonHuntEntranceProfile Entrance,
     DragonHuntArenaTrait Arena,
     double PhaseBreakSeconds,
-    DragonHuntPressureProfile Pressure);
+    DragonHuntPressureProfile Pressure,
+    DragonHuntSignatureProfile Signature,
+    string PhaseTwoCallout);

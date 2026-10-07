@@ -16,7 +16,18 @@ public static class DragonHuntCatalog
             new DragonPhaseValues(82, 108),
             new DragonPhaseValues(20, 28),
             1,
-            SpellId.FireBolt));
+            SpellId.FireBolt),
+        new DragonHuntSignatureProfile(
+            DragonHuntSignatureKind.CinderSweep,
+            "Cinder Sweep",
+            new DragonPhaseValues(9.2, 6.8),
+            new DragonPhaseValues(0.95, 0.72),
+            new DragonPhaseValues(54, 62),
+            new DragonPhaseValues(26, 34),
+            4,
+            5,
+            SpellId.FireBolt),
+        "THE SCAR IGNITES");
 
     public static DragonHuntProfile Stormcoil { get; } = new(
         DragonId.Stormcoil,
@@ -29,7 +40,18 @@ public static class DragonHuntCatalog
             new DragonPhaseValues(70, 88),
             new DragonPhaseValues(16, 23),
             3,
-            SpellId.ChainLightning));
+            SpellId.ChainLightning),
+        new DragonHuntSignatureProfile(
+            DragonHuntSignatureKind.TempestCage,
+            "Tempest Cage",
+            new DragonPhaseValues(8.8, 6.2),
+            new DragonPhaseValues(1.0, 0.75),
+            new DragonPhaseValues(46, 54),
+            new DragonPhaseValues(22, 30),
+            6,
+            8,
+            SpellId.ChainLightning),
+        "THE STORM CLOSES");
 
     public static DragonHuntProfile Rimeclaw { get; } = new(
         DragonId.Rimeclaw,
@@ -42,7 +64,18 @@ public static class DragonHuntCatalog
             new DragonPhaseValues(125, 158),
             new DragonPhaseValues(24, 33),
             1,
-            SpellId.FrostShard));
+            SpellId.FrostShard),
+        new DragonHuntSignatureProfile(
+            DragonHuntSignatureKind.GlacialWall,
+            "Glacial Wall",
+            new DragonPhaseValues(10.2, 7.4),
+            new DragonPhaseValues(1.15, 0.86),
+            new DragonPhaseValues(54, 62),
+            new DragonPhaseValues(28, 38),
+            5,
+            7,
+            SpellId.FrostShard),
+        "THE BASIN FREEZES");
 
     public static DragonHuntProfile Voidweaver { get; } = new(
         DragonId.Voidweaver,
@@ -55,7 +88,18 @@ public static class DragonHuntCatalog
             new DragonPhaseValues(92, 122),
             new DragonPhaseValues(19, 27),
             2,
-            SpellId.ArcaneOrb));
+            SpellId.ArcaneOrb),
+        new DragonHuntSignatureProfile(
+            DragonHuntSignatureKind.RiftEcho,
+            "Rift Echo",
+            new DragonPhaseValues(8.4, 5.8),
+            new DragonPhaseValues(0.82, 0.62),
+            new DragonPhaseValues(62, 74),
+            new DragonPhaseValues(24, 34),
+            2,
+            3,
+            SpellId.ArcaneOrb),
+        "THE RIFT ANSWERS");
 
     public static IReadOnlyList<DragonHuntProfile> All { get; } = [Ashfang, Stormcoil, Rimeclaw, Voidweaver];
 

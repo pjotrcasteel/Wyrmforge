@@ -28,6 +28,7 @@ public sealed record RunSelfPlayMetrics(
     int Synergies,
     int DragonsSlain,
     int WyrmsReached,
+    string? FirstWyrm,
     double? FirstWyrmSeconds,
     int EncounterBreathingRooms,
     int EncounterClimaxes,

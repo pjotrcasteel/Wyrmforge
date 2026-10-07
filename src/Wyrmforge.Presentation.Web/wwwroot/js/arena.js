@@ -239,7 +239,7 @@ function draw(state, snapshot, width, height) {
     ctx.stroke();
 
     drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
-    if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, width);
+    if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);
@@ -324,22 +324,85 @@ function drawHuntHazard(ctx, hazard) {
     const palette = schoolPalette(hazard.school);
     const progress = Math.min(1, Math.max(0, hazard.progress));
     const radius = hazard.radius * (1.12 - progress * 0.12);
-    const alpha = 0.2 + progress * 0.62;
+    const armedScale = hazard.armed === false ? 0.28 : 1;
+    const alpha = (0.2 + progress * 0.62) * armedScale;
     ctx.save();
+    ctx.translate(hazard.x, hazard.y);
+
+    if (hazard.signature === 1) drawCinderSweepTelegraph(ctx, radius, progress, alpha, palette);
+    else if (hazard.signature === 2) drawTempestCageTelegraph(ctx, radius, progress, alpha, palette);
+    else if (hazard.signature === 3) drawGlacialWallTelegraph(ctx, radius, progress, alpha, palette);
+    else if (hazard.signature === 4) drawRiftEchoTelegraph(ctx, radius, progress, alpha, palette);
+    else drawGenericHuntTelegraph(ctx, radius, progress, alpha, palette);
+
+    ctx.restore();
+}
+
+function drawGenericHuntTelegraph(ctx, radius, progress, alpha, palette) {
     ctx.beginPath();
-    ctx.arc(hazard.x, hazard.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${palette.rgb}, ${0.035 + progress * 0.07})`;
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${palette.rgb}, ${(0.035 + progress * 0.07) * alpha})`;
     ctx.fill();
     ctx.strokeStyle = `rgba(${palette.rgb}, ${alpha})`;
     ctx.lineWidth = 2 + progress * 2;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(hazard.x, hazard.y, radius * (0.35 + progress * 0.5), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${0.2 + progress * 0.5})`;
+    ctx.arc(0, 0, radius * (0.35 + progress * 0.5), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${(0.2 + progress * 0.5) * alpha})`;
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    ctx.restore();
+}
+
+function drawCinderSweepTelegraph(ctx, radius, progress, alpha, palette) {
+    drawGenericHuntTelegraph(ctx, radius, progress, alpha, palette);
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${Math.min(1, alpha * 1.12)})`;
+    ctx.lineWidth = 2.5;
+    const reach = radius * (0.45 + progress * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(-reach, -reach);
+    ctx.lineTo(reach, reach);
+    ctx.moveTo(reach, -reach);
+    ctx.lineTo(-reach, reach);
+    ctx.stroke();
+}
+
+function drawTempestCageTelegraph(ctx, radius, progress, alpha, palette) {
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${alpha})`;
+    ctx.lineWidth = 2.5 + progress;
+    for (let ring = 0; ring < 2; ring++) {
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * (0.72 + ring * 0.28), ring * 0.55, Math.PI * 1.35 + ring * 0.7);
+        ctx.stroke();
+    }
+    for (let index = 0; index < 4; index++) {
+        const angle = index * Math.PI / 2 + progress * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * radius * 0.35, Math.sin(angle) * radius * 0.35);
+        ctx.lineTo(Math.cos(angle + 0.16) * radius, Math.sin(angle + 0.16) * radius);
+        ctx.stroke();
+    }
+}
+
+function drawGlacialWallTelegraph(ctx, radius, progress, alpha, palette) {
+    ctx.fillStyle = `rgba(${palette.rgb}, ${0.04 * alpha})`;
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${alpha})`;
+    ctx.lineWidth = 2.2 + progress;
+    drawPolygon(ctx, 0, 0, radius, 6, Math.PI / 6);
+    ctx.fill();
+    ctx.stroke();
+    drawPolygon(ctx, 0, 0, radius * (0.55 + progress * 0.18), 6, Math.PI / 6);
+    ctx.stroke();
+}
+
+function drawRiftEchoTelegraph(ctx, radius, progress, alpha, palette) {
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${alpha})`;
+    ctx.lineWidth = 2 + progress * 1.5;
+    const outer = radius * 0.78;
+    ctx.strokeRect(-outer, -outer, outer * 2, outer * 2);
+    const inner = radius * (0.3 + progress * 0.24);
+    ctx.strokeRect(-inner, -inner, inner * 2, inner * 2);
 }
 
 function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
@@ -350,7 +413,8 @@ function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
     const headline = entering ? 'WYRM HUNT' : 'PHASE BREAK';
     const detail = entering
         ? `${dragon?.name?.toUpperCase() ?? 'UNKNOWN WYRM'} • ${dragon?.title?.toUpperCase() ?? 'THE REALM ANSWERS'}`
-        : `${dragon?.name?.toUpperCase() ?? 'THE WYRM'} UNLEASHES ITS TRUE POWER`;
+        : hunt.phaseTwoCallout ?? `${dragon?.name?.toUpperCase() ?? 'THE WYRM'} UNLEASHES ITS TRUE POWER`;
+    const signature = `SIGNATURE • ${hunt.signatureName?.toUpperCase() ?? 'UNKNOWN'}`;
 
     ctx.save();
     ctx.fillStyle = `rgba(5, 4, 8, ${0.26 * fade})`;
@@ -364,6 +428,11 @@ function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
     ctx.fillStyle = `rgba(244, 238, 248, ${0.95 * fade})`;
     ctx.font = '900 21px system-ui, sans-serif';
     ctx.fillText(detail, width / 2, height * 0.52);
+    if (entering) {
+        ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.78 * fade})`;
+        ctx.font = '800 10px system-ui, sans-serif';
+        ctx.fillText(signature, width / 2, height * 0.555);
+    }
     ctx.restore();
 }
 
@@ -761,27 +830,34 @@ function drawDragonEyes(ctx, radius, palette) {
     ctx.fill();
 }
 
-function drawBossBar(ctx, dragon, width) {
+function drawBossBar(ctx, dragon, hunt, width) {
     const palette = schoolPalette(dragon.school);
     const outerWidth = Math.min(430, width - 36);
     const x = (width - outerWidth) / 2;
     const y = 16;
+    const panelHeight = hunt?.signatureName ? 58 : 48;
     ctx.fillStyle = palette.dark;
-    roundRect(ctx, x, y, outerWidth, 48, 12);
+    roundRect(ctx, x, y, outerWidth, panelHeight, 12);
     ctx.fill();
 
     ctx.fillStyle = palette.text;
     ctx.font = '800 11px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`${dragon.name.toUpperCase()} • ${dragon.title.toUpperCase()} • PHASE ${dragon.phase}`, width / 2, y + 17);
+    if (hunt?.signatureName) {
+        ctx.fillStyle = palette.edge;
+        ctx.font = '800 9px system-ui, sans-serif';
+        ctx.fillText(`SIGNATURE • ${hunt.signatureName.toUpperCase()}`, width / 2, y + 31);
+    }
 
     const innerX = x + 12;
     const innerWidth = outerWidth - 24;
     ctx.fillStyle = 'rgba(9, 7, 12, 0.72)';
-    roundRect(ctx, innerX, y + 27, innerWidth, 10, 5);
+    const healthY = hunt?.signatureName ? y + 39 : y + 27;
+    roundRect(ctx, innerX, healthY, innerWidth, 10, 5);
     ctx.fill();
     ctx.fillStyle = dragon.phase === 2 ? palette.phase : palette.body;
-    roundRect(ctx, innerX, y + 27, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 10, 5);
+    roundRect(ctx, innerX, healthY, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 10, 5);
     ctx.fill();
     ctx.textAlign = 'start';
 }

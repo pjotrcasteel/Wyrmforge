@@ -129,6 +129,7 @@ public sealed class RunSelfPlayDriver
         private int peakEnemies;
         private int peakLooseExperience;
         private int wyrmsReached;
+        private string? firstWyrm;
         private double? firstWyrmSeconds;
         private int encounterBreathingRooms;
         private int encounterClimaxes;
@@ -143,6 +144,7 @@ public sealed class RunSelfPlayDriver
             if (hasDragon && !dragonVisible)
             {
                 wyrmsReached++;
+                firstWyrm ??= snapshot.Dragon!.Name;
                 firstWyrmSeconds ??= simulatedSeconds;
             }
             dragonVisible = hasDragon;
@@ -204,6 +206,7 @@ public sealed class RunSelfPlayDriver
                 summary.Synergies,
                 summary.DragonsSlain,
                 wyrmsReached,
+                firstWyrm,
                 firstWyrmSeconds,
                 encounterBreathingRooms,
                 encounterClimaxes,
