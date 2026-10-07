@@ -40,7 +40,7 @@ jobs:
 
       - name: Run quick balance sample
         run: |
-          dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build --             --runs-per-combination 2             --max-seconds 240             --output artifacts/balance-quick
+          dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build --             --runs-per-combination 10             --max-seconds 240             --output artifacts/balance-quick
 
       - name: Upload quick balance evidence
         uses: actions/upload-artifact@v4
