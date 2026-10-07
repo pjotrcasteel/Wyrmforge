@@ -20,7 +20,7 @@ Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting W
 - Signature telegraphs have distinct visual languages instead of reusing one generic warning circle.
 - The boss bar names the active signature mechanic.
 - Entrances introduce the signature and each Wyrm has its own phase-two callout.
-- Balance Lab now separates **Wyrm reach** from **conditional Wyrm win rate**, so pre-hunt failures and boss-fight failures can be analyzed independently.
+- Balance Lab now separates **Wyrm reach** from **conditional Wyrm win rate** and reports first-Wyrm outcomes individually, so pre-hunt failures and specific hunt problems can be analyzed independently.
 - Signature profiles, phase timing and all four deterministic pattern planners are unit-tested.
 
 ### Future Build Evolution direction — not part of 0.0.73
