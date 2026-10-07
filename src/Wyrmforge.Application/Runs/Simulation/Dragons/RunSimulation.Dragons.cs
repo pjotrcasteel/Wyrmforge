@@ -52,10 +52,16 @@ public sealed partial class RunSimulation
     {
         var entrance = dragonHuntState.Profile?.Entrance ?? throw new InvalidOperationException("Active dragon hunt requires an entrance profile.");
         dragonHuntState.TickStage(delta);
-        var progress = dragonHuntState.Stage == DragonHuntStage.Entrance ? EaseOutCubic(dragonHuntState.StageProgress) : 1;
+        var travelProgress = dragonHuntState.Stage == DragonHuntStage.Battle ? 1 : dragonHuntState.EntranceBeat switch
+        {
+            DragonHuntEntranceBeat.Omen => 0,
+            DragonHuntEntranceBeat.Arrival => EaseOutCubic(dragonHuntState.EntranceBeatProgress),
+            DragonHuntEntranceBeat.Reveal => 1,
+            _ => 1,
+        };
         var from = ArenaPoint(entrance.Start, width, height);
         var to = ArenaPoint(entrance.Destination, width, height);
-        activeDragon.Position = from + ((to - from) * progress);
+        activeDragon.Position = from + ((to - from) * travelProgress);
         if (dragonHuntState.Stage == DragonHuntStage.Battle) activeDragon.AttackCooldown = 1.15;
     }
 
@@ -304,7 +310,7 @@ public sealed partial class RunSimulation
     {
         if (dragon is not { Health: > 0 } activeDragon || dragonHuntState.Profile is not { } hunt) return null;
         return new DragonHuntRenderSnapshot(activeDragon.Definition.School, dragonHuntState.Stage, hunt.Arena, hunt.Entrance.Style, dragonHuntState.StageProgress,
-            hunt.Signature.Name, hunt.PhaseTwoCallout);
+            dragonHuntState.EntranceBeat, dragonHuntState.EntranceBeatProgress, hunt.Signature.Name, hunt.PhaseTwoCallout);
     }
 
     private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards

@@ -187,7 +187,8 @@ function draw(state, snapshot, width, height) {
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
-    if (snapshot.dragon) drawDragon(ctx, snapshot.dragon);
+    const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
+    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
     for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
@@ -238,8 +239,9 @@ function draw(state, snapshot, width, height) {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    drawHud(ctx, snapshot.hud, width, Boolean(snapshot.dragon));
-    if (snapshot.dragon) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
+    const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
+    drawHud(ctx, snapshot.hud, width, battleActive);
+    if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);
@@ -406,16 +408,14 @@ function drawRiftEchoTelegraph(ctx, radius, progress, alpha, palette) {
 }
 
 function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
+    if (hunt.stage === 1) {
+        drawWyrmEntranceSequence(ctx, hunt, dragon, width, height);
+        return;
+    }
+
     const palette = schoolPalette(hunt.school);
     const progress = Math.min(1, Math.max(0, hunt.stageProgress));
     const fade = Math.min(1, progress * 5, Math.max(0.25, (1 - progress) * 5));
-    const entering = hunt.stage === 1;
-    const headline = entering ? 'WYRM HUNT' : 'PHASE BREAK';
-    const detail = entering
-        ? `${dragon?.name?.toUpperCase() ?? 'UNKNOWN WYRM'} • ${dragon?.title?.toUpperCase() ?? 'THE REALM ANSWERS'}`
-        : hunt.phaseTwoCallout ?? `${dragon?.name?.toUpperCase() ?? 'THE WYRM'} UNLEASHES ITS TRUE POWER`;
-    const signature = `SIGNATURE • ${hunt.signatureName?.toUpperCase() ?? 'UNKNOWN'}`;
-
     ctx.save();
     ctx.fillStyle = `rgba(5, 4, 8, ${0.26 * fade})`;
     ctx.fillRect(0, 0, width, height);
@@ -424,15 +424,73 @@ function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
     ctx.textAlign = 'center';
     ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.95 * fade})`;
     ctx.font = '900 12px system-ui, sans-serif';
-    ctx.fillText(headline, width / 2, height * 0.47);
+    ctx.fillText('PHASE BREAK', width / 2, height * 0.47);
     ctx.fillStyle = `rgba(244, 238, 248, ${0.95 * fade})`;
     ctx.font = '900 21px system-ui, sans-serif';
-    ctx.fillText(detail, width / 2, height * 0.52);
-    if (entering) {
-        ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.78 * fade})`;
-        ctx.font = '800 10px system-ui, sans-serif';
-        ctx.fillText(signature, width / 2, height * 0.555);
+    ctx.fillText(hunt.phaseTwoCallout ?? 'THE WYRM UNLEASHES ITS TRUE POWER', width / 2, height * 0.52);
+    ctx.restore();
+}
+
+function drawWyrmEntranceSequence(ctx, hunt, dragon, width, height) {
+    const palette = schoolPalette(hunt.school);
+    const progress = Math.min(1, Math.max(0, hunt.entranceBeatProgress ?? 0));
+    ctx.save();
+
+    if (hunt.entranceBeat === 1) {
+        const pulse = 0.45 + Math.sin(performance.now() / 70) * 0.12;
+        ctx.fillStyle = `rgba(5, 4, 8, ${0.28 + progress * 0.22})`;
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = `rgba(${palette.lightRgb}, ${Math.max(0.08, pulse * progress)})`;
+        ctx.lineWidth = 2;
+        const centerX = width / 2;
+        const groundY = height * 0.78;
+        for (let index = -3; index <= 3; index++) {
+            const offset = index * 34;
+            ctx.beginPath();
+            ctx.moveTo(centerX + offset - 9, groundY + (index % 2) * 5);
+            ctx.lineTo(centerX + offset, groundY - 8 - progress * 8);
+            ctx.lineTo(centerX + offset + 10, groundY + 3);
+            ctx.stroke();
+        }
+        ctx.textAlign = 'center';
+        ctx.fillStyle = `rgba(225, 216, 232, ${0.48 + progress * 0.42})`;
+        ctx.font = '800 11px system-ui, sans-serif';
+        ctx.fillText('THE WYRMREALM TREMBLES...', width / 2, height * 0.57);
+        ctx.restore();
+        return;
     }
+
+    const barHeight = Math.max(20, height * 0.055);
+    ctx.fillStyle = 'rgba(4, 3, 7, 0.72)';
+    ctx.fillRect(0, 0, width, barHeight);
+    ctx.fillRect(0, height - barHeight, width, barHeight);
+
+    if (hunt.entranceBeat === 2) {
+        const flash = Math.max(0, progress - 0.7) / 0.3;
+        ctx.fillStyle = `rgba(${palette.rgb}, ${flash * 0.08})`;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+        return;
+    }
+
+    const slam = Math.min(1, progress * 5);
+    const fade = Math.min(1, (1 - progress) * 5, 0.4 + slam * 0.6);
+    ctx.fillStyle = `rgba(5, 4, 8, ${0.32 * fade})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = `rgba(${palette.rgb}, ${0.12 * slam})`;
+    ctx.fillRect(0, height * 0.36, width, height * 0.28);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(${palette.lightRgb}, ${fade})`;
+    ctx.font = '900 12px system-ui, sans-serif';
+    ctx.fillText('WYRM HUNT', width / 2, height * 0.425);
+    ctx.fillStyle = `rgba(248, 242, 251, ${fade})`;
+    ctx.font = `900 ${Math.min(34, Math.max(24, width * 0.065))}px system-ui, sans-serif`;
+    ctx.fillText(dragon?.name?.toUpperCase() ?? 'UNKNOWN WYRM', width / 2, height * 0.49);
+    ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.88 * fade})`;
+    ctx.font = '800 12px system-ui, sans-serif';
+    ctx.fillText(dragon?.title?.toUpperCase() ?? 'THE REALM ANSWERS', width / 2, height * 0.535);
+    ctx.font = '800 10px system-ui, sans-serif';
+    ctx.fillText(`SIGNATURE • ${hunt.signatureName?.toUpperCase() ?? 'UNKNOWN'}`, width / 2, height * 0.575);
     ctx.restore();
 }
 

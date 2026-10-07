@@ -13,6 +13,8 @@ public sealed class DragonHuntState
     public bool CanTargetDragon => Stage == DragonHuntStage.Battle;
     public bool CanDragonAct => Stage == DragonHuntStage.Battle;
     public double StageProgress => stageDuration <= 0 ? 1 : 1 - Math.Clamp(stageRemaining / stageDuration, 0, 1);
+    public DragonHuntEntranceBeat EntranceBeat => ResolveEntranceBeat();
+    public double EntranceBeatProgress => ResolveEntranceBeatProgress();
 
     public void Start(DragonHuntProfile profile)
     {
@@ -81,6 +83,32 @@ public sealed class DragonHuntState
         signatureRemaining = 0;
         phaseBreakTriggered = false;
     }
+
+    private DragonHuntEntranceBeat ResolveEntranceBeat()
+    {
+        if (Stage != DragonHuntStage.Entrance || Profile is null) return DragonHuntEntranceBeat.None;
+        var entrance = Profile.Entrance;
+        var elapsed = Math.Max(0, stageDuration - stageRemaining);
+        if (elapsed < entrance.OmenSeconds) return DragonHuntEntranceBeat.Omen;
+        if (elapsed < entrance.OmenSeconds + entrance.TravelSeconds) return DragonHuntEntranceBeat.Arrival;
+        return DragonHuntEntranceBeat.Reveal;
+    }
+
+    private double ResolveEntranceBeatProgress()
+    {
+        if (Profile is null || Stage != DragonHuntStage.Entrance) return 1;
+        var entrance = Profile.Entrance;
+        var elapsed = Math.Max(0, stageDuration - stageRemaining);
+        return ResolveEntranceBeat() switch
+        {
+            DragonHuntEntranceBeat.Omen => Progress(elapsed, entrance.OmenSeconds),
+            DragonHuntEntranceBeat.Arrival => Progress(elapsed - entrance.OmenSeconds, entrance.TravelSeconds),
+            DragonHuntEntranceBeat.Reveal => Progress(elapsed - entrance.OmenSeconds - entrance.TravelSeconds, entrance.RevealSeconds),
+            _ => 1,
+        };
+    }
+
+    private static double Progress(double elapsed, double duration) => duration <= 0 ? 1 : Math.Clamp(elapsed / duration, 0, 1);
 
     private void BeginPhaseBreak()
     {
