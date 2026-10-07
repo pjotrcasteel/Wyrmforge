@@ -78,7 +78,7 @@ internal static class BalanceReportWriter
         builder.AppendLine("## Interpretation guardrails");
         builder.AppendLine();
         builder.AppendLine("- Compare builds only inside the same cohort and agent; cohorts intentionally use different Arcane budgets.");
-        builder.AppendLine("- KeystoneRoute builds use one complete Keystone route; FullBuild builds use two-school 23-point plans.");
+        builder.AppendLine("- KeystoneRoute builds use one complete Keystone route; FullBuild builds use two-school 20-point plans.");
         builder.AppendLine("- Treat TimeLimit or DecisionFailure as agent/instrumentation problems before interpreting balance.");
         builder.AppendLine("- Check XP collection rate before blaming a build for low level cadence.");
         builder.AppendLine("- Prefer median and tail behavior over one lucky seed.");
