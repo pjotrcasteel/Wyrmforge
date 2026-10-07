@@ -15,3 +15,24 @@
 .draft-hint { display:block; margin:14px 0 0 5px; padding:9px 10px; border-left:2px solid #604979; color:#9c8ba9; background:rgba(75,52,91,.14); font-size:.66rem; line-height:1.4; }
 .role-venture + .choice-card-header .choice-rarity { color:#b89662; }
 @media (max-width:680px) { .draft-legend { grid-template-columns:1fr; gap:5px; } .draft-legend span { display:flex; gap:8px; } .draft-role { margin-bottom:7px; } }
+
+.level-up {
+    background:
+        radial-gradient(circle at 50% 38%, rgba(153, 94, 211, .15), transparent 34%),
+        rgba(5, 4, 7, .82);
+}
+
+.level-up-card {
+    animation: level-up-arrive .18s ease-out;
+    box-shadow: 0 0 0 1px rgba(184, 135, 255, .08), 0 30px 90px rgba(0, 0, 0, .55), 0 0 70px rgba(127, 72, 177, .1);
+}
+
+.level-up-card > .eyebrow {
+    color: #ca9eff;
+    text-shadow: 0 0 18px rgba(184, 135, 255, .32);
+}
+
+@keyframes level-up-arrive {
+    from { opacity: .35; transform: translateY(8px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
