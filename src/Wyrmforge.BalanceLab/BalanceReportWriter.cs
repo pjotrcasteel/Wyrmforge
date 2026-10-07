@@ -20,7 +20,7 @@ internal static class BalanceReportWriter
     private static string Csv(IReadOnlyList<RunSelfPlayMetrics> runs)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,dragonsSlain,wyrmsReached,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes");
+        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes");
 
         foreach (var run in runs)
         {
@@ -50,6 +50,7 @@ internal static class BalanceReportWriter
                 run.Synergies,
                 run.DragonsSlain,
                 run.WyrmsReached,
+                Quote(run.FirstWyrm ?? string.Empty),
                 run.FirstWyrmSeconds.HasValue ? F(run.FirstWyrmSeconds.Value) : string.Empty,
                 run.EncounterBreathingRooms,
                 run.EncounterClimaxes,
@@ -80,12 +81,22 @@ internal static class BalanceReportWriter
         }
 
         builder.AppendLine();
+        builder.AppendLine("## Wyrm encounter outcomes");
+        builder.AppendLine();
+        builder.AppendLine("| First Wyrm | Reached | Win after reach | Extracted run | Median arrival |");
+        builder.AppendLine("| --- | ---: | ---: | ---: | ---: |");
+        foreach (var wyrm in report.Wyrms)
+        {
+            builder.AppendLine($"| {wyrm.Wyrm} | {wyrm.RunsReached} | {wyrm.WinRate:P0} | {wyrm.ExtractionRate:P0} | {wyrm.MedianFirstWyrmSeconds:0}s |");
+        }
+
+        builder.AppendLine();
         builder.AppendLine("## Interpretation guardrails");
         builder.AppendLine();
         builder.AppendLine("- Compare builds only inside the same cohort and agent; cohorts intentionally use different Arcane budgets.");
         builder.AppendLine("- KeystoneRoute builds use one complete Keystone route; FullBuild builds use two-school 20-point plans.");
         builder.AppendLine("- Treat TimeLimit or DecisionFailure as agent/instrumentation problems before interpreting balance.");
-        builder.AppendLine("- Use Wyrm reach, conditional Wyrm win rate and first-Wyrm timing to separate pre-hunt encounter problems from Wyrm-fight problems.");
+        builder.AppendLine("- Use Wyrm reach, conditional Wyrm win rate, first-Wyrm timing and the per-Wyrm table to separate pre-hunt problems from individual hunt problems.");
         builder.AppendLine("- Breathing-room and climax counts verify the Combat Director is actually being experienced.");
         builder.AppendLine("- Check XP collection rate before blaming a build for low level cadence.");
         builder.AppendLine("- Prefer median and tail behavior over one lucky seed.");
