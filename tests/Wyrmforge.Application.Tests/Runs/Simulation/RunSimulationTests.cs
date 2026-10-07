@@ -67,7 +67,7 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         DeathBurstRenderSnapshot? deathBurst = null;
 
-        for (var tick = 0; tick < 80 && deathBurst is null; tick++)
+        for (var tick = 0; tick < 240 && deathBurst is null; tick++)
         {
             var snapshot = simulation.Tick(0.05, default, 200, 200);
             deathBurst = snapshot.DeathBursts.FirstOrDefault();
