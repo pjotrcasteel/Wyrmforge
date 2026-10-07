@@ -81,5 +81,5 @@ internal static class BalanceReportWriter
     }
 
     private static string F(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
-    private static string Quote(string value) => $""{value.Replace(""", """", StringComparison.Ordinal)}"";
+    private static string Quote(string value) => "\"" + value.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
 }
