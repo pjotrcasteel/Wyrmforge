@@ -62,7 +62,9 @@ jobs:
         run: |
           sed -i 's#<base href="/" />#<base href="/Wyrmforge/" />#' ./artifacts/web/wwwroot/index.html
           sed -i "s#__WYRMFORGE_BUILD__#${GITHUB_SHA}#g" ./artifacts/web/wwwroot/index.html
+          cp ./artifacts/web/wwwroot/index.html ./artifacts/web/wwwroot/404.html
           touch ./artifacts/web/wwwroot/.nojekyll
+          test -f ./artifacts/web/wwwroot/404.html
           test -f ./artifacts/web/wwwroot/_framework/blazor.webassembly.js
           grep -q '<base href="/Wyrmforge/" />' ./artifacts/web/wwwroot/index.html
           grep -q "${GITHUB_SHA}" ./artifacts/web/wwwroot/index.html
