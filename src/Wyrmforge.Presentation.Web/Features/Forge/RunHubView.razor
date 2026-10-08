@@ -1,6 +1,7 @@
 @using Wyrmforge.Application.Runs.Offerings
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
+@using Wyrmforge.Domain.Progression.GreatHunt
 
 <section class="run-hub">
     <header class="run-hero">
@@ -86,7 +87,7 @@
             }
         </article>
     </div>
-    <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" />
+    <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" />
 </section>
 
 @code {
@@ -94,6 +95,7 @@
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
+    [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public int BestScore { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
