@@ -2,6 +2,19 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
+## Prototype 0.0.82 — Ascendant Stormcoil: Stormbound Halo
+
+**The next playable Great Hunt challenge** builds on the existing oath, Mastery and Ascendant architecture instead of adding a prestige currency.
+
+- Seal the **Oath of the Unbroken Sky** to invoke **Ascendant Stormcoil** from the Run Hub; the Ashfang rite remains available and choosing either deselects the other. Ordinary runs and Depth I remain unchanged.
+- At the Depth II gate, a chosen Ascendant forces its corresponding Wyrm once per run. Stormcoil receives an extended, school-colored cinematic reveal and a distinct **Skybreak Crossing** signature: a warning corridor of lightning runs horizontally, then vertically; phase two adds an angled third crossing. Telegraphs and strike radii are scaled for portrait and landscape movement.
+- Winning permanently awards the **Stormbound Halo** trophy, celebrated post-run and displayed at the Great Hunt altar. Saved Ashfang crowns and sealed oaths remain compatible with the existing v1 save record.
+- All four ordinary Wyrms retain their signatures. The other two Ascendants are **not** represented as playable yet; Rimeclaw, Voidweaver and Elder Wyrms remain future milestones.
+- Deterministic attack geometry, exclusive rite selection, persistent reward semantics and mobile/browser coverage are included. Balance and actual player experience remain subject to feedback; no flat account stat bonuses are awarded.
+- The existing consent-only 0.0.81 playtest collector stays live. Reports include game version; first-cohort feedback must be interpreted carefully if testers played different deployed versions.
+
+**Next:** validate mobile readability and intensity in human testing while returning to the two remaining distinct Ascendant encounters, then Elder Wyrms. Keep Build Evolution open for future mechanical branches.
+
 ## Playtest feedback insights — scheduled aggregation
 
 The external playtest collector can now produce an automatic, privacy-safe development summary without exposing individual tester records. A scheduled GitHub workflow queries aggregate counts, ratings and recent-run metrics through Cloudflare D1, excludes the owner's synthetic integration test, and publishes only aggregate data after a ten-report privacy threshold.

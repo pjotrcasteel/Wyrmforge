@@ -51,14 +51,15 @@
             </section>
         }
 
-        @if (NewAscendantVictories.Count > 0)
+        @foreach (var wyrm in NewAscendantVictories)
         {
+            var rite = AscendantRiteCatalog.Get(wyrm);
             <section class="run-ascendant-victory" aria-label="Ascendant Wyrm conquered">
                 <span>✦ ASCENDANT CONQUERED ✦</span>
-                <div aria-hidden="true">♛</div>
-                <h3>The Crown of Embers</h3>
-                <p>You endured Crownfall and brought down Ascendant Ashfang. Your permanent Crown now shines in the Great Hunt altar.</p>
-                <strong>NEW TROPHY • ASCENDANT ASHFANG REMAINS REPLAYABLE</strong>
+                <div aria-hidden="true">@(wyrm == DragonId.Stormcoil ? "ϟ" : "♛")</div>
+                <h3>The @rite.Trophy</h3>
+                <p>@rite.VictoryStory</p>
+                <strong>NEW TROPHY • ASCENDANT @wyrm REMAINS REPLAYABLE</strong>
             </section>
         }
 
@@ -73,7 +74,7 @@
                     <h3>@oath.Name</h3>
                     <p>All four deeds completed. Your permanent Great Hunt seal now burns in the Forge and Codex.</p>
                 }
-                <strong>ASCENDANT PATH PREPARED • NEW ENCOUNTER IN A FUTURE CHAPTER</strong>
+                <strong>ASCENDANT PATH PREPARED • INSPECT THE GREAT HUNT ALTAR</strong>
             </section>
         }
         @if (AdvancedOaths.Count > 0)

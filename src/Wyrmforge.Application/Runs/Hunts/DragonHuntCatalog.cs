@@ -124,6 +124,38 @@ public static class DragonHuntCatalog
         PhaseTwoCallout = "THE CROWN DIVIDES THE SKY",
     };
 
+
+    // A moving three-beat lightning puzzle: transverse crossing, longitudinal crossing,
+    // then a diagonal discharge during the second phase. Entirely separate from Tempest Cage.
+    public static DragonHuntProfile AscendantStormcoil { get; } = Stormcoil with
+    {
+        Entrance = Stormcoil.Entrance with { OmenSeconds = 0.95, TravelSeconds = 1.1, RevealSeconds = 1.65 },
+        PhaseBreakSeconds = 1.8,
+        Pressure = Stormcoil.Pressure with
+        {
+            Cadence = new DragonHuntPressureCadence(new DragonPhaseValues(5.2, 4.0), new DragonPhaseValues(0.98, 0.8)),
+        },
+        Signature = Stormcoil.Signature with
+        {
+            Kind = DragonHuntSignatureKind.SkybreakCrossing,
+            Name = "Skybreak Crossing",
+            IntervalSeconds = new DragonPhaseValues(10.4, 7.6),
+            TelegraphSeconds = new DragonPhaseValues(1.15, 0.95),
+            Radius = new DragonPhaseValues(36, 40),
+            Damage = new DragonPhaseValues(24, 32),
+            PhaseOneStrikes = 10,
+            PhaseTwoStrikes = 15,
+        },
+        PhaseTwoCallout = "THE STORM REVERSES ITS CURRENT",
+    };
+
+    public static DragonHuntProfile GetAscendant(DragonId id) => id switch
+    {
+        DragonId.Ashfang => AscendantAshfang,
+        DragonId.Stormcoil => AscendantStormcoil,
+        _ => throw new InvalidOperationException($"No Ascendant encounter has been implemented for {id}."),
+    };
+
     public static IReadOnlyList<DragonHuntProfile> All { get; } = [Ashfang, Stormcoil, Rimeclaw, Voidweaver];
 
     public static DragonHuntProfile Get(DragonId id) => All.Single(profile => profile.Dragon == id);

@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Progression.GreatHunt;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
@@ -16,14 +17,15 @@ public sealed partial class RunSimulation
     private readonly HashSet<SpellId> qualifiedWyrmFeats = [];
     private readonly HashSet<DragonId> deepEvolvedWyrmDuels = [];
     private readonly HashSet<DragonId> ascendantVictories = [];
-    private bool ascendantChallengeEnabled;
+    private DragonId? selectedAscendant;
     private bool ascendantHuntConsumed;
     private bool ascendantActive;
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
-    internal void EnableAscendantAshfang(bool enabled) => ascendantChallengeEnabled = enabled;
-    public bool AscendantRiteSelected => ascendantChallengeEnabled;
+    internal void EnableAscendantAshfang(bool enabled) => selectedAscendant = enabled ? DragonId.Ashfang : null;
+    internal void EnableAscendantRite(DragonId? wyrm) => selectedAscendant = wyrm is { } id && AscendantRiteCatalog.IsAvailable(id) ? id : null;
+    public bool AscendantRiteSelected => selectedAscendant.HasValue;
 
     private void UpdateDragonEncounter(double delta, double width, double height)
     {
@@ -180,9 +182,9 @@ public sealed partial class RunSimulation
         enemies.Clear();
         projectiles.Clear();
         lightning.Clear();
-        ascendantActive = AscendantAshfangRule.IsEncounter(ascendantChallengeEnabled, ascendantHuntConsumed, depthState.Depth, definition.Id);
+        ascendantActive = AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
         if (ascendantActive) ascendantHuntConsumed = true;
-        var hunt = ascendantActive ? DragonHuntCatalog.AscendantAshfang : DragonHuntCatalog.Get(definition.Id);
+        var hunt = ascendantActive ? DragonHuntCatalog.GetAscendant(definition.Id) : DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
         dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1));
@@ -309,7 +311,8 @@ public sealed partial class RunSimulation
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
         var definition = activeDragon.Definition;
-        return new DragonRenderSnapshot(ascendantActive ? "Ascendant Ashfang" : definition.Name, ascendantActive ? "The Crown of Embers" : definition.Title,
+        var rite = ascendantActive ? AscendantRiteCatalog.Get(definition.Id) : null;
+        return new DragonRenderSnapshot(ascendantActive ? $"Ascendant {definition.Name}" : definition.Name, rite is null ? definition.Title : $"The {rite.Trophy}",
             definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
             activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
         { IsAscendant = ascendantActive };

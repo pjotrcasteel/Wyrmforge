@@ -2,6 +2,7 @@
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Domain.Progression.GreatHunt
+@using Wyrmforge.Domain.Combat.Dragons
 
 <main class="game-shell">
     <aside class="shell-rail" aria-label="Wyrmforge navigation">
@@ -67,8 +68,8 @@
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
     [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
-    [Parameter] public bool AscendantSelected { get; set; }
-    [Parameter] public EventCallback<bool> OnAscendantChanged { get; set; }
+    [Parameter] public DragonId? AscendantSelected { get; set; }
+    [Parameter] public EventCallback<DragonId?> OnAscendantChanged { get; set; }
     [Parameter] public int BestScore { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }

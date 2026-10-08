@@ -52,7 +52,7 @@ public sealed class GreatHuntState
                 Slain = current.Slain || slain,
                 EssenceSecured = current.EssenceSecured || essence,
                 DeepEvolvedDuel = current.DeepEvolvedDuel || duel,
-                AscendantDefeated = current.AscendantDefeated || (oath.Wyrm == DragonId.Ashfang && evidence.AscendantVictories.Contains(oath.Wyrm)),
+                AscendantDefeated = current.AscendantDefeated || (AscendantRiteCatalog.IsAvailable(oath.Wyrm) && slain && evidence.AscendantVictories.Contains(oath.Wyrm)),
             };
             if (updated == current) continue;
             entries[oath.Wyrm] = updated;
