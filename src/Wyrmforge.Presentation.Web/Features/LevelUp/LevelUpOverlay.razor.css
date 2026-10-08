@@ -218,3 +218,5 @@
     }
     .evo-stage .evo-confirm-icon,.evo-stage .evo-confirmation h2 { animation: none !important; }
 }
+
+.evolution-draft .evo-crossroads.run-overlay-surface { width: min(760px, 100%) !important; }
