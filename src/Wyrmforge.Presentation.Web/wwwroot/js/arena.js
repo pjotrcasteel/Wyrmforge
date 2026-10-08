@@ -263,7 +263,7 @@ function drawHuntArena(ctx, hunt, width, height) {
     if (hunt.isAscendant) {
         ctx.save();
         const breadth = Math.min(width, height);
-        ctx.strokeStyle = 'rgba(246, 190, 100, .24)';
+        ctx.strokeStyle = `rgba(${palette.lightRgb}, .24)`;
         ctx.lineWidth = 2;
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
@@ -272,7 +272,7 @@ function drawHuntArena(ctx, hunt, width, height) {
             ctx.lineTo(width / 2 + side * breadth * .37, height * .5);
             ctx.stroke();
         }
-        ctx.strokeStyle = 'rgba(255, 208, 119, .17)';
+        ctx.strokeStyle = `rgba(${palette.lightRgb}, .17)`;
         ctx.setLineDash([10, 12]);
         ctx.beginPath();
         ctx.ellipse(width / 2, height * .56, breadth * .45, breadth * .35, 0, 0, Math.PI * 2);
@@ -356,6 +356,7 @@ function drawHuntHazard(ctx, hazard) {
     else if (hazard.signature === 3) drawGlacialWallTelegraph(ctx, radius, progress, alpha, palette);
     else if (hazard.signature === 4) drawRiftEchoTelegraph(ctx, radius, progress, alpha, palette);
     else if (hazard.signature === 5) drawCrownfallTelegraph(ctx, radius, progress, alpha);
+    else if (hazard.signature === 6) drawSkybreakCrossingTelegraph(ctx, radius, progress, alpha, palette);
     else drawGenericHuntTelegraph(ctx, radius, progress, alpha, palette);
 
     ctx.restore();
@@ -377,6 +378,31 @@ function drawCrownfallTelegraph(ctx, radius, progress, alpha) {
     ctx.strokeStyle = `rgba(255, 229, 165, ${alpha * .9})`;
     ctx.beginPath();
     ctx.arc(0, 0, radius * (1 - progress * .65), 0, Math.PI * 2);
+    ctx.stroke();
+}
+
+function drawSkybreakCrossingTelegraph(ctx, radius, progress, alpha, palette) {
+    // Each node signals a charged relay on a shared crossing path; it is not a Tempest Cage ring.
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${alpha})`;
+    ctx.fillStyle = `rgba(${palette.rgb}, ${0.09 * alpha})`;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    const reach = radius * (.64 + progress * .18);
+    for (let index = -1; index <= 1; index++) {
+        const shift = index * radius * .19;
+        ctx.moveTo(-reach + shift, -reach);
+        ctx.lineTo(-radius * .11 + shift, 0);
+        ctx.lineTo(radius * .17 + shift, -radius * .05);
+        ctx.lineTo(reach + shift, reach);
+    }
+    ctx.strokeStyle = `rgba(${palette.lightRgb}, ${Math.min(1, alpha * 1.2)})`;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * (1 - progress * .6), 0, Math.PI * 2);
     ctx.stroke();
 }
 
@@ -495,7 +521,9 @@ function drawWyrmEntranceSequence(ctx, hunt, dragon, width, height) {
         ctx.textAlign = 'center';
         ctx.fillStyle = `rgba(225, 216, 232, ${0.5 + progress * 0.44})`;
         ctx.font = '900 11px system-ui, sans-serif';
-        ctx.fillText(hunt.isAscendant ? 'THE FIRST CROWN AWAKENS' : 'THE WYRMREALM TREMBLES', width / 2, height * 0.56);
+        ctx.fillText(hunt.isAscendant
+            ? (hunt.school === 3 ? 'THE SKY REMEMBERS YOUR NAME' : 'THE FIRST CROWN AWAKENS')
+            : 'THE WYRMREALM TREMBLES', width / 2, height * 0.56);
         ctx.restore();
         return;
     }
@@ -878,9 +906,9 @@ function drawDragon(ctx, dragon) {
     }
 
     if (dragon.isAscendant) {
-        ctx.strokeStyle = 'rgba(255, 208, 123, .75)';
+        ctx.strokeStyle = `rgba(${palette.lightRgb}, .75)`;
         ctx.lineWidth = 3;
-        ctx.shadowColor = 'rgba(255, 174, 65, .65)';
+        ctx.shadowColor = `rgba(${palette.rgb}, .65)`;
         ctx.shadowBlur = 17;
         ctx.beginPath();
         ctx.arc(0, 0, dragon.radius * 1.65, -Math.PI * .84, -Math.PI * .16);
@@ -894,7 +922,7 @@ function drawDragon(ctx, dragon) {
     else drawStormWyrm(ctx, dragon, palette);
 
     if (dragon.isAscendant) {
-        ctx.fillStyle = '#ffe3a2';
+        ctx.fillStyle = palette.edge;
         const peak = dragon.radius * 1.35;
         for (let index = -1; index <= 1; index++) {
             const x = index * dragon.radius * .38;
