@@ -235,6 +235,7 @@ public partial class Home
             }
         }
         catch (JSException) { }
+        catch (JsonException) { }
     }
 
     private async Task PersistFirstHuntAsync()

@@ -62,8 +62,9 @@
     <nav class="mobile-nav" aria-label="Wyrmforge navigation">
         @foreach (var item in Navigation)
         {
-            <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty)" @onclick="() => Navigate(item.Section)">
-                <span class="nav-icon">@item.Icon</span>
+            <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty) @(!IsUnlocked(item.Section) ? "chapter-locked" : string.Empty)"
+                disabled="@(!IsUnlocked(item.Section))" title="@NavHelp(item.Section)" aria-label="@NavHelp(item.Section)" @onclick="() => Navigate(item.Section)">
+                <span class="nav-icon">@(!IsUnlocked(item.Section) ? "🔒" : item.Icon)</span>
                 <span>@item.Label</span>
             </button>
         }
