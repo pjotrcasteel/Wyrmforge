@@ -13,7 +13,7 @@ public sealed partial class RunSimulation
 
     private void UpdateSpawn(double delta, double width, double height)
     {
-        if (dragon is { Health: > 0 }) return;
+        if (developmentHunt || dragon is { Health: > 0 }) return;
         var mapEncounter = mapState.EncounterActive;
         if (mapEncounter) encounterDirector.Tick(delta);
         if (mapEncounter && encounterDirector.Directive.SuppressSpawns)
@@ -118,6 +118,7 @@ public sealed partial class RunSimulation
 
     private void DamagePlayer(double rawDamage)
     {
+        if (developmentInvulnerable) return;
         if (passiveProfile.WinterShell && player.WinterShellGuardRemaining > 0) return;
 
         if (passiveProfile.WinterShell && player.Barrier)
