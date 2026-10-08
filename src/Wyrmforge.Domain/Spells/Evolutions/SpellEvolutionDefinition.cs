@@ -7,4 +7,5 @@ public sealed record SpellEvolutionDefinition(
     string Description,
     string Icon,
     SpellEvolutionProfile Profile,
-    bool RequiresForgeUnlock = false);
+    bool RequiresForgeUnlock = false,
+    bool RequiresMasteryUnlock = false);
