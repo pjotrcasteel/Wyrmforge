@@ -20,6 +20,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         try
         {
             await OpenAsync();
+            await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
+            var mobileForge = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Forge" });
+            await mobileForge.EvaluateAsync("element => element.click()");
+            await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
+            await ScreenshotAsync("mobile-forge-goals.png");
             var mobileBuild = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Build" });
             await mobileBuild.EvaluateAsync("element => element.click()");
             await Expect(Page.GetByText("ARCANE ATLAS", new() { Exact = true })).ToBeVisibleAsync();
@@ -52,6 +57,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await OpenAsync();
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "ENTER WYRMREALM" })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-home.png");
+            await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
+            var desktopForge = Page.Locator("aside.shell-rail button").Filter(new LocatorFilterOptions { HasText = "Forge" });
+            await desktopForge.EvaluateAsync("element => element.click()");
+            await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
+            await ScreenshotAsync("desktop-forge-goals.png");
 
             var desktopBuild = Page.Locator("aside.shell-rail button").Filter(new LocatorFilterOptions { HasText = "Build" });
             await desktopBuild.EvaluateAsync("element => element.click()");
