@@ -2,7 +2,15 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.77 — The Great Hunt: Four Ancient Oaths
+## Prototype 0.0.78 — Mobile combat HUD and post-run clarity
+
+- The score, health, experience and spells now share one responsive HUD surface alongside the current trail objective. Encounter progress stays live; there are no overlapping floating blocks.
+- The Exit text button becomes an accessible running/retreat icon with a 44px mobile touch target. The action still abandons the run.
+- Post-run results lead with score, build, journey, earned Mastery and cinematic unlocks; Replay and Return are visible without first scrolling on a typical phone.
+- Spell/relic/synergy inventory and the three long-term pursuit goals remain available in optional expandable report sections rather than filling the entire initial results screen.
+- Mobile browser coverage checks aligned HUD sections, retreat affordance, immediately visible results actions, expanded report access and return to Forge.
+
+### 0.0.77 — The Great Hunt: Four Ancient Oaths
 
 The Forge now holds a living Great Hunt altar. Its four permanent, Wyrm-specific oaths connect ordinary hunts and existing Spell Mastery to long-term aspirational seals. No new currency, flat account-stat inflation or disconnected prestige loop is introduced.
 

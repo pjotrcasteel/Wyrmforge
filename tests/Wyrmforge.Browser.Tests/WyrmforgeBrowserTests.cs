@@ -147,7 +147,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await OpenAsync();
             await EnterFirstTrailAsync();
             await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+            await Expect(Page.Locator(".combat-vitals")).ToBeVisibleAsync();
+            await Expect(Page.Locator("button.leave-run svg")).ToBeVisibleAsync();
             await Page.WaitForTimeoutAsync(1200);
+            var vitals = await Page.Locator(".combat-vitals").BoundingBoxAsync();
+            var objective = await Page.GetByLabel("Current encounter objective").BoundingBoxAsync();
+            Assert.IsNotNull(vitals);
+            Assert.IsNotNull(objective);
+            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.Y - objective.Y), "Vitals and trail must share one aligned HUD row.");
+            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.X + vitals.Width - objective.X), "No gap between HUD sections.");
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
             Assert.IsLessThanOrEqualTo(1, overflow, $"Mobile combat overflows horizontally by {overflow:0.#}px.");
@@ -157,6 +165,35 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await StopTraceAsync("mobile-combat-trace.zip");
         }
+    }
+
+    [TestMethod]
+    public async Task Mobile_RunResults_ShowActionsWithoutScrollingAndExpandDetailsOnDemand()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Abandon run" }).ClickAsync();
+
+        var report = Page.Locator(".run-report-card");
+        await Expect(report).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Return to Wyrmforge" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "↻ Replay seed" })).ToBeVisibleAsync();
+        Assert.IsFalse(await Page.Locator("details.run-report-details").EvaluateAsync<bool>("node => node.open"));
+        Assert.IsFalse(await Page.Locator("details.run-report-next").EvaluateAsync<bool>("node => node.open"));
+
+        var actionBox = await Page.Locator(".run-report-actions").BoundingBoxAsync();
+        Assert.IsNotNull(actionBox);
+        Assert.IsLessThanOrEqualTo(844, actionBox.Y + actionBox.Height, "Replay and Return must be visible without scrolling on a phone.");
+        await ScreenshotAsync("mobile-run-results-compact.png");
+
+        await Page.Locator("details.run-report-details > summary").ClickAsync();
+        await Expect(Page.Locator(".run-report-expanded .run-report-section").First).ToBeVisibleAsync();
+        await Page.Locator("details.run-report-next > summary").ClickAsync();
+        await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Return to Wyrmforge" }).ClickAsync();
+        await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
     }
 
     [TestMethod]
