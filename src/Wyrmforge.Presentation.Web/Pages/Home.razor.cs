@@ -219,7 +219,14 @@ public partial class Home
         try
         {
             var saved = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FirstHuntKey);
-            if (int.TryParse(saved, out var count)) { firstHunt.Restore(count); return; }
+            if (int.TryParse(saved, out var count))
+            {
+                firstHunt.Restore(count);
+                var persistedBuild = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneBuildKey);
+                // Migrated accounts were already playing with all 24 points before Arcane budget persistence existed.
+                if (count >= 2 && string.IsNullOrWhiteSpace(persistedBuild)) selection.RestoreBudget(PassiveTreeCatalog.TotalPoints);
+                return;
+            }
             var previousPlaytest = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, "wyrmforge.playtest.v1");
             var previousRuns = false;
             if (!string.IsNullOrEmpty(previousPlaytest))
