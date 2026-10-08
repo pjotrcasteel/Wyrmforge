@@ -27,6 +27,23 @@ public sealed class RunContentProfileTests
     }
 
     [TestMethod]
+    public void From_WyrmforgedLineage_AddsBranchOnlyAfterMasteryAndWyrmFeat()
+    {
+        var forge = new ForgeProgressionState();
+        var mastery = new Wyrmforge.Domain.Progression.SpellMastery.SpellMasteryState();
+        var evidence = new Wyrmforge.Domain.Progression.SpellMastery.MasteryRunEvidence(
+            1, 2, false, new HashSet<Wyrmforge.Domain.Combat.Dragons.DragonId> { Wyrmforge.Domain.Combat.Dragons.DragonId.Ashfang },
+            [new Wyrmforge.Domain.Progression.SpellMastery.MasteryRunSpell(SpellId.FireBolt, 3)]);
+
+        Assert.IsFalse(RunContentProfile.From(forge, mastery).Evolutions.Contains(SpellEvolutionId.Wyrmfire));
+        for (var run = 0; run < 4; run++) mastery.RecordRun(evidence);
+        var unlocked = RunContentProfile.From(forge, mastery);
+        Assert.IsTrue(unlocked.Evolutions.Contains(SpellEvolutionId.Wyrmfire));
+        Assert.IsFalse(unlocked.Evolutions.Contains(SpellEvolutionId.GlacialRequiem));
+        Assert.IsTrue(unlocked.Evolutions.Contains(SpellEvolutionId.MeteorHeart));
+    }
+
+    [TestMethod]
     public void From_ForgedMasteries_AddsUnlockedSpellAndRelicToFutureRuns()
     {
         var progression = new ForgeProgressionState();

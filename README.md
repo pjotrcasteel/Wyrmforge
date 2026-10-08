@@ -2,7 +2,20 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.75 — Forge 2.0
+## Prototype 0.0.76 — Spell Mastery & Wyrmforged Lineages
+
+Persistent spell growth now gives the next few hunts a specific purpose. Repeated **meaningful** use of a spell and a matching Wyrm feat awaken a rare new evolution that enters future Rank III crossroads. This is a new *possibility*, never a flat permanent damage bonus.
+
+- **Four new Wyrmforged evolutions:** Fire Bolt → Wyrmfire (Ashfang); Frost Shard → Glacial Requiem (Rimeclaw); Chain Lightning → Tempest Ascendant (Stormcoil); Arcane Orb → Void Constellation (Voidweaver).
+- Each lineage requires **four meaningful hunts** featuring its spell at Rank II+ and **defeating its associated Wyrm with that spell at Rank III**. Both objectives can progress in any order.
+- A meaningful hunt must clear at least one trail; abandoned runs and instant restarts award no mastery. A run awards mastery at most once, with duplicate game-over notifications guarded.
+- Spell mastery survives reloads using a versioned local save key and can be restored independently of existing Forge and Codex data.
+- The Codex shows evocative clues, progress toward both requirements and only reveals the evolved form once earned.
+- The Run Hub, Forge's Hunt Ledger and post-run results now mix Forge objectives with long-term spell mastery goals instead of showing only Essence tasks.
+- An earned lineage receives a large post-run discovery moment and immediately becomes eligible for future evolution choices. The normal two-base-branch choice remains intact for fresh players.
+- Great Hunt / Ascendant Wyrms and mastery coverage for additional spells remain later content/endgame work; this milestone establishes the proven long-term unlock loop.
+
+### 0.0.75 — Forge 2.0
 
 The Forge now provides **three actionable next hunts** before and after a run, and within the Forge itself. Goals are based on actual discovered Wyrm lineages, required secured Essence, and unfinished masteries—not daily chores or flat account-stat rewards.
 
