@@ -53,6 +53,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Rimeclaw") }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Rimeclaw" })).ToBeVisibleAsync();
             await ScreenshotAsync("mobile-forge-sanctum.png");
+            await Page.Locator("details.sanctum-great-hunt > summary").ClickAsync();
+            var oaths = Page.GetByRole(AriaRole.Navigation, new() { Name = "Inspect a Great Hunt oath" });
+            await Expect(oaths).ToBeVisibleAsync();
+            await oaths.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Voidweaver") }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Oath Beyond the Veil" })).ToBeVisibleAsync();
+            await ScreenshotAsync("great-hunt-altar.png");
             await Page.Locator("details.sanctum-ledger > summary").ClickAsync();
             await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("PREPARE NEXT HUNT") }).ClickAsync();
@@ -60,6 +66,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             var mobileCodex = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Codex" });
             await mobileCodex.ClickAsync();
             await Expect(Page.GetByText("WYRMFORGED SPELL LINEAGES", new() { Exact = true })).ToBeVisibleAsync();
+            await Expect(Page.Locator(".codex-view .great-hunt-altar")).ToBeVisibleAsync();
             await ScreenshotAsync("mobile-mastery-codex.png");
             var mobileBuild = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Build" });
             await mobileBuild.EvaluateAsync("element => element.click()");
@@ -101,6 +108,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Stormcoil") }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Stormcoil" })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-forge-sanctum.png");
+            await Page.Locator("details.sanctum-great-hunt > summary").ClickAsync();
+            var oaths = Page.GetByRole(AriaRole.Navigation, new() { Name = "Inspect a Great Hunt oath" });
+            await Expect(oaths).ToBeVisibleAsync();
+            await oaths.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Voidweaver") }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Oath Beyond the Veil" })).ToBeVisibleAsync();
+            await ScreenshotAsync("great-hunt-altar.png");
             await Page.Locator("details.sanctum-ledger > summary").ClickAsync();
             await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("PREPARE NEXT HUNT") }).ClickAsync();

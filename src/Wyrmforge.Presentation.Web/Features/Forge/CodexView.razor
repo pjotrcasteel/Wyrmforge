@@ -4,6 +4,7 @@
 @using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
+@using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Spells.Evolutions
 @using Wyrmforge.Domain.Spells.Synergies
 
@@ -69,6 +70,11 @@
     </section>
 
     <section class="codex-section">
+        <div class="section-heading"><span class="section-kicker">THE GREAT HUNT</span><small>@Hunt.CompletedCount(Masteries) / 4 oaths sealed</small></div>
+        <GreatHuntPanel Hunt="Hunt" Masteries="Masteries" />
+    </section>
+
+    <section class="codex-section">
         <div class="section-heading"><span class="section-kicker">SPELLS</span><small>@SpellCatalog.All.Count known designs</small></div>
         <div class="codex-grid compact">
             @foreach (var spell in SpellCatalog.All)
@@ -115,4 +121,5 @@
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
+    [Parameter] public GreatHuntState Hunt { get; set; } = new();
 }

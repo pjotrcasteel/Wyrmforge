@@ -1,0 +1,68 @@
+@using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.GreatHunt
+@using Wyrmforge.Domain.Progression.SpellMastery
+@using Wyrmforge.Domain.Spells
+
+<section class="great-hunt-altar" aria-label="Great Hunt oath altar">
+    <div class="hunt-altar-heading">
+        <div>
+            <span class="section-kicker">FOUR OATHS • ONE LEGEND</span>
+            <h2>Let the realm remember.</h2>
+            <p>Earn permanent seals through real hunts. Each oath prepares an Ascendant path; the encounters themselves arrive in the next combat chapter.</p>
+        </div>
+        <strong>@Hunt.CompletedCount(Masteries) / @GreatHuntCatalog.All.Count SEALED</strong>
+    </div>
+
+    <nav class="hunt-oath-sigils" aria-label="Inspect a Great Hunt oath">
+        @foreach (var oath in GreatHuntCatalog.All)
+        {
+            var complete = Hunt.IsSealed(oath.Wyrm, Masteries);
+            var selected = ActiveOath.Wyrm == oath.Wyrm;
+            <button type="button" class="hunt-oath-sigil @(selected ? "active" : string.Empty) @(complete ? "sealed" : string.Empty)"
+                    aria-pressed="@selected" @onclick="() => Select(oath.Wyrm)">
+                <span class="hunt-oath-rune" aria-hidden="true">@oath.Rune</span>
+                <span>@DragonCatalog.Get(oath.Wyrm).Name</span>
+                <small>@(complete ? "SEALED" : $"{Count(oath)} / 4")</small>
+            </button>
+        }
+    </nav>
+
+    <div class="hunt-altar-stage @(Hunt.IsSealed(ActiveOath.Wyrm, Masteries) ? "awakened" : string.Empty)" aria-live="polite">
+        <div class="hunt-altar-crest" aria-hidden="true"><span>@ActiveOath.Rune</span></div>
+        <div class="hunt-altar-story">
+            <span class="section-kicker">@(Hunt.IsSealed(ActiveOath.Wyrm, Masteries) ? "OATH SEALED • ASCENDANT PATH PREPARED" : "AN ANCIENT OATH IS CALLING")</span>
+            <h3>@ActiveOath.Name</h3>
+            <p>@ActiveOath.Legend</p>
+            <div class="hunt-altar-steps">
+                <div class="@(Entry.Slain ? "fulfilled" : string.Empty)"><b>@(Entry.Slain ? "✦" : "◇")</b><span>Slay @Wyrm.Name</span></div>
+                <div class="@(Entry.EssenceSecured ? "fulfilled" : string.Empty)"><b>@(Entry.EssenceSecured ? "✦" : "◇")</b><span>Secure @Wyrm.Name Essence</span></div>
+                <div class="@(Entry.DeepEvolvedDuel ? "fulfilled" : string.Empty)"><b>@(Entry.DeepEvolvedDuel ? "✦" : "◇")</b><span>Defeat at Depth II+ with evolved @Wyrm.School magic</span></div>
+                <div class="@(LineageAwakened ? "fulfilled" : string.Empty)"><b>@(LineageAwakened ? "✦" : "◇")</b><span>Awaken @SpellCatalog.Get(ActiveOath.LineageSpell).Name's Wyrmforged lineage</span></div>
+            </div>
+            @if (Hunt.IsSealed(ActiveOath.Wyrm, Masteries))
+            {
+                <div class="hunt-seal-reward">✦ ETERNAL SEAL CLAIMED <small>The Ascendant rite is prepared. A new challenge will awaken in a future chapter.</small></div>
+            }
+            else
+            {
+                var goal = GreatHuntGoalPlanner.Next(Hunt, Masteries, 4).First(goal => goal.Wyrm == ActiveOath.Wyrm);
+                <div class="hunt-next-oath"><strong>NEXT PURSUIT</strong><span>@goal.Objective</span></div>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public GreatHuntState Hunt { get; set; } = null!;
+    [Parameter, EditorRequired] public SpellMasteryState Masteries { get; set; } = null!;
+
+    private DragonId? selectedOath;
+    private GreatHuntOath ActiveOath => GreatHuntCatalog.Get(selectedOath
+        ?? GreatHuntGoalPlanner.Next(Hunt, Masteries, 1).FirstOrDefault()?.Wyrm
+        ?? DragonId.Ashfang);
+    private DragonDefinition Wyrm => DragonCatalog.Get(ActiveOath.Wyrm);
+    private GreatHuntEntry Entry => Hunt.Get(ActiveOath.Wyrm);
+    private bool LineageAwakened => Masteries.Get(ActiveOath.LineageSpell).Unlocked;
+    private int Count(GreatHuntOath oath) => Hunt.Get(oath.Wyrm).Feats + (Masteries.Get(oath.LineageSpell).Unlocked ? 1 : 0);
+    private void Select(DragonId wyrm) => selectedOath = wyrm;
+}

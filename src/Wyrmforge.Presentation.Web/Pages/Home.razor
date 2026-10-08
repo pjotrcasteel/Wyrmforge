@@ -2,7 +2,7 @@
 
 @if (!runActive)
 {
-    <ForgeView Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" SelectedOffering="selectedOffering" BestScore="bestScore"
+    <ForgeView Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore"
         OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" />
 }
 else
@@ -12,7 +12,7 @@ else
 
 @if (summary is not null)
 {
-    <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" />
+    <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" />
 }
 
 <div style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>

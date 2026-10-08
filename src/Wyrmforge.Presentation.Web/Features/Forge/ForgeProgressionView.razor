@@ -4,6 +4,7 @@
 @using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Spells.Evolutions
 @using Wyrmforge.Domain.Progression.SpellMastery
+@using Wyrmforge.Domain.Progression.GreatHunt
 
 <section class="forge-view forge-sanctum" aria-label="Wyrmforge sanctum">
     <header class="sanctum-heading">
@@ -151,6 +152,11 @@
         </section>
     </div>
 
+    <details class="sanctum-drawer sanctum-great-hunt" aria-label="The Great Hunt oaths">
+        <summary><span>✦ <b>THE GREAT HUNT</b></span><span>@Hunt.CompletedCount(Masteries) / 4 OATHS SEALED <i>⌄</i></span></summary>
+        <GreatHuntPanel Hunt="Hunt" Masteries="Masteries" />
+    </details>
+
     <details class="sanctum-drawer" aria-label="Essence vault and next-run offerings">
         <summary><span>◇ <b>ESSENCE VAULT &amp; OFFERING ALTAR</b></span><span>@Vault.TotalCount SECURED • @(SelectedOffering is null ? "NO OFFERING" : "OFFERING SELECTED") <i>⌄</i></span></summary>
         <div class="sanctum-drawer-body">
@@ -189,7 +195,7 @@
 
     <details class="sanctum-drawer sanctum-ledger" aria-label="Your next hunts">
         <summary><span>⚔ <b>HUNT LEDGER</b></span><span>YOUR NEXT THREE PURSUITS <i>⌄</i></span></summary>
-        <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Compact="true" />
+        <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" Compact="true" />
     </details>
 </section>
 
@@ -197,6 +203,7 @@
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
+    [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }

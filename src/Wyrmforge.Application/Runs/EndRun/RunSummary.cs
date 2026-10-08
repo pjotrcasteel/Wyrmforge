@@ -25,6 +25,7 @@ public sealed record RunSummary(
     public IReadOnlyList<SynergyId> SynergyIds { get; init; } = Array.Empty<SynergyId>();
     public IReadOnlyList<DragonId> DragonIds { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<SpellId> WyrmMasteryFeats { get; init; } = Array.Empty<SpellId>();
+    public IReadOnlyList<DragonId> DeepEvolvedWyrmDuels { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<RunSpellSummary> SpellLoadout { get; init; } = Array.Empty<RunSpellSummary>();
     public IReadOnlyList<RunUpgradeSummary> UpgradeLoadout { get; init; } = Array.Empty<RunUpgradeSummary>();
     public IReadOnlyList<RunRelicSummary> RelicLoadout { get; init; } = Array.Empty<RunRelicSummary>();

@@ -143,3 +143,11 @@ The endgame succeeds when the player can finish a run, look at the Forge/Codex, 
 > "I want to do that next."
 
 Preferably in three different directions.
+
+## 0.0.77 implementation: the first Great Hunt layer
+
+Four oath seals are earned by slaying each Wyrm, preserving at least one of its Essences, performing a school-matched evolved defeat at Depth II+ and awakening the related Wyrmforged Spell Lineage. Conditions accumulate independently across meaningful runs. A seal becomes a permanent ceremonial trophy and marks an Ascendant path as prepared; no encounter is represented as playable until its distinct combat mechanics ship.
+
+The Great Hunt altar is a compact, selectable ritual surface in the Forge sanctum and Codex, not a separate currency shop. The goals board reserves space for Forge, Spell Mastery and Great Hunt horizons while those pursuits remain active. Existing Forge discoveries restore historically known slay/Essence feats; older deep evolved duels cannot be inferred accurately, so they must be earned moving forward.
+
+**Next gameplay gate:** implement a distinctly telegraphed Ascendant hunt with fair portrait/mobile positioning, novel attack sequencing and clear encounter unlock/selection, then evaluate feel and deterministic balance. After Ascendants, extend the chain toward Elder Wyrms. Continue extending Build Evolution where new mechanics genuinely alter builds.

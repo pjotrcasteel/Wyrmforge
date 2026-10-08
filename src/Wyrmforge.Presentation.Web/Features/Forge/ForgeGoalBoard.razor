@@ -1,19 +1,20 @@
 @using Wyrmforge.Domain.Progression.DragonEssences
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
+@using Wyrmforge.Domain.Progression.GreatHunt
 
 <section class="forge-goal-board @(Compact ? "compact" : string.Empty)" aria-label="Your next hunts">
     <header>
         <div>
             <span class="section-kicker">THE HUNT CONTINUES</span>
             <h2>Your next three pursuits</h2>
-            <p>Recover Essence, forge new possibilities and awaken hidden spell lineages.</p>
+            <p>Forge new possibilities, awaken hidden lineages and prepare your Great Hunt oaths.</p>
         </div>
-        <span class="forge-goal-count">@Progression.MasteryCount FORGED • @Masteries.UnlockedCount LINEAGES</span>
+        <span class="forge-goal-count">@Progression.MasteryCount FORGED • @Masteries.UnlockedCount LINEAGES • @Hunt.CompletedCount(Masteries) OATHS</span>
     </header>
     @if (Goals.Count == 0)
     {
-        <p class="forge-goal-complete">All currently available Forge and Wyrmforged mastery goals have been completed. The Great Hunt will expand these pursuits.</p>
+        <p class="forge-goal-complete">All current Forge, spell mastery and Great Hunt oaths are sealed. Await the Ascendant chapter.</p>
     }
     else
     {
@@ -35,22 +36,28 @@
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
+    [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public bool Compact { get; set; }
 
     private IReadOnlyList<HuntGoal> Goals
     {
         get
         {
-            var forge = ForgeGoalPlanner.Next(Progression, Vault);
-            var mastery = SpellMasteryGoalPlanner.Next(Masteries);
-            var forgeCount = mastery.Count > 0 ? Math.Min(forge.Count, 2) : 3;
-            var selected = forge.Take(forgeCount).Select(goal => new HuntGoal(goal.Title, goal.Objective, goal.Reward, goal.Progress,
-                goal.Required, goal.ReadyToForge, goal.ReadyToForge ? "READY TO FORGE" : "NEXT HUNT")).ToList();
-            selected.AddRange(mastery.Take(3 - selected.Count).Select(goal =>
-                new HuntGoal(goal.Title, goal.Objective, goal.Reward, goal.Progress, goal.Required, false, "SPELL MASTERY")));
-            if (selected.Count < 3) selected.AddRange(forge.Skip(forgeCount).Take(3 - selected.Count).Select(goal =>
-                new HuntGoal(goal.Title, goal.Objective, goal.Reward, goal.Progress, goal.Required, goal.ReadyToForge, "NEXT HUNT")));
-            return selected;
+            var forge = ForgeGoalPlanner.Next(Progression, Vault).Select(goal =>
+                new HuntGoal(goal.Title, goal.Objective, goal.Reward, goal.Progress, goal.Required, goal.ReadyToForge,
+                    goal.ReadyToForge ? "READY TO FORGE" : "FORGE")).ToArray();
+            var mastery = SpellMasteryGoalPlanner.Next(Masteries).Select(goal =>
+                new HuntGoal(goal.Title, goal.Objective, goal.Reward, goal.Progress, goal.Required, false, "SPELL MASTERY")).ToArray();
+            var hunt = GreatHuntGoalPlanner.Next(Hunt, Masteries).Select(goal =>
+                new HuntGoal(goal.Title, goal.Objective, goal.Reward, goal.Progress, goal.Required, false, "GREAT HUNT")).ToArray();
+            var goals = new List<HuntGoal>();
+            if (forge.Length > 0) goals.Add(forge[0]);
+            if (mastery.Length > 0) goals.Add(mastery[0]);
+            if (hunt.Length > 0) goals.Add(hunt[0]);
+            goals.AddRange(forge.Skip(forge.Length > 0 ? 1 : 0));
+            goals.AddRange(mastery.Skip(mastery.Length > 0 ? 1 : 0));
+            goals.AddRange(hunt.Skip(hunt.Length > 0 ? 1 : 0));
+            return goals.Take(3).ToArray();
         }
     }
 

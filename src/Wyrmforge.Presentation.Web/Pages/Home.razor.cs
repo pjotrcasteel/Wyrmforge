@@ -7,6 +7,7 @@ using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Domain.Progression.Codex;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
+using Wyrmforge.Domain.Progression.GreatHunt;
 using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Domain.Spells.Evolutions;
@@ -22,11 +23,15 @@ public partial class Home
     private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
     private const string ForgeMasteryKey = "wyrmforge.forgeMastery";
     private const string SpellMasteryKey = "wyrmforge.spellMastery.v1";
+    private const string GreatHuntKey = "wyrmforge.greatHunt.v1";
     private readonly PassiveTreeSelection selection = new();
     private readonly DragonEssenceVault essenceVault = new();
     private readonly ArcaneCodex arcaneCodex = new();
     private readonly ForgeProgressionState forgeProgression = new();
     private readonly SpellMasteryState spellMastery = new();
+    private readonly GreatHuntState greatHunt = new();
+    private IReadOnlyList<Wyrmforge.Domain.Combat.Dragons.DragonId> advancedOaths = [];
+    private IReadOnlyList<Wyrmforge.Domain.Combat.Dragons.DragonId> newlySealedOaths = [];
     private IReadOnlyList<SpellEvolutionId> newlyUnlockedLineages = [];
     private IReadOnlyList<Wyrmforge.Domain.Spells.SpellId> advancedSpellIds = [];
     private int lastCreditedRunNumber = -1;
@@ -48,6 +53,8 @@ public partial class Home
         await TryLoadForgeProgressionAsync();
         await TryLoadForgeMasteryAsync();
         await TryLoadSpellMasteryAsync();
+        await TryLoadGreatHuntAsync();
+        if (greatHunt.ReconcileForgeHistory(forgeProgression)) await TrySetGreatHuntAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
         StateHasChanged();
@@ -72,6 +79,8 @@ public partial class Home
     {
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
+        advancedOaths = [];
+        newlySealedOaths = [];
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
@@ -89,6 +98,7 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
         var mastery = spellMastery.RecordRun(new MasteryRunEvidence(
             value.CompletedRouteNodes,
             value.Depth,
@@ -98,6 +108,11 @@ public partial class Home
         newlyUnlockedLineages = mastery.NewlyUnlocked;
         advancedSpellIds = mastery.Progressed;
         if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();
+        advancedOaths = greatHunt.RecordRun(new GreatHuntRunEvidence(value.CompletedRouteNodes, value.Outcome == RunOutcome.Abandoned,
+            value.DragonIds.ToHashSet(), value.DeepEvolvedWyrmDuels.ToHashSet(), value.EssenceIds));
+        newlySealedOaths = GreatHuntCatalog.All.Where(oath => !oldSeals.Contains(oath.Wyrm) && greatHunt.IsSealed(oath.Wyrm, spellMastery))
+            .Select(oath => oath.Wyrm).ToArray();
+        if (advancedOaths.Count > 0 || newlySealedOaths.Count > 0) await TrySetGreatHuntAsync();
         summary = value;
         var codexChanged = false;
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
@@ -121,6 +136,8 @@ public partial class Home
         summary = null;
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
+        advancedOaths = [];
+        newlySealedOaths = [];
         runNumber++;
         runActive = true;
         return Task.CompletedTask;
@@ -211,6 +228,29 @@ public partial class Home
         {
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, SpellMasteryKey,
                 JsonSerializer.Serialize(spellMastery.Snapshot()));
+        }
+        catch (JSException) { }
+    }
+
+    private async Task TryLoadGreatHuntAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, GreatHuntKey);
+            if (string.IsNullOrWhiteSpace(stored)) return;
+            var saved = JsonSerializer.Deserialize<GreatHuntEntry[]>(stored);
+            if (saved is not null) greatHunt.Restore(saved);
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task TrySetGreatHuntAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, GreatHuntKey,
+                JsonSerializer.Serialize(greatHunt.Snapshot()));
         }
         catch (JSException) { }
     }
