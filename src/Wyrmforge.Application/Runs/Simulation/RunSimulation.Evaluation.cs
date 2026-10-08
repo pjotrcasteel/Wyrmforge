@@ -43,6 +43,7 @@ public sealed partial class RunSimulation
             RareRouteNodes = completedRouteNodes.Count(node => node.Rarity == WyrmrealmNodeRarity.Rare),
             DragonIds = defeatedDragonIds.OrderBy(id => id).ToArray(),
             WyrmMasteryFeats = qualifiedWyrmFeats.OrderBy(id => id).ToArray(),
+            DeepEvolvedWyrmDuels = deepEvolvedWyrmDuels.OrderBy(id => id).ToArray(),
             SpellLoadout = spellLoadout,
             UpgradeLoadout = upgradeLoadout,
             RelicLoadout = relicLoadout,

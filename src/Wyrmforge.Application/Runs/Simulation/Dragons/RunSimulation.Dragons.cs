@@ -14,6 +14,7 @@ public sealed partial class RunSimulation
     private readonly DragonHuntState dragonHuntState = new();
     private readonly List<DragonHuntHazardState> dragonHuntHazards = [];
     private readonly HashSet<SpellId> qualifiedWyrmFeats = [];
+    private readonly HashSet<DragonId> deepEvolvedWyrmDuels = [];
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
@@ -272,6 +273,7 @@ public sealed partial class RunSimulation
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
+        if (GreatHuntDuelQualification.Qualifies(definition, depthState.Depth, build.Spells, build.Evolutions)) deepEvolvedWyrmDuels.Add(definition.Id);
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
