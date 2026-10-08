@@ -13,6 +13,7 @@ public sealed class WyrmFeatTimingTests
     {
         var spells = new SpellBook();
         Assert.IsTrue(spells.LearnOrUpgrade(SpellId.FireBolt));
+        Assert.IsTrue(spells.LearnOrUpgrade(SpellId.FireBolt));
 
         var feats = SpellLineageCatalog.FeatsEarnedAtDefeat(DragonId.Ashfang, spells);
 
@@ -25,6 +26,7 @@ public sealed class WyrmFeatTimingTests
     public void FeatsEarnedAtDefeat_SpellAlreadyMastered_AwardsMatchingWyrmOnly()
     {
         var spells = new SpellBook();
+        Assert.IsTrue(spells.LearnOrUpgrade(SpellId.FireBolt));
         Assert.IsTrue(spells.LearnOrUpgrade(SpellId.FireBolt));
         Assert.IsTrue(spells.LearnOrUpgrade(SpellId.FireBolt));
 
