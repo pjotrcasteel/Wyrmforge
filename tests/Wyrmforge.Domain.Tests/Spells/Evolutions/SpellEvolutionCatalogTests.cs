@@ -14,7 +14,7 @@ public sealed class SpellEvolutionCatalogTests
         {
             var branches = SpellEvolutionCatalog.For(spell.Id).Where(evolution => !evolution.RequiresForgeUnlock).ToArray();
 
-            Assert.AreEqual(2, branches.Count, $"{spell.Name} should have exactly two base evolution branches.");
+            Assert.AreEqual(2, branches.Length, $"{spell.Name} should have exactly two base evolution branches.");
             Assert.AreEqual(2, branches.Select(branch => branch.Id).Distinct().Count());
             Assert.IsTrue(branches.All(branch => branch.Spell == spell.Id));
             Assert.IsTrue(branches.All(branch => branch.Profile != SpellEvolutionProfile.Identity));
