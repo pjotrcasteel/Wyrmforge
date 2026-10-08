@@ -4,6 +4,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -12,6 +13,7 @@ public sealed partial class RunSimulation
 {
     private readonly DragonHuntState dragonHuntState = new();
     private readonly List<DragonHuntHazardState> dragonHuntHazards = [];
+    private readonly HashSet<SpellId> qualifiedWyrmFeats = [];
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
@@ -270,6 +272,10 @@ public sealed partial class RunSimulation
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
+        foreach (var lineage in SpellLineageCatalog.All.Where(lineage => lineage.Wyrm == definition.Id))
+        {
+            if (build.Spells[lineage.Spell] >= SpellCatalog.Get(lineage.Spell).MaxRank) qualifiedWyrmFeats.Add(lineage.Spell);
+        }
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
         score += (int)(dragonScore * depthState.ScoreMultiplier);

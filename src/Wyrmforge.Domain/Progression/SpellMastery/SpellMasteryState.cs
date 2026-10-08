@@ -12,7 +12,7 @@ public sealed record SpellMasteryEntry(SpellId Spell, int MeaningfulRuns, int Be
 
 public sealed record MasteryRunSpell(SpellId Spell, int Rank);
 public sealed record MasteryRunEvidence(int CompletedRoutes, int Depth, bool Abandoned,
-    IReadOnlySet<DragonId> WyrmsSlain, IReadOnlyList<MasteryRunSpell> Spells);
+    IReadOnlySet<SpellId> QualifiedWyrmFeats, IReadOnlyList<MasteryRunSpell> Spells);
 
 public sealed record MasteryRunProgress(IReadOnlyList<SpellId> Progressed, IReadOnlyList<SpellEvolutionId> NewlyUnlocked);
 
@@ -44,7 +44,7 @@ public sealed class SpellMasteryState
             if (spell is null || spell.Rank < 2) continue;
 
             var previous = Get(lineage.Spell);
-            var feat = previous.WyrmFeat || spell.Rank >= 3 && evidence.WyrmsSlain.Contains(lineage.Wyrm);
+            var feat = previous.WyrmFeat || evidence.QualifiedWyrmFeats.Contains(lineage.Spell);
             var next = previous with
             {
                 MeaningfulRuns = Math.Min(9999, previous.MeaningfulRuns + 1),

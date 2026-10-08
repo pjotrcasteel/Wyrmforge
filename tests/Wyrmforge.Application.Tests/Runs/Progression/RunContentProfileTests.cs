@@ -32,7 +32,7 @@ public sealed class RunContentProfileTests
         var forge = new ForgeProgressionState();
         var mastery = new Wyrmforge.Domain.Progression.SpellMastery.SpellMasteryState();
         var evidence = new Wyrmforge.Domain.Progression.SpellMastery.MasteryRunEvidence(
-            1, 2, false, new HashSet<Wyrmforge.Domain.Combat.Dragons.DragonId> { Wyrmforge.Domain.Combat.Dragons.DragonId.Ashfang },
+            1, 2, false, new HashSet<SpellId> { SpellId.FireBolt },
             [new Wyrmforge.Domain.Progression.SpellMastery.MasteryRunSpell(SpellId.FireBolt, 3)]);
 
         Assert.IsFalse(RunContentProfile.From(forge, mastery).Evolutions.Contains(SpellEvolutionId.Wyrmfire));

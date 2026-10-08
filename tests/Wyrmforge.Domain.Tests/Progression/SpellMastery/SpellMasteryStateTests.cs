@@ -79,7 +79,9 @@ public sealed class SpellMasteryStateTests
     }
 
     private static MasteryRunEvidence Evidence(SpellId spell, int rank, params DragonId[] wyrms)
-        => new(1, 2, false, wyrms.ToHashSet(), [new MasteryRunSpell(spell, rank)]);
+        => new(1, 2, false,
+            rank >= 3 && wyrms.Contains(SpellLineageCatalog.Get(spell).Wyrm) ? new HashSet<SpellId> { spell } : new HashSet<SpellId>(),
+            [new MasteryRunSpell(spell, rank)]);
 }
 
 [TestClass]
@@ -100,7 +102,7 @@ public sealed class SpellMasteryGoalPlannerTests
     {
         var state = new SpellMasteryState();
         for (var run = 0; run < 4; run++) state.RecordRun(
-            new MasteryRunEvidence(1, 3, false, new HashSet<DragonId> { DragonId.Ashfang }, [new MasteryRunSpell(SpellId.FireBolt, 3)]));
+            new MasteryRunEvidence(1, 3, false, new HashSet<SpellId> { SpellId.FireBolt }, [new MasteryRunSpell(SpellId.FireBolt, 3)]));
 
         var goals = SpellMasteryGoalPlanner.Next(state, 4);
 

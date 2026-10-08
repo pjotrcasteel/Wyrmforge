@@ -93,7 +93,7 @@ public partial class Home
             value.CompletedRouteNodes,
             value.Depth,
             value.Outcome == RunOutcome.Abandoned,
-            value.DragonIds.ToHashSet(),
+            value.WyrmMasteryFeats.ToHashSet(),
             value.SpellLoadout.Select(spell => new MasteryRunSpell(spell.Id, spell.Rank)).ToArray()));
         newlyUnlockedLineages = mastery.NewlyUnlocked;
         advancedSpellIds = mastery.Progressed;
