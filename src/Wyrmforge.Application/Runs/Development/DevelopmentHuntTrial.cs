@@ -51,7 +51,7 @@ public sealed class DevelopmentHuntTrial
             var observation = new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false);
             snapshot = simulation.Tick(tick, agent.ChooseMovement(observation), setup.Width, setup.Height);
             seconds += tick;
-            minRatio = Math.Min(minRatio, snapshot.Hud.Health / Math.Max(1, snapshot.Hud.MaxHealth));
+            minRatio = Math.Min(minRatio, Math.Clamp(snapshot.Hud.Health / Math.Max(1, snapshot.Hud.MaxHealth), 0, 1));
             damage += Math.Max(0, previousHealth - snapshot.Hud.Health);
             previousHealth = snapshot.Hud.Health;
             secondPhase |= snapshot.Dragon?.Phase == 2 || snapshot.Hunt?.Stage == DragonHuntStage.PhaseBreak;
@@ -75,6 +75,6 @@ public sealed class DevelopmentHuntTrial
         var summary = simulation.CreateEvaluationSummary();
         var victory = summary.DragonIds.Contains(setup.Wyrm);
         return new DevelopmentHuntTrialResult(setup, build.Name, personality, victory, simulation.IsEnded && !victory, secondPhase,
-            seconds, snapshot.Hud.Health, minRatio, damage, warnings, warningExposure, activeExposure, patterns);
+            seconds, Math.Max(0, snapshot.Hud.Health), minRatio, damage, warnings, warningExposure, activeExposure, patterns);
     }
 }
