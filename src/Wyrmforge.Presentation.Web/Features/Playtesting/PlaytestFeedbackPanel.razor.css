@@ -27,3 +27,9 @@
 .playtest-action-footer .playtest-footer { margin-top:7px; }
 .playtest-action-footer .playtest-footer button { min-height:32px;font-size:.65rem; }
 @media(max-width:600px) { .playtest-dialog { padding:0; }.playtest-scroll { padding:15px; }.playtest-action-footer { padding:9px 15px; } }
+
+.playtest-consent { display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px;border:1px solid #75548e;border-radius:11px;background:rgba(97,64,124,.12);color:#e2d1ec;font-size:.73rem;line-height:1.5;cursor:pointer; }
+.playtest-consent input { flex:0 0 auto;width:19px;height:19px;accent-color:#be8eef; }
+.playtest-send { width:100%;min-height:49px;margin-bottom:9px;padding:11px;border:1px solid #e9c9f7;border-radius:12px;background:linear-gradient(135deg,#e6c3ff,#b784ee);color:#23132e;font-size:.79rem;font-weight:950;letter-spacing:.06em;cursor:pointer;touch-action:manipulation; }
+.playtest-send:disabled { opacity:.5;cursor:not-allowed; }
+.playtest-action-footer:has(.playtest-send) .playtest-share { background:transparent;border:1px solid #765c87;color:#e4d1ee;min-height:40px;font-size:.7rem; }

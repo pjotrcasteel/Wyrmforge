@@ -6,7 +6,7 @@
     <section class="playtest-dialog" role="dialog" aria-modal="true" aria-labelledby="playtest-title">
         <div class="playtest-scroll">
         <header class="playtest-heading">
-            <div><span class="playtest-kicker">COMMUNITY PLAYTEST • 0.0.80</span><h2 id="playtest-title">Help shape the Wyrmrealm</h2></div>
+            <div><span class="playtest-kicker">COMMUNITY PLAYTEST • 0.0.81</span><h2 id="playtest-title">Help shape the Wyrmrealm</h2></div>
             <button class="playtest-close" aria-label="Close playtest feedback" @onclick="CloseAsync">✕</button>
         </header>
         <p class="playtest-intro">Tell us what actually felt good, confusing or frustrating. It takes about a minute. All answers are optional.</p>
@@ -46,10 +46,18 @@
             <input type="checkbox" @bind="includeRuns" />
             <span>Include my last 12 run summaries, seeds, gameplay milestones and sampled performance.</span>
         </label>
-        <p class="playtest-privacy">Report data stays on this device until you choose to share. No names, email addresses, IP addresses or full device identifiers appear in the report. You choose the recipient.</p>
+        <p class="playtest-privacy">Your report stays on this device until you choose to send or share it. The report contains no name, email, IP address or full device identifier. Please avoid personal details in free-text answers.</p>
+        @if (collectorAvailable)
+        {
+            <label class="playtest-consent"><input type="checkbox" @bind="consentToSend" /><span>I agree to send my answers and @(includeRuns ? "recent gameplay evidence" : "summary gameplay counts") to the private WyrmForge playtest collector. Reports are kept for up to 30 days and can be deleted by the organizer.</span></label>
+        }
         </div>
         <div class="playtest-action-footer">
-        <button class="playtest-share" disabled="@sending" @onclick="ShareAsync">@(sending ? "PREPARING REPORT…" : "SHARE PLAYTEST REPORT")</button>
+        @if (collectorAvailable)
+        {
+            <button class="playtest-send" disabled="@(sending || !consentToSend)" @onclick="SendAsync">@(sending ? "SENDING…" : "SEND FEEDBACK PRIVATELY")</button>
+        }
+        <button class="playtest-share" disabled="@sending" @onclick="ShareAsync">@(sending ? "PREPARING REPORT…" : "SHARE / DOWNLOAD JSON")</button>
         @if (!string.IsNullOrEmpty(status))
         {
             <p class="playtest-status" role="status">@status</p>
@@ -72,8 +80,40 @@
     private string bestMoment = "";
     private string improvement = "";
     private bool includeRuns = true;
+    private bool collectorAvailable;
+    private bool consentToSend;
     private bool sending;
     private string status = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try { collectorAvailable = await JavaScript.InvokeAsync<bool>("wyrmforgePlaytest.collectorReady", CancellationToken.None); }
+        catch (JSException) { collectorAvailable = false; }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SendAsync()
+    {
+        if (sending || !consentToSend || !collectorAvailable) return;
+        sending = true;
+        status = "";
+        try
+        {
+            var result = await JavaScript.InvokeAsync<string>("wyrmforgePlaytest.sendDirect", CancellationToken.None, Answers());
+            status = result switch
+            {
+                "sent" => "Received. Thank you! Your playtest report is now in the private feedback inbox.",
+                "rate_limited" => "Too many submissions from this connection. Please wait or share the JSON manually.",
+                _ => "We could not confirm delivery. Nothing has been acknowledged; try again or use Share / Download JSON.",
+            };
+            if (result == "sent") consentToSend = false;
+        }
+        catch (JSException) { status = "Could not contact the collector. Please use Share / Download JSON instead."; }
+        finally { sending = false; }
+    }
+
+    private object Answers() => new { enjoyment, clarity, replay, troubleArea, bestMoment, improvement, includeRuns };
 
     private async Task ShareAsync()
     {
@@ -82,10 +122,7 @@
         status = "";
         try
         {
-            var result = await JavaScript.InvokeAsync<string>("wyrmforgePlaytest.share", CancellationToken.None, new
-            {
-                enjoyment, clarity, replay, troubleArea, bestMoment, improvement, includeRuns,
-            });
+            var result = await JavaScript.InvokeAsync<string>("wyrmforgePlaytest.share", CancellationToken.None, Answers());
             status = result switch
             {
                 "shared" => "Thanks! Your report was handed to the app you selected. Please send it to your playtest organizer.",

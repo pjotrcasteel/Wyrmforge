@@ -43,6 +43,14 @@ These are **targets**, not claims about results:
 
 Collect observations in a brief moderated session when practical; **offline reports alone cannot measure true page exits or silent drop-offs**.
 
+## Central collection (0.0.81)
+
+A Cloudflare Worker + D1 collector has now been implemented, but **sending centrally must be enabled by provisioning Cloudflare and setting the public HTTPS endpoint**. Before that happens, the 0.0.80 manual share/download flow remains available.
+
+Once enabled, testers can tick an explicit consent checkbox and press **Send feedback privately**. A successful response confirms receipt; transport failures are not treated as successful. Reports are held for up to 30 days and accessible only to the organizer with an administrator token. No feedback is silently uploaded, and opting out of recent runs remains supported.
+
+See [deployment and private reporting guide](collector-deployment.md).
+
 ## Automatic collection is an explicit follow-up
 
 GitHub Pages cannot safely accept writes from arbitrary browsers by itself. To collect passive session analytics or direct submissions, choose and deploy a secure HTTPS intake (e.g. a serverless endpoint with storage and retention policy). Add explicit opt-in, payload validation, rate limiting, CORS protection and restricted access to reports; never embed a privileged GitHub token or database write key in the public game. The current build intentionally does **not** claim automatic uploads.

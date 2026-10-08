@@ -38,6 +38,25 @@ jobs:
       - name: Publish web
         run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web -p:SourceRevisionId=${GITHUB_SHA}
 
+      - name: Prepare public collector endpoint
+        env:
+          WYRMFORGE_FEEDBACK_ENDPOINT: ${{ vars.WYRMFORGE_FEEDBACK_ENDPOINT }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          endpoint = os.environ.get("WYRMFORGE_FEEDBACK_ENDPOINT", "").strip()
+          if endpoint:
+              url = urlsplit(endpoint)
+              if url.scheme != "https" or not url.hostname or url.username or url.password or url.query or url.fragment or url.path != "/v1/reports":
+                  raise SystemExit("WYRMFORGE_FEEDBACK_ENDPOINT must be a clean HTTPS /v1/reports URL")
+          Path("artifacts/web/wwwroot/playtest-collector-config.json").write_text(json.dumps({"endpoint": endpoint}) + "\n", encoding="utf-8")
+          print("Feedback intake configured:", bool(endpoint))
+          PY
+
       - name: Prepare GitHub Pages
         run: |
           sed -i 's#<base href="/" />#<base href="/Wyrmforge/" />#' ./artifacts/web/wwwroot/index.html

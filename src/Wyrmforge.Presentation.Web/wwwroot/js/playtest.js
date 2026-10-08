@@ -121,5 +121,43 @@
         state = blank();
         try { localStorage.removeItem(key); } catch { /* No storage available. */ }
     }
-    window.wyrmforgePlaytest = { startRun, milestone, performanceSample, finishRun, buildReport, share, clear };
+    let endpointPromise;
+    async function getCollectorEndpoint() {
+        endpointPromise ??= (async () => {
+            try {
+                const response = await fetch(new URL('playtest-collector-config.json', document.baseURI), {
+                    cache: 'no-store', credentials: 'omit'
+                });
+                if (!response.ok) return null;
+                const config = await response.json();
+                const uri = new URL(config.endpoint);
+                if (uri.protocol !== 'https:' || uri.pathname !== '/v1/reports' || uri.search || uri.hash || uri.username || uri.password) return null;
+                return uri.href;
+            } catch { return null; }
+        })();
+        return endpointPromise;
+    }
+    async function collectorReady() { return (await getCollectorEndpoint()) !== null; }
+    async function sendDirect(answers) {
+        const endpoint = await getCollectorEndpoint();
+        if (!endpoint) return 'unavailable';
+        const report = buildReport(answers);
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 12000);
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store', redirect: 'error',
+                referrerPolicy: 'no-referrer', signal: controller.signal,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ consent: true, report })
+            });
+            if (response.status === 429) return 'rate_limited';
+            if (!response.ok) return 'failure';
+            const receipt = await response.json();
+            return receipt?.accepted === true && receipt.id === report.id ? 'sent' : 'failure';
+        } catch { return 'unavailable'; }
+        finally { clearTimeout(timer); }
+    }
+
+    window.wyrmforgePlaytest = { startRun, milestone, performanceSample, finishRun, buildReport, share, clear, collectorReady, sendDirect };
 })();
