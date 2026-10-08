@@ -3,70 +3,94 @@
 @using Wyrmforge.Domain.Spells.Evolutions
 
 <div class="level-up run-overlay @(EvolutionDraft ? "evolution-draft" : string.Empty)">
-    @if (EvolutionDraft && revealing)
+    @if (EvolutionDraft)
     {
-        <section class="evo-ceremony school-@SchoolClass" role="dialog" aria-label="Spell evolving" aria-live="polite">
-            <div class="evo-ceremony-content">
-                <div class="evo-overline">RANK III • MASTERED</div>
-                <div class="evo-transformation">
-                    <div class="evo-ring outer"></div>
-                    <div class="evo-ring inner"></div>
-                    <div class="evo-original-icon">@EvolutionSpellIcon</div>
-                    <div class="evo-possible-forms">
-                        @foreach (var choice in Choices)
-                        {
-                            <span>@choice.Icon</span>
-                        }
+        <div class="evo-stage school-@SchoolClass">
+            <section class="evo-ceremony @(revealing ? "evo-visible" : "evo-withdrawn")" role="status" aria-label="Spell evolving" aria-hidden="@(!revealing)">
+                <div class="evo-ceremony-content">
+                    <div class="evo-overline">RANK III • MASTERED</div>
+                    <div class="evo-transformation">
+                        <div class="evo-ring outer"></div>
+                        <div class="evo-ring inner"></div>
+                        <div class="evo-original-icon">@EvolutionSpellIcon</div>
+                        <div class="evo-possible-forms">
+                            @foreach (var choice in Choices)
+                            {
+                                <span>@choice.Icon</span>
+                            }
+                        </div>
                     </div>
+                    <h2>@EvolutionSpellName</h2>
+                    <p>IS EVOLVING...</p>
+                    <div class="evo-ceremony-instruction">NEW FORMS ARE AWAKENING</div>
                 </div>
-                <h2>@EvolutionSpellName</h2>
-                <p>IS EVOLVING...</p>
-                <div class="evo-ceremony-instruction">TWO FATES ARE AWAKENING</div>
-            </div>
-            <button class="evo-skip" @onclick="SkipReveal" aria-label="Skip spell evolution animation">Skip animation <span>»</span></button>
-        </section>
-    }
-    else if (EvolutionDraft && confirmingChoice is { } selected)
-    {
-        <section class="evo-ceremony evo-confirmation school-@SchoolClass" role="status" aria-live="assertive">
-            <div class="evo-ceremony-content">
-                <div class="evo-overline">A NEW FORM IS FORGED</div>
-                <div class="evo-confirm-icon">@selected.Icon</div>
-                <h2>@selected.Name</h2>
-                <p>@EvolutionSpellName HAS EVOLVED</p>
-                <div class="evo-ceremony-instruction">THIS FORM IS YOURS FOR THE REST OF THE HUNT</div>
-            </div>
-        </section>
+                @if (revealing)
+                {
+                    <button class="evo-skip" @onclick="SkipReveal" aria-label="Skip spell evolution animation">Skip animation <span>»</span></button>
+                }
+            </section>
+
+            <section class="level-up-card run-overlay-surface evo-crossroads @(revealing || confirmingChoice is not null ? "evo-withdrawn" : "evo-visible")"
+                     aria-hidden="@(revealing || confirmingChoice is not null)">
+                <div class="eyebrow">SPELL EVOLUTION • @EvolutionSpellName</div>
+                <h2>Choose what the spell becomes</h2>
+                <p>Two fates await. Choose one permanent transformation for this hunt; the other closes.</p>
+                <div class="upgrade-choices">
+                    @foreach (var choice in Choices)
+                    {
+                        <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice)"
+                                disabled="@(revealing || confirmingChoice is not null)" @onclick="() => ChooseAsync(choice)">
+                            <span class="choice-card-header">
+                                <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
+                                <span class="choice-rarity">@choice.Rarity</span>
+                            </span>
+                            <span class="upgrade-icon">@choice.Icon</span>
+                            <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
+                            <strong>@choice.Name</strong>
+                            <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>
+                            <small>@choice.Description</small>
+                            @if (!string.IsNullOrWhiteSpace(choice.Hint))
+                            {
+                                <span class="draft-hint">@choice.Hint</span>
+                            }
+                            <span class="choice-footer">@LevelChoicePresentation.Footer(choice)</span>
+                        </button>
+                    }
+                </div>
+                <p class="evo-crossroads-warning">ONE PATH FOR THIS HUNT • NO SECOND CHANCE</p>
+            </section>
+
+            @if (confirmingChoice is { } selected)
+            {
+                <section class="evo-ceremony evo-confirmation @(finishing ? "evo-withdrawn" : "evo-visible")" role="status" aria-live="polite">
+                    <div class="evo-ceremony-content">
+                        <div class="evo-overline">A NEW FORM IS FORGED</div>
+                        <div class="evo-confirm-icon">@selected.Icon</div>
+                        <h2>@selected.Name</h2>
+                        <p>@EvolutionSpellName HAS EVOLVED</p>
+                        <div class="evo-ceremony-instruction">THIS FORM IS YOURS FOR THE REST OF THE HUNT</div>
+                    </div>
+                </section>
+            }
+        </div>
     }
     else
     {
         <section class="level-up-card run-overlay-surface">
-            @if (EvolutionDraft)
-            {
-                <div class="eyebrow">SPELL EVOLUTION • @EvolutionSpellName</div>
-                <h2>Choose what the spell becomes</h2>
-                <p>Two fates await. Choose one permanent transformation for this hunt; the other closes.</p>
-            }
-            else
-            {
-                <div class="eyebrow">LEVEL @Level • RUN DRAFT</div>
-                <h2>Choose what this run becomes</h2>
-                <p>Your Arcane Web set the intent. The realm now asks whether you deepen it, converge on an interaction, or pivot.</p>
-                <div class="draft-legend" aria-label="Draft directions">
-                    <span><b>REINFORCE</b> deepen what already works</span>
-                    <span><b>CONVERGE</b> chase route or synergy</span>
-                    <span><b>VENTURE</b> open a new direction</span>
-                </div>
-            }
+            <div class="eyebrow">LEVEL @Level • RUN DRAFT</div>
+            <h2>Choose what this run becomes</h2>
+            <p>Your Arcane Web set the intent. The realm now asks whether you deepen it, converge on an interaction, or pivot.</p>
+            <div class="draft-legend" aria-label="Draft directions">
+                <span><b>REINFORCE</b> deepen what already works</span>
+                <span><b>CONVERGE</b> chase route or synergy</span>
+                <span><b>VENTURE</b> open a new direction</span>
+            </div>
             <div class="upgrade-choices">
                 @foreach (var choice in Choices)
                 {
                     <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice)"
-                        @onclick="() => ChooseAsync(choice)">
-                        @if (!EvolutionDraft)
-                        {
-                            <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
-                        }
+                            @onclick="() => ChooseAsync(choice)">
+                        <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
                         <span class="choice-card-header">
                             <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
                             <span class="choice-rarity">@choice.Rarity</span>
@@ -84,10 +108,6 @@
                     </button>
                 }
             </div>
-            @if (EvolutionDraft)
-            {
-                <p class="evo-crossroads-warning">ONE PATH FOR THIS HUNT • NO SECOND CHANCE</p>
-            }
         </section>
     }
 </div>
@@ -98,10 +118,12 @@
     [Parameter] public EventCallback<string> OnChoose { get; set; }
 
     private const int RevealDurationMilliseconds = 1950;
-    private const int ConfirmationDurationMilliseconds = 650;
+    private const int ConfirmationDurationMilliseconds = 690;
+    private const int ConfirmationFadeMilliseconds = 220;
     private string? currentDraft;
     private int revealVersion;
     private bool revealing;
+    private bool finishing;
     private bool disposed;
     private LevelChoice? confirmingChoice;
 
@@ -115,10 +137,10 @@
     {
         var nextDraft = EvolutionDraft ? string.Join("|", Choices.Select(choice => choice.Id)) : null;
         if (nextDraft == currentDraft) return;
-
         currentDraft = nextDraft;
         revealing = nextDraft is not null;
         confirmingChoice = null;
+        finishing = false;
         var version = ++revealVersion;
         if (revealing) _ = CompleteRevealAsync(version);
     }
@@ -143,7 +165,7 @@
 
     private async Task ChooseAsync(LevelChoice choice)
     {
-        if (confirmingChoice is not null) return;
+        if (confirmingChoice is not null || (EvolutionDraft && revealing)) return;
         if (!EvolutionDraft)
         {
             await OnChoose.InvokeAsync(choice.Id);
@@ -153,6 +175,10 @@
         confirmingChoice = choice;
         await InvokeAsync(StateHasChanged);
         await Task.Delay(ConfirmationDurationMilliseconds);
+        if (disposed) return;
+        finishing = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(ConfirmationFadeMilliseconds);
         if (!disposed) await OnChoose.InvokeAsync(choice.Id);
     }
 
