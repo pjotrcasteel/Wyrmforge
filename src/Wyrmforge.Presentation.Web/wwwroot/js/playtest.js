@@ -25,7 +25,7 @@
             state.runs.push({ ...state.active, outcome: 'Interrupted', durationSeconds: safeNumber((Date.now() - state.active.startedAt) / 1000) });
         }
         state.started++;
-        state.active = { startedAt: Date.now(), ascendantRite: !!rite, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
+        state.active = { runId: newId(), startedAt: Date.now(), ascendantRite: !!rite, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
         state.runs = state.runs.slice(-maximumRuns);
         persist();
     }
@@ -48,7 +48,7 @@
     }
     function finishRun(report) {
         if (!report || typeof report !== 'object') return;
-        const active = state.active ?? { startedAt: Date.now(), ascendantRite: false, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
+        const active = state.active ?? { runId: newId(), startedAt: Date.now(), ascendantRite: false, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
         const allowedOutcome = ['Extracted', 'Defeated', 'Abandoned'].includes(report.outcome) ? report.outcome : 'Unknown';
         state.runs.push({
             ...active, outcome: allowedOutcome, seed: safeNumber(report.seed), score: safeNumber(report.score),
