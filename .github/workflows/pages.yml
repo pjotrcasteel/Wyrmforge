@@ -48,7 +48,8 @@ jobs:
           from pathlib import Path
           from urllib.parse import urlsplit
 
-          endpoint = os.environ.get("WYRMFORGE_FEEDBACK_ENDPOINT", "").strip()
+          fallback = json.loads(Path("src/Wyrmforge.Presentation.Web/wwwroot/playtest-collector-config.json").read_text(encoding="utf-8")).get("endpoint", "")
+          endpoint = os.environ.get("WYRMFORGE_FEEDBACK_ENDPOINT", "").strip() or fallback
           if endpoint:
               url = urlsplit(endpoint)
               if url.scheme != "https" or not url.hostname or url.username or url.password or url.query or url.fragment or url.path != "/v1/reports":
@@ -113,6 +114,55 @@ jobs:
           WYRMFORGE_BASE_URL: https://pjotrcasteel.github.io/Wyrmforge/
           WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/pages-smoke
         run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "Desktop_HomeAndAtlas_RenderAtWideViewport"
+
+      - name: Verify live playtest collector connection
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+          from urllib.parse import urlsplit
+
+          origin = "https://pjotrcasteel.github.io"
+          endpoint_expected = "https://wyrmforge-feedback-collector.pjotr-2.workers.dev/v1/reports"
+          config = origin + "/Wyrmforge/playtest-collector-config.json?build=" + os.environ["GITHUB_SHA"]
+
+          with urllib.request.urlopen(config, timeout=25) as response:
+              endpoint = json.load(response).get("endpoint")
+          if endpoint != endpoint_expected:
+              raise SystemExit(f"Published collector endpoint mismatch: {endpoint!r}")
+
+          health = endpoint.removesuffix("/v1/reports") + "/health"
+          with urllib.request.urlopen(health, timeout=25) as response:
+              result = json.load(response)
+          if result.get("status") != "ok":
+              raise SystemExit("Worker health check failed")
+
+          request = urllib.request.Request(endpoint, method="OPTIONS", headers={
+              "Origin": origin,
+              "Access-Control-Request-Method": "POST",
+              "Access-Control-Request-Headers": "content-type"
+          })
+          with urllib.request.urlopen(request, timeout=25) as response:
+              if response.status != 204 or response.headers.get("Access-Control-Allow-Origin") != origin:
+                  raise SystemExit("Worker CORS preflight failed")
+
+          # Verify consent enforcement without storing a report or requiring administrator access.
+          request = urllib.request.Request(endpoint, data=b'{"consent":false,"report":{}}', method="POST", headers={
+              "Origin": origin, "Content-Type": "application/json"
+          })
+          try:
+              urllib.request.urlopen(request, timeout=25)
+              raise SystemExit("Worker accepted a request without consent")
+          except urllib.error.HTTPError as error:
+              if error.code != 400 or json.load(error).get("error") != "explicit_consent_required":
+                  raise
+
+          print("Live configuration, Worker health, CORS and explicit-consent rejection passed; no test feedback stored.")
+          PY
 
       - name: Upload deployed smoke evidence
         if: always()
