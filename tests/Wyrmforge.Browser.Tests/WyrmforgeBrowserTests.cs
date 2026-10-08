@@ -258,6 +258,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             JSON.stringify([{Spell:1,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true}]));");
 
         await OpenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Hunt preparation", Exact = true }).ClickAsync();
         var rite = Page.GetByRole(AriaRole.Button, new() { Name = "INVOKE ASCENDANT RITE" });
         await Expect(rite).ToBeVisibleAsync();
         await rite.ClickAsync();
@@ -283,6 +284,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 {Spell:3,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true}]));");
 
         await OpenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Hunt preparation", Exact = true }).ClickAsync();
         var fire = Page.Locator("section.ascendant-rite-card:not(.storm) button.ascendant-rite-action");
         var storm = Page.Locator("section.ascendant-rite-card.storm button.ascendant-rite-action");
         await Expect(fire).ToBeVisibleAsync();
@@ -365,7 +367,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.84", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.85", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
