@@ -4,7 +4,6 @@ using Wyrmforge.Application.Runs.Progression;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.SpellMastery;
-using Wyrmforge.Domain.Combat.Dragons;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 

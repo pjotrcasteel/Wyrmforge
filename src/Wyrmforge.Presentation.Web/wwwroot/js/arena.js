@@ -890,6 +890,9 @@ function drawDragon(ctx, dragon) {
 
     if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
     else if (dragon.school === 1) drawFireWyrm(ctx, dragon, palette);
+    else if (dragon.school === 2) drawFrostWyrm(ctx, dragon, palette);
+    else drawStormWyrm(ctx, dragon, palette);
+
     if (dragon.isAscendant) {
         ctx.fillStyle = '#ffe3a2';
         const peak = dragon.radius * 1.35;
@@ -898,8 +901,6 @@ function drawDragon(ctx, dragon) {
             drawTriangle(ctx, x - 7, -peak + 6, x, -peak - (index === 0 ? 22 : 10), x + 7, -peak + 6);
         }
     }
-    else if (dragon.school === 2) drawFrostWyrm(ctx, dragon, palette);
-    else drawStormWyrm(ctx, dragon, palette);
 
     ctx.restore();
 }

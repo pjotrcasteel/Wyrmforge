@@ -151,3 +151,9 @@ Four oath seals are earned by slaying each Wyrm, preserving at least one of its 
 The Great Hunt altar is a compact, selectable ritual surface in the Forge sanctum and Codex, not a separate currency shop. The goals board reserves space for Forge, Spell Mastery and Great Hunt horizons while those pursuits remain active. Existing Forge discoveries restore historically known slay/Essence feats; older deep evolved duels cannot be inferred accurately, so they must be earned moving forward.
 
 **Next gameplay gate:** implement a distinctly telegraphed Ascendant hunt with fair portrait/mobile positioning, novel attack sequencing and clear encounter unlock/selection, then evaluate feel and deterministic balance. After Ascendants, extend the chain toward Elder Wyrms. Continue extending Build Evolution where new mechanics genuinely alter builds.
+
+## 0.0.79: first playable Ascendant
+
+**Ascendant Ashfang — Crown of Embers** is the first opt-in rite, unlocked by sealing the First Flame oath. Selecting it from the Run Hub preserves normal Depth I gameplay and guarantees an upgraded Ashfang at the Depth II Wyrm gate. It has an extended cinematic reveal, stronger health, a shifting-safe-lane Crownfall signature and a third volley in phase two. A permanent, non-stat Crown of Embers trophy marks the first victory on the existing Great Hunt altar, and the fight is replayable.
+
+The three other Ascendants must each gain a distinctive movement problem instead of inheriting Ashfang's Crownfall or being presented as playable. Then Elder Wyrms can extend the same progression architecture. Normal combat balance must remain unchanged for non-rite runs.

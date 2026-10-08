@@ -113,7 +113,7 @@ public static class DragonHuntCatalog
         Signature = Ashfang.Signature with
         {
             Kind = DragonHuntSignatureKind.Crownfall,
-            Name = "Crownfall • Shifting Gates",
+            Name = "Crownfall",
             IntervalSeconds = new DragonPhaseValues(10, 7.8),
             TelegraphSeconds = new DragonPhaseValues(1.1, 0.95),
             Radius = new DragonPhaseValues(40, 46),
