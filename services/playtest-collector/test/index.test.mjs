@@ -5,6 +5,7 @@ import worker, { sanitizeReport } from '../src/index.js';
 class MemoryDb {
     reports = new Map();
     buckets = new Map();
+    scores = new Map();
     prepare(sql) {
         return {
             bind: (...args) => ({ run: () => this.run(sql, args), all: () => this.all(sql, args), first: () => this.first(sql, args) }),
@@ -18,6 +19,12 @@ class MemoryDb {
             const count = this.buckets.get(key) ?? 0;
             if (count >= 12) return { meta: { changes: 0 } };
             this.buckets.set(key, count + 1);
+            return { meta: { changes: 1 } };
+        }
+        if (sql.includes('INSERT OR IGNORE INTO leaderboard_entries')) {
+            const [id, nickname, score, game_version, created_at] = args;
+            if (this.scores.has(id)) return { meta: { changes: 0 } };
+            this.scores.set(id, { id, nickname, score, game_version, created_at });
             return { meta: { changes: 1 } };
         }
         if (sql.includes('INSERT OR IGNORE INTO reports')) {
@@ -36,6 +43,8 @@ class MemoryDb {
     }
     async all(sql, args) {
         const rows = [...this.reports.values()];
+        if (sql.includes('SELECT nickname,score,game_version FROM leaderboard_entries'))
+            return { results: [...this.scores.values()].sort((a,b) => b.score - a.score).slice(0,20) };
         if (sql.includes('SELECT id,received_at,data')) return { results: rows.slice(-args[0]).reverse() };
         if (sql.includes('trouble_area AS area')) {
             return { results: Object.entries(countBy(rows, 'trouble_area')).map(([area, count]) => ({ area, count })) };
@@ -133,5 +142,30 @@ test('CORS preflight and retention cleanup', async () => {
     await post(e, { consent: true, report: report() });
     e.DB.reports.get(report().id).received_at = '2020-01-01T00:00:00.000Z';
     await worker.scheduled({}, e);
+    assert.equal(e.DB.reports.size, 0);
+});
+
+test('Leaderboard stores opted-in community scores, never invented Legends, and hides report data', async () => {
+    const e = env();
+    const path = 'https://collector.example.test/v1/leaderboard';
+    const base = { consent: true, id: 'score-test-12345', nickname: 'Rune Scout', score: 7200, version: '0.0.84' };
+    const send = (payload, origin = e.PUBLIC_ORIGIN) => worker.fetch(new Request(path, { method: 'POST',
+        headers: { Origin: origin, 'Content-Type': 'application/json', 'CF-Connecting-IP': '203.0.113.5' },
+        body: JSON.stringify(payload)
+    }), e);
+
+    assert.equal((await send({ ...base, consent: false })).status, 400);
+    assert.equal((await send({ ...base, nickname: 'test@example.com' })).status, 400);
+    assert.equal((await send(base, 'https://attacker.invalid')).status, 403);
+    assert.equal((await send(base)).status, 202);
+    const duplicate = await (await send(base)).json();
+    assert.equal(duplicate.duplicate, true);
+    assert.equal(e.DB.scores.size, 1);
+    const response = await worker.fetch(new Request(path), e);
+    const board = await response.json();
+    assert.deepEqual(board.entries, [{ name: 'Rune Scout', score: 7200, version: '0.0.84', type: 'community', verified: false }]);
+    assert.equal(JSON.stringify(board).includes('score-test-12345'), false);
+    const preflight = await worker.fetch(new Request(path, { method: 'OPTIONS', headers: { Origin: e.PUBLIC_ORIGIN } }), e);
+    assert.equal(preflight.status, 204);
     assert.equal(e.DB.reports.size, 0);
 });
