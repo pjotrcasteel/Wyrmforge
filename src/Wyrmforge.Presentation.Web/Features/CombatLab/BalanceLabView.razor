@@ -65,6 +65,7 @@
                 Invulnerable practice (not valid for fairness scores)
             </label>
             <button class="primary" disabled="@huntRunning" @onclick="RunHuntTrialsAsync">@(huntRunning ? $"SIMULATING {huntProgress}/2…" : "RUN PORTRAIT + LANDSCAPE TRIALS")</button>
+            <button class="secondary" @onclick="WatchHunt">WATCH AUTOPILOT CINEMATIC →</button>
         </div>
         <div class="hunt-trial-layout">
             <div class="hunt-pattern">
@@ -263,6 +264,8 @@
         result = new RunSelfPlayDriver().Play(build, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 480));
         running = false;
     }
+
+    private void WatchHunt() => Navigation.NavigateTo($"hunt-lab?wyrm={huntWyrm}&ascendant={huntVariant && AscendantRiteCatalog.IsAvailable(huntWyrm)}&phase={huntPhase}&seed={seed}");
 
     private void OpenCombatLab() => Navigation.NavigateTo("combat-lab");
     private void BackToForge() => Navigation.NavigateTo(string.Empty);

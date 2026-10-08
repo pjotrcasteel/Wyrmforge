@@ -1,0 +1,153 @@
+@page "/hunt-lab"
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using Wyrmforge.Application.Abstractions.Randomness
+@using Wyrmforge.Application.Runs.Development
+@using Wyrmforge.Application.Runs.SelfPlay
+@using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Application.Runs.Simulation.Snapshots
+@using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.GreatHunt
+@using Wyrmforge.Domain.Spells
+
+<main class="hunt-lab">
+    <header class="hunt-lab-head">
+        <div><span>WYRMFORGE • DEVELOPER CINEMATIC</span>
+            <h1>Watch the Great Hunt fight itself.</h1>
+            <p>The actual combat renderer, deterministic simulation and movement agent. No account progress, loot or playtest report is credited.</p>
+        </div>
+        <div class="hunt-lab-actions"><button @onclick="Restart">↻ Restart encounter</button><button @onclick="Pause">@(paused ? "▶ Resume" : "Ⅱ Pause")</button><a href="balance-lab">← Balance Lab</a></div>
+    </header>
+    <section class="hunt-lab-settings">
+        <label>Wyrm
+            <select @bind="selectedWyrm">
+                @foreach (var wyrm in DragonCatalog.All) { <option value="@wyrm.Id">@wyrm.Name</option> }
+            </select>
+        </label>
+        <label>Hunt form
+            <select @bind="ascendant">
+                <option value="false">Ordinary</option>
+                @if (AscendantRiteCatalog.IsAvailable(selectedWyrm)) { <option value="true">Ascendant</option> }
+            </select>
+        </label>
+        <label>Phase
+            <select @bind="phase"><option value="1">Phase I</option><option value="2">Phase II</option></select>
+        </label>
+        <label>Seed
+            <input type="number" @bind="seed" />
+        </label>
+        <label>Agent
+            <select @bind="personality">
+                @foreach (var value in Enum.GetValues<RunAgentPersonality>()) { <option value="@value">@value</option> }
+            </select>
+        </label>
+        <label class="practice-toggle"><input type="checkbox" @bind="invulnerable" /> Invulnerable watch mode</label>
+        <button @onclick="Restart">APPLY & REPLAY</button>
+    </section>
+    <section class="hunt-lab-surface" aria-label="Live developer Wyrm encounter">
+        <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
+        <div class="hunt-lab-stage" aria-live="polite">
+            <strong>@status</strong>
+            <span>@(paused ? "PAUSED" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
+        </div>
+    </section>
+    <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
+</main>
+
+@code {
+    [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery(Name = "wyrm")] public string? WyrmQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "ascendant")] public bool? AscendantQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "phase")] public int? PhaseQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+
+    private ElementReference canvas;
+    private IJSObjectReference? arenaModule;
+    private DotNetObjectReference<HuntLab>? reference;
+    private RunSimulation? simulation;
+    private HeuristicRunAgent? agent;
+    private DragonId selectedWyrm = DragonId.Stormcoil;
+    private bool ascendant = true;
+    private int phase = 1;
+    private int seed = 1337;
+    private bool invulnerable = true;
+    private bool paused;
+    private string status = "PREPARING THE WYRMREALM";
+    private RunAgentPersonality personality = RunAgentPersonality.Kiter;
+
+    protected override void OnParametersSet()
+    {
+        if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
+        if (AscendantQuery is { } a) ascendant = a;
+        if (PhaseQuery is 1 or 2) phase = PhaseQuery.Value;
+        if (SeedQuery is { } s) seed = s;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
+        reference = DotNetObjectReference.Create(this);
+        await arenaModule.InvokeVoidAsync("initializeArena", canvas, reference);
+    }
+
+    [JSInvokable]
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY)
+    {
+        if (simulation is null) CreateEncounter(width, height);
+        var current = simulation!;
+        var snapshot = current.CreateSnapshot();
+        if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot);
+        var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
+        snapshot = current.Tick(delta, agent!.ChooseMovement(observation), width, height);
+        var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
+            : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "ASCENDANT DUEL WON • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
+        if (current.IsEnded) nextStatus = "AGENT DEFEATED • RESTART TO WATCH AGAIN";
+        if (nextStatus != status)
+        {
+            status = nextStatus;
+            _ = InvokeAsync(StateHasChanged);
+        }
+        return Task.FromResult(snapshot);
+    }
+
+    private void CreateEncounter(double width, double height)
+    {
+        var wyrm = selectedWyrm;
+        var spell = wyrm switch
+        {
+            DragonId.Ashfang => SpellId.FireBolt,
+            DragonId.Stormcoil => SpellId.ChainLightning,
+            DragonId.Rimeclaw => SpellId.FrostShard,
+            _ => SpellId.ArcaneOrb,
+        };
+        var build = SelfPlayBuildCatalog.All.First();
+        var setup = new DevelopmentHuntSetup(wyrm, ascendant && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
+            Math.Max(240, width), Math.Max(240, height), invulnerable);
+        simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(build.SelectedNodes, setup);
+        agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
+        status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";
+    }
+
+    private void Restart()
+    {
+        simulation = null;
+        agent = null;
+        paused = false;
+        status = "PREPARING THE WYRMREALM";
+    }
+
+    private void Pause() => paused = !paused;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (arenaModule is not null)
+        {
+            try { await arenaModule.InvokeVoidAsync("disposeArena", canvas); }
+            catch (JSDisconnectedException) { }
+            await arenaModule.DisposeAsync();
+        }
+        reference?.Dispose();
+    }
+}
