@@ -1,0 +1,18 @@
+.hunt-lab{min-height:100dvh;padding:16px;background:radial-gradient(circle at 60% 0,rgba(70,60,140,.24),transparent 35%),#0c0a11;color:#f0e9f5;font-family:system-ui,sans-serif}
+.hunt-lab-head{display:flex;justify-content:space-between;gap:16px;max-width:1100px;margin:0 auto 14px}
+.hunt-lab-head span{color:#c6a1eb;font-size:.65rem;font-weight:900;letter-spacing:.12em}
+.hunt-lab-head h1{font-size:clamp(1.3rem,3vw,2.2rem);margin:5px 0}
+.hunt-lab-head p{color:#a79aaf;max-width:590px;font-size:.8rem;line-height:1.5;margin:0}
+.hunt-lab-actions{display:flex;gap:7px;align-items:flex-start;flex-wrap:wrap}
+.hunt-lab button,.hunt-lab a{min-height:44px;display:grid;place-items:center;padding:8px 13px;border:1px solid #534267;border-radius:10px;background:#21192b;color:#ead9f5;text-decoration:none;font:750 .74rem system-ui;cursor:pointer;touch-action:manipulation}
+.hunt-lab-settings{display:flex;gap:10px;align-items:end;flex-wrap:wrap;max-width:1100px;margin:0 auto 12px}
+.hunt-lab-settings label{display:grid;gap:4px;font-size:.65rem;color:#a999c0;font-weight:800}
+.hunt-lab-settings select,.hunt-lab-settings input[type=number]{min-height:44px;width:135px;padding:6px;border:1px solid #4c3f5c;border-radius:8px;background:#1b1524;color:#f3e8f7}
+.hunt-lab-settings .practice-toggle{display:flex;align-items:center;gap:8px;min-height:44px}
+.practice-toggle input{width:20px;height:20px;accent-color:#ab82dd}
+.hunt-lab-surface{position:relative;max-width:1100px;height:min(67dvh,680px);min-height:340px;margin:0 auto;border:1px solid #463655;border-radius:16px;overflow:hidden;background:#100d15}
+.hunt-lab-canvas{display:block;width:100%;height:100%;touch-action:none}
+.hunt-lab-stage{position:absolute;left:12px;top:10px;max-width:calc(100% - 24px);display:grid;gap:2px;pointer-events:none;padding:8px 11px;border:1px solid #4e3d66;border-radius:10px;background:rgba(13,10,22,.85);font-size:.75rem}
+.hunt-lab-stage span{font-size:.55rem;letter-spacing:.08em;color:#c6b2d6}
+.hunt-lab-note{max-width:1100px;margin:8px auto;color:#968aa3;font-size:.7rem;line-height:1.45}
+@media(max-width:650px){.hunt-lab{padding:10px}.hunt-lab-head{display:grid}.hunt-lab-actions{gap:6px}.hunt-lab-settings{gap:7px}.hunt-lab-settings label:not(.practice-toggle){flex:1 1 29%}.hunt-lab-settings select,.hunt-lab-settings input[type=number]{width:100%}.hunt-lab-settings>button{flex:1}.hunt-lab-surface{height:57dvh;min-height:380px}.hunt-lab-stage{top:5px;left:5px}}

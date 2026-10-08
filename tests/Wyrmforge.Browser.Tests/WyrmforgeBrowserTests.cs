@@ -253,6 +253,34 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_DeveloperHuntTrials_ShowsPortraitWarningGeometryAndIsolatedHuntControls()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/balance-lab");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Skip the grind. Stress-test the Wyrm." })).ToBeVisibleAsync();
+        await Expect(Page.GetByLabel("Test Wyrm")).ToHaveValueAsync("Stormcoil");
+        await Expect(Page.GetByLabel("Encounter variant")).ToHaveValueAsync("ascendant");
+        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = "Planned boss warning positions with player centered" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "RUN PORTRAIT + LANDSCAPE TRIALS" })).ToBeVisibleAsync();
+        var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
+        Assert.IsLessThanOrEqualTo(1, overflow, "Developer trial controls must fit on iPhone width.");
+    }
+
+    [TestMethod]
+    public async Task Mobile_HuntLab_AutopilotDisplaysActualBossWithoutWritingGreatHuntSave()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/hunt-lab?wyrm=Stormcoil&ascendant=true&phase=2&seed=1337");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Watch the Great Hunt fight itself." })).ToBeVisibleAsync();
+        await Expect(Page.GetByLabel("Automated live Wyrm arena")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".hunt-lab-stage strong")).ToContainTextAsync("Stormcoil", new() { Timeout = 30000 });
+        var save = await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.greatHunt.v1')");
+        Assert.IsNull(save, "Cinematic sandbox must not award or persist player trophies.");
+        var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
+        Assert.IsLessThanOrEqualTo(1, overflow);
+    }
+
+    [TestMethod]
     public async Task Mobile_CommunityPlaytest_ReportsAreOptInAndIncludeReproducibleRunData()
     {
         Directory.CreateDirectory(ArtifactDirectory);
@@ -286,7 +314,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.82", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.83", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());

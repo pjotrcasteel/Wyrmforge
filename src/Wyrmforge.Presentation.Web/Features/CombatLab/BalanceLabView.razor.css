@@ -35,3 +35,33 @@
 .decision-log > span { color:#8b7498; font-size:.57rem; font-weight:950; letter-spacing:.11em; }
 .decision-log code { padding:6px 8px; border-left:2px solid #5d426d; color:#94859c; background:rgba(74,49,84,.09); font-size:.6rem; }
 @media (max-width:800px) { .balance-lab { padding:14px 10px 90px; } .lab-header { align-items:stretch; flex-direction:column; } .lab-layout { grid-template-columns:1fr; } .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .results-panel { min-height:0; } .empty-results { min-height:260px; } }
+
+.hunt-trial-panel{max-width:1280px;margin:0 auto 18px;padding:18px;border:1px solid rgba(145,123,225,.4);border-radius:18px;background:radial-gradient(circle at 92% 4%,rgba(86,78,185,.24),transparent 40%),#15111e}
+.hunt-trial-heading{display:flex;justify-content:space-between;gap:18px;align-items:start}
+.hunt-trial-heading h2{margin:6px 0 5px;font-size:1.35rem}
+.hunt-trial-heading p{max-width:830px;margin:0;color:#aaa0bc;font-size:.8rem;line-height:1.55}
+.hunt-trial-heading>strong{flex-shrink:0;color:#beb0ed;font-size:.62rem;letter-spacing:.12em}
+.hunt-trial-controls{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:18px 0}
+.hunt-trial-controls label{display:grid;gap:5px;color:#b0a2be;font-size:.69rem;font-weight:750}
+.hunt-trial-controls select{min-height:44px;padding:7px 12px;border:1px solid #504164;border-radius:10px;color:#ece2ff;background:#171322}
+.hunt-trial-controls .hunt-trial-practice{display:flex;align-items:center;gap:7px;max-width:220px;font-weight:500;line-height:1.35}
+.hunt-trial-practice input{width:18px;height:18px;accent-color:#ac8adb}
+.hunt-trial-controls button{min-height:44px}
+.hunt-trial-layout{display:grid;grid-template-columns:minmax(200px,330px) minmax(0,1fr);gap:16px}
+.hunt-pattern,.hunt-trial-results{padding:12px;border:1px solid #3d314d;border-radius:14px;background:rgba(12,9,19,.75)}
+.hunt-pattern-heading{display:grid;gap:5px;text-align:center}
+.hunt-pattern-heading small,.hunt-pattern>small{font-size:.66rem;color:#9e8fb1}
+.hunt-pattern-arena{display:block;width:100%;max-height:270px;margin:12px auto;background:#0d0a13;border-radius:12px}
+.hunt-strike{fill:rgba(143,94,247,.12);stroke:rgba(204,173,255,.66);stroke-width:2}
+.hunt-strike.later{stroke:rgba(255,221,125,.8);stroke-dasharray:5 5}
+.hunt-trial-results{display:grid;gap:9px;align-content:start}
+.hunt-trial-empty{display:grid;place-items:center;min-height:190px;color:#9d90ae;text-align:center;font-size:.78rem;line-height:1.5}
+.hunt-trial-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.hunt-trial-summary article{display:grid;gap:5px;border:1px solid #41354d;border-radius:9px;padding:10px}
+.hunt-trial-summary span{font-size:.58rem;color:#a294b0}
+.hunt-trial-summary strong{font-size:1.12rem}
+.hunt-trial-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px 8px;border-top:1px solid #342b40}
+.hunt-trial-row div{display:grid;gap:4px}
+.hunt-trial-row strong{font-size:.75rem;color:#ede4f6}
+.hunt-trial-row span,.hunt-trial-disclaimer{font-size:.65rem;line-height:1.5;color:#a296ae}
+@media(max-width:800px){.hunt-trial-panel{padding:13px}.hunt-trial-heading{display:grid}.hunt-trial-layout{grid-template-columns:1fr}.hunt-trial-summary{grid-template-columns:repeat(2,1fr)}.hunt-trial-row{grid-template-columns:1fr}.hunt-trial-controls>label:not(.hunt-trial-practice){flex:1 1 42%}.hunt-trial-controls select{width:100%}.hunt-trial-controls button{width:100%}.hunt-pattern-arena{max-height:330px}}

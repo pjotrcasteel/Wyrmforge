@@ -1,6 +1,12 @@
 @using Wyrmforge.Application.Abstractions.Randomness
 @using Wyrmforge.Application.Runs.SelfPlay
 @using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Application.Runs.Development
+@using Wyrmforge.Application.Runs.Hunts
+@using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.GreatHunt
+@using Wyrmforge.Domain.Combat.Geometry
+@using Wyrmforge.Domain.Spells
 
 <main class="balance-lab">
     <header class="lab-header">
@@ -14,6 +20,94 @@
             <button class="secondary" @onclick="BackToForge">← Forge</button>
         </div>
     </header>
+
+    <section class="hunt-trial-panel" aria-label="Developer hunt trials">
+        <header class="hunt-trial-heading">
+            <div>
+                <span class="eyebrow">ASCENDANT ENCOUNTER TEST BENCH</span>
+                <h2>Skip the grind. Stress-test the Wyrm.</h2>
+                <p>Start directly at Depth II with a Rank III evolved spell. No saves, Forge unlocks or Great Hunt trophies are modified. The agent plays the real combat simulation, including boss entrances, phases and damage.</p>
+            </div>
+            <strong>ISOLATED DEV MODE</strong>
+        </header>
+        <div class="hunt-trial-controls">
+            <label>Wyrm
+                <select @bind="huntWyrm" aria-label="Test Wyrm">
+                    @foreach (var wyrm in DragonCatalog.All)
+                    {
+                        <option value="@wyrm.Id">@wyrm.Name</option>
+                    }
+                </select>
+            </label>
+            <label>Encounter
+                <select @bind="huntVariant" aria-label="Encounter variant">
+                    <option value="ordinary">Ordinary</option>
+                    @if (AscendantRiteCatalog.IsAvailable(huntWyrm))
+                    {
+                        <option value="ascendant">Ascendant</option>
+                    }
+                </select>
+            </label>
+            <label>Start phase
+                <select @bind="huntPhase" aria-label="Starting boss phase">
+                    <option value="1">Phase I · entrance</option>
+                    <option value="2">Phase II · break</option>
+                </select>
+            </label>
+            <label>Inspect geometry
+                <select @bind="portraitPreview" aria-label="Preview orientation">
+                    <option value="portrait">Portrait · 390 × 844</option>
+                    <option value="landscape">Landscape · 844 × 390</option>
+                </select>
+            </label>
+            <label class="hunt-trial-practice">
+                <input type="checkbox" @bind="huntInvulnerable" />
+                Invulnerable practice (not valid for fairness scores)
+            </label>
+            <button class="primary" disabled="@huntRunning" @onclick="RunHuntTrialsAsync">@(huntRunning ? $"SIMULATING {huntProgress}/2…" : "RUN PORTRAIT + LANDSCAPE TRIALS")</button>
+            <button class="secondary" @onclick="WatchHunt">WATCH AUTOPILOT CINEMATIC →</button>
+        </div>
+        <div class="hunt-trial-layout">
+            <div class="hunt-pattern">
+                <div class="hunt-pattern-heading"><strong>@PreviewProfile.Signature.Name · phase @huntPhase</strong><small>Deterministic warning geometry · @PreviewWidth × @PreviewHeight</small></div>
+                <svg class="hunt-pattern-arena" viewBox="@($"0 0 {PreviewWidth} {PreviewHeight}")" role="img" aria-label="Planned boss warning positions with player centered">
+                    <rect x="1" y="1" width="@(PreviewWidth - 2)" height="@(PreviewHeight - 2)" rx="16" fill="#101020" stroke="#504465" stroke-width="2" />
+                    @foreach (var strike in PreviewStrikes)
+                    {
+                        <circle cx="@strike.Position.X" cy="@strike.Position.Y" r="@(strike.Radius ?? PreviewProfile.Signature.Radius.For(huntPhase))"
+                            class="hunt-strike @(strike.DelaySeconds == 0 ? "first" : "later")" />
+                    }
+                    <circle cx="@(PreviewWidth / 2d)" cy="@(PreviewHeight / 2d)" r="12" fill="#e8d5ff" stroke="#ab78da" stroke-width="4" />
+                </svg>
+                <small>Preview shows planned strike locations, not the full cinematic renderer. Actual attack timing and damage are measured below.</small>
+            </div>
+            <div class="hunt-trial-results" aria-live="polite">
+                @if (huntResults.Count == 0)
+                {
+                    <div class="hunt-trial-empty">Choose an encounter, then let the agent attempt it in both mobile orientations. The previews and tests never count toward your player progression.</div>
+                }
+                else
+                {
+                    <div class="hunt-trial-summary">
+                        <article><span>VICTORIES</span><strong>@huntResults.Count(x => x.Victory) / @huntResults.Count</strong></article>
+                        <article><span>PHASE II REACHED</span><strong>@huntResults.Count(x => x.ReachedSecondPhase) / @huntResults.Count</strong></article>
+                        <article><span>AVG DAMAGE</span><strong>@huntResults.Average(x => x.DamageTaken).ToString("0")</strong></article>
+                        <article><span>WARNING FRAMES</span><strong>@huntResults.Sum(x => x.SignatureWarningFrames)</strong></article>
+                    </div>
+                    @foreach (var trial in huntResults)
+                    {
+                        <article class="hunt-trial-row">
+                            <div><strong>@(trial.Setup.Width < trial.Setup.Height ? "PORTRAIT" : "LANDSCAPE") · seed @trial.Setup.Seed</strong>
+                                <span>@(trial.Victory ? "Wyrm defeated" : trial.Defeated ? "Agent defeated" : "Time limit") · @trial.DurationSeconds.ToString("0.0")s · @trial.Agent</span></div>
+                            <div><strong>HP @trial.HealthRemaining.ToString("0") · min @trial.MinimumHealthRatio.ToString("P0")</strong>
+                                <span>@trial.SignaturePatternsObserved attack windows · @trial.WarningExposureFrames pre-armed overlaps · @trial.ActiveStrikeExposureFrames armed overlaps</span></div>
+                        </article>
+                    }
+                    <small class="hunt-trial-disclaimer">These are reproducible heuristic-agent trials, not proof that human players find the attacks fair or fun. Real-device cinematic and touch checks remain separate.</small>
+                }
+            </div>
+        </div>
+    </section>
 
     <section class="lab-layout">
         <aside class="control-panel">
@@ -96,7 +190,54 @@
 @code {
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
+    private DragonId huntWyrm = DragonId.Stormcoil;
+    private string huntVariant = "ascendant";
+    private int huntPhase = 1;
+    private string portraitPreview = "portrait";
+    private bool huntInvulnerable;
+    private bool huntRunning;
+    private int huntProgress;
+    private readonly List<DevelopmentHuntTrialResult> huntResults = [];
     private int selectedBuildIndex;
+
+    private DragonHuntProfile PreviewProfile => huntVariant == "ascendant" && AscendantRiteCatalog.IsAvailable(huntWyrm)
+        ? DragonHuntCatalog.GetAscendant(huntWyrm) : DragonHuntCatalog.Get(huntWyrm);
+    private double PreviewWidth => portraitPreview == "portrait" ? 390 : 844;
+    private double PreviewHeight => portraitPreview == "portrait" ? 844 : 390;
+    private IReadOnlyList<DragonHuntSignatureStrike> PreviewStrikes => DragonHuntSignaturePlanner.Create(PreviewProfile.Signature, huntPhase,
+        new Vector2D(PreviewWidth / 2d, PreviewHeight * 0.2), new Vector2D(PreviewWidth / 2d, PreviewHeight / 2d),
+        PreviewWidth, PreviewHeight, new SeededRandomSource(seed));
+
+    private async Task RunHuntTrialsAsync()
+    {
+        if (huntRunning) return;
+        huntRunning = true;
+        huntProgress = 0;
+        huntResults.Clear();
+        var build = SelfPlayBuildCatalog.All[selectedBuildIndex];
+        var wyrm = huntWyrm;
+        var ascendant = huntVariant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm);
+        var spell = wyrm switch
+        {
+            DragonId.Ashfang => SpellId.FireBolt,
+            DragonId.Stormcoil => SpellId.ChainLightning,
+            DragonId.Rimeclaw => SpellId.FrostShard,
+            _ => SpellId.ArcaneOrb,
+        };
+
+        try
+        {
+            foreach (var (width, height) in new[] { (390d, 844d), (844d, 390d) })
+            {
+                await Task.Yield();
+                var setup = new DevelopmentHuntSetup(wyrm, ascendant, huntPhase, spell, seed, width, height, huntInvulnerable);
+                huntResults.Add(new DevelopmentHuntTrial().Run(build, setup, selectedPersonality));
+                huntProgress++;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        finally { huntRunning = false; }
+    }
     private RunAgentPersonality selectedPersonality = RunAgentPersonality.BuildFocused;
     private int seed = 1337;
     private bool running;
@@ -123,6 +264,8 @@
         result = new RunSelfPlayDriver().Play(build, seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 480));
         running = false;
     }
+
+    private void WatchHunt() => Navigation.NavigateTo($"hunt-lab?wyrm={huntWyrm}&ascendant={huntVariant == "ascendant" && AscendantRiteCatalog.IsAvailable(huntWyrm)}&phase={huntPhase}&seed={seed}");
 
     private void OpenCombatLab() => Navigation.NavigateTo("combat-lab");
     private void BackToForge() => Navigation.NavigateTo(string.Empty);

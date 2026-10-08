@@ -112,7 +112,7 @@ public sealed partial class RunSimulation
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
         EnsurePlayerPosition(width, height);
-        if (IsEnded || HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending) return CreateSnapshot();
+        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending))) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
         UpdateCombatFeedback(delta);
         elapsed += delta;
@@ -250,7 +250,7 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
-            HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending,
+            !developmentHunt && (HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending),
             IsEnded,
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
