@@ -20,6 +20,8 @@ public sealed partial class RunSimulation
     private DragonId? selectedAscendant;
     private bool ascendantHuntConsumed;
     private bool ascendantActive;
+    private bool firstHunt;
+    internal void EnableFirstHunt(bool enabled) => firstHunt = enabled;
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
@@ -296,6 +298,15 @@ public sealed partial class RunSimulation
         ascendantActive = false;
         spawnTimer = 1.2;
         mapState.CompleteDragon();
+        if (firstHunt)
+        {
+            // First Hunt is a self-contained chapter: reaching a Wyrm is the ending, not the next menu.
+            // Preserve the actual victory and score while skipping the normal harvest/refuge flow.
+            outcome = RunOutcome.Extracted;
+            IsEnded = true;
+            pendingDragonEssenceChoices = [];
+            return;
+        }
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(definition.Id).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
         GainExperience(reward.Experience);
         if (pendingDragonEssenceChoices.Count == 0 && !extractionState.Start(player.Position)) checkpointState.Enter();
