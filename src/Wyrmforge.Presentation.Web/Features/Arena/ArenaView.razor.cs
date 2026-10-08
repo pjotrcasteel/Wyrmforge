@@ -115,6 +115,7 @@ public partial class ArenaView : IAsyncDisposable
             || previousEvacuation != current.EvacuationActive
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
+        if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
@@ -154,6 +155,7 @@ public partial class ArenaView : IAsyncDisposable
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
         if (node is null || simulation?.ChooseMapNode(id) != true) return;
         ShowMapMoment(node);
+        await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
         await InvokeAsync(StateHasChanged);
     }
 
@@ -161,10 +163,18 @@ public partial class ArenaView : IAsyncDisposable
     {
         if (simulation?.UseCheckpointAction(id) != true) return;
         ShowCheckpointMoment(id);
+        if (id == RunCheckpointActionId.Descend) await TryRecordPlaytestMilestoneAsync("descended");
+        if (id == RunCheckpointActionId.LeaveRealm) await TryRecordPlaytestMilestoneAsync("extracted");
         await InvokeAsync(StateHasChanged);
     }
     private async Task EquipRelicAsync(RelicId id) { if (simulation?.EquipRelic(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task UnequipRelicAsync(RelicId id) { if (simulation?.UnequipRelic(id) == true) await InvokeAsync(StateHasChanged); }
+
+    private async Task TryRecordPlaytestMilestoneAsync(string milestone)
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.milestone", CancellationToken.None, milestone); }
+        catch (JSException) { /* No effect on gameplay. */ }
+    }
 
     private async Task AbandonRunAsync()
     {

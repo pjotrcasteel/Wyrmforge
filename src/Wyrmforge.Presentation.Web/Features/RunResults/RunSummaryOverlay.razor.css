@@ -174,3 +174,6 @@
 .run-ascendant-victory strong { color:#bce8bd;font-size:.61rem;letter-spacing:.07em; }
 @keyframes ascendant-victory-reveal { from {opacity:0;transform:scale(.95);filter:brightness(1.6);}to {opacity:1;transform:scale(1);filter:brightness(1);} }
 @media(prefers-reduced-motion:reduce) { .run-ascendant-victory { animation:none; } }
+
+.run-playtest-feedback { display:block;width:100%;min-height:36px;border:1px solid #554166;border-radius:9px;background:rgba(85,56,115,.13);color:#d9b9f0;font-size:.71rem;font-weight:850;cursor:pointer;touch-action:manipulation; }
+.run-playtest-feedback:focus-visible { outline:2px solid #e2bfff;outline-offset:3px; }

@@ -7,3 +7,4 @@ artifacts/
 *.suo
 .DS_Store
 *.log
+playtest-reports/

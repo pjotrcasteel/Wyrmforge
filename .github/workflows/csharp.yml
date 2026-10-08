@@ -29,6 +29,12 @@ jobs:
       - name: Restore
         run: dotnet restore Wyrmforge.slnx
 
+      - name: Check playtest JavaScript syntax
+        run: node --check src/Wyrmforge.Presentation.Web/wwwroot/js/playtest.js
+
+      - name: Test playtest report analysis
+        run: python3 -m unittest discover -s tools/playtesting -p 'test_*.py'
+
       - name: Build
         run: dotnet build Wyrmforge.slnx -c Release --no-restore
 

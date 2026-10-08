@@ -110,6 +110,8 @@
             <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
         </div>
 
+        <button class="run-playtest-feedback" @onclick="() => OnFeedback.InvokeAsync()">✎ Send playtest feedback about this run</button>
+
         <details class="run-report-details">
             <summary><span>BUILD, LOOT &amp; RUN DETAILS</span><span aria-hidden="true">⌄</span></summary>
             <div class="run-report-expanded">
@@ -214,6 +216,7 @@
     [Parameter] public IReadOnlyList<SpellId> AdvancedSpells { get; set; } = [];
     [Parameter] public EventCallback OnReplay { get; set; }
     [Parameter] public EventCallback OnReturn { get; set; }
+    [Parameter] public EventCallback OnFeedback { get; set; }
 
     private string BuildIdentity
     {
