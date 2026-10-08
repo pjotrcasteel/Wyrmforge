@@ -10,7 +10,7 @@
     <nav class="collection-tabs" aria-label="Forge sections">
         @foreach (var tab in Sections)
         {
-            <button aria-pressed="@(activeSection == tab)" @onclick="() => activeSection = tab">@tab</button>
+            <button aria-pressed="@((activeSection == tab).ToString().ToLowerInvariant())" @onclick="() => activeSection = tab">@tab</button>
         }
     </nav>
     @if (newlyForged is { } completed)

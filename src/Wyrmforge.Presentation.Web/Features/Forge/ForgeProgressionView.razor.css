@@ -278,3 +278,5 @@
 .sanctum-drawer{border-radius:4px}
 .sanctum-heading{display:none}
 @media(max-width:760px){.sanctum-chamber{grid-template-columns:1fr;gap:10px}.sanctum-stage{padding:6px}.sanctum-sigils{gap:4px}.sanctum-sigil{padding:8px 2px}.sanctum-sigil-name{font-size:.68rem}.sanctum-sigil-state{font-size:.6rem}.sanctum-blueprints{padding:10px}.sanctum-inspection{padding:12px}.sanctum-drawer>summary{flex-wrap:wrap;gap:8px;min-height:44px}.sanctum-forge-action,.sanctum-prep-action,.clear-offering{min-height:44px}.collection-tabs button{font-size:.73rem}}
+
+@media(max-width:760px){.sanctum-sigil-state{font-size:.46rem;white-space:nowrap;overflow-wrap:normal;letter-spacing:0}}

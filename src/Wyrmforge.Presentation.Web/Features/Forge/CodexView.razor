@@ -12,7 +12,7 @@
     <nav class="collection-tabs" aria-label="Codex categories">
         @foreach (var category in Categories)
         {
-            <button aria-pressed="@(activeCategory == category)" @onclick="() => activeCategory = category">@category</button>
+            <button aria-pressed="@((activeCategory == category).ToString().ToLowerInvariant())" @onclick="() => activeCategory = category">@category</button>
         }
     </nav>
     <section class="codex-section" hidden="@(activeCategory != "Synergies")">
