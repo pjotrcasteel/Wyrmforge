@@ -51,7 +51,7 @@ public static class DragonCatalog
             new DragonAttackProfile(
                 DragonAttackPattern.TargetBurst,
                 SpellId.FrostShard,
-                new DragonPhaseValues(1.05, 0.76),
+                new DragonPhaseValues(1.05, 1.10),
                 new DragonPhaseValues(3, 2.25),
                 new DragonPhaseValues(42, 58),
                 DragonAttackGeometry.Circle(118, 152)),
@@ -69,7 +69,7 @@ public static class DragonCatalog
             new DragonAttackProfile(
                 DragonAttackPattern.TargetBurst,
                 SpellId.ArcaneOrb,
-                new DragonPhaseValues(0.74, 0.5),
+                new DragonPhaseValues(1.10, 1.35),
                 new DragonPhaseValues(2.55, 1.85),
                 new DragonPhaseValues(36, 54),
                 DragonAttackGeometry.Circle(148, 195)),

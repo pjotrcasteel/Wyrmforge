@@ -60,7 +60,7 @@ public static class DragonHuntCatalog
         1.2,
         new DragonHuntPressureProfile(
             DragonHuntPressureOrigin.Player,
-            new DragonHuntPressureCadence(new DragonPhaseValues(4.8, 3.45), new DragonPhaseValues(1.05, 0.76)),
+            new DragonHuntPressureCadence(new DragonPhaseValues(4.8, 3.45), new DragonPhaseValues(1.05, 1.15)),
             new DragonPhaseValues(125, 158),
             new DragonPhaseValues(24, 33),
             1,
