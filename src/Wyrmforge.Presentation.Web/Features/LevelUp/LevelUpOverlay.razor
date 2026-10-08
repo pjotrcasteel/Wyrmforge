@@ -34,7 +34,7 @@
                      aria-hidden="@(revealing || confirmingChoice is not null)">
                 <div class="eyebrow">SPELL EVOLUTION • @EvolutionSpellName</div>
                 <h2>Choose what the spell becomes</h2>
-                <p>Two fates await. Choose one permanent transformation for this hunt; the other closes.</p>
+                <p>Choose one of @Choices.Count permanent forms for this hunt. The other paths close.</p>
                 <div class="upgrade-choices">
                     @foreach (var choice in Choices)
                     {

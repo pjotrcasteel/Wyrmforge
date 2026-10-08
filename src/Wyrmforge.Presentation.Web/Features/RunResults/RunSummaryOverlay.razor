@@ -1,6 +1,7 @@
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.DragonEssences
 @using Wyrmforge.Domain.Progression.Forge
+@using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Presentation.Web.Features.Forge
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Progression.RunUpgrades
@@ -106,7 +107,20 @@
             </div>
         }
 
-        <ForgeGoalBoard Progression="Progression" Vault="Vault" Compact="true" />
+        @if (NewLineages.Count > 0)
+        {
+            <section class="run-lineage-reveal" aria-label="Wyrmforged lineage discovered">
+                <span>✦ AN ANCIENT LINEAGE HAS AWAKENED ✦</span>
+                @foreach (var evolutionId in NewLineages)
+                {
+                    var evolution = SpellEvolutionCatalog.Get(evolutionId);
+                    <h3>@evolution.Icon @evolution.Name</h3>
+                    <p>@evolution.Description</p>
+                }
+                <strong>NEW EVOLUTION AVAILABLE IN FUTURE HUNTS</strong>
+            </section>
+        }
+        <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Compact="true" />
 
         <p class="run-report-meta">@Summary.Choices build choices • @Summary.DragonEssences secured Essence • seed @Summary.Seed</p>
         <div class="run-report-actions">
@@ -120,6 +134,8 @@
     [Parameter, EditorRequired] public Wyrmforge.Application.Runs.EndRun.RunSummary Summary { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter] public SpellMasteryState Masteries { get; set; } = new();
+    [Parameter] public IReadOnlyList<SpellEvolutionId> NewLineages { get; set; } = [];
     [Parameter] public EventCallback OnReplay { get; set; }
     [Parameter] public EventCallback OnReturn { get; set; }
 

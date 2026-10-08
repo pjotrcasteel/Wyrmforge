@@ -8,6 +8,8 @@ using Wyrmforge.Domain.Progression.Codex;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.PassiveTree;
+using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Presentation.Web.Pages;
@@ -19,10 +21,14 @@ public partial class Home
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
     private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
     private const string ForgeMasteryKey = "wyrmforge.forgeMastery";
+    private const string SpellMasteryKey = "wyrmforge.spellMastery.v1";
     private readonly PassiveTreeSelection selection = new();
     private readonly DragonEssenceVault essenceVault = new();
     private readonly ArcaneCodex arcaneCodex = new();
     private readonly ForgeProgressionState forgeProgression = new();
+    private readonly SpellMasteryState spellMastery = new();
+    private IReadOnlyList<SpellEvolutionId> newlyUnlockedLineages = [];
+    private int lastCreditedRunNumber = -1;
     private RunSummary? summary;
     private DragonEssenceId? selectedOffering;
     private DragonEssenceId? activeOffering;
@@ -40,6 +46,7 @@ public partial class Home
         await TryLoadEssenceVaultAsync();
         await TryLoadForgeProgressionAsync();
         await TryLoadForgeMasteryAsync();
+        await TryLoadSpellMasteryAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
         StateHasChanged();
@@ -62,6 +69,7 @@ public partial class Home
 
     private async Task StartRunAsync()
     {
+        newlyUnlockedLineages = [];
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
@@ -77,6 +85,16 @@ public partial class Home
 
     private async Task HandleGameOverAsync(RunSummary value)
     {
+        if (lastCreditedRunNumber == runNumber) return;
+        lastCreditedRunNumber = runNumber;
+        var mastery = spellMastery.RecordRun(new MasteryRunEvidence(
+            value.CompletedRouteNodes,
+            value.Depth,
+            value.Outcome == RunOutcome.Abandoned,
+            value.DragonIds.ToHashSet(),
+            value.SpellLoadout.Select(spell => new MasteryRunSpell(spell.Id, spell.Rank)).ToArray()));
+        newlyUnlockedLineages = mastery.NewlyUnlocked;
+        if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();
         summary = value;
         var codexChanged = false;
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
@@ -98,6 +116,7 @@ public partial class Home
         if (summary is null) return Task.CompletedTask;
         activeRunSeed = summary.Seed;
         summary = null;
+        newlyUnlockedLineages = [];
         runNumber++;
         runActive = true;
         return Task.CompletedTask;
@@ -167,6 +186,29 @@ public partial class Home
         }
         catch (JSException) { }
         catch (JsonException) { }
+    }
+
+    private async Task TryLoadSpellMasteryAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, SpellMasteryKey);
+            if (string.IsNullOrWhiteSpace(stored)) return;
+            var saved = JsonSerializer.Deserialize<SpellMasteryEntry[]>(stored);
+            if (saved is not null) spellMastery.Restore(saved);
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task TrySetSpellMasteryAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, SpellMasteryKey,
+                JsonSerializer.Serialize(spellMastery.Snapshot()));
+        }
+        catch (JSException) { }
     }
 
     private async Task TryLoadArcaneCodexAsync()
