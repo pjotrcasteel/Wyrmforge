@@ -34,6 +34,7 @@ class MemoryDb {
                 trouble_area: args[7], completed_runs: args[9], recent_run_count: args[11] });
             return { meta: { changes: 1 } };
         }
+        if (sql.includes('DELETE FROM leaderboard_entries WHERE id')) this.scores.delete(args[0]);
         if (sql.includes('DELETE FROM reports WHERE id')) this.reports.delete(args[0]);
         if (sql.includes('DELETE FROM reports WHERE received_at')) {
             for (const [id, value] of this.reports) if (value.received_at < args[0]) this.reports.delete(id);
@@ -43,6 +44,8 @@ class MemoryDb {
     }
     async all(sql, args) {
         const rows = [...this.reports.values()];
+        if (sql.includes('SELECT id,nickname,score,game_version,created_at FROM leaderboard_entries'))
+            return { results: [...this.scores.values()].slice().reverse() };
         if (sql.includes('SELECT nickname,score,game_version FROM leaderboard_entries'))
             return { results: [...this.scores.values()].sort((a,b) => b.score - a.score).slice(0,20) };
         if (sql.includes('SELECT id,received_at,data')) return { results: rows.slice(-args[0]).reverse() };
@@ -171,4 +174,15 @@ test('Leaderboard stores opted-in community scores, never invented Legends, and 
     const preflight = await worker.fetch(new Request(path, { method: 'OPTIONS', headers: { Origin: e.PUBLIC_ORIGIN } }), e);
     assert.equal(preflight.status, 204);
     assert.equal(e.DB.reports.size, 0);
+});
+
+test('Organizer can list and delete consented scores without exposing feedback', async () => {
+    const e = env();
+    e.DB.scores.set('score-00001', { id: 'score-00001', nickname: 'Run Tester', score: 1200,
+        game_version: '0.0.84', created_at: '2026-10-08T12:00:00Z' });
+    assert.equal((await admin(e, '/v1/admin/leaderboard', 'bad-key')).status, 401);
+    const list = await (await admin(e, '/v1/admin/leaderboard')).json();
+    assert.equal(list.entries[0].id, 'score-00001');
+    assert.equal((await admin(e, '/v1/admin/leaderboard/score-00001', e.ADMIN_TOKEN, 'DELETE')).status, 204);
+    assert.equal(e.DB.scores.size, 0);
 });

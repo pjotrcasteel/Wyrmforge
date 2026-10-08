@@ -179,6 +179,16 @@ async function admin(request, env, url) {
             WHERE replay IS NOT NULL GROUP BY replay ORDER BY count DESC`).all();
         return json({ aggregate, issues: issues.results, replayIntent: intent.results });
     }
+    if (request.method === 'GET' && url.pathname === '/v1/admin/leaderboard') {
+        const scores = await env.DB.prepare('SELECT id,nickname,score,game_version,created_at FROM leaderboard_entries ORDER BY created_at DESC LIMIT 100').all();
+        return json({ entries: scores.results });
+    }
+    if (request.method === 'DELETE' && url.pathname.startsWith('/v1/admin/leaderboard/')) {
+        const id = url.pathname.slice('/v1/admin/leaderboard/'.length);
+        if (!identifier.test(id)) return reject(400, 'invalid_id');
+        await env.DB.prepare('DELETE FROM leaderboard_entries WHERE id = ?').bind(id).run();
+        return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+    }
     if (request.method === 'GET' && url.pathname === '/v1/admin/reports') {
         const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 50));
         const rows = await env.DB.prepare('SELECT id,received_at,data FROM reports ORDER BY received_at DESC LIMIT ?').bind(limit).all();

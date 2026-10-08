@@ -220,7 +220,14 @@ public partial class Home
         {
             var saved = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FirstHuntKey);
             if (int.TryParse(saved, out var count)) { firstHunt.Restore(count); return; }
-            if (bestScore > 0 || essenceVault.TotalCount > 0 || spellMastery.UnlockedCount > 0 || forgeProgression.Discovered.Count > 0)
+            var previousPlaytest = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, "wyrmforge.playtest.v1");
+            var previousRuns = false;
+            if (!string.IsNullOrEmpty(previousPlaytest))
+            {
+                using var document = JsonDocument.Parse(previousPlaytest);
+                previousRuns = document.RootElement.TryGetProperty("started", out var started) && started.TryGetInt32(out var count) && count > 0;
+            }
+            if (bestScore > 0 || previousRuns || essenceVault.TotalCount > 0 || spellMastery.UnlockedCount > 0 || forgeProgression.Discovered.Count > 0)
             {
                 firstHunt.MigrateExperiencedPlayer();
                 selection.RestoreBudget(PassiveTreeCatalog.TotalPoints);
