@@ -262,3 +262,6 @@
     .sanctum-heading { gap: 5px; }
     .sanctum-heading p { font-size: .77rem; }
 }
+
+.sanctum-prep-action { min-height: 39px; border: 1px solid rgba(var(--sanctum-color), .44); border-radius: 9px; background: rgba(var(--sanctum-color), .08); color: #f2d4ad; font-size: .64rem; font-weight: 900; letter-spacing: .09em; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+.sanctum-prep-action:hover { background: rgba(var(--sanctum-color), .19); border-color: rgba(var(--sanctum-color), .75); }
