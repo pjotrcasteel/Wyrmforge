@@ -150,7 +150,7 @@ async function leaderboard(request, env, origin) {
     const name = string(payload?.nickname, 80);
     if (payload?.consent !== true || typeof payload?.id !== 'string' || !identifier.test(payload.id) ||
         !nicknameFormat.test(name) || !Number.isSafeInteger(payload.score) || payload.score < 1 || payload.score > 2000000 ||
-        !/^0\\.0\\.[0-9]{1,3}$/.test(payload.version ?? '')) return reject(400, 'invalid_entry', headers);
+        !/^0\.0\.[0-9]{1,3}$/.test(payload.version ?? '')) return reject(400, 'invalid_entry', headers);
 
     const hour = Math.floor(Date.now() / 3600000);
     const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
