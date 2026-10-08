@@ -9,6 +9,15 @@
         <span class="leave-run-label">RETREAT</span>
     </button>
 
+    @if (trailTransition)
+    {
+        <div class="trail-clear-transition" role="status" aria-live="polite" aria-label="Trail cleared, preparing the route map">
+            <div class="trail-power-burst" aria-hidden="true"></div>
+            <strong>TRAIL CLEARED</strong>
+            <p>Power sweeps the arena clean. Remaining XP is gathered.</p>
+            <span>THE NEXT PATH IS REVEALED</span>
+        </div>
+    }
     @if (runMoment is { } moment)
     {
         <RunMomentOverlay Moment="moment" />
@@ -111,7 +120,7 @@
     {
         <LevelUpOverlay Level="CurrentLevel + 1" Choices="CurrentChoices" OnChoose="ChooseAsync" />
     }
-    else if (PendingMapChoice)
+    else if (PendingMapChoice && !trailTransition)
     {
         <WyrmrealmMapView Depth="CurrentDepth" Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" Resonance="CurrentResonance"
             Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" />
