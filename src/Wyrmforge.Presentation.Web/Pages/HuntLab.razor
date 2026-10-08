@@ -102,7 +102,7 @@
         var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
         snapshot = current.Tick(delta, agent!.ChooseMovement(observation), width, height);
         var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
-            : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "ASCENDANT DUEL WON • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
+            : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "WYRM DEFEATED • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
         if (current.IsEnded) nextStatus = "AGENT DEFEATED • RESTART TO WATCH AGAIN";
         if (nextStatus != status)
         {
