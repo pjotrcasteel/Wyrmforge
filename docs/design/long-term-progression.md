@@ -157,3 +157,11 @@ The Great Hunt altar is a compact, selectable ritual surface in the Forge sanctu
 **Ascendant Ashfang — Crown of Embers** is the first opt-in rite, unlocked by sealing the First Flame oath. Selecting it from the Run Hub preserves normal Depth I gameplay and guarantees an upgraded Ashfang at the Depth II Wyrm gate. It has an extended cinematic reveal, stronger health, a shifting-safe-lane Crownfall signature and a third volley in phase two. A permanent, non-stat Crown of Embers trophy marks the first victory on the existing Great Hunt altar, and the fight is replayable.
 
 The three other Ascendants must each gain a distinctive movement problem instead of inheriting Ashfang's Crownfall or being presented as playable. Then Elder Wyrms can extend the same progression architecture. Normal combat balance must remain unchanged for non-rite runs.
+
+## 0.0.82: second playable Ascendant
+
+**Ascendant Stormcoil — Stormbound Halo** opens only after the Unbroken Sky oath is sealed. Players choose one unlocked rite per run; the Depth II encounter follows that choice, preserving the rest of the journey and the deterministic ordinary-hunt random stream.
+
+Its new **Skybreak Crossing** pattern is a three-beat crossing-corridor movement problem, visually distinct from Tempest Cage and Crownfall. Phase one sends transverse and longitudinal lightning; phase two adds a diagonal crossing. Telegraph sizes are bounded by the shorter arena dimension for portrait/landscape fairness. A separate Storm-colored cinematic name slam and permanent Halo trophy give the win a memorable identity.
+
+No new permanently stacking attributes are introduced. Existing Great Hunt saves continue to deserialize, Ashfang trophies remain earned, and the remaining rites stay genuinely locked until their unique encounters are implemented. The community playtest system is live in parallel, and feedback results across versions must be treated as different cohorts when balancing future changes.
