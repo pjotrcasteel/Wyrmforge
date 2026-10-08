@@ -153,6 +153,35 @@ public sealed class GreatHuntStateTests
         Assert.IsFalse(state.Get(DragonId.Ashfang).AscendantDefeated);
     }
 
+    [TestMethod]
+    public void RecordRun_StormcoilAscendantVictory_AwardsOnePersistedTrophyWithoutChangingAshfang()
+    {
+        var state = new GreatHuntState();
+        var evidence = Evidence(DragonId.Stormcoil) with { AscendantVictories = new HashSet<DragonId> { DragonId.Stormcoil } };
+
+        Assert.AreEqual(0, state.RecordRun(evidence with { Abandoned = true }).Count);
+        Assert.IsFalse(state.Get(DragonId.Stormcoil).AscendantDefeated);
+        Assert.AreEqual(1, state.RecordRun(evidence).Count);
+        Assert.AreEqual(0, state.RecordRun(evidence).Count);
+        Assert.IsTrue(state.Get(DragonId.Stormcoil).AscendantDefeated);
+        Assert.IsFalse(state.Get(DragonId.Ashfang).AscendantDefeated);
+
+        var restored = new GreatHuntState();
+        restored.Restore(state.Snapshot());
+        Assert.IsTrue(restored.Get(DragonId.Stormcoil).AscendantDefeated);
+    }
+
+    [TestMethod]
+    public void Restore_LegacyAshfangTrophy_RemainsSealedAfterAddingStormcoilRite()
+    {
+        var state = new GreatHuntState();
+        state.Restore([new GreatHuntEntry(DragonId.Ashfang, true, true, true) { AscendantDefeated = true }]);
+        Assert.IsTrue(state.Get(DragonId.Ashfang).AscendantDefeated);
+        Assert.IsFalse(state.Get(DragonId.Stormcoil).AscendantDefeated);
+        Assert.IsTrue(AscendantRiteCatalog.IsAvailable(DragonId.Stormcoil));
+        Assert.IsFalse(AscendantRiteCatalog.IsAvailable(DragonId.Voidweaver));
+    }
+
     private static GreatHuntRunEvidence Evidence(DragonId wyrm) => new(1, false,
         new HashSet<DragonId> { wyrm }, new HashSet<DragonId>(), []);
 }

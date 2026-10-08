@@ -221,6 +221,38 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_TwoAscendantRites_SelectionIsExclusiveAndRunStartsWithoutOverflow()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.greatHunt.v1',
+            JSON.stringify([{Wyrm:0,Slain:true,EssenceSecured:true,DeepEvolvedDuel:true,AscendantDefeated:true},
+                {Wyrm:1,Slain:true,EssenceSecured:true,DeepEvolvedDuel:true,AscendantDefeated:false}]));
+            localStorage.setItem('wyrmforge.spellMastery.v1',
+            JSON.stringify([{Spell:1,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true},
+                {Spell:3,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true}]));");
+
+        await OpenAsync();
+        var fire = Page.Locator("section.ascendant-rite-card:not(.storm) button.ascendant-rite-action");
+        var storm = Page.Locator("section.ascendant-rite-card.storm button.ascendant-rite-action");
+        await Expect(fire).ToBeVisibleAsync();
+        await Expect(storm).ToBeVisibleAsync();
+        await storm.ClickAsync();
+        await Expect(storm).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(fire).ToHaveAttributeAsync("aria-pressed", "false");
+        await fire.ClickAsync();
+        await Expect(fire).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(storm).ToHaveAttributeAsync("aria-pressed", "false");
+        await storm.ClickAsync();
+        await Expect(storm).ToHaveAttributeAsync("aria-pressed", "true");
+        await ScreenshotAsync("mobile-two-ascendant-rites.png");
+        var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
+        Assert.IsLessThanOrEqualTo(1, overflow);
+        await EnterFirstTrailAsync();
+        await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     public async Task Mobile_CommunityPlaytest_ReportsAreOptInAndIncludeReproducibleRunData()
     {
         Directory.CreateDirectory(ArtifactDirectory);

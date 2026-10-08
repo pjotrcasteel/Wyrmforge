@@ -123,6 +123,51 @@ public sealed class DragonHuntSignaturePlannerTests
         Assert.IsTrue(AscendantAshfangRule.IsEncounter(true, false, 2, Wyrmforge.Domain.Combat.Dragons.DragonId.Ashfang));
     }
 
+    [TestMethod]
+    public void SkybreakCrossing_AlternatesPerpendicularCorridorsAndThirdPhaseTwoWave()
+    {
+        var signature = DragonHuntCatalog.AscendantStormcoil.Signature;
+        Assert.AreEqual(DragonHuntSignatureKind.SkybreakCrossing, signature.Kind);
+
+        foreach (var (width, height, player) in new[]
+        {
+            (390d, 844d, new Vector2D(195, 410)),
+            (844d, 390d, new Vector2D(420, 195)),
+        })
+        {
+            var early = DragonHuntSignaturePlanner.Create(signature, 1, Dragon, player, width, height, new FirstRandomSource());
+            var late = DragonHuntSignaturePlanner.Create(signature, 2, Dragon, player, width, height, new FirstRandomSource());
+            Assert.AreEqual(10, early.Count);
+            Assert.AreEqual(15, late.Count);
+            var waves = late.GroupBy(strike => strike.DelaySeconds).OrderBy(group => group.Key).ToArray();
+            Assert.AreEqual(3, waves.Length);
+            Assert.IsTrue(waves.All(wave => wave.Count() == 5));
+            Assert.IsTrue(waves.All(wave => wave.All(strike => strike.Radius is > 0 && strike.Position.X >= 0 &&
+                strike.Position.X <= width && strike.Position.Y >= 0 && strike.Position.Y <= height)));
+            Assert.IsTrue(waves[0].All(strike => Math.Abs(strike.Position.Y - player.Y) < 0.001));
+            Assert.IsTrue(waves[1].All(strike => Math.Abs(strike.Position.X - player.X) < 0.001));
+            Assert.IsTrue(waves[2].Select(strike => strike.Position).Distinct().Count() >= 3);
+            Assert.IsTrue(waves[1].Key >= 1.3 && waves[2].Key >= 2.6);
+            Assert.IsFalse(waves[0].Select(strike => strike.Position).SequenceEqual(waves[1].Select(strike => strike.Position)));
+        }
+    }
+
+    [TestMethod]
+    public void AscendantHuntRule_SealedRiteTarget_OnlyReplacesDepthTwoMatchingWyrm()
+    {
+        Assert.IsFalse(AscendantHuntRule.ShouldForce(null, false, 2));
+        Assert.IsFalse(AscendantHuntRule.ShouldForce(Wyrmforge.Domain.Combat.Dragons.DragonId.Rimeclaw, false, 2));
+        Assert.IsFalse(AscendantHuntRule.ShouldForce(Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil, false, 1));
+        Assert.IsTrue(AscendantHuntRule.ShouldForce(Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil, false, 2));
+        Assert.IsFalse(AscendantHuntRule.ShouldForce(Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil, true, 3));
+        Assert.IsTrue(AscendantHuntRule.IsEncounter(Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil, false, 2,
+            Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil));
+        Assert.IsFalse(AscendantHuntRule.IsEncounter(Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil, false, 2,
+            Wyrmforge.Domain.Combat.Dragons.DragonId.Ashfang));
+        Assert.AreEqual("Tempest Cage", DragonHuntCatalog.Stormcoil.Signature.Name);
+        Assert.AreEqual("Crownfall", DragonHuntCatalog.AscendantAshfang.Signature.Name);
+    }
+
     private static bool IsInsideArena(Vector2D position, double radius) =>
         position.X >= radius && position.X <= Width - radius && position.Y >= radius && position.Y <= Height - radius;
 }
