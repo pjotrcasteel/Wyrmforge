@@ -6,19 +6,37 @@
     <base href="/" />
     <title>Wyrmforge</title>
     <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/ignition.css" />
     <link rel="stylesheet" href="css/dragon-harvest.css" />
     <link rel="stylesheet" href="Wyrmforge.Presentation.Web.styles.css" />
     <link rel="stylesheet" href="css/run-overlays.css" />
 </head>
-<body>
-    <div id="app">Heating the forge…</div>
+<body class="igniting">
+    <div id="wyrmforge-ignition" class="ignition-screen" role="status" aria-live="polite" aria-label="Igniting Wyrmforge">
+        <div class="ignition-content">
+            <div class="ignition-sigil" aria-hidden="true"><span class="ignition-sigil-core">◆</span></div>
+            <p class="ignition-kicker">THE REALM IS AWAKENING</p>
+            <h1>IGNITING <span>WYRMFORGE</span></h1>
+            <div class="ignition-progress" aria-hidden="true"><span></span></div>
+            <p class="ignition-status" id="ignition-status">PREPARING THE HUNT</p>
+            <button type="button" id="ignition-retry" class="ignition-retry" hidden>TRY AGAIN</button>
+        </div>
+    </div>
+    <div id="app">Preparing Wyrmforge…</div>
     <script src="js/arcane-web.js"></script>
     <script src="_framework/blazor.webassembly.js?v=__WYRMFORGE_BUILD__" autostart="false"></script>
     <script>
         (() => {
             const build = "__WYRMFORGE_BUILD__";
             const app = document.getElementById("app");
-            const retryKey = `wyrmforge-boot-retry-${build}`;
+            const splash = document.getElementById("wyrmforge-ignition");
+            const status = document.getElementById("ignition-status");
+            const retry = document.getElementById("ignition-retry");
+            const retryKey = "wyrmforge-boot-retry-" + build;
+            const startedAt = performance.now();
+            const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const minimumIntroMs = reducedMotion ? 0 : 1100;
+            let started = false;
 
             const versionedResource = (type, name, defaultUri) => {
                 if (!defaultUri) return defaultUri;
@@ -28,28 +46,53 @@
             };
 
             const fail = error => {
-                console.error("Wyrmforge failed to start.", error);
-                if (!app) return;
-                app.innerHTML = '<div style="display:grid;place-items:center;min-height:100vh;padding:24px;text-align:center;background:#0c0a10;color:#eee9f4;font-family:system-ui,sans-serif"><div><strong style="display:block;font-size:1.1rem">The forge failed to ignite.</strong><span style="display:block;margin:8px 0 16px;color:#9f95a8;font-size:.85rem">A stale deployment asset may be cached.</span><button type="button" onclick="location.reload()" style="padding:10px 16px;border:1px solid #4b3c59;border-radius:10px;color:#eee9f4;background:#211827">Retry</button></div></div>';
+                console.error("Wyrmforge failed to ignite.", error);
+                if (!splash) return;
+                splash.classList.add("ignition-failed");
+                status.textContent = "THE FORGE COULD NOT IGNITE";
+                retry.hidden = false;
             };
 
+            retry.addEventListener("click", () => {
+                try { sessionStorage.removeItem(retryKey); } catch { /* Storage can be disabled. */ }
+                window.location.reload();
+            });
+
             const recoveryTimer = window.setTimeout(() => {
-                if (!app || !app.textContent?.includes("Heating the forge")) return;
-                if (sessionStorage.getItem(retryKey)) {
+                if (started) return;
+                const url = new URL(window.location.href);
+                if (url.searchParams.get("boot") === build) {
                     fail(new Error("Blazor startup timed out after automatic retry."));
                     return;
                 }
 
-                sessionStorage.setItem(retryKey, "1");
-                const url = new URL(window.location.href);
+                try {
+                    if (sessionStorage.getItem(retryKey)) {
+                        fail(new Error("Blazor startup timed out after automatic retry."));
+                        return;
+                    }
+                    sessionStorage.setItem(retryKey, "1");
+                } catch { /* The URL marker still prevents repeated automatic retries. */ }
                 url.searchParams.set("boot", build);
                 window.location.replace(url.toString());
             }, 9000);
 
-            Blazor.start({ loadBootResource: versionedResource })
+            Promise.resolve()
                 .then(() => {
+                    if (!window.Blazor) throw new Error("Blazor bootstrap was not loaded.");
+                    return window.Blazor.start({ loadBootResource: versionedResource });
+                })
+                .then(() => {
+                    started = true;
                     window.clearTimeout(recoveryTimer);
-                    sessionStorage.removeItem(retryKey);
+                    try { sessionStorage.removeItem(retryKey); } catch { /* Storage can be disabled. */ }
+
+                    const remaining = Math.max(0, minimumIntroMs - (performance.now() - startedAt));
+                    window.setTimeout(() => {
+                        document.body.classList.remove("igniting");
+                        splash.classList.add("ignition-complete");
+                        window.setTimeout(() => splash.remove(), 650);
+                    }, remaining);
                 })
                 .catch(error => {
                     window.clearTimeout(recoveryTimer);
