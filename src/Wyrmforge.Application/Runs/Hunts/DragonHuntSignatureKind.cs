@@ -7,4 +7,5 @@ public enum DragonHuntSignatureKind
     GlacialWall = 3,
     RiftEcho = 4,
     Crownfall = 5,
+    SkybreakCrossing = 6,
 }

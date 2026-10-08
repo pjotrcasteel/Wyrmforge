@@ -36,9 +36,9 @@ public sealed partial class RunSimulation
     private void ResolveDragonAttraction()
     {
         if (attractedDragon is not null) return;
-        if (AscendantAshfangRule.ShouldForceAshfang(ascendantChallengeEnabled, ascendantHuntConsumed, depthState.Depth))
+        if (AscendantHuntRule.ShouldForce(selectedAscendant, ascendantHuntConsumed, depthState.Depth))
         {
-            attractedDragon = DragonId.Ashfang;
+            attractedDragon = selectedAscendant;
             return;
         }
         attractedDragon = dragonAttractionState.Roll(Resonance, randomSource, defeatedDragonIds);

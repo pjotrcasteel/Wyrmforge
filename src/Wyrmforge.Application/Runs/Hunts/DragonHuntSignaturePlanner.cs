@@ -27,6 +27,7 @@ public static class DragonHuntSignaturePlanner
             DragonHuntSignatureKind.GlacialWall => GlacialWall(strikes, radius, playerPosition, width, height, randomSource),
             DragonHuntSignatureKind.RiftEcho => RiftEcho(strikes, radius, playerPosition, width, height),
             DragonHuntSignatureKind.Crownfall => Crownfall(strikes, radius, playerPosition, width, height),
+            DragonHuntSignatureKind.SkybreakCrossing => SkybreakCrossing(strikes, radius, playerPosition, width, height),
             _ => throw new InvalidOperationException($"Unsupported Wyrm signature {signature.Kind}."),
         };
     }
@@ -135,6 +136,35 @@ public static class DragonHuntSignaturePlanner
                 var at = effectiveRadius + spacing * lane;
                 var point = acrossWidth ? new Vector2D(at, player.Y) : new Vector2D(player.X, at);
                 result.Add(new DragonHuntSignatureStrike(Clamp(point, width, height, effectiveRadius), wave * 1.25, effectiveRadius));
+            }
+        }
+
+        return result;
+    }
+
+    // Sequential crossing currents sweep through the captured position in perpendicular directions.
+    // Each wave gives a full telegraph and a 1.35s recovery window. No camera-relative assumptions.
+    private static IReadOnlyList<DragonHuntSignatureStrike> SkybreakCrossing(int strikes, double radius, Vector2D player, double width, double height)
+    {
+        const int nodesPerWave = 5;
+        var waveCount = Math.Max(1, strikes / nodesPerWave);
+        var effectiveRadius = Math.Min(radius, Math.Min(width, height) / 13d);
+        var spacing = effectiveRadius * 1.85;
+        var result = new List<DragonHuntSignatureStrike>(waveCount * nodesPerWave);
+
+        for (var wave = 0; wave < waveCount; wave++)
+        {
+            var direction = wave % 3 switch
+            {
+                0 => new Vector2D(1, 0),
+                1 => new Vector2D(0, 1),
+                _ => new Vector2D(Math.Sqrt(0.5), Math.Sqrt(0.5)),
+            };
+            for (var node = 0; node < nodesPerWave; node++)
+            {
+                var offset = (node - nodesPerWave / 2) * spacing;
+                result.Add(new DragonHuntSignatureStrike(Clamp(player + direction * offset, width, height, effectiveRadius),
+                    wave * 1.35, effectiveRadius));
             }
         }
 
