@@ -48,8 +48,9 @@ jobs:
             git switch --detach FETCH_HEAD
             git switch -C playtest-insights
           else
+            # Git 2.55+ already clears the index/worktree on orphan creation.
+            # Running git rm here fails with "pathspec '.' did not match any files".
             git switch --orphan playtest-insights
-            git rm -rf --quiet .
           fi
 
           mkdir -p docs/playtesting/insights
