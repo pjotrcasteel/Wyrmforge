@@ -230,8 +230,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.Locator("button.playtest-invite").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Help shape the Wyrmrealm" })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Report data stays on this device until you choose to share.", new() { Exact = false })).ToBeVisibleAsync();
-        var shareAction = Page.GetByRole(AriaRole.Button, new() { Name = "SHARE PLAYTEST REPORT" });
+        await Expect(Page.GetByText("Your report stays on this device until you choose to send or share it.", new() { Exact = false })).ToBeVisibleAsync();
+        var shareAction = Page.GetByRole(AriaRole.Button, new() { Name = "SHARE / DOWNLOAD JSON" });
         var bounds = await shareAction.BoundingBoxAsync();
         Assert.IsNotNull(bounds);
         Assert.IsLessThanOrEqualTo(844, bounds.Y + bounds.Height, "Share action must be visible even when the optional form scrolls.");
@@ -247,7 +247,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator("#playtest-area").SelectOptionAsync("movement");
         await Page.Locator("#playtest-improve").FillAsync("Touch movement was confusing.");
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE PLAYTEST REPORT" }).ClickAsync());
+            await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE / DOWNLOAD JSON" }).ClickAsync());
         Assert.IsTrue(download.SuggestedFilename.StartsWith("wyrmforge-playtest-", StringComparison.Ordinal));
         var file = Path.Combine(ArtifactDirectory, "playtest-test-export.json");
         await download.SaveAsAsync(file);
@@ -263,7 +263,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.Locator("label.playtest-include input").UncheckAsync();
         var emptyDownload = await Page.RunAndWaitForDownloadAsync(async () =>
-            await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE PLAYTEST REPORT" }).ClickAsync());
+            await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE / DOWNLOAD JSON" }).ClickAsync());
         var optedOutPath = Path.Combine(ArtifactDirectory, "playtest-opted-out.json");
         await emptyDownload.SaveAsAsync(optedOutPath);
         using var optedOut = JsonDocument.Parse(await File.ReadAllTextAsync(optedOutPath));
