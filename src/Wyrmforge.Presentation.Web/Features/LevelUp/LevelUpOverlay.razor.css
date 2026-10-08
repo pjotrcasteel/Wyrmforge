@@ -221,3 +221,9 @@
 
 .evolution-draft .evo-crossroads.run-overlay-surface { width: min(760px, 100%) !important; }
 .evo-stage > .evo-confirmation.evo-withdrawn { animation: none; }
+
+/* An earned third lineage deserves a real three-way crossroads, not an orphaned card. */
+@media (min-width: 901px) {
+    .evolution-draft .evo-crossroads.evo-many-branches.run-overlay-surface { width: min(1040px, calc(100vw - 36px)) !important; }
+    .evolution-draft .evo-crossroads.evo-many-branches .upgrade-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

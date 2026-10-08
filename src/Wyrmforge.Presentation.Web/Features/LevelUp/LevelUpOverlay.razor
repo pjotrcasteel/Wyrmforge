@@ -30,7 +30,7 @@
                 }
             </section>
 
-            <section class="level-up-card run-overlay-surface evo-crossroads @(revealing || confirmingChoice is not null ? "evo-withdrawn" : "evo-visible")"
+            <section class="level-up-card run-overlay-surface evo-crossroads @(Choices.Count > 2 ? "evo-many-branches" : string.Empty) @(revealing || confirmingChoice is not null ? "evo-withdrawn" : "evo-visible")"
                      aria-hidden="@(revealing || confirmingChoice is not null)">
                 <div class="eyebrow">SPELL EVOLUTION • @EvolutionSpellName</div>
                 <h2>Choose what the spell becomes</h2>
