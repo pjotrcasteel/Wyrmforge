@@ -259,7 +259,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/balance-lab");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Skip the grind. Stress-test the Wyrm." })).ToBeVisibleAsync();
         await Expect(Page.GetByLabel("Test Wyrm")).ToHaveValueAsync("Stormcoil");
-        await Expect(Page.GetByLabel("Encounter variant")).ToHaveValueAsync("True");
+        await Expect(Page.GetByLabel("Encounter variant")).ToHaveValueAsync("ascendant");
         await Expect(Page.GetByRole(AriaRole.Img, new() { Name = "Planned boss warning positions with player centered" })).ToBeVisibleAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "RUN PORTRAIT + LANDSCAPE TRIALS" })).ToBeVisibleAsync();
         var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");

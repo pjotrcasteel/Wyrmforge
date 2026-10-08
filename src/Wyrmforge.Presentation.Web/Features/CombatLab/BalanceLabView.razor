@@ -41,10 +41,10 @@
             </label>
             <label>Encounter
                 <select @bind="huntVariant" aria-label="Encounter variant">
-                    <option value="False">Ordinary</option>
+                    <option value="ordinary">Ordinary</option>
                     @if (AscendantRiteCatalog.IsAvailable(huntWyrm))
                     {
-                        <option value="True">Ascendant</option>
+                        <option value="ascendant">Ascendant</option>
                     }
                 </select>
             </label>
@@ -56,8 +56,8 @@
             </label>
             <label>Inspect geometry
                 <select @bind="portraitPreview" aria-label="Preview orientation">
-                    <option value="True">Portrait · 390 × 844</option>
-                    <option value="False">Landscape · 844 × 390</option>
+                    <option value="portrait">Portrait · 390 × 844</option>
+                    <option value="landscape">Landscape · 844 × 390</option>
                 </select>
             </label>
             <label class="hunt-trial-practice">
@@ -191,19 +191,19 @@
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
     private DragonId huntWyrm = DragonId.Stormcoil;
-    private bool huntVariant = true;
+    private string huntVariant = "ascendant";
     private int huntPhase = 1;
-    private bool portraitPreview = true;
+    private string portraitPreview = "portrait";
     private bool huntInvulnerable;
     private bool huntRunning;
     private int huntProgress;
     private readonly List<DevelopmentHuntTrialResult> huntResults = [];
     private int selectedBuildIndex;
 
-    private DragonHuntProfile PreviewProfile => huntVariant && AscendantRiteCatalog.IsAvailable(huntWyrm)
+    private DragonHuntProfile PreviewProfile => huntVariant == "ascendant" && AscendantRiteCatalog.IsAvailable(huntWyrm)
         ? DragonHuntCatalog.GetAscendant(huntWyrm) : DragonHuntCatalog.Get(huntWyrm);
-    private double PreviewWidth => portraitPreview ? 390 : 844;
-    private double PreviewHeight => portraitPreview ? 844 : 390;
+    private double PreviewWidth => portraitPreview == "portrait" ? 390 : 844;
+    private double PreviewHeight => portraitPreview == "portrait" ? 844 : 390;
     private IReadOnlyList<DragonHuntSignatureStrike> PreviewStrikes => DragonHuntSignaturePlanner.Create(PreviewProfile.Signature, huntPhase,
         new Vector2D(PreviewWidth / 2d, PreviewHeight * 0.2), new Vector2D(PreviewWidth / 2d, PreviewHeight / 2d),
         PreviewWidth, PreviewHeight, new SeededRandomSource(seed));
@@ -216,7 +216,7 @@
         huntResults.Clear();
         var build = SelfPlayBuildCatalog.All[selectedBuildIndex];
         var wyrm = huntWyrm;
-        var ascendant = huntVariant && AscendantRiteCatalog.IsAvailable(wyrm);
+        var ascendant = huntVariant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm);
         var spell = wyrm switch
         {
             DragonId.Ashfang => SpellId.FireBolt,
@@ -265,7 +265,7 @@
         running = false;
     }
 
-    private void WatchHunt() => Navigation.NavigateTo($"hunt-lab?wyrm={huntWyrm}&ascendant={huntVariant && AscendantRiteCatalog.IsAvailable(huntWyrm)}&phase={huntPhase}&seed={seed}");
+    private void WatchHunt() => Navigation.NavigateTo($"hunt-lab?wyrm={huntWyrm}&ascendant={huntVariant == "ascendant" && AscendantRiteCatalog.IsAvailable(huntWyrm)}&phase={huntPhase}&seed={seed}");
 
     private void OpenCombatLab() => Navigation.NavigateTo("combat-lab");
     private void BackToForge() => Navigation.NavigateTo(string.Empty);
