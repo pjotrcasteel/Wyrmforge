@@ -253,6 +253,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_DeveloperHuntTrials_ShowsPortraitWarningGeometryAndIsolatedHuntControls()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl + "/balance-lab");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Skip the grind. Stress-test the Wyrm." })).ToBeVisibleAsync();
+        await Expect(Page.GetByLabel("Test Wyrm")).ToHaveValueAsync("Stormcoil");
+        await Expect(Page.GetByLabel("Encounter variant")).ToHaveValueAsync("true");
+        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = "Planned boss warning positions with player centered" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "RUN PORTRAIT + LANDSCAPE TRIALS" })).ToBeVisibleAsync();
+        var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
+        Assert.IsLessThanOrEqualTo(1, overflow, "Developer trial controls must fit on iPhone width.");
+    }
+
+    [TestMethod]
     public async Task Mobile_CommunityPlaytest_ReportsAreOptInAndIncludeReproducibleRunData()
     {
         Directory.CreateDirectory(ArtifactDirectory);
