@@ -45,3 +45,35 @@
 .mastery-node.forged button { border-color: rgba(105,205,156,.36); color: #8bd8b0; background: rgba(105,205,156,.12); }
 @media (max-width: 820px) { .lineage-grid { grid-template-columns: 1fr; } .forge-heading { align-items: stretch; flex-direction: column; } .forge-count { width: fit-content; } }
 @media (max-width: 560px) { .forge-heading { padding: 20px; } .offering-card { flex-basis: 100%; } }
+
+.forge-celebration-backdrop {
+    position: fixed;
+    z-index: 100;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(6, 4, 8, .89);
+    backdrop-filter: blur(13px);
+}
+.forge-celebration {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    width: min(560px, 100%);
+    padding: clamp(22px, 5vw, 52px);
+    text-align: center;
+    border: 1px solid rgba(225, 180, 99, .6);
+    border-radius: 24px;
+    background: radial-gradient(ellipse at 50% 12%, rgba(231, 172, 70, .19), transparent 60%), #17111e;
+    box-shadow: 0 0 100px rgba(220, 164, 81, .19), 0 30px 90px rgba(0, 0, 0, .65);
+    animation: forge-unlock-arrival .5s cubic-bezier(.2, 1.25, .35, 1) both;
+}
+.forge-celebration-sigil { font-size: 5rem; color: #f1ce84; filter: drop-shadow(0 0 27px #d69c4e); }
+.forge-celebration h2 { margin: 0; font-size: clamp(1.7rem, 4vw, 3rem); }
+.forge-celebration p { margin: 0; color: #bbacbe; line-height: 1.5; }
+.forge-celebration-unlocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.forge-celebration-unlocks span { padding: 8px 12px; border: 1px solid #655037; border-radius: 10px; background: rgba(213, 164, 89, .1); color: #f0d6a1; font-size: .78rem; }
+.forge-celebration button { min-height: 44px; margin-top: 8px; padding: 10px 22px; border: 1px solid #ad8350; border-radius: 12px; color: #180f15; background: #e8c486; font-weight: 900; cursor: pointer; }
+@keyframes forge-unlock-arrival { from { opacity: 0; transform: scale(.83); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .forge-celebration { animation: none; } }

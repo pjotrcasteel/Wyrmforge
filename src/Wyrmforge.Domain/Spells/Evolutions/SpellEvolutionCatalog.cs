@@ -36,7 +36,17 @@ public static class SpellEvolutionCatalog
             new(DamageMultiplier: 0.60, CastIntervalMultiplier: 0.88, ExtraProjectiles: 2, BonusPierces: 2)),
         new(SpellEvolutionId.Markstorm, SpellId.AetherDart, "Markstorm", "Aether Dart fires much faster and applies an additional Arcane Mark stack on every hit.", "◇",
             new(DamageMultiplier: 0.86, CastIntervalMultiplier: 0.72, StatusDurationMultiplier: 1.35, BonusStatusStacks: 1)),
+        new(SpellEvolutionId.EmberTempest, SpellId.CinderNeedle, "Ember Tempest", "A forged storm of four embers erupts across packs, trading individual impact for wide Burning.", "✺",
+            new(DamageMultiplier: 0.54, CastIntervalMultiplier: 1.18, ExtraProjectiles: 3, SplashRadius: 58, StatusDurationMultiplier: 1.2), true),
+        new(SpellEvolutionId.ThunderCrown, SpellId.BallLightning, "Thunder Crown", "An overclocked chain storm with fast pulses, extra arcs and relentless Shock.", "♛",
+            new(DamageMultiplier: 0.76, CastIntervalMultiplier: 0.76, BonusChains: 3, StatusDurationMultiplier: 1.15), true),
+        new(SpellEvolutionId.CrystalDivide, SpellId.IceLance, "Crystal Divide", "One ice lance becomes three piercing crystal spears that trade heavy impact for coverage.", "❖",
+            new(DamageMultiplier: 0.64, CastIntervalMultiplier: 1.08, ExtraProjectiles: 2, BonusPierces: 1), true),
+        new(SpellEvolutionId.MirrorChoir, SpellId.AetherDart, "Mirror Choir", "Two quick mirrored darts pierce enemies and weave heavier Arcane Marks.", "◈",
+            new(DamageMultiplier: 0.72, CastIntervalMultiplier: 0.84, ExtraProjectiles: 1, BonusPierces: 1, BonusStatusStacks: 1), true),
     ];
+
+    public static IReadOnlyList<SpellEvolutionDefinition> Base { get; } = All.Where(evolution => !evolution.RequiresForgeUnlock).ToArray();
 
     public static SpellEvolutionDefinition Get(SpellEvolutionId id) => All.Single(definition => definition.Id == id);
 

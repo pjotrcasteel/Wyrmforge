@@ -1,0 +1,17 @@
+.forge-goal-board { display:grid;gap:13px;padding:18px;border:1px solid rgba(184,135,255,.21);border-radius:17px;background:linear-gradient(135deg,rgba(45,29,59,.5),rgba(18,14,23,.92)); }
+.forge-goal-board > header { display:flex;justify-content:space-between;align-items:center;gap:16px; }
+.forge-goal-board h2 { margin:4px 0 3px;font-size:1.18rem; }
+.forge-goal-board header p { margin:0;color:#a095ac;font-size:.74rem;line-height:1.4; }
+.forge-goal-count { flex:0 0 auto;color:#a991bf;font-size:.6rem;font-weight:850;letter-spacing:.08em; }
+.forge-goal-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px; }
+.forge-goal { display:grid;align-content:start;gap:6px;min-width:0;padding:13px;border:1px solid #40324a;border-radius:12px;background:rgba(11,9,15,.55); }
+.forge-goal.ready { border-color:#ae844b;background:rgba(91,61,29,.13); }
+.forge-goal-status { color:#bd91e8;font-size:.56rem;font-weight:900;letter-spacing:.09em; }
+.forge-goal.ready .forge-goal-status { color:#f0cb80; }
+.forge-goal h3 { margin:0;font-size:.88rem;color:#f0e9f4; }
+.forge-goal p { margin:0;color:#b7aabf;font-size:.7rem;line-height:1.45; }
+.forge-goal small { margin-top:5px;color:#c8a9df;font-size:.63rem;line-height:1.4; }
+.forge-goal-complete { margin:0;color:#c3b0d0;font-size:.8rem;line-height:1.5; }
+.forge-goal-board.compact { margin-top:12px;padding:12px; }
+.forge-goal-board.compact .forge-goal { padding:10px; }
+@media (max-width:780px) { .forge-goal-grid { grid-template-columns:1fr; } .forge-goal-board > header { flex-wrap:wrap; } }

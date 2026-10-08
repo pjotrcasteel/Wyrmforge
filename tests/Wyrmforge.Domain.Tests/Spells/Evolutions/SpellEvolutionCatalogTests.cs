@@ -12,13 +12,22 @@ public sealed class SpellEvolutionCatalogTests
     {
         foreach (var spell in SpellCatalog.All)
         {
-            var branches = SpellEvolutionCatalog.For(spell.Id);
+            var branches = SpellEvolutionCatalog.For(spell.Id).Where(evolution => !evolution.RequiresForgeUnlock).ToArray();
 
-            Assert.AreEqual(2, branches.Count, $"{spell.Name} should have exactly two base evolution branches.");
+            Assert.AreEqual(2, branches.Length, $"{spell.Name} should have exactly two base evolution branches.");
             Assert.AreEqual(2, branches.Select(branch => branch.Id).Distinct().Count());
             Assert.IsTrue(branches.All(branch => branch.Spell == spell.Id));
             Assert.IsTrue(branches.All(branch => branch.Profile != SpellEvolutionProfile.Identity));
         }
+    }
+
+    [TestMethod]
+    public void All_ForgeExclusiveBranchesRequireTheirOwnBlueprint()
+    {
+        var locked = SpellEvolutionCatalog.All.Where(evolution => evolution.RequiresForgeUnlock).ToArray();
+
+        Assert.AreEqual(4, locked.Length);
+        Assert.AreEqual(4, locked.Select(evolution => SpellCatalog.Get(evolution.Spell).School).Distinct().Count());
     }
 
     [TestMethod]

@@ -33,7 +33,11 @@ public sealed class LevelChoiceService(
     {
         if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
         if (choice.Id.StartsWith("spell:", StringComparison.Ordinal)) return build.Spells.LearnOrUpgrade(ParseSpell(choice.Id));
-        if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal)) return build.Evolutions.Select(ParseEvolution(choice.Id), build.Spells);
+        if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal))
+        {
+            var evolution = ParseEvolution(choice.Id);
+            return (availableEvolutions is null || availableEvolutions.Contains(evolution)) && build.Evolutions.Select(evolution, build.Spells);
+        }
         if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return build.Synergies.Select(ParseSynergy(choice.Id), build.Spells);
         return false;
     }

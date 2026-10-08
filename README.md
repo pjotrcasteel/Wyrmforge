@@ -2,7 +2,18 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.74 — Build Evolution
+## Prototype 0.0.75 — Forge 2.0
+
+The Forge now provides **three actionable next hunts** before and after a run, and within the Forge itself. Goals are based on actual discovered Wyrm lineages, required secured Essence, and unfinished masteries—not daily chores or flat account-stat rewards.
+
+- Completing one of the four Wyrm masterwork lines permanently unlocks a third evolution for its spell: **Ember Tempest** (Cinder Needle), **Thunder Crown** (Ball Lightning), **Crystal Divide** (Ice Lance), or **Mirror Choir** (Aether Dart).
+- The new branches are excluded from runs until forged. The Codex hints at locked Forge blueprints, while the Forge previews the exact new possibilities.
+- Each Forge mastery gets a clear celebration showing what was unlocked.
+- The Run Hub, Forge and post-run report expose up to three immediate hunt/Essence/Forge targets, with a clear ready-to-forge state.
+- Existing saved Forge masterworks automatically confer their new evolution blueprints; no save migration is necessary.
+- Spell Mastery, hidden Wyrmforged Lineages and the Great Hunt remain future layers in the established roadmap. Build Evolution stays open for more mechanical depth.
+
+### 0.0.74 — Build Evolution
 
 0.0.74 turns Rank III from the end of a spell's run progression into a crossroads. Every current spell now has two mutually exclusive evolutions that change how it behaves for the rest of the run.
 
@@ -13,7 +24,7 @@ Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting W
 - All 8 current spells have two base branches, creating 16 distinct evolved forms.
 - Evolutions are spell-scoped and stack with global runes, Atlas passives, relics, Synergies and Essence instead of replacing those systems.
 - Evolutions can alter damage, cadence, projectile count, speed, radius, pierce, chain count/falloff, splash, Frost nova radius and status behavior.
-- The HUD uses the evolved icon, the run report records the evolved form, and choosing an evolution gets a dedicated **SPELL EVOLVED** moment.
+- The HUD uses the evolved icon, the run report records the evolved form, and choosing an evolution now gets its own skippable, school-themed transformation and confirmation.
 - Balance Lab records evolution activation and per-evolution outcomes so sister branches can be compared instead of balanced by intuition alone.
 
 ### Base evolution branches

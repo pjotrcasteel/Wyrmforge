@@ -1,11 +1,14 @@
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.Progression;
 
 public sealed record RunContentProfile(IReadOnlySet<SpellId> Spells, IReadOnlySet<RelicId> Relics)
 {
+    public IReadOnlySet<SpellEvolutionId> Evolutions { get; init; } = SpellEvolutionCatalog.Base.Select(evolution => evolution.Id).ToHashSet();
+
     private static readonly HashSet<SpellId> BaseSpells =
     [
         SpellId.ArcaneOrb,
@@ -27,7 +30,10 @@ public sealed record RunContentProfile(IReadOnlySet<SpellId> Spells, IReadOnlySe
         ArgumentNullException.ThrowIfNull(progression);
         var spells = SpellCatalog.All.Where(spell => BaseSpells.Contains(spell.Id) || progression.UnlocksSpell(spell.Id)).Select(spell => spell.Id).ToHashSet();
         var relics = RelicCatalog.All.Where(relic => BaseRelics.Contains(relic.Id) || progression.UnlocksRelic(relic.Id)).Select(relic => relic.Id).ToHashSet();
-        return new RunContentProfile(spells, relics);
+        var evolutions = SpellEvolutionCatalog.All
+            .Where(evolution => !evolution.RequiresForgeUnlock || progression.UnlocksEvolution(evolution.Id))
+            .Select(evolution => evolution.Id).ToHashSet();
+        return new RunContentProfile(spells, relics) { Evolutions = evolutions };
     }
 
     public static RunContentProfile All { get; } = new(SpellCatalog.All.Select(spell => spell.Id).ToHashSet(), RelicCatalog.All.Select(relic => relic.Id).ToHashSet());

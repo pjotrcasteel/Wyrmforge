@@ -18,4 +18,8 @@ public enum SpellEvolutionId
     Overcharge,
     PhaseBarrage,
     Markstorm,
+    EmberTempest,
+    ThunderCrown,
+    CrystalDivide,
+    MirrorChoir,
 }

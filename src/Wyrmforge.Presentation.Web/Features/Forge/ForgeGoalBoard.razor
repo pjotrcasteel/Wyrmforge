@@ -1,0 +1,38 @@
+@using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Progression.Forge
+
+<section class="forge-goal-board @(Compact ? "compact" : string.Empty)" aria-label="Your next hunts">
+    <header>
+        <div>
+            <span class="section-kicker">THE HUNT CONTINUES</span>
+            <h2>Your next three pursuits</h2>
+            <p>Every run can bring back something that opens a new possibility.</p>
+        </div>
+        <span class="forge-goal-count">@Progression.MasteryCount / @ForgeMasteryCatalog.All.Count FORGED</span>
+    </header>
+    @if (Goals.Count == 0)
+    {
+        <p class="forge-goal-complete">All current Forge blueprints are mastered. Hidden spell Lineages and the Great Hunt will expand the journey in later milestones.</p>
+    }
+    else
+    {
+        <div class="forge-goal-grid">
+            @foreach (var goal in Goals)
+            {
+                <article class="forge-goal @(goal.ReadyToForge ? "ready" : string.Empty)">
+                    <div class="forge-goal-status">@(goal.ReadyToForge ? "READY TO FORGE" : "NEXT HUNT") • @goal.Progress / @goal.Required</div>
+                    <h3>@goal.Title</h3>
+                    <p>@goal.Objective</p>
+                    <small>@goal.Reward</small>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter] public bool Compact { get; set; }
+    private IReadOnlyList<ForgeGoal> Goals => ForgeGoalPlanner.Next(Progression, Vault);
+}
