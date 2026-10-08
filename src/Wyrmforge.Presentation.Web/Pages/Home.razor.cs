@@ -149,8 +149,13 @@ public partial class Home
         if (tutorialEnded || chapterAdvanced)
         {
             firstHunt.CompleteRun(false);
-            if (chapterAdvanced) selection.GrantPoints(1);
             await PersistFirstHuntAsync();
+        }
+        // The tutorial opens the Atlas with one point; every subsequent completed hunt awards
+        // one more, capped at the 24-point Arcane Web. This never awards points on retreat.
+        if (!tutorialEnded && value.Outcome != RunOutcome.Abandoned && firstHunt.AtlasUnlocked)
+        {
+            selection.GrantPoints(1);
             await SaveArcaneBuildAsync();
         }
         summary = tutorialEnded ? null : value;
