@@ -8,7 +8,7 @@ namespace Wyrmforge.Application.Tests.Runs.Hunts;
 [TestClass]
 public sealed class TargetedAttackEscapeTests
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(DragonId.Voidweaver, 1)]
     [DataRow(DragonId.Voidweaver, 2)]
     [DataRow(DragonId.Rimeclaw, 2)]
