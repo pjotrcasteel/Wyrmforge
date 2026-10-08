@@ -1,0 +1,35 @@
+diff --git a/src/Wyrmforge.Application/Runs/Hunts/DragonHuntCatalog.cs b/src/Wyrmforge.Application/Runs/Hunts/DragonHuntCatalog.cs
+index 95dc36d..88cbcf6 100644
+--- a/src/Wyrmforge.Application/Runs/Hunts/DragonHuntCatalog.cs
++++ b/src/Wyrmforge.Application/Runs/Hunts/DragonHuntCatalog.cs
+@@ -60,7 +60,7 @@ public static class DragonHuntCatalog
+         1.2,
+         new DragonHuntPressureProfile(
+             DragonHuntPressureOrigin.Player,
+-            new DragonHuntPressureCadence(new DragonPhaseValues(4.8, 3.45), new DragonPhaseValues(1.05, 0.76)),
++            new DragonHuntPressureCadence(new DragonPhaseValues(4.8, 3.45), new DragonPhaseValues(1.05, 1.15)),
+             new DragonPhaseValues(125, 158),
+             new DragonPhaseValues(24, 33),
+             1,
+diff --git a/src/Wyrmforge.Domain/Combat/Dragons/DragonCatalog.cs b/src/Wyrmforge.Domain/Combat/Dragons/DragonCatalog.cs
+index 510dd25..edbe81e 100644
+--- a/src/Wyrmforge.Domain/Combat/Dragons/DragonCatalog.cs
++++ b/src/Wyrmforge.Domain/Combat/Dragons/DragonCatalog.cs
+@@ -51,7 +51,7 @@ public static class DragonCatalog
+             new DragonAttackProfile(
+                 DragonAttackPattern.TargetBurst,
+                 SpellId.FrostShard,
+-                new DragonPhaseValues(1.05, 0.76),
++                new DragonPhaseValues(1.05, 1.10),
+                 new DragonPhaseValues(3, 2.25),
+                 new DragonPhaseValues(42, 58),
+                 DragonAttackGeometry.Circle(118, 152)),
+@@ -69,7 +69,7 @@ public static class DragonCatalog
+             new DragonAttackProfile(
+                 DragonAttackPattern.TargetBurst,
+                 SpellId.ArcaneOrb,
+-                new DragonPhaseValues(0.74, 0.5),
++                new DragonPhaseValues(1.10, 1.35),
+                 new DragonPhaseValues(2.55, 1.85),
+                 new DragonPhaseValues(36, 54),
+                 DragonAttackGeometry.Circle(148, 195)),
