@@ -139,6 +139,7 @@
                     @if (!forged && !canForge)
                     {
                         <p class="sanctum-hint">@NextAction(blueprint)</p>
+                        <button class="sanctum-prep-action" @onclick="PrepareHuntAsync">PREPARE NEXT HUNT →</button>
                     }
                     @if (forged)
                     {
@@ -197,6 +198,7 @@
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
+    [Parameter] public EventCallback OnPrepareHunt { get; set; }
 
     private ForgeDiscoveryId? selectedLineage;
     private ForgeMasteryId? inspectedMastery;
@@ -275,6 +277,7 @@
         _ => "New possibility",
     };
 
+    private Task PrepareHuntAsync() => OnPrepareHunt.InvokeAsync();
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ClearOfferingAsync() => SelectedOffering is { } id ? OnOfferingChanged.InvokeAsync(id) : Task.CompletedTask;
 
