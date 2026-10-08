@@ -202,3 +202,106 @@
         overflow-y: auto;
     }
 }
+
+
+/* One shared top HUD: player vitals and the current trail are peers, not independent floating cards. */
+.arena-top-hud {
+    position: fixed;
+    z-index: 4;
+    top: max(10px, calc(env(safe-area-inset-top) + 6px));
+    left: max(10px, calc(env(safe-area-inset-left) + 6px));
+    right: max(66px, calc(env(safe-area-inset-right) + 62px));
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    width: min(600px, calc(100vw - 80px));
+    min-height: 78px;
+    border: 1px solid rgba(198,154,255,.32);
+    border-radius: 13px;
+    background: rgba(12,9,18,.85);
+    box-shadow: 0 8px 28px rgba(0,0,0,.17);
+    backdrop-filter: blur(10px);
+    pointer-events: none;
+    overflow: hidden;
+}
+.combat-vitals {
+    display: grid;
+    align-content: center;
+    gap: 7px;
+    flex: 1 1 55%;
+    min-width: 0;
+    padding: 9px 11px;
+    font-variant-numeric: tabular-nums;
+}
+.combat-vitals-score { display:flex; gap:9px; justify-content:space-between; white-space:nowrap; color:#d9d1e1; font-size:.62rem; font-weight:900; }
+.combat-health-track,.combat-xp-track { height:7px; border-radius:9px; background:#362b43; overflow:hidden; }
+.combat-health-track > div { height:100%; width:100%; border-radius:inherit; background:#9ed6a2; transition:width .12s linear; }
+.combat-vitals-progress { display:flex; align-items:center; gap:7px; white-space:nowrap; color:#aaa0b4; font-size:.59rem; font-weight:800; }
+.combat-xp-track { flex:1 1 25px; min-width:16px; height:4px; }
+.combat-xp-track > div { height:100%; width:0; border-radius:inherit; background:#b887ff; }
+.combat-vitals-spells { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#c9bfd3; font-size:.65rem; font-weight:800; min-height:13px; }
+.arena-top-hud .encounter-objective {
+    position: static;
+    transform: none;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+    flex: 1 1 45%;
+    min-width: 0;
+    max-width: none;
+    width: auto;
+    min-height: 0;
+    padding: 9px 8px;
+    border: 0;
+    border-left: 1px solid rgba(198,154,255,.23);
+    border-radius: 0;
+    background: rgba(75,49,93,.12);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+.arena-top-hud .encounter-objective > span {
+    max-width:100%;
+    font-size:.59rem;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#b9a5cd;
+    font-weight:900;
+}
+.encounter-objective-progress { display:flex; justify-content:center; align-items:center; gap:6px; max-width:100%; }
+.arena-top-hud .encounter-objective strong { font-size:.64rem; white-space:nowrap; }
+.arena-top-hud .encounter-objective .encounter-phase { font-size:.54rem; padding:2px 5px; }
+.arena-top-hud .encounter-objective.evacuation { background:rgba(115,43,34,.18); }
+.game-screen .leave-run {
+    top: max(10px, calc(env(safe-area-inset-top) + 6px));
+    right: max(10px, calc(env(safe-area-inset-right) + 6px));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    min-width:44px;
+    min-height:44px;
+    padding:7px 10px;
+    color:#e2cbdd;
+    border-color:rgba(224,139,108,.36);
+    background:rgba(40,22,28,.88);
+    opacity:1;
+    touch-action:manipulation;
+}
+.game-screen .leave-run svg { display:block; width:22px; height:22px; flex:0 0 auto; }
+.game-screen .leave-run-label { font-size:.59rem; letter-spacing:.08em; }
+.game-screen .leave-run:focus-visible { outline:2px solid #ffd49c; outline-offset:3px; }
+@media(max-width:680px) {
+    .arena-top-hud { width:auto; min-height:76px; gap:0; }
+    .combat-vitals { flex-basis:55%; gap:6px; padding:8px 7px; }
+    .combat-vitals-score { font-size:.53rem; gap:4px; }
+    .combat-vitals-progress { font-size:.52rem; gap:4px; }
+    .combat-vitals-spells { font-size:.58rem; }
+    .arena-top-hud .encounter-objective { flex-basis:45%; padding:8px 5px; gap:5px; }
+    .arena-top-hud .encounter-objective > span { font-size:.54rem; }
+    .arena-top-hud .encounter-objective-progress { flex-wrap:wrap; column-gap:5px; row-gap:3px; }
+    .arena-top-hud .encounter-objective strong { font-size:.61rem; }
+    .game-screen .leave-run-label { display:none; }
+}
+@media(prefers-reduced-motion:reduce) { .combat-health-track > div { transition:none; } }

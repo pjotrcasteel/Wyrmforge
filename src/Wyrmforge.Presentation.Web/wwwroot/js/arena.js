@@ -240,7 +240,7 @@ function draw(state, snapshot, width, height) {
     ctx.stroke();
 
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
-    drawHud(ctx, snapshot.hud, width, battleActive);
+    // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
@@ -942,7 +942,7 @@ function drawBossBar(ctx, dragon, hunt, width) {
     const palette = schoolPalette(dragon.school);
     const outerWidth = Math.min(350, width - 132);
     const x = (width - outerWidth) / 2;
-    const y = 9;
+    const y = width <= 520 ? 103 : 9;
     const barY = y + 20;
 
     ctx.save();
@@ -973,65 +973,6 @@ function drawBossBar(ctx, dragon, hunt, width) {
     ctx.fillStyle = dragon.phase === 2 ? palette.phase : palette.body;
     roundRect(ctx, innerX, barY, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 8, 4);
     ctx.fill();
-    ctx.restore();
-}
-function drawHud(ctx, hud, width, dragonActive) {
-    const x = 10;
-    const compactViewport = width <= 520;
-    const y = dragonActive ? 54 : compactViewport ? 46 : 10;
-    const panelWidth = Math.min(compactViewport ? 210 : 260, width - 72);
-    const panelHeight = hud.synergies.length > 0 ? 86 : 70;
-
-    ctx.save();
-    ctx.fillStyle = 'rgba(8, 6, 12, 0.62)';
-    roundRect(ctx, x, y, panelWidth, panelHeight, 10);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.fillStyle = '#d9d1e1';
-    ctx.font = '800 9px system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`SCORE ${hud.score}   •   ${hud.seconds}s   •   ${hud.kills} KILLS`, x + 9, y + 14);
-
-    const barX = x + 9;
-    const barWidth = panelWidth - 18;
-    ctx.fillStyle = 'rgba(51, 42, 62, 0.86)';
-    roundRect(ctx, barX, y + 21, barWidth, 7, 4);
-    ctx.fill();
-    ctx.fillStyle = '#9ed6a2';
-    roundRect(ctx, barX, y + 21, barWidth * Math.max(0, hud.health / hud.maxHealth), 7, 4);
-    ctx.fill();
-
-    ctx.fillStyle = '#93889e';
-    ctx.font = '700 8px system-ui, sans-serif';
-    ctx.fillText(`HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}   LV ${hud.level}`, barX, y + 39);
-
-    ctx.fillStyle = 'rgba(51, 42, 62, 0.86)';
-    roundRect(ctx, barX + 88, y + 34, Math.max(40, barWidth - 88), 5, 3);
-    ctx.fill();
-    ctx.fillStyle = '#b887ff';
-    roundRect(ctx, barX + 88, y + 34, Math.max(40, barWidth - 88) * Math.min(1, hud.experience / hud.experienceToNext), 5, 3);
-    ctx.fill();
-
-    ctx.fillStyle = '#c9bfd3';
-    ctx.font = '700 9px system-ui, sans-serif';
-    const spells = hud.spells.map(spell => `${spell.evolutionIcon ?? spell.icon}${roman(spell.rank)}`).join('  ');
-    ctx.fillText(spells, barX, y + 56);
-
-    if (hud.synergies.length > 0) {
-        ctx.fillStyle = '#d5b66d';
-        ctx.font = '700 8px system-ui, sans-serif';
-        const synergies = hud.synergies.map(synergy => `${synergy.icon} ${synergy.name}`).join('  •  ');
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(barX, y + 63, barWidth, 16);
-        ctx.clip();
-        ctx.fillText(synergies, barX, y + 76);
-        ctx.restore();
-    }
-
     ctx.restore();
 }
 function drawTouchIndicator(state, ctx) {
