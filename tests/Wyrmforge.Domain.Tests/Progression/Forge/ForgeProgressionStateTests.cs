@@ -3,6 +3,7 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Domain.Tests.Progression.Forge;
 
@@ -78,6 +79,8 @@ public sealed class ForgeProgressionStateTests
         Assert.IsTrue(state.UnlocksRelic(RelicId.MirrorPrism));
         Assert.IsTrue(state.UnlocksSpell(SpellId.AetherDart));
         Assert.IsTrue(state.UnlocksOffering(DragonEssenceId.PhaseWing));
+        Assert.IsTrue(state.UnlocksEvolution(SpellEvolutionId.MirrorChoir));
+        Assert.IsFalse(state.UnlocksEvolution(SpellEvolutionId.EmberTempest));
     }
 
     [TestMethod]

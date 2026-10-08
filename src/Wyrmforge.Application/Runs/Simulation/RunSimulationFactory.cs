@@ -13,7 +13,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
         var content = progression is null ? RunContentProfile.All : RunContentProfile.From(progression);
-        var levelChoiceService = new LevelChoiceService(randomSource, content.Spells);
+        var levelChoiceService = new LevelChoiceService(randomSource, content.Spells, content.Evolutions);
         var simulation = new RunSimulation(selectedNodes, levelChoiceService, randomSource, offering);
         simulation.InitializeRunSeed(runSeed);
         simulation.InitializeContentProfile(content);

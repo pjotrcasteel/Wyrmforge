@@ -3,6 +3,7 @@ using Wyrmforge.Application.Runs.Progression;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Tests.Runs.Progression;
 
@@ -21,6 +22,8 @@ public sealed class RunContentProfileTests
         Assert.IsTrue(profile.Relics.Contains(RelicId.Vitalstone));
         Assert.IsFalse(profile.Relics.Contains(RelicId.MirrorPrism));
         Assert.IsFalse(profile.Relics.Contains(RelicId.Stormhook));
+        Assert.IsTrue(profile.Evolutions.Contains(SpellEvolutionId.WildfireNeedles));
+        Assert.IsFalse(profile.Evolutions.Contains(SpellEvolutionId.EmberTempest));
     }
 
     [TestMethod]
@@ -44,5 +47,8 @@ public sealed class RunContentProfileTests
         Assert.IsTrue(profile.Relics.Contains(RelicId.Stormhook));
         Assert.IsTrue(profile.Relics.Contains(RelicId.MirrorPrism));
         Assert.IsFalse(profile.Spells.Contains(SpellId.CinderNeedle));
+        Assert.IsTrue(profile.Evolutions.Contains(SpellEvolutionId.ThunderCrown));
+        Assert.IsTrue(profile.Evolutions.Contains(SpellEvolutionId.MirrorChoir));
+        Assert.IsFalse(profile.Evolutions.Contains(SpellEvolutionId.CrystalDivide));
     }
 }
