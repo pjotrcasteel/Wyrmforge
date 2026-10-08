@@ -28,6 +28,7 @@ public partial class Home
     private readonly ForgeProgressionState forgeProgression = new();
     private readonly SpellMasteryState spellMastery = new();
     private IReadOnlyList<SpellEvolutionId> newlyUnlockedLineages = [];
+    private IReadOnlyList<Wyrmforge.Domain.Spells.SpellId> advancedSpellIds = [];
     private int lastCreditedRunNumber = -1;
     private RunSummary? summary;
     private DragonEssenceId? selectedOffering;
@@ -70,6 +71,7 @@ public partial class Home
     private async Task StartRunAsync()
     {
         newlyUnlockedLineages = [];
+        advancedSpellIds = [];
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
@@ -94,6 +96,7 @@ public partial class Home
             value.DragonIds.ToHashSet(),
             value.SpellLoadout.Select(spell => new MasteryRunSpell(spell.Id, spell.Rank)).ToArray()));
         newlyUnlockedLineages = mastery.NewlyUnlocked;
+        advancedSpellIds = mastery.Progressed;
         if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();
         summary = value;
         var codexChanged = false;
@@ -117,6 +120,7 @@ public partial class Home
         activeRunSeed = summary.Seed;
         summary = null;
         newlyUnlockedLineages = [];
+        advancedSpellIds = [];
         runNumber++;
         runActive = true;
         return Task.CompletedTask;
