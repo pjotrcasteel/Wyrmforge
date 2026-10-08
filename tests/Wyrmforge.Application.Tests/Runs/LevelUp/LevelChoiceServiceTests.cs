@@ -162,6 +162,34 @@ public sealed class LevelChoiceServiceTests
         Assert.IsFalse(service.Apply(build, choices[1]));
     }
 
+    [TestMethod]
+    public void CreateEvolutionDraft_WhenBlueprintLocked_ExcludesThirdBranch()
+    {
+        var build = new RunBuildState();
+        for (var rank = 0; rank < 3; rank++) Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.CinderNeedle));
+        var available = SpellEvolutionCatalog.Base.Select(evolution => evolution.Id).ToHashSet();
+        var service = new LevelChoiceService(new FirstRandomSource(), availableEvolutions: available);
+
+        var draft = service.CreateEvolutionDraft(build, SpellId.CinderNeedle);
+
+        Assert.AreEqual(2, draft.Count);
+        Assert.IsFalse(draft.Any(choice => choice.Id == $"evolution:{SpellEvolutionId.EmberTempest}"));
+    }
+
+    [TestMethod]
+    public void CreateEvolutionDraft_AfterBlueprintUnlocked_AddsThirdBranch()
+    {
+        var build = new RunBuildState();
+        for (var rank = 0; rank < 3; rank++) Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.CinderNeedle));
+        var available = SpellEvolutionCatalog.All.Select(evolution => evolution.Id).ToHashSet();
+        var service = new LevelChoiceService(new FirstRandomSource(), availableEvolutions: available);
+
+        var draft = service.CreateEvolutionDraft(build, SpellId.CinderNeedle);
+
+        Assert.AreEqual(3, draft.Count);
+        Assert.IsTrue(draft.Any(choice => choice.Id == $"evolution:{SpellEvolutionId.EmberTempest}"));
+    }
+
     private sealed class FixedRandomSource(double value) : IRandomSource
     {
         public int Next(int exclusiveMax) => 0;
