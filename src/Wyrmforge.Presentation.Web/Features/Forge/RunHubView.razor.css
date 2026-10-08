@@ -50,3 +50,9 @@
 .ascendant-rite-action.selected { color:#fbe2b5;background:#503d2e;box-shadow:0 0 25px rgba(243,164,87,.17); }
 .ascendant-rite-action:focus-visible { outline:2px solid #ffd49b;outline-offset:3px; }
 @media(max-width:750px) { .ascendant-rite-card {grid-template-columns:auto minmax(0,1fr);gap:12px;padding:15px;}.ascendant-rite-sigil {width:46px;height:46px;font-size:1.8rem;}.ascendant-rite-action {grid-column:1/-1;width:100%;max-width:none;} }
+
+.playtest-invite { display:grid;gap:4px;justify-items:start;width:100%;min-height:68px;padding:13px 17px;border:1px solid rgba(186,144,226,.33);border-radius:15px;background:linear-gradient(135deg,rgba(112,77,147,.12),rgba(26,19,32,.72));text-align:left;cursor:pointer;touch-action:manipulation; }
+.playtest-invite span { color:#cda7ef;font-size:.59rem;letter-spacing:.12em;font-weight:950; }
+.playtest-invite strong { color:#f0def7;font-size:.86rem; }
+.playtest-invite small { color:#afa0bd;font-size:.68rem; }
+.playtest-invite:focus-visible { outline:2px solid #dec0ff;outline-offset:3px; }

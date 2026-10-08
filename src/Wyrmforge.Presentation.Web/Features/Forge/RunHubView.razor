@@ -104,6 +104,11 @@
             </button>
         </section>
     }
+    <button class="playtest-invite" @onclick="() => OnFeedback.InvokeAsync()">
+        <span>✎ COMMUNITY PLAYTEST</span>
+        <strong>Tell us how your hunt felt</strong>
+        <small>One-minute feedback • optional session report • no account needed</small>
+    </button>
     <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" />
 </section>
 
@@ -118,6 +123,7 @@
     [Parameter] public bool AscendantSelected { get; set; }
     [Parameter] public EventCallback<bool> OnAscendantChanged { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnFeedback { get; set; }
     [Parameter] public EventCallback OnEditBuild { get; set; }
     [Parameter] public EventCallback OnEditForge { get; set; }
 

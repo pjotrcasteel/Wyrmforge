@@ -28,6 +28,8 @@ export function initializeArena(canvas, dotNetReference) {
         statusCanvas: createStatusCanvas(),
         combatHud: getCombatHud(canvas),
         lastHudUpdate: 0,
+        lastPlaytestSample: 0,
+        lastSampleFrame: 0,
     };
     state.onViewportChanged = () => {
         state.canvasRect = state.originalGetBoundingClientRect();
@@ -93,6 +95,12 @@ async function invokeFrame(state, args) {
         state.latestSnapshot = snapshot;
         drawStatusOverlay(state, snapshot);
         updateCombatHud(state, snapshot);
+        if (now - state.lastPlaytestSample > 5000) {
+            const previousFrame = state.lastSampleFrame || now;
+            window.wyrmforgePlaytest?.performanceSample(now - previousFrame, snapshot.simulationMilliseconds ?? 0);
+            state.lastPlaytestSample = now;
+        }
+        state.lastSampleFrame = now;
     }
     return snapshot;
 }

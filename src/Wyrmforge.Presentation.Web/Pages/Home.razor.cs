@@ -44,6 +44,10 @@ public partial class Home
     private int bestScore;
     private int runNumber;
     private bool runActive;
+    private bool playtestFeedbackOpen;
+
+    private void OpenPlaytestFeedback() => playtestFeedbackOpen = true;
+    private void ClosePlaytestFeedback() => playtestFeedbackOpen = false;
     private bool ascendantSelected;
     private bool activeAscendant;
 
@@ -102,6 +106,7 @@ public partial class Home
         selectedOffering = null;
         runNumber++;
         runActive = true;
+        await TryRecordPlaytestStartAsync();
     }
 
     private async Task HandleGameOverAsync(RunSummary value)
@@ -127,6 +132,7 @@ public partial class Home
             .Select(oath => oath.Wyrm).ToArray();
         if (advancedOaths.Count > 0 || newlySealedOaths.Count > 0) await TrySetGreatHuntAsync();
         summary = value;
+        await TryRecordPlaytestFinishAsync(value);
         var codexChanged = false;
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
         if (codexChanged) await TrySetArcaneCodexAsync();
@@ -142,9 +148,9 @@ public partial class Home
         await TrySetBestScoreAsync(bestScore);
     }
 
-    private Task ReplayRunAsync()
+    private async Task ReplayRunAsync()
     {
-        if (summary is null) return Task.CompletedTask;
+        if (summary is null) return;
         activeRunSeed = summary.Seed;
         summary = null;
         newlyUnlockedLineages = [];
@@ -154,7 +160,7 @@ public partial class Home
         newlyConqueredAscendants = [];
         runNumber++;
         runActive = true;
-        return Task.CompletedTask;
+        await TryRecordPlaytestStartAsync();
     }
 
     private void ReturnToForge()
@@ -164,6 +170,28 @@ public partial class Home
         activeRunSeed = null;
         activeAscendant = false;
         runActive = false;
+    }
+
+    private async Task TryRecordPlaytestStartAsync()
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.startRun", CancellationToken.None, activeAscendant); }
+        catch (JSException) { /* Playtesting must never prevent starting a run. */ }
+    }
+
+    private async Task TryRecordPlaytestFinishAsync(RunSummary run)
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.finishRun", CancellationToken.None, new
+            {
+                outcome = run.Outcome.ToString(), seed = run.Seed, score = run.Score, seconds = run.Seconds,
+                depth = run.Depth, level = run.Level, kills = run.Kills, trailsCompleted = run.CompletedRouteNodes,
+                rareTrails = run.RareRouteNodes, wyrmsDefeated = run.DragonsSlain, essencesSecured = run.DragonEssences,
+                ascendantVictories = run.AscendantDragonIds.Count,
+                spellEvolutions = run.SpellLoadout.Where(spell => spell.Evolution.HasValue).Select(spell => spell.Evolution!.Value.ToString()).ToArray(),
+            });
+        }
+        catch (JSException) { /* Diagnostics must never block progression or rewards. */ }
     }
 
     private async Task<int> TryGetBestScoreAsync()
