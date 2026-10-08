@@ -77,6 +77,22 @@ public sealed class GreatHuntStateTests
     }
 
     [TestMethod]
+    public void ReconcileMasteryHistory_PreexistingKillTimeWyrmFeat_RestoresSlayWithoutInventingEssenceOrDuel()
+    {
+        var state = new GreatHuntState();
+        var mastery = new SpellMasteryState();
+        mastery.RecordRun(new MasteryRunEvidence(1, 2, false,
+            new HashSet<SpellId> { SpellId.FrostShard }, [new MasteryRunSpell(SpellId.FrostShard, 3)]));
+
+        Assert.IsTrue(state.ReconcileMasteryHistory(mastery));
+        Assert.IsFalse(state.ReconcileMasteryHistory(mastery));
+        var entry = state.Get(DragonId.Rimeclaw);
+        Assert.IsTrue(entry.Slain);
+        Assert.IsFalse(entry.EssenceSecured);
+        Assert.IsFalse(entry.DeepEvolvedDuel);
+    }
+
+    [TestMethod]
     public void Restore_DuplicateSavedEntriesAndLaterRuns_DoNotLoseCompletedFeats()
     {
         var state = new GreatHuntState();

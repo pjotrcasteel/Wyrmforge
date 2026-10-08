@@ -54,7 +54,9 @@ public partial class Home
         await TryLoadForgeMasteryAsync();
         await TryLoadSpellMasteryAsync();
         await TryLoadGreatHuntAsync();
-        if (greatHunt.ReconcileForgeHistory(forgeProgression)) await TrySetGreatHuntAsync();
+        var restoredOathHistory = greatHunt.ReconcileForgeHistory(forgeProgression);
+        restoredOathHistory |= greatHunt.ReconcileMasteryHistory(spellMastery);
+        if (restoredOathHistory) await TrySetGreatHuntAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
         StateHasChanged();

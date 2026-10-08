@@ -72,6 +72,21 @@ public sealed class GreatHuntState
         return changed;
     }
 
+    public bool ReconcileMasteryHistory(SpellMasteryState mastery)
+    {
+        ArgumentNullException.ThrowIfNull(mastery);
+        var changed = false;
+        foreach (var oath in GreatHuntCatalog.All.Where(oath => mastery.Get(oath.LineageSpell).WyrmFeat))
+        {
+            var previous = Get(oath.Wyrm);
+            if (previous.Slain) continue;
+            entries[oath.Wyrm] = previous with { Slain = true };
+            changed = true;
+        }
+
+        return changed;
+    }
+
     public void Restore(IEnumerable<GreatHuntEntry> saved)
     {
         ArgumentNullException.ThrowIfNull(saved);
