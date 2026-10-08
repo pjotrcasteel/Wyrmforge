@@ -56,3 +56,10 @@
 .playtest-invite strong { color:#f0def7;font-size:.86rem; }
 .playtest-invite small { color:#afa0bd;font-size:.68rem; }
 .playtest-invite:focus-visible { outline:2px solid #dec0ff;outline-offset:3px; }
+
+.ascendant-rite-card.storm { border-color:rgba(166,178,255,.5);background:radial-gradient(ellipse at 0% 45%,rgba(109,114,230,.23),transparent 55%),linear-gradient(145deg,#171b2c,#120f1c); }
+.ascendant-rite-card.storm .ascendant-rite-sigil { color:#cfddff;border-color:#8996ed;background:rgba(90,117,242,.16);box-shadow:0 0 38px rgba(114,145,250,.19); }
+.ascendant-rite-card.storm h2 { color:#dfe9ff; }
+.ascendant-rite-card.storm small { color:#b5c4ff; }
+.ascendant-rite-card.storm .ascendant-rite-action { border-color:#8ba9ef;background:linear-gradient(125deg,#abc3fb,#828ae7);color:#101b34; }
+.ascendant-rite-card.storm .ascendant-rite-action.selected { color:#dce8ff;background:#27345c;box-shadow:0 0 28px rgba(128,164,253,.16); }

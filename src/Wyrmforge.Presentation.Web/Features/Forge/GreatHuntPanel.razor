@@ -8,7 +8,7 @@
         <div>
             <span class="section-kicker">FOUR OATHS • ONE LEGEND</span>
             <h2>Let the realm remember.</h2>
-            <p>Earn permanent seals through real hunts. The First Flame opens Ascendant Ashfang; the other Ascendant rites remain dormant.</p>
+            <p>Earn permanent seals through real hunts. First Flame and Unbroken Sky unlock distinctive Ascendant rites; the remaining paths are still dormant.</p>
         </div>
         <strong>@Hunt.CompletedCount(Masteries) / @GreatHuntCatalog.All.Count SEALED</strong>
     </div>
@@ -42,9 +42,10 @@
             @if (Hunt.IsSealed(ActiveOath.Wyrm, Masteries))
             {
                 <div class="hunt-seal-reward">✦ ETERNAL SEAL CLAIMED
-                    @if (ActiveOath.Wyrm == DragonId.Ashfang)
+                    @if (AscendantRiteCatalog.IsAvailable(ActiveOath.Wyrm))
                     {
-                        <small>@(Entry.AscendantDefeated ? "♛ Crown of Embers earned. The Ascendant is conquered and replayable." : "Ascendant Ashfang unlocked! Invoke the rite in your Run Hub and reach Depth II.")</small>
+                        var rite = AscendantRiteCatalog.Get(ActiveOath.Wyrm);
+                        <small>@(Entry.AscendantDefeated ? $"✦ {rite.Trophy} earned. The Ascendant is conquered and replayable." : $"Ascendant {ActiveOath.Wyrm} unlocked! Invoke the rite in your Run Hub and reach Depth II.")</small>
                     }
                     else
                     {

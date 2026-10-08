@@ -48,8 +48,8 @@ public partial class Home
 
     private void OpenPlaytestFeedback() => playtestFeedbackOpen = true;
     private void ClosePlaytestFeedback() => playtestFeedbackOpen = false;
-    private bool ascendantSelected;
-    private bool activeAscendant;
+    private DragonId? selectedAscendant;
+    private DragonId? activeAscendant;
 
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
 
@@ -85,7 +85,8 @@ public partial class Home
         await TrySetForgeMasteryAsync();
     }
 
-    private void SelectAscendant(bool selected) => ascendantSelected = selected && greatHunt.IsSealed(DragonId.Ashfang, spellMastery);
+    private void SelectAscendant(DragonId? selected) =>
+        selectedAscendant = selected is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm) && greatHunt.IsSealed(wyrm, spellMastery) ? selected : null;
 
     private async Task StartRunAsync()
     {
@@ -94,7 +95,7 @@ public partial class Home
         advancedOaths = [];
         newlySealedOaths = [];
         newlyConqueredAscendants = [];
-        activeAscendant = ascendantSelected && greatHunt.IsSealed(DragonId.Ashfang, spellMastery);
+        activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
@@ -113,7 +114,7 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
-        var previouslyConquered = greatHunt.Get(DragonId.Ashfang).AscendantDefeated;
+        var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
         var mastery = spellMastery.RecordRun(new MasteryRunEvidence(
             value.CompletedRouteNodes,
@@ -127,7 +128,8 @@ public partial class Home
         advancedOaths = greatHunt.RecordRun(new GreatHuntRunEvidence(value.CompletedRouteNodes, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds.ToHashSet(), value.DeepEvolvedWyrmDuels.ToHashSet(), value.EssenceIds)
         { AscendantVictories = value.AscendantDragonIds.ToHashSet() });
-        newlyConqueredAscendants = !previouslyConquered && greatHunt.Get(DragonId.Ashfang).AscendantDefeated ? [DragonId.Ashfang] : [];
+        newlyConqueredAscendants = AscendantRiteCatalog.All.Where(rite => !previouslyConquered.Contains(rite.Wyrm) && greatHunt.Get(rite.Wyrm).AscendantDefeated)
+            .Select(rite => rite.Wyrm).ToArray();
         newlySealedOaths = GreatHuntCatalog.All.Where(oath => !oldSeals.Contains(oath.Wyrm) && greatHunt.IsSealed(oath.Wyrm, spellMastery))
             .Select(oath => oath.Wyrm).ToArray();
         if (advancedOaths.Count > 0 || newlySealedOaths.Count > 0) await TrySetGreatHuntAsync();
@@ -168,13 +170,13 @@ public partial class Home
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
-        activeAscendant = false;
+        activeAscendant = null;
         runActive = false;
     }
 
     private async Task TryRecordPlaytestStartAsync()
     {
-        try { await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.startRun", CancellationToken.None, activeAscendant); }
+        try { await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.startRun", CancellationToken.None, activeAscendant.HasValue); }
         catch (JSException) { /* Playtesting must never prevent starting a run. */ }
     }
 
