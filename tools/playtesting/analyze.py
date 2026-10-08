@@ -51,7 +51,7 @@ def summary(reports):
         "## Player sentiment", *rating_lines,
         f"- Another run? {', '.join(f'{key}: {count}' for key, count in replay.most_common()) or 'no responses'}", "",
         "## Biggest reported problems",
-        *[f"- {key}: {count}" for key, count in issues.most_common()] or ["- No categories selected"],
+        *([f"- {key}: {count}" for key, count in issues.most_common()] or ["- No categories selected"]),
         "", "## Recent run sample (distinct run IDs)",
         f"- Outcomes: {', '.join(f'{key}: {count}' for key, count in outcome.most_common()) or 'no runs shared'}",
         f"- Reached depths: {', '.join(f'{key}: {count}' for key, count in sorted(depths.items())) or 'no runs shared'}",

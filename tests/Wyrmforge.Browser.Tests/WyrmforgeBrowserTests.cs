@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Playwright;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -217,6 +218,55 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await EnterFirstTrailAsync();
         await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_CommunityPlaytest_ReportsAreOptInAndIncludeReproducibleRunData()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });");
+        await OpenAsync();
+
+        await Page.Locator("button.playtest-invite").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Help shape the Wyrmrealm" })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Only stored on this device until you choose to share.", new() { Exact = false })).ToBeVisibleAsync();
+        await ScreenshotAsync("mobile-playtest-dialog.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Close playtest feedback" }).ClickAsync();
+
+        await EnterFirstTrailAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Abandon run" }).ClickAsync();
+        await Page.Locator("button.run-playtest-feedback").ClickAsync();
+        await Page.Locator("#playtest-fun").SelectOptionAsync("4");
+        await Page.Locator("#playtest-clarity").SelectOptionAsync("3");
+        await Page.Locator("#playtest-replay").SelectOptionAsync("yes");
+        await Page.Locator("#playtest-area").SelectOptionAsync("movement");
+        await Page.Locator("#playtest-improve").FillAsync("Touch movement was confusing.");
+        var download = await Page.RunAndWaitForDownloadAsync(async () =>
+            await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE PLAYTEST REPORT" }).ClickAsync());
+        Assert.IsTrue(download.SuggestedFilename.StartsWith("wyrmforge-playtest-", StringComparison.Ordinal));
+        var file = Path.Combine(ArtifactDirectory, "playtest-test-export.json");
+        await download.SaveAsAsync(file);
+        using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
+        var root = report.RootElement;
+        Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
+        Assert.AreEqual("0.0.80", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
+        Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
+        Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
+        Assert.AreEqual("Abandoned", root.GetProperty("recentRuns")[0].GetProperty("outcome").GetString());
+        Assert.IsGreaterThanOrEqualTo(1, root.GetProperty("stats").GetProperty("trailsEntered").GetInt32());
+
+        await Page.Locator("label.playtest-include input").UncheckAsync();
+        var emptyDownload = await Page.RunAndWaitForDownloadAsync(async () =>
+            await Page.GetByRole(AriaRole.Button, new() { Name = "SHARE PLAYTEST REPORT" }).ClickAsync());
+        var optedOutPath = Path.Combine(ArtifactDirectory, "playtest-opted-out.json");
+        await emptyDownload.SaveAsAsync(optedOutPath);
+        using var optedOut = JsonDocument.Parse(await File.ReadAllTextAsync(optedOutPath));
+        Assert.AreEqual(0, optedOut.RootElement.GetProperty("recentRuns").GetArrayLength());
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Erase my local playtest history" }).ClickAsync();
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.playtest.v1')"));
     }
 
     [TestMethod]
