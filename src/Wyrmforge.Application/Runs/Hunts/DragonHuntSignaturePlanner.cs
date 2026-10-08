@@ -154,7 +154,7 @@ public static class DragonHuntSignaturePlanner
 
         for (var wave = 0; wave < waveCount; wave++)
         {
-            var direction = wave % 3 switch
+            var direction = (wave % 3) switch
             {
                 0 => new Vector2D(1, 0),
                 1 => new Vector2D(0, 1),
