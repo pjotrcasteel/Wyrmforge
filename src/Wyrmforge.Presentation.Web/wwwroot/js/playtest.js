@@ -121,7 +121,20 @@
         state = blank();
         try { localStorage.removeItem(key); } catch { /* No storage available. */ }
     }
+    const lastSentKey = 'wyrmforge.playtest.lastReceipt.v1';
+    const pendingKey = 'wyrmforge.playtest.pendingReceipt.v1';
     let endpointPromise;
+    async function feedbackFingerprint(answers) {
+        const evidence = JSON.stringify({ answers, runIds: state.runs.map(run => run.runId) });
+        const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(evidence));
+        return Array.from(new Uint8Array(bytes), value => value.toString(16).padStart(2, '0')).join('');
+    }
+    function storedReceipt(key) {
+        try { return JSON.parse(localStorage.getItem(key) ?? 'null'); } catch { return null; }
+    }
+    function rememberReceipt(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch { }
+    }
     async function getCollectorEndpoint() {
         endpointPromise ??= (async () => {
             try {
@@ -141,7 +154,13 @@
     async function sendDirect(answers) {
         const endpoint = await getCollectorEndpoint();
         if (!endpoint) return 'unavailable';
-        const report = buildReport(answers);
+        const fingerprint = await feedbackFingerprint(answers);
+        const sent = storedReceipt(lastSentKey);
+        if (sent?.fingerprint === fingerprint && Date.now() - sent.timestamp < 600000) return 'duplicate';
+        const pending = storedReceipt(pendingKey);
+        const id = pending?.fingerprint === fingerprint ? pending.id : newId();
+        rememberReceipt(pendingKey, { id, fingerprint });
+        const report = { ...buildReport(answers), id };
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 12000);
         try {
@@ -154,7 +173,10 @@
             if (response.status === 429) return 'rate_limited';
             if (!response.ok) return 'failure';
             const receipt = await response.json();
-            return receipt?.accepted === true && receipt.id === report.id ? 'sent' : 'failure';
+            if (receipt?.accepted !== true || receipt.id !== report.id) return 'failure';
+            rememberReceipt(lastSentKey, { fingerprint, timestamp: Date.now() });
+            try { localStorage.removeItem(pendingKey); } catch { }
+            return receipt.duplicate ? 'duplicate' : 'sent';
         } catch { return 'unavailable'; }
         finally { clearTimeout(timer); }
     }

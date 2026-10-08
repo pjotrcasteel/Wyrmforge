@@ -415,6 +415,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
     private async Task OpenAsync()
     {
+        // Existing gameplay tests represent established accounts, not the new First Hunt tutorial.
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
     }

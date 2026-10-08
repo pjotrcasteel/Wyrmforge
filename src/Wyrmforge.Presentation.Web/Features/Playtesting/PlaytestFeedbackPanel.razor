@@ -6,7 +6,7 @@
     <section class="playtest-dialog" role="dialog" aria-modal="true" aria-labelledby="playtest-title">
         <div class="playtest-scroll">
         <header class="playtest-heading">
-            <div><span class="playtest-kicker">COMMUNITY PLAYTEST • 0.0.81</span><h2 id="playtest-title">Help shape the Wyrmrealm</h2></div>
+            <div><span class="playtest-kicker">COMMUNITY PLAYTEST • 0.0.84</span><h2 id="playtest-title">Help shape the Wyrmrealm</h2></div>
             <button class="playtest-close" aria-label="Close playtest feedback" @onclick="CloseAsync">✕</button>
         </header>
         <p class="playtest-intro">Tell us what actually felt good, confusing or frustrating. It takes about a minute. All answers are optional.</p>
@@ -55,7 +55,7 @@
         <div class="playtest-action-footer">
         @if (collectorAvailable)
         {
-            <button class="playtest-send" disabled="@(sending || !consentToSend)" @onclick="SendAsync">@(sending ? "SENDING…" : "SEND FEEDBACK PRIVATELY")</button>
+            <button class="playtest-send" disabled="@(sending || submitted || !consentToSend)" @onclick="SendAsync">@(sending ? "SENDING…" : "SEND FEEDBACK PRIVATELY")</button>
         }
         <button class="playtest-share" disabled="@sending" @onclick="ShareAsync">@(sending ? "PREPARING REPORT…" : "SHARE / DOWNLOAD JSON")</button>
         @if (!string.IsNullOrEmpty(status))
@@ -83,6 +83,7 @@
     private bool collectorAvailable;
     private bool consentToSend;
     private bool sending;
+    private bool submitted;
     private string status = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -95,7 +96,7 @@
 
     private async Task SendAsync()
     {
-        if (sending || !consentToSend || !collectorAvailable) return;
+        if (sending || submitted || !consentToSend || !collectorAvailable) return;
         sending = true;
         status = "";
         try
@@ -104,10 +105,11 @@
             status = result switch
             {
                 "sent" => "Received. Thank you! Your playtest report is now in the private feedback inbox.",
+                "duplicate" => "This feedback was already received. You don't need to submit it again.",
                 "rate_limited" => "Too many submissions from this connection. Please wait or share the JSON manually.",
                 _ => "We could not confirm delivery. Nothing has been acknowledged; try again or use Share / Download JSON.",
             };
-            if (result == "sent") consentToSend = false;
+            if (result is "sent" or "duplicate") { consentToSend = false; submitted = true; }
         }
         catch (JSException) { status = "Could not contact the collector. Please use Share / Download JSON instead."; }
         finally { sending = false; }
