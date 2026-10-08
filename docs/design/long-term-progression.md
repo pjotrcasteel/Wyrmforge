@@ -53,6 +53,16 @@ The Forge should answer three questions:
 
 Targets for Forge 2.0 include a goal surface, clearer discovery/mastery paths, unlock previews, Codex hooks and progression rewards that add content to future runs rather than simply increasing account stats.
 
+### 0.0.76 — Spell Mastery & Wyrmforged Lineages
+
+The first persistent Spell Mastery layer is shipped for the four original spells. Each has an aspirational Wyrmforged evolution gated behind four meaningful Rank II+ hunts and an associated Wyrm defeat with that spell at Rank III **at the time of the kill**. Progress and feat can occur in any order; abandoned runs and instant quits award nothing.
+
+The Codex tracks both conditions, without revealing a locked form's name. Run Hub, Forge ledger and post-run goals now mix Mastery with Forge objectives. The post-run story marks incremental Mastery and celebrates the four new possibilities on discovery. Future runs gain access through their progression-scoped evolution pool.
+
+New lineages: Fire Bolt / Ashfang → Wyrmfire; Frost Shard / Rimeclaw → Glacial Requiem; Chain Lightning / Stormcoil → Tempest Ascendant; Arcane Orb / Voidweaver → Void Constellation.
+
+The four remaining spells and the deeper Wyrm-related feats will be added in existing later endgame/content work. Ascendant/Elder Wyrms, Great Hunt chains and other rare discoveries are still future goals, not part of 0.0.76.
+
 ### Existing later content/endgame work
 
 Later roadmap work should deepen the same model rather than introduce an unrelated endgame currency treadmill.
