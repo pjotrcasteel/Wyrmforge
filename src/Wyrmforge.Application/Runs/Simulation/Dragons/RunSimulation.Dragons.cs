@@ -15,8 +15,15 @@ public sealed partial class RunSimulation
     private readonly List<DragonHuntHazardState> dragonHuntHazards = [];
     private readonly HashSet<SpellId> qualifiedWyrmFeats = [];
     private readonly HashSet<DragonId> deepEvolvedWyrmDuels = [];
+    private readonly HashSet<DragonId> ascendantVictories = [];
+    private bool ascendantChallengeEnabled;
+    private bool ascendantHuntConsumed;
+    private bool ascendantActive;
     private bool dragonPending;
     private bool dragonEncounterStarted;
+
+    internal void EnableAscendantAshfang(bool enabled) => ascendantChallengeEnabled = enabled;
+    public bool AscendantRiteSelected => ascendantChallengeEnabled;
 
     private void UpdateDragonEncounter(double delta, double width, double height)
     {
@@ -173,10 +180,12 @@ public sealed partial class RunSimulation
         enemies.Clear();
         projectiles.Clear();
         lightning.Clear();
-        var hunt = DragonHuntCatalog.Get(definition.Id);
+        ascendantActive = AscendantAshfangRule.IsEncounter(ascendantChallengeEnabled, ascendantHuntConsumed, depthState.Depth, definition.Id);
+        if (ascendantActive) ascendantHuntConsumed = true;
+        var hunt = ascendantActive ? DragonHuntCatalog.AscendantAshfang : DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
-        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier);
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1));
     }
 
     private void MoveDragon(DragonState activeDragon, double delta)
@@ -273,14 +282,16 @@ public sealed partial class RunSimulation
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
+        if (ascendantActive) ascendantVictories.Add(definition.Id);
         if (GreatHuntDuelQualification.Qualifies(definition, depthState.Depth, build.Spells, build.Evolutions)) deepEvolvedWyrmDuels.Add(definition.Id);
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
-        score += (int)(dragonScore * depthState.ScoreMultiplier);
+        score += (int)((dragonScore + (ascendantActive ? 6000 : 0)) * depthState.ScoreMultiplier);
         dragon = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
+        ascendantActive = false;
         spawnTimer = 1.2;
         mapState.CompleteDragon();
         pendingDragonEssenceChoices = DragonEssenceCatalog.ChoicesFor(definition.Id).Where(choice => !build.DragonEssences.Contains(choice.Id)).ToArray();
@@ -298,8 +309,10 @@ public sealed partial class RunSimulation
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
         var definition = activeDragon.Definition;
-        return new DragonRenderSnapshot(definition.Name, definition.Title, definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius,
-            activeDragon.Health, activeDragon.MaxHealth, activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses));
+        return new DragonRenderSnapshot(ascendantActive ? "Ascendant Ashfang" : definition.Name, ascendantActive ? "The Crown of Embers" : definition.Title,
+            definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
+            activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
+        { IsAscendant = ascendantActive };
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
@@ -315,7 +328,7 @@ public sealed partial class RunSimulation
     {
         if (dragon is not { Health: > 0 } activeDragon || dragonHuntState.Profile is not { } hunt) return null;
         return new DragonHuntRenderSnapshot(activeDragon.Definition.School, dragonHuntState.Stage, hunt.Arena, hunt.Entrance.Style, dragonHuntState.StageProgress,
-            dragonHuntState.EntranceBeat, dragonHuntState.EntranceBeatProgress, hunt.Signature.Name, hunt.PhaseTwoCallout);
+            dragonHuntState.EntranceBeat, dragonHuntState.EntranceBeatProgress, hunt.Signature.Name, hunt.PhaseTwoCallout) { IsAscendant = ascendantActive };
     }
 
     private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards

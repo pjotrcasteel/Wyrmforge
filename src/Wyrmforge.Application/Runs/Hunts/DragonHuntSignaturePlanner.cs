@@ -26,6 +26,7 @@ public static class DragonHuntSignaturePlanner
             DragonHuntSignatureKind.TempestCage => TempestCage(strikes, radius, playerPosition, width, height, randomSource),
             DragonHuntSignatureKind.GlacialWall => GlacialWall(strikes, radius, playerPosition, width, height, randomSource),
             DragonHuntSignatureKind.RiftEcho => RiftEcho(strikes, radius, playerPosition, width, height),
+            DragonHuntSignatureKind.Crownfall => Crownfall(strikes, radius, playerPosition, width, height),
             _ => throw new InvalidOperationException($"Unsupported Wyrm signature {signature.Kind}."),
         };
     }
@@ -109,6 +110,35 @@ public static class DragonHuntSignaturePlanner
         return Enumerable.Range(0, strikes)
             .Select(index => new DragonHuntSignatureStrike(Clamp(anchors[Math.Min(index, anchors.Length - 1)], width, height, radius), index * 0.28))
             .ToArray();
+    }
+
+    // Multiple warning waves split the arena into four lanes with one safe gate.
+    // The gate moves each wave, allowing deliberate repositioning on portrait screens.
+    private static IReadOnlyList<DragonHuntSignatureStrike> Crownfall(int strikes, double radius, Vector2D player, double width, double height)
+    {
+        const int slots = 4;
+        var acrossWidth = width <= height;
+        var span = acrossWidth ? width : height;
+        var effectiveRadius = Math.Min(radius, Math.Max(8, span / 10));
+        var spacing = (span - effectiveRadius * 2) / (slots - 1);
+        var coordinate = acrossWidth ? player.X : player.Y;
+        var initialGate = Math.Clamp((int)Math.Round((coordinate - effectiveRadius) / Math.Max(1, spacing)), 0, slots - 1);
+        var waves = strikes / (slots - 1);
+        var result = new List<DragonHuntSignatureStrike>(strikes);
+
+        for (var wave = 0; wave < waves; wave++)
+        {
+            var safeLane = (initialGate + wave) % slots;
+            for (var lane = 0; lane < slots; lane++)
+            {
+                if (lane == safeLane) continue;
+                var at = effectiveRadius + spacing * lane;
+                var point = acrossWidth ? new Vector2D(at, player.Y) : new Vector2D(player.X, at);
+                result.Add(new DragonHuntSignatureStrike(Clamp(point, width, height, effectiveRadius), wave * 1.25, effectiveRadius));
+            }
+        }
+
+        return result;
     }
 
     private static Vector2D Clamp(Vector2D position, double width, double height, double radius)

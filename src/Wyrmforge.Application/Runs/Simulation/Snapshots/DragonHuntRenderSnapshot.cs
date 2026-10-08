@@ -12,4 +12,7 @@ public sealed record DragonHuntRenderSnapshot(
     DragonHuntEntranceBeat EntranceBeat,
     double EntranceBeatProgress,
     string SignatureName,
-    string PhaseTwoCallout);
+    string PhaseTwoCallout)
+{
+    public bool IsAscendant { get; init; }
+}
