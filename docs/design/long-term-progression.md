@@ -39,7 +39,11 @@ The third branch can remain hidden or teased until its persistent requirements a
 
 ### 0.0.75 — Forge 2.0
 
-Forge 2.0 should turn secured Essence into visible future possibility.
+Forge 2.0 makes secured Essence lead to real future possibilities. Its first layer now shows a three-goal board in the Run Hub, Forge and post-run report, generated from the player’s real discovered Wyrm lineages, secured Essence and next unfinished mastery. The four Masterwork recipes each unlock an additional spell evolution blueprint on top of their existing reward.
+
+These unlocks use existing Forge persistence and expand only the future evolution pool. Fresh profiles cannot draft locked branches. Previously forged Masterworks receive their new blueprint automatically.
+
+The goal board is an actionable Forge starting point, not the complete endgame. Once all current craft lines are completed it must say so rather than invent false objectives; later Mastery, hidden Lineages, Codex feats and Great Hunt content will provide additional long-term horizons.
 
 The Forge should answer three questions:
 
