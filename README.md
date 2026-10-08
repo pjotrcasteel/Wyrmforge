@@ -2,7 +2,20 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.79 — The First Ascendant: Crown of Embers
+## Prototype 0.0.80 — Community playtesting and evidence
+
+Before another Wyrm chapter, WyrmForge now has a built-in, mobile-first playtest loop.
+
+- Run Hub and post-run screens offer a one-minute feedback survey for external testers (enjoyment, clarity, replay intent, trouble area and optional comments).
+- The browser keeps **local-only** anonymized run and funnel evidence: recent run outcomes and seeds, trail/Wyrm gates, depth, Essence, evolved spells and sparse frame-performance samples.
+- Testers decide whether to include run data and explicitly **share a JSON report** through the native phone share sheet, or download it to send to the playtest organizer. No server-side telemetry or automatic uploading is represented as enabled.
+- Reports can be deduplicated and summarized offline with `python3 tools/playtesting/analyze.py playtest-reports/`. Reports are ignored by Git.
+- `docs/playtesting/community-round-1.md` sets the first external testing protocol and pass/fail gates.
+- `docs/design/mobile-platform-roadmap.md` establishes iOS and Android releases as explicit future goals without forking deterministic C# gameplay.
+
+**Next release depends on feedback evidence.** Keep Ascendant/Elder Wyrms, Build Evolution expansion and native packaging on the roadmap, but prioritize blockers revealed by testers.
+
+### 0.0.79 — The First Ascendant: Crown of Embers
 
 The first playable Great Hunt rite begins after the Oath of the First Flame is sealed. The Run Hub exposes an opt-in Ascendant Ashfang encounter; regular hunts and early progression remain unchanged.
 
