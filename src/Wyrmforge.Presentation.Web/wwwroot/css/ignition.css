@@ -1,0 +1,146 @@
+/* A deliberately short startup ceremony, separate from Blazor so it also renders while WASM downloads. */
+body.igniting #app { visibility: hidden; }
+
+.ignition-screen {
+    position: fixed;
+    z-index: 20000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    min-height: 100dvh;
+    padding: max(24px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 52% 36% at 50% 42%, rgba(199, 105, 59, .15), transparent 78%),
+        radial-gradient(ellipse 70% 45% at 50% 115%, rgba(109, 66, 145, .12), transparent),
+        #0c0a10;
+    color: #f0e7ef;
+    transition: opacity .52s ease, visibility .52s ease;
+}
+
+.ignition-screen.ignition-complete {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.ignition-content {
+    display: grid;
+    justify-items: center;
+    width: min(100%, 420px);
+    text-align: center;
+    transform: translateY(-3vh);
+}
+
+.ignition-sigil {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 82px;
+    height: 82px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(235, 173, 101, .45);
+    border-radius: 22px;
+    transform: rotate(45deg);
+    background: linear-gradient(135deg, #302033, #16111e);
+    box-shadow: 0 0 42px rgba(230, 139, 66, .09), inset 0 0 25px rgba(249, 151, 85, .05);
+    animation: ignition-breathe 2.2s ease-in-out infinite;
+}
+
+.ignition-sigil::after {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border: 1px solid rgba(231, 179, 114, .21);
+    border-radius: 13px;
+}
+
+.ignition-sigil-core {
+    display: block;
+    color: #f2c582;
+    font-size: 35px;
+    line-height: 1;
+    text-shadow: 0 0 19px rgba(237, 144, 76, .68);
+    transform: rotate(-45deg);
+}
+
+.ignition-kicker {
+    margin: 0 0 12px;
+    color: #ad91a2;
+    font-size: .66rem;
+    font-weight: 850;
+    letter-spacing: .28em;
+}
+
+.ignition-content h1 {
+    margin: 0;
+    font: 750 clamp(1.55rem, 6vw, 2.6rem)/1.14 system-ui, sans-serif;
+    letter-spacing: .15em;
+}
+
+.ignition-content h1 span {
+    display: block;
+    color: #f2c78e;
+    font-weight: 900;
+    letter-spacing: .14em;
+}
+
+.ignition-progress {
+    width: min(214px, 72%);
+    height: 2px;
+    margin-top: 30px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(194, 160, 180, .17);
+}
+
+.ignition-progress span {
+    display: block;
+    width: 36%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, #f0c07d, #e89b66);
+    box-shadow: 0 0 14px rgba(235, 163, 89, .6);
+    animation: ignition-progress 1.65s ease-in-out infinite;
+}
+
+.ignition-status {
+    margin: 12px 0 0;
+    color: #82778c;
+    font-size: .6rem;
+    font-weight: 750;
+    letter-spacing: .2em;
+}
+
+.ignition-retry {
+    min-height: 44px;
+    margin-top: 25px;
+    padding: 9px 22px;
+    border: 1px solid #ba875c;
+    border-radius: 10px;
+    background: #30202c;
+    color: #f4dcc0;
+    font-size: .8rem;
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.ignition-retry[hidden] { display: none; }
+.ignition-failed .ignition-progress span { animation: none; width: 100%; background: #ae5555; }
+.ignition-failed .ignition-status { color: #e2a19b; }
+
+@keyframes ignition-breathe {
+    0%, 100% { box-shadow: 0 0 32px rgba(230, 139, 66, .07), inset 0 0 25px rgba(249, 151, 85, .05); }
+    50% { box-shadow: 0 0 65px rgba(230, 139, 66, .25), inset 0 0 34px rgba(249, 151, 85, .13); }
+}
+
+@keyframes ignition-progress {
+    from { transform: translateX(-110%); }
+    to { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ignition-screen { transition: none; }
+    .ignition-sigil, .ignition-progress span { animation: none; }
+    .ignition-progress span { transform: none; width: 100%; }
+}
