@@ -181,6 +181,7 @@
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter] public EventCallback OnSelectionChanged { get; set; }
 
     private ElementReference viewport;
     private string focusedId = PassiveTreeCatalog.OriginId;
@@ -202,14 +203,14 @@
         inspectorOpen = true;
     }
 
-    private void AllocateFocusedRoute()
+    private async Task AllocateFocusedRoute()
     {
         var plan = FocusedPlan;
         if (plan is null || plan.AdditionalCost > PointsLeft) return;
-        Selection.SelectPath(plan.NodeIds);
+        if (Selection.SelectPath(plan.NodeIds)) await OnSelectionChanged.InvokeAsync();
     }
 
-    private void RefundFocused() => Selection.Remove(focusedId);
+    private async Task RefundFocused() { if (Selection.Remove(focusedId)) await OnSelectionChanged.InvokeAsync(); }
     private void CloseInspector() => inspectorOpen = false;
 
     private string NodeClass(PassiveNodeDefinition node)
@@ -297,9 +298,10 @@
     private string NodeStateClass(PassiveNodeDefinition node) => NodeState(node).ToLowerInvariant().Replace(' ', '-');
     private static string SchoolLabel(PassiveNodeDefinition node) => node.School?.ToString() ?? "Wyrmheart / old bridges";
 
-    private void Reset()
+    private async Task Reset()
     {
         Selection.Reset();
+        await OnSelectionChanged.InvokeAsync();
         focusedId = PassiveTreeCatalog.OriginId;
         inspectorOpen = false;
     }
