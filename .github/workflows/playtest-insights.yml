@@ -1,0 +1,65 @@
+name: Publish privacy-safe playtest insights
+
+on:
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/playtest-insights.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: playtest-insights
+  cancel-in-progress: false
+
+jobs:
+  insights:
+    runs-on: ubuntu-latest
+    environment: playtest-collector
+    timeout-minutes: 10
+    steps:
+      - name: Checkout latest analysis tools
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+
+      - name: Generate report from aggregate-only D1 queries
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WYRMFORGE_D1_DATABASE_ID: ${{ vars.WYRMFORGE_D1_DATABASE_ID }}
+        run: |
+          python3 tools/playtesting/publish_insights.py --output "$RUNNER_TEMP/latest-playtest-insights.md"
+
+      - name: Publish only aggregated insight document to a separate public branch
+        env:
+          REPORT_FILE: ${{ runner.temp }}/latest-playtest-insights.md
+        run: |
+          set -euo pipefail
+          git config user.name "WyrmForge Insights Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin playtest-insights >/dev/null 2>&1; then
+            git fetch --no-tags origin playtest-insights
+            git switch --detach FETCH_HEAD
+            git switch -C playtest-insights
+          else
+            git switch --orphan playtest-insights
+            git rm -rf --quiet .
+          fi
+
+          mkdir -p docs/playtesting/insights
+          cp "$REPORT_FILE" docs/playtesting/insights/latest.md
+          git add -- docs/playtesting/insights/latest.md
+
+          if git diff --cached --quiet; then
+            echo "No changes to anonymized report."
+            exit 0
+          fi
+          git commit -m "Update privacy-safe community playtest insights"
+          git push origin HEAD:refs/heads/playtest-insights
+          echo "Only anonymized aggregates were published; no raw feedback artifacts were created."
