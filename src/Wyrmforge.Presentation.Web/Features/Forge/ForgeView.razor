@@ -37,7 +37,7 @@
                     <BuildView Selection="Selection" />
                     break;
                 case ShellSection.Forge:
-                    <ForgeProgressionView Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" />
+                    <ForgeProgressionView Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
                     break;
                 case ShellSection.Codex:
                     <CodexView Codex="Codex" Progression="Progression" />

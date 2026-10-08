@@ -1,79 +1,267 @@
-.forge-view { display: grid; gap: 14px; }
-.section-kicker { color: #9e78ce; font-size: .66rem; font-weight: 900; letter-spacing: .18em; }
-.forge-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 24px; border: 1px solid #2e2637; border-radius: 20px; background: linear-gradient(145deg,rgba(31,24,40,.94),rgba(18,14,23,.94)); }
-.forge-heading h1 { margin: 7px 0 8px; font-size: clamp(2rem,4vw,3.7rem); line-height: .96; letter-spacing: -.045em; }
-.forge-heading p { max-width: 690px; margin: 0; color: #9f94a8; line-height: 1.5; }
-.forge-count { display: grid; min-width: 160px; padding: 14px 16px; border: 1px solid #3a3045; border-radius: 14px; background: #17131d; }
-.forge-count strong { font-size: 1.75rem; }
-.forge-count span { color: #85798e; font-size: .68rem; }
-.vault-panel,.offering-panel { padding: 17px; border: 1px solid #2e2637; border-radius: 16px; background: rgba(18,14,23,.86); }
-.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-.panel-heading > div { display: grid; gap: 4px; }
-.panel-heading small { color: #81768b; }
-.panel-heading strong { color: #c9bdd5; font-size: .76rem; }
-.vault-items,.offering-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.essence-chip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid #382d43; border-radius: 10px; color: #cfc5d8; background: #17131d; font-size: .72rem; }
-.essence-chip b { font-size: 1rem; }
-.essence-chip strong { color: #fff; }
-.empty-copy { color: #81768b; font-size: .75rem; }
-.clear-offering { border: 0; color: #b58ae8; background: transparent; cursor: pointer; font-size: .62rem; font-weight: 900; letter-spacing: .12em; }
-.offering-card { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; flex: 1 1 250px; min-width: 0; padding: 11px; text-align: left; border: 1px solid #352b40; border-radius: 12px; color: #e7dfee; background: #17131d; cursor: pointer; }
-.offering-card.selected { border-color: #b887ff; background: #251b30; box-shadow: inset 0 0 0 1px rgba(184,135,255,.14); }
-.offering-icon { display: grid; width: 38px; aspect-ratio: 1; place-items: center; border-radius: 10px; background: #241b2e; font-size: 1.25rem; }
-.offering-card div { display: grid; gap: 2px; min-width: 0; }
-.offering-card small { color: #897e92; line-height: 1.3; }
-.offering-card > b { color: #a99db4; font-size: .68rem; }
-.lineage-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
-.lineage-card { min-width: 0; padding: 17px; border: 1px solid #302737; border-radius: 17px; background: rgba(18,14,23,.88); }
-.lineage-card.discovered { border-color: rgba(184,135,255,.38); }
-.lineage-card.locked { opacity: .55; }
-.lineage-card > header > span { color: #8d6db4; font-size: .57rem; font-weight: 900; letter-spacing: .13em; }
-.lineage-card h2 { margin: 5px 0 4px; font-size: 1.1rem; }
-.lineage-card > header > p { margin: 0; color: #8d8395; font-size: .73rem; line-height: 1.4; }
-.mastery-stack { display: grid; gap: 8px; margin-top: 14px; }
-.mastery-node { display: grid; gap: 6px; padding: 11px; border: 1px solid #2d2634; border-radius: 11px; background: rgba(10,8,13,.45); }
-.mastery-node.ready { border-color: rgba(184,135,255,.7); box-shadow: inset 0 0 0 1px rgba(184,135,255,.12); }
-.mastery-node.forged { border-color: rgba(105,205,156,.48); background: rgba(55,101,79,.16); }
-.mastery-node.blocked { opacity: .58; }
-.mastery-title { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.mastery-title span { color: #766c80; font-size: .5rem; font-weight: 900; letter-spacing: .1em; }
-.mastery-title strong { color: #d8cfdf; font-size: .76rem; text-align: right; }
-.mastery-node p { margin: 0; color: #8d8395; font-size: .67rem; line-height: 1.4; }
-.mastery-node em { color: #b887ff; font-size: .61rem; font-style: normal; line-height: 1.3; }
-.mastery-node button { min-height: 36px; margin-top: 2px; padding: 0 10px; border: 1px solid #49375c; border-radius: 8px; color: #e8dbf4; background: #241a2d; cursor: pointer; font-size: .6rem; font-weight: 900; letter-spacing: .05em; }
-.mastery-node button:disabled { opacity: .5; cursor: not-allowed; }
-.mastery-node.forged button { border-color: rgba(105,205,156,.36); color: #8bd8b0; background: rgba(105,205,156,.12); }
-@media (max-width: 820px) { .lineage-grid { grid-template-columns: 1fr; } .forge-heading { align-items: stretch; flex-direction: column; } .forge-count { width: fit-content; } }
-@media (max-width: 560px) { .forge-heading { padding: 20px; } .offering-card { flex-basis: 100%; } }
+.forge-sanctum {
+    --sanctum-color: 231, 156, 94;
+    --sanctum-ink: #0e0b14;
+    display: grid;
+    gap: 15px;
+    color: #eae3ed;
+}
 
-.forge-celebration-backdrop {
-    position: fixed;
-    z-index: 100;
+.sanctum-heading {
+    display: grid;
+    gap: 7px;
+    padding: clamp(18px, 3vw, 30px);
+    border: 1px solid rgba(200, 164, 119, .19);
+    border-radius: 20px;
+    background: radial-gradient(ellipse at 78% 0%, rgba(210, 123, 58, .11), transparent 55%), #141019;
+}
+.sanctum-heading .section-kicker { color: #ccab79; font-size: .66rem; font-weight: 950; letter-spacing: .17em; }
+.sanctum-heading h1 { margin: 0; font: 600 clamp(2rem, 4vw, 3.5rem)/1.1 Georgia, serif; letter-spacing: -.025em; color: #f4e8d7; }
+.sanctum-heading p { max-width: 720px; margin: 0; color: #b6a9bb; font-size: .83rem; line-height: 1.55; }
+.sanctum-instructions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 9px; }
+.sanctum-instructions span { color: #cfc0c8; font-size: .61rem; font-weight: 850; letter-spacing: .09em; }
+.sanctum-instructions b { margin-right: 4px; color: #e0a65d; }
+.sanctum-instructions i { color: #755e62; font-size: .85rem; font-style: normal; }
+
+.sanctum-chamber {
+    --sanctum-color: 242, 139, 77;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, .82fr) minmax(0, 1.1fr) minmax(270px, 1.1fr);
+    align-items: stretch;
+    gap: clamp(11px, 2vw, 23px);
+    padding: clamp(14px, 2vw, 23px);
+    border: 1px solid rgba(var(--sanctum-color), .31);
+    border-radius: 20px;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 52% 43%, rgba(var(--sanctum-color), .15), transparent 43%),
+        repeating-linear-gradient(150deg, transparent 0 88px, rgba(255,255,255,.012) 89px 90px),
+        linear-gradient(145deg, #241b29, #100e17 63%, #19121c);
+    box-shadow: inset 0 0 80px rgba(0,0,0,.23), 0 14px 40px rgba(0,0,0,.12);
+    transition: border-color .5s ease, background-color .5s ease;
+}
+.sanctum-chamber.lineage-stormcraft { --sanctum-color: 245, 207, 94; }
+.sanctum-chamber.lineage-rimecraft { --sanctum-color: 132, 215, 247; }
+.sanctum-chamber.lineage-voidcraft { --sanctum-color: 179, 141, 250; }
+.sanctum-chamber::before {
+    content: "";
+    position: absolute;
     inset: 0;
+    border-radius: inherit;
+    background: repeating-radial-gradient(circle at 50% 45%, transparent 0 85px, rgba(var(--sanctum-color), .027) 87px 89px);
+    pointer-events: none;
+    z-index: -1;
+}
+.sanctum-legend { color: #bda4c5; font-size: .59rem; font-weight: 950; letter-spacing: .14em; }
+.sanctum-choose { display: grid; align-content: start; gap: 14px; padding: 11px 0; }
+.sanctum-sigils { display: grid; gap: 11px; }
+.sanctum-sigil {
+    display: grid;
+    grid-template-columns: 48px minmax(0,1fr);
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    padding: 12px 10px;
+    border: 1px solid rgba(184, 160, 189, .16);
+    border-radius: 14px;
+    background: linear-gradient(130deg, rgba(40,30,47,.88),rgba(14,12,20,.83));
+    color: #ddd3e4;
+    cursor: pointer;
+    text-align: left;
+    transition: transform .2s ease, border-color .3s ease, box-shadow .3s ease, background .3s ease;
+}
+.sanctum-sigil:hover { transform: translateX(4px); border-color: #766182; }
+.sanctum-sigil:focus-visible,.sanctum-rune:focus-visible,.sanctum-forge-action:focus-visible { outline: 2px solid #e7ba78; outline-offset: 3px; }
+.sanctum-sigil.selected { border-color: rgba(var(--sanctum-color), .75); box-shadow: inset 0 0 0 1px rgba(var(--sanctum-color), .24),0 0 28px rgba(var(--sanctum-color), .11); background: linear-gradient(120deg,rgba(var(--sanctum-color), .11),rgba(19,14,24,.95)); }
+.sanctum-sigil-icon {
+    grid-row: 1 / span 2;
     display: grid;
     place-items: center;
-    padding: 20px;
-    background: rgba(6, 4, 8, .89);
-    backdrop-filter: blur(13px);
+    width: 46px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid #6b566b;
+    background: radial-gradient(circle at 35% 35%,#45354b,#18121f 75%);
+    font-size: 1.7rem;
+    color: #cfb8dd;
+    box-shadow: inset 0 0 12px #130f18;
 }
-.forge-celebration {
+.sigil-ashcraft .sanctum-sigil-icon { color: #ee9b68; }
+.sigil-stormcraft .sanctum-sigil-icon { color: #f2d484; }
+.sigil-rimecraft .sanctum-sigil-icon { color: #8adced; }
+.sigil-voidcraft .sanctum-sigil-icon { color: #bd9bea; }
+.sanctum-sigil.selected .sanctum-sigil-icon { border-color: rgba(var(--sanctum-color), .75); filter: drop-shadow(0 0 8px rgba(var(--sanctum-color), .42)); }
+.sanctum-sigil-name { min-width: 0; font: 600 .98rem Georgia, serif; }
+.sanctum-sigil-state { color: #887c91; font-size: .55rem; font-weight: 900; letter-spacing: .07em; }
+.sanctum-sigil.selected .sanctum-sigil-state { color: rgb(var(--sanctum-color)); }
+.sanctum-sigil.undiscovered .sanctum-sigil-icon { opacity: .6; }
+
+.sanctum-stage { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 0; gap: 11px; text-align: center; }
+.sanctum-hearth { position: relative; display: grid; place-items: center; width: min(100%, 390px); aspect-ratio: 1; }
+.hearth-halo { position: absolute; width: 75%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle,rgba(var(--sanctum-color),.35),rgba(var(--sanctum-color),.07) 48%,transparent 75%); filter: blur(10px); animation: hearth-pulse 4.7s ease-in-out infinite; }
+.hearth-rune { position: absolute; width: 83%; aspect-ratio: 1; border: 1px solid rgba(var(--sanctum-color), .3); border-radius: 50%; box-shadow: 0 0 16px rgba(var(--sanctum-color), .07), inset 0 0 18px rgba(var(--sanctum-color), .09); }
+.rune-outer { border-style: dashed; animation: hearth-turn 35s linear infinite; }
+.rune-inner { width: 59%; border-style: dotted; animation: hearth-turn 29s linear infinite reverse; }
+.hearth-aura { position: absolute; width: 49%; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(from 0deg,rgba(var(--sanctum-color),.01),rgba(var(--sanctum-color),.17),transparent,rgba(var(--sanctum-color),.08)); filter: blur(6px); animation: hearth-turn 13s linear infinite; }
+.hearth-anvil { z-index: 2; width: 70%; max-width: 270px; filter: drop-shadow(0 8px 8px #07050b) drop-shadow(0 0 20px rgba(var(--sanctum-color), .25)); transition: filter .45s ease; }
+.hearth-ember { position: absolute; z-index: 1; width: 4px; height: 4px; border-radius: 50%; background: rgb(var(--sanctum-color)); box-shadow: 0 0 14px 4px rgba(var(--sanctum-color),.45); animation: hearth-ember-rise 3.6s ease-out infinite; }
+.ember-a { left: 37%; bottom: 38%; }
+.ember-b { left: 57%; bottom: 34%; animation-delay: -1.4s; }
+.ember-c { left: 49%; bottom: 40%; animation-delay: -2.5s; }
+.sanctum-wyrm-heading { display: grid; justify-items: center; gap: 4px; margin-top: -12px; }
+.sanctum-wyrm-heading span { color: rgb(var(--sanctum-color)); font-size: .58rem; font-weight: 950; letter-spacing: .13em; }
+.sanctum-wyrm-heading h2 { margin: 0; font: 600 clamp(1.5rem,3vw,2.8rem)/1.1 Georgia, serif; color: #f4e5d9; }
+.sanctum-wyrm-heading p { max-width: 260px; margin: 0; color: #9f94a8; font-size: .71rem; line-height: 1.5; }
+.sanctum-ritual-progress { display: flex; gap: 12px; justify-content: center; padding: 10px 0; }
+.sanctum-ritual-progress span { width: 13px; aspect-ratio: 1; transform: rotate(45deg); border: 1px solid rgba(var(--sanctum-color),.6); background: #17111e; }
+.sanctum-ritual-progress span.lit { background: rgb(var(--sanctum-color)); box-shadow: 0 0 14px rgba(var(--sanctum-color),.6); }
+
+.sanctum-blueprints { display: grid; align-content: start; gap: 12px; min-width: 0; }
+.sanctum-blueprints-heading { display: flex; justify-content: space-between; align-items: center; gap: 7px; margin: 9px 0 1px; }
+.sanctum-blueprints-heading strong { color: rgb(var(--sanctum-color)); font-size: .59rem; white-space: nowrap; }
+.sanctum-rune-chain { display: grid; gap: 13px; position: relative; }
+.sanctum-rune-chain::before { content: ""; position: absolute; top: 20px; bottom: 20px; left: 26px; width: 2px; background: linear-gradient(rgba(var(--sanctum-color),.43),rgba(var(--sanctum-color),.05)); }
+.sanctum-rune {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 66px;
+    padding: 10px;
+    border: 1px solid #403347;
+    border-radius: 12px;
+    text-align: left;
+    color: #d9cde2;
+    background: rgba(14,11,20,.93);
+    cursor: pointer;
+    transition: border-color .25s ease, transform .25s ease, background .25s ease;
+}
+.sanctum-rune:hover { transform: translateX(-3px); border-color: #8e7592; }
+.sanctum-rune.inspected { border-color: rgba(var(--sanctum-color),.72); background: rgba(var(--sanctum-color),.085); }
+.sanctum-rune.forged { border-color: #4e7a67; }
+.sanctum-rune.ready { box-shadow: inset 0 0 15px rgba(var(--sanctum-color),.1); }
+.sanctum-rune-mark { display: grid; flex: 0 0 32px; place-items: center; width: 32px; aspect-ratio: 1; transform: rotate(45deg); border: 1px solid rgba(var(--sanctum-color),.66); border-radius: 4px; color: #ead4b5; background: #28202c; font-weight: 900; font-size: .68rem; }
+.sanctum-rune-mark::first-letter { transform: rotate(-45deg); }
+.sanctum-rune.forged .sanctum-rune-mark { color: #b8ebcb; background: #204036; border-color: #76bd9e; }
+.sanctum-rune-text { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.sanctum-rune-text small { color: #95869a; font-size: .52rem; font-weight: 900; letter-spacing: .07em; }
+.sanctum-rune.ready .sanctum-rune-text small { color: rgb(var(--sanctum-color)); }
+.sanctum-rune-text b { font: 600 .84rem Georgia,serif; overflow-wrap: anywhere; }
+.sanctum-rune-chevron { color: #87718d; font-size: 1.25rem; }
+.sanctum-inspection {
     display: grid;
-    justify-items: center;
-    gap: 14px;
-    width: min(560px, 100%);
-    padding: clamp(22px, 5vw, 52px);
-    text-align: center;
-    border: 1px solid rgba(225, 180, 99, .6);
-    border-radius: 24px;
-    background: radial-gradient(ellipse at 50% 12%, rgba(231, 172, 70, .19), transparent 60%), #17111e;
-    box-shadow: 0 0 100px rgba(220, 164, 81, .19), 0 30px 90px rgba(0, 0, 0, .65);
-    animation: forge-unlock-arrival .5s cubic-bezier(.2, 1.25, .35, 1) both;
+    gap: 9px;
+    padding: 15px;
+    border: 1px solid rgba(var(--sanctum-color), .27);
+    border-radius: 13px;
+    background: linear-gradient(145deg,rgba(var(--sanctum-color),.055),rgba(10,8,14,.88));
+    animation: inspect-arrival .25s ease-out both;
 }
+.sanctum-inspection h3 { margin: 0; font: 600 1.27rem Georgia,serif; }
+.sanctum-inspection p { margin: 0; color: #b2a8b9; font-size: .72rem; line-height: 1.5; }
+.sanctum-rewards { display: flex; flex-wrap: wrap; align-items: start; gap: 6px; }
+.sanctum-rewards > span { width: 100%; color: #a58db3; font-size: .55rem; font-weight: 900; letter-spacing: .1em; }
+.sanctum-rewards strong { padding: 5px 7px; border: 1px solid #58445e; border-radius: 6px; color: #e6c2ef; background: rgba(156,90,190,.11); font-size: .58rem; font-weight: 700; }
+.sanctum-material { display: flex; align-items: center; gap: 9px; margin-top: 2px; padding: 9px; border: 1px solid rgba(222,169,99,.2); border-radius: 9px; background: #1c1620; }
+.material-icon { font-size: 1.55rem; }
+.sanctum-material > div { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.sanctum-material small { color: #9a8299; font-size: .54rem; font-weight: 850; }
+.sanctum-material strong { font-size: .72rem; }
+.sanctum-material > b { color: #edc98c; font-size: .85rem; }
+.sanctum-forge-action { min-height: 46px; padding: 10px; border: 1px solid #ffcf84; border-radius: 10px; color: #221319; background: linear-gradient(120deg,#e7b764,#f2d39b,#cfa062); font-size: .75rem; font-weight: 950; letter-spacing: .08em; cursor: pointer; box-shadow: 0 0 23px rgba(239,184,92,.18); }
+.sanctum-forge-action:hover:not(:disabled) { filter: brightness(1.15); }
+.sanctum-forge-action:disabled { cursor: not-allowed; border-color: #483c46; color: #988b98; background: #28212d; box-shadow: none; }
+.sanctum-inspection .sanctum-hint { font-size: .67rem; color: #d2af8f; }
+.sanctum-inspection .sanctum-hint.unlocked { color: #94d1b3; }
+
+.sanctum-drawer { min-width: 0; border: 1px solid rgba(178,151,188,.21); border-radius: 13px; background: #15111c; }
+.sanctum-drawer > summary { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 14px 17px; cursor: pointer; list-style: none; }
+.sanctum-drawer > summary::-webkit-details-marker { display: none; }
+.sanctum-drawer > summary > span:first-child { display: flex; align-items: center; gap: 8px; color: #d5c4df; font-size: .7rem; font-weight: 900; letter-spacing: .05em; }
+.sanctum-drawer > summary > span:last-child { color: #ab93ad; font-size: .61rem; font-weight: 800; }
+.sanctum-drawer summary i { display: inline-block; margin-left: 10px; font-size: .95rem; font-style: normal; transition: transform .24s ease; }
+.sanctum-drawer[open] summary i { transform: rotate(180deg); }
+.sanctum-drawer[open] { border-color: rgba(197,159,120,.4); }
+.sanctum-drawer-body { display: grid; gap: 14px; padding: 0 17px 17px; }
+.sanctum-drawer-body h3 { margin: 4px 0; font: 600 1.1rem Georgia,serif; }
+.sanctum-drawer .panel-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.sanctum-drawer .panel-heading > div { display: grid; gap: 3px; }
+.sanctum-drawer .panel-heading small { color: #96889c; font-size: .69rem; }
+.vault-items,.offering-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.essence-chip { display: inline-flex; gap: 7px; align-items: center; padding: 8px 10px; border: 1px solid #514158; border-radius: 9px; background: #231b2a; color: #e4d3e6; font-size: .68rem; }
+.essence-chip strong { color: #e8c58d; }
+.offering-card { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; align-items: center; flex: 1 1 240px; min-width: 0; padding: 11px; border: 1px solid #3d3044; border-radius: 11px; background: #211928; color: #e5d6e8; text-align: left; cursor: pointer; }
+.offering-card.selected { border-color: #d7ac76; box-shadow: inset 0 0 0 1px rgba(237,196,118,.26); }
+.offering-icon { display: grid; place-items: center; width: 38px; aspect-ratio: 1; border-radius: 10px; background: #302438; font-size: 1.2rem; }
+.offering-card > div { display: grid; gap: 3px; min-width: 0; }
+.offering-card strong { font-size: .76rem; }
+.offering-card small { color: #ab9eaf; font-size: .65rem; }
+.offering-card > b { color: #e1c48f; font-size: .59rem; }
+.empty-copy { color: #afa3b4; font-size: .76rem; line-height: 1.45; }
+.clear-offering { border: 0; background: none; color: #e7bd86; font-size: .61rem; font-weight: 900; cursor: pointer; }
+.sanctum-ledger > .forge-goal-board { margin: 0 15px 15px; border-radius: 10px; }
+
+.forge-celebration-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(6,4,8,.89); backdrop-filter: blur(13px); }
+.forge-celebration { display: grid; justify-items: center; gap: 14px; width: min(560px,100%); padding: clamp(22px,5vw,52px); text-align: center; border: 1px solid rgba(225,180,99,.6); border-radius: 24px; background: radial-gradient(ellipse at 50% 12%, rgba(231,172,70,.19), transparent 60%),#17111e; box-shadow: 0 0 100px rgba(220,164,81,.19),0 30px 90px rgba(0,0,0,.65); animation: forge-unlock-arrival .55s cubic-bezier(.2,.85,.25,1) both; }
 .forge-celebration-sigil { font-size: 5rem; color: #f1ce84; filter: drop-shadow(0 0 27px #d69c4e); }
-.forge-celebration h2 { margin: 0; font-size: clamp(1.7rem, 4vw, 3rem); }
+.forge-celebration h2 { margin: 0; font: 600 clamp(1.7rem,4vw,3rem) Georgia,serif; }
 .forge-celebration p { margin: 0; color: #bbacbe; line-height: 1.5; }
 .forge-celebration-unlocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.forge-celebration-unlocks span { padding: 8px 12px; border: 1px solid #655037; border-radius: 10px; background: rgba(213, 164, 89, .1); color: #f0d6a1; font-size: .78rem; }
+.forge-celebration-unlocks span { padding: 8px 12px; border: 1px solid #655037; border-radius: 10px; background: rgba(213,164,89,.1); color: #f0d6a1; font-size: .78rem; }
 .forge-celebration button { min-height: 44px; margin-top: 8px; padding: 10px 22px; border: 1px solid #ad8350; border-radius: 12px; color: #180f15; background: #e8c486; font-weight: 900; cursor: pointer; }
-@keyframes forge-unlock-arrival { from { opacity: 0; transform: scale(.83); } to { opacity: 1; transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) { .forge-celebration { animation: none; } }
+
+@keyframes hearth-pulse { 50% { transform: scale(1.08); opacity: .65; } }
+@keyframes hearth-turn { to { transform: rotate(360deg); } }
+@keyframes hearth-ember-rise { 0% { opacity: 0; transform: translate(0,8px) scale(.6); } 30% { opacity: .9; } 100% { opacity: 0; transform: translate(20px,-95px) scale(.2); } }
+@keyframes inspect-arrival { from { opacity: .45; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@keyframes forge-unlock-arrival { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+
+@media (max-width: 1100px) {
+    .sanctum-chamber { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); }
+    .sanctum-blueprints { grid-column: 1 / -1; }
+    .sanctum-rune-chain { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .sanctum-rune-chain::before { display: none; }
+    .sanctum-rune { padding: 8px; }
+}
+@media (max-width: 660px) {
+    .sanctum-chamber { grid-template-columns: minmax(0,1fr); padding: 11px; }
+    .sanctum-choose { padding: 0; gap: 10px; }
+    .sanctum-sigils { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
+    .sanctum-sigil { display: grid; grid-template-columns: 1fr; grid-template-rows: auto auto auto; justify-items: center; gap: 4px; min-width: 0; padding: 9px 3px; text-align: center; }
+    .sanctum-sigil-icon { grid-row: auto; width: 42px; }
+    .sanctum-sigil-name { font-size: .67rem; }
+    .sanctum-sigil-state { font-size: .44rem; overflow-wrap: anywhere; }
+    .sanctum-sigil:hover { transform: none; }
+    .sanctum-stage { gap: 0; }
+    .sanctum-hearth { width: min(74%,270px); }
+    .sanctum-wyrm-heading { margin-top: -8px; }
+    .sanctum-wyrm-heading h2 { font-size: 1.8rem; }
+    .sanctum-blueprints { grid-column: 1; }
+    .sanctum-rune-chain { grid-template-columns: 1fr; gap: 8px; }
+    .sanctum-rune { min-height: 55px; padding: 8px 10px; }
+    .sanctum-heading { padding: 15px; }
+    .sanctum-heading h1 { font-size: 2.1rem; }
+    .sanctum-instructions { gap: 6px; }
+    .sanctum-instructions span { font-size: .48rem; }
+    .sanctum-drawer > summary > span:last-child { font-size: .53rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hearth-halo,.rune-outer,.rune-inner,.hearth-aura,.hearth-ember,.sanctum-inspection,.forge-celebration { animation: none !important; }
+    .sanctum-sigil,.sanctum-rune { transition: none !important; }
+}
+
+/* Keep the first rune in view sooner on phones: the hearth is a landmark, not an entire screen of dead space. */
+@media (max-width: 660px) {
+    .sanctum-hearth { width: min(62%, 216px); }
+    .sanctum-wyrm-heading { margin-top: -13px; gap: 2px; }
+    .sanctum-wyrm-heading h2 { font-size: 1.6rem; }
+    .sanctum-ritual-progress { padding: 5px 0; }
+    .sanctum-blueprints { gap: 9px; }
+    .sanctum-heading { gap: 5px; }
+    .sanctum-heading p { font-size: .77rem; }
+}
+
+.sanctum-prep-action { min-height: 39px; border: 1px solid rgba(var(--sanctum-color), .44); border-radius: 9px; background: rgba(var(--sanctum-color), .08); color: #f2d4ad; font-size: .64rem; font-weight: 900; letter-spacing: .09em; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+.sanctum-prep-action:hover { background: rgba(var(--sanctum-color), .19); border-color: rgba(var(--sanctum-color), .75); }

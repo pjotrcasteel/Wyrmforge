@@ -23,8 +23,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
             var mobileForge = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Forge" });
             await mobileForge.EvaluateAsync("element => element.click()");
+            await Expect(Page.GetByRole(AriaRole.Navigation, new() { Name = "Choose a Wyrm lineage" })).ToBeVisibleAsync();
+            await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Rimeclaw") }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Rimeclaw" })).ToBeVisibleAsync();
+            await ScreenshotAsync("mobile-forge-sanctum.png");
+            await Page.Locator("details.sanctum-ledger > summary").ClickAsync();
             await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
-            await ScreenshotAsync("mobile-forge-goals.png");
+            await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("PREPARE NEXT HUNT") }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "ENTER WYRMREALM" })).ToBeVisibleAsync();
             var mobileBuild = Page.Locator("nav.mobile-nav button").Filter(new LocatorFilterOptions { HasText = "Build" });
             await mobileBuild.EvaluateAsync("element => element.click()");
             await Expect(Page.GetByText("ARCANE ATLAS", new() { Exact = true })).ToBeVisibleAsync();
@@ -60,8 +66,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
             var desktopForge = Page.Locator("aside.shell-rail button").Filter(new LocatorFilterOptions { HasText = "Forge" });
             await desktopForge.EvaluateAsync("element => element.click()");
+            await Expect(Page.GetByRole(AriaRole.Navigation, new() { Name = "Choose a Wyrm lineage" })).ToBeVisibleAsync();
+            await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Stormcoil") }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Stormcoil" })).ToBeVisibleAsync();
+            await ScreenshotAsync("desktop-forge-sanctum.png");
+            await Page.Locator("details.sanctum-ledger > summary").ClickAsync();
             await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
-            await ScreenshotAsync("desktop-forge-goals.png");
+            await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("PREPARE NEXT HUNT") }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "ENTER WYRMREALM" })).ToBeVisibleAsync();
 
             var desktopBuild = Page.Locator("aside.shell-rail button").Filter(new LocatorFilterOptions { HasText = "Build" });
             await desktopBuild.EvaluateAsync("element => element.click()");

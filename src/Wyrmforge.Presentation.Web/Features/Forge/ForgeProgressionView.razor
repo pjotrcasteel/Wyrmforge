@@ -4,24 +4,26 @@
 @using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Spells.Evolutions
 
-<section class="forge-view">
-    <header class="forge-heading">
-        <div>
-            <span class="section-kicker">THE FORGE</span>
-            <h1>Turn stolen power into possibilities.</h1>
-            <p>Essence survives only when you extract. Spend it here to unlock new offerings, spells and relics for future runs.</p>
+<section class="forge-view forge-sanctum" aria-label="Wyrmforge sanctum">
+    <header class="sanctum-heading">
+        <span class="section-kicker">THE WYRMFORGE • SANCTUM</span>
+        <h1>Awaken the forge.</h1>
+        <p>Hunt a Wyrm. Carry its Essence home. Forge that Essence into a new possibility for your next run.</p>
+        <div class="sanctum-instructions" aria-label="How forging works">
+            <span><b>01</b> HUNT A WYRM</span>
+            <i aria-hidden="true">⟶</i>
+            <span><b>02</b> EXTRACT ESSENCE</span>
+            <i aria-hidden="true">⟶</i>
+            <span><b>03</b> FORGE A BLUEPRINT</span>
         </div>
-        <div class="forge-count"><strong>@Progression.MasteryCount</strong><span>of @ForgeMasteryCatalog.All.Count masteries forged</span></div>
     </header>
-
-    <ForgeGoalBoard Progression="Progression" Vault="Vault" />
 
     @if (newlyForged is { } completed)
     {
         <div class="forge-celebration-backdrop" role="dialog" aria-modal="true" aria-label="Forge mastery completed">
             <section class="forge-celebration">
                 <div class="section-kicker">MASTERWORK AWAKENED</div>
-                <div class="forge-celebration-sigil">◆</div>
+                <div class="forge-celebration-sigil" aria-hidden="true">◆</div>
                 <h2>@completed.Name</h2>
                 <p>You have permanently widened the possibilities of every future hunt.</p>
                 <div class="forge-celebration-unlocks">
@@ -35,78 +37,159 @@
         </div>
     }
 
-    <section class="vault-panel">
-        <div class="panel-heading"><span class="section-kicker">ESSENCE VAULT</span><strong>@Vault.TotalCount secured</strong></div>
-        <div class="vault-items">
-            @if (Vault.TotalCount == 0)
+    <div class="sanctum-chamber lineage-@ActiveLineage.ToString().ToLowerInvariant()">
+        <div class="sanctum-choose">
+            <span class="sanctum-legend">CHOOSE A WYRM'S POWER</span>
+            <nav class="sanctum-sigils" aria-label="Choose a Wyrm lineage">
+                @foreach (var lineage in ForgeDiscoveryCatalog.All)
+                {
+                    var isDiscovered = Progression.Contains(lineage.Id);
+                    var isSelected = ActiveLineage == lineage.Id;
+                    <button class="sanctum-sigil sigil-@lineage.Id.ToString().ToLowerInvariant() @(isSelected ? "selected" : string.Empty) @(isDiscovered ? "discovered" : "undiscovered")"
+                            aria-pressed="@isSelected" title="@lineage.Name" @onclick="() => ChooseLineage(lineage.Id)">
+                        <span class="sanctum-sigil-icon" aria-hidden="true">@LineageIcon(lineage.Id)</span>
+                        <span class="sanctum-sigil-name">@WyrmName(lineage.Id)</span>
+                        <span class="sanctum-sigil-state">@(isDiscovered ? $"{ForgedCount(lineage.Id)} / 3 FORGED" : "UNDISCOVERED")</span>
+                    </button>
+                }
+            </nav>
+        </div>
+
+        <div class="sanctum-stage">
+            <div class="sanctum-hearth" aria-hidden="true">
+                <div class="hearth-halo"></div>
+                <div class="hearth-rune rune-outer"></div>
+                <div class="hearth-rune rune-inner"></div>
+                <div class="hearth-aura"></div>
+                <svg class="hearth-anvil" viewBox="0 0 240 190" fill="none" aria-hidden="true">
+                    <path d="M38 57 L200 57 L183 83 L58 83 Z" fill="#6f687b" stroke="#b4a2b7" stroke-width="3"/>
+                    <path d="M24 54 L67 45 L67 90 L29 71 Z" fill="#948699" stroke="#c6aeca" stroke-width="3"/>
+                    <path d="M68 82 L170 82 L155 130 L89 130 Z" fill="#494252" stroke="#97869e" stroke-width="3"/>
+                    <path d="M91 130 L150 130 L154 150 L87 150 Z" fill="#706678"/>
+                    <path d="M72 150 L169 150 L182 167 L58 167 Z" fill="#38313f" stroke="#95849e" stroke-width="3"/>
+                    <path d="M80 56 L178 56" stroke="#e7d0b3" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M121 82 L121 116" stroke="#b18bd0" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+                </svg>
+                <span class="hearth-ember ember-a"></span><span class="hearth-ember ember-b"></span><span class="hearth-ember ember-c"></span>
+            </div>
+            <div class="sanctum-wyrm-heading">
+                <span>@(Progression.Contains(ActiveLineage) ? "LINEAGE DISCOVERED" : "LINEAGE DORMANT")</span>
+                <h2>@WyrmName(ActiveLineage)</h2>
+                <p>@(Progression.Contains(ActiveLineage) ? ForgeDiscoveryCatalog.Get(ActiveLineage).Name : "The Forge has not yet tasted this Wyrm's Essence")</p>
+            </div>
+            <div class="sanctum-ritual-progress" aria-label="Forged blueprints">
+                @foreach (var mastery in ForgeMasteryCatalog.For(ActiveLineage))
+                {
+                    <span class="@(Progression.IsForged(mastery.Id) ? "lit" : string.Empty)" title="@mastery.Name"></span>
+                }
+            </div>
+        </div>
+
+        <section class="sanctum-blueprints">
+            <div class="sanctum-blueprints-heading">
+                <span class="sanctum-legend">ANCIENT BLUEPRINTS</span>
+                <strong>@ForgedCount(ActiveLineage) / 3 FORGED</strong>
+            </div>
+            <div class="sanctum-rune-chain" aria-label="Forge blueprint progression">
+                @foreach (var mastery in ForgeMasteryCatalog.For(ActiveLineage))
+                {
+                    <button class="sanctum-rune @MasteryClass(mastery) @(InspectedMastery?.Id == mastery.Id ? "inspected" : string.Empty)"
+                            aria-pressed="@(InspectedMastery?.Id == mastery.Id)" @onclick="() => Inspect(mastery.Id)">
+                        <span class="sanctum-rune-mark" aria-hidden="true">@(Progression.IsForged(mastery.Id) ? "✦" : $"0{mastery.Tier}")</span>
+                        <span class="sanctum-rune-text">
+                            <small>RUNE @mastery.Tier • @MasteryStatus(mastery)</small>
+                            <b>@mastery.Name</b>
+                        </span>
+                        <span class="sanctum-rune-chevron" aria-hidden="true">›</span>
+                    </button>
+                }
+            </div>
+            @if (InspectedMastery is { } blueprint)
             {
-                <span class="empty-copy">Empty — successfully extract Wyrm Essence to bring it home.</span>
+                var cost = DragonEssenceCatalog.Get(blueprint.Cost);
+                var forged = Progression.IsForged(blueprint.Id);
+                var canForge = Progression.CanForge(blueprint.Id, Vault);
+                <div class="sanctum-inspection" aria-live="polite">
+                    <span class="sanctum-legend">INSPECTED RUNE • @MasteryStatus(blueprint)</span>
+                    <h3>@blueprint.Name</h3>
+                    <p>@blueprint.Description</p>
+                    @if (Progression.Contains(blueprint.Lineage))
+                    {
+                        <div class="sanctum-rewards">
+                            <span>FORGED REWARDS</span>
+                            @foreach (var reward in blueprint.Unlocks)
+                            {
+                                <strong>@UnlockLabel(reward)</strong>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="sanctum-hint">Defeat @WyrmName(ActiveLineage) and return with its Essence to awaken this lineage.</p>
+                    }
+                    <div class="sanctum-material">
+                        <span class="material-icon">@cost.Icon</span>
+                        <div>
+                            <small>REQUIRED ESSENCE</small>
+                            <strong>@cost.Name</strong>
+                        </div>
+                        <b>@Vault.Count(blueprint.Cost) / 1</b>
+                    </div>
+                    <button class="sanctum-forge-action" disabled="@(forged || !canForge)" @onclick="() => ForgeAsync(blueprint.Id)">@ForgeAction(blueprint)</button>
+                    @if (!forged && !canForge)
+                    {
+                        <p class="sanctum-hint">@NextAction(blueprint)</p>
+                        <button class="sanctum-prep-action" @onclick="PrepareHuntAsync">PREPARE NEXT HUNT →</button>
+                    }
+                    @if (forged)
+                    {
+                        <p class="sanctum-hint unlocked">✦ This rune is permanently forged. Its rewards are available on future hunts.</p>
+                    }
+                </div>
             }
-            else
-            {
+        </section>
+    </div>
+
+    <details class="sanctum-drawer" aria-label="Essence vault and next-run offerings">
+        <summary><span>◇ <b>ESSENCE VAULT &amp; OFFERING ALTAR</b></span><span>@Vault.TotalCount SECURED • @(SelectedOffering is null ? "NO OFFERING" : "OFFERING SELECTED") <i>⌄</i></span></summary>
+        <div class="sanctum-drawer-body">
+            <h3>Stolen Essence</h3>
+            <div class="vault-items">
+                @if (Vault.TotalCount == 0)
+                {
+                    <span class="empty-copy">Your vault is empty. Defeat a Wyrm, steal its Essence and extract safely to bring it here.</span>
+                }
                 @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0))
                 {
                     <span class="essence-chip"><b>@essence.Icon</b>@essence.Name <strong>×@Vault.Count(essence.Id)</strong></span>
                 }
-            }
+            </div>
+            <div class="panel-heading">
+                <div><h3>Prepare an offering</h3><small>Carrying an offering spends one secured Essence when your next hunt begins.</small></div>
+                @if (SelectedOffering is not null) { <button class="clear-offering" @onclick="ClearOfferingAsync">CLEAR OFFERING</button> }
+            </div>
+            <div class="offering-grid">
+                @foreach (var essence in AvailableOfferings)
+                {
+                    var selected = SelectedOffering == essence.Id;
+                    <button class="offering-card @(selected ? "selected" : string.Empty)" aria-pressed="@selected" @onclick="() => SelectOfferingAsync(essence.Id)">
+                        <span class="offering-icon">@essence.Icon</span>
+                        <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(essence.Id).Effect</small></div>
+                        <b>@(selected ? "EQUIPPED" : $"×{Vault.Count(essence.Id)}")</b>
+                    </button>
+                }
+                @if (AvailableOfferings.Count == 0)
+                {
+                    <span class="empty-copy">Forge an offering recipe and secure matching Essence to prepare a Wyrm gift.</span>
+                }
+            </div>
         </div>
-    </section>
+    </details>
 
-    <section class="offering-panel">
-        <div class="panel-heading">
-            <div><span class="section-kicker">NEXT RUN OFFERING</span><small>Spend one secured Essence when the run begins.</small></div>
-            @if (SelectedOffering is not null) { <button class="clear-offering" @onclick="ClearOfferingAsync">CLEAR</button> }
-        </div>
-        <div class="offering-grid">
-            @foreach (var essence in AvailableOfferings)
-            {
-                var selected = SelectedOffering == essence.Id;
-                <button class="offering-card @(selected ? "selected" : string.Empty)" @onclick="() => SelectOfferingAsync(essence.Id)">
-                    <span class="offering-icon">@essence.Icon</span>
-                    <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(essence.Id).Effect</small></div>
-                    <b>×@Vault.Count(essence.Id)</b>
-                </button>
-            }
-            @if (AvailableOfferings.Count == 0)
-            {
-                <span class="empty-copy">Forge an offering recipe and keep matching Essence in the vault to use it here.</span>
-            }
-        </div>
-    </section>
-
-    <div class="lineage-grid">
-        @foreach (var discovery in ForgeDiscoveryCatalog.All)
-        {
-            var discovered = Progression.Contains(discovery.Id);
-            <article class="lineage-card @(discovered ? "discovered" : "locked")">
-                <header>
-                    <span>@(discovered ? "DISCOVERED LINEAGE" : "UNKNOWN LINEAGE")</span>
-                    <h2>@discovery.Name</h2>
-                    <p>@(discovered ? discovery.Description : "Secure any Essence from this Wyrm lineage to reveal its Forge path.")</p>
-                </header>
-                <div class="mastery-stack">
-                    @foreach (var mastery in ForgeMasteryCatalog.For(discovery.Id))
-                    {
-                        var cost = DragonEssenceCatalog.Get(mastery.Cost);
-                        var forged = Progression.IsForged(mastery.Id);
-                        <section class="mastery-node @MasteryClass(mastery)">
-                            <div class="mastery-title"><span>TIER @mastery.Tier</span><strong>@mastery.Name</strong></div>
-                            @if (discovered)
-                            {
-                                <p>@mastery.Description</p>
-                                <em>@UnlockSummary(mastery)</em>
-                                <button disabled="@(forged || !Progression.CanForge(mastery.Id, Vault))" @onclick="() => ForgeAsync(mastery.Id)">@MasteryAction(mastery, cost)</button>
-                            }
-                            else
-                            {
-                                <p>Blueprint hidden until this lineage is discovered.</p>
-                            }
-                        </section>
-                    }
-                </div>
-            </article>
-        }
-    </div>
+    <details class="sanctum-drawer sanctum-ledger" aria-label="Your next hunts">
+        <summary><span>⚔ <b>HUNT LEDGER</b></span><span>YOUR NEXT THREE PURSUITS <i>⌄</i></span></summary>
+        <ForgeGoalBoard Progression="Progression" Vault="Vault" Compact="true" />
+    </details>
 </section>
 
 @code {
@@ -115,42 +198,96 @@
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
+    [Parameter] public EventCallback OnPrepareHunt { get; set; }
 
+    private ForgeDiscoveryId? selectedLineage;
+    private ForgeMasteryId? inspectedMastery;
     private ForgeMasteryDefinition? newlyForged;
-    private IReadOnlyList<DragonEssenceDefinition> AvailableOfferings => DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id, Progression)).ToArray();
+    private ForgeDiscoveryId ActiveLineage => selectedLineage ?? ForgeGoalPlanner.Next(Progression, Vault).FirstOrDefault()?.Lineage ?? ForgeDiscoveryId.Ashcraft;
+    private ForgeMasteryDefinition? InspectedMastery => ForgeMasteryCatalog.For(ActiveLineage).FirstOrDefault(mastery => mastery.Id == inspectedMastery)
+        ?? ForgeMasteryCatalog.For(ActiveLineage).FirstOrDefault(mastery => !Progression.IsForged(mastery.Id))
+        ?? ForgeMasteryCatalog.For(ActiveLineage).LastOrDefault();
+    private IReadOnlyList<DragonEssenceDefinition> AvailableOfferings => DragonEssenceCatalog.All
+        .Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id, Progression)).ToArray();
+
+    private void ChooseLineage(ForgeDiscoveryId lineage)
+    {
+        selectedLineage = lineage;
+        inspectedMastery = null;
+    }
+
+    private void Inspect(ForgeMasteryId id) => inspectedMastery = id;
+    private int ForgedCount(ForgeDiscoveryId id) => ForgeMasteryCatalog.For(id).Count(mastery => Progression.IsForged(mastery.Id));
 
     private string MasteryClass(ForgeMasteryDefinition mastery)
     {
         if (Progression.IsForged(mastery.Id)) return "forged";
         if (!Progression.Contains(mastery.Lineage)) return "hidden";
         if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return "blocked";
-        return Vault.Count(mastery.Cost) > 0 ? "ready" : "available";
+        return Progression.CanForge(mastery.Id, Vault) ? "ready" : "available";
     }
 
-    private string MasteryAction(ForgeMasteryDefinition mastery, DragonEssenceDefinition cost)
+    private string MasteryStatus(ForgeMasteryDefinition mastery) => MasteryClass(mastery) switch
     {
-        if (Progression.IsForged(mastery.Id)) return "FORGED";
-        if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return "LOCKED BY PREVIOUS TIER";
-        return Vault.Count(mastery.Cost) > 0 ? $"FORGE • {cost.Icon} {cost.Name}" : $"NEED • {cost.Icon} {cost.Name}";
+        "forged" => "FORGED",
+        "hidden" => "DORMANT",
+        "blocked" => "LOCKED",
+        "ready" => "READY",
+        _ => "AWAITING ESSENCE",
+    };
+
+    private string ForgeAction(ForgeMasteryDefinition mastery)
+    {
+        if (Progression.IsForged(mastery.Id)) return "✦ ALREADY FORGED";
+        if (Progression.CanForge(mastery.Id, Vault)) return "⚒ FORGE THIS RUNE";
+        return "RUNE NOT YET READY";
     }
 
-    private static string UnlockSummary(ForgeMasteryDefinition mastery) => string.Join(" • ", mastery.Unlocks.Select(UnlockLabel));
+    private string NextAction(ForgeMasteryDefinition mastery)
+    {
+        if (!Progression.Contains(mastery.Lineage)) return $"Hunt {WyrmName(mastery.Lineage)} and extract an Essence to discover its Forge path.";
+        if (mastery.Prerequisite is { } prerequisite && !Progression.IsForged(prerequisite)) return $"Forge {ForgeMasteryCatalog.Get(prerequisite).Name} first to awaken this rune.";
+        return $"Hunt {WyrmName(mastery.Lineage)}, collect {DragonEssenceCatalog.Get(mastery.Cost).Name} and extract safely.";
+    }
+
+    private static string WyrmName(ForgeDiscoveryId id) => id switch
+    {
+        ForgeDiscoveryId.Ashcraft => "Ashfang",
+        ForgeDiscoveryId.Stormcraft => "Stormcoil",
+        ForgeDiscoveryId.Rimecraft => "Rimeclaw",
+        ForgeDiscoveryId.Voidcraft => "Voidweaver",
+        _ => "Unknown Wyrm",
+    };
+
+    private static string LineageIcon(ForgeDiscoveryId id) => id switch
+    {
+        ForgeDiscoveryId.Ashcraft => "♨",
+        ForgeDiscoveryId.Stormcraft => "ϟ",
+        ForgeDiscoveryId.Rimecraft => "❆",
+        ForgeDiscoveryId.Voidcraft => "✧",
+        _ => "◇",
+    };
+
     private static string UnlockLabel(ForgeFeatureUnlock unlock) => unlock switch
     {
-        RunOfferingUnlock offering => $"Offering: {DragonEssenceCatalog.Get(offering.EssenceId).Name}",
-        SpellPoolUnlock spell => $"Spell: {SpellCatalog.Get(spell.SpellId).Name}",
-        RelicPoolUnlock relic => $"Relic: {RelicCatalog.Get(relic.RelicId).Name}",
-        EvolutionPoolUnlock evolution => $"Evolution: {SpellEvolutionCatalog.Get(evolution.EvolutionId).Name}",
+        RunOfferingUnlock offering => $"Offering • {DragonEssenceCatalog.Get(offering.EssenceId).Name}",
+        SpellPoolUnlock spell => $"New spell • {SpellCatalog.Get(spell.SpellId).Name}",
+        RelicPoolUnlock relic => $"New relic • {RelicCatalog.Get(relic.RelicId).Name}",
+        EvolutionPoolUnlock evolution => $"New evolution • {SpellEvolutionCatalog.Get(evolution.EvolutionId).Name}",
         _ => "New possibility",
     };
 
+    private Task PrepareHuntAsync() => OnPrepareHunt.InvokeAsync();
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ClearOfferingAsync() => SelectedOffering is { } id ? OnOfferingChanged.InvokeAsync(id) : Task.CompletedTask;
+
     private async Task ForgeAsync(ForgeMasteryId id)
     {
         if (Progression.IsForged(id)) return;
         await OnForgeMastery.InvokeAsync(id);
-        if (Progression.IsForged(id)) newlyForged = ForgeMasteryCatalog.Get(id);
+        if (!Progression.IsForged(id)) return;
+        newlyForged = ForgeMasteryCatalog.Get(id);
+        inspectedMastery = null;
     }
 
     private void DismissCelebration() => newlyForged = null;
