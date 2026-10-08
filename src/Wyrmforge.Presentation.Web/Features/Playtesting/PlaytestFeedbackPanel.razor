@@ -1,0 +1,111 @@
+@using Microsoft.JSInterop
+@namespace Wyrmforge.Presentation.Web.Features.Playtesting
+@inject IJSRuntime JavaScript
+
+<div class="playtest-backdrop">
+    <section class="playtest-dialog" role="dialog" aria-modal="true" aria-labelledby="playtest-title">
+        <header class="playtest-heading">
+            <div><span class="playtest-kicker">COMMUNITY PLAYTEST • 0.0.80</span><h2 id="playtest-title">Help shape the Wyrmrealm</h2></div>
+            <button class="playtest-close" aria-label="Close playtest feedback" @onclick="CloseAsync">✕</button>
+        </header>
+        <p class="playtest-intro">Tell us what actually felt good, confusing or frustrating. It takes about a minute. All answers are optional.</p>
+        <div class="playtest-fields">
+            <label for="playtest-fun">How enjoyable was the gameplay?</label>
+            <select id="playtest-fun" @bind="enjoyment">
+                <option value="">Choose a rating</option>
+                <option value="1">1 — Not enjoyable</option><option value="2">2 — Needs work</option>
+                <option value="3">3 — Okay</option><option value="4">4 — Enjoyable</option><option value="5">5 — Loved it</option>
+            </select>
+            <label for="playtest-clarity">How easy was it to understand what to do?</label>
+            <select id="playtest-clarity" @bind="clarity">
+                <option value="">Choose a rating</option>
+                <option value="1">1 — Very confusing</option><option value="2">2 — Often confusing</option>
+                <option value="3">3 — Some questions</option><option value="4">4 — Mostly clear</option><option value="5">5 — Completely clear</option>
+            </select>
+            <label for="playtest-replay">Would you want to play another run?</label>
+            <select id="playtest-replay" @bind="replay">
+                <option value="">Choose an answer</option><option value="yes">Yes</option>
+                <option value="maybe">Maybe</option><option value="no">No</option>
+            </select>
+            <label for="playtest-area">What needs the most attention?</label>
+            <select id="playtest-area" @bind="troubleArea">
+                <option value="">Choose an area</option><option value="onboarding">Getting started</option>
+                <option value="movement">Touch controls / movement</option><option value="combat">Combat and balance</option>
+                <option value="rewards">Choices and rewards</option><option value="forge">Forge / long-term goals</option>
+                <option value="wyrms">Wyrm and Ascendant fights</option><option value="performance">Performance / loading</option>
+                <option value="other">Something else</option>
+            </select>
+            <label for="playtest-best">What was your favorite moment?</label>
+            <textarea id="playtest-best" maxlength="600" rows="2" @bind="bestMoment" placeholder="A spell, fight, surprise, decision…"></textarea>
+            <label for="playtest-improve">What should we fix first?</label>
+            <textarea id="playtest-improve" maxlength="1000" rows="3" @bind="improvement" placeholder="Tell us where you were stuck or what felt wrong."></textarea>
+        </div>
+
+        <label class="playtest-include">
+            <input type="checkbox" @bind="includeRuns" />
+            <span>Include my last 12 run summaries, seeds, gameplay milestones and sampled performance.</span>
+        </label>
+        <p class="playtest-privacy">Only stored on this device until you choose to share. No names, email addresses, IP addresses or full device identifiers are recorded. You decide who receives the report.</p>
+        <button class="playtest-share" disabled="@sending" @onclick="ShareAsync">@(sending ? "PREPARING REPORT…" : "SHARE PLAYTEST REPORT")</button>
+        @if (!string.IsNullOrEmpty(status))
+        {
+            <p class="playtest-status" role="status">@status</p>
+        }
+        <div class="playtest-footer">
+            <button @onclick="ClearAsync">Erase my local playtest history</button>
+            <button @onclick="CloseAsync">Back to game</button>
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string enjoyment = "";
+    private string clarity = "";
+    private string replay = "";
+    private string troubleArea = "";
+    private string bestMoment = "";
+    private string improvement = "";
+    private bool includeRuns = true;
+    private bool sending;
+    private string status = "";
+
+    private async Task ShareAsync()
+    {
+        if (sending) return;
+        sending = true;
+        status = "";
+        try
+        {
+            var result = await JavaScript.InvokeAsync<string>("wyrmforgePlaytest.share", CancellationToken.None, new
+            {
+                enjoyment, clarity, replay, troubleArea, bestMoment, improvement, includeRuns,
+            });
+            status = result switch
+            {
+                "shared" => "Thanks! Your report was handed to the app you selected. Please send it to your playtest organizer.",
+                "downloaded" => "Your JSON report has been downloaded. Please send the file to your playtest organizer via email or messaging.",
+                "cancelled" => "Sharing cancelled. Your feedback has not been sent.",
+                _ => "Your report could not be shared. Please try again.",
+            };
+        }
+        catch (JSException)
+        {
+            status = "Sharing is unavailable in this browser. Try Safari/Chrome or ask the organizer for help.";
+        }
+        finally { sending = false; }
+    }
+
+    private async Task ClearAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("wyrmforgePlaytest.clear", CancellationToken.None);
+            status = "Local playtest history erased. Your game progress and Forge unlocks are unchanged.";
+        }
+        catch (JSException) { status = "Could not erase local playtest history in this browser."; }
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+}
