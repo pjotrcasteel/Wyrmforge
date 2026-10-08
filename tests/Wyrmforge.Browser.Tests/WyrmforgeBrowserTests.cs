@@ -24,7 +24,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(nav.Filter(new() { HasText = "Codex" })).ToBeDisabledAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = "Wyrmforge combat arena" })).ToBeVisibleAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
     }
 
@@ -40,7 +40,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("nav.mobile-nav button").Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
         await Expect(Page.GetByText("ARCANE ATLAS", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("1", new() { Exact = true }).First).ToBeVisibleAsync();
+        await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
     }
 
     [TestMethod]

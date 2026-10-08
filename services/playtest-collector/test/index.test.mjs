@@ -162,6 +162,9 @@ test('Leaderboard stores opted-in community scores, never invented Legends, and 
     assert.equal(duplicate.duplicate, true);
     assert.equal(e.DB.scores.size, 1);
     const response = await worker.fetch(new Request(path), e);
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), e.PUBLIC_ORIGIN === undefined ? null : null);
+    const browserResponse = await worker.fetch(new Request(path, { headers: { Origin: e.PUBLIC_ORIGIN } }), e);
+    assert.equal(browserResponse.headers.get('Access-Control-Allow-Origin'), e.PUBLIC_ORIGIN);
     const board = await response.json();
     assert.deepEqual(board.entries, [{ name: 'Rune Scout', score: 7200, version: '0.0.84', type: 'community', verified: false }]);
     assert.equal(JSON.stringify(board).includes('score-test-12345'), false);

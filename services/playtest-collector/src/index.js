@@ -131,7 +131,8 @@ async function leaderboard(request, env, origin) {
     if (request.method === 'GET') {
         const results = await env.DB.prepare('SELECT nickname,score,game_version FROM leaderboard_entries ORDER BY score DESC,created_at ASC LIMIT 20').all();
         return json({ entries: results.results.map(entry => ({ name: entry.nickname, score: entry.score,
-            version: entry.game_version, type: 'community', verified: false })) });
+            version: entry.game_version, type: 'community', verified: false })) }, 200,
+            origin === env.PUBLIC_ORIGIN ? cors(origin) : {});
     }
     if (!origin || origin !== env.PUBLIC_ORIGIN) return reject(403, 'origin_not_allowed');
     const headers = cors(origin);
