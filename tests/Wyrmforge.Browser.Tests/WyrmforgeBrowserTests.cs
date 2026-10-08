@@ -230,7 +230,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.Locator("button.playtest-invite").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Help shape the Wyrmrealm" })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Only stored on this device until you choose to share.", new() { Exact = false })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Report data stays on this device until you choose to share.", new() { Exact = false })).ToBeVisibleAsync();
         var shareAction = Page.GetByRole(AriaRole.Button, new() { Name = "SHARE PLAYTEST REPORT" });
         var bounds = await shareAction.BoundingBoxAsync();
         Assert.IsNotNull(bounds);
