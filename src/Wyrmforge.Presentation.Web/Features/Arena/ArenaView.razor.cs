@@ -35,6 +35,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public int? RunSeed { get; set; }
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
+    [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
@@ -78,7 +79,7 @@ public partial class ArenaView : IAsyncDisposable
     private int CurrentLevel => simulation?.Level ?? 1;
     private int PendingEssenceCount => Math.Max(0, CurrentEssences.Count - SecuredEssenceCount);
 
-    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm);
+    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -117,6 +118,8 @@ public partial class ArenaView : IAsyncDisposable
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
+        if (current.CompletedMapNodes.Count > previousMapCompleted && current.PendingMapChoice && !snapshot.Ended)
+            ShowTrailTransition();
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)

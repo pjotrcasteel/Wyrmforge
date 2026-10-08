@@ -10,6 +10,7 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.GreatHunt;
 using Wyrmforge.Domain.Progression.PassiveTree;
+using Wyrmforge.Domain.Progression.Onboarding;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -18,6 +19,8 @@ namespace Wyrmforge.Presentation.Web.Pages;
 
 public partial class Home
 {
+    private const string FirstHuntKey = "wyrmforge.firstHunt.v1";
+    private const string ArcaneBuildKey = "wyrmforge.arcaneBuild.v1";
     private const string BestScoreKey = "wyrmforge.bestScore";
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
@@ -25,7 +28,8 @@ public partial class Home
     private const string ForgeMasteryKey = "wyrmforge.forgeMastery";
     private const string SpellMasteryKey = "wyrmforge.spellMastery.v1";
     private const string GreatHuntKey = "wyrmforge.greatHunt.v1";
-    private readonly PassiveTreeSelection selection = new();
+    private readonly PassiveTreeSelection selection = new(1);
+    private readonly FirstHuntProgress firstHunt = new();
     private readonly DragonEssenceVault essenceVault = new();
     private readonly ArcaneCodex arcaneCodex = new();
     private readonly ForgeProgressionState forgeProgression = new();
@@ -44,6 +48,10 @@ public partial class Home
     private int bestScore;
     private int runNumber;
     private bool runActive;
+    private bool tutorialCinematic;
+    private bool unlockCinematic;
+    private bool leaderboardOpen;
+    private bool ForgeAvailable => firstHunt.AtlasUnlocked && (essenceVault.TotalCount > 0 || forgeProgression.Discovered.Count > 0);
     private bool playtestFeedbackOpen;
 
     private void OpenPlaytestFeedback() => playtestFeedbackOpen = true;
@@ -67,6 +75,8 @@ public partial class Home
         if (restoredOathHistory) await TrySetGreatHuntAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
+        await LoadFirstHuntAsync();
+        await LoadArcaneBuildAsync();
         StateHasChanged();
     }
 
@@ -105,6 +115,7 @@ public partial class Home
             await TrySetEssenceVaultAsync();
         }
         selectedOffering = null;
+        await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;
         await TryRecordPlaytestStartAsync();
@@ -133,8 +144,23 @@ public partial class Home
         newlySealedOaths = GreatHuntCatalog.All.Where(oath => !oldSeals.Contains(oath.Wyrm) && greatHunt.IsSealed(oath.Wyrm, spellMastery))
             .Select(oath => oath.Wyrm).ToArray();
         if (advancedOaths.Count > 0 || newlySealedOaths.Count > 0) await TrySetGreatHuntAsync();
-        summary = value;
+        var tutorialEnded = firstHunt.TutorialRun && value.Outcome != RunOutcome.Abandoned;
+        var chapterAdvanced = firstHunt.CompletedRuns == 1 && value.Outcome != RunOutcome.Abandoned;
+        if (tutorialEnded || chapterAdvanced)
+        {
+            firstHunt.CompleteRun(false);
+            if (chapterAdvanced) selection.GrantPoints(1);
+            await PersistFirstHuntAsync();
+            await SaveArcaneBuildAsync();
+        }
+        summary = tutorialEnded ? null : value;
+        if (chapterAdvanced) leaderboardOpen = true;
         await TryRecordPlaytestFinishAsync(value);
+        if (tutorialEnded)
+        {
+            tutorialCinematic = true;
+            _ = CompleteFirstHuntCinematicAsync();
+        }
         var codexChanged = false;
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
         if (codexChanged) await TrySetArcaneCodexAsync();
@@ -165,6 +191,20 @@ public partial class Home
         await TryRecordPlaytestStartAsync();
     }
 
+    private async Task CompleteFirstHuntCinematicAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(2850);
+        tutorialCinematic = false;
+        runActive = false;
+        unlockCinematic = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void DismissUnlocks() => unlockCinematic = false;
+    private void OpenLeaderboard() => leaderboardOpen = true;
+    private void CloseLeaderboard() => leaderboardOpen = false;
+
     private void ReturnToForge()
     {
         summary = null;
@@ -173,6 +213,70 @@ public partial class Home
         activeAscendant = null;
         runActive = false;
     }
+
+    private async Task LoadFirstHuntAsync()
+    {
+        try
+        {
+            var saved = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FirstHuntKey);
+            if (int.TryParse(saved, out var count))
+            {
+                firstHunt.Restore(count);
+                var persistedBuild = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneBuildKey);
+                // Migrated accounts were already playing with all 24 points before Arcane budget persistence existed.
+                if (count >= 2 && string.IsNullOrWhiteSpace(persistedBuild)) selection.RestoreBudget(PassiveTreeCatalog.TotalPoints);
+                return;
+            }
+            var previousPlaytest = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, "wyrmforge.playtest.v1");
+            var previousRuns = false;
+            if (!string.IsNullOrEmpty(previousPlaytest))
+            {
+                using var document = JsonDocument.Parse(previousPlaytest);
+                previousRuns = document.RootElement.TryGetProperty("started", out var started) && started.TryGetInt32(out var startedCount) && startedCount > 0;
+            }
+            if (bestScore > 0 || previousRuns || essenceVault.TotalCount > 0 || spellMastery.UnlockedCount > 0 || forgeProgression.Discovered.Count > 0)
+            {
+                firstHunt.MigrateExperiencedPlayer();
+                selection.RestoreBudget(PassiveTreeCatalog.TotalPoints);
+                await PersistFirstHuntAsync();
+            }
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task PersistFirstHuntAsync()
+    {
+        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, FirstHuntKey, firstHunt.CompletedRuns.ToString(CultureInfo.InvariantCulture)); }
+        catch (JSException) { }
+    }
+
+    private async Task LoadArcaneBuildAsync()
+    {
+        try
+        {
+            var saved = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, ArcaneBuildKey);
+            if (string.IsNullOrWhiteSpace(saved)) return;
+            var state = JsonSerializer.Deserialize<ArcaneBuildSave>(saved);
+            if (state is null) return;
+            selection.RestoreBudget(state.Budget);
+            selection.RestoreNodes(state.Nodes ?? []);
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task SaveArcaneBuildAsync()
+    {
+        try
+        {
+            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray());
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
+        }
+        catch (JSException) { }
+    }
+
+    private sealed record ArcaneBuildSave(int Budget, string[] Nodes);
 
     private async Task TryRecordPlaytestStartAsync()
     {

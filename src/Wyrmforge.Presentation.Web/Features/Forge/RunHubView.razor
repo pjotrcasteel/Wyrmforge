@@ -8,16 +8,22 @@
     <header class="run-hero">
         <div class="run-hero-copy">
             <span class="section-kicker">THE WYRMREALM</span>
-            <h1>The realm is listening.</h1>
-            <p>Shape your mage, carry an offering if you dare, then push as deep as your build can survive.</p>
+            <h1>@(FirstHunt ? "Your first hunt begins." : "The realm is listening.")</h1>
+            <p>@(FirstHunt ? "Enter the Wyrmrealm, move to survive and follow the map toward a Wyrm. Death or victory will conclude your first chapter." : "Shape your mage, carry an offering if you dare, then push as deep as your build can survive.")</p>
+            @if (!FirstHunt && AtlasUnlocked && Selection.PointBudget > Selection.SpentPoints)
+            {
+                <button class="arcane-available" @onclick="EditBuildAsync" aria-label="Allocate unspent Arcane points">
+                    ✦ @((Selection.PointBudget - Selection.SpentPoints)) ARCANE POINT@(Selection.PointBudget - Selection.SpentPoints == 1 ? string.Empty : "S") READY · OPEN ATLAS →
+                </button>
+            }
             <div class="run-status-row">
-                <span>@Selection.SpentPoints / @Selection.PointBudget arcane points</span>
+                <span>@(FirstHunt ? "BEGINNER BUILD · LOCKED" : $"{Selection.SpentPoints} / {Selection.PointBudget} arcane points")</span>
                 <span>@OfferingLabel</span>
                 <span>Best @BestScore.ToString("N0")</span>
             </div>
             <button class="enter-realm" @onclick="StartAsync">
-                <span>ENTER WYRMREALM</span>
-                <small>Begin a new run</small>
+                <span>@(FirstHunt ? "BEGIN FIRST HUNT" : "ENTER WYRMREALM")</span>
+                <small>@(FirstHunt ? "Chapter I · the journey starts with action" : "Begin a new run")</small>
             </button>
         </div>
         <div class="realm-placeholder" aria-hidden="true">
@@ -28,6 +34,10 @@
         </div>
     </header>
 
+    @if (FirstHunt)
+    {
+        <div class="first-hunt-instructions" aria-label="Your first hunt instructions"><strong>HOW TO BEGIN</strong><span>1 · Start the hunt</span><span>2 · Move to dodge and collect XP</span><span>3 · Choose a trail on the map</span><span>4 · Survive or defeat the Wyrm</span></div>
+    }
     <div class="run-dashboard">
         <article class="loadout-card">
             <div class="card-heading">
@@ -35,7 +45,7 @@
                     <span class="section-kicker">CURRENT BUILD</span>
                     <h2>@BuildTitle</h2>
                 </div>
-                <button class="text-action" @onclick="EditBuildAsync">EDIT</button>
+                <button class="text-action" disabled="@(!AtlasUnlocked)" @onclick="EditBuildAsync">@(AtlasUnlocked ? "EDIT" : "🔒 LOCKED")</button>
             </div>
             <div class="school-summary">
                 @foreach (var school in Enum.GetValues<PassiveSchool>())
@@ -69,7 +79,7 @@
                     <span class="section-kicker">WYRM OFFERING</span>
                     <h2>@OfferingTitle</h2>
                 </div>
-                <button class="text-action" @onclick="EditForgeAsync">CHANGE</button>
+                <button class="text-action" disabled="@(!ForgeUnlocked)" @onclick="EditForgeAsync">@(ForgeUnlocked ? "CHANGE" : "🔒 LOCKED")</button>
             </div>
             @if (SelectedOffering is { } offering)
             {
@@ -104,6 +114,10 @@
             </button>
         </section>
     }
+    @if (LeaderboardUnlocked)
+    {
+        <button class="leaderboard-open-action" @onclick="() => OnLeaderboard.InvokeAsync()" aria-label="Open Hall of Fame">🏆 HALL OF FAME · HIGH SCORES →</button>
+    }
     <button class="playtest-invite" @onclick="() => OnFeedback.InvokeAsync()">
         <span>✎ COMMUNITY PLAYTEST</span>
         <strong>Tell us how your hunt felt</strong>
@@ -114,6 +128,11 @@
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public bool AtlasUnlocked { get; set; }
+    [Parameter] public bool ForgeUnlocked { get; set; }
+    [Parameter] public bool LeaderboardUnlocked { get; set; }
+    [Parameter] public EventCallback OnLeaderboard { get; set; }
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();

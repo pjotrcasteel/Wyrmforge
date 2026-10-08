@@ -1,24 +1,47 @@
 @page "/"
 @using Wyrmforge.Presentation.Web.Features.Playtesting
+@using Wyrmforge.Presentation.Web.Features.Leaderboard
 
 @if (!runActive)
 {
     <ForgeView Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback"
-        OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" />
+        OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneBuildAsync" OnLeaderboard="OpenLeaderboard" />
 }
 else
 {
-    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" OnGameOver="HandleGameOverAsync" />
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" OnGameOver="HandleGameOverAsync" />
 }
 
+@if (tutorialCinematic)
+{
+    <div class="first-hunt-cinematic" role="status" aria-live="polite"><h1>IT DOESN'T END HERE.</h1><p>The Wyrmrealm remembers you.</p></div>
+}
+@if (unlockCinematic && !tutorialCinematic)
+{
+    <div class="first-hunt-unlocks" role="dialog" aria-label="New chapters unlocked">
+        <section>
+            <div class="unlock-padlock" aria-hidden="true">🔓</div>
+            <h2>THE ARCANE ATLAS AWAKENS</h2>
+            <p>You earned your first Arcane point. Shape your path before the next hunt.</p>
+            <div class="unlock-padlock second" aria-hidden="true">🔓</div>
+            <h3>CODEX UNLOCKED</h3>
+            <p>You have witnessed magic. Begin recording what you discover.</p>
+            <button @onclick="DismissUnlocks">OPEN THE WYRMFORGE</button>
+        </section>
+    </div>
+}
 @if (summary is not null)
 {
     <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" NewAscendantVictories="newlyConqueredAscendants" OnFeedback="OpenPlaytestFeedback" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" />
 }
 
+@if (leaderboardOpen && firstHunt.LeaderboardUnlocked)
+{
+    <LeaderboardView Score="summary?.Score ?? bestScore" OnClose="CloseLeaderboard" />
+}
 @if (playtestFeedbackOpen)
 {
     <PlaytestFeedbackPanel OnClose="ClosePlaytestFeedback" />
 }
 
-<div data-game-version="0.0.83" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>
+<div data-game-version="0.0.84" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>

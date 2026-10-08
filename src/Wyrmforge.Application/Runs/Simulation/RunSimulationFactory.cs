@@ -20,7 +20,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false)
     {
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
@@ -29,6 +29,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         var simulation = new RunSimulation(selectedNodes, levelChoiceService, randomSource, offering);
         simulation.InitializeRunSeed(runSeed);
         simulation.EnableAscendantRite(ascendantWyrm ?? (ascendantAshfang ? DragonId.Ashfang : null));
+        simulation.EnableFirstHunt(firstHunt);
         simulation.InitializeContentProfile(content);
         simulation.InitializeResonance(selectedNodes);
         return simulation;

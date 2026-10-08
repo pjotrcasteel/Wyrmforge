@@ -12,6 +12,8 @@ public partial class ArenaView
     private RunMoment? runMoment;
     private long runMomentVersion;
     private bool disposed;
+    private bool trailTransition;
+    private long trailTransitionVersion;
 
     private void ShowRunMoment(RunMoment value)
     {
@@ -25,6 +27,21 @@ public partial class ArenaView
         await Task.Delay(TimeSpan.FromSeconds(1.8));
         if (disposed || version != runMomentVersion) return;
         runMoment = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ShowTrailTransition()
+    {
+        trailTransition = true;
+        var version = ++trailTransitionVersion;
+        _ = FadeToMapAsync(version);
+    }
+
+    private async Task FadeToMapAsync(long version)
+    {
+        await Task.Delay(1550);
+        if (disposed || version != trailTransitionVersion) return;
+        trailTransition = false;
         await InvokeAsync(StateHasChanged);
     }
 

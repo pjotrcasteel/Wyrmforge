@@ -63,3 +63,8 @@
 .ascendant-rite-card.storm small { color:#b5c4ff; }
 .ascendant-rite-card.storm .ascendant-rite-action { border-color:#8ba9ef;background:linear-gradient(125deg,#abc3fb,#828ae7);color:#101b34; }
 .ascendant-rite-card.storm .ascendant-rite-action.selected { color:#dce8ff;background:#27345c;box-shadow:0 0 28px rgba(128,164,253,.16); }
+
+.arcane-available{min-height:43px;margin-top:17px;padding:10px 14px;border:1px solid #d1a5fa;border-radius:11px;color:#ebd5fc;text-align:left;background:rgba(139,75,202,.24);font-size:.75rem;font-weight:950;cursor:pointer;animation:unspent-pulse 2.3s ease-in-out infinite}
+.first-hunt-instructions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:15px 17px;border:1px solid rgba(197,148,241,.26);border-radius:15px;background:#17111f}
+.first-hunt-instructions strong{font-size:.68rem;letter-spacing:.1em;color:#f1d0ff}
+.first-hunt-instructions span{font-size:.69rem;color:#c5b2ce}

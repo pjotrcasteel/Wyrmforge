@@ -7,6 +7,7 @@ const fields = new Set(['onboarding', 'movement', 'combat', 'rewards', 'forge', 
 const outcomes = new Set(['Extracted', 'Defeated', 'Abandoned', 'Interrupted', 'Unknown']);
 const milestones = new Set(['trail_entered', 'wyrm_entered', 'refuge_reached', 'descended', 'extracted']);
 const identifier = /^[a-zA-Z0-9-]{8,100}$/;
+const nicknameFormat = /^[a-zA-Z0-9 _-]{2,18}$/;
 
 function json(value, status = 200, headers = {}) {
     return new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8',
@@ -125,6 +126,45 @@ async function submit(request, env, headers) {
         report.stats.completedRuns, report.stats.interruptedRuns, report.recentRuns.length, JSON.stringify(report)).run();
     return json({ accepted: true, id: report.id, duplicate: result.meta?.changes === 0 }, 202, headers);
 }
+async function leaderboard(request, env, origin) {
+    if (!env.DB) return reject(503, 'leaderboard_unavailable');
+    if (request.method === 'GET') {
+        const results = await env.DB.prepare('SELECT nickname,score,game_version FROM leaderboard_entries ORDER BY score DESC,created_at ASC LIMIT 20').all();
+        return json({ entries: results.results.map(entry => ({ name: entry.nickname, score: entry.score,
+            version: entry.game_version, type: 'community', verified: false })) }, 200,
+            origin === env.PUBLIC_ORIGIN ? cors(origin) : {});
+    }
+    if (!origin || origin !== env.PUBLIC_ORIGIN) return reject(403, 'origin_not_allowed');
+    const headers = cors(origin);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
+    if (request.method !== 'POST') return reject(405, 'method_not_allowed', headers);
+    if (!env.RATE_LIMIT_KEY) return reject(503, 'leaderboard_unavailable', headers);
+    if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return reject(415, 'json_required', headers);
+
+    let payload;
+    try {
+        const body = await readCapped(request);
+        if (!body) return reject(400, 'invalid_json', headers);
+        payload = JSON.parse(body);
+    } catch { return reject(400, 'invalid_json', headers); }
+
+    const name = string(payload?.nickname, 80);
+    if (payload?.consent !== true || typeof payload?.id !== 'string' || !identifier.test(payload.id) ||
+        !nicknameFormat.test(name) || !Number.isSafeInteger(payload.score) || payload.score < 1 || payload.score > 2000000 ||
+        !/^0\.0\.[0-9]{1,3}$/.test(payload.version ?? '')) return reject(400, 'invalid_entry', headers);
+
+    const hour = Math.floor(Date.now() / 3600000);
+    const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+    const bucket = await bucketFor(ip, env.RATE_LIMIT_KEY, 'leaderboard:' + hour);
+    const limit = await env.DB.prepare('INSERT INTO rate_limits (bucket,hits,expires_at) VALUES (?,1,?) ON CONFLICT(bucket) DO UPDATE SET hits=hits+1 WHERE hits < 5')
+        .bind(bucket, (hour + 2) * 3600).run();
+    if (!limit.meta?.changes) return reject(429, 'rate_limited', headers);
+
+    const inserted = await env.DB.prepare('INSERT OR IGNORE INTO leaderboard_entries (id,nickname,score,game_version,created_at) VALUES (?,?,?,?,?)')
+        .bind(payload.id, name, payload.score, payload.version, new Date().toISOString()).run();
+    return json({ accepted: true, duplicate: inserted.meta?.changes === 0 }, 202, headers);
+}
+
 async function admin(request, env, url) {
     if (!env.ADMIN_TOKEN || !env.DB) return reject(503, 'admin_not_configured');
     const authorization = request.headers.get('authorization') ?? '';
@@ -138,6 +178,16 @@ async function admin(request, env, url) {
         const intent = await env.DB.prepare(`SELECT replay,COUNT(*) AS count FROM reports
             WHERE replay IS NOT NULL GROUP BY replay ORDER BY count DESC`).all();
         return json({ aggregate, issues: issues.results, replayIntent: intent.results });
+    }
+    if (request.method === 'GET' && url.pathname === '/v1/admin/leaderboard') {
+        const scores = await env.DB.prepare('SELECT id,nickname,score,game_version,created_at FROM leaderboard_entries ORDER BY created_at DESC LIMIT 100').all();
+        return json({ entries: scores.results });
+    }
+    if (request.method === 'DELETE' && url.pathname.startsWith('/v1/admin/leaderboard/')) {
+        const id = url.pathname.slice('/v1/admin/leaderboard/'.length);
+        if (!identifier.test(id)) return reject(400, 'invalid_id');
+        await env.DB.prepare('DELETE FROM leaderboard_entries WHERE id = ?').bind(id).run();
+        return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
     }
     if (request.method === 'GET' && url.pathname === '/v1/admin/reports') {
         const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 50));
@@ -157,6 +207,10 @@ export default {
         const url = new URL(request.url);
         if (url.pathname === '/health' && request.method === 'GET') return json({ status: 'ok', service: 'wyrmforge-feedback' });
         if (url.pathname.startsWith('/v1/admin/')) return admin(request, env, url);
+        if (url.pathname === '/v1/leaderboard') {
+            try { return await leaderboard(request, env, request.headers.get('origin')); }
+            catch { return reject(503, 'leaderboard_unavailable'); }
+        }
         if (url.pathname !== '/v1/reports') return reject(404, 'not_found');
         const origin = request.headers.get('origin');
         if (!origin || origin !== env.PUBLIC_ORIGIN) return reject(403, 'origin_not_allowed');

@@ -1,0 +1,17 @@
+.first-hunt-cinematic{position:fixed;inset:0;z-index:180;display:grid;place-content:center;gap:18px;padding:26px;text-align:center;color:#f9ecff;background:#000;animation:first-hunt-blackout 2.85s ease-in-out both}
+.first-hunt-cinematic h1{margin:0;font:900 clamp(2rem,6vw,4.3rem)/1.08 Georgia,serif;letter-spacing:.08em;animation:first-hunt-line 2.2s ease-out both}
+.first-hunt-cinematic p{margin:0;color:#ac95bf;font-size:.86rem;animation:first-hunt-line 2.4s ease-out both}
+@keyframes first-hunt-blackout{0%{background:rgba(0,0,0,0)}24%,85%{background:#000}100%{background:#000}}
+.first-hunt-cinematic:before{content:"";position:absolute;inset:0;pointer-events:none;animation:first-hunt-rumble .55s .9s linear}
+@keyframes first-hunt-rumble{0%,100%{transform:translate(0,0)}20%{transform:translate(-3px,2px)}40%{transform:translate(4px,-1px)}60%{transform:translate(-2px,-3px)}80%{transform:translate(3px,2px)}}
+@keyframes first-hunt-line{0%,18%{opacity:0;transform:scale(.97)}45%,95%{opacity:1;transform:scale(1)}}
+.first-hunt-unlocks{position:fixed;inset:0;z-index:181;display:grid;place-items:center;padding:18px;background:rgba(7,5,12,.89);animation:unlocks-fade-in .9s ease-out both}
+.first-hunt-unlocks section{width:min(440px,100%);display:grid;justify-items:center;gap:11px;padding:28px;border:1px solid rgba(193,150,255,.44);border-radius:21px;background:radial-gradient(circle at 50% 0,rgba(125,79,177,.2),transparent 65%),#1a1224;text-align:center}
+.first-hunt-unlocks h2,.first-hunt-unlocks h3{margin:0;color:#efdbff;font-size:1.12rem;letter-spacing:.08em}
+.first-hunt-unlocks p{margin:0;color:#b9abc9;font-size:.79rem;line-height:1.5}
+.unlock-padlock{font-size:3rem;animation:unlock-pop .6s .45s ease-out both}
+.unlock-padlock.second{font-size:2.5rem;animation-delay:1.15s}
+.first-hunt-unlocks button{width:100%;min-height:49px;margin-top:10px;border:0;border-radius:12px;color:#201329;background:linear-gradient(120deg,#e9c9ff,#b883ef);font-size:.8rem;font-weight:950;cursor:pointer}
+@keyframes unlocks-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes unlock-pop{from{opacity:0;transform:translateY(12px) scale(.6)}70%{transform:translateY(-4px) scale(1.1)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.first-hunt-cinematic,.first-hunt-cinematic:before,.first-hunt-cinematic h1,.first-hunt-cinematic p,.first-hunt-unlocks,.unlock-padlock{animation:none}}

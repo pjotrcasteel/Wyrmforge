@@ -1,0 +1,89 @@
+@namespace Wyrmforge.Presentation.Web.Features.Leaderboard
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+<div class="hall-backdrop">
+    <section class="hall-card" role="dialog" aria-modal="true" aria-label="Hall of Fame high scores">
+        <header>
+            <span>CHAPTER II · THE HALL AWAKENS</span>
+            <button @onclick="CloseAsync" aria-label="Close Hall of Fame">✕</button>
+        </header>
+        <h2>HALL OF FAME</h2>
+        <p>Your second hunt has placed you among the Legends. Fictional starter entries are marked <strong>LEGEND · DEMO</strong>; genuine submissions are labeled <strong>COMMUNITY · UNVERIFIED</strong>.</p>
+        <div class="hall-scores" aria-label="High-score rankings">
+            @foreach (var (entry, index) in SortedEntries.Select((entry, index) => (entry, index)))
+            {
+                <article class="@(entry.Type == "yours" ? "hall-yours" : string.Empty)">
+                    <b>#@(index + 1)</b><strong>@entry.Name</strong>
+                    <span>@entry.Type.ToUpperInvariant()</span>
+                    <em>@entry.Score.ToString("N0")</em>
+                </article>
+            }
+        </div>
+        <div class="hall-publish">
+            <strong>YOUR RUN · @Score.ToString("N0") POINTS</strong>
+            <p>A local entry is shown automatically. Publishing a score publicly is optional; names and scores can remain visible until removed by the organizer. Never enter your real name or personal information.</p>
+            <label for="hall-nickname">Public nickname (2–18 letters, numbers, spaces, _ or -)</label>
+            <input id="hall-nickname" maxlength="18" @bind="nickname" placeholder="Wyrm Wanderer" />
+            <label class="hall-consent"><input type="checkbox" @bind="consent" /><span>I consent to publish this nickname and score on the public Hall of Fame.</span></label>
+            <button disabled="@(sending || !consent || !ValidNickname || Score <= 0)" @onclick="PublishAsync">
+                @(sending ? "SAVING…" : "PUBLISH SCORE")
+            </button>
+            @if (!string.IsNullOrWhiteSpace(status)) { <small role="status">@status</small> }
+        </div>
+        <button class="hall-close" @onclick="CloseAsync">RETURN TO MY HUNT SUMMARY</button>
+    </section>
+</div>
+
+@code {
+    [Parameter] public int Score { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    private IJSObjectReference? module;
+    private bool consent;
+    private bool sending;
+    private string nickname = "";
+    private string status = "";
+    private IReadOnlyList<HallEntry> entries = [];
+    private sealed record HallEntry(string Name, int Score, string Type);
+    private bool ValidNickname => nickname.Trim() is { Length: >= 2 and <= 18 } name && name.All(c => char.IsAsciiLetterOrDigit(c) || c is ' ' or '_' or '-');
+    private IReadOnlyList<HallEntry> SortedEntries => entries.Concat([new HallEntry("YOU · THIS RUN", Score, "yours")])
+        .OrderByDescending(entry => entry.Score).ThenBy(entry => entry.Type == "yours" ? 0 : 1).Take(20).ToArray();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/leaderboard.js");
+            var rows = await module.InvokeAsync<HallEntry[]>("load");
+            entries = rows;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (JSException) { status = "Unable to load online scores. Your local result is still displayed."; await InvokeAsync(StateHasChanged); }
+    }
+
+    private async Task PublishAsync()
+    {
+        if (module is null || !consent || sending || !ValidNickname || Score <= 0) return;
+        sending = true;
+        try
+        {
+            var result = await module.InvokeAsync<string>("publish", nickname.Trim(), Score, "0.0.84");
+            status = result switch
+            {
+                "sent" => "Your score is saved in the public community Hall of Fame. Thank you!",
+                "local" => "Cloudflare is temporarily unavailable. Your score was saved on this device only; it is not on the public board.",
+                "rate_limited" => "The score submission limit has been reached. Try again later.",
+                _ => "Could not submit your score. Your local result is unaffected.",
+            };
+            if (result == "sent" || result == "local")
+            {
+                consent = false;
+                entries = await module.InvokeAsync<HallEntry[]>("load");
+            }
+        }
+        catch (JSException) { status = "Submission unavailable; your in-game score is unchanged."; }
+        finally { sending = false; }
+    }
+    private Task CloseAsync() => OnClose.InvokeAsync();
+}

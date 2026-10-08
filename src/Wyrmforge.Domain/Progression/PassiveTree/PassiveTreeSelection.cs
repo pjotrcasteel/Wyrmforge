@@ -3,7 +3,7 @@ namespace Wyrmforge.Domain.Progression.PassiveTree;
 public sealed class PassiveTreeSelection
 {
     private readonly HashSet<string> selected = [];
-    private readonly int pointBudget;
+    private int pointBudget;
 
     public PassiveTreeSelection(int pointBudget = PassiveTreeCatalog.TotalPoints)
     {
@@ -14,6 +14,10 @@ public sealed class PassiveTreeSelection
     public int SpentPoints => selected.Sum(id => PassiveTreeCatalog.Get(id).Cost);
 
     public int PointBudget => pointBudget;
+
+    public void GrantPoints(int count) => pointBudget = Math.Clamp(pointBudget + Math.Max(0, count), 1, PassiveTreeCatalog.TotalPoints);
+
+    public void RestoreBudget(int budget) => pointBudget = Math.Clamp(Math.Max(budget, SpentPoints), 1, PassiveTreeCatalog.TotalPoints);
 
     public IReadOnlySet<string> Selected => new HashSet<string>(selected);
 
@@ -75,6 +79,19 @@ public sealed class PassiveTreeSelection
         }
 
         return true;
+    }
+
+    public void RestoreNodes(IEnumerable<string> ids)
+    {
+        selected.Clear();
+        var remaining = ids.Where(id => id != PassiveTreeCatalog.OriginId && PassiveTreeCatalog.All.Any(node => node.Id == id)).ToHashSet();
+        while (remaining.Count > 0)
+        {
+            var next = remaining.FirstOrDefault(CanSelect);
+            if (next is null) break;
+            Select(next);
+            remaining.Remove(next);
+        }
     }
 
     public void Reset() => selected.Clear();

@@ -176,3 +176,12 @@
 @media (max-width: 390px) {
   .resource-strip > span:first-child { display: none; }
 }
+
+.shell-nav-item.chapter-locked{opacity:.48;cursor:not-allowed;border:1px solid rgba(169,139,201,.13);background:#15111c}
+.shell-nav-item.chapter-locked .nav-icon{filter:grayscale(.5);font-size:1rem}
+.first-hunt-banner{display:grid;gap:5px;margin-bottom:16px;padding:13px 16px;border:1px solid #7958a4;border-radius:14px;background:rgba(98,59,143,.19)}
+.first-hunt-banner strong{font-size:.69rem;letter-spacing:.11em;color:#e2bfff}
+.first-hunt-banner span{font-size:.77rem;line-height:1.5;color:#c2afce}
+.unspent-topbar{min-height:32px;padding:5px 9px;border:1px solid #c999ff;border-radius:999px;color:#251331;background:#d8b6ff;font-size:.64rem;font-weight:950;cursor:pointer;animation:unspent-pulse 2.3s ease-in-out infinite}
+@keyframes unspent-pulse{50%{box-shadow:0 0 24px rgba(193,129,255,.32)}}
+@media(max-width:480px){.unspent-topbar{font-size:.57rem;padding:5px 7px}}

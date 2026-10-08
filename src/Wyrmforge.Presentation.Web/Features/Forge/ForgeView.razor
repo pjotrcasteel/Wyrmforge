@@ -3,6 +3,7 @@
 @using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.Onboarding
 
 <main class="game-shell">
     <aside class="shell-rail" aria-label="Wyrmforge navigation">
@@ -10,8 +11,9 @@
         <nav class="rail-nav">
             @foreach (var item in Navigation)
             {
-                <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty)" @onclick="() => Navigate(item.Section)">
-                    <span class="nav-icon">@item.Icon</span>
+                <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty) @(!IsUnlocked(item.Section) ? "chapter-locked" : string.Empty)"
+                    disabled="@(!IsUnlocked(item.Section))" title="@NavHelp(item.Section)" aria-label="@NavHelp(item.Section)" @onclick="() => Navigate(item.Section)">
+                    <span class="nav-icon">@(!IsUnlocked(item.Section) ? "🔒" : item.Icon)</span>
                     <span>@item.Label</span>
                 </button>
             }
@@ -27,17 +29,25 @@
                 <span title="Secured Essence">◇ <b>@Vault.TotalCount</b></span>
                 <span title="Forge masteries">◆ <b>@Progression.MasteryCount/@ForgeMasteryCatalog.All.Count</b></span>
                 <span title="Arcane build points">✦ <b>@Selection.SpentPoints/@Selection.PointBudget</b></span>
+                @if (Progress.AtlasUnlocked && Selection.PointBudget > Selection.SpentPoints)
+                {
+                    <button class="unspent-topbar" @onclick="() => Navigate(ShellSection.Build)" aria-label="@($"{Selection.PointBudget - Selection.SpentPoints} unspent Arcane points, open Atlas")">✦ @((Selection.PointBudget - Selection.SpentPoints)) UNSPENT</button>
+                }
             </div>
         </header>
 
         <div class="shell-content">
+            @if (Progress.TutorialRun)
+            {
+                <section class="first-hunt-banner" aria-label="First Hunt tutorial"><strong>CHAPTER I · THE FIRST HUNT</strong><span>Enter the Wyrmrealm. Move to survive, choose a trail and face your first Wyrm. Death or victory opens your next chapter.</span></section>
+            }
             @switch (section)
             {
                 case ShellSection.Run:
-                    <RunHubView Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
+                    <RunHubView FirstHunt="Progress.TutorialRun" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                     break;
                 case ShellSection.Build:
-                    <BuildView Selection="Selection" />
+                    <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" />
                     break;
                 case ShellSection.Forge:
                     <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
@@ -52,8 +62,9 @@
     <nav class="mobile-nav" aria-label="Wyrmforge navigation">
         @foreach (var item in Navigation)
         {
-            <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty)" @onclick="() => Navigate(item.Section)">
-                <span class="nav-icon">@item.Icon</span>
+            <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty) @(!IsUnlocked(item.Section) ? "chapter-locked" : string.Empty)"
+                disabled="@(!IsUnlocked(item.Section))" title="@NavHelp(item.Section)" aria-label="@NavHelp(item.Section)" @onclick="() => Navigate(item.Section)">
+                <span class="nav-icon">@(!IsUnlocked(item.Section) ? "🔒" : item.Icon)</span>
                 <span>@item.Label</span>
             </button>
         }
@@ -62,6 +73,10 @@
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter, EditorRequired] public FirstHuntProgress Progress { get; set; } = null!;
+    [Parameter] public bool ForgeUnlocked { get; set; }
+    [Parameter] public EventCallback OnSelectionChanged { get; set; }
+    [Parameter] public EventCallback OnLeaderboard { get; set; }
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
@@ -86,7 +101,22 @@
     ];
 
     private string SectionTitle => Navigation.Single(item => item.Section == section).Label;
-    private void Navigate(ShellSection value) => section = value;
+    private bool IsUnlocked(ShellSection value) => value switch
+    {
+        ShellSection.Run => true,
+        ShellSection.Build => Progress.AtlasUnlocked,
+        ShellSection.Codex => Progress.CodexUnlocked,
+        ShellSection.Forge => ForgeUnlocked,
+        _ => false,
+    };
+    private string NavHelp(ShellSection value) => IsUnlocked(value) ? value.ToString() : value switch
+    {
+        ShellSection.Build => "Arcane Atlas locked until your First Hunt ends",
+        ShellSection.Codex => "Codex locked until your First Hunt ends",
+        ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
+        _ => "Locked",
+    };
+    private void Navigate(ShellSection value) { if (IsUnlocked(value)) section = value; }
     private Task NavigateAsync(ShellSection value) { Navigate(value); return Task.CompletedTask; }
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);

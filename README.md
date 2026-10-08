@@ -2,6 +2,14 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
+## Prototype 0.0.84 — First Hunt: chapter unlocks, route transitions and Hall of Fame
+
+New accounts begin with an actual guided First Hunt rather than a menu full of unexplained systems. The Build/Arcane Atlas, Forge and Codex are initially padlocked, leaving the Run as the first action. A First Hunt ends when the player dies or slays their first Wyrm; manual abandonment does not complete the tutorial. The game fades to black, rumbles, says **IT DOESN'T END HERE**, returns to the Run Hub and opens the Atlas and Codex with a simple padlock animation. One Arcane point becomes available and is called out in the HUD and Run Hub.
+
+The Forge remains locked until a player returns with a secured Wyrm Essence. The completed second run unlocks the **Hall of Fame** and a score comparison. Fictional starter names are prominently marked **LEGEND · DEMO** and live only in the browser; real opt-in scores are written to the separate Cloudflare D1 leaderboard table. Publishing a pseudonym requires express consent; scores are **COMMUNITY · UNVERIFIED** until we have server-authoritative run validation. No private feedback reports are exposed. In an outage, an explicitly published score can be retained on that device only and must be labeled local-only.
+
+Existing WyrmForge accounts with progress migrate past onboarding with their prior access. Arcane build budget and allocated nodes now persist across refresh. The underlying combat still collects loose XP and removes remaining minions/projectiles when a trail finishes; a power burst/blackout now holds the transition before the next route map. Both animations honor reduced-motion preferences. Playtest feedback also guards against accidental duplicate sends and preserves retry identity without storing comment text in the receipt.
+
 ## Prototype 0.0.83 — Development Hunt Trials (no grind)
 
 The existing public **[Balance Lab](https://pjotrcasteel.github.io/Wyrmforge/balance-lab)** now includes an isolated Wyrm encounter test bench for developers.
