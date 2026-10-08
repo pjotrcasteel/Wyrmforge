@@ -1,6 +1,7 @@
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Domain.Progression.Forge;
 
@@ -34,7 +35,7 @@ public static class ForgeMasteryCatalog
             "Forge an Ashen Wing into a masterwork pattern that adds Emberheart Charm to future relic pools.",
             DragonEssenceId.AshenWing,
             ForgeMasteryId.AshMoltenSmithing,
-            [new RunOfferingUnlock(DragonEssenceId.AshenWing), new RelicPoolUnlock(RelicId.EmberheartCharm)]),
+            [new RunOfferingUnlock(DragonEssenceId.AshenWing), new RelicPoolUnlock(RelicId.EmberheartCharm), new EvolutionPoolUnlock(SpellEvolutionId.EmberTempest)]),
 
         new(
             ForgeMasteryId.StormheartBinding,
@@ -62,7 +63,7 @@ public static class ForgeMasteryCatalog
             "Capture a Tempest Wing's momentum in a masterwork pattern that adds Stormhook to future relic pools.",
             DragonEssenceId.TempestWing,
             ForgeMasteryId.ChargedSmithing,
-            [new RunOfferingUnlock(DragonEssenceId.TempestWing), new RelicPoolUnlock(RelicId.Stormhook)]),
+            [new RunOfferingUnlock(DragonEssenceId.TempestWing), new RelicPoolUnlock(RelicId.Stormhook), new EvolutionPoolUnlock(SpellEvolutionId.ThunderCrown)]),
 
         new(
             ForgeMasteryId.RimeheartBinding,
@@ -90,7 +91,7 @@ public static class ForgeMasteryCatalog
             "Shape a Hoarfrost Wing into a masterwork pattern that adds Ironbark Totem to future relic pools.",
             DragonEssenceId.HoarfrostWing,
             ForgeMasteryId.GlacialSmithing,
-            [new RunOfferingUnlock(DragonEssenceId.HoarfrostWing), new RelicPoolUnlock(RelicId.IronbarkTotem)]),
+            [new RunOfferingUnlock(DragonEssenceId.HoarfrostWing), new RelicPoolUnlock(RelicId.IronbarkTotem), new EvolutionPoolUnlock(SpellEvolutionId.CrystalDivide)]),
 
         new(
             ForgeMasteryId.VoidheartBinding,
@@ -118,7 +119,7 @@ public static class ForgeMasteryCatalog
             "Fix a Phase Wing between realities to add Mirror Prism to future relic pools.",
             DragonEssenceId.PhaseWing,
             ForgeMasteryId.NullSmithing,
-            [new RunOfferingUnlock(DragonEssenceId.PhaseWing), new RelicPoolUnlock(RelicId.MirrorPrism)]),
+            [new RunOfferingUnlock(DragonEssenceId.PhaseWing), new RelicPoolUnlock(RelicId.MirrorPrism), new EvolutionPoolUnlock(SpellEvolutionId.MirrorChoir)]),
     ];
 
     public static ForgeMasteryDefinition Get(ForgeMasteryId id) => All.Single(definition => definition.Id == id);

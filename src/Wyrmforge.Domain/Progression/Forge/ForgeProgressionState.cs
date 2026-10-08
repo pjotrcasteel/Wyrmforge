@@ -1,6 +1,7 @@
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Domain.Progression.Forge;
 
@@ -53,6 +54,8 @@ public sealed class ForgeProgressionState
     public bool UnlocksSpell(SpellId spellId) => ForgedUnlocks<SpellPoolUnlock>().Any(unlock => unlock.SpellId == spellId);
 
     public bool UnlocksRelic(RelicId relicId) => ForgedUnlocks<RelicPoolUnlock>().Any(unlock => unlock.RelicId == relicId);
+
+    public bool UnlocksEvolution(SpellEvolutionId evolutionId) => ForgedUnlocks<EvolutionPoolUnlock>().Any(unlock => unlock.EvolutionId == evolutionId);
 
     public void Restore(IEnumerable<ForgeDiscoveryId> discoveries)
     {
