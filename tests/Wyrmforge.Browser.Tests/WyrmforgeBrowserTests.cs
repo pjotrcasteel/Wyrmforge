@@ -11,6 +11,32 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_Startup_ShowsIgnitionUntilGameIsReady()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.Commit });
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "IGNITING WYRMFORGE" })).ToBeVisibleAsync();
+        await ScreenshotAsync("mobile-igniting-wyrmforge.png");
+
+        await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync(new() { Timeout = 30000 });
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0, new() { Timeout = 30000 });
+    }
+
+    [TestMethod]
+    public async Task Desktop_BootstrapFailure_ShowsRetryInsteadOfHanging()
+    {
+        await Page.SetViewportSizeAsync(1440, 900);
+        await Page.RouteAsync("**/_framework/blazor.webassembly.js*", route => route.AbortAsync());
+
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "TRY AGAIN" })).ToBeVisibleAsync(new() { Timeout = 15000 });
+        await Expect(Page.Locator("#ignition-status")).ToHaveTextAsync("THE FORGE COULD NOT IGNITE");
+    }
+
+    [TestMethod]
     public async Task Mobile_ArcaneAtlas_RendersPlanningSurfaceWithoutPageOverflow()
     {
         Directory.CreateDirectory(ArtifactDirectory);
