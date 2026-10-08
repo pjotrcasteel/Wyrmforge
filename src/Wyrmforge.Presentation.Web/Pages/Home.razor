@@ -1,5 +1,6 @@
 @page "/"
 @using Wyrmforge.Presentation.Web.Features.Playtesting
+@using Wyrmforge.Presentation.Web.Features.Leaderboard
 
 @if (!runActive)
 {
@@ -16,6 +17,10 @@ else
     <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" NewAscendantVictories="newlyConqueredAscendants" OnFeedback="OpenPlaytestFeedback" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" />
 }
 
+@if (leaderboardOpen && firstHunt.LeaderboardUnlocked)
+{
+    <LeaderboardView Score="summary?.Score ?? bestScore" OnClose="CloseLeaderboard" />
+}
 @if (playtestFeedbackOpen)
 {
     <PlaytestFeedbackPanel OnClose="ClosePlaytestFeedback" />

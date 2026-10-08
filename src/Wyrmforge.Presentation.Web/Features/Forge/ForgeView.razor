@@ -44,7 +44,7 @@
             @switch (section)
             {
                 case ShellSection.Run:
-                    <RunHubView FirstHunt="Progress.TutorialRun" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
+                    <RunHubView FirstHunt="Progress.TutorialRun" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
                     break;
                 case ShellSection.Build:
                     <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" />

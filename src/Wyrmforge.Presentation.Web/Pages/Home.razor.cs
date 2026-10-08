@@ -154,6 +154,7 @@ public partial class Home
             await SaveArcaneBuildAsync();
         }
         summary = tutorialEnded ? null : value;
+        if (chapterAdvanced) leaderboardOpen = true;
         await TryRecordPlaytestFinishAsync(value);
         if (tutorialEnded)
         {

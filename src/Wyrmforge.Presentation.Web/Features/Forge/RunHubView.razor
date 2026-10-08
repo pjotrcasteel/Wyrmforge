@@ -114,6 +114,10 @@
             </button>
         </section>
     }
+    @if (LeaderboardUnlocked)
+    {
+        <button class="leaderboard-open-action" @onclick="() => OnLeaderboard.InvokeAsync()" aria-label="Open Hall of Fame">🏆 HALL OF FAME · HIGH SCORES →</button>
+    }
     <button class="playtest-invite" @onclick="() => OnFeedback.InvokeAsync()">
         <span>✎ COMMUNITY PLAYTEST</span>
         <strong>Tell us how your hunt felt</strong>
@@ -126,6 +130,8 @@
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public bool AtlasUnlocked { get; set; }
+    [Parameter] public bool LeaderboardUnlocked { get; set; }
+    [Parameter] public EventCallback OnLeaderboard { get; set; }
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
