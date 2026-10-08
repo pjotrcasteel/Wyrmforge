@@ -2,6 +2,19 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
+## Prototype 0.0.83 — Development Hunt Trials (no grind)
+
+The existing public **[Balance Lab](https://pjotrcasteel.github.io/Wyrmforge/balance-lab)** now includes an isolated Wyrm encounter test bench for developers.
+
+- Directly start any of the four ordinary Wyrms, or both implemented Ascendant encounters (Ashfang and Stormcoil), at Depth II without playing the earlier routes.
+- Choose the opening phase, seed, existing Arcane build and heuristic agent. Every trial gets the associated school spell at Rank III with an actual base evolution, rather than artificially granting saved Forge or player power.
+- Run the *actual combat simulation* headlessly in **portrait (390 × 844) and landscape (844 × 390)** with the same seed. The agent makes movement decisions. Report victory, death, phase-two reach, minimum HP, damage, simulated time, signature warning frames, player overlaps with pending/armed warnings and observed attack windows.
+- A mobile-friendly, seeded attack-location preview shows the real signature planner's geometry (explicitly a planning preview, **not** the cinematic renderer). Invulnerable practice can help capture more attacks but must never be treated as fair survival evidence.
+- Developer trials bypass persistent progression and never grant Great Hunt oaths, Essence, trophies, or playtest telemetry. All ordinary-game startup, achievements and saves remain untouched.
+- This supports iteration on difficulty and mobile reachability without repeatedly losing a real run. It cannot objectively determine subjective fun, cinematic appeal or real-touch comfort; those remain complementary visual/playtest gates.
+
+The original headless self-play and Combat Lab are retained. The remaining Rimeclaw/Voidweaver Ascendants and later Elder Wyrms can enter the same bench when their actual combat content is implemented.
+
 ## Prototype 0.0.82 — Ascendant Stormcoil: Stormbound Halo
 
 **The next playable Great Hunt challenge** builds on the existing oath, Mastery and Ascendant architecture instead of adding a prestige currency.

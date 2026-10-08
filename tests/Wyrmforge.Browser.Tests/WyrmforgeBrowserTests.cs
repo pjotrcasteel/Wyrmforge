@@ -256,7 +256,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_DeveloperHuntTrials_ShowsPortraitWarningGeometryAndIsolatedHuntControls()
     {
         await Page.SetViewportSizeAsync(390, 844);
-        await Page.GotoAsync(BaseUrl + "/balance-lab");
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/balance-lab");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Skip the grind. Stress-test the Wyrm." })).ToBeVisibleAsync();
         await Expect(Page.GetByLabel("Test Wyrm")).ToHaveValueAsync("Stormcoil");
         await Expect(Page.GetByLabel("Encounter variant")).ToHaveValueAsync("true");
@@ -300,7 +300,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.82", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.83", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());

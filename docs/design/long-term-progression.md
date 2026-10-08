@@ -165,3 +165,9 @@ The three other Ascendants must each gain a distinctive movement problem instead
 Its new **Skybreak Crossing** pattern is a three-beat crossing-corridor movement problem, visually distinct from Tempest Cage and Crownfall. Phase one sends transverse and longitudinal lightning; phase two adds a diagonal crossing. Telegraph sizes are bounded by the shorter arena dimension for portrait/landscape fairness. A separate Storm-colored cinematic name slam and permanent Halo trophy give the win a memorable identity.
 
 No new permanently stacking attributes are introduced. Existing Great Hunt saves continue to deserialize, Ashfang trophies remain earned, and the remaining rites stay genuinely locked until their unique encounters are implemented. The community playtest system is live in parallel, and feedback results across versions must be treated as different cohorts when balancing future changes.
+
+## 0.0.83: repeatable developer encounter evidence
+
+The existing Balance Lab now exposes a developer-only, no-save direct-boss scenario using the real deterministic RunSimulation rather than a mocked damage calculator. Two mobile aspect ratios, seed reproduction, selectable phases, normal vs Ascendant variants, artificial invulnerable practice and agent metrics let us evaluate timing, telegraph exposure and phase progression independently of the player's hard-earned Great Hunt progress.
+
+This does not weaken the normal progression requirements. Invulnerable practice must be clearly labeled and excluded from win-rate and fairness interpretation. Use browser/mobile render checks and actual feedback to validate cinematic appearance and perceived dodge windows; scripted results alone cannot guarantee that a fight is enjoyable.
