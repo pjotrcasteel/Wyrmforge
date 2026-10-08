@@ -12,6 +12,53 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_FirstHunt_OnlyRunUnlockedAndGoalIsClear()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Your first hunt begins." })).ToBeVisibleAsync();
+        await Expect(Page.GetByLabel("First Hunt tutorial")).ToBeVisibleAsync();
+        var nav = Page.Locator("nav.mobile-nav button");
+        await Expect(nav.Filter(new() { HasText = "Build" })).ToBeDisabledAsync();
+        await Expect(nav.Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
+        await Expect(nav.Filter(new() { HasText = "Codex" })).ToBeDisabledAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = "Wyrmforge combat arena" })).ToBeVisibleAsync();
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_FirstHuntComplete_UnlocksOnePointCodexAndPersistsLocally()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','1'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:1, Nodes:[] }));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" })).ToBeVisibleAsync();
+        await Expect(Page.Locator("nav.mobile-nav button").Filter(new() { HasText = "Build" })).ToBeEnabledAsync();
+        await Expect(Page.Locator("nav.mobile-nav button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
+        await Expect(Page.Locator("nav.mobile-nav button").Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
+        await Expect(Page.GetByText("ARCANE ATLAS", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("1", new() { Exact = true }).First).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_HallOfFame_SeparatesFictionalLegendsAndOptInEntries()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Open Hall of Fame" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Hall of Fame high scores" })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("LEGEND · DEMO").First).ToBeVisibleAsync();
+        await Expect(Page.GetByText("YOU · THIS RUN", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "PUBLISH SCORE" })).ToBeDisabledAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Close Hall of Fame" }).ClickAsync();
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.hall-of-fame.local.v1')"));
+    }
+
+    [TestMethod]
     public async Task Mobile_Startup_ShowsIgnitionUntilGameIsReady()
     {
         Directory.CreateDirectory(ArtifactDirectory);
@@ -314,7 +361,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.83", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.84", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
@@ -416,7 +463,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private async Task OpenAsync()
     {
         // Existing gameplay tests represent established accounts, not the new First Hunt tutorial.
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart']));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
     }

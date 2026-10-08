@@ -79,7 +79,7 @@
                     <span class="section-kicker">WYRM OFFERING</span>
                     <h2>@OfferingTitle</h2>
                 </div>
-                <button class="text-action" disabled="@FirstHunt" @onclick="EditForgeAsync">@(FirstHunt ? "🔒 LOCKED" : "CHANGE")</button>
+                <button class="text-action" disabled="@(!ForgeUnlocked)" @onclick="EditForgeAsync">@(ForgeUnlocked ? "CHANGE" : "🔒 LOCKED")</button>
             </div>
             @if (SelectedOffering is { } offering)
             {
@@ -130,6 +130,7 @@
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public bool AtlasUnlocked { get; set; }
+    [Parameter] public bool ForgeUnlocked { get; set; }
     [Parameter] public bool LeaderboardUnlocked { get; set; }
     [Parameter] public EventCallback OnLeaderboard { get; set; }
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
