@@ -2,6 +2,14 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
+## Playtest feedback insights — scheduled aggregation
+
+The external playtest collector can now produce an automatic, privacy-safe development summary without exposing individual tester records. A scheduled GitHub workflow queries aggregate counts, ratings and recent-run metrics through Cloudflare D1, excludes the owner's synthetic integration test, and publishes only aggregate data after a ten-report privacy threshold.
+
+- [Automated insight pipeline and privacy boundaries](docs/playtesting/insights-automation.md)
+- Once the first cohort reaches the threshold, review `playtest-insights/docs/playtesting/insights/latest.md` on the separate GitHub branch.
+- The public report contains no verbatim comments or reproduction seeds. Access those only through the existing private Cloudflare owner tools when necessary.
+
 ## Prototype 0.0.81 — Private, consent-only feedback collector
 
 - A separately deployable Cloudflare Worker + D1 database accepts **only reports sent via the explicit in-game consent checkbox**, validates/sanitizes the `wyrmforge.playtest.report.v1` schema and saves them for up to 30 days.

@@ -10,7 +10,7 @@ Invite **10–15 independent testers**, including at least 5 who have never seen
 
 **Copyable invitation:**
 
-> We're playtesting WyrmForge, an early action roguelite you can play in your browser. Could you try it for 15 minutes without instructions and tell me where it's fun, confusing or frustrating? https://pjotrcasteel.github.io/Wyrmforge/ — At any point, tap **Tell us how your hunt felt** (or **Send playtest feedback** after a run). Share the JSON report through your phone's share sheet, or download the file and send it back to me. No account required to play and no automatic feedback upload.
+> We're playtesting WyrmForge, an early action roguelite you can play in your browser. Could you try it for 15 minutes without instructions and tell me where it's fun, confusing or frustrating? https://pjotrcasteel.github.io/Wyrmforge/ — At any point, tap **Tell us how your hunt felt** (or **Send playtest feedback** after a run). Tap **Tell us how your hunt felt** (or **Send playtest feedback** after a run), answer the quick questions, tick the consent box and choose **Send feedback privately**. That securely submits your report to WyrmForge; Share / Download JSON is an alternative. No account required, and nothing is sent without your choice.
 
 ## What gets recorded
 
@@ -18,7 +18,7 @@ The browser locally tracks: run starts, interrupted restarts, selected trail/Wyr
 
 The report includes an optional anonymous questionnaire (1–5 enjoyment/clarity, replay intent, most problematic area, best moment, improvement). The tester can **uncheck Include my recent runs** before sharing. No raw clickstream, position history, full user-agent, name, email address or IP address is included in a report. The browser host can have its own access logs; the report collection itself is local-only until the tester shares it. No automatic transfer is enabled.
 
-The file is shared only to the destination the tester chooses. If native file sharing is unsupported, Safari/Chrome downloads a JSON file which the tester can send manually. **Receiving files in a messaging app is not automatic ingestion**; the organizer still needs to collect and analyze them. Never publish submitted reports to GitHub, especially free-text content.
+Direct private submission to the Cloudflare D1 collector is live and requires an explicit consent checkbox; the game confirms receipt only after an accepted API response. Manual sharing is optional: the phone share sheet or downloaded JSON still works. No personal report or free-text comment may be published to GitHub.
 
 ## Organizing the results
 
@@ -43,17 +43,13 @@ These are **targets**, not claims about results:
 
 Collect observations in a brief moderated session when practical; **offline reports alone cannot measure true page exits or silent drop-offs**.
 
-## Central collection (0.0.81)
+## Central collection and automated insights (0.0.81+)
 
-A Cloudflare Worker + D1 collector has now been implemented, but **sending centrally must be enabled by provisioning Cloudflare and setting the public HTTPS endpoint**. Before that happens, the 0.0.80 manual share/download flow remains available.
+The consent-only HTTPS collector is live. Testers explicitly tick a consent box and press **Send feedback privately**; there are no passive background uploads. Cloudflare stores report submissions privately for up to 30 days, with no raw identifiers or comments added to the public GitHub repository.
 
-Once enabled, testers can tick an explicit consent checkbox and press **Send feedback privately**. A successful response confirms receipt; transport failures are not treated as successful. Reports are held for up to 30 days and accessible only to the organizer with an administrator token. No feedback is silently uploaded, and opting out of recent runs remains supported.
+A daily GitHub Actions workflow uses only aggregate SQL queries against Cloudflare D1. The anonymized summary is published to the separate public `playtest-insights` branch **only after at least 10 voluntary reports** and only lists issue categories selected by at least 3 submissions. A small sample remains withheld, and raw comments/seeds remain restricted to the Cloudflare administrator dashboard. The acknowledged synthetic integration test is deleted/excluded automatically.
 
-See [deployment and private reporting guide](collector-deployment.md).
-
-## Automatic collection is an explicit follow-up
-
-GitHub Pages cannot safely accept writes from arbitrary browsers by itself. To collect passive session analytics or direct submissions, choose and deploy a secure HTTPS intake (e.g. a serverless endpoint with storage and retention policy). Add explicit opt-in, payload validation, rate limiting, CORS protection and restricted access to reports; never embed a privileged GitHub token or database write key in the public game. The current build intentionally does **not** claim automatic uploads.
+Read [insights automation](insights-automation.md). The public aggregate cannot support individual defect reproduction or free-text analysis; those still require restricted owner access.
 
 ## Next decision
 
