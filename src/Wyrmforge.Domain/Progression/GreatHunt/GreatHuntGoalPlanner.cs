@@ -15,14 +15,15 @@ public static class GreatHuntGoalPlanner
         if (count <= 0) return [];
 
         return GreatHuntCatalog.All
-            .Where(oath => !hunt.IsSealed(oath.Wyrm, mastery) || oath.Wyrm == DragonId.Ashfang && !hunt.Get(oath.Wyrm).AscendantDefeated)
+            .Where(oath => !hunt.IsSealed(oath.Wyrm, mastery) || AscendantRiteCatalog.IsAvailable(oath.Wyrm) && !hunt.Get(oath.Wyrm).AscendantDefeated)
             .Select(oath =>
             {
                 var entry = hunt.Get(oath.Wyrm);
                 if (hunt.IsSealed(oath.Wyrm, mastery))
                 {
-                    return new GreatHuntGoal(oath.Wyrm, "Ascendant Ashfang", "Invoke the rite in the Run Hub, then defeat Ascendant Ashfang at Depth II.",
-                        "Permanent Crown of Embers trophy • the first Ascendant conquered", entry.AscendantDefeated ? 1 : 0, 1);
+                    var rite = AscendantRiteCatalog.Get(oath.Wyrm);
+                    return new GreatHuntGoal(oath.Wyrm, $"Ascendant {oath.Wyrm}", $"Invoke the rite in the Run Hub and defeat Ascendant {oath.Wyrm} at Depth II.",
+                        $"Permanent {rite.Trophy} trophy • replayable Ascendant duel", entry.AscendantDefeated ? 1 : 0, 1);
                 }
 
                 var lineage = mastery.Get(oath.LineageSpell).Unlocked;
