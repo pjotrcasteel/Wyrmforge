@@ -232,7 +232,7 @@ public partial class Home
             if (!string.IsNullOrEmpty(previousPlaytest))
             {
                 using var document = JsonDocument.Parse(previousPlaytest);
-                previousRuns = document.RootElement.TryGetProperty("started", out var started) && started.TryGetInt32(out var count) && count > 0;
+                previousRuns = document.RootElement.TryGetProperty("started", out var started) && started.TryGetInt32(out var startedCount) && startedCount > 0;
             }
             if (bestScore > 0 || previousRuns || essenceVault.TotalCount > 0 || spellMastery.UnlockedCount > 0 || forgeProgression.Discovered.Count > 0)
             {
