@@ -85,11 +85,13 @@
             }
         </article>
     </div>
+    <ForgeGoalBoard Progression="Progression" Vault="Vault" />
 </section>
 
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public int BestScore { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }

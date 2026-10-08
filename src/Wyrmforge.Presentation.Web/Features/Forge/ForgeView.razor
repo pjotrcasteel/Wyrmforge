@@ -31,7 +31,7 @@
             @switch (section)
             {
                 case ShellSection.Run:
-                    <RunHubView Selection="Selection" Progression="Progression" SelectedOffering="SelectedOffering" BestScore="BestScore" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
+                    <RunHubView Selection="Selection" Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" BestScore="BestScore" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
                     break;
                 case ShellSection.Build:
                     <BuildView Selection="Selection" />
@@ -40,7 +40,7 @@
                     <ForgeProgressionView Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" />
                     break;
                 case ShellSection.Codex:
-                    <CodexView Codex="Codex" />
+                    <CodexView Codex="Codex" Progression="Progression" />
                     break;
             }
         </div>

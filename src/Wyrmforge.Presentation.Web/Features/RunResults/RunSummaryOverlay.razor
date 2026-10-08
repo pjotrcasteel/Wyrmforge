@@ -1,5 +1,7 @@
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Progression.Forge
+@using Wyrmforge.Presentation.Web.Features.Forge
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Progression.RunUpgrades
 @using Wyrmforge.Domain.Spells
@@ -104,6 +106,8 @@
             </div>
         }
 
+        <ForgeGoalBoard Progression="Progression" Vault="Vault" Compact="true" />
+
         <p class="run-report-meta">@Summary.Choices build choices • @Summary.DragonEssences secured Essence • seed @Summary.Seed</p>
         <div class="run-report-actions">
             <button class="secondary" @onclick="ReplayAsync">Replay same seed</button>
@@ -114,6 +118,8 @@
 
 @code {
     [Parameter, EditorRequired] public Wyrmforge.Application.Runs.EndRun.RunSummary Summary { get; set; } = null!;
+    [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public EventCallback OnReplay { get; set; }
     [Parameter] public EventCallback OnReturn { get; set; }
 

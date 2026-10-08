@@ -2,6 +2,7 @@
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Spells
+@using Wyrmforge.Domain.Spells.Evolutions
 
 <section class="forge-view">
     <header class="forge-heading">
@@ -12,6 +13,27 @@
         </div>
         <div class="forge-count"><strong>@Progression.MasteryCount</strong><span>of @ForgeMasteryCatalog.All.Count masteries forged</span></div>
     </header>
+
+    <ForgeGoalBoard Progression="Progression" Vault="Vault" />
+
+    @if (newlyForged is { } completed)
+    {
+        <div class="forge-celebration-backdrop" role="dialog" aria-modal="true" aria-label="Forge mastery completed">
+            <section class="forge-celebration">
+                <div class="section-kicker">MASTERWORK AWAKENED</div>
+                <div class="forge-celebration-sigil">◆</div>
+                <h2>@completed.Name</h2>
+                <p>You have permanently widened the possibilities of every future hunt.</p>
+                <div class="forge-celebration-unlocks">
+                    @foreach (var unlock in completed.Unlocks)
+                    {
+                        <span>@UnlockLabel(unlock)</span>
+                    }
+                </div>
+                <button @onclick="DismissCelebration">CONTINUE FORGING</button>
+            </section>
+        </div>
+    }
 
     <section class="vault-panel">
         <div class="panel-heading"><span class="section-kicker">ESSENCE VAULT</span><strong>@Vault.TotalCount secured</strong></div>
@@ -94,6 +116,7 @@
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
 
+    private ForgeMasteryDefinition? newlyForged;
     private IReadOnlyList<DragonEssenceDefinition> AvailableOfferings => DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0 && RunOfferingCatalog.CanOffer(essence.Id, Progression)).ToArray();
 
     private string MasteryClass(ForgeMasteryDefinition mastery)
@@ -117,10 +140,18 @@
         RunOfferingUnlock offering => $"Offering: {DragonEssenceCatalog.Get(offering.EssenceId).Name}",
         SpellPoolUnlock spell => $"Spell: {SpellCatalog.Get(spell.SpellId).Name}",
         RelicPoolUnlock relic => $"Relic: {RelicCatalog.Get(relic.RelicId).Name}",
+        EvolutionPoolUnlock evolution => $"Evolution: {SpellEvolutionCatalog.Get(evolution.EvolutionId).Name}",
         _ => "New possibility",
     };
 
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ClearOfferingAsync() => SelectedOffering is { } id ? OnOfferingChanged.InvokeAsync(id) : Task.CompletedTask;
-    private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
+    private async Task ForgeAsync(ForgeMasteryId id)
+    {
+        if (Progression.IsForged(id)) return;
+        await OnForgeMastery.InvokeAsync(id);
+        if (Progression.IsForged(id)) newlyForged = ForgeMasteryCatalog.Get(id);
+    }
+
+    private void DismissCelebration() => newlyForged = null;
 }
