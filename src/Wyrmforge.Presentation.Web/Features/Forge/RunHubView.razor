@@ -2,6 +2,7 @@
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Domain.Progression.GreatHunt
+@using Wyrmforge.Domain.Combat.Dragons
 
 <section class="run-hub">
     <header class="run-hero">
@@ -87,6 +88,22 @@
             }
         </article>
     </div>
+    @if (Hunt.IsSealed(DragonId.Ashfang, Masteries))
+    {
+        <section class="ascendant-rite-card" aria-label="Ascendant Ashfang rite">
+            <span class="ascendant-rite-sigil" aria-hidden="true">♛</span>
+            <div>
+                <span class="section-kicker">THE GREAT HUNT • FIRST ASCENDANT</span>
+                <h2>Ascendant Ashfang</h2>
+                <p>Your Oath of the First Flame has opened a harder hunt. Invoke the rite to summon the Crown of Embers at Depth II.
+                    Clear Depth I normally; then survive shifting Crownfall gates. Victory permanently crowns your Forge.</p>
+                <small>@(Hunt.Get(DragonId.Ashfang).AscendantDefeated ? "✦ CROWN OF EMBERS EARNED • REPLAYABLE" : "◇ CROWN OF EMBERS AWAITS")</small>
+            </div>
+            <button class="ascendant-rite-action @(AscendantSelected ? "selected" : string.Empty)" aria-pressed="@AscendantSelected" @onclick="ToggleAscendantAsync">
+                @(AscendantSelected ? "✓ RITE INVOKED" : "INVOKE ASCENDANT RITE")
+            </button>
+        </section>
+    }
     <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" />
 </section>
 
@@ -98,6 +115,8 @@
     [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public int BestScore { get; set; }
+    [Parameter] public bool AscendantSelected { get; set; }
+    [Parameter] public EventCallback<bool> OnAscendantChanged { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
     [Parameter] public EventCallback OnEditBuild { get; set; }
     [Parameter] public EventCallback OnEditForge { get; set; }
@@ -109,6 +128,7 @@
 
     private int SchoolPoints(PassiveSchool school) => Selection.Selected.Where(id => PassiveTreeCatalog.Get(id).School == school).Sum(id => PassiveTreeCatalog.Get(id).Cost);
     private Task StartAsync() => OnStart.InvokeAsync();
+    private Task ToggleAscendantAsync() => OnAscendantChanged.InvokeAsync(!AscendantSelected);
     private Task EditBuildAsync() => OnEditBuild.InvokeAsync();
     private Task EditForgeAsync() => OnEditForge.InvokeAsync();
     private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄", PassiveSchool.Storm => "⚡", _ => "✦" };

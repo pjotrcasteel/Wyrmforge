@@ -5,6 +5,7 @@ using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Domain.Progression.Codex;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.GreatHunt;
@@ -31,6 +32,7 @@ public partial class Home
     private readonly SpellMasteryState spellMastery = new();
     private readonly GreatHuntState greatHunt = new();
     private IReadOnlyList<Wyrmforge.Domain.Combat.Dragons.DragonId> advancedOaths = [];
+    private IReadOnlyList<DragonId> newlyConqueredAscendants = [];
     private IReadOnlyList<Wyrmforge.Domain.Combat.Dragons.DragonId> newlySealedOaths = [];
     private IReadOnlyList<SpellEvolutionId> newlyUnlockedLineages = [];
     private IReadOnlyList<Wyrmforge.Domain.Spells.SpellId> advancedSpellIds = [];
@@ -42,6 +44,8 @@ public partial class Home
     private int bestScore;
     private int runNumber;
     private bool runActive;
+    private bool ascendantSelected;
+    private bool activeAscendant;
 
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
 
@@ -77,12 +81,16 @@ public partial class Home
         await TrySetForgeMasteryAsync();
     }
 
+    private void SelectAscendant(bool selected) => ascendantSelected = selected && greatHunt.IsSealed(DragonId.Ashfang, spellMastery);
+
     private async Task StartRunAsync()
     {
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
         advancedOaths = [];
         newlySealedOaths = [];
+        newlyConqueredAscendants = [];
+        activeAscendant = ascendantSelected && greatHunt.IsSealed(DragonId.Ashfang, spellMastery);
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
@@ -100,6 +108,7 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        var previouslyConquered = greatHunt.Get(DragonId.Ashfang).AscendantDefeated;
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
         var mastery = spellMastery.RecordRun(new MasteryRunEvidence(
             value.CompletedRouteNodes,
@@ -111,7 +120,9 @@ public partial class Home
         advancedSpellIds = mastery.Progressed;
         if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();
         advancedOaths = greatHunt.RecordRun(new GreatHuntRunEvidence(value.CompletedRouteNodes, value.Outcome == RunOutcome.Abandoned,
-            value.DragonIds.ToHashSet(), value.DeepEvolvedWyrmDuels.ToHashSet(), value.EssenceIds));
+            value.DragonIds.ToHashSet(), value.DeepEvolvedWyrmDuels.ToHashSet(), value.EssenceIds)
+        { AscendantVictories = value.AscendantDragonIds.ToHashSet() });
+        newlyConqueredAscendants = !previouslyConquered && greatHunt.Get(DragonId.Ashfang).AscendantDefeated ? [DragonId.Ashfang] : [];
         newlySealedOaths = GreatHuntCatalog.All.Where(oath => !oldSeals.Contains(oath.Wyrm) && greatHunt.IsSealed(oath.Wyrm, spellMastery))
             .Select(oath => oath.Wyrm).ToArray();
         if (advancedOaths.Count > 0 || newlySealedOaths.Count > 0) await TrySetGreatHuntAsync();
@@ -140,6 +151,7 @@ public partial class Home
         advancedSpellIds = [];
         advancedOaths = [];
         newlySealedOaths = [];
+        newlyConqueredAscendants = [];
         runNumber++;
         runActive = true;
         return Task.CompletedTask;
@@ -150,6 +162,7 @@ public partial class Home
         summary = null;
         activeOffering = null;
         activeRunSeed = null;
+        activeAscendant = false;
         runActive = false;
     }
 

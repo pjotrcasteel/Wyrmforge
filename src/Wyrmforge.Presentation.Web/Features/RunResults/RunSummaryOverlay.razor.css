@@ -165,3 +165,12 @@
     .run-report-card .run-report-actions { grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); }
     .run-report-card .run-report-actions button { font-size:.73rem; }
 }
+
+.run-ascendant-victory { display:grid;justify-items:center;gap:8px;padding:20px 14px;border:1px solid #eabf75;border-radius:15px;text-align:center;background:radial-gradient(ellipse at 50% 0,rgba(255,195,90,.28),transparent 68%),#241920;animation:ascendant-victory-reveal .9s ease-out both; }
+.run-ascendant-victory > span { color:#ffdfa6;font-size:.68rem;font-weight:950;letter-spacing:.17em; }
+.run-ascendant-victory > div { color:#fce3ae;font:600 3.2rem Georgia,serif;text-shadow:0 0 35px rgba(255,176,73,.75); }
+.run-ascendant-victory h3 { margin:0;font:600 clamp(1.6rem,4vw,2.5rem) Georgia,serif;color:#fff0ce; }
+.run-ascendant-victory p { margin:0;color:#d9c3bc;font-size:.77rem;line-height:1.5; }
+.run-ascendant-victory strong { color:#bce8bd;font-size:.61rem;letter-spacing:.07em; }
+@keyframes ascendant-victory-reveal { from {opacity:0;transform:scale(.95);filter:brightness(1.6);}to {opacity:1;transform:scale(1);filter:brightness(1);} }
+@media(prefers-reduced-motion:reduce) { .run-ascendant-victory { animation:none; } }
