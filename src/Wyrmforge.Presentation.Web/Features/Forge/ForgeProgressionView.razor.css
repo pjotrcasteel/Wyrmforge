@@ -265,3 +265,18 @@
 
 .sanctum-prep-action { min-height: 39px; border: 1px solid rgba(var(--sanctum-color), .44); border-radius: 9px; background: rgba(var(--sanctum-color), .08); color: #f2d4ad; font-size: .64rem; font-weight: 900; letter-spacing: .09em; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
 .sanctum-prep-action:hover { background: rgba(var(--sanctum-color), .19); border-color: rgba(var(--sanctum-color), .75); }
+
+[hidden]{display:none!important}
+.collection-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-bottom:12px}
+.collection-tabs button{min-height:44px;padding:8px 4px;border:0;border-bottom:2px solid transparent;color:#c8bacb;background:transparent;font:inherit;font-size:.8rem;cursor:pointer}
+.collection-tabs button[aria-pressed=true]{border-color:#cead74;color:#eee5d4;background:#261c2f}
+.collection-tabs button:focus-visible{outline:2px solid #cead74;outline-offset:2px}
+.sanctum-stage .sanctum-hearth{display:none}
+.sanctum-stage{min-height:0;padding:12px}
+.sanctum-wyrm-heading p{margin-bottom:4px}
+.sanctum-sigil{min-height:64px}
+.sanctum-drawer{border-radius:4px}
+.sanctum-heading{display:none}
+@media(max-width:760px){.sanctum-chamber{grid-template-columns:1fr;gap:10px}.sanctum-stage{padding:6px}.sanctum-sigils{gap:4px}.sanctum-sigil{padding:8px 2px}.sanctum-sigil-name{font-size:.68rem}.sanctum-sigil-state{font-size:.6rem}.sanctum-blueprints{padding:10px}.sanctum-inspection{padding:12px}.sanctum-drawer>summary{flex-wrap:wrap;gap:8px;min-height:44px}.sanctum-forge-action,.sanctum-prep-action,.clear-offering{min-height:44px}.collection-tabs button{font-size:.73rem}}
+
+@media(max-width:760px){.sanctum-sigil-state{font-size:.46rem;white-space:nowrap;overflow-wrap:normal;letter-spacing:0}}

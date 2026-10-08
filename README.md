@@ -2,6 +2,12 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
+## Prototype 0.0.85 — Mobile game menus
+
+A compact main menu replaces the dashboard rail and mobile tab bar. Begin Hunt stays prominent; chapter gates, available Arcane points and secured Essence appear beside their destinations. WyrmForge uses a rune mark, restrained gold accents and serif headings without requiring artwork. Forge and Codex show one category at a time; preparation, offerings, Ascendant rites and goals remain available on dedicated screens.
+
+The full connected Arcane Atlas and in-run route map are preserved. The Atlas uses the space freed by navigation, with 44-pixel zoom controls and a bottom inspector. Safe-area padding and short-portrait/landscape layouts support mobile browsers and future store wrappers. Native iOS/Android packaging is a later delivery; this release ships the web UI.
+
 ## Prototype 0.0.84 — First Hunt: chapter unlocks, route transitions and Hall of Fame
 
 New accounts begin with an actual guided First Hunt rather than a menu full of unexplained systems. The Build/Arcane Atlas, Forge and Codex are initially padlocked, leaving the Run as the first action. A First Hunt ends when the player dies or slays their first Wyrm; manual abandonment does not complete the tutorial. The game fades to black, rumbles, says **IT DOESN'T END HERE**, returns to the Run Hub and opens the Atlas and Codex with a simple padlock animation. One Arcane point becomes available and is called out in the HUD and Run Hub.

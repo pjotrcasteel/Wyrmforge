@@ -9,16 +9,13 @@
 @using Wyrmforge.Domain.Spells.Synergies
 
 <section class="codex-view">
-    <header class="codex-heading">
-        <div>
-            <span class="section-kicker">ARCANE CODEX</span>
-            <h1>Know what the realm can become.</h1>
-            <p>The Codex is reference and discovery, not a start screen. Unknown synergies stay hidden until you create them in a run.</p>
-        </div>
-        <div class="codex-count"><strong>@Codex.Count</strong><span>of @SynergyCatalog.All.Count synergies discovered</span></div>
-    </header>
-
-    <section class="codex-section">
+    <nav class="collection-tabs" aria-label="Codex categories">
+        @foreach (var category in Categories)
+        {
+            <button aria-pressed="@((activeCategory == category).ToString().ToLowerInvariant())" @onclick="() => activeCategory = category">@category</button>
+        }
+    </nav>
+    <section class="codex-section" hidden="@(activeCategory != "Synergies")">
         <div class="section-heading"><span class="section-kicker">DISCOVERED SYNERGIES</span></div>
         <div class="codex-grid">
             @foreach (var synergy in SynergyCatalog.All)
@@ -26,13 +23,13 @@
                 var discovered = Codex.Contains(synergy.Id);
                 <article class="codex-card @(discovered ? "known" : "unknown")">
                     <span class="codex-icon">@(discovered ? synergy.Icon : "?")</span>
-                    <div><strong>@(discovered ? synergy.Name : "Unknown synergy")</strong><small>@(discovered ? synergy.Description : "Create new combinations in the Wyrmrealm to reveal this entry.")</small></div>
+                    <div><strong>@(discovered ? synergy.Name : "Undiscovered")</strong><small>@(discovered ? synergy.Description : "Undiscovered")</small></div>
                 </article>
             }
         </div>
     </section>
 
-    <section class="codex-section lineage-codex">
+    <section class="codex-section lineage-codex" hidden="@(activeCategory != "Lineages")">
         <div class="section-heading">
             <span class="section-kicker">WYRMFORGED SPELL LINEAGES</span>
             <small>@Masteries.UnlockedCount / @SpellLineageCatalog.All.Count awakened</small>
@@ -69,12 +66,12 @@
         </div>
     </section>
 
-    <section class="codex-section">
+    <section class="codex-section" hidden="@(activeCategory != "Great Hunt")">
         <div class="section-heading"><span class="section-kicker">THE GREAT HUNT</span><small>@Hunt.CompletedCount(Masteries) / 4 oaths sealed</small></div>
         <GreatHuntPanel Hunt="Hunt" Masteries="Masteries" />
     </section>
 
-    <section class="codex-section">
+    <section class="codex-section" hidden="@(activeCategory != "Spells")">
         <div class="section-heading"><span class="section-kicker">SPELLS</span><small>@SpellCatalog.All.Count known designs</small></div>
         <div class="codex-grid compact">
             @foreach (var spell in SpellCatalog.All)
@@ -94,7 +91,7 @@
         </div>
     </section>
 
-    <section class="codex-section">
+    <section class="codex-section" hidden="@(activeCategory != "Relics")">
         <div class="section-heading"><span class="section-kicker">RELICS</span><small>@RelicCatalog.All.Count known relics</small></div>
         <div class="codex-grid compact">
             @foreach (var relic in RelicCatalog.All)
@@ -104,7 +101,7 @@
         </div>
     </section>
 
-    <section class="codex-section">
+    <section class="codex-section" hidden="@(activeCategory != "Wyrms")">
         <div class="section-heading"><span class="section-kicker">WYRM DOSSIERS</span><small>@DragonCatalog.All.Count known Wyrms</small></div>
         <div class="codex-grid compact">
             @foreach (var dragon in DragonCatalog.All)
@@ -114,10 +111,13 @@
         </div>
     </section>
 
-    <a class="combat-lab-link" href="combat-lab">Open developer Combat Lab</a>
+
 </section>
 
 @code {
+    private static readonly string[] Categories = ["Spells", "Relics", "Wyrms", "Synergies", "Lineages", "Great Hunt"];
+    private string activeCategory = "Spells";
+
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();

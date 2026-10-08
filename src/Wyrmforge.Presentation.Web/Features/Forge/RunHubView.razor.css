@@ -68,3 +68,5 @@
 .first-hunt-instructions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:15px 17px;border:1px solid rgba(197,148,241,.26);border-radius:15px;background:#17111f}
 .first-hunt-instructions strong{font-size:.68rem;letter-spacing:.1em;color:#f1d0ff}
 .first-hunt-instructions span{font-size:.69rem;color:#c5b2ce}
+
+.run-hub{display:grid;gap:14px}.enter-realm{min-height:52px;border-radius:4px}.loadout-card{border-radius:4px}.text-action{min-height:44px}.ascendant-rite-card{border-radius:4px}
