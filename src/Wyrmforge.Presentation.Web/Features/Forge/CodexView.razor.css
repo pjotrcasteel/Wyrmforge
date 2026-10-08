@@ -31,3 +31,12 @@
 .lineage-codex-progress span.done { border-color: rgba(119,198,159,.54); color: #b5e9d0; background: rgba(68,128,98,.14); }
 .codex-card .lineage-reward { margin-top: 5px; color: #d4b488; }
 @media (max-width: 680px) { .lineage-codex-grid { grid-template-columns: 1fr; } }
+
+[hidden]{display:none!important}
+.collection-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.collection-tabs button{min-height:44px;padding:8px;border:0;border-bottom:2px solid transparent;color:#c8bacb;background:transparent;font:inherit;font-size:.8rem;cursor:pointer}
+.collection-tabs button[aria-pressed=true]{border-color:#cead74;color:#eee5d4;background:#261c2f}
+.collection-tabs button:focus-visible{outline:2px solid #cead74;outline-offset:2px}
+.codex-section{padding:12px;border-radius:4px}
+.codex-card{border-radius:4px}.codex-card small{color:#b7aaba;font-size:.78rem}
+@media(min-width:700px){.collection-tabs{grid-template-columns:repeat(6,minmax(0,1fr))}}

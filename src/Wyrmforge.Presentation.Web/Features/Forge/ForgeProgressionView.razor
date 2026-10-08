@@ -7,19 +7,12 @@
 @using Wyrmforge.Domain.Progression.GreatHunt
 
 <section class="forge-view forge-sanctum" aria-label="Wyrmforge sanctum">
-    <header class="sanctum-heading">
-        <span class="section-kicker">THE WYRMFORGE • SANCTUM</span>
-        <h1>Awaken the forge.</h1>
-        <p>Hunt a Wyrm. Carry its Essence home. Forge that Essence into a new possibility for your next run.</p>
-        <div class="sanctum-instructions" aria-label="How forging works">
-            <span><b>01</b> HUNT A WYRM</span>
-            <i aria-hidden="true">⟶</i>
-            <span><b>02</b> EXTRACT ESSENCE</span>
-            <i aria-hidden="true">⟶</i>
-            <span><b>03</b> FORGE A BLUEPRINT</span>
-        </div>
-    </header>
-
+    <nav class="collection-tabs" aria-label="Forge sections">
+        @foreach (var tab in Sections)
+        {
+            <button aria-pressed="@(activeSection == tab)" @onclick="() => activeSection = tab">@tab</button>
+        }
+    </nav>
     @if (newlyForged is { } completed)
     {
         <div class="forge-celebration-backdrop" role="dialog" aria-modal="true" aria-label="Forge mastery completed">
@@ -27,7 +20,7 @@
                 <div class="section-kicker">MASTERWORK AWAKENED</div>
                 <div class="forge-celebration-sigil" aria-hidden="true">◆</div>
                 <h2>@completed.Name</h2>
-                <p>You have permanently widened the possibilities of every future hunt.</p>
+                
                 <div class="forge-celebration-unlocks">
                     @foreach (var unlock in completed.Unlocks)
                     {
@@ -39,7 +32,7 @@
         </div>
     }
 
-    <div class="sanctum-chamber lineage-@ActiveLineage.ToString().ToLowerInvariant()">
+    <div class="sanctum-chamber lineage-@ActiveLineage.ToString().ToLowerInvariant()" hidden="@(activeSection != "Mastery")">
         <div class="sanctum-choose">
             <span class="sanctum-legend">CHOOSE A WYRM'S POWER</span>
             <nav class="sanctum-sigils" aria-label="Choose a Wyrm lineage">
@@ -145,19 +138,19 @@
                     }
                     @if (forged)
                     {
-                        <p class="sanctum-hint unlocked">✦ This rune is permanently forged. Its rewards are available on future hunts.</p>
+                        <p class="sanctum-hint unlocked">Permanently unlocked</p>
                     }
                 </div>
             }
         </section>
     </div>
 
-    <details class="sanctum-drawer sanctum-great-hunt" aria-label="The Great Hunt oaths">
+    <details open class="sanctum-drawer sanctum-great-hunt" hidden="@(activeSection != "Great Hunt")" aria-label="The Great Hunt oaths">
         <summary><span>✦ <b>THE GREAT HUNT</b></span><span>@Hunt.CompletedCount(Masteries) / 4 OATHS SEALED <i>⌄</i></span></summary>
         <GreatHuntPanel Hunt="Hunt" Masteries="Masteries" />
     </details>
 
-    <details class="sanctum-drawer" aria-label="Essence vault and next-run offerings">
+    <details open class="sanctum-drawer" hidden="@(activeSection != "Offerings")" aria-label="Essence vault and next-run offerings">
         <summary><span>◇ <b>ESSENCE VAULT &amp; OFFERING ALTAR</b></span><span>@Vault.TotalCount SECURED • @(SelectedOffering is null ? "NO OFFERING" : "OFFERING SELECTED") <i>⌄</i></span></summary>
         <div class="sanctum-drawer-body">
             <h3>Stolen Essence</h3>
@@ -193,13 +186,16 @@
         </div>
     </details>
 
-    <details class="sanctum-drawer sanctum-ledger" aria-label="Your next hunts">
+    <details open class="sanctum-drawer sanctum-ledger" hidden="@(activeSection != "Goals")" aria-label="Your next hunts">
         <summary><span>⚔ <b>HUNT LEDGER</b></span><span>YOUR NEXT THREE PURSUITS <i>⌄</i></span></summary>
         <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" Compact="true" />
     </details>
 </section>
 
 @code {
+    private static readonly string[] Sections = ["Mastery", "Offerings", "Great Hunt", "Goals"];
+    private string activeSection = "Mastery";
+
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();

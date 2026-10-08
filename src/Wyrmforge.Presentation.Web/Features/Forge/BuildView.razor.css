@@ -1421,3 +1421,8 @@
         grid-column: 1 / -1;
     }
 }
+
+/* The Atlas keeps its complete web; the game shell no longer has a bottom nav. */
+.build-heading{justify-content:flex-end;padding:0;border:0;background:transparent;box-shadow:none}
+.build-heading .build-points{padding:6px 10px}
+@media(max-width:760px){.atlas-stage{height:calc(100dvh - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom));min-height:260px;border-radius:4px}.atlas-action{width:44px;height:44px}.node-inspector{bottom:max(8px,env(safe-area-inset-bottom));max-height:min(60dvh,460px);border-radius:8px}.inspector-close{min-width:44px;min-height:44px}}

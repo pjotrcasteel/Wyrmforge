@@ -5,39 +5,7 @@
 @using Wyrmforge.Domain.Combat.Dragons
 
 <section class="run-hub">
-    <header class="run-hero">
-        <div class="run-hero-copy">
-            <span class="section-kicker">THE WYRMREALM</span>
-            <h1>@(FirstHunt ? "Your first hunt begins." : "The realm is listening.")</h1>
-            <p>@(FirstHunt ? "Enter the Wyrmrealm, move to survive and follow the map toward a Wyrm. Death or victory will conclude your first chapter." : "Shape your mage, carry an offering if you dare, then push as deep as your build can survive.")</p>
-            @if (!FirstHunt && AtlasUnlocked && Selection.PointBudget > Selection.SpentPoints)
-            {
-                <button class="arcane-available" @onclick="EditBuildAsync" aria-label="Allocate unspent Arcane points">
-                    ✦ @((Selection.PointBudget - Selection.SpentPoints)) ARCANE POINT@(Selection.PointBudget - Selection.SpentPoints == 1 ? string.Empty : "S") READY · OPEN ATLAS →
-                </button>
-            }
-            <div class="run-status-row">
-                <span>@(FirstHunt ? "BEGINNER BUILD · LOCKED" : $"{Selection.SpentPoints} / {Selection.PointBudget} arcane points")</span>
-                <span>@OfferingLabel</span>
-                <span>Best @BestScore.ToString("N0")</span>
-            </div>
-            <button class="enter-realm" @onclick="StartAsync">
-                <span>@(FirstHunt ? "BEGIN FIRST HUNT" : "ENTER WYRMREALM")</span>
-                <small>@(FirstHunt ? "Chapter I · the journey starts with action" : "Begin a new run")</small>
-            </button>
-        </div>
-        <div class="realm-placeholder" aria-hidden="true">
-            <div class="realm-ring ring-outer"></div>
-            <div class="realm-ring ring-middle"></div>
-            <div class="realm-ring ring-inner"></div>
-            <div class="realm-mark">W</div>
-        </div>
-    </header>
-
-    @if (FirstHunt)
-    {
-        <div class="first-hunt-instructions" aria-label="Your first hunt instructions"><strong>HOW TO BEGIN</strong><span>1 · Start the hunt</span><span>2 · Move to dodge and collect XP</span><span>3 · Choose a trail on the map</span><span>4 · Survive or defeat the Wyrm</span></div>
-    }
+    <button class="enter-realm" @onclick="StartAsync">BEGIN HUNT</button>
     <div class="run-dashboard">
         <article class="loadout-card">
             <div class="card-heading">
@@ -64,12 +32,12 @@
                 <div class="keystone-summary">
                     <span>KEYSTONE@(SelectedKeystones.Count == 1 ? string.Empty : "S")</span>
                     <strong>@string.Join(" • ", SelectedKeystones.Select(node => node.Name))</strong>
-                    <small>Rule-changing endpoints reached through your allocated path.</small>
+                    
                 </div>
             }
             else
             {
-                <p class="support-copy">Your Arcane Web sets the starting intent. Run rewards decide what it becomes.</p>
+                
             }
         </article>
 
@@ -114,16 +82,6 @@
             </button>
         </section>
     }
-    @if (LeaderboardUnlocked)
-    {
-        <button class="leaderboard-open-action" @onclick="() => OnLeaderboard.InvokeAsync()" aria-label="Open Hall of Fame">🏆 HALL OF FAME · HIGH SCORES →</button>
-    }
-    <button class="playtest-invite" @onclick="() => OnFeedback.InvokeAsync()">
-        <span>✎ COMMUNITY PLAYTEST</span>
-        <strong>Tell us how your hunt felt</strong>
-        <small>One-minute feedback • optional session report • no account needed</small>
-    </button>
-    <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" />
 </section>
 
 @code {

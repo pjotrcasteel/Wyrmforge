@@ -5,70 +5,55 @@
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.Onboarding
 
-<main class="game-shell">
-    <aside class="shell-rail" aria-label="Wyrmforge navigation">
-        <button class="brand-mark" @onclick="() => Navigate(ShellSection.Run)" aria-label="Wyrmforge home">W</button>
-        <nav class="rail-nav">
-            @foreach (var item in Navigation)
-            {
-                <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty) @(!IsUnlocked(item.Section) ? "chapter-locked" : string.Empty)"
-                    disabled="@(!IsUnlocked(item.Section))" title="@NavHelp(item.Section)" aria-label="@NavHelp(item.Section)" @onclick="() => Navigate(item.Section)">
-                    <span class="nav-icon">@(!IsUnlocked(item.Section) ? "🔒" : item.Icon)</span>
-                    <span>@item.Label</span>
-                </button>
-            }
-        </nav>
-        <div class="rail-meta"><span>BEST</span><strong>@BestScore.ToString("N0")</strong></div>
-    </aside>
-
-    <section class="shell-stage">
-        <header class="shell-topbar">
-            <div class="mobile-brand"><span class="brand-rune">W</span><div><strong>WYRMFORGE</strong><small>@SectionTitle</small></div></div>
-            <div class="desktop-section"><span class="section-kicker">WYRMFORGE</span><strong>@SectionTitle</strong></div>
-            <div class="resource-strip">
-                <span title="Secured Essence">◇ <b>@Vault.TotalCount</b></span>
-                <span title="Forge masteries">◆ <b>@Progression.MasteryCount/@ForgeMasteryCatalog.All.Count</b></span>
-                <span title="Arcane build points">✦ <b>@Selection.SpentPoints/@Selection.PointBudget</b></span>
-                @if (Progress.AtlasUnlocked && Selection.PointBudget > Selection.SpentPoints)
-                {
-                    <button class="unspent-topbar" @onclick="() => Navigate(ShellSection.Build)" aria-label="@($"{Selection.PointBudget - Selection.SpentPoints} unspent Arcane points, open Atlas")">✦ @((Selection.PointBudget - Selection.SpentPoints)) UNSPENT</button>
-                }
-            </div>
+<main class="game-shell @(section == ShellSection.Run ? "menu-home" : string.Empty)">
+    @if (section != ShellSection.Run)
+    {
+        <header class="menu-header">
+            <button class="menu-back" aria-label="Back to main menu" @onclick="() => Navigate(ShellSection.Run)">‹</button>
+            <h1>@SectionTitle</h1>
         </header>
-
-        <div class="shell-content">
-            @if (Progress.TutorialRun)
-            {
-                <section class="first-hunt-banner" aria-label="First Hunt tutorial"><strong>CHAPTER I · THE FIRST HUNT</strong><span>Enter the Wyrmrealm. Move to survive, choose a trail and face your first Wyrm. Death or victory opens your next chapter.</span></section>
-            }
-            @switch (section)
-            {
-                case ShellSection.Run:
-                    <RunHubView FirstHunt="Progress.TutorialRun" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
-                    break;
-                case ShellSection.Build:
-                    <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" />
-                    break;
-                case ShellSection.Forge:
-                    <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
-                    break;
-                case ShellSection.Codex:
-                    <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
-                    break;
-            }
-        </div>
-    </section>
-
-    <nav class="mobile-nav" aria-label="Wyrmforge navigation">
-        @foreach (var item in Navigation)
+    }
+    <section class="shell-content">
+        @switch (section)
         {
-            <button class="shell-nav-item @(section == item.Section ? "active" : string.Empty) @(!IsUnlocked(item.Section) ? "chapter-locked" : string.Empty)"
-                disabled="@(!IsUnlocked(item.Section))" title="@NavHelp(item.Section)" aria-label="@NavHelp(item.Section)" @onclick="() => Navigate(item.Section)">
-                <span class="nav-icon">@(!IsUnlocked(item.Section) ? "🔒" : item.Icon)</span>
-                <span>@item.Label</span>
-            </button>
+            case ShellSection.Run:
+                <section class="main-menu" aria-label="Main menu">
+                    <header class="menu-brand"><span class="menu-sigil" aria-hidden="true">W</span><h1>WYRMFORGE</h1></header>
+                    <nav class="menu-actions" aria-label="Wyrmforge navigation">
+                        <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
+                        @foreach (var item in Navigation.Where(item => item.Section != ShellSection.Run))
+                        {
+                            var unlocked = IsUnlocked(item.Section);
+                            <button class="menu-destination" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
+                                <span><i aria-hidden="true">@item.Icon</i>@item.Label</span>
+                                <small>@(!unlocked ? $"◇ {UnlockHint(item.Section)}" : item.Section == ShellSection.Build ? $"{Selection.PointBudget - Selection.SpentPoints} points" : item.Section == ShellSection.Forge ? $"{Vault.TotalCount} Essence" : string.Empty)</small>
+                            </button>
+                        }
+                        <button class="menu-destination" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i aria-hidden="true">♜</i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
+                    </nav>
+                    <footer class="menu-footer">
+                        @if (!Progress.TutorialRun) { <button @onclick="() => Navigate(ShellSection.Prepare)">Hunt preparation</button> }
+                        <button aria-label="More options" @onclick="() => Navigate(ShellSection.Options)">•••</button>
+                    </footer>
+                </section>
+                break;
+            case ShellSection.Build:
+                <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" />
+                break;
+            case ShellSection.Forge:
+                <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
+                break;
+            case ShellSection.Codex:
+                <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
+                break;
+            case ShellSection.Prepare:
+                <RunHubView AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
+                break;
+            case ShellSection.Options:
+                <div class="menu-options"><button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button><a href="combat-lab">Developer Combat Lab</a></div>
+                break;
         }
-    </nav>
+    </section>
 </main>
 
 @code {
@@ -95,15 +80,15 @@
     private static readonly NavigationItem[] Navigation =
     [
         new(ShellSection.Run, "⚔", "Run"),
-        new(ShellSection.Build, "✦", "Build"),
+        new(ShellSection.Build, "✦", "Arcane Atlas"),
         new(ShellSection.Forge, "◆", "Forge"),
         new(ShellSection.Codex, "▣", "Codex"),
     ];
 
-    private string SectionTitle => Navigation.Single(item => item.Section == section).Label;
+    private string SectionTitle => section == ShellSection.Prepare ? "Hunt preparation" : section == ShellSection.Options ? "Options" : Navigation.Single(item => item.Section == section).Label;
     private bool IsUnlocked(ShellSection value) => value switch
     {
-        ShellSection.Run => true,
+        ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
         ShellSection.Build => Progress.AtlasUnlocked,
         ShellSection.Codex => Progress.CodexUnlocked,
         ShellSection.Forge => ForgeUnlocked,
@@ -121,7 +106,8 @@
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
     private Task StartAsync() => OnStart.InvokeAsync();
+    private string UnlockHint(ShellSection value) => value == ShellSection.Forge ? "Secure Essence" : "Finish first hunt";
 
-    private enum ShellSection { Run, Build, Forge, Codex }
+    private enum ShellSection { Run, Build, Forge, Codex, Prepare, Options }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
 }
