@@ -2,7 +2,7 @@
 
 ## Status and security boundary
 
-The **implementation is included in the repository**. The online collector only becomes available after the Cloudflare account/database/secrets and public endpoint have been provisioned. GitHub Pages itself remains a read-only host; do not place a private token in the web project.
+The **collector is deployed on Cloudflare** at `https://wyrmforge-feedback-collector.pjotr-2.workers.dev`, with D1 migrations and Worker secrets applied by GitHub Actions run #2. The public, non-secret intake URL is now part of the game's checked-in configuration, with optional override via `WYRMFORGE_FEEDBACK_ENDPOINT`. GitHub Pages itself remains a read-only host; do not place a private token in the web project.
 
 The Cloudflare Worker accepts *only actively submitted, explicitly consented* reports. There is no passive telemetry upload. It validates and allowlists fields, uses D1 storage, HMAC IP-based rate limiting (no raw IP persisted), private Bearer-token administrator endpoints and 30-day scheduled deletion.
 
@@ -21,11 +21,11 @@ The Cloudflare Worker accepts *only actively submitted, explicitly consented* re
 5. Add environment variable `WYRMFORGE_D1_DATABASE_ID` containing the D1 UUID. Enable the Worker `workers.dev` subdomain or configure a custom HTTPS hostname.
 6. Trigger **Actions → Deploy private playtest collector → Run workflow**. This runs tests, D1 migrations, deployment and Worker secret installation. No endpoint accepts reports unless the rate-limit secret exists.
 7. Verify `https://<your-worker-host>/health` returns a JSON status. Verify a POST requires the exact origin `https://pjotrcasteel.github.io`. **Never test with personal player data**.
-8. In GitHub repository Settings → Secrets and variables → Actions → Variables, set `WYRMFORGE_FEEDBACK_ENDPOINT` to the **public** full HTTPS URL such as `https://<your-worker-host>/v1/reports`. This is a public endpoint, not a credential.
-9. Run **Actions → Deploy Wyrmforge demo → Run workflow** to publish the endpoint in the versioned public JSON configuration. Check the game: **Send feedback privately** becomes visible in the playtest dialog. It is disabled until a tester checks the consent box.
+8. The public HTTPS URL is now checked into `src/Wyrmforge.Presentation.Web/wwwroot/playtest-collector-config.json`, and the Pages workflow publishes it automatically. For a future hostname change, update this file or override it with the GitHub Actions repository variable `WYRMFORGE_FEEDBACK_ENDPOINT`. This URL is public configuration, not a credential.
+9. A push to `main` triggers **Deploy Wyrmforge demo** and publishes the URL automatically. The post-deploy smoke validates the published URL, Worker health, CORS and rejection of no-consent requests. In the game, **Send feedback privately** appears in the playtest dialog, disabled until a tester checks the consent box.
 10. Submit a synthetic test report and confirm its receipt using the owner tool below. Only then invite the external cohort.
 
-No Cloudflare credentials, D1 database, or account were created simply by merging the code. The game falls back to the existing Share / Download JSON flow whenever the collector is not configured.
+The Cloudflare account and D1 database were provisioned by the owner; GitHub Actions deployed the Worker. The game's existing Share / Download JSON option remains available if the collector is unreachable. A real report write still needs a voluntary end-to-end submission to verify receipt in the private dashboard.
 
 ## Private reporting dashboard
 
