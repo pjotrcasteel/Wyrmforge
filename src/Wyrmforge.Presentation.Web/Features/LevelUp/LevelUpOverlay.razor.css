@@ -220,3 +220,4 @@
 }
 
 .evolution-draft .evo-crossroads.run-overlay-surface { width: min(760px, 100%) !important; }
+.evo-stage > .evo-confirmation.evo-withdrawn { animation: none; }
