@@ -272,10 +272,7 @@ public sealed partial class RunSimulation
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
-        foreach (var lineage in SpellLineageCatalog.All.Where(lineage => lineage.Wyrm == definition.Id))
-        {
-            if (build.Spells[lineage.Spell] >= SpellCatalog.Get(lineage.Spell).MaxRank) qualifiedWyrmFeats.Add(lineage.Spell);
-        }
+        foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
         score += (int)(dragonScore * depthState.ScoreMultiplier);

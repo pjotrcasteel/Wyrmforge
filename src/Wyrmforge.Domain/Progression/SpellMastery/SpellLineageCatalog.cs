@@ -21,4 +21,11 @@ public static class SpellLineageCatalog
     ];
 
     public static SpellLineageDefinition Get(SpellId spell) => All.Single(definition => definition.Spell == spell);
+
+    public static IReadOnlyList<SpellId> FeatsEarnedAtDefeat(DragonId wyrm, SpellBook spellBook)
+    {
+        ArgumentNullException.ThrowIfNull(spellBook);
+        return All.Where(lineage => lineage.Wyrm == wyrm && spellBook[lineage.Spell] >= SpellCatalog.Get(lineage.Spell).MaxRank)
+            .Select(lineage => lineage.Spell).ToArray();
+    }
 }
