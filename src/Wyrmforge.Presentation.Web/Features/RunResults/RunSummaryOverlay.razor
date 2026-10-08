@@ -2,6 +2,7 @@
 @using Wyrmforge.Domain.Progression.DragonEssences
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
+@using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Presentation.Web.Features.Forge
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Progression.RunUpgrades
@@ -127,6 +128,35 @@
             </div>
         }
 
+        @if (NewSeals.Count > 0)
+        {
+            <section class="run-great-hunt-seal" aria-label="Great Hunt oath sealed">
+                <span>✦ THE GREAT HUNT REMEMBERS ✦</span>
+                @foreach (var wyrm in NewSeals)
+                {
+                    var oath = GreatHuntCatalog.Get(wyrm);
+                    <div class="run-great-hunt-rune" aria-hidden="true">@oath.Rune</div>
+                    <h3>@oath.Name</h3>
+                    <p>All four deeds completed. Your permanent Great Hunt seal now burns in the Forge and Codex.</p>
+                }
+                <strong>ASCENDANT PATH PREPARED • NEW ENCOUNTER IN A FUTURE CHAPTER</strong>
+            </section>
+        }
+        @if (AdvancedOaths.Count > 0)
+        {
+            <section class="run-great-hunt-progress" aria-label="Great Hunt progress">
+                <span>◆ GREAT HUNT OATHS ADVANCED</span>
+                <div class="run-great-hunt-entries">
+                    @foreach (var wyrm in AdvancedOaths)
+                    {
+                        var oath = GreatHuntCatalog.Get(wyrm);
+                        var entry = Hunt.Get(wyrm);
+                        <div><strong>@oath.Rune @oath.Name</strong><small>@(entry.Feats + (Masteries.Get(oath.LineageSpell).Unlocked ? 1 : 0)) / 4 deeds complete</small></div>
+                    }
+                </div>
+            </section>
+        }
+
         @if (NewLineages.Count > 0)
         {
             <section class="run-lineage-reveal" aria-label="Wyrmforged lineage discovered">
@@ -140,7 +170,7 @@
                 <strong>NEW EVOLUTION AVAILABLE IN FUTURE HUNTS</strong>
             </section>
         }
-        <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Compact="true" />
+        <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" Compact="true" />
 
         <p class="run-report-meta">@Summary.Choices build choices • @Summary.DragonEssences secured Essence • seed @Summary.Seed</p>
         <div class="run-report-actions">
@@ -155,6 +185,9 @@
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
+    [Parameter] public GreatHuntState Hunt { get; set; } = new();
+    [Parameter] public IReadOnlyList<DragonId> AdvancedOaths { get; set; } = [];
+    [Parameter] public IReadOnlyList<DragonId> NewSeals { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellEvolutionId> NewLineages { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellId> AdvancedSpells { get; set; } = [];
     [Parameter] public EventCallback OnReplay { get; set; }

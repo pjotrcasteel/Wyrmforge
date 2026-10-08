@@ -2,7 +2,19 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.76 — Spell Mastery & Wyrmforged Lineages
+## Prototype 0.0.77 — The Great Hunt: Four Ancient Oaths
+
+The Forge now holds a living Great Hunt altar. Its four permanent, Wyrm-specific oaths connect ordinary hunts and existing Spell Mastery to long-term aspirational seals. No new currency, flat account-stat inflation or disconnected prestige loop is introduced.
+
+- Each Wyrm demands four **independent deeds**: slay it, secure any of its Essences, defeat it at Depth II+ with a matching-school Rank III evolved spell **already evolved at kill time**, and awaken its associated Wyrmforged Spell Lineage.
+- Deeds persist across meaningful runs in `wyrmforge.greatHunt.v1`. Existing Forge discoveries backfill historical kills and secured Essence; unreconstructable evolved duels are never fabricated.
+- One Great Hunt pursuit now appears alongside a Forge goal and a Spell Mastery goal in the three-horizon hunt board. The Codex and a collapsible Forge sanctum altar let hunters inspect every oath, its exact conditions and the next actionable step.
+- Completing an oath earns a permanent illuminated ceremonial seal, with a post-run discovery reveal and an enduring Forge/Codex trophy. The progression unlocks the **preparation** for its Ascendant route; it does **not** pretend an Ascendant boss is playable yet.
+- Deep evolved duels are captured at the exact Wyrm defeat moment, maintaining deterministic simulation and preventing retroactive Rank III/evolution credit.
+- Mobile-friendly selectable sigils, concise altar stage and reduced-motion treatment; no combat viewport overlays.
+- The next combat milestone turns prepared Ascendant seals into **distinct mechanically new encounters**, then progresses toward Elder Wyrms. Build Evolution remains extensible.
+
+### 0.0.76 — Spell Mastery & Wyrmforged Lineages
 
 Persistent spell growth now gives the next few hunts a specific purpose. Repeated **meaningful** use of a spell and a matching Wyrm feat awaken a rare new evolution that enters future Rank III crossroads. This is a new *possibility*, never a flat permanent damage bonus.
 

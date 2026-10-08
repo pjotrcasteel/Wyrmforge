@@ -101,3 +101,18 @@
 .run-mastery-entry { display:grid; gap:5px; padding:10px; border:1px solid #4b3a57; border-radius:9px; background:#21192b; }
 .run-mastery-entry strong { color:#efe1f6; font-size:.78rem; }
 .run-mastery-entry small { color:#c5b3ce; font-size:.65rem; }
+
+.run-great-hunt-seal { display:grid;justify-items:center;gap:8px;padding:18px 12px;margin:12px 0;border:1px solid #ddb778;border-radius:15px;text-align:center;background:radial-gradient(ellipse at 50% 18%,rgba(226,167,75,.26),transparent 66%),#211820;animation:great-hunt-arrival .9s ease-out both; }
+.run-great-hunt-seal > span { color:#f1cc8c;font-size:.65rem;font-weight:900;letter-spacing:.14em; }
+.run-great-hunt-rune { display:grid;place-items:center;width:70px;height:70px;border:2px solid #dfb278;border-radius:20px;transform:rotate(45deg);font-size:3rem;color:#ffe4af;text-shadow:0 0 25px #eeb46c;box-shadow:0 0 30px rgba(228,161,75,.22); }
+.run-great-hunt-seal h3 { margin:6px 0 0;font:600 clamp(1.55rem,4vw,2.4rem) Georgia,serif;color:#ffedd0; }
+.run-great-hunt-seal p { margin:0;max-width:450px;color:#dfc9cb;font-size:.8rem;line-height:1.5; }
+.run-great-hunt-seal strong { color:#c1ebc1;font-size:.63rem;letter-spacing:.06em; }
+.run-great-hunt-progress { display:grid;gap:9px;margin:12px 0;padding:12px;border:1px solid rgba(218,167,99,.38);border-radius:12px;background:rgba(84,59,36,.14); }
+.run-great-hunt-progress > span { color:#e8c294;font-size:.64rem;font-weight:900;letter-spacing:.1em; }
+.run-great-hunt-entries { display:flex;flex-wrap:wrap;gap:7px; }
+.run-great-hunt-entries > div { display:grid;gap:3px;flex:1 1 150px;padding:9px;border:1px solid #604b44;border-radius:9px;background:#22191f; }
+.run-great-hunt-entries strong { color:#ebd9c8;font-size:.75rem; }
+.run-great-hunt-entries small { color:#c7aca0;font-size:.65rem; }
+@keyframes great-hunt-arrival { from { opacity:0;filter:brightness(1.7);transform:scale(.94); } to { opacity:1;filter:brightness(1);transform:scale(1); } }
+@media(prefers-reduced-motion:reduce) { .run-great-hunt-seal { animation:none; } }
