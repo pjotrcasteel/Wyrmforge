@@ -251,3 +251,14 @@
     .hearth-halo,.rune-outer,.rune-inner,.hearth-aura,.hearth-ember,.sanctum-inspection,.forge-celebration { animation: none !important; }
     .sanctum-sigil,.sanctum-rune { transition: none !important; }
 }
+
+/* Keep the first rune in view sooner on phones: the hearth is a landmark, not an entire screen of dead space. */
+@media (max-width: 660px) {
+    .sanctum-hearth { width: min(62%, 216px); }
+    .sanctum-wyrm-heading { margin-top: -13px; gap: 2px; }
+    .sanctum-wyrm-heading h2 { font-size: 1.6rem; }
+    .sanctum-ritual-progress { padding: 5px 0; }
+    .sanctum-blueprints { gap: 9px; }
+    .sanctum-heading { gap: 5px; }
+    .sanctum-heading p { font-size: .77rem; }
+}
