@@ -41,10 +41,10 @@
             </label>
             <label>Encounter
                 <select @bind="huntVariant" aria-label="Encounter variant">
-                    <option value="false">Ordinary</option>
+                    <option value="False">Ordinary</option>
                     @if (AscendantRiteCatalog.IsAvailable(huntWyrm))
                     {
-                        <option value="true">Ascendant</option>
+                        <option value="True">Ascendant</option>
                     }
                 </select>
             </label>
@@ -56,8 +56,8 @@
             </label>
             <label>Inspect geometry
                 <select @bind="portraitPreview" aria-label="Preview orientation">
-                    <option value="true">Portrait · 390 × 844</option>
-                    <option value="false">Landscape · 844 × 390</option>
+                    <option value="True">Portrait · 390 × 844</option>
+                    <option value="False">Landscape · 844 × 390</option>
                 </select>
             </label>
             <label class="hunt-trial-practice">

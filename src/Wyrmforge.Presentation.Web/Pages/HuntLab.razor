@@ -27,8 +27,8 @@
         </label>
         <label>Hunt form
             <select @bind="ascendant">
-                <option value="false">Ordinary</option>
-                @if (AscendantRiteCatalog.IsAvailable(selectedWyrm)) { <option value="true">Ascendant</option> }
+                <option value="False">Ordinary</option>
+                @if (AscendantRiteCatalog.IsAvailable(selectedWyrm)) { <option value="True">Ascendant</option> }
             </select>
         </label>
         <label>Phase
