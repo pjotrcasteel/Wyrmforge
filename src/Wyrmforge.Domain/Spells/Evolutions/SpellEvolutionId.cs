@@ -22,4 +22,8 @@ public enum SpellEvolutionId
     ThunderCrown,
     CrystalDivide,
     MirrorChoir,
+    Wyrmfire,
+    GlacialRequiem,
+    TempestAscendant,
+    VoidConstellation,
 }

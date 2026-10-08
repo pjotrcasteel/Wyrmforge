@@ -1,5 +1,6 @@
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Forge
+@using Wyrmforge.Domain.Progression.SpellMastery
 
 <main class="game-shell">
     <aside class="shell-rail" aria-label="Wyrmforge navigation">
@@ -31,16 +32,16 @@
             @switch (section)
             {
                 case ShellSection.Run:
-                    <RunHubView Selection="Selection" Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" BestScore="BestScore" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
+                    <RunHubView Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" SelectedOffering="SelectedOffering" BestScore="BestScore" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
                     break;
                 case ShellSection.Build:
                     <BuildView Selection="Selection" />
                     break;
                 case ShellSection.Forge:
-                    <ForgeProgressionView Vault="Vault" Progression="Progression" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
+                    <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
                     break;
                 case ShellSection.Codex:
-                    <CodexView Codex="Codex" Progression="Progression" />
+                    <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" />
                     break;
             }
         </div>
@@ -62,6 +63,7 @@
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter] public SpellMasteryState Masteries { get; set; } = new();
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
     [Parameter] public int BestScore { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }

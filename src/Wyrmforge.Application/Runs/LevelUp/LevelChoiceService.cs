@@ -17,6 +17,7 @@ public sealed class LevelChoiceService(
     private const double SynergyResonanceWeightPerPoint = 0.03;
     private const double RecentOfferWeightMultiplier = 0.35;
     private const int RecentDraftMemory = 2;
+    private readonly IReadOnlySet<SpellEvolutionId> evolutionPool = availableEvolutions ?? SpellEvolutionCatalog.Base.Select(evolution => evolution.Id).ToHashSet();
     private readonly RewardChoiceEngine rewardChoiceEngine = new(randomSource);
     private readonly Queue<HashSet<string>> recentDrafts = [];
 
@@ -36,7 +37,7 @@ public sealed class LevelChoiceService(
         if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal))
         {
             var evolution = ParseEvolution(choice.Id);
-            return (availableEvolutions is null || availableEvolutions.Contains(evolution)) && build.Evolutions.Select(evolution, build.Spells);
+            return evolutionPool.Contains(evolution) && build.Evolutions.Select(evolution, build.Spells);
         }
         if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return build.Synergies.Select(ParseSynergy(choice.Id), build.Spells);
         return false;
@@ -47,7 +48,7 @@ public sealed class LevelChoiceService(
         if (build.Evolutions.For(spell) is not null || build.Spells[spell] < SpellCatalog.Get(spell).MaxRank) return Array.Empty<LevelChoice>();
 
         return SpellEvolutionCatalog.For(spell)
-            .Where(evolution => availableEvolutions is null || availableEvolutions.Contains(evolution.Id))
+            .Where(evolution => evolutionPool.Contains(evolution.Id))
             .Select(evolution => new LevelChoice(
                 $"evolution:{evolution.Id}",
                 LevelChoiceKind.Evolution,

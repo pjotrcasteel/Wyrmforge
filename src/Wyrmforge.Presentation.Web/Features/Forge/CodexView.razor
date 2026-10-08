@@ -3,6 +3,7 @@
 @using Wyrmforge.Domain.Progression.Relics
 @using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Progression.Forge
+@using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Domain.Spells.Evolutions
 @using Wyrmforge.Domain.Spells.Synergies
 
@@ -30,6 +31,43 @@
         </div>
     </section>
 
+    <section class="codex-section lineage-codex">
+        <div class="section-heading">
+            <span class="section-kicker">WYRMFORGED SPELL LINEAGES</span>
+            <small>@Masteries.UnlockedCount / @SpellLineageCatalog.All.Count awakened</small>
+        </div>
+        <p class="lineage-codex-guide">Master a spell across meaningful hunts, then defeat its Wyrm with the spell at Rank III. The reward is a new evolution branch forever available in future runs.</p>
+        <div class="codex-grid lineage-codex-grid">
+            @foreach (var lineage in SpellLineageCatalog.All)
+            {
+                var progress = Masteries.Get(lineage.Spell);
+                var spell = SpellCatalog.Get(lineage.Spell);
+                var wyrm = DragonCatalog.Get(lineage.Wyrm);
+                var awakened = progress.Unlocked;
+                var evolution = SpellEvolutionCatalog.Get(lineage.Evolution);
+                <article class="codex-card @(awakened ? "known" : "unknown-lineage")">
+                    <span class="codex-icon">@(awakened ? evolution.Icon : spell.Icon)</span>
+                    <div>
+                        <strong>@(awakened ? evolution.Name : $"{spell.Name} • unknown lineage")</strong>
+                        <small>@lineage.Clue</small>
+                        <div class="lineage-codex-progress">
+                            <span class="@(progress.MeaningfulRuns >= lineage.RequiredRuns ? "done" : string.Empty)">@(Math.Min(progress.MeaningfulRuns, lineage.RequiredRuns)) / @lineage.RequiredRuns meaningful hunts</span>
+                            <span class="@(progress.WyrmFeat ? "done" : string.Empty)">@(progress.WyrmFeat ? "✓" : "◇") @wyrm.Name with Rank III @spell.Name</span>
+                        </div>
+                        @if (awakened)
+                        {
+                            <small class="lineage-reward">AWAKENED • @evolution.Description</small>
+                        }
+                        else
+                        {
+                            <small class="lineage-reward">REWARD • undiscovered evolution</small>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
     <section class="codex-section">
         <div class="section-heading"><span class="section-kicker">SPELLS</span><small>@SpellCatalog.All.Count known designs</small></div>
         <div class="codex-grid compact">
@@ -41,7 +79,9 @@
                     <div>
                         <strong>@spell.Name</strong>
                         <small>@spell.Description</small>
-                        <small>Rank III → @string.Join(" / ", evolutions.Select(evolution => evolution.RequiresForgeUnlock && !Progression.UnlocksEvolution(evolution.Id) ? "🔒 Forge blueprint" : $"{evolution.Icon} {evolution.Name}"))</small>
+                        <small>Rank III → @string.Join(" / ", evolutions.Select(evolution => evolution.RequiresForgeUnlock && !Progression.UnlocksEvolution(evolution.Id) ? "🔒 Forge blueprint"
+                            : evolution.RequiresMasteryUnlock && !Masteries.Unlocks(evolution.Id) ? "◇ Hidden lineage"
+                            : $"{evolution.Icon} {evolution.Name}"))</small>
                     </div>
                 </article>
             }
@@ -74,4 +114,5 @@
 @code {
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
+    [Parameter] public SpellMasteryState Masteries { get; set; } = new();
 }

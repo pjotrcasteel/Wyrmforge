@@ -1,6 +1,7 @@
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells.Synergies;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.EndRun;
 
@@ -23,6 +24,7 @@ public sealed record RunSummary(
     public int RareRouteNodes { get; init; }
     public IReadOnlyList<SynergyId> SynergyIds { get; init; } = Array.Empty<SynergyId>();
     public IReadOnlyList<DragonId> DragonIds { get; init; } = Array.Empty<DragonId>();
+    public IReadOnlyList<SpellId> WyrmMasteryFeats { get; init; } = Array.Empty<SpellId>();
     public IReadOnlyList<RunSpellSummary> SpellLoadout { get; init; } = Array.Empty<RunSpellSummary>();
     public IReadOnlyList<RunUpgradeSummary> UpgradeLoadout { get; init; } = Array.Empty<RunUpgradeSummary>();
     public IReadOnlyList<RunRelicSummary> RelicLoadout { get; init; } = Array.Empty<RunRelicSummary>();

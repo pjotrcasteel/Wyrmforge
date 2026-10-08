@@ -44,9 +44,17 @@ public static class SpellEvolutionCatalog
             new(DamageMultiplier: 0.64, CastIntervalMultiplier: 1.08, ExtraProjectiles: 2, BonusPierces: 1), true),
         new(SpellEvolutionId.MirrorChoir, SpellId.AetherDart, "Mirror Choir", "Two quick mirrored darts pierce enemies and weave heavier Arcane Marks.", "◈",
             new(DamageMultiplier: 0.72, CastIntervalMultiplier: 0.84, ExtraProjectiles: 1, BonusPierces: 1, BonusStatusStacks: 1), true),
+        new(SpellEvolutionId.Wyrmfire, SpellId.FireBolt, "Wyrmfire", "Fire Bolt fractures into a storm of burning Wyrm embers. Impacts erupt through enemy packs.", "🐉",
+            new(DamageMultiplier: 0.78, CastIntervalMultiplier: 0.92, ExtraProjectiles: 2, SplashRadius: 83, StatusDurationMultiplier: 1.25), RequiresMasteryUnlock: true),
+        new(SpellEvolutionId.GlacialRequiem, SpellId.FrostShard, "Glacial Requiem", "The Wyrm's winter erupts around each shard, locking entire packs in frost.", "❅",
+            new(DamageMultiplier: 0.82, CastIntervalMultiplier: 1.12, FrostNovaRadius: 178, ProjectileRadiusMultiplier: 1.2, StatusDurationMultiplier: 1.6), RequiresMasteryUnlock: true),
+        new(SpellEvolutionId.TempestAscendant, SpellId.ChainLightning, "Tempest Ascendant", "The Wyrm's storm accelerates and ricochets through an ever-widening web of lightning.", "ϟ",
+            new(DamageMultiplier: 0.80, CastIntervalMultiplier: 0.78, BonusChains: 4, ChainFalloffMultiplier: 1.12), RequiresMasteryUnlock: true),
+        new(SpellEvolutionId.VoidConstellation, SpellId.ArcaneOrb, "Void Constellation", "Orbiting void-stars flood the battlefield, piercing enemies with overlapping arcane paths.", "✵",
+            new(DamageMultiplier: 0.64, CastIntervalMultiplier: 0.89, ExtraProjectiles: 3, BonusPierces: 2, ProjectileSpeedMultiplier: 1.17), RequiresMasteryUnlock: true),
     ];
 
-    public static IReadOnlyList<SpellEvolutionDefinition> Base { get; } = All.Where(evolution => !evolution.RequiresForgeUnlock).ToArray();
+    public static IReadOnlyList<SpellEvolutionDefinition> Base { get; } = All.Where(evolution => !evolution.RequiresForgeUnlock && !evolution.RequiresMasteryUnlock).ToArray();
 
     public static SpellEvolutionDefinition Get(SpellEvolutionId id) => All.Single(definition => definition.Id == id);
 

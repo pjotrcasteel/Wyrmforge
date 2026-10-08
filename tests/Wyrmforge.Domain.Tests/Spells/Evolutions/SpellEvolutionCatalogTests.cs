@@ -12,7 +12,7 @@ public sealed class SpellEvolutionCatalogTests
     {
         foreach (var spell in SpellCatalog.All)
         {
-            var branches = SpellEvolutionCatalog.For(spell.Id).Where(evolution => !evolution.RequiresForgeUnlock).ToArray();
+            var branches = SpellEvolutionCatalog.For(spell.Id).Where(evolution => !evolution.RequiresForgeUnlock && !evolution.RequiresMasteryUnlock).ToArray();
 
             Assert.AreEqual(2, branches.Length, $"{spell.Name} should have exactly two base evolution branches.");
             Assert.AreEqual(2, branches.Select(branch => branch.Id).Distinct().Count());
@@ -28,6 +28,16 @@ public sealed class SpellEvolutionCatalogTests
 
         Assert.AreEqual(4, locked.Length);
         Assert.AreEqual(4, locked.Select(evolution => SpellCatalog.Get(evolution.Spell).School).Distinct().Count());
+    }
+
+    [TestMethod]
+    public void All_FourWyrmforgedLineagesRequireMastery()
+    {
+        var branches = SpellEvolutionCatalog.All.Where(evolution => evolution.RequiresMasteryUnlock).ToArray();
+
+        Assert.AreEqual(4, branches.Length);
+        Assert.AreEqual(4, branches.Select(evolution => SpellCatalog.Get(evolution.Spell).School).Distinct().Count());
+        Assert.IsTrue(branches.All(evolution => !evolution.RequiresForgeUnlock));
     }
 
     [TestMethod]
