@@ -254,7 +254,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.80", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.81", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
@@ -271,6 +271,54 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "Erase my local playtest history" }).ClickAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.playtest.v1')"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_CollectorConsent_IsRequiredAndAcknowledgedBeforeSuccess()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("""
+            (() => {
+                const originalFetch = window.fetch.bind(window);
+                window.__collectorPayload = null;
+                window.fetch = (resource, options) => {
+                    const url = String(resource instanceof Request ? resource.url : resource);
+                    if (url.endsWith('/playtest-collector-config.json')) {
+                        return Promise.resolve(new Response(JSON.stringify({
+                            endpoint: 'https://collector.example.test/v1/reports'
+                        }), {status: 200, headers: {'Content-Type': 'application/json'}}));
+                    }
+                    if (url === 'https://collector.example.test/v1/reports') {
+                        window.__collectorPayload = JSON.parse(options.body);
+                        return Promise.resolve(new Response(JSON.stringify({
+                            accepted: true, id: window.__collectorPayload.report.id
+                        }), {status: 202, headers: {'Content-Type': 'application/json'}}));
+                    }
+                    return originalFetch(resource, options);
+                };
+            })();
+            """);
+        await OpenAsync();
+        await Page.Locator("button.playtest-invite").ClickAsync();
+        var send = Page.GetByRole(AriaRole.Button, new() { Name = "SEND FEEDBACK PRIVATELY" });
+        await Expect(send).ToBeVisibleAsync();
+        await Expect(send).ToBeDisabledAsync();
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => window.__collectorPayload"));
+
+        await Page.Locator("#playtest-fun").SelectOptionAsync("5");
+        await Page.Locator("#playtest-area").SelectOptionAsync("onboarding");
+        await Page.Locator("label.playtest-include input").UncheckAsync();
+        await Page.Locator("label.playtest-consent input").CheckAsync();
+        await Expect(send).ToBeEnabledAsync();
+        await send.ClickAsync();
+        await Expect(Page.GetByText("Received. Thank you!", new() { Exact = false })).ToBeVisibleAsync();
+        var payload = await Page.EvaluateAsync<JsonElement>("() => window.__collectorPayload");
+        Assert.IsTrue(payload.GetProperty("consent").GetBoolean());
+        Assert.AreEqual(5, payload.GetProperty("report").GetProperty("feedback").GetProperty("enjoyment").GetInt32());
+        Assert.AreEqual(0, payload.GetProperty("report").GetProperty("recentRuns").GetArrayLength());
+        Assert.AreEqual("wyrmforge.playtest.report.v1", payload.GetProperty("report").GetProperty("schema").GetString());
+        await ScreenshotAsync("mobile-collector-consent-success.png");
     }
 
     [TestMethod]
