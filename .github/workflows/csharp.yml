@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'src/**'
+      - 'services/playtest-collector/**'
       - 'tests/**'
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
@@ -29,8 +30,12 @@ jobs:
       - name: Restore
         run: dotnet restore Wyrmforge.slnx
 
-      - name: Check playtest JavaScript syntax
-        run: node --check src/Wyrmforge.Presentation.Web/wwwroot/js/playtest.js
+      - name: Check playtest and collector JavaScript
+        run: |
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/js/playtest.js
+          node --check services/playtest-collector/src/index.js
+          node --check services/playtest-collector/scripts/configure.mjs
+          node --test services/playtest-collector/test/*.test.mjs
 
       - name: Test playtest report analysis
         run: python3 -m unittest discover -s tools/playtesting -p 'test_*.py'

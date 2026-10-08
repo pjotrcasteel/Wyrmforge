@@ -2,7 +2,16 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.80 — Community playtesting and evidence
+## Prototype 0.0.81 — Private, consent-only feedback collector
+
+- A separately deployable Cloudflare Worker + D1 database accepts **only reports sent via the explicit in-game consent checkbox**, validates/sanitizes the `wyrmforge.playtest.report.v1` schema and saves them for up to 30 days.
+- Anonymous report intake uses exact-origin CORS, capped request bodies, an hourly HMAC rate limiter, no raw IP storage, idempotent report IDs and no analytics tracking SDK.
+- Owner-only admin endpoints aggregate feedback and allow private export/deletion. The administrator token is never shipped with the game.
+- The Send button appears only once `WYRMFORGE_FEEDBACK_ENDPOINT` is set for GitHub Pages. Share/download JSON remains usable at all times and on failure.
+- Deployment needs a Cloudflare account with a real D1 database and provisioned GitHub secrets. **Building this milestone does not automatically provision an external Cloudflare account or enable intake**. See [collector deployment guide](docs/playtesting/collector-deployment.md).
+- Shared C# gameplay and planned native iOS/Android adapters are unaffected.
+
+### 0.0.80 — Community playtesting and evidence
 
 Before another Wyrm chapter, WyrmForge now has a built-in, mobile-first playtest loop.
 
