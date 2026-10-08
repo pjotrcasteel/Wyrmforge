@@ -87,3 +87,93 @@
         min-height: 0;
     }
 }
+
+/* The evolution is a ceremony in the frozen arena, not an instant level-up menu. */
+.evo-ceremony {
+    --evo-accent: 194, 138, 255;
+    position: relative;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+    width: 100%;
+    min-height: calc(100dvh - 70px);
+    color: #f8f3ff;
+    text-align: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 45%, rgba(var(--evo-accent), .17), transparent 50%);
+}
+.school-fire { --evo-accent: 255, 116, 56; }
+.school-frost { --evo-accent: 120, 216, 255; }
+.school-storm { --evo-accent: 245, 211, 93; }
+.school-arcane { --evo-accent: 194, 138, 255; }
+.evo-ceremony::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background: repeating-conic-gradient(from 15deg at 50% 50%, transparent 0deg 31deg, rgba(var(--evo-accent), .10) 33deg 37deg, transparent 39deg 60deg);
+    animation: evo-spin 8s linear infinite;
+    opacity: .65;
+    pointer-events: none;
+}
+.evo-ceremony-content { position: relative; z-index: 1; width: min(650px, 94%); }
+.evo-overline { color: rgb(var(--evo-accent)); font-size: .8rem; font-weight: 950; letter-spacing: .3em; }
+.evo-ceremony h2 {
+    margin: .6rem 0 .25rem;
+    font-size: clamp(2rem, 7vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: .07em;
+    text-shadow: 0 0 32px rgba(var(--evo-accent), .45);
+}
+.evo-ceremony p { color: #ebe2f2; font-size: clamp(.9rem, 2vw, 1.2rem); font-weight: 850; letter-spacing: .22em; }
+.evo-ceremony-instruction { margin-top: 1.2rem; color: #a99db7; font-size: .65rem; font-weight: 850; letter-spacing: .16em; }
+.evo-transformation { position: relative; display: grid; place-items: center; height: min(40dvh, 330px); margin-top: 12px; }
+.evo-ring {
+    position: absolute;
+    width: min(37dvh, 300px);
+    aspect-ratio: 1;
+    border: 2px dashed rgba(var(--evo-accent), .75);
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(var(--evo-accent), .24), inset 0 0 25px rgba(var(--evo-accent), .17);
+    animation: evo-spin 5s linear infinite, evo-ring-build 1.4s ease-out both;
+}
+.evo-ring.inner { width: min(27dvh, 216px); border-style: solid; opacity: .65; animation-direction: reverse, normal; }
+.evo-original-icon { z-index: 2; font-size: clamp(4rem, 14vw, 7rem); animation: evo-icon-awaken 1.95s ease-in both; filter: drop-shadow(0 0 22px rgba(var(--evo-accent), .55)); }
+.evo-possible-forms { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: min(18vw, 150px); }
+.evo-possible-forms span { font-size: clamp(2.4rem, 9vw, 5rem); opacity: 0; animation: evo-branch-ghost 1.95s ease-in both; }
+.evo-possible-forms span:first-child { transform: translateX(40px) rotate(-15deg); }
+.evo-possible-forms span:last-child { transform: translateX(-40px) rotate(15deg); animation-delay: .04s; }
+.evo-skip {
+    position: absolute;
+    z-index: 2;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 999px;
+    background: rgba(20, 15, 28, .82);
+    color: #ded3e9;
+    cursor: pointer;
+    font-size: .75rem;
+}
+.evo-skip span { font-weight: 900; padding-left: 5px; }
+.evo-confirmation::before { animation-duration: 2s; }
+.evo-confirm-icon { margin: 1.5rem 0 .2rem; font-size: clamp(5rem, 17vw, 9rem); animation: evo-confirm-slam .6s cubic-bezier(.2,1.3,.35,1) both; filter: drop-shadow(0 0 36px rgba(var(--evo-accent), .8)); }
+.evo-confirmation h2 { animation: evo-confirm-slam .55s cubic-bezier(.2,1.3,.35,1) both; }
+.evolution-draft .level-up-card { animation: evo-choice-arrive .38s cubic-bezier(.2,.8,.2,1) both; }
+.evo-crossroads-warning { margin: 20px 0 0; color: #c8ab74; text-align: center; font-size: .65rem; font-weight: 900; letter-spacing: .13em; }
+@keyframes evo-spin { to { transform: rotate(360deg); } }
+@keyframes evo-ring-build { from { scale: .4; opacity: 0; } 55% { opacity: 1; } to { scale: 1.1; opacity: .85; } }
+@keyframes evo-icon-awaken { 0% { transform: scale(.55); opacity: 0; } 24% { transform: scale(1); opacity: 1; } 72% { transform: scale(1.14); opacity: 1; } 95% { transform: scale(1.55); filter: brightness(3); opacity: .6; } 100% { transform: scale(.1); opacity: 0; } }
+@keyframes evo-branch-ghost { 0%,55% { opacity: 0; } 76% { opacity: .25; } 88% { opacity: .85; } 100% { opacity: 0; transform: translateX(0) rotate(0); } }
+@keyframes evo-confirm-slam { from { transform: scale(1.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes evo-choice-arrive { from { opacity: 0; transform: translateY(20px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (max-width: 680px) {
+    .evo-ceremony { min-height: calc(100dvh - 50px); }
+    .evo-transformation { height: min(39dvh, 280px); }
+    .evo-ceremony-instruction { font-size: .57rem; }
+    .evo-crossroads-warning { font-size: .57rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .evo-ceremony::before, .evo-ring, .evo-original-icon, .evo-possible-forms span, .evo-confirm-icon, .evo-confirmation h2, .evolution-draft .level-up-card { animation: none !important; }
+    .evo-original-icon { opacity: 1; }
+}

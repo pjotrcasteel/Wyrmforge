@@ -30,11 +30,7 @@ public partial class ArenaView
 
     private void ShowChoiceMoment(LevelChoice choice)
     {
-        if (choice.Kind == LevelChoiceKind.Evolution)
-        {
-            ShowRunMoment(new RunMoment("SPELL EVOLVED", choice.Name, choice.Description, RunMomentTone.Legendary));
-            return;
-        }
+        if (choice.Kind == LevelChoiceKind.Evolution) return; // The evolution ceremony owns the confirmation beat.
 
         if (choice.Kind == LevelChoiceKind.Synergy)
         {
