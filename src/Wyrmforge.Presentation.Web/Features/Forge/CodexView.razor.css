@@ -22,3 +22,12 @@
 .combat-lab-link:hover { color: #b58ae8; }
 @media (max-width: 1050px) { .codex-grid,.codex-grid.compact { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 680px) { .codex-heading { align-items: stretch; flex-direction: column; padding: 20px; } .codex-count { width: fit-content; } .codex-grid,.codex-grid.compact { grid-template-columns: 1fr; } }
+
+.lineage-codex-guide { margin: 10px 0 3px; max-width: 720px; color: #aca0b6; font-size: .76rem; line-height: 1.5; }
+.lineage-codex-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.codex-card.unknown-lineage { border-color: #4b3a54; background: radial-gradient(ellipse at 0 0, rgba(132,90,170,.11),transparent 70%), #17131d; }
+.lineage-codex-progress { display: grid; gap: 5px; margin-top: 6px; }
+.lineage-codex-progress span { padding: 5px 7px; border: 1px solid #44364b; border-radius: 6px; color: #bbadc4; font-size: .65rem; }
+.lineage-codex-progress span.done { border-color: rgba(119,198,159,.54); color: #b5e9d0; background: rgba(68,128,98,.14); }
+.codex-card .lineage-reward { margin-top: 5px; color: #d4b488; }
+@media (max-width: 680px) { .lineage-codex-grid { grid-template-columns: 1fr; } }
