@@ -1,5 +1,7 @@
 using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Domain.Progression.GreatHunt;
+using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -24,7 +26,7 @@ public sealed partial class RunSimulation
         // A repeatable, evolved boss-ready spell; no Forge grants or saved progression.
         var spell = SpellCatalog.Get(setup.Spell);
         while (build.Spells[setup.Spell] < spell.MaxRank) build.Spells.LearnOrUpgrade(setup.Spell);
-        var evolution = SpellEvolutionCatalog.All.First(choice => choice.Spell == setup.Spell && !choice.RequiresUnlock);
+        var evolution = SpellEvolutionCatalog.All.First(choice => choice.Spell == setup.Spell && !choice.RequiresForgeUnlock && !choice.RequiresMasteryUnlock);
         build.Evolutions.Select(evolution.Id, build.Spells);
         RefreshBuildModifiers(true);
         RefreshBuildHud();
