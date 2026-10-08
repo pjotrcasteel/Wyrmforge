@@ -99,7 +99,7 @@
                     Clear Depth I normally; then survive shifting Crownfall gates. Victory permanently crowns your Forge.</p>
                 <small>@(Hunt.Get(DragonId.Ashfang).AscendantDefeated ? "✦ CROWN OF EMBERS EARNED • REPLAYABLE" : "◇ CROWN OF EMBERS AWAITS")</small>
             </div>
-            <button class="ascendant-rite-action @(AscendantSelected ? "selected" : string.Empty)" aria-pressed="@AscendantSelected" @onclick="ToggleAscendantAsync">
+            <button class="ascendant-rite-action @(AscendantSelected ? "selected" : string.Empty)" aria-pressed="@AscendantSelected.ToString().ToLowerInvariant()" @onclick="ToggleAscendantAsync">
                 @(AscendantSelected ? "✓ RITE INVOKED" : "INVOKE ASCENDANT RITE")
             </button>
         </section>
