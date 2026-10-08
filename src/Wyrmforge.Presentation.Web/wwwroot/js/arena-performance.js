@@ -95,7 +95,7 @@ async function invokeFrame(state, args) {
         state.latestSnapshot = snapshot;
         drawStatusOverlay(state, snapshot);
         updateCombatHud(state, snapshot);
-        if (now - state.lastPlaytestSample > 5000) {
+        if (!snapshot.paused && now - state.lastPlaytestSample > 5000) {
             const previousFrame = state.lastSampleFrame || now;
             window.wyrmforgePlaytest?.performanceSample(now - previousFrame, snapshot.simulationMilliseconds ?? 0);
             state.lastPlaytestSample = now;

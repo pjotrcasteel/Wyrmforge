@@ -19,3 +19,11 @@
 .playtest-footer button { min-height:40px;padding:9px 6px;border:0;background:none;color:#bda4d4;font-size:.69rem;text-decoration:underline;cursor:pointer; }
 .playtest-dialog :is(button,input,select,textarea):focus-visible { outline:2px solid #e3baff;outline-offset:3px; }
 @media(max-width:600px) { .playtest-dialog { border-radius:14px;padding:15px; }.playtest-heading h2 { font-size:1.55rem; } }
+
+/* Keep the primary action visible on short phones while the optional questions scroll independently. */
+.playtest-dialog { display:flex;flex-direction:column;max-height:100%;padding:0;overflow:hidden; }
+.playtest-scroll { min-height:0;flex:1 1 auto;overflow-y:auto;padding:15px clamp(15px,3vw,25px);overscroll-behavior:contain; }
+.playtest-action-footer { flex:0 0 auto;padding:11px clamp(15px,3vw,25px) 13px;border-top:1px solid #493551;background:#1c1524; }
+.playtest-action-footer .playtest-footer { margin-top:7px; }
+.playtest-action-footer .playtest-footer button { min-height:32px;font-size:.65rem; }
+@media(max-width:600px) { .playtest-dialog { padding:0; }.playtest-scroll { padding:15px; }.playtest-action-footer { padding:9px 15px; } }

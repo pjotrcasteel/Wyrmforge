@@ -4,6 +4,7 @@
 
 <div class="playtest-backdrop">
     <section class="playtest-dialog" role="dialog" aria-modal="true" aria-labelledby="playtest-title">
+        <div class="playtest-scroll">
         <header class="playtest-heading">
             <div><span class="playtest-kicker">COMMUNITY PLAYTEST • 0.0.80</span><h2 id="playtest-title">Help shape the Wyrmrealm</h2></div>
             <button class="playtest-close" aria-label="Close playtest feedback" @onclick="CloseAsync">✕</button>
@@ -45,7 +46,9 @@
             <input type="checkbox" @bind="includeRuns" />
             <span>Include my last 12 run summaries, seeds, gameplay milestones and sampled performance.</span>
         </label>
-        <p class="playtest-privacy">Only stored on this device until you choose to share. No names, email addresses, IP addresses or full device identifiers are recorded. You decide who receives the report.</p>
+        <p class="playtest-privacy">Report data stays on this device until you choose to share. No names, email addresses, IP addresses or full device identifiers appear in the report. You choose the recipient.</p>
+        </div>
+        <div class="playtest-action-footer">
         <button class="playtest-share" disabled="@sending" @onclick="ShareAsync">@(sending ? "PREPARING REPORT…" : "SHARE PLAYTEST REPORT")</button>
         @if (!string.IsNullOrEmpty(status))
         {
@@ -54,6 +57,7 @@
         <div class="playtest-footer">
             <button @onclick="ClearAsync">Erase my local playtest history</button>
             <button @onclick="CloseAsync">Back to game</button>
+        </div>
         </div>
     </section>
 </div>
