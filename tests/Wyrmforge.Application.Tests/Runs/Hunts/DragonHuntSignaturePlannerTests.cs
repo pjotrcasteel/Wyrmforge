@@ -83,6 +83,46 @@ public sealed class DragonHuntSignaturePlannerTests
         Assert.IsTrue(phaseTwo[2].DelaySeconds > phaseTwo[1].DelaySeconds);
     }
 
+    [TestMethod]
+    public void Create_Crownfall_LeavesChangingSafeGatesOnPortraitAndLandscape()
+    {
+        var signature = DragonHuntCatalog.AscendantAshfang.Signature;
+        Assert.AreEqual(DragonHuntSignatureKind.Crownfall, signature.Kind);
+
+        foreach (var (width, height, player) in new[]
+        {
+            (390d, 844d, new Vector2D(195, 410)),
+            (844d, 390d, new Vector2D(420, 195)),
+        })
+        {
+            var first = DragonHuntSignaturePlanner.Create(signature, 1, Dragon, player, width, height, new FirstRandomSource());
+            var second = DragonHuntSignaturePlanner.Create(signature, 2, Dragon, player, width, height, new FirstRandomSource());
+
+            Assert.AreEqual(6, first.Count);
+            Assert.AreEqual(9, second.Count);
+            Assert.IsTrue(second.All(strike => strike.Radius > 0));
+            Assert.IsTrue(second.All(strike => strike.Position.X >= 0 && strike.Position.X <= width
+                && strike.Position.Y >= 0 && strike.Position.Y <= height));
+            var waves = second.GroupBy(strike => strike.DelaySeconds).OrderBy(group => group.Key).ToArray();
+            Assert.AreEqual(3, waves.Length);
+            Assert.IsTrue(waves.All(wave => wave.Count() == 3));
+            Assert.IsTrue(waves.All(wave => wave.Select(strike => width <= height ? strike.Position.X : strike.Position.Y).Distinct().Count() == 3));
+            Assert.IsFalse(waves[0].Select(strike => strike.Position).SequenceEqual(waves[1].Select(strike => strike.Position)));
+            Assert.IsTrue(waves[1].Key >= 1d);
+        }
+    }
+
+    [TestMethod]
+    public void AscendantAshfangRule_FreshRite_OnlyForcesFirstDepthTwoAshfang()
+    {
+        Assert.IsFalse(AscendantAshfangRule.ShouldForceAshfang(false, false, 2));
+        Assert.IsFalse(AscendantAshfangRule.ShouldForceAshfang(true, false, 1));
+        Assert.IsTrue(AscendantAshfangRule.ShouldForceAshfang(true, false, 2));
+        Assert.IsFalse(AscendantAshfangRule.ShouldForceAshfang(true, true, 3));
+        Assert.IsFalse(AscendantAshfangRule.IsEncounter(true, false, 2, Wyrmforge.Domain.Combat.Dragons.DragonId.Stormcoil));
+        Assert.IsTrue(AscendantAshfangRule.IsEncounter(true, false, 2, Wyrmforge.Domain.Combat.Dragons.DragonId.Ashfang));
+    }
+
     private static bool IsInsideArena(Vector2D position, double radius) =>
         position.X >= radius && position.X <= Width - radius && position.Y >= radius && position.Y <= Height - radius;
 }

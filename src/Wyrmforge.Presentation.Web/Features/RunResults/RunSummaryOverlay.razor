@@ -51,6 +51,17 @@
             </section>
         }
 
+        @if (NewAscendantVictories.Count > 0)
+        {
+            <section class="run-ascendant-victory" aria-label="Ascendant Wyrm conquered">
+                <span>✦ ASCENDANT CONQUERED ✦</span>
+                <div aria-hidden="true">♛</div>
+                <h3>The Crown of Embers</h3>
+                <p>You endured Crownfall and brought down Ascendant Ashfang. Your permanent Crown now shines in the Great Hunt altar.</p>
+                <strong>NEW TROPHY • ASCENDANT ASHFANG REMAINS REPLAYABLE</strong>
+            </section>
+        }
+
         @if (NewSeals.Count > 0)
         {
             <section class="run-great-hunt-seal" aria-label="Great Hunt oath sealed">
@@ -198,6 +209,7 @@
     [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public IReadOnlyList<DragonId> AdvancedOaths { get; set; } = [];
     [Parameter] public IReadOnlyList<DragonId> NewSeals { get; set; } = [];
+    [Parameter] public IReadOnlyList<DragonId> NewAscendantVictories { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellEvolutionId> NewLineages { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellId> AdvancedSpells { get; set; } = [];
     [Parameter] public EventCallback OnReplay { get; set; }

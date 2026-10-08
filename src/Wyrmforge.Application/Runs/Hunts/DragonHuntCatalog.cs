@@ -101,6 +101,29 @@ public static class DragonHuntCatalog
             SpellId.ArcaneOrb),
         "THE RIFT ANSWERS");
 
+    // The first post-oath encounter: distinct crownfall lanes, a longer omen and a stronger second act.
+    public static DragonHuntProfile AscendantAshfang { get; } = Ashfang with
+    {
+        Entrance = Ashfang.Entrance with { OmenSeconds = 1.0, TravelSeconds = 1.15, RevealSeconds = 1.6 },
+        PhaseBreakSeconds = 1.7,
+        Pressure = Ashfang.Pressure with
+        {
+            Cadence = new DragonHuntPressureCadence(new DragonPhaseValues(5.1, 3.8), new DragonPhaseValues(0.95, 0.75)),
+        },
+        Signature = Ashfang.Signature with
+        {
+            Kind = DragonHuntSignatureKind.Crownfall,
+            Name = "Crownfall",
+            IntervalSeconds = new DragonPhaseValues(10, 7.8),
+            TelegraphSeconds = new DragonPhaseValues(1.1, 0.95),
+            Radius = new DragonPhaseValues(40, 46),
+            Damage = new DragonPhaseValues(26, 34),
+            PhaseOneStrikes = 6,
+            PhaseTwoStrikes = 9,
+        },
+        PhaseTwoCallout = "THE CROWN DIVIDES THE SKY",
+    };
+
     public static IReadOnlyList<DragonHuntProfile> All { get; } = [Ashfang, Stormcoil, Rimeclaw, Voidweaver];
 
     public static DragonHuntProfile Get(DragonId id) => All.Single(profile => profile.Dragon == id);

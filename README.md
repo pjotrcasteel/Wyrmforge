@@ -2,7 +2,19 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
-## Prototype 0.0.78 — Mobile combat HUD and post-run clarity
+## Prototype 0.0.79 — The First Ascendant: Crown of Embers
+
+The first playable Great Hunt rite begins after the Oath of the First Flame is sealed. The Run Hub exposes an opt-in Ascendant Ashfang encounter; regular hunts and early progression remain unchanged.
+
+- Invoke the rite in the Run Hub to guarantee **Ascendant Ashfang at the Depth II Wyrm encounter**. The Depth I fight remains ordinary, so building/evolving a spell and reaching the second depth are part of the challenge.
+- Crownfall is a distinct signature: sequential rows of warning circles leave one shifting safe lane; the second phase adds a third wave. Distinct gold telegraphs, crowned Wyrm silhouette, longer entrance and phase-break presentation communicate the upgrade.
+- Victory earns the **permanent Crown of Embers trophy** in the Great Hunt altar. It saves within the existing v1 Great Hunt record as an optional field, with no new currency or power inflation. The rite remains replayable.
+- Existing Ashfang Essence and Spell Mastery systems continue to work. Defeats are captured in the run summary at kill time and credited once, with abandoned runs excluded from persistent progress.
+- Normal runs do not opt into the challenge and retain their original seeded combat behavior. Portrait and landscape Crownfall safe-lane tests and a mobile unlocked-rite browser check protect accessibility.
+
+The three remaining Ascendant encounters and Elder Wyrms are intentionally not misrepresented as implemented. Build Evolution remains expandable.
+
+### 0.0.78 — Mobile combat HUD and post-run clarity
 
 - The score, health, experience and spells now share one responsive HUD surface alongside the current trail objective. Encounter progress stays live; there are no overlapping floating blocks.
 - The Exit text button becomes an accessible running/retreat icon with a 44px mobile touch target. The action still abandons the run.

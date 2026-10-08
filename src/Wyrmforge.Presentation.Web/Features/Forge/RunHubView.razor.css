@@ -40,3 +40,13 @@
 .offering-display small { color: #8c8195; line-height: 1.35; }
 @media (max-width: 860px) { .run-hero { grid-template-columns: 1fr; min-height: 0; } .realm-placeholder { order: -1; min-height: 230px; border-bottom: 1px solid #282031; } .run-hero-copy { padding: 28px; } .run-dashboard { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .run-hub { gap: 12px; } .run-hero { border-radius: 18px; } .realm-placeholder { min-height: 180px; } .ring-outer { width: 145px; } .ring-middle { width: 108px; } .ring-inner { width: 72px; } .realm-mark { width: 48px; font-size: 1.35rem; } .run-hero-copy { padding: 22px 18px 20px; } .run-hero h1 { font-size: 2.45rem; } .run-status-row { margin-top: 18px; } .enter-realm { width: 100%; min-width: 0; margin-top: 20px; } .loadout-card { padding: 17px; border-radius: 16px; } }
+
+.ascendant-rite-card { display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;padding:20px;border:1px solid rgba(238,172,92,.42);border-radius:19px;background:radial-gradient(ellipse at 0% 50%,rgba(231,145,59,.16),transparent 55%),linear-gradient(145deg,#241b20,#130f19); }
+.ascendant-rite-sigil { display:grid;place-items:center;width:64px;height:64px;border:1px solid #bb8b52;border-radius:18px;color:#f4c98f;background:rgba(219,144,58,.09);font:600 2.6rem Georgia,serif;box-shadow:0 0 35px rgba(221,133,40,.12); }
+.ascendant-rite-card h2 { margin:4px 0 6px;font:600 1.35rem Georgia,serif;color:#f4dec1; }
+.ascendant-rite-card p { margin:0;color:#bda9ad;font-size:.75rem;line-height:1.55; }
+.ascendant-rite-card small { display:block;margin-top:10px;color:#e1ba80;font-size:.62rem;font-weight:850;letter-spacing:.06em; }
+.ascendant-rite-action { min-height:46px;max-width:210px;padding:11px 14px;border:1px solid #d5a56d;border-radius:12px;background:linear-gradient(125deg,#e3b475,#b67b54);color:#22141a;font-size:.66rem;font-weight:950;letter-spacing:.07em;cursor:pointer;touch-action:manipulation; }
+.ascendant-rite-action.selected { color:#fbe2b5;background:#503d2e;box-shadow:0 0 25px rgba(243,164,87,.17); }
+.ascendant-rite-action:focus-visible { outline:2px solid #ffd49b;outline-offset:3px; }
+@media(max-width:750px) { .ascendant-rite-card {grid-template-columns:auto minmax(0,1fr);gap:12px;padding:15px;}.ascendant-rite-sigil {width:46px;height:46px;font-size:1.8rem;}.ascendant-rite-action {grid-column:1/-1;width:100%;max-width:none;} }

@@ -259,6 +259,26 @@ function drawHuntArena(ctx, hunt, width, height) {
     else if (hunt.arena === 2) drawStormField(ctx, width, height, palette);
     else if (hunt.arena === 3) drawFrozenBasin(ctx, width, height, palette);
     else if (hunt.arena === 4) drawAetherFracture(ctx, width, height, palette);
+
+    if (hunt.isAscendant) {
+        ctx.save();
+        const breadth = Math.min(width, height);
+        ctx.strokeStyle = 'rgba(246, 190, 100, .24)';
+        ctx.lineWidth = 2;
+        for (let side = -1; side <= 1; side += 2) {
+            ctx.beginPath();
+            ctx.moveTo(width / 2 + side * breadth * .32, height * .12);
+            ctx.lineTo(width / 2 + side * breadth * .43, height * .28);
+            ctx.lineTo(width / 2 + side * breadth * .37, height * .5);
+            ctx.stroke();
+        }
+        ctx.strokeStyle = 'rgba(255, 208, 119, .17)';
+        ctx.setLineDash([10, 12]);
+        ctx.beginPath();
+        ctx.ellipse(width / 2, height * .56, breadth * .45, breadth * .35, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
 }
 
 function drawCinderScar(ctx, width, height, palette) {
@@ -335,9 +355,29 @@ function drawHuntHazard(ctx, hazard) {
     else if (hazard.signature === 2) drawTempestCageTelegraph(ctx, radius, progress, alpha, palette);
     else if (hazard.signature === 3) drawGlacialWallTelegraph(ctx, radius, progress, alpha, palette);
     else if (hazard.signature === 4) drawRiftEchoTelegraph(ctx, radius, progress, alpha, palette);
+    else if (hazard.signature === 5) drawCrownfallTelegraph(ctx, radius, progress, alpha);
     else drawGenericHuntTelegraph(ctx, radius, progress, alpha, palette);
 
     ctx.restore();
+}
+
+function drawCrownfallTelegraph(ctx, radius, progress, alpha) {
+    ctx.fillStyle = `rgba(255, 158, 73, ${.07 * alpha})`;
+    ctx.strokeStyle = `rgba(255, 199, 106, ${alpha})`;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    for (let index = -1; index <= 1; index++) {
+        const offset = index * radius * .48;
+        drawTriangle(ctx, offset - radius * .19, radius * .32, offset, -radius * (.5 + progress * .13), offset + radius * .19, radius * .32);
+        ctx.stroke();
+    }
+    ctx.strokeStyle = `rgba(255, 229, 165, ${alpha * .9})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * (1 - progress * .65), 0, Math.PI * 2);
+    ctx.stroke();
 }
 
 function drawGenericHuntTelegraph(ctx, radius, progress, alpha, palette) {
@@ -424,7 +464,7 @@ function drawHuntStageBanner(ctx, hunt, dragon, width, height) {
     ctx.textAlign = 'center';
     ctx.fillStyle = `rgba(${palette.lightRgb}, ${0.95 * fade})`;
     ctx.font = '900 12px system-ui, sans-serif';
-    ctx.fillText('PHASE BREAK', width / 2, height * 0.47);
+    ctx.fillText(hunt.isAscendant ? 'ASCENDANT UNBOUND' : 'PHASE BREAK', width / 2, height * 0.47);
     ctx.fillStyle = `rgba(244, 238, 248, ${0.95 * fade})`;
     ctx.font = '900 21px system-ui, sans-serif';
     ctx.fillText(hunt.phaseTwoCallout ?? 'THE WYRM UNLEASHES ITS TRUE POWER', width / 2, height * 0.52);
@@ -455,7 +495,7 @@ function drawWyrmEntranceSequence(ctx, hunt, dragon, width, height) {
         ctx.textAlign = 'center';
         ctx.fillStyle = `rgba(225, 216, 232, ${0.5 + progress * 0.44})`;
         ctx.font = '900 11px system-ui, sans-serif';
-        ctx.fillText('THE WYRMREALM TREMBLES', width / 2, height * 0.56);
+        ctx.fillText(hunt.isAscendant ? 'THE FIRST CROWN AWAKENS' : 'THE WYRMREALM TREMBLES', width / 2, height * 0.56);
         ctx.restore();
         return;
     }
@@ -837,10 +877,30 @@ function drawDragon(ctx, dragon) {
         ctx.stroke();
     }
 
+    if (dragon.isAscendant) {
+        ctx.strokeStyle = 'rgba(255, 208, 123, .75)';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = 'rgba(255, 174, 65, .65)';
+        ctx.shadowBlur = 17;
+        ctx.beginPath();
+        ctx.arc(0, 0, dragon.radius * 1.65, -Math.PI * .84, -Math.PI * .16);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+
     if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
     else if (dragon.school === 1) drawFireWyrm(ctx, dragon, palette);
     else if (dragon.school === 2) drawFrostWyrm(ctx, dragon, palette);
     else drawStormWyrm(ctx, dragon, palette);
+
+    if (dragon.isAscendant) {
+        ctx.fillStyle = '#ffe3a2';
+        const peak = dragon.radius * 1.35;
+        for (let index = -1; index <= 1; index++) {
+            const x = index * dragon.radius * .38;
+            drawTriangle(ctx, x - 7, -peak + 6, x, -peak - (index === 0 ? 22 : 10), x + 7, -peak + 6);
+        }
+    }
 
     ctx.restore();
 }
@@ -949,8 +1009,8 @@ function drawBossBar(ctx, dragon, hunt, width) {
     ctx.fillStyle = 'rgba(8, 6, 12, 0.74)';
     roundRect(ctx, x, y, outerWidth, 36, 10);
     ctx.fill();
-    ctx.strokeStyle = `rgba(${palette.rgb}, 0.28)`;
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = dragon.isAscendant ? 'rgba(255, 206, 133, .8)' : `rgba(${palette.rgb}, 0.28)`;
+    ctx.lineWidth = dragon.isAscendant ? 2 : 1;
     ctx.stroke();
 
     ctx.fillStyle = palette.text;

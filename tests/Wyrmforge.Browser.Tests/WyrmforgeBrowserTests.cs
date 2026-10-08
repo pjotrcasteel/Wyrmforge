@@ -197,6 +197,29 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_AscendantRite_SealedOathCanBeInvokedBeforeStartingRun()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.greatHunt.v1',
+            JSON.stringify([{Wyrm:0,Slain:true,EssenceSecured:true,DeepEvolvedDuel:true,AscendantDefeated:false}]));
+            localStorage.setItem('wyrmforge.spellMastery.v1',
+            JSON.stringify([{Spell:1,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true}]));");
+
+        await OpenAsync();
+        var rite = Page.GetByRole(AriaRole.Button, new() { Name = "INVOKE ASCENDANT RITE" });
+        await Expect(rite).ToBeVisibleAsync();
+        await rite.ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "✓ RITE INVOKED" })).ToHaveAttributeAsync("aria-pressed", "true");
+        await ScreenshotAsync("mobile-ascendant-rite-ready.png");
+        var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth");
+        Assert.IsLessThanOrEqualTo(1, overflow, "Ascendant rite should not overflow portrait width.");
+
+        await EnterFirstTrailAsync();
+        await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     public async Task Desktop_FirstTrail_RendersActiveCombat()
     {
         Directory.CreateDirectory(ArtifactDirectory);

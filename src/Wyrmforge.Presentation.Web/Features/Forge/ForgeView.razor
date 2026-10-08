@@ -33,7 +33,7 @@
             @switch (section)
             {
                 case ShellSection.Run:
-                    <RunHubView Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
+                    <RunHubView Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" />
                     break;
                 case ShellSection.Build:
                     <BuildView Selection="Selection" />
@@ -67,6 +67,8 @@
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
     [Parameter] public GreatHuntState Hunt { get; set; } = new();
     [Parameter] public DragonEssenceId? SelectedOffering { get; set; }
+    [Parameter] public bool AscendantSelected { get; set; }
+    [Parameter] public EventCallback<bool> OnAscendantChanged { get; set; }
     [Parameter] public int BestScore { get; set; }
     [Parameter] public EventCallback<DragonEssenceId> OnOfferingChanged { get; set; }
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }

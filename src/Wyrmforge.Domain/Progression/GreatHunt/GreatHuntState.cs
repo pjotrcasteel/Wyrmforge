@@ -7,11 +7,15 @@ namespace Wyrmforge.Domain.Progression.GreatHunt;
 
 public sealed record GreatHuntEntry(DragonId Wyrm, bool Slain, bool EssenceSecured, bool DeepEvolvedDuel)
 {
+    public bool AscendantDefeated { get; init; }
     public int Feats => (Slain ? 1 : 0) + (EssenceSecured ? 1 : 0) + (DeepEvolvedDuel ? 1 : 0);
 }
 
 public sealed record GreatHuntRunEvidence(int CompletedRoutes, bool Abandoned, IReadOnlySet<DragonId> DefeatedWyrms,
-    IReadOnlySet<DragonId> DeepEvolvedDuels, IReadOnlyList<DragonEssenceId> SecuredEssences);
+    IReadOnlySet<DragonId> DeepEvolvedDuels, IReadOnlyList<DragonEssenceId> SecuredEssences)
+{
+    public IReadOnlySet<DragonId> AscendantVictories { get; init; } = new HashSet<DragonId>();
+}
 
 public sealed class GreatHuntState
 {
@@ -48,6 +52,7 @@ public sealed class GreatHuntState
                 Slain = current.Slain || slain,
                 EssenceSecured = current.EssenceSecured || essence,
                 DeepEvolvedDuel = current.DeepEvolvedDuel || duel,
+                AscendantDefeated = current.AscendantDefeated || (oath.Wyrm == DragonId.Ashfang && evidence.AscendantVictories.Contains(oath.Wyrm)),
             };
             if (updated == current) continue;
             entries[oath.Wyrm] = updated;

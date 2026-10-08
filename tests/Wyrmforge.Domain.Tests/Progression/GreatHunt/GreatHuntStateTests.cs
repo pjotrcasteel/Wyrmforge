@@ -120,7 +120,37 @@ public sealed class GreatHuntStateTests
         for (var run = 0; run < 4; run++) mastery.RecordRun(new MasteryRunEvidence(1, 2, false,
             new HashSet<SpellId> { SpellId.FireBolt }, [new MasteryRunSpell(SpellId.FireBolt, 3)]));
 
+        var ascendant = GreatHuntGoalPlanner.Next(state, mastery, 4).Single(goal => goal.Wyrm == DragonId.Ashfang);
+        Assert.AreEqual("Ascendant Ashfang", ascendant.Title);
+        Assert.AreEqual(0, ascendant.Progress);
+        state.RecordRun(Evidence(DragonId.Ashfang) with { AscendantVictories = new HashSet<DragonId> { DragonId.Ashfang } });
         Assert.IsFalse(GreatHuntGoalPlanner.Next(state, mastery, 4).Any(goal => goal.Wyrm == DragonId.Ashfang));
+    }
+
+    [TestMethod]
+    public void RecordRun_AscendantDefeat_WinsPermanentTrophyAndSurvivesRestore()
+    {
+        var state = new GreatHuntState();
+        var defeated = Evidence(DragonId.Ashfang) with { AscendantVictories = new HashSet<DragonId> { DragonId.Ashfang } };
+        Assert.AreEqual(0, state.RecordRun(defeated with { Abandoned = true }).Count);
+        Assert.IsFalse(state.Get(DragonId.Ashfang).AscendantDefeated);
+
+        Assert.AreEqual(1, state.RecordRun(defeated).Count);
+        Assert.IsTrue(state.Get(DragonId.Ashfang).AscendantDefeated);
+        Assert.AreEqual(0, state.RecordRun(defeated).Count);
+
+        var restored = new GreatHuntState();
+        restored.Restore(state.Snapshot());
+        Assert.IsTrue(restored.Get(DragonId.Ashfang).AscendantDefeated);
+        Assert.AreEqual(1, restored.Get(DragonId.Ashfang).Feats);
+    }
+
+    [TestMethod]
+    public void Restore_PreAscendantSavedEntry_DefaultsToNoAscendantVictory()
+    {
+        var state = new GreatHuntState();
+        state.Restore([new GreatHuntEntry(DragonId.Ashfang, true, true, true)]);
+        Assert.IsFalse(state.Get(DragonId.Ashfang).AscendantDefeated);
     }
 
     private static GreatHuntRunEvidence Evidence(DragonId wyrm) => new(1, false,

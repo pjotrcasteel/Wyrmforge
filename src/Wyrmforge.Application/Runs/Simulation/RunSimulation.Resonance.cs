@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Runs.RealmInfluence;
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Domain.Combat.Dragons;
 
@@ -35,6 +36,11 @@ public sealed partial class RunSimulation
     private void ResolveDragonAttraction()
     {
         if (attractedDragon is not null) return;
+        if (AscendantAshfangRule.ShouldForceAshfang(ascendantChallengeEnabled, ascendantHuntConsumed, depthState.Depth))
+        {
+            attractedDragon = DragonId.Ashfang;
+            return;
+        }
         attractedDragon = dragonAttractionState.Roll(Resonance, randomSource, defeatedDragonIds);
     }
 }

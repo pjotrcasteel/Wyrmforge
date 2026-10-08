@@ -12,6 +12,7 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.SpellMastery;
 
@@ -32,6 +33,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public SpellMasteryState? Masteries { get; set; }
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
     [Parameter] public int? RunSeed { get; set; }
+    [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
@@ -75,7 +77,7 @@ public partial class ArenaView : IAsyncDisposable
     private int CurrentLevel => simulation?.Level ?? 1;
     private int PendingEssenceCount => Math.Max(0, CurrentEssences.Count - SecuredEssenceCount);
 
-    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries);
+    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

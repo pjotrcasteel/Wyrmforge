@@ -24,6 +24,7 @@ public sealed record RunSummary(
     public int RareRouteNodes { get; init; }
     public IReadOnlyList<SynergyId> SynergyIds { get; init; } = Array.Empty<SynergyId>();
     public IReadOnlyList<DragonId> DragonIds { get; init; } = Array.Empty<DragonId>();
+    public IReadOnlyList<DragonId> AscendantDragonIds { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<SpellId> WyrmMasteryFeats { get; init; } = Array.Empty<SpellId>();
     public IReadOnlyList<DragonId> DeepEvolvedWyrmDuels { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<RunSpellSummary> SpellLoadout { get; init; } = Array.Empty<RunSpellSummary>();
