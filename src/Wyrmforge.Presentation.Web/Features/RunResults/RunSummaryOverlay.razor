@@ -13,28 +13,24 @@
 
 <div class="game-over run-overlay">
     <div class="game-over-card run-report-card run-overlay-surface">
-        <div class="eyebrow">@OutcomeLabel • RUN SEED @Summary.Seed</div>
-        <h2>@Summary.Score.ToString("N0") score</h2>
-        <p>@OutcomeMessage</p>
+        <header class="run-report-hero">
+            <span class="eyebrow">@OutcomeLabel</span>
+            <h2>@Summary.Score.ToString("N0") <small>score</small></h2>
+            <p>@OutcomeMessage</p>
+        </header>
 
         <div class="run-report-grid">
             <section>
-                <span>BUILD DNA</span>
+                <span>YOUR BUILD</span>
                 <strong>@BuildIdentity</strong>
                 <small>@ResonanceSummary</small>
             </section>
             <section>
                 <span>JOURNEY</span>
                 <strong>Depth @Summary.Depth • Level @Summary.Level</strong>
-                <small>@Summary.CompletedRouteNodes routes • @Summary.RareRouteNodes rare • @Summary.Kills kills • @Summary.Seconds s</small>
+                <small>@Summary.CompletedRouteNodes trails • @Summary.Kills kills • @Summary.Seconds s</small>
             </section>
         </div>
-
-        <section class="run-story">
-            <span>RUN STORY</span>
-            <strong>@RunStory</strong>
-            <small>@RunStoryDetail</small>
-        </section>
 
         @if (AdvancedSpells.Count > 0)
         {
@@ -48,14 +44,69 @@
                         var spell = SpellCatalog.Get(id);
                         <div class="run-mastery-entry">
                             <strong>@spell.Icon @spell.Name</strong>
-                            <small>@Math.Min(state.MeaningfulRuns, definition.RequiredRuns) / @definition.RequiredRuns meaningful hunts</small>
-                            <small>@(state.WyrmFeat ? "✓ Wyrm feat complete" : "◇ Wyrm feat still to earn")</small>
+                            <small>@Math.Min(state.MeaningfulRuns, definition.RequiredRuns) / @definition.RequiredRuns hunts • @(state.WyrmFeat ? "Wyrm feat ✓" : "Wyrm feat pending")</small>
                         </div>
                     }
                 </div>
             </section>
         }
 
+        @if (NewSeals.Count > 0)
+        {
+            <section class="run-great-hunt-seal" aria-label="Great Hunt oath sealed">
+                <span>✦ THE GREAT HUNT REMEMBERS ✦</span>
+                @foreach (var wyrm in NewSeals)
+                {
+                    var oath = GreatHuntCatalog.Get(wyrm);
+                    <div class="run-great-hunt-rune" aria-hidden="true">@oath.Rune</div>
+                    <h3>@oath.Name</h3>
+                    <p>All four deeds completed. Your permanent Great Hunt seal now burns in the Forge and Codex.</p>
+                }
+                <strong>ASCENDANT PATH PREPARED • NEW ENCOUNTER IN A FUTURE CHAPTER</strong>
+            </section>
+        }
+        @if (AdvancedOaths.Count > 0)
+        {
+            <section class="run-great-hunt-progress" aria-label="Great Hunt progress">
+                <span>◆ GREAT HUNT OATHS ADVANCED</span>
+                <div class="run-great-hunt-entries">
+                    @foreach (var wyrm in AdvancedOaths)
+                    {
+                        var oath = GreatHuntCatalog.Get(wyrm);
+                        var entry = Hunt.Get(wyrm);
+                        <div><strong>@oath.Rune @oath.Name</strong><small>@(entry.Feats + (Masteries.Get(oath.LineageSpell).Unlocked ? 1 : 0)) / 4 deeds complete</small></div>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (NewLineages.Count > 0)
+        {
+            <section class="run-lineage-reveal" aria-label="Wyrmforged lineage discovered">
+                <span>✦ AN ANCIENT LINEAGE HAS AWAKENED ✦</span>
+                @foreach (var evolutionId in NewLineages)
+                {
+                    var evolution = SpellEvolutionCatalog.Get(evolutionId);
+                    <h3>@evolution.Icon @evolution.Name</h3>
+                    <p>@evolution.Description</p>
+                }
+                <strong>NEW EVOLUTION AVAILABLE IN FUTURE HUNTS</strong>
+            </section>
+        }
+
+        <div class="run-report-actions">
+            <button class="secondary" @onclick="ReplayAsync">↻ Replay seed</button>
+            <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
+        </div>
+
+        <details class="run-report-details">
+            <summary><span>BUILD, LOOT &amp; RUN DETAILS</span><span aria-hidden="true">⌄</span></summary>
+            <div class="run-report-expanded">
+                <section class="run-story">
+                    <span>RUN STORY</span>
+                    <strong>@RunStory</strong>
+                    <small>@RunStoryDetail</small>
+                </section>
         <div class="run-report-section">
             <span>SPELLS</span>
             <div class="run-report-chips">
@@ -128,55 +179,14 @@
             </div>
         }
 
-        @if (NewSeals.Count > 0)
-        {
-            <section class="run-great-hunt-seal" aria-label="Great Hunt oath sealed">
-                <span>✦ THE GREAT HUNT REMEMBERS ✦</span>
-                @foreach (var wyrm in NewSeals)
-                {
-                    var oath = GreatHuntCatalog.Get(wyrm);
-                    <div class="run-great-hunt-rune" aria-hidden="true">@oath.Rune</div>
-                    <h3>@oath.Name</h3>
-                    <p>All four deeds completed. Your permanent Great Hunt seal now burns in the Forge and Codex.</p>
-                }
-                <strong>ASCENDANT PATH PREPARED • NEW ENCOUNTER IN A FUTURE CHAPTER</strong>
-            </section>
-        }
-        @if (AdvancedOaths.Count > 0)
-        {
-            <section class="run-great-hunt-progress" aria-label="Great Hunt progress">
-                <span>◆ GREAT HUNT OATHS ADVANCED</span>
-                <div class="run-great-hunt-entries">
-                    @foreach (var wyrm in AdvancedOaths)
-                    {
-                        var oath = GreatHuntCatalog.Get(wyrm);
-                        var entry = Hunt.Get(wyrm);
-                        <div><strong>@oath.Rune @oath.Name</strong><small>@(entry.Feats + (Masteries.Get(oath.LineageSpell).Unlocked ? 1 : 0)) / 4 deeds complete</small></div>
-                    }
-                </div>
-            </section>
-        }
 
-        @if (NewLineages.Count > 0)
-        {
-            <section class="run-lineage-reveal" aria-label="Wyrmforged lineage discovered">
-                <span>✦ AN ANCIENT LINEAGE HAS AWAKENED ✦</span>
-                @foreach (var evolutionId in NewLineages)
-                {
-                    var evolution = SpellEvolutionCatalog.Get(evolutionId);
-                    <h3>@evolution.Icon @evolution.Name</h3>
-                    <p>@evolution.Description</p>
-                }
-                <strong>NEW EVOLUTION AVAILABLE IN FUTURE HUNTS</strong>
-            </section>
-        }
-        <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" Compact="true" />
-
-        <p class="run-report-meta">@Summary.Choices build choices • @Summary.DragonEssences secured Essence • seed @Summary.Seed</p>
-        <div class="run-report-actions">
-            <button class="secondary" @onclick="ReplayAsync">Replay same seed</button>
-            <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
-        </div>
+                <p class="run-report-meta">@Summary.Choices build choices • @Summary.RareRouteNodes rare trails • @Summary.DragonEssences secured Essence • seed @Summary.Seed</p>
+            </div>
+        </details>
+        <details class="run-report-next">
+            <summary><span>YOUR NEXT THREE PURSUITS</span><span aria-hidden="true">⌄</span></summary>
+            <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" Compact="true" />
+        </details>
     </div>
 </div>
 

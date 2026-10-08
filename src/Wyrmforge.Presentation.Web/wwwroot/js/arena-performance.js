@@ -26,6 +26,8 @@ export function initializeArena(canvas, dotNetReference) {
         pendingTimer: 0,
         pendingResolve: null,
         statusCanvas: createStatusCanvas(),
+        combatHud: getCombatHud(canvas),
+        lastHudUpdate: 0,
     };
     state.onViewportChanged = () => {
         state.canvasRect = state.originalGetBoundingClientRect();
@@ -90,6 +92,7 @@ async function invokeFrame(state, args) {
     if (state.active) {
         state.latestSnapshot = snapshot;
         drawStatusOverlay(state, snapshot);
+        updateCombatHud(state, snapshot);
     }
     return snapshot;
 }
@@ -166,4 +169,31 @@ function drawStatusBadges(ctx, x, y, radius, statuses, large) {
         ctx.fillText(String(status.stacks), countX, countY + 0.25);
     }
     ctx.restore();
+}
+
+function getCombatHud(canvas) {
+    const root = canvas.closest('.game-screen')?.querySelector('.combat-vitals');
+    if (!root) return null;
+    const get = key => root.querySelector(`[data-hud="${key}"]`);
+    return { score:get('score'),time:get('time'),kills:get('kills'),health:get('health'),
+        level:get('level'),spells:get('spells'),healthFill:get('health-fill'),xpFill:get('xp-fill') };
+}
+
+function updateCombatHud(state, snapshot) {
+    if (!state.combatHud || !snapshot?.hud) return;
+    const now = performance.now();
+    if (now - state.lastHudUpdate < 90) return;
+    state.lastHudUpdate = now;
+    const hud = snapshot.hud;
+    const dom = state.combatHud;
+    const updateText = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
+    updateText(dom.score, `SCORE ${hud.score}`);
+    updateText(dom.time, `${hud.seconds}s`);
+    updateText(dom.kills, `${hud.kills} KILLS`);
+    updateText(dom.health, `HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
+    updateText(dom.level, `LV ${hud.level}`);
+    const roman = rank => ['0','I','II','III','IV','V'][rank] ?? String(rank);
+    updateText(dom.spells, hud.spells.map(spell => `${spell.evolutionIcon ?? spell.icon}${roman(spell.rank)}`).join('  '));
+    if (dom.healthFill) dom.healthFill.style.width = `${Math.max(0, Math.min(100, hud.health / Math.max(1, hud.maxHealth) * 100))}%`;
+    if (dom.xpFill) dom.xpFill.style.width = `${Math.max(0, Math.min(100, hud.experience / Math.max(1, hud.experienceToNext) * 100))}%`;
 }
