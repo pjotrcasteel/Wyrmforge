@@ -584,6 +584,42 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
     }
 
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_UpgradeConfirmation_FitsBelowHudAndCannotInterceptTouches(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        // Isolate the shipped scoped presentation from combat RNG; readout correctness is covered separately.
+        await Page.EvaluateAsync(@"() => {
+            const rules = [...document.styleSheets].flatMap(sheet => { try { return [...sheet.cssRules]; } catch { return []; } });
+            const rule = rules.find(rule => rule.selectorText?.includes('.run-moment.upgrade-moment'));
+            const scope = rule.selectorText.match(/\[(b-[^\]]+)\]/)[1];
+            const moment = document.createElement('div');
+            moment.className = 'run-moment upgrade-moment tone-standard';
+            moment.innerHTML = '<strong>◈ Arcane Orb</strong><small>Pierce +1 • 18 → 23 damage • 0.65 → 0.61s</small>';
+            for (const element of [moment, ...moment.children]) element.setAttribute(scope, '');
+            document.querySelector('main.game-screen').appendChild(moment);
+        }");
+        var moment = Page.Locator(".upgrade-moment").Last;
+        await Expect(moment).ToBeVisibleAsync();
+        await Expect(moment).ToHaveCSSAsync("pointer-events", "none");
+        var box = await moment.BoundingBoxAsync();
+        var hud = await Page.Locator(".arena-top-hud").BoundingBoxAsync();
+        Assert.IsNotNull(box);
+        Assert.IsNotNull(hud);
+        Assert.IsGreaterThanOrEqualTo(hud.Y + hud.Height, box.Y);
+        Assert.IsLessThanOrEqualTo(width, box.X + box.Width);
+        Assert.IsLessThanOrEqualTo(height, box.Y + box.Height);
+        Assert.IsFalse(await moment.EvaluateAsync<bool>(@"node => {
+            const box = node.getBoundingClientRect();
+            return !!document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.closest('.upgrade-moment');
+        }"));
+        await ScreenshotAsync($"mobile-upgrade-confirmation-{width}.png");
+    }
+
     private async Task EnterFirstTrailAsync()
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });

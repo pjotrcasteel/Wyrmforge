@@ -1,7 +1,10 @@
 @namespace Wyrmforge.Presentation.Web.Features.Arena
 
-<div class="run-moment tone-@Moment.Tone.ToString().ToLowerInvariant()" role="status" aria-live="polite">
-    <span>@Moment.Eyebrow</span>
+<div class="run-moment @(Moment.Compact ? "upgrade-moment" : string.Empty) tone-@Moment.Tone.ToString().ToLowerInvariant()" role="status" aria-live="polite">
+    @if (!string.IsNullOrEmpty(Moment.Eyebrow))
+    {
+        <span>@Moment.Eyebrow</span>
+    }
     <strong>@Moment.Title</strong>
     <small>@Moment.Detail</small>
 </div>

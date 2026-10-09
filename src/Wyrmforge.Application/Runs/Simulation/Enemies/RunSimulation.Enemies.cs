@@ -31,8 +31,8 @@ public sealed partial class RunSimulation
         spawnTimer -= delta;
         if (spawnTimer > 0) return;
 
-        var openingTrail = mapEncounter && depthState.Depth == 1 && mapState.CurrentNode?.Stage == 1;
-        var activeCap = openingTrail ? 8 : EnemyEncounterComposition.GetActiveEnemyCap(depthState.Depth);
+        var stage = mapState.CurrentNode?.Stage ?? 1;
+        var activeCap = mapEncounter ? EnemyStagePressure.ActiveEnemyCap(stage, depthState.Depth) : EnemyEncounterComposition.GetActiveEnemyCap(depthState.Depth);
         if (enemies.Count >= activeCap)
         {
             spawnTimer = 0.08;
@@ -55,11 +55,10 @@ public sealed partial class RunSimulation
             SpawnEnemy(width, height, encounterPlan.Enemies[encounterPlanIndex++]);
         }
 
-        var stage = mapState.CurrentNode?.Stage ?? 1;
         var baseInterval = EnemyStagePressure.SpawnIntervalSeconds(stage);
         var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier
-            * encounterModifiers.SpawnIntervalMultiplier * directive.SpawnIntervalMultiplier * (openingTrail ? 1.75 : 1);
+            * encounterModifiers.SpawnIntervalMultiplier * directive.SpawnIntervalMultiplier * (mapEncounter ? EnemyStagePressure.OpeningSpawnIntervalMultiplier(stage, depthState.Depth) : 1);
     }
 
     private void EnsureEncounterPlan(bool mapEncounter)

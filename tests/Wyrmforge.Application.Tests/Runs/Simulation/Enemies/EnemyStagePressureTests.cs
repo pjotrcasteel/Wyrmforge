@@ -7,6 +7,19 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation.Enemies;
 public sealed class EnemyStagePressureTests
 {
     [TestMethod]
+    public void OpeningRamp_DeeperHuntsKeepFullPressureAndInvalidStagesClamp()
+    {
+        for (var stage = 1; stage <= 4; stage++)
+        {
+            Assert.AreEqual(EnemyEncounterComposition.GetActiveEnemyCap(2), EnemyStagePressure.ActiveEnemyCap(stage, 2));
+            Assert.AreEqual(1d, EnemyStagePressure.OpeningSpawnIntervalMultiplier(stage, 2));
+        }
+        Assert.AreEqual(EnemyStagePressure.ActiveEnemyCap(1, 1), EnemyStagePressure.ActiveEnemyCap(0, 1));
+        Assert.AreEqual(EnemyStagePressure.ActiveEnemyCap(4, 1), EnemyStagePressure.ActiveEnemyCap(99, 1));
+        Assert.AreEqual(1d, EnemyStagePressure.OpeningSpawnIntervalMultiplier(4, 1));
+    }
+
+    [TestMethod]
     public void StageOne_UsesBaselinePressure()
     {
         Assert.AreEqual(1d, EnemyStagePressure.HealthMultiplier(1));

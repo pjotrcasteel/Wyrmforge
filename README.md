@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.93 — Use the first reward before the crowd surges
+
+- Depth-one crowds ramp through 8 / 10 / 14 / 22 enemies. Spawn interval multipliers taper through 1.75 / 1.60 / 1.30 / 1.00. Deeper hunts, phase gates, kill quotas and the final trail retain their pressure.
+- Upgrade cards lead with the behaviour gained: piercing, a wider bolt, impact blast, freezing nova, forked lightning or the actual freeze duration / chain target count.
+- Ordinary upgrades use a compact icon-and-effect confirmation, replacing generic new-spell copy. It appears below the combat HUD, passes touches through, and respects reduced motion. Evolution retains its existing ceremony.
+- [Matched simulation results and first-hunt limitations](docs/playtesting/first-reward-payoff-0.0.93.md).
+
 ## Prototype 0.0.92 — Time to escape a stacked hit
 
 - Actual health loss grants 0.35s of damage protection. Simultaneous damage uses the strongest source, so overlapping enemies cannot add their contact hits together and a weak hit cannot hide a heavier attack.

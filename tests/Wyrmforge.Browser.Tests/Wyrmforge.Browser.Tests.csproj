@@ -8,4 +8,8 @@
     <PackageReference Include="MSTest.TestAdapter" Version="3.10.2" />
     <PackageReference Include="MSTest.TestFramework" Version="3.10.2" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Wyrmforge.Application/Wyrmforge.Application.csproj" />
+    <Compile Include="../../src/Wyrmforge.Presentation.Web/Features/LevelUp/LevelChoicePresentation.cs" Link="Presentation/LevelChoicePresentation.cs" />
+  </ItemGroup>
 </Project>
