@@ -60,7 +60,7 @@ public sealed partial class RunSimulation
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond * depthState.DragonDamageMultiplier;
-        if (Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayer(contactDamage * delta);
+        if (delta > 0 && Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayerContact(contactDamage);
     }
 
     private void UpdateDragonEntrance(DragonState activeDragon, double delta, double width, double height)

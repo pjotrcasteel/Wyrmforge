@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.92 — Time to escape a stacked hit
+
+- Actual health loss grants 0.35s of damage protection. Simultaneous damage uses the strongest source, so overlapping enemies cannot add their contact hits together and a weak hit cannot hide a heavier attack.
+- Enemy and Wyrm contact damage is delivered in spaced hits at the existing single-source damage-per-second rate. Contact still kills if the hunter stays inside danger; the grace period freezes during menus.
+- Existing wards and reductions remain in the damage path. No text or input-blocking overlay is added; the existing hurt and health-ring feedback responds to each actual health loss.
+- [First-hunt survival evidence and limitations](docs/playtesting/first-hunt-survival-0.0.92.md).
+
 ## Prototype 0.0.91 — A foothold before the first reward
 
 - The first trail at depth one caps its crowd at eight and spaces spawn batches 75% further apart. Phase timing, kill quotas and later trail pressure remain intact.
