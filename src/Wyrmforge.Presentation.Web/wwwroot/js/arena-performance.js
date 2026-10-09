@@ -1,3 +1,4 @@
+import { createSpellBadge } from './spell-hud.js';
 import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js';
 
 const frameStates = new WeakMap();
@@ -40,7 +41,7 @@ export function initializeArena(canvas, dotNetReference) {
     state.resizeObserver.observe(canvas);
     window.addEventListener('resize', state.onViewportChanged);
     window.addEventListener('scroll', state.onViewportChanged, { passive: true });
-    document.body.appendChild(state.statusCanvas);
+    canvas.parentElement.appendChild(state.statusCanvas);
     syncStatusCanvas(state);
     frameStates.set(canvas, state);
     initializeBaseArena(canvas, createThrottledReference(state));
@@ -133,6 +134,7 @@ function drawStatusOverlay(state, snapshot) {
     const ctx = state.statusCanvas.getContext('2d');
     const rect = state.canvasRect;
     ctx.clearRect(0, 0, rect.width, rect.height);
+    if (snapshot?.paused || snapshot?.ended) return;
     for (const enemy of snapshot?.enemies ?? []) drawStatusBadges(ctx, enemy.x, enemy.y, enemy.radius, enemy.statuses, false);
     if (snapshot?.dragon) drawStatusBadges(ctx, snapshot.dragon.x, snapshot.dragon.y, snapshot.dragon.radius, snapshot.dragon.statuses, true);
 }
@@ -211,8 +213,13 @@ function updateCombatHud(state, snapshot) {
     updateText(dom.kills, `${hud.kills} KILLS`);
     updateText(dom.health, `HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
     updateText(dom.level, `LV ${hud.level}`);
-    const roman = rank => ['0','I','II','III','IV','V'][rank] ?? String(rank);
-    updateText(dom.spells, hud.spells.map(spell => `${spell.evolutionIcon ?? spell.icon}${roman(spell.rank)}`).join('  '));
+    const signature = JSON.stringify(hud.spells);
+    if (dom.spells && dom.spells.dataset.loadout !== signature) {
+        dom.spells.dataset.loadout = signature;
+        dom.spells.replaceChildren(...hud.spells.map(createSpellBadge));
+    }
+    const hudPanel = dom.spells?.closest('.arena-top-hud');
+    if (hudPanel) state.canvas.closest('.game-screen')?.style.setProperty('--combat-hud-bottom', `${hudPanel.getBoundingClientRect().bottom}px`);
     if (dom.healthFill) dom.healthFill.style.width = `${Math.max(0, Math.min(100, hud.health / Math.max(1, hud.maxHealth) * 100))}%`;
     if (dom.xpFill) dom.xpFill.style.width = `${Math.max(0, Math.min(100, hud.experience / Math.max(1, hud.experienceToNext) * 100))}%`;
 }

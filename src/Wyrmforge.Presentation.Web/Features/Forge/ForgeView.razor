@@ -24,6 +24,11 @@
                         {
                             <button class="hunter-menu-progress" @onclick="() => OnQuests.InvokeAsync()"><span>HUNTER @Hunter.Level</span><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></button>
                         }</header>
+                    <div class="player-identity">
+                        <label for="player-name">PLAYER NAME</label>
+                        <input id="player-name" aria-label="Player name" maxlength="18" minlength="2" pattern="[A-Za-z0-9 _-]{2,18}" title="2–18 letters, numbers, spaces, _ or -" value="@PlayerName" @onchange="e => OnPlayerNameChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty)" />
+                        <small>Used on the public leaderboard.</small>
+                    </div>
                     <nav class="menu-actions" aria-label="Wyrmforge navigation">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
                         @foreach (var item in Navigation.Where(item => item.Section != ShellSection.Run))
@@ -66,6 +71,8 @@
 </main>
 
 @code {
+    [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
+    [Parameter] public EventCallback<string> OnPlayerNameChanged { get; set; }
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public FirstHuntProgress Progress { get; set; } = null!;
     [Parameter] public bool ForgeUnlocked { get; set; }

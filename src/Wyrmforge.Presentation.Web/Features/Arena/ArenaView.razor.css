@@ -326,10 +326,21 @@
 .encounter-phase small { margin-left:5px; font-size:.55rem; color:#afa1ba; font-weight:600; letter-spacing:0; }
 .trail-progress { height:4px; border-radius:4px; background:#34263e; overflow:hidden; }
 .trail-progress i { display:block; width:0; height:100%; background:#d4af72; transition:width .15s linear; }
-.encounter-change { position:fixed; z-index:4; top:max(151px,calc(env(safe-area-inset-top) + 147px)); left:50%; transform:translateX(-50%); max-width:calc(100vw - 30px); padding:7px 11px; border:1px solid #756147; border-radius:5px; background:rgba(16,12,22,.85); color:#e0cda9; text-align:center; font-size:.72rem; pointer-events:none; animation:encounter-cue 3s ease both; }
+.encounter-change { position:fixed; z-index:4; top:calc(var(--combat-hud-bottom, 145px) + 6px); left:50%; transform:translateX(-50%); max-width:calc(100vw - 30px); padding:7px 11px; border:1px solid #756147; border-radius:5px; background:rgba(16,12,22,.85); color:#e0cda9; text-align:center; font-size:.72rem; pointer-events:none; animation:encounter-cue 3s ease both; }
 .encounter-edge-cue { position:fixed; z-index:2; inset:0; pointer-events:none; animation:encounter-cue 3s ease both; box-shadow:inset 0 0 24px rgba(208,160,93,.26); }
 .encounter-edge-cue.north-south { box-shadow:inset 0 14px 20px -14px #d9ad67,inset 0 -14px 20px -14px #d9ad67; }
 .encounter-edge-cue.flanks { box-shadow:inset 14px 0 20px -14px #c299e4,inset -14px 0 20px -14px #c299e4; }
 @keyframes encounter-cue { 0%{opacity:0} 12%,75%{opacity:1} 100%{opacity:0} }
 @media (max-height:450px) { .arena-top-hud { width:min(430px,calc(100vw - 80px)); } .combat-vitals { padding:6px 10px;gap:4px; } .encounter-change { top:132px; } }
 @media (prefers-reduced-motion:reduce) { .trail-progress i { transition:none; } }
+
+.combat-vitals-spells { display:flex; gap:3px; align-items:center; min-height:34px; }
+::deep .combat-spell-badge { display:inline-flex; flex:0 0 auto; flex-direction:column; align-items:center; gap:1px; padding:2px 3px; border:1px solid #74608d; border-radius:5px; background:#211a30; line-height:1.2; }
+::deep .combat-spell-symbol { display:inline-block; min-width:16px; text-align:center; font-size:15px; }
+::deep .combat-spell-badge b { font:700 8px/1.2 system-ui,sans-serif; }
+
+::deep .combat-spell-evolved { border-color:#d5b780; box-shadow:inset 0 0 0 1px #d5b78044; }
+
+::deep .combat-spell-badge svg { width:16px; height:16px; flex:0 0 auto; }
+
+@media(max-width:680px) { .combat-vitals { gap:3px; padding:6px 7px; } }

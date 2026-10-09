@@ -52,6 +52,8 @@ public partial class Home
     private DragonEssenceId? selectedOffering;
     private DragonEssenceId? activeOffering;
     private int? activeRunSeed;
+    private string playerName = "Wyrm Wanderer";
+    private IJSObjectReference? leaderboardModule;
     private int bestScore;
     private int runNumber;
     private bool runActive;
@@ -71,6 +73,13 @@ public partial class Home
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+        try
+        {
+            leaderboardModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/leaderboard.js");
+            playerName = await leaderboardModule.InvokeAsync<string>("getPlayerName");
+            _ = leaderboardModule.InvokeAsync<string>("flush").AsTask();
+        }
+        catch (JSException) { }
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
         await TryLoadForgeProgressionAsync();
@@ -85,6 +94,13 @@ public partial class Home
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
         StateHasChanged();
+    }
+
+    private async Task SavePlayerNameAsync(string value)
+    {
+        if (leaderboardModule is null) return;
+        try { playerName = await leaderboardModule.InvokeAsync<string>("setPlayerName", value); }
+        catch (JSException) { }
     }
 
     private void SelectOffering(DragonEssenceId id)
@@ -168,6 +184,11 @@ public partial class Home
         summary = tutorialEnded ? null : value;
         if (chapterAdvanced) leaderboardOpen = true;
         await TryRecordPlaytestFinishAsync(value);
+        if (value.Outcome != RunOutcome.Abandoned && value.Score > 0 && leaderboardModule is not null)
+        {
+            try { await leaderboardModule.InvokeVoidAsync("recordRun", value.Score, AppBuildInfo.Version); }
+            catch (JSException) { }
+        }
         if (tutorialEnded)
         {
             tutorialCinematic = true;
