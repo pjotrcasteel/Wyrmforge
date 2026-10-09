@@ -310,7 +310,7 @@
 .trail-clear-transition strong{font:900 clamp(1.6rem,6vw,3.5rem) Georgia,serif;letter-spacing:.08em;color:#ecd7ff;text-shadow:0 0 38px #b878ef}
 .trail-clear-transition p{margin:0;color:#c9afd9;font-size:.83rem}
 .trail-clear-transition span{font-weight:900;letter-spacing:.15em;font-size:.63rem;color:#9d86c7}
-.trail-power-burst{position:absolute;left:50%;top:50%;width:16vmin;aspect-ratio:1;border:3px solid #dfb9ff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 30px #c689ff,inset 0 0 40px #945bb8;opacity:0;animation:trail-shockwave 1s ease-out forwards}
+.trail-power-burst{position:absolute;left:50%;top:50%;width:16vmin;aspect-ratio:1;border:3px solid #dfb9ff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 30px #c689ff,inset 0 0 40px #945bb8;opacity:0;animation:trail-shockwave 1s ease-out forwards;pointer-events:none}
 @keyframes trail-shockwave{0%{opacity:1;transform:translate(-50%,-50%) scale(.2)}85%{opacity:.45}100%{opacity:0;transform:translate(-50%,-50%) scale(12)}}
 @keyframes trail-blackout{0%{background:rgba(8,6,13,.04)}24%{background:rgba(8,6,13,.82)}76%{background:rgba(8,6,13,.96)}100%{background:rgba(8,6,13,.98)}}
 @media(prefers-reduced-motion:reduce){.trail-clear-transition,.trail-power-burst{animation:none}.trail-clear-transition{background:rgba(8,6,13,.98)}}

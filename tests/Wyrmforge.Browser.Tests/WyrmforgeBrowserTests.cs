@@ -367,7 +367,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.86", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.86.1", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
@@ -524,6 +524,30 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator("button.relic-choice").First.ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         Assert.AreEqual(0, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.arcaneBuild.v1')).Quests.Caches"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_TrailClearDecoration_ContinueReceivesClickAfterAnimation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        // Exercise the shipped scoped CSS without depending on combat RNG or exposing a gameplay test endpoint.
+        await Page.EvaluateAsync(@"() => {
+            const screen = document.querySelector('main.game-screen');
+            const scope = screen.getAttributeNames().find(name => name.startsWith('b-'));
+            const overlay = document.createElement('div');
+            overlay.className = 'trail-clear-transition';
+            overlay.innerHTML = '<div class=""trail-power-burst"" aria-hidden=""true""></div><strong>TRAIL CLEARED</strong><p>XP collected</p><button>CONTINUE</button>';
+            for (const element of [overlay, ...overlay.querySelectorAll('*')]) element.setAttribute(scope, '');
+            overlay.querySelector('button').addEventListener('click', () => overlay.remove());
+            screen.appendChild(overlay);
+            overlay.querySelector('.trail-power-burst').getAnimations().forEach(animation => animation.finish());
+        }");
+        var burst = Page.Locator(".trail-power-burst");
+        await Expect(burst).ToHaveCSSAsync("opacity", "0");
+        await Page.Locator(".trail-clear-transition button").ClickAsync(new() { Timeout = 5000 });
+        await Expect(Page.Locator(".trail-clear-transition")).ToHaveCountAsync(0);
     }
 
     private async Task EnterFirstTrailAsync()
