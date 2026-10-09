@@ -12,7 +12,7 @@
             <div><strong>Hunter @Hunter.Level</strong><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></div>
             @if (!Hunter.AtCap) { <progress value="@Hunter.ExperienceInLevel" max="@Hunter.ExperienceToNext" aria-label="Hunter level progress"></progress> }
             <small>@(Hunter.AtCap ? "24 Arcane points unlocked" : Hunter.NextRewardForBudget(PointBudget))</small>
-            <p>Hunt XP and quest rewards raise your Hunter level. Each level grants an Arcane point.</p>
+            <p>Hunt XP + quest XP. One Arcane point per level.</p>
         </section>
         <nav aria-label="Quest categories">
             <button aria-pressed="@((!completed).ToString().ToLowerInvariant())" @onclick="() => completed = false">Active</button>

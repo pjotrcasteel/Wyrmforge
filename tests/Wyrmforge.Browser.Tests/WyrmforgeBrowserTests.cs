@@ -518,6 +518,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose a relic", Exact = true })).ToBeVisibleAsync();
         await ScreenshotAsync("mobile-quest-relic-cache.png");
+        var lastChoice = await Page.Locator("button.relic-choice").Last.BoundingBoxAsync();
+        Assert.IsNotNull(lastChoice);
+        Assert.IsLessThanOrEqualTo(568, lastChoice.Y + lastChoice.Height, "All relic choices should fit on a small phone.");
         await Page.Locator("button.relic-choice").First.ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         Assert.AreEqual(0, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.arcaneBuild.v1')).Quests.Caches"));

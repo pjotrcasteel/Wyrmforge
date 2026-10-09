@@ -88,13 +88,25 @@
 }
 
 @media (max-width: 700px) {
+    .relic-card { padding: 14px; }
+    .relic-card h2 { font-size: 1.25rem; margin: 4px 0; }
+    .relic-card > p { font-size: .75rem; margin-bottom: 10px; }
     .relic-choices {
         grid-template-columns: 1fr;
+        gap: 8px;
     }
 
     .relic-choice {
-        min-height: 150px;
+        min-height: 0;
+        padding: 10px;
+        grid-template-columns: 24px minmax(0, 1fr);
+        column-gap: 8px;
     }
+    .relic-choice .relic-rarity { grid-column: 2; }
+    .relic-choice .relic-icon { grid-column: 1; grid-row: 1 / 5; margin: 0; font-size: 1.5rem; }
+    .relic-choice strong { grid-column: 2; font-size: .85rem; }
+    .relic-choice span:not(.relic-rarity):not(.relic-icon) { grid-column: 2; margin-top: 4px; font-size: .75rem; line-height: 1.3; }
+    .relic-choice small { grid-column: 2; margin-top: 4px; font-size: .65rem; }
 }
 
 .relic-replacement{display:grid;gap:10px}.relic-replacement button{display:grid;gap:5px;min-height:48px;padding:12px;text-align:left;border:1px solid #75604a;background:#251c24;color:#eee5d4;cursor:pointer}.relic-replacement small{color:#c2b1c7}
