@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.Checkpoint;
+﻿using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
@@ -81,7 +81,7 @@ public sealed class RunSelfPlayDriver
         {
             var id = agent.ChooseRelic(observation);
             var choice = observation.RelicChoices.Single(item => item.Id == id);
-            if (!simulation.ApplyRelicChoice(id)) return false;
+            if (!simulation.ApplyRelicChoice(id, simulation.EquippedRelics.Count >= simulation.RelicSlots ? simulation.EquippedRelics[0].Id : null)) return false;
             recorder.Decision($"relic:{choice.Name}");
             return true;
         }

@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.Checkpoint;
+﻿using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Rewards;
@@ -13,7 +13,6 @@ public partial class ArenaView
     private long runMomentVersion;
     private bool disposed;
     private bool trailTransition;
-    private long trailTransitionVersion;
 
     private void ShowRunMoment(RunMoment value)
     {
@@ -30,20 +29,9 @@ public partial class ArenaView
         await InvokeAsync(StateHasChanged);
     }
 
-    private void ShowTrailTransition()
-    {
-        trailTransition = true;
-        var version = ++trailTransitionVersion;
-        _ = FadeToMapAsync(version);
-    }
+    private void ShowTrailTransition() => trailTransition = true;
 
-    private async Task FadeToMapAsync(long version)
-    {
-        await Task.Delay(1550);
-        if (disposed || version != trailTransitionVersion) return;
-        trailTransition = false;
-        await InvokeAsync(StateHasChanged);
-    }
+    private void ContinueAfterTrail() => trailTransition = false;
 
     private void ShowChoiceMoment(LevelChoice choice)
     {

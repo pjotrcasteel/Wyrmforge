@@ -314,3 +314,5 @@
 @keyframes trail-shockwave{0%{opacity:1;transform:translate(-50%,-50%) scale(.2)}85%{opacity:.45}100%{opacity:0;transform:translate(-50%,-50%) scale(12)}}
 @keyframes trail-blackout{0%{background:rgba(8,6,13,.04)}24%{background:rgba(8,6,13,.82)}76%{background:rgba(8,6,13,.96)}100%{background:rgba(8,6,13,.98)}}
 @media(prefers-reduced-motion:reduce){.trail-clear-transition,.trail-power-burst{animation:none}.trail-clear-transition{background:rgba(8,6,13,.98)}}
+
+.trail-clear-transition{animation:trail-blackout .6s ease-out both}.trail-clear-transition button{min-height:48px;min-width:180px;margin-top:20px;padding:12px 24px;border:1px solid #cead74;background:#302137;color:#eee5d4;font-weight:800;cursor:pointer}.trail-clear-transition button:focus-visible{outline:2px solid #eee5d4;outline-offset:4px}

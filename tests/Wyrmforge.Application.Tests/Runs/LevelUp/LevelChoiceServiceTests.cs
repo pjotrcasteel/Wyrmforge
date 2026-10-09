@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Resonance;
@@ -188,6 +188,36 @@ public sealed class LevelChoiceServiceTests
 
         Assert.AreEqual(3, draft.Count);
         Assert.IsTrue(draft.Any(choice => choice.Id == $"evolution:{SpellEvolutionId.EmberTempest}"));
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(3)]
+    public void Roll_ReadySynergyAndRouteAttunement_AlwaysIncludesChosenSchool(int count)
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.LearnOrUpgrade(SpellId.FrostShard);
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var choices = service.Roll(build, SpellSchool.Storm, count);
+        Assert.IsTrue(choices.Any(choice => choice.Id.StartsWith("spell:", StringComparison.Ordinal)
+            && SpellCatalog.Get(Enum.Parse<SpellId>(choice.Id[6..])).School == SpellSchool.Storm));
+        Assert.AreEqual(count, choices.Count);
+    }
+
+    [TestMethod]
+    public void Roll_AllSchoolUpgradesMaxed_OffersSchoolDamageInsteadOfUnrelatedReward()
+    {
+        var build = new RunBuildState();
+        foreach (var spell in SpellCatalog.All.Where(spell => spell.School == SpellSchool.Fire))
+            for (var rank = 0; rank < spell.MaxRank; rank++) build.Spells.LearnOrUpgrade(spell.Id);
+        while (build.RunUpgrades.Apply(Wyrmforge.Domain.Progression.RunUpgrades.RunUpgradeId.Emberbrand)) { }
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var choice = service.Roll(build, SpellSchool.Fire, 1).Single();
+        Assert.AreEqual(LevelChoiceKind.SchoolPower, choice.Kind);
+        Assert.IsTrue(service.Apply(build, choice));
+        Assert.AreEqual(1.1, build.SchoolDamageMultiplier(SpellSchool.Fire), 0.001);
+        Assert.AreEqual(1, build.SchoolDamageMultiplier(SpellSchool.Frost));
     }
 
     private sealed class FixedRandomSource(double value) : IRandomSource

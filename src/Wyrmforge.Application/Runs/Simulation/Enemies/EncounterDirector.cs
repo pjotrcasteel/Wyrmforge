@@ -1,14 +1,15 @@
-using Wyrmforge.Domain.Combat.Enemies;
+﻿using Wyrmforge.Domain.Combat.Enemies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed class EncounterDirector
 {
-    public const double BreathingRoomSeconds = 1.4;
+    public const double BreathingRoomSeconds = 3;
 
     private readonly Queue<EnemyKind> pendingInserts = new();
     private EnemyEncounterPattern pattern;
     private int depth;
+    private int stage;
     private double progress;
     private double breathingRemaining;
 
@@ -16,14 +17,16 @@ public sealed class EncounterDirector
     public EncounterPhase Phase { get; private set; } = EncounterPhase.Pressure;
     public EncounterDirective Directive => ResolveDirective();
 
-    public void Start(EnemyEncounterPattern encounterPattern, int encounterDepth)
+    public void Start(EnemyEncounterPattern encounterPattern, int encounterDepth, int encounterStage = 1)
     {
         Active = true;
         pattern = encounterPattern;
         depth = Math.Max(1, encounterDepth);
+        stage = encounterStage;
         progress = 0;
         breathingRemaining = 0;
         pendingInserts.Clear();
+        if (stage == 4) pendingInserts.Enqueue(EnemyKind.Brute);
         Phase = EncounterPhase.Pressure;
     }
 
@@ -118,7 +121,7 @@ public sealed class EncounterDirector
                 pendingInserts.Enqueue(EnemyKind.RiftStalker);
                 break;
             case EnemyEncounterPattern.Mixed:
-                pendingInserts.Enqueue(depth >= 2 ? EnemyKind.Brute : EnemyKind.RiftStalker);
+                pendingInserts.Enqueue(depth >= 2 || stage == 4 ? EnemyKind.Brute : EnemyKind.RiftStalker);
                 break;
         }
     }

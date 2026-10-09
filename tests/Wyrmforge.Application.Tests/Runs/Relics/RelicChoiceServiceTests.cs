@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Relics;
 using Wyrmforge.Domain.Progression.Relics;
@@ -37,6 +37,14 @@ public sealed class RelicChoiceServiceTests
 
         CollectionAssert.AreEquivalent(available.ToArray(), choices.Select(choice => choice.Id).ToArray());
         Assert.IsFalse(choices.Any(choice => choice.Id == RelicId.Stormhook));
+    }
+
+    [TestMethod]
+    public void Roll_FirstCache_OffersPowerSurvivalAndMobility()
+    {
+        var choices = new RelicChoiceService().Roll(new RelicInventoryState(), new FirstRandomSource());
+        CollectionAssert.AreEquivalent(new[] { RelicRole.Power, RelicRole.Survival, RelicRole.Mobility },
+            choices.Select(choice => RelicChoiceService.Role(choice.Id)).ToArray());
     }
 
     private sealed class FirstRandomSource : IRandomSource

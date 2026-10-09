@@ -5,11 +5,11 @@
 @if (!runActive)
 {
     <ForgeView Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback"
-        OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneBuildAsync" OnLeaderboard="OpenLeaderboard" />
+        OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneBuildAsync" OnLeaderboard="OpenLeaderboard" OnQuests="OpenQuests" QuestRewards="quests.ReadyCount" RewardCaches="quests.Caches" Hunter="hunter" />
 }
 else
 {
-    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" OnGameOver="HandleGameOverAsync" />
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" RewardCache="activeRewardCache" OnGameOver="HandleGameOverAsync" />
 }
 
 @if (tutorialCinematic)
@@ -32,9 +32,13 @@ else
 }
 @if (summary is not null)
 {
-    <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" NewAscendantVictories="newlyConqueredAscendants" OnFeedback="OpenPlaytestFeedback" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" />
+    <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" NewAscendantVictories="newlyConqueredAscendants" OnFeedback="OpenPlaytestFeedback" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" OnQuests="ReturnToQuests" QuestRewards="quests.ReadyCount" Hunter="hunter" PointBudget="selection.PointBudget" HunterGain="hunterGain" />
 }
 
+@if (questsOpen)
+{
+    <HuntQuestsView PointBudget="selection.PointBudget" Hunter="hunter" State="quests" OnClaim="ClaimQuestAsync" OnClose="CloseQuests" />
+}
 @if (leaderboardOpen && firstHunt.LeaderboardUnlocked)
 {
     <LeaderboardView Score="summary?.Score ?? bestScore" OnClose="CloseLeaderboard" />
@@ -44,4 +48,4 @@ else
     <PlaytestFeedbackPanel OnClose="ClosePlaytestFeedback" />
 }
 
-<div data-game-version="0.0.85" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>
+<div data-game-version="0.0.86" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>

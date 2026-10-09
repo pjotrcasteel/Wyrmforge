@@ -367,7 +367,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.85", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.86", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
@@ -487,6 +487,43 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Zoom in", Exact = true })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_Quests_ClaimsPersistAndRewardCacheOpensAtNextHunt()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(320, 568);
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('firstQuestTestSeeded')) {
+            localStorage.setItem('firstQuestTestSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','2');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:2,Nodes:[],Quests:{
+                Trails:4,RareTrails:1,Depth:1,Wyrms:[],Essences:[],Synergy:false,Evolution:false,Claimed:[],Caches:0}})); }");
+        await Page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Quests") }).ClickAsync();
+        var dialog = Page.GetByRole(AriaRole.Dialog, new() { Name = "Hunt quests" });
+        await Expect(dialog).ToBeVisibleAsync();
+        await dialog.Locator(".quest-entry").Filter(new() { HasText = "First path" }).GetByRole(AriaRole.Button, new() { Name = "CLAIM", Exact = true }).ClickAsync();
+        await dialog.Locator(".quest-entry").Filter(new() { HasText = "A path to the Wyrm" }).GetByRole(AriaRole.Button, new() { Name = "CLAIM", Exact = true }).ClickAsync();
+        await ScreenshotAsync("mobile-quests.png");
+        var overflow = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - innerWidth");
+        Assert.IsLessThanOrEqualTo(1, overflow);
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var save = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.arcaneBuild.v1')");
+        using var json = JsonDocument.Parse(save);
+        Assert.AreEqual(2, json.RootElement.GetProperty("Budget").GetInt32());
+        Assert.AreEqual(60, json.RootElement.GetProperty("HunterExperience").GetInt32());
+        Assert.AreEqual(2, json.RootElement.GetProperty("Quests").GetProperty("Claimed").GetArrayLength());
+        Assert.AreEqual(1, json.RootElement.GetProperty("Quests").GetProperty("Caches").GetInt32());
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose a relic", Exact = true })).ToBeVisibleAsync();
+        await ScreenshotAsync("mobile-quest-relic-cache.png");
+        var lastChoice = await Page.Locator("button.relic-choice").Last.BoundingBoxAsync();
+        Assert.IsNotNull(lastChoice);
+        Assert.IsLessThanOrEqualTo(568, lastChoice.Y + lastChoice.Height, "All relic choices should fit on a small phone.");
+        await Page.Locator("button.relic-choice").First.ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        Assert.AreEqual(0, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.arcaneBuild.v1')).Quests.Caches"));
     }
 
     private async Task EnterFirstTrailAsync()

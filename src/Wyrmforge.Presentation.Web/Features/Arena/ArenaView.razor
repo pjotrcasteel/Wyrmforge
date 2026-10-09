@@ -1,3 +1,4 @@
+@using Wyrmforge.Application.Runs.Navigation
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
@@ -11,11 +12,11 @@
 
     @if (trailTransition)
     {
-        <div class="trail-clear-transition" role="status" aria-live="polite" aria-label="Trail cleared, preparing the route map">
+        <div class="trail-clear-transition" role="dialog" aria-modal="true" aria-label="Trail cleared">
             <div class="trail-power-burst" aria-hidden="true"></div>
             <strong>TRAIL CLEARED</strong>
-            <p>Power sweeps the arena clean. Remaining XP is gathered.</p>
-            <span>THE NEXT PATH IS REVEALED</span>
+            <p>XP collected</p>
+            <button @onclick="ContinueAfterTrail">CONTINUE</button>
         </div>
     }
     @if (runMoment is { } moment)
@@ -41,7 +42,7 @@
         @if (MapCombatActive && CurrentMapNode is { } activeNode)
         {
             <section class="encounter-objective" aria-label="Current encounter objective">
-                <span title="@activeNode.Name">TRAIL @activeNode.Stage • @activeNode.Name</span>
+                <span title="@activeNode.Name">@WyrmrealmStageCatalog.Name(activeNode.Stage).ToUpperInvariant() • @activeNode.Name</span>
                 <div class="encounter-objective-progress">
                     <em class="encounter-phase">@EncounterPhaseLabel</em>
                     <strong>@CurrentMapNodeKills / @CurrentMapNodeKillsRequired KILLS</strong>
@@ -102,23 +103,23 @@
         </details>
     }
 
-    @if (CurrentEssenceChoices.Count > 0)
+    @if (!trailTransition && CurrentEssenceChoices.Count > 0)
     {
         <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
     }
-    else if (CurrentRelicChoices.Count > 0)
+    else if (!trailTransition && CurrentRelicChoices.Count > 0)
     {
-        <RelicChoiceOverlay Choices="CurrentRelicChoices" OnChoose="ChooseRelicAsync" />
+        <RelicChoiceOverlay Choices="CurrentRelicChoices" Equipped="CurrentRelics" OnChoose="ChooseRelicAsync" />
     }
-    else if (AtRefuge)
+    else if (!trailTransition && AtRefuge)
     {
         <RefugeOverlay Actions="CurrentCheckpointActions" Visit="CheckpointVisit" NextDepth="@(CurrentDepth + 1)" ScoreMultiplier="NextDepthScoreMultiplier"
             SecuredEssenceCount="SecuredEssenceCount" Health="CurrentHealth" MaxHealth="CurrentMaxHealth" OwnedRelics="OwnedRelics" EquippedRelics="CurrentRelics"
             RelicSlots="RelicSlots" OnUse="UseCheckpointActionAsync" OnEquipRelic="EquipRelicAsync" OnUnequipRelic="UnequipRelicAsync" />
     }
-    else if (CurrentChoices.Count > 0)
+    else if (!trailTransition && CurrentChoices.Count > 0)
     {
-        <LevelUpOverlay Level="CurrentLevel + 1" Choices="CurrentChoices" OnChoose="ChooseAsync" />
+        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync" />
     }
     else if (PendingMapChoice && !trailTransition)
     {

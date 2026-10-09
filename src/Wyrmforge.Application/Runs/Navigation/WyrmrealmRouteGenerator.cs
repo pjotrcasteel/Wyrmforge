@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.Depth;
+﻿using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Navigation;
@@ -47,7 +47,7 @@ internal static class WyrmrealmRouteGenerator
     private static WyrmrealmMapNode CreateCombatNode(RunDifficultyProfile difficulty, WyrmrealmNodeLayout layout, SpellSchool school, Random random)
     {
         var rare = layout.Rarity == WyrmrealmNodeRarity.Rare;
-        var encounter = (WyrmrealmEncounterKind)random.Next(0, 3);
+        var encounter = WyrmrealmStageCatalog.Kind(layout.Stage);
         var stagePressure = Math.Max(0, layout.Stage - 1) * 0.035;
         var spawnInterval = Math.Clamp(1.02 - random.NextDouble() * 0.18 - (rare ? 0.1 : 0), 0.64, 1.02);
         var enemyHealth = 1 + difficulty.RouteEnemyHealthBonus + stagePressure + random.NextDouble() * 0.11 + (rare ? 0.18 : 0);
@@ -55,7 +55,7 @@ internal static class WyrmrealmRouteGenerator
         var score = 60 + difficulty.Depth * 70 + layout.Stage * 55 + random.Next(20, 111);
         if (rare) score *= 2;
         var recovery = rare ? 0.12 : random.NextDouble() < 0.28 ? 0.05 + random.Next(0, 5) / 100d : 0;
-        var relic = rare || random.NextDouble() < 0.16 ? RelicCache : null;
+        var relic = rare || layout.Stage is 2 or 4 ? RelicCache : null;
         var modifiers = CreateModifiers(difficulty, layout.Stage, rare, random);
         var route = new WyrmrealmRouteProfile(
             new WyrmrealmEncounterProfile(encounter, spawnInterval, enemyHealth, enemySpeed),

@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Enemies;
 
@@ -97,5 +97,14 @@ public sealed class EncounterDirectorTests
 
         Assert.IsTrue(director.TryTakeInsert(out var surgeInsert));
         Assert.AreEqual(EnemyKind.RiftStalker, surgeInsert);
+    }
+    [TestMethod]
+    public void Start_FinalTrailAtDepthOne_LeadsWithBrute()
+    {
+        var director = new EncounterDirector();
+        director.Start(EnemyEncounterPattern.Mixed, 1, 4);
+        Assert.IsTrue(director.TryTakeInsert(out var first));
+        Assert.AreEqual(EnemyKind.Brute, first);
+        Assert.IsFalse(director.TryTakeInsert(out _));
     }
 }

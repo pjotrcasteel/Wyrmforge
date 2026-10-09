@@ -77,14 +77,8 @@
     else
     {
         <section class="level-up-card run-overlay-surface">
-            <div class="eyebrow">LEVEL @Level • RUN DRAFT</div>
-            <h2>Choose what this run becomes</h2>
-            <p>Your Arcane Web set the intent. The realm now asks whether you deepen it, converge on an interaction, or pivot.</p>
-            <div class="draft-legend" aria-label="Draft directions">
-                <span><b>REINFORCE</b> deepen what already works</span>
-                <span><b>CONVERGE</b> chase route or synergy</span>
-                <span><b>VENTURE</b> open a new direction</span>
-            </div>
+            <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD" : $"LEVEL {Level}")</div>
+            <h2>Choose an upgrade</h2>
             <div class="upgrade-choices">
                 @foreach (var choice in Choices)
                 {
@@ -113,6 +107,7 @@
 </div>
 
 @code {
+    [Parameter] public SpellSchool? RewardSchool { get; set; }
     [Parameter] public int Level { get; set; }
     [Parameter, EditorRequired] public IReadOnlyList<LevelChoice> Choices { get; set; } = Array.Empty<LevelChoice>();
     [Parameter] public EventCallback<string> OnChoose { get; set; }

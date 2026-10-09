@@ -1,0 +1,54 @@
+@using Wyrmforge.Domain.Progression.Quests
+@using Wyrmforge.Domain.Progression.Experience
+
+<section class="quest-screen" role="dialog" aria-modal="true" aria-label="Hunt quests">
+    <header>
+        <button aria-label="Close quests" @onclick="() => OnClose.InvokeAsync()">‹</button>
+        <h1>Quests</h1>
+        <span>@State.Caches ◆</span>
+    </header>
+    <div class="quest-content">
+        <section class="hunter-progress" aria-label="Hunter progression">
+            <div><strong>Hunter @Hunter.Level</strong><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></div>
+            @if (!Hunter.AtCap) { <progress value="@Hunter.ExperienceInLevel" max="@Hunter.ExperienceToNext" aria-label="Hunter level progress"></progress> }
+            <small>@(Hunter.AtCap ? "24 Arcane points unlocked" : Hunter.NextRewardForBudget(PointBudget))</small>
+            <p>Hunt XP + quest XP. One Arcane point per level.</p>
+        </section>
+        <nav aria-label="Quest categories">
+            <button aria-pressed="@((!completed).ToString().ToLowerInvariant())" @onclick="() => completed = false">Active</button>
+            <button aria-pressed="@completed.ToString().ToLowerInvariant()" @onclick="() => completed = true">Completed</button>
+        </nav>
+        <p class="quest-rule">Hunt XP is kept on retreat. Quests bank on death or extraction.</p>
+        @if (State.Caches > 0)
+        {
+            <p class="quest-cache">◆ @State.Caches relic cache@(State.Caches == 1 ? string.Empty : "s") · opens at your next hunt</p>
+        }
+        @foreach (var quest in VisibleQuests)
+        {
+            var ready = State.CanClaim(quest);
+            var claimed = State.IsClaimed(quest.Id);
+            <article class="quest-entry @(ready ? "ready" : string.Empty)">
+                <div class="quest-title"><h2>@quest.Name</h2><span>@State.Progress(quest) / @quest.Required</span></div>
+                <p>@quest.Objective</p>
+                <progress value="@State.Progress(quest)" max="@quest.Required" aria-label="@($"{quest.Name} progress")"></progress>
+                <div class="quest-reward"><strong>✦ @quest.Reward</strong>
+                    @if (ready) { <button @onclick="() => OnClaim.InvokeAsync(quest.Id)">CLAIM</button> }
+                    else if (claimed) { <span>✓ CLAIMED</span> }
+                </div>
+            </article>
+        }
+        @if (!VisibleQuests.Any()) { <p>@(completed ? "No rewards claimed yet." : "All quests complete.")</p> }
+    </div>
+</section>
+
+@code {
+    [Parameter] public int PointBudget { get; set; } = 1;
+    [Parameter] public HunterProgress Hunter { get; set; } = new();
+    [Parameter, EditorRequired] public HuntQuestState State { get; set; } = null!;
+    [Parameter] public EventCallback<string> OnClaim { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    private bool completed;
+    private IEnumerable<HuntQuest> VisibleQuests => completed ? HuntQuestCatalog.All.Where(quest => State.IsClaimed(quest.Id))
+        : HuntQuestCatalog.All.Where(quest => !State.IsClaimed(quest.Id)).GroupBy(quest => quest.Metric).Select(group => group.First())
+            .OrderByDescending(State.CanClaim).ThenBy(quest => Array.IndexOf(HuntQuestCatalog.All.ToArray(), quest));
+}

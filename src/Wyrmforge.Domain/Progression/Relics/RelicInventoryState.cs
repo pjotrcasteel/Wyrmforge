@@ -25,4 +25,12 @@ public sealed class RelicInventoryState
     }
 
     public bool TryUnequip(RelicId id) => equipped.Remove(id);
+
+    public bool TryReplace(RelicId previous, RelicId next)
+    {
+        var index = equipped.IndexOf(previous);
+        if (index < 0 || !owned.Contains(next) || equipped.Contains(next)) return false;
+        equipped[index] = next;
+        return true;
+    }
 }
