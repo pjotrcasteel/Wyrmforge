@@ -220,6 +220,47 @@ public sealed class LevelChoiceServiceTests
         Assert.AreEqual(1, build.SchoolDamageMultiplier(SpellSchool.Frost));
     }
 
+    [TestMethod]
+    public void Roll_FirstTwoDrafts_OfferImmediateReinforcementAndPreserveRouteSchool()
+    {
+        foreach (var school in Enum.GetValues<SpellSchool>())
+        {
+            for (var sample = 0; sample < 50; sample++)
+            {
+                var service = new LevelChoiceService(new FixedRandomSource(sample / 50d), new HashSet<SpellId>
+                    { SpellId.ArcaneOrb, SpellId.FireBolt, SpellId.FrostShard, SpellId.ChainLightning });
+                var build = new RunBuildState();
+                for (var draft = 0; draft < 2; draft++)
+                {
+                    var choices = service.Roll(build, school);
+                    var reinforce = choices.Single(choice => choice.Role == LevelChoiceDraftRole.Reinforce);
+                    Assert.IsTrue(reinforce.Kind == LevelChoiceKind.SpellUpgrade || reinforce.Id is "rune:Potency" or "rune:Quickening");
+                    Assert.AreEqual(3, choices.Select(choice => choice.Id).Distinct().Count());
+                    Assert.IsTrue(choices.Any(choice => choice.Id.StartsWith("spell:", StringComparison.Ordinal)
+                        && SpellCatalog.Get(Enum.Parse<SpellId>(choice.Id[6..])).School == school));
+                    Assert.IsFalse(choices.Any(choice => choice.Id is "spell:AetherDart" or "spell:CinderNeedle" or "spell:IceLance" or "spell:BallLightning"));
+                    Assert.IsTrue(service.Apply(build, reinforce));
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    public void Roll_AfterTwoDrafts_ReturnsUtilityRunesToReinforcePool()
+    {
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var build = new RunBuildState();
+        for (var draft = 0; draft < 2; draft++) service.Roll(build, SpellSchool.Arcane);
+        var seen = new HashSet<string>();
+        for (var draft = 0; draft < 30; draft++)
+        {
+            var choices = service.Roll(build, SpellSchool.Arcane);
+            seen.Add(choices.Single(choice => choice.Role == LevelChoiceDraftRole.Reinforce).Id);
+            foreach (var choice in choices.Where(choice => choice.Kind == LevelChoiceKind.Rune)) service.Apply(build, choice);
+        }
+        Assert.IsTrue(seen.Any(id => id is "rune:Velocity" or "rune:Fleetfoot" or "rune:Vitality" or "rune:Bulwark"));
+    }
+
     private sealed class FixedRandomSource(double value) : IRandomSource
     {
         public int Next(int exclusiveMax) => 0;

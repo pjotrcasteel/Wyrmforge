@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Abstractions.Randomness;
+﻿using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Domain.Progression.RunUpgrades;
@@ -20,6 +20,7 @@ public sealed class LevelChoiceService(
     private readonly IReadOnlySet<SpellEvolutionId> evolutionPool = availableEvolutions ?? SpellEvolutionCatalog.Base.Select(evolution => evolution.Id).ToHashSet();
     private readonly RewardChoiceEngine rewardChoiceEngine = new(randomSource);
     private readonly Queue<HashSet<string>> recentDrafts = [];
+    private int openingDraftsRemaining = 2;
 
     public IReadOnlyList<LevelChoice> Roll(RunBuildState build, int count = 3) => RollInternal(build, null, null, count);
 
@@ -87,6 +88,7 @@ public sealed class LevelChoiceService(
         if (!preferredSchool.HasValue) AddConvergeChoice(choices, pool, build, null, resonance);
         if (count >= 3) AddVentureChoice(choices, pool, build, resonance);
         AddFallbackChoice(choices, pool, build, resonance, count);
+        openingDraftsRemaining = Math.Max(0, openingDraftsRemaining - 1);
         RememberDraft(choices);
         return choices;
     }
@@ -140,6 +142,12 @@ public sealed class LevelChoiceService(
         var representedSchools = LearnedSchools(build);
         var candidates = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade
             || choice.Kind == LevelChoiceKind.Rune && RuneFitsRepresentedSchools(choice, representedSchools)).ToList();
+        if (openingDraftsRemaining > 0)
+        {
+            var immediate = candidates.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade).ToList();
+            if (immediate.Count == 0) immediate = candidates.Where(choice => choice.Id is "rune:Potency" or "rune:Quickening").ToList();
+            if (immediate.Count > 0) candidates = immediate;
+        }
         if (candidates.Count == 0) candidates = pool.Where(choice => choice.Kind != LevelChoiceKind.Synergy).ToList();
         TakeInto(result, pool, candidates, resonance, LevelChoiceDraftRole.Reinforce, choice => ReinforceHint(choice, representedSchools));
     }
