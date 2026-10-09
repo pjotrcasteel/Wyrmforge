@@ -116,6 +116,7 @@ public sealed partial class RunSimulation
         EnsurePlayerPosition(width, height);
         if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending))) return CreateSnapshot();
         delta = Math.Clamp(delta, 0, 0.05);
+        BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);
         elapsed += delta;
         UpdatePlayer(delta, movement, width, height);
@@ -136,6 +137,7 @@ public sealed partial class RunSimulation
         ResolveRelicDefeatBursts();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         CompleteMapEncounterCleanup();
+        ResolvePlayerDamage();
         if (player.Health <= 0)
         {
             essenceCargoState.LosePending();

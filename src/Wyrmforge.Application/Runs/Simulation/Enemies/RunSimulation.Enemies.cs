@@ -1,7 +1,5 @@
 ﻿using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
-using Wyrmforge.Domain.Combat.Modifiers;
-using Wyrmforge.Domain.Combat.Stats;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -121,30 +119,8 @@ public sealed partial class RunSimulation
             }
 
             enemy.Position += direction * speed * scaledDelta;
-            if (Vector2D.Distance(enemy.Position, player.Position) <= enemy.Radius + player.Radius) DamagePlayer(contactDamagePerSecond * scaledDelta);
+            if (delta > 0 && Vector2D.Distance(enemy.Position, player.Position) <= enemy.Radius + player.Radius) DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
     }
 
-    private void DamagePlayer(double rawDamage)
-    {
-        if (developmentInvulnerable) return;
-        if (passiveProfile.WinterShell && player.WinterShellGuardRemaining > 0) return;
-
-        if (passiveProfile.WinterShell && player.Barrier)
-        {
-            player.Barrier = false;
-            player.WinterShellGuardRemaining = PassiveEffectResolver.WinterShellGuardSeconds;
-            player.WinterShellRechargeRemaining = PassiveEffectResolver.WinterShellRechargeSeconds;
-            return;
-        }
-
-        rawDamage = ApplyChargedScale(rawDamage);
-        var encounterDamage = rawDamage * passiveProfile.DamageTakenMultiplier * encounterModifiers.DamageTakenMultiplier;
-        encounterDamage = PassiveEffectResolver.ApplyIceArmor(passiveProfile, player.Barrier, encounterDamage);
-        player.Health -= buildModifiers.Apply(BuildStatId.DamageTaken, encounterDamage);
-
-        if (!passiveProfile.IceArmor || passiveProfile.WinterShell || player.Barrier) return;
-        player.Barrier = true;
-        player.BarrierRemaining = PassiveEffectResolver.IceArmorDurationSeconds;
-    }
 }
