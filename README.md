@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.90 — Damage and critical-health awareness
+
+- Damage briefly colors the player and reveals a nearby health ring. Sustained contact cannot create rapid repeated flashes.
+- Below 35% health the amber ring and restrained edge tint persist; below 15% a red broken outer ring remains visible even with almost no health left.
+- Critical tint breathes slowly, respects reduced-motion preferences, and leaves the arena centre clear. Paused/ended runs suppress the effects; recovery clears the low-health warning.
+- All cues render on the existing arena canvas and cannot intercept pointer input. Regression tests cover damage, thresholds, healing, pause/death, health-cap changes and the shipped mobile renderer/input flow.
+
 ## Prototype 0.0.89 — Relic setup and payoff
 
 - Emberheart turns burning kills into spreading explosions; Duelist Lens turns chilled/frozen kills into shattering, slowing bursts. Both scale with spell damage and their school upgrades, with distinct artless fire/frost feedback.

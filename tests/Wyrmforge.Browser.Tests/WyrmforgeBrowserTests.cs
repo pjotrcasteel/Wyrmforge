@@ -605,6 +605,39 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
     }
 
+    [TestMethod]
+    public async Task Mobile_CriticalHealthCue_UsesShippedRendererAndPreservesPointerInput()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const arena = await import(new URL('js/arena.js', document.baseURI).href);
+            document.body.innerHTML = '<canvas id=""danger-test"" style=""position:fixed;inset:0;width:100vw;height:100vh;touch-action:none""></canvas>';
+            window.__dangerHealth = 100;
+            window.__dangerMovement = 0;
+            arena.initializeArena(document.querySelector('canvas'), {
+                invokeMethodAsync: async (method, delta, width, height, x, y) => {
+                    window.__dangerMovement = Math.max(window.__dangerMovement, Math.abs(x) + Math.abs(y));
+                    return { player: { x:195, y:400, radius:12, barrier:false }, hud: { health:window.__dangerHealth, maxHealth:100 },
+                        enemies:[], splashPulses:[], elementalImpacts:[], deathBursts:[], essenceBursts:[], essenceBolts:[], projectiles:[], lightning:[], paused:false, ended:false };
+                }
+            });
+        }");
+        await Page.WaitForFunctionAsync("() => document.querySelector('canvas').width > 0");
+        await Page.EvaluateAsync("() => window.__dangerHealth = 12");
+        await Page.WaitForFunctionAsync(@"() => {
+            const canvas = document.querySelector('canvas');
+            const pixel = canvas.getContext('2d').getImageData(2, Math.floor(canvas.height / 2), 1, 1).data;
+            return pixel[0] > 30 && pixel[0] > pixel[1] * 1.5;
+        }");
+        await ScreenshotAsync("mobile-critical-health.png");
+        await Page.Mouse.MoveAsync(190, 600);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(250, 600);
+        await Page.WaitForFunctionAsync("() => window.__dangerMovement > .5");
+        await Page.Mouse.UpAsync();
+    }
+
     private Task ScreenshotAsync(string name) => Page.ScreenshotAsync(new PageScreenshotOptions
     {
         Path = Path.Combine(ArtifactDirectory, name),
