@@ -1,5 +1,41 @@
-// Public opt-in community scores; fictional seed characters NEVER enter the database.
-// No passive score upload, player identity, browser fingerprint, or telemetry.
+// Public game scores use the editable player nickname. Demo entries stay out of the database.
+const profileKey = 'wyrmforge.player-name.v1';
+const pendingKey = 'wyrmforge.hall-of-fame.pending.v1';
+const validName = name => typeof name === 'string' && /^[A-Za-z0-9 _-]{2,18}$/.test(name);
+export function getPlayerName() {
+    try { const name = localStorage.getItem(profileKey); if (validName(name)) return name; } catch { }
+    return 'Wyrm Wanderer';
+}
+export function setPlayerName(value) {
+    const name = value.trim();
+    if (!validName(name)) return getPlayerName();
+    try { localStorage.setItem(profileKey, name); } catch { }
+    return name;
+}
+function pending() {
+    try { const rows = JSON.parse(localStorage.getItem(pendingKey) ?? '[]'); return Array.isArray(rows) ? rows : []; } catch { return []; }
+}
+function savePending(rows) { try { localStorage.setItem(pendingKey, JSON.stringify(rows)); } catch { } }
+let syncing;
+export function recordRun(score, version) {
+    if (!Number.isSafeInteger(score) || score < 1 || score > 2000000) return;
+    const nickname = getPlayerName();
+    saveLocal(nickname, score);
+    savePending([...pending(), { id: crypto.randomUUID(), nickname, score, version }].slice(-20));
+    void flush();
+}
+export function flush() {
+    return syncing ??= syncPending().finally(() => { syncing = null; });
+}
+async function syncPending() {
+    for (const row of pending()) {
+        const result = await publish(row.nickname, row.score, row.version, row.id);
+        if (result !== 'sent') return result;
+        savePending(pending().filter(item => item.id !== row.id));
+    }
+    return 'sent';
+}
+
 const key = 'wyrmforge.hall-of-fame.local.v1';
 const legends = [
     { name: 'ASHEN WARDEN', score: 1850, type: 'LEGEND · DEMO' },
@@ -8,7 +44,7 @@ const legends = [
     { name: 'VOID SPARK', score: 310, type: 'LEGEND · DEMO' }
 ];
 async function endpoint() {
-    const response = await fetch(new URL('playtest-collector-config.json', document.baseURI), { cache: 'no-store', credentials: 'omit' });
+    const response = await fetch(new URL('playtest-collector-config.json', document.baseURI), { cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(6000) });
     if (!response.ok) throw Error('No feedback collector config');
     const config = await response.json();
     const uri = new URL(config.endpoint);
@@ -30,7 +66,7 @@ export async function load() {
     let community = [];
     try {
         const url = await endpoint();
-        const response = await fetch(url, { mode: 'cors', cache: 'no-store', credentials: 'omit' });
+        const response = await fetch(url, { mode: 'cors', cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(6000) });
         if (response.ok) {
             const result = await response.json();
             if (Array.isArray(result.entries)) community = result.entries
@@ -38,15 +74,14 @@ export async function load() {
                 .map(x => ({ name: x.name, score: x.score, type: 'COMMUNITY · UNVERIFIED' }));
         }
     } catch { /* The local board remains functional offline. */ }
-    return [...community, ...legends, ...local()].sort((a,b) => b.score - a.score).slice(0,19);
+    return [...community, ...legends, ...local().filter(row => !community.some(entry => entry.name === row.name && entry.score === row.score))].sort((a,b) => b.score - a.score).slice(0,19);
 }
-export async function publish(nickname, score, version) {
+export async function publish(nickname, score, version, id = crypto.randomUUID()) {
     if (!/^[A-Za-z0-9 _-]{2,18}$/.test(nickname) || !Number.isSafeInteger(score) || score < 1 || score > 2000000) return 'invalid';
-    const id = crypto.randomUUID();
     try {
         const url = await endpoint();
         const response = await fetch(url, {
-            method: 'POST', mode: 'cors', credentials: 'omit', cache: 'no-store',
+            method: 'POST', mode: 'cors', credentials: 'omit', signal: AbortSignal.timeout(6000), cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ consent: true, id, nickname, score, version })
         });
@@ -56,6 +91,10 @@ export async function publish(nickname, score, version) {
             if (receipt?.accepted === true) return 'sent';
         }
     } catch { /* Keep only a device-local copy if the network is unavailable. */ }
-    saveLocal(nickname, score);
     return 'local';
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => { void flush(); });
+    window.setInterval(() => { if (document.visibilityState === 'visible' && pending().length) void flush(); }, 60000);
 }

@@ -333,3 +333,10 @@
 @keyframes encounter-cue { 0%{opacity:0} 12%,75%{opacity:1} 100%{opacity:0} }
 @media (max-height:450px) { .arena-top-hud { width:min(430px,calc(100vw - 80px)); } .combat-vitals { padding:6px 10px;gap:4px; } .encounter-change { top:132px; } }
 @media (prefers-reduced-motion:reduce) { .trail-progress i { transition:none; } }
+
+.combat-vitals-spells { display:flex; gap:7px; align-items:center; min-height:25px; }
+::deep .combat-spell-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 5px; border:1px solid #74608d; border-radius:5px; background:#211a30; line-height:1.2; }
+::deep .combat-spell-symbol { display:inline-block; min-width:16px; text-align:center; font-size:15px; }
+::deep .combat-spell-badge b { font:700 10px/1.2 system-ui,sans-serif; }
+
+::deep .combat-spell-evolved { border-color:#d5b780; box-shadow:inset 0 0 0 1px #d5b78044; }

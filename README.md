@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.94 — Player identity and clean overlays
+
+- Edit the saved player nickname on the main screen. Completed hunts save locally and submit scores automatically with the actual release version; failed submissions retry with their original ID. The board refreshes while open.
+- Eight distinct vector spell icons have separate rank badges; evolved spells retain a highlighted border and accessible lineage name.
+- Enemy status badges stay inside the arena and clear while paused or ended, preventing them from appearing above upgrade choices. Run depth now renders correctly.
+- Leaderboard retry tests and mobile browser checks cover name persistence, vector badges and paused status rendering.
+
 ## Prototype 0.0.93 — Use the first reward before the crowd surges
 
 - Depth-one crowds ramp through 8 / 10 / 14 / 22 enemies. Spawn interval multipliers taper through 1.75 / 1.60 / 1.30 / 1.00. Deeper hunts, phase gates, kill quotas and the final trail retain their pressure.

@@ -43,7 +43,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    public async Task Mobile_HallOfFame_SeparatesFictionalLegendsAndOptInEntries()
+    public async Task Mobile_HallOfFame_SeparatesFictionalLegendsAndAutomaticScores()
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
@@ -52,9 +52,30 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Hall of Fame high scores" })).ToBeVisibleAsync();
         await Expect(Page.GetByText("LEGEND · DEMO").First).ToBeVisibleAsync();
         await Expect(Page.GetByText("YOU · THIS RUN", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "PUBLISH SCORE" })).ToBeDisabledAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "PUBLISH SCORE" })).ToHaveCountAsync(0);
+        await Expect(Page.GetByText("Scores sync automatically using your player name.")).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Close Hall of Fame" }).ClickAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.hall-of-fame.local.v1')"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_PlayerName_PersistsAndArenaStatusCanvasStaysInsideGame()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(320, 568);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var name = Page.GetByRole(AriaRole.Textbox, new() { Name = "Player name", Exact = true });
+        await name.FillAsync("Test Hunter");
+        await name.PressAsync("Tab");
+        await Expect(name).ToHaveValueAsync("Test Hunter");
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(name).ToHaveValueAsync("Test Hunter");
+        await ScreenshotAsync("mobile-player-name-320.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await Expect(Page.Locator(".game-screen canvas[aria-hidden='true']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".combat-spell-badge svg").First).ToBeVisibleAsync();
+        await ScreenshotAsync("mobile-spell-badges-320.png");
     }
 
     [TestMethod]
@@ -672,6 +693,36 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Mouse.MoveAsync(250, 600);
         await Page.WaitForFunctionAsync("() => window.__dangerMovement > .5");
         await Page.Mouse.UpAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_StatusBadges_ClearDuringUpgradePause()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(320, 568);
+        await OpenAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const arena = await import(new URL('js/arena-performance.js', document.baseURI).href);
+            document.body.innerHTML = '<main class=""game-screen""><canvas class=""game-canvas"" style=""position:fixed;inset:0;width:100vw;height:100vh""></canvas></main>';
+            window.__statusPaused = false;
+            arena.initializeArena(document.querySelector('canvas'), {
+                invokeMethodAsync: async () => ({
+                    player:{x:160,y:350,radius:12,barrier:false},
+                    enemies:[{x:160,y:200,radius:12,statuses:[{id:1,stacks:1}]}],
+                    splashPulses:[],elementalImpacts:[],deathBursts:[],essenceBursts:[],essenceBolts:[],projectiles:[],lightning:[],
+                    paused:window.__statusPaused,ended:false
+                })
+            });
+            window.__statusHasInk = () => {
+                const canvas = document.querySelector('canvas[aria-hidden]');
+                const data = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+                return data.some((value,index) => index % 4 === 3 && value > 0);
+            };
+        }");
+        await Page.WaitForFunctionAsync("() => window.__statusHasInk()");
+        await Page.EvaluateAsync("() => window.__statusPaused = true");
+        await Page.WaitForFunctionAsync("() => !window.__statusHasInk()");
+        await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
     }
 
     private Task ScreenshotAsync(string name) => Page.ScreenshotAsync(new PageScreenshotOptions
