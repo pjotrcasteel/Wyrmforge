@@ -67,7 +67,7 @@
         </div>
         @if (CurrentEncounterPhase != EncounterPhase.BreathingRoom)
         {
-            <div @key="(cueNode.Id, CurrentEncounterPhase, \"edge\")" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode.Stage)" aria-hidden="true"></div>
+            <div @key="(cueNode.Id, CurrentEncounterPhase, 1)" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode.Stage)" aria-hidden="true"></div>
         }
     }
 
