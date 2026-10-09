@@ -32,6 +32,7 @@ jobs:
 
       - name: Check playtest and collector JavaScript
         run: |
+          node --test tests/javascript/*.test.mjs
           node --check src/Wyrmforge.Presentation.Web/wwwroot/js/playtest.js
           node --check services/playtest-collector/src/index.js
           node --check services/playtest-collector/scripts/configure.mjs

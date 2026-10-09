@@ -1,3 +1,5 @@
+import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
+
 const arenas = new WeakMap();
 
 export function initializeArena(canvas, dotNetReference) {
@@ -33,6 +35,8 @@ function createState(canvas, dotNetReference) {
         active: true,
         simulationBusy: false,
         latestSnapshot: null,
+        playerDanger: createPlayerDangerState(),
+        reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
         touchOrigin: { x: 0, y: 0 },
@@ -105,6 +109,7 @@ function startSimulationFrame(state, timestamp, rect) {
     state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y)
         .then(snapshot => {
             if (!state.active) return;
+            updatePlayerDanger(state.playerDanger, snapshot, performance.now());
             state.latestSnapshot = snapshot;
             state.simulationFrameCount++;
             state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
@@ -176,6 +181,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const ctx = state.context;
+    const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#14111b';
     ctx.fillRect(0, 0, width, height);
@@ -233,13 +239,14 @@ function draw(state, snapshot, width, height) {
 
     ctx.beginPath();
     ctx.arc(snapshot.player.x, snapshot.player.y, snapshot.player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = snapshot.player.barrier ? '#b6efff' : '#f4e9ff';
+    ctx.fillStyle = danger.hit ? '#ff8e9b' : snapshot.player.barrier ? '#b6efff' : '#f4e9ff';
     ctx.fill();
     ctx.strokeStyle = '#7f56c2';
     ctx.lineWidth = 3;
     ctx.stroke();
 
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
+    drawPlayerDanger(ctx, snapshot.player, danger, width, height);
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
