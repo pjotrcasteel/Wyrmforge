@@ -89,7 +89,7 @@ public sealed partial class RunSimulation
         if (reward is null) return;
         pendingAttunements.Enqueue(reward.AttunementSchool);
         score += (int)(reward.ScoreBonus * depthState.ScoreMultiplier);
-        if (reward.Relic is not null) OfferRelicChoice();
+        if (reward.Relic is not null) OfferRelicChoice(reward.AttunementSchool);
         var recovery = reward.RecoveryFraction * encounterModifiers.RecoveryMultiplier;
         if (recovery > 0 && player.Health > 0) player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth * recovery);
     }
@@ -106,6 +106,7 @@ public sealed partial class RunSimulation
     {
         CollectLooseExperienceShards();
         enemies.Clear();
+        pendingRelicBursts.Clear();
         projectiles.Clear();
         lightning.Clear();
         burningGrounds.Clear();

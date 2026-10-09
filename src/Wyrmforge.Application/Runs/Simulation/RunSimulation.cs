@@ -133,6 +133,7 @@ public sealed partial class RunSimulation
         UpdateProjectiles(delta, width, height);
         UpdateLightning(delta);
         ResolveProjectileHits();
+        ResolveRelicDefeatBursts();
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         CompleteMapEncounterCleanup();
         if (player.Health <= 0)

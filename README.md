@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.89 — Relic setup and payoff
+
+- Emberheart turns burning kills into spreading explosions; Duelist Lens turns chilled/frozen kills into shattering, slowing bursts. Both scale with spell damage and their school upgrades, with distinct artless fire/frost feedback.
+- Relic caches offer a school-relevant power option when unlocked and unowned, alongside survival/mobility alternatives. Route caches use the chosen school; other caches use the strongest learned school. Unlock gates remain intact.
+- Results show the strongest burst relic's actual damage, kills and activations; detailed totals survive replacing a relic. These totals exclude passive stat bonuses and damage-over-time, rather than claiming total relic contribution.
+- Lightning now triggers generic on-hit relic rules. Vitalstone heals its maximum-health increase only on acquisition, preventing checkpoint swap healing.
+- Deterministic regression tests cover dense chains, overkill attribution, status/radius gating, unequipped relics and queued bursts crossing a Wyrm phase break. Simulated runs and agent critiques identify mechanical problems; they are not proof of human enjoyment.
+
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
 ## Prototype 0.0.86 — Hunter progression and trail rewards

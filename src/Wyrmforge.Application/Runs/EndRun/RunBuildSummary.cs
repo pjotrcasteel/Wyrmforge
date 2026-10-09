@@ -11,4 +11,9 @@ public sealed record RunUpgradeSummary(RunUpgradeId Id, int Rank);
 
 public sealed record RunResonanceSummary(SpellSchool School, int Value);
 
-public sealed record RunRelicSummary(RelicId Id, bool Equipped);
+public sealed record RunRelicSummary(RelicId Id, bool Equipped)
+{
+    public int Bursts { get; init; }
+    public double BurstDamage { get; init; }
+    public int BurstKills { get; init; }
+}
