@@ -64,16 +64,29 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Directory.CreateDirectory(ArtifactDirectory);
         await Page.SetViewportSizeAsync(320, 568);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var edit = Page.GetByRole(AriaRole.Button, new() { Name = "Edit player name", Exact = true });
+        await Expect(Page.GetByRole(AriaRole.Textbox, new() { Name = "Player name", Exact = true })).ToHaveCountAsync(0);
+        await edit.ClickAsync();
         var name = Page.GetByRole(AriaRole.Textbox, new() { Name = "Player name", Exact = true });
         await name.FillAsync("Test Hunter");
-        await name.PressAsync("Tab");
-        await Expect(name).ToHaveValueAsync("Test Hunter");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "SAVE", Exact = true }).ClickAsync();
+        await Expect(edit).ToContainTextAsync("Test Hunter");
+        var cookie = (await Context.CookiesAsync()).Single(cookie => cookie.Name == "wyrmforge_player_name");
+        Assert.AreEqual("Test Hunter", Uri.UnescapeDataString(cookie.Value));
+        await edit.ClickAsync();
+        await name.FillAsync("f_u_c_k");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "SAVE", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToHaveTextAsync("Choose a different name.");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "CANCEL", Exact = true }).ClickAsync();
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
-        await Expect(name).ToHaveValueAsync("Test Hunter");
+        await Expect(edit).ToContainTextAsync("Test Hunter");
+        await Page.Locator("#wyrmforge-ignition").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         await ScreenshotAsync("mobile-player-name-320.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await Expect(Page.Locator(".game-screen canvas[aria-hidden='true']")).ToHaveCountAsync(1);
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator(".combat-spell-badge svg").First).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
             const {createSpellBadge} = await import(new URL('js/spell-hud.js',document.baseURI).href);
@@ -240,9 +253,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             var objective = await Page.GetByLabel("Current encounter objective").BoundingBoxAsync();
             Assert.IsNotNull(vitals);
             Assert.IsNotNull(objective);
-            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.Y + vitals.Height - objective.Y), "Trail status must sit directly beneath vitals.");
-            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.X - objective.X), "HUD sections must align on the phone.");
-            Assert.IsLessThanOrEqualTo(140, vitals.Height + objective.Height, "HUD must leave room for combat.");
+            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.Y - objective.Y), "Trail status must align with vitals.");
+            Assert.IsGreaterThanOrEqualTo(vitals.X + vitals.Width - 2, objective.X, "Trail status must sit to the right of vitals.");
+            Assert.IsLessThanOrEqualTo(100, Math.Max(vitals.Height, objective.Height), "HUD must leave room for combat.");
             await Expect(Page.GetByRole(AriaRole.Progressbar, new() { Name = "Trail progress" })).ToHaveAttributeAsync("aria-valuenow", new System.Text.RegularExpressions.Regex("^\\d+$"));
             await Expect(Page.Locator("[data-trail='phase-time']")).ToHaveTextAsync(new System.Text.RegularExpressions.Regex("^\\d+s$"));
 

@@ -1,3 +1,5 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
@@ -18,17 +20,31 @@
         @switch (section)
         {
             case ShellSection.Run:
+                <div class="player-identity">
+                    <button class="player-name-edit" aria-label="Edit player name" @onclick="OpenNameEditor">
+                        <span>@PlayerName</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 16 12-12 4 4-12 12-5 1Z M14 6l4 4" /></svg>
+                    </button>
+                    <small>Public nickname</small>
+                </div>
+                @if (editingName)
+                {
+                    <div class="name-editor-backdrop">
+                        <form class="name-editor" role="dialog" aria-modal="true" aria-label="Edit player name" @onsubmit="SaveNameAsync" @onsubmit:preventDefault>
+                            <label for="player-name">PLAYER NAME</label>
+                            <input id="player-name" aria-label="Player name" maxlength="18" @bind="nameDraft" autofocus autocomplete="nickname" />
+                            @if (nameError is not null) { <small class="name-error" role="alert">@nameError</small> }
+                            <small>Used on the public leaderboard.</small>
+                            <div><button type="button" @onclick="() => editingName = false">CANCEL</button><button type="submit">SAVE</button></div>
+                        </form>
+                    </div>
+                }
                 <section class="main-menu" aria-label="Main menu">
                     <header class="menu-brand"><span class="menu-sigil" aria-hidden="true">W</span><h1>WYRMFORGE</h1>
                         @if (Progress.AtlasUnlocked)
                         {
                             <button class="hunter-menu-progress" @onclick="() => OnQuests.InvokeAsync()"><span>HUNTER @Hunter.Level</span><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></button>
                         }</header>
-                    <div class="player-identity">
-                        <label for="player-name">PLAYER NAME</label>
-                        <input id="player-name" aria-label="Player name" maxlength="18" minlength="2" pattern="[A-Za-z0-9 _-]{2,18}" title="2–18 letters, numbers, spaces, _ or -" value="@PlayerName" @onchange="e => OnPlayerNameChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty)" />
-                        <small>Used on the public leaderboard.</small>
-                    </div>
                     <nav class="menu-actions" aria-label="Wyrmforge navigation">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
                         @foreach (var item in Navigation.Where(item => item.Section != ShellSection.Run))
@@ -95,6 +111,23 @@
     [Parameter] public int QuestRewards { get; set; }
     [Parameter] public int RewardCaches { get; set; }
     [Parameter] public HunterProgress Hunter { get; set; } = new();
+
+    private bool editingName;
+    private string nameDraft = "";
+    private string? nameError;
+    private void OpenNameEditor() { nameDraft = PlayerName; nameError = null; editingName = true; }
+    private async Task SaveNameAsync()
+    {
+        var policy = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/name-policy.js");
+        try
+        {
+            nameError = await policy.InvokeAsync<string?>("validateName", nameDraft);
+            if (nameError is not null) return;
+            await OnPlayerNameChanged.InvokeAsync(nameDraft.Trim());
+            editingName = false;
+        }
+        finally { await policy.DisposeAsync(); }
+    }
 
     private ShellSection section = ShellSection.Run;
     private static readonly NavigationItem[] Navigation =

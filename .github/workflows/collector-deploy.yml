@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'services/playtest-collector/**'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/name-policy.js'
       - '.github/workflows/collector-deploy.yml'
 
 permissions:

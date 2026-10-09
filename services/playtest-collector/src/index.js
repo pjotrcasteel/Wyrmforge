@@ -1,3 +1,5 @@
+import { validateName } from '../../../src/Wyrmforge.Presentation.Web/wwwroot/js/name-policy.js';
+
 // Cloudflare Worker: explicit-consent feedback intake. No automatic/passive telemetry.
 const REPORT_SCHEMA = 'wyrmforge.playtest.report.v1';
 const MAX_BYTES = 32 * 1024;
@@ -130,7 +132,7 @@ async function leaderboard(request, env, origin) {
     if (!env.DB) return reject(503, 'leaderboard_unavailable');
     if (request.method === 'GET') {
         const results = await env.DB.prepare('SELECT nickname,score,game_version FROM leaderboard_entries ORDER BY score DESC,created_at ASC LIMIT 20').all();
-        return json({ entries: results.results.map(entry => ({ name: entry.nickname, score: entry.score,
+        return json({ entries: results.results.filter(entry => !validateName(entry.nickname)).map(entry => ({ name: entry.nickname, score: entry.score,
             version: entry.game_version, type: 'community', verified: false })) }, 200,
             origin === env.PUBLIC_ORIGIN ? cors(origin) : {});
     }
@@ -150,7 +152,7 @@ async function leaderboard(request, env, origin) {
 
     const name = string(payload?.nickname, 80);
     if (payload?.consent !== true || typeof payload?.id !== 'string' || !identifier.test(payload.id) ||
-        !nicknameFormat.test(name) || !Number.isSafeInteger(payload.score) || payload.score < 1 || payload.score > 2000000 ||
+        (!nicknameFormat.test(name) || validateName(name)) || !Number.isSafeInteger(payload.score) || payload.score < 1 || payload.score > 2000000 ||
         !/^0\.0\.[0-9]{1,3}$/.test(payload.version ?? '')) return reject(400, 'invalid_entry', headers);
 
     const hour = Math.floor(Date.now() / 3600000);

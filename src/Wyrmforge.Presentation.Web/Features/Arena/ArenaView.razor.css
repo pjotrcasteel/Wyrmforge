@@ -318,9 +318,9 @@
 .trail-clear-transition{animation:trail-blackout .6s ease-out both}.trail-clear-transition button{min-height:48px;min-width:180px;margin-top:20px;padding:12px 24px;border:1px solid #cead74;background:#302137;color:#eee5d4;font-weight:800;cursor:pointer}.trail-clear-transition button:focus-visible{outline:2px solid #eee5d4;outline-offset:4px}
 
 /* Trail status remains compact; phase cues never intercept movement or menu input. */
-.arena-top-hud { flex-wrap:wrap; }
-.combat-vitals { flex-basis:100%; }
-.arena-top-hud .encounter-objective { flex-basis:100%; justify-items:stretch; gap:5px; border-left:0; border-top:1px solid rgba(198,154,255,.23); padding:7px 10px; }
+.arena-top-hud { flex-wrap:nowrap; }
+.combat-vitals { flex-basis:60%; }
+.arena-top-hud .encounter-objective { flex-basis:40%; justify-items:stretch; gap:5px; border-left:1px solid rgba(198,154,255,.23); border-top:0; padding:7px 5px; }
 .arena-top-hud .encounter-objective > span { font-size:.58rem; }
 .encounter-objective-progress { justify-content:space-between; }
 .encounter-phase small { margin-left:5px; font-size:.55rem; color:#afa1ba; font-weight:600; letter-spacing:0; }
@@ -334,13 +334,25 @@
 @media (max-height:450px) { .arena-top-hud { width:min(430px,calc(100vw - 80px)); } .combat-vitals { padding:6px 10px;gap:4px; } .encounter-change { top:132px; } }
 @media (prefers-reduced-motion:reduce) { .trail-progress i { transition:none; } }
 
-.combat-vitals-spells { display:flex; gap:3px; align-items:center; min-height:34px; }
-::deep .combat-spell-badge { display:inline-flex; flex:0 0 auto; flex-direction:column; align-items:center; gap:1px; padding:2px 3px; border:1px solid #74608d; border-radius:5px; background:#211a30; line-height:1.2; }
+.combat-vitals-spells { display:flex; flex-wrap:wrap; gap:3px; align-items:center; min-height:18px; }
+::deep .combat-spell-badge { display:inline-flex; flex:0 0 auto; flex-direction:row; align-items:center; gap:1px; padding:2px 3px; border:1px solid #74608d; border-radius:5px; background:#211a30; line-height:1.2; }
 ::deep .combat-spell-symbol { display:inline-block; min-width:16px; text-align:center; font-size:15px; }
 ::deep .combat-spell-badge b { font:700 8px/1.2 system-ui,sans-serif; }
 
 ::deep .combat-spell-evolved { border-color:#d5b780; box-shadow:inset 0 0 0 1px #d5b78044; }
 
-::deep .combat-spell-badge svg { width:16px; height:16px; flex:0 0 auto; }
+::deep .combat-spell-badge svg { width:12px; height:12px; flex:0 0 auto; }
 
 @media(max-width:680px) { .combat-vitals { gap:3px; padding:6px 7px; } }
+
+@media(max-width:680px) {
+    .combat-vitals-score { display:grid; grid-template-columns:1fr auto; row-gap:2px; }
+    .combat-vitals-score > span:first-child { grid-column:1 / -1; }
+    .combat-vitals-progress { flex-wrap:wrap; }
+    .combat-xp-track { flex-basis:100%; }
+    .arena-top-hud .encounter-objective-progress { flex-direction:column; align-items:flex-start; gap:4px; }
+    .arena-top-hud .encounter-objective > span { white-space:normal; font-size:.5rem; }
+    .arena-top-hud .encounter-objective strong { font-size:.55rem; }
+    .encounter-phase { white-space:nowrap; }
+    .encounter-phase small { margin-left:2px; font-size:.48rem; }
+}

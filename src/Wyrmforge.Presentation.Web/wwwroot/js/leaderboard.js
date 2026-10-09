@@ -1,16 +1,27 @@
 // Public game scores use the editable player nickname. Demo entries stay out of the database.
+import { validateName } from './name-policy.js';
+export { validateName } from './name-policy.js';
 const profileKey = 'wyrmforge.player-name.v1';
+const cookieKey = 'wyrmforge_player_name';
 const pendingKey = 'wyrmforge.hall-of-fame.pending.v1';
-const validName = name => typeof name === 'string' && /^[A-Za-z0-9 _-]{2,18}$/.test(name);
+let currentName = 'Wyrm Wanderer';
 export function getPlayerName() {
-    try { const name = localStorage.getItem(profileKey); if (validName(name)) return name; } catch { }
-    return 'Wyrm Wanderer';
+    try {
+        const cookie = document.cookie.split(';').map(part => part.trim()).find(part => part.startsWith(`${cookieKey}=`));
+        const name = cookie ? decodeURIComponent(cookie.slice(cookieKey.length + 1)) : localStorage.getItem(profileKey);
+        if (name && !validateName(name)) return setPlayerName(name);
+    } catch { }
+    return setPlayerName(currentName);
 }
 export function setPlayerName(value) {
-    const name = value.trim();
-    if (!validName(name)) return getPlayerName();
-    try { localStorage.setItem(profileKey, name); } catch { }
-    return name;
+    if (validateName(value)) return currentName;
+    currentName = value.trim();
+    try {
+        const base = new URL('.', document.baseURI);
+        document.cookie = `${cookieKey}=${encodeURIComponent(currentName)};Path=${base.pathname};Max-Age=31536000;SameSite=Lax${base.protocol === 'https:' ? ';Secure' : ''}`;
+        localStorage.removeItem(profileKey);
+    } catch { }
+    return currentName;
 }
 function pending() {
     try { const rows = JSON.parse(localStorage.getItem(pendingKey) ?? '[]'); return Array.isArray(rows) ? rows : []; } catch { return []; }
@@ -30,6 +41,7 @@ export function flush() {
 async function syncPending() {
     for (const row of pending()) {
         const result = await publish(row.nickname, row.score, row.version, row.id);
+        if (result === 'invalid') { savePending(pending().filter(item => item.id !== row.id)); continue; }
         if (result !== 'sent') return result;
         savePending(pending().filter(item => item.id !== row.id));
     }
@@ -55,7 +67,7 @@ async function endpoint() {
 function local() {
     try {
         const saved = JSON.parse(localStorage.getItem(key) ?? '[]');
-        return Array.isArray(saved) ? saved.filter(x => x && typeof x.name === 'string' && Number.isInteger(x.score))
+        return Array.isArray(saved) ? saved.filter(x => x && !validateName(x.name) && Number.isInteger(x.score))
             .slice(-12).map(x => ({ name: x.name, score: x.score, type: 'LOCAL ONLY' })) : [];
     } catch { return []; }
 }
@@ -70,14 +82,14 @@ export async function load() {
         if (response.ok) {
             const result = await response.json();
             if (Array.isArray(result.entries)) community = result.entries
-                .filter(x => typeof x.name === 'string' && Number.isInteger(x.score))
+                .filter(x => !validateName(x.name) && Number.isInteger(x.score))
                 .map(x => ({ name: x.name, score: x.score, type: 'COMMUNITY · UNVERIFIED' }));
         }
     } catch { /* The local board remains functional offline. */ }
     return [...community, ...legends, ...local().filter(row => !community.some(entry => entry.name === row.name && entry.score === row.score))].sort((a,b) => b.score - a.score).slice(0,19);
 }
 export async function publish(nickname, score, version, id = crypto.randomUUID()) {
-    if (!/^[A-Za-z0-9 _-]{2,18}$/.test(nickname) || !Number.isSafeInteger(score) || score < 1 || score > 2000000) return 'invalid';
+    if (validateName(nickname) || !Number.isSafeInteger(score) || score < 1 || score > 2000000) return 'invalid';
     try {
         const url = await endpoint();
         const response = await fetch(url, {

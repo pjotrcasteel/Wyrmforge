@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const storage = new Map();
-globalThis.localStorage = { getItem:key => storage.get(key) ?? null, setItem:(key, value) => storage.set(key, value) };
-globalThis.document = { baseURI:'https://game.test/' };
+globalThis.localStorage = { getItem:key => storage.get(key) ?? null, setItem:(key, value) => storage.set(key, value), removeItem:key => storage.delete(key) };
+globalThis.document = { baseURI:'https://game.test/', cookie:'' };
 const board = await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/leaderboard.js');
 const pendingKey = 'wyrmforge.hall-of-fame.pending.v1';
 let posts = [];
@@ -19,6 +19,9 @@ globalThis.fetch = async (url, options) => {
 test('saved player nickname is validated and used for automatic runs; offline retry retains the same submission ID', async () => {
     assert.equal(board.setPlayerName('Test Hunter'), 'Test Hunter');
     assert.equal(board.getPlayerName(), 'Test Hunter');
+    assert.match(document.cookie, /wyrmforge_player_name=Test%20Hunter/);
+    assert.match(document.cookie, /Max-Age=31536000;SameSite=Lax;Secure/);
+    assert.equal(storage.has('wyrmforge.player-name.v1'), false);
     assert.equal(board.setPlayerName('<script>'), 'Test Hunter');
     board.recordRun(2500, '0.0.94');
     assert.equal(await board.flush(), 'local');
@@ -43,4 +46,12 @@ test('rate limited entries stay queued for a later automatic retry', async () =>
     board.recordRun(4000, '0.0.94');
     assert.equal(await board.flush(), 'rate_limited');
     assert.equal(JSON.parse(storage.get(pendingKey)).length, 1);
+});
+
+test('existing local nicknames migrate into the cookie', () => {
+    document.cookie = '';
+    storage.set('wyrmforge.player-name.v1', 'Legacy Hunter');
+    assert.equal(board.getPlayerName(), 'Legacy Hunter');
+    assert.match(document.cookie, /wyrmforge_player_name=Legacy%20Hunter/);
+    assert.equal(storage.has('wyrmforge.player-name.v1'), false);
 });
