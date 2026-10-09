@@ -10,9 +10,11 @@
                 <div class="eyebrow">WYRMREALM • DEPTH @Depth</div>
                 <h2>Choose your trail.</h2>
             </div>
-            <p>Follow the marked routes. Tap a symbol to inspect it before entering.</p>
+            <b class="map-run-progress">@CompletedNodes.Count(node => node.Type == WyrmrealmNodeType.Combat)/4 cleared</b>
         </header>
 
+        <details class="map-attention">
+        <summary>Wyrm attention <b>@DominantLabel</b></summary>
         <div class="resonance-panel" aria-label="Current magic resonance">
             <div class="resonance-heading">
                 <div><strong>MAGIC RESONANCE</strong><span class="resonance-detail-copy">Your build and cleared trails shape which wyrm notices you.</span></div>
@@ -31,6 +33,7 @@
         </div>
 
         <DragonSignsView Signs="Signs" Compact="true" />
+        </details>
 
         @if (CompletedNodes.Count > 0)
         {
@@ -39,14 +42,11 @@
         }
 
         <div class="realm-route" aria-label="Generated Wyrmrealm route map">
-            <aside class="map-legend" aria-label="Map legend">
-                <strong>KEY</strong>
-                <span><i>⚔︎</i> Combat</span>
-                <span><i>✦</i> Rare</span>
-                <span><i>💎</i> Relic</span>
-                <span><i>♥</i> Recovery</span>
-                <span><i>⚠</i> Hazard</span>
-            </aside>
+            @for (var stage = 1; stage <= 4; stage++)
+            {
+                <span class="map-stage-label" style="@StageLabelStyle(stage)">@stage · @WyrmrealmStageCatalog.Name(stage)</span>
+            }
+            <span class="map-stage-label wyrm-label">WYRM</span>
 
             <div class="map-entry @(CompletedNodes.Count == 0 ? "current" : string.Empty)" aria-label="Realm entry">
                 <span class="entry-point"></span>
@@ -81,6 +81,8 @@
                         {
                             <span class="node-school">@SchoolIcon(school)</span>
                         }
+                        @if (IsCompleted(node)) { <span class="node-check" aria-label="Cleared">✓</span> }
+                        @if (node.Rarity == WyrmrealmNodeRarity.Rare) { <span class="node-rare" aria-label="Rare trail">✦</span> }
                     </span>
                     <span class="node-name">@node.Name</span>
                     @if (node.Type != WyrmrealmNodeType.Dragon)
@@ -96,6 +98,8 @@
             }
         </div>
 
+        <div class="route-key" aria-label="Map legend"><span>◉ Reachable</span><span>✓ Cleared</span><span>◆ Relic</span><span>✦ Rare</span></div>
+
         @if (selectedNode is { } selected)
         {
             <aside class="node-sheet" aria-label="Selected trail details">
@@ -110,7 +114,7 @@
 
                 @if (selected.Type == WyrmrealmNodeType.Dragon)
                 {
-                    <p class="sheet-copy">Something enormous waits beyond every surviving path.</p>
+                    <p class="sheet-copy">Wyrm duel · defeat it to reach Refuge</p>
                 }
                 else if (selected.Route is { } route)
                 {
@@ -119,10 +123,8 @@
                         <div class="rare-trail-callout"><strong>✦ RARE TRAIL</strong><span>Stronger enemies • doubled route score • guaranteed relic cache</span></div>
                     }
                     <div class="sheet-traits">
-                        <span>@SchoolIcon(route.Reward.AttunementSchool) +@RunResonanceState.RouteWeight resonance</span>
-                        <span>@EncounterIcon(route.Encounter.Kind) @WyrmrealmStageCatalog.Name(selected.Stage)</span>
-                        <span>@WyrmrealmStageCatalog.Hint(selected.Stage)</span>
-                        <span>@SchoolIcon(route.Reward.AttunementSchool) Guaranteed @route.Reward.AttunementSchool upgrade</span>
+                        <span class="sheet-encounter">@NodeIcon(selected) @WyrmrealmStageCatalog.Name(selected.Stage) · @WyrmrealmStageCatalog.Hint(selected.Stage)</span>
+                        <span class="sheet-guarantee">@SchoolIcon(route.Reward.AttunementSchool) @route.Reward.AttunementSchool upgrade · guaranteed</span>
                         @foreach (var trait in DetailTraits(route))
                         {
                             <span>@trait</span>
@@ -172,20 +174,22 @@
         var rarity = node.Rarity == WyrmrealmNodeRarity.Rare ? " rare" : string.Empty;
         var selected = selectedNode?.Id == node.Id ? " selected" : string.Empty;
         var current = IsCurrent(node) ? " current" : string.Empty;
-        return $"route-node {state}{rarity}{selected}{current}";
+        var school = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "wyrm";
+        var encounter = node.Type == WyrmrealmNodeType.Dragon ? "dragon" : $"stage-{node.Stage}";
+        return $"route-node {state}{rarity}{selected}{current} school-{school} {encounter}";
     }
 
     private string ConnectionClass(WyrmrealmMapNode from, WyrmrealmMapNode to)
     {
         if (IsCompleted(from) && IsCompleted(to)) return "route-link traversed";
-        if (IsCompleted(from) && IsAvailable(to)) return "route-link active";
+        if (IsCurrent(from) && IsAvailable(to)) return selectedNode?.Id == to.Id ? "route-link active selected" : "route-link active";
         return "route-link future";
     }
 
     private string EntryConnectionClass(WyrmrealmMapNode node)
     {
         if (IsCompleted(node)) return "route-link traversed";
-        if (IsAvailable(node)) return "route-link active";
+        if (IsAvailable(node)) return selectedNode?.Id == node.Id ? "route-link active selected" : "route-link active";
         return "route-link future";
     }
 
@@ -201,18 +205,19 @@
         var noise = UnitNoise($"x:{node.Id}");
         return stageNodes.Length switch
         {
-            <= 1 => 42 + noise * 16,
-            2 => index == 0 ? 16 + noise * 25 : 59 + noise * 25,
-            _ => index switch { 0 => 9 + noise * 22, 1 => 36 + noise * 28, _ => 69 + noise * 22 },
+            <= 1 => 46 + noise * 8,
+            2 => index == 0 ? 21 + noise * 8 : 71 + noise * 8,
+            _ => index switch { 0 => 17 + noise * 6, 1 => 47 + noise * 6, _ => 77 + noise * 6 },
         };
     }
 
     private static double NodeY(WyrmrealmMapNode node)
     {
         if (node.Type == WyrmrealmNodeType.Dragon) return 92;
-        var baseY = 18 + (node.Stage - 1) * 19.2;
-        return Math.Clamp(baseY + StableNoise($"y:{node.Id}") * 4.2, 13, 79);
+        return 20 + (node.Stage - 1) * 17;
     }
+
+    private static string StageLabelStyle(int stage) => FormattableString.Invariant($"top:{11 + (stage - 1) * 17}%");
 
     private static string Curve(string key, double x1, double y1, double x2, double y2)
     {
@@ -248,7 +253,7 @@
     {
         if (node.Route is not { } route) return Array.Empty<NodeBadge>();
         var badges = new List<NodeBadge>();
-        if (route.Reward.Relic is not null) badges.Add(new("💎", "Relic cache", "reward"));
+        if (route.Reward.Relic is not null) badges.Add(new("◆", "Relic cache", "reward"));
         if (route.Reward.RecoveryFraction > 0) badges.Add(new("♥", $"Restore {route.Reward.RecoveryFraction * 100:0}% health", "heal"));
         if (route.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out _)) badges.Add(new("⚠", "Unstable rifts", "hazard"));
         return badges;
@@ -260,7 +265,7 @@
         if (route.Encounter.SpawnIntervalMultiplier < 0.9) traits.Add("⏱ Fast spawns");
         if (route.Encounter.EnemyHealthMultiplier > 1.1) traits.Add("⬢ Tougher enemies");
         if (route.Encounter.EnemySpeedMultiplier > 1.1) traits.Add("➤ Faster enemies");
-        if (route.Reward.Relic is not null) traits.Add("💎 Relic cache");
+        if (route.Reward.Relic is not null) traits.Add("◆ Relic cache");
         if (route.Reward.RecoveryFraction > 0) traits.Add($"♥ Restore {route.Reward.RecoveryFraction * 100:0}% health");
         if (route.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var hazardInterval))
         {
@@ -274,16 +279,11 @@
         ? "Unknown wyrm encounter"
         : $"Trail {node.Stage}, {node.Name}, {node.AttunementSchool}, {EncounterLabel(node.EncounterKind ?? WyrmrealmEncounterKind.Mixed)}";
 
-    private static string NodeIcon(WyrmrealmMapNode node)
+    private static string NodeIcon(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon ? "♜" : node.Stage switch
     {
-        if (node.Type == WyrmrealmNodeType.Dragon) return "🐉";
-        return node.Rarity == WyrmrealmNodeRarity.Rare ? "✦" : "⚔︎";
-    }
-
-    private static string EncounterIcon(WyrmrealmEncounterKind kind) => kind switch
-    {
-        WyrmrealmEncounterKind.Swarm => "⚔︎",
-        WyrmrealmEncounterKind.StalkerPressure => "◈",
+        2 => "≋",
+        3 => "⌖",
+        4 => "⬢",
         _ => "◎",
     };
 
@@ -296,10 +296,10 @@
 
     private static string SchoolIcon(SpellSchool school) => school switch
     {
-        SpellSchool.Fire => "🔥",
-        SpellSchool.Frost => "❄️",
-        SpellSchool.Storm => "⚡",
-        _ => "✨",
+        SpellSchool.Fire => "✹",
+        SpellSchool.Frost => "❄",
+        SpellSchool.Storm => "ϟ",
+        _ => "✦",
     };
 
     private sealed record NodeBadge(string Icon, string Label, string ClassName);
