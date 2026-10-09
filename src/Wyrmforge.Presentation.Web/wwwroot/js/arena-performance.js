@@ -218,6 +218,8 @@ function updateCombatHud(state, snapshot) {
         dom.spells.dataset.loadout = signature;
         dom.spells.replaceChildren(...hud.spells.map(createSpellBadge));
     }
+    const hudPanel = dom.spells?.closest('.arena-top-hud');
+    if (hudPanel) state.canvas.closest('.game-screen')?.style.setProperty('--combat-hud-bottom', `${hudPanel.getBoundingClientRect().bottom}px`);
     if (dom.healthFill) dom.healthFill.style.width = `${Math.max(0, Math.min(100, hud.health / Math.max(1, hud.maxHealth) * 100))}%`;
     if (dom.xpFill) dom.xpFill.style.width = `${Math.max(0, Math.min(100, hud.experience / Math.max(1, hud.experienceToNext) * 100))}%`;
 }

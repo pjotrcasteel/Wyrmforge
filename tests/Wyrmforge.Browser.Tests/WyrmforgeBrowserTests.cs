@@ -75,6 +75,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".game-screen canvas[aria-hidden='true']")).ToHaveCountAsync(1);
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".combat-spell-badge svg").First).ToBeVisibleAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const {createSpellBadge} = await import(new URL('js/spell-hud.js',document.baseURI).href);
+            const names = ['Arcane Orb','Fire Bolt','Frost Shard','Chain Lightning','Cinder Needle','Ice Lance','Ball Lightning','Aether Dart'];
+            const row = document.querySelector('[data-hud=spells]');
+            row.replaceChildren(...names.map(name => createSpellBadge({name,rank:3})));
+            // Keep this full-loadout layout sample stable while the actual renderer continues running.
+            row.dataset.loadout = 'sample';
+            window.__fullLoadoutFits = () => {
+                const box = row.getBoundingClientRect();
+                return [...row.children].every(item => item.getBoundingClientRect().right <= box.right);
+            };
+            window.__fullLoadoutFitsResult = window.__fullLoadoutFits();
+        }");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => window.__fullLoadoutFitsResult"));
         await ScreenshotAsync("mobile-spell-badges-320.png");
     }
 

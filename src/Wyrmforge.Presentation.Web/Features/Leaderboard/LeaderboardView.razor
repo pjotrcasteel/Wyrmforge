@@ -66,7 +66,8 @@
             while (await timer.WaitForNextTickAsync(refreshCancellation.Token))
             {
                 if (module is null) return;
-                await module.InvokeAsync<string>("flush");
+                var sync = await module.InvokeAsync<string>("flush");
+                status = sync == "local" ? "Offline · saved scores will retry automatically." : sync == "rate_limited" ? "Sync delayed · saved scores will retry later." : "";
                 entries = await module.InvokeAsync<HallEntry[]>("load");
                 await InvokeAsync(StateHasChanged);
             }
