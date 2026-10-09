@@ -370,7 +370,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.87", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.88", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
@@ -551,6 +551,37 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(burst).ToHaveCSSAsync("opacity", "0");
         await Page.Locator(".trail-clear-transition button").ClickAsync(new() { Timeout = 5000 });
         await Expect(Page.Locator(".trail-clear-transition")).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_RouteMap_ShowsFullPathAndConcreteRewardBeforeEntering(int width, int height)
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(width, height);
+        await OpenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        var wyrm = await Page.Locator("button.route-node.dragon").BoundingBoxAsync();
+        Assert.IsNotNull(wyrm);
+        Assert.IsLessThanOrEqualTo(height, wyrm.Y + wyrm.Height, "The complete route must fit on a portrait phone.");
+        var node = Page.Locator("button.route-node.available").First;
+        var seal = await node.Locator(".node-core").BoundingBoxAsync();
+        Assert.IsNotNull(seal);
+        Assert.IsGreaterThanOrEqualTo(44, seal.Width);
+        await ScreenshotAsync($"mobile-route-map-{width}.png");
+        await node.ClickAsync();
+        await Expect(Page.GetByLabel("Selected trail details")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".sheet-guarantee")).ToContainTextAsync("upgrade · guaranteed");
+        await Expect(Page.Locator(".route-link.selected").First).ToBeVisibleAsync();
+        var enter = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") });
+        var action = await enter.BoundingBoxAsync();
+        Assert.IsNotNull(action);
+        Assert.IsLessThanOrEqualTo(height, action.Y + action.Height);
+        await ScreenshotAsync($"mobile-route-preview-{width}.png");
+        await enter.ClickAsync();
+        await Expect(Page.GetByLabel("Current encounter objective")).ToBeVisibleAsync();
     }
 
     private async Task EnterFirstTrailAsync()

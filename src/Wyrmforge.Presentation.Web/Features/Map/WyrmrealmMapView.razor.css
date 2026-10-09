@@ -256,3 +256,48 @@
 .rare-trail-callout strong { color:#d4aa61; font-size:.58rem; letter-spacing:.1em; }
 .rare-trail-callout span { color:#a48f6c; font-size:.62rem; }
 @media (max-width:600px) { .rare-trail-callout { grid-column:1; } }
+
+/* An artless field chart: school seals, route states, and a complete portrait overview. */
+.realm-map-overlay { padding: max(10px,env(safe-area-inset-top)) 10px max(16px,env(safe-area-inset-bottom)); }
+.realm-map-card { padding:14px; border-radius:8px; }
+.map-header { align-items:center; gap:10px; margin-bottom:8px; }
+.map-run-progress { color:#cfb27d; font-size:.65rem; white-space:nowrap; }
+.map-attention { margin-bottom:8px; }
+.map-attention > summary { display:flex; justify-content:space-between; padding:8px 10px; border:1px solid #43364f; color:#b4a4c3; font-size:.65rem; cursor:pointer; min-height:36px; }
+.map-attention > summary::after { content:'⌄'; margin-left:8px; }
+.map-attention[open] > summary::after { content:'⌃'; }
+.map-attention > summary b { margin-left:auto; color:#d6b9ef; }
+.map-attention .resonance-panel { margin-top:7px; }
+.realm-route { height:clamp(360px,calc(100svh - 190px),650px); border-color:#74664f; border-radius:5px; }
+.map-stage-label { position:absolute;z-index:2;left:8px;color:#756b61;font-size:.55rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;pointer-events:none; }
+.wyrm-label { top:83%; }
+.route-key { display:flex; justify-content:space-between; gap:8px; padding:8px 2px 0; color:#a69aaf; font-size:.6rem; }
+.route-link.future { opacity:.35; }
+.route-link.active { stroke:#6b4930; stroke-width:2.3; stroke-dasharray:4 5; }
+.route-link.selected { stroke:#926318; stroke-width:3.5; stroke-dasharray:none; }
+.route-link.traversed { stroke:#455f4d; stroke-width:3; }
+.route-node { min-height:54px; width:64px; touch-action:manipulation; }
+.node-core { width:44px;height:44px;border-color:var(--school-ink,#64546b);background:#d8d0bf; }
+.school-fire { --school-ink:#a84932; }.school-frost { --school-ink:#386779; }.school-storm { --school-ink:#7a6722; }.school-arcane { --school-ink:#74528f; }
+.node-main-icon { color:var(--school-ink,#4c3a52);filter:none;font-family:Georgia,serif;font-size:1.35rem; }
+.node-school { width:18px;height:18px;color:var(--school-ink,#4c3a52);background:#eee5d1;border-color:var(--school-ink,#4c3a52);font-size:.72rem; }
+.route-node.available .node-core { border-color:var(--school-ink,#64546b);box-shadow:0 0 0 3px #eadfc5,0 0 0 4px var(--school-ink,#64546b); }
+.route-node.selected .node-core { box-shadow:0 0 0 3px #efd28d,0 0 0 5px #8b631e; }
+.route-node.completed .node-core { background:#b6c5b1; border-color:#4a6850; }
+.route-node.current .node-core { box-shadow:0 0 0 3px #8caa8c,0 0 0 5px #445f4a; }
+.route-node.rare .node-core { border-radius:7px;transform:none;background:#e0d1a8; }
+.route-node.rare .node-main-icon,.route-node.rare .node-school { transform:none; }
+.route-node.stage-3 .node-core { border-radius:5px; }
+.route-node.stage-4 .node-core { border-radius:12px 12px 4px 4px; }
+.route-node.dragon .node-core { width:48px;height:48px;background:#c5b4ca; }
+.route-node:focus-visible { outline:2px solid #61422d;outline-offset:5px;border-radius:5px; }
+.node-check,.node-rare { position:absolute;top:-7px;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;font-size:.7rem; }
+.node-check { left:-7px;background:#44634c;color:#eef2e8; }.node-rare { right:-7px;background:#72561c;color:#ffe4a0; }
+.node-badge { font-size:.65rem; }
+.node-name { display:none; }
+.sheet-encounter { flex-basis:100%;background:transparent !important;padding:0 !important;line-height:1.5; }
+.sheet-guarantee { color:#e3cb97 !important;border:1px solid #786343; }
+.node-sheet { border-radius:8px; }
+@media (max-width:600px) { .realm-map-card { padding:10px 8px; }.map-header h2 { font-size:1.05rem; }.node-core { width:44px;height:44px; }.route-node.dragon .node-core { width:48px;height:48px; }.current-marker { top:-17px; }.node-sheet { max-height:70svh;overflow:auto; }.route-key { font-size:.55rem; }.node-badge { min-width:14px;height:14px; }.sheet-close { min-width:44px;min-height:44px;top:0;right:0; } }
+
+.route-node.future { opacity:.55; }.route-node.bypassed { opacity:.25; }
