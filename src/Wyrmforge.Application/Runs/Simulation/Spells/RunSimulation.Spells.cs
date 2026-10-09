@@ -1,4 +1,4 @@
-using Wyrmforge.Domain.Combat.Abilities;
+﻿using Wyrmforge.Domain.Combat.Abilities;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
@@ -83,7 +83,7 @@ public sealed partial class RunSimulation
         var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier * evolution.ProjectileSpeedMultiplier;
         var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed);
         var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
-        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale;
+        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School);
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
         var masteredFrostShard = id == SpellId.FrostShard && FrostShardMastery.IsActive(rank);
@@ -123,7 +123,7 @@ public sealed partial class RunSimulation
         var current = origin;
         var evolution = EvolutionProfile(spell.Id);
         var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
-        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale;
+        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School);
         var jumps = profile.CalculateJumps(rank) + buildModifiers.ApplyInt(BuildStatId.BonusChains) + bonusJumps + evolution.BonusChains;
         var falloff = Math.Min(1, profile.DamageFalloff * evolution.ChainFalloffMultiplier);
         var hit = new HashSet<int>();

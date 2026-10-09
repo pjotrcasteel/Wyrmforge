@@ -32,6 +32,11 @@ public sealed class LevelChoiceService(
 
     public bool Apply(RunBuildState build, LevelChoice choice)
     {
+        if (choice.Kind == LevelChoiceKind.SchoolPower && Enum.TryParse<SpellSchool>(choice.Id[6..], out var school))
+        {
+            build.EmpowerSchool(school);
+            return true;
+        }
         if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
         if (choice.Id.StartsWith("spell:", StringComparison.Ordinal)) return build.Spells.LearnOrUpgrade(ParseSpell(choice.Id));
         if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal))
@@ -77,8 +82,9 @@ public sealed class LevelChoiceService(
             return choices;
         }
 
+        if (preferredSchool.HasValue) AddConvergeChoice(choices, pool, build, preferredSchool, resonance);
         AddReinforceChoice(choices, pool, build, resonance);
-        AddConvergeChoice(choices, pool, build, preferredSchool, resonance);
+        if (!preferredSchool.HasValue) AddConvergeChoice(choices, pool, build, null, resonance);
         if (count >= 3) AddVentureChoice(choices, pool, build, resonance);
         AddFallbackChoice(choices, pool, build, resonance, count);
         RememberDraft(choices);
@@ -140,21 +146,23 @@ public sealed class LevelChoiceService(
 
     private void AddConvergeChoice(List<LevelChoice> result, List<LevelChoice> pool, RunBuildState build, SpellSchool? preferredSchool, IReadOnlyList<RunResonanceEntry>? resonance)
     {
+        if (preferredSchool is { } guaranteedSchool)
+        {
+            var matching = pool.Where(choice => IsSpellChoiceForSchool(choice, guaranteedSchool)).ToList();
+            if (matching.Count == 0) matching = pool.Where(choice => choice.Kind == LevelChoiceKind.Rune && RuneSchool(ParseRunUpgrade(choice.Id)) == guaranteedSchool).ToList();
+            if (matching.Count > 0)
+                TakeInto(result, pool, matching, resonance, LevelChoiceDraftRole.Converge, _ => $"Route attunement: {guaranteedSchool}.");
+            else
+                result.Add(new LevelChoice($"power:{guaranteedSchool}", LevelChoiceKind.SchoolPower, $"{guaranteedSchool} Attunement",
+                    $"+10% {guaranteedSchool} spell damage for this hunt.", "✦", build.SchoolPower(guaranteedSchool), int.MaxValue,
+                    RewardRarity.Uncommon, LevelChoiceDraftRole.Converge, $"Route attunement: {guaranteedSchool}."));
+            return;
+        }
         var readySynergies = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy).ToList();
         if (readySynergies.Count > 0)
         {
             TakeInto(result, pool, readySynergies, resonance, LevelChoiceDraftRole.Converge, choice => ReadySynergyHint(choice));
             return;
-        }
-
-        if (preferredSchool is { } school)
-        {
-            var attuned = pool.Where(choice => IsSpellChoiceForSchool(choice, school)).ToList();
-            if (attuned.Count > 0)
-            {
-                TakeInto(result, pool, attuned, resonance, LevelChoiceDraftRole.Converge, _ => $"Route attunement: {school}.");
-                return;
-            }
         }
 
         var newSpells = pool.Where(choice => choice.Kind == LevelChoiceKind.NewSpell).ToList();

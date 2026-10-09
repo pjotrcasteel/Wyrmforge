@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
@@ -153,6 +153,58 @@ public sealed class RunSimulationTests
         Assert.IsFalse(simulation.PendingMapChoice);
         Assert.IsNull(snapshot.Dragon);
         Assert.IsGreaterThan(0, snapshot.Enemies.Count);
+    }
+
+    [TestMethod]
+    public void ApplyChoice_TrailReward_UpgradesWithoutSpendingXpOrInventingRunLevel()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
+        var applyReward = typeof(RunSimulation).GetMethod("ApplyRouteReward", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        applyReward.Invoke(simulation, [new Wyrmforge.Application.Runs.Navigation.WyrmrealmRewardProfile(SpellSchool.Fire, 0)]);
+        typeof(RunSimulation).GetMethod("TryLevelUp", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(simulation, null);
+        Assert.AreEqual(SpellSchool.Fire, simulation.PendingRewardSchool);
+        var choice = simulation.PendingChoices.Single(choice => choice.Role == LevelChoiceDraftRole.Converge);
+        Assert.IsTrue(simulation.ApplyChoice(choice.Id));
+        Assert.AreEqual(1, simulation.Level);
+        Assert.AreEqual(0, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(0, simulation.CreateSnapshot().Hud.Experience);
+        Assert.IsNull(simulation.PendingRewardSchool);
+        Assert.IsFalse(simulation.ApplyChoice(choice.Id));
+    }
+
+    [TestMethod]
+    public void ApplyRelicChoice_FullInventory_RequiresValidReplacementBeforeChangingAnything()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
+        simulation.OpenRewardCache();
+        Assert.IsTrue(simulation.ApplyRelicChoice(simulation.PendingRelicChoices[0].Id));
+        simulation.OpenRewardCache();
+        Assert.IsTrue(simulation.ApplyRelicChoice(simulation.PendingRelicChoices[0].Id));
+        simulation.OpenRewardCache();
+        var next = simulation.PendingRelicChoices[0].Id;
+        var previous = simulation.EquippedRelics[0].Id;
+        Assert.IsFalse(simulation.ApplyRelicChoice(next));
+        Assert.AreEqual(2, simulation.OwnedRelics.Count);
+        Assert.IsTrue(simulation.PendingRelicChoices.Count > 0);
+        Assert.IsTrue(simulation.ApplyRelicChoice(next, previous));
+        Assert.IsTrue(simulation.EquippedRelics.Any(relic => relic.Id == next));
+        Assert.IsFalse(simulation.EquippedRelics.Any(relic => relic.Id == previous));
+        Assert.AreEqual(3, simulation.OwnedRelics.Count);
+    }
+
+    [TestMethod]
+    public void CreateSummary_SpendingRunXp_StillReportsAllCollectedXpForHunterProgress()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
+        typeof(RunSimulation).GetMethod("GainExperience", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(simulation, [35]);
+        for (var count = 0; count < 10 && simulation.PendingChoices.Count > 0; count++)
+        {
+            var choice = simulation.PendingChoices.FirstOrDefault(choice => choice.Kind == LevelChoiceKind.Rune) ?? simulation.PendingChoices[0];
+            Assert.IsTrue(simulation.ApplyChoice(choice.Id));
+        }
+        Assert.AreEqual(3, simulation.Level);
+        Assert.AreEqual(10, simulation.CreateSnapshot().Hud.Experience);
+        Assert.AreEqual(35, simulation.CreateEvaluationSummary().ExperienceEarned);
     }
 
     private static void StartFirstMapEncounter(RunSimulation simulation) => Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));

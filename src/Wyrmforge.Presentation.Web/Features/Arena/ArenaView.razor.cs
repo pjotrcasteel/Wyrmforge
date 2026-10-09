@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.Checkpoint;
@@ -8,6 +8,7 @@ using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Offerings;
 using Wyrmforge.Application.Runs.RealmInfluence;
 using Wyrmforge.Application.Runs.Resonance;
+using Wyrmforge.Application.Runs.Relics;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.DragonEssences;
@@ -36,6 +37,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public bool RewardCache { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
@@ -79,7 +81,11 @@ public partial class ArenaView : IAsyncDisposable
     private int CurrentLevel => simulation?.Level ?? 1;
     private int PendingEssenceCount => Math.Max(0, CurrentEssences.Count - SecuredEssenceCount);
 
-    protected override void OnInitialized() => simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt);
+    protected override void OnInitialized()
+    {
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt);
+        if (RewardCache) simulation.OpenRewardCache();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -146,10 +152,10 @@ public partial class ArenaView : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task ChooseRelicAsync(RelicId id)
+    private async Task ChooseRelicAsync(RelicSelection selection)
     {
-        var relic = CurrentRelicChoices.SingleOrDefault(candidate => candidate.Id == id);
-        if (relic is null || simulation?.ApplyRelicChoice(id) != true) return;
+        var relic = CurrentRelicChoices.SingleOrDefault(candidate => candidate.Id == selection.Relic);
+        if (relic is null || simulation?.ApplyRelicChoice(selection.Relic, selection.Replace) != true) return;
         ShowRelicMoment(relic);
         await InvokeAsync(StateHasChanged);
     }

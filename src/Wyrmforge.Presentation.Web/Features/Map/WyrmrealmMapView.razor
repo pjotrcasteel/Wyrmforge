@@ -120,7 +120,9 @@
                     }
                     <div class="sheet-traits">
                         <span>@SchoolIcon(route.Reward.AttunementSchool) +@RunResonanceState.RouteWeight resonance</span>
-                        <span>@EncounterIcon(route.Encounter.Kind) @EncounterLabel(route.Encounter.Kind)</span>
+                        <span>@EncounterIcon(route.Encounter.Kind) @WyrmrealmStageCatalog.Name(selected.Stage)</span>
+                        <span>@WyrmrealmStageCatalog.Hint(selected.Stage)</span>
+                        <span>@SchoolIcon(route.Reward.AttunementSchool) Guaranteed @route.Reward.AttunementSchool upgrade</span>
                         @foreach (var trait in DetailTraits(route))
                         {
                             <span>@trait</span>

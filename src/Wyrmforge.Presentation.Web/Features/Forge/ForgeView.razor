@@ -4,6 +4,7 @@
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.Onboarding
+@using Wyrmforge.Domain.Progression.Experience
 
 <main class="game-shell @(section == ShellSection.Run ? "menu-home" : string.Empty)">
     @if (section != ShellSection.Run)
@@ -18,7 +19,11 @@
         {
             case ShellSection.Run:
                 <section class="main-menu" aria-label="Main menu">
-                    <header class="menu-brand"><span class="menu-sigil" aria-hidden="true">W</span><h1>WYRMFORGE</h1></header>
+                    <header class="menu-brand"><span class="menu-sigil" aria-hidden="true">W</span><h1>WYRMFORGE</h1>
+                        @if (Progress.AtlasUnlocked)
+                        {
+                            <button class="hunter-menu-progress" @onclick="() => OnQuests.InvokeAsync()"><span>HUNTER @Hunter.Level</span><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></button>
+                        }</header>
                     <nav class="menu-actions" aria-label="Wyrmforge navigation">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
                         @foreach (var item in Navigation.Where(item => item.Section != ShellSection.Run))
@@ -32,13 +37,17 @@
                         <button class="menu-destination" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i aria-hidden="true">♜</i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
                     </nav>
                     <footer class="menu-footer">
-                        @if (!Progress.TutorialRun) { <button @onclick="() => Navigate(ShellSection.Prepare)">Hunt preparation</button> }
+                        @if (!Progress.TutorialRun)
+                        {
+                            <button @onclick="() => Navigate(ShellSection.Prepare)">Hunt preparation</button>
+                            <button @onclick="() => OnQuests.InvokeAsync()">Quests@(QuestRewards > 0 ? $" · {QuestRewards}" : string.Empty)</button>
+                        }
                         <button aria-label="More options" @onclick="() => Navigate(ShellSection.Options)">•••</button>
                     </footer>
                 </section>
                 break;
             case ShellSection.Build:
-                <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" />
+                <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" />
                 break;
             case ShellSection.Forge:
                 <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
@@ -47,7 +56,7 @@
                 <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
                 break;
             case ShellSection.Prepare:
-                <RunHubView AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
+                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                 break;
             case ShellSection.Options:
                 <div class="menu-options"><button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button><a href="combat-lab">Developer Combat Lab</a></div>
@@ -75,6 +84,10 @@
     [Parameter] public EventCallback<ForgeMasteryId> OnForgeMastery { get; set; }
     [Parameter] public EventCallback OnStart { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
+    [Parameter] public EventCallback OnQuests { get; set; }
+    [Parameter] public int QuestRewards { get; set; }
+    [Parameter] public int RewardCaches { get; set; }
+    [Parameter] public HunterProgress Hunter { get; set; } = new();
 
     private ShellSection section = ShellSection.Run;
     private static readonly NavigationItem[] Navigation =

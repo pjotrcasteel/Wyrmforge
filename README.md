@@ -2,6 +2,16 @@
 
 Wyrmforge is an experimental C# action roguelite about shaping a mage, hunting Wyrms, stealing their Essence and deciding how deep to risk a run. Mechanics and architecture come before final art.
 
+## Prototype 0.0.86 — Hunter progression and trail rewards
+
+Collected hunt XP also advances a permanent **Hunter level**, separate from the temporary combat level. Quest claims grant Hunter XP and specific relic caches. Hunter levels unlock one Arcane point each, up to the current 24-point Atlas budget; levels 5, 10, 15 and 20 also grant a relic cache. Home shows the Hunter level and XP; results show XP earned and actual points gained; the quest screen names the next reward. Existing saves keep their Atlas budget and allocations without inventing historical XP. Claims, XP, point budget and unopened caches persist in a single save record.
+
+Trail clears wait for **Continue**. Every cleared elemental trail gives an immediate upgrade draft with a guaranteed choice from that school, independently of the next XP level. Active trail level-ups also guarantee that school. When all school spells and supporting runes are maxed, a school damage attunement remains available. The four trails now progress through skirmish, horde, ambush and heavy assault, with different spawn directions and a final Brute insertion; trails two and four guarantee relic caches.
+
+Relic drafts offer power, survival and mobility roles when the remaining unlocked pool permits it. Relics have concise, numeric effects, including burn, shock and echo rules. Full slots require an explicit replacement that equips immediately; the previous relic stays in the pack for Refuge. Earned XP survives retreat; quest progress banks on defeat or extraction. Developer hunts remain isolated from permanent progression.
+
+[Progression and encounter research](docs/playtesting/hunter-progression-0.0.86.md)
+
 ## Prototype 0.0.85 — Mobile game menus
 
 A compact main menu replaces the dashboard rail and mobile tab bar. Begin Hunt stays prominent; chapter gates, available Arcane points and secured Essence appear beside their destinations. WyrmForge uses a rune mark, restrained gold accents and serif headings without requiring artwork. Forge and Codex show one category at a time; preparation, offerings, Ascendant rites and goals remain available on dedicated screens.

@@ -177,3 +177,7 @@
 
 .run-playtest-feedback { display:block;width:100%;min-height:36px;border:1px solid #554166;border-radius:9px;background:rgba(85,56,115,.13);color:#d9b9f0;font-size:.71rem;font-weight:850;cursor:pointer;touch-action:manipulation; }
 .run-playtest-feedback:focus-visible { outline:2px solid #e2bfff;outline-offset:3px; }
+
+.quest-reward-ready{width:100%;min-height:48px;margin-bottom:12px;border:1px solid #cead74;background:#302137;color:#eee5d4;font:inherit;font-size:.85rem;cursor:pointer}
+
+.hunter-run-progress{display:grid;gap:7px;margin-bottom:12px;padding:12px;border:1px solid #756044;background:#261c2f}.hunter-run-progress strong{font-size:.85rem;color:#eee5d4}.hunter-run-progress span,.hunter-run-progress small{font-size:.75rem;color:#cead74}.hunter-run-progress progress{width:100%;height:5px;accent-color:#cead74}

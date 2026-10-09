@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.Navigation;
+﻿using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -33,7 +33,7 @@ public sealed partial class RunSimulation
         var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
-        encounterDirector.Start(encounterPattern, depthState.Depth);
+        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage);
         spawnTimer = 0.15;
         return true;
     }
@@ -73,6 +73,7 @@ public sealed partial class RunSimulation
         if (!mapEncounterCleanupPending) return;
         ClearMapEncounterField();
         mapEncounterCleanupPending = false;
+        TryLevelUp();
     }
 
     private void ClearMapEncounterField()

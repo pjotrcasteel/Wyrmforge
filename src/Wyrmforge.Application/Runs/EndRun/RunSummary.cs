@@ -1,4 +1,4 @@
-using Wyrmforge.Domain.Combat.Dragons;
+﻿using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells.Synergies;
 using Wyrmforge.Domain.Spells;
@@ -20,6 +20,7 @@ public sealed record RunSummary(
     RunOutcome Outcome)
 {
     public int Seed { get; init; }
+    public int ExperienceEarned { get; init; }
     public int CompletedRouteNodes { get; init; }
     public int RareRouteNodes { get; init; }
     public IReadOnlyList<SynergyId> SynergyIds { get; init; } = Array.Empty<SynergyId>();

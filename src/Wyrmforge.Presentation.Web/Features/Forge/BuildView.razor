@@ -5,6 +5,7 @@
 <section class="build-view">
     <header class="build-heading">
         <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
+        <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
     </header>
 
     <div class="web-layout">
@@ -177,6 +178,7 @@
 @code {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public EventCallback OnSelectionChanged { get; set; }
+    [Parameter] public EventCallback OnQuests { get; set; }
 
     private ElementReference viewport;
     private string focusedId = PassiveTreeCatalog.OriginId;

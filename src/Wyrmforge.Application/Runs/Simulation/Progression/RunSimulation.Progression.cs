@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.LevelUp;
+﻿using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 
@@ -22,16 +22,23 @@ public sealed partial class RunSimulation
 
     private void GainExperience(int amount)
     {
+        experienceEarned += amount;
         experience += amount;
         TryLevelUp();
     }
 
     private void TryLevelUp()
     {
-        if (pendingChoices.Count > 0 || experience < experienceToNext) return;
-        pendingChoices = pendingAttunements.Count > 0
-            ? levelChoiceService.Roll(build, pendingAttunements.Dequeue(), Resonance)
-            : levelChoiceService.Roll(build, Resonance);
+        if (pendingChoices.Count > 0) return;
+        if (pendingAttunements.TryDequeue(out var school))
+        {
+            PendingRewardSchool = school;
+            pendingChoices = levelChoiceService.Roll(build, school, Resonance);
+            return;
+        }
+        PendingRewardSchool = null;
+        if (experience < experienceToNext) return;
+        pendingChoices = CurrentRoute is { } route ? levelChoiceService.Roll(build, route.Reward.AttunementSchool, Resonance) : levelChoiceService.Roll(build, Resonance);
         if (pendingChoices.Count == 0) CompleteLevelUp();
     }
 

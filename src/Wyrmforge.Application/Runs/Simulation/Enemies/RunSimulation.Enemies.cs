@@ -1,4 +1,4 @@
-using Wyrmforge.Domain.Combat.Enemies;
+﻿using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Stats;
@@ -67,7 +67,7 @@ public sealed partial class RunSimulation
     private void SpawnEnemy(double width, double height, EnemyKind kind)
     {
         const double margin = 30;
-        var edge = randomSource.Next(4);
+        var edge = Wyrmforge.Application.Runs.Navigation.WyrmrealmStageCatalog.SpawnEdge(mapState.CurrentNode?.Stage ?? 1, enemyId, randomSource.Next(4));
         var position = edge switch
         {
             0 => new Vector2D(randomSource.NextDouble() * width, -margin),

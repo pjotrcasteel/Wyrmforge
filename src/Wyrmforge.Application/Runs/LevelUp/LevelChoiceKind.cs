@@ -7,4 +7,5 @@ public enum LevelChoiceKind
     SpellUpgrade,
     Evolution,
     Synergy,
+    SchoolPower,
 }

@@ -5,6 +5,7 @@
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Presentation.Web.Features.Forge
 @using Wyrmforge.Domain.Progression.Relics
+@using Wyrmforge.Domain.Progression.Experience
 @using Wyrmforge.Domain.Progression.RunUpgrades
 @using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Spells.Evolutions
@@ -19,6 +20,16 @@
             <p>@OutcomeMessage</p>
         </header>
 
+        <section class="hunter-run-progress" aria-label="Hunter XP earned">
+            <strong>HUNTER @Hunter.Level · +@(HunterGain?.Experience ?? 0) XP</strong>
+            @if (HunterGain is { } gain && gain.ToLevel > gain.FromLevel) { <span>LEVEL UP@(gain.AtlasPoints > 0 ? $" · +{gain.AtlasPoints} Arcane point{(gain.AtlasPoints == 1 ? string.Empty : "s")}" : string.Empty)@(gain.RelicCaches > 0 ? $" · +{gain.RelicCaches} relic cache" : string.Empty)</span> }
+            @if (!Hunter.AtCap) { <progress value="@Hunter.ExperienceInLevel" max="@Hunter.ExperienceToNext" aria-label="Hunter level progress"></progress><small>@Hunter.ExperienceInLevel / @Hunter.ExperienceToNext XP · @Hunter.NextRewardForBudget(PointBudget)</small> }
+            else { <small>Atlas complete · 24 points unlocked</small> }
+        </section>
+        @if (QuestRewards > 0)
+        {
+            <button class="quest-reward-ready" @onclick="() => OnQuests.InvokeAsync()">✦ @QuestRewards quest reward@(QuestRewards == 1 ? string.Empty : "s") ready · CLAIM</button>
+        }
         <div class="run-report-grid">
             <section>
                 <span>YOUR BUILD</span>
@@ -218,6 +229,11 @@
     [Parameter] public EventCallback OnReplay { get; set; }
     [Parameter] public EventCallback OnReturn { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
+    [Parameter] public EventCallback OnQuests { get; set; }
+    [Parameter] public int QuestRewards { get; set; }
+    [Parameter] public int PointBudget { get; set; } = 1;
+    [Parameter] public HunterProgress Hunter { get; set; } = new();
+    [Parameter] public HunterExperienceGain? HunterGain { get; set; }
 
     private string BuildIdentity
     {

@@ -9,6 +9,12 @@ namespace Wyrmforge.Application.Runs.LevelUp;
 
 public sealed class RunBuildState
 {
+    private readonly Dictionary<SpellSchool, int> schoolPower = [];
+
+    public int SchoolPower(SpellSchool school) => schoolPower.GetValueOrDefault(school);
+    public void EmpowerSchool(SpellSchool school) => schoolPower[school] = SchoolPower(school) + 1;
+    public double SchoolDamageMultiplier(SpellSchool school) => 1 + SchoolPower(school) * 0.1;
+
     public RunUpgradeState RunUpgrades { get; } = new();
 
     public SpellBook Spells { get; } = new();

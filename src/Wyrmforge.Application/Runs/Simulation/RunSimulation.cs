@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Abstractions.Randomness;
+﻿using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
@@ -64,6 +64,7 @@ public sealed partial class RunSimulation
     private int dragonsSlain;
     private int level = 1;
     private int experience;
+    private int experienceEarned;
     private int experienceToNext = ExperienceCurve.RequiredForLevel(1);
     private int choiceCount;
     private bool playerPositionInitialized;
@@ -83,6 +84,7 @@ public sealed partial class RunSimulation
     }
 
     public IReadOnlyList<LevelChoice> PendingChoices => pendingChoices;
+    public SpellSchool? PendingRewardSchool { get; private set; }
     public IReadOnlyList<DragonEssenceDefinition> PendingDragonEssenceChoices => pendingDragonEssenceChoices;
     public IReadOnlyList<DragonEssenceDefinition> SelectedDragonEssences => build.DragonEssences.Selected.Select(DragonEssenceCatalog.Get).ToArray();
     public IReadOnlyList<WyrmrealmMapNode> MapNodes => mapState.Nodes;
@@ -169,7 +171,12 @@ public sealed partial class RunSimulation
         }
 
         pendingChoices = [];
-        CompleteLevelUp();
+        if (PendingRewardSchool.HasValue)
+        {
+            PendingRewardSchool = null;
+            TryLevelUp();
+        }
+        else CompleteLevelUp();
         return true;
     }
 
@@ -230,6 +237,7 @@ public sealed partial class RunSimulation
         build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
         SynergyIds = build.Synergies.Snapshot().ToArray(),
+        ExperienceEarned = experienceEarned,
     };
 
     public RunRenderSnapshot CreateSnapshot()

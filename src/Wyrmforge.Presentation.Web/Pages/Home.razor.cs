@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -10,6 +10,8 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.GreatHunt;
 using Wyrmforge.Domain.Progression.PassiveTree;
+using Wyrmforge.Domain.Progression.Quests;
+using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Progression.Onboarding;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Domain.Spells.Evolutions;
@@ -30,6 +32,11 @@ public partial class Home
     private const string GreatHuntKey = "wyrmforge.greatHunt.v1";
     private readonly PassiveTreeSelection selection = new(1);
     private readonly FirstHuntProgress firstHunt = new();
+    private readonly HuntQuestState quests = new();
+    private readonly HunterProgress hunter = new();
+    private HunterExperienceGain? hunterGain;
+    private bool questsOpen;
+    private bool activeRewardCache;
     private readonly DragonEssenceVault essenceVault = new();
     private readonly ArcaneCodex arcaneCodex = new();
     private readonly ForgeProgressionState forgeProgression = new();
@@ -100,6 +107,7 @@ public partial class Home
 
     private async Task StartRunAsync()
     {
+        hunterGain = null;
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
         advancedOaths = [];
@@ -107,6 +115,7 @@ public partial class Home
         newlyConqueredAscendants = [];
         activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
+        activeRewardCache = !firstHunt.TutorialRun && quests.ConsumeCache();
         activeOffering = null;
         activeRunSeed = null;
         if (selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Consume(offering))
@@ -149,10 +158,13 @@ public partial class Home
         if (tutorialEnded || chapterAdvanced)
         {
             firstHunt.CompleteRun(false);
-            if (chapterAdvanced) selection.GrantPoints(1);
             await PersistFirstHuntAsync();
             await SaveArcaneBuildAsync();
         }
+        hunterGain = CreditHunterExperience(value.ExperienceEarned);
+        quests.Record(new HuntQuestEvidence(value.CompletedRouteNodes, value.RareRouteNodes, value.Depth, value.Outcome == RunOutcome.Abandoned,
+            value.DragonIds, value.EssenceIds, value.Synergies > 0, value.SpellLoadout.Any(spell => spell.Evolution.HasValue)));
+        await SaveArcaneBuildAsync();
         summary = tutorialEnded ? null : value;
         if (chapterAdvanced) leaderboardOpen = true;
         await TryRecordPlaytestFinishAsync(value);
@@ -180,7 +192,9 @@ public partial class Home
     {
         if (summary is null) return;
         activeRunSeed = summary.Seed;
+        activeRewardCache = false;
         summary = null;
+        hunterGain = null;
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
         advancedOaths = [];
@@ -208,6 +222,7 @@ public partial class Home
     private void ReturnToForge()
     {
         summary = null;
+        activeRewardCache = false;
         activeOffering = null;
         activeRunSeed = null;
         activeAscendant = null;
@@ -261,6 +276,9 @@ public partial class Home
             if (state is null) return;
             selection.RestoreBudget(state.Budget);
             selection.RestoreNodes(state.Nodes ?? []);
+            hunter.Restore(state.HunterExperience);
+            selection.RestoreBudget(Math.Max(selection.PointBudget, hunter.AtlasBudget));
+            quests.Restore(state.Quests, hunter.EarnedCaches);
         }
         catch (JSException) { }
         catch (JsonException) { }
@@ -270,13 +288,35 @@ public partial class Home
     {
         try
         {
-            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray());
+            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience);
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
         }
         catch (JSException) { }
     }
 
-    private sealed record ArcaneBuildSave(int Budget, string[] Nodes);
+    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null);
+
+    private HunterExperienceGain CreditHunterExperience(int experience)
+    {
+        var previousBudget = selection.PointBudget;
+        var gain = hunter.AddExperience(experience);
+        selection.RestoreBudget(Math.Max(selection.PointBudget, hunter.AtlasBudget));
+        quests.GrantCaches(gain.RelicCaches);
+        return gain with { AtlasPoints = selection.PointBudget - previousBudget };
+    }
+
+    private void OpenQuests() => questsOpen = true;
+    private void CloseQuests() => questsOpen = false;
+    private void ReturnToQuests() { ReturnToForge(); OpenQuests(); }
+
+    private async Task ClaimQuestAsync(string id)
+    {
+        var reward = quests.Claim(id);
+        if (reward is null) return;
+        CreditHunterExperience(reward.Experience);
+        // Claimed rewards and the Atlas budget share one localStorage write, preventing double grants after refresh.
+        await SaveArcaneBuildAsync();
+    }
 
     private async Task TryRecordPlaytestStartAsync()
     {

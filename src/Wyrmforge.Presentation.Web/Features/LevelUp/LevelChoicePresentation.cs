@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.LevelUp;
+﻿using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
@@ -10,7 +10,7 @@ public static class LevelChoicePresentation
 {
     public static string KindClass(LevelChoice choice) => choice.Kind switch
     {
-        LevelChoiceKind.Rune => "rune",
+        LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower => "rune",
         LevelChoiceKind.NewSpell => "new-spell",
         LevelChoiceKind.SpellUpgrade => "spell-upgrade",
         LevelChoiceKind.Evolution => "evolution",
@@ -21,6 +21,7 @@ public static class LevelChoicePresentation
 
     public static string Badge(LevelChoice choice) => choice.Kind switch
     {
+        LevelChoiceKind.SchoolPower => "ATTUNEMENT",
         LevelChoiceKind.Rune => "RUNE",
         LevelChoiceKind.NewSpell => "NEW SPELL",
         LevelChoiceKind.SpellUpgrade => "SPELL UPGRADE",
@@ -30,6 +31,7 @@ public static class LevelChoicePresentation
 
     public static string Rank(LevelChoice choice)
     {
+        if (choice.Kind == LevelChoiceKind.SchoolPower) return $"+{(choice.CurrentRank + 1) * 10}% SCHOOL DAMAGE";
         if (choice.Kind == LevelChoiceKind.Synergy) return "NEW INTERACTION";
         if (choice.Kind == LevelChoiceKind.Evolution) return "EVOLVED FORM";
         if (choice.Kind == LevelChoiceKind.NewSpell) return "RANK I";
@@ -39,6 +41,7 @@ public static class LevelChoicePresentation
 
     public static string Delta(LevelChoice choice)
     {
+        if (choice.Kind == LevelChoiceKind.SchoolPower) return choice.Description;
         if (choice.Kind == LevelChoiceKind.Rune) return RuneDelta(ParseRunUpgrade(choice.Id), choice.CurrentRank);
         if (choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade) return SpellDelta(ParseSpell(choice.Id), choice.CurrentRank);
         if (choice.Kind == LevelChoiceKind.Evolution) return EvolutionDelta(ParseEvolution(choice.Id));
@@ -47,7 +50,7 @@ public static class LevelChoicePresentation
 
     public static string Footer(LevelChoice choice) => choice.Kind switch
     {
-        LevelChoiceKind.Rune => "TEMPORARY • THIS RUN ONLY",
+        LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower => "TEMPORARY • THIS RUN ONLY",
         LevelChoiceKind.NewSpell => "TEMPORARY • ADDS A SPELL",
         LevelChoiceKind.SpellUpgrade => "TEMPORARY • DEEPENS A SPELL",
         LevelChoiceKind.Evolution => "TEMPORARY • DEFINES THIS SPELL",

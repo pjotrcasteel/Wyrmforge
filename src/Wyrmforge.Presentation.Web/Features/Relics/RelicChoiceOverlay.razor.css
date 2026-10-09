@@ -96,3 +96,5 @@
         min-height: 150px;
     }
 }
+
+.relic-replacement{display:grid;gap:10px}.relic-replacement button{display:grid;gap:5px;min-height:48px;padding:12px;text-align:left;border:1px solid #75604a;background:#251c24;color:#eee5d4;cursor:pointer}.relic-replacement small{color:#c2b1c7}

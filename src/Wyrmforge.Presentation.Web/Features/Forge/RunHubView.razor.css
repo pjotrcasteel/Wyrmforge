@@ -70,3 +70,5 @@
 .first-hunt-instructions span{font-size:.69rem;color:#c5b2ce}
 
 .run-hub{display:grid;gap:14px}.enter-realm{min-height:52px;border-radius:4px}.loadout-card{border-radius:4px}.text-action{min-height:44px}.ascendant-rite-card{border-radius:4px}
+
+.quest-cache-ready{padding:12px;border:1px solid #796443;color:#e4c68c;font-size:.8rem}

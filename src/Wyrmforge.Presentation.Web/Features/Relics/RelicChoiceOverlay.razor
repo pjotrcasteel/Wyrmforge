@@ -1,11 +1,25 @@
 @namespace Wyrmforge.Presentation.Web.Features.Relics
 @using Wyrmforge.Domain.Progression.Relics
+@using Wyrmforge.Application.Runs.Relics
 
 <div class="relic-overlay run-overlay">
     <section class="relic-card run-overlay-surface">
         <div class="eyebrow">RELIC CACHE • CHOOSE ONE</div>
-        <h2>Something old survived the realm.</h2>
-        <p>Relics are permanent for this run. The first two you find equip automatically; any others remain in your pack until you reach the Refuge.</p>
+        <h2>Choose a relic</h2>
+        <p>@(Equipped.Count < RelicInventoryState.MaxEquipped ? "Equips immediately · this hunt only" : "Two slots full · choose a replacement")</p>
+        @if (selected is { } replacementChoice)
+        {
+            <div class="relic-replacement" aria-label="Choose relic to replace">
+                <strong>@RelicCatalog.Get(replacementChoice).Name</strong>
+                @foreach (var old in Equipped)
+                {
+                    <button @onclick="() => OnChoose.InvokeAsync(new RelicSelection(replacementChoice, old.Id))">Replace @old.Name<small>@old.Description</small></button>
+                }
+                <button @onclick="() => selected = null">Back to relic choices</button>
+            </div>
+        }
+        else
+        {
         <div class="relic-choices">
             @foreach (var relic in Choices)
             {
@@ -14,16 +28,24 @@
                     <span class="relic-icon">@relic.Icon</span>
                     <strong>@relic.Name</strong>
                     <span>@relic.Description</span>
-                    <small>Take this relic for the rest of the run.</small>
+                    <small>@RelicChoiceService.Role(relic.Id) · @(Equipped.Count < RelicInventoryState.MaxEquipped ? "Equip" : "Replace a relic")</small>
                 </button>
             }
         </div>
+        }
     </section>
 </div>
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<RelicDefinition> Choices { get; set; } = Array.Empty<RelicDefinition>();
-    [Parameter] public EventCallback<RelicId> OnChoose { get; set; }
+    [Parameter] public IReadOnlyList<RelicDefinition> Equipped { get; set; } = [];
+    [Parameter] public EventCallback<RelicSelection> OnChoose { get; set; }
+    private RelicId? selected;
 
-    private Task ChooseAsync(RelicId id) => OnChoose.InvokeAsync(id);
+    private Task ChooseAsync(RelicId id)
+    {
+        if (Equipped.Count < RelicInventoryState.MaxEquipped) return OnChoose.InvokeAsync(new RelicSelection(id));
+        selected = id;
+        return Task.CompletedTask;
+    }
 }
