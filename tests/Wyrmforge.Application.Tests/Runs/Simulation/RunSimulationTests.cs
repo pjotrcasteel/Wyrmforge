@@ -207,5 +207,28 @@ public sealed class RunSimulationTests
         Assert.AreEqual(35, simulation.CreateEvaluationSummary().ExperienceEarned);
     }
 
+    [TestMethod]
+    public void Tick_KillQuotaReachedEarly_CompletesAfterFinalPushAndAwardsRouteOnce()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
+        StartFirstMapEncounter(simulation);
+        var node = simulation.CurrentMapNode!;
+        var register = typeof(RunSimulation).GetMethod("RegisterMapEncounterKill", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var director = (EncounterDirector)typeof(RunSimulation).GetField("encounterDirector", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
+        var quota = simulation.CurrentMapNodeKillsRequired;
+        for (var kill = 0; kill < quota + 2; kill++) register.Invoke(simulation, null);
+        Assert.IsFalse(simulation.PendingMapChoice);
+        Assert.AreEqual(EncounterPhase.Pressure, simulation.CurrentEncounterPhase);
+        Assert.AreEqual("Hold the trail", simulation.CreateSnapshot().Trail!.Objective);
+        Assert.IsTrue(simulation.CreateSnapshot().Trail!.Progress < 1);
+        for (var phase = 0; phase < 5; phase++) director.Tick(director.PhaseDuration);
+        simulation.Tick(0, default, 800, 600);
+        Assert.IsTrue(simulation.PendingMapChoice);
+        Assert.AreEqual(1, simulation.CompletedMapNodes.Count);
+        Assert.AreEqual(node.AttunementSchool, simulation.PendingRewardSchool);
+        simulation.Tick(0.05, default, 800, 600);
+        Assert.AreEqual(1, simulation.CompletedMapNodes.Count);
+    }
+
     private static void StartFirstMapEncounter(RunSimulation simulation) => Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
 }

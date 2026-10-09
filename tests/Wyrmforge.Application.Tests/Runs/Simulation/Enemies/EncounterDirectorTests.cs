@@ -25,9 +25,11 @@ public sealed class EncounterDirectorTests
         var director = new EncounterDirector();
         director.Start(EnemyEncounterPattern.Mixed, 1);
 
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(4, 16);
         Assert.AreEqual(EncounterPhase.Escalation, director.Phase);
 
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(8, 16);
         Assert.AreEqual(EncounterPhase.BreathingRoom, director.Phase);
         Assert.IsTrue(director.Directive.SuppressSpawns);
@@ -42,12 +44,15 @@ public sealed class EncounterDirectorTests
     {
         var director = new EncounterDirector();
         director.Start(EnemyEncounterPattern.Mixed, 2);
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(4, 16);
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(8, 16);
         director.Tick(EncounterDirector.BreathingRoomSeconds);
         Assert.IsTrue(director.TryTakeInsert(out var surgeInsert));
         Assert.AreEqual(EnemyKind.RiftStalker, surgeInsert);
 
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(13, 16);
 
         Assert.AreEqual(EncounterPhase.Climax, director.Phase);
@@ -62,9 +67,12 @@ public sealed class EncounterDirectorTests
     {
         var depthOne = new EncounterDirector();
         depthOne.Start(EnemyEncounterPattern.Swarm, 1);
+        depthOne.Tick(depthOne.PhaseDuration);
         depthOne.RegisterProgress(5, 20);
+        depthOne.Tick(depthOne.PhaseDuration);
         depthOne.RegisterProgress(10, 20);
         depthOne.Tick(EncounterDirector.BreathingRoomSeconds);
+        depthOne.Tick(depthOne.PhaseDuration);
         depthOne.RegisterProgress(16, 20);
 
         Assert.AreEqual(EncounterPhase.Climax, depthOne.Phase);
@@ -73,9 +81,12 @@ public sealed class EncounterDirectorTests
 
         var depthTwo = new EncounterDirector();
         depthTwo.Start(EnemyEncounterPattern.Swarm, 2);
+        depthTwo.Tick(depthTwo.PhaseDuration);
         depthTwo.RegisterProgress(6, 24);
+        depthTwo.Tick(depthTwo.PhaseDuration);
         depthTwo.RegisterProgress(12, 24);
         depthTwo.Tick(EncounterDirector.BreathingRoomSeconds);
+        depthTwo.Tick(depthTwo.PhaseDuration);
         depthTwo.RegisterProgress(20, 24);
 
         Assert.IsTrue(depthTwo.TryTakeInsert(out var insert));
@@ -88,10 +99,12 @@ public sealed class EncounterDirectorTests
         var director = new EncounterDirector();
         director.Start(EnemyEncounterPattern.StalkerPressure, 1);
 
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(3, 12);
         Assert.IsTrue(director.TryTakeInsert(out var escalationInsert));
         Assert.AreEqual(EnemyKind.RiftStalker, escalationInsert);
 
+        director.Tick(director.PhaseDuration);
         director.RegisterProgress(6, 12);
         director.Tick(EncounterDirector.BreathingRoomSeconds);
 
@@ -107,4 +120,40 @@ public sealed class EncounterDirectorTests
         Assert.AreEqual(EnemyKind.Brute, first);
         Assert.IsFalse(director.TryTakeInsert(out _));
     }
+    [TestMethod]
+    public void Tick_FullKillQuota_EachPhaseGetsItsOwnCombatWindow()
+    {
+        var director = new EncounterDirector();
+        director.Start(EnemyEncounterPattern.Mixed, 1);
+        director.RegisterProgress(16, 16);
+        Assert.AreEqual(EncounterPhase.Pressure, director.Phase);
+        Assert.IsFalse(director.CanComplete);
+        director.Tick(director.PhaseDuration);
+        Assert.AreEqual(EncounterPhase.Escalation, director.Phase);
+        director.Tick(director.PhaseDuration);
+        Assert.AreEqual(EncounterPhase.BreathingRoom, director.Phase);
+        director.Tick(director.PhaseDuration);
+        Assert.AreEqual(EncounterPhase.Surge, director.Phase);
+        director.Tick(director.PhaseDuration);
+        Assert.AreEqual(EncounterPhase.Climax, director.Phase);
+        Assert.IsFalse(director.CanComplete);
+        director.Tick(director.PhaseDuration - 0.1);
+        Assert.IsFalse(director.CanComplete);
+        director.Tick(0.1);
+        Assert.IsTrue(director.CanComplete);
+    }
+
+    [TestMethod]
+    public void Tick_FinalTrail_PacesLongerAndReinforcesWithBrutes()
+    {
+        var director = new EncounterDirector();
+        director.Start(EnemyEncounterPattern.Mixed, 1, 4);
+        Assert.IsTrue(director.PhaseDuration > 7);
+        director.TryTakeInsert(out _);
+        director.RegisterProgress(16, 16);
+        director.Tick(director.PhaseDuration);
+        Assert.IsTrue(director.TryTakeInsert(out var reinforcement));
+        Assert.AreEqual(EnemyKind.Brute, reinforcement);
+    }
+
 }

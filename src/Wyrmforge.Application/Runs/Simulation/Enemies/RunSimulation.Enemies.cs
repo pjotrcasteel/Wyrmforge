@@ -15,7 +15,15 @@ public sealed partial class RunSimulation
     {
         if (developmentHunt || dragon is { Health: > 0 }) return;
         var mapEncounter = mapState.EncounterActive;
-        if (mapEncounter) encounterDirector.Tick(delta);
+        if (mapEncounter)
+        {
+            encounterDirector.Tick(delta);
+            if (encounterDirector.CanComplete && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
+            {
+                CompleteTrail(completed);
+                return;
+            }
+        }
         if (mapEncounter && encounterDirector.Directive.SuppressSpawns)
         {
             spawnTimer = Math.Max(spawnTimer, 0.08);

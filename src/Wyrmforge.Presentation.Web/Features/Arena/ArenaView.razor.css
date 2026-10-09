@@ -316,3 +316,20 @@
 @media(prefers-reduced-motion:reduce){.trail-clear-transition,.trail-power-burst{animation:none}.trail-clear-transition{background:rgba(8,6,13,.98)}}
 
 .trail-clear-transition{animation:trail-blackout .6s ease-out both}.trail-clear-transition button{min-height:48px;min-width:180px;margin-top:20px;padding:12px 24px;border:1px solid #cead74;background:#302137;color:#eee5d4;font-weight:800;cursor:pointer}.trail-clear-transition button:focus-visible{outline:2px solid #eee5d4;outline-offset:4px}
+
+/* Trail status remains compact; phase cues never intercept movement or menu input. */
+.arena-top-hud { flex-wrap:wrap; }
+.combat-vitals { flex-basis:100%; }
+.arena-top-hud .encounter-objective { flex-basis:100%; justify-items:stretch; gap:5px; border-left:0; border-top:1px solid rgba(198,154,255,.23); padding:7px 10px; }
+.arena-top-hud .encounter-objective > span { font-size:.58rem; }
+.encounter-objective-progress { justify-content:space-between; }
+.encounter-phase small { margin-left:5px; font-size:.55rem; color:#afa1ba; font-weight:600; letter-spacing:0; }
+.trail-progress { height:4px; border-radius:4px; background:#34263e; overflow:hidden; }
+.trail-progress i { display:block; width:0; height:100%; background:#d4af72; transition:width .15s linear; }
+.encounter-change { position:fixed; z-index:4; top:max(151px,calc(env(safe-area-inset-top) + 147px)); left:50%; transform:translateX(-50%); max-width:calc(100vw - 30px); padding:7px 11px; border:1px solid #756147; border-radius:5px; background:rgba(16,12,22,.85); color:#e0cda9; text-align:center; font-size:.72rem; pointer-events:none; animation:encounter-cue 3s ease both; }
+.encounter-edge-cue { position:fixed; z-index:2; inset:0; pointer-events:none; animation:encounter-cue 3s ease both; box-shadow:inset 0 0 24px rgba(208,160,93,.26); }
+.encounter-edge-cue.north-south { box-shadow:inset 0 14px 20px -14px #d9ad67,inset 0 -14px 20px -14px #d9ad67; }
+.encounter-edge-cue.flanks { box-shadow:inset 14px 0 20px -14px #c299e4,inset -14px 0 20px -14px #c299e4; }
+@keyframes encounter-cue { 0%{opacity:0} 12%,75%{opacity:1} 100%{opacity:0} }
+@media (max-height:450px) { .arena-top-hud { width:min(430px,calc(100vw - 80px)); } .combat-vitals { padding:6px 10px;gap:4px; } .encounter-change { top:132px; } }
+@media (prefers-reduced-motion:reduce) { .trail-progress i { transition:none; } }

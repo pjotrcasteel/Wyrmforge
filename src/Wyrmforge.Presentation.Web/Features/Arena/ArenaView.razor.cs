@@ -65,15 +65,7 @@ public partial class ArenaView : IAsyncDisposable
     private int CurrentMapNodeKills => simulation?.CurrentMapNodeKills ?? 0;
     private int CurrentMapNodeKillsRequired => simulation?.CurrentMapNodeKillsRequired ?? 0;
     private EncounterPhase? CurrentEncounterPhase => simulation?.CurrentEncounterPhase;
-    private string EncounterPhaseLabel => CurrentEncounterPhase switch
-    {
-        EncounterPhase.Pressure => "PRESSURE",
-        EncounterPhase.Escalation => "ESCALATION",
-        EncounterPhase.BreathingRoom => "BREATHE",
-        EncounterPhase.Surge => "SURGE",
-        EncounterPhase.Climax => "CLIMAX",
-        _ => "TRAIL",
-    };
+    private string EncounterPhaseLabel => EncounterCueCatalog.PhaseName(CurrentEncounterPhase);
     private int CurrentDepth => simulation?.Depth ?? 1;
     private int CheckpointVisit => simulation?.CheckpointVisit ?? 0;
     private int RelicSlots => simulation?.RelicSlots ?? 0;

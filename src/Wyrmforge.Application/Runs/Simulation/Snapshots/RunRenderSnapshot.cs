@@ -20,4 +20,7 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<DragonHuntHazardRenderSnapshot>? HuntHazards = null,
     double SimulationMilliseconds = 0,
     IReadOnlyList<ExperienceShardRenderSnapshot>? ExperienceShards = null,
-    IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null);
+    IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
+{
+    public TrailRenderSnapshot? Trail { get; init; }
+}

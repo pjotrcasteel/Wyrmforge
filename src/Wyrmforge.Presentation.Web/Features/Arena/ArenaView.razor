@@ -1,4 +1,5 @@
 @using Wyrmforge.Application.Runs.Navigation
+@using Wyrmforge.Application.Runs.Simulation
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
@@ -42,11 +43,12 @@
         @if (MapCombatActive && CurrentMapNode is { } activeNode)
         {
             <section class="encounter-objective" aria-label="Current encounter objective">
-                <span title="@activeNode.Name">@WyrmrealmStageCatalog.Name(activeNode.Stage).ToUpperInvariant() • @activeNode.Name</span>
+                <span title="@activeNode.Name">TRAIL @activeNode.Stage/4 · @WyrmrealmStageCatalog.Name(activeNode.Stage).ToUpperInvariant()</span>
                 <div class="encounter-objective-progress">
-                    <em class="encounter-phase">@EncounterPhaseLabel</em>
-                    <strong>@CurrentMapNodeKills / @CurrentMapNodeKillsRequired KILLS</strong>
+                    <em class="encounter-phase">@EncounterPhaseLabel <small data-trail="phase-time"></small></em>
+                    <strong data-trail="objective">@CurrentMapNodeKills/@CurrentMapNodeKillsRequired kills</strong>
                 </div>
+                <div class="trail-progress" role="progressbar" aria-label="Trail progress" aria-valuemin="0" aria-valuemax="100"><i data-trail="progress"></i></div>
             </section>
         }
         else if (EvacuationActive)
@@ -57,6 +59,17 @@
             </section>
         }
     </div>
+
+    @if (MapCombatActive && !trailTransition && CurrentMapNode is { } cueNode)
+    {
+        <div @key="(cueNode.Id, CurrentEncounterPhase)" class="encounter-change" aria-live="polite">
+            @EncounterCueCatalog.Cue(cueNode.Stage, CurrentEncounterPhase)
+        </div>
+        @if (CurrentEncounterPhase != EncounterPhase.BreathingRoom)
+        {
+            <div @key="(cueNode.Id, CurrentEncounterPhase, \"edge\")" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode.Stage)" aria-hidden="true"></div>
+        }
+    }
 
     @if (CurrentEssences.Count > 0 || CurrentRelics.Count > 0 || CurrentDepth > 1 || CurrentOffering is not null)
     {

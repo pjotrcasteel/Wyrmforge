@@ -1,4 +1,5 @@
 ﻿using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -14,6 +15,26 @@ public sealed partial class RunSimulation
     public int CurrentMapNodeKillsRequired => mapState.CurrentNodeKillsRequired;
     public EncounterPhase? CurrentEncounterPhase => encounterDirector.Active ? encounterDirector.Phase : null;
     public IReadOnlyList<SpellSchool> PendingAttunements => pendingAttunements.ToArray();
+
+    private TrailRenderSnapshot? CreateTrailSnapshot()
+    {
+        if (!mapState.EncounterActive || !encounterDirector.Active) return null;
+        var phase = encounterDirector.Phase;
+        var phaseProgress = encounterDirector.PhaseProgress;
+        var phaseFraction = phase switch
+        {
+            EncounterPhase.Pressure => phaseProgress * 0.25,
+            EncounterPhase.Escalation => 0.25 + phaseProgress * 0.25,
+            EncounterPhase.BreathingRoom => 0.5,
+            EncounterPhase.Surge => 0.5 + phaseProgress * 0.25,
+            _ => 0.75 + phaseProgress * 0.25,
+        };
+        var killProgress = CurrentMapNodeKills / (double)Math.Max(1, CurrentMapNodeKillsRequired);
+        var seconds = (int)Math.Ceiling(Math.Max(0, encounterDirector.PhaseDuration - encounterDirector.PhaseElapsed));
+        var status = seconds > 0 ? $"{seconds}s" : "Clear enemies";
+        var objective = killProgress >= 1 ? "Hold the trail" : $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills";
+        return new(Math.Min(killProgress, phaseFraction), status, objective);
+    }
 
     private WyrmrealmRouteProfile? CurrentRoute => mapState.EncounterActive ? mapState.CurrentNode?.Route : null;
 
@@ -50,7 +71,12 @@ public sealed partial class RunSimulation
         if (dragonEncounterStarted || !mapState.EncounterActive) return;
         var completedNode = mapState.CurrentNode;
         encounterDirector.RegisterProgress(mapState.CurrentNodeKills + 1, mapState.CurrentNodeKillsRequired);
-        if (!mapState.RegisterKill() || completedNode is null) return;
+        if (!mapState.RegisterKill(encounterDirector.CanComplete) || completedNode is null) return;
+        CompleteTrail(completedNode);
+    }
+
+    private void CompleteTrail(WyrmrealmMapNode completedNode)
+    {
         completedRouteNodes.Add(completedNode);
         RefreshBuildModifiers(true);
         ApplyRouteReward(completedNode.Route?.Reward);
