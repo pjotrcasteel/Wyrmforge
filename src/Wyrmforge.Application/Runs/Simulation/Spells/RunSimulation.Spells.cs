@@ -135,11 +135,13 @@ public sealed partial class RunSimulation
             var target = NearestTarget(current, hit);
             if (target is null) break;
             hit.Add(target.Id);
+            hitCount++;
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
             RegisterElementalImpact(target.Position, spell.Id);
             var killed = DamageTarget(target, hitDamage);
             if (!killed) ApplyAbilityStatus(spell, rank, target);
+            if (!killed) ApplyHitRules(spell.Id, target);
 
             if (forkPending)
             {
@@ -157,11 +159,13 @@ public sealed partial class RunSimulation
         var target = NearestTarget(origin, hit);
         if (target is null) return;
         hit.Add(target.Id);
+        hitCount++;
         lightning.Add(new LightningTrace(origin, target.Position, 0.16));
         var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
         RegisterElementalImpact(target.Position, spell.Id);
         var killed = DamageTarget(target, forkDamage);
         if (!killed) ApplyAbilityStatus(spell, rank, target);
+        if (!killed) ApplyHitRules(spell.Id, target);
     }
 
     private SpellEvolutionProfile EvolutionProfile(SpellId spell)

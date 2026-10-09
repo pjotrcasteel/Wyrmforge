@@ -113,6 +113,7 @@ public sealed partial class RunSimulation
             case EnemyState defeatedEnemy:
                 RegisterEnemyDeath(defeatedEnemy);
                 kills++;
+                QueueRelicDefeatBursts(defeatedEnemy);
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 experienceShards.Drop(defeatedEnemy.Position, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost);

@@ -43,6 +43,15 @@
             </section>
         </div>
 
+        @if (StrongestRelic is { } payoff)
+        {
+            var relic = RelicCatalog.Get(payoff.Id);
+            <section class="hunter-run-progress" aria-label="Relic payoff">
+                <strong>@relic.Icon @relic.Name</strong>
+                <small>@payoff.Bursts bursts · @payoff.BurstDamage.ToString("N0") burst damage · @payoff.BurstKills kills</small>
+            </section>
+        }
+
         @if (AdvancedSpells.Count > 0)
         {
             <section class="run-mastery-progress" aria-label="Spell mastery earned">
@@ -180,7 +189,7 @@
                     @foreach (var relic in Summary.RelicLoadout)
                     {
                         var definition = RelicCatalog.Get(relic.Id);
-                        <b>@definition.Icon @definition.Name@(relic.Equipped ? " • equipped" : string.Empty)</b>
+                        <b>@definition.Icon @definition.Name@(relic.Equipped ? " • equipped" : string.Empty)@(relic.Bursts > 0 ? $" · {relic.Bursts} bursts · {relic.BurstDamage:N0} burst damage · {relic.BurstKills} kills" : string.Empty)</b>
                     }
                 </div>
             </div>
@@ -248,6 +257,9 @@
             return $"{first.School} attuned";
         }
     }
+
+    private Wyrmforge.Application.Runs.EndRun.RunRelicSummary? StrongestRelic => Summary.RelicLoadout
+        .Where(relic => relic.Bursts > 0).OrderByDescending(relic => relic.BurstDamage).ThenByDescending(relic => relic.Bursts).FirstOrDefault();
 
     private string RunStory
     {

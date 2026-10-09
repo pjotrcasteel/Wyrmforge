@@ -1,5 +1,6 @@
 using Wyrmforge.Application.Runs.Relics;
 using Wyrmforge.Domain.Progression.Relics;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -21,7 +22,7 @@ public sealed partial class RunSimulation
         pendingRelicChoices = [];
         if (build.Relics.HasFreeSlot) build.Relics.TryEquip(id);
         else build.Relics.TryReplace(replacement!.Value, id);
-        RefreshRelicEffects();
+        RefreshRelicEffects(true);
         return true;
     }
 
@@ -39,13 +40,15 @@ public sealed partial class RunSimulation
         return true;
     }
 
-    private void OfferRelicChoice()
+    private void OfferRelicChoice(SpellSchool? preferredSchool = null)
     {
         if (pendingRelicChoices.Count > 0) return;
-        pendingRelicChoices = relicChoiceService.Roll(build.Relics, randomSource, availableRelics);
+        preferredSchool ??= SpellCatalog.All.Where(spell => build.Spells[spell.Id] > 0).GroupBy(spell => spell.School)
+            .OrderByDescending(group => group.Sum(spell => build.Spells[spell.Id])).Select(group => (SpellSchool?)group.Key).FirstOrDefault();
+        pendingRelicChoices = relicChoiceService.Roll(build.Relics, randomSource, availableRelics, preferredSchool);
     }
 
     public void OpenRewardCache() => OfferRelicChoice();
 
-    private void RefreshRelicEffects() => RefreshBuildModifiers(true);
+    private void RefreshRelicEffects(bool healMaximumHealthIncrease = false) => RefreshBuildModifiers(healMaximumHealthIncrease);
 }

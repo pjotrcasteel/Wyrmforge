@@ -27,7 +27,7 @@ public sealed partial class RunSimulation
             .Select(upgrade => new RunUpgradeSummary(upgrade.Id, build.RunUpgrades[upgrade.Id]))
             .ToArray();
         var relicLoadout = build.Relics.Owned
-            .Select(id => new RunRelicSummary(id, build.Relics.IsEquipped(id)))
+            .Select(CreateRelicSummary)
             .ToArray();
         var resonance = Resonance
             .Where(entry => entry.Value > 0)
