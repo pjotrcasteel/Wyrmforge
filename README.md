@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.91 — A foothold before the first reward
+
+- The first trail at depth one caps its crowd at eight and spaces spawn batches 75% further apart. Phase timing, kill quotas and later trail pressure remain intact.
+- Arcane Orb II now pierces one extra target; rank III retains its wider bolt. Frost Shard hits for 16 instead of 12, with a 0.70s base freeze instead of 0.53s.
+- BalanceLab accepts portrait arena dimensions and a fresh-hunter mode with zero Atlas points and the actual base unlock pool.
+- [Matched before/after simulation results](docs/playtesting/opening-balance-0.0.91.md) show improvement while retaining the limitations of heuristic agents.
+
 ## Prototype 0.0.90 — Damage and critical-health awareness
 
 - Damage briefly colors the player and reveals a nearby health ring. Sustained contact cannot create rapid repeated flashes.

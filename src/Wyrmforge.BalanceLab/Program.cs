@@ -1,3 +1,5 @@
+using Wyrmforge.Domain.Progression.Forge;
+using Wyrmforge.Domain.Spells;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
@@ -9,21 +11,28 @@ var driver = new RunSelfPlayDriver();
 var factory = new RunSimulationFactory(new SeededRandomSource(1));
 var personalities = Enum.GetValues<RunAgentPersonality>();
 
-foreach (var build in SelfPlayBuildCatalog.All)
+var builds = options.FreshHunter
+    ? Enum.GetValues<SpellSchool>().Select(school => new SelfPlayBuildDefinition(
+        $"Fresh {school}", SelfPlayBuildCohort.FullBuild, school, new HashSet<string>(), Array.Empty<string>(), 0)).ToArray()
+    : SelfPlayBuildCatalog.All;
+
+Console.WriteLine($"Arena: {options.ArenaWidth} × {options.ArenaHeight}; fresh hunter: {options.FreshHunter}");
+
+foreach (var build in builds)
 {
     foreach (var personality in personalities)
     {
         for (var index = 0; index < options.RunsPerCombination; index++)
         {
             var seed = options.SeedStart + index;
-            var simulation = factory.Create(build.SelectedNodes, seed: seed);
+            var simulation = factory.Create(build.SelectedNodes, seed: seed, progression: options.FreshHunter ? new ForgeProgressionState() : null);
             var agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
             var metrics = driver.Play(
                 build,
                 seed,
                 simulation,
                 agent,
-                new RunSelfPlayOptions(MaximumSimulatedSeconds: options.MaximumSimulatedSeconds));
+                new RunSelfPlayOptions(ArenaWidth: options.ArenaWidth, ArenaHeight: options.ArenaHeight, MaximumSimulatedSeconds: options.MaximumSimulatedSeconds));
             results.Add(metrics);
         }
 

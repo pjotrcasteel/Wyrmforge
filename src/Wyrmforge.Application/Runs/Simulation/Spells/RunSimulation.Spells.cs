@@ -85,6 +85,7 @@ public sealed partial class RunSimulation
         var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
         var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School);
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
+        var piercingArcaneOrb = id == SpellId.ArcaneOrb && rank >= 2;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
         var masteredFrostShard = id == SpellId.FrostShard && FrostShardMastery.IsActive(rank);
         var status = CreateProjectileStatus(spell, rank);
@@ -97,7 +98,7 @@ public sealed partial class RunSimulation
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
             var radius = baseRadius * evolution.ProjectileRadiusMultiplier;
-            var pierces = (masteredArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces;
+            var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces;
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var effects = new ProjectileEffects(
