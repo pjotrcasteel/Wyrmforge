@@ -4,7 +4,7 @@
 
 @if (!runActive)
 {
-    <ForgeView PlayerName="playerName" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback"
+    <ForgeView PlayerName="@playerName" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback"
         OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneBuildAsync" OnLeaderboard="OpenLeaderboard" OnQuests="OpenQuests" QuestRewards="quests.ReadyCount" RewardCaches="quests.Caches" Hunter="hunter" />
 }
 else

@@ -37,3 +37,10 @@
 .player-identity label { font-size:.6rem; letter-spacing:.12em; color:#b9a5cf; }
 .player-identity input { min-width:0; width:100%; border:1px solid #655276; border-radius:5px; padding:8px 10px; background:#17121f; color:#eee4f8; font:inherit; }
 .player-identity small { grid-column:2; font-size:.6rem; color:#a998b9; }
+
+@media(orientation:landscape) and (max-height:520px) {
+    .menu-brand { grid-column:1; grid-row:1; }
+    .player-identity { grid-column:1; grid-row:2; margin:0; }
+    .menu-actions { grid-column:2; grid-row:1 / span 2; }
+    .menu-footer { grid-column:2; grid-row:3; }
+}

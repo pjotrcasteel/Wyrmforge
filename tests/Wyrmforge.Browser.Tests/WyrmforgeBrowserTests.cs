@@ -80,7 +80,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const names = ['Arcane Orb','Fire Bolt','Frost Shard','Chain Lightning','Cinder Needle','Ice Lance','Ball Lightning','Aether Dart'];
             const row = document.querySelector('[data-hud=spells]');
             row.replaceChildren(...names.map(name => createSpellBadge({name,rank:3})));
-            // Keep this full-loadout layout sample stable while the actual renderer continues running.
+            // Measure the full loadout synchronously before the next combat HUD update.
             row.dataset.loadout = 'sample';
             window.__fullLoadoutFits = () => {
                 const box = row.getBoundingClientRect();
@@ -405,7 +405,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.88", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual(await Page.Locator("[data-game-version]").GetAttributeAsync("data-game-version"), root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());
@@ -721,7 +721,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             window.__statusPaused = false;
             arena.initializeArena(document.querySelector('canvas'), {
                 invokeMethodAsync: async () => ({
-                    player:{x:160,y:350,radius:12,barrier:false},
+                    player:{x:160,y:350,radius:12,barrier:false}, hud:{health:100,maxHealth:100,spells:[]},
                     enemies:[{x:160,y:200,radius:12,statuses:[{id:1,stacks:1}]}],
                     splashPulses:[],elementalImpacts:[],deathBursts:[],essenceBursts:[],essenceBolts:[],projectiles:[],lightning:[],
                     paused:window.__statusPaused,ended:false
