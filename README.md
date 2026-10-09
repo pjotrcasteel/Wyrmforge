@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.97 — Earlier opening upgrades
+
+- The first two run-level upgrades cost 6 and 10 collected XP, previously 10 and 15. Level three onward keeps its existing costs. Opening reinforcement arrives sooner without adding XP or changing enemy pressure.
+- Collected XP still counts in full toward Hunter progression, including XP spent on run levels.
+- CI now records the same fresh and established portrait cohorts for each gameplay PR. The first-hunt milestone remains open.
+
 ## Prototype 0.0.96 — Useful opening reinforcement
 
 - The first two normal upgrade drafts prioritise an existing spell upgrade in the Reinforce slot. If route attunement already took that upgrade, immediate damage or cast speed takes its place. Later drafts retain their broader rune pool.

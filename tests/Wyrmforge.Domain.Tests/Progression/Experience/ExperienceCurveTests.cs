@@ -7,8 +7,10 @@ namespace Wyrmforge.Domain.Tests.Progression.Experience;
 public sealed class ExperienceCurveTests
 {
     [TestMethod]
-    [DataRow(1, 10)]
-    [DataRow(2, 15)]
+    [DataRow(0, 6)]
+    [DataRow(1, 6)]
+    [DataRow(2, 10)]
+    [DataRow(3, 20)]
     [DataRow(5, 30)]
     public void RequiredForLevel_ReturnsExpectedCurve(int level, int expected)
     {
