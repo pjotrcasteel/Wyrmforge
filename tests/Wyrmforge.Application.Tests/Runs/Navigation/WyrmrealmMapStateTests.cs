@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
@@ -6,6 +6,26 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 [TestClass]
 public sealed class WyrmrealmMapStateTests
 {
+    [TestMethod]
+    public void Generate_DepthOne_AlwaysOffersRecoveryWhileDeeperRoutesKeepTheirVariety()
+    {
+        var deeperRecovery = new HashSet<double>();
+        for (var seed = 0; seed < 80; seed++)
+        {
+            foreach (var node in WyrmrealmMapGenerator.Generate(1, seed).Where(node => node.Type == WyrmrealmNodeType.Combat))
+            {
+                Assert.AreEqual(node.Rarity == WyrmrealmNodeRarity.Rare ? 0.12 : 0.10, node.Route!.Reward.RecoveryFraction);
+            }
+            foreach (var node in WyrmrealmMapGenerator.Generate(2, seed).Where(node => node.Type == WyrmrealmNodeType.Combat))
+            {
+                deeperRecovery.Add(node.Route!.Reward.RecoveryFraction);
+            }
+        }
+        Assert.IsTrue(deeperRecovery.Contains(0));
+        Assert.IsTrue(deeperRecovery.Any(recovery => recovery is >= 0.05 and <= 0.09));
+        Assert.IsTrue(deeperRecovery.Contains(0.12));
+    }
+
     [TestMethod]
     public void NewMap_OffersThreeFirstStageRoutes()
     {
