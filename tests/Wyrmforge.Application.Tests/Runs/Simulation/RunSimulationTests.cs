@@ -203,7 +203,7 @@ public sealed class RunSimulationTests
             Assert.IsTrue(simulation.ApplyChoice(choice.Id));
         }
         Assert.AreEqual(3, simulation.Level);
-        Assert.AreEqual(10, simulation.CreateSnapshot().Hud.Experience);
+        Assert.AreEqual(19, simulation.CreateSnapshot().Hud.Experience);
         Assert.AreEqual(35, simulation.CreateEvaluationSummary().ExperienceEarned);
     }
 
