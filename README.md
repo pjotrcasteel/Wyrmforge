@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.96 — Useful opening reinforcement
+
+- The first two normal upgrade drafts prioritise an existing spell upgrade in the Reinforce slot. If route attunement already took that upgrade, immediate damage or cast speed takes its place. Later drafts retain their broader rune pool.
+- Chosen-school guarantees, content unlocks, crowd pressure, spell stats and evolution drafts remain intact.
+- [Matched portrait simulations](docs/playtesting/opening-drafts-0.0.96.md): fresh second-trail clears rise from 1/64 to 4/64; no fresh agent reaches a Wyrm yet. The first-hunt milestone remains open.
+
 ## Prototype 0.0.95 — Compact nickname and side-by-side combat HUD
 
 - The player nickname is a small top-left label with a pencil button. Its editor opens on demand; the nickname persists in a one-year SameSite cookie, migrating the previous local save.
