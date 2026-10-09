@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.95 — Compact nickname and side-by-side combat HUD
+
+- The player nickname is a small top-left label with a pencil button. Its editor opens on demand; the nickname persists in a one-year SameSite cookie, migrating the previous local save.
+- Shared client/server nickname validation rejects common Dutch/English profanity and simple digit/separator disguises while allowing ordinary names. Existing flagged leaderboard rows are hidden.
+- The trail panel sits to the right of player vitals again. Compact spell badges wrap within their own panel, and phase cues follow the actual HUD height.
+
 ## Prototype 0.0.94 — Player identity and clean overlays
 
 - Edit the saved player nickname on the main screen. Completed hunts save locally and submit scores automatically with the actual release version; failed submissions retry with their original ID. The board refreshes while open.

@@ -160,6 +160,7 @@ test('Leaderboard stores opted-in community scores, never invented Legends, and 
     assert.equal((await send({ ...base, consent: false })).status, 400);
     assert.equal((await send({ ...base, nickname: 'test@example.com' })).status, 400);
     assert.equal((await send(base, 'https://attacker.invalid')).status, 403);
+    for (const nickname of ['FuckMage', 'KankerMage', 'f_u_c_k', 'Sh1t']) assert.equal((await send({...base, nickname})).status, 400);
     assert.equal((await send(base)).status, 202);
     const duplicate = await (await send(base)).json();
     assert.equal(duplicate.duplicate, true);

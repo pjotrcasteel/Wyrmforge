@@ -33,14 +33,23 @@
 .hunter-menu-progress{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;width:100%;max-width:280px;padding:8px 12px;border:1px solid #403346;background:transparent;color:#cead74;font:600 .7rem/1.2 system-ui,sans-serif;cursor:pointer}.hunter-menu-progress span:last-child{color:#b7aaba;font-weight:400}.hunter-menu-progress:focus-visible{outline:2px solid #cead74;outline-offset:3px}
 @media(max-width:360px){.menu-footer>button{font-size:.7rem;padding:8px}.menu-footer{gap:0}}
 
-.player-identity { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:5px 10px; margin:8px 0 12px; }
-.player-identity label { font-size:.6rem; letter-spacing:.12em; color:#b9a5cf; }
-.player-identity input { min-width:0; width:100%; border:1px solid #655276; border-radius:5px; padding:8px 10px; background:#17121f; color:#eee4f8; font:inherit; }
-.player-identity small { grid-column:2; font-size:.6rem; color:#a998b9; }
-
+/* The public nickname is a small corner control, not a main-menu form. */
+.menu-home { position:relative; }
+.player-identity { position:absolute; top:max(8px,env(safe-area-inset-top)); left:max(12px,env(safe-area-inset-left)); z-index:2; max-width:calc(100% - 24px); }
+.player-name-edit { display:flex; align-items:center; gap:8px; min-height:44px; padding:0; border:0; color:#d8c8e6; background:transparent; font-family:inherit; font-size:.75rem; font-weight:600; cursor:pointer; }
+.player-name-edit span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.player-name-edit svg { width:14px; height:14px; flex:0 0 auto; color:#cead74; }
+.player-identity small { display:block; margin-top:-5px; color:#a998b9; font-size:.58rem; }
+.name-editor-backdrop { position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:18px; background:#09060de6; }
+.name-editor { display:grid; gap:12px; width:min(320px,100%); padding:20px; border:1px solid #655276; border-radius:8px; background:#17121f; }
+.name-editor label { font-size:.72rem; letter-spacing:.1em; color:#b9a5cf; }
+.name-editor input { width:100%; min-width:0; min-height:44px; border:1px solid #655276; border-radius:5px; padding:8px 10px; background:#0e0b14; color:#eee4f8; font:inherit; }
+.name-editor small { color:#a998b9; font-size:.7rem; }
+.name-editor .name-error { color:#ffac9f; }
+.name-editor > div { display:flex; justify-content:flex-end; gap:8px; }
+.name-editor button { min-height:44px; padding:8px 14px; border:1px solid #655276; border-radius:5px; background:#302339; color:#eee4f8; font:inherit; cursor:pointer; }
 @media(orientation:landscape) and (max-height:520px) {
     .menu-brand { grid-column:1; grid-row:1; }
-    .player-identity { grid-column:1; grid-row:2; margin:0; }
-    .menu-actions { grid-column:2; grid-row:1 / span 2; }
-    .menu-footer { grid-column:2; grid-row:3; }
+    .menu-actions { grid-column:2; grid-row:1; }
+    .menu-footer { grid-column:2; grid-row:2; }
 }
