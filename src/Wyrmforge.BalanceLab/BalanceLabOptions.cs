@@ -4,7 +4,10 @@ internal sealed record BalanceLabOptions(
     int RunsPerCombination,
     int SeedStart,
     double MaximumSimulatedSeconds,
-    string OutputDirectory)
+    string OutputDirectory,
+    double ArenaWidth,
+    double ArenaHeight,
+    bool FreshHunter)
 {
     public static BalanceLabOptions Parse(string[] args)
     {
@@ -20,7 +23,10 @@ internal sealed record BalanceLabOptions(
             ParseInt(values, "--runs-per-combination", 25, 1, 10_000),
             ParseInt(values, "--seed-start", 10_000, 0, int.MaxValue - 10_000),
             ParseDouble(values, "--max-seconds", 720, 30, 7_200),
-            values.GetValueOrDefault("--output", "artifacts/balance"));
+            values.GetValueOrDefault("--output", "artifacts/balance"),
+            ParseDouble(values, "--arena-width", 1280, 200, 6000),
+            ParseDouble(values, "--arena-height", 720, 200, 6000),
+            values.ContainsKey("--fresh-hunter"));
     }
 
     private static int ParseInt(IReadOnlyDictionary<string, string> values, string key, int fallback, int minimum, int maximum) =>

@@ -38,7 +38,7 @@ public sealed class SpellAbilityProfileTests
         var projectile = (ProjectileAbilityProfile)spell.Ability.Delivery;
 
         Assert.AreEqual(0.836d, spell.Ability.CalculateCooldownSeconds(3), 0.0001);
-        Assert.AreEqual(18d, spell.Ability.CalculateDamage(3), 0.0001);
+        Assert.AreEqual(24d, spell.Ability.CalculateDamage(3), 0.0001);
         Assert.AreEqual(550d, projectile.CalculateSpeed(3), 0.0001);
     }
 
