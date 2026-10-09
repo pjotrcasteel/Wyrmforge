@@ -55,6 +55,7 @@ internal static class WyrmrealmRouteGenerator
         var score = 60 + difficulty.Depth * 70 + layout.Stage * 55 + random.Next(20, 111);
         if (rare) score *= 2;
         var recovery = rare ? 0.12 : random.NextDouble() < 0.28 ? 0.05 + random.Next(0, 5) / 100d : 0;
+        if (difficulty.Depth == 1) recovery = Math.Max(0.10, recovery);
         var relic = rare || layout.Stage is 2 or 4 ? RelicCache : null;
         var modifiers = CreateModifiers(difficulty, layout.Stage, rare, random);
         var route = new WyrmrealmRouteProfile(

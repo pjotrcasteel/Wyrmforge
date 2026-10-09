@@ -3,6 +3,7 @@ using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Application.Tests.TestDoubles;
+using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Simulation;
@@ -10,6 +11,24 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 [TestClass]
 public sealed class RunSimulationTests
 {
+    [TestMethod]
+    [DataRow(100d, 50d, 60d)]
+    [DataRow(200d, 50d, 70d)]
+    [DataRow(100d, 96d, 100d)]
+    [DataRow(100d, 0d, 0d)]
+    public void ApplyRouteReward_OpeningRecovery_UsesMaximumHealthCapsAndCannotRevive(double maximum, double health, double expected)
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
+        var player = (PlayerState)typeof(RunSimulation).GetField("player", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
+        player.MaxHealth = maximum;
+        player.Health = health;
+        var node = simulation.AvailableMapNodes[0];
+        typeof(RunSimulation).GetMethod("ApplyRouteReward", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(simulation, [node.Route!.Reward]);
+        Assert.AreEqual(expected, simulation.Health);
+        Assert.AreEqual(0, simulation.CreateEvaluationSummary().ExperienceEarned);
+        Assert.AreEqual(1, simulation.PendingAttunements.Count);
+    }
+
     [TestMethod]
     public void Construction_StartsWithMapDecisionPending()
     {

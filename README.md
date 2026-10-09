@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.98 — Reliable opening trail recovery
+
+- Depth 1 common trails restore 10% of maximum health when cleared; rare trails retain their 12% recovery. The existing map preview displays the reward. Deeper routes keep their existing recovery variety.
+- Recovery is capped at maximum health and cannot revive a defeated hunter. Enemy pressure, XP and draft rules stay unchanged.
+- [Matched portrait samples](docs/playtesting/trail-recovery-0.0.98.md): fresh median survival rises from 42.4s to 45.0s, with no additional trail clears. The first-hunt milestone remains open.
+
 ## Prototype 0.0.97 — Earlier opening upgrades
 
 - The first two run-level upgrades cost 6 and 10 collected XP, previously 10 and 15. Level three onward keeps its existing costs. Opening reinforcement arrives sooner without adding XP or changing enemy pressure.
