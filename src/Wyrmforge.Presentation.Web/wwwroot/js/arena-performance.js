@@ -194,6 +194,17 @@ function updateCombatHud(state, snapshot) {
     state.lastHudUpdate = now;
     const hud = snapshot.hud;
     const dom = state.combatHud;
+    const encounter = state.canvas.closest('.game-screen')?.querySelector('.encounter-objective');
+    if (encounter && snapshot.trail) {
+        const trail = snapshot.trail;
+        const percent = Math.round(trail.progress * 100);
+        const fill = encounter.querySelector('[data-trail="progress"]');
+        if (fill) { fill.style.width = `${percent}%`; fill.parentElement.setAttribute('aria-valuenow', String(percent)); }
+        const clock = encounter.querySelector('[data-trail="phase-time"]');
+        const objective = encounter.querySelector('[data-trail="objective"]');
+        if (clock) clock.textContent = trail.phaseStatus;
+        if (objective) objective.textContent = trail.objective;
+    }
     const updateText = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
     updateText(dom.score, `SCORE ${hud.score}`);
     updateText(dom.time, `${hud.seconds}s`);

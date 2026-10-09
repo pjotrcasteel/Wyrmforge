@@ -11,7 +11,12 @@ public sealed class EncounterDirector
     private int depth;
     private int stage;
     private double progress;
-    private double breathingRemaining;
+    private double phaseElapsed;
+
+    public double PhaseElapsed => phaseElapsed;
+    public double PhaseDuration => Phase == EncounterPhase.BreathingRoom ? BreathingRoomSeconds : 7 + Math.Clamp(stage - 1, 0, 3) * 1.5;
+    public double PhaseProgress => Math.Clamp(phaseElapsed / PhaseDuration, 0, 1);
+    public bool CanComplete => Active && Phase == EncounterPhase.Climax && PhaseProgress >= 1;
 
     public bool Active { get; private set; }
     public EncounterPhase Phase { get; private set; } = EncounterPhase.Pressure;
@@ -24,7 +29,7 @@ public sealed class EncounterDirector
         depth = Math.Max(1, encounterDepth);
         stage = encounterStage;
         progress = 0;
-        breathingRemaining = 0;
+        phaseElapsed = 0;
         pendingInserts.Clear();
         if (stage == 4) pendingInserts.Enqueue(EnemyKind.Brute);
         Phase = EncounterPhase.Pressure;
@@ -35,19 +40,28 @@ public sealed class EncounterDirector
         if (!Active || requiredKills <= 0) return;
         progress = Math.Clamp(kills / (double)requiredKills, 0, 1);
 
-        if (Phase == EncounterPhase.Pressure && progress >= 0.25) Enter(EncounterPhase.Escalation);
-        if (Phase == EncounterPhase.Escalation && progress >= 0.5) BeginBreathingRoom();
-        if (Phase == EncounterPhase.Surge && progress >= 0.8) Enter(EncounterPhase.Climax);
+        AdvancePhase();
     }
 
     public void Tick(double delta)
     {
-        if (!Active || Phase != EncounterPhase.BreathingRoom) return;
-        breathingRemaining = Math.Max(0, breathingRemaining - Math.Max(0, delta));
-        if (breathingRemaining > 0) return;
+        if (!Active) return;
+        phaseElapsed += Math.Max(0, delta);
+        AdvancePhase();
+    }
 
-        Enter(EncounterPhase.Surge);
-        if (progress >= 0.8) Enter(EncounterPhase.Climax);
+    private void AdvancePhase()
+    {
+        if (PhaseProgress < 1) return;
+        var next = Phase switch
+        {
+            EncounterPhase.Pressure when progress >= 0.25 => EncounterPhase.Escalation,
+            EncounterPhase.Escalation when progress >= 0.5 => EncounterPhase.BreathingRoom,
+            EncounterPhase.BreathingRoom => EncounterPhase.Surge,
+            EncounterPhase.Surge when progress >= 0.8 => EncounterPhase.Climax,
+            _ => Phase,
+        };
+        Enter(next);
     }
 
     public bool TryTakeInsert(out EnemyKind kind)
@@ -62,7 +76,7 @@ public sealed class EncounterDirector
         Active = false;
         Phase = EncounterPhase.Pressure;
         progress = 0;
-        breathingRemaining = 0;
+        phaseElapsed = 0;
         pendingInserts.Clear();
     }
 
@@ -88,16 +102,18 @@ public sealed class EncounterDirector
         };
     }
 
-    private void BeginBreathingRoom()
-    {
-        Phase = EncounterPhase.BreathingRoom;
-        breathingRemaining = BreathingRoomSeconds;
-    }
-
     private void Enter(EncounterPhase phase)
     {
         if (Phase == phase) return;
         Phase = phase;
+        phaseElapsed = 0;
+
+        if (stage == 4 && phase is EncounterPhase.Escalation or EncounterPhase.Surge or EncounterPhase.Climax)
+        {
+            pendingInserts.Enqueue(EnemyKind.Brute);
+            if (phase == EncounterPhase.Climax) pendingInserts.Enqueue(EnemyKind.RiftStalker);
+            return;
+        }
 
         if (phase == EncounterPhase.Escalation && pattern == EnemyEncounterPattern.StalkerPressure)
         {

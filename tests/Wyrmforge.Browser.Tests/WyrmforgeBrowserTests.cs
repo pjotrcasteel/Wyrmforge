@@ -205,8 +205,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
             var objective = await Page.GetByLabel("Current encounter objective").BoundingBoxAsync();
             Assert.IsNotNull(vitals);
             Assert.IsNotNull(objective);
-            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.Y - objective.Y), "Vitals and trail must share one aligned HUD row.");
-            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.X + vitals.Width - objective.X), "No gap between HUD sections.");
+            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.Y + vitals.Height - objective.Y), "Trail status must sit directly beneath vitals.");
+            Assert.IsLessThanOrEqualTo(2, Math.Abs(vitals.X - objective.X), "HUD sections must align on the phone.");
+            Assert.IsLessThanOrEqualTo(140, vitals.Height + objective.Height, "HUD must leave room for combat.");
+            await Expect(Page.GetByRole(AriaRole.Progressbar, new() { Name = "Trail progress" })).ToHaveAttributeAsync("aria-valuenow", new System.Text.RegularExpressions.Regex("^\\d+$"));
+            await Expect(Page.Locator("[data-trail='phase-time']")).ToHaveTextAsync(new System.Text.RegularExpressions.Regex("^\\d+s$"));
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
             Assert.IsLessThanOrEqualTo(1, overflow, $"Mobile combat overflows horizontally by {overflow:0.#}px.");
@@ -367,7 +370,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         using var report = JsonDocument.Parse(await File.ReadAllTextAsync(file));
         var root = report.RootElement;
         Assert.AreEqual("wyrmforge.playtest.report.v1", root.GetProperty("schema").GetString());
-        Assert.AreEqual("0.0.86.1", root.GetProperty("gameVersion").GetString());
+        Assert.AreEqual("0.0.87", root.GetProperty("gameVersion").GetString());
         Assert.AreEqual(4, root.GetProperty("feedback").GetProperty("enjoyment").GetInt32());
         Assert.AreEqual("movement", root.GetProperty("feedback").GetProperty("troubleArea").GetString());
         Assert.AreEqual(1, root.GetProperty("stats").GetProperty("completedRuns").GetInt32());

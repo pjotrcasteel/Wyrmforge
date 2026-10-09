@@ -87,6 +87,20 @@ public sealed class WyrmrealmMapStateTests
         Assert.IsNull(state.AvailableNodes[0].Route);
     }
 
+    [TestMethod]
+    public void RegisterKill_PhasesNotFinished_StoresQuotaWithoutCompletingOrDuplicatingRewards()
+    {
+        var state = new WyrmrealmMapState(seed: 1);
+        state.Choose(state.AvailableNodes[0].Id);
+        var required = state.CurrentNodeKillsRequired;
+        for (var kill = 0; kill < required + 5; kill++) Assert.IsFalse(state.RegisterKill(false));
+        Assert.AreEqual(required, state.CurrentNodeKills);
+        Assert.IsFalse(state.DecisionPending);
+        Assert.IsTrue(state.TryCompleteEncounter());
+        Assert.IsFalse(state.TryCompleteEncounter());
+        Assert.AreEqual(1, state.CompletedNodes.Count);
+    }
+
     private static void CompleteEncounter(WyrmrealmMapState state)
     {
         var killsRequired = state.CurrentNodeKillsRequired;

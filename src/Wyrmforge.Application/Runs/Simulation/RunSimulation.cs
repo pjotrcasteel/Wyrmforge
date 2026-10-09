@@ -263,7 +263,7 @@ public sealed partial class RunSimulation
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
-            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray());
+            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot() };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()

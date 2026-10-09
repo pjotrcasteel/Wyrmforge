@@ -44,13 +44,18 @@ public sealed class WyrmrealmMapState
         return node;
     }
 
-    public bool RegisterKill()
+    public bool RegisterKill(bool allowCompletion = true)
     {
         if (!EncounterActive) return false;
         var required = CurrentNodeKillsRequired;
         if (required <= 0) return false;
-        CurrentNodeKills++;
-        if (CurrentNodeKills < required) return false;
+        CurrentNodeKills = Math.Min(CurrentNodeKills + 1, required);
+        return allowCompletion && TryCompleteEncounter();
+    }
+
+    public bool TryCompleteEncounter()
+    {
+        if (!EncounterActive || CurrentNodeKills < CurrentNodeKillsRequired) return false;
         completedNodes.Add(CurrentNode!);
         CurrentNode = null;
         CurrentNodeKills = 0;

@@ -12,10 +12,10 @@ public static class WyrmrealmStageCatalog
     public static string Name(int stage) => stage switch { 2 => "Horde", 3 => "Ambush", 4 => "Heavy assault", _ => "Skirmish" };
     public static string Hint(int stage) => stage switch
     {
-        2 => "Massed enemies from opposite edges",
-        3 => "Stalkers attack from alternating flanks",
-        4 => "Brutes lead the final assault",
-        _ => "Scattered enemies; room to build",
+        2 => "Swarm from north and south",
+        3 => "Hunters from left and right",
+        4 => "Brutes lead the assault",
+        _ => "Scattered enemies",
     };
 
     public static int SpawnEdge(int stage, int enemyIndex, int randomEdge) => stage switch
