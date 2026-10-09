@@ -1,5 +1,7 @@
 ﻿using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Domain.Progression.RunUpgrades;
+using Wyrmforge.Domain.Combat.Abilities;
+using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -100,12 +102,30 @@ public static class LevelChoicePresentation
         var nextRank = currentRank + 1;
         var nextDamage = spell.Ability.CalculateDamage(nextRank);
         var nextCooldown = spell.Ability.CalculateCooldownSeconds(nextRank);
-        var mastery = nextRank == spell.MaxRank ? " • MASTERY RANK" : string.Empty;
-        if (currentRank == 0) return $"{nextDamage:0.#} damage • {nextCooldown:0.00}s interval{mastery}";
+        var effect = SpellEffect(spell, currentRank);
+        var prefix = string.IsNullOrEmpty(effect) ? string.Empty : $"{effect} • ";
+        if (currentRank == 0) return $"{prefix}{nextDamage:0.#} damage • {nextCooldown:0.00}s interval";
 
         var currentDamage = spell.Ability.CalculateDamage(currentRank);
         var currentCooldown = spell.Ability.CalculateCooldownSeconds(currentRank);
-        return $"{currentDamage:0.#} → {nextDamage:0.#} damage • {currentCooldown:0.00} → {nextCooldown:0.00}s{mastery}";
+        return $"{prefix}{currentDamage:0.#} → {nextDamage:0.#} damage • {currentCooldown:0.00} → {nextCooldown:0.00}s";
+    }
+
+    private static string SpellEffect(SpellDefinition spell, int currentRank)
+    {
+        var nextRank = currentRank + 1;
+        if (spell.Id == SpellId.ArcaneOrb && currentRank == 1) return "Pierce +1";
+        if (spell.Id == SpellId.ArcaneOrb && nextRank == spell.MaxRank) return "Wider bolt";
+        if (spell.Id == SpellId.FireBolt && nextRank == spell.MaxRank) return "Impact blast";
+        if (spell.Id == SpellId.FrostShard && nextRank == spell.MaxRank) return "Freezing nova";
+        if (spell.Id == SpellId.ChainLightning && nextRank == spell.MaxRank) return "Forked lightning";
+        if (spell.Ability.Status is { Status: CombatStatusId.Frozen } freeze)
+            return currentRank == 0 ? $"Freeze {freeze.CalculateDurationSeconds(nextRank):0.00}s"
+                : $"Freeze {freeze.CalculateDurationSeconds(currentRank):0.00} → {freeze.CalculateDurationSeconds(nextRank):0.00}s";
+        if (spell.Ability.Delivery is ChainAbilityProfile chain)
+            return currentRank == 0 ? $"{chain.CalculateJumps(nextRank)} targets"
+                : $"{chain.CalculateJumps(currentRank)} → {chain.CalculateJumps(nextRank)} targets";
+        return string.Empty;
     }
 
     public static string EvolutionSpellName(LevelChoice choice) =>

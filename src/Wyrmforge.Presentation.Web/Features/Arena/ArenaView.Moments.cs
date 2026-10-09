@@ -2,6 +2,7 @@
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Rewards;
+using Wyrmforge.Presentation.Web.Features.LevelUp;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
 
@@ -43,18 +44,10 @@ public partial class ArenaView
             return;
         }
 
-        if (choice.Kind == LevelChoiceKind.NewSpell)
-        {
-            ShowRunMoment(new RunMoment("SPELL BOUND", choice.Name, "A new spell has entered this run.", RunMomentTone.Rare));
-            return;
-        }
-
         if (choice.Kind == LevelChoiceKind.SpellUpgrade && choice.CurrentRank + 1 == choice.MaxRank) return;
-
-        if (choice.Kind == LevelChoiceKind.Rune && choice.Rarity is RewardRarity.Rare or RewardRarity.Legendary)
-        {
-            ShowRunMoment(new RunMoment("RARE RUNE", choice.Name, choice.Description, RunMomentTone.Rare));
-        }
+        var tone = choice.Kind == LevelChoiceKind.NewSpell || choice.Rarity is RewardRarity.Rare or RewardRarity.Legendary
+            ? RunMomentTone.Rare : RunMomentTone.Standard;
+        ShowRunMoment(new RunMoment(string.Empty, $"{choice.Icon} {choice.Name}", LevelChoicePresentation.Delta(choice), tone, Compact: true));
     }
 
     private void ShowEssenceMoment(DragonEssenceDefinition essence) =>

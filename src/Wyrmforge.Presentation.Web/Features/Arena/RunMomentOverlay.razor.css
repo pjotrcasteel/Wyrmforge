@@ -33,3 +33,15 @@
     .run-moment { top: max(76px, calc(env(safe-area-inset-top) + 70px)); padding: 10px 12px; }
     .run-moment strong { font-size: .9rem; }
 }
+
+.run-moment.upgrade-moment {
+    top: auto;
+    bottom: max(110px, calc(env(safe-area-inset-bottom) + 100px));
+    width: min(330px, calc(100vw - 32px));
+    padding: 8px 12px;
+    gap: 2px;
+    border-radius: 8px;
+}
+.upgrade-moment strong { font-size: .78rem; }
+.upgrade-moment small { font-size: .64rem; }
+@media (prefers-reduced-motion: reduce) { .run-moment { animation: none; } }

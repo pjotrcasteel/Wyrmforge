@@ -17,20 +17,22 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class OpeningPowerTests
 {
     [TestMethod]
-    public void FirstTrail_SpawnPressureStopsAtEightAndSecondTrailRestoresNormalCap()
+    public void OpeningTrails_SpawnCapsGrowGraduallyAndReachNormalPressureAtStageFour()
     {
         var simulation = Create();
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
         for (var frame = 0; frame < 500; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
         Assert.AreEqual(8, Field<List<EnemyState>>(simulation, "enemies").Count);
         var map = Field<WyrmrealmMapState>(simulation, "mapState");
-        var quota = map.CurrentNodeKillsRequired;
-        for (var kill = 0; kill < quota; kill++) map.RegisterKill();
-        Field<List<EnemyState>>(simulation, "enemies").Clear();
-        Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
-        Assert.AreEqual(2, simulation.CurrentMapNode!.Stage);
-        for (var frame = 0; frame < 500; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
-        Assert.AreEqual(22, Field<List<EnemyState>>(simulation, "enemies").Count);
+        foreach (var expectedCap in new[] { 10, 14, 22 })
+        {
+            var quota = map.CurrentNodeKillsRequired;
+            for (var kill = 0; kill < quota; kill++) map.RegisterKill();
+            Field<List<EnemyState>>(simulation, "enemies").Clear();
+            Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+            for (var frame = 0; frame < 600; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
+            Assert.AreEqual(expectedCap, Field<List<EnemyState>>(simulation, "enemies").Count);
+        }
     }
 
     [TestMethod]
