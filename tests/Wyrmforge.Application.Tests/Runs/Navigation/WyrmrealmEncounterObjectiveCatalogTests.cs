@@ -7,12 +7,12 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WyrmrealmEncounterObjectiveCatalogTests
 {
     [TestMethod]
-    [DataRow(WyrmrealmEncounterKind.StalkerPressure, 1, 8)]
-    [DataRow(WyrmrealmEncounterKind.Mixed, 1, 11)]
-    [DataRow(WyrmrealmEncounterKind.Swarm, 1, 14)]
-    [DataRow(WyrmrealmEncounterKind.StalkerPressure, 3, 12)]
-    [DataRow(WyrmrealmEncounterKind.Mixed, 3, 16)]
-    [DataRow(WyrmrealmEncounterKind.Swarm, 3, 19)]
+    [DataRow(WyrmrealmEncounterKind.StalkerPressure, 1, 6)]
+    [DataRow(WyrmrealmEncounterKind.Mixed, 1, 8)]
+    [DataRow(WyrmrealmEncounterKind.Swarm, 1, 10)]
+    [DataRow(WyrmrealmEncounterKind.StalkerPressure, 3, 9)]
+    [DataRow(WyrmrealmEncounterKind.Mixed, 3, 12)]
+    [DataRow(WyrmrealmEncounterKind.Swarm, 3, 14)]
     public void KillsRequired_ReturnsPatternAndDepthSpecificObjective(WyrmrealmEncounterKind kind, int depth, int expected)
     {
         Assert.AreEqual(expected, WyrmrealmEncounterObjectiveCatalog.KillsRequired(kind, depth));

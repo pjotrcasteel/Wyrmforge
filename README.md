@@ -535,3 +535,8 @@ dotnet run --project src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.c
 8. Important state changes deserve feedback; common noise should stay quiet.
 9. Extraction converts survival into a decision; secured loot requires successful evacuation.
 10. Stop at assessment milestones and improve cohesion before expanding the feature surface again.
+
+
+### 0.0.100 — generated territories and road choices
+
+Hunts now generate seeded river, ridge and caldera territories with unequal encounter placement. Two major forks offer 2–4 committed roads: at least one short road (2 fights), medium roads (3), and occasional long detours (5) with a guaranteed additional relic cache. The quickest hunt has eight fights; detours add encounters and upgrades. Encounter icons remain readable on the map, and route previews show road length and rewards. Terrain and landmarks are structured data rendered as artless SVG, ready for a future art layer.

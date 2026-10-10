@@ -17,14 +17,14 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class OpeningPowerTests
 {
     [TestMethod]
-    public void OpeningTrails_SpawnCapsGrowGraduallyAndReachNormalPressureAtStageSix()
+    public void OpeningTrails_SpawnCapsGrowGraduallyAndReachNormalPressureAtStageEight()
     {
         var simulation = Create();
         Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
         for (var frame = 0; frame < 500; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
         Assert.AreEqual(8, Field<List<EnemyState>>(simulation, "enemies").Count);
         var map = Field<WyrmrealmMapState>(simulation, "mapState");
-        foreach (var expectedCap in new[] { 10, 10, 14, 14, 22 })
+        foreach (var expectedCap in new[] { 8, 10, 10, 14, 14, 14, 22 })
         {
             var quota = map.CurrentNodeKillsRequired;
             for (var kill = 0; kill < quota; kill++) map.RegisterKill();

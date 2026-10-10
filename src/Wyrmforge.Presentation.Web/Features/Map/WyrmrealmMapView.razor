@@ -9,8 +9,8 @@
 <div class="realm-map-overlay">
     <section class="realm-map-card" aria-label="Hunt expedition">
         <header class="map-header">
-            <div><div class="eyebrow">THE GREAT HUNT · DEPTH @Depth</div><h2>Choose your trail.</h2></div>
-            <b class="map-run-progress">@CompletedNodes.Count(node => node.Type == WyrmrealmNodeType.Combat)/@WyrmrealmMapState.CombatStages</b>
+            <div><div class="eyebrow">@(Territory?.Name.ToUpperInvariant() ?? "THE GREAT HUNT") · DEPTH @Depth</div><h2>Choose your trail.</h2></div>
+            <b class="map-run-progress">@CompletedNodes.Count(node => node.Type == WyrmrealmNodeType.Combat) cleared</b>
         </header>
         <details class="map-attention">
             <summary>Wyrm signs <b>@DominantLabel</b></summary>
@@ -25,14 +25,29 @@
         <div class="hunt-viewport" @ref="viewport" tabindex="0" aria-label="Scrollable hunt territory">
             <div class="realm-route" aria-label="Generated Wyrmrealm route map">
                 <svg class="hunt-terrain" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                    <path class="ridge" d="M0 8L10 3L18 9L27 4L35 10M66 7L76 2L85 8L93 4L100 10M0 27L8 21L17 29L23 23L30 31M75 32L82 24L91 29L100 22M0 63L8 55L17 62L23 56M78 67L85 58L94 64L100 59M0 90L9 83L18 88L25 81M77 87L85 80L94 89L100 85" />
-                    <path class="contour" d="M0 13Q18 18 34 12M63 13Q79 17 100 12M0 35Q11 32 24 38M76 37Q85 41 100 34M0 69Q10 65 20 71M79 73Q91 68 100 72M0 96Q12 92 28 97M72 94Q88 92 100 97" />
-                    <path class="river" d="M0 72Q15 69 30 73T59 72T81 75T100 73" />
+                    @if (Territory is { } land)
+                    {
+                        <path class="river-fill" d="@RiverPath(land.River)" />
+                        @foreach (var feature in land.Features)
+                        {
+                            @if (feature.Kind is "mountain")
+                            {
+                                <path class="contour" d="@FeaturePath(feature, 1)" />
+                                <path class="ridge" d="@FeaturePath(feature, .65)" />
+                            }
+                            else if (feature.Kind is "volcano" or "ridge") { <path class="crater @feature.Kind" d="@CraterPath(feature)" /> }
+                            else if (feature.Kind == "ruins") { <path class="ruins" d="@RuinsPath(feature.Center)" /> }
+                            else if (feature.Kind == "bridge") { <path class="bridge" d="@BridgePath(feature.Center)" /> }
+                        }
+                    }
                 </svg>
-                <span class="territory-label outskirts">OUTSKIRTS</span>
-                <span class="territory-label inner-territory">INNER TERRITORY</span>
-                <div class="map-entry @(CompletedNodes.Count == 0 ? "current" : string.Empty)" data-current="@(CompletedNodes.Count == 0 ? "true" : "false")" aria-label="Realm entry">
-                    <span class="entry-point">◇</span><small>@(CompletedNodes.Count == 0 ? "YOU" : "ENTRY")</small>
+                @foreach (var road in Territory?.Roads ?? [])
+                {
+                    var entrance = Nodes.First(node => node.Site?.RoadId == road.Id);
+                    <span class="road-label @(road.BonusRelic ? "detour" : "")" style="@RoadLabelStyle(entrance)">@road.Length · @road.Encounters <small>@(road.BonusRelic ? "◆ Bonus relic" : road.Name)</small></span>
+                }
+                <div class="map-entry @(CompletedNodes.Count == 0 ? "current" : string.Empty)" style="@CampStyle" data-current="@(CompletedNodes.Count == 0 ? "true" : "false")" aria-label="Realm entry">
+                    <span class="entry-point">◇</span><small>@(CompletedNodes.Count == 0 ? "YOU" : "CAMP")</small>
                 </div>
                 <svg class="route-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     @foreach (var node in Nodes.Where(candidate => candidate.Stage == 1))
@@ -58,7 +73,8 @@
                             @if (IsCompleted(node) || selectedNode?.Id == node.Id) { <span class="node-check">✓</span> }
                             @if (node.Rarity == WyrmrealmNodeRarity.Rare) { <span class="node-rare" aria-label="Rare trail">✦</span> }
                         </span>
-                        <span class="node-name">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : node.Name)</span>
+                        <span class="node-name">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : WyrmrealmStageCatalog.Name(node.Stage))</span>
+                        @if (node.Site?.BonusRelic == true) { <small class="node-bonus">◆ BONUS RELIC</small> }
                         <span class="node-badges">
                             @foreach (var badge in NodeBadges(node)) { <span class="node-badge @badge.ClassName" title="@badge.Label" aria-label="@badge.Label">@badge.Icon</span> }
                         </span>
@@ -74,6 +90,10 @@
                 <div class="sheet-traits">
                     @if (selected.Route is { } route)
                     {
+                        @if (SelectedRoad(selected) is { } road)
+                        {
+                            <span class="sheet-road">@road.Length road · @road.Encounters fights @(road.BonusRelic ? "· Bonus relic" : "")</span>
+                        }
                         <span class="sheet-encounter">@WyrmrealmStageCatalog.Name(selected.Stage)</span>
                         <span class="sheet-guarantee">@SchoolIcon(route.Reward.AttunementSchool) @route.Reward.AttunementSchool upgrade · guaranteed</span>
                         @if (route.Reward.RecoveryFraction > 0) { <span>♥ @($"{route.Reward.RecoveryFraction * 100:0}%") recovery</span> }
@@ -103,8 +123,11 @@
     [Parameter, EditorRequired] public IReadOnlyList<DragonSign> Signs { get; set; } = Array.Empty<DragonSign>();
     [Parameter] public EventCallback<string> OnChoose { get; set; }
 
-    private const double EntryX = 50;
-    private const double EntryY = 95;
+    private WyrmrealmTerritory? Territory => Nodes.FirstOrDefault()?.Territory;
+    private double EntryX => Territory?.Camp.X ?? 50;
+    private double EntryY => Territory?.Camp.Y ?? 95;
+    private string CampStyle => FormattableString.Invariant($"left:{EntryX:0.#}%;top:{EntryY:0.#}%");
+    private HuntRoad? SelectedRoad(WyrmrealmMapNode node) => Territory?.Roads.FirstOrDefault(road => road.Id == node.Site?.RoadId);
     private WyrmrealmMapNode? selectedNode;
     private ElementReference viewport;
     private IJSObjectReference? mapModule;
@@ -163,46 +186,41 @@
     }
 
     private string NodeMapStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node):0.#}%");
-    private string EntryConnectionPath(WyrmrealmMapNode node) => Curve($"entry>{node.Id}", EntryX, EntryY, NodeX(node), NodeY(node));
-    private string ConnectionPath(WyrmrealmMapNode from, WyrmrealmMapNode to) => Curve($"{from.Id}>{to.Id}", NodeX(from), NodeY(from), NodeX(to), NodeY(to));
-
-    private double NodeX(WyrmrealmMapNode node)
+    private string EntryConnectionPath(WyrmrealmMapNode node) => TrailPath(node.Site?.IncomingTrail ?? [new(EntryX, EntryY), new(NodeX(node), NodeY(node))]);
+    private string ConnectionPath(WyrmrealmMapNode from, WyrmrealmMapNode to)
+        => TrailPath(to.Site is { IncomingTrail.Count: > 0 } site ? site.IncomingTrail : [new(NodeX(from), NodeY(from)), new(NodeX(to), NodeY(to))]);
+    private double NodeX(WyrmrealmMapNode node) => node.Site?.Point.X ?? 50;
+    private static double NodeY(WyrmrealmMapNode node) => node.Site?.Point.Y ?? 5;
+    private string RoadLabelStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node) - 3:0.#}%");
+    private static string TrailPath(IReadOnlyList<HuntPoint> points)
     {
-        if (node.Type == WyrmrealmNodeType.Dragon) return 50;
-        var stageNodes = Nodes.Where(candidate => candidate.Stage == node.Stage).OrderBy(candidate => candidate.Lane).ToArray();
-        var index = Array.FindIndex(stageNodes, candidate => candidate.Id == node.Id);
-        var noise = UnitNoise($"x:{node.Id}");
-        return stageNodes.Length <= 1 ? 50 : 14 + index * 72d / (stageNodes.Length - 1) + (noise - 0.5) * 2;
-    }
-
-    private static double NodeY(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon ? 5 : 83 - (node.Stage - 1) * 13;
-
-    private static string Curve(string key, double x1, double y1, double x2, double y2)
-    {
-        var height = y2 - y1;
-        var bend = StableNoise(key) * 13;
-        var firstControlX = Math.Clamp(x1 + bend, 4, 96);
-        var secondControlX = Math.Clamp(x2 - bend * 0.55, 4, 96);
-        var firstControlY = y1 + height * 0.34;
-        var secondControlY = y1 + height * 0.7;
-        return FormattableString.Invariant($"M {x1:0.#} {y1:0.#} C {firstControlX:0.#} {firstControlY:0.#}, {secondControlX:0.#} {secondControlY:0.#}, {x2:0.#} {y2:0.#}");
-    }
-
-    private static double UnitNoise(string value) => (StableNoise(value) + 1) / 2;
-
-    private static double StableNoise(string value)
-    {
-        unchecked
+        if (points.Count == 0) return "";
+        var result = FormattableString.Invariant($"M {points[0].X:0.###} {points[0].Y:0.###}");
+        foreach (var edge in points.Zip(points.Skip(1)))
         {
-            var hash = 2166136261u;
-            foreach (var character in value)
-            {
-                hash ^= character;
-                hash *= 16777619u;
-            }
-            return (hash % 2001) / 1000d - 1;
+            var a = edge.First;
+            var b = edge.Second;
+            var dy = b.Y - a.Y;
+            result += FormattableString.Invariant($" C {a.X:0.###} {a.Y + dy / 3:0.###}, {b.X:0.###} {a.Y + dy * 2 / 3:0.###}, {b.X:0.###} {b.Y:0.###}");
         }
+        return result;
     }
+    private static string PolygonPath(IReadOnlyList<HuntPoint> points) => "M " + string.Join(" L ", points.Select(p => FormattableString.Invariant($"{p.X:0.###} {p.Y:0.###}")));
+    private static string RiverPath(IReadOnlyList<HuntPoint> points) => PolygonPath(points.Select(p => p with { X = p.X - 3 }).Concat(points.Reverse().Select(p => p with { X = p.X + 3 })).ToArray()) + " Z";
+    private static string FeaturePath(HuntFeature feature, double scale)
+    {
+        var points = Enumerable.Range(0, 17).Select(i =>
+        {
+            var angle = i * Math.PI / 8;
+            var noise = 1 + Math.Sin(angle * 3 + feature.Center.X) * .16;
+            return new HuntPoint(feature.Center.X + Math.Cos(angle) * feature.RadiusX * scale * noise,
+                feature.Center.Y + Math.Sin(angle) * feature.RadiusY * scale * noise);
+        }).ToArray();
+        return PolygonPath(points) + " Z";
+    }
+    private static string CraterPath(HuntFeature f) => FormattableString.Invariant($"M {f.Center.X - 4} {f.Center.Y + f.RadiusY} A {f.RadiusX} {f.RadiusY} 0 1 1 {f.Center.X + 4} {f.Center.Y + f.RadiusY}");
+    private static string RuinsPath(HuntPoint p) => FormattableString.Invariant($"M {p.X + 6} {p.Y + .6} V {p.Y - .6} H {p.X + 8} V {p.Y + .6} M {p.X - 8} {p.Y + .5} V {p.Y - .8} H {p.X - 6} V {p.Y + .5}");
+    private static string BridgePath(HuntPoint p) => FormattableString.Invariant($"M {p.X - 4} {p.Y - .35} L {p.X + 4} {p.Y - .35} M {p.X - 4} {p.Y + .35} L {p.X + 4} {p.Y + .35}");
 
     private string SelectionStatus(WyrmrealmMapNode node) => IsAvailable(node) ? "REACHABLE NOW" : IsCompleted(node) ? "CLEARED" : "FUTURE TRAIL";
     private string SelectionStatusClass(WyrmrealmMapNode node) => IsAvailable(node) ? "reachable" : IsCompleted(node) ? "cleared" : "future";
@@ -238,13 +256,13 @@
         : $"Trail {node.Stage}, {node.Name}, {node.AttunementSchool}, {EncounterLabel(node.EncounterKind ?? WyrmrealmEncounterKind.Mixed)}";
 
     private static string LandmarkPath(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon
-        ? "M5 27L5 17L11 6L16 13L23 3L29 14L35 7L41 18L41 27M15 27V20Q23 9 31 20V27M20 20L23 17L26 20"
-        : node.Stage switch
+        ? "M5 28V16L14 5L23 12L32 5L41 16V28M16 28V20Q23 10 30 20V28"
+        : WyrmrealmStageCatalog.PressureStage(node.Stage) switch
         {
-            1 or 3 => "M5 28V14H39V28M11 28V24Q17 12 23 24V28M23 28V24Q29 12 35 24V28M9 9V14M35 9V14",
-            2 => "M5 20L14 7L23 20L32 8L40 23M10 28L18 18L26 28L34 18L40 28",
-            4 or 5 => "M8 28V10H15V28M20 28V6H27V28M33 28V13H39V28M5 29H42",
-            _ => "M9 29V11L15 6L22 11L29 6L35 11V29M16 29V20Q22 12 28 20V29",
+            2 => "M8 28V8M3 14L8 7L13 14M23 28V5M18 11L23 4L28 11M38 28V8M33 14L38 7L43 14",
+            3 => "M9 5L37 29M37 5L9 29M10 17A13 13 0 1 0 36 17A13 13 0 1 0 10 17",
+            4 => "M13 12L7 4L7 16M33 12L39 4L39 16M13 12Q23 5 33 12V23L27 29H19L13 23ZM18 17H20M26 17H28M21 24H25",
+            _ => "M9 5L36 28M37 5L10 28M7 23L14 30M32 30L39 23M9 5L16 7L12 11M37 5L30 7L34 11",
         };
 
     private static string NodeIcon(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon ? "◇" : "◈";

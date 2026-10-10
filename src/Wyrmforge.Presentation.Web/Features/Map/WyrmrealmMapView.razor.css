@@ -55,3 +55,23 @@
 .enter-trail:disabled { color:#9b87aa;border-color:#574263;background:#30223b;cursor:default; }
 @media(max-width:360px) { .map-header { padding:9px 12px 6px; }.map-header h2 { font-size:.98rem; }.node-sheet { padding:8px 12px 10px; }.sheet-heading h3 { font-size:.9rem; }.node-name { width:68px;font-size:.61rem; }.sheet-traits { font-size:.61rem; } }
 @media(max-height:450px) and (orientation:landscape) { .realm-map-card { width:100%;display:grid;grid-template-columns:1fr 240px;grid-template-rows:auto auto 1fr; }.map-header,.map-attention { grid-column:1; }.hunt-viewport { grid-column:1;grid-row:3; }.node-sheet { grid-column:2;grid-row:1 / span 3;align-content:center;border-top:0;border-left:1px solid #735587; } }
+
+/* Terrain and unequal road lengths replace row-based navigation. */
+.realm-route { height:calc(var(--hunt-step) * 15); }
+.hunt-terrain .river-fill { fill:#34506966;stroke:#7b9bb955;stroke-width:1; }
+.crater { stroke:#a88db566;stroke-width:2; }.crater.volcano { stroke:#c5825b;stroke-width:2; }
+.bridge { stroke:#e2d2e9;stroke-width:2; }
+.road-label { position:absolute;z-index:2;transform:translate(-50%,-100%);max-width:88px;padding:4px 6px;background:#20172c;border:1px solid #695179;border-radius:4px;color:#d2bae7;font-size:.6rem;font-weight:750;text-align:center;pointer-events:none; }
+.road-label small { display:block;color:#a99ab7;font-size:.52rem;font-weight:400; }.road-label.detour { border-color:#ad8756; }.road-label.detour small,.node-bonus { color:#e0bd79; }
+.node-core { transform:none;border-radius:50%;width:44px;height:44px; }
+.node-main-icon,.node-school,.node-check,.node-rare { transform:none; }
+.node-school { right:-6px;top:-4px; }.node-check { bottom:-4px;right:-3px; }
+.node-name { margin-top:5px; }
+.route-node.future { opacity:.7; }.route-node.future .node-name { visibility:visible; }.route-node.future .node-badges { visibility:hidden; }
+.node-bonus { font-size:.5rem;white-space:nowrap; }
+.sheet-road { width:100%;color:#dfc5ee; }
+.route-node.dragon .node-core { border-radius:8px; }
+
+.route-link { stroke-linejoin:round; }
+
+.ruins { stroke:#c3a77a;stroke-width:1.5; }

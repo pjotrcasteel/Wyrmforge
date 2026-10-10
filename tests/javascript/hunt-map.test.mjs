@@ -7,6 +7,7 @@ const { focusHunter } = await import(`data:text/javascript;base64,${Buffer.from(
 function territory(y, reduced = false) {
     globalThis.window = { matchMedia: () => ({ matches: reduced }) };
     return { scrollHeight: 1800, clientHeight: 400, scrollTop: 0, calls: [],
+        querySelectorAll: () => [],
         querySelector: () => y === null ? null : { offsetTop: y },
         scrollTo(options) { this.calls.push(options); this.scrollTop = options.top; } };
 }
@@ -38,4 +39,14 @@ test('final approach clamps to the top and missing marker preserves manual scrol
     focusHunter(unknown, true);
     assert.equal(unknown.scrollTop, 600);
     assert.equal(unknown.calls.length, 0);
+});
+
+
+test('unequal road entrances remain visible on a short phone viewport', () => {
+    const map = territory(1000, true);
+    map.querySelectorAll = () => [{ offsetTop: 700 }, { offsetTop: 900 }];
+    focusHunter(map, true);
+    assert.equal(map.scrollTop, 630);
+    assert.ok(700 - map.scrollTop >= 70);
+    assert.ok(900 - map.scrollTop < map.clientHeight - 45);
 });

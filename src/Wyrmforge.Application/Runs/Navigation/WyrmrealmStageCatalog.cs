@@ -2,7 +2,7 @@
 
 public static class WyrmrealmStageCatalog
 {
-    public static int PressureStage(int stage) => Math.Clamp(stage, 1, WyrmrealmMapState.CombatStages) switch { 1 => 1, 2 or 3 => 2, 4 or 5 => 3, _ => 4 };
+    public static int PressureStage(int stage) => Math.Clamp(stage, 1, WyrmrealmMapState.CombatStages) switch { 1 or 2 => 1, 3 or 4 => 2, 5 or 6 or 7 => 3, _ => 4 };
 
     public static WyrmrealmEncounterKind Kind(int stage) => PressureStage(stage) switch
     {

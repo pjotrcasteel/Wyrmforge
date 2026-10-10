@@ -19,7 +19,7 @@ public static class EncounterCueCatalog
     private static string CueForPressure(int stage, EncounterPhase? phase) => phase switch
     {
         EncounterPhase.BreathingRoom => "Spawns paused · collect XP",
-        EncounterPhase.Pressure => WyrmrealmStageCatalog.Hint(stage switch { 3 => 4, 4 => 6, _ => stage }),
+        EncounterPhase.Pressure => WyrmrealmStageCatalog.Hint(stage switch { 3 => 5, 4 => 8, 2 => 3, _ => stage }),
         EncounterPhase.Escalation when stage == 3 => "Hunters on the flanks",
         EncounterPhase.Escalation when stage == 4 => "Brute reinforcements",
         EncounterPhase.Escalation => "Enemies arrive faster",

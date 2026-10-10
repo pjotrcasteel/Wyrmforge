@@ -27,35 +27,52 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
-    public void Generate_SixTrailCampaign_ForksOfferAlternativesAndKeepCommittedStretches()
+    public void Generate_SeededTerritories_OfferTwoToFourRoadsWithAShortOptionAndRewardEveryLongDetour()
     {
-        for (var seed = 0; seed < 80; seed++)
+        var signatures = new HashSet<string>();
+        var longRoads = 0;
+        for (var seed = 0; seed < 500; seed++)
         {
             var nodes = WyrmrealmMapGenerator.Generate(1, seed);
-            Assert.AreEqual(3, nodes.Count(node => node.Stage == 1));
-            for (var stage = 2; stage <= WyrmrealmMapState.CombatStages; stage++)
+            var land = nodes[0].Territory!;
+            signatures.Add(string.Join("|", nodes.Select(n => $"{n.Id}:{n.Site!.Point}")));
+            Assert.AreEqual(8, MinimumFights(nodes, nodes.Single(n => n.Type == WyrmrealmNodeType.Dragon)));
+            foreach (var fork in nodes.Where(n => nodes.Count(next => next.PreviousNodeIds.Contains(n.Id)) > 1))
             {
-                foreach (var previous in nodes.Where(node => node.Stage == stage - 1))
-                {
-                    var next = nodes.Where(node => node.PreviousNodeIds.Contains(previous.Id)).ToArray();
-                    Assert.IsTrue(next.Length >= (stage % 2 == 0 ? 2 : 1));
-                }
+                var next = nodes.Where(n => n.PreviousNodeIds.Contains(fork.Id)).ToArray();
+                Assert.IsTrue(next.Length is >= 2 and <= 4);
+                Assert.AreEqual(next.Length, next.Select(n => n.AttunementSchool).Distinct().Count());
+                Assert.IsTrue(next.Select(n => land.Roads.Single(r => r.Id == n.Site!.RoadId).Length).Distinct().Count() >= 2);
+                Assert.IsTrue(next.Any(n => land.Roads.Single(r => r.Id == n.Site!.RoadId).Length == "Short"));
             }
-            Assert.IsTrue(nodes.Where(node => node.Stage == 3 && node.Rarity != WyrmrealmNodeRarity.Rare).All(node => node.PreviousNodeIds.Count == 1));
-            Assert.IsTrue(nodes.Where(node => node.Stage == 5 && node.Rarity != WyrmrealmNodeRarity.Rare).All(node => node.PreviousNodeIds.Count == 1));
+            foreach (var road in land.Roads)
+            {
+                var stops = nodes.Where(n => n.Site!.RoadId == road.Id).ToArray();
+                Assert.AreEqual(road.Encounters, stops.Length);
+                if (!road.BonusRelic) continue;
+                longRoads++;
+                var reward = stops.Single(n => n.Site!.BonusRelic);
+                Assert.IsNotNull(reward.Route!.Reward.Relic);
+                Assert.IsTrue(stops.Length > 3);
+            }
+            foreach (var node in nodes)
+            {
+                Assert.IsTrue(node.Site!.Point.X is >= 4 and <= 96);
+                Assert.IsTrue(node.Site.Point.Y is >= 3 and <= 96);
+                if (node.Type != WyrmrealmNodeType.Dragon) Assert.IsTrue(nodes.Any(n => n.PreviousNodeIds.Contains(node.Id)));
+            }
         }
+        Assert.AreEqual(500, signatures.Count);
+        Assert.IsGreaterThan(0, longRoads);
     }
 
     [TestMethod]
-    public void NewMap_OffersThreeFirstStageRoutes()
+    public void NewMap_StartsOnTheSharedApproachBeforeRoadChoices()
     {
         var state = new WyrmrealmMapState(seed: 1204);
-
         Assert.IsTrue(state.DecisionPending);
-        Assert.AreEqual(3, state.AvailableNodes.Count);
-        Assert.IsTrue(state.AvailableNodes.All(node => node.Stage == 1));
-        Assert.IsTrue(state.AvailableNodes.All(node => node.Type == WyrmrealmNodeType.Combat));
-        Assert.AreEqual(3, state.AvailableNodes.Select(node => node.AttunementSchool).Distinct().Count());
+        Assert.AreEqual(1, state.AvailableNodes.Count);
+        Assert.AreEqual(1, state.AvailableNodes[0].Stage);
     }
 
     [TestMethod]
@@ -68,20 +85,30 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
-    public void GeneratedMaps_AllNodesConnectForwardAndReachDragonLayer()
+    public void GeneratedMaps_RoadsStayOnDryGroundAndMountainFeaturesDoNotCoverTrails()
     {
-        for (var seed = 0; seed < 80; seed++)
+        for (var seed = 0; seed < 200; seed++)
         {
-            var state = new WyrmrealmMapState(2, seed);
-            var dragon = state.Nodes.Single(node => node.Type == WyrmrealmNodeType.Dragon);
-            Assert.AreEqual(WyrmrealmMapState.CombatStages + 1, dragon.Stage);
-            Assert.AreEqual(state.Nodes.Count(node => node.Stage == WyrmrealmMapState.CombatStages), dragon.PreviousNodeIds.Count);
-
-            foreach (var node in state.Nodes.Where(node => node.Stage <= WyrmrealmMapState.CombatStages))
+            var nodes = WyrmrealmMapGenerator.Generate(2, seed);
+            var land = nodes[0].Territory!;
+            foreach (var road in land.Roads)
             {
-                if (node.Stage > 1) Assert.IsTrue(node.PreviousNodeIds.Count > 0);
-                Assert.IsTrue(state.Nodes.Any(next => next.Stage == node.Stage + 1 && next.PreviousNodeIds.Contains(node.Id, StringComparer.Ordinal)),
-                    $"{node.Id} had no route forward for seed {seed}.");
+                foreach (var edge in road.Points.Zip(road.Points.Skip(1)))
+                {
+                    for (var step = 0; step <= 20; step++)
+                    {
+                        var t = step / 20d;
+                        var point = WyrmrealmMapGenerator.TrailPoint(edge.First, edge.Second, t);
+                        var x = point.X;
+                        var y = point.Y;
+                        Assert.IsTrue(Math.Abs(x - WyrmrealmMapGenerator.RiverX(land.River, y)) > 3, $"River collision: {seed}");
+                        foreach (var hill in land.Features.Where(f => f.Kind == "mountain"))
+                        {
+                            var distance = Math.Pow((x - hill.Center.X) / hill.RadiusX, 2) + Math.Pow((y - hill.Center.Y) / hill.RadiusY, 2);
+                            Assert.IsTrue(distance > 1, $"Ridge collision: {seed}");
+                        }
+                    }
+                }
             }
         }
     }
@@ -112,7 +139,7 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
-    public void CompletingSixConnectedCombatNodes_RevealsUnknownWyrm()
+    public void CompletingEightShortestRoadCombatNodes_RevealsUnknownWyrm()
     {
         var state = new WyrmrealmMapState(seed: 8021);
         for (var stage = 0; stage < WyrmrealmMapState.CombatStages; stage++)
@@ -140,6 +167,10 @@ public sealed class WyrmrealmMapStateTests
         Assert.IsFalse(state.TryCompleteEncounter());
         Assert.AreEqual(1, state.CompletedNodes.Count);
     }
+
+    private static int MinimumFights(IReadOnlyList<WyrmrealmMapNode> nodes, WyrmrealmMapNode node)
+        => (node.Type == WyrmrealmNodeType.Combat ? 1 : 0) + (node.PreviousNodeIds.Count == 0 ? 0
+            : node.PreviousNodeIds.Min(id => MinimumFights(nodes, nodes.Single(n => n.Id == id))));
 
     private static void CompleteEncounter(WyrmrealmMapState state)
     {
