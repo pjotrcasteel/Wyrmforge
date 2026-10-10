@@ -1,4 +1,4 @@
-namespace Wyrmforge.Application.Runs.Navigation;
+﻿namespace Wyrmforge.Application.Runs.Navigation;
 
 public static class WyrmrealmMapGenerator
 {
@@ -16,7 +16,7 @@ public static class WyrmrealmMapGenerator
         var rareStage = RollRareStage(depth, random);
         for (var stage = 1; stage <= WyrmrealmMapState.CombatStages; stage++)
         {
-            var width = stage == 1 ? 3 : random.Next(2, 4);
+            var width = stage is 1 or WyrmrealmMapState.CombatStages ? 3 : 4;
             var rareIndex = stage == rareStage ? random.Next(width) : -1;
             layers.Add(CreateLayer(depth, stage, width, rareIndex));
         }
@@ -35,7 +35,7 @@ public static class WyrmrealmMapGenerator
 
     private static List<NodeDraft> CreateLayer(int depth, int stage, int width, int rareIndex)
     {
-        var lanes = width == 2 ? new[] { -1, 1 } : new[] { -1, 0, 1 };
+        var lanes = width == 4 ? new[] { -3, -1, 1, 3 } : new[] { -2, 0, 2 };
         return lanes.Select((lane, index) => new NodeDraft(
             $"depth-{depth}-stage-{stage}-lane-{lane}",
             stage,
@@ -52,13 +52,13 @@ public static class WyrmrealmMapGenerator
             Nearest(current, source.Lane).PreviousNodeIds.Add(source.Id);
         }
 
-        foreach (var node in current)
+        // Forks alternate with committed stretches so routes do not merge immediately.
+        if (current[0].Stage % 2 == 0)
         {
             foreach (var source in previous)
             {
-                if (node.PreviousNodeIds.Contains(source.Id)) continue;
-                var chance = Math.Abs(node.Lane - source.Lane) <= 1 ? 0.42 : 0.18;
-                if (random.NextDouble() < chance) node.PreviousNodeIds.Add(source.Id);
+                foreach (var destination in current.OrderBy(node => Math.Abs(node.Lane - source.Lane)).ThenBy(_ => random.Next()).Take(2))
+                    destination.PreviousNodeIds.Add(source.Id);
             }
         }
 

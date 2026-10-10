@@ -604,7 +604,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_RouteMap_ShowsFullPathAndConcreteRewardBeforeEntering(int width, int height)
+    public async Task Mobile_RouteMap_UnfoldsTerritoryAndKeepsRewardPanelFixed(int width, int height)
     {
         Directory.CreateDirectory(ArtifactDirectory);
         await Page.SetViewportSizeAsync(width, height);
@@ -613,8 +613,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         var wyrm = await Page.Locator("button.route-node.dragon").BoundingBoxAsync();
         Assert.IsNotNull(wyrm);
-        Assert.IsLessThanOrEqualTo(height, wyrm.Y + wyrm.Height, "The complete route must fit on a portrait phone.");
+        var territory = Page.GetByLabel("Scrollable hunt territory");
+        var chart = await territory.BoundingBoxAsync();
+        Assert.IsNotNull(chart);
+        Assert.IsTrue(wyrm.Y + wyrm.Height < chart.Y, "The lair starts beyond the opening viewport.");
+        var scrollBefore = await territory.EvaluateAsync<double>("element => element.scrollTop");
+        Assert.IsGreaterThan(0d, scrollBefore);
+        var headerBefore = await Page.Locator(".map-header").BoundingBoxAsync();
+        var footerBefore = await Page.Locator(".node-sheet").BoundingBoxAsync();
+        await territory.EvaluateAsync("element => element.scrollTop -= 140");
+        Assert.AreEqual(headerBefore!.Y, (await Page.Locator(".map-header").BoundingBoxAsync())!.Y);
+        Assert.AreEqual(footerBefore!.Y, (await Page.Locator(".node-sheet").BoundingBoxAsync())!.Y);
+        await Page.EvaluateAsync("async () => { const map = await import('./js/hunt-map.js'); map.focusHunter(document.querySelector('.hunt-viewport')); }");
         var node = Page.Locator("button.route-node.available").First;
+        await Expect(node).ToBeInViewportAsync();
         var seal = await node.Locator(".node-core").BoundingBoxAsync();
         Assert.IsNotNull(seal);
         Assert.IsGreaterThanOrEqualTo(44, seal.Width);

@@ -27,6 +27,26 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
+    public void Generate_SixTrailCampaign_ForksOfferAlternativesAndKeepCommittedStretches()
+    {
+        for (var seed = 0; seed < 80; seed++)
+        {
+            var nodes = WyrmrealmMapGenerator.Generate(1, seed);
+            Assert.AreEqual(3, nodes.Count(node => node.Stage == 1));
+            for (var stage = 2; stage <= WyrmrealmMapState.CombatStages; stage++)
+            {
+                foreach (var previous in nodes.Where(node => node.Stage == stage - 1))
+                {
+                    var next = nodes.Where(node => node.PreviousNodeIds.Contains(previous.Id)).ToArray();
+                    Assert.IsTrue(next.Length >= (stage % 2 == 0 ? 2 : 1));
+                }
+            }
+            Assert.IsTrue(nodes.Where(node => node.Stage == 3 && node.Rarity != WyrmrealmNodeRarity.Rare).All(node => node.PreviousNodeIds.Count == 1));
+            Assert.IsTrue(nodes.Where(node => node.Stage == 5 && node.Rarity != WyrmrealmNodeRarity.Rare).All(node => node.PreviousNodeIds.Count == 1));
+        }
+    }
+
+    [TestMethod]
     public void NewMap_OffersThreeFirstStageRoutes()
     {
         var state = new WyrmrealmMapState(seed: 1204);
@@ -92,7 +112,7 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
-    public void CompletingFourConnectedCombatNodes_RevealsUnknownWyrm()
+    public void CompletingSixConnectedCombatNodes_RevealsUnknownWyrm()
     {
         var state = new WyrmrealmMapState(seed: 8021);
         for (var stage = 0; stage < WyrmrealmMapState.CombatStages; stage++)

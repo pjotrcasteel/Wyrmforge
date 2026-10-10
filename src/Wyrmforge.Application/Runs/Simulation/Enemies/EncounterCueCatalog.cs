@@ -14,10 +14,12 @@ public static class EncounterCueCatalog
         _ => "Trail",
     };
 
-    public static string Cue(int stage, EncounterPhase? phase) => phase switch
+    public static string Cue(int stage, EncounterPhase? phase) => CueForPressure(WyrmrealmStageCatalog.PressureStage(stage), phase);
+
+    private static string CueForPressure(int stage, EncounterPhase? phase) => phase switch
     {
         EncounterPhase.BreathingRoom => "Spawns paused · collect XP",
-        EncounterPhase.Pressure => WyrmrealmStageCatalog.Hint(stage),
+        EncounterPhase.Pressure => WyrmrealmStageCatalog.Hint(stage switch { 3 => 4, 4 => 6, _ => stage }),
         EncounterPhase.Escalation when stage == 3 => "Hunters on the flanks",
         EncounterPhase.Escalation when stage == 4 => "Brute reinforcements",
         EncounterPhase.Escalation => "Enemies arrive faster",
@@ -32,5 +34,5 @@ public static class EncounterCueCatalog
         _ => "",
     };
 
-    public static string EdgeClass(int stage) => stage switch { 2 => "north-south", 3 => "flanks", _ => "all-edges" };
+    public static string EdgeClass(int stage) => WyrmrealmStageCatalog.PressureStage(stage) switch { 2 => "north-south", 3 => "flanks", _ => "all-edges" };
 }

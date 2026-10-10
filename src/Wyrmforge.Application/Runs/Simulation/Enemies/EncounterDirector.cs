@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Domain.Combat.Enemies;
+﻿using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Domain.Combat.Enemies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -14,7 +15,7 @@ public sealed class EncounterDirector
     private double phaseElapsed;
 
     public double PhaseElapsed => phaseElapsed;
-    public double PhaseDuration => Phase == EncounterPhase.BreathingRoom ? BreathingRoomSeconds : 7 + Math.Clamp(stage - 1, 0, 3) * 1.5;
+    public double PhaseDuration => Phase == EncounterPhase.BreathingRoom ? BreathingRoomSeconds : (7 + Math.Clamp(stage - 1, 0, 3) * 1.5) * 4 / WyrmrealmMapState.CombatStages;
     public double PhaseProgress => Math.Clamp(phaseElapsed / PhaseDuration, 0, 1);
     public bool CanComplete => Active && Phase == EncounterPhase.Climax && PhaseProgress >= 1;
 
@@ -27,7 +28,7 @@ public sealed class EncounterDirector
         Active = true;
         pattern = encounterPattern;
         depth = Math.Max(1, encounterDepth);
-        stage = encounterStage;
+        stage = WyrmrealmStageCatalog.PressureStage(encounterStage);
         progress = 0;
         phaseElapsed = 0;
         pendingInserts.Clear();
