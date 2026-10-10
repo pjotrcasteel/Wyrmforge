@@ -67,6 +67,7 @@ public static class WyrmrealmMapGenerator
             var schools = Enum.GetValues<SpellSchool>().OrderBy(_ => random.Next()).ToArray();
             var lengths = new List<int> { 2 };
             for (var i = 1; i < count; i++) lengths.Add(random.NextDouble() < .35 ? 2 : random.NextDouble() < .45 ? 5 : 3);
+            if (lengths.All(length => length == 2)) lengths[^1] = 3;
             var ends = new List<string>();
             for (var lane = 0; lane < count; lane++)
             {

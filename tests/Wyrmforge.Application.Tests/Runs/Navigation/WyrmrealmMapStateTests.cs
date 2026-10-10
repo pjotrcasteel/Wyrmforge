@@ -42,6 +42,7 @@ public sealed class WyrmrealmMapStateTests
                 var next = nodes.Where(n => n.PreviousNodeIds.Contains(fork.Id)).ToArray();
                 Assert.IsTrue(next.Length is >= 2 and <= 4);
                 Assert.AreEqual(next.Length, next.Select(n => n.AttunementSchool).Distinct().Count());
+                Assert.IsTrue(next.Select(n => land.Roads.Single(r => r.Id == n.Site!.RoadId).Length).Distinct().Count() >= 2);
                 Assert.IsTrue(next.Any(n => land.Roads.Single(r => r.Id == n.Site!.RoadId).Length == "Short"));
             }
             foreach (var road in land.Roads)
