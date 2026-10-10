@@ -630,7 +630,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(node).ToBeInViewportAsync();
         var seal = await node.Locator(".node-core").BoundingBoxAsync();
         Assert.IsNotNull(seal);
-        Assert.IsGreaterThanOrEqualTo(44, seal.Width);
+        Assert.IsGreaterThanOrEqualTo(36, seal.Width);
+        var touchTarget = await node.BoundingBoxAsync();
+        Assert.IsNotNull(touchTarget);
+        Assert.IsGreaterThanOrEqualTo(44, touchTarget.Width);
+        Assert.IsGreaterThanOrEqualTo(44, touchTarget.Height);
         await Page.Locator(".road-label").First.ScrollIntoViewIfNeededAsync();
         await ScreenshotAsync($"mobile-territory-forks-{width}.png");
         var detour = Page.Locator(".road-label.detour").First;
