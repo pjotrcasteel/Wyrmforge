@@ -27,11 +27,15 @@
                 <svg class="hunt-terrain" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     @if (Territory is { } land)
                     {
+                        <path class="river-bank" d="@RiverPath(land.River)" />
                         <path class="river-fill" d="@RiverPath(land.River)" />
+                        <path class="river-current" d="@TrailPath(land.River)" />
                         @foreach (var feature in land.Features)
                         {
                             @if (feature.Kind is "mountain")
                             {
+                                <path class="mountain-shadow" d="@FeaturePath(feature, 1)" />
+                                <path class="mountain-face" d="@MountainFacePath(feature)" />
                                 <path class="contour" d="@FeaturePath(feature, 1)" />
                                 <path class="ridge" d="@FeaturePath(feature, .65)" />
                             }
@@ -218,6 +222,11 @@
         }).ToArray();
         return PolygonPath(points) + " Z";
     }
+    private static string MountainFacePath(HuntFeature f) => PolygonPath([
+        new(f.Center.X - f.RadiusX * .8, f.Center.Y + f.RadiusY * .35),
+        new(f.Center.X - f.RadiusX * .15, f.Center.Y - f.RadiusY * .7),
+        new(f.Center.X + f.RadiusX * .7, f.Center.Y + f.RadiusY * .35),
+        new(f.Center.X + f.RadiusX * .12, f.Center.Y + f.RadiusY * .7)]) + " Z";
     private static string CraterPath(HuntFeature f) => FormattableString.Invariant($"M {f.Center.X - 4} {f.Center.Y + f.RadiusY} A {f.RadiusX} {f.RadiusY} 0 1 1 {f.Center.X + 4} {f.Center.Y + f.RadiusY}");
     private static string RuinsPath(HuntPoint p) => FormattableString.Invariant($"M {p.X + 6} {p.Y + .6} V {p.Y - .6} H {p.X + 8} V {p.Y + .6} M {p.X - 8} {p.Y + .5} V {p.Y - .8} H {p.X - 6} V {p.Y + .5}");
     private static string BridgePath(HuntPoint p) => FormattableString.Invariant($"M {p.X - 4} {p.Y - .35} L {p.X + 4} {p.Y - .35} M {p.X - 4} {p.Y + .35} L {p.X + 4} {p.Y + .35}");
