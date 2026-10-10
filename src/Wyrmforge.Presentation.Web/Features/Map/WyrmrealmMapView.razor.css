@@ -92,4 +92,4 @@
 .node-main-icon { width:27px;height:24px; }.node-school { width:17px;height:17px;font-size:.8rem;line-height:17px; }
 .route-node { min-height:72px; }.node-name { font-size:.6rem; }.node-badges { min-height:12px;font-size:.6rem; }
 .road-label { font-size:.56rem;padding:3px 5px;background:#261e2dde;border-color:#8c7298;box-shadow:0 2px 5px #08050b44; }.road-label small { font-size:.49rem; }
-@media(max-width:360px) { .realm-route { --hunt-step:clamp(160px,30svh,230px); }.node-name { font-size:.56rem; }.road-label { max-width:78px; } }
+@media(max-width:360px) { .realm-route { --hunt-step:clamp(160px,30svh,230px);height:calc(var(--hunt-step) * 11); }.node-name { font-size:.56rem; }.road-label { max-width:64px;font-size:.52rem; }.road-label small { font-size:.45rem; } }
