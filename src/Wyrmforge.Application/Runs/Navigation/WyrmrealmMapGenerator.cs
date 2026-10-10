@@ -83,30 +83,20 @@ public static class WyrmrealmMapGenerator
             for (var lane = 0; lane < count; lane++)
             {
                 var fights = lengths[lane];
-                var centerX = 29 + lane * 53d / (count - 1) + (random.NextDouble() - .5) * 7;
+                var centerX = 26 + lane * 60d / (count - 1);
+                var bendRoom = Math.Min(12, (60d / (count - 1) - 16) / 2);
                 var bend = random.NextDouble() * Math.PI * 2;
                 var points = new List<HuntPoint> { start };
                 for (var i = 1; i <= fights; i++)
                 {
                     var spacingNoise = fights switch { 2 => .18, 3 => .10, _ => .04 };
-                    var neighbours = drafts.Where(d => d.Site.RoadId?.StartsWith($"road-{sector}-") == true)
-                        .Select(d => d.Site.Point).Concat(points.Skip(1)).ToArray();
-                    var best = new HuntPoint(centerX, start.Y);
-                    var bestClearance = -1d;
-                    for (var attempt = 0; attempt < 80; attempt++)
-                    {
-                        var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
-                        var x = centerX + Math.Sin(t * Math.PI * 2 + bend) * 9 + (random.NextDouble() - .5) * 5;
-                        var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
-                        var point = new HuntPoint(Math.Clamp(x, 26, 85), y);
-                        var clearance = neighbours.Length == 0 ? 2 : neighbours.Min(other =>
-                            Math.Max(Math.Abs(point.X - other.X) / 16, Math.Abs(point.Y - other.Y) / 3.3));
-                        if (clearance <= bestClearance) continue;
-                        best = point;
-                        bestClearance = clearance;
-                        if (clearance >= 1) break;
-                    }
-                    points.Add(best);
+                    var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
+                    // Reserve touch-sized corridors across neighbouring roads, while varying each bend and stop's height.
+                    var bendOffset = Math.Sin(t * Math.PI * 2 + bend) * bendRoom;
+                    var x = centerX + Math.Clamp(bendOffset + (random.NextDouble() - .5) * 3, -bendRoom, bendRoom);
+                    var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
+                    if (i > 1) y = Math.Min(y, points[^1].Y - 3.3);
+                    points.Add(new(Math.Clamp(x, 26, 88), y));
                 }
                 points.Add(end);
                 var roadId = $"road-{sector}-{lane}";
