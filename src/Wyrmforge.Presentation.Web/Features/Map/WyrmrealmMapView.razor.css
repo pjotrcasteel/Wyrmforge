@@ -113,3 +113,15 @@
 .node-bonus { font-size:.44rem; }.route-node.available .node-name { color:#f0dec8; }
 .camp-icon { width:44px;height:34px;fill:#6c526166;stroke:#d8bda0;stroke-width:1.5;stroke-linejoin:round; }
 @media(max-width:360px) { .road-label { max-width:64px;font-size:.52rem; }.terrain-landmark { max-width:90px; } }
+
+/* Scenery stays within the generator's reserved footprint. */
+.terrain-landmark svg { width:100%;height:100%; }.terrain-landmark { max-width:none; }.terrain-landmark.volcano,.terrain-landmark.ridge { max-width:none; }
+.terrain-landmark .woodland { fill:#3b5147;stroke:#7d948172;stroke-width:1.2;stroke-linejoin:round; }
+.terrain-landmark.rocks .mountain-body { fill:#574551; }.terrain-landmark.rocks .mountain-light { fill:#b1826a35; }
+.terrain-landmark.ruins { z-index:0; }.node-bonus { display:block;min-height:12px;margin-top:3px;letter-spacing:.04em;color:#e5c189; }
+.route-node.dragon .node-core { width:76px;height:64px;border:0;background:transparent;box-shadow:none; }
+.route-node.dragon .node-main-icon { width:70px;height:52px;fill:#17121e;stroke:#c5adbf;stroke-width:1.1; }
+.route-node.dragon .node-name { color:#dac4d8;font-size:.58rem; }.route-node.dragon.future { opacity:.75; }
+.route-node.available { opacity:1; }.route-node.available .node-core { box-shadow:0 0 12px #b48bdb30; }
+.node-name { color:#d2c1cd; }.route-node.future { opacity:.68; }
+@media(max-width:360px) { .terrain-landmark { max-width:none; } }

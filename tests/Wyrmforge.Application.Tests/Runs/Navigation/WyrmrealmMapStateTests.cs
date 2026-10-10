@@ -102,7 +102,7 @@ public sealed class WyrmrealmMapStateTests
                         var x = point.X;
                         var y = point.Y;
                         Assert.IsTrue(Math.Abs(x - WyrmrealmMapGenerator.RiverX(land.River, y)) > 3, $"River collision: {seed}");
-                        foreach (var hill in land.Features.Where(f => f.Kind == "mountain"))
+                        foreach (var hill in land.Features.Where(f => f.Kind is "mountain" or "forest" or "rocks"))
                         {
                             var distance = Math.Pow((x - hill.Center.X) / hill.RadiusX, 2) + Math.Pow((y - hill.Center.Y) / hill.RadiusY, 2);
                             Assert.IsTrue(distance > 1, $"Ridge collision: {seed}");
@@ -111,6 +111,35 @@ public sealed class WyrmrealmMapStateTests
                 }
             }
         }
+    }
+
+    [TestMethod]
+    public void Generate_SceneryFootprints_LeaveRiverbanksClearAndDoNotOverlap()
+    {
+        var kinds = new HashSet<string>();
+        for (var seed = 0; seed < 200; seed++)
+        {
+            var land = WyrmrealmMapGenerator.Generate(1, seed)[0].Territory!;
+            var scenery = land.Features.Where(f => f.Kind is "mountain" or "forest" or "rocks").ToArray();
+            foreach (var feature in scenery)
+            {
+                kinds.Add(feature.Kind);
+                for (var sample = -1; sample <= 1; sample++)
+                {
+                    var water = WyrmrealmMapGenerator.RiverX(land.River, feature.Center.Y + sample * feature.RadiusY);
+                    Assert.IsTrue(Math.Abs(feature.Center.X - water) > feature.RadiusX + 3, $"Scenery covers water: {seed}");
+                }
+                foreach (var other in land.Features.Where(f => f != feature && f.Kind is "mountain" or "forest" or "rocks" or "ruins"))
+                {
+                    var distance = Math.Pow((feature.Center.X - other.Center.X) / (feature.RadiusX + other.RadiusX), 2)
+                        + Math.Pow((feature.Center.Y - other.Center.Y) / (feature.RadiusY + other.RadiusY), 2);
+                    Assert.IsTrue(distance > 1, $"Scenery overlaps another landmark: {seed}");
+                }
+            }
+            var lair = land.Features.Single(f => f.Kind is "ridge" or "volcano");
+            Assert.AreEqual(5d, lair.Center.Y);
+        }
+        CollectionAssert.AreEquivalent(new[] { "mountain", "forest", "rocks" }, kinds.ToArray());
     }
 
     [TestMethod]
