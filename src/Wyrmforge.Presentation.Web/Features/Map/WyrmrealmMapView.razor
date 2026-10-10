@@ -39,7 +39,20 @@
                 {
                     <div class="terrain-landmark @feature.Kind" style="@FeatureStyle(feature)" aria-hidden="true">
                         <svg viewBox="0 0 100 70">
-                            @if (feature.Kind == "ruins")
+                            @if (feature.Kind == "forest")
+                            {
+                                <path class="land-shadow" d="M5 60L42 31L95 57L55 67Z" />
+                                <path class="woodland" d="M15 59V43M4 48L15 22L27 48ZM40 63V40M24 47L40 10L55 47ZM66 60V43M54 49L66 21L79 49ZM87 62V48M77 52L87 31L97 52Z" />
+                                <path class="forest-ink" d="M15 25L10 38M40 14L32 34M66 24L61 39M87 34L83 44" />
+                            }
+                            else if (feature.Kind == "rocks")
+                            {
+                                <path class="land-shadow" d="M5 59L31 26L92 54L65 67Z" />
+                                <path class="mountain-body" d="M7 56L13 32L29 26L45 39L39 60ZM44 60L50 22L64 13L83 25L94 57Z" />
+                                <path class="mountain-light" d="M13 32L29 26L25 42L39 60H7ZM50 22L64 13L65 37L78 57H44Z" />
+                                <path class="peak-ink" d="M64 13L65 37L78 57M29 26L25 42M83 25L76 32" />
+                            }
+                            else if (feature.Kind == "ruins")
                             {
                                 <path class="land-shadow" d="M8 61L32 51L90 58L71 68Z" />
                                 <path class="stone" d="M22 58V27H34V17H42V58M54 59V34Q65 20 77 34V60M60 59V39Q65 31 71 39V59M19 27H46M26 38H32M28 46H34M54 34H77" />
@@ -215,7 +228,7 @@
         => TrailPath(to.Site is { IncomingTrail.Count: > 0 } site ? site.IncomingTrail : [new(NodeX(from), NodeY(from)), new(NodeX(to), NodeY(to))]);
     private double NodeX(WyrmrealmMapNode node) => node.Site?.Point.X ?? 50;
     private static double NodeY(WyrmrealmMapNode node) => node.Site?.Point.Y ?? 5;
-    private static string FeatureStyle(HuntFeature feature) => FormattableString.Invariant($"left:{feature.Center.X:0.#}%;top:{feature.Center.Y:0.#}%;width:{Math.Clamp(feature.RadiusX * 2, 15, 28):0.#}%");
+    private static string FeatureStyle(HuntFeature feature) => FormattableString.Invariant($"left:{feature.Center.X:0.#}%;top:{feature.Center.Y:0.#}%;width:{feature.RadiusX * 2:0.#}%;height:{feature.RadiusY * 2:0.#}%");
     private string RoadLabelStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node) - 3:0.#}%");
     private static string TrailPath(IReadOnlyList<HuntPoint> points)
     {
@@ -286,12 +299,12 @@
         : $"Trail {node.Stage}, {node.Name}, {node.AttunementSchool}, {EncounterLabel(node.EncounterKind ?? WyrmrealmEncounterKind.Mixed)}";
 
     private static string LandmarkPath(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon
-        ? "M5 28V16L14 5L23 12L32 5L41 16V28M16 28V20Q23 10 30 20V28"
+        ? "M3 30L12 16L18 7L25 10L32 5L43 30ZM16 30V23Q23 12 30 23V30M12 16L18 7L22 14M32 5L35 17"
         : WyrmrealmStageCatalog.PressureStage(node.Stage) switch
         {
             2 => "M8 28V8M3 14L8 7L13 14M23 28V5M18 11L23 4L28 11M38 28V8M33 14L38 7L43 14",
             3 => "M9 5L37 29M37 5L9 29M10 17A13 13 0 1 0 36 17A13 13 0 1 0 10 17",
-            4 => "M13 12L7 4L7 16M33 12L39 4L39 16M13 12Q23 5 33 12V23L27 29H19L13 23ZM18 17H20M26 17H28M21 24H25",
+            4 => "M12 6H34V19L23 30L12 19ZM18 11H28M23 11V23M19 19L23 23L27 19",
             _ => "M9 5L36 28M37 5L10 28M7 23L14 30M32 30L39 23M9 5L16 7L12 11M37 5L30 7L34 11",
         };
 

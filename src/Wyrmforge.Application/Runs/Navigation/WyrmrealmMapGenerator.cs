@@ -29,18 +29,28 @@ public static class WyrmrealmMapGenerator
         var trails = drafts.SelectMany(d => d.Site.IncomingTrail.Zip(d.Site.IncomingTrail.Skip(1)))
             .Concat(roads.SelectMany(r => r.Points.Zip(r.Points.Skip(1)))).ToArray();
         var features = new List<HuntFeature> { new("bridge", new(crossingX, 92), 4, .6) };
+        foreach (var road in roads.Where(r => r.BonusRelic))
+        {
+            var reward = road.Points[road.Points.Count / 2];
+            var side = reward.X < 50 ? -1 : 1;
+            var ruin = new HuntPoint(Math.Clamp(reward.X + side * 14, 7, 93), reward.Y);
+            if (Math.Abs(ruin.X - RiverX(river, ruin.Y)) < 9) ruin = new(Math.Clamp(reward.X - side * 14, 7, 93), reward.Y);
+            features.Add(new("ruins", ruin, 5, 1.8));
+        }
         // Valleys are reserved before encounter placement. Ridges cannot cover their navigable corridors.
-        for (var attempt = 0; attempt < 350 && features.Count < 24; attempt++)
+        for (var attempt = 0; attempt < 350 && features.Count < 18; attempt++)
         {
             var point = new HuntPoint(random.NextDouble() * 100, 21 + random.NextDouble() * 62);
-            var radiusX = 6 + random.NextDouble() * 9;
-            var radiusY = 0.7 + random.NextDouble() * 1.1;
+            var radiusX = 5 + random.NextDouble() * 5;
+            var radiusY = 1.8 + random.NextDouble() * .8;
+            if (Math.Abs(point.X - RiverX(river, point.Y)) < radiusX + 5) continue;
+            if (features.Any(f => Distance(point, f.Center, radiusX + f.RadiusX + 2, radiusY + f.RadiusY + 1) < 1)) continue;
             if (trails.Any(edge => SegmentDistance(point, edge.First, edge.Second, radiusX + 3, radiusY + 1) < 1)) continue;
             if (drafts.Any(d => Distance(point, d.Site.Point, radiusX + 5, radiusY + 2) < 1)) continue;
-            features.Add(new("mountain", point, radiusX, radiusY));
+            var kind = biome switch { 0 when attempt % 3 != 0 => "forest", 2 when attempt % 3 != 0 => "rocks", _ => "mountain" };
+            features.Add(new(kind, point, radiusX, radiusY));
         }
-        features.Add(new(biome == 2 ? "volcano" : "ridge", new(approach.X, 7), 17, 7));
-        foreach (var road in roads.Where(r => r.BonusRelic)) features.Add(new("ruins", road.Points[road.Points.Count / 2], 3, 1));
+        features.Add(new(biome == 2 ? "volcano" : "ridge", new(approach.X, 5), 17, 4));
         var territory = new WyrmrealmTerritory(seed, new[] { "River valley", "Broken ridge", "Ashen caldera" }[biome], camp, river, roads, features);
         var mirror = random.Next(2) == 1;
         HuntPoint Flip(HuntPoint point) => mirror ? point with { X = 100 - point.X } : point;
