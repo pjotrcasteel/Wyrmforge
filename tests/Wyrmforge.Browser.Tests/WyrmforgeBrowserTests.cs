@@ -609,6 +609,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Directory.CreateDirectory(ArtifactDirectory);
         await Page.SetViewportSizeAsync(width, height);
         await OpenAsync();
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0, new() { Timeout = 30000 });
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         var wyrm = await Page.Locator("button.route-node.dragon").BoundingBoxAsync();
