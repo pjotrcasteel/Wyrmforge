@@ -89,10 +89,24 @@ public static class WyrmrealmMapGenerator
                 for (var i = 1; i <= fights; i++)
                 {
                     var spacingNoise = fights switch { 2 => .18, 3 => .10, _ => .04 };
-                    var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
-                    var x = centerX + Math.Sin(t * Math.PI * 2 + bend) * 9 + (random.NextDouble() - .5) * 5;
-                    var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
-                    points.Add(new(Math.Clamp(x, 26, 85), y));
+                    var neighbours = drafts.Where(d => d.Site.RoadId?.StartsWith($"road-{sector}-") == true)
+                        .Select(d => d.Site.Point).Concat(points.Skip(1)).ToArray();
+                    var best = new HuntPoint(centerX, start.Y);
+                    var bestClearance = -1d;
+                    for (var attempt = 0; attempt < 80; attempt++)
+                    {
+                        var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
+                        var x = centerX + Math.Sin(t * Math.PI * 2 + bend) * 9 + (random.NextDouble() - .5) * 5;
+                        var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
+                        var point = new HuntPoint(Math.Clamp(x, 26, 85), y);
+                        var clearance = neighbours.Length == 0 ? 2 : neighbours.Min(other =>
+                            Math.Max(Math.Abs(point.X - other.X) / 16, Math.Abs(point.Y - other.Y) / 3.3));
+                        if (clearance <= bestClearance) continue;
+                        best = point;
+                        bestClearance = clearance;
+                        if (clearance >= 1) break;
+                    }
+                    points.Add(best);
                 }
                 points.Add(end);
                 var roadId = $"road-{sector}-{lane}";

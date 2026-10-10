@@ -7,6 +7,23 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WyrmrealmMapStateTests
 {
     [TestMethod]
+    public void GeneratedNodes_LeaveSeparateTouchTargetsOnNarrowPhones()
+    {
+        for (var seed = 0; seed < 500; seed++)
+        {
+            var nodes = WyrmrealmMapGenerator.Generate(1, seed).Where(n => n.Site!.RoadId is not null).ToArray();
+            for (var index = 0; index < nodes.Length; index++)
+            foreach (var other in nodes.Skip(index + 1))
+            {
+                var point = nodes[index].Site!.Point;
+                var next = other.Site!.Point;
+                Assert.IsTrue(Math.Abs(point.X - next.X) >= 15 || Math.Abs(point.Y - next.Y) >= 2.8,
+                    $"Overlapping 48px targets at 320px width: seed {seed}, {nodes[index].Id}, {other.Id}");
+            }
+        }
+    }
+
+    [TestMethod]
     public void GeneratedRoads_MixEncountersAndOfferUphillCrossroadsWithoutSkippingTheReward()
     {
         var crossings = 0;

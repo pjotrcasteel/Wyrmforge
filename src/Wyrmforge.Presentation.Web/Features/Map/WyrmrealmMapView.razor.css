@@ -135,3 +135,12 @@
 .route-node.road-preview { opacity:.95; }.route-node.road-preview .node-core { border-color:var(--school-ink); }.route-node.road-preview .node-name { color:#e1cce7; }
 .route-node.current .node-core { box-shadow:0 0 0 3px #c88e6530;border-color:#e4b98f; }.current-marker { color:#e4c29d; }
 @media(max-height:450px) and (orientation:landscape) { .hunt-chart { grid-column:1;grid-row:3; }.hunt-chart .hunt-viewport { display:block; } }
+
+/* Only the seal is a touch target; overflowing labels cannot cover neighbouring seals. */
+.route-node { width:48px;height:48px;min-height:48px;padding:6px 0; }
+.route-node > * { pointer-events:none; }
+.route-node .node-name { position:absolute;top:46px;left:50%;margin:0;transform:translateX(-50%); }
+.route-node .node-badges { position:absolute;top:62px;left:50%;transform:translateX(-50%);white-space:nowrap; }
+.route-node .node-bonus { position:absolute;top:76px;left:50%;transform:translateX(-50%);white-space:nowrap; }
+.route-node.dragon { height:88px;min-height:88px; }
+.route-node.dragon .node-name { top:76px; }
