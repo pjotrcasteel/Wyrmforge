@@ -22,6 +22,7 @@
                 <DragonSignsView Signs="Signs" Compact="true" />
             </div>
         </details>
+        <div class="hunt-chart">
         <div class="hunt-viewport" @ref="viewport" tabindex="0" aria-label="Scrollable hunt territory">
             <div class="realm-route" aria-label="Generated Wyrmrealm route map">
                 <svg class="hunt-terrain" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -102,7 +103,7 @@
                 </svg>
                 @foreach (var node in Nodes.OrderBy(node => node.Stage).ThenBy(node => node.Lane))
                 {
-                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
+                    <button class="@NodeClass(node)" style="@NodeMapStyle(node)" data-road="@node.Site?.RoadId" data-stage="@node.Stage" data-current="@(IsCurrent(node) ? "true" : "false")" aria-label="@NodeAriaLabel(node)" aria-pressed="@(selectedNode?.Id == node.Id)" @onclick="() => SelectNode(node)">
                         @if (IsCurrent(node)) { <span class="current-marker">YOU</span> }
                         <span class="node-core">
                             <svg class="node-main-icon" viewBox="0 0 46 34" aria-hidden="true"><path d="@LandmarkPath(node)" /></svg>
@@ -118,6 +119,10 @@
                     </button>
                 }
             </div>
+        </div>
+        <button class="hunter-compass" aria-label="Return to hunter" title="Return to hunter" @onclick="ReturnToHunterAsync">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11" /><path d="M20 10L18 18L10 22L14 14ZM16 2V5M16 27V30M2 16H5M27 16H30" /></svg>
+        </button>
         </div>
         <aside class="node-sheet" aria-label="Selected trail details">
             @if (selectedNode is { } selected)
@@ -169,6 +174,26 @@
     private ElementReference viewport;
     private IJSObjectReference? mapModule;
     private string? focusedKey;
+    private HashSet<string> reachableNodeIds = [];
+
+    protected override void OnParametersSet()
+    {
+        reachableNodeIds = AvailableNodes.Select(node => node.Id).ToHashSet(StringComparer.Ordinal);
+        var pending = new Queue<string>(reachableNodeIds);
+        while (pending.TryDequeue(out var id))
+        {
+            foreach (var next in Nodes.Where(node => node.PreviousNodeIds.Contains(id)))
+            {
+                if (reachableNodeIds.Add(next.Id)) pending.Enqueue(next.Id);
+            }
+        }
+    }
+
+    private async Task ReturnToHunterAsync()
+    {
+        mapModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/hunt-map.js");
+        await mapModule.InvokeVoidAsync("focusHunter", viewport, false);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -190,7 +215,7 @@
     private bool IsAvailable(WyrmrealmMapNode node) => AvailableNodes.Any(candidate => candidate.Id == node.Id);
     private bool IsCompleted(WyrmrealmMapNode node) => CompletedNodes.Any(candidate => candidate.Id == node.Id);
     private bool IsCurrent(WyrmrealmMapNode node) => CompletedNodes.Count > 0 && CompletedNodes[^1].Id == node.Id;
-    private bool IsBypassed(WyrmrealmMapNode node) => CompletedNodes.Any(completed => completed.Stage == node.Stage) && !IsCompleted(node);
+    private bool IsBypassed(WyrmrealmMapNode node) => !IsCompleted(node) && !reachableNodeIds.Contains(node.Id);
     private string ResonanceStyle(int value) => $"width: {(TotalResonance == 0 ? 0 : value * 100d / TotalResonance):0.#}%";
 
     private void SelectNode(WyrmrealmMapNode node) => selectedNode = node;
@@ -203,15 +228,18 @@
         var rarity = node.Rarity == WyrmrealmNodeRarity.Rare ? " rare" : string.Empty;
         var selected = selectedNode?.Id == node.Id ? " selected" : string.Empty;
         var current = IsCurrent(node) ? " current" : string.Empty;
+        var preview = selectedNode?.Site?.RoadId is { } roadId && node.Site?.RoadId == roadId ? " road-preview" : string.Empty;
         var school = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "wyrm";
         var encounter = node.Type == WyrmrealmNodeType.Dragon ? "dragon" : $"stage-{node.Stage}";
-        return $"route-node {state}{rarity}{selected}{current} school-{school} {encounter}";
+        return $"route-node {state}{rarity}{selected}{current}{preview} school-{school} {encounter}";
     }
 
     private string ConnectionClass(WyrmrealmMapNode from, WyrmrealmMapNode to)
     {
         if (IsCompleted(from) && IsCompleted(to)) return "route-link traversed";
         if (IsCurrent(from) && IsAvailable(to)) return selectedNode?.Id == to.Id ? "route-link active selected" : "route-link active";
+        if (IsBypassed(from) || IsBypassed(to)) return "route-link bypassed";
+        if (selectedNode?.Site?.RoadId is { } road && (from.Site?.RoadId == road || to.Site?.RoadId == road)) return "route-link preview";
         return "route-link future";
     }
 
