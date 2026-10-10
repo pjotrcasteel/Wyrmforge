@@ -18,7 +18,7 @@ public static class WyrmrealmMapGenerator
         var roads = new List<HuntRoad>();
         var drafts = new List<WyrmrealmNodeLayout>();
         var crossingX = RiverX(river, 92);
-        var bridge = new[] { camp, new HuntPoint(crossingX - 3, 92), new HuntPoint(crossingX + 3, 92), opening };
+        var bridge = new[] { camp, new HuntPoint(crossingX - 4, 92), new HuntPoint(crossingX + 4, 92), opening };
         Add("opening-1", 1, 0, [], opening, bridge);
         Add("opening-2", 2, 0, [drafts[^1].Id], fork, [opening, fork]);
         var firstEnds = AddRoads(0, fork, clearing, 3, drafts[^1].Id);
@@ -28,13 +28,13 @@ public static class WyrmrealmMapGenerator
         Add("wyrm", 9, 0, [drafts[^1].Id], lair, [approach, lair]);
         var trails = drafts.SelectMany(d => d.Site.IncomingTrail.Zip(d.Site.IncomingTrail.Skip(1)))
             .Concat(roads.SelectMany(r => r.Points.Zip(r.Points.Skip(1)))).ToArray();
-        var features = new List<HuntFeature> { new("bridge", new(crossingX, 92), 3, .6) };
+        var features = new List<HuntFeature> { new("bridge", new(crossingX, 92), 4, .6) };
         // Valleys are reserved before encounter placement. Ridges cannot cover their navigable corridors.
-        for (var attempt = 0; attempt < 120 && features.Count < 14; attempt++)
+        for (var attempt = 0; attempt < 350 && features.Count < 24; attempt++)
         {
-            var point = new HuntPoint(25 + random.NextDouble() * 66, 21 + random.NextDouble() * 62);
-            var radiusX = 3 + random.NextDouble() * 5;
-            var radiusY = 1.8 + random.NextDouble() * 2;
+            var point = new HuntPoint(random.NextDouble() * 100, 21 + random.NextDouble() * 62);
+            var radiusX = 6 + random.NextDouble() * 9;
+            var radiusY = 0.7 + random.NextDouble() * 1.1;
             if (trails.Any(edge => SegmentDistance(point, edge.First, edge.Second, radiusX + 3, radiusY + 1) < 1)) continue;
             if (drafts.Any(d => Distance(point, d.Site.Point, radiusX + 5, radiusY + 2) < 1)) continue;
             features.Add(new("mountain", point, radiusX, radiusY));
@@ -75,10 +75,11 @@ public static class WyrmrealmMapGenerator
                 var points = new List<HuntPoint> { start };
                 for (var i = 1; i <= fights; i++)
                 {
-                    var t = i / (fights + 1d);
-                    var x = centerX + Math.Sin(t * Math.PI * 2 + sector + lane) * (2 + random.NextDouble() * 3);
+                    var spacingNoise = fights switch { 2 => .18, 3 => .10, _ => .04 };
+                    var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
+                    var x = centerX + Math.Sin(t * Math.PI * 2 + sector) * 7 + (random.NextDouble() - .5) * 2;
                     var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
-                    points.Add(new(Math.Max(x, RiverX(river, y) + 6), y));
+                    points.Add(new(Math.Max(x, 26), y));
                 }
                 points.Add(end);
                 var roadId = $"road-{sector}-{lane}";
@@ -107,15 +108,17 @@ public static class WyrmrealmMapGenerator
     }
 
     private static double Distance(HuntPoint point, HuntPoint other, double rx, double ry)
-        => Math.Sqrt(Math.Pow((point.X - other.X) / rx, 2) + Math.Pow((point.Y - other.Y) / ry, 2));
+    {
+        var dx = (point.X - other.X) / rx;
+        var dy = (point.Y - other.Y) / ry;
+        return dx * dx + dy * dy;
+    }
+
+    public static HuntPoint TrailPoint(HuntPoint a, HuntPoint b, double t)
+        => new(a.X + (b.X - a.X) * (3 * t * t - 2 * t * t * t), a.Y + (b.Y - a.Y) * t);
 
     private static double SegmentDistance(HuntPoint point, HuntPoint a, HuntPoint b, double rx, double ry)
-    {
-        var dx = (b.X - a.X) / rx;
-        var dy = (b.Y - a.Y) / ry;
-        var t = Math.Clamp(((point.X - a.X) / rx * dx + (point.Y - a.Y) / ry * dy) / (dx * dx + dy * dy), 0, 1);
-        return Distance(point, new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t), rx, ry);
-    }
+        => Enumerable.Range(0, 41).Min(i => Distance(point, TrailPoint(a, b, i / 40d), rx, ry));
 }
 
 internal sealed record WyrmrealmNodeLayout(string Id, int Stage, int Lane, IReadOnlyList<string> PreviousNodeIds,

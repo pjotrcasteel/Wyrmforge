@@ -73,3 +73,5 @@
 .route-node.dragon .node-core { border-radius:8px; }
 
 .route-link { stroke-linejoin:round; }
+
+.ruins { stroke:#c3a77a;stroke-width:1.5; }

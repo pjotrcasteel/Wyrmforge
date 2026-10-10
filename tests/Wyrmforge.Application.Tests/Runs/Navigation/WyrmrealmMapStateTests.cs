@@ -97,9 +97,10 @@ public sealed class WyrmrealmMapStateTests
                     for (var step = 0; step <= 20; step++)
                     {
                         var t = step / 20d;
-                        var x = edge.First.X + (edge.Second.X - edge.First.X) * t;
-                        var y = edge.First.Y + (edge.Second.Y - edge.First.Y) * t;
-                        Assert.IsTrue(Math.Abs(x - WyrmrealmMapGenerator.RiverX(land.River, y)) > 2, $"River collision: {seed}");
+                        var point = WyrmrealmMapGenerator.TrailPoint(edge.First, edge.Second, t);
+                        var x = point.X;
+                        var y = point.Y;
+                        Assert.IsTrue(Math.Abs(x - WyrmrealmMapGenerator.RiverX(land.River, y)) > 3, $"River collision: {seed}");
                         foreach (var hill in land.Features.Where(f => f.Kind == "mountain"))
                         {
                             var distance = Math.Pow((x - hill.Center.X) / hill.RadiusX, 2) + Math.Pow((y - hill.Center.Y) / hill.RadiusY, 2);

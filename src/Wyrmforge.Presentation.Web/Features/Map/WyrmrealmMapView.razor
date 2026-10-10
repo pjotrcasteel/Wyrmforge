@@ -36,6 +36,7 @@
                                 <path class="ridge" d="@FeaturePath(feature, .65)" />
                             }
                             else if (feature.Kind is "volcano" or "ridge") { <path class="crater @feature.Kind" d="@CraterPath(feature)" /> }
+                            else if (feature.Kind == "ruins") { <path class="ruins" d="@RuinsPath(feature.Center)" /> }
                             else if (feature.Kind == "bridge") { <path class="bridge" d="@BridgePath(feature.Center)" /> }
                         }
                     }
@@ -191,8 +192,21 @@
     private double NodeX(WyrmrealmMapNode node) => node.Site?.Point.X ?? 50;
     private static double NodeY(WyrmrealmMapNode node) => node.Site?.Point.Y ?? 5;
     private string RoadLabelStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node) - 3:0.#}%");
-    private static string TrailPath(IReadOnlyList<HuntPoint> points) => points.Count == 0 ? "" : "M " + string.Join(" L ", points.Select(p => FormattableString.Invariant($"{p.X:0.###} {p.Y:0.###}")));
-    private static string RiverPath(IReadOnlyList<HuntPoint> points) => TrailPath(points.Select(p => p with { X = p.X - 2 }).Concat(points.Reverse().Select(p => p with { X = p.X + 2 })).ToArray()) + " Z";
+    private static string TrailPath(IReadOnlyList<HuntPoint> points)
+    {
+        if (points.Count == 0) return "";
+        var result = FormattableString.Invariant($"M {points[0].X:0.###} {points[0].Y:0.###}");
+        foreach (var edge in points.Zip(points.Skip(1)))
+        {
+            var a = edge.First;
+            var b = edge.Second;
+            var dy = b.Y - a.Y;
+            result += FormattableString.Invariant($" C {a.X:0.###} {a.Y + dy / 3:0.###}, {b.X:0.###} {a.Y + dy * 2 / 3:0.###}, {b.X:0.###} {b.Y:0.###}");
+        }
+        return result;
+    }
+    private static string PolygonPath(IReadOnlyList<HuntPoint> points) => "M " + string.Join(" L ", points.Select(p => FormattableString.Invariant($"{p.X:0.###} {p.Y:0.###}")));
+    private static string RiverPath(IReadOnlyList<HuntPoint> points) => PolygonPath(points.Select(p => p with { X = p.X - 3 }).Concat(points.Reverse().Select(p => p with { X = p.X + 3 })).ToArray()) + " Z";
     private static string FeaturePath(HuntFeature feature, double scale)
     {
         var points = Enumerable.Range(0, 17).Select(i =>
@@ -202,10 +216,11 @@
             return new HuntPoint(feature.Center.X + Math.Cos(angle) * feature.RadiusX * scale * noise,
                 feature.Center.Y + Math.Sin(angle) * feature.RadiusY * scale * noise);
         }).ToArray();
-        return TrailPath(points) + " Z";
+        return PolygonPath(points) + " Z";
     }
     private static string CraterPath(HuntFeature f) => FormattableString.Invariant($"M {f.Center.X - 4} {f.Center.Y + f.RadiusY} A {f.RadiusX} {f.RadiusY} 0 1 1 {f.Center.X + 4} {f.Center.Y + f.RadiusY}");
-    private static string BridgePath(HuntPoint p) => FormattableString.Invariant($"M {p.X - 3} {p.Y - .35} L {p.X + 3} {p.Y - .35} M {p.X - 3} {p.Y + .35} L {p.X + 3} {p.Y + .35}");
+    private static string RuinsPath(HuntPoint p) => FormattableString.Invariant($"M {p.X + 6} {p.Y + .6} V {p.Y - .6} H {p.X + 8} V {p.Y + .6} M {p.X - 8} {p.Y + .5} V {p.Y - .8} H {p.X - 6} V {p.Y + .5}");
+    private static string BridgePath(HuntPoint p) => FormattableString.Invariant($"M {p.X - 4} {p.Y - .35} L {p.X + 4} {p.Y - .35} M {p.X - 4} {p.Y + .35} L {p.X + 4} {p.Y + .35}");
 
     private string SelectionStatus(WyrmrealmMapNode node) => IsAvailable(node) ? "REACHABLE NOW" : IsCompleted(node) ? "CLEARED" : "FUTURE TRAIL";
     private string SelectionStatusClass(WyrmrealmMapNode node) => IsAvailable(node) ? "reachable" : IsCompleted(node) ? "cleared" : "future";
