@@ -80,7 +80,7 @@ public static class WyrmrealmMapGenerator
                     var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
                     var x = centerX + Math.Sin(t * Math.PI * 2 + sector) * 7 + (random.NextDouble() - .5) * 2;
                     var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
-                    points.Add(new(Math.Max(x, 26), y));
+                    points.Add(new(Math.Clamp(x, 26, 85), y));
                 }
                 points.Add(end);
                 var roadId = $"road-{sector}-{lane}";
