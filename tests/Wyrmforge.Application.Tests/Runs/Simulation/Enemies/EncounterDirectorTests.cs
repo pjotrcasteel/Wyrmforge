@@ -8,6 +8,23 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation.Enemies;
 public sealed class EncounterDirectorTests
 {
     [TestMethod]
+    public void Campaign_SixShorterTrails_KeepsMinimumCombatTimeAndKillBudgetNearPreviousHunt()
+    {
+        var seconds = 0d;
+        var kills = 0;
+        for (var stage = 1; stage <= Wyrmforge.Application.Runs.Navigation.WyrmrealmMapState.CombatStages; stage++)
+        {
+            var director = new EncounterDirector();
+            director.Start(EnemyEncounterPattern.Mixed, 1, stage);
+            seconds += director.PhaseDuration * 4 + EncounterDirector.BreathingRoomSeconds;
+            kills += Wyrmforge.Application.Runs.Navigation.WyrmrealmEncounterObjectiveCatalog.KillsRequired(
+                Wyrmforge.Application.Runs.Navigation.WyrmrealmStageCatalog.Kind(stage), 1);
+        }
+        Assert.AreEqual(166d, seconds, 0.0001);
+        Assert.AreEqual(66, kills);
+    }
+
+    [TestMethod]
     public void Start_BeginsAtPressureWithoutElapsedTimeEscalation()
     {
         var director = new EncounterDirector();
@@ -115,7 +132,7 @@ public sealed class EncounterDirectorTests
     public void Start_FinalTrailAtDepthOne_LeadsWithBrute()
     {
         var director = new EncounterDirector();
-        director.Start(EnemyEncounterPattern.Mixed, 1, 4);
+        director.Start(EnemyEncounterPattern.Mixed, 1, 6);
         Assert.IsTrue(director.TryTakeInsert(out var first));
         Assert.AreEqual(EnemyKind.Brute, first);
         Assert.IsFalse(director.TryTakeInsert(out _));
@@ -147,7 +164,7 @@ public sealed class EncounterDirectorTests
     public void Tick_FinalTrail_PacesLongerAndReinforcesWithBrutes()
     {
         var director = new EncounterDirector();
-        director.Start(EnemyEncounterPattern.Mixed, 1, 4);
+        director.Start(EnemyEncounterPattern.Mixed, 1, 6);
         Assert.IsTrue(director.PhaseDuration > 7);
         director.TryTakeInsert(out _);
         director.RegisterProgress(16, 16);

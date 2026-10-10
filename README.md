@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.99 — The unfolding hunt
+
+- A dark hunter’s chart replaces the compact parchment diagram: geometric terrain, landmark trails, school accents and a copper travelled path. The map scrolls toward the hunter after each clear; the lair starts off-screen. Header and reward panel stay fixed, with manual scrolling and reduced-motion support.
+- Six shorter trails replace four long encounters. Three opening routes lead into wider forks, committed stretches and occasional crossovers. The final assault and school guarantees remain.
+- [Campaign pacing evidence](docs/playtesting/unfolding-hunt-0.0.99.md): in the extended matched sample, 9/64 fresh agents reach and defeat a Wyrm, previously 0/64. Human engagement remains unverified.
+
 ## Prototype 0.0.98 — Reliable opening trail recovery
 
 - Depth 1 common trails restore 10% of maximum health when cleared; rare trails retain their 12% recovery. The existing map preview displays the reward. Deeper routes keep their existing recovery variety.

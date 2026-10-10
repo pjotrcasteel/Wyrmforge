@@ -48,7 +48,7 @@ internal static class WyrmrealmRouteGenerator
     {
         var rare = layout.Rarity == WyrmrealmNodeRarity.Rare;
         var encounter = WyrmrealmStageCatalog.Kind(layout.Stage);
-        var stagePressure = Math.Max(0, layout.Stage - 1) * 0.035;
+        var stagePressure = Math.Max(0, WyrmrealmStageCatalog.PressureStage(layout.Stage) - 1) * 0.035;
         var spawnInterval = Math.Clamp(1.02 - random.NextDouble() * 0.18 - (rare ? 0.1 : 0), 0.64, 1.02);
         var enemyHealth = 1 + difficulty.RouteEnemyHealthBonus + stagePressure + random.NextDouble() * 0.11 + (rare ? 0.18 : 0);
         var enemySpeed = 1 + difficulty.RouteEnemySpeedBonus + random.NextDouble() * 0.1 + (rare ? 0.12 : 0);
@@ -56,7 +56,7 @@ internal static class WyrmrealmRouteGenerator
         if (rare) score *= 2;
         var recovery = rare ? 0.12 : random.NextDouble() < 0.28 ? 0.05 + random.Next(0, 5) / 100d : 0;
         if (difficulty.Depth == 1) recovery = Math.Max(0.10, recovery);
-        var relic = rare || layout.Stage is 2 or 4 ? RelicCache : null;
+        var relic = rare || layout.Stage is 2 or WyrmrealmMapState.CombatStages ? RelicCache : null;
         var modifiers = CreateModifiers(difficulty, layout.Stage, rare, random);
         var route = new WyrmrealmRouteProfile(
             new WyrmrealmEncounterProfile(encounter, spawnInterval, enemyHealth, enemySpeed),

@@ -59,6 +59,11 @@ jobs:
           dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 4 --seed-start 9100 --max-seconds 180 --output artifacts/balance-quick/fresh-portrait
           dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --arena-width 390 --arena-height 700 --runs-per-combination 3 --seed-start 9100 --max-seconds 180 --output artifacts/balance-quick/established-portrait
 
+      - name: Run extended portrait hunts
+        run: |
+          dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 4 --seed-start 9100 --max-seconds 360 --output artifacts/balance-quick/fresh-extended
+          dotnet run --project src/Wyrmforge.BalanceLab -c Release --no-build -- --arena-width 390 --arena-height 700 --runs-per-combination 3 --seed-start 9100 --max-seconds 360 --output artifacts/balance-quick/established-extended
+
       - name: Upload quick balance evidence
         uses: actions/upload-artifact@v4
         with:
