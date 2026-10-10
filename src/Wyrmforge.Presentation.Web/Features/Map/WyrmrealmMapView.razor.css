@@ -125,3 +125,13 @@
 .route-node.available { opacity:1; }.route-node.available .node-core { box-shadow:0 0 12px #b48bdb30; }
 .node-name { color:#d2c1cd; }.route-node.future { opacity:.68; }
 @media(max-width:360px) { .terrain-landmark { max-width:none; } }
+
+/* Follow the committed road and keep manual exploration reversible. */
+.hunt-chart { position:relative;flex:1;min-height:0; }.hunt-chart .hunt-viewport { height:100%; }
+.hunter-compass { position:absolute;z-index:4;top:8px;right:10px;display:grid;place-items:center;width:44px;height:44px;border:1px solid #8b708a88;border-radius:50%;background:#211829e8;color:#d5b9d8;box-shadow:0 2px 8px #08050c66;cursor:pointer;touch-action:manipulation; }
+.hunter-compass svg { width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round; }.hunter-compass:focus-visible { outline:2px solid #e0b9ff;outline-offset:3px; }
+.route-link.bypassed { opacity:.18; }.route-link.preview { stroke:#caa6dd;stroke-width:2.7;opacity:.85; }
+.route-node.bypassed { opacity:.2; }.route-node.bypassed .node-name,.route-node.bypassed .node-bonus { visibility:hidden; }
+.route-node.road-preview { opacity:.95; }.route-node.road-preview .node-core { border-color:var(--school-ink); }.route-node.road-preview .node-name { color:#e1cce7; }
+.route-node.current .node-core { box-shadow:0 0 0 3px #c88e6530;border-color:#e4b98f; }.current-marker { color:#e4c29d; }
+@media(max-height:450px) and (orientation:landscape) { .hunt-chart { grid-column:1;grid-row:3; }.hunt-chart .hunt-viewport { display:block; } }

@@ -636,6 +636,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThanOrEqualTo(44, touchTarget.Width);
         Assert.IsGreaterThanOrEqualTo(44, touchTarget.Height);
         await territory.EvaluateAsync("element => element.scrollTop = element.scrollHeight * .48");
+        var roadStop = Page.Locator("button.route-node[data-road]").First;
+        await roadStop.ScrollIntoViewIfNeededAsync();
+        await roadStop.ClickAsync();
+        await Expect(Page.Locator(".route-link.preview").First).ToBeVisibleAsync();
+        Assert.IsGreaterThan(1, await Page.Locator(".route-node.road-preview").CountAsync());
+        await Expect(Page.Locator(".enter-trail")).ToBeDisabledAsync();
+        await ScreenshotAsync($"mobile-road-preview-{width}.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Close trail details" }).ClickAsync();
+        await territory.EvaluateAsync("element => element.scrollTop = element.scrollHeight * .48");
         await ScreenshotAsync($"mobile-territory-forks-{width}.png");
         var detour = Page.Locator(".node-bonus").First;
         if (await detour.CountAsync() > 0)
@@ -643,7 +652,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await detour.ScrollIntoViewIfNeededAsync();
             await Expect(detour).ToContainTextAsync("BONUS RELIC");
         }
-        await Page.EvaluateAsync("async () => { const map = await import('./js/hunt-map.js'); map.focusHunter(document.querySelector('.hunt-viewport')); }");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Return to hunter" }).ClickAsync();
+        await Expect(node).ToBeInViewportAsync();
         await ScreenshotAsync($"mobile-route-map-{width}.png");
         await node.ClickAsync();
         await Expect(Page.GetByLabel("Selected trail details")).ToBeVisibleAsync();
