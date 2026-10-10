@@ -57,7 +57,7 @@
 @media(max-height:450px) and (orientation:landscape) { .realm-map-card { width:100%;display:grid;grid-template-columns:1fr 240px;grid-template-rows:auto auto 1fr; }.map-header,.map-attention { grid-column:1; }.hunt-viewport { grid-column:1;grid-row:3; }.node-sheet { grid-column:2;grid-row:1 / span 3;align-content:center;border-top:0;border-left:1px solid #735587; } }
 
 /* Terrain and unequal road lengths replace row-based navigation. */
-.realm-route { height:calc(var(--hunt-step) * 15); }
+.realm-route { height:calc(var(--hunt-step) * 9); }
 .hunt-terrain .river-fill { fill:#34506966;stroke:#7b9bb955;stroke-width:1; }
 .crater { stroke:#a88db566;stroke-width:2; }.crater.volcano { stroke:#c5825b;stroke-width:2; }
 .bridge { stroke:#e2d2e9;stroke-width:2; }
@@ -75,3 +75,21 @@
 .route-link { stroke-linejoin:round; }
 
 .ruins { stroke:#c3a77a;stroke-width:1.5; }
+
+/* A wider expedition view with inked relief, rather than enlarged diagram nodes. */
+.realm-route { background:radial-gradient(ellipse at 75% 28%,#49334b55,transparent 45%),radial-gradient(ellipse at 22% 72%,#30444155,transparent 40%),linear-gradient(180deg,#21192b,#18141f 65%,#24202b); }
+.realm-route::before { content:'';position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.16;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23cabbb0' filter='url(%23grain)' opacity='.4' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); }
+.hunt-terrain .mountain-shadow { fill:#0c10184d;stroke:#8d80965c;stroke-width:1; }
+.hunt-terrain .mountain-face { fill:#70647c3b;stroke:#c2aecb40;stroke-width:.8; }
+.ridge { stroke:#d2bdd26b; }.contour { stroke:#ac97b345; }
+.hunt-terrain .river-bank { fill:#24393b;stroke:#8a9b8460;stroke-width:9; }
+.hunt-terrain .river-fill { fill:#415c728c;stroke:#a2c1d86b;stroke-width:1.2; }
+.hunt-terrain .river-current { stroke:#b0d3df40;stroke-width:1;stroke-dasharray:10 14; }
+.crater { stroke:#cbb0ce8c; }.crater.volcano { stroke:#df997c;filter:drop-shadow(0 0 8px #bd624b66); }
+.ruins,.bridge { filter:drop-shadow(1px 2px 2px #0009); }
+.route-link { stroke:#d3c4d18c;stroke-width:1.2;stroke-dasharray:3 5; }
+.node-core { width:36px;height:36px;background:radial-gradient(circle at 35% 25%,#3c3045,#211b2b);box-shadow:0 2px 5px #08050b77; }
+.node-main-icon { width:27px;height:24px; }.node-school { width:17px;height:17px;font-size:.8rem;line-height:17px; }
+.route-node { min-height:72px; }.node-name { font-size:.6rem; }.node-badges { min-height:12px;font-size:.6rem; }
+.road-label { font-size:.56rem;padding:3px 5px;background:#261e2dde;border-color:#8c7298;box-shadow:0 2px 5px #08050b44; }.road-label small { font-size:.49rem; }
+@media(max-width:360px) { .realm-route { --hunt-step:clamp(160px,30svh,230px);height:calc(var(--hunt-step) * 11); }.node-name { font-size:.56rem; }.road-label { max-width:64px;font-size:.52rem; }.road-label small { font-size:.45rem; } }
