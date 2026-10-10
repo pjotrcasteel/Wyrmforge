@@ -29,29 +29,49 @@
                     {
                         <path class="river-bank" d="@RiverPath(land.River)" />
                         <path class="river-fill" d="@RiverPath(land.River)" />
-                        <path class="river-current" d="@TrailPath(land.River)" />
-                        @foreach (var feature in land.Features)
+                        @foreach (var feature in land.Features.Where(feature => feature.Kind == "bridge"))
                         {
-                            @if (feature.Kind is "mountain")
-                            {
-                                <path class="mountain-shadow" d="@FeaturePath(feature, 1)" />
-                                <path class="mountain-face" d="@MountainFacePath(feature)" />
-                                <path class="contour" d="@FeaturePath(feature, 1)" />
-                                <path class="ridge" d="@FeaturePath(feature, .65)" />
-                            }
-                            else if (feature.Kind is "volcano" or "ridge") { <path class="crater @feature.Kind" d="@CraterPath(feature)" /> }
-                            else if (feature.Kind == "ruins") { <path class="ruins" d="@RuinsPath(feature.Center)" /> }
-                            else if (feature.Kind == "bridge") { <path class="bridge" d="@BridgePath(feature.Center)" /> }
+                            <path class="bridge" d="@BridgePath(feature.Center)" />
                         }
                     }
                 </svg>
+                @foreach (var feature in Territory?.Features.Where(feature => feature.Kind != "bridge") ?? [])
+                {
+                    <div class="terrain-landmark @feature.Kind" style="@FeatureStyle(feature)" aria-hidden="true">
+                        <svg viewBox="0 0 100 70">
+                            @if (feature.Kind == "ruins")
+                            {
+                                <path class="land-shadow" d="M8 61L32 51L90 58L71 68Z" />
+                                <path class="stone" d="M22 58V27H34V17H42V58M54 59V34Q65 20 77 34V60M60 59V39Q65 31 71 39V59M19 27H46M26 38H32M28 46H34M54 34H77" />
+                            }
+                            else if (feature.Kind == "volcano")
+                            {
+                                <path class="land-shadow" d="M3 62L48 19L95 63L55 69Z" />
+                                <path class="mountain-body" d="M5 61L31 31L40 20L63 21L72 36L95 62Z" />
+                                <path class="mountain-light" d="M5 61L40 20L49 24L35 46L40 62Z" />
+                                <path class="lava" d="M40 21Q51 29 63 21M51 26L47 39L56 46L52 60" />
+                            }
+                            else
+                            {
+                                <path class="land-shadow" d="M2 62L22 39L50 10L86 44L99 63L65 69Z" />
+                                <path class="mountain-body" d="M4 60L24 32L34 46L53 9L78 46L86 34L98 61Z" />
+                                <path class="mountain-light" d="M34 46L53 9L58 25L49 32L54 43L45 60H22L28 43L24 32L4 60Z" />
+                                <path class="peak-ink" d="M43 29L53 9L64 30L56 25L51 30L49 25M9 61L24 32L34 46M62 43L78 59M86 34L96 56" />
+                                <path class="forest-ink" d="M2 64V49M2 48L-3 57H7ZM89 65V53M89 52L84 60H94" />
+                            }
+                        </svg>
+                    </div>
+                }
                 @foreach (var road in Territory?.Roads ?? [])
                 {
                     var entrance = Nodes.First(node => node.Site?.RoadId == road.Id);
+                    @if (IsAvailable(entrance))
+                    {
                     <span class="road-label @(road.BonusRelic ? "detour" : "")" style="@RoadLabelStyle(entrance)">@road.Length · @road.Encounters <small>@(road.BonusRelic ? "◆ Bonus relic" : road.Name)</small></span>
+                    }
                 }
                 <div class="map-entry @(CompletedNodes.Count == 0 ? "current" : string.Empty)" style="@CampStyle" data-current="@(CompletedNodes.Count == 0 ? "true" : "false")" aria-label="Realm entry">
-                    <span class="entry-point">◇</span><small>@(CompletedNodes.Count == 0 ? "YOU" : "CAMP")</small>
+                    <svg class="camp-icon" viewBox="0 0 60 44" aria-hidden="true"><path d="M5 38L24 8L44 38ZM24 8L27 38M17 38L24 23L31 38M39 8V27M39 8L54 12L39 17" /></svg><small>@(CompletedNodes.Count == 0 ? "YOU" : "CAMP")</small>
                 </div>
                 <svg class="route-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     @foreach (var node in Nodes.Where(candidate => candidate.Stage == 1))
@@ -195,6 +215,7 @@
         => TrailPath(to.Site is { IncomingTrail.Count: > 0 } site ? site.IncomingTrail : [new(NodeX(from), NodeY(from)), new(NodeX(to), NodeY(to))]);
     private double NodeX(WyrmrealmMapNode node) => node.Site?.Point.X ?? 50;
     private static double NodeY(WyrmrealmMapNode node) => node.Site?.Point.Y ?? 5;
+    private static string FeatureStyle(HuntFeature feature) => FormattableString.Invariant($"left:{feature.Center.X:0.#}%;top:{feature.Center.Y:0.#}%;width:{Math.Clamp(feature.RadiusX * 2, 15, 28):0.#}%");
     private string RoadLabelStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node) - 3:0.#}%");
     private static string TrailPath(IReadOnlyList<HuntPoint> points)
     {

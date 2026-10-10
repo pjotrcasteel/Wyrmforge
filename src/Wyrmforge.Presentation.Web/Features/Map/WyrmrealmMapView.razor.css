@@ -93,3 +93,23 @@
 .route-node { min-height:72px; }.node-name { font-size:.6rem; }.node-badges { min-height:12px;font-size:.6rem; }
 .road-label { font-size:.56rem;padding:3px 5px;background:#261e2dde;border-color:#8c7298;box-shadow:0 2px 5px #08050b44; }.road-label small { font-size:.49rem; }
 @media(max-width:360px) { .realm-route { --hunt-step:clamp(160px,30svh,230px);height:calc(var(--hunt-step) * 11); }.node-name { font-size:.56rem; }.road-label { max-width:64px;font-size:.52rem; }.road-label small { font-size:.45rem; } }
+
+/* Illustrated field chart: natural water, worn trails and unstretched landmarks. */
+.hunt-terrain .river-bank { fill:#273639;stroke:#718a8059;stroke-width:5; }
+.hunt-terrain .river-fill { fill:#42647880;stroke:#88a8b94d;stroke-width:.7; }
+.terrain-landmark { position:absolute;z-index:0;transform:translate(-50%,-50%);pointer-events:none;max-width:110px; }
+.terrain-landmark svg { display:block;width:100%;height:auto;overflow:visible; }
+.terrain-landmark .land-shadow { fill:#090c124d; }.terrain-landmark .mountain-body { fill:#413c50;stroke:#8b7c956e;stroke-width:1; }
+.terrain-landmark .mountain-light { fill:#76647b55; }.terrain-landmark .peak-ink { fill:none;stroke:#c5aebb88;stroke-width:1.3;stroke-linejoin:round; }
+.terrain-landmark .forest-ink { fill:#394942;stroke:#78908477;stroke-width:1; }.terrain-landmark .stone { fill:#62545e;stroke:#bfaa938c;stroke-width:1.6;stroke-linejoin:round; }
+.terrain-landmark .lava { fill:none;stroke:#dc9870;stroke-width:2; }.terrain-landmark.volcano { max-width:140px; }.terrain-landmark.ridge { max-width:140px; }
+.route-link { stroke:#b8a0888c;stroke-width:2.3;stroke-dasharray:none;filter:drop-shadow(0 1px 1px #08070b); }
+.route-link.active { stroke:#ddc2a2;stroke-width:3; }.route-link.selected { stroke:#e1c1ff;stroke-width:3.5; }
+.route-link.traversed { stroke:#b78666;stroke-width:2.5; }
+.road-label { border:0;border-radius:0;background:#211926c9;box-shadow:none;color:#dcc7a9;padding:2px 4px;max-width:76px;font-size:.56rem; }
+.road-label small { display:none; }.road-label.detour { color:#e4bf7f; }
+.node-core { border-color:#ad99a477;border-width:1;background:#28202dcf;box-shadow:0 2px 4px #0c071466; }
+.route-node.future { opacity:.6; }.node-name { color:#c3b1bd;font-weight:500;font-size:.56rem;text-shadow:0 1px 3px #100c16; }
+.node-bonus { font-size:.44rem; }.route-node.available .node-name { color:#f0dec8; }
+.camp-icon { width:44px;height:34px;fill:#6c526166;stroke:#d8bda0;stroke-width:1.5;stroke-linejoin:round; }
+@media(max-width:360px) { .road-label { max-width:64px;font-size:.52rem; }.terrain-landmark { max-width:90px; } }
