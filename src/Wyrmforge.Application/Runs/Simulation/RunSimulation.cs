@@ -174,6 +174,7 @@ public sealed partial class RunSimulation
         }
 
         pendingChoices = [];
+        if (mapState.EncounterActive || dragonEncounterStarted) ReleaseUpgradePower();
         if (PendingRewardSchool.HasValue)
         {
             PendingRewardSchool = null;
@@ -266,7 +267,7 @@ public sealed partial class RunSimulation
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
-            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot() };
+            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot() };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()

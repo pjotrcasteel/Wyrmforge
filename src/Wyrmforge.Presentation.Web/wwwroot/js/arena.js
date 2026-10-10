@@ -193,6 +193,19 @@ function draw(state, snapshot, width, height) {
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
+    if (snapshot.powerBurst) {
+        const pulse = snapshot.powerBurst;
+        const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(pulse.x, pulse.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(188, 153, 255, ${0.12 * (1 - pulse.progress)})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(221, 207, 255, ${0.85 * (1 - pulse.progress)})`;
+        ctx.lineWidth = 4 * (1 - pulse.progress) + 1;
+        ctx.stroke();
+        ctx.restore();
+    }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
     for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);

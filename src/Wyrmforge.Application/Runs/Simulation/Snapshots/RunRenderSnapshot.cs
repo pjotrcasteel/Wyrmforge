@@ -22,5 +22,6 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<ExperienceShardRenderSnapshot>? ExperienceShards = null,
     IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
 {
+    public SplashPulseRenderSnapshot? PowerBurst { get; init; }
     public TrailRenderSnapshot? Trail { get; init; }
 }

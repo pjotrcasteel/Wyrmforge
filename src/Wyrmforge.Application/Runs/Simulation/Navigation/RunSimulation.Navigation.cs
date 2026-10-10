@@ -10,6 +10,8 @@ public sealed partial class RunSimulation
     private readonly EncounterDirector encounterDirector = new();
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
+    private double entryGraceRemaining;
+    public double EntryGraceRemaining => entryGraceRemaining;
 
     public int CurrentMapNodeKills => mapState.CurrentNodeKills;
     public int CurrentMapNodeKillsRequired => mapState.CurrentNodeKillsRequired;
@@ -55,6 +57,7 @@ public sealed partial class RunSimulation
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
         encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage);
+        entryGraceRemaining = 2;
         spawnTimer = 0.15;
         return true;
     }
@@ -104,6 +107,8 @@ public sealed partial class RunSimulation
 
     private void ClearMapEncounterField()
     {
+        entryGraceRemaining = 0;
+        powerBurstRemaining = 0;
         CollectLooseExperienceShards();
         enemies.Clear();
         pendingRelicBursts.Clear();

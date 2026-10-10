@@ -18,6 +18,7 @@ public sealed partial class RunSimulation
 
     private void UpdateCombatFeedback(double delta)
     {
+        powerBurstRemaining = Math.Max(0, powerBurstRemaining - delta);
         foreach (var id in hitFlashRemaining.Keys.ToArray())
         {
             var remaining = hitFlashRemaining[id] - delta;

@@ -62,7 +62,7 @@ public sealed class RunSimulationTests
         EnemyRenderSnapshot? damagedEnemy = null;
         ElementalImpactRenderSnapshot? impact = null;
 
-        for (var tick = 0; tick < 20 && damagedEnemy is null; tick++)
+        for (var tick = 0; tick < 65 && damagedEnemy is null; tick++)
         {
             var snapshot = simulation.Tick(0.05, default, 200, 200);
             damagedEnemy = snapshot.Enemies.FirstOrDefault(enemy => enemy.HealthRatio < 1);
@@ -134,7 +134,7 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         SplashPulseRenderSnapshot? splashPulse = null;
 
-        for (var tick = 0; tick < 20 && splashPulse is null; tick++)
+        for (var tick = 0; tick < 65 && splashPulse is null; tick++)
         {
             var snapshot = simulation.Tick(0.05, default, 200, 200);
             splashPulse = snapshot.SplashPulses.FirstOrDefault();
@@ -167,7 +167,7 @@ public sealed class RunSimulationTests
         StartFirstMapEncounter(simulation);
         RunRenderSnapshot snapshot = simulation.CreateSnapshot();
 
-        for (var tick = 0; tick < 4; tick++) snapshot = simulation.Tick(0.05, default, 800, 600);
+        for (var tick = 0; tick < 46; tick++) snapshot = simulation.Tick(0.05, default, 800, 600);
 
         Assert.IsFalse(simulation.PendingMapChoice);
         Assert.IsNull(snapshot.Dragon);
@@ -231,6 +231,7 @@ public sealed class RunSimulationTests
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
         StartFirstMapEncounter(simulation);
+        for (var tick = 0; tick < 40; tick++) simulation.Tick(0.05, default, 800, 600);
         var node = simulation.CurrentMapNode!;
         var register = typeof(RunSimulation).GetMethod("RegisterMapEncounterKill", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
         var director = (EncounterDirector)typeof(RunSimulation).GetField("encounterDirector", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;

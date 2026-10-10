@@ -11,6 +11,7 @@ public sealed partial class RunSimulation
 
     private void UpdateRouteHazards(double delta)
     {
+        if (entryGraceRemaining > 0) return;
         var wasTelegraphing = unstableRiftState.IsTelegraphing;
         var riftsActive = encounterModifiers.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out var intervalMultiplier) && dragon is null && !dragonPending;
         var difficultyInterval = riftsActive ? intervalMultiplier * depthState.HazardIntervalMultiplier : 1;

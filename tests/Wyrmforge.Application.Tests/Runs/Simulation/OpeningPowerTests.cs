@@ -17,10 +17,48 @@ namespace Wyrmforge.Application.Tests.Runs.Simulation;
 public sealed class OpeningPowerTests
 {
     [TestMethod]
+    public void EnteringTrail_LeavesTwoSecondsToMoveBeforeSpawnsOrPhaseClock()
+    {
+        var simulation = Create();
+        simulation.ChooseMapNode(simulation.AvailableMapNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id);
+        for (var frame = 0; frame < 39; frame++) simulation.Tick(0.05, default, 390, 700);
+        Assert.AreEqual(0, simulation.CreateSnapshot().Enemies.Count);
+        Assert.AreEqual(0d, Field<EncounterDirector>(simulation, "encounterDirector").PhaseElapsed);
+        for (var frame = 0; frame < 6; frame++) simulation.Tick(0.05, default, 390, 700);
+        Assert.IsTrue(simulation.CreateSnapshot().Enemies.Count > 0);
+    }
+
+    [TestMethod]
+    public void UpgradeChoice_FreezesAllEnemiesAndPushesCloseEnemiesFurtherWithoutHurtingThem()
+    {
+        var simulation = Create();
+        simulation.ChooseMapNode(simulation.AvailableMapNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id);
+        simulation.Tick(0, default, 390, 700);
+        var center = simulation.CreateSnapshot().Player;
+        var targets = new[] { 20d, 100d, 220d }.Select((distance, index) =>
+            new EnemyState(index + 1, new Vector2D(center.X + distance, center.Y), 10, 100, 0)).ToArray();
+        Field<List<EnemyState>>(simulation, "enemies").AddRange(targets);
+        Invoke(simulation, "GainExperience", 100);
+        Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
+        var pushes = targets.Select((enemy, index) => enemy.Position.X - center.X - new[] { 20d, 100d, 220d }[index]).ToArray();
+        Assert.IsTrue(pushes[0] > pushes[1] && pushes[1] > 0);
+        Assert.AreEqual(0d, pushes[2]);
+        Assert.IsNotNull(simulation.CreateSnapshot().PowerBurst);
+        foreach (var enemy in targets)
+        {
+            Assert.AreEqual(100d, enemy.Health);
+            Assert.IsTrue(enemy.Statuses.Has(CombatStatusId.Frozen));
+            enemy.Statuses.Tick(0.86);
+            Assert.IsFalse(enemy.Statuses.Has(CombatStatusId.Frozen));
+        }
+        Assert.IsFalse(simulation.ApplyChoice("invalid"));
+    }
+
+    [TestMethod]
     public void OpeningTrails_SpawnCapsGrowGraduallyAndReachNormalPressureAtStageEight()
     {
         var simulation = Create();
-        Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+        Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id));
         for (var frame = 0; frame < 500; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
         Assert.AreEqual(8, Field<List<EnemyState>>(simulation, "enemies").Count);
         var map = Field<WyrmrealmMapState>(simulation, "mapState");
@@ -29,7 +67,7 @@ public sealed class OpeningPowerTests
             var quota = map.CurrentNodeKillsRequired;
             for (var kill = 0; kill < quota; kill++) map.RegisterKill();
             Field<List<EnemyState>>(simulation, "enemies").Clear();
-            Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes[0].Id));
+            Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id));
             for (var frame = 0; frame < 600; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
             Assert.AreEqual(expectedCap, Field<List<EnemyState>>(simulation, "enemies").Count);
         }

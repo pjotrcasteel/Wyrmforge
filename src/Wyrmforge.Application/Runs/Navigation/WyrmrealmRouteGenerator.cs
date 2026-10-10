@@ -42,7 +42,8 @@ internal static class WyrmrealmRouteGenerator
     private static WyrmrealmMapNode CreateCombatNode(RunDifficultyProfile difficulty, WyrmrealmNodeLayout layout, SpellSchool school, Random random)
     {
         var rare = layout.Rarity == WyrmrealmNodeRarity.Rare;
-        var encounter = WyrmrealmStageCatalog.Kind(layout.Stage);
+        var encounter = layout.Site.RoadId is null ? WyrmrealmStageCatalog.Kind(layout.Stage)
+            : (WyrmrealmEncounterKind)((layout.Site.RoadIndex + layout.Lane + (int)school) % 3);
         var stagePressure = Math.Max(0, WyrmrealmStageCatalog.PressureStage(layout.Stage) - 1) * 0.035;
         var spawnInterval = Math.Clamp(1.02 - random.NextDouble() * 0.18 - (rare ? 0.1 : 0), 0.64, 1.02);
         var enemyHealth = 1 + difficulty.RouteEnemyHealthBonus + stagePressure + random.NextDouble() * 0.11 + (rare ? 0.18 : 0);
