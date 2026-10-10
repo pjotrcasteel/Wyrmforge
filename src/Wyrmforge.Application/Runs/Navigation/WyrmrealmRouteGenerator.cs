@@ -25,21 +25,16 @@ internal static class WyrmrealmRouteGenerator
     {
         var difficulty = RunDifficultyCatalog.Get(depth);
         var nodes = new List<WyrmrealmMapNode>(layouts.Count);
-        foreach (var stage in layouts.GroupBy(layout => layout.Stage).OrderBy(group => group.Key))
+        var schools = ShuffleSchools(random);
+        var rareId = random.NextDouble() < .65 ? layouts.Where(l => l.Stage == 5).Select(l => l.Id).FirstOrDefault() : null;
+        foreach (var draft in layouts)
         {
-            if (stage.Key > WyrmrealmMapState.CombatStages)
+            var layout = draft.Id == rareId ? draft with { Rarity = WyrmrealmNodeRarity.Rare } : draft;
+            if (layout.Stage > WyrmrealmMapState.CombatStages)
             {
-                var dragon = stage.Single();
-                nodes.Add(new WyrmrealmMapNode(dragon.Id, "Unknown Wyrm", new WyrmrealmNodePosition(dragon.Stage, dragon.Lane), WyrmrealmNodeType.Dragon, null,
-                    new WyrmrealmNodeGraph(dragon.PreviousNodeIds)));
-                continue;
+                nodes.Add(new(layout.Id, "Unknown Wyrm", new(layout.Stage, layout.Lane), WyrmrealmNodeType.Dragon, null, new(layout.PreviousNodeIds)));
             }
-
-            var schools = ShuffleSchools(random);
-            foreach (var pair in stage.OrderBy(layout => layout.Lane).Select((layout, index) => (layout, school: schools[index])))
-            {
-                nodes.Add(CreateCombatNode(difficulty, pair.layout, pair.school, random));
-            }
+            else nodes.Add(CreateCombatNode(difficulty, layout, layout.School ?? schools[layout.Stage % schools.Length], random));
         }
         return nodes;
     }
@@ -56,7 +51,7 @@ internal static class WyrmrealmRouteGenerator
         if (rare) score *= 2;
         var recovery = rare ? 0.12 : random.NextDouble() < 0.28 ? 0.05 + random.Next(0, 5) / 100d : 0;
         if (difficulty.Depth == 1) recovery = Math.Max(0.10, recovery);
-        var relic = rare || layout.Stage is 2 or WyrmrealmMapState.CombatStages ? RelicCache : null;
+        var relic = rare || layout.Site.BonusRelic || layout.Stage is 2 or WyrmrealmMapState.CombatStages ? RelicCache : null;
         var modifiers = CreateModifiers(difficulty, layout.Stage, rare, random);
         var route = new WyrmrealmRouteProfile(
             new WyrmrealmEncounterProfile(encounter, spawnInterval, enemyHealth, enemySpeed),

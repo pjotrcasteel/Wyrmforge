@@ -631,6 +631,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var seal = await node.Locator(".node-core").BoundingBoxAsync();
         Assert.IsNotNull(seal);
         Assert.IsGreaterThanOrEqualTo(44, seal.Width);
+        await Page.Locator(".road-label").First.ScrollIntoViewIfNeededAsync();
+        await ScreenshotAsync($"mobile-territory-forks-{width}.png");
+        var detour = Page.Locator(".road-label.detour").First;
+        if (await detour.CountAsync() > 0)
+        {
+            await detour.ScrollIntoViewIfNeededAsync();
+            await Expect(detour).ToContainTextAsync("Bonus relic");
+        }
+        await Page.EvaluateAsync("async () => { const map = await import('./js/hunt-map.js'); map.focusHunter(document.querySelector('.hunt-viewport')); }");
         await ScreenshotAsync($"mobile-route-map-{width}.png");
         await node.ClickAsync();
         await Expect(Page.GetByLabel("Selected trail details")).ToBeVisibleAsync();

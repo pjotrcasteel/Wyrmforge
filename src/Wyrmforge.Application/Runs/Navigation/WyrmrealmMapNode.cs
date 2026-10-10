@@ -1,4 +1,4 @@
-using Wyrmforge.Domain.Spells;
+﻿using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Navigation;
 
@@ -10,6 +10,8 @@ public sealed record WyrmrealmMapNode(
     WyrmrealmRouteProfile? Route,
     WyrmrealmNodeGraph Graph)
 {
+    public HuntSite? Site { get; init; }
+    public WyrmrealmTerritory? Territory { get; init; }
     public int Stage => Position.Stage;
     public int Lane => Position.Lane;
     public IReadOnlyList<string> PreviousNodeIds => Graph.PreviousNodeIds;

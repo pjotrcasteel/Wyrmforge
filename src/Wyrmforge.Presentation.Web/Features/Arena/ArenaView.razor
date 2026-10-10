@@ -43,7 +43,7 @@
         @if (MapCombatActive && CurrentMapNode is { } activeNode)
         {
             <section class="encounter-objective" aria-label="Current encounter objective">
-                <span title="@activeNode.Name">TRAIL @activeNode.Stage/@WyrmrealmMapState.CombatStages · @WyrmrealmStageCatalog.Name(activeNode.Stage).ToUpperInvariant()</span>
+                <span title="@activeNode.Name">TRAIL @(CompletedMapNodes.Count + 1) · @WyrmrealmStageCatalog.Name(activeNode.Stage).ToUpperInvariant()</span>
                 <div class="encounter-objective-progress">
                     <em class="encounter-phase">@EncounterPhaseLabel <small data-trail="phase-time"></small></em>
                     <strong data-trail="objective">@CurrentMapNodeKills/@CurrentMapNodeKillsRequired kills</strong>

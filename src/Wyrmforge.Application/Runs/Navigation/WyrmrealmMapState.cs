@@ -2,7 +2,7 @@
 
 public sealed class WyrmrealmMapState
 {
-    public const int CombatStages = 6;
+    public const int CombatStages = 8;
     private readonly List<WyrmrealmMapNode> completedNodes = [];
 
     public WyrmrealmMapState(int depth = 1, int? seed = null)
