@@ -43,7 +43,7 @@
         @if (MapCombatActive && CurrentMapNode is { } activeNode)
         {
             <section class="encounter-objective" aria-label="Current encounter objective">
-                <span title="@activeNode.Name">TRAIL @(CompletedMapNodes.Count + 1) · @WyrmrealmStageCatalog.Name(activeNode.Stage).ToUpperInvariant()</span>
+                <span title="@activeNode.Name">TRAIL @(CompletedMapNodes.Count + 1) · @activeNode.EncounterName.ToUpperInvariant()</span>
                 <div class="encounter-objective-progress">
                     <em class="encounter-phase">@EncounterPhaseLabel <small data-trail="phase-time"></small></em>
                     <strong data-trail="objective">@CurrentMapNodeKills/@CurrentMapNodeKillsRequired kills</strong>
@@ -63,11 +63,11 @@
     @if (MapCombatActive && !trailTransition && CurrentMapNode is { } cueNode)
     {
         <div @key="(cueNode.Id, CurrentEncounterPhase)" class="encounter-change" aria-live="polite">
-            @EncounterCueCatalog.Cue(cueNode.Stage, CurrentEncounterPhase)
+            @EncounterCueCatalog.Cue(cueNode.EncounterCueStage, CurrentEncounterPhase)
         </div>
         @if (CurrentEncounterPhase != EncounterPhase.BreathingRoom)
         {
-            <div @key="(cueNode.Id, CurrentEncounterPhase, 1)" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode.Stage)" aria-hidden="true"></div>
+            <div @key="(cueNode.Id, CurrentEncounterPhase, 1)" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode.EncounterCueStage)" aria-hidden="true"></div>
         }
     }
 

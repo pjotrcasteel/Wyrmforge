@@ -111,7 +111,7 @@
                             @if (IsCompleted(node) || selectedNode?.Id == node.Id) { <span class="node-check">✓</span> }
                             @if (node.Rarity == WyrmrealmNodeRarity.Rare) { <span class="node-rare" aria-label="Rare trail">✦</span> }
                         </span>
-                        <span class="node-name">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : WyrmrealmStageCatalog.Name(node.Stage))</span>
+                        <span class="node-name">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : node.EncounterName)</span>
                         @if (node.Site?.BonusRelic == true) { <small class="node-bonus">◆ BONUS RELIC</small> }
                         <span class="node-badges">
                             @foreach (var badge in NodeBadges(node)) { <span class="node-badge @badge.ClassName" title="@badge.Label" aria-label="@badge.Label">@badge.Icon</span> }
@@ -136,7 +136,7 @@
                         {
                             <span class="sheet-road">@road.Length road · @road.Encounters fights @(road.BonusRelic ? "· Bonus relic" : "")</span>
                         }
-                        <span class="sheet-encounter">@WyrmrealmStageCatalog.Name(selected.Stage)</span>
+                        <span class="sheet-encounter">@selected.EncounterName</span>
                         <span class="sheet-guarantee">@SchoolIcon(route.Reward.AttunementSchool) @route.Reward.AttunementSchool upgrade · guaranteed</span>
                         @if (route.Reward.RecoveryFraction > 0) { <span>♥ @($"{route.Reward.RecoveryFraction * 100:0}%") recovery</span> }
                         @if (route.Reward.Relic is not null) { <span>◆ Relic cache</span> }
@@ -253,7 +253,7 @@
     private string NodeMapStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node):0.#}%");
     private string EntryConnectionPath(WyrmrealmMapNode node) => TrailPath(node.Site?.IncomingTrail ?? [new(EntryX, EntryY), new(NodeX(node), NodeY(node))]);
     private string ConnectionPath(WyrmrealmMapNode from, WyrmrealmMapNode to)
-        => TrailPath(to.Site is { IncomingTrail.Count: > 0 } site ? site.IncomingTrail : [new(NodeX(from), NodeY(from)), new(NodeX(to), NodeY(to))]);
+        => TrailPath(to.Site is { IncomingTrail.Count: > 0 } site && site.IncomingTrail[0] == from.Site?.Point ? site.IncomingTrail : [new(NodeX(from), NodeY(from)), new(NodeX(to), NodeY(to))]);
     private double NodeX(WyrmrealmMapNode node) => node.Site?.Point.X ?? 50;
     private static double NodeY(WyrmrealmMapNode node) => node.Site?.Point.Y ?? 5;
     private static string FeatureStyle(HuntFeature feature) => FormattableString.Invariant($"left:{feature.Center.X:0.#}%;top:{feature.Center.Y:0.#}%;width:{feature.RadiusX * 2:0.#}%;height:{feature.RadiusY * 2:0.#}%");
@@ -328,7 +328,7 @@
 
     private static string LandmarkPath(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Dragon
         ? "M3 30L12 16L18 7L25 10L32 5L43 30ZM16 30V23Q23 12 30 23V30M12 16L18 7L22 14M32 5L35 17"
-        : WyrmrealmStageCatalog.PressureStage(node.Stage) switch
+        : (node.Stage == WyrmrealmMapState.CombatStages ? 4 : node.EncounterKind == WyrmrealmEncounterKind.Swarm ? 2 : node.EncounterKind == WyrmrealmEncounterKind.StalkerPressure ? 3 : 1) switch
         {
             2 => "M8 28V8M3 14L8 7L13 14M23 28V5M18 11L23 4L28 11M38 28V8M33 14L38 7L43 14",
             3 => "M9 5L37 29M37 5L9 29M10 17A13 13 0 1 0 36 17A13 13 0 1 0 10 17",

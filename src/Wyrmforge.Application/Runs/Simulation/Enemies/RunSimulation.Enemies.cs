@@ -12,6 +12,11 @@ public sealed partial class RunSimulation
     private void UpdateSpawn(double delta, double width, double height)
     {
         if (developmentHunt || dragon is { Health: > 0 }) return;
+        if (entryGraceRemaining > 0)
+        {
+            entryGraceRemaining = Math.Max(0, entryGraceRemaining - delta);
+            return;
+        }
         var mapEncounter = mapState.EncounterActive;
         if (mapEncounter)
         {
@@ -73,7 +78,12 @@ public sealed partial class RunSimulation
     private void SpawnEnemy(double width, double height, EnemyKind kind)
     {
         const double margin = 30;
-        var edge = Wyrmforge.Application.Runs.Navigation.WyrmrealmStageCatalog.SpawnEdge(mapState.CurrentNode?.Stage ?? 1, enemyId, randomSource.Next(4));
+        var edge = encounterPattern switch
+        {
+            EnemyEncounterPattern.Swarm => enemyId % 2 * 2,
+            EnemyEncounterPattern.StalkerPressure => enemyId % 4,
+            _ => randomSource.Next(4),
+        };
         var position = edge switch
         {
             0 => new Vector2D(randomSource.NextDouble() * width, -margin),

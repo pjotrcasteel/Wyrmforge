@@ -26,7 +26,8 @@ public static class WyrmrealmMapGenerator
         var secondEnds = AddRoads(1, clearing, approach, 6, drafts[^1].Id);
         Add("approach", 8, 0, secondEnds, approach, []);
         Add("wyrm", 9, 0, [drafts[^1].Id], lair, [approach, lair]);
-        var trails = drafts.SelectMany(d => d.Site.IncomingTrail.Zip(d.Site.IncomingTrail.Skip(1)))
+        var trails = drafts.SelectMany(d => d.PreviousNodeIds.Select(id => (First: drafts.Single(p => p.Id == id).Site.Point, Second: d.Site.Point)))
+            .Concat(drafts.SelectMany(d => d.Site.IncomingTrail.Zip(d.Site.IncomingTrail.Skip(1))))
             .Concat(roads.SelectMany(r => r.Points.Zip(r.Points.Skip(1)))).ToArray();
         var features = new List<HuntFeature> { new("bridge", new(crossingX, 92), 4, .6) };
         foreach (var road in roads.Where(r => r.BonusRelic))
@@ -82,13 +83,14 @@ public static class WyrmrealmMapGenerator
             for (var lane = 0; lane < count; lane++)
             {
                 var fights = lengths[lane];
-                var centerX = 27 + lane * 60d / (count - 1);
+                var centerX = 29 + lane * 53d / (count - 1) + (random.NextDouble() - .5) * 7;
+                var bend = random.NextDouble() * Math.PI * 2;
                 var points = new List<HuntPoint> { start };
                 for (var i = 1; i <= fights; i++)
                 {
                     var spacingNoise = fights switch { 2 => .18, 3 => .10, _ => .04 };
                     var t = i / (fights + 1d) + (random.NextDouble() - .5) * spacingNoise;
-                    var x = centerX + Math.Sin(t * Math.PI * 2 + sector) * 7 + (random.NextDouble() - .5) * 2;
+                    var x = centerX + Math.Sin(t * Math.PI * 2 + bend) * 9 + (random.NextDouble() - .5) * 5;
                     var y = start.Y + (end.Y - start.Y) * t + (random.NextDouble() - .5) * 1.4;
                     points.Add(new(Math.Clamp(x, 26, 85), y));
                 }
@@ -106,6 +108,27 @@ public static class WyrmrealmMapGenerator
                     incoming = drafts[^1].Id;
                 }
                 ends.Add(incoming);
+            }
+            // Cross trails run uphill between neighbouring roads; they never skip a road's first fight
+            // or its reward stop. Equal-or-greater stop indices preserve the quick route's length.
+            var sectorNodes = drafts.Where(d => d.Site.RoadId?.StartsWith($"road-{sector}-") == true).ToArray();
+            for (var lane = 0; lane < count - 1; lane++)
+            {
+                foreach (var direction in new[] { 1, -1 })
+                {
+                    var fromLane = direction == 1 ? lane : lane + 1;
+                    var toLane = direction == 1 ? lane + 1 : lane;
+                    var candidates = (from source in sectorNodes.Where(d => d.Lane == fromLane)
+                                      from destination in sectorNodes.Where(d => d.Lane == toLane)
+                                      where destination.Site.RoadIndex == source.Site.RoadIndex + 1
+                                          && destination.Site.Point.Y < source.Site.Point.Y - 1.5
+                                          && (lengths[toLane] != 5 || destination.Site.RoadIndex <= 2)
+                                      select (source, destination)).ToArray();
+                    if (candidates.Length == 0) continue;
+                    var link = candidates[random.Next(candidates.Length)];
+                    var index = drafts.FindIndex(d => d.Id == link.destination.Id);
+                    drafts[index] = link.destination with { PreviousNodeIds = [.. drafts[index].PreviousNodeIds, link.source.Id] };
+                }
             }
             return ends.ToArray();
         }

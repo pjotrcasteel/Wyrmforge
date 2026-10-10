@@ -7,6 +7,29 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 public sealed class WyrmrealmMapStateTests
 {
     [TestMethod]
+    public void GeneratedRoads_MixEncountersAndOfferUphillCrossroadsWithoutSkippingTheReward()
+    {
+        var crossings = 0;
+        for (var seed = 0; seed < 200; seed++)
+        {
+            var nodes = WyrmrealmMapGenerator.Generate(1, seed);
+            foreach (var road in nodes.Where(n => n.Site!.RoadId is not null).GroupBy(n => n.Site!.RoadId))
+                Assert.IsTrue(road.Select(n => n.EncounterKind).Distinct().Count() >= 2);
+            foreach (var node in nodes.Where(n => n.Site!.RoadId is not null))
+            foreach (var previous in node.PreviousNodeIds.Select(id => nodes.Single(n => n.Id == id)))
+            {
+                if (previous.Site!.RoadId is null || previous.Site.RoadId == node.Site!.RoadId) continue;
+                crossings++;
+                Assert.IsTrue(node.Site.Point.Y < previous.Site.Point.Y);
+                Assert.AreEqual(previous.Site.RoadIndex + 1, node.Site.RoadIndex);
+                var reward = nodes.SingleOrDefault(n => n.Site!.RoadId == node.Site.RoadId && n.Site.BonusRelic);
+                if (reward is not null) Assert.IsTrue(node.Site.RoadIndex <= reward.Site!.RoadIndex);
+            }
+        }
+        Assert.IsGreaterThan(200, crossings);
+    }
+
+    [TestMethod]
     public void Generate_DepthOne_AlwaysOffersRecoveryWhileDeeperRoutesKeepTheirVariety()
     {
         var deeperRecovery = new HashSet<double>();
@@ -37,7 +60,7 @@ public sealed class WyrmrealmMapStateTests
             var land = nodes[0].Territory!;
             signatures.Add(string.Join("|", nodes.Select(n => $"{n.Id}:{n.Site!.Point}")));
             Assert.AreEqual(8, MinimumFights(nodes, nodes.Single(n => n.Type == WyrmrealmNodeType.Dragon)));
-            foreach (var fork in nodes.Where(n => nodes.Count(next => next.PreviousNodeIds.Contains(n.Id)) > 1))
+            foreach (var fork in nodes.Where(n => n.Site!.RoadId is null && nodes.Count(next => next.PreviousNodeIds.Contains(n.Id)) > 1))
             {
                 var next = nodes.Where(n => n.PreviousNodeIds.Contains(fork.Id)).ToArray();
                 Assert.IsTrue(next.Length is >= 2 and <= 4);
@@ -173,7 +196,7 @@ public sealed class WyrmrealmMapStateTests
         var state = new WyrmrealmMapState(seed: 8021);
         for (var stage = 0; stage < WyrmrealmMapState.CombatStages; stage++)
         {
-            Assert.IsNotNull(state.Choose(state.AvailableNodes[0].Id));
+            Assert.IsNotNull(state.Choose(state.AvailableNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id));
             CompleteEncounter(state);
         }
 
