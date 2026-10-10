@@ -635,13 +635,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsNotNull(touchTarget);
         Assert.IsGreaterThanOrEqualTo(44, touchTarget.Width);
         Assert.IsGreaterThanOrEqualTo(44, touchTarget.Height);
-        await Page.Locator(".road-label").First.ScrollIntoViewIfNeededAsync();
+        await territory.EvaluateAsync("element => element.scrollTop = element.scrollHeight * .48");
         await ScreenshotAsync($"mobile-territory-forks-{width}.png");
-        var detour = Page.Locator(".road-label.detour").First;
+        var detour = Page.Locator(".node-bonus").First;
         if (await detour.CountAsync() > 0)
         {
             await detour.ScrollIntoViewIfNeededAsync();
-            await Expect(detour).ToContainTextAsync("Bonus relic");
+            await Expect(detour).ToContainTextAsync("BONUS RELIC");
         }
         await Page.EvaluateAsync("async () => { const map = await import('./js/hunt-map.js'); map.focusHunter(document.querySelector('.hunt-viewport')); }");
         await ScreenshotAsync($"mobile-route-map-{width}.png");
