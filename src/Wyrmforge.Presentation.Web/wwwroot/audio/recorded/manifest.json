@@ -11,7 +11,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "086e18c4d27e8064bffd0f55d29d0a3abac1aadd157acdd1c081d42390aa1504"
+      "sha256": "f03548b10646dd7555b57d046b1264f7b5158ab6b2b090f7ceac158260293d56"
     },
     "fire": {
       "file": "fire.ogg",
@@ -19,7 +19,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "0a01f5ae4f820a85246c89609117d3fe6f5da8b70e67f11b7575daecdf183265"
+      "sha256": "394f72dcbf905db9e0e09aef93c9625b8c8557cf0658c69dbb540560aa460f4d"
     },
     "frost": {
       "file": "frost.ogg",
@@ -27,7 +27,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "5941bc67d2d34592b381c1fbdf85ce04c6f4080e833748eaf38c61fc5ac58412"
+      "sha256": "9bb8d54107b9d08878fcca90ee56d939831ac2a54939ee34b45deee3bd35e1ee"
     },
     "lightning": {
       "file": "lightning.ogg",
@@ -35,7 +35,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "42102a010b32f596ef99cb3b72cd5ba0f461ead65ba65da005a09b018ecb838e"
+      "sha256": "97deacbc2c6d533b07e383cdc800a0d76ace3191c640db0c92b18583e794cd74"
     },
     "impact": {
       "file": "impact.ogg",
@@ -43,7 +43,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "48c34b2b1a7591d4cab89b580b158b7b4e5564875c11df14642054ac9aabe486"
+      "sha256": "821c48661835d93b165d57bf42e7baa50850726697fda5ffc1bf43202b7bb6f1"
     },
     "enemy-down": {
       "file": "enemy-down.ogg",
@@ -51,7 +51,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "02240650b039506c227e40dae685e30c7d29ade0ce31b88045e90d8b9b53d176"
+      "sha256": "c57c552d645dd8b6b813b80ec869de7f5f5908fccea8e40938ba4f4b6ee8c536"
     },
     "hurt": {
       "file": "hurt.ogg",
@@ -59,7 +59,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "ca1c8fcb7f34edc656b9ea7d4c6f0cf543f653fb2ea3afca68c817e9863d2fec"
+      "sha256": "e97fbd6976b216e2f91edf1ad77333f2f8bf620a3c12e073bbfa53fbc39aa265"
     },
     "wyrm": {
       "file": "wyrm.ogg",
@@ -67,7 +67,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "9c488dfb88c1bc81b1f1106f82587b20f3b2227304cf6d4dadd50f00d8682f76"
+      "sha256": "4fa9337c6775e776937de4277a170699af13f48913e63e091f56668e7156e3a5"
     },
     "ui": {
       "file": "ui.ogg",
@@ -75,7 +75,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "c77aeea42aadf15ad22ef781fff2a11e0161045b1364440e079b42a6fab86c86"
+      "sha256": "932355ba64e93c0108847799c55753e579bd9e039f4b832b8f258c3829dd521e"
     },
     "upgrade-open": {
       "file": "upgrade-open.ogg",
@@ -83,7 +83,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "b551e5db1e78924ffa30e95d58ee41a41366eb833396938041ef4511450bf165"
+      "sha256": "4a50badc8e90fda2897ed4cf97f9012c6381adbdcca206cb3f1742a26a30e25a"
     },
     "upgrade-choice": {
       "file": "upgrade-choice.ogg",
@@ -91,7 +91,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "c32b0996187db3cfce3fad8711e3fbdf97003e3963ccec74f8d2490c654b3a0b"
+      "sha256": "b730447739495f2bbcff06b87f2a47bea1f1d0e6d79b3c4699957476a1acfe8b"
     },
     "power-burst": {
       "file": "power-burst.ogg",
@@ -99,7 +99,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "eb627077d2543c30aedfbd1fb8136f41faff0c2b4b11e08757b27dbdef2a9695"
+      "sha256": "88dadc7f3ef078db151ddc33abb5ec2708308a5342a22ac7aca734f00efd07b6"
     },
     "trail-clear": {
       "file": "trail-clear.ogg",
@@ -107,7 +107,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "fca02e0b43dadd645ecfffc3096e0a156be876451ec6503d30eb923b1edb4f00"
+      "sha256": "33381d980d9bb0eedb755c84bb8e0107882374ab6bced5c818dbbb23236cacfa"
     },
     "reward": {
       "file": "reward.ogg",
@@ -115,7 +115,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "886360b5d23fc6273386ca138ad8cd33ee132c8705ddcdbee065b048e451faab"
+      "sha256": "fd23801fd33f0b8d08b334668b949470452f2097f8f94689ad2c3137b6e4e27b"
     },
     "hunt-start": {
       "file": "hunt-start.ogg",
@@ -123,7 +123,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "e28e5e95115db40395486b933b9a9cb401d86c95b8db779555093858eafed16d"
+      "sha256": "f45eca6d246c164c68381d229b8bef1d035b422875b05e145506786a74365d95"
     },
     "victory": {
       "file": "victory.ogg",
@@ -131,7 +131,7 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "021eeffdfbd4a9ac16aa84f28788de257b420243ed2c05a36bbe16f7241aed42"
+      "sha256": "4cffce23718b653124f4a9a7d1d23000c8a9af69143f543ddc868c7ba4860a58"
     },
     "death": {
       "file": "death.ogg",
@@ -139,7 +139,7 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "0b57a16ceefa6c2cd3798bf01f1d2a7821ced5377d1ec64652f3d1bafd5cbc61"
+      "sha256": "0220862e0cd91b5222ba5bada2bb4a8367160ed0abeae174956a29d8adeb8562"
     }
   },
   "sources": [
