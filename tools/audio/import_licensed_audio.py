@@ -27,18 +27,18 @@ SOURCES = {
 AUDIO_SUFFIXES = {".ogg", ".wav", ".mp3", ".flac", ".aif", ".aiff"}
 # Match assets by semantic filename, not by nondeterministic ZIP archive order.
 CUES = {
-    "arcane": ("rpg", ("spell_01", "spell_02", "spell_03")),
+    "arcane": ("rpg", ("spell_01",)),
     "fire": ("fantasy", ("fire", "launch")),
     "frost": ("fantasy", ("ice", "launch")),
     "lightning": ("fantasy", ("electric", "launch")),
-    "impact": ("fantasy", ("heavy", "impact")),
+    "impact": ("fantasy", ("sword", "hit", "metal")),
     "enemy-down": ("rpg", ("creature", "die")),
     "hurt": ("rpg", ("creature", "hurt")),
     "wyrm": ("rpg", ("creature", "roar")),
     "ui": ("rpg", ("item", "stone")),
     "upgrade-open": ("fantasy", ("magic", "shield")),
     "upgrade-choice": ("fantasy", ("healing",)),
-    "power-burst": ("fantasy", ("electric", "impact")),
+    "power-burst": ("fantasy", ("electric", "hit")),
     "trail-clear": ("fantasy", ("healing",)),
     "reward": ("rpg", ("item", "gem")),
     "hunt-start": ("fantasy", ("magic", "shield")),
