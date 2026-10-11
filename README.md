@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.109 — Recorded dark-fantasy soundtrack and elemental magic
+
+- **Actual audio recordings** replace procedural beeps: separate authored Fireball, Frost, Lightning and Arcane sounds, physical hits, Wyrm and reward effects. No proprietary game audio is sampled.
+- **Recorded soundtrack:** Brandon Morris's CC0 *Osare (Unrest Theme)* accompanies the menu/Refuge, and *Cave Theme* accompanies hunts. The music transitions gently rather than restarting with every effect.
+- Music, Combat, Interface and Moments have independent persisted mixing controls in Sound Atelier. iPhone Silent Mode audio playback support remains in place.
+- Audio files are shipped **self-hosted** under `wwwroot/audio/recorded`; `manifest.json` documents source URLs, authors, licenses, SHA-256s and cue bindings. JC Sounds' elemental sound effects are credited under CC BY 4.0 in `docs/audio/recorded-audio-credits.md`.
+- This is the first recorded-audio **listening candidate**, not the final composition. The classic Diablo/StarCraft era is an emotional reference, while WoW, Skyrim, Enshrouded and Path of Exile guide the weight and clarity of spell and impact audio.
+
 ## Prototype 0.0.108 — Ancient Resonance: first sound identity
 
 - Replace short oscillating beeps with a deterministic, layered **Ancient Resonance** palette: breath, stone, glass, restrained elemental energy and low, weighty Wyrm cues. No third-party copyrighted samples are bundled.
