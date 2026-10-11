@@ -82,7 +82,7 @@ public partial class ArenaView : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena-performance.js");
+        arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, "./js/arena-performance.js?v={AppBuildInfo.Version}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
     }
@@ -117,7 +117,11 @@ public partial class ArenaView : IAsyncDisposable
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
         if (current.CompletedMapNodes.Count > previousMapCompleted && current.PendingMapChoice && !snapshot.Ended)
+        {
             ShowTrailTransition();
+            await TryPlayAudioAsync("trail-clear");
+        }
+        if (!hadChoices && current.PendingChoices.Count > 0) await TryPlayAudioAsync("upgrade-open");
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
         if (snapshot.Ended && !gameOverSent)
@@ -133,6 +137,7 @@ public partial class ArenaView : IAsyncDisposable
         var choice = CurrentChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || simulation?.ApplyChoice(id) != true) return;
         ShowChoiceMoment(choice);
+        await TryPlayAudioAsync("upgrade-choice");
         await InvokeAsync(StateHasChanged);
     }
 
@@ -141,6 +146,7 @@ public partial class ArenaView : IAsyncDisposable
         var essence = CurrentEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (essence is null || simulation?.ApplyDragonEssence(id) != true) return;
         ShowEssenceMoment(essence);
+        await TryPlayAudioAsync("reward");
         await InvokeAsync(StateHasChanged);
     }
 
@@ -149,6 +155,7 @@ public partial class ArenaView : IAsyncDisposable
         var relic = CurrentRelicChoices.SingleOrDefault(candidate => candidate.Id == selection.Relic);
         if (relic is null || simulation?.ApplyRelicChoice(selection.Relic, selection.Replace) != true) return;
         ShowRelicMoment(relic);
+        await TryPlayAudioAsync("reward");
         await InvokeAsync(StateHasChanged);
     }
 
@@ -157,6 +164,7 @@ public partial class ArenaView : IAsyncDisposable
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
         if (node is null || simulation?.ChooseMapNode(id) != true) return;
         ShowMapMoment(node);
+        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "hunt-start");
         await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
         await InvokeAsync(StateHasChanged);
     }
@@ -165,12 +173,20 @@ public partial class ArenaView : IAsyncDisposable
     {
         if (simulation?.UseCheckpointAction(id) != true) return;
         ShowCheckpointMoment(id);
+        if (id == RunCheckpointActionId.MendWounds) await TryPlayAudioAsync("reward");
+        if (id == RunCheckpointActionId.Descend) await TryPlayAudioAsync("hunt-start");
         if (id == RunCheckpointActionId.Descend) await TryRecordPlaytestMilestoneAsync("descended");
         if (id == RunCheckpointActionId.LeaveRealm) await TryRecordPlaytestMilestoneAsync("extracted");
         await InvokeAsync(StateHasChanged);
     }
     private async Task EquipRelicAsync(RelicId id) { if (simulation?.EquipRelic(id) == true) await InvokeAsync(StateHasChanged); }
     private async Task UnequipRelicAsync(RelicId id) { if (simulation?.UnequipRelic(id) == true) await InvokeAsync(StateHasChanged); }
+
+    private async Task TryPlayAudioAsync(string cue)
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgeAudio.play", CancellationToken.None, cue); }
+        catch (JSException) { /* Audio is optional and must never interrupt a run. */ }
+    }
 
     private async Task TryRecordPlaytestMilestoneAsync(string milestone)
     {
