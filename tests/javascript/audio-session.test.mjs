@@ -3,78 +3,91 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
+const soundSource = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-design.js', import.meta.url), 'utf8');
 const audioSource = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
 
-function createHarness({ sessionSupported = true, startingState = 'suspended' } = {}) {
-    const nodes = [];
-    const oscillatorStarts = [];
-    class FakeNode {
-        constructor() {
-            this.frequency = { setValueAtTime() {}, exponentialRampToValueAtTime() {} };
-            this.gain = { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} };
-        }
-        connect() {}
-        disconnect() {}
-        start() { oscillatorStarts.push(true); }
-        stop() {}
-    }
-    class FakeAudioContext {
-        constructor() {
-            this.state = startingState;
-            this.destination = new FakeNode();
-            this.currentTime = 0;
-            this.sampleRate = 44100;
-        }
-        resume() {
-            this.state = 'running';
-            return Promise.resolve();
-        }
-        createGain() { return new FakeNode(); }
-        createOscillator() { const node = new FakeNode(); nodes.push(node); return node; }
-        createBuffer() { return { getChannelData: () => new Float32Array(32) }; }
-        createBufferSource() { return new FakeNode(); }
-        createBiquadFilter() { return new FakeNode(); }
-    }
+function harness({ sessionSupported = true } = {}) {
+    const started = [];
     const settings = new Map();
     const session = { type: 'ambient' };
-    const navigator = sessionSupported ? { audioSession: session } : {};
+    class Parameter {
+        constructor() { this.value = 0; }
+        setTargetAtTime(value) { this.value = value; }
+        cancelScheduledValues() {}
+    }
+    class Node {
+        constructor() { this.gain = new Parameter(); this.playbackRate = new Parameter(); }
+        connect() {}
+        disconnect() {}
+        start() { started.push(this.buffer); }
+    }
+    class FakeContext {
+        constructor() {
+            this.state = 'suspended';
+            this.sampleRate = 24000;
+            this.currentTime = 0;
+            this.destination = new Node();
+        }
+        resume() { this.state = 'running'; return Promise.resolve(); }
+        createGain() { return new Node(); }
+        createBufferSource() { return new Node(); }
+        createBuffer(channels, samples, rate) {
+            assert.equal(channels, 1);
+            assert.equal(rate, this.sampleRate);
+            return { copyToChannel(pcm) { assert.equal(pcm.length, samples); this.sample = pcm; } };
+        }
+    }
     const window = {
-        AudioContext: FakeAudioContext,
-        localStorage: { getItem: key => settings.get(key) ?? null, setItem: (key, value) => settings.set(key, value) },
+        AudioContext: FakeContext,
+        localStorage: { getItem: key => settings.get(key) ?? null, setItem: (key, val) => settings.set(key, val) },
         setTimeout: callback => { callback(); return 1; },
         clearTimeout() {},
     };
-    const events = new Map();
-    const document = { readyState: 'loading', hidden: false, addEventListener: (name, handler) => events.set(name, handler) };
-    runInNewContext(audioSource, { window, document, navigator, performance: { now: () => 10_000 }, console, Math, Float32Array });
-    return { audio: window.wyrmforgeAudio, session, settings, nodes, oscillatorStarts };
+    const document = { readyState: 'loading', hidden: false, addEventListener() {}, querySelector() { return null; } };
+    const navigator = sessionSupported ? { audioSession: session } : {};
+    const environment = { window, document, navigator, performance: { now: () => 5000 }, console, Math, Float32Array };
+    runInNewContext(soundSource, environment);
+    runInNewContext(audioSource, environment);
+    return { audio: window.wyrmforgeAudio, sound: window.WyrmforgeSoundDesign, started, settings, session };
 }
 
-test('iPhone playback mode is configured before the first demo sound with silent switch on', () => {
-    const { audio, session, oscillatorStarts } = createHarness();
+test('iPhone Silent Mode configures playback before the first sampled sound', () => {
+    const { audio, session, started } = harness();
     assert.equal(session.type, 'ambient');
     audio.testSound();
     assert.equal(session.type, 'playback');
     assert.equal(audio.diagnostics().state, 'running');
-    assert.equal(audio.diagnostics().session, 'playback');
-    assert.equal(oscillatorStarts.length, 2, 'tap schedules two clearly audible test tones');
+    assert.equal(audio.diagnostics().identity, 'Ancient Resonance');
+    assert.equal(started.length, 1);
+    assert.ok(started[0].sample.some(value => Math.abs(value) > 0.1));
 });
 
-test('browsers without AudioSession still support the test tone', () => {
-    const { audio, oscillatorStarts } = createHarness({ sessionSupported: false });
+test('unsupported AudioSession still plays authored samples, not oscillator beeps', () => {
+    const { audio, started } = harness({ sessionSupported: false });
     audio.testSound();
     assert.equal(audio.diagnostics().session, 'unsupported');
-    assert.equal(oscillatorStarts.length, 2);
+    assert.equal(started.length, 1);
 });
 
-test('user mute persists across sound tests and gameplay cues cannot override it', () => {
-    const { audio, oscillatorStarts, settings } = createHarness();
+test('mute and category volume settings persist without muting gameplay logic', () => {
+    const { audio, started, settings } = harness();
     audio.setEnabled(false);
-    audio.play('arcane');
-    assert.equal(oscillatorStarts.length, 0);
+    assert.equal(audio.play('arcane'), false);
+    assert.equal(started.length, 0);
     assert.equal(settings.get('wyrmforge.audio.enabled.v1'), 'false');
     audio.setEnabled(true);
+    audio.updateVolume('combat', 0.25);
     assert.equal(settings.get('wyrmforge.audio.enabled.v1'), 'true');
+    assert.equal(settings.get('wyrmforge.audio.combat.v1'), '0.25');
+    assert.ok(started.length >= 1);
+});
+
+test('cached voiced cues rotate through authored variations', () => {
+    const { audio, started } = harness();
     audio.testSound();
-    assert.ok(oscillatorStarts.length >= 2);
+    audio.play('arcane', true);
+    audio.play('arcane', true);
+    const a = started.at(-2).sample;
+    const b = started.at(-1).sample;
+    assert.notDeepEqual(Array.from(a.slice(0, 100)), Array.from(b.slice(0, 100)));
 });
