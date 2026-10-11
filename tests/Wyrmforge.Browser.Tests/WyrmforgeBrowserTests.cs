@@ -24,6 +24,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
     }
 
