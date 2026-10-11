@@ -10,6 +10,7 @@
     const variants = new Map();
     const buffers = new Map();
     const voices = { ui: 0, combat: 0, moment: 0 };
+    const activeVoices = { ui: [], combat: [], moment: [] };
     const maxVoices = { ui: 2, combat: 5, moment: 3 };
     let enabled = true;
     let unlocked = false;
@@ -100,7 +101,14 @@
         const sound = design.palette[name];
         const now = performance.now();
         if (!preview && now - (lastCue.get(name) ?? -Infinity) < sound.cooldown) return false;
-        if (voices[sound.bus] >= maxVoices[sound.bus] && sound.priority < 3) return false;
+        if (voices[sound.bus] >= maxVoices[sound.bus]) {
+            // Never let extra effects raise the peak; important moments may replace a less important voice.
+            const active = activeVoices[sound.bus];
+            const lowest = active.reduce((candidate, item) => !candidate || item.priority < candidate.priority ? item : candidate, null);
+            if (!lowest || lowest.priority >= sound.priority) return false;
+            try { lowest.source.stop(); } catch { /* Already stopped. */ }
+            lowest.release();
+        }
 
         try {
             const count = variants.get(name) ?? 0;
@@ -113,11 +121,21 @@
             gain.gain.value = sound.volume;
             source.connect(gain);
             gain.connect(bus);
-            source.onended = () => {
-                voices[sound.bus] = Math.max(0, voices[sound.bus] - 1);
-                source.disconnect();
-                gain.disconnect();
+            let released = false;
+            const voice = {
+                source,
+                priority: sound.priority,
+                release() {
+                    if (released) return;
+                    released = true;
+                    voices[sound.bus] = Math.max(0, voices[sound.bus] - 1);
+                    const index = activeVoices[sound.bus].indexOf(voice);
+                    if (index !== -1) activeVoices[sound.bus].splice(index, 1);
+                    source.disconnect();
+                    gain.disconnect();
+                },
             };
+            source.onended = voice.release;
 
             if (sound.bus === 'moment') {
                 const at = ctx.currentTime;
@@ -131,6 +149,7 @@
 
             source.start();
             voices[sound.bus]++;
+            activeVoices[sound.bus].push(voice);
             variants.set(name, count + 1);
             lastCue.set(name, now);
             return true;
