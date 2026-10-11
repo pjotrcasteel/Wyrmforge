@@ -145,3 +145,6 @@ footer { padding: 16px 4px 0; color: #6f6678; font-size: .78rem; text-align: cen
 .wyrmforge-sound-test:focus-visible, .wyrmforge-sound-toggle:focus-visible { outline:2px solid #d8b7ff; outline-offset:3px; }
 .wyrmforge-sound-toggle[aria-pressed="false"] { color:#a399ae; border-color:rgba(165,154,170,.22); }
 .wyrmforge-sound-status { position:absolute; bottom:calc(100% + 6px); right:0; color:#dbcde6; font:700 9px/1.25 system-ui,sans-serif; letter-spacing:.05em; text-shadow:0 1px 4px #090510; white-space:nowrap; pointer-events:none; }
+/* Route-map, retreat and upgrade actions take priority over global sound controls on small screens. */
+body:has(.game-screen) .wyrmforge-sound-controls { display:none; }
+
