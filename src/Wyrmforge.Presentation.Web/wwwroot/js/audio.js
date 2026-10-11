@@ -4,8 +4,8 @@
     const design = window.WyrmforgeSoundDesign;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const savedEnabledKey = 'wyrmforge.audio.enabled.v1';
-    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1' };
-    const volumes = { ui: 0.44, combat: 0.56, moment: 0.82 };
+    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1' };
+    const volumes = { ui: 0.40, combat: 0.53, moment: 0.72, music: 0.33 };
     const lastCue = new Map();
     const variants = new Map();
     const buffers = new Map();
@@ -23,6 +23,12 @@
     let lab = null;
     let status = null;
     let statusTimer = 0;
+    let recordedManifest = null;
+    const recordedBuffers = new Map();
+    const musicPlayers = new Map();
+    let currentMusic = null;
+    let fadeGeneration = 0;
+    let wantedMusic = null;
 
     function loadPreference(key) {
         try { return window.localStorage.getItem(key); } catch { return null; }
@@ -81,6 +87,145 @@
         if (!enabled) return;
         unlocked = true;
         ensureContext();
+        syncMusic();
+    }
+
+
+    // Files are imported, verified and committed by tools/audio/import_licensed_audio.py.
+    // No hotlinking to third-party media. Manifest absence is silent rather than playing the rejected synthesizer.
+    const assetUrl = name => new URL('audio/recorded/' + name, document.baseURI).href;
+
+    function loadManifest() {
+        if (typeof fetch !== 'function' || !document.baseURI) return;
+        void fetch(assetUrl('manifest.json')).then(response => {
+            if (!response.ok) throw new Error('Recorded audio pack unavailable: ' + response.status);
+            return response.json();
+        }).then(manifest => {
+            if (!manifest.cues?.arcane || !manifest.cues?.fire || !manifest.cues?.frost || !manifest.cues?.lightning ||
+                !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
+            recordedManifest = manifest;
+            if (status) status.textContent = 'RECORDED AUDIO READY';
+            syncMusic();
+        }).catch(error => {
+            console.warn('Recorded WyrmForge audio not yet installed:', error);
+            if (status) status.textContent = 'RECORDED AUDIO UNAVAILABLE';
+        });
+    }
+
+    function loadRecordedBuffer(name) {
+        if (recordedBuffers.has(name)) return recordedBuffers.get(name);
+        const entry = recordedManifest?.cues?.[name];
+        if (!entry || !context) return Promise.reject(new Error('Unmapped recorded sound: ' + name));
+        const pending = fetch(assetUrl(entry.file)).then(response => {
+            if (!response.ok) throw new Error('Recorded sound unavailable: ' + name + ' (' + response.status + ')');
+            return response.arrayBuffer();
+        }).then(bytes => context.decodeAudioData(bytes));
+        recordedBuffers.set(name, pending);
+        pending.catch(() => recordedBuffers.delete(name));
+        return pending;
+    }
+
+    function playRecorded(name, sound, preview, now) {
+        const bus = sound.bus;
+        if (voices[bus] >= maxVoices[bus]) return false;
+        lastCue.set(name, now);
+        const variant = (variants.get(name) ?? 0) % 3;
+        variants.set(name, (variants.get(name) ?? 0) + 1);
+        void loadRecordedBuffer(name).then(buffer => {
+            if (!enabled || !context || context.state === 'closed' || voices[bus] >= maxVoices[bus]) return;
+            const source = context.createBufferSource();
+            const gain = context.createGain();
+            source.buffer = buffer;
+            source.playbackRate.value = [0.977, 1, 1.019][variant];
+            gain.gain.value = sound.volume;
+            source.connect(gain);
+            gain.connect(buses[bus]);
+            voices[bus]++;
+            source.onended = () => {
+                voices[bus] = Math.max(0, voices[bus] - 1);
+                source.disconnect();
+                gain.disconnect();
+            };
+            if (bus === 'moment') {
+                const parameter = buses.combat.gain, t = context.currentTime;
+                if (parameter.setTargetAtTime) {
+                    parameter.cancelScheduledValues(t);
+                    parameter.setTargetAtTime(volumes.combat * 0.40, t, 0.035);
+                    parameter.setTargetAtTime(volumes.combat, t + Math.max(0.4, buffer.duration * 0.55), 0.16);
+                }
+            }
+            source.start();
+        }).catch(error => {
+            console.warn('Recorded WyrmForge cue could not load:', name, error);
+            if (status) status.textContent = 'SOUND COULD NOT LOAD: ' + name.toUpperCase();
+        });
+        return true;
+    }
+
+    function musicPlayer(kind) {
+        if (musicPlayers.has(kind)) return musicPlayers.get(kind);
+        if (typeof window.Audio !== 'function' || !recordedManifest?.music?.[kind]) return null;
+        const player = new window.Audio(assetUrl(recordedManifest.music[kind]));
+        player.preload = 'none';
+        player.loop = true;
+        player.volume = 0;
+        musicPlayers.set(kind, player);
+        return player;
+    }
+
+    function stopMusic() {
+        fadeGeneration++;
+        for (const player of musicPlayers.values()) {
+            player.pause();
+            player.volume = 0;
+        }
+        currentMusic = null;
+    }
+
+    function syncMusic() {
+        if (!recordedManifest || !enabled || !unlocked || typeof window.Audio !== 'function') {
+            if (currentMusic && !enabled) stopMusic();
+            return;
+        }
+        const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
+        if (currentMusic === desired) return;
+        const next = musicPlayer(desired);
+        if (!next) return;
+        const previous = currentMusic ? musicPlayer(currentMusic) : null;
+        currentMusic = desired;
+        const generation = ++fadeGeneration;
+        const started = performance.now();
+        // Start new media from an already unlocked context; rejected autoplay is retried on the next gesture.
+        void next.play().catch(error => {
+            currentMusic = null;
+            console.debug('Music awaits user interaction:', error);
+        });
+        function fade(now) {
+            if (generation !== fadeGeneration || !enabled) return;
+            const progress = Math.max(0, Math.min(1, (now - started) / 5000));
+            const musicLevel = volumes.music * 0.52;
+            next.volume = Math.min(1, musicLevel * Math.sin(progress * Math.PI / 2));
+            if (previous) previous.volume = Math.min(1, musicLevel * Math.cos(progress * Math.PI / 2));
+            if (progress < 1) {
+                window.requestAnimationFrame(fade);
+            } else if (previous && previous !== next) {
+                previous.pause();
+                previous.volume = 0;
+                previous.currentTime = 0;
+            }
+        }
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(fade);
+        else next.volume = volumes.music * 0.52;
+    }
+
+    function observeMusicState() {
+        if (typeof MutationObserver !== 'function' || !document.body) return;
+        const observer = new MutationObserver(() => {
+            if (!recordedManifest || !unlocked || !enabled) return;
+            const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
+            if (desired !== currentMusic) syncMusic();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     function bufferFor(name, variant) {
@@ -101,6 +246,11 @@
         const sound = design.palette[name];
         const now = performance.now();
         if (!preview && now - (lastCue.get(name) ?? -Infinity) < sound.cooldown) return false;
+        if (recordedManifest) {
+            if (!recordedManifest.cues[name]) return false;
+            return playRecorded(name, sound, preview, now);
+        }
+        if (typeof fetch === 'function') return false; // Never play synthetic fallback in the real browser.
         if (voices[sound.bus] >= maxVoices[sound.bus]) {
             // Never let extra effects raise the peak; important moments may replace a less important voice.
             const active = activeVoices[sound.bus];
@@ -164,6 +314,13 @@
         const next = Math.max(0, Math.min(1, Number(value) || 0));
         volumes[group] = next;
         savePreference(volumeKeys[group], next);
+        if (group === 'music') {
+            if (currentMusic) {
+                const player = musicPlayers.get(currentMusic);
+                if (player) player.volume = next * 0.52;
+            }
+            return;
+        }
         if (buses) {
             const parameter = buses[group].gain;
             if (context.state === 'running' && typeof parameter.setTargetAtTime === 'function') {
@@ -191,6 +348,8 @@
         if (enabled) {
             unlock();
             play('ui', true);
+        } else {
+            stopMusic();
         }
         if (status) status.textContent = enabled ? '' : 'SFX MUTED';
         return enabled;
@@ -200,7 +359,7 @@
         if (!enabled) setEnabled(true);
         unlock(); // A direct click creates/resumes the audio session before scheduling the sample.
         const sent = play('upgrade-choice', true);
-        if (status) status.textContent = sent ? 'PLAYING ANCIENT RESONANCE…' : 'AUDIO UNAVAILABLE';
+        if (status) status.textContent = sent ? 'PLAYING RECORDED FANTASY…' : 'RECORDED AUDIO LOADING';
         window.clearTimeout(statusTimer);
         statusTimer = window.setTimeout(() => {
             const session = navigator.audioSession?.type ?? 'browser default';
@@ -267,7 +426,7 @@
         const heading = document.createElement('h3');
         heading.textContent = 'SOUND ATELIER';
         const desc = document.createElement('p');
-        desc.textContent = 'Ancient Resonance · V1  —  preview the Wyrmrealm';
+        desc.textContent = 'Recorded dark fantasy · human-made spell effects and music';
         const samples = document.createElement('div');
         samples.className = 'wyrmforge-sound-samples';
         for (const name of design?.previewNames ?? []) {
@@ -279,9 +438,17 @@
         }
         const levels = document.createElement('div');
         levels.className = 'wyrmforge-sound-levels';
-        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'));
+        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'));
         const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
-        lab.append(heading, desc, samples, levels, close);
+        const credit = document.createElement('p');
+        credit.textContent = 'Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
+        const creditLink = document.createElement('a');
+        creditLink.textContent = 'Asset credits & licenses';
+        creditLink.href = 'https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1';
+        creditLink.target = '_blank';
+        creditLink.rel = 'noopener noreferrer';
+        credit.append(' ', creditLink);
+        lab.append(heading, desc, samples, levels, credit, close);
 
         status = document.createElement('span');
         status.className = 'wyrmforge-sound-status';
@@ -294,13 +461,21 @@
         sync();
         controls.append(lab, status, labButton, testButton, toggleButton);
         document.body.appendChild(controls);
+        observeMusicState();
+        loadManifest();
     }
 
     document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
     document.addEventListener('touchend', unlock, { capture: true, passive: true });
     document.addEventListener('keydown', unlock, { capture: true });
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && enabled && context) ensureContext();
+        if (document.hidden) {
+            for (const track of musicPlayers.values()) track.pause();
+            currentMusic = null;
+        } else if (enabled) {
+            if (context) ensureContext();
+            syncMusic();
+        }
     });
     document.addEventListener('click', event => {
         if (!event.target?.closest || document.querySelector('.game-screen')) return;
@@ -317,6 +492,6 @@
     window.wyrmforgeAudio = {
         play, setEnabled, testSound, isEnabled: () => enabled, updateVolume,
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
-            identity: design?.identity ?? 'unavailable', voices: { ...voices } }),
+            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', music: currentMusic, recorded: Boolean(recordedManifest), voices: { ...voices } }),
     };
 })();

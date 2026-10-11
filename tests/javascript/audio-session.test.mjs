@@ -57,7 +57,7 @@ test('iPhone Silent Mode configures playback before the first sampled sound', ()
     audio.testSound();
     assert.equal(session.type, 'playback');
     assert.equal(audio.diagnostics().state, 'running');
-    assert.equal(audio.diagnostics().identity, 'Ancient Resonance');
+    assert.equal(audio.diagnostics().identity, 'recordings-loading');
     assert.equal(started.length, 1);
     assert.ok(started[0].sample.some(value => Math.abs(value) > 0.1));
 });

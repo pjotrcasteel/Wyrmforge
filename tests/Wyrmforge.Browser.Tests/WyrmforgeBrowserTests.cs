@@ -63,7 +63,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(atelier).ToBeVisibleAsync();
         await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" })).ToBeVisibleAsync();
         await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" }).ClickAsync();
-        Assert.AreEqual("Ancient Resonance", await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().identity"));
+        Assert.AreEqual("Recorded Dark Fantasy", await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().identity"));
 
         var combat = atelier.GetByRole(AriaRole.Slider, new() { Name = "Combat volume" });
         await combat.FocusAsync();
