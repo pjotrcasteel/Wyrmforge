@@ -137,7 +137,11 @@ footer { padding: 16px 4px 0; color: #6f6678; font-size: .78rem; text-align: cen
   .skill-node { min-height: 86px; }
 }
 
-/* Prototype SFX control is always reachable, including over the run overlays, but outside the main combat HUD. */
-.wyrmforge-sound-toggle { position:fixed; z-index:15; right:max(10px, env(safe-area-inset-right)); bottom:max(28px, calc(env(safe-area-inset-bottom) + 25px)); min-width:73px; min-height:37px; padding:8px 10px; border:1px solid rgba(192,165,211,.38); border-radius:99px; background:rgba(20,14,29,.88); color:#d8cce6; font:700 10px/1 system-ui,sans-serif; letter-spacing:.08em; cursor:pointer; backdrop-filter:blur(8px); touch-action:manipulation; }
-.wyrmforge-sound-toggle:focus-visible { outline:2px solid #d8b7ff; outline-offset:3px; }
+/* Accessible, small audio controls remain reachable over overlays and the arena on narrow phones. */
+.wyrmforge-sound-controls { position:fixed; z-index:15; right:max(10px, env(safe-area-inset-right)); bottom:max(28px, calc(env(safe-area-inset-bottom) + 25px)); display:flex; align-items:center; gap:6px; }
+.wyrmforge-sound-test, .wyrmforge-sound-toggle { min-height:37px; padding:8px 10px; border:1px solid rgba(192,165,211,.38); border-radius:99px; background:rgba(20,14,29,.91); color:#d8cce6; font:700 10px/1 system-ui,sans-serif; letter-spacing:.08em; cursor:pointer; backdrop-filter:blur(8px); touch-action:manipulation; }
+.wyrmforge-sound-test { color:#b9ebcf; border-color:rgba(124,208,166,.4); }
+.wyrmforge-sound-test:disabled { opacity:.45; cursor:default; }
+.wyrmforge-sound-test:focus-visible, .wyrmforge-sound-toggle:focus-visible { outline:2px solid #d8b7ff; outline-offset:3px; }
 .wyrmforge-sound-toggle[aria-pressed="false"] { color:#a399ae; border-color:rgba(165,154,170,.22); }
+.wyrmforge-sound-status { position:absolute; bottom:calc(100% + 6px); right:0; color:#dbcde6; font:700 9px/1.25 system-ui,sans-serif; letter-spacing:.05em; text-shadow:0 1px 4px #090510; white-space:nowrap; pointer-events:none; }
