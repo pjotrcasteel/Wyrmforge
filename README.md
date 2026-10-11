@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.106 — Demo sound design
+
+- Original, lightweight Web Audio sound effects for four spell schools, impact and kills, taking damage, opening/choosing upgrades, trail clears, the upgrade power burst, Wyrm appearances, hunt start and run outcomes.
+- Combat audio follows actual simulation snapshots with per-event cooldowns and a bounded voice budget. Audio never influences the deterministic run state.
+- A touch-friendly SFX ON/OFF control persists the player's preference. Browser sound playback starts only after a user gesture; unsupported or blocked audio never prevents play.
+- These sounds are intentionally replaceable prototype assets. No third-party sound files or licences are bundled, and no background music is included yet.
+
 ## Prototype 0.0.99 — The unfolding hunt
 
 - A dark hunter’s chart replaces the compact parchment diagram: geometric terrain, landmark trails, school accents and a copper travelled path. The map scrolls toward the hunter after each clear; the lair starts off-screen. Header and reward panel stay fixed, with manual scrolling and reduced-motion support.
