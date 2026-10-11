@@ -1,4 +1,5 @@
 import { createSpellBadge } from './spell-hud.js';
+import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
 import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js';
 
 const frameStates = new WeakMap();
@@ -31,6 +32,7 @@ export function initializeArena(canvas, dotNetReference) {
         lastHudUpdate: 0,
         lastPlaytestSample: 0,
         lastSampleFrame: 0,
+        soundEvents: createSoundEventTracker(),
     };
     state.onViewportChanged = () => {
         state.canvasRect = state.originalGetBoundingClientRect();
@@ -94,6 +96,7 @@ async function invokeFrame(state, args) {
     const snapshot = await state.dotNetReference.invokeMethodAsync('Frame', delta, args[1], args[2], args[3], args[4]);
     if (state.active) {
         state.latestSnapshot = snapshot;
+        for (const cue of collectSoundEvents(state.soundEvents, snapshot, now)) window.wyrmforgeAudio?.play(cue);
         drawStatusOverlay(state, snapshot);
         updateCombatHud(state, snapshot);
         if (!snapshot.paused && now - state.lastPlaytestSample > 5000) {

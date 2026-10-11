@@ -123,6 +123,7 @@ public partial class Home
 
     private async Task StartRunAsync()
     {
+        await TryPlayAudioAsync("hunt-start");
         hunterGain = null;
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
@@ -150,6 +151,7 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        if (value.Outcome is RunOutcome.Defeated or RunOutcome.Extracted) await TryPlayAudioAsync(value.Outcome == RunOutcome.Extracted ? "victory" : "death");
         var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
         var mastery = spellMastery.RecordRun(new MasteryRunEvidence(
@@ -212,6 +214,7 @@ public partial class Home
     private async Task ReplayRunAsync()
     {
         if (summary is null) return;
+        await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
         activeRewardCache = false;
         summary = null;
@@ -337,6 +340,12 @@ public partial class Home
         CreditHunterExperience(reward.Experience);
         // Claimed rewards and the Atlas budget share one localStorage write, preventing double grants after refresh.
         await SaveArcaneBuildAsync();
+    }
+
+    private async Task TryPlayAudioAsync(string cue)
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgeAudio.play", CancellationToken.None, cue); }
+        catch (JSException) { /* Audio must never interrupt progression or gameplay. */ }
     }
 
     private async Task TryRecordPlaytestStartAsync()
