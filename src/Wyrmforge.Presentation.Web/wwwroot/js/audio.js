@@ -1,262 +1,322 @@
-// WyrmForge prototype audio. Original Web Audio synthesis: no binary downloads, attribution or game-state coupling.
+// WyrmForge audio runtime — sample playback, mix priorities and a small main-menu Sound Atelier.
+// No synthesis on the animation/gameplay hot path. Sound identity lives in sound-design.js.
 (() => {
-    const preferenceKey = 'wyrmforge.audio.enabled.v1';
-    const cooldowns = new Map();
+    const design = window.WyrmforgeSoundDesign;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const savedEnabledKey = 'wyrmforge.audio.enabled.v1';
+    const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1' };
+    const volumes = { ui: 0.44, combat: 0.56, moment: 0.82 };
+    const lastCue = new Map();
+    const variants = new Map();
+    const buffers = new Map();
+    const voices = { ui: 0, combat: 0, moment: 0 };
+    const activeVoices = { ui: [], combat: [], moment: [] };
+    const maxVoices = { ui: 2, combat: 5, moment: 3 };
     let enabled = true;
+    let unlocked = false;
     let context = null;
     let master = null;
-    let noiseBuffer = null;
-    let voices = 0;
-    let button = null;
+    let buses = null;
     let testButton = null;
-    let testStatus = null;
-    let diagnosticTimer = 0;
-    try { enabled = window.localStorage.getItem(preferenceKey) !== 'false'; } catch { /* Private mode. */ }
+    let toggleButton = null;
+    let labButton = null;
+    let lab = null;
+    let status = null;
+    let statusTimer = 0;
 
-    // iOS Safari's default ambient Web Audio session is inaudible while the iPhone is in Silent Mode.
-    // Ask for media playback explicitly before creating/resuming the context (WebKit 237322).
-    function configureAudioSession() {
-        try {
-            if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback';
-        } catch { /* Experimental browser API; continue with ordinary audio on unsupported browsers. */ }
+    function loadPreference(key) {
+        try { return window.localStorage.getItem(key); } catch { return null; }
+    }
+    function savePreference(key, value) {
+        try { window.localStorage.setItem(key, String(value)); } catch { /* Private browsing may disable storage. */ }
+    }
+    enabled = loadPreference(savedEnabledKey) !== 'false';
+    for (const group of Object.keys(volumes)) {
+        const saved = Number(loadPreference(volumeKeys[group]));
+        if (loadPreference(volumeKeys[group]) !== null && Number.isFinite(saved)) volumes[group] = Math.max(0, Math.min(1, saved));
     }
 
-    function ready() {
-        if (!enabled || !AudioContextClass) return null;
-        configureAudioSession();
+    function configureSession() {
+        try {
+            if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback';
+        } catch { /* Unsupported audio session APIs must not interrupt gameplay. */ }
+    }
+
+    function ensureContext() {
+        if (!AudioContextClass || !design) return null;
+        configureSession(); // Keep the iPhone Silent Mode fix from 0.0.107.
         try {
             if (!context) {
                 context = new AudioContextClass();
                 master = context.createGain();
-                master.gain.value = 0.50;
-                master.connect(context.destination);
+                master.gain.value = 0.62;
+                let destination = context.destination;
+                if (typeof context.createDynamicsCompressor === 'function') {
+                    const limiter = context.createDynamicsCompressor();
+                    limiter.threshold.value = -16;
+                    limiter.knee.value = 10;
+                    limiter.ratio.value = 3;
+                    limiter.attack.value = 0.004;
+                    limiter.release.value = 0.25;
+                    limiter.connect(destination);
+                    destination = limiter;
+                }
+                master.connect(destination);
+                buses = {};
+                for (const group of Object.keys(volumes)) {
+                    buses[group] = context.createGain();
+                    buses[group].gain.value = volumes[group];
+                    buses[group].connect(master);
+                }
             }
             if (context.state !== 'running' && context.state !== 'closed') void context.resume().catch(() => {});
             return context;
-        } catch {
+        } catch (error) {
+            console.warn('WyrmForge audio unavailable.', error);
             return null;
         }
     }
 
-    function unlock() { if (enabled) ready(); }
+    function unlock() {
+        if (!enabled) return;
+        unlocked = true;
+        ensureContext();
+    }
 
-    function reportAudioStatus(message) {
-        if (testStatus) testStatus.textContent = message;
+    function bufferFor(name, variant) {
+        const key = `${name}:${variant}`;
+        if (buffers.has(key)) return buffers.get(key);
+        const pcm = design.render(name, variant, context.sampleRate);
+        const buffer = context.createBuffer(1, pcm.length, context.sampleRate);
+        buffer.copyToChannel(pcm, 0);
+        buffers.set(key, buffer);
+        return buffer;
+    }
+
+    function play(name, preview = false) {
+        if (!enabled || !design?.palette[name]) return false;
+        if (!unlocked && !preview) return false;
+        const ctx = ensureContext();
+        if (!ctx || ctx.state === 'closed') return false;
+        const sound = design.palette[name];
+        const now = performance.now();
+        if (!preview && now - (lastCue.get(name) ?? -Infinity) < sound.cooldown) return false;
+        if (voices[sound.bus] >= maxVoices[sound.bus]) {
+            // Never let extra effects raise the peak; important moments may replace a less important voice.
+            const active = activeVoices[sound.bus];
+            const lowest = active.reduce((candidate, item) => !candidate || item.priority < candidate.priority ? item : candidate, null);
+            if (!lowest || lowest.priority >= sound.priority) return false;
+            try { lowest.source.stop(); } catch { /* Already stopped. */ }
+            lowest.release();
+        }
+
+        try {
+            const count = variants.get(name) ?? 0;
+            const variant = count % 3;
+            const source = ctx.createBufferSource();
+            source.buffer = bufferFor(name, variant);
+            source.playbackRate.value = [0.986, 1, 1.014][variant];
+            const gain = ctx.createGain();
+            const bus = buses[sound.bus];
+            gain.gain.value = sound.volume;
+            source.connect(gain);
+            gain.connect(bus);
+            let released = false;
+            const voice = {
+                source,
+                priority: sound.priority,
+                release() {
+                    if (released) return;
+                    released = true;
+                    voices[sound.bus] = Math.max(0, voices[sound.bus] - 1);
+                    const index = activeVoices[sound.bus].indexOf(voice);
+                    if (index !== -1) activeVoices[sound.bus].splice(index, 1);
+                    source.disconnect();
+                    gain.disconnect();
+                },
+            };
+            source.onended = voice.release;
+
+            if (sound.bus === 'moment') {
+                const at = ctx.currentTime;
+                const combatGain = buses.combat.gain;
+                if (typeof combatGain.setTargetAtTime === 'function') {
+                    combatGain.cancelScheduledValues(at);
+                    combatGain.setTargetAtTime(volumes.combat * 0.38, at, 0.035);
+                    combatGain.setTargetAtTime(volumes.combat, at + Math.max(0.25, sound.duration * 0.62), 0.15);
+                }
+            }
+
+            source.start();
+            voices[sound.bus]++;
+            activeVoices[sound.bus].push(voice);
+            variants.set(name, count + 1);
+            lastCue.set(name, now);
+            return true;
+        } catch (error) {
+            console.warn('WyrmForge sound cue failed:', name, error);
+            return false; // Gameplay must remain independent from sound.
+        }
+    }
+
+    function updateVolume(group, value) {
+        if (!Object.hasOwn(volumes, group)) return;
+        const next = Math.max(0, Math.min(1, Number(value) || 0));
+        volumes[group] = next;
+        savePreference(volumeKeys[group], next);
+        if (buses) {
+            const parameter = buses[group].gain;
+            if (context.state === 'running' && typeof parameter.setTargetAtTime === 'function') {
+                parameter.setTargetAtTime(next, context.currentTime, 0.015);
+            } else {
+                parameter.value = next;
+            }
+        }
+    }
+
+    function sync() {
+        if (toggleButton) {
+            toggleButton.textContent = enabled ? '♫ SFX ON' : '♪ SFX OFF';
+            toggleButton.setAttribute('aria-label', enabled ? 'Mute game sound effects' : 'Enable game sound effects');
+            toggleButton.setAttribute('aria-pressed', String(enabled));
+            toggleButton.title = enabled ? 'Mute sound effects' : 'Enable sound effects';
+        }
+        if (testButton) testButton.disabled = !enabled;
+    }
+
+    function setEnabled(value) {
+        enabled = Boolean(value);
+        savePreference(savedEnabledKey, enabled);
+        sync();
+        if (enabled) {
+            unlock();
+            play('ui', true);
+        }
+        if (status) status.textContent = enabled ? '' : 'SFX MUTED';
+        return enabled;
     }
 
     function testSound() {
         if (!enabled) setEnabled(true);
-        const ctx = ready(); // Still inside the trusted click event on iOS.
-        if (!ctx) {
-            reportAudioStatus('AUDIO UNAVAILABLE');
-            return;
-        }
-        // Schedule directly while the click has browser activation. Suspended contexts retain these notes until resumed.
-        // This is deliberately louder and longer than an in-game click so it is easy to verify on phone speakers.
-        note(523.25, 523.25, 0.38, 'sine', 0.65);
-        note(783.99, 783.99, 0.46, 'sine', 0.52, 0.18);
-        reportAudioStatus('CHECKING AUDIO…');
-        window.clearTimeout(diagnosticTimer);
-        diagnosticTimer = window.setTimeout(() => {
-            const mode = navigator.audioSession?.type ?? 'browser default';
-            reportAudioStatus(ctx.state === 'running' ? `AUDIO TEST SENT · ${mode}` : `AUDIO ${ctx.state.toUpperCase()} · ${mode}`);
-        }, 700);
+        unlock(); // A direct click creates/resumes the audio session before scheduling the sample.
+        const sent = play('upgrade-choice', true);
+        if (status) status.textContent = sent ? 'PLAYING ANCIENT RESONANCE…' : 'AUDIO UNAVAILABLE';
+        window.clearTimeout(statusTimer);
+        statusTimer = window.setTimeout(() => {
+            const session = navigator.audioSession?.type ?? 'browser default';
+            if (status) status.textContent = `${context?.state === 'running' ? 'AUDIO TEST SENT' : 'AUDIO ' + (context?.state ?? 'UNAVAILABLE').toUpperCase()} · ${session}`;
+        }, 650);
     }
 
-    function withSource(source, destination, start, duration) {
-        if (voices >= 18) return;
-        voices++;
-        source.connect(destination);
-        source.onended = () => {
-            voices = Math.max(0, voices - 1);
-            source.disconnect();
-            destination.disconnect();
-        };
-        source.start(start);
-        source.stop(start + duration + 0.03);
+    function makeButton(text, className, ariaLabel, action) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = className;
+        button.textContent = text;
+        button.setAttribute('aria-label', ariaLabel);
+        button.addEventListener('click', action);
+        return button;
     }
 
-    function note(startHz, endHz, duration, wave = 'sine', loudness = 0.25, delay = 0) {
-        const ctx = context;
-        if (!ctx || voices >= 18) return;
-        const start = ctx.currentTime + delay;
-        const osc = ctx.createOscillator();
-        const envelope = ctx.createGain();
-        osc.type = wave;
-        osc.frequency.setValueAtTime(Math.max(20, startHz), start);
-        osc.frequency.exponentialRampToValueAtTime(Math.max(20, endHz), start + duration);
-        envelope.gain.setValueAtTime(0.0001, start);
-        envelope.gain.exponentialRampToValueAtTime(Math.max(0.001, loudness), start + Math.min(0.018, duration * 0.25));
-        envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-        envelope.connect(master);
-        withSource(osc, envelope, start, duration);
+    function makeVolumeControl(group, label) {
+        const row = document.createElement('label');
+        row.className = 'wyrmforge-sound-volume';
+        const title = document.createElement('span');
+        title.textContent = label;
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.min = '0';
+        input.max = '100';
+        input.step = '5';
+        input.value = String(Math.round(volumes[group] * 100));
+        input.setAttribute('aria-label', `${label} volume`);
+        const value = document.createElement('output');
+        value.textContent = input.value + '%';
+        input.addEventListener('input', () => {
+            updateVolume(group, Number(input.value) / 100);
+            value.textContent = input.value + '%';
+        });
+        row.append(title, input, value);
+        return row;
     }
 
-    function noise(duration, cutoff = 900, loudness = 0.16, delay = 0) {
-        const ctx = context;
-        if (!ctx || voices >= 18) return;
-        if (!noiseBuffer) {
-            noiseBuffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 0.6), ctx.sampleRate);
-            const values = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < values.length; i++) values[i] = Math.random() * 2 - 1;
-        }
-        const start = ctx.currentTime + delay;
-        const source = ctx.createBufferSource();
-        source.buffer = noiseBuffer;
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = cutoff;
-        const envelope = ctx.createGain();
-        envelope.gain.setValueAtTime(0.0001, start);
-        envelope.gain.exponentialRampToValueAtTime(loudness, start + 0.008);
-        envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-        filter.connect(envelope);
-        envelope.connect(master);
-        withSource(source, filter, start, duration);
-    }
-
-    const effects = {
-        ui() { note(710, 560, 0.055, 'sine', 0.18); },
-        'hunt-start'() {
-            note(130, 85, 0.48, 'triangle', 0.32);
-            note(330, 440, 0.26, 'sine', 0.2, 0.12);
-            noise(0.35, 320, 0.11);
-        },
-        arcane() {
-            note(610, 255, 0.14, 'sine', 0.18);
-            note(920, 480, 0.09, 'triangle', 0.09);
-        },
-        fire() {
-            noise(0.16, 1900, 0.18);
-            note(215, 85, 0.17, 'sawtooth', 0.11);
-        },
-        frost() {
-            note(1200, 650, 0.21, 'sine', 0.17);
-            note(1740, 1020, 0.18, 'sine', 0.1, 0.025);
-        },
-        lightning() {
-            noise(0.095, 4200, 0.17);
-            note(1250, 280, 0.095, 'sawtooth', 0.1);
-        },
-        impact() {
-            noise(0.075, 850, 0.13);
-            note(145, 72, 0.085, 'triangle', 0.14);
-        },
-        'enemy-down'() {
-            note(240, 90, 0.14, 'triangle', 0.14);
-            noise(0.09, 520, 0.075);
-        },
-        hurt() {
-            note(180, 54, 0.28, 'sawtooth', 0.23);
-            noise(0.16, 480, 0.2);
-        },
-        'upgrade-open'() {
-            note(420, 640, 0.25, 'sine', 0.18);
-            note(630, 940, 0.3, 'sine', 0.15, 0.1);
-        },
-        'upgrade-choice'() {
-            note(500, 680, 0.19, 'triangle', 0.22);
-            note(750, 1140, 0.28, 'sine', 0.19, 0.1);
-        },
-        'power-burst'() {
-            noise(0.46, 1100, 0.31);
-            note(95, 36, 0.5, 'sawtooth', 0.28);
-            note(480, 1150, 0.35, 'sine', 0.17, 0.07);
-        },
-        'trail-clear'() {
-            note(330, 460, 0.24, 'sine', 0.19);
-            note(494, 720, 0.27, 'sine', 0.2, 0.16);
-        },
-        wyrm() {
-            note(110, 48, 0.7, 'sawtooth', 0.35);
-            noise(0.55, 370, 0.17);
-        },
-        victory() {
-            for (const [i, hz] of [440, 554, 659, 880].entries()) note(hz, hz * 1.01, 0.42, 'sine', 0.22, i * 0.14);
-        },
-        death() {
-            note(340, 120, 0.56, 'triangle', 0.27);
-            note(170, 55, 0.66, 'sawtooth', 0.13, 0.13);
-        },
-        reward() {
-            note(540, 840, 0.26, 'sine', 0.21);
-            note(820, 1230, 0.27, 'sine', 0.14, 0.11);
-        },
-    };
-    const intervals = { ui: 80, arcane: 250, fire: 250, frost: 250, lightning: 330, impact: 165, 'enemy-down': 280,
-        hurt: 550, 'power-burst': 750, 'upgrade-open': 550, 'trail-clear': 550, wyrm: 1500 };
-
-    function play(name) {
-        if (!enabled || !Object.hasOwn(effects, name)) return;
-        // Ignore automated gameplay cues until a real browser user gesture has activated audio.
-        if (!context || context.state !== 'running') return;
-        const now = performance.now();
-        if (now - (cooldowns.get(name) ?? -Infinity) < (intervals[name] ?? 120)) return;
-        cooldowns.set(name, now);
-        try { effects[name](); } catch (error) { console.warn('WyrmForge audio cue unavailable', error); }
-    }
-
-    function syncButton() {
-        if (!button) return;
-        button.textContent = enabled ? '♫ SFX ON' : '♪ SFX OFF';
-        button.setAttribute('aria-label', enabled ? 'Mute game sound effects' : 'Enable game sound effects');
-        button.setAttribute('aria-pressed', String(enabled));
-        button.title = enabled ? 'Mute sound effects' : 'Enable sound effects';
-        if (testButton) testButton.disabled = !enabled;
-    }
-
-    function setEnabled(next) {
-        enabled = Boolean(next);
-        try { window.localStorage.setItem(preferenceKey, String(enabled)); } catch { /* Still works in memory. */ }
-        syncButton();
-        reportAudioStatus(enabled ? '' : 'SFX MUTED');
-        if (enabled) {
+    function toggleLab() {
+        if (!lab) return;
+        const open = lab.hidden;
+        lab.hidden = !open;
+        labButton?.setAttribute('aria-expanded', String(open));
+        if (open) {
             unlock();
-            // Schedule on a gesture even if the context is still resuming.
-            if (context) note(710, 560, 0.11, 'sine', 0.25);
+            lab.querySelector('button')?.focus();
+        } else {
+            labButton?.focus();
         }
-        return enabled;
     }
 
-    function mountControl() {
-        if (button || !document.body) return;
+    function mountControls() {
+        if (toggleButton || !document.body) return;
         const controls = document.createElement('div');
         controls.className = 'wyrmforge-sound-controls';
         controls.setAttribute('aria-label', 'Sound effects controls');
 
-        testButton = document.createElement('button');
-        testButton.type = 'button';
-        testButton.className = 'wyrmforge-sound-test';
-        testButton.textContent = 'TEST ♪';
-        testButton.setAttribute('aria-label', 'Play sound test');
-        testButton.addEventListener('click', testSound);
+        lab = document.createElement('section');
+        lab.className = 'wyrmforge-sound-lab';
+        lab.hidden = true;
+        lab.setAttribute('role', 'dialog');
+        lab.setAttribute('aria-label', 'Sound Atelier');
+        const heading = document.createElement('h3');
+        heading.textContent = 'SOUND ATELIER';
+        const desc = document.createElement('p');
+        desc.textContent = 'Ancient Resonance · V1  —  preview the Wyrmrealm';
+        const samples = document.createElement('div');
+        samples.className = 'wyrmforge-sound-samples';
+        for (const name of design?.previewNames ?? []) {
+            const item = makeButton(design.palette[name].label, 'wyrmforge-sound-sample', `Preview ${name} sound`, () => {
+                unlock();
+                play(name, true);
+            });
+            samples.appendChild(item);
+        }
+        const levels = document.createElement('div');
+        levels.className = 'wyrmforge-sound-levels';
+        levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'));
+        const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
+        lab.append(heading, desc, samples, levels, close);
 
-        button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'wyrmforge-sound-toggle';
-        button.addEventListener('click', () => setEnabled(!enabled));
-
-        testStatus = document.createElement('span');
-        testStatus.className = 'wyrmforge-sound-status';
-        testStatus.setAttribute('role', 'status');
-        testStatus.setAttribute('aria-live', 'polite');
-        syncButton();
-        controls.append(testStatus, testButton, button);
+        status = document.createElement('span');
+        status.className = 'wyrmforge-sound-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        testButton = makeButton('TEST ♪', 'wyrmforge-sound-test', 'Play sound test', testSound);
+        labButton = makeButton('SOUNDS', 'wyrmforge-sound-lab-toggle', 'Open Sound Atelier', toggleLab);
+        labButton.setAttribute('aria-expanded', 'false');
+        toggleButton = makeButton('', 'wyrmforge-sound-toggle', 'Mute game sound effects', () => setEnabled(!enabled));
+        sync();
+        controls.append(lab, status, labButton, testButton, toggleButton);
         document.body.appendChild(controls);
     }
 
     document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
     document.addEventListener('touchend', unlock, { capture: true, passive: true });
     document.addEventListener('keydown', unlock, { capture: true });
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && enabled) configureAudioSession(); });
-    document.addEventListener('click', event => {
-        if (event.target instanceof Element && event.target.closest('button:not(.wyrmforge-sound-toggle)')) play('ui');
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && enabled && context) ensureContext();
     });
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountControl, { once: true });
-    else mountControl();
+    document.addEventListener('click', event => {
+        if (!event.target?.closest || document.querySelector('.game-screen')) return;
+        if (event.target.closest('button:not(.wyrmforge-sound-toggle):not(.wyrmforge-sound-test):not(.wyrmforge-sound-lab-toggle):not(.wyrmforge-sound-sample):not(.wyrmforge-sound-close)')) {
+            play('ui');
+        }
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && lab && !lab.hidden) toggleLab();
+    });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountControls, { once: true });
+    else mountControls();
 
-    window.wyrmforgeAudio = { play, setEnabled, testSound, isEnabled: () => enabled,
-        diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported' }) };
-
+    window.wyrmforgeAudio = {
+        play, setEnabled, testSound, isEnabled: () => enabled, updateVolume,
+        diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
+            identity: design?.identity ?? 'unavailable', voices: { ...voices } }),
+    };
 })();

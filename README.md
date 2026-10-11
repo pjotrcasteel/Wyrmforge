@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.108 — Ancient Resonance: first sound identity
+
+- Replace short oscillating beeps with a deterministic, layered **Ancient Resonance** palette: breath, stone, glass, restrained elemental energy and low, weighty Wyrm cues. No third-party copyrighted samples are bundled.
+- Preserve all existing combat/upgrade/hunt audio events and the iPhone Silent Mode playback fix. Original sampled waveforms are cached in Web Audio buffers, with three subtle repeat variations and controlled spectral brightness.
+- Prioritize important moments above repeated combat: cooldowns, per-bus voice limits, lightweight dynamic compression, moment ducking and independent saved Interface / Combat / Moments volume controls.
+- Add a main-menu **Sound Atelier** with 12 individually auditionable cues, plus the existing SFX mute and test-tone button. No additional in-combat buttons or tabs.
+- Keep the sonic palette modular so hand-recorded or professionally produced SFX can replace individual events without changing gameplay.
+
 ## Prototype 0.0.107 — iPhone Silent Mode audio fix
 
 - Set the supported browser AudioSession to `playback` before Web Audio starts, allowing demo SFX with the iPhone's Silent Mode enabled (Apple WebKit issue 237322).

@@ -52,6 +52,33 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_SoundAtelier_PreviewsPaletteAndRemembersMix()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var open = Page.GetByRole(AriaRole.Button, new() { Name = "Open Sound Atelier" });
+        await open.ClickAsync();
+
+        var atelier = Page.GetByRole(AriaRole.Dialog, new() { Name = "Sound Atelier" });
+        await Expect(atelier).ToBeVisibleAsync();
+        await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" })).ToBeVisibleAsync();
+        await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" }).ClickAsync();
+        Assert.AreEqual("Ancient Resonance", await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().identity"));
+
+        var combat = atelier.GetByRole(AriaRole.Slider, new() { Name = "Combat volume" });
+        await combat.FocusAsync();
+        await combat.PressAsync("Home");
+        for (var i = 0; i < 6; i++) await combat.PressAsync("ArrowRight");
+        Assert.AreEqual("0.3", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.audio.combat.v1')"));
+        await atelier.GetByRole(AriaRole.Button, new() { Name = "Close Sound Atelier" }).ClickAsync();
+        await Expect(atelier).ToBeHiddenAsync();
+
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Open Sound Atelier" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Slider, new() { Name = "Combat volume" })).ToHaveValueAsync("30");
+    }
+
+    [TestMethod]
     public async Task Mobile_FirstHuntComplete_UnlocksOnePointCodexAndPersistsLocally()
     {
         await Page.SetViewportSizeAsync(390, 844);
