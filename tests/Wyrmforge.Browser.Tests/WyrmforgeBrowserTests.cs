@@ -66,7 +66,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("Ancient Resonance", await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().identity"));
 
         var combat = atelier.GetByRole(AriaRole.Slider, new() { Name = "Combat volume" });
-        await combat.FillAsync("30");
+        await combat.FocusAsync();
+        await combat.PressAsync("Home");
+        for (var i = 0; i < 6; i++) await combat.PressAsync("ArrowRight");
         Assert.AreEqual("0.3", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.audio.combat.v1')"));
         await atelier.GetByRole(AriaRole.Button, new() { Name = "Close Sound Atelier" }).ClickAsync();
         await Expect(atelier).ToBeHiddenAsync();
