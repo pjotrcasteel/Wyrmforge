@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "music": {
+    "menu": "music-osare.ogg",
+    "hunt": "music-cave.ogg"
+  },
+  "cues": {
+    "arcane": {
+      "file": "arcane.ogg",
+      "source": "spell_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "086e18c4d27e8064bffd0f55d29d0a3abac1aadd157acdd1c081d42390aa1504"
+    },
+    "fire": {
+      "file": "fire.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Fireball Launch_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "0a01f5ae4f820a85246c89609117d3fe6f5da8b70e67f11b7575daecdf183265"
+    },
+    "frost": {
+      "file": "frost.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Ice Shard Projectile_Launch_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "5941bc67d2d34592b381c1fbdf85ce04c6f4080e833748eaf38c61fc5ac58412"
+    },
+    "lightning": {
+      "file": "lightning.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Electric Spell_Launch_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "42102a010b32f596ef99cb3b72cd5ba0f461ead65ba65da005a09b018ecb838e"
+    },
+    "impact": {
+      "file": "impact.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Heavy Sword_Hit_Metal_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "48c34b2b1a7591d4cab89b580b158b7b4e5564875c11df14642054ac9aabe486"
+    },
+    "enemy-down": {
+      "file": "enemy-down.ogg",
+      "source": "creature_die_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "02240650b039506c227e40dae685e30c7d29ade0ce31b88045e90d8b9b53d176"
+    },
+    "hurt": {
+      "file": "hurt.ogg",
+      "source": "creature_hurt_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "ca1c8fcb7f34edc656b9ea7d4c6f0cf543f653fb2ea3afca68c817e9863d2fec"
+    },
+    "wyrm": {
+      "file": "wyrm.ogg",
+      "source": "creature_roar_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "9c488dfb88c1bc81b1f1106f82587b20f3b2227304cf6d4dadd50f00d8682f76"
+    },
+    "ui": {
+      "file": "ui.ogg",
+      "source": "item_stone_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "c77aeea42aadf15ad22ef781fff2a11e0161045b1364440e079b42a6fab86c86"
+    },
+    "upgrade-open": {
+      "file": "upgrade-open.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "b551e5db1e78924ffa30e95d58ee41a41366eb833396938041ef4511450bf165"
+    },
+    "upgrade-choice": {
+      "file": "upgrade-choice.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Healing Chime_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "c32b0996187db3cfce3fad8711e3fbdf97003e3963ccec74f8d2490c654b3a0b"
+    },
+    "power-burst": {
+      "file": "power-burst.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Electric Spell_Hit_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "eb627077d2543c30aedfbd1fb8136f41faff0c2b4b11e08757b27dbdef2a9695"
+    },
+    "trail-clear": {
+      "file": "trail-clear.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Healing Chime_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "fca02e0b43dadd645ecfffc3096e0a156be876451ec6503d30eb923b1edb4f00"
+    },
+    "reward": {
+      "file": "reward.ogg",
+      "source": "item_gem_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "886360b5d23fc6273386ca138ad8cd33ee132c8705ddcdbee065b048e451faab"
+    },
+    "hunt-start": {
+      "file": "hunt-start.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "e28e5e95115db40395486b933b9a9cb401d86c95b8db779555093858eafed16d"
+    },
+    "victory": {
+      "file": "victory.ogg",
+      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Healing Chime_01.wav",
+      "library": "fantasy",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "sha256": "021eeffdfbd4a9ac16aa84f28788de257b420243ed2c05a36bbe16f7241aed42"
+    },
+    "death": {
+      "file": "death.ogg",
+      "source": "creature_die_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "0b57a16ceefa6c2cd3798bf01f1d2a7821ced5377d1ec64652f3d1bafd5cbc61"
+    }
+  },
+  "sources": [
+    {
+      "key": "osare",
+      "url": "https://opengameart.org/sites/default/files/42b4b.ogg",
+      "sourcePage": "https://opengameart.org/content/osare-unrest-theme",
+      "author": "Brandon Morris (Augmentality)",
+      "license": "CC0",
+      "originalSha256": "8ef0ceec4c70e5c2b8fadad32f04e73c6af1ab6365e4d26b9d08712dc869184d"
+    },
+    {
+      "key": "cave",
+      "url": "https://opengameart.org/sites/default/files/cave%20themeb4.ogg",
+      "sourcePage": "https://opengameart.org/content/cave-theme",
+      "author": "Brandon Morris",
+      "license": "CC0",
+      "originalSha256": "1ddf7a0845c808136edfda7ea829e48fa2b7c57793e008d706dadbb5917dff9c"
+    },
+    {
+      "key": "fantasy",
+      "url": "https://opengameart.org/sites/default/files/fantasy_sfx_pack_vol_1.7z",
+      "sourcePage": "https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1",
+      "author": "JC Sounds",
+      "license": "CC-BY-4.0",
+      "originalSha256": "7ae22fe73c05e2725db32f61a3bd391e05dbc2a46f8ed0b18fa0a0fa0bf198f4"
+    },
+    {
+      "key": "rpg",
+      "url": "https://opengameart.org/sites/default/files/80-CC0-RPG-SFX_0.zip",
+      "sourcePage": "https://opengameart.org/content/80-cc0-rpg-sfx",
+      "author": "rubberduck",
+      "license": "CC0",
+      "originalSha256": "1c2f06ff4e8563b5b8b745b23cf213c1474142a69bb82bd8f5e10d9b3f7a7bbd"
+    }
+  ],
+  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)"
+}
