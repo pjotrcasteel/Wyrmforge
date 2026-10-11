@@ -24,6 +24,12 @@ SOURCES = {
     "fantasy": ("https://opengameart.org/sites/default/files/fantasy_sfx_pack_vol_1.7z", "CC-BY-4.0", "JC Sounds", "https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1"),
     "rpg": ("https://opengameart.org/sites/default/files/80-CC0-RPG-SFX_0.zip", "CC0", "rubberduck", "https://opengameart.org/content/80-cc0-rpg-sfx"),
 }
+EXPECTED_SOURCE_SHA256 = {
+    "osare": "8ef0ceec4c70e5c2b8fadad32f04e73c6af1ab6365e4d26b9d08712dc869184d",
+    "cave": "1ddf7a0845c808136edfda7ea829e48fa2b7c57793e008d706dadbb5917dff9c",
+    "fantasy": "7ae22fe73c05e2725db32f61a3bd391e05dbc2a46f8ed0b18fa0a0fa0bf198f4",
+    "rpg": "1c2f06ff4e8563b5b8b745b23cf213c1474142a69bb82bd8f5e10d9b3f7a7bbd",
+}
 AUDIO_SUFFIXES = {".ogg", ".wav", ".mp3", ".flac", ".aif", ".aiff"}
 # Match assets by semantic filename, not by nondeterministic ZIP archive order.
 CUES = {
@@ -116,6 +122,8 @@ def main() -> None:
         for key, (url, license_id, creator, page) in SOURCES.items():
             archive = base / (key + (".7z" if key == "fantasy" else ".zip" if key == "rpg" else ".ogg"))
             sha[key] = download(url, archive)
+            if sha[key] != EXPECTED_SOURCE_SHA256[key]:
+                raise ValueError(f"Source {key} changed after license review; re-audit and update pinned hash")
             provenance.append({"key": key, "url": url, "sourcePage": page, "author": creator,
                                "license": license_id, "originalSha256": sha[key]})
             if key in ("rpg", "fantasy"):
