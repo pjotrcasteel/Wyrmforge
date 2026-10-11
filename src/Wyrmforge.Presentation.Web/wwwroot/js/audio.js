@@ -60,7 +60,7 @@
         window.clearTimeout(diagnosticTimer);
         diagnosticTimer = window.setTimeout(() => {
             const mode = navigator.audioSession?.type ?? 'browser default';
-            reportAudioStatus(ctx.state === 'running' ? `TEST SENT · ${mode}` : `AUDIO ${ctx.state.toUpperCase()} · ${mode}`);
+            reportAudioStatus(ctx.state === 'running' ? `AUDIO TEST SENT · ${mode}` : `AUDIO ${ctx.state.toUpperCase()} · ${mode}`);
         }, 700);
     }
 
