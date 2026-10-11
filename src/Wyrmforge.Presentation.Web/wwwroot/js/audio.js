@@ -9,18 +9,30 @@
     let noiseBuffer = null;
     let voices = 0;
     let button = null;
+    let testButton = null;
+    let testStatus = null;
+    let diagnosticTimer = 0;
     try { enabled = window.localStorage.getItem(preferenceKey) !== 'false'; } catch { /* Private mode. */ }
+
+    // iOS Safari's default ambient Web Audio session is inaudible while the iPhone is in Silent Mode.
+    // Ask for media playback explicitly before creating/resuming the context (WebKit 237322).
+    function configureAudioSession() {
+        try {
+            if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback';
+        } catch { /* Experimental browser API; continue with ordinary audio on unsupported browsers. */ }
+    }
 
     function ready() {
         if (!enabled || !AudioContextClass) return null;
+        configureAudioSession();
         try {
             if (!context) {
                 context = new AudioContextClass();
                 master = context.createGain();
-                master.gain.value = 0.32;
+                master.gain.value = 0.50;
                 master.connect(context.destination);
             }
-            if (context.state === 'suspended') void context.resume().catch(() => {});
+            if (context.state !== 'running' && context.state !== 'closed') void context.resume().catch(() => {});
             return context;
         } catch {
             return null;
@@ -28,6 +40,29 @@
     }
 
     function unlock() { if (enabled) ready(); }
+
+    function reportAudioStatus(message) {
+        if (testStatus) testStatus.textContent = message;
+    }
+
+    function testSound() {
+        if (!enabled) setEnabled(true);
+        const ctx = ready(); // Still inside the trusted click event on iOS.
+        if (!ctx) {
+            reportAudioStatus('AUDIO UNAVAILABLE');
+            return;
+        }
+        // Schedule directly while the click has browser activation. Suspended contexts retain these notes until resumed.
+        // This is deliberately louder and longer than an in-game click so it is easy to verify on phone speakers.
+        note(523.25, 523.25, 0.38, 'sine', 0.65);
+        note(783.99, 783.99, 0.46, 'sine', 0.52, 0.18);
+        reportAudioStatus('CHECKING AUDIO…');
+        window.clearTimeout(diagnosticTimer);
+        diagnosticTimer = window.setTimeout(() => {
+            const mode = navigator.audioSession?.type ?? 'browser default';
+            reportAudioStatus(ctx.state === 'running' ? `AUDIO TEST SENT · ${mode}` : `AUDIO ${ctx.state.toUpperCase()} · ${mode}`);
+        }, 700);
+    }
 
     function withSource(source, destination, start, duration) {
         if (voices >= 18) return;
@@ -168,36 +203,60 @@
         button.setAttribute('aria-label', enabled ? 'Mute game sound effects' : 'Enable game sound effects');
         button.setAttribute('aria-pressed', String(enabled));
         button.title = enabled ? 'Mute sound effects' : 'Enable sound effects';
+        if (testButton) testButton.disabled = !enabled;
     }
 
     function setEnabled(next) {
         enabled = Boolean(next);
         try { window.localStorage.setItem(preferenceKey, String(enabled)); } catch { /* Still works in memory. */ }
         syncButton();
+        reportAudioStatus(enabled ? '' : 'SFX MUTED');
         if (enabled) {
             unlock();
-            play('ui');
+            // Schedule on a gesture even if the context is still resuming.
+            if (context) note(710, 560, 0.11, 'sine', 0.25);
         }
         return enabled;
     }
 
     function mountControl() {
         if (button || !document.body) return;
+        const controls = document.createElement('div');
+        controls.className = 'wyrmforge-sound-controls';
+        controls.setAttribute('aria-label', 'Sound effects controls');
+
+        testButton = document.createElement('button');
+        testButton.type = 'button';
+        testButton.className = 'wyrmforge-sound-test';
+        testButton.textContent = 'TEST ♪';
+        testButton.setAttribute('aria-label', 'Play sound test');
+        testButton.addEventListener('click', testSound);
+
         button = document.createElement('button');
         button.type = 'button';
         button.className = 'wyrmforge-sound-toggle';
         button.addEventListener('click', () => setEnabled(!enabled));
+
+        testStatus = document.createElement('span');
+        testStatus.className = 'wyrmforge-sound-status';
+        testStatus.setAttribute('role', 'status');
+        testStatus.setAttribute('aria-live', 'polite');
         syncButton();
-        document.body.appendChild(button);
+        controls.append(testStatus, testButton, button);
+        document.body.appendChild(controls);
     }
 
     document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    document.addEventListener('touchend', unlock, { capture: true, passive: true });
     document.addEventListener('keydown', unlock, { capture: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && enabled) configureAudioSession(); });
     document.addEventListener('click', event => {
         if (event.target instanceof Element && event.target.closest('button:not(.wyrmforge-sound-toggle)')) play('ui');
     });
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountControl, { once: true });
     else mountControl();
 
-    window.wyrmforgeAudio = { play, setEnabled, isEnabled: () => enabled };
+    window.wyrmforgeAudio = { play, setEnabled, testSound, isEnabled: () => enabled,
+        diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported' }) };
+
 })();

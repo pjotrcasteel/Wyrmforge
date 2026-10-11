@@ -24,7 +24,31 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_SoundTest_ActivatesAudioAndPersistsMutePreference()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var test = Page.GetByRole(AriaRole.Button, new() { Name = "Play sound test" });
+        var toggle = Page.GetByRole(AriaRole.Button, new() { Name = "Mute game sound effects" });
+        await Expect(test).ToBeVisibleAsync();
+        await Expect(toggle).ToBeVisibleAsync();
+
+        await test.ClickAsync();
+        await Expect(Page.Locator(".wyrmforge-sound-status")).ToContainTextAsync("AUDIO");
+        var status = await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().state");
+        Assert.AreNotEqual("uninitialized", status, "Sound test must create a real Web Audio context from a click.");
+
+        await toggle.ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Enable game sound effects" })).ToBeVisibleAsync();
+        await Expect(test).ToBeDisabledAsync();
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Enable game sound effects" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Play sound test" })).ToBeDisabledAsync();
     }
 
     [TestMethod]

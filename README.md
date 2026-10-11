@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.107 — iPhone Silent Mode audio fix
+
+- Set the supported browser AudioSession to `playback` before Web Audio starts, allowing demo SFX with the iPhone's Silent Mode enabled (Apple WebKit issue 237322).
+- Give testers a dedicated `TEST ♪` button next to the saved sound preference. Test tones are scheduled directly on tap; the small status label reports whether the browser audio context is running.
+- Retry browser activation after touch, keyboard and focus restoration. Unsupported AudioSession implementations keep their standard audio behavior.
+
 ## Prototype 0.0.106 — Demo sound design
 
 - Original, lightweight Web Audio sound effects for four spell schools, impact and kills, taking damage, opening/choosing upgrades, trail clears, the upgrade power burst, Wyrm appearances, hunt start and run outcomes.
