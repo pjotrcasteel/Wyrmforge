@@ -546,7 +546,7 @@
         const heading = document.createElement('h3');
         heading.textContent = 'SOUND ATELIER';
         const desc = document.createElement('p');
-        desc.textContent = 'Recorded dark fantasy · human-made spell effects and music';
+        desc.textContent = 'Recorded dark fantasy · layered spells, natural tails and a continuous soundtrack';
         const samples = document.createElement('div');
         samples.className = 'wyrmforge-sound-samples';
         for (const name of design?.previewNames ?? []) {
@@ -556,6 +556,12 @@
             });
             samples.appendChild(item);
         }
+        const hearMusic = makeButton('HEAR SOUNDTRACK', 'wyrmforge-sound-close', 'Start and preview soundtrack', () => {
+            unlock();
+            startMusicFromGesture();
+            syncMusic();
+            if (status) status.textContent = musicIsPlaying(currentMusic ?? 'menu') ? 'SOUNDTRACK PLAYING' : 'SOUNDTRACK STARTING…';
+        });
         const levels = document.createElement('div');
         levels.className = 'wyrmforge-sound-levels';
         levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'));
@@ -568,7 +574,7 @@
         creditLink.target = '_blank';
         creditLink.rel = 'noopener noreferrer';
         credit.append(' ', creditLink);
-        lab.append(heading, desc, samples, levels, credit, close);
+        lab.append(heading, desc, hearMusic, samples, levels, credit, close);
 
         status = document.createElement('span');
         status.className = 'wyrmforge-sound-status';
