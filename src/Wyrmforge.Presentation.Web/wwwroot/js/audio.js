@@ -649,7 +649,7 @@
     window.wyrmforgeAudio = {
         play, setEnabled, testSound, isEnabled: () => enabled, updateVolume,
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
-            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', music: currentMusic,
+            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', audioRevision, music: currentMusic,
             musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
             recorded: Boolean(recordedManifest), voices: { ...voices } }),
     };
