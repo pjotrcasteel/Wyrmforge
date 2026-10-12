@@ -5,7 +5,7 @@
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const savedEnabledKey = 'wyrmforge.audio.enabled.v1';
     const volumeKeys = { ui: 'wyrmforge.audio.ui.v1', combat: 'wyrmforge.audio.combat.v1', moment: 'wyrmforge.audio.moment.v1', music: 'wyrmforge.audio.music.v1' };
-    const volumes = { ui: 0.40, combat: 0.53, moment: 0.72, music: 0.33 };
+    const volumes = { ui: 0.32, combat: 0.36, moment: 0.69, music: 0.66 };
     const lastCue = new Map();
     const variants = new Map();
     const buffers = new Map();
@@ -29,6 +29,8 @@
     let currentMusic = null;
     let fadeGeneration = 0;
     let wantedMusic = null;
+    let recentSpell = null;
+    const spellSchools = new Set(['arcane', 'fire', 'frost', 'lightning']);
 
     function loadPreference(key) {
         try { return window.localStorage.getItem(key); } catch { return null; }
@@ -87,6 +89,7 @@
         if (!enabled) return;
         unlocked = true;
         ensureContext();
+        startMusicFromGesture();
         syncMusic();
     }
 
@@ -105,6 +108,7 @@
                 !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
             recordedManifest = manifest;
             if (status) status.textContent = 'RECORDED AUDIO READY';
+            startMusicFromGesture(); // May be blocked outside a gesture; the next tap retries both tracks.
             syncMusic();
         }).catch(error => {
             console.warn('Recorded WyrmForge audio not yet installed:', error);
@@ -162,60 +166,122 @@
         return true;
     }
 
-    function musicPlayer(kind) {
-        if (musicPlayers.has(kind)) return musicPlayers.get(kind);
-        if (typeof window.Audio !== 'function' || !recordedManifest?.music?.[kind]) return null;
-        const player = new window.Audio(assetUrl(recordedManifest.music[kind]));
-        player.preload = 'none';
-        player.loop = true;
-        player.volume = 0;
-        musicPlayers.set(kind, player);
-        return player;
-    }
 
-    function stopMusic() {
-        fadeGeneration++;
-        for (const player of musicPlayers.values()) {
-            player.pause();
+    // Both source elements begin inside one real user gesture and remain playing at zero gain
+    // when off-screen. iOS Safari cannot reliably start the next track in a later async
+    // MutationObserver or Promise callback. The shared Web Audio mixer owns the fades.
+    function musicTrack(kind) {
+        if (musicPlayers.has(kind)) return musicPlayers.get(kind);
+        if (!recordedManifest?.music?.[kind] || typeof window.Audio !== 'function' || !context) return null;
+        const player = new window.Audio(assetUrl(recordedManifest.music[kind]));
+        player.loop = true;
+        player.preload = 'auto';
+        let gain = null;
+        if (typeof context.createMediaElementSource === 'function') {
+            const source = context.createMediaElementSource(player);
+            gain = context.createGain();
+            gain.gain.value = 0;
+            source.connect(gain);
+            gain.connect(buses.music);
+            player.volume = 1; // Safari ignores or limits HTMLAudioElement.volume. Web Audio gain is authoritative.
+        } else {
             player.volume = 0;
         }
-        currentMusic = null;
+        const track = { kind, player, gain, level: 0, starting: false };
+        musicPlayers.set(kind, track);
+        return track;
+    }
+
+    function setMusicLevel(track, value) {
+        if (!track) return;
+        const level = Math.max(0, Math.min(1, value));
+        track.level = level;
+        if (track.gain) {
+            track.gain.gain.value = level * 0.82;
+        } else {
+            track.player.volume = level * volumes.music * 0.82;
+        }
+    }
+
+    function musicIsPlaying(kind) {
+        const track = musicPlayers.get(kind);
+        return Boolean(track && !track.player.paused);
+    }
+
+    function startMusicFromGesture() {
+        if (!recordedManifest || !enabled || !context || !unlocked || document.hidden) return;
+        for (const kind of ['menu', 'hunt']) {
+            const track = musicTrack(kind);
+            if (!track || !track.player.paused || track.starting) continue;
+            track.starting = true;
+            // IMPORTANT: call HTMLMediaElement.play() synchronously within pointerdown/keydown.
+            // Do not await a file fetch or media loading before this call.
+            try {
+                const result = track.player.play();
+                Promise.resolve(result).then(() => {
+                    track.starting = false;
+                    syncMusic();
+                }).catch(error => {
+                    track.starting = false;
+                    console.debug('WyrmForge music awaits another user gesture', error);
+                });
+            } catch (error) {
+                track.starting = false;
+                console.debug('WyrmForge music activation unavailable', error);
+            }
+        }
+    }
+
+    function fadeMusicOut(duration = 500) {
+        const generation = ++fadeGeneration;
+        const tracks = [...musicPlayers.values()];
+        const from = tracks.map(t => t.level);
+        const started = performance.now();
+        const frame = now => {
+            if (generation !== fadeGeneration) return;
+            const fraction = Math.max(0, Math.min(1, (now - started) / duration));
+            for (let i = 0; i < tracks.length; i++) setMusicLevel(tracks[i], from[i] * (1 - fraction));
+            if (fraction < 1 && typeof window.requestAnimationFrame === 'function') {
+                window.requestAnimationFrame(frame);
+            } else {
+                for (const track of tracks) track.player.pause();
+                currentMusic = null;
+            }
+        };
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(frame);
+        else {
+            for (const track of tracks) {
+                setMusicLevel(track, 0);
+                track.player.pause();
+            }
+            currentMusic = null;
+        }
     }
 
     function syncMusic() {
-        if (!recordedManifest || !enabled || !unlocked || typeof window.Audio !== 'function') {
-            if (currentMusic && !enabled) stopMusic();
-            return;
-        }
+        if (!recordedManifest || !enabled || !unlocked || document.hidden || !context) return;
         const desired = document.querySelector?.('.game-screen') ? 'hunt' : 'menu';
-        if (currentMusic === desired) return;
-        const next = musicPlayer(desired);
-        if (!next) return;
-        const previous = currentMusic ? musicPlayer(currentMusic) : null;
+        if (desired === currentMusic && musicIsPlaying(desired)) return;
+        const previous = currentMusic;
         currentMusic = desired;
         const generation = ++fadeGeneration;
         const started = performance.now();
-        // Start new media from an already unlocked context; rejected autoplay is retried on the next gesture.
-        void next.play().catch(error => {
-            currentMusic = null;
-            console.debug('Music awaits user interaction:', error);
-        });
-        function fade(now) {
-            if (generation !== fadeGeneration || !enabled) return;
-            const progress = Math.max(0, Math.min(1, (now - started) / 5000));
-            const musicLevel = volumes.music * 0.52;
-            next.volume = Math.min(1, musicLevel * Math.sin(progress * Math.PI / 2));
-            if (previous) previous.volume = Math.min(1, musicLevel * Math.cos(progress * Math.PI / 2));
-            if (progress < 1) {
-                window.requestAnimationFrame(fade);
-            } else if (previous && previous !== next) {
-                previous.pause();
-                previous.volume = 0;
-                previous.currentTime = 0;
-            }
-        }
-        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(fade);
-        else next.volume = volumes.music * 0.52;
+        const menu = musicTrack('menu'), hunt = musicTrack('hunt');
+        if (!menu || !hunt) return;
+        const tracks = [menu, hunt];
+        const initial = tracks.map(t => t.level);
+        const targets = [desired === 'menu' ? 1 : 0, desired === 'hunt' ? 1 : 0];
+        // Five-second equal-power crossfade, with a shorter recovery from browser suspension.
+        const duration = previous === null ? 1800 : 4800;
+        const frame = now => {
+            if (generation !== fadeGeneration || !enabled || document.hidden) return;
+            const u = Math.max(0, Math.min(1, (now - started) / duration));
+            const eased = u * u * (3 - 2 * u);
+            tracks.forEach((track, i) => setMusicLevel(track, initial[i] + (targets[i] - initial[i]) * eased));
+            if (u < 1 && typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(frame);
+        };
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(frame);
+        else tracks.forEach((track, i) => setMusicLevel(track, targets[i]));
     }
 
     function observeMusicState() {
@@ -315,10 +381,8 @@
         volumes[group] = next;
         savePreference(volumeKeys[group], next);
         if (group === 'music') {
-            if (currentMusic) {
-                const player = musicPlayers.get(currentMusic);
-                if (player) player.volume = next * 0.52;
-            }
+            if (buses?.music) buses.music.gain.value = next;
+            for (const track of musicPlayers.values()) if (!track.gain) setMusicLevel(track, track.level);
             return;
         }
         if (buses) {
@@ -349,7 +413,7 @@
             unlock();
             play('ui', true);
         } else {
-            stopMusic();
+            fadeMusicOut(420);
         }
         if (status) status.textContent = enabled ? '' : 'SFX MUTED';
         return enabled;
@@ -470,10 +534,12 @@
     document.addEventListener('keydown', unlock, { capture: true });
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            for (const track of musicPlayers.values()) track.pause();
+            for (const track of musicPlayers.values()) track.player.pause();
+            fadeGeneration++;
             currentMusic = null;
         } else if (enabled) {
             if (context) ensureContext();
+            // A new direct tap may be required by iOS following suspension.
             syncMusic();
         }
     });
@@ -492,6 +558,8 @@
     window.wyrmforgeAudio = {
         play, setEnabled, testSound, isEnabled: () => enabled, updateVolume,
         diagnostics: () => ({ enabled, state: context?.state ?? 'uninitialized', session: navigator.audioSession?.type ?? 'unsupported',
-            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', music: currentMusic, recorded: Boolean(recordedManifest), voices: { ...voices } }),
+            identity: recordedManifest ? 'Recorded Dark Fantasy' : 'recordings-loading', music: currentMusic,
+            musicPlaying: currentMusic ? musicIsPlaying(currentMusic) : false, musicTracks: [...musicPlayers.values()].map(track => ({ kind: track.kind, paused: track.player.paused, level: track.level })),
+            recorded: Boolean(recordedManifest), voices: { ...voices } }),
     };
 })();
