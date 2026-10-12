@@ -96,7 +96,12 @@
 
     // Files are imported, verified and committed by tools/audio/import_licensed_audio.py.
     // No hotlinking to third-party media. Manifest absence is silent rather than playing the rejected synthesizer.
-    const assetUrl = name => new URL('audio/recorded/' + name, document.baseURI).href;
+    const assetUrl = name => {
+        const url = new URL('audio/recorded/' + name, document.baseURI);
+        // A different imported pack revision must not reuse stale iPhone Safari cache entries.
+        url.searchParams.set('pack', '2');
+        return url.href;
+    };
 
     function loadManifest() {
         if (typeof fetch !== 'function' || !document.baseURI) return;
@@ -104,7 +109,7 @@
             if (!response.ok) throw new Error('Recorded audio pack unavailable: ' + response.status);
             return response.json();
         }).then(manifest => {
-            if (!manifest.cues?.arcane || !manifest.cues?.fire || !manifest.cues?.frost || !manifest.cues?.lightning ||
+            if (manifest.version !== 2 || !manifest.cues?.arcane?.variants?.length || !manifest.cues?.fire?.variants?.length || !manifest.cues?.frost?.variants?.length || !manifest.cues?.lightning?.variants?.length ||
                 !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
             recordedManifest = manifest;
             if (status) status.textContent = 'RECORDED AUDIO READY';
