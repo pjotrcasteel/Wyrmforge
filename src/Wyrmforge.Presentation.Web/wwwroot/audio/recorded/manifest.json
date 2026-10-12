@@ -19,7 +19,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "3edf3c5551ba382dc29bf8866b4faf99ffd84a38f1f0ee16cb0ed705fcb4b048"
+          "sha256": "4429a7e6adbc1e174ccf115c90ff4cf288059e35a25cbbdecf0b12be0d93ca60"
         },
         {
           "file": "arcane-cast-2.ogg",
@@ -27,7 +27,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "57fd09c10878600434b5d3ec3e4361d77d2ce1a8d3c028d2690b4659809b08b7"
+          "sha256": "606beac04c4d1fe4d5a450df333333e281d082ba5c5b24702c2681694f97c46e"
         },
         {
           "file": "arcane-cast-3.ogg",
@@ -35,7 +35,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "f742bf2312ae1c0d67c35eb90bcc57faa1b6bbb02fb26a968dac20dd61e49c05"
+          "sha256": "e6e910b9227685f57511c05061c71b4c5d28c345d3086d716964ef0a6737c9f7"
         }
       ],
       "hitVariants": [
@@ -45,7 +45,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "408a4f74090dc4679d013354582f8641a34ffdbddb4d25e805a8f33ce86ab21b"
+          "sha256": "f41ccd8adecb663a29c4cdec8e21ed62a654b3cf42e3eaf3504d7b7f569bd212"
         },
         {
           "file": "arcane-hit-2.ogg",
@@ -53,7 +53,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "84cd4640ab785bd0bfd086d6184e9022a4b65a9abf7ed950e5cdec04c5bfc9a0"
+          "sha256": "5bcb6344c12d47c3742c6843041c731333016833023dad428eb5e83cec1cd0eb"
         }
       ],
       "buildup": {
@@ -62,7 +62,7 @@
         "library": "fantasy",
         "author": "JC Sounds",
         "license": "CC-BY-4.0",
-        "sha256": "71957940d02b6d938b3fcd6e8d129427200ecbf2e71cce55f0fcca37e80fec79"
+        "sha256": "bfe01446bd4ac73b8e27941700d04bc0894310f22e99518769bd3670db282ec3"
       }
     },
     "fire": {
@@ -79,7 +79,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "dbfbace7a598af02feebebd69599c5f037fe980d95375c529f2f3805c0fd5bb4"
+          "sha256": "41751f7403185e319bce061511f3e7cfa8bc208f5450ea1a47f4039ea7e8f0db"
         },
         {
           "file": "fire-cast-2.ogg",
@@ -87,7 +87,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "24e5a6f81cde649b7da3dacf32619eabda05c2ff3523f0d2cc54c97220388ed0"
+          "sha256": "fd6dd7ae8603c6faaf8dd06ea050475fbf08da4235df53f4930f777919cbdf01"
         },
         {
           "file": "fire-cast-3.ogg",
@@ -95,7 +95,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "cf2b56e90d5dba85fb4b92d1658e35a46e1bf2e1b1c1e530aaae5cee34e3e7cc"
+          "sha256": "9a0e07516d63f7eab3d7c6193e84d95c635bc3ae35740d268a98d102cf6760ef"
         }
       ],
       "hitVariants": [
@@ -105,7 +105,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "0b95d2f3b2152869efef8746b3123f70e82a4cb0c6bef7bf1f2ea989435d2384"
+          "sha256": "6e395eb0e648ab97f01c2dd79fc967d28f13611cbd8fdb6343dd52b246e63d49"
         },
         {
           "file": "fire-hit-2.ogg",
@@ -113,7 +113,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "b0411bf1c92b677359d945313ea662117acb37a764ffdd9695d4938d028b3b95"
+          "sha256": "5306149dbf30a0573a1599e158c65df04ceeeaea90b31be66cf56bb6130a2277"
         },
         {
           "file": "fire-hit-3.ogg",
@@ -121,7 +121,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "5f7a97122581f1b2622825842dbee06c4d0d47f8fe74b06ccdd5e7f6b24d864a"
+          "sha256": "ab66b65c97c4174adce0552fe4af598a3c9ab57a69d30ab5866cab1fa2825574"
         }
       ],
       "buildup": {
@@ -130,7 +130,7 @@
         "library": "fantasy",
         "author": "JC Sounds",
         "license": "CC-BY-4.0",
-        "sha256": "dc6455e0b1b4ddc9d5ced4c78b4afe6a4e5010f1616d2603b05d62561bcb8616"
+        "sha256": "0e1a27aad95c65b23c4451e4635e9c0384b8e7fd8c0ea2eaec443f9f48b910a1"
       }
     },
     "frost": {
@@ -147,7 +147,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "4e5f1e9e728c0c9a54c313e3c5a3eb3c6aa249ae14d3f163afd05f28610b3a01"
+          "sha256": "06394a8c24b1a777899bd1f8d9d21a8f0e0da2831ee8293e7eab4d6603b52f05"
         },
         {
           "file": "frost-cast-2.ogg",
@@ -155,7 +155,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "c515266e71a94bac5e73b869ec39ccf8f5866c5019e4593759e72c375c58fd6c"
+          "sha256": "bdf05ae49fe52132e55fe38ec2f5855ec3e1f30cd93f7456a0da4783185c413a"
         },
         {
           "file": "frost-cast-3.ogg",
@@ -163,7 +163,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "b55d79c36e7e48f00dfc77ddbd64fc6e83f5816cc98892486a904f2bdc903b95"
+          "sha256": "89c75a5b64e8c49a538b6223fbc905e667d3604d5cfc76a2eb1446122a2814db"
         }
       ],
       "hitVariants": [
@@ -173,7 +173,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "0660eaecf6b32163ce70d9a0470e95600670b35d1d96f344070c3dfb8ae416e2"
+          "sha256": "16450da8f6dd84a197c9c51584dedea49a0f1f2c09cfa5b53d8708c70a0eb669"
         },
         {
           "file": "frost-hit-2.ogg",
@@ -181,7 +181,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "8342f6671eb2638ff1e12591427417942da7528e243a3a2c72321347277fe164"
+          "sha256": "e781dd2c9a6417b752685600059dab8c6822c11222ee4c3d6aae0da6b331dccd"
         },
         {
           "file": "frost-hit-3.ogg",
@@ -189,7 +189,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "1c19d13479dcace8ee64af2b5de54911025fcfb1358e91d7da37e44f5cc17c87"
+          "sha256": "7787f5a8b047b2c59621e08cda8b1a2396e964c8794769e15cae16514bcefbe4"
         }
       ],
       "buildup": {
@@ -198,7 +198,7 @@
         "library": "fantasy",
         "author": "JC Sounds",
         "license": "CC-BY-4.0",
-        "sha256": "dba2b005fe42deff2dd38f44e69f237540bc4271f8d6cc703a4a8b63a7b6ab0e"
+        "sha256": "e66fd9327bfc141baefddf5e0763d94be7dea65108df6157d2a6c296ff59303d"
       }
     },
     "lightning": {
@@ -215,7 +215,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "fe2f39d714a42b2e36f6ff5b52c13b1232f6ac06cdf53651edf67f814331ccd7"
+          "sha256": "556f59c69ce414a6799bd2187331a4791ef5e0dfad9f1218caf6ac3f640f1210"
         },
         {
           "file": "lightning-cast-2.ogg",
@@ -223,7 +223,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "e4f20eaefa0e9a828c3e3ad961ececf02a235bea1643fdaf1c90dd7a7682991d"
+          "sha256": "241f6aed601877cc57b8c86c6acffefc326608c8108ac10e1a47ec861bb9aaa1"
         },
         {
           "file": "lightning-cast-3.ogg",
@@ -231,7 +231,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "4a3a3ded4cccedcb618276fcc195705ae34562593518a3b44120be47b8e570ca"
+          "sha256": "49cdff7d787ae001e01ea94ce9da48741841b64d84dc424c281bf9a038d4328a"
         }
       ],
       "hitVariants": [
@@ -241,7 +241,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "9ef15d78666bcf0f5bde5faa3b3fa49c01ca9d1b7375925c81b0625300108b03"
+          "sha256": "97b6ed4b289f3249b39793a7baf64c71d21a30d9fb0745ef024044be0ae8771f"
         },
         {
           "file": "lightning-hit-2.ogg",
@@ -249,7 +249,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "92d3653da01db9c5bd56026bb664a6d0c85dbf8b3a218c2fcebe8d06528ebe22"
+          "sha256": "fcbe498b0661a6ff8f19d008803dd6cd74ba33b41cc24d60a66ce746fa4b2340"
         },
         {
           "file": "lightning-hit-3.ogg",
@@ -257,7 +257,7 @@
           "library": "fantasy",
           "author": "JC Sounds",
           "license": "CC-BY-4.0",
-          "sha256": "3426ea8f90a6a8d9739fe1ead33453ddfc826a80b15bd93ff0c8f107c970b2a3"
+          "sha256": "0ceeff6a3a14045bab88d893910dfca90415c369017d33334b68e75f3d7df660"
         }
       ],
       "buildup": {
@@ -266,7 +266,7 @@
         "library": "fantasy",
         "author": "JC Sounds",
         "license": "CC-BY-4.0",
-        "sha256": "aae56ca6869484825b6003e735b1a78ea14dc3614bc127ea597b353174725631"
+        "sha256": "292c1bbefce7b94cd855346a79af252b5adc19959e4c8dbb55ff4b1d44b13804"
       }
     },
     "impact": {
