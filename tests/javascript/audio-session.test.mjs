@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 const soundSource = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-design.js', import.meta.url), 'utf8');
 const audioSource = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
 
-function harness({ sessionSupported = true } = {}) {
+function harness({ sessionSupported = true, scriptSrc = null } = {}) {
     const started = [];
     const settings = new Map();
     const session = { type: 'ambient' };
@@ -43,13 +43,20 @@ function harness({ sessionSupported = true } = {}) {
         setTimeout: callback => { callback(); return 1; },
         clearTimeout() {},
     };
-    const document = { readyState: 'loading', hidden: false, addEventListener() {}, querySelector() { return null; } };
+    const document = { readyState: 'loading', hidden: false, currentScript: scriptSrc ? { src: scriptSrc } : null, addEventListener() {}, querySelector() { return null; } };
     const navigator = sessionSupported ? { audioSession: session } : {};
     const environment = { window, document, navigator, performance: { now: () => 5000 }, console, Math, Float32Array };
     runInNewContext(soundSource, environment);
     runInNewContext(audioSource, environment);
     return { audio: window.wyrmforgeAudio, sound: window.WyrmforgeSoundDesign, started, settings, session };
 }
+
+test('audio revision follows the deployed script commit for iPhone cache invalidation', () => {
+    const { audio } = harness({ scriptSrc: 'https://example.test/js/audio.js?v=abcdef123456' });
+    assert.equal(audio.diagnostics().audioRevision, 'abcdef123456');
+    const fallback = harness();
+    assert.equal(fallback.audio.diagnostics().audioRevision, '0.0.111');
+});
 
 test('iPhone Silent Mode configures playback before the first sampled sound', () => {
     const { audio, session, started } = harness();
