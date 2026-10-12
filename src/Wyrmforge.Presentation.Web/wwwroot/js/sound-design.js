@@ -13,8 +13,8 @@
         'enemy-down': { label: 'Enemy down — fading ember', bus: 'combat', volume: 0.24, cooldown: 1100, duration: 0.34, priority: 1 },
         hurt: { label: 'Hurt — grounded warning', bus: 'combat', volume: 0.62, cooldown: 850, duration: 0.43, priority: 2 },
         'hunt-start': { label: 'Entering the hunt', bus: 'moment', volume: 0.57, cooldown: 800, duration: 0.93, priority: 3 },
-        'upgrade-open': { label: 'A new possibility', bus: 'moment', volume: 0.56, cooldown: 700, duration: 0.79, priority: 3 },
-        'upgrade-choice': { label: 'Power accepted', bus: 'moment', volume: 0.78, cooldown: 420, duration: 1.08, priority: 4 },
+        'upgrade-open': { label: 'Discovery — a gentle glimmer', bus: 'moment', volume: 0.44, cooldown: 700, duration: 0.79, priority: 3 },
+        'upgrade-choice': { label: 'Upgrade chosen — warm resonance', bus: 'moment', volume: 0.60, cooldown: 420, duration: 1.08, priority: 4 },
         'power-burst': { label: 'Power unleashed', bus: 'moment', volume: 0.82, cooldown: 1000, duration: 1.04, priority: 4 },
         'trail-clear': { label: 'Trail conquered', bus: 'moment', volume: 0.67, cooldown: 900, duration: 0.83, priority: 3 },
         wyrm: { label: 'The Wyrm awakens', bus: 'moment', volume: 0.85, cooldown: 1800, duration: 1.75, priority: 5 },
@@ -221,6 +221,6 @@
         palette,
         render,
         previewNames: ['arcane', 'fire', 'frost', 'lightning', 'impact', 'hurt',
-            'upgrade-choice', 'power-burst', 'reward', 'wyrm', 'victory', 'death'],
+            'upgrade-open', 'upgrade-choice', 'power-burst', 'reward', 'wyrm', 'victory', 'death'],
     });
 })();

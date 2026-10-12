@@ -155,11 +155,13 @@
             const gain = context.createGain();
             source.buffer = buffer;
             source.playbackRate.value = [0.99, 1, 1.01][variation % 3];
-            const level = Math.min(0.7, sound.volume * gainScale);
+            const mix = entry.mix;
+            const level = Math.min(0.7, sound.volume * gainScale * (mix?.gain ?? 1));
             const at = context.currentTime + delay;
             const duration = buffer.duration / source.playbackRate.value;
-            const tail = Math.min(bus === 'ui' ? 0.12 : bus === 'moment' ? 0.54 : 0.24, duration * 0.48);
-            const attack = Math.min(0.018, duration * 0.12);
+            const naturalTail = Math.min(bus === 'ui' ? 0.12 : bus === 'moment' ? 0.54 : 0.24, duration * 0.48);
+            const tail = Math.min(mix?.releaseSeconds ?? naturalTail, duration * 0.70);
+            const attack = Math.min(mix?.attackSeconds ?? 0.018, duration * 0.12);
             // Never stop a menu, reward or magical cue with a hard gain edge.
             if (gain.gain.setValueAtTime && gain.gain.linearRampToValueAtTime) {
                 gain.gain.setValueAtTime(0.0001, at);
@@ -170,12 +172,24 @@
                 gain.gain.value = level;
             }
             source.connect(gain);
-            gain.connect(buses[bus]);
+            let filter = null;
+            if (mix?.lowpassHz && typeof context.createBiquadFilter === 'function') {
+                // Reward cues should sound warm, not like shrill alerts. Other combat SFX stay unchanged.
+                filter = context.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = mix.lowpassHz;
+                filter.Q.value = 0.65;
+                gain.connect(filter);
+                filter.connect(buses[bus]);
+            } else {
+                gain.connect(buses[bus]);
+            }
             voices[bus]++;
             source.onended = () => {
                 voices[bus] = Math.max(0, voices[bus] - 1);
                 source.disconnect();
                 gain.disconnect();
+                filter?.disconnect();
             };
             if (bus === 'moment') {
                 const parameter = buses.combat.gain;

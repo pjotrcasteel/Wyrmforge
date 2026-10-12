@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.111 — Warm upgrade moments
+
+- New spell / level-up reveal uses a delicate CC0 gemstone sound instead of the jarring combat-oriented Magic Shield activation.
+- Confirming an upgrade uses a quieter CC BY 4.0 healing chime with softened high frequencies, a gradual attack and a longer release.
+- Both moments remain separate, previewable entries in Sound Atelier; the spell casts, soundtrack and existing iPhone Silent Mode playback stay unchanged.
+- Source licenses and per-cue mix profiles are documented in `audio/recorded/manifest.json`. Audio quality remains a listening decision, not a claim made by automated tests.
+
 ## Prototype 0.0.110 — recorded mage magic and reliable music
 
 - **Continuous soundtrack:** menu and hunt music are started inside a trusted iPhone tap and remain active, with a smooth 4.8-second scene crossfade via Web Audio gains; the soundtrack is no longer re-started from asynchronous DOM callbacks.

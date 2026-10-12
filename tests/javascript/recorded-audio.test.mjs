@@ -52,6 +52,26 @@ test('every mage school has multiple real cast takes, impact takes and a separat
     }
 });
 
+test('upgrade discovery and selection use distinct, welcoming licensed recordings with soft-release profiles', () => {
+    const reveal = manifest.cues['upgrade-open'];
+    const choice = manifest.cues['upgrade-choice'];
+    assert.equal(reveal.file, manifest.cues.reward.file, 'opening an upgrade must not trigger a Magic Shield combat sound');
+    assert.equal(reveal.source, 'item_gem_01.ogg');
+    assert.equal(reveal.library, 'rpg');
+    assert.equal(reveal.license, 'CC0');
+    assert.notEqual(reveal.sha256, choice.sha256, 'discovery and confirmation must communicate distinct moments');
+    assert.match(choice.source, /Healing Chime/);
+    assert.equal(choice.license, 'CC-BY-4.0');
+    for (const sound of [reveal, choice]) {
+        assert.ok(sound.mix.gain > 0 && sound.mix.gain < 1);
+        assert.ok(sound.mix.lowpassHz <= 4800);
+        assert.ok(sound.mix.attackSeconds >= 0.02);
+        assert.ok(sound.mix.releaseSeconds >= 0.25);
+        assert.equal(sha256(readFileSync(new URL(sound.file, directory))), sound.sha256);
+    }
+    assert.ok(choice.mix.releaseSeconds > reveal.mix.releaseSeconds);
+});
+
 test('every bundled file can be traced to verified CC0 or CC BY source records', () => {
     const sources = new Map(manifest.sources.map(entry => [entry.key, entry]));
     assert.ok(sources.has('osare') && sources.has('cave'));
