@@ -96,10 +96,20 @@
 
     // Files are imported, verified and committed by tools/audio/import_licensed_audio.py.
     // No hotlinking to third-party media. Manifest absence is silent rather than playing the rejected synthesizer.
+    // audio.js is already loaded with a commit-specific ?v= token on GitHub Pages.
+    // Reuse that token for the manifest and media files so iOS Safari never serves a
+    // stale sound mapping after deployments, without disabling useful asset caching.
+    const audioRevision = (() => {
+        try {
+            const src = document.currentScript?.src;
+            return src ? new URL(src).searchParams.get('v') || '0.0.111' : '0.0.111';
+        } catch {
+            return '0.0.111';
+        }
+    })();
     const assetUrl = name => {
         const url = new URL('audio/recorded/' + name, document.baseURI);
-        // A different imported pack revision must not reuse stale iPhone Safari cache entries.
-        url.searchParams.set('pack', '2');
+        url.searchParams.set('v', audioRevision);
         return url.href;
     };
 
