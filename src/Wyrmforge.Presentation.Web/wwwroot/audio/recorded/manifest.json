@@ -310,12 +310,19 @@
       "sha256": "7147c88577bd60afa19b9b5898ff3e4c8ab5eb933edce666b23dfc3d640ae25c"
     },
     "upgrade-open": {
-      "file": "upgrade-open.ogg",
-      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_01.wav",
-      "library": "fantasy",
-      "author": "JC Sounds",
-      "license": "CC-BY-4.0",
-      "sha256": "01f227350e48eba005281527e6e9c75ac768a30585d5a78870b037029dd73c84"
+      "file": "reward.ogg",
+      "source": "item_gem_01.ogg",
+      "library": "rpg",
+      "author": "rubberduck",
+      "license": "CC0",
+      "sha256": "aa8be46672352caa53fb70ce46483cd88ec9c099f68512dee7e4fc4b5a3bf356",
+      "mix": {
+        "gain": 0.66,
+        "lowpassHz": 3200,
+        "attackSeconds": 0.035,
+        "releaseSeconds": 0.28
+      },
+      "intent": "Soft discovery glimmer. Deliberately replaces the alarming magic-shield activation."
     },
     "upgrade-choice": {
       "file": "upgrade-choice.ogg",
@@ -323,7 +330,14 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "4b5c6bb62a2a247c21b627e3eb5a33429c26edb37108a95cc0d94378ea295a71"
+      "sha256": "4b5c6bb62a2a247c21b627e3eb5a33429c26edb37108a95cc0d94378ea295a71",
+      "mix": {
+        "gain": 0.78,
+        "lowpassHz": 4400,
+        "attackSeconds": 0.036,
+        "releaseSeconds": 0.65
+      },
+      "intent": "Warm selection confirmation with a rounded, lingering chime."
     },
     "power-burst": {
       "file": "power-burst.ogg",
@@ -408,6 +422,6 @@
       "originalSha256": "1c2f06ff4e8563b5b8b745b23cf213c1474142a69bb82bd8f5e10d9b3f7a7bbd"
     }
   ],
-  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
+  "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
   "mixVersion": "0.0.110"
 }
