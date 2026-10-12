@@ -116,32 +116,54 @@
         });
     }
 
-    function loadRecordedBuffer(name) {
-        if (recordedBuffers.has(name)) return recordedBuffers.get(name);
-        const entry = recordedManifest?.cues?.[name];
-        if (!entry || !context) return Promise.reject(new Error('Unmapped recorded sound: ' + name));
+
+    // Cache decoded recordings by filename. Variations are different human-performed attacks, not
+    // a single repeated WAV shifted by a few cents. The game remains operational if loading fails.
+    function loadRecordedBuffer(entry) {
+        if (recordedBuffers.has(entry.file)) return recordedBuffers.get(entry.file);
+        if (!entry?.file || !context) return Promise.reject(new Error('Recorded sound file is missing'));
         const pending = fetch(assetUrl(entry.file)).then(response => {
-            if (!response.ok) throw new Error('Recorded sound unavailable: ' + name + ' (' + response.status + ')');
+            if (!response.ok) throw new Error('Recorded sound unavailable: ' + entry.file + ' (' + response.status + ')');
             return response.arrayBuffer();
         }).then(bytes => context.decodeAudioData(bytes));
-        recordedBuffers.set(name, pending);
-        pending.catch(() => recordedBuffers.delete(name));
+        recordedBuffers.set(entry.file, pending);
+        pending.catch(() => recordedBuffers.delete(entry.file));
         return pending;
     }
 
-    function playRecorded(name, sound, preview, now) {
+    function recordedEntry(name, type, variation) {
+        const definition = recordedManifest?.cues?.[name];
+        if (!definition) return null;
+        const clips = type === 'hit' ? definition.hitVariants : definition.variants;
+        if (type === 'buildup') return definition.buildup ?? null;
+        return clips?.length ? clips[variation % clips.length] : (type === 'cast' ? definition : null);
+    }
+
+    function playRecordedEntry(entry, sound, name, variation, gainScale = 1, delay = 0) {
+        if (!entry || !enabled || !context) return false;
         const bus = sound.bus;
+        // Hard limit on simultaneous sounds; the music soundtrack is independent of these limits.
         if (voices[bus] >= maxVoices[bus]) return false;
-        lastCue.set(name, now);
-        const variant = (variants.get(name) ?? 0) % 3;
-        variants.set(name, (variants.get(name) ?? 0) + 1);
-        void loadRecordedBuffer(name).then(buffer => {
+        void loadRecordedBuffer(entry).then(buffer => {
             if (!enabled || !context || context.state === 'closed' || voices[bus] >= maxVoices[bus]) return;
             const source = context.createBufferSource();
             const gain = context.createGain();
             source.buffer = buffer;
-            source.playbackRate.value = [0.977, 1, 1.019][variant];
-            gain.gain.value = sound.volume;
+            source.playbackRate.value = [0.99, 1, 1.01][variation % 3];
+            const level = Math.min(0.7, sound.volume * gainScale);
+            const at = context.currentTime + delay;
+            const duration = buffer.duration / source.playbackRate.value;
+            const tail = Math.min(bus === 'ui' ? 0.12 : bus === 'moment' ? 0.54 : 0.24, duration * 0.48);
+            const attack = Math.min(0.018, duration * 0.12);
+            // Never stop a menu, reward or magical cue with a hard gain edge.
+            if (gain.gain.setValueAtTime && gain.gain.linearRampToValueAtTime) {
+                gain.gain.setValueAtTime(0.0001, at);
+                gain.gain.linearRampToValueAtTime(level, at + attack);
+                gain.gain.setValueAtTime(level, Math.max(at + attack, at + duration - tail));
+                gain.gain.linearRampToValueAtTime(0.0001, at + duration);
+            } else {
+                gain.gain.value = level;
+            }
             source.connect(gain);
             gain.connect(buses[bus]);
             voices[bus]++;
@@ -151,14 +173,14 @@
                 gain.disconnect();
             };
             if (bus === 'moment') {
-                const parameter = buses.combat.gain, t = context.currentTime;
+                const parameter = buses.combat.gain;
                 if (parameter.setTargetAtTime) {
-                    parameter.cancelScheduledValues(t);
-                    parameter.setTargetAtTime(volumes.combat * 0.40, t, 0.035);
-                    parameter.setTargetAtTime(volumes.combat, t + Math.max(0.4, buffer.duration * 0.55), 0.16);
+                    parameter.cancelScheduledValues(at);
+                    parameter.setTargetAtTime(volumes.combat * 0.56, at, 0.055);
+                    parameter.setTargetAtTime(volumes.combat, at + Math.max(0.4, duration * 0.67), 0.20);
                 }
             }
-            source.start();
+            source.start(at);
         }).catch(error => {
             console.warn('Recorded WyrmForge cue could not load:', name, error);
             if (status) status.textContent = 'SOUND COULD NOT LOAD: ' + name.toUpperCase();
@@ -166,6 +188,40 @@
         return true;
     }
 
+    function playSpellImpact(school, preview = false) {
+        const options = recordedManifest?.cues?.[school]?.hitVariants;
+        if (!options?.length) return false;
+        const count = variants.get(school + '-hit') ?? 0;
+        variants.set(school + '-hit', count + 1);
+        const sound = design.palette.impact;
+        return playRecordedEntry(options[count % options.length], sound, school + '-hit', count, preview ? 0.62 : 0.53);
+    }
+
+    function playRecorded(name, sound, preview, now) {
+        const count = variants.get(name) ?? 0;
+        const isSpell = spellSchools.has(name);
+        if (name === 'impact' && recentSpell && now - recentSpell.at < 1250 &&
+            playSpellImpact(recentSpell.name, preview)) {
+            lastCue.set(name, now);
+            return true;
+        }
+        const entry = recordedEntry(name, 'cast', count);
+        if (!entry) return false;
+        if (!playRecordedEntry(entry, sound, name, count, isSpell ? 0.72 : 1)) return false;
+        variants.set(name, count + 1);
+        lastCue.set(name, now);
+        if (isSpell) {
+            if (!preview) recentSpell = { name, at: now };
+            if (!preview && count % 7 === 0) {
+                const buildup = recordedEntry(name, 'buildup', count);
+                if (buildup) playRecordedEntry(buildup, sound, name + '-buildup', count, 0.13);
+            }
+            if (preview && typeof window.setTimeout === 'function') {
+                window.setTimeout(() => playSpellImpact(name, true), 230);
+            }
+        }
+        return true;
+    }
 
     // Both source elements begin inside one real user gesture and remain playing at zero gain
     // when off-screen. iOS Safari cannot reliably start the next track in a later async
