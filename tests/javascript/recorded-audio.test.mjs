@@ -32,6 +32,26 @@ test('all spell schools and high-value cues use real checked-in recordings', () 
     assert.equal(new Set(elemental).size, 4, 'the four spell schools must sound physically different');
 });
 
+test('every mage school has multiple real cast takes, impact takes and a separately licensed buildup', () => {
+    assert.equal(manifest.version, 2);
+    for (const school of ['arcane', 'fire', 'frost', 'lightning']) {
+        const cue = manifest.cues[school];
+        assert.ok(cue.variants.length >= 3, school + ' has no recorded cast variations');
+        assert.ok(cue.hitVariants.length >= 2, school + ' has no recorded hit variations');
+        const entries = [...cue.variants, ...cue.hitVariants, cue.buildup];
+        assert.equal(new Set(entries.map(entry => entry.sha256)).size, entries.length, school + ' reuses the same sample');
+        for (const entry of entries) {
+            assert.equal(entry.library, 'fantasy');
+            assert.equal(entry.author, 'JC Sounds');
+            assert.equal(entry.license, 'CC-BY-4.0');
+            assert.match(entry.file, /\\.ogg$/);
+            const bytes = readFileSync(new URL(entry.file, directory));
+            assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
+            assert.equal(sha256(bytes), entry.sha256);
+        }
+    }
+});
+
 test('every bundled file can be traced to verified CC0 or CC BY source records', () => {
     const sources = new Map(manifest.sources.map(entry => [entry.key, entry]));
     assert.ok(sources.has('osare') && sources.has('cave'));
