@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "music": {
     "menu": "music-osare.ogg",
     "hunt": "music-cave.ogg"
@@ -11,7 +11,59 @@
       "library": "rpg",
       "author": "rubberduck",
       "license": "CC0",
-      "sha256": "cc1eaf93e71699505b47cdaa2c66d415b62751177deabe0d7df0eaae7390f6fe"
+      "sha256": "cc1eaf93e71699505b47cdaa2c66d415b62751177deabe0d7df0eaae7390f6fe",
+      "variants": [
+        {
+          "file": "arcane-cast-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Teleport_In.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "e3f2fe1fb78f9296e110dd09ee4cdcd5e392f2b18affbf5ed02c329239423654"
+        },
+        {
+          "file": "arcane-cast-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Teleport_Out.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "fbbd14cb75cae275f036d5ee53ff93df433182df06dec2f4ad4aebea64097f12"
+        },
+        {
+          "file": "arcane-cast-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "5dd67447cfbd3098713c36759809ad428ac52c2252a1a5ceb7944fd710e75551"
+        }
+      ],
+      "hitVariants": [
+        {
+          "file": "arcane-hit-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "98dab58ba95e8e5721b5dcb4aa272143206dfe2081773b2ffe74ba64d4c4ea06"
+        },
+        {
+          "file": "arcane-hit-2.ogg",
+          "source": "Seq_Fantasy SFX Pack Vol 1_Mana Drain_End.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "8cabf78315669cbac8dc904fecfb4a7161527b880e88ec9d84c0a7a0fc358710"
+        }
+      ],
+      "buildup": {
+        "file": "arcane-buildup.ogg",
+        "source": "Seq_Fantasy SFX Pack Vol 1_Mana Drain_Start.wav",
+        "library": "fantasy",
+        "author": "JC Sounds",
+        "license": "CC-BY-4.0",
+        "sha256": "3f4359c0f9aa79a258cd62c4242ba3f6198357418df605d5ccb9df533cbf3100"
+      }
     },
     "fire": {
       "file": "fire.ogg",
@@ -19,7 +71,67 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "0b1a9e86fa6cc1080b1dc2412051abcc157b0500bb15f3abfe2416785a75ac63"
+      "sha256": "0b1a9e86fa6cc1080b1dc2412051abcc157b0500bb15f3abfe2416785a75ac63",
+      "variants": [
+        {
+          "file": "fire-cast-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "87a54ce74494ed51bf6bed465c3509c97b13c96abc306ad74f91d67d904e11fd"
+        },
+        {
+          "file": "fire-cast-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "f939e3bd978fa93ea7184da135920ec1289fb459dbc2adb1d45c5416a5590196"
+        },
+        {
+          "file": "fire-cast-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Launch_03.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "c668073684775beafb1003f85f215eee544571c3ed78efbc8ba76e2445eac064"
+        }
+      ],
+      "hitVariants": [
+        {
+          "file": "fire-hit-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "b64d9b4c38c21d3f146319357f25b56f824fe45b7dc73f9cec152827c7788c60"
+        },
+        {
+          "file": "fire-hit-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "ed2b0e1c6b170d6399330ddf1bab25874281f185c2396ba1e585ef9eee5f271e"
+        },
+        {
+          "file": "fire-hit-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Fireball Impact_03.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "25a62cee3c00909c705bea77476d6e40292c2e3e3f064cdbe1a9ef4b67581844"
+        }
+      ],
+      "buildup": {
+        "file": "fire-buildup.ogg",
+        "source": "Single_Fantasy SFX Pack Vol 1_Fireball_Buildup.wav",
+        "library": "fantasy",
+        "author": "JC Sounds",
+        "license": "CC-BY-4.0",
+        "sha256": "5d365da56c1647664d3c0d2d9645bbd2663faf49beebf7cdf9b710d587045866"
+      }
     },
     "frost": {
       "file": "frost.ogg",
@@ -27,7 +139,67 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "767ea3080ef6d3dbf4375e51ad6885bed086689c21a0a1ea0a500066d476e38a"
+      "sha256": "767ea3080ef6d3dbf4375e51ad6885bed086689c21a0a1ea0a500066d476e38a",
+      "variants": [
+        {
+          "file": "frost-cast-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Ice Shard Projectile_Launch_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "99b383f69a07bbfa2b4a91a130a2d9ae7b2ea6f2f79af49b103b7355510d4858"
+        },
+        {
+          "file": "frost-cast-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Ice Shard Projectile_Launch_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "da2a9a94448e7ea6ce7738a3fb098128868ca550406afa71023d04427080ade5"
+        },
+        {
+          "file": "frost-cast-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Ice Shard Projectile_Launch_03.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "97923acf27b23bf46ee6a32aceefab822024d66123e832159dd989110cc984a8"
+        }
+      ],
+      "hitVariants": [
+        {
+          "file": "frost-hit-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Ice Shard  Projectile_Impact_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "2492163c3c76edb1f4b918747dbf9b358821efc4e6fefa5f38e24cb30afb8e88"
+        },
+        {
+          "file": "frost-hit-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Ice Shard  Projectile_Impact_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "61f4dcf3f34d8cd0298ec3349089509591daef10997b92b987848f36139d41bb"
+        },
+        {
+          "file": "frost-hit-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Ice Shard  Projectile_Impact_03.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "5ec939da43a4e1c567d44379a856cba1590faf08cab74a817c20d84d2b5ee39d"
+        }
+      ],
+      "buildup": {
+        "file": "frost-buildup.ogg",
+        "source": "Single_Fantasy SFX Pack Vol 1_Ice Spell_Buildup.wav",
+        "library": "fantasy",
+        "author": "JC Sounds",
+        "license": "CC-BY-4.0",
+        "sha256": "d351e428b64258a9203ed8df952365e4766591fdc3cba5725edc68f9f0c12ddd"
+      }
     },
     "lightning": {
       "file": "lightning.ogg",
@@ -35,7 +207,67 @@
       "library": "fantasy",
       "author": "JC Sounds",
       "license": "CC-BY-4.0",
-      "sha256": "8903d40007abb6872505e8c7445bdd57feabc4fcbcc6a64b30494b50846579bf"
+      "sha256": "8903d40007abb6872505e8c7445bdd57feabc4fcbcc6a64b30494b50846579bf",
+      "variants": [
+        {
+          "file": "lightning-cast-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Launch_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "2a5d5adb477fe1921167339e4aed49937fc264a7557d7f58e66fa962a09c67f3"
+        },
+        {
+          "file": "lightning-cast-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Launch_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "33bc503dc4f5080ac0c1d06bed2b03409754dc5fce5c669ea0a820334511c564"
+        },
+        {
+          "file": "lightning-cast-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Launch_03.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "a52b6fdeade4d7aa394953f66ecd09a287b03c2c2d51bbf02e0ba62069030e6e"
+        }
+      ],
+      "hitVariants": [
+        {
+          "file": "lightning-hit-1.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Hit_01.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "82e6431baf5137d9685c7dd946fd88026ba7ccc584a82be628107a7efe03520f"
+        },
+        {
+          "file": "lightning-hit-2.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Hit_02.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "0a69813546c98ee149a05053f534d6ef501e0362b68bf9aa977b027611040c08"
+        },
+        {
+          "file": "lightning-hit-3.ogg",
+          "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Hit_03.wav",
+          "library": "fantasy",
+          "author": "JC Sounds",
+          "license": "CC-BY-4.0",
+          "sha256": "6526e3c37102f27a059c3b1e7ab8dcf0a9d02356789324240b6d9a40c9aadd0e"
+        }
+      ],
+      "buildup": {
+        "file": "lightning-buildup.ogg",
+        "source": "Single_Fantasy SFX Pack Vol 1_Electric Spell_Buildup.wav",
+        "library": "fantasy",
+        "author": "JC Sounds",
+        "license": "CC-BY-4.0",
+        "sha256": "0207dbae6fabf8275f68061ed64ebe29a7f32b0a61615fb73db3d73ddd117590"
+      }
     },
     "impact": {
       "file": "impact.ogg",
@@ -176,5 +408,6 @@
       "originalSha256": "1c2f06ff4e8563b5b8b745b23cf213c1474142a69bb82bd8f5e10d9b3f7a7bbd"
     }
   ],
-  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)"
+  "attribution": "JC Sounds \u00b7 CC BY 4.0 \u00b7 https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
+  "mixVersion": "0.0.110"
 }
