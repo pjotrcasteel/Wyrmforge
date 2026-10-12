@@ -1,5 +1,14 @@
 # Wyrmforge
 
+## Prototype 0.0.110 — recorded mage magic and reliable music
+
+- **Continuous soundtrack:** menu and hunt music are started inside a trusted iPhone tap and remain active, with a smooth 4.8-second scene crossfade via Web Audio gains; the soundtrack is no longer re-started from asynchronous DOM callbacks.
+- **Recorded mage spell layers:** Arcane, Fire, Frost and Lightning each use three distinct human-recorded casting takes, separate impact variations and a quieter occasional buildup layer. No recycled beeps or copied third-party game recordings.
+- **Natural release:** menu, reward, transition and spell cues fade gently instead of cutting off at their end; important moments remain audible above routine attacks.
+- **Rebalanced mix:** a stronger separate soundtrack bus, quieter routine combat, persisted individual category levels and a one-tap **HEAR SOUNDTRACK** control in Sound Atelier.
+- Every imported sample has a source filename, CC BY 4.0 attribution and SHA-256 manifest entry. See `docs/audio/recorded-audio-credits.md`.
+- CI verifies each cast/impact is a distinct recording, actual music activation in a browser, mobile layout and the existing gameplay.
+
 ## Prototype 0.0.109 — Recorded dark-fantasy soundtrack and elemental magic
 
 - **Actual audio recordings** replace procedural beeps: separate authored Fireball, Frost, Lightning and Arcane sounds, physical hits, Wyrm and reward effects. No proprietary game audio is sampled.
