@@ -25,6 +25,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
+        await Page.WaitForFunctionAsync("() => {
+            const audio = window.wyrmforgeAudio.diagnostics();
+            return audio.music === 'hunt' && audio.musicPlaying;
+        }");
+
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
     }
 
@@ -61,6 +66,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var atelier = Page.GetByRole(AriaRole.Dialog, new() { Name = "Sound Atelier" });
         await Expect(atelier).ToBeVisibleAsync();
+        await atelier.GetByRole(AriaRole.Button, new() { Name = "Start and preview soundtrack" }).ClickAsync();
+        await Page.WaitForFunctionAsync("() => window.wyrmforgeAudio.diagnostics().musicPlaying === true");
+        var musicDetails = await Page.EvaluateAsync<int>("() => window.wyrmforgeAudio.diagnostics().musicTracks.length");
+        Assert.AreEqual(2, musicDetails, "Both menu and hunt tracks must be primed during the trusted tap.");
+
         await Expect(atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" })).ToBeVisibleAsync();
         await atelier.GetByRole(AriaRole.Button, new() { Name = "Preview arcane sound" }).ClickAsync();
         Assert.AreEqual("Recorded Dark Fantasy", await Page.EvaluateAsync<string>("() => window.wyrmforgeAudio.diagnostics().identity"));
