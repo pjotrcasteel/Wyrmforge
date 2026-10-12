@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { URL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 
 const soundSource = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/sound-design.js', import.meta.url), 'utf8');
@@ -45,7 +46,7 @@ function harness({ sessionSupported = true, scriptSrc = null } = {}) {
     };
     const document = { readyState: 'loading', hidden: false, currentScript: scriptSrc ? { src: scriptSrc } : null, addEventListener() {}, querySelector() { return null; } };
     const navigator = sessionSupported ? { audioSession: session } : {};
-    const environment = { window, document, navigator, performance: { now: () => 5000 }, console, Math, Float32Array };
+    const environment = { window, document, navigator, performance: { now: () => 5000 }, console, Math, Float32Array, URL };
     runInNewContext(soundSource, environment);
     runInNewContext(audioSource, environment);
     return { audio: window.wyrmforgeAudio, sound: window.WyrmforgeSoundDesign, started, settings, session };
