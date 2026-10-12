@@ -44,7 +44,7 @@ test('every mage school has multiple real cast takes, impact takes and a separat
             assert.equal(entry.library, 'fantasy');
             assert.equal(entry.author, 'JC Sounds');
             assert.equal(entry.license, 'CC-BY-4.0');
-            assert.match(entry.file, /\\.ogg$/);
+            assert.ok(entry.file.endsWith('.ogg'));
             const bytes = readFileSync(new URL(entry.file, directory));
             assert.equal(bytes.subarray(0, 4).toString(), 'OggS');
             assert.equal(sha256(bytes), entry.sha256);
