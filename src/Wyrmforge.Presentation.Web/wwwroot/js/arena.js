@@ -1,5 +1,6 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
+import { drawArenaEnvironment } from './arena-environment.js';
 
 const arenas = new WeakMap();
 
@@ -128,10 +129,12 @@ function draw(state, snapshot, width, height) {
     const ctx = state.context;
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#14111b';
-    ctx.fillRect(0, 0, width, height);
+    if (!drawArenaEnvironment(ctx, snapshot.environment, width, height, snapshot.hud?.seconds ?? 0)) {
+        ctx.fillStyle = '#14111b';
+        ctx.fillRect(0, 0, width, height);
+        drawGrid(ctx, width, height);
+    }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, width, height);
-    drawGrid(ctx, width, height);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
