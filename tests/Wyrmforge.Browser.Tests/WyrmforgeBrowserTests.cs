@@ -302,10 +302,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await OpenAsync();
         await EnterFirstTrailAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
+        await Page.EvaluateAsync(@"async () => {
             const arena = await import('./js/arena.js');
-            return Boolean(arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'))?.player);
+            window.__arenaDiagnostics = arena.readArenaDiagnostics;
         }");
+        await Page.WaitForFunctionAsync(@"() =>
+            Boolean(window.__arenaDiagnostics(document.querySelector('canvas.game-canvas'))?.player)");
 
         await Page.EvaluateAsync(@"async () => {
             const canvas = document.querySelector('canvas.game-canvas');
@@ -322,9 +324,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             canvas.dispatchEvent(new TouchEvent('touchmove',
                 { bubbles: true, cancelable: true, touches: [moved], changedTouches: [moved], targetTouches: [moved] }));
         }");
-        var movement = await Page.WaitForFunctionAsync(@"async () => {
-            const arena = await import('./js/arena.js');
-            const result = arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
+        var movement = await Page.WaitForFunctionAsync(@"() => {
+            const result = window.__arenaDiagnostics(document.querySelector('canvas.game-canvas'));
             const distance = (result?.player?.x ?? 0) - window.__touchMoveBaseline.x;
             return distance > 8 ? distance : false;
         }", null, new PageWaitForFunctionOptions { Timeout = 7000 });
