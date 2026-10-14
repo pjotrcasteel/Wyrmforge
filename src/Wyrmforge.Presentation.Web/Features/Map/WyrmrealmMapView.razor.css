@@ -144,3 +144,32 @@
 .route-node .node-bonus { position:absolute;top:76px;left:50%;transform:translateX(-50%);white-space:nowrap; }
 .route-node.dragon { height:88px;min-height:88px; }
 .route-node.dragon .node-name { top:76px; }
+
+/* Elemental influence spreads toward the lair. Not a color wash: each scar leaves irregular material evidence. */
+.territory-elemental-scar {
+    position:absolute;z-index:0;pointer-events:none;width:var(--scar-size);height:calc(var(--scar-size) * 1.2);
+    transform:translate(-50%,-50%) rotate(var(--scar-angle));opacity:var(--scar-opacity);
+    --scar-ink:#93687f;--scar-core:rgba(101,50,76,.2);
+    background:radial-gradient(ellipse, var(--scar-core), transparent 72%);filter:drop-shadow(0 0 5px var(--scar-core));
+}
+.territory-elemental-scar.school-fire { --scar-ink:#c26641;--scar-core:rgba(126,42,22,.38); }
+.territory-elemental-scar.school-frost { --scar-ink:#91c4d0;--scar-core:rgba(54,120,142,.21); }
+.territory-elemental-scar.school-storm { --scar-ink:#baa86c;--scar-core:rgba(112,112,56,.25); }
+.territory-elemental-scar.school-arcane { --scar-ink:#b18ad8;--scar-core:rgba(88,51,136,.33); }
+.territory-elemental-scar > span { position:absolute;display:block;top:12%;left:21%;width:61%;height:78%; }
+.territory-elemental-scar .scar-fault {
+    clip-path:polygon(39% 0,65% 23%,53% 34%,79% 57%,54% 70%,70% 100%,46% 78%,58% 60%,34% 43%,45% 28%);
+    background:var(--scar-ink);opacity:.85;
+}
+.territory-elemental-scar .scar-rift {
+    clip-path:polygon(58% 1%,83% 20%,62% 44%,72% 68%,32% 100%,51% 68%,39% 42%);
+    transform:rotate(87deg) scale(.62);background:var(--scar-ink);opacity:.56;
+}
+.territory-elemental-scar .scar-splinter {
+    clip-path:polygon(20% 13%,43% 35%,29% 56%,66% 100%,35% 72%,15% 51%);
+    transform:translate(17%,10%) rotate(-40deg) scale(.55);background:var(--scar-ink);opacity:.47;
+}
+.territory-elemental-scar.school-fire .scar-fault { filter:drop-shadow(0 0 4px rgba(233,79,24,.8)); }
+.territory-elemental-scar.school-frost .scar-rift { opacity:.9;transform:rotate(140deg) scale(.72); }
+.territory-elemental-scar.school-storm .scar-fault { transform:rotate(-25deg) scaleX(.46); }
+.territory-elemental-scar.school-arcane .scar-splinter { opacity:.85;transform:translate(25%,-20%) rotate(104deg) scale(.5); }
