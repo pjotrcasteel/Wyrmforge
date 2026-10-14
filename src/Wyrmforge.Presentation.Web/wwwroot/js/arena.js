@@ -1,4 +1,5 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
+import { attachArenaInput, getArenaMovement } from './arena-input.js';
 
 const arenas = new WeakMap();
 
@@ -6,7 +7,7 @@ export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
-    attachInput(state);
+    state.detachInput = attachArenaInput(state);
     const now = performance.now();
     state.lastSimulationTimestamp = now;
     state.performanceWindowStarted = now;
@@ -18,12 +19,7 @@ export function disposeArena(canvas) {
     if (!state) return;
     state.active = false;
     cancelAnimationFrame(state.animationFrame);
-    window.removeEventListener('keydown', state.onKeyDown);
-    window.removeEventListener('keyup', state.onKeyUp);
-    canvas.removeEventListener('pointerdown', state.onPointerDown);
-    canvas.removeEventListener('pointermove', state.onPointerMove);
-    canvas.removeEventListener('pointerup', state.onPointerUp);
-    canvas.removeEventListener('pointercancel', state.onPointerUp);
+    state.detachInput?.();
     arenas.delete(canvas);
 }
 
@@ -55,36 +51,6 @@ function createState(canvas, dotNetReference) {
     };
 }
 
-function attachInput(state) {
-    state.onKeyDown = event => {
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(event.key)) event.preventDefault();
-        state.keys.add(event.key.toLowerCase());
-    };
-    state.onKeyUp = event => state.keys.delete(event.key.toLowerCase());
-    state.onPointerDown = event => {
-        if (state.pointerId !== null) return;
-        state.pointerId = event.pointerId;
-        state.touchOrigin = { x: event.clientX, y: event.clientY };
-        state.touchCurrent = { ...state.touchOrigin };
-        state.canvas.setPointerCapture(event.pointerId);
-    };
-    state.onPointerMove = event => {
-        if (event.pointerId !== state.pointerId) return;
-        state.touchCurrent = { x: event.clientX, y: event.clientY };
-    };
-    state.onPointerUp = event => {
-        if (event.pointerId !== state.pointerId) return;
-        state.pointerId = null;
-    };
-
-    window.addEventListener('keydown', state.onKeyDown, { passive: false });
-    window.addEventListener('keyup', state.onKeyUp);
-    state.canvas.addEventListener('pointerdown', state.onPointerDown);
-    state.canvas.addEventListener('pointermove', state.onPointerMove);
-    state.canvas.addEventListener('pointerup', state.onPointerUp);
-    state.canvas.addEventListener('pointercancel', state.onPointerUp);
-}
-
 function frame(state, timestamp) {
     if (!state.active) return;
     const rect = state.canvas.getBoundingClientRect();
@@ -103,7 +69,7 @@ function startSimulationFrame(state, timestamp, rect) {
     state.simulationBusy = true;
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
-    const movement = getMovement(state);
+    const movement = getArenaMovement(state);
     const bridgeStarted = performance.now();
 
     state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y)
@@ -136,27 +102,6 @@ function recordRenderFrame(state, timestamp) {
     state.simulationMillisecondsTotal = 0;
     state.bridgeMillisecondsTotal = 0;
     state.performanceWindowStarted = timestamp;
-}
-
-function getMovement(state) {
-    let x = 0;
-    let y = 0;
-    if (state.keys.has('arrowleft') || state.keys.has('a')) x -= 1;
-    if (state.keys.has('arrowright') || state.keys.has('d')) x += 1;
-    if (state.keys.has('arrowup') || state.keys.has('w')) y -= 1;
-    if (state.keys.has('arrowdown') || state.keys.has('s')) y += 1;
-    if (x !== 0 || y !== 0) return normalize(x, y);
-    if (state.pointerId === null) return { x: 0, y: 0 };
-
-    const dx = state.touchCurrent.x - state.touchOrigin.x;
-    const dy = state.touchCurrent.y - state.touchOrigin.y;
-    if (Math.hypot(dx, dy) < 8) return { x: 0, y: 0 };
-    return normalize(dx, dy);
-}
-
-function normalize(x, y) {
-    const length = Math.hypot(x, y) || 1;
-    return { x: x / length, y: y / length };
 }
 
 function resizeCanvas(state, rect) {
