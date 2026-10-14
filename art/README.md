@@ -28,3 +28,20 @@ This approved concept establishes the atmosphere and environment direction. It i
 ## Provenance
 
 Generated with OpenAI image generation and iteratively art-directed with Pjotr. This is the approved final revision with wall-mounted failing runes, battered defences, and the weathered footprint. Earlier exploratory revisions are not the approved reference.
+
+## Approved forest encounter — 14 October 2026
+
+![Forest monastery encounter](world/forest-monastery-encounter-v1.png)
+
+Approved gameplay-view environment study: an open forest clearing, ruined monastery entrance, a mage and two scavengers. This is concept art rather than a production tileset.
+
+### Character readability
+
+- Characters must remain immediately distinguishable from the terrain at mobile viewing size.
+- The mage uses a muted slate-blue cloak, pale collar and clear staff silhouette.
+- Scavengers use lighter bone-gray faces and upper backs with dark undersides and separated limbs.
+- Quiet ground textures near characters; maintain value and restrained colour separation.
+- Preserve grounded dark fantasy atmosphere without relying on glowing outlines, circles or UI markers.
+- Apply this readability principle to every environment, enemy and mage progression state.
+
+Generated with OpenAI image generation and iteratively art-directed with Pjotr; approved after the character contrast revision.
