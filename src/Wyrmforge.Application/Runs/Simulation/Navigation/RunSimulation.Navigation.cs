@@ -8,6 +8,7 @@ public sealed partial class RunSimulation
 {
     private readonly Queue<SpellSchool> pendingAttunements = new();
     private readonly EncounterDirector encounterDirector = new();
+    private ArenaEnvironmentState? arenaEnvironment;
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
     private double entryGraceRemaining;
@@ -46,6 +47,7 @@ public sealed partial class RunSimulation
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();
@@ -57,6 +59,7 @@ public sealed partial class RunSimulation
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
         encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage);
+        arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         spawnTimer = 0.15;
         return true;
@@ -125,6 +128,7 @@ public sealed partial class RunSimulation
         encounterPlan = null;
         encounterPlanIndex = 0;
         encounterDirector.Reset();
+        arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     }
 
