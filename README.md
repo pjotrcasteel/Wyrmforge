@@ -1,5 +1,14 @@
 # Wyrmforge
 
+## Prototype 0.0.113 — Living gothic battlefield
+
+- The empty combat grid becomes seeded dark-fantasy scenery: ancient roads, rubble, broken monoliths, scorched approaches, oppressive shadows and distinct valley/ridge/caldera treatments.
+- Actual C# environment state governs two side supply alcoves per combat trail: an XP cache opens at breathing room and a health cache opens at the surge. These grants change real run state, not JavaScript overlays.
+- The last wave opens a real passage. Players walk north into the exit before choosing the next route; automated self-play agents understand the exit too.
+- Seeded decorations and supplies use dedicated deterministic randomness, with zero calls to combat RNG. Existing enemy pressure, attacks and loot distributions stay unchanged.
+- This is a *screen-based world foundation*, not yet a scrolling open map or collision-aware larger territory. The next environmental slice introduces a persistent world-space arena, following camera and meaningful chokepoints.
+- **Tone:** gothic Diablo I/II-inspired menace and violent combat weight, with StarCraft-like dark cinematic tension in future original/licensed soundtrack work. Never copy protected artwork, samples or music.
+
 ## Prototype 0.0.112 — Mobile control reliability and health guidance
 
 - Arena input now resets when iOS loses pointer capture, the browser loses focus, or a hunt becomes backgrounded; cancelled gestures no longer leave stale movement.
