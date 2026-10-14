@@ -107,6 +107,192 @@ export function drawTerritoryGround(ctx, plan) {
     drawTerritoryWounds(ctx, plan);
 }
 
+// Large-scale composition comes first: the player must recognize a DIFFERENT place when a new node loads.
+// These are walkable floor materials, not collision or raised impassable walls.
+function drawDistrictFoundation(ctx, plan) {
+    const { width: w, height: h, district, biome, seed } = plan;
+    const palette = groundPalette[biome];
+    const random = randomStream(seed ^ 0x31fdae94);
+    ctx.save();
+    if (district === 'sanctuary') {
+        // A ruined ceremonial city square fills the starting viewport with monumental ground architecture.
+        ctx.translate(w * .5, h * .5);
+        ctx.fillStyle = palette.high;
+        ctx.globalAlpha = .55;
+        ctx.beginPath();
+        for (let i = 0; i < 9; i++) {
+            const a = i * Math.PI / 4 + Math.PI / 8;
+            const px = Math.cos(a) * Math.min(335, w * .37);
+            const py = Math.sin(a) * 330;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = palette.edge;
+        ctx.lineWidth = 7;
+        for (const r of [125, 230, 305]) {
+            ctx.globalAlpha = r === 305 ? .47 : .67;
+            ctx.beginPath(); ctx.ellipse(0, 0, Math.min(r, w * .35), r * .92, 0, .1, Math.PI * 1.9); ctx.stroke();
+        }
+        ctx.globalAlpha = .55;
+        for (let i = 0; i < 16; i++) {
+            const a = i * Math.PI / 8;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 76, Math.sin(a) * 74);
+            ctx.lineTo(Math.cos(a) * Math.min(310, w * .35), Math.sin(a) * 291);
+            ctx.stroke();
+        }
+        // Eight huge star-shaped inlays: readable at gameplay scale, not tiny decorative marks.
+        ctx.strokeStyle = '#a99c8a'; ctx.lineWidth = 4; ctx.globalAlpha = .67;
+        ctx.beginPath();
+        for (let i = 0; i <= 16; i++) {
+            const a = i * Math.PI / 8 - Math.PI / 2;
+            const r = i % 2 ? 55 : 103;
+            if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+            else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.stroke();
+    } else if (district === 'rift') {
+        // Three enormous damage corridors with terraces and a battered stone crossing.
+        // All surface markings are traversable and remain clearly distinct from actual solid gates.
+        for (const [i, offset] of [-.28, .05, .35].entries()) {
+            const x = w * (.5 + offset);
+            ctx.beginPath();
+            ctx.moveTo(x - 42, -15);
+            for (let j = 0; j <= 16; j++) {
+                const y = h * j / 16;
+                ctx.lineTo(x - 30 + Math.sin(j * 1.2 + i) * (26 + i * 9), y);
+            }
+            for (let j = 16; j >= 0; j--) {
+                const y = h * j / 16;
+                ctx.lineTo(x + 31 + Math.sin(j * 1.2 + i) * (26 + i * 9), y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = palette.low; ctx.globalAlpha = .85; ctx.fill();
+            ctx.strokeStyle = palette.edge; ctx.lineWidth = 5; ctx.globalAlpha = .5; ctx.stroke();
+        }
+        // Fallen cobblestone slabs form a prominent fractured crossing at the initial playfield.
+        ctx.globalAlpha = .8;
+        for (let i = 0; i < 19; i++) {
+            const x = w * (.18 + i * .035);
+            const y = h * .5 + Math.sin(i * .9) * 18;
+            ctx.save(); ctx.translate(x, y); ctx.rotate((random() - .5) * .34);
+            ctx.fillStyle = palette.high; ctx.fillRect(-12, -23, 24 + random() * 10, 45);
+            ctx.strokeStyle = palette.edge; ctx.lineWidth = 2; ctx.strokeRect(-12, -23, 24, 45);
+            ctx.restore();
+        }
+    } else {
+        // Processional road: a broad, clear ancient highway with visible massive opposing shoulder banks.
+        ctx.beginPath();
+        ctx.moveTo(w * .36, -15);
+        ctx.bezierCurveTo(w * .42, h * .32, w * .365, h * .7, w * .4, h + 15);
+        ctx.lineTo(w * .6, h + 15);
+        ctx.bezierCurveTo(w * .635, h * .7, w * .58, h * .32, w * .64, -15);
+        ctx.closePath();
+        ctx.fillStyle = palette.road; ctx.globalAlpha = .76; ctx.fill();
+        ctx.strokeStyle = palette.edge; ctx.lineWidth = 8; ctx.globalAlpha = .54; ctx.stroke();
+        for (let y = 18; y < h; y += 42) {
+            const offset = Math.sin(y * .006) * w * .025;
+            for (let lane = -3; lane <= 3; lane++) {
+                if (random() < .17) continue;
+                const x = w * .5 + offset + lane * Math.min(34, w * .04);
+                ctx.fillStyle = random() > .5 ? palette.high : palette.earth;
+                ctx.globalAlpha = .65;
+                ctx.fillRect(x - 13, y + random() * 9, 24, 25 + random() * 8);
+                ctx.strokeStyle = palette.edge; ctx.globalAlpha = .35;
+                ctx.strokeRect(x - 13, y, 24, 27);
+            }
+        }
+    }
+    ctx.restore();
+}
+
+function drawElementalLandform(ctx, plan) {
+    const { width: w, height: h, element, corruption, district, seed } = plan;
+    const pigment = schoolPalette[element];
+    const random = randomStream(seed ^ 0x72b48a1);
+    ctx.save();
+    const centerX = w * (district === 'rift' ? .64 : district === 'sanctuary' ? .34 : .22);
+    const centerY = h * .49;
+    ctx.translate(centerX, centerY);
+    ctx.globalAlpha = .55 + corruption * .25;
+    if (element === 'fire') {
+        // Massive exposed obsidian basin threaded by broad volcanic lava channels.
+        ctx.fillStyle = '#211017';
+        ctx.beginPath(); ctx.ellipse(0, 0, w * .26, h * .19, -.32, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#e36c35'; ctx.lineCap = 'round';
+        for (let i = 0; i < 6; i++) {
+            const x = (i - 3) * 39;
+            ctx.beginPath(); ctx.moveTo(x - 80, -h * .19);
+            ctx.bezierCurveTo(x + 60, -h * .08, x - 85, h * .085, x + 85, h * .18);
+            ctx.lineWidth = 5 + (i % 3) * 6; ctx.stroke();
+            ctx.strokeStyle = i % 2 ? '#d85b33' : '#ee9d55';
+        }
+        ctx.fillStyle = '#a93b28';
+        for (let i = 0; i < 12; i++) {
+            ctx.beginPath();
+            ctx.ellipse((random() - .5) * w * .42, (random() - .5) * h * .3, 7 + random() * 22, 4 + random() * 10, random(), 0, Math.PI * 2); ctx.fill();
+        }
+    } else if (element === 'frost') {
+        // A pale frozen shelf made of visibly separate large floating plates.
+        ctx.fillStyle = '#4c8491';
+        ctx.beginPath(); ctx.ellipse(0, 0, w * .3, h * .2, .15, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#a0ced1';
+        ctx.strokeStyle = '#e1f3ef'; ctx.lineWidth = 4;
+        for (let i = 0; i < 19; i++) {
+            const a = i * 2.399;
+            const distance = Math.sqrt(i / 19);
+            const x = Math.cos(a) * distance * w * .26;
+            const y = Math.sin(a) * distance * h * .165;
+            const size = 17 + random() * 40;
+            ctx.beginPath();
+            for (let side = 0; side <= 6; side++) {
+                const angle = side * Math.PI / 3 + (i % 3) * .4;
+                const px = x + Math.cos(angle) * size;
+                const py = y + Math.sin(angle) * size * .82;
+                if (side === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.globalAlpha = .28 + corruption * .42;
+            ctx.fill(); ctx.globalAlpha = .8; ctx.stroke();
+        }
+    } else if (element === 'storm') {
+        // Black fused impact field with dramatic lightning fractures crossing an entire district.
+        ctx.fillStyle = '#1d2227';
+        ctx.beginPath(); ctx.ellipse(0, 0, w * .3, h * .21, -.15, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#d9d39d'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        for (let i = 0; i < 12; i++) {
+            const angle = i * Math.PI / 6;
+            const length = Math.min(w * .38, 350) * (.75 + random() * .4);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(angle) * length * .4, Math.sin(angle) * length * .5);
+            ctx.lineTo(Math.cos(angle + .18) * length * .7, Math.sin(angle + .18) * length * .86);
+            ctx.lineTo(Math.cos(angle) * length, Math.sin(angle) * length * 1.35);
+            ctx.lineWidth = i % 3 === 0 ? 8 : 4; ctx.globalAlpha = i % 2 ? .45 : .9; ctx.stroke();
+        }
+    } else {
+        // A gigantic ritual geometry, not a collection of little purple dots.
+        ctx.strokeStyle = '#b581e8'; ctx.lineWidth = 7; ctx.globalAlpha = .64 + corruption * .25;
+        for (let ring = 0; ring < 4; ring++) {
+            const r = 78 + ring * 55;
+            ctx.beginPath(); ctx.ellipse(0, 0, r, r * 1.35, .28, ring * .15, Math.PI * (1.74 + ring * .15)); ctx.stroke();
+        }
+        ctx.strokeStyle = '#e9baf3'; ctx.lineWidth = 5;
+        for (let side = 0; side < 8; side++) {
+            const a = side * Math.PI / 4;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 105, Math.sin(a) * 142);
+            ctx.lineTo(Math.cos(a + .37) * 235, Math.sin(a + .37) * 309);
+            ctx.stroke();
+        }
+        ctx.fillStyle = pigment.dark; ctx.globalAlpha = .42;
+        ctx.beginPath(); ctx.ellipse(0, 0, 65, 98, .28, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+}
+
 function drawTerritoryWounds(ctx, plan) {
     const pigment = schoolPalette[plan.element];
     for (const [i, wound] of plan.wounds.entries()) {
