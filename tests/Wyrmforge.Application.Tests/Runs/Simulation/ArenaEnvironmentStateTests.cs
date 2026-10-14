@@ -99,7 +99,7 @@ public sealed class ArenaEnvironmentStateTests
 
         var playerField = typeof(RunSimulation).GetField("player", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
         var player = (Wyrmforge.Domain.Combat.Player.PlayerState)playerField.GetValue(simulation)!;
-        player.Position = new Vector2D(exit.X, exit.Y + exit.Radius + player.Radius + 8);
+        player.Position = new Vector2D(exit.X, exit.Y + exit.Radius + player.Radius - 4);
         simulation.Tick(0.05, new MovementInput(0, -1), 390, 700);
 
         Assert.IsFalse(simulation.TrailExitPending);
