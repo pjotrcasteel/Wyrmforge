@@ -304,7 +304,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterFirstTrailAsync();
         await Page.WaitForFunctionAsync(@"async () => {
             const arena = await import('./js/arena.js');
-            return arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'))?.player !== null;
+            return Boolean(arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'))?.player);
         }");
 
         await Page.EvaluateAsync(@"async () => {
