@@ -22,9 +22,12 @@ public sealed partial class RunSimulation
         {
             encounterDirector.Tick(delta);
             arenaEnvironment?.SetPhase(encounterDirector.Phase);
-            if (encounterDirector.CanComplete && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
+            if (encounterDirector.CanComplete && mapState.CurrentNodeKills >= mapState.CurrentNodeKillsRequired)
             {
-                CompleteTrail(completed);
+                // Stop spawning after the finale, but do not open a passage with live enemies on the floor.
+                if (enemies.Count == 0 && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
+                    CompleteTrail(completed);
+                spawnTimer = 0.08;
                 return;
             }
         }
