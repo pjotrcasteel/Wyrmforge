@@ -78,7 +78,7 @@
                 }
                 @foreach (var scarNode in Nodes.Where(node => node.Type == WyrmrealmNodeType.Combat))
                 {
-                    <div class="territory-elemental-scar school-@scarNode.AttunementSchool!.Value.ToString().ToLowerInvariant()"
+                    <div class="territory-elemental-scar school-@(scarNode.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane")"
                          style="@ElementScarStyle(scarNode)" aria-hidden="true">
                         <span class="scar-fault"></span>
                         <span class="scar-rift"></span>
