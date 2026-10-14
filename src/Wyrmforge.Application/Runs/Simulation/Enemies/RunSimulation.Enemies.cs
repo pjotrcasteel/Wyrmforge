@@ -111,6 +111,8 @@ public sealed partial class RunSimulation
             * definition.HealthMultiplier;
         var speed = EnemyStagePressure.BaseSpeed * EnemyStagePressure.SpeedMultiplier(stage) * depthState.EnemySpeedMultiplier * routeSpeed
             * definition.SpeedMultiplier;
+        if (mapState.EncounterActive && arenaEnvironment is not null)
+            position = arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius);
         enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, kind));
     }
 
@@ -123,7 +125,10 @@ public sealed partial class RunSimulation
             if (statusTimeScale <= 0) continue;
 
             var scaledDelta = delta * statusTimeScale;
-            var direction = Vector2D.DirectionTo(enemy.Position, player.Position);
+            var target = mapState.EncounterActive && arenaEnvironment is not null
+                ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, player.Position, arenaWidth, arenaHeight, enemy.Radius)
+                : player.Position;
+            var direction = Vector2D.DirectionTo(enemy.Position, target);
             var speed = enemy.Speed;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier;
             if (enemy.RiftStalker is { } stalker)
@@ -139,7 +144,11 @@ public sealed partial class RunSimulation
                 }
             }
 
-            enemy.Position += direction * speed * scaledDelta;
+            var previous = enemy.Position;
+            var proposed = previous + direction * speed * scaledDelta;
+            enemy.Position = mapState.EncounterActive && arenaEnvironment is not null
+                ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius)
+                : proposed;
             if (delta > 0 && Vector2D.Distance(enemy.Position, player.Position) <= enemy.Radius + player.Radius) DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
     }
