@@ -11,7 +11,7 @@ public sealed partial class RunSimulation
 
     private void UpdateSpawn(double delta, double width, double height)
     {
-        if (developmentHunt || dragon is { Health: > 0 }) return;
+        if (developmentHunt || trailExitPending || dragon is { Health: > 0 }) return;
         if (entryGraceRemaining > 0)
         {
             entryGraceRemaining = Math.Max(0, entryGraceRemaining - delta);
