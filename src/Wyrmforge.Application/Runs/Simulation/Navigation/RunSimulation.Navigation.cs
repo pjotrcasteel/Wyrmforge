@@ -43,7 +43,7 @@ public sealed partial class RunSimulation
 
     public bool ChooseMapNode(string id)
     {
-        if (dragonEncounterStarted) return false;
+        if (dragonEncounterStarted || trailExitPending) return false;
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
@@ -84,6 +84,7 @@ public sealed partial class RunSimulation
     private void CompleteTrail(WyrmrealmMapNode completedNode)
     {
         completedRouteNodes.Add(completedNode);
+        trailExitPending = true;
         RefreshBuildModifiers(true);
         ApplyRouteReward(completedNode.Route?.Reward);
         if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
@@ -103,12 +104,12 @@ public sealed partial class RunSimulation
     private void CompleteMapEncounterCleanup()
     {
         if (!mapEncounterCleanupPending) return;
-        ClearMapEncounterField();
+        ClearMapEncounterField(preserveEnvironment: true);
         mapEncounterCleanupPending = false;
         TryLevelUp();
     }
 
-    private void ClearMapEncounterField()
+    private void ClearMapEncounterField(bool preserveEnvironment = false)
     {
         entryGraceRemaining = 0;
         powerBurstRemaining = 0;
@@ -128,7 +129,7 @@ public sealed partial class RunSimulation
         encounterPlan = null;
         encounterPlanIndex = 0;
         encounterDirector.Reset();
-        arenaEnvironment = null;
+        if (!preserveEnvironment) arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     }
 
