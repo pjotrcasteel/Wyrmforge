@@ -26,4 +26,5 @@ public sealed record RunRenderSnapshot(
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }
     public ArenaExitRenderSnapshot? Exit { get; init; }
+    public ArenaWorldRenderSnapshot? World { get; init; }
 }
