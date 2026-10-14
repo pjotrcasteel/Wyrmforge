@@ -50,6 +50,19 @@ Generated with OpenAI image generation and iteratively art-directed with Pjotr; 
 
 Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. Preserve the mage's established slate-blue cloak, pale collar and staff silhouette. Use reference images directly; do not guess character colours from memory.
 
+### Mandatory structural review — 15 October 2026
+
+Apply to every future image, including concept art and production sprites. Mood and surface detail are insufficient for acceptance.
+
+- Inspect perspective, coherent building layout, wall and roof supports, stairs and access, and object scale.
+- Trace machinery from input through joints, pivots, linkages, and output; each visible connection must be understandable.
+- Distinguish an intentional architectural cutaway from actual damage. Do not disguise unresolved geometry with rubble or texture.
+- Preserve established characters and inspect silhouettes at intended gameplay size.
+- Remove decorative complexity when it obscures function or construction. Fantasy power sources can remain mysterious; ordinary physical connections should remain coherent.
+- Inspect the generated result against these requirements before describing it as ready. Research and detailed prompts do not replace output review.
+
+The first engine house study failed this structural review: ambiguous roof construction, conflated structural and mechanical beams, an unreadable bellows drive, and an unclear conduit connection. It remains an unapproved exploration.
+
 ## Approved monastery interior — 15 October 2026
 
 ![Flooded monastery cloister and manuscript study](world/monastery-interior-v1.png)
@@ -66,3 +79,21 @@ Architectural references researched before generation:
 - [Lilleshall Abbey — monastic layout, English Heritage](https://www.english-heritage.org.uk/visit/places/lilleshall-abbey/History/description/)
 
 Generated with OpenAI image generation and iteratively art-directed with Pjotr. Earlier white-robe, burgundy-robe and ritual-chamber studies are not approved references.
+
+## Protective engine house — 15 October 2026
+
+![Protective engine house](world/protective-engine-house-v2.png)
+
+Retained revised concept, not a production asset. The city's defensive infrastructure depends on exhausting human effort and an increasingly scarce fuel whose origin remains concealed.
+
+- Simple stone-and-timber room; ground-level fuel loading removes the earlier unnecessary stair and platform.
+- Separate bellows stand and a visible conduit connection to the wall rune panel.
+- Preserve the established mage's slate-blue cloak, pale collar, and staff.
+- Inspect physical construction, perspective, machinery connections, and object function before accepting future art. Validate mechanical motion before animating the furnace.
+- The earlier engine house study failed structural review and is superseded by this revision.
+
+Research before generation:
+- [Saugus furnace and forge — Penn State](https://www.engr.psu.edu/mtah/essays/saugus.htm): furnace, bellows, charging route, and mechanical connections.
+- [Papplewick engine house — Historic England](https://historicengland.org.uk/images-books/photos/item/DP572025): a spatial reference for purpose-built machinery rooms, not a period template.
+
+Generated using the built-in OpenAI image tool, with the previous study and approved forest encounter as direct references, followed by a targeted conduit correction. The revision prompt required a rectangular workshop, explicit roof cutaway, a simple masonry furnace, floor-level charging hatch, independent lever-operated bellows, and one continuous conduit terminating at the rune panel. Restrained detail and traceable construction take priority over decoration.
