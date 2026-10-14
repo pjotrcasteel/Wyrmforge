@@ -76,10 +76,9 @@ public sealed partial class RunSimulation
     private void RegisterMapEncounterKill()
     {
         if (dragonEncounterStarted || !mapState.EncounterActive) return;
-        var completedNode = mapState.CurrentNode;
         encounterDirector.RegisterProgress(mapState.CurrentNodeKills + 1, mapState.CurrentNodeKillsRequired);
-        if (!mapState.RegisterKill(encounterDirector.CanComplete) || completedNode is null) return;
-        CompleteTrail(completedNode);
+        // Completion is evaluated by UpdateSpawn once the last wave has no surviving enemies.
+        mapState.RegisterKill(false);
     }
 
     private void CompleteTrail(WyrmrealmMapNode completedNode)
