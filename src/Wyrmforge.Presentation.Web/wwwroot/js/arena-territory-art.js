@@ -34,13 +34,16 @@ export function createTerritoryStoryPlan(environment, width, height) {
     const name = (environment.biome ?? '').toLowerCase();
     const biome = name.includes('caldera') ? 'ash' : name.includes('ridge') ? 'ridge' : 'valley';
     const element = schoolPalette[environment.element] ? environment.element : 'arcane';
+    const district = ['causeway', 'sanctuary', 'rift'].includes(environment.district) ? environment.district : 'causeway';
     const corruption = clamp(((environment.stage ?? 1) - 1) / 7, 0, 1);
+    const districtShift = district === 'sanctuary' ? .11 : district === 'rift' ? -.095 : 0;
     const landmarks = [
-        { kind: landmarkKinds[biome][0], x: width * (.31 + random() * .035), y: height * .19,
+        { kind: landmarkKinds[biome][district === 'rift' ? 2 : 0], x: width * (.31 + districtShift + random() * .035), y: height * .19,
             title: { ash: 'THE BLACK PYRE', ridge: 'THE LAST WATCH', valley: 'THE SUNKEN CHAPEL' }[biome] },
-        { kind: landmarkKinds[biome][1], x: width * (.615 + random() * .025), y: height * (.475 + random() * .03),
+        { kind: landmarkKinds[biome][district === 'sanctuary' ? 0 : 1], x: width * (.615 - districtShift + random() * .025),
+            y: height * (.475 + random() * .03),
             title: { ash: 'RUINED FORGE', ridge: 'BONE SHRINE', valley: 'ABANDONED WAYSTATION' }[biome] },
-        { kind: landmarkKinds[biome][2], x: width * (.29 + random() * .04), y: height * .82,
+        { kind: landmarkKinds[biome][district === 'rift' ? 1 : 2], x: width * (.29 - districtShift + random() * .04), y: height * .82,
             title: { ash: 'THE ASH CONVOY', ridge: 'FALLEN BANNERS', valley: 'FLOODED ALTAR' }[biome] },
     ];
     const patches = [];
@@ -67,7 +70,7 @@ export function createTerritoryStoryPlan(environment, width, height) {
             branches: 2 + Math.floor(random() * 4),
         });
     }
-    return { biome, element, corruption, landmarks, patches, wounds, seed: environment.seed, width, height };
+    return { biome, element, district, corruption, landmarks, patches, wounds, seed: environment.seed, width, height };
 }
 
 function irregularShape(ctx, x, y, rx, ry, rotation, seed) {
@@ -98,58 +101,9 @@ export function drawTerritoryGround(ctx, plan) {
     }
     ctx.globalAlpha = 1;
 
-    // A continuous ancient causeway visibly connects the north/south crossings.
-    // Players can read the next direction from broken paving and its edge stones.
-    ctx.beginPath();
-    ctx.moveTo(width * .405, -16);
-    ctx.bezierCurveTo(width * .415, height * .25, width * .39, height * .58, width * .405, height + 16);
-    ctx.lineTo(width * .595, height + 16);
-    ctx.bezierCurveTo(width * .61, height * .58, width * .585, height * .25, width * .595, -16);
-    ctx.closePath();
-    ctx.fillStyle = colors.road;
-    ctx.globalAlpha = .32;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    const random = randomStream(seed ^ 0x31345224);
-    const spacing = 32;
-    for (let y = 10; y < height - 10; y += spacing) {
-        for (let lane = -2; lane <= 2; lane++) {
-            if (random() < .19) continue; // cracked/missing paving gives the route its age.
-            const x = width * .5 + lane * Math.min(38, width * .041) + (random() - .5) * 12;
-            const slab = 15 + random() * 13;
-            ctx.save();
-            ctx.translate(x, y + (random() - .5) * 10);
-            ctx.rotate((random() - .5) * .3);
-            ctx.fillStyle = colors.high;
-            ctx.globalAlpha = .31 + random() * .23;
-            ctx.fillRect(-slab / 2, -9, slab, 17);
-            ctx.strokeStyle = colors.edge;
-            ctx.globalAlpha = .28;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(-slab / 2, -9, slab, 17);
-            ctx.restore();
-        }
-    }
-    // The first courtyard is an intentional visual rest, not more random grit.
-    const courtY = height * .5;
-    ctx.save();
-    ctx.translate(width * .5, courtY);
-    ctx.fillStyle = colors.low;
-    ctx.globalAlpha = .38;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, Math.min(width * .165, 154), 140, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = .56;
-    ctx.strokeStyle = colors.edge;
-    ctx.lineWidth = 3;
-    for (const radius of [72, 119]) {
-        ctx.beginPath();
-        ctx.ellipse(0, 0, radius, radius * .77, 0, Math.PI * .12, Math.PI * 1.87);
-        ctx.stroke();
-    }
-    ctx.restore();
-
+    // Each district has a different large-scale footprint. There is no one shared road template.
+    drawDistrictFoundation(ctx, plan);
+    drawElementalLandform(ctx, plan);
     drawTerritoryWounds(ctx, plan);
 }
 
