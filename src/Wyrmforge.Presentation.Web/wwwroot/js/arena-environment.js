@@ -179,6 +179,7 @@ function terrainTexture(environment, width, height) {
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {
     if (!environment) return false;
     ctx.drawImage(terrainTexture(environment, width, height), 0, 0, width, height);
+    for (const barrier of environment.barriers ?? []) drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
     return true;
 }
@@ -264,5 +265,74 @@ export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
     ctx.font = 'bold 11px system-ui';
     ctx.textAlign = 'center';
     ctx.fillText('NEXT TRAIL ↑', 0, 54);
+    ctx.restore();
+}
+
+function drawTerritoryBarrier(ctx, barrier, element, worldWidth, worldHeight, elapsed) {
+    if (barrier.open) {
+        if (barrier.kind !== 'gate') return;
+        // The shattered gate leaves a persistent visual trace of the unlocked passage.
+        const x = barrier.x * worldWidth;
+        const y = barrier.y * worldHeight;
+        const breadth = barrier.width * worldWidth;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(173,139,102,.38)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([7, 8]);
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 5);
+        ctx.lineTo(x + breadth - 10, y + 5);
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
+    const x = barrier.x * worldWidth;
+    const y = barrier.y * worldHeight;
+    const breadth = barrier.width * worldWidth;
+    const depth = barrier.height * worldHeight;
+    const pigment = {
+        fire: ['#544039', '#bc5b3c'],
+        frost: ['#35454e', '#92c7d8'],
+        storm: ['#494840', '#b8ad6b'],
+        arcane: ['#403546', '#9e74c4'],
+    }[element] ?? ['#453d46', '#9e74c4'];
+
+    ctx.save();
+    // Thick masonry follows the exact rectangle used by C# circle-vs-AABB collision.
+    ctx.fillStyle = 'rgba(4,6,8,.44)';
+    ctx.fillRect(x + 6, y + 10, breadth, depth + 7);
+    ctx.fillStyle = pigment[0];
+    ctx.fillRect(x, y, breadth, depth);
+    ctx.strokeStyle = 'rgba(195,180,157,.36)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, y + 1, Math.max(1, breadth - 2), Math.max(1, depth - 2));
+    for (let p = 0; p < breadth; p += 31) {
+        ctx.beginPath();
+        ctx.moveTo(x + p, y + (p % 3) * 3);
+        ctx.lineTo(x + p + 7, y + depth * .57);
+        ctx.lineTo(x + p + 3, y + depth);
+        ctx.stroke();
+    }
+    if (barrier.kind === 'gate') {
+        const pulse = .6 + .25 * Math.sin(elapsed * 3);
+        ctx.strokeStyle = pigment[1];
+        ctx.globalAlpha = pulse;
+        ctx.lineWidth = 3;
+        for (const shift of [-1, 0, 1]) {
+            const markX = x + breadth / 2 + shift * 18;
+            ctx.beginPath();
+            ctx.moveTo(markX - 6, y + 5);
+            ctx.lineTo(markX + 6, y + depth * .48);
+            ctx.lineTo(markX - 6, y + depth - 5);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#f0ddba';
+        ctx.font = 'bold 11px system-ui';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#0b0a11';
+        ctx.shadowBlur = 5;
+        ctx.fillText('SEALED', x + breadth / 2, y + depth / 2 - 25);
+    }
     ctx.restore();
 }

@@ -1,5 +1,15 @@
 # Wyrmforge
 
+## Prototype 0.0.115 — The Living Territory
+
+- The roaming combat world now has **real ruined-stone chokepoints**, not just painted landscape. Canonical seeded wall and gate geometry collides with the hunter and enemies.
+- An early northern barricade physically opens at the encounter director's BreathingRoom phase (after the second wave); a southern region opens at Surge. Once open, both stay open.
+- Clearing the opened routes reveals a useful optional XP cache to the north and health cache to the south; health is only consumed if needed. The original final-wave northern exit remains a physical destination.
+- The monster spawn system keeps new enemies inside the hunter's reachable region while a gate is shut, preventing inaccessible stragglers from blocking progression.
+- Enemy pursuit steers toward open choke throats when crossing regions. The active C# state owns collision, navigation and wave phase; the browser just renders the results.
+- Dark elemental masonry gains Fire/Frost/Storm/Arcane damage cues without uniform scenery tint. Basic seed variance keeps exact crossings from repeating.
+- Acceptance gates: deterministic geometry/phase/path/spawn tests, real JavaScript rendering contract, original touch/camera regression suite, balance runs and browser smoke. Physical iPhone testing still required before claiming complete device coverage.
+
 ## Prototype 0.0.114 — Roaming territory and compass-guided exits
 
 - Combat trails are actual multi-viewport worlds, not fixed canvas-sized arenas. The player, enemies, experience, hazards and caches use canonical world-space positions.
