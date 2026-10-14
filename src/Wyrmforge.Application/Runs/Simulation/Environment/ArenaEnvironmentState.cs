@@ -165,9 +165,14 @@ public sealed class ArenaEnvironmentState
     {
         // A deliberately narrow 18% pass connects visually distinct regions in a wide world.
         // A small gap between segments is avoided: no invisible corner a hunter can squeeze through.
-        barriers.Add(new Barrier(0, y, .41, .024, null, "ruin"));
-        barriers.Add(new Barrier(.59, y, .41, .024, null, "ruin"));
-        barriers.Add(new Barrier(.41, y, .18, .024, unlockPhase, "gate"));
+        // Local districts change the *physical* throat width and the character of their fortifications.
+        // Sanctuary courtyards have grand wide entrances; the fractured pass is heavy and constricted.
+        var opening = district switch { "sanctuary" => .30, "rift" => .20, _ => .24 };
+        var thickness = district switch { "sanctuary" => .018, "rift" => .04, _ => .026 };
+        var leftWidth = (1 - opening) / 2;
+        barriers.Add(new Barrier(0, y, leftWidth, thickness, null, "ruin"));
+        barriers.Add(new Barrier(leftWidth + opening, y, leftWidth, thickness, null, "ruin"));
+        barriers.Add(new Barrier(leftWidth, y, opening, thickness, unlockPhase, "gate"));
     }
 
     private bool IsOpen(Supply supply) => phase >= supply.UnlockPhase;
