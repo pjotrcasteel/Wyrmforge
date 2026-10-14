@@ -243,6 +243,11 @@ public sealed class RunSimulationTests
         Assert.IsTrue(simulation.CreateSnapshot().Trail!.Progress < 1);
         for (var phase = 0; phase < 5; phase++) director.Tick(director.PhaseDuration);
         simulation.Tick(0, default, 800, 600);
+        Assert.IsFalse(simulation.TrailExitPending, "Surviving monsters must be cleared before passage appears.");
+        var enemies = (List<Wyrmforge.Domain.Combat.Enemies.EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
+        enemies.Clear();
+        simulation.Tick(0, default, 800, 600);
         Assert.IsFalse(simulation.PendingMapChoice);
         Assert.IsTrue(simulation.TrailExitPending);
         Assert.IsNotNull(simulation.CreateSnapshot().Exit);
