@@ -176,3 +176,39 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     ctx.fillText(opened ? experience ? '+3 XP' : 'HEAL' : 'SEALED', 0, 47);
     ctx.restore();
 }
+
+export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
+    if (!exit) return;
+    const { x, y } = exit;
+    const pulse = Math.sin(elapsedSeconds * 3) * .08;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(5,3,12,.82)';
+    ctx.strokeStyle = '#c7ac7f';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-36, 32);
+    ctx.lineTo(-36, -21);
+    ctx.quadraticCurveTo(-36, -50, 0, -57);
+    ctx.quadraticCurveTo(36, -50, 36, -21);
+    ctx.lineTo(36, 32);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(161,106,208,.32)';
+    ctx.beginPath();
+    ctx.ellipse(0, 3, 25 * (1 + pulse), 34, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(221,183,255,.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-12, -8);
+    ctx.lineTo(0, -20);
+    ctx.lineTo(12, -8);
+    ctx.stroke();
+    ctx.fillStyle = '#f3d7ac';
+    ctx.font = 'bold 11px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('NEXT TRAIL ↑', 0, 54);
+    ctx.restore();
+}
