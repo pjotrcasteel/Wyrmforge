@@ -21,6 +21,7 @@ public sealed partial class RunSimulation
         if (mapEncounter)
         {
             encounterDirector.Tick(delta);
+            arenaEnvironment?.SetPhase(encounterDirector.Phase);
             if (encounterDirector.CanComplete && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
             {
                 CompleteTrail(completed);
