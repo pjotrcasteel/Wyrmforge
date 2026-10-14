@@ -1,6 +1,7 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
+import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
 const arenas = new WeakMap();
 
@@ -152,13 +153,18 @@ function drawWaiting(state, width, height) {
 function draw(state, snapshot, width, height) {
     const ctx = state.context;
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
+    const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
+    const worldWidth = camera.width;
+    const worldHeight = camera.height;
     ctx.clearRect(0, 0, width, height);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, width, height, snapshot.hud?.seconds ?? 0)) {
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, snapshot.hud?.seconds ?? 0)) {
         ctx.fillStyle = '#14111b';
-        ctx.fillRect(0, 0, width, height);
-        drawGrid(ctx, width, height);
+        ctx.fillRect(0, 0, worldWidth, worldHeight);
+        drawGrid(ctx, worldWidth, worldHeight);
     }
-    if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, width, height);
+    if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     drawArenaExit(ctx, snapshot.exit, snapshot.hud?.seconds ?? 0);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
@@ -231,8 +237,11 @@ function draw(state, snapshot, width, height) {
     ctx.lineWidth = 3;
     ctx.stroke();
 
+    ctx.restore();
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
-    drawPlayerDanger(ctx, snapshot.player, danger, width, height);
+    drawPlayerDanger(ctx, { ...snapshot.player, x: snapshot.player.x - camera.x, y: snapshot.player.y - camera.y }, danger, width, height);
+    // Draw navigation above the world but under the HUD. The arrow is not a touch target.
+    drawExitGuide(ctx, snapshot.exit, camera, width, height);
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
