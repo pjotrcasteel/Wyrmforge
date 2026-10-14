@@ -1,3 +1,5 @@
+import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
+
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
 
@@ -38,7 +40,8 @@ export function createTerrainPlan(environment, width, height) {
             length: (9 + random() * 31) * (.65 + proximity * 1.2),
             angle: random() * Math.PI * 2 });
     }
-    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark };
+    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark,
+        story: createTerritoryStoryPlan(environment, width, height) };
 }
 
 function drawTerrain(ctx, plan, width, height) {
@@ -51,6 +54,7 @@ function drawTerrain(ctx, plan, width, height) {
     gradient.addColorStop(1, colors[2]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
+    drawTerritoryGround(ctx, plan.story);
 
     // The ancient road curves beyond both edges, implying an unseen world beyond the immediate encounter.
     ctx.beginPath();
@@ -144,6 +148,7 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.stroke();
         ctx.restore();
     }
+    drawTerritoryLandmarks(ctx, plan.story);
     if (plan.stage >= 5) {
         ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : 'rgba(128,178,153,.19)';
         ctx.lineWidth = 2;
@@ -181,6 +186,7 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     ctx.drawImage(terrainTexture(environment, width, height), 0, 0, width, height);
     for (const barrier of environment.barriers ?? []) drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
+    drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
     return true;
 }
 
