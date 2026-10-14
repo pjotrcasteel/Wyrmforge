@@ -26,6 +26,7 @@ public partial class ArenaView : IAsyncDisposable
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
+    private bool healthHelpOpen;
 
     [Inject] public RunSimulationFactory SimulationFactory { get; set; } = null!;
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
