@@ -25,4 +25,5 @@ public sealed record RunRenderSnapshot(
     public SplashPulseRenderSnapshot? PowerBurst { get; init; }
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }
+    public ArenaExitRenderSnapshot? Exit { get; init; }
 }
