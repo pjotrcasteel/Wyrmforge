@@ -1,5 +1,14 @@
 # Wyrmforge
 
+## Prototype 0.0.114 — Roaming territory and compass-guided exits
+
+- Combat trails are actual multi-viewport worlds, not fixed canvas-sized arenas. The player, enemies, experience, hazards and caches use canonical world-space positions.
+- A camera follows the hunter, revealing ancient roads, ruins and elemental scars as they move. The viewport remains a display only; there is no web-page scrolling during gameplay.
+- Enemies appear around the visible hunter instead of the distant world boundary, retaining playable wave pressure.
+- Once the final encounter is defeated, the distant northern passage opens and a compass arrow guides the hunter to it. Reaching the passage unlocks the normal route decision.
+- World coordinates and camera geometry remain separate, with deterministic tests of boundaries, movement and exit direction on portrait viewports.
+- Browser and native builds share the C# simulation state; scrolling and arrow drawing are presentation details.
+
 ## Prototype 0.0.113.1 — Safari movement hotfix
 
 - Combat touch gestures have their own non-passive touch tracking, preventing native page scrolling and preserving input after Safari cancels pointer capture.
