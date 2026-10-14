@@ -297,6 +297,41 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_TerritoryStory_CanvasDrawsDistinctBiomesAndVisibleLandmarks()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+
+        var scene = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const art = await import('./js/arena-territory-art.js');
+            const environment = await import('./js/arena-environment.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = 950;
+            canvas.height = 1550;
+            const make = biome => ({ seed: 712, biome, element: 'fire', stage: 6,
+                landmark: 'ruined crossing', supplies: [], barriers: [] });
+            const ash = art.createTerritoryStoryPlan(make('Ashen caldera'), 950, 1550);
+            const ridge = art.createTerritoryStoryPlan(make('Broken ridge'), 950, 1550);
+            const valley = art.createTerritoryStoryPlan(make('River valley'), 950, 1550);
+            const painted = environment.drawArenaEnvironment(canvas.getContext('2d'), make('Ashen caldera'), 950, 1550, 1);
+            const middlePixel = [...canvas.getContext('2d').getImageData(475, 775, 1, 1).data];
+            return {
+                painted, ash: ash.landmarks[1].kind, ridge: ridge.landmarks[1].kind,
+                valley: valley.landmarks[1].kind, landmarks: ash.landmarks.length,
+                opaque: middlePixel[3] === 255,
+            };
+        }");
+
+        Assert.IsTrue(scene.GetProperty("painted").GetBoolean());
+        Assert.AreEqual(3, scene.GetProperty("landmarks").GetInt32());
+        Assert.AreEqual("forge", scene.GetProperty("ash").GetString());
+        Assert.AreEqual("ossuary", scene.GetProperty("ridge").GetString());
+        Assert.AreEqual("waystation", scene.GetProperty("valley").GetString());
+        Assert.IsTrue(scene.GetProperty("opaque").GetBoolean(), "Ground art must actually render into the world texture.");
+    }
+
+    [TestMethod]
     public async Task Mobile_RoamingTrail_CameraFollowsHunterBeyondScreenAndPageDoesNotScroll()
     {
         await Page.SetViewportSizeAsync(390, 844);
