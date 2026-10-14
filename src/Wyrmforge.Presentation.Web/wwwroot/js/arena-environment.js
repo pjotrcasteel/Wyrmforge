@@ -26,7 +26,19 @@ export function createTerrainPlan(environment, width, height) {
         remains.push({ x: Math.max(9, Math.min(width - 9, width * .5 + side * (trailWidth * .68 + random() * width * .16))),
             y: 20 + random() * Math.max(1, height - 40), size: 7 + random() * 11, rotation: random() * Math.PI });
     }
-    return { biome, bend, trailWidth, rubble, remains, stage: environment.stage, landmark: environment.landmark };
+    const proximity = Math.max(0, Math.min(1, (environment.stage - 1) / 7));
+    const element = ['fire', 'frost', 'storm', 'arcane'].includes(environment.element) ? environment.element : 'arcane';
+    const scars = [];
+    for (let index = 0; index < 3 + Math.floor(proximity * 20); index++) {
+        // Irregular, sparsely placed burn/frost/charge/rift deposits build toward the lair.
+        // Leave the central fighting ground clearer than the ruined approach and outer terrain.
+        const side = index % 2 === 0 ? -1 : 1;
+        scars.push({ x: width * .5 + side * (width * (.18 + random() * .27)),
+            y: height * (.08 + random() * .84),
+            length: (9 + random() * 31) * (.65 + proximity * 1.2),
+            angle: random() * Math.PI * 2 });
+    }
+    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark };
 }
 
 function drawTerrain(ctx, plan, width, height) {
@@ -74,6 +86,47 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.fillRect(piece.x, piece.y, piece.size, piece.size * .6);
     }
 
+    // Elemental scars communicate both the trail school and proximity to the Wyrm's source.
+    const scarColor = { fire: '#b55336', frost: '#90c7d9', storm: '#c4b469', arcane: '#ae7dd7' }[plan.element];
+    ctx.save();
+    ctx.strokeStyle = scarColor;
+    ctx.lineWidth = 1.3 + plan.proximity;
+    ctx.globalAlpha = .14 + plan.proximity * .33;
+    for (const scar of plan.scars) {
+        ctx.save();
+        ctx.translate(scar.x, scar.y);
+        ctx.rotate(scar.angle);
+        ctx.beginPath();
+        ctx.moveTo(0, -scar.length * .5);
+        ctx.lineTo(-scar.length * .14, -scar.length * .1);
+        ctx.lineTo(scar.length * .19, scar.length * .12);
+        ctx.lineTo(-scar.length * .08, scar.length * .5);
+        ctx.stroke();
+        if (plan.element === 'frost') {
+            ctx.beginPath();
+            ctx.moveTo(-scar.length * .31, 0);
+            ctx.lineTo(scar.length * .19, scar.length * .12);
+            ctx.lineTo(scar.length * .36, -scar.length * .23);
+            ctx.stroke();
+        } else if (plan.element === 'fire') {
+            ctx.fillStyle = '#61241c';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, scar.length * .12, scar.length * .18, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (plan.element === 'storm') {
+            ctx.beginPath();
+            ctx.moveTo(-scar.length * .25, scar.length * .23);
+            ctx.lineTo(scar.length * .25, -scar.length * .13);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, scar.length * .24, Math.PI * .2, Math.PI * 1.4);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+    ctx.restore();
+
     // Fallen monoliths, blasted masonry and long shadows are non-colliding scenery for this slice.
     for (const piece of plan.remains) {
         ctx.save();
@@ -111,7 +164,7 @@ function drawTerrain(ctx, plan, width, height) {
 }
 
 function terrainTexture(environment, width, height) {
-    const key = [environment.seed, environment.biome, environment.stage, width, height].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.stage, width, height].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
