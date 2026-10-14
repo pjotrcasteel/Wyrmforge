@@ -71,6 +71,14 @@
         </aside>
     }
 
+    @if (simulation?.TrailExitPending == true && !trailTransition)
+    {
+        <div class="trail-exit-instruction" role="status" aria-live="polite">
+            <strong>TRAIL VANQUISHED</strong>
+            <span>Follow the illuminated passage north to continue</span>
+        </div>
+    }
+
     @if (MapCombatActive && !trailTransition && CurrentMapNode is { } cueNode)
     {
         <div @key="(cueNode.Id, CurrentEncounterPhase)" class="encounter-change" aria-live="polite">
