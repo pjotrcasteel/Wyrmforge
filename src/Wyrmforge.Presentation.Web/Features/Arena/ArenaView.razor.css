@@ -237,6 +237,13 @@
 .combat-health-track,.combat-xp-track { height:7px; border-radius:9px; background:#362b43; overflow:hidden; }
 .combat-health-track > div { height:100%; width:100%; border-radius:inherit; background:#9ed6a2; transition:width .12s linear; }
 .combat-vitals-progress { display:flex; align-items:center; gap:7px; white-space:nowrap; color:#aaa0b4; font-size:.59rem; font-weight:800; }
+.combat-health-help { display:grid; place-items:center; flex:0 0 22px; width:22px; height:22px; padding:0; border:1px solid rgba(162,214,167,.6); border-radius:50%; color:#b8e6bd; background:rgba(39,69,47,.65); font-size:.68rem; font-weight:900; cursor:pointer; pointer-events:auto; touch-action:manipulation; }
+.combat-health-help:focus-visible,.health-help-panel button:focus-visible { outline:2px solid #e4b7ff; outline-offset:2px; }
+.health-help-panel { position:fixed; z-index:15; top:max(102px,calc(env(safe-area-inset-top) + 92px)); left:max(10px,calc(env(safe-area-inset-left) + 6px)); width:min(345px,calc(100vw - 24px)); padding:15px; border:1px solid rgba(162,214,167,.5); border-radius:13px; background:rgba(15,19,19,.96); box-shadow:0 14px 32px rgba(0,0,0,.42); color:#e7eee8; line-height:1.45; }
+.health-help-panel strong { font-size:.72rem; letter-spacing:.1em; color:#b8e6bd; }
+.health-help-panel p { margin:9px 0; font-size:.78rem; }
+.health-help-panel button { min-height:40px; margin-top:5px; padding:6px 15px; border:1px solid rgba(184,230,189,.5); border-radius:9px; color:#e7eee8; background:#304338; font-weight:800; cursor:pointer; touch-action:manipulation; }
+
 .combat-xp-track { flex:1 1 25px; min-width:16px; height:4px; }
 .combat-xp-track > div { height:100%; width:0; border-radius:inherit; background:#b887ff; }
 .combat-vitals-spells { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#c9bfd3; font-size:.65rem; font-weight:800; min-height:13px; }
