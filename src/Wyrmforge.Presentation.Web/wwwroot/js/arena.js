@@ -156,18 +156,19 @@ function draw(state, snapshot, width, height) {
     const ctx = state.context;
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
+    const visualSeconds = performance.now() / 1000;
     const worldWidth = camera.width;
     const worldHeight = camera.height;
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, snapshot.hud?.seconds ?? 0)) {
+    if (!drawArenaEnvironment(ctx, snapshot.environment, worldWidth, worldHeight, visualSeconds)) {
         ctx.fillStyle = '#14111b';
         ctx.fillRect(0, 0, worldWidth, worldHeight);
         drawGrid(ctx, worldWidth, worldHeight);
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
-    drawArenaExit(ctx, snapshot.exit, snapshot.hud?.seconds ?? 0);
+    drawArenaExit(ctx, snapshot.exit, visualSeconds);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
