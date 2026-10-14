@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'services/playtest-collector/**'
+      - 'tools/playtesting/**'
       - 'tests/**'
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
