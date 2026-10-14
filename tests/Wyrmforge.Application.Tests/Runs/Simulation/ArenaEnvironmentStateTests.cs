@@ -72,6 +72,43 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void CompleteTrail_WalkingIntoVisibleExit_RevealsNextMapDecision()
+    {
+        var simulation = new RunSimulationFactory(new Wyrmforge.Application.Tests.TestDoubles.FirstRandomSource())
+            .Create(new HashSet<string>(), seed: 1204);
+        simulation.Tick(0, default, 390, 700);
+        var first = simulation.AvailableMapNodes[0];
+        Assert.IsTrue(simulation.ChooseMapNode(first.Id));
+
+        // Use the real map completion state to focus this test on traversal rather than enemy AI.
+        var field = typeof(RunSimulation).GetField("mapState", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var map = (WyrmrealmMapState)field.GetValue(simulation)!;
+        for (var kill = 0; kill < map.CurrentNodeKillsRequired; kill++) map.RegisterKill(false);
+        Assert.IsTrue(map.TryCompleteEncounter());
+        var complete = typeof(RunSimulation).GetMethod("CompleteTrail", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        complete.Invoke(simulation, [first]);
+        var cleanup = typeof(RunSimulation).GetMethod("CompleteMapEncounterCleanup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        cleanup.Invoke(simulation, null);
+        for (var choice = 0; simulation.PendingChoices.Count > 0 && choice < 10; choice++)
+            Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
+
+        Assert.IsTrue(simulation.TrailExitPending);
+        Assert.IsFalse(simulation.PendingMapChoice);
+        var exit = simulation.CreateSnapshot().Exit;
+        Assert.IsNotNull(exit);
+
+        var playerField = typeof(RunSimulation).GetField("player", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var player = (Wyrmforge.Domain.Combat.Player.PlayerState)playerField.GetValue(simulation)!;
+        player.Position = new Vector2D(exit.X, exit.Y + exit.Radius + player.Radius + 8);
+        simulation.Tick(0.05, new MovementInput(0, -1), 390, 700);
+
+        Assert.IsFalse(simulation.TrailExitPending);
+        Assert.IsTrue(simulation.PendingMapChoice);
+        Assert.IsNull(simulation.CreateSnapshot().Exit);
+        Assert.IsGreaterThan(0, simulation.CompletedMapNodes.Count);
+    }
+
+    [TestMethod]
     public void RestrictMovement_SealedCacheIsSolidButMainPassageRemainsOpen()
     {
         var map = new WyrmrealmMapState(seed: 27);
