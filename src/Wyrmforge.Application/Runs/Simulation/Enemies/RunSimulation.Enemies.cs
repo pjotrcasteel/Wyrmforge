@@ -22,9 +22,12 @@ public sealed partial class RunSimulation
         {
             encounterDirector.Tick(delta);
             arenaEnvironment?.SetPhase(encounterDirector.Phase);
-            if (encounterDirector.CanComplete && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
+            if (encounterDirector.CanComplete && mapState.CurrentNodeKills >= mapState.CurrentNodeKillsRequired)
             {
-                CompleteTrail(completed);
+                // Stop spawning after the finale, but do not open a passage with live enemies on the floor.
+                if (enemies.Count == 0 && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
+                    CompleteTrail(completed);
+                spawnTimer = 0.08;
                 return;
             }
         }
@@ -85,13 +88,21 @@ public sealed partial class RunSimulation
             EnemyEncounterPattern.StalkerPressure => enemyId % 4,
             _ => randomSource.Next(4),
         };
+        // Spawn around the hunter's *camera*, not at the remote edge of a multi-screen world.
+        // Otherwise roaming makes the opening waves invisible and changes encounter difficulty.
+        var localWidth = mapState.EncounterActive ? viewportWidth : width;
+        var localHeight = mapState.EncounterActive ? viewportHeight : height;
+        var horizontal = (randomSource.NextDouble() - 0.5) * localWidth;
+        var vertical = (randomSource.NextDouble() - 0.5) * localHeight;
         var position = edge switch
         {
-            0 => new Vector2D(randomSource.NextDouble() * width, -margin),
-            1 => new Vector2D(width + margin, randomSource.NextDouble() * height),
-            2 => new Vector2D(randomSource.NextDouble() * width, height + margin),
-            _ => new Vector2D(-margin, randomSource.NextDouble() * height),
+            0 => new Vector2D(player.Position.X + horizontal, player.Position.Y - localHeight / 2 - margin),
+            1 => new Vector2D(player.Position.X + localWidth / 2 + margin, player.Position.Y + vertical),
+            2 => new Vector2D(player.Position.X + horizontal, player.Position.Y + localHeight / 2 + margin),
+            _ => new Vector2D(player.Position.X - localWidth / 2 - margin, player.Position.Y + vertical),
         };
+        position = new Vector2D(Math.Clamp(position.X, margin, Math.Max(margin, width - margin)),
+            Math.Clamp(position.Y, margin, Math.Max(margin, height - margin)));
         var definition = EnemyCatalog.Get(kind);
         var stage = mapState.CurrentNode?.Stage ?? 1;
         var routeHealth = Math.Max(0.25, CurrentRoute?.Encounter.EnemyHealthMultiplier ?? 1) * encounterModifiers.EnemyHealthMultiplier;

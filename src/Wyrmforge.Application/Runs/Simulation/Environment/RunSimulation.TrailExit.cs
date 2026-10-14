@@ -9,10 +9,12 @@ public sealed partial class RunSimulation
     private bool trailExitPending;
     private double arenaWidth = 800;
     private double arenaHeight = 600;
+    private double viewportWidth = 800;
+    private double viewportHeight = 600;
 
     public bool TrailExitPending => trailExitPending;
 
-    private Vector2D TrailExitPosition => new(arenaWidth * .5, Math.Max(60, arenaHeight * .2));
+    private Vector2D TrailExitPosition => new(arenaWidth * .5, Math.Max(80, arenaHeight * .11));
 
     private ArenaExitRenderSnapshot? CreateTrailExitSnapshot()
     {

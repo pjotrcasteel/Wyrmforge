@@ -170,7 +170,8 @@ function terrainTexture(environment, width, height) {
     image.width = Math.max(1, Math.round(width));
     image.height = Math.max(1, Math.round(height));
     drawTerrain(image.getContext('2d'), createTerrainPlan(environment, image.width, image.height), image.width, image.height);
-    if (textures.size >= 6) textures.delete(textures.keys().next().value);
+    // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
+    if (textures.size >= 2) textures.delete(textures.keys().next().value);
     textures.set(key, image);
     return image;
 }

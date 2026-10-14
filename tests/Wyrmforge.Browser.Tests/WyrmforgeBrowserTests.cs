@@ -297,6 +297,55 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_RoamingTrail_CameraFollowsHunterBeyondScreenAndPageDoesNotScroll()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const arena = await import('./js/arena.js');
+            const camera = await import('./js/arena-camera.js');
+            window.__roamingState = arena.readArenaDiagnostics;
+            window.__roamingCamera = camera.resolveArenaCamera;
+        }");
+        await Page.WaitForFunctionAsync(@"() => {
+            const state = window.__roamingState?.(document.querySelector('canvas.game-canvas'));
+            return Boolean(state?.world && state.player);
+        }");
+        var initial = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
+            const state = window.__roamingState(document.querySelector('canvas.game-canvas'));
+            const camera = window.__roamingCamera(state.world, state.player, 390, 844);
+            window.__roamingStartX = state.player.x;
+            return { worldWidth: state.world.width, worldHeight: state.world.height,
+                playerX: state.player.x, cameraX: camera.x, scrollY: window.scrollY };
+        }");
+        Assert.IsGreaterThan(390, initial.GetProperty("worldWidth").GetDouble());
+        Assert.IsGreaterThan(844, initial.GetProperty("worldHeight").GetDouble());
+        Assert.IsGreaterThan(390, initial.GetProperty("playerX").GetDouble(), "The world player must not be clamped to the screen.");
+
+        await Page.Keyboard.DownAsync("ArrowRight");
+        try
+        {
+            await Page.WaitForFunctionAsync(@"() => {
+                const state = window.__roamingState(document.querySelector('canvas.game-canvas'));
+                return state?.player?.x > window.__roamingStartX + 40;
+            }", null, new PageWaitForFunctionOptions { Timeout = 6000 });
+        }
+        finally { await Page.Keyboard.UpAsync("ArrowRight"); }
+        var next = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
+            const state = window.__roamingState(document.querySelector('canvas.game-canvas'));
+            const camera = window.__roamingCamera(state.world, state.player, 390, 844);
+            return { playerX: state.player.x, cameraX: camera.x, viewportX: state.player.x - camera.x,
+                scrollY: window.scrollY, renderingFailed: state.renderingFailed };
+        }");
+        Assert.IsGreaterThan(initial.GetProperty("playerX").GetDouble() + 40, next.GetProperty("playerX").GetDouble());
+        Assert.IsGreaterThan(initial.GetProperty("cameraX").GetDouble() + 35, next.GetProperty("cameraX").GetDouble());
+        Assert.IsLessThanOrEqualTo(210, next.GetProperty("viewportX").GetDouble(), "Hunter should stay near screen center as camera follows.");
+        Assert.AreEqual(initial.GetProperty("scrollY").GetDouble(), next.GetProperty("scrollY").GetDouble());
+        Assert.IsFalse(next.GetProperty("renderingFailed").GetBoolean());
+    }
+
+    [TestMethod]
     public async Task Mobile_FirstTrail_SafariTouchDrag_MovesHunterWithoutDocumentScroll()
     {
         await Page.SetViewportSizeAsync(390, 844);

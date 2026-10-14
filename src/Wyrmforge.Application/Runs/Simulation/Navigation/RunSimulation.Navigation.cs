@@ -35,7 +35,8 @@ public sealed partial class RunSimulation
         var killProgress = CurrentMapNodeKills / (double)Math.Max(1, CurrentMapNodeKillsRequired);
         var seconds = (int)Math.Ceiling(Math.Max(0, encounterDirector.PhaseDuration - encounterDirector.PhaseElapsed));
         var status = seconds > 0 ? $"{seconds}s" : "Clear enemies";
-        var objective = killProgress >= 1 ? "Hold the trail" : $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills";
+        var objective = killProgress < 1 ? $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills"
+            : encounterDirector.CanComplete ? $"Clear {enemies.Count} remaining" : "Hold the trail";
         return new(Math.Min(killProgress, phaseFraction), status, objective);
     }
 
@@ -47,6 +48,7 @@ public sealed partial class RunSimulation
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
+        playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
@@ -75,10 +77,9 @@ public sealed partial class RunSimulation
     private void RegisterMapEncounterKill()
     {
         if (dragonEncounterStarted || !mapState.EncounterActive) return;
-        var completedNode = mapState.CurrentNode;
         encounterDirector.RegisterProgress(mapState.CurrentNodeKills + 1, mapState.CurrentNodeKillsRequired);
-        if (!mapState.RegisterKill(encounterDirector.CanComplete) || completedNode is null) return;
-        CompleteTrail(completedNode);
+        // Completion is evaluated by UpdateSpawn once the last wave has no surviving enemies.
+        mapState.RegisterKill(false);
     }
 
     private void CompleteTrail(WyrmrealmMapNode completedNode)

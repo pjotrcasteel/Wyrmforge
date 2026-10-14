@@ -94,6 +94,8 @@ public sealed class ArenaEnvironmentStateTests
 
         Assert.IsTrue(simulation.TrailExitPending);
         Assert.IsFalse(simulation.PendingMapChoice);
+        // The camera/world dimensions are refreshed on Tick, including after a manual completion in this test.
+        simulation.Tick(0, default, 390, 700);
         var exit = simulation.CreateSnapshot().Exit;
         Assert.IsNotNull(exit);
 

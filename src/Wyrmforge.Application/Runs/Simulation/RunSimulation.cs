@@ -113,8 +113,14 @@ public sealed partial class RunSimulation
 
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
-        arenaWidth = width;
-        arenaHeight = height;
+        // The Canvas is a camera viewport. Encounter simulation occupies a larger deterministic world.
+        viewportWidth = width;
+        viewportHeight = height;
+        var roaming = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending);
+        arenaWidth = roaming ? Math.Max(width * 2.6, 950) : width;
+        arenaHeight = roaming ? Math.Max(height * 2.5, 1550) : height;
+        width = arenaWidth;
+        height = arenaHeight;
         EnsurePlayerPosition(width, height);
         if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice))) return CreateSnapshot();
         if (trailExitPending)
@@ -122,6 +128,7 @@ public sealed partial class RunSimulation
             delta = Math.Clamp(delta, 0, 0.05);
             elapsed += delta;
             UpdatePlayer(delta, movement, width, height);
+            CollectEnvironmentSupplies(width, height);
             TryReachTrailExit();
             return CreateSnapshot();
         }
@@ -279,7 +286,8 @@ public sealed partial class RunSimulation
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
-            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot(), Environment = arenaEnvironment?.Snapshot(), Exit = CreateTrailExitSnapshot() };
+            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot(), Environment = arenaEnvironment?.Snapshot(), Exit = CreateTrailExitSnapshot(),
+            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()
