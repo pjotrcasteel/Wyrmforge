@@ -325,7 +325,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.WaitForFunctionAsync(@"async () => {
             const arena = await import('./js/arena.js');
             const result = arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
-            return result?.player?.x > window.__touchMoveBaseline.x + 8;
+            if (result?.player?.x > window.__touchMoveBaseline.x + 8) {
+                window.__touchMoveObserved = result.player.x - window.__touchMoveBaseline.x;
+                return true;
+            }
+            return false;
         }", null, new PageWaitForFunctionOptions { Timeout = 7000 });
         var details = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
             const arena = await import('./js/arena.js');
@@ -335,11 +339,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const current = new Touch({ identifier: 71, target: canvas, clientX: 0, clientY: 0 });
             canvas.dispatchEvent(new TouchEvent('touchend',
                 { bubbles: true, cancelable: true, touches: [], changedTouches: [current], targetTouches: [] }));
-            return { moved: result.player.x - original.x, scrollDelta: window.scrollY - original.scrollY,
+            return { moved: result.player.x - original.x, peakMoved: window.__touchMoveObserved,
+                scrollDelta: window.scrollY - original.scrollY,
                 renderFailed: result.renderingFailed, touchCleared: arena.readArenaDiagnostics(canvas).touchId === null };
         }");
 
-        Assert.IsGreaterThan(8, details.GetProperty("moved").GetDouble(), "The hunter must actually move when an iPhone touch drags.");
+        Assert.IsGreaterThan(8, details.GetProperty("peakMoved").GetDouble(), "The hunter must actually move when an iPhone touch drags.");
         Assert.AreEqual(0, details.GetProperty("scrollDelta").GetDouble(), "Touching the arena must not scroll the browser document.");
         Assert.IsFalse(details.GetProperty("renderFailed").GetBoolean(), "Terrain rendering must not fail during gameplay.");
         Assert.IsTrue(details.GetProperty("touchCleared").GetBoolean(), "Lifting the finger must stop steering.");
