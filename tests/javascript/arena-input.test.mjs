@@ -48,6 +48,49 @@ test('short primary touch swipes steer without scrolling; extra fingers do not h
     a.detach();
 });
 
+test('Safari touch continues steering after pointercancel and prevents scrolling', () => {
+    const a = arena();
+    const touch = (identifier, x, y) => ({ identifier, clientX: x, clientY: y });
+    const start = touch(37, 120, 180);
+    const moved = touch(37, 165, 180);
+    assert.equal(a.canvas.dispatch('touchstart', { changedTouches: [start], touches: [start] }).defaultPrevented, true);
+    assert.equal(a.state.touchId, 37);
+    a.canvas.dispatch('pointercancel', { pointerId: 1 });
+    assert.deepEqual(getArenaMovement(a.state), { x: 0, y: 0 });
+    const scroll = a.canvas.dispatch('touchmove', { touches: [moved], changedTouches: [moved] });
+    assert.equal(scroll.defaultPrevented, true);
+    assert.deepEqual(getArenaMovement(a.state), { x: 1, y: 0 });
+    a.canvas.dispatch('pointermove', { pointerId: 1, clientX: 100, clientY: 100 });
+    assert.deepEqual(getArenaMovement(a.state), { x: 1, y: 0 });
+
+    const other = touch(38, 50, 50);
+    a.canvas.dispatch('touchstart', { changedTouches: [other], touches: [moved, other] });
+    a.canvas.dispatch('touchend', { changedTouches: [other], touches: [moved] });
+    assert.equal(a.state.touchId, 37, 'The second finger must not cancel primary steering.');
+    a.canvas.dispatch('touchend', { changedTouches: [moved], touches: [] });
+    assert.equal(a.state.touchId, null);
+    assert.deepEqual(getArenaMovement(a.state), { x: 0, y: 0 });
+    a.detach();
+});
+
+test('touch cancellation, blur and teardown clear touch steering', () => {
+    const a = arena();
+    const touch = { identifier: 14, clientX: 100, clientY: 100 };
+    a.canvas.dispatch('touchstart', { changedTouches: [touch], touches: [touch] });
+    a.canvas.dispatch('touchmove', { changedTouches: [{ ...touch, clientX: 144 }], touches: [{ ...touch, clientX: 144 }] });
+    assert.deepEqual(getArenaMovement(a.state), { x: 1, y: 0 });
+    a.canvas.dispatch('touchcancel', { changedTouches: [touch], touches: [] });
+    assert.deepEqual(getArenaMovement(a.state), { x: 0, y: 0 });
+    a.canvas.dispatch('touchstart', { changedTouches: [touch], touches: [touch] });
+    a.win.dispatch('blur');
+    assert.equal(a.state.touchId, null);
+    a.canvas.dispatch('touchstart', { changedTouches: [touch], touches: [touch] });
+    a.detach();
+    assert.equal(a.state.touchId, null);
+    a.canvas.dispatch('touchstart', { changedTouches: [touch], touches: [touch] });
+    assert.equal(a.state.touchId, null);
+});
+
 test('blur, backgrounding, and disposal clear keyboard and captured pointer state', () => {
     const a = arena(() => { throw new Error('Pointer capture not supported'); });
     const down = a.win.dispatch('keydown', { key: 'ArrowRight' });

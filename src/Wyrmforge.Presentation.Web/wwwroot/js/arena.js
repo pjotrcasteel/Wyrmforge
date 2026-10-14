@@ -15,6 +15,20 @@ export function initializeArena(canvas, dotNetReference) {
     state.animationFrame = requestAnimationFrame(timestamp => frame(state, timestamp));
 }
 
+// Read-only diagnostics allow browser smoke to verify actual movement, not merely visible canvas pixels.
+export function readArenaDiagnostics(canvas) {
+    const state = arenas.get(canvas);
+    if (!state) return null;
+    return {
+        active: state.active,
+        movement: getArenaMovement(state),
+        pointerId: state.pointerId,
+        touchId: state.touchId,
+        player: state.latestSnapshot?.player ?? null,
+        renderingFailed: Boolean(state.renderingFailed),
+    };
+}
+
 export function disposeArena(canvas) {
     const state = arenas.get(canvas);
     if (!state) return;
@@ -58,8 +72,18 @@ function frame(state, timestamp) {
     resizeCanvas(state, rect);
     recordRenderFrame(state, timestamp);
 
-    if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
-    else drawWaiting(state, rect.width, rect.height);
+    try {
+        if (state.latestSnapshot) draw(state, state.latestSnapshot, rect.width, rect.height);
+        else drawWaiting(state, rect.width, rect.height);
+        state.renderingFailed = false;
+    } catch (error) {
+        if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
+        state.renderingFailed = true;
+        // Canvas rendering must never silently stop player movement and the C# simulation.
+        state.context.setTransform(1, 0, 0, 1, 0, 0);
+        state.context.fillStyle = '#14111b';
+        state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
+    }
 
     startSimulationFrame(state, timestamp, rect);
     if (state.active) state.animationFrame = requestAnimationFrame(next => frame(state, next));

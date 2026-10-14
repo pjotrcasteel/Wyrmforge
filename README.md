@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.113.1 — Safari movement hotfix
+
+- Combat touch gestures have their own non-passive touch tracking, preventing native page scrolling and preserving input after Safari cancels pointer capture.
+- Movement on iPhone no longer depends on uninterrupted Pointer Events; mouse and keyboard controls remain supported.
+- An isolated terrain drawing error cannot terminate the simulation loop or silently disable all movement.
+- Regression coverage includes touch cancellation and actual hunter position change on a mobile browser viewport. Physical iPhone Safari confirmation is still needed.
+
 ## Prototype 0.0.113 — Living gothic battlefield
 
 - The empty combat grid becomes seeded dark-fantasy scenery: ancient roads, rubble, broken monoliths, scorched approaches, oppressive shadows and distinct valley/ridge/caldera treatments.

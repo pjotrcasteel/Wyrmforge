@@ -1,11 +1,14 @@
-// Arena-specific input lifecycle. Keep this independent of rendering so touch recovery can be tested without a browser.
+// Arena-specific input lifecycle. On iOS Safari, touch events survive pointer-capture loss
+// during scrolling/viewport changes; the two paths must never fight over one virtual stick.
 const navigationKeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']);
 
 export function attachArenaInput(state, browserWindow = window, browserDocument = document) {
     const { canvas } = state;
+    state.touchId = null;
     const reset = () => {
         state.keys.clear();
         state.pointerId = null;
+        state.touchId = null;
     };
     const onKeyDown = event => {
         if (event.target?.isContentEditable ||
@@ -15,22 +18,42 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
     };
     const onKeyUp = event => state.keys.delete(event.key.toLowerCase());
     const onPointerDown = event => {
-        if (state.pointerId !== null || event.isPrimary === false ||
+        if (state.touchId !== null || state.pointerId !== null || event.isPrimary === false ||
             (event.pointerType === 'mouse' && event.button !== 0)) return;
         state.pointerId = event.pointerId;
         state.touchOrigin = { x: event.clientX, y: event.clientY };
         state.touchCurrent = { ...state.touchOrigin };
         try { canvas.setPointerCapture?.(event.pointerId); }
-        catch { /* Keep movement while the pointer remains on canvas if capture is unavailable. */ }
+        catch { /* The document still tracks captured touches through touch events. */ }
         if (event.pointerType === 'touch' && event.cancelable) event.preventDefault();
     };
     const onPointerMove = event => {
-        if (event.pointerId !== state.pointerId) return;
+        if (state.touchId !== null || event.pointerId !== state.pointerId) return;
         state.touchCurrent = { x: event.clientX, y: event.clientY };
         if (event.pointerType === 'touch' && event.cancelable) event.preventDefault();
     };
     const onPointerEnd = event => {
         if (event.pointerId === state.pointerId) state.pointerId = null;
+    };
+    const onTouchStart = event => {
+        if (state.touchId !== null) return;
+        const touch = event.changedTouches?.[0];
+        if (!touch) return;
+        state.touchId = touch.identifier;
+        state.pointerId = null;
+        state.touchOrigin = { x: touch.clientX, y: touch.clientY };
+        state.touchCurrent = { ...state.touchOrigin };
+        if (event.cancelable) event.preventDefault();
+    };
+    const onTouchMove = event => {
+        if (state.touchId === null) return;
+        // Touches remain targeted at the canvas even if the finger leaves its bounding rectangle.
+        const touch = Array.from(event.touches ?? []).find(touch => touch.identifier === state.touchId);
+        if (touch) state.touchCurrent = { x: touch.clientX, y: touch.clientY };
+        if (event.cancelable) event.preventDefault();
+    };
+    const onTouchEnd = event => {
+        if (Array.from(event.changedTouches ?? []).some(touch => touch.identifier === state.touchId)) state.touchId = null;
     };
     const onBlur = () => reset();
     const onVisibilityChange = () => { if (browserDocument.hidden) reset(); };
@@ -42,6 +65,9 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
     canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
     canvas.addEventListener('pointermove', onPointerMove, { passive: false });
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, onPointerEnd);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    for (const name of ['touchend', 'touchcancel']) canvas.addEventListener(name, onTouchEnd);
     return () => {
         browserWindow.removeEventListener('keydown', onKeyDown);
         browserWindow.removeEventListener('keyup', onKeyUp);
@@ -50,6 +76,9 @@ export function attachArenaInput(state, browserWindow = window, browserDocument 
         canvas.removeEventListener('pointerdown', onPointerDown);
         canvas.removeEventListener('pointermove', onPointerMove);
         for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.removeEventListener(name, onPointerEnd);
+        canvas.removeEventListener('touchstart', onTouchStart);
+        canvas.removeEventListener('touchmove', onTouchMove);
+        for (const name of ['touchend', 'touchcancel']) canvas.removeEventListener(name, onTouchEnd);
         reset();
     };
 }
@@ -62,7 +91,7 @@ export function getArenaMovement(state) {
     if (state.keys.has('arrowup') || state.keys.has('w')) y -= 1;
     if (state.keys.has('arrowdown') || state.keys.has('s')) y += 1;
     if (x !== 0 || y !== 0) return normalize(x, y);
-    if (state.pointerId === null) return { x: 0, y: 0 };
+    if (state.pointerId === null && state.touchId === null) return { x: 0, y: 0 };
 
     const dx = state.touchCurrent.x - state.touchOrigin.x;
     const dy = state.touchCurrent.y - state.touchOrigin.y;

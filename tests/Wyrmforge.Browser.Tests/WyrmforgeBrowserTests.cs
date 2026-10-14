@@ -297,6 +297,58 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_FirstTrail_SafariTouchDrag_MovesHunterWithoutDocumentScroll()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const arena = await import('./js/arena.js');
+            window.__arenaDiagnostics = arena.readArenaDiagnostics;
+        }");
+        await Page.WaitForFunctionAsync(@"() =>
+            Boolean(window.__arenaDiagnostics(document.querySelector('canvas.game-canvas'))?.player)");
+
+        await Page.EvaluateAsync(@"async () => {
+            const canvas = document.querySelector('canvas.game-canvas');
+            const arena = await import('./js/arena.js');
+            const start = arena.readArenaDiagnostics(canvas);
+            const rect = canvas.getBoundingClientRect();
+            window.__touchMoveBaseline = { x: start.player.x, scrollY: window.scrollY };
+            const origin = new Touch({ identifier: 71, target: canvas, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 });
+            const moved = new Touch({ identifier: 71, target: canvas, clientX: origin.clientX + 65, clientY: origin.clientY });
+            canvas.dispatchEvent(new TouchEvent('touchstart',
+                { bubbles: true, cancelable: true, touches: [origin], changedTouches: [origin], targetTouches: [origin] }));
+            // Mobile Safari can cancel pointer capture even though the original finger is still moving.
+            canvas.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 71, pointerType: 'touch' }));
+            canvas.dispatchEvent(new TouchEvent('touchmove',
+                { bubbles: true, cancelable: true, touches: [moved], changedTouches: [moved], targetTouches: [moved] }));
+        }");
+        var movement = await Page.WaitForFunctionAsync(@"() => {
+            const result = window.__arenaDiagnostics(document.querySelector('canvas.game-canvas'));
+            const distance = (result?.player?.x ?? 0) - window.__touchMoveBaseline.x;
+            return distance > 8 ? distance : false;
+        }", null, new PageWaitForFunctionOptions { Timeout = 7000 });
+        var observedMovement = await movement.JsonValueAsync<double>();
+        var details = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const arena = await import('./js/arena.js');
+            const canvas = document.querySelector('canvas.game-canvas');
+            const result = arena.readArenaDiagnostics(canvas);
+            const original = window.__touchMoveBaseline;
+            const current = new Touch({ identifier: 71, target: canvas, clientX: 0, clientY: 0 });
+            canvas.dispatchEvent(new TouchEvent('touchend',
+                { bubbles: true, cancelable: true, touches: [], changedTouches: [current], targetTouches: [] }));
+            return { moved: result.player.x - original.x, scrollDelta: window.scrollY - original.scrollY,
+                renderFailed: result.renderingFailed, touchCleared: arena.readArenaDiagnostics(canvas).touchId === null };
+        }");
+
+        Assert.IsGreaterThan(8, observedMovement, "The hunter must actually move when an iPhone touch drags.");
+        Assert.AreEqual(0, details.GetProperty("scrollDelta").GetDouble(), "Touching the arena must not scroll the browser document.");
+        Assert.IsFalse(details.GetProperty("renderFailed").GetBoolean(), "Terrain rendering must not fail during gameplay.");
+        Assert.IsTrue(details.GetProperty("touchCleared").GetBoolean(), "Lifting the finger must stop steering.");
+    }
+
+    [TestMethod]
     public async Task Mobile_FirstTrail_RendersActiveCombatWithoutPageOverflow()
     {
         Directory.CreateDirectory(ArtifactDirectory);
