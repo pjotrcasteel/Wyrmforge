@@ -45,3 +45,24 @@ Approved gameplay-view environment study: an open forest clearing, ruined monast
 - Apply this readability principle to every environment, enemy and mage progression state.
 
 Generated with OpenAI image generation and iteratively art-directed with Pjotr; approved after the character contrast revision.
+
+## Artwork workflow
+
+Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. Preserve the mage's established slate-blue cloak, pale collar and staff silhouette. Use reference images directly; do not guess character colours from memory.
+
+## Approved monastery interior — 15 October 2026
+
+![Flooded monastery cloister and manuscript study](world/monastery-interior-v1.png)
+
+Approved after research and architectural revision. A recognisable above-ground monastery: a flooded garden courtyard, connected covered walks, surviving roof sections, and adjoining rooms for study and daily life. Forbidden knowledge sits in a manuscript study; past wyrm worship appears in a faded mural.
+
+- Maintain a coherent, human-scale building plan and clear routes.
+- Restrained purposeful furnishings; avoid random arches, isolated pillars, giant ritual reliefs and cave-like flooded halls.
+- Keep the established mage design and readable character silhouettes.
+- This is approved concept art, not a production tileset.
+
+Architectural references researched before generation:
+- [Lacock Abbey — cloister and adjoining rooms, National Trust](https://www.nationaltrust.org.uk/visit/wiltshire/lacock/things-to-see-and-do-in-the-house-at-lacock)
+- [Lilleshall Abbey — monastic layout, English Heritage](https://www.english-heritage.org.uk/visit/places/lilleshall-abbey/History/description/)
+
+Generated with OpenAI image generation and iteratively art-directed with Pjotr. Earlier white-robe, burgundy-robe and ritual-chamber studies are not approved references.
