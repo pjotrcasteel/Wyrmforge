@@ -55,7 +55,7 @@ public sealed class ArenaEnvironmentState
         var element = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
         // Each node belongs to a different local district even when its overarching biome is unchanged.
         // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
-        var districtIndex = ((seed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
+        var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
