@@ -35,7 +35,8 @@ public sealed partial class RunSimulation
         var killProgress = CurrentMapNodeKills / (double)Math.Max(1, CurrentMapNodeKillsRequired);
         var seconds = (int)Math.Ceiling(Math.Max(0, encounterDirector.PhaseDuration - encounterDirector.PhaseElapsed));
         var status = seconds > 0 ? $"{seconds}s" : "Clear enemies";
-        var objective = killProgress >= 1 ? "Hold the trail" : $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills";
+        var objective = killProgress < 1 ? $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills"
+            : encounterDirector.CanComplete ? $"Clear {enemies.Count} remaining" : "Hold the trail";
         return new(Math.Min(killProgress, phaseFraction), status, objective);
     }
 
