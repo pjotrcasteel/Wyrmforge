@@ -19,8 +19,8 @@ public sealed class EnvironmentDistrictTests
 
         Assert.AreEqual(starting.Biome, following.Biome);
         Assert.AreNotEqual(starting.District, following.District);
-        Assert.Contains(starting.District, new[] { "causeway", "sanctuary", "rift" });
-        Assert.Contains(following.District, new[] { "causeway", "sanctuary", "rift" });
+        CollectionAssert.Contains(new[] { "causeway", "sanctuary", "rift" }, starting.District);
+        CollectionAssert.Contains(new[] { "causeway", "sanctuary", "rift" }, following.District);
     }
 
     [TestMethod]
