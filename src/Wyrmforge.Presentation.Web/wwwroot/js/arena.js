@@ -1,6 +1,6 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
-import { drawArenaEnvironment } from './arena-environment.js';
+import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
 
 const arenas = new WeakMap();
 
@@ -135,6 +135,7 @@ function draw(state, snapshot, width, height) {
         drawGrid(ctx, width, height);
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, width, height);
+    drawArenaExit(ctx, snapshot.exit, snapshot.hud?.seconds ?? 0);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
