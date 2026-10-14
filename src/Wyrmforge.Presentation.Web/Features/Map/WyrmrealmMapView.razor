@@ -76,6 +76,15 @@
                         </svg>
                     </div>
                 }
+                @foreach (var scarNode in Nodes.Where(node => node.Type == WyrmrealmNodeType.Combat))
+                {
+                    <div class="territory-elemental-scar school-@scarNode.AttunementSchool!.Value.ToString().ToLowerInvariant()"
+                         style="@ElementScarStyle(scarNode)" aria-hidden="true">
+                        <span class="scar-fault"></span>
+                        <span class="scar-rift"></span>
+                        <span class="scar-splinter"></span>
+                    </div>
+                }
                 @foreach (var road in Territory?.Roads ?? [])
                 {
                     var entrance = Nodes.First(node => node.Site?.RoadId == road.Id);
@@ -248,6 +257,18 @@
         if (IsCompleted(node)) return "route-link traversed";
         if (IsAvailable(node)) return selectedNode?.Id == node.Id ? "route-link active selected" : "route-link active";
         return "route-link future";
+    }
+
+    // A small trace at the first trail becomes a scarred landscape as the lair approaches.
+    // Route school, position and seed are already canonical map data, never rolled in the view.
+    private string ElementScarStyle(WyrmrealmMapNode node)
+    {
+        var stage = Math.Clamp(node.Stage, 1, WyrmrealmMapState.CombatStages);
+        var scale = (stage - 1d) / (WyrmrealmMapState.CombatStages - 1);
+        var seed = Territory?.Seed ?? 0;
+        var tilt = (unchecked(seed * 17 + node.Stage * 67 + node.Lane * 31) % 61) - 30;
+        return FormattableString.Invariant(
+            $"left:{NodeX(node):0.#}%;top:{NodeY(node):0.#}%;--scar-size:{44 + scale * 110:0.#}px;--scar-opacity:{0.22 + scale * 0.60:0.###};--scar-angle:{tilt}deg;");
     }
 
     private string NodeMapStyle(WyrmrealmMapNode node) => FormattableString.Invariant($"left:{NodeX(node):0.#}%;top:{NodeY(node):0.#}%");
