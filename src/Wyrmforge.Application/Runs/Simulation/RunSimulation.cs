@@ -128,6 +128,7 @@ public sealed partial class RunSimulation
             delta = Math.Clamp(delta, 0, 0.05);
             elapsed += delta;
             UpdatePlayer(delta, movement, width, height);
+            CollectEnvironmentSupplies(width, height);
             TryReachTrailExit();
             return CreateSnapshot();
         }
