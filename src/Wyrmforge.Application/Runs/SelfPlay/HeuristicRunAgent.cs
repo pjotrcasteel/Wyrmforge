@@ -23,6 +23,8 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
     {
         var snapshot = observation.Snapshot;
         var player = new Vector2D(snapshot.Player.X, snapshot.Player.Y);
+        if (snapshot.Exit is { } exit) return ToInput(Vector2D.DirectionTo(player, new Vector2D(exit.X, exit.Y)));
+
 
         if (snapshot.Extraction is { } extraction)
         {
