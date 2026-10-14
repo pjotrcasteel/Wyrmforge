@@ -11,7 +11,7 @@ public sealed partial class RunSimulation
 
     private void UpdateSpawn(double delta, double width, double height)
     {
-        if (developmentHunt || dragon is { Health: > 0 }) return;
+        if (developmentHunt || trailExitPending || dragon is { Health: > 0 }) return;
         if (entryGraceRemaining > 0)
         {
             entryGraceRemaining = Math.Max(0, entryGraceRemaining - delta);
@@ -21,6 +21,7 @@ public sealed partial class RunSimulation
         if (mapEncounter)
         {
             encounterDirector.Tick(delta);
+            arenaEnvironment?.SetPhase(encounterDirector.Phase);
             if (encounterDirector.CanComplete && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
             {
                 CompleteTrail(completed);

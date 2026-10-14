@@ -363,3 +363,12 @@
     .encounter-phase { white-space:nowrap; }
     .encounter-phase small { margin-left:2px; font-size:.48rem; }
 }
+
+/* An earned passage is visible in-world; this readable direction cue doesn't steal touch input. */
+.trail-exit-instruction { position:fixed; z-index:5; left:50%; top:max(100px,calc(env(safe-area-inset-top) + 96px));
+    transform:translateX(-50%); display:grid; justify-items:center; gap:3px; width:min(340px,calc(100vw - 34px));
+    padding:8px 12px; border:1px solid rgba(203,158,103,.6); border-radius:11px;
+    background:rgba(17,11,17,.87); color:#e3d1b4; text-align:center; pointer-events:none;
+    box-shadow:0 4px 20px rgba(0,0,0,.25); }
+.trail-exit-instruction strong { font-size:.63rem; letter-spacing:.1em; }
+.trail-exit-instruction span { font-size:.65rem; color:#cab9b5; }

@@ -117,7 +117,7 @@ public partial class ArenaView : IAsyncDisposable
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
-        if (current.CompletedMapNodes.Count > previousMapCompleted && current.PendingMapChoice && !snapshot.Ended)
+        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended)
         {
             ShowTrailTransition();
             await TryPlayAudioAsync("trail-clear");

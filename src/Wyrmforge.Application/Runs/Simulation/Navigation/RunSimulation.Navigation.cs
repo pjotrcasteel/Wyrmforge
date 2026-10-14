@@ -8,6 +8,7 @@ public sealed partial class RunSimulation
 {
     private readonly Queue<SpellSchool> pendingAttunements = new();
     private readonly EncounterDirector encounterDirector = new();
+    private ArenaEnvironmentState? arenaEnvironment;
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
     private double entryGraceRemaining;
@@ -42,10 +43,11 @@ public sealed partial class RunSimulation
 
     public bool ChooseMapNode(string id)
     {
-        if (dragonEncounterStarted) return false;
+        if (dragonEncounterStarted || trailExitPending) return false;
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
+        arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();
@@ -57,6 +59,7 @@ public sealed partial class RunSimulation
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
         encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage);
+        arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         spawnTimer = 0.15;
         return true;
@@ -81,6 +84,7 @@ public sealed partial class RunSimulation
     private void CompleteTrail(WyrmrealmMapNode completedNode)
     {
         completedRouteNodes.Add(completedNode);
+        trailExitPending = true;
         RefreshBuildModifiers(true);
         ApplyRouteReward(completedNode.Route?.Reward);
         if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
@@ -100,12 +104,12 @@ public sealed partial class RunSimulation
     private void CompleteMapEncounterCleanup()
     {
         if (!mapEncounterCleanupPending) return;
-        ClearMapEncounterField();
+        ClearMapEncounterField(preserveEnvironment: true);
         mapEncounterCleanupPending = false;
         TryLevelUp();
     }
 
-    private void ClearMapEncounterField()
+    private void ClearMapEncounterField(bool preserveEnvironment = false)
     {
         entryGraceRemaining = 0;
         powerBurstRemaining = 0;
@@ -125,6 +129,7 @@ public sealed partial class RunSimulation
         encounterPlan = null;
         encounterPlanIndex = 0;
         encounterDirector.Reset();
+        if (!preserveEnvironment) arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     }
 
