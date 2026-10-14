@@ -243,6 +243,14 @@ public sealed class RunSimulationTests
         Assert.IsTrue(simulation.CreateSnapshot().Trail!.Progress < 1);
         for (var phase = 0; phase < 5; phase++) director.Tick(director.PhaseDuration);
         simulation.Tick(0, default, 800, 600);
+        Assert.IsFalse(simulation.PendingMapChoice);
+        Assert.IsTrue(simulation.TrailExitPending);
+        Assert.IsNotNull(simulation.CreateSnapshot().Exit);
+        // Clearance is no longer a teleport: walk the final few steps into the passage.
+        var exit = simulation.CreateSnapshot().Exit!;
+        var player = (PlayerState)typeof(RunSimulation).GetField("player", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
+        player.Position = new Wyrmforge.Domain.Combat.Geometry.Vector2D(exit.X, exit.Y);
+        simulation.Tick(0, default, 800, 600);
         Assert.IsTrue(simulation.PendingMapChoice);
         Assert.AreEqual(1, simulation.CompletedMapNodes.Count);
         Assert.AreEqual(node.AttunementSchool, simulation.PendingRewardSchool);
