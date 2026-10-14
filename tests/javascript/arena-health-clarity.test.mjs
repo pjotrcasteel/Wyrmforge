@@ -21,7 +21,6 @@ test('the same overarching biome produces three distinct full-sized district com
     const context = { seed: 1204, biome: 'Ashen caldera', element: 'fire', stage: 3 };
     const plans = ['causeway', 'sanctuary', 'rift'].map(district => createTerritoryStoryPlan({ ...context, district }, 950, 2100));
     assert.deepEqual(plans.map(plan => plan.district), ['causeway', 'sanctuary', 'rift']);
-    assert.equal(new Set(plans.map(plan => plans[0].landmarks === plan.landmarks)).size >= 1, true);
     assert.notDeepEqual(plans[0].landmarks, plans[1].landmarks);
     assert.notDeepEqual(plans[1].landmarks, plans[2].landmarks);
     assert.equal(plans[0].element, plans[1].element);
