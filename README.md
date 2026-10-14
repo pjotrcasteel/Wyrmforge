@@ -1,5 +1,15 @@
 # Wyrmforge
 
+## Prototype 0.0.116 — Recognizable Living Territories (environment slice A)
+
+- The world-space combat territory now reads like an actual place: a continuous weathered causeway, broken paving, deliberate central courtyard and three large themed landmarks per biome.
+- Ashen calderas have a black pyre, ruined forge and burned convoy. Ridges have a fallen watchtower, ossuary and banners. Valleys have a broken chapel, abandoned waystation and flooded altar.
+- Original elemental devastation is geometric as well as chromatic: Fire scorches, Frost splinters ground into plates, Storm splits it into branching lightning wounds, and Arcane corrupts the terrain in ritual rings. Scarring intensifies at stages nearer the Wyrm.
+- Seeded regional ground strata and atmospheric motes add scale and motion without importing art assets, changing canonical combat RNG or creating misleading solid walls.
+- Canvas ground illustration is baked into the existing bounded terrain texture cache; per-frame animation is restricted to lightweight ambient motes. HUD, real physics barriers and the existing camera remain unchanged.
+- [Living Territory visual language, game reference research and next slices](docs/design/living-territories-0.0.116.md). The next step is a real Wyrm flyover and lasting elemental impact, then dramatic area unlocks.
+- Automated tests validate deterministic recipes, distinct biomes, escalating corruption, camera/gate composition and mobile browser Canvas rendering. Physical iPhone Safari visual approval is still required.
+
 ## Prototype 0.0.115 — The Living Territory
 
 - The roaming combat world now has **real ruined-stone chokepoints**, not just painted landscape. Canonical seeded wall and gate geometry collides with the hunter and enemies.
