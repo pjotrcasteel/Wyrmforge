@@ -326,7 +326,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const arena = await import('./js/arena.js');
             const result = arena.readArenaDiagnostics(document.querySelector('canvas.game-canvas'));
             return result?.player?.x > window.__touchMoveBaseline.x + 8;
-        }", new PageWaitForFunctionOptions { Timeout = 7000 });
+        }", null, new PageWaitForFunctionOptions { Timeout = 7000 });
         var details = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
             const arena = await import('./js/arena.js');
             const canvas = document.querySelector('canvas.game-canvas');
