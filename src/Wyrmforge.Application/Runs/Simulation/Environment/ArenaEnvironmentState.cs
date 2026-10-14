@@ -142,7 +142,9 @@ public sealed class ArenaEnvironmentState
         {
             var crossingY = (gate.Y + gate.Height * .5) * height;
             if ((enemy.Y - crossingY) * (hunter.Y - crossingY) >= 0) continue;
-            var offset = Math.Max(24, radius + 12);
+            // A thicker regional crossing needs a waypoint *beyond* its masonry.
+            // Otherwise a pursuing enemy targets the interior of a wide ruined gate.
+            var offset = Math.Max(24, gate.Height * height * .5 + radius + 8);
             return new Vector2D(width * .5, crossingY + (hunter.Y < crossingY ? -offset : offset));
         }
         return hunter;
