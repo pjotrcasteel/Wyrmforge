@@ -242,10 +242,14 @@ public sealed class RunSimulationTests
         Assert.AreEqual("Hold the trail", simulation.CreateSnapshot().Trail!.Objective);
         Assert.IsTrue(simulation.CreateSnapshot().Trail!.Progress < 1);
         for (var phase = 0; phase < 5; phase++) director.Tick(director.PhaseDuration);
-        simulation.Tick(0, default, 800, 600);
-        Assert.IsFalse(simulation.TrailExitPending, "Surviving monsters must be cleared before passage appears.");
+        // Insert one live straggler deliberately; auto-cast may have killed all naturally spawned enemies.
         var enemies = (List<Wyrmforge.Domain.Combat.Enemies.EnemyState>)typeof(RunSimulation)
             .GetField("enemies", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
+        enemies.Clear();
+        enemies.Add(new Wyrmforge.Domain.Combat.Enemies.EnemyState(9999,
+            new Wyrmforge.Domain.Combat.Geometry.Vector2D(50, 50), 12, 100000, 0));
+        simulation.Tick(0, default, 800, 600);
+        Assert.IsFalse(simulation.TrailExitPending, "Surviving monsters must be cleared before passage appears.");
         enemies.Clear();
         simulation.Tick(0, default, 800, 600);
         Assert.IsFalse(simulation.PendingMapChoice);
