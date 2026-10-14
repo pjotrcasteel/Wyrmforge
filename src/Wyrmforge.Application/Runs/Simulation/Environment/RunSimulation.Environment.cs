@@ -4,7 +4,7 @@ public sealed partial class RunSimulation
 {
     private void CollectEnvironmentSupplies(double width, double height)
     {
-        if (!mapState.EncounterActive || arenaEnvironment is null) return;
+        if ((!mapState.EncounterActive && !trailExitPending) || arenaEnvironment is null) return;
         var collected = arenaEnvironment.TryCollect(player.Position, width, height, player.Radius, player.Health < player.MaxHealth);
         if (collected is null) return;
 
