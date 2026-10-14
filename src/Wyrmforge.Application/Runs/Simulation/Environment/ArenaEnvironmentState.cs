@@ -10,6 +10,7 @@ public sealed class ArenaEnvironmentState
     private readonly List<Supply> supplies = [];
     private readonly int seed;
     private readonly string biome;
+    private readonly string element;
     private readonly int stage;
     private readonly string landmark;
     private EncounterPhase phase = EncounterPhase.Pressure;
@@ -23,10 +24,11 @@ public sealed class ArenaEnvironmentState
         public bool Collected { get; set; }
     }
 
-    private ArenaEnvironmentState(int seed, string biome, int stage, string landmark)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark)
     {
         this.seed = seed;
         this.biome = biome;
+        this.element = element;
         this.stage = stage;
         this.landmark = landmark;
     }
@@ -45,7 +47,8 @@ public sealed class ArenaEnvironmentState
             "Broken ridge" => stage >= 6 ? "Collapsed guardian watch" : "Old pilgrim stones",
             _ => stage >= 6 ? "The ruined river crossing" : "Forgotten hunter's trail",
         };
-        var environment = new ArenaEnvironmentState(seed, biome, stage, landmark);
+        var element = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The left cache alcove opens after the first two combat phases; the right opens after the third wave.
@@ -57,7 +60,7 @@ public sealed class ArenaEnvironmentState
 
     public void SetPhase(EncounterPhase current) => phase = current;
 
-    public ArenaEnvironmentRenderSnapshot Snapshot() => new(seed, biome, stage, landmark,
+    public ArenaEnvironmentRenderSnapshot Snapshot() => new(seed, biome, element, stage, landmark,
         supplies.Where(supply => !supply.Collected)
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
             .ToArray());
