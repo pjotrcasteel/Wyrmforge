@@ -1,5 +1,14 @@
 # Wyrmforge
 
+## Prototype 0.0.112 — Mobile control reliability and health guidance
+
+- Arena input now resets when iOS loses pointer capture, the browser loses focus, or a hunt becomes backgrounded; cancelled gestures no longer leave stale movement.
+- Touch movement responds to shorter deliberate swipes and ignores a second finger taking control of the virtual stick.
+- The active hunt locks background page scrolling while map and decision panels retain their own scrolling.
+- The combat HUD provides an optional, dismissible explanation of HP, recovery and Refuge healing. No health or difficulty balancing was changed.
+- Automated JavaScript regressions cover pointer lifecycle, keyboard focus, cancellation, backgrounding and scroll behavior. Actual iPhone Safari touch verification remains a release gate.
+- Only engineering changes are described here; small private playtest cohorts and individual feedback are not published.
+
 ## Prototype 0.0.111 — Warm upgrade moments
 
 - New spell / level-up reveal uses a delicate CC0 gemstone sound instead of the jarring combat-oriented Magic Shield activation.
