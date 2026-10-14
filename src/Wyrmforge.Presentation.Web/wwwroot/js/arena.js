@@ -26,6 +26,8 @@ export function readArenaDiagnostics(canvas) {
         pointerId: state.pointerId,
         touchId: state.touchId,
         player: state.latestSnapshot?.player ?? null,
+        world: state.latestSnapshot?.world ?? null,
+        exit: state.latestSnapshot?.exit ?? null,
         renderingFailed: Boolean(state.renderingFailed),
     };
 }
