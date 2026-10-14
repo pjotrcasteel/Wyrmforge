@@ -9,6 +9,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import sys
 from urllib.error import HTTPError, URLError
@@ -17,6 +18,15 @@ from urllib.request import Request, urlopen
 MIN_COHORT = 10
 MIN_CELL = 3
 SYNTHETIC_TEST_ID = "e3626f65-00fd-4aa3-bb51-cb7259a51170"
+VERSION_PATTERN = re.compile(r"0\.0\.[0-9]{1,4}\Z")
+
+# D1 returns only cohorts that pass the overall public reporting threshold.
+# Never fetch (or publish) version-specific rows for a smaller cohort.
+VERSION_COHORTS_SQL = """
+SELECT version, COUNT(*) AS reports
+FROM reports WHERE id <> ?
+GROUP BY version HAVING COUNT(*) >= ?
+"""
 
 TOTALS_SQL = """
 SELECT COUNT(*) AS reports,
@@ -27,16 +37,16 @@ SELECT COUNT(*) AS reports,
        SUM(CASE WHEN replay IS NOT NULL THEN 1 ELSE 0 END) AS replay_responses,
        SUM(CASE WHEN replay = 'yes' THEN 1 ELSE 0 END) AS replay_yes
 FROM reports
-WHERE id <> ?
+WHERE id <> ? AND version = ?
 """
 ISSUES_SQL = """
 SELECT trouble_area AS category, COUNT(*) AS responses
-FROM reports WHERE id <> ? AND trouble_area IS NOT NULL
+FROM reports WHERE id <> ? AND version = ? AND trouble_area IS NOT NULL
 GROUP BY trouble_area ORDER BY responses DESC, category
 """
 DEVICES_SQL = """
 SELECT kind AS category, COUNT(*) AS responses
-FROM reports WHERE id <> ?
+FROM reports WHERE id <> ? AND version = ?
 GROUP BY kind ORDER BY responses DESC, category
 """
 RUNS_SQL = """
@@ -46,7 +56,7 @@ WITH unique_runs AS (
            MAX(json_extract(j.value, '$.durationSeconds')) AS duration_seconds,
            MAX(json_extract(j.value, '$.outcome')) AS outcome
     FROM reports r JOIN json_each(r.data, '$.recentRuns') j
-    WHERE r.id <> ?
+    WHERE r.id <> ? AND r.version = ?
     GROUP BY json_extract(j.value, '$.runId')
 )
 SELECT COUNT(*) AS runs,
@@ -59,7 +69,7 @@ WITH unique_runs AS (
     SELECT json_extract(j.value, '$.runId') AS run_id,
            MAX(json_extract(j.value, '$.outcome')) AS outcome
     FROM reports r JOIN json_each(r.data, '$.recentRuns') j
-    WHERE r.id <> ?
+    WHERE r.id <> ? AND r.version = ?
     GROUP BY json_extract(j.value, '$.runId')
 )
 SELECT outcome AS category, COUNT(*) AS responses
@@ -115,7 +125,7 @@ def publishable_categories(rows, permitted):
             and (numeric(row, "responses") or 0) >= MIN_CELL]
 
 
-def render(totals, issues, devices, runs, outcomes, as_of):
+def render(totals, issues, devices, runs, outcomes, as_of, version=None):
     count = int(numeric(totals, "reports") or 0)
     header = [
         "# WyrmForge — anonymized playtest insights", "",
@@ -135,7 +145,7 @@ def render(totals, issues, devices, runs, outcomes, as_of):
         ])
 
     sections = header + [
-        "## Feedback overview", "",
+        f"## Feedback overview — version {version}" if version else "## Feedback overview", "",
         f"- **Sample:** at least {MIN_COHORT} consented reports (rolling D1 retention window).",
         f"- **Enjoyment:** {totals['enjoyment']:.1f}/5" if
             (numeric(totals, "enjoyment_responses") or 0) >= MIN_COHORT and numeric(totals, "enjoyment") is not None
@@ -196,6 +206,81 @@ def render(totals, issues, devices, runs, outcomes, as_of):
     return "\n".join(sections)
 
 
+def qualifying_versions(rows):
+    """Only supported game versions with >=10 consented reports can be published."""
+    valid = []
+    for row in rows:
+        version = row.get("version")
+        if isinstance(version, str) and VERSION_PATTERN.fullmatch(version) and (numeric(row, "reports") or 0) >= MIN_COHORT:
+            valid.append(version)
+    return sorted(set(valid), key=lambda version: int(version.rsplit(".", 1)[1]), reverse=True)[:2]
+
+
+def comparison_rating(totals, value, answered):
+    if (numeric(totals, answered) or 0) < MIN_COHORT or numeric(totals, value) is None:
+        return "withheld"
+    return f"{numeric(totals, value):.1f}/5"
+
+
+def comparison_cell(cohort, field):
+    totals, runs = cohort["totals"], cohort["runs"]
+    if field == "enjoyment":
+        return comparison_rating(totals, "enjoyment", "enjoyment_responses")
+    if field == "clarity":
+        return comparison_rating(totals, "clarity", "clarity_responses")
+    if field == "replay":
+        percent = rate(numeric(totals, "replay_yes") or 0, numeric(totals, "replay_responses") or 0)
+        return f"~{percent}%" if percent is not None else "withheld"
+    if field == "duration":
+        duration = numeric(runs, "mean_duration_seconds")
+        return f"~{round(duration / 10) * 10:.0f}s" if (numeric(runs, "runs") or 0) >= MIN_COHORT and duration is not None else "withheld"
+    if field == "issue":
+        names = publishable_categories(cohort["issues"], {
+            "onboarding", "movement", "combat", "rewards", "forge", "wyrms", "performance", "other"
+        })
+        return names[0].replace("_", " ").title() if names else "withheld"
+    raise ValueError("Unsupported comparison field")
+
+
+def render_cohorts(cohorts, as_of):
+    """Show one version's actions and optionally compare two independent qualifying cohorts."""
+    safe = [cohort for cohort in cohorts
+            if isinstance(cohort.get("version"), str) and VERSION_PATTERN.fullmatch(cohort["version"])
+            and (numeric(cohort.get("totals"), "reports") or 0) >= MIN_COHORT]
+    if not safe:
+        return render({"reports": 0}, [], [], {}, [], as_of) + (
+            "\nStatistics are withheld until a single game version has at least "
+            f"{MIN_COHORT} consented reports. Versions are never pooled.\n"
+        )
+    safe.sort(key=lambda cohort: int(cohort["version"].rsplit(".", 1)[1]), reverse=True)
+    safe = safe[:2]
+    latest = safe[0]
+    report = render(latest["totals"], latest["issues"], latest["devices"], latest["runs"],
+                    latest["outcomes"], as_of, version=latest["version"])
+    report = report.replace("## Feedback overview", (
+        f"**Latest eligible game version: {latest['version']}.** All feedback and run statistics below "
+        "are scoped to this release, not pooled with earlier versions.\n\n## Feedback overview"
+    ), 1)
+    if len(safe) < 2:
+        return report + "\nOnly one version currently meets the reporting threshold; no comparison is published.\n"
+
+    older = safe[1]
+    table = [
+        "", "## Comparison of eligible game versions", "",
+        "These are separate opt-in report cohorts, **not** matched players. A difference is not proof of a release effect.",
+        "Answered rating/intent groups and unique shared-run samples require at least 10 within **each** version.",
+        "Low-frequency problem categories are withheld. No individual feedback or exact version counts are published.",
+        "",
+        f"| Measure | {older['version']} | {latest['version']} |",
+        "| --- | --- | --- |",
+    ]
+    for label, field in [
+        ("Enjoyment", "enjoyment"), ("Clarity", "clarity"), ("Replay intent", "replay"),
+        ("Common reported problem", "issue"), ("Shared-run average duration", "duration")
+    ]:
+        table.append(f"| {label} | {comparison_cell(older, field)} | {comparison_cell(latest, field)} |")
+    return report + "\n".join(table + [""])
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
@@ -205,25 +290,27 @@ def main():
     # Idempotent deletion prevents it from contaminating any later cohort summary.
     execute_d1(PURGE_SQL, [SYNTHETIC_TEST_ID])
 
-    totals = execute_d1(TOTALS_SQL, [SYNTHETIC_TEST_ID])
-    if len(totals) != 1:
-        raise CollectorError("D1 totals query must return exactly one row")
-
-    # Never query free-text columns or entire JSON report bodies.
-    if int(numeric(totals[0], "reports") or 0) < MIN_COHORT:
-        issues, devices, runs, outcomes = [], [], {}, []
-    else:
-        issues = execute_d1(ISSUES_SQL, [SYNTHETIC_TEST_ID])
-        devices = execute_d1(DEVICES_SQL, [SYNTHETIC_TEST_ID])
-        sample = execute_d1(RUNS_SQL, [SYNTHETIC_TEST_ID])
+    version_rows = execute_d1(VERSION_COHORTS_SQL, [SYNTHETIC_TEST_ID, MIN_COHORT])
+    cohorts = []
+    for version in qualifying_versions(version_rows):
+        params = [SYNTHETIC_TEST_ID, version]
+        totals = execute_d1(TOTALS_SQL, params)
+        if len(totals) != 1:
+            raise CollectorError("D1 version totals query must return exactly one row")
+        if int(numeric(totals[0], "reports") or 0) < MIN_COHORT:
+            continue  # Retention may have expired a cohort between queries.
+        issues = execute_d1(ISSUES_SQL, params)
+        devices = execute_d1(DEVICES_SQL, params)
+        sample = execute_d1(RUNS_SQL, params)
         if len(sample) != 1:
-            raise CollectorError("D1 run aggregate must return exactly one row")
-        runs = sample[0]
-        outcomes = execute_d1(RUN_OUTCOMES_SQL, [SYNTHETIC_TEST_ID])
+            raise CollectorError("D1 version run aggregate must return exactly one row")
+        outcomes = execute_d1(RUN_OUTCOMES_SQL, params)
+        cohorts.append({"version": version, "totals": totals[0], "issues": issues,
+                        "devices": devices, "runs": sample[0], "outcomes": outcomes})
 
     # Timestamp is a day, not a precise ingestion timestamp.
     date = datetime.now(timezone.utc).date().isoformat()
-    content = render(totals[0], issues, devices, runs, outcomes, date)
+    content = render_cohorts(cohorts, date)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(content, encoding="utf-8")
     print("Privacy-safe playtest insight summary generated; no raw submissions exported.")
