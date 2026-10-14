@@ -56,19 +56,8 @@ function drawTerrain(ctx, plan, width, height) {
     ctx.fillRect(0, 0, width, height);
     drawTerritoryGround(ctx, plan.story);
 
-    // The ancient road curves beyond both edges, implying an unseen world beyond the immediate encounter.
-    ctx.beginPath();
-    ctx.moveTo(width * .5 - plan.trailWidth * .75 - plan.bend, -25);
-    ctx.bezierCurveTo(width * .33, height * .3, width * .68, height * .65, width * .5 - plan.trailWidth * .65 + plan.bend, height + 25);
-    ctx.lineTo(width * .5 + plan.trailWidth * .65 + plan.bend, height + 25);
-    ctx.bezierCurveTo(width * .75, height * .65, width * .42, height * .3, width * .5 + plan.trailWidth * .75 - plan.bend, -25);
-    ctx.closePath();
-    ctx.fillStyle = ash ? 'rgba(97,66,47,.18)' : ridge ? 'rgba(103,107,98,.12)' : 'rgba(126,108,79,.11)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(165,145,111,.13)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
+    // No shared road overlay: the canonical encounter district now owns the entire
+    // large-scale ground composition through its deterministic territory story plan.
     // Ominous cliff shadows and a broken outer horizon; no bright rectangular grid.
     for (const side of [-1, 1]) {
         ctx.beginPath();
@@ -169,7 +158,7 @@ function drawTerrain(ctx, plan, width, height) {
 }
 
 function terrainTexture(environment, width, height) {
-    const key = [environment.seed, environment.biome, environment.element, environment.stage, width, height].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.stage, width, height].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));

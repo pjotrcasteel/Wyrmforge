@@ -218,7 +218,12 @@ function updateCombatHud(state, snapshot) {
     updateText(dom.score, `SCORE ${hud.score}`);
     updateText(dom.time, `${hud.seconds}s`);
     updateText(dom.kills, `${hud.kills} KILLS`);
-    updateText(dom.health, `HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
+    updateText(dom.health, `♥ HP ${Math.ceil(hud.health)}/${Math.ceil(hud.maxHealth)}`);
+    const healthFraction = Math.max(0, Math.min(1, hud.health / Math.max(1, hud.maxHealth)));
+    const vitals = dom.health?.closest('.combat-vitals');
+    if (vitals) vitals.dataset.healthState = healthFraction <= .25 ? 'critical' : healthFraction <= .55 ? 'wounded' : 'healthy';
+    const healthTrack = dom.healthFill?.parentElement;
+    if (healthTrack) healthTrack.setAttribute('aria-valuenow', String(Math.round(healthFraction * 100)));
     updateText(dom.level, `LV ${hud.level}`);
     const signature = JSON.stringify(hud.spells);
     if (dom.spells && dom.spells.dataset.loadout !== signature) {

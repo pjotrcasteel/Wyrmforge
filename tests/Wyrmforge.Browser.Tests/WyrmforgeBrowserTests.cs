@@ -297,6 +297,68 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_HealthStatus_IsImmediateAndDoesNotRequireHelpButton()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+
+        await Expect(Page.Locator(".combat-health-help")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".health-help-panel")).ToHaveCountAsync(0);
+        await Expect(Page.GetByRole(AriaRole.Progressbar, new() { Name = "Health" })).ToBeVisibleAsync();
+        await Expect(Page.Locator("[data-hud='health']")).ToContainTextAsync("HP");
+        var state = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"() => {
+            const value = document.querySelector('[data-hud=health]').textContent;
+            const bar = document.querySelector('.combat-health-track');
+            return { text: value, value: bar.getAttribute('aria-valuenow'),
+                state: document.querySelector('.combat-vitals').dataset.healthState };
+        }");
+        Assert.IsTrue(state.GetProperty("text").GetString()!.Contains("♥"));
+        Assert.IsTrue(int.TryParse(state.GetProperty("value").GetString(), out _));
+        Assert.IsNotNull(state.GetProperty("state").GetString());
+    }
+
+    [TestMethod]
+    public async Task Mobile_Territories_DifferentDistrictsProduceDifferentActualCanvasPixels()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        var result = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const painter = await import('./js/arena-environment.js');
+            const make = district => ({ seed: 1455, biome: 'Ashen caldera', element: 'fire',
+                stage: 3, district, landmark: 'ruined road', supplies: [], barriers: [] });
+            const sample = district => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 950;
+                canvas.height = 1550;
+                const context = canvas.getContext('2d');
+                painter.drawArenaEnvironment(context, make(district), 950, 1550, 0);
+                const points = [];
+                for (let y = 555; y < 1020; y += 28) {
+                    for (let x = 130; x < 820; x += 28) {
+                        const pixel = context.getImageData(x, y, 1, 1).data;
+                        points.push([pixel[0], pixel[1], pixel[2]]);
+                    }
+                }
+                return points;
+            };
+            const a = sample('causeway');
+            const b = sample('sanctuary');
+            const c = sample('rift');
+            const compare = (first, second) => first.filter((rgb, i) => rgb.some((value, j) =>
+                Math.abs(value - second[i][j]) > 12)).length;
+            return { sampled: a.length, causewaySanctuary: compare(a, b),
+                sanctuaryRift: compare(b, c), causewayRift: compare(a, c) };
+        }");
+        var sampled = result.GetProperty("sampled").GetInt32();
+        Assert.IsGreaterThan(200, sampled);
+        foreach (var comparison in new[] { "causewaySanctuary", "sanctuaryRift", "causewayRift" })
+            Assert.IsGreaterThan(sampled / 4, result.GetProperty(comparison).GetInt32(),
+                "Different combat districts must look substantially different, not merely gain a few elemental marks.");
+    }
+
+    [TestMethod]
     public async Task Mobile_TerritoryStory_CanvasDrawsDistinctBiomesAndVisibleLandmarks()
     {
         await Page.SetViewportSizeAsync(390, 844);

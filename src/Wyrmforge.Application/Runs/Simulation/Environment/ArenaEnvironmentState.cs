@@ -14,6 +14,7 @@ public sealed class ArenaEnvironmentState
     private readonly string element;
     private readonly int stage;
     private readonly string landmark;
+    private readonly string district;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -27,13 +28,14 @@ public sealed class ArenaEnvironmentState
 
     private sealed record Barrier(double X, double Y, double Width, double Height, EncounterPhase? UnlockPhase, string Kind);
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district)
     {
         this.seed = seed;
         this.biome = biome;
         this.element = element;
         this.stage = stage;
         this.landmark = landmark;
+        this.district = district;
     }
 
     public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node)
@@ -51,7 +53,11 @@ public sealed class ArenaEnvironmentState
             _ => stage >= 6 ? "The ruined river crossing" : "Forgotten hunter's trail",
         };
         var element = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark);
+        // Each node belongs to a different local district even when its overarching biome is unchanged.
+        // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
+        var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
+        var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The hunter begins in the central courtyard. Both crossings have a permanent narrow throat.
@@ -75,7 +81,7 @@ public sealed class ArenaEnvironmentState
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
             .ToArray(),
         barriers.Select(barrier => new ArenaBarrierRenderSnapshot(barrier.X, barrier.Y, barrier.Width, barrier.Height,
-            IsOpen(barrier), barrier.Kind)).ToArray());
+            IsOpen(barrier), barrier.Kind)).ToArray(), district);
 
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double width, double height, double radius = 0)
     {
@@ -136,7 +142,9 @@ public sealed class ArenaEnvironmentState
         {
             var crossingY = (gate.Y + gate.Height * .5) * height;
             if ((enemy.Y - crossingY) * (hunter.Y - crossingY) >= 0) continue;
-            var offset = Math.Max(24, radius + 12);
+            // A thicker regional crossing needs a waypoint *beyond* its masonry.
+            // Otherwise a pursuing enemy targets the interior of a wide ruined gate.
+            var offset = Math.Max(24, gate.Height * height * .5 + radius + 8);
             return new Vector2D(width * .5, crossingY + (hunter.Y < crossingY ? -offset : offset));
         }
         return hunter;
@@ -159,9 +167,14 @@ public sealed class ArenaEnvironmentState
     {
         // A deliberately narrow 18% pass connects visually distinct regions in a wide world.
         // A small gap between segments is avoided: no invisible corner a hunter can squeeze through.
-        barriers.Add(new Barrier(0, y, .41, .024, null, "ruin"));
-        barriers.Add(new Barrier(.59, y, .41, .024, null, "ruin"));
-        barriers.Add(new Barrier(.41, y, .18, .024, unlockPhase, "gate"));
+        // Local districts change the *physical* throat width and the character of their fortifications.
+        // Sanctuary courtyards have grand wide entrances; the fractured pass is heavy and constricted.
+        var opening = district switch { "sanctuary" => .30, "rift" => .20, _ => .24 };
+        var thickness = district switch { "sanctuary" => .018, "rift" => .04, _ => .026 };
+        var leftWidth = (1 - opening) / 2;
+        barriers.Add(new Barrier(0, y, leftWidth, thickness, null, "ruin"));
+        barriers.Add(new Barrier(leftWidth + opening, y, leftWidth, thickness, null, "ruin"));
+        barriers.Add(new Barrier(leftWidth, y, opening, thickness, unlockPhase, "gate"));
     }
 
     private bool IsOpen(Supply supply) => phase >= supply.UnlockPhase;

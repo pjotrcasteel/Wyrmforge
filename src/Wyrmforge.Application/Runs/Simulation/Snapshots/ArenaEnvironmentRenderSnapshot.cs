@@ -11,4 +11,5 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     int Stage,
     string Landmark,
     IReadOnlyList<ArenaSupplyRenderSnapshot> Supplies,
-    IReadOnlyList<ArenaBarrierRenderSnapshot> Barriers);
+    IReadOnlyList<ArenaBarrierRenderSnapshot> Barriers,
+    string District);

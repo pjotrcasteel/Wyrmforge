@@ -32,10 +32,11 @@
                 <span data-hud="time">0s</span>
                 <span data-hud="kills">0 KILLS</span>
             </div>
-            <div class="combat-health-track"><div data-hud="health-fill"></div></div>
+            <div class="combat-health-track" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                <div data-hud="health-fill"></div>
+            </div>
             <div class="combat-vitals-progress">
-                <span data-hud="health">HP 100/100</span>
-                <button type="button" class="combat-health-help" aria-label="Explain health and recovery" aria-expanded="@healthHelpOpen.ToString().ToLowerInvariant()" @onclick="() => healthHelpOpen = !healthHelpOpen">?</button>
+                <span data-hud="health" class="combat-hp-value">♥ HP 100/100</span>
                 <span data-hud="level">LV 1</span>
                 <div class="combat-xp-track"><div data-hud="xp-fill"></div></div>
             </div>
@@ -60,16 +61,6 @@
             </section>
         }
     </div>
-
-    @if (healthHelpOpen)
-    {
-        <aside class="health-help-panel" aria-label="How health works">
-            <strong>YOUR HEALTH</strong>
-            <p>The green HP bar falls when enemy attacks hit. At zero HP, your hunt ends.</p>
-            <p>Clear trails to recover health, or choose Mend Wounds at a Refuge. Certain builds also protect against damage.</p>
-            <button type="button" @onclick="() => healthHelpOpen = false">GOT IT</button>
-        </aside>
-    }
 
     @if (simulation?.TrailExitPending == true && !trailTransition)
     {

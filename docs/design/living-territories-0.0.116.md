@@ -21,8 +21,10 @@ This is a living design reference. At the beginning of each subsequent environme
 | **Darkest Dungeon** | https://www.gamedeveloper.com/audio/road-to-the-igf-red-hook-studios-i-darkest-dungeon-i- ; https://www.darkestdungeon.com/darkest-dungeon/about/ | Historic materials, pronounced outlines, pooling blacks and worn places sustain gothic atmosphere. | High-contrast silhouette-first stone ruins, old banners, ossuary stones, collapsed chapel, ruined forge/pyre. |
 | **V Rising — Gloomrot** | https://playvrising.com/expansions/gloomrot | Environmental damage, polluted valleys, lightning-scarred highlands and weather express faction and danger. | Fire burns charred valleys; Frost makes polygonal fractures; Storm branches into split-earth lightning wounds; Arcane distorts the landscape into rings and ritual geometry. |
 | **Darkest Dungeon II** | https://www.gamedeveloper.com/design/how-a-theme-of-a-road-trip-from-hell-would-shape-darkest-dungeon-ii | The route between locations is a memorable landscape, not just a transition screen. | Player actually travels through a world and observes increasingly damaged districts before physically entering the exit. |
+| **Grim Dawn** | https://www.grimdawn.com/guide/gameplay/exploration/ | Hand-crafted areas establish geography and history; selected bridges, barricades and shortcuts vary between sessions. | Different canonical combat districts (causeway/sanctuary/rift), opening passages of different widths, and recognizable foundations. Prefer meaningful regional geometry to random debris. |
+| **No Rest for the Wicked** | https://80.lv/articles/interview-inside-the-tech-and-artistic-inspirations-of-no-rest-for-the-wicked-from-moon-studios | Expressive silhouette and lighting deliberately emphasize the painterly scene over indiscriminate photorealism. | Introduce one enormous visual landform per element and a distinct composition per district, always preserving player/attack readability. |
 
-**Next sources to assess:** *Grim Dawn* (town ruins, environmental history), *No Rest for the Wicked* (ground texture hierarchy, movement/readability), *Ravenswatch* (top-down hostile world exploration), and *Path of Exile* (strong act-biome landmarks). Research techniques, not content or grind loops.
+**Next sources to assess:** *Ravenswatch* (top-down hostile world exploration), and *Path of Exile* (strong act-biome landmarks). Research techniques, not content or grind loops.
 
 ## Slice A — Readable Territories (this PR)
 
@@ -69,3 +71,16 @@ Acceptance:
 ## Future inspiration review template
 
 Record for each milestone: **game + source, concrete observation, WyrmForge adaptation, what we deliberately reject, screenshot/test acceptance**. This keeps research productive rather than becoming style imitation.
+
+## 0.0.117 playtest response — explicit anti-repetition and health-clarity gates
+
+User feedback: the health HUD must not require a clickable question-mark tutorial, and different levels must **not** be one floor with small different-colored scars.
+
+Implementation: remove health tutorial state/UI; a passive ♥ HP bar communicates current health, percentage and criticality through shape/length/color. Adjacent nodes choose different deterministic districts. Each district changes the world's major floor footprint and the physical crossing width, while each element creates a large identifiable landform.
+
+Keep these hard acceptance gates in future changes:
+- **Three screenshots, same biome and element, three sequential districts:** large areas of the image must differ structurally, not just in particles or color.
+- **One-element monochrome test:** Fire/Frost/Storm/Arcane ought to remain distinguishable by their different patterns/shapes, not their hue alone.
+- **No user interaction required to understand health, energy, XP or the route.** Noninteractive progress meters may carry screen-reader labels, not clickable tutorial buttons.
+- **All new geography must agree with canonical navigation.** Scenery that looks like an inaccessible cliff but has no collision should read as shallow damaged ground instead.
+- **Do not declare visual quality passed based only on automated checks.** Compare actual portrait phone screenshots and adjust based on player feedback.

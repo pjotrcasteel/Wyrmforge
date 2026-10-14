@@ -124,11 +124,12 @@ test('editable controls keep keyboard navigation; right-click does not engage vi
     a.detach();
 });
 
-test('active hunts lock background document scrolling while keeping accessible health help', () => {
+test('active hunts lock background scrolling while passive health display remains accessible', () => {
     const css = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/css/app.css', import.meta.url), 'utf8');
     const markup = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor', import.meta.url), 'utf8');
     assert.match(css, /\.game-canvas\s*\{[^}]*touch-action:\s*none/);
     assert.match(css, /html:has\(\.game-screen\), body:has\(\.game-screen\)\s*\{[^}]*overflow:\s*hidden/);
-    assert.match(markup, /aria-label="Explain health and recovery"/);
-    assert.match(markup, /Mend Wounds at a Refuge/);
+    assert.match(markup, /role="progressbar" aria-label="Health"/);
+    assert.match(markup, /class="combat-hp-value">♥ HP 100\/100/);
+    assert.doesNotMatch(markup, /Explain health and recovery|healthHelpOpen/);
 });

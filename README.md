@@ -1,5 +1,15 @@
 # Wyrmforge
 
+## Prototype 0.0.117 — Health clarity and unmistakably different territories
+
+- **Remove the clickable health help question mark and modal entirely.** In combat, the green health bar, visible heart + HP current/maximum, and severity coloring (healthy / wounded / critical) convey the status immediately without interrupting movement. The health bar also exposes an accessible progress value.
+- **Same-biome encounters no longer reuse one universal road template.** Every route node gets a deterministic `causeway`, `sanctuary`, or `rift` district, with different gate widths and wall thicknesses in the canonical simulation. Adjacent opening stages rotate districts.
+- **Large-scale district composition:** broken ancient highway and paving versus massive ceremonial plazas and radial stonework versus full-height fractured-earth trenches and shattered crossing slabs.
+- **Large elemental landforms:** exposed glowing lava basins, frozen ice shelves, branching lightning impact fields, or enormous distorted ritual circles. These occupy substantial portions of the world, not a handful of small marks.
+- Separate original landmark layouts for each district, preserving the broader map's biome while giving every encounter a place identity.
+- World-space camera, accessible supply caches, monster pathing, wave unlocks and final exit stay canonical and functioning as before.
+- Automated checks cover district uniqueness, actual differing Canvas pixels on portrait browser emulation, health HUD without help controls, full .NET and existing movement/touch/browser regression suites. Physical iPhone screenshot inspection remains the visual quality gate.
+
 ## Prototype 0.0.116 — Recognizable Living Territories (environment slice A)
 
 - The world-space combat territory now reads like an actual place: a continuous weathered causeway, broken paving, deliberate central courtyard and three large themed landmarks per biome.
