@@ -57,8 +57,8 @@ public sealed class ArenaEnvironmentState
         // The hunter begins in the central courtyard. Both crossings have a permanent narrow throat.
         // A sealed barricade temporarily closes that throat. The north opens after wave two;
         // the south opens at the surge. Neither gate can lock again during this encounter.
-        environment.AddCrossing(0.34, EncounterPhase.BreathingRoom);
-        environment.AddCrossing(0.69, EncounterPhase.Surge);
+        environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
+        environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
         environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
         environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
         return environment;
