@@ -246,6 +246,10 @@ public sealed class RunSimulationTests
         Assert.IsFalse(simulation.PendingMapChoice);
         Assert.IsTrue(simulation.TrailExitPending);
         Assert.IsNotNull(simulation.CreateSnapshot().Exit);
+        Assert.AreEqual(node.AttunementSchool, simulation.PendingRewardSchool);
+        // The reward draft must be resolved before the hunter can walk through the passage.
+        for (var choice = 0; simulation.PendingChoices.Count > 0 && choice < 10; choice++)
+            Assert.IsTrue(simulation.ApplyChoice(simulation.PendingChoices[0].Id));
         // Clearance is no longer a teleport: walk the final few steps into the passage.
         var exit = simulation.CreateSnapshot().Exit!;
         var player = (PlayerState)typeof(RunSimulation).GetField("player", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(simulation)!;
@@ -253,7 +257,6 @@ public sealed class RunSimulationTests
         simulation.Tick(0, default, 800, 600);
         Assert.IsTrue(simulation.PendingMapChoice);
         Assert.AreEqual(1, simulation.CompletedMapNodes.Count);
-        Assert.AreEqual(node.AttunementSchool, simulation.PendingRewardSchool);
         simulation.Tick(0.05, default, 800, 600);
         Assert.AreEqual(1, simulation.CompletedMapNodes.Count);
     }
