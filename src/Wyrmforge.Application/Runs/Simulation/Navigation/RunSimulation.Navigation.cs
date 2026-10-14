@@ -47,6 +47,7 @@ public sealed partial class RunSimulation
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
+        playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
