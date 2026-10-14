@@ -1,6 +1,7 @@
 import { createSpellBadge } from './spell-hud.js';
 import { createSoundEventTracker, collectSoundEvents } from './sound-events.js';
 import { disposeArena as disposeBaseArena, initializeArena as initializeBaseArena } from './arena.js';
+import { resolveArenaCamera } from './arena-camera.js';
 
 const frameStates = new WeakMap();
 const activeSimulationIntervalMilliseconds = 1000 / 60;
@@ -138,8 +139,11 @@ function drawStatusOverlay(state, snapshot) {
     const rect = state.canvasRect;
     ctx.clearRect(0, 0, rect.width, rect.height);
     if (snapshot?.paused || snapshot?.ended) return;
-    for (const enemy of snapshot?.enemies ?? []) drawStatusBadges(ctx, enemy.x, enemy.y, enemy.radius, enemy.statuses, false);
-    if (snapshot?.dragon) drawStatusBadges(ctx, snapshot.dragon.x, snapshot.dragon.y, snapshot.dragon.radius, snapshot.dragon.statuses, true);
+    const camera = resolveArenaCamera(snapshot?.world, snapshot?.player, rect.width, rect.height);
+    for (const enemy of snapshot?.enemies ?? [])
+        drawStatusBadges(ctx, enemy.x - camera.x, enemy.y - camera.y, enemy.radius, enemy.statuses, false);
+    if (snapshot?.dragon)
+        drawStatusBadges(ctx, snapshot.dragon.x - camera.x, snapshot.dragon.y - camera.y, snapshot.dragon.radius, snapshot.dragon.statuses, true);
 }
 
 function drawStatusBadges(ctx, x, y, radius, statuses, large) {
