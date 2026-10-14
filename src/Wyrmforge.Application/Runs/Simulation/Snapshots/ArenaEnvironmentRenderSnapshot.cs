@@ -5,6 +5,7 @@ public sealed record ArenaSupplyRenderSnapshot(string Kind, double X, double Y, 
 public sealed record ArenaEnvironmentRenderSnapshot(
     int Seed,
     string Biome,
+    string Element,
     int Stage,
     string Landmark,
     IReadOnlyList<ArenaSupplyRenderSnapshot> Supplies);
