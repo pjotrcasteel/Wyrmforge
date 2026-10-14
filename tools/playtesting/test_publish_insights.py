@@ -120,7 +120,7 @@ class PublishInsightsTests(unittest.TestCase):
         self.assertIn("Enjoyment:** 4.2/5", rendered)
         self.assertNotIn("Enjoyment:** 2.7/5", rendered)
         self.assertIn("| Enjoyment | 2.7/5 | 4.2/5 |", rendered)
-        self.assertIn("not matched players", rendered)
+        self.assertIn("**not** matched players", rendered)
         self.assertNotIn("0.0.110", rendered)
         self.assertNotIn("injected", rendered)
 
