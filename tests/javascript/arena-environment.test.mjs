@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createTerrainPlan, drawArenaEnvironment } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
-const scene = { seed: 1204, biome: 'Ashen caldera', stage: 6, landmark: 'The dragon\'s scorched approach',
+const scene = { seed: 1204, biome: 'Ashen caldera', element: 'fire', stage: 6, landmark: 'The dragon\'s scorched approach',
     supplies: [{ kind: 'health', x: .83, y: .61, open: true }] };
 
 test('terrain drawing plan is seeded, stable and offers different biome identities', () => {
@@ -12,6 +12,15 @@ test('terrain drawing plan is seeded, stable and offers different biome identiti
     const ridge = createTerrainPlan({ ...scene, biome: 'Broken ridge' }, 390, 700);
     assert.deepEqual(first, second);
     assert.equal(first.biome, 'ash');
+    assert.equal(first.element, 'fire');
+    assert.ok(first.scars.length > 3);
+    assert.ok(first.proximity > 0);
+    const early = createTerrainPlan({ ...scene, stage: 1 }, 390, 700);
+    assert.ok(early.scars.length < first.scars.length);
+    assert.equal(early.proximity, 0);
+    const frost = createTerrainPlan({ ...scene, element: 'frost' }, 390, 700);
+    assert.equal(frost.element, 'frost');
+    assert.equal(frost.scars.length, first.scars.length);
     assert.equal(ridge.biome, 'ridge');
     assert.equal(first.rubble.length, Math.min(260, Math.ceil(390 * 700 / 900)));
     assert.equal(first.remains.length, 10);
