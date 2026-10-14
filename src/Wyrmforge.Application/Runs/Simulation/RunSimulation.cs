@@ -93,7 +93,7 @@ public sealed partial class RunSimulation
     public WyrmrealmMapNode? CurrentMapNode => mapState.CurrentNode;
     public DragonEssenceId? Offering { get; }
     public DragonId? HuntTarget => AttractedDragon;
-    public bool PendingMapChoice => mapState.DecisionPending && !dragonEncounterStarted;
+    public bool PendingMapChoice => mapState.DecisionPending && !dragonEncounterStarted && !trailExitPending;
     public bool AtCheckpoint => checkpointState.IsOpen;
     public bool CanPushDeeper => depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
@@ -113,8 +113,18 @@ public sealed partial class RunSimulation
 
     public RunRenderSnapshot Tick(double delta, MovementInput movement, double width, double height)
     {
+        arenaWidth = width;
+        arenaHeight = height;
         EnsurePlayerPosition(width, height);
-        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending))) return CreateSnapshot();
+        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice))) return CreateSnapshot();
+        if (trailExitPending)
+        {
+            delta = Math.Clamp(delta, 0, 0.05);
+            elapsed += delta;
+            UpdatePlayer(delta, movement, width, height);
+            TryReachTrailExit();
+            return CreateSnapshot();
+        }
         delta = Math.Clamp(delta, 0, 0.05);
         BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);
@@ -214,6 +224,7 @@ public sealed partial class RunSimulation
         dragonEncounterStarted = false;
         ResetDragonHunt();
         mapEncounterCleanupPending = false;
+        trailExitPending = false;
         ClearMapEncounterField();
         spawnTimer = 0;
         return true;
@@ -263,12 +274,12 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
-            !developmentHunt && (HasPendingRunChoice || AtCheckpoint || mapState.DecisionPending),
+            !developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice),
             IsEnded,
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
-            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot(), Environment = arenaEnvironment?.Snapshot() };
+            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot(), Environment = arenaEnvironment?.Snapshot(), Exit = CreateTrailExitSnapshot() };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()
