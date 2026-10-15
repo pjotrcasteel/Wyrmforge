@@ -35,6 +35,15 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         }
 
         var avoidance = CalculateAvoidance(snapshot, player);
+        var recovery = CalculateRecoveryCacheAttraction(snapshot, player);
+        if (recovery is { } directionToRecovery)
+        {
+            // Model the same recovery choice a human can make in the world. The agent
+            // must physically reach an opened cache; it cannot grant itself healing.
+            var urgency = snapshot.Hud.Health / Math.Max(1, snapshot.Hud.MaxHealth) < 0.4 ? 3.4 : 2.6;
+            return ToInput((directionToRecovery * urgency + avoidance * 1.1).Normalized());
+        }
+
         var pickup = CalculatePickupAttraction(snapshot, player);
         var orbit = new Vector2D(Math.Cos(snapshot.Hud.Seconds * 0.63), Math.Sin(snapshot.Hud.Seconds * 0.63));
 
@@ -192,6 +201,19 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         }
 
         return result;
+    }
+
+    private static Vector2D? CalculateRecoveryCacheAttraction(Wyrmforge.Application.Runs.Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)
+    {
+        if (snapshot.Hud.MaxHealth <= 0 || snapshot.Hud.Health / snapshot.Hud.MaxHealth >= 0.75 ||
+            snapshot.Environment is not { } environment || snapshot.World is not { } world) return null;
+
+        var available = environment.Supplies
+            .Where(supply => supply.Open && supply.Kind == "health")
+            .Select(supply => new Vector2D(supply.X * world.Width, supply.Y * world.Height))
+            .OrderBy(location => Vector2D.Distance(location, player))
+            .ToArray();
+        return available.Length == 0 ? null : Vector2D.DirectionTo(player, available[0]);
     }
 
     private static Vector2D CalculatePickupAttraction(Wyrmforge.Application.Runs.Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
@@ -42,6 +43,36 @@ public sealed class FocusedMagicAgentTests
         var choice = agent.ChooseLevelChoice(Observation(SpellId.ArcaneOrb, 1, choices));
 
         Assert.AreEqual("spell:ChainLightning", choice.Id);
+    }
+
+    [TestMethod]
+    public void ChooseMovement_DamagedHunter_SeeksVisibleUnlockedHealingCache()
+    {
+        var agent = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, 7, SpellSchool.Fire);
+        var open = ObservationWithRecoveryCache(40, true);
+        var movement = agent.ChooseMovement(open);
+
+        Assert.IsGreaterThan(0.2, movement.X);
+        Assert.IsGreaterThan(0.2, movement.Y);
+
+        var sealedMovement = agent.ChooseMovement(ObservationWithRecoveryCache(40, false));
+        Assert.AreEqual(0d, sealedMovement.Y, .001, "Do not seek a locked cache behind real masonry.");
+        Assert.AreEqual(0d, agent.ChooseMovement(ObservationWithRecoveryCache(95, true)).Y, .001,
+            "Do not abandon combat to seek recovery while already healthy.");
+    }
+
+    private static RunAgentObservation ObservationWithRecoveryCache(double health, bool open)
+    {
+        var snapshot = new RunSimulationFactory(new SeededRandomSource(1)).Create(new HashSet<string>(), seed: 7).CreateSnapshot();
+        snapshot = snapshot with
+        {
+            Player = snapshot.Player with { X = 700, Y = 1200 },
+            Hud = snapshot.Hud with { Health = health, MaxHealth = 100 },
+            World = new ArenaWorldRenderSnapshot(950, 1550),
+            Environment = new ArenaEnvironmentRenderSnapshot(1, "River valley", "fire", 4, "Ruined waystation",
+                [new ArenaSupplyRenderSnapshot("health", 0.8, 0.82, open)], [], "causeway"),
+        };
+        return new(snapshot, [], [], [], [], [], 1, 0, false);
     }
 
     private static RunAgentObservation Observation(SpellId primary, int rank, IReadOnlyList<LevelChoice> choices)
