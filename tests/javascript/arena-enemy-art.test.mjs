@@ -19,7 +19,7 @@ test('lighting colors a side of the enemy without changing one sprite per actual
     try{
         globalThis.document={createElement:()=>{allocations++;return{width:0,height:0,getContext:()=>({
             fillRect(){},fillStyle:'#fff',
-        })}}}};
+        })}}};
         const calls=[];
         const ctx={save(){},restore(){},drawImage(...args){calls.push(['image',...args])},
             fillRect(...args){calls.push(['light',...args])}};
