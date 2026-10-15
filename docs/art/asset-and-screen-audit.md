@@ -31,7 +31,7 @@ committed PNGs byte for byte; `--check` (also run by `tests/javascript/art-pipel
 
 ## 3. What changed (after)
 
-**Runtime atlases** (`src/Wyrmforge.Presentation.Web/wwwroot/art/`, 184 frames, ~1 art px = 1 world unit, nearest-neighbour):
+**Runtime atlases** (`src/Wyrmforge.Presentation.Web/wwwroot/art/`, 189 frames, ~1 art px = 1 world unit, nearest-neighbour):
 
 | Atlas | Frames | Contents |
 |---|---|---|
@@ -39,7 +39,7 @@ committed PNGs byte for byte; `--check` (also run by `tests/javascript/art-pipel
 | `wyrms.png` | 20 | Arcane/fire/frost/storm wyrm × phase 1/2 × two wing frames + frozen. |
 | `tiles.png` | 5 | Seamless 64px valley, ash, ridge, road, flagstone tiles. |
 | `environment.png` | 59 | Wall cap/face/foot per biome, portcullis, rubble, lit/dim runes per school, 9 landmark ruins + slab/rubble, decals, edge props, XP shards, caches, waystone exit. |
-| `icons.png` + `icons.css` | 22 | UI icons as `.px-icon .px-{id}` at 1× (`.px-sm`), 2× (default), 3× (`.px-lg`). |
+| `icons.png` + `icons.css` | 27 | UI icons as `.px-icon .px-{id}` at 1× (`.px-sm`), 2× (default), 3× (`.px-lg`). |
 | `hub-backdrop.png` | — | 480×270 rainy keep, forest and moon for the hub. |
 
 **Integration** (all paths keep the previous code-painted renderer as a fallback when art is not loaded):
@@ -55,12 +55,42 @@ committed PNGs byte for byte; `--check` (also run by `tests/javascript/art-pipel
 - Wyrms — sprites scaled to radius with flap animation (static under reduced motion).
 - Shards, caches, exit — sprites; `HEAL` / `+3 XP` / `NEXT TRAIL` / `SEALED` text removed when art is ready.
 - UI — hub backdrop with CSS rain and translucent menu; pixel icons in hub nav, primary-choice cards, map, run hub, build atlas.
+- UI — `Shared/GameIcon.razor` + `GameIconMap.cs` resolve every catalog glyph (spells, evolutions, upgrades, refinements,
+  relics, essences, synergies, resonance) to atlas icons, falling back to the glyph only if unmapped; used by level-up,
+  evolution ceremony, relic choice, refuge, dragon harvest, codex, forge, run hub, HUD chips and run summary. A JS test fails
+  when a new catalog glyph is not mapped.
+- Level-up on phones — icon rail + text column; three choices now nearly fit one 390×844 screen (previously ~1.5).
+
+## 3b. Status matrix
+
+Legend: ✅ integrated + visually reviewed · 🟡 integrated + needs review · 🔧 in progress · ⬜ not started
+
+| Screen / asset | Status | Evidence / note |
+|---|---|---|
+| Hub (Run section) backdrop + nav icons | ✅ | `after/*-01-hub-first-time.png` |
+| First-hunt unlock modal | ✅ | atlas rune/book replace 🔓 emoji |
+| Primary-magic choice | ✅ | `after/desktop-02-hunt-entry.png` |
+| Level-up / refinement cards | ✅ | `after/*-06-choice-or-combat.png` |
+| Evolution ceremony, relic choice, refuge, dragon harvest, run summary, codex, forge | 🟡 | GameIcon wired + builds + browser suite green; not individually screenshotted |
+| Wyrmrealm map node badges | ⬜ | still glyph badges (`NodeBadges`) |
+| Arena ground tiles + decals (valley/ash/ridge) | ✅ | `after/*-04-walk-north.png`, `*-05-combat-later.png` |
+| Territory walls, runes, portcullis gates, opened-gate rubble | ✅ / 🟡 | walls+gates reviewed; rubble seen only in previews |
+| Landmark ruins (9 kinds) | 🟡 | reviewed in previews, 2 seen in game |
+| Edge forest band | ✅ | baked; not depth-sorted (see limitations) |
+| Mage 4 facings × 7 poses + hit | ✅ | `04-walk-*` captures; N shows back |
+| Enemies 4 kinds × walk × normal/hit/frozen | ✅ | combat captures |
+| Wyrms 4 schools × 2 phases × 2 frames + frozen | 🟡 | previews + unit test; no Wyrm fight captured this session |
+| XP shards, caches, waystone exit | 🟡 | shards seen in game; caches/exit in previews |
+| Monastery / cloister architecture | 🟡 | unchanged pre-existing renderer (`arena-cloister-art.js`); territory walls intentionally skip cloister areas; N/S occlusion not re-captured this session |
+| Spell / projectile / impact VFX | ⬜ | existing code-drawn VFX retained |
+| Death / elite / burn sprites for enemies | ⬜ | not authored |
+| Combat Lab / Balance Lab (dev pages) | ⬜ | glyphs retained intentionally |
 
 ## 4. Verification
 
-- `node --test tests/javascript/*.test.mjs` — 106 pass (14 new in `art-pipeline.test.mjs`: generator determinism,
+- `node --test tests/javascript/*.test.mjs` — 107 pass (15 new in `art-pipeline.test.mjs`: generator determinism,
   PNG/manifest consistency, frame completeness for every renderer request, CSS coverage, loader fallback,
-  draw anchoring/mirroring, facing rules, wall projection, rune determinism, decal/edge seeding).
+  draw anchoring/mirroring, facing rules, wall projection, rune determinism, decal/edge seeding, catalog glyph → icon coverage).
 - `dotnet test Wyrmforge.slnx -c Release` — Domain 145, Application 289 pass.
 - `tests/Wyrmforge.Browser.Tests` against the published build — 47 pass.
 - Visual review of before/after captures at both viewports.
