@@ -28,6 +28,7 @@ export const enemyPixelFrames = [
         ['edge',-11,8,8,12],['shade',-10,7,7,13],
         ['edge',-1,7,11,14],['body',0,7,8,10],
         ['shade',-13,0,4,12],['shade',9,-3,4,16],
+        ['light',-4,3,2,5],['shade',2,7,3,5],
         ['weapon',10,-9,3,8],
     ],
     [ // Executioner: cowl, asymmetrical pauldrons, narrow spear.
