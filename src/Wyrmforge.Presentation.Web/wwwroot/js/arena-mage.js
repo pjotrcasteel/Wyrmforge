@@ -83,6 +83,12 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false) 
     ctx.fillRect(9 + pose.reach, -4, 5, 9);
     ctx.fillStyle = '#6d798e';
     ctx.fillRect(10 + pose.reach, -2, 3, 5);
+    // Three tiny marks on the shaft show actual saved charge; no extra HUD button or halo.
+    const charge = Math.max(0, Math.min(3, Number(player.focusCharge) || 0));
+    for (let index = 0; index < 3; index++) {
+        ctx.fillStyle = index < charge ? '#dfc4a5' : '#544d4b';
+        ctx.fillRect(9 + pose.reach - 12 + index * 4, -2, 2, 4);
+    }
     ctx.restore();
 
     if (player.barrier) {

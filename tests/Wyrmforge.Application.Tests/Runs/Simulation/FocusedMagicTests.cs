@@ -189,6 +189,7 @@ public sealed class FocusedMagicTests
         var shots = Projectiles(simulation);
         Assert.AreEqual(4, shots.Count, "Focus Surge must not add a second scheduled projectile.");
         Assert.IsTrue(shots.Take(3).All(projectile => !projectile.Surge));
+        Assert.AreEqual(0, simulation.CreateSnapshot().Player.FocusCharge, "A surge consumes the stored three marks.");
         var surge = shots[^1];
         Assert.IsTrue(surge.Surge);
         Assert.IsGreaterThan(shots[0].Damage, surge.Damage);
@@ -217,18 +218,22 @@ public sealed class FocusedMagicTests
             cooldowns[SpellId.FireBolt] = 0;
             Invoke(simulation, "UpdateSpellcasting", 0d, false);
         }
+        Assert.AreEqual(3, simulation.CreateSnapshot().Player.FocusCharge);
         Invoke(simulation, "CastSpell", fire, 1, 1d, true);
+        Assert.AreEqual(3, simulation.CreateSnapshot().Player.FocusCharge);
         Assert.IsFalse(Projectiles(simulation)[^1].Surge);
 
         build.Spells.TryFocus(SpellId.FrostShard);
         cooldowns[SpellId.FrostShard] = 0;
         Invoke(simulation, "UpdateSpellcasting", 0d, false);
         Assert.IsFalse(Projectiles(simulation)[^1].Surge);
+        Assert.AreEqual(1, simulation.CreateSnapshot().Player.FocusCharge);
 
         build.Spells.TryFocus(SpellId.FireBolt);
         cooldowns[SpellId.FireBolt] = 0;
         Invoke(simulation, "UpdateSpellcasting", 0d, false);
         Assert.IsTrue(Projectiles(simulation)[^1].Surge);
+        Assert.AreEqual(0, simulation.CreateSnapshot().Player.FocusCharge);
     }
 
     [TestMethod]

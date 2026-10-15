@@ -340,6 +340,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const visible = a => a.filter((value, i) => i % 4 === 3 && value > 32).length;
             const player = { x: 80, y: 80, radius: 12, barrier: false };
             const idle = sample(() => mage.drawMage(ctx, player, null));
+            const charging = sample(() => mage.drawMage(ctx, { ...player, focusCharge: 3 }, null));
             const casting = sample(() => mage.drawMage(ctx, player,
                 { spell: 1, rank: 3, progress: .36, angle: 0 }));
             const basic = sample(() => spells.drawSpellImpact(ctx,
@@ -357,7 +358,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 rankDifference: difference(basic, mastered),
                 combinationDifference: difference(mastered, frostfire),
                 surgeDifference: difference(mastered, surged),
-                surgedMageDifference: difference(casting, surgedMage) };
+                surgedMageDifference: difference(casting, surgedMage),
+                chargeDifference: difference(idle, charging) };
         }");
 
         Assert.IsGreaterThan(150, pixels.GetProperty("magePixels").GetInt32(), "Mage must read as a silhouette, not a tiny marker.");
@@ -367,6 +369,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, pixels.GetProperty("combinationDifference").GetInt32(), "Frostfire must visibly differ from basic fire.");
         Assert.IsGreaterThan(20, pixels.GetProperty("surgeDifference").GetInt32(), "Focus Surge must produce a visibly empowered impact.");
         Assert.IsGreaterThan(20, pixels.GetProperty("surgedMageDifference").GetInt32(), "Focus Surge must visibly empower the staff motion.");
+        Assert.IsGreaterThan(15, pixels.GetProperty("chargeDifference").GetInt32(), "Earned Focus Surge charge should be visible on the staff.");
     }
 
     [TestMethod]

@@ -43,3 +43,16 @@ test('the player casting preview stays deterministic and is fully restored', () 
     assert.deepEqual(a.calls, b.calls);
     assert.doesNotThrow(() => drawMage(fakeContext(), player, cast, false, true));
 });
+
+
+test('staff runes show charge from the authoritative player snapshot, not animation time', () => {
+    const player = { x: 12, y: 35, radius: 12, barrier: false };
+    const low = fakeContext();
+    const full = fakeContext();
+    drawMage(low, { ...player, focusCharge: 0 }, null);
+    drawMage(full, { ...player, focusCharge: 3 }, null);
+    assert.deepEqual(low.calls.filter(([method]) => method === 'fillRect').map(row => row.slice(1)),
+        full.calls.filter(([method]) => method === 'fillRect').map(row => row.slice(1)));
+    assert.doesNotThrow(() => drawMage(fakeContext(), { ...player, focusCharge: -4 }, null));
+    assert.doesNotThrow(() => drawMage(fakeContext(), { ...player, focusCharge: 20 }, null));
+});
