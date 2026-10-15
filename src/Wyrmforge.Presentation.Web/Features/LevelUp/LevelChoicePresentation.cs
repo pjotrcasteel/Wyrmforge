@@ -12,7 +12,7 @@ public static class LevelChoicePresentation
 {
     public static string KindClass(LevelChoice choice) => choice.Kind switch
     {
-        LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower => "rune",
+        LevelChoiceKind.Rune or LevelChoiceKind.Refinement or LevelChoiceKind.SchoolPower => "rune",
         LevelChoiceKind.NewSpell or LevelChoiceKind.SpellFocus => "new-spell",
         LevelChoiceKind.SpellUpgrade => "spell-upgrade",
         LevelChoiceKind.Evolution => "evolution",
@@ -24,7 +24,8 @@ public static class LevelChoicePresentation
     public static string Badge(LevelChoice choice) => choice.Kind switch
     {
         LevelChoiceKind.SchoolPower => "ATTUNEMENT",
-        LevelChoiceKind.Rune => "RUNE",
+        LevelChoiceKind.Rune => "MAJOR RUNE",
+        LevelChoiceKind.Refinement => "REFINEMENT",
         LevelChoiceKind.NewSpell => "SUPPORT MAGIC",
         LevelChoiceKind.SpellFocus => "PRIMARY FOCUS",
         LevelChoiceKind.SpellUpgrade => "SPELL UPGRADE",
@@ -34,6 +35,7 @@ public static class LevelChoicePresentation
 
     public static string Rank(LevelChoice choice)
     {
+        if (choice.Kind == LevelChoiceKind.Refinement) return $"{Roman(choice.CurrentRank)} → {Roman(choice.CurrentRank + 1)} / {Roman(choice.MaxRank)}";
         if (choice.Kind == LevelChoiceKind.SpellFocus) return $"KNOWN RANK {Roman(choice.CurrentRank)}";
         if (choice.Kind == LevelChoiceKind.SchoolPower) return $"+{(choice.CurrentRank + 1) * 10}% SCHOOL DAMAGE";
         if (choice.Kind == LevelChoiceKind.Synergy) return "NEW INTERACTION";
@@ -47,6 +49,7 @@ public static class LevelChoicePresentation
     {
         if (choice.Kind == LevelChoiceKind.SpellFocus) return choice.Description;
         if (choice.Kind == LevelChoiceKind.SchoolPower) return choice.Description;
+        if (choice.Kind == LevelChoiceKind.Refinement) return RefinementDelta(choice);
         if (choice.Kind == LevelChoiceKind.Rune) return RuneDelta(ParseRunUpgrade(choice.Id), choice.CurrentRank);
         if (choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade) return SpellDelta(ParseSpell(choice.Id), choice.CurrentRank);
         if (choice.Kind == LevelChoiceKind.Evolution) return EvolutionDelta(ParseEvolution(choice.Id));
@@ -55,11 +58,22 @@ public static class LevelChoicePresentation
 
     public static string Footer(LevelChoice choice) => choice.Kind switch
     {
-        LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower => "TEMPORARY • THIS RUN ONLY",
+        LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower => "MAJOR • THIS RUN ONLY",
+        LevelChoiceKind.Refinement => "MINOR • BUILDS TOWARD YOUR NEXT BREAKTHROUGH",
         LevelChoiceKind.NewSpell or LevelChoiceKind.SpellFocus => "THIS RUN • NO MID-RUN PIVOT",
         LevelChoiceKind.SpellUpgrade => "THIS RUN • STRENGTHENS YOUR PRIMARY",
         LevelChoiceKind.Evolution => "TEMPORARY • DEFINES THIS SPELL",
         _ => "THIS RUN • KEEPS PRIMARY CAST",
+    };
+
+    private static string RefinementDelta(LevelChoice choice) => choice.Id switch
+    {
+        "refine:Force" => $"+{choice.CurrentRank * 6}% → +{(choice.CurrentRank + 1) * 6}% spell damage",
+        "refine:Rhythm" => $"{choice.CurrentRank * 4}% → {(choice.CurrentRank + 1) * 4}% shorter cast interval",
+        "refine:Footwork" => $"+{choice.CurrentRank * 4}% → +{(choice.CurrentRank + 1) * 4}% movement speed",
+        "refine:Warding" => $"{choice.CurrentRank * 5}% → {(choice.CurrentRank + 1) * 5}% damage reduction",
+        "refine:Vitality" => $"+{choice.CurrentRank * 8} → +{(choice.CurrentRank + 1) * 8} maximum HP • heal 8",
+        _ => choice.Description,
     };
 
     private static string RuneDelta(RunUpgradeId id, int currentRank)

@@ -33,20 +33,22 @@ public sealed partial class RunSimulation
         if (pendingAttunements.TryDequeue(out var school))
         {
             PendingRewardSchool = school;
-            pendingChoices = levelChoiceService.Roll(build, school, Resonance);
+            pendingChoices = levelChoiceService.RollForProgression(build, level + 1, trailReward: true, school, Resonance);
             return;
         }
         PendingRewardSchool = null;
         if (experience < experienceToNext) return;
-        pendingChoices = CurrentRoute is { } route ? levelChoiceService.Roll(build, route.Reward.AttunementSchool, Resonance) : levelChoiceService.Roll(build, Resonance);
+        pendingChoices = levelChoiceService.RollForProgression(build, level + 1, trailReward: false,
+            CurrentRoute?.Reward.AttunementSchool, Resonance);
         if (pendingChoices.Count == 0) CompleteLevelUp();
     }
 
     private void ApplyChoiceEffects(LevelChoice choice)
     {
-        var healMaximumHealthIncrease = choice.Kind == LevelChoiceKind.Rune && choice.Id == $"rune:{RunUpgradeId.Vitality}";
+        var healMaximumHealthIncrease = choice.Id is "rune:Vitality" or "refine:Vitality";
         RefreshBuildModifiers(healMaximumHealthIncrease
-            || choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade or LevelChoiceKind.Evolution or LevelChoiceKind.Synergy);
+            || choice.Kind is LevelChoiceKind.Refinement or LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade
+                or LevelChoiceKind.Evolution or LevelChoiceKind.Synergy);
     }
 
     private void CompleteLevelUp()
