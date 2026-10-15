@@ -26,7 +26,7 @@ function flicker(family, elapsed, reducedMotion) {
     return 1; // Frost is steady, sharp cold light.
 }
 
-export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false) {
+export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, viewport = null) {
     if (!snapshot) return [];
     const candidates = [];
     const add = (state, type, strength, radius) => {
@@ -51,7 +51,10 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false) {
 
     // Bound the worst-case cost when several projectiles and impacts overlap on mobile.
     // Impact gets priority over an older projectile only when it is visibly brighter.
-    return candidates.sort((a, b) => b.strength - a.strength).slice(0, maximumLights);
+    return candidates.filter(light => !viewport ||
+        (light.x + light.radius >= viewport.x && light.x - light.radius <= viewport.x + viewport.width &&
+         light.y + light.radius >= viewport.y && light.y - light.radius <= viewport.y + viewport.height))
+        .sort((a, b) => b.strength - a.strength).slice(0, maximumLights);
 }
 
 export function sampleSpellLight(lights, x, y) {
