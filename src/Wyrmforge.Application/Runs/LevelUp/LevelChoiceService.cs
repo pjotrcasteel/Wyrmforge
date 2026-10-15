@@ -52,7 +52,11 @@ public sealed class LevelChoiceService(
             var evolution = ParseEvolution(choice.Id);
             return evolutionPool.Contains(evolution) && build.Evolutions.Select(evolution, build.Spells);
         }
-        if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal)) return build.Synergies.Select(ParseSynergy(choice.Id), build.Spells);
+        if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal))
+        {
+            var synergy = ParseSynergy(choice.Id);
+            return SynergyCatalog.Get(synergy).CanHost(build.Spells.ActiveSpell) && build.Synergies.Select(synergy, build.Spells);
+        }
         return false;
     }
 
@@ -138,7 +142,7 @@ public sealed class LevelChoiceService(
                 $"Replace {SpellCatalog.Get(build.Spells.ActiveSpell).Name} as your primary cast. Learned spells and ranks are retained for combinations.",
                 spell.Icon, build.Spells[spell.Id], spell.MaxRank, RewardRarity.Common)));
         choices.AddRange(SynergyCatalog.All
-            .Where(synergy => build.Synergies.IsAvailable(synergy.Id, build.Spells))
+            .Where(synergy => build.Synergies.IsAvailable(synergy.Id, build.Spells) && synergy.CanHost(build.Spells.ActiveSpell))
             .Select(synergy => new LevelChoice(
                 $"synergy:{synergy.Id}",
                 LevelChoiceKind.Synergy,
@@ -207,6 +211,13 @@ public sealed class LevelChoiceService(
 
     private void AddVentureChoice(List<LevelChoice> result, List<LevelChoice> pool, RunBuildState build, IReadOnlyList<RunResonanceEntry>? resonance)
     {
+        var readySynergies = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy).ToList();
+        if (readySynergies.Count > 0)
+        {
+            TakeInto(result, pool, readySynergies, resonance, LevelChoiceDraftRole.Venture, choice => ReadySynergyHint(choice));
+            return;
+        }
+
         var representedSchools = LearnedSchools(build);
         var offSchoolSpells = pool.Where(choice => choice.Kind == LevelChoiceKind.NewSpell && !representedSchools.Contains(SpellCatalog.Get(ParseSpell(choice.Id)).School)).ToList();
         if (offSchoolSpells.Count > 0)
@@ -309,6 +320,7 @@ public sealed class LevelChoiceService(
         var spellId = ParseSpell(choice.Id);
         return SynergyCatalog.All
             .Where(synergy => !build.Synergies.Contains(synergy.Id)
+                && synergy.CanHost(spellId)
                 && synergy.RequiredSpells.Contains(spellId)
                 && synergy.RequiredSpells.Where(required => required != spellId).All(required => build.Spells[required] > 0))
             .ToArray();

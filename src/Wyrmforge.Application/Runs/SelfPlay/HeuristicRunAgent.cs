@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Abstractions.Randomness;
+﻿using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
@@ -74,19 +74,31 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
             return branches[index];
         }
 
+        var primary = observation.Snapshot.Hud.Spells.FirstOrDefault(spell => spell.IsActive);
         return PickBest(observation.LevelChoices, choice =>
         {
-        var score = RoleScore(choice.Role) + RarityScore(choice.Rarity);
-        var searchable = $"{choice.Name} {choice.Description} {choice.Hint}";
+            var score = RoleScore(choice.Role) + RarityScore(choice.Rarity);
+            var searchable = $"{choice.Name} {choice.Description} {choice.Hint}";
 
-        if (ContainsAny(searchable, "damage", "projectile", "chain", "echo", "multicast")) score += personality == RunAgentPersonality.Greedy ? 2.2 : 0.7;
-        if (ContainsAny(searchable, "health", "vitality", "barrier", "damage taken", "freeze")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
-        if (ContainsAny(searchable, "move speed", "cast speed", "cooldown")) score += personality == RunAgentPersonality.Kiter ? 1.8 : 0.8;
-        if (choice.Kind == LevelChoiceKind.Synergy) score += 2.4;
-        if (choice.Kind == LevelChoiceKind.Evolution) score += 3.2;
+            if (ContainsAny(searchable, "damage", "projectile", "chain", "echo", "multicast")) score += personality == RunAgentPersonality.Greedy ? 2.2 : 0.7;
+            if (ContainsAny(searchable, "health", "vitality", "barrier", "damage taken", "freeze")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
+            if (ContainsAny(searchable, "move speed", "cast speed", "cooldown")) score += personality == RunAgentPersonality.Kiter ? 1.8 : 0.8;
+            if (choice.Kind == LevelChoiceKind.Synergy) score += 2.4;
+            if (choice.Kind == LevelChoiceKind.Evolution) score += 3.2;
 
-        if (preferredSchool is { } school && searchable.Contains(school.ToString(), StringComparison.OrdinalIgnoreCase))
-            score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
+            if (choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade or LevelChoiceKind.SpellFocus)
+            {
+                var spell = SpellCatalog.Get(Enum.Parse<SpellId>(choice.Id[6..]));
+                if (spell.Name == primary?.Name) score += personality == RunAgentPersonality.BuildFocused ? 2.5 : 1.5;
+                else if (primary is not null)
+                {
+                    var resultingRank = choice.CurrentRank + (choice.Kind == LevelChoiceKind.SpellFocus ? 0 : 1);
+                    score -= Math.Max(0, primary.Rank - resultingRank) * 1.5;
+                }
+                if (spell.School == preferredSchool) score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
+            }
+            else if (preferredSchool is { } school && searchable.Contains(school.ToString(), StringComparison.OrdinalIgnoreCase))
+                score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
 
             return score;
         });

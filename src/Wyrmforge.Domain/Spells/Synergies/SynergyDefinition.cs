@@ -1,4 +1,4 @@
-using Wyrmforge.Domain.Combat.Interactions;
+﻿using Wyrmforge.Domain.Combat.Interactions;
 
 namespace Wyrmforge.Domain.Spells.Synergies;
 
@@ -6,4 +6,7 @@ public sealed record SynergyDefinition(SynergyId Id, string Name, string Descrip
     IReadOnlyList<StatusInteractionRule>? StatusInteractions = null)
 {
     public IReadOnlyList<StatusInteractionRule> InteractionRules => StatusInteractions ?? Array.Empty<StatusInteractionRule>();
+    public IReadOnlyList<SpellId>? PrimarySpells { get; init; }
+
+    public bool CanHost(SpellId spell) => (PrimarySpells ?? RequiredSpells).Contains(spell);
 }

@@ -123,6 +123,8 @@ public sealed class RunSelfPlayDriver
     {
         private readonly Dictionary<int, double> levelUpSeconds = new();
         private readonly List<string> decisions = [];
+        private readonly List<string> primarySpellSequence = [];
+        private int peakActivePrimaryCount;
         private double minimumHealthRatio = 1;
         private double damageTaken;
         private double previousHealth = double.NaN;
@@ -140,6 +142,11 @@ public sealed class RunSelfPlayDriver
 
         public void Observe(RunRenderSnapshot snapshot, double simulatedSeconds, EncounterPhase? encounterPhase)
         {
+            var primaries = snapshot.Hud.Spells.Where(spell => spell.IsActive).ToArray();
+            peakActivePrimaryCount = Math.Max(peakActivePrimaryCount, primaries.Length);
+            if (primaries.Length == 1 && primarySpellSequence.LastOrDefault() != primaries[0].Name)
+                primarySpellSequence.Add(primaries[0].Name);
+
             var hasDragon = snapshot.Dragon is not null;
             if (hasDragon && !dragonVisible)
             {
@@ -216,7 +223,12 @@ public sealed class RunSelfPlayDriver
                 summary.CompletedRouteNodes,
                 summary.RareRouteNodes,
                 new Dictionary<int, double>(levelUpSeconds),
-                decisions.ToArray());
+                decisions.ToArray())
+            {
+                PrimarySwitches = Math.Max(0, primarySpellSequence.Count - 1),
+                PeakActivePrimaryCount = peakActivePrimaryCount,
+                PrimarySpellSequence = primarySpellSequence.ToArray(),
+            };
         }
     }
 }

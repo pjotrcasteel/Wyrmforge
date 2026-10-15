@@ -8,9 +8,7 @@ public static class SpellCombinationResolver
     public static SynergyId? ActiveFor(SpellId primary, SpellBook spells, SynergySelection combinations)
     {
         if (primary != spells.ActiveSpell) return null;
-        if (combinations.Contains(SynergyId.Frostfire) && primary is SpellId.FireBolt or SpellId.FrostShard) return SynergyId.Frostfire;
-        if (combinations.Contains(SynergyId.Stormglass) && primary == SpellId.ChainLightning) return SynergyId.Stormglass;
-        return combinations.Contains(SynergyId.ArcaneConduit) && primary == SpellId.ArcaneOrb ? SynergyId.ArcaneConduit : null;
+        return SynergyCatalog.All.FirstOrDefault(combination => combinations.Contains(combination.Id) && combination.CanHost(primary))?.Id;
     }
 
     public static IReadOnlyList<ProjectileStatusEffect> Resolve(SpellId primary, SpellBook spells, SynergySelection combinations)

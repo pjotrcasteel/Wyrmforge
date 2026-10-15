@@ -2,6 +2,7 @@
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Tests.Runs.LevelUp;
 
@@ -57,5 +58,69 @@ public sealed class FocusedMagicChoiceTests
         var spells = new SpellBook();
         Assert.IsFalse(spells.TryFocus(SpellId.FireBolt));
         Assert.AreEqual(SpellId.ArcaneOrb, spells.ActiveSpell);
+    }
+
+    [TestMethod]
+    [DataRow(SpellId.ArcaneOrb, SynergyId.Frostfire, false)]
+    [DataRow(SpellId.FireBolt, SynergyId.Frostfire, true)]
+    [DataRow(SpellId.FrostShard, SynergyId.Frostfire, true)]
+    [DataRow(SpellId.FrostShard, SynergyId.Stormglass, false)]
+    [DataRow(SpellId.ChainLightning, SynergyId.Stormglass, true)]
+    [DataRow(SpellId.ChainLightning, SynergyId.ArcaneConduit, false)]
+    [DataRow(SpellId.ArcaneOrb, SynergyId.ArcaneConduit, true)]
+    public void Roll_CombinationRequirementsLearned_OnlyOffersCompatiblePrimary(SpellId primary, SynergyId synergy, bool expected)
+    {
+        var build = new RunBuildState();
+        foreach (var spell in new[] { SpellId.FireBolt, SpellId.FrostShard, SpellId.ChainLightning }) build.Spells.LearnOrUpgrade(spell);
+        build.Spells.TryFocus(primary);
+        var service = new LevelChoiceService(new FirstRandomSource());
+
+        var offered = service.Roll(build, count: 50).Any(choice => choice.Id == $"synergy:{synergy}");
+
+        Assert.AreEqual(expected, offered);
+    }
+
+    [TestMethod]
+    public void Roll_ReadyCombinationAndRouteAttunement_OffersBoth()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.LearnOrUpgrade(SpellId.FrostShard);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var service = new LevelChoiceService(new FirstRandomSource());
+
+        var choices = service.Roll(build, SpellSchool.Fire);
+
+        Assert.IsTrue(choices.Any(choice => choice.Id == "synergy:Frostfire"));
+        Assert.IsTrue(choices.Any(choice => choice.Id == "spell:FireBolt"));
+    }
+
+    [TestMethod]
+    public void Apply_CombinationCardAfterIncompatibleFocusChange_RejectsWithoutSpendingUnlock()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.LearnOrUpgrade(SpellId.FrostShard);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var choice = service.Roll(build, count: 50).Single(choice => choice.Id == "synergy:Frostfire");
+        build.Spells.TryFocus(SpellId.ArcaneOrb);
+
+        Assert.IsFalse(service.Apply(build, choice));
+        Assert.IsFalse(build.Synergies.Contains(SynergyId.Frostfire));
+    }
+
+    [TestMethod]
+    public void Roll_NewSpellCannotHostCompletedCombination_DoesNotPromiseCombinationNext()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.ChainLightning);
+        build.Spells.TryFocus(SpellId.ChainLightning);
+        var service = new LevelChoiceService(new FirstRandomSource(), new HashSet<SpellId> { SpellId.FrostShard });
+
+        var converge = service.Roll(build).Single(choice => choice.Role == LevelChoiceDraftRole.Converge);
+
+        Assert.AreEqual("spell:FrostShard", converge.Id);
+        Assert.IsFalse(converge.Hint!.Contains("Stormglass", StringComparison.Ordinal));
     }
 }

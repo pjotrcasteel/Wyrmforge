@@ -11,10 +11,11 @@ A mage owns one primary cast. Learning another spell does not add a second autom
 - Only the active primary has its cast clock advanced and scheduled. Switching away and back does not reset its outstanding cooldown.
 - The combat HUD displays the primary only. The snapshot retains all learned spells and explicitly marks the active one.
 - Learning requirements does not automatically activate a combination. The player must select the separate synergy skill.
+- Combination offers must support the current primary. A normal three-card route draft preserves its school reward while exposing a ready combination in another slot. Stale combination choices after an incompatible focus switch are rejected.
 
 ## First combination: Frostfire
 
-After learning Fire Bolt and Frost Shard, a separate Frostfire choice becomes available. While either is focused, one projectile carries both freezing and burning. The projectile retains the primary spell's damage, cadence, speed, mastery/evolution and earned volley effects. Frostfire adds Burning for 3.5 seconds; a Fire Bolt host also receives the learned Frost Shard rank's freeze duration. A Frost Shard host keeps its native freeze. Existing boss duration rules continue to apply.
+After learning Fire Bolt and Frost Shard, a separate Frostfire choice becomes available while either is focused. While either is focused, one projectile carries both freezing and burning. The projectile retains the primary spell's damage, cadence, speed, mastery/evolution and earned volley effects. Frostfire adds Burning for 3.5 seconds; a Fire Bolt host also receives the learned Frost Shard rank's freeze duration. A Frost Shard host keeps its native freeze. Existing boss duration rules continue to apply.
 
 Fire Bolt's existing shatter interaction still multiplies damage against an already-frozen enemy. Its first combined hit freezes/burns; subsequent hits can shatter. Burning continues while the target is frozen. This slice does not inherit the secondary spell's full damage or its mastery nova.
 
@@ -32,6 +33,8 @@ Injury stays visual only. This slice adds no injury-dependent movement speed, da
 
 Application tests cover one cast stream with eight learned spells, explicit switching, preserved ranks, cooldown retention, no accidental frost/burn from merely learning the prerequisite, a single Frostfire projectile applying both statuses, burning damage during freeze and retained payload after switching. Upgrade readout tests cover explicit primary replacement and correct mastered-rank text.
 
-Local validation: 245 application tests, 131 domain tests, 5 upgrade-presentation tests and 53 JavaScript tests passed. The web Compile target passed. A full local WebAssembly asset build failed to start the SDK's ComputeWasmBuildAssets task host (MSB4216); CI must validate packaging before merge. No real-browser playtest is claimed.
+Current local validation: 257 application tests and 131 domain tests passed. The preceding revision also passed 5 upgrade-presentation tests and 53 JavaScript tests, plus full CI build/test/publish and browser smoke (runs 38705635866 and 38705637293). CI resolved the preceding local WebAssembly task-host packaging uncertainty. Current changes require their own CI run. No human browser playtest is claimed.
+
+The [mobile hunt comparison](../playtesting/focused-magic-2026-10-15.md) records 288 diagnostic runs, including matched old-scheduler controls. The focused model retains one primary but substantially reduces boss reach in established builds. Keep the PR in draft for primary power/coverage and combination-access work; passing automated tests does not establish balance.
 
 This is a gameplay draft. Total output changes from the previous many-spell scheduler, so encounter pace, skill offer frequency, status uptime, echoes and earned multi-projectile effects need a live balance pass before release. Existing earned volleys, echoes, relic/essence procs and explicitly selected combination effects remain; this slice removes independently scheduled learned base spells, not every possible multi-projectile upgrade. It has not been merged or deployed.

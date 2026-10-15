@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
@@ -48,6 +48,8 @@ public sealed class RunSelfPlayTests
         Assert.AreEqual(first.StopReason, second.StopReason);
         Assert.AreEqual(first.ExperienceCollectionRate, second.ExperienceCollectionRate);
         CollectionAssert.AreEqual(first.Decisions.ToArray(), second.Decisions.ToArray());
+        CollectionAssert.AreEqual(first.PrimarySpellSequence.ToArray(), second.PrimarySpellSequence.ToArray());
+        Assert.AreEqual(first.PrimarySwitches, second.PrimarySwitches);
     }
 
     [TestMethod]
@@ -61,6 +63,8 @@ public sealed class RunSelfPlayTests
         Assert.IsGreaterThan(0, result.Kills);
         Assert.IsGreaterThan(0, result.TotalExperience);
         Assert.IsGreaterThan(0, result.Decisions.Count);
+        Assert.AreEqual(1, result.PeakActivePrimaryCount);
+        Assert.AreEqual(result.PrimarySpellSequence.Count - 1, result.PrimarySwitches);
     }
 
     private static RunSelfPlayMetrics Play(SelfPlayBuildDefinition build, RunAgentPersonality personality, int seed)

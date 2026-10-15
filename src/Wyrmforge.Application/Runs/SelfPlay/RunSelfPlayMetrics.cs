@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Runs.EndRun;
+﻿using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.SelfPlay;
@@ -39,4 +39,9 @@ public sealed record RunSelfPlayMetrics(
     int CompletedRouteNodes,
     int RareRouteNodes,
     IReadOnlyDictionary<int, double> LevelUpSeconds,
-    IReadOnlyList<string> Decisions);
+    IReadOnlyList<string> Decisions)
+{
+    public int PrimarySwitches { get; init; }
+    public int PeakActivePrimaryCount { get; init; }
+    public IReadOnlyList<string> PrimarySpellSequence { get; init; } = [];
+}
