@@ -43,9 +43,9 @@ test('mobile lighting is capped and culls lights outside the world-space camera'
     const lights = buildSpellLights({ projectiles: many }, 3, true);
     assert.equal(lights.length, 6);
     const onlyVisible = buildSpellLights({ projectiles: many }, 3, true,
-        { x: 0, y: 0, width: 200, height: 700 });
+        { x: 90, y: 0, width: 30, height: 700 });
     assert.ok(onlyVisible.length < 6, 'Offscreen light sources do not exhaust the visible-source budget.');
-    assert.ok(onlyVisible.every(light => light.x - light.radius <= 200));
+    assert.ok(onlyVisible.every(light => light.x - light.radius <= 120));
     let count = 0;
     const ctx = {
         save() {}, restore() {},
