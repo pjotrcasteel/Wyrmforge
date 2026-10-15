@@ -23,3 +23,8 @@ This second vertical slice improves the *playable* scene merged via PR #112 with
 - Build and deterministic simulation tests must remain green. No changes to DPS/XP/primary spell or arena hitboxes.
 
 The original art is still a foundation for further hand-authored sprite atlas and tile lighting; passing tests is not final aesthetic approval.
+## Subsequent direction and regression warning (15 October 2026)
+
+[PR #114](https://github.com/pjotrcasteel/Wyrmforge/pull/114) supersedes the earlier random spires and incorrect billboard-like architecture in playable monastery presentation. Fixed-plane wall elevations now sort in world depth with actual character feet; gates and wards follow C# state. **Never restore** floating, uncollidable columns or full-width prison grilles to obtain visual spectacle.
+
+Preserve this slice's authentic spell-driven water reflection and enemy movement: neither can make a false gameplay state. Consult [the canonical handover](../handover/2026-10-15-project-art-and-backlog.md). Passing browser pixels establishes regression coverage, not the artistic merit of the scene.
