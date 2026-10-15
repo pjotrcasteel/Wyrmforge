@@ -84,3 +84,8 @@ A/B original 0.0.108 sound against **real licensed** elements. In the first cand
 - Record a qualitative decision **keep / revise / replace**, along with `fatigue`, `believability`, `magical power`, and `emotional immersion` rated 1–5.
 
 Do not promote the prototype to main solely because build and browser CI pass. Sound quality is a human listening gate.
+## Historical document status — updated 15 October 2026
+
+This was an **initial research candidate / listening plan** in PR #94. That PR's docs were later merged for provenance, but actual **recorded licensed** music and sound entered the game independently in 0.0.109 and 0.0.110. Many tracks and SFX listed here as candidates have since shipped; therefore the historical unreviewed/not-downloaded fields of `licensed-audio-candidates.json` are **not** an up-to-date asset inventory, license approval, or permission to download/reuse those entries.
+
+For actual shipped sources, attribution, modifications and hashes, see [recorded audio credits](recorded-audio-credits.md), the real `wwwroot/audio/recorded/manifest.json`, and the current browser audio code. New assets still require licensing evidence and listening approval. General direction remains original, mature Diablo/StarCraft-era atmosphere, without copying copyrighted Blizzard audio. Other art/backlog decisions: [handover](../handover/2026-10-15-project-art-and-backlog.md).
