@@ -142,7 +142,7 @@
                             <small>@spell.School</small>
                             @if (PreparedMutationFoundation == spell.Id)
                             {
-                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-frost" aria-hidden="true"></i>@PreparedMutationName</span>
+                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-@PreparedMutationIcon" aria-hidden="true"></i>@PreparedMutationName</span>
                             }
                         </button>
                     }
@@ -153,7 +153,7 @@
     }
     else if (!trailTransition && CurrentEssenceChoices.Count > 0)
     {
-        <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
+        <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" ResearchSpecimen="ResearchSpecimen" />
     }
     else if (!trailTransition && CurrentRelicChoices.Count > 0)
     {

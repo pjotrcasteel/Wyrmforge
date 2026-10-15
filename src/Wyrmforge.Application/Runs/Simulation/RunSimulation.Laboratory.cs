@@ -1,3 +1,4 @@
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells;
@@ -8,11 +9,15 @@ public sealed partial class RunSimulation
 {
     private LaboratoryMutationId? preparedLaboratoryMutation;
     private LaboratoryMutationId? activeLaboratoryMutation;
+    private DragonId? researchLead;
     private int reactionsTriggered;
 
     public LaboratoryMutationId? PreparedLaboratoryMutation => preparedLaboratoryMutation;
     public LaboratoryMutationId? ActiveLaboratoryMutation => activeLaboratoryMutation;
+    public DragonId? ResearchLead => researchLead;
     public int ReactionsTriggered => reactionsTriggered;
+
+    internal void EnableResearchLead(DragonId? wyrm) => researchLead = wyrm;
 
     // The mutation is carried into the hunt but only wakes when its foundation spell becomes the primary.
     public void PrepareLaboratoryMutation(LaboratoryMutationId? mutation)

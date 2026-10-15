@@ -1,3 +1,4 @@
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
@@ -7,10 +8,12 @@ namespace Wyrmforge.Domain.Progression.Laboratory;
 
 public sealed record LaboratoryExperimentDefinition(
     LaboratoryExperimentId Id,
+    LaboratoryMutationId Mutation,
     string Name,
     string Hypothesis,
     LaboratoryExperimentOutcome Outcome,
     LaboratoryObservationId Reveals,
+    string Label,
     string Finding,
     string NextStep,
     DragonEssenceId? RequiresSample,
@@ -25,49 +28,83 @@ public sealed record LaboratoryMutationDefinition(
     string Name,
     string Summary,
     string TradeOff,
+    string AwakenedText,
+    string ReactionNoun,
     SpellId Foundation,
     SynergyId Realizes,
     DragonEssenceId Stabilizer,
     ArcaneMutationSocketId Socket,
     IReadOnlyList<LaboratoryObservationId> RequiresObservations,
-    BuildModifierProfile Modifiers);
+    BuildModifierProfile Modifiers)
+{
+    public DragonEssenceDefinition Specimen => DragonEssenceCatalog.All.Single(essence => essence.Id == Stabilizer);
+
+    public DragonId SpecimenWyrm => DragonCatalog.All.First(dragon => DragonEssenceCatalog.ChoicesFor(dragon.Id).Any(choice => choice.Id == Stabilizer)).Id;
+}
 
 public static class LaboratoryCatalog
 {
-    // Tuning hypothesis (handover §17), not a balance commitment.
+    // Tuning hypotheses (handover §17), not balance commitments. See docs/design/laboratory-tuning-v1.md.
     public const double RimeInfusionDamageTradeOff = -0.10;
+    public const double StormInfusionCastIntervalTradeOff = 0.10;
 
     public static IReadOnlyList<LaboratoryExperimentDefinition> Experiments { get; } =
     [
-        new(LaboratoryExperimentId.ExamineRimeHeart, "Examine the Rime Heart",
+        new(LaboratoryExperimentId.ExamineRimeHeart, LaboratoryMutationId.RimeInfusion, "Examine the Rime Heart",
             "Does Rimeclaw's heart hold a cold that survives outside the Wyrm?",
-            LaboratoryExperimentOutcome.Insight, LaboratoryObservationId.RimePreservesCold,
+            LaboratoryExperimentOutcome.Insight, LaboratoryObservationId.RimePreservesCold, "Rime holds cold",
             "The heart keeps a cold that does not melt. It could carry frost into a spell.",
             "Try binding that cold to Fire Bolt.",
             DragonEssenceId.RimeHeart, []),
-        new(LaboratoryExperimentId.InfuseFireBoltWithRime, "Infuse Fire Bolt with rime",
+        new(LaboratoryExperimentId.InfuseFireBoltWithRime, LaboratoryMutationId.RimeInfusion, "Infuse Fire Bolt with rime",
             "Can one bolt carry fire and frost together?",
-            LaboratoryExperimentOutcome.InstructiveFailure, LaboratoryObservationId.ThermalShockUnstable,
+            LaboratoryExperimentOutcome.InstructiveFailure, LaboratoryObservationId.ThermalShockUnstable, "Cold must land first",
             "The frost boils away in flight. Fire and frost cannot share one impact; the cold must reach the target first.",
             "Test freezing the target with the cast, then letting fire strike it.",
             null, [LaboratoryObservationId.RimePreservesCold]),
-        new(LaboratoryExperimentId.QuenchFireBoltInRime, "Quench Fire Bolt in rime",
+        new(LaboratoryExperimentId.QuenchFireBoltInRime, LaboratoryMutationId.RimeInfusion, "Quench Fire Bolt in rime",
             "Will cooling the flame make it stable?",
-            LaboratoryExperimentOutcome.Incompatibility, LaboratoryObservationId.QuenchingSmothersFlame,
+            LaboratoryExperimentOutcome.Incompatibility, LaboratoryObservationId.QuenchingSmothersFlame, "Smothered flame",
             "Quenching smothers the flame: weaker fire and no reaction. This path is ruled out.",
             "Infusion, not quenching, is the way forward.",
             null, [LaboratoryObservationId.RimePreservesCold]),
-        new(LaboratoryExperimentId.ChillThenIgnite, "Freeze, then ignite",
+        new(LaboratoryExperimentId.ChillThenIgnite, LaboratoryMutationId.RimeInfusion, "Freeze, then ignite",
             "Does fire striking a frozen target release the trapped cold?",
-            LaboratoryExperimentOutcome.Insight, LaboratoryObservationId.FireShattersFrozen,
+            LaboratoryExperimentOutcome.Insight, LaboratoryObservationId.FireShattersFrozen, "Fire shatters ice",
             "A frozen target shatters when Fire Bolt hits it: double damage and a burst of thermal shock.",
             "Stabilize Rime Infusion with a secured Rime Heart.",
             null, [LaboratoryObservationId.ThermalShockUnstable]),
+
+        new(LaboratoryExperimentId.ExamineStormHeart, LaboratoryMutationId.StormInfusion, "Examine the Storm Heart",
+            "Does Stormcoil's heart still beat with its own rhythm?",
+            LaboratoryExperimentOutcome.Insight, LaboratoryObservationId.StormHeartKeepsRhythm, "Heart keeps rhythm",
+            "The heart pulses in a steady count, releasing lightning on every beat. Charge can be stored and timed.",
+            "Try charging Arcane Orb with the pulse.",
+            DragonEssenceId.StormHeart, []),
+        new(LaboratoryExperimentId.ChargeArcaneOrb, LaboratoryMutationId.StormInfusion, "Charge Arcane Orb",
+            "Can the orb carry the storm and release it on impact?",
+            LaboratoryExperimentOutcome.InstructiveFailure, LaboratoryObservationId.ChargeBleedsOnContact, "Charge bleeds away",
+            "Every impact bleeds the charge into the ground. A single hit cannot hold a storm; it must build over several.",
+            "Count the impacts and see whether the charge accumulates.",
+            null, [LaboratoryObservationId.StormHeartKeepsRhythm]),
+        new(LaboratoryExperimentId.GroundArcaneOrb, LaboratoryMutationId.StormInfusion, "Ground the orb",
+            "Will grounding the orb make the charge safe to carry?",
+            LaboratoryExperimentOutcome.Incompatibility, LaboratoryObservationId.GroundingDrainsCharge, "Grounding drains it",
+            "Grounding drains every spark: a quieter orb and no discharge. This path is ruled out.",
+            "Store the charge across hits instead of draining it.",
+            null, [LaboratoryObservationId.StormHeartKeepsRhythm]),
+        new(LaboratoryExperimentId.CountOrbImpacts, LaboratoryMutationId.StormInfusion, "Count the impacts",
+            "Does the orb remember charge across several hits?",
+            LaboratoryExperimentOutcome.Insight, LaboratoryObservationId.OrbStoresCharge, "Orb stores charge",
+            "The orb holds the pulse: every fourth impact discharges a chain of lightning from the target.",
+            "Stabilize Storm Infusion with a secured Storm Heart.",
+            null, [LaboratoryObservationId.ChargeBleedsOnContact]),
     ];
 
     public static IReadOnlyList<ArcaneMutationSocketDefinition> Sockets { get; } =
     [
         new(ArcaneMutationSocketId.Rimebrand, "Rimebrand socket", "hybrid-fire-frost-2", "Rimebrand", "Fire–Frost bridge"),
+        new(ArcaneMutationSocketId.ChargedFocus, "Charged Focus socket", "hybrid-storm-arcane-2", "Charged Focus", "Storm–Arcane bridge"),
     ];
 
     public static IReadOnlyList<LaboratoryMutationDefinition> Mutations { get; } =
@@ -75,12 +112,22 @@ public static class LaboratoryCatalog
         new(LaboratoryMutationId.RimeInfusion, "Rime Infusion",
             "Fire Bolt freezes and burns from the first cast. Frozen targets shatter (Frostfire).",
             "−10% spell damage while Fire Bolt carries the rime.",
+            "Fire Bolt freezes and burns. Strike frozen foes to shatter them.", "shatter",
             SpellId.FireBolt, SynergyId.Frostfire, DragonEssenceId.RimeHeart, ArcaneMutationSocketId.Rimebrand,
             [LaboratoryObservationId.RimePreservesCold, LaboratoryObservationId.ThermalShockUnstable, LaboratoryObservationId.FireShattersFrozen],
             new BuildModifierProfile([new BuildStatModifier(BuildStatId.Damage, BuildStatOperation.PercentAdd, RimeInfusionDamageTradeOff)])),
+        new(LaboratoryMutationId.StormInfusion, "Storm Infusion",
+            "Arcane Orb stores charge from the first cast. Every 4th impact discharges chain lightning (Arcane Conduit).",
+            "Casts 10% slower while Arcane Orb holds the storm.",
+            "Arcane Orb holds the storm. Every 4th impact discharges lightning.", "discharge",
+            SpellId.ArcaneOrb, SynergyId.ArcaneConduit, DragonEssenceId.StormHeart, ArcaneMutationSocketId.ChargedFocus,
+            [LaboratoryObservationId.StormHeartKeepsRhythm, LaboratoryObservationId.ChargeBleedsOnContact, LaboratoryObservationId.OrbStoresCharge],
+            new BuildModifierProfile([new BuildStatModifier(BuildStatId.CastInterval, BuildStatOperation.PercentAdd, StormInfusionCastIntervalTradeOff)])),
     ];
 
     public static LaboratoryExperimentDefinition Get(LaboratoryExperimentId id) => Experiments.Single(experiment => experiment.Id == id);
     public static LaboratoryMutationDefinition Get(LaboratoryMutationId id) => Mutations.Single(mutation => mutation.Id == id);
     public static ArcaneMutationSocketDefinition Get(ArcaneMutationSocketId id) => Sockets.Single(socket => socket.Id == id);
+    public static IReadOnlyList<LaboratoryExperimentDefinition> ExperimentsFor(LaboratoryMutationId id) => Experiments.Where(experiment => experiment.Mutation == id).ToArray();
+    public static string ObservationLabel(LaboratoryObservationId id) => Experiments.Single(experiment => experiment.Reveals == id).Label;
 }

@@ -186,3 +186,21 @@ The product owner approved the 2026-10-15 Game Design & Spellcraft handover as t
 - Previews: static now, animated later.
 
 **Next:** Laboratory Phase C.1 (a second mutation), then C.2 (preparation economy) and C.3 (two sockets and loadouts). See roadmap §5 M7 and §11.
+
+
+## 10. Continuation: Laboratory Phase C.1 (same branch)
+
+**Built:**
+- **Storm Infusion**, a second mutation: Arcane Orb × Storm Heart → existing Arcane Conduit, socket Charged Focus (`hybrid-storm-arcane-2`), casts 10% slower.
+- **Research leads**: TRACK a mutation and the next hunt draws its specimen Wyrm (not in the First Hunt or a due Ascendant rite).
+- **`LaboratoryAdvisor`**: one next step, used by the Forge status line and the run summary's research prompt.
+- **BalanceLab `--laboratory`**: a self-play study. Proposals are in `docs/design/laboratory-tuning-v1.md`; no constants changed.
+
+Details: `docs/design/laboratory-frostfire-slice-v1.md` §8.
+
+**Validation:**
+- Domain, Application and JS (107) tests pass.
+- Browser tests: only the 2 known pre-existing failures.
+- Storm and Rime capture flows verified in emulated 390×844 Chromium.
+
+**Open decisions (product owner):** the tuning proposals in `laboratory-tuning-v1.md` §3, and whether a lead should expire after failed hunts.

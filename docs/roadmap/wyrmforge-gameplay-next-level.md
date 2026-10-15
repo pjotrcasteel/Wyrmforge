@@ -325,11 +325,12 @@ Every milestone must meet these shared gates:
 
 **Pillar-5 risk (a second economy):** mitigated in v1. Experiments are free, and the only cost is one consented Rime Heart at stabilization. A preparation currency is an open decision for Phase C.2.
 
+**C.1 done:** *Storm Infusion* (Arcane Orb × Storm Heart → Arcane Conduit), research leads that guarantee specimen access, a Laboratory advisor and a post-run research prompt. Self-play tuning proposals are in [`laboratory-tuning-v1.md`](../design/laboratory-tuning-v1.md).
+
 **Next:**
-- **C.1:** a second mutation on an existing synergy.
 - **C.2:** a preparation economy.
 - **C.3:** two sockets, loadouts and event budgets.
-- After those: animated previews and post-run research prompts.
+- After those: animated previews.
 
 ### Elder Wyrms (after M6)
 

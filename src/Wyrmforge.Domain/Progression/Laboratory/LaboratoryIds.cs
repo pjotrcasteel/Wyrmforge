@@ -7,6 +7,10 @@ public enum LaboratoryObservationId
     ThermalShockUnstable,
     FireShattersFrozen,
     QuenchingSmothersFlame,
+    StormHeartKeepsRhythm,
+    ChargeBleedsOnContact,
+    OrbStoresCharge,
+    GroundingDrainsCharge,
 }
 
 public enum LaboratoryExperimentId
@@ -15,16 +19,22 @@ public enum LaboratoryExperimentId
     InfuseFireBoltWithRime,
     QuenchFireBoltInRime,
     ChillThenIgnite,
+    ExamineStormHeart,
+    ChargeArcaneOrb,
+    GroundArcaneOrb,
+    CountOrbImpacts,
 }
 
 public enum LaboratoryMutationId
 {
     RimeInfusion,
+    StormInfusion,
 }
 
 public enum ArcaneMutationSocketId
 {
     Rimebrand,
+    ChargedFocus,
 }
 
 public enum LaboratoryExperimentOutcome

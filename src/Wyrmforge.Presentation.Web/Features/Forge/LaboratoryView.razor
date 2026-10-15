@@ -1,4 +1,6 @@
+@using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.PassiveTree
 
@@ -8,32 +10,50 @@
         <div class="lab-notice" role="status"><span>@Notice</span><button aria-label="Dismiss" @onclick="() => OnDismissNotice.InvokeAsync()">×</button></div>
     }
 
+    <nav class="lab-tabs" role="tablist" aria-label="Mutations">
+        @foreach (var candidate in LaboratoryCatalog.Mutations)
+        {
+            var current = candidate.Id == Mutation.Id;
+            <button role="tab" aria-selected="@current.ToString().ToLowerInvariant()" class="@(current ? "active" : string.Empty)" @onclick="() => Select(candidate.Id)">
+                <i class="px-icon px-sm px-@SpellIcon(candidate.Foundation)" aria-hidden="true"></i>@candidate.Name<small>@TabState(candidate.Id)</small>
+            </button>
+        }
+    </nav>
+
     <header class="lab-recipe @RecipeClass" aria-label="@Mutation.Name recipe">
         <div class="lab-kicker">MUTATION · @Mutation.Name.ToUpperInvariant()</div>
         <div class="lab-equation" aria-hidden="true">
-            <span class="lab-glyph fire"><i class="px-icon px-lg px-fire"></i></span>
+            <span class="lab-glyph @FoundationIcon"><i class="px-icon px-lg px-@FoundationIcon"></i></span>
             <b>+</b>
-            <span class="lab-glyph frost"><i class="px-icon px-lg px-frost"></i><i class="px-icon px-heart lab-glyph-badge"></i></span>
+            <span class="lab-glyph @SpecimenIcon"><i class="px-icon px-lg px-@SpecimenIcon"></i><i class="px-icon px-heart lab-glyph-badge"></i></span>
             <b>→</b>
-            <span class="lab-glyph frostfire"><i class="px-icon px-lg px-fire"></i><i class="px-icon px-lg px-frost"></i></span>
+            <span class="lab-glyph fused @FoundationIcon-@SpecimenIcon"><i class="px-icon px-lg px-@FoundationIcon"></i><i class="px-icon px-lg px-@SpecimenIcon"></i></span>
         </div>
         <p>@Mutation.Summary</p>
         <ol class="lab-pips" aria-label="@KnownCount of @Mutation.RequiresObservations.Count conditions understood">
             @foreach (var observation in Mutation.RequiresObservations)
             {
-                <li class="@(Laboratory.HasObserved(observation) ? "known" : string.Empty)" title="@ObservationLabel(observation)">@ObservationLabel(observation)</li>
+                <li class="@(Laboratory.HasObserved(observation) ? "known" : string.Empty)" title="@LaboratoryCatalog.ObservationLabel(observation)">@LaboratoryCatalog.ObservationLabel(observation)</li>
             }
         </ol>
         <div class="lab-specimen">
-            <i class="px-icon px-sm px-frost" aria-hidden="true"></i>
-            <span>Rime Heart × @RimeHearts</span>
-            <small>@(RimeHearts == 0 ? "Hunt Rimeclaw to bring back a specimen." : "Specimens are only studied; experiments never consume them.")</small>
+            <i class="px-icon px-sm px-@SpecimenIcon" aria-hidden="true"></i>
+            <span>@Mutation.Specimen.Name × @Specimens</span>
+            @if (Laboratory.NeedsSpecimen(Mutation.Id, Vault))
+            {
+                <small>@(IsTracked ? $"Tracked: {WyrmName} answers your next hunt." : $"Hunt {WyrmName} to bring back a specimen.")</small>
+                <button class="lab-track @(IsTracked ? "tracked" : string.Empty)" aria-pressed="@IsTracked.ToString().ToLowerInvariant()" @onclick="ToggleTrackAsync">@(IsTracked ? "TRACKING" : $"TRACK {WyrmName.ToUpperInvariant()}")</button>
+            }
+            else
+            {
+                <small>Specimens are only studied; experiments never consume them.</small>
+            }
         </div>
     </header>
 
     <section class="lab-bench" aria-label="Experiments">
         <h2>Experiments</h2>
-        @foreach (var experiment in LaboratoryCatalog.Experiments)
+        @foreach (var experiment in LaboratoryCatalog.ExperimentsFor(Mutation.Id))
         {
             var availability = Laboratory.Availability(experiment.Id, Vault);
             var known = availability == ExperimentAvailability.AlreadyRecorded;
@@ -44,7 +64,7 @@
                         <strong>@experiment.Name</strong>
                         <small>@(known ? OutcomeLabel(experiment.Outcome) : availability switch
                         {
-                            ExperimentAvailability.MissingSample => "Needs a Rime Heart in the vault",
+                            ExperimentAvailability.MissingSample => $"Needs a {Mutation.Specimen.Name} in the vault",
                             ExperimentAvailability.MissingObservation => "Needs an earlier finding",
                             _ => experiment.Hypothesis,
                         })</small>
@@ -56,7 +76,7 @@
                 }
             </article>
         }
-        @if (lastResult is { } result)
+        @if (lastResult is { } result && result.Experiment.Mutation == Mutation.Id)
         {
             <div class="lab-result @(result.Novel ? "novel" : "repeat")" role="status" aria-live="polite">
                 <strong>@(result.Novel ? OutcomeLabel(result.Experiment.Outcome) : "ALREADY RECORDED")</strong>
@@ -73,7 +93,7 @@
                 <p class="lab-hint">Understand @(Mutation.RequiresObservations.Count - KnownCount) more condition@(Mutation.RequiresObservations.Count - KnownCount == 1 ? string.Empty : "s") to stabilize the mutation.</p>
                 break;
             case MutationResearchStatus.MissingStabilizer:
-                <p class="lab-hint">All conditions known. Stabilizing needs 1 secured Rime Heart.</p>
+                <p class="lab-hint">All conditions known. Stabilizing needs 1 secured @Mutation.Specimen.Name.</p>
                 break;
             case MutationResearchStatus.ReadyToStabilize:
                 @if (!confirming)
@@ -83,8 +103,8 @@
                 else
                 {
                     <div class="lab-consent" role="alertdialog" aria-label="Confirm Essence use">
-                        <strong>Consume 1 Rime Heart?</strong>
-                        <span>Vault: @RimeHearts → @(RimeHearts - 1). The Forge uses the same Rime Hearts.</span>
+                        <strong>Consume 1 @Mutation.Specimen.Name?</strong>
+                        <span>Vault: @Specimens → @(Specimens - 1). The Forge uses the same @(Mutation.Specimen.Name)s.</span>
                         <span>Success is certain: every condition is understood. The recipe is kept forever.</span>
                         <div><button @onclick="() => confirming = false">CANCEL</button><button class="lab-primary" @onclick="StabilizeAsync">CONSUME &amp; STABILIZE</button></div>
                     </div>
@@ -99,12 +119,16 @@
                 <button class="lab-primary @(IsEquipped ? "equipped" : string.Empty)" disabled="@(!SocketReady && !IsEquipped)" aria-pressed="@IsEquipped.ToString().ToLowerInvariant()" @onclick="ToggleEquipAsync">
                     @(IsEquipped ? "EQUIPPED: unequip" : "EQUIP FOR NEXT HUNT")
                 </button>
-                <p class="lab-tradeoff">Active only when Fire Bolt is your primary. @Mutation.TradeOff</p>
+                <p class="lab-tradeoff">Active only when @SpellCatalog.Get(Mutation.Foundation).Name is your primary. @Mutation.TradeOff</p>
+                @if (Laboratory.Equipped is { } other && other != Mutation.Id)
+                {
+                    <p class="lab-tradeoff">One mutation at a time: equipping replaces @LaboratoryCatalog.Get(other).Name.</p>
+                }
                 break;
         }
         @if (Laboratory.FieldTests > 0)
         {
-            <p class="lab-field-notes"><i class="px-icon px-sm px-book" aria-hidden="true"></i>Field notes: @Laboratory.FieldTests hunt@(Laboratory.FieldTests == 1 ? string.Empty : "s"), @Laboratory.FieldReactions shatter@(Laboratory.FieldReactions == 1 ? string.Empty : "s").</p>
+            <p class="lab-field-notes"><i class="px-icon px-sm px-book" aria-hidden="true"></i>Field notes: @Laboratory.FieldTests hunt@(Laboratory.FieldTests == 1 ? string.Empty : "s"), @Laboratory.FieldReactions reaction@(Laboratory.FieldReactions == 1 ? string.Empty : "s").</p>
         }
     </section>
 </section>
@@ -119,18 +143,59 @@
     [Parameter, EditorRequired] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>> RunExperiment { get; set; } = null!;
     [Parameter, EditorRequired] public Func<LaboratoryMutationId, Task<bool>> Stabilize { get; set; } = null!;
     [Parameter, EditorRequired] public Func<LaboratoryMutationId?, Task> Equip { get; set; } = null!;
+    [Parameter] public Func<LaboratoryMutationId?, Task> Track { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public LaboratoryMutationId? Focus { get; set; }
 
-    private static readonly LaboratoryMutationDefinition Mutation = LaboratoryCatalog.Get(LaboratoryMutationId.RimeInfusion);
-    private static readonly ArcaneMutationSocketDefinition Socket = LaboratoryCatalog.Get(Mutation.Socket);
+    private LaboratoryMutationId selected = LaboratoryMutationId.RimeInfusion;
     private LaboratoryExperimentResult? lastResult;
     private bool confirming;
 
-    private int RimeHearts => Vault.Count(Mutation.Stabilizer);
+    private LaboratoryMutationDefinition Mutation => LaboratoryCatalog.Get(selected);
+    private ArcaneMutationSocketDefinition Socket => LaboratoryCatalog.Get(Mutation.Socket);
+    private string WyrmName => DragonCatalog.Get(Mutation.SpecimenWyrm).Name;
+    private bool IsTracked => Laboratory.Tracked == Mutation.Id;
+    private string FoundationIcon => SpellIcon(Mutation.Foundation);
+    private string SpecimenIcon => WyrmIcon(Mutation.SpecimenWyrm);
+    private int Specimens => Vault.Count(Mutation.Stabilizer);
     private int KnownCount => Mutation.RequiresObservations.Count(Laboratory.HasObserved);
     private MutationResearchStatus Status => Laboratory.Status(Mutation.Id, Vault);
     private bool SocketReady => LaboratoryState.SocketUnlocked(Socket.Id, Selection.Selected);
     private bool IsEquipped => Laboratory.Equipped == Mutation.Id;
     private string RecipeClass => Status == MutationResearchStatus.Stabilized ? "stabilized" : KnownCount > 0 ? "researching" : "unknown";
+
+    // Open on whatever the player is pursuing: an explicit focus, else the tracked lead, else the equipped recipe.
+    protected override void OnInitialized() =>
+        selected = Focus ?? Laboratory.Tracked ?? Laboratory.Equipped ?? LaboratoryMutationId.RimeInfusion;
+
+    private void Select(LaboratoryMutationId id)
+    {
+        selected = id;
+        confirming = false;
+    }
+
+    private string TabState(LaboratoryMutationId id) =>
+        Laboratory.Equipped == id ? "equipped"
+        : Laboratory.Stabilized.Contains(id) ? "stabilized"
+        : Laboratory.Tracked == id ? "tracked"
+        : $"{LaboratoryCatalog.Get(id).RequiresObservations.Count(Laboratory.HasObserved)}/{LaboratoryCatalog.Get(id).RequiresObservations.Count}";
+
+    private Task ToggleTrackAsync() => Track(IsTracked ? null : Mutation.Id);
+
+    private static string SpellIcon(SpellId spell) => spell switch
+    {
+        SpellId.FireBolt => "fire",
+        SpellId.ArcaneOrb => "arcane",
+        SpellId.ChainLightning => "storm",
+        _ => "frost",
+    };
+
+    private static string WyrmIcon(DragonId wyrm) => wyrm switch
+    {
+        DragonId.Ashfang => "fire",
+        DragonId.Stormcoil => "storm",
+        DragonId.Voidweaver => "arcane",
+        _ => "frost",
+    };
 
     private async Task RunAsync(LaboratoryExperimentId id) => lastResult = await RunExperiment(id);
 
@@ -141,14 +206,6 @@
     }
 
     private Task ToggleEquipAsync() => Equip(IsEquipped ? null : Mutation.Id);
-
-    private static string ObservationLabel(LaboratoryObservationId id) => id switch
-    {
-        LaboratoryObservationId.RimePreservesCold => "Rime holds cold",
-        LaboratoryObservationId.ThermalShockUnstable => "Cold must land first",
-        LaboratoryObservationId.FireShattersFrozen => "Fire shatters ice",
-        _ => "Smothered flame",
-    };
 
     private static string OutcomeLabel(LaboratoryExperimentOutcome outcome) => outcome switch
     {

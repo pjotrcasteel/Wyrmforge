@@ -1,10 +1,12 @@
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.SelfPlay;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Tests.TestDoubles;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Projectiles;
@@ -104,6 +106,112 @@ public sealed class LaboratoryMutationSimulationTests
     }
 
     [TestMethod]
+    public void ChoosePrimary_ArcaneOrbWithStormInfusion_RealizesArcaneConduitOnOnePrimaryCast()
+    {
+        var simulation = Create(LaboratoryMutationId.StormInfusion);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.ArcaneOrb));
+        var build = Build(simulation);
+
+        Assert.AreEqual(LaboratoryMutationId.StormInfusion, simulation.ActiveLaboratoryMutation);
+        Assert.AreEqual(SpellId.ArcaneOrb, build.Spells.ActiveSpell);
+        Assert.IsTrue(build.Synergies.Contains(SynergyId.ArcaneConduit));
+        Assert.AreEqual(1, build.Synergies.Count);
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        Assert.AreEqual(1, Projectiles(simulation).Count, "A mutation changes the cast; it never adds an attack stream.");
+        Assert.AreEqual(SpellId.ArcaneOrb, Projectiles(simulation)[0].Spell);
+    }
+
+    [TestMethod]
+    public void LevelChoices_AfterStormInfusion_NeverOfferLegacyArcaneConduit()
+    {
+        var simulation = Create(LaboratoryMutationId.StormInfusion);
+        simulation.ChoosePrimary(SpellId.ArcaneOrb);
+        var build = Build(simulation);
+        var choices = new LevelChoiceService(new FirstRandomSource()).Roll(build, count: 50);
+        Assert.IsFalse(choices.Any(choice => choice.Id == "synergy:ArcaneConduit"), "The legacy synergy must not stack on the researched one.");
+        Assert.IsTrue(choices.Any(choice => choice.Id == "spell:ArcaneOrb"));
+        Assert.IsFalse(build.Synergies.Select(SynergyId.ArcaneConduit, build.Spells));
+    }
+
+    [TestMethod]
+    [DataRow(SpellId.FireBolt)]
+    [DataRow(SpellId.FrostShard)]
+    [DataRow(SpellId.ChainLightning)]
+    public void ChoosePrimary_OtherFoundation_LeavesStormInfusionDormant(SpellId primary)
+    {
+        var simulation = Create(LaboratoryMutationId.StormInfusion);
+        Assert.IsTrue(simulation.ChoosePrimary(primary));
+        Assert.IsNull(simulation.ActiveLaboratoryMutation);
+        Assert.AreEqual(0, Build(simulation).Synergies.Count);
+    }
+
+    [TestMethod]
+    public void StormInfusion_AppliesItsCastIntervalTradeOffAgainstTheLegacyConduitPath()
+    {
+        var mutated = Create(LaboratoryMutationId.StormInfusion);
+        mutated.ChoosePrimary(SpellId.ArcaneOrb);
+
+        var legacy = Create(null);
+        legacy.ChoosePrimary(SpellId.ArcaneOrb);
+        var build = Build(legacy);
+        build.Spells.LearnOrUpgrade(SpellId.ChainLightning);
+        Assert.IsTrue(build.Synergies.Select(SynergyId.ArcaneConduit, build.Spells));
+        Invoke(legacy, "RefreshBuildModifiers", false);
+
+        Invoke(mutated, "UpdateSpellcasting", 0d, false);
+        Invoke(legacy, "UpdateSpellcasting", 0d, false);
+        var ratio = Cooldowns(mutated)[SpellId.ArcaneOrb] / Cooldowns(legacy)[SpellId.ArcaneOrb];
+        Assert.AreEqual(1 + LaboratoryCatalog.StormInfusionCastIntervalTradeOff, ratio, 1e-9);
+    }
+
+    [TestMethod]
+    public void RealHunt_StormInfusion_DischargesDeterministicallyWithOnePrimary()
+    {
+        var first = Hunt(LaboratoryMutationId.StormInfusion, SpellSchool.Arcane);
+        var second = Hunt(LaboratoryMutationId.StormInfusion, SpellSchool.Arcane);
+
+        Assert.AreEqual(LaboratoryMutationId.StormInfusion, first.Summary.PreparedMutation);
+        Assert.IsTrue(first.Summary.ReactionsTriggered > 0, "Field test must observe Conduit discharges in a real hunt.");
+        Assert.AreEqual(1, first.Metrics.PeakActivePrimaryCount);
+        Assert.AreEqual(first.Summary.Score, second.Summary.Score);
+        Assert.AreEqual(first.Summary.ReactionsTriggered, second.Summary.ReactionsTriggered);
+    }
+
+    [TestMethod]
+    public void ResearchLead_DecidesTheAttractedWyrm()
+    {
+        foreach (var wyrm in new[] { DragonId.Rimeclaw, DragonId.Stormcoil })
+        {
+            var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: Seed, researchLead: wyrm);
+            Invoke(simulation, "ResolveDragonAttraction");
+            Assert.AreEqual(wyrm, simulation.AttractedDragon);
+        }
+    }
+
+    [TestMethod]
+    public void ResearchLead_IsIgnoredDuringTheFirstHunt()
+    {
+        DragonId? Attract(DragonId? lead)
+        {
+            var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: Seed, firstHunt: true, researchLead: lead);
+            Invoke(simulation, "ResolveDragonAttraction");
+            return simulation.AttractedDragon;
+        }
+        var baseline = Attract(null);
+        var lead = Enum.GetValues<DragonId>().First(wyrm => wyrm != baseline);
+        Assert.AreEqual(baseline, Attract(lead));
+    }
+
+    [TestMethod]
+    public void ResearchLead_NeverOverridesADueAscendantRite()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: Seed, ascendantWyrm: DragonId.Ashfang, researchLead: DragonId.Rimeclaw);
+        Assert.IsTrue(Field<RunDepthState>(simulation, "depthState").PushDeeper());
+        Invoke(simulation, "ResolveDragonAttraction");
+        Assert.AreEqual(DragonId.Ashfang, simulation.AttractedDragon);
+    }
+
+    [TestMethod]
     public void PrepareLaboratoryMutation_AfterCommit_IsIgnored()
     {
         var simulation = Create(null);
@@ -127,9 +235,9 @@ public sealed class LaboratoryMutationSimulationTests
         Assert.AreEqual(first.Summary.Kills, second.Summary.Kills);
     }
 
-    private static (RunSelfPlayMetrics Metrics, Wyrmforge.Application.Runs.EndRun.RunSummary Summary) Hunt(LaboratoryMutationId? mutation)
+    private static (RunSelfPlayMetrics Metrics, Wyrmforge.Application.Runs.EndRun.RunSummary Summary) Hunt(LaboratoryMutationId? mutation, SpellSchool school = SpellSchool.Fire)
     {
-        var build = SelfPlayBuildCatalog.All.First(candidate => candidate.PreferredSchool == SpellSchool.Fire);
+        var build = SelfPlayBuildCatalog.All.First(candidate => candidate.PreferredSchool == school);
         var simulation = new RunSimulationFactory(new SeededRandomSource(1)).Create(build.SelectedNodes, seed: Seed, preparedMutation: mutation);
         var agent = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, Seed, build.PreferredSchool);
         var metrics = new RunSelfPlayDriver().Play(build, Seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 120));
@@ -153,6 +261,7 @@ public sealed class LaboratoryMutationSimulationTests
 
     private static RunBuildState Build(RunSimulation simulation) => Field<RunBuildState>(simulation, "build");
     private static EnemyState Enemy(RunSimulation simulation) => Field<List<EnemyState>>(simulation, "enemies").Single(enemy => enemy.Id == 999);
+    private static Dictionary<SpellId, double> Cooldowns(RunSimulation simulation) => Field<Dictionary<SpellId, double>>(simulation, "spellCooldowns");
     private static List<ProjectileState> Projectiles(RunSimulation simulation) => Field<List<ProjectileState>>(simulation, "projectiles");
     private static T Field<T>(RunSimulation simulation, string name) =>
         (T)typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(simulation)!;

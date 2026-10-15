@@ -22,3 +22,5 @@
 .essence-choice small { margin-top:8px; color:#8e8082; line-height:1.4; }
 .essence-footer { margin-top:auto; padding-top:18px; color:#a27265; font-size:.58rem; font-weight:900; letter-spacing:.08em; }
 @media (max-width:700px) { .dragon-harvest-card { padding:20px 14px; } .essence-choices { grid-template-columns:1fr; } .essence-choice { min-height:0; } .harvest-flow span { flex:1 1 auto; text-align:center; } }
+.essence-choice.research-specimen { border-color:rgba(159,220,240,.55); box-shadow:0 0 0 1px rgba(159,220,240,.25) inset; }
+.essence-research { display:flex; align-items:center; gap:5px; margin-top:6px; color:#9fdcf0; font-size:.58rem; font-weight:900; letter-spacing:.1em; }

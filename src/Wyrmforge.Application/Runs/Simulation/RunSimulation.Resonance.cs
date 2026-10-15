@@ -41,6 +41,12 @@ public sealed partial class RunSimulation
             attractedDragon = selectedAscendant;
             return;
         }
+        // A tracked Laboratory lead decides which Wyrm answers, but never overrides an Ascendant rite or the First Hunt.
+        if (researchLead is { } lead && !firstHunt && !defeatedDragonIds.Contains(lead))
+        {
+            attractedDragon = lead;
+            return;
+        }
         attractedDragon = dragonAttractionState.Roll(Resonance, randomSource, defeatedDragonIds);
     }
 }

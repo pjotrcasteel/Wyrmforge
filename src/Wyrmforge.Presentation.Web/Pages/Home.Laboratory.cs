@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.JSInterop;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Laboratory;
 
 namespace Wyrmforge.Presentation.Web.Pages;
@@ -10,8 +11,43 @@ public partial class Home
     private readonly LaboratoryState laboratory = new();
     private LaboratoryMutationId? activeLaboratoryMutation;
     private string? laboratoryNotice;
+    private DragonId? activeResearchLead;
+    private Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceId? activeResearchSpecimen;
+    private LaboratoryPrompt? researchPrompt;
+    private bool openLaboratoryOnReturn;
+    private LaboratoryMutationId? laboratoryFocus;
 
     private void DismissLaboratoryNotice() => laboratoryNotice = null;
+
+    private void PrepareLaboratoryRun()
+    {
+        activeLaboratoryMutation = laboratory.PreparedFor(selection.Selected);
+        activeResearchLead = laboratory.LeadWyrm(essenceVault);
+        activeResearchSpecimen = activeResearchLead is not null && laboratory.Tracked is { } tracked ? LaboratoryCatalog.Get(tracked).Stabilizer : null;
+        researchPrompt = null;
+    }
+
+    private async Task TrackLaboratoryMutationAsync(LaboratoryMutationId? id)
+    {
+        if (id is { } mutation) { if (!laboratory.Track(mutation, essenceVault)) return; }
+        else laboratory.Untrack();
+        await TrySetLaboratoryAsync();
+    }
+
+    // Runs after the hunt's Essences are stored: a secured specimen ends its lead, then the summary
+    // points at the single most useful research step.
+    private async Task RefreshResearchPromptAsync()
+    {
+        if (laboratory.ReconcileLead(essenceVault)) await TrySetLaboratoryAsync();
+        researchPrompt = ForgeAvailable ? LaboratoryAdvisor.Next(laboratory, essenceVault, selection.Selected) : null;
+    }
+
+    private void OpenLaboratoryFromSummary()
+    {
+        laboratoryFocus = researchPrompt?.Mutation;
+        ReturnToForge();
+        openLaboratoryOnReturn = true;
+    }
 
     private async Task<LaboratoryExperimentResult> RunLaboratoryExperimentAsync(LaboratoryExperimentId id)
     {

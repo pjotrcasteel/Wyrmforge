@@ -14,8 +14,9 @@
         <div class="essence-choices">
             @foreach (var essence in Choices)
             {
-                <button class="essence-choice" @onclick="() => ChooseAsync(essence.Id)">
+                <button class="essence-choice @(essence.Id == ResearchSpecimen ? "research-specimen" : string.Empty)" @onclick="() => ChooseAsync(essence.Id)">
                     <span class="essence-source">STOLEN FROM @essence.Source.ToUpperInvariant()</span>
+                    @if (essence.Id == ResearchSpecimen) { <span class="essence-research"><i class="px-icon px-sm px-flask" aria-hidden="true"></i>LABORATORY SPECIMEN</span> }
                     <span class="essence-icon"><GameIcon Glyph="@(essence.Icon)" /></span>
                     <strong>@essence.Name</strong>
                     <span class="essence-effect">@essence.Effect</span>
@@ -33,6 +34,10 @@
 
     [Parameter]
     public EventCallback<DragonEssenceId> OnChoose { get; set; }
+
+    // The tracked Laboratory specimen is highlighted, never preselected: the choice stays the player's.
+    [Parameter]
+    public DragonEssenceId? ResearchSpecimen { get; set; }
 
     private string SourceName => Choices.FirstOrDefault()?.Source ?? "Wyrm";
 

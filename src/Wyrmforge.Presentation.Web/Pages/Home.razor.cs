@@ -144,7 +144,7 @@ public partial class Home
             await TrySetEssenceVaultAsync();
         }
         selectedOffering = null;
-        activeLaboratoryMutation = laboratory.PreparedFor(selection.Selected);
+        PrepareLaboratoryRun();
         await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;
@@ -218,6 +218,7 @@ public partial class Home
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
         }
+        await RefreshResearchPromptAsync();
         if (value.Score <= bestScore) return;
         bestScore = value.Score;
         await TrySetBestScoreAsync(bestScore);
@@ -228,7 +229,7 @@ public partial class Home
         if (summary is null) return;
         await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
-        activeLaboratoryMutation = laboratory.PreparedFor(selection.Selected);
+        PrepareLaboratoryRun();
         activeRewardCache = false;
         summary = null;
         hunterGain = null;
@@ -259,6 +260,7 @@ public partial class Home
     private void ReturnToForge()
     {
         summary = null;
+        openLaboratoryOnReturn = false;
         activeRewardCache = false;
         activeOffering = null;
         activeRunSeed = null;

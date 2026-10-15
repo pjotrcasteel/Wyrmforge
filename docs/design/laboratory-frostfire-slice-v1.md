@@ -97,9 +97,33 @@ North star: the player becomes *the mage who knows how to create the spell*, not
 - There are no animated previews yet. The preview is static icons plus the in-hunt moment.
 - Online, anti-cheat and ranked eligibility are deferred. Laboratory data is local and unverified.
 
-## 8. Next slices
+## 8. Phase C.1 follow-up: Storm Infusion, research leads and post-run prompts
 
-1. **Phase C.1:** a second mutation on another existing synergy, such as Storm × Frost "Stormglass". This proves the catalog generalises, and gives a generic reusable mutation socket node.
+Status: implemented on the same branch.
+
+**Second mutation: Storm Infusion** (Arcane Orb × Storm Heart → existing `ArcaneConduit` synergy).
+- Stormglass (Storm × Frost) was rejected: the Arcane Web has no Frost–Storm bridge, and its specimen would again come from Rimeclaw.
+- Experiments: *Examine the Storm Heart* (insight), *Charge Arcane Orb* (instructive failure: charge bleeds away), *Ground the orb* (dead end), *Count the impacts* (insight: every 4th impact discharges).
+- Stabilizer: 1 Storm Heart, on consent. Socket: **Charged Focus** on `hybrid-storm-arcane-2` (Storm–Arcane bridge).
+- Trade-off: casts 10% slower (`StormInfusionCastIntervalTradeOff`). Same no-stacking rule: the legacy `synergy:ArcaneConduit` offer is hidden.
+- Conduit discharges now count as reactions (`RecordReaction()`), so field notes report them.
+- The catalog is generalised: experiments, specimens, glyphs, awakened text and reaction nouns are per mutation. `LaboratoryView` has a tab per mutation.
+
+**Research leads (guaranteed specimen access).**
+- `LaboratoryState.Track` sets a lead while a mutation still needs its specimen. `LeadWyrm` returns the specimen Wyrm; `ReconcileLead` clears the lead once the specimen is held or the recipe is stabilized.
+- In the hunt, `ResolveDragonAttraction` forces the lead Wyrm, except during the First Hunt or a due Ascendant rite, and only while that Wyrm is not yet defeated.
+- The arena shows the tracked specimen; the harvest overlay highlights it with a "LABORATORY SPECIMEN" tag but never preselects it.
+- Persisted as the optional `Tracked` field of `LaboratorySave`; older saves load with no lead.
+
+**Advisor and post-run prompt.**
+- `LaboratoryAdvisor.Next()` picks one next step in priority order: stabilize → novel experiment → equip (or unlock socket) → hunt specimen. The tracked mutation goes first.
+- The Forge's Laboratory status line and the run summary's research-prompt button both use it. The button opens the Laboratory on the relevant mutation's tab.
+
+**Tuning:** self-play measurements and proposals are in [`laboratory-tuning-v1.md`](laboratory-tuning-v1.md). No constants were changed.
+
+## 9. Next slices
+
+1. ~~**Phase C.1:** a second mutation on another existing synergy.~~ Done as Storm Infusion (§8).
 2. **Phase C.2:** a preparation economy, meaning common reagents from non-Wyrm rares spent on experiments, shown with an exact spend preview. Forge and Laboratory must never consume the same Essence at the same time.
 3. **Phase C.3:** a two-socket limit with path prerequisites, saved loadouts, free respec, and event-budget tests for reaction chains.
-4. Animated reaction previews that match the deterministic rules, and post-run research follow-up prompts.
+4. Animated reaction previews that match the deterministic rules. (Post-run research prompts are done, §8.)

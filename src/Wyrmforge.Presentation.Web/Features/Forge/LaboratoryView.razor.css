@@ -18,6 +18,17 @@
     font-size: .78rem;
     line-height: 1.4;
 }
+.lab-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.lab-tabs button {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-height: 48px; padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, .1); border-radius: 12px; background: #17121c; color: #c9bfd0;
+    font-size: .74rem; font-weight: 900; text-align: left; cursor: pointer;
+}
+.lab-tabs button.active { border-color: rgba(255, 210, 122, .55); background: #241a22; color: #fff1d6; }
+.lab-tabs small { flex-basis: 100%; color: #8d8098; font-size: .6rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.lab-track { min-height: 40px; padding: 0 12px; border: 1px solid rgba(255, 210, 122, .5); border-radius: 10px; background: none; color: #ffd27a; font-size: .7rem; font-weight: 950; letter-spacing: .08em; cursor: pointer; }
+.lab-track.tracked { background: rgba(255, 210, 122, .14); }
+
 .lab-notice button { margin-left: auto; border: 0; background: none; color: inherit; font-size: 1.2rem; cursor: pointer; }
 
 .lab-recipe {
@@ -51,9 +62,12 @@
 }
 .lab-glyph.fire { box-shadow: 0 0 0 1px rgba(224, 112, 46, .45) inset; }
 .lab-glyph.frost { box-shadow: 0 0 0 1px rgba(90, 168, 216, .45) inset; }
-.lab-glyph.frostfire { min-width: 96px; box-shadow: 0 0 0 1px rgba(255, 210, 122, .35) inset, 0 0 18px rgba(159, 220, 240, .12); }
-.lab-recipe.unknown .lab-glyph.frostfire { filter: grayscale(1) brightness(.45); }
-.lab-recipe.researching .lab-glyph.frostfire { filter: saturate(.55) brightness(.8); }
+.lab-glyph.arcane { box-shadow: 0 0 0 1px rgba(196, 138, 255, .45) inset; }
+.lab-glyph.storm { box-shadow: 0 0 0 1px rgba(122, 196, 255, .5) inset; }
+.lab-glyph.fused.arcane-storm { box-shadow: 0 0 0 1px rgba(196, 138, 255, .35) inset, 0 0 18px rgba(122, 196, 255, .14); }
+.lab-glyph.fused { min-width: 96px; box-shadow: 0 0 0 1px rgba(255, 210, 122, .35) inset, 0 0 18px rgba(159, 220, 240, .12); }
+.lab-recipe.unknown .lab-glyph.fused { filter: grayscale(1) brightness(.45); }
+.lab-recipe.researching .lab-glyph.fused { filter: saturate(.55) brightness(.8); }
 .lab-glyph-badge { position: absolute; right: 4px; bottom: 4px; }
 
 .lab-pips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
@@ -144,6 +158,6 @@
 
 @media (max-width: 480px) {
     .lab-glyph { min-width: 48px; height: 48px; }
-    .lab-glyph.frostfire { min-width: 80px; }
+    .lab-glyph.fused { min-width: 80px; }
     .lab-recipe { padding: 13px; }
 }

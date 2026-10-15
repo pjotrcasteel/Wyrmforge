@@ -6,6 +6,12 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.BalanceLab;
 
 var options = BalanceLabOptions.Parse(args);
+if (options.Laboratory)
+{
+    await LaboratoryStudy.RunAsync(options);
+    return;
+}
+
 var results = new List<RunSelfPlayMetrics>();
 var driver = new RunSelfPlayDriver();
 var factory = new RunSimulationFactory(new SeededRandomSource(1));

@@ -86,7 +86,7 @@
                 <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
                 break;
             case ShellSection.Laboratory:
-                <LaboratoryView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice" OnOpenAtlas="() => NavigateAsync(ShellSection.Build)" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" />
+                <LaboratoryView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice" OnOpenAtlas="() => NavigateAsync(ShellSection.Build)" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" Focus="LaboratoryFocus" />
                 break;
             case ShellSection.Codex:
                 <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
@@ -132,6 +132,9 @@
     [Parameter] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>> RunExperiment { get; set; } = _ => throw new InvalidOperationException("Laboratory not wired.");
     [Parameter] public Func<LaboratoryMutationId, Task<bool>> StabilizeMutation { get; set; } = _ => Task.FromResult(false);
     [Parameter] public Func<LaboratoryMutationId?, Task> EquipMutation { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public Func<LaboratoryMutationId?, Task> TrackMutation { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public bool StartInLaboratory { get; set; }
+    [Parameter] public LaboratoryMutationId? LaboratoryFocus { get; set; }
 
     private bool editingName;
     private string nameDraft = "";
@@ -184,10 +187,21 @@
     private Task StartAsync() => OnStart.InvokeAsync();
     private string UnlockHint(ShellSection value) => value == ShellSection.Forge ? "Secure Essence" : "Finish first hunt";
 
-    private string LaboratoryStatus => Laboratory.Equipped is not null ? "Mutation equipped"
-        : Laboratory.Stabilized.Count > 0 ? "Recipe ready"
-        : Laboratory.Observations.Count > 0 ? $"{Laboratory.Observations.Count} findings"
-        : Vault.Count(DragonEssenceId.RimeHeart) > 0 ? "Specimen ready" : "Needs a Rime Heart";
+    private string LaboratoryStatus => Laboratory.Equipped is { } equipped ? $"{LaboratoryCatalog.Get(equipped).Name} equipped"
+        : LaboratoryAdvisor.Next(Laboratory, Vault, Selection.Selected) is not { } prompt ? $"{Laboratory.Observations.Count} findings"
+        : prompt.Kind switch
+        {
+            LaboratoryPromptKind.Stabilize => "Ready to stabilize",
+            LaboratoryPromptKind.Experiment => "New experiment",
+            LaboratoryPromptKind.Equip or LaboratoryPromptKind.UnlockSocket => "Recipe ready",
+            _ when Laboratory.Tracked is { } tracked => $"Tracking {DragonCatalog.Get(LaboratoryCatalog.Get(tracked).SpecimenWyrm).Name}",
+            _ => $"Needs a {LaboratoryCatalog.Get(prompt.Mutation).Specimen.Name}",
+        };
+
+    protected override void OnInitialized()
+    {
+        if (StartInLaboratory && IsUnlocked(ShellSection.Laboratory)) section = ShellSection.Laboratory;
+    }
 
     private enum ShellSection { Run, Build, Forge, Laboratory, Codex, Prepare, Options }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);

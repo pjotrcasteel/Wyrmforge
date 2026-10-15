@@ -1,3 +1,4 @@
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Domain.Progression.Laboratory;
@@ -13,7 +14,8 @@ public sealed record LaboratoryExperimentResult(LaboratoryExperimentDefinition E
     public string Message => Rejected ? "Not possible yet." : Novel ? Experiment.Finding : "Already recorded. Repeating it teaches nothing new.";
 }
 
-public sealed record LaboratorySave(int Version, string[] Observations, string[] Mutations, string? Equipped, int FieldTests, int FieldReactions);
+// Tracked was added after v1 shipped; older saves omit it and deserialize it as null.
+public sealed record LaboratorySave(int Version, string[] Observations, string[] Mutations, string? Equipped, int FieldTests, int FieldReactions, string? Tracked = null);
 
 // Persistent research knowledge and the one equipped mutation. Experiments are deterministic and
 // idempotent: a novel experiment always records its specific observation, a repeated one never farms
@@ -71,6 +73,7 @@ public sealed class LaboratoryState
     {
         if (!consentToConsume || Status(id, vault) != MutationResearchStatus.ReadyToStabilize) return false;
         if (!vault.Consume(LaboratoryCatalog.Get(id).Stabilizer)) return false;
+        if (Tracked == id) Tracked = null;
         return stabilized.Add(id);
     }
 
@@ -105,6 +108,35 @@ public sealed class LaboratoryState
     public LaboratoryMutationId? PreparedFor(IReadOnlySet<string> arcaneNodes) =>
         Equipped is { } id && SocketUnlocked(LaboratoryCatalog.Get(id).Socket, arcaneNodes) ? id : null;
 
+    // A pinned research lead: while the Laboratory still needs that mutation's specimen, the next hunt's
+    // Wyrm is the one that carries it. The lead lapses on its own once the specimen is secured.
+    public LaboratoryMutationId? Tracked { get; private set; }
+
+    public bool NeedsSpecimen(LaboratoryMutationId id, DragonEssenceVault vault)
+    {
+        ArgumentNullException.ThrowIfNull(vault);
+        return !stabilized.Contains(id) && vault.Count(LaboratoryCatalog.Get(id).Stabilizer) == 0;
+    }
+
+    public bool Track(LaboratoryMutationId id, DragonEssenceVault vault)
+    {
+        if (!NeedsSpecimen(id, vault)) return false;
+        Tracked = id;
+        return true;
+    }
+
+    public void Untrack() => Tracked = null;
+
+    public DragonId? LeadWyrm(DragonEssenceVault vault) =>
+        Tracked is { } id && NeedsSpecimen(id, vault) ? LaboratoryCatalog.Get(id).SpecimenWyrm : null;
+
+    public bool ReconcileLead(DragonEssenceVault vault)
+    {
+        if (Tracked is not { } id || NeedsSpecimen(id, vault)) return false;
+        Tracked = null;
+        return true;
+    }
+
     public void RecordFieldTest(LaboratoryMutationId? applied, int reactions)
     {
         if (applied is null) return;
@@ -115,7 +147,7 @@ public sealed class LaboratoryState
     public LaboratorySave ToSave() => new(SaveVersion,
         observations.Order().Select(id => id.ToString()).ToArray(),
         stabilized.Order().Select(id => id.ToString()).ToArray(),
-        Equipped?.ToString(), FieldTests, FieldReactions);
+        Equipped?.ToString(), FieldTests, FieldReactions, Tracked?.ToString());
 
     public void Restore(LaboratorySave? save)
     {
@@ -124,11 +156,13 @@ public sealed class LaboratoryState
         Equipped = null;
         FieldTests = 0;
         FieldReactions = 0;
+        Tracked = null;
         if (save is null) return;
         foreach (var name in save.Observations ?? []) if (Enum.TryParse<LaboratoryObservationId>(name, out var id) && Enum.IsDefined(id)) observations.Add(id);
         foreach (var name in save.Mutations ?? []) if (Enum.TryParse<LaboratoryMutationId>(name, out var id) && Enum.IsDefined(id)) stabilized.Add(id);
         if (Enum.TryParse<LaboratoryMutationId>(save.Equipped, out var equipped) && stabilized.Contains(equipped)) Equipped = equipped;
         FieldTests = Math.Max(0, save.FieldTests);
         FieldReactions = Math.Max(0, save.FieldReactions);
+        if (Enum.TryParse<LaboratoryMutationId>(save.Tracked, out var tracked) && Enum.IsDefined(tracked) && !stabilized.Contains(tracked)) Tracked = tracked;
     }
 }

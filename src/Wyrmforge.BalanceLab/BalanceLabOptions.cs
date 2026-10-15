@@ -7,7 +7,8 @@ internal sealed record BalanceLabOptions(
     string OutputDirectory,
     double ArenaWidth,
     double ArenaHeight,
-    bool FreshHunter)
+    bool FreshHunter,
+    bool Laboratory = false)
 {
     public static BalanceLabOptions Parse(string[] args)
     {
@@ -26,7 +27,8 @@ internal sealed record BalanceLabOptions(
             values.GetValueOrDefault("--output", "artifacts/balance"),
             ParseDouble(values, "--arena-width", 1280, 200, 6000),
             ParseDouble(values, "--arena-height", 720, 200, 6000),
-            values.ContainsKey("--fresh-hunter"));
+            values.ContainsKey("--fresh-hunter"),
+            values.ContainsKey("--laboratory"));
     }
 
     private static int ParseInt(IReadOnlyDictionary<string, string> values, string key, int fallback, int minimum, int maximum) =>

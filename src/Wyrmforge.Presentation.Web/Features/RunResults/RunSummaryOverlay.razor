@@ -30,6 +30,10 @@
         {
             <button class="quest-reward-ready" @onclick="() => OnQuests.InvokeAsync()">✦ @QuestRewards quest reward@(QuestRewards == 1 ? string.Empty : "s") ready · CLAIM</button>
         }
+        @if (ResearchPrompt is { } research)
+        {
+            <button class="quest-reward-ready research-prompt" aria-label="Open Laboratory: @research.Text" @onclick="() => OnOpenLaboratory.InvokeAsync()"><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @research.Text <b>LABORATORY ›</b></button>
+        }
         <div class="run-report-grid">
             <section>
                 <span>YOUR BUILD</span>
@@ -186,7 +190,7 @@
             <div class="run-report-section">
                 <span>FIELD NOTES</span>
                 <div class="run-report-chips">
-                    <b><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @Wyrmforge.Domain.Progression.Laboratory.LaboratoryCatalog.Get(mutationId).Name · @Summary.ReactionsTriggered shatter@(Summary.ReactionsTriggered == 1 ? string.Empty : "s")</b>
+                    <b><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @Wyrmforge.Domain.Progression.Laboratory.LaboratoryCatalog.Get(mutationId).Name · @Summary.ReactionsTriggered @Wyrmforge.Domain.Progression.Laboratory.LaboratoryCatalog.Get(mutationId).ReactionNoun@(Summary.ReactionsTriggered == 1 ? string.Empty : "s")</b>
                 </div>
             </div>
         }
@@ -253,6 +257,8 @@
     [Parameter] public int PointBudget { get; set; } = 1;
     [Parameter] public HunterProgress Hunter { get; set; } = new();
     [Parameter] public HunterExperienceGain? HunterGain { get; set; }
+    [Parameter] public Wyrmforge.Domain.Progression.Laboratory.LaboratoryPrompt? ResearchPrompt { get; set; }
+    [Parameter] public EventCallback OnOpenLaboratory { get; set; }
 
     private string BuildIdentity
     {

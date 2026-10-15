@@ -65,7 +65,11 @@ public sealed partial class RunSimulation
             if (projectile.Spell == SpellId.ArcaneOrb)
             {
                 arcaneHitCount++;
-                if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0) CastChainLightning(1, target.Position, 0.55, 1);
+                if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0)
+                {
+                    RecordReaction();
+                    CastChainLightning(1, target.Position, 0.55, 1);
+                }
             }
             if (!projectile.ContinueAfterHit(target.Id)) (consumed ??= []).Add(projectile);
         }
