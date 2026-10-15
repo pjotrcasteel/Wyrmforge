@@ -61,6 +61,7 @@ Spell identity should change with actual behavior: wind-up, projectile outline/t
 | [#67](https://github.com/pjotrcasteel/Wyrmforge/pull/67) | **Closed, obsolete implementation** | Would grant one additional Arcane point on each eligible hunt. Modern `HunterProgress` already earns permanent Arcane points from Hunter XP levels. Do NOT add another independent grant without revisiting the design; it risks double awards / bypassing XP pacing. |
 | [#64](https://github.com/pjotrcasteel/Wyrmforge/pull/64) | **Closed, historical experiment** | 0.0.83 9,552-scenario imperfect-player and boss-warning analysis. Its proposed timings are *unmerged* and must be revalidated on the latest code, not blindly replayed. |
 | [#115](https://github.com/pjotrcasteel/Wyrmforge/pull/115) | **Merged (during handover work)** | Port of #67: adds a per-completed-hunt point **in addition to** the existing XP-driven budget. Design/test interaction is unresolved; tracked in [#117](https://github.com/pjotrcasteel/Wyrmforge/issues/117). |
+| [#116](https://github.com/pjotrcasteel/Wyrmforge/pull/116) | **Closed (duplicate handover)** | Canonical documentation already merged directly on main. Its unique [0.0.83 historical fairness study](../playtesting/archive/player-study-0.0.83.md) was saved separately; the overlapping docs contained outdated Arcane/audio claims. |
 
 **Important:** PR state/CI can change after this handover. The PRs and code in GitHub, not this timestamped table, decide current truth. Since this audit, PR #115 merged as `a9d80e2d80`, and issue #117 was opened to preserve the review.
 
@@ -76,7 +77,7 @@ Spell identity should change with actual behavior: wind-up, projectile outline/t
 
 ### Historical fairness finding to carry forward (not a shipped fix)
 
-PR #64 compared synthetic self-play agents, **not calibrated real users**. It found apparently impossible-to-escape circles for some Voidweaver/Rimeclaw warnings under base movement on the old 0.0.83 code. Re-measure real CURRENT attack radius, delay, player speed and overlaps; design new regression tests and actual player trials before making balance changes. Do not copy the unmerged patch and assume it applies. Player-comprehensible hazard tells matter especially on phones.
+PR #64 compared synthetic self-play agents, **not calibrated real users**. Its full original findings are preserved in the [archived 0.0.83 study](../playtesting/archive/player-study-0.0.83.md), without old executable harness or optional patch. It found apparently impossible-to-escape circles for some Voidweaver/Rimeclaw warnings under base movement on the old 0.0.83 code. Re-measure real CURRENT attack radius, delay, player speed and overlaps; design new regression tests and actual player trials before making balance changes. Do not copy the unmerged patch and assume it applies. Player-comprehensible hazard tells matter especially on phones.
 
 ### Arcane reward semantics must be resolved, not accidentally doubled
 
@@ -89,7 +90,7 @@ PR #64 compared synthetic self-play agents, **not calibrated real users**. It fo
 3. Run `node --test tests/javascript/*.test.mjs`, .NET 10 solution build/tests, browser smoke and actual 390 × 844 screenshot comparisons. Check sprite silhouette in idle, walk, windup, Surge, all school lighting and player-vs-wall depth through camera traversal.
 4. On real iPhone Safari inspect scaling, touch/movement, crowded combat contrast, frozen/open gate art and reduced motion. CI may pass while art is still ugly, confusing or directionally wrong.
 5. Verify GitHub Pages site [WyrmForge](https://pjotrcasteel.github.io/Wyrmforge/) deployed at the expected **exact SHA**. Deployment workflows can fail for issue #60's separately tracked Cloudflare probe without proving the game itself is down.
-6. Only close PRs after demonstrating merged/superseded scope; explain the reason and reference authoritative replacement docs. Do not close the four legitimate open issues merely to achieve an empty backlog.
+6. Only close PRs after demonstrating merged/superseded scope; explain the reason and reference authoritative replacement docs. Do not close the five legitimate open issues (#55, #60, #66, #108 and #117) merely to achieve an empty backlog.
 7. Update this dated handover whenever a decision, merge, production art approval, game mechanic or relevant issue resolution changes.
 
 ## 7. Next work
