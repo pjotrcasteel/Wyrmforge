@@ -125,3 +125,13 @@ test('character feet cross in front of and behind world-space wall elevations', 
     assert.deepEqual(sortSceneDepthLayers([wall,{kind:'mage',depth:wall.depth}]),
         [{kind:'mage',depth:wall.depth},wall], 'At the wall foot, facade wins the depth tie.');
 });
+
+test('closed monastery crossing is a restrained ward, not a full-width prison grille', () => {
+    const ctx = fakeContext();
+    ctx.closePath = () => {};
+    assert.equal(drawCloisterElevation(ctx, walls[1], 900, 1500), true);
+    const fullHeightSlats = ctx.rectangles.filter(row => row.args[2] <= 3 && row.args[3] >= 16);
+    assert.equal(fullHeightSlats.length, 0, 'There must be no repeated long iron bars in the cloister.');
+    assert.ok(ctx.rectangles.some(row => String(row.color).includes('78, 134, 105')),
+        'The closed crossing has a subtle transparent seal between its masonry ends.');
+});
