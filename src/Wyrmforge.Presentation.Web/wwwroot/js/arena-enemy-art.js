@@ -40,6 +40,7 @@ export const enemyPixelFrames = [
         ['edge',-9,12,7,9],['edge',3,12,8,9],
         ['shade',-8,13,5,7],['shade',4,13,5,7],
         ['weapon',12,-17,3,38],['head',11,-19,5,6],
+        ['shade',-3,-3,6,2],['light',-10,1,3,6],['weapon',12,-5,5,2],
         ['edge',-13,0,4,12],
     ],
     [ // Heavy armored revenant: broad red pauldrons, horned crest, massive arms.
