@@ -183,6 +183,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator("#wyrmforge-ignition").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         await ScreenshotAsync("mobile-player-name-320.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.Locator(".game-screen canvas[aria-hidden='true']")).ToHaveCountAsync(1);
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
         await Page.Locator("button.route-node.available").First.ClickAsync();
@@ -1003,7 +1004,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(2, json.RootElement.GetProperty("Quests").GetProperty("Claimed").GetArrayLength());
         Assert.AreEqual(1, json.RootElement.GetProperty("Quests").GetProperty("Caches").GetInt32());
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
-        await Page.Locator(".primary-choice-arcane").ClickAsync();
+        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose a relic", Exact = true })).ToBeVisibleAsync();
         await ScreenshotAsync("mobile-quest-relic-cache.png");
         var lastChoice = await Page.Locator("button.relic-choice").Last.BoundingBoxAsync();
@@ -1048,7 +1049,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0, new() { Timeout = 30000 });
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
-        await Page.Locator(".primary-choice-arcane").ClickAsync();
+        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         var wyrm = await Page.Locator("button.route-node.dragon").BoundingBoxAsync();
         Assert.IsNotNull(wyrm);
@@ -1163,7 +1164,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         if (await back.IsVisibleAsync()) await back.ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
-        await Page.Locator(".primary-choice-arcane").ClickAsync();
+        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
 
         var route = Page.Locator("button.route-node.available").First;
