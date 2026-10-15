@@ -1,7 +1,8 @@
-// Readable temporary mage silhouette based on the approved slate-blue cloak, pale collar and staff.
-// Fixed pixel geometry; the final hand-authored animation frames can replace this isolated renderer.
+// Authored character frames now replace the temporary body geometry; the staff remains articulated.
+// Gameplay/physics never reads animation geometry.
+import { drawMagePixelFrame, mageFrameKey } from './arena-mage-frames.js';
+
 const cloak = '#485b73';
-const cloakShade = '#26364b';
 const cloakEdge = '#1b2637';
 const paleCollar = '#c8c6b8';
 const staffWood = '#766552';
@@ -36,33 +37,9 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
     ctx.ellipse(0, 12, 11, 4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Hem and uneven cloak edges read at phone scale; a pale collar separates the hood from it.
-    ctx.fillStyle = cloakEdge;
-    ctx.fillRect(-10, -5, 20, 19);
-    ctx.fillRect(-8, 13, 6, 3);
-    ctx.fillRect(3, 13, 6, 3);
-    ctx.fillStyle = hit ? '#7d5260' : cloakShade;
-    ctx.fillRect(-9, -5, 18, 18);
-    ctx.fillRect(-8, 11, 6, 4);
-    ctx.fillRect(3, 11, 6, 4);
-    ctx.fillStyle = hit ? '#a06e73' : cloak;
-    ctx.fillRect(-7, -4, 13, 14);
-    ctx.fillRect(-8, 7, 8, 5);
-    ctx.fillStyle = '#677c92';
-    ctx.fillRect(-6, -5, 4, 12);
-    ctx.fillRect(3, 0, 3, 10);
-
-    // Muted hood with a deliberately dark face opening (no bright helmet blob).
-    ctx.fillStyle = cloakEdge;
-    ctx.fillRect(-7, -15, 14, 12);
-    ctx.fillStyle = hit ? '#946671' : '#63788f';
-    ctx.fillRect(-6, -15, 12, 10);
-    ctx.fillStyle = '#293241';
-    ctx.fillRect(-4, -11, 8, 5);
-    ctx.fillStyle = paleCollar;
-    ctx.fillRect(-6, -5, 12, 3);
-    ctx.fillRect(-5, -2, 3, 2);
-    ctx.fillRect(3, -2, 3, 2);
+    // Distinct authored pixel silhouettes express weight transfer and cloak follow-through.
+    const currentFrame = mageFrameKey(cast);
+    drawMagePixelFrame(ctx, currentFrame, hit);
 
     if (lighting?.intensity > .015) {
         // The face and cloak catch light from the actual nearby cast, projectile or impact.
@@ -80,7 +57,11 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
     // The staff is a readable weapon silhouette and leads the actual cast angle.
     // It follows the attack, not the movement controls, and cannot block movement.
     ctx.save();
-    ctx.translate(5, -3);
+    const staffGrip = currentFrame === 'windup' ? { x: 2, y: -4 }
+        : currentFrame === 'surgeRelease' ? { x: 10, y: -7 }
+        : currentFrame === 'release' ? { x: 9, y: -5 }
+        : currentFrame === 'followThrough' ? { x: 7, y: -3 } : { x: 5, y: -3 };
+    ctx.translate(staffGrip.x, staffGrip.y);
     ctx.rotate(pose.aim + pose.sweep);
     ctx.fillStyle = cloakEdge;
     ctx.fillRect(1, -4, 8, 7);

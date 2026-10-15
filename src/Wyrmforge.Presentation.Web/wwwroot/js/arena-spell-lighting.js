@@ -1,4 +1,6 @@
 import { spellFamily } from './arena-spell-vfx.js';
+import { magePose } from './arena-mage.js';
+import { mageFrameKey } from './arena-mage-frames.js';
 
 // The authoritative C# cast/projectile/impact snapshots determine every light's location,
 // rank, combination and Surge. The entire light rig is cosmetic: no physics or RNG writes.
@@ -16,6 +18,13 @@ function clamp(value, minimum, maximum) { return Math.min(maximum, Math.max(mini
 export function spellLightProfile(spell, combination = null) {
     const family = spellFamily(spell, combination);
     return { family, ...palette[family] };
+}
+
+export function castLightEnvelope(progress) {
+    const p = clamp(Number(progress) || 0, 0, 1);
+    if (p < .22) return .36 + p / .22 * .48;
+    if (p < .48) return 1;
+    return Math.max(.08, 1 - (p - .48) / .52 * .92);
 }
 
 function flicker(family, elapsed, reducedMotion) {
@@ -36,15 +45,21 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
         const surge = state.surge === true;
         const intensity = strength * (1 + (rank - 1) * .13) * (surge ? 1.4 : 1)
             * flicker(profile.family, elapsed, reducedMotion);
-        const angle = Number(state.angle) || 0;
-        const offset = type === 'cast' ? 20 + rank * 3 : 0;
-        candidates.push({ x: state.x + Math.cos(angle) * offset, y: state.y + Math.sin(angle) * offset,
-            radius: radius + rank * 15 + (surge ? 42 : 0), strength: clamp(intensity, 0, 1.4), type, surge, ...profile });
+        const pose = type === 'cast' ? magePose(state, reducedMotion) : null;
+        const angle = pose ? pose.aim + pose.sweep : Number(state.angle) || 0;
+        const hand = mageFrameKey(state) === 'surgeRelease' ? { x: 10, y: -7 }
+            : mageFrameKey(state) === 'release' ? { x: 9, y: -5 }
+            : mageFrameKey(state) === 'windup' ? { x: 2, y: -4 } : { x: 5, y: -3 };
+        const offset = pose ? pose.reach + 22 : 0;
+        const x = state.x + (pose ? hand.x : 0) + Math.cos(angle) * offset;
+        const y = state.y + (pose ? hand.y : 0) + Math.sin(angle) * offset;
+        candidates.push({ x, y, radius: radius + rank * 15 + (surge ? 42 : 0),
+            strength: clamp(intensity, 0, 1.4), type, surge, ...profile });
     };
 
     const cast = snapshot.castMotion;
     if (cast && Number(cast.progress) < 1)
-        add(cast, 'cast', .47 * (1 - clamp(Number(cast.progress) || 0, 0, 1)), 78);
+        add(cast, 'cast', .47 * castLightEnvelope(cast.progress), 78);
     for (const projectile of snapshot.projectiles ?? []) add(projectile, 'projectile', .35, 66);
     for (const impact of snapshot.elementalImpacts ?? [])
         add(impact, 'impact', .8 * (1 - clamp(Number(impact.progress) || 0, 0, 1)), 106);

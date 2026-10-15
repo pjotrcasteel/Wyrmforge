@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSpellLights, sampleSpellLight, drawSpellLightSpill, spellLightProfile } from
+import { buildSpellLights, sampleSpellLight, drawSpellLightSpill, spellLightProfile, castLightEnvelope } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-spell-lighting.js';
 
 const cast = { x: 90, y: 90, angle: 0, spell: 1, rank: 2, progress: .2 };
@@ -57,4 +57,17 @@ test('mobile lighting is capped and culls lights outside the world-space camera'
     assert.ok(count < many.length);
     assert.equal(drawSpellLightSpill(ctx, lights, { x: 5000, y: 5000, width: 390, height: 700 }), 0);
     assert.equal(drawSpellLightSpill(ctx, [], { x: 0, y: 0, width: 390, height: 700 }), 0);
+});
+
+test('staff-tip light grows through windup, peaks on release, and fades through follow-through', () => {
+    assert.ok(castLightEnvelope(.05) < castLightEnvelope(.24));
+    assert.equal(castLightEnvelope(.32), 1);
+    assert.ok(castLightEnvelope(.88) < castLightEnvelope(.5));
+    const base = { spell: 1, rank: 3, x: 100, y: 100, angle: 0 };
+    const winding = buildSpellLights({ castMotion: { ...base, progress: .1 } }, 0, true)[0];
+    const released = buildSpellLights({ castMotion: { ...base, progress: .32 } }, 0, true)[0];
+    const finishing = buildSpellLights({ castMotion: { ...base, progress: .9 } }, 0, true)[0];
+    assert.ok(released.strength > winding.strength);
+    assert.ok(released.strength > finishing.strength);
+    assert.notEqual(winding.x, released.x, 'Light follows the actual authored staff grip.');
 });

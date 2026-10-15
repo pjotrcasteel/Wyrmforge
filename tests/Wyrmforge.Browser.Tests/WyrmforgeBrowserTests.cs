@@ -404,6 +404,43 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_MageAuthoredFrames_DifferentCastPhasesProduceVisiblePixelsAndStaffLighting()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const mage = await import('./js/arena-mage.js');
+            const light = await import('./js/arena-spell-lighting.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 180;
+            const ctx = canvas.getContext('2d');
+            const player = { x: 90, y: 92, radius: 12, focusCharge: 3 };
+            const sample = (progress, surge = false) => {
+                const cast = { x: 90, y: 92, angle: 0, spell: 1, rank: 3, progress, surge };
+                const sources = light.buildSpellLights({ castMotion: cast }, 0, true);
+                const illumination = light.sampleSpellLight(sources, player.x, player.y);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                mage.drawMage(ctx, player, cast, false, true, illumination);
+                return [...ctx.getImageData(0, 0, canvas.width, canvas.height).data];
+            };
+            const windup = sample(.12);
+            const release = sample(.32);
+            const followThrough = sample(.75);
+            const surged = sample(.32, true);
+            const difference = (a, b) => a.reduce((total, v, i) => total + (Math.abs(v - b[i]) > 16 ? 1 : 0), 0);
+            const visible = image => image.filter((v, i) => i % 4 === 3 && v > 32).length;
+            return { visible: visible(release), windupToRelease: difference(windup, release),
+                releaseToFollowThrough: difference(release, followThrough), releaseToSurge: difference(release, surged) };
+        }");
+
+        Assert.IsGreaterThan(175, pixels.GetProperty("visible").GetInt32());
+        Assert.IsGreaterThan(50, pixels.GetProperty("windupToRelease").GetInt32());
+        Assert.IsGreaterThan(45, pixels.GetProperty("releaseToFollowThrough").GetInt32());
+        Assert.IsGreaterThan(40, pixels.GetProperty("releaseToSurge").GetInt32());
+    }
+
+    [TestMethod]
     public async Task Mobile_FocusedMagic_MageAndRankedImpactsProduceDifferentActualPixels()
     {
         await Page.SetViewportSizeAsync(390, 844);

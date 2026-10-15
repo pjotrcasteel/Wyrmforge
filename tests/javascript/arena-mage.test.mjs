@@ -70,3 +70,20 @@ test('actual light direction and family shade one side of the mage, never moveme
     assert.doesNotThrow(() => drawMage(fakeContext(), player, null, false, true,
         { intensity: .7, color: [255, 160, 91], sourceX: 20 }));
 });
+
+test('actual cast stages select visibly different authored body frames and articulated staff grips', () => {
+    const player = { x: 100, y: 100, radius: 12, barrier: false };
+    const sample = (progress, surge = false) => {
+        const ctx = fakeContext();
+        drawMage(ctx, player, { spell: 1, rank: 3, angle: 0, progress, surge }, false, true);
+        return ctx.calls;
+    };
+    const windup = sample(.1);
+    const release = sample(.3);
+    const recovery = sample(.65);
+    const surged = sample(.3, true);
+    assert.notDeepEqual(windup, release);
+    assert.notDeepEqual(release, recovery);
+    assert.notDeepEqual(surged, release);
+    assert.deepEqual(sample(.1), windup, 'Explicit authored frames must be deterministic.');
+});
