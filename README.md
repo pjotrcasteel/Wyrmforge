@@ -1,5 +1,10 @@
 # Wyrmforge
 
+## Current continuation and handover (15 October 2026)
+
+Start with the [canonical project, art, game-UX and GitHub backlog handover](docs/handover/2026-10-15-project-art-and-backlog.md). It preserves **approved/rejected artwork**, the correct staff and monastery 2.5D rules, focused spell identity, mobile picture-first design, and reviewed PRs/issues. The [approved image references](art/README.md) and [visual-first Magic Lab/Battlemage research](docs/design/visual-first-magic-ui-rfc.md) are complementary. Research designs are not automatically playable features; inspect current source and PR/CI before continuing.
+
+
 ## Prototype 0.0.117 — Health clarity and unmistakably different territories
 
 - **Remove the clickable health help question mark and modal entirely.** In combat, the green health bar, visible heart + HP current/maximum, and severity coloring (healthy / wounded / critical) convey the status immediately without interrupting movement. The health bar also exposes an accessible progress value.
