@@ -85,6 +85,6 @@ public sealed class PrimaryCommitmentTests
         Assert.IsTrue(simulation.PrimaryCommitted);
         Assert.IsFalse(simulation.ChoosePrimary(SpellId.FireBolt));
         var snapshot = simulation.CreateSnapshot();
-        Assert.AreEqual(SpellId.ChainLightning, snapshot.Hud.Spells.Single().Id);
+        Assert.AreEqual(SpellCatalog.Get(SpellId.ChainLightning).Name, snapshot.Hud.Spells.Single().Name);
     }
 }

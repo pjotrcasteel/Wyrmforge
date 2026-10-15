@@ -1140,11 +1140,28 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync($"mobile-upgrade-confirmation-{width}.png");
     }
 
+    [TestMethod]
+    public async Task Mobile_PrimaryOath_RequiresStartingSpellBeforeShowingRouteMap()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
+        await Expect(oath).ToBeVisibleAsync();
+        await Expect(oath.Locator("button.primary-choice")).ToHaveCountAsync(4);
+        await oath.Locator("button.primary-fire").ClickAsync();
+        await Expect(oath).ToBeHiddenAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".combat-vitals-spells")).ToContainTextAsync("🔥");
+    }
+
     private async Task EnterFirstTrailAsync()
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
+        await Page.Locator(".primary-choice-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
 
         var route = Page.Locator("button.route-node.available").First;
