@@ -10,13 +10,14 @@
 <h1>Forest encounter · art test</h1>
 <p>Check silhouettes, materials and scale together. This is an asset preview, not the live game.</p>
 <fieldset>
+<label>Mage animation <select id="mage-animation"><option value="idle">Idle directions</option><option value="walk" selected>Walk study · SE</option><option value="cast">Cast study · SE</option></select></label>
 <label>Mage facing <select id="direction"><option>S</option><option>SW</option><option>W</option><option>NW</option><option>N</option><option>NE</option><option>E</option><option selected>SE</option></select></label>
 <label>Size <input id="scale" type="range" min="0.65" max="1.8" step="0.05" value="1"><output id="size">80 px</output></label>
 <label><input id="animate" type="checkbox" checked> Scavenger walk study</label>
 <button id="pause">Pause</button>
 </fieldset>
 <canvas width="960" height="640" aria-label="Forest scene assembled from the prototype mage, scavenger and prop atlases"></canvas>
-<p class="note">Mage: eight static directions. Scavenger: one directional walk study. Props: six reusable objects. Mage walk failed review and is excluded. Cast keyposes need continuity cleanup. Camera matching, directional animation coverage, collision footprints and seamless terrain edges remain open.</p>
+<p class="note">Mage: eight static directions plus four-keyframe SE walk and cast studies. Scavenger: one directional walk study. Props: six reusable objects. These are motion studies, not finished production animation. Camera matching, intermediate frames, directional animation coverage, collision footprints and seamless terrain edges remain open.</p>
 <p><a href="atlas.json">Atlas metadata</a> · <a href="README.md">Review notes</a></p>
 </main>
 <script type="module" src="preview.js"></script>

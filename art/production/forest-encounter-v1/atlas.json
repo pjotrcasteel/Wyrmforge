@@ -121,6 +121,144 @@
       254
     ]
   },
+  "mageWalk": {
+    "file": "mage-walk-se-v2.png",
+    "size": [
+      2172,
+      724
+    ],
+    "scale": 0.1249024199843872,
+    "frames": [
+      {
+        "name": "contact-a",
+        "source": [
+          19,
+          52,
+          509,
+          631
+        ],
+        "pivot": [
+          279.7,
+          637
+        ]
+      },
+      {
+        "name": "passing-a",
+        "source": [
+          547,
+          44,
+          490,
+          645
+        ],
+        "pivot": [
+          294.6,
+          645
+        ]
+      },
+      {
+        "name": "contact-b",
+        "source": [
+          1086,
+          50,
+          503,
+          637
+        ],
+        "pivot": [
+          298.6,
+          639
+        ]
+      },
+      {
+        "name": "passing-b",
+        "source": [
+          1635,
+          44,
+          490,
+          644
+        ],
+        "pivot": [
+          292.6,
+          645
+        ]
+      }
+    ],
+    "status": "four-keyframe motion study; not final animation",
+    "alpha": [
+      0,
+      255
+    ],
+    "fps": 7,
+    "direction": "SE"
+  },
+  "mageCast": {
+    "file": "mage-cast-se-v2.png",
+    "size": [
+      2172,
+      724
+    ],
+    "scale": 0.15384615384615385,
+    "frames": [
+      {
+        "name": "anticipation",
+        "source": [
+          48,
+          130,
+          404,
+          517
+        ],
+        "pivot": [
+          250.7,
+          517
+        ]
+      },
+      {
+        "name": "gather",
+        "source": [
+          576,
+          127,
+          421,
+          520
+        ],
+        "pivot": [
+          265.6,
+          520
+        ]
+      },
+      {
+        "name": "release",
+        "source": [
+          1118,
+          127,
+          440,
+          520
+        ],
+        "pivot": [
+          266.6,
+          520
+        ]
+      },
+      {
+        "name": "recover",
+        "source": [
+          1670,
+          127,
+          413,
+          520
+        ],
+        "pivot": [
+          257.6,
+          520
+        ]
+      }
+    ],
+    "status": "four-keyframe motion study; not final animation",
+    "alpha": [
+      0,
+      255
+    ],
+    "fps": 7,
+    "direction": "SE"
+  },
   "scavenger": {
     "file": "scavenger-walk-se-v1.png",
     "size": [
@@ -344,6 +482,6 @@
     }
   ],
   "rejected": [
-    "Mage walk attempts repeat the same leading leg and must not be used as a walking loop."
+    "Earlier mage walk attempts repeat the same leading leg; the v2 study replaces these with open and crossed contacts."
   ]
 }

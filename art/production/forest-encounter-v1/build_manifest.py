@@ -37,18 +37,31 @@ def atlas(filename, columns, rows, names, regions=None, category="actor", world_
             "status": "prototype-review", "alpha": list(alpha.getextrema())}
 
 
+walk = atlas("mage-walk-se-v2.png", 4, 1, ["contact-a", "passing-a", "contact-b", "passing-b"], category="mage")
+cast = atlas("mage-cast-se-v2.png", 4, 1, ["anticipation", "gather", "release", "recover"], category="mage")
+for animation in (walk, cast):
+    cell_width = animation["size"][0] / 4
+    baseline = max(f["source"][1] + f["source"][3] for f in animation["frames"])
+    for index, frame in enumerate(animation["frames"]):
+        frame["pivot"] = [round((index + .55) * cell_width - frame["source"][0], 1), baseline - frame["source"][1]]
+    animation["fps"] = 7
+    animation["direction"] = "SE"
+    animation["status"] = "four-keyframe motion study; not final animation"
+
 manifest = {
     "version": 1,
     "status": "Art prototypes; not integrated into the live game.",
     "camera": "Elevated three-quarter orthographic study; validate against gameplay before acceptance.",
     "mage": atlas("mage-idle-directions-v1.png", 4, 2, ["S", "SW", "W", "NW", "N", "NE", "E", "SE"], category="mage"),
+    "mageWalk": walk,
+    "mageCast": cast,
     "scavenger": atlas("scavenger-walk-se-v1.png", 4, 2, [str(i) for i in range(8)], world_height=42),
     "props": atlas("forest-props-v1.png", 3, 2, ["fir", "wall-ne", "wall-nw", "doorway", "fence", "rubble"],
                    regions=[(0, 0, 445, 558), (445, 0, 1035, 555), (1035, 0, 1536, 555),
                             (0, 558, 445, 1024), (445, 558, 1040, 1024), (1040, 558, 1536, 1024)], world_height=120),
     "terrain": {"file": "forest-mud-v1.png", "status": "repeat-study; exact edge continuity not guaranteed"},
     "reviewOnly": [{"file": "review/mage-cast-se-keyposes-v1.png", "reason": "Check handedness, costume continuity, pivot and frame boundaries before animation."}],
-    "rejected": ["Mage walk attempts repeat the same leading leg and must not be used as a walking loop."]
+    "rejected": ["Earlier mage walk attempts repeat the same leading leg; the v2 study replaces these with open and crossed contacts."]
 }
 (ROOT / "atlas.json").write_text(json.dumps(manifest, indent=2) + "\n")
 print(json.dumps({k: len(manifest[k]["frames"]) for k in ["mage", "scavenger", "props"]}))

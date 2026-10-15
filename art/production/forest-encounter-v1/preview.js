@@ -4,8 +4,9 @@ const ctx = canvas.getContext('2d');
 const direction = document.querySelector('#direction');
 const scaleControl = document.querySelector('#scale');
 const animate = document.querySelector('#animate');
+const mageAnimation = document.querySelector('#mage-animation');
 const images = new Map();
-await Promise.all([manifest.mage.file, manifest.scavenger.file, manifest.props.file, manifest.terrain.file].map(async file => {
+await Promise.all([manifest.mage.file, manifest.mageWalk.file, manifest.mageCast.file, manifest.scavenger.file, manifest.props.file, manifest.terrain.file].map(async file => {
     const image = new Image();
     image.src = file;
     await image.decode();
@@ -52,7 +53,10 @@ function draw(time) {
     }
     const size = Number(scaleControl.value);
     const mageIndex = manifest.mage.frames.findIndex(frame => frame.name === direction.value);
-    items.push([manifest.mage, mageIndex, width * .45, height * .74, manifest.mage.scale * size]);
+    const selectedMage = mageAnimation.value === 'walk' ? manifest.mageWalk : mageAnimation.value === 'cast' ? manifest.mageCast : manifest.mage;
+    const mageFrame = selectedMage === manifest.mage ? mageIndex : Math.floor(elapsed * selectedMage.fps / 1000) % selectedMage.frames.length;
+    direction.disabled = selectedMage !== manifest.mage;
+    items.push([selectedMage, mageFrame, width * .45, height * .74, selectedMage.scale * size]);
     const frameIndex = animate.checked ? Math.floor(elapsed / 130) % 8 : 0;
     items.push([manifest.scavenger, frameIndex, width * .72, height * .67, manifest.scavenger.scale * size]);
     items.push([manifest.scavenger, (frameIndex + 4) % 8, width * .25, height * .54, manifest.scavenger.scale * size]);
@@ -61,6 +65,8 @@ function draw(time) {
     document.querySelector('#size').value = `${Math.round(80 * size)} px`;
     window.__artPreviewReady = true;
     window.__artPreviewFrame = frameIndex;
+    window.__magePreviewFrame = mageFrame;
+    window.__magePreviewMode = mageAnimation.value;
     requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
