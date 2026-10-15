@@ -182,3 +182,8 @@ Test novice players who have never read these docs, and veterans on both iPhone 
 ## Non-goals
 
 Not an alternate combat system, not a new resource economy, not changing fixed primary or level-5/10/15 milestone balance, not a full-screen neon rune wheel or generic oversized particle backdrop, not another deep navigation tree, not an icon-only interface without labels, and **not** an attempt to ship a fully compositional spell engine before defining its domain contracts.
+## Accepted continuation constraints and status (15 October 2026)
+
+This RFC and the Battlemage research were merged as **documentation** in [PR #111](https://github.com/pjotrcasteel/Wyrmforge/pull/111). They do not implement a Magic Lab or new recipe system. The user requires minimal reading and scrolling, clear intuitive interaction, actual visuals instead of unexplained help icons, and a coherent 2.5D roaming world (not Legion Breaker's fixed lane). Current Mage/monastery art corrections merged separately in [PR #114](https://github.com/pjotrcasteel/Wyrmforge/pull/114).
+
+The fuller [art, gameplay and issue handover](../handover/2026-10-15-project-art-and-backlog.md) preserves all related decisions and links to [issue #108](https://github.com/pjotrcasteel/Wyrmforge/issues/108) for the **future** deterministic Magic Lab. Do not confuse a mockup with an already usable feature or create fictitious spell previews. The original code audit near the top describes the state at the time of its research, not necessarily today's main.
