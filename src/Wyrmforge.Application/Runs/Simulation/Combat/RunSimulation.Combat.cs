@@ -1,4 +1,4 @@
-using Wyrmforge.Domain.Combat.Dragons;
+﻿using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
@@ -144,7 +144,11 @@ public sealed partial class RunSimulation
         if (target is null) return;
         var direction = Vector2D.DirectionTo(position, target.Position);
         var speed = source.Velocity.Length * 1.2;
-        var effects = new ProjectileEffects(false, source.ChainsLeft - 1, source.SplashRadius, source.Status, 0, 0);
+        var effects = new ProjectileEffects(false, source.ChainsLeft - 1, source.SplashRadius, source.Status, 0, 0)
+        {
+            Combination = source.Combination,
+            AdditionalStatuses = source.AdditionalStatuses,
+        };
         spawned.Add(new ProjectileState(position, direction * speed, Math.Max(4, source.Radius - 1), source.Damage * 0.82, source.Spell, effects));
     }
 

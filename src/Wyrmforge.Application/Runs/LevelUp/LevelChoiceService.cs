@@ -39,7 +39,14 @@ public sealed class LevelChoiceService(
             return true;
         }
         if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
-        if (choice.Id.StartsWith("spell:", StringComparison.Ordinal)) return build.Spells.LearnOrUpgrade(ParseSpell(choice.Id));
+        if (choice.Id.StartsWith("focus:", StringComparison.Ordinal)) return build.Spells.TryFocus(ParseSpell(choice.Id));
+        if (choice.Id.StartsWith("spell:", StringComparison.Ordinal))
+        {
+            var spell = ParseSpell(choice.Id);
+            if (!build.Spells.LearnOrUpgrade(spell)) return false;
+            build.Spells.TryFocus(spell);
+            return true;
+        }
         if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal))
         {
             var evolution = ParseEvolution(choice.Id);
@@ -117,12 +124,19 @@ public sealed class LevelChoiceService(
                     $"spell:{spell.Id}",
                     kind,
                     spell.Name,
-                    spell.Description,
+                    spell.Id != build.Spells.ActiveSpell
+                        ? $"Replaces {SpellCatalog.Get(build.Spells.ActiveSpell).Name} as your primary cast. {spell.Description}" : spell.Description,
                     spell.Icon,
                     currentRank,
                     spell.MaxRank,
                     SpellRarity(spell, currentRank));
             }));
+        choices.AddRange(SpellCatalog.All
+            .Where(spell => build.Spells[spell.Id] == spell.MaxRank && spell.Id != build.Spells.ActiveSpell)
+            .Select(spell => new LevelChoice(
+                $"focus:{spell.Id}", LevelChoiceKind.SpellFocus, $"Focus {spell.Name}",
+                $"Replace {SpellCatalog.Get(build.Spells.ActiveSpell).Name} as your primary cast. Learned spells and ranks are retained for combinations.",
+                spell.Icon, build.Spells[spell.Id], spell.MaxRank, RewardRarity.Common)));
         choices.AddRange(SynergyCatalog.All
             .Where(synergy => build.Synergies.IsAvailable(synergy.Id, build.Spells))
             .Select(synergy => new LevelChoice(
@@ -140,7 +154,7 @@ public sealed class LevelChoiceService(
     private void AddReinforceChoice(List<LevelChoice> result, List<LevelChoice> pool, RunBuildState build, IReadOnlyList<RunResonanceEntry>? resonance)
     {
         var representedSchools = LearnedSchools(build);
-        var candidates = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade
+        var candidates = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade && ParseSpell(choice.Id) == build.Spells.ActiveSpell
             || choice.Kind == LevelChoiceKind.Rune && RuneFitsRepresentedSchools(choice, representedSchools)).ToList();
         if (openingDraftsRemaining > 0)
         {
@@ -181,7 +195,7 @@ public sealed class LevelChoiceService(
             return;
         }
 
-        var spellChoices = pool.Where(choice => choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade).ToList();
+        var spellChoices = pool.Where(choice => choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade or LevelChoiceKind.SpellFocus).ToList();
         if (spellChoices.Count > 0)
         {
             TakeInto(result, pool, spellChoices, resonance, LevelChoiceDraftRole.Converge, _ => "Keeps your spell package moving toward a stronger interaction.");
@@ -199,6 +213,14 @@ public sealed class LevelChoiceService(
         {
             TakeInto(result, pool, offSchoolSpells, resonance, LevelChoiceDraftRole.Venture,
                 choice => $"Pivot: opens the {SpellCatalog.Get(ParseSpell(choice.Id)).School} school.");
+            return;
+        }
+
+        var knownPrimaries = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellFocus
+            || choice.Kind == LevelChoiceKind.SpellUpgrade && ParseSpell(choice.Id) != build.Spells.ActiveSpell).ToList();
+        if (knownPrimaries.Count > 0)
+        {
+            TakeInto(result, pool, knownPrimaries, resonance, LevelChoiceDraftRole.Venture, _ => "Pivot: switch to a known primary; previous spell knowledge is retained.");
             return;
         }
 
@@ -278,7 +300,7 @@ public sealed class LevelChoiceService(
         var synergies = SynergiesCompletedBy(build, choice);
         return synergies.Count > 0
             ? $"Completes {string.Join(" / ", synergies.Select(synergy => synergy.Name))} requirements; the Synergy can appear next."
-            : "Adds another spell to your interaction pool.";
+            : "Switches your primary cast and retains your learned magic for combinations.";
     }
 
     private static IReadOnlyList<SynergyDefinition> SynergiesCompletedBy(RunBuildState build, LevelChoice choice)
@@ -294,6 +316,7 @@ public sealed class LevelChoiceService(
 
     private static string FallbackHint(RunBuildState build, LevelChoice choice)
     {
+        if (choice.Kind == LevelChoiceKind.SpellFocus) return "Switches your primary cast; learned magic stays available for combinations.";
         if (choice.Kind == LevelChoiceKind.NewSpell) return ConvergeSpellHint(build, choice) ?? "Adds another spell to this run.";
         if (choice.Kind == LevelChoiceKind.Evolution) return "Transforms a mastered spell for the rest of this run.";
         if (choice.Kind == LevelChoiceKind.Synergy) return ReadySynergyHint(choice);

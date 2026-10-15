@@ -278,7 +278,10 @@ public sealed partial class RunSimulation
             deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity)).ToArray(),
             CreateFieryAreaSnapshots(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
-            projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
+            projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)
+            {
+                Combination = projectile.Combination,
+            }).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
             !developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice),
@@ -286,8 +289,14 @@ public sealed partial class RunSimulation
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
-            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot(), Environment = arenaEnvironment?.Snapshot(), Exit = CreateTrailExitSnapshot(),
-            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null };
+            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
+        {
+            Trail = CreateTrailSnapshot(),
+            PowerBurst = CreatePowerBurstSnapshot(),
+            Environment = arenaEnvironment?.Snapshot(),
+            Exit = CreateTrailExitSnapshot(),
+            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null
+        };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()
@@ -319,7 +328,11 @@ public sealed partial class RunSimulation
     {
         if (Offering is not { } offeringId) return;
         var offering = RunOfferingCatalog.Get(offeringId);
-        if (offering.StartingSpell is { } startingSpell) build.Spells.LearnOrUpgrade(startingSpell);
+        if (offering.StartingSpell is { } startingSpell)
+        {
+            build.Spells.LearnOrUpgrade(startingSpell);
+            build.Spells.TryFocus(startingSpell);
+        }
         if (offering.StartingUpgrade is { } startingUpgrade) build.RunUpgrades.Apply(startingUpgrade);
     }
 
@@ -329,7 +342,10 @@ public sealed partial class RunSimulation
         {
             var evolutionId = build.Evolutions.For(spell.Id);
             var evolution = evolutionId is { } id ? SpellEvolutionCatalog.Get(id) : null;
-            return new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id], evolution?.Icon, evolution?.Name);
+            return new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id], evolution?.Icon, evolution?.Name)
+            {
+                IsActive = spell.Id == build.Spells.ActiveSpell,
+            };
         }).ToArray();
         synergyHud = SynergyCatalog.All.Where(synergy => build.Synergies.Contains(synergy.Id)).Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name)).ToArray();
     }

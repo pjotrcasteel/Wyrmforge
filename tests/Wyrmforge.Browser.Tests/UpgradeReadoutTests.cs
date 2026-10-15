@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Presentation.Web.Features.LevelUp;
@@ -30,6 +30,23 @@ public sealed class UpgradeReadoutTests
     {
         StringAssert.StartsWith(LevelChoicePresentation.Delta(Choice(SpellId.FireBolt, 2)), "Impact blast");
         StringAssert.StartsWith(LevelChoicePresentation.Delta(Choice(SpellId.ChainLightning, 2)), "Forked lightning");
+    }
+
+    [TestMethod]
+    public void Rank_FocusKnownSpell_DoesNotClaimAnotherRank()
+    {
+        var choice = new LevelChoice("focus:FireBolt", LevelChoiceKind.SpellFocus, "Focus Fire Bolt", "Replaces primary", "fire", 3, 3);
+        Assert.AreEqual("SWITCH PRIMARY", LevelChoicePresentation.Badge(choice));
+        Assert.AreEqual("KNOWN RANK III", LevelChoicePresentation.Rank(choice));
+        Assert.AreEqual("Replaces primary", LevelChoicePresentation.Delta(choice));
+    }
+
+    [TestMethod]
+    public void Footer_NewPrimary_ExplainsReplacementInsteadOfAdditionalAutoCast()
+    {
+        var choice = Choice(SpellId.FireBolt, 0);
+        Assert.AreEqual("NEW PRIMARY", LevelChoicePresentation.Badge(choice));
+        StringAssert.Contains(LevelChoicePresentation.Footer(choice), "REPLACES PRIMARY");
     }
 
     private static LevelChoice Choice(SpellId id, int rank)

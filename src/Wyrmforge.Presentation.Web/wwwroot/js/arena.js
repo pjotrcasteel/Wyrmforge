@@ -196,8 +196,14 @@ function draw(state, snapshot, width, height) {
     for (const projectile of snapshot.projectiles) {
         ctx.beginPath();
         ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
-        ctx.fillStyle = projectile.inferno ? '#ffb04a' : projectileColor(projectile.spell);
+        ctx.fillStyle = projectile.combination === 0 ? '#94dfec' : projectile.inferno ? '#ffb04a' : projectileColor(projectile.spell);
         ctx.fill();
+        if (projectile.combination === 0) {
+            ctx.beginPath();
+            ctx.arc(projectile.x, projectile.y, projectile.radius * .55, 0, Math.PI * 2);
+            ctx.fillStyle = '#ee8248';
+            ctx.fill();
+        }
     }
 
     for (const trace of snapshot.lightning) {

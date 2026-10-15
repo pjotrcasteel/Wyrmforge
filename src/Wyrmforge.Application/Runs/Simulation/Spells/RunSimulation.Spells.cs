@@ -7,6 +7,7 @@ using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -14,15 +15,13 @@ public sealed partial class RunSimulation
 {
     private void UpdateSpellcasting(double delta, bool moving)
     {
-        foreach (var spell in SpellCatalog.All)
-        {
-            var rank = build.Spells[spell.Id];
-            if (rank <= 0) continue;
-            spellCooldowns[spell.Id] -= delta;
-            if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) continue;
-            CastSpell(spell, rank, 1, false);
-            spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
-        }
+        // Only the focused spell owns a cast clock. Learned spells are combination knowledge.
+        var spell = SpellCatalog.Get(build.Spells.ActiveSpell);
+        var rank = build.Spells[spell.Id];
+        spellCooldowns[spell.Id] -= delta;
+        if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) return;
+        CastSpell(spell, rank, 1, false);
+        spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
     }
 
     private double GetSpellCooldown(SpellDefinition spell, int rank, bool moving)
@@ -107,7 +106,11 @@ public sealed partial class RunSimulation
                 Math.Max(masterySplash, evolution.SplashRadius),
                 status,
                 pierces,
-                Math.Max(masteryNova, evolution.FrostNovaRadius));
+                Math.Max(masteryNova, evolution.FrostNovaRadius))
+            {
+                Combination = SpellCombinationResolver.ActiveFor(id, build.Spells, build.Synergies),
+                AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
+            };
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
         }
     }
