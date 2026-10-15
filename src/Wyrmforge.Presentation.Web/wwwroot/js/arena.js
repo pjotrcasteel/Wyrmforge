@@ -1,10 +1,10 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
-import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections } from './arena-environment.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
-import { drawEnemyPixelArt } from './arena-enemy-art.js';
+import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions } from './arena-enemy-art.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
@@ -56,6 +56,7 @@ function createState(canvas, dotNetReference) {
         latestSnapshot: null,
         playerDanger: createPlayerDangerState(),
         mageWalk: { x: null, y: null, lastMove: Number.NEGATIVE_INFINITY },
+        enemyMotion: createEnemyMotionState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -178,6 +179,9 @@ function draw(state, snapshot, width, height) {
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
+    // Actual spell sources streak across nearby cloister water, not unrelated UI bloom.
+    drawArenaCloisterReflections(ctx, snapshot.environment, worldWidth, worldHeight,
+        spellLights, visualSeconds, state.reducedMotion.matches);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
@@ -185,8 +189,10 @@ function draw(state, snapshot, width, height) {
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     for (const enemy of snapshot.enemies)
-        drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y));
+        drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+            enemyPoses.get(enemy.entityId) ?? 0);
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
@@ -697,8 +703,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.restore();
 }
 
-function drawEnemy(ctx, enemy, lighting = null) {
-    drawEnemyPixelArt(ctx, enemy, lighting);
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0) {
+    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
     ctx.strokeStyle = `rgba(255, 205, 190, ${0.18 + damage * 0.5})`;

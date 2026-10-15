@@ -109,3 +109,38 @@ export function drawCloisterMist(ctx,plan,seconds,reducedMotion=false){
     }
     ctx.restore();
 }
+
+export function drawCloisterReflections(ctx, plan, lights, seconds = 0, reducedMotion = false) {
+    if (!plan || !lights?.length) return 0;
+    const c = plan.court, p = plan.path;
+    const water = { x: c.x + p * 1.7, y: c.y + c.h * .52,
+        w: c.w - p * 3.4, h: c.h * .16 };
+    if (water.w <= 0 || water.h <= 0) return 0;
+    let reflections = 0;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(water.x, water.y, water.w, water.h); ctx.clip();
+    for (const light of lights) {
+        const radius = Math.max(0, Number(light.radius) || 0);
+        if (!radius || !(light.strength > 0)) continue;
+        const nearestX = Math.max(water.x, Math.min(water.x + water.w, light.x));
+        const nearestY = Math.max(water.y, Math.min(water.y + water.h, light.y));
+        const distance = Math.hypot(light.x - nearestX, light.y - nearestY);
+        if (distance >= radius) continue;
+        const falloff = Math.pow(1 - distance / radius, 2);
+        const alpha = Math.min(.30, light.strength * falloff * .20);
+        if (alpha < .018) continue;
+        const [r, g, b] = light.center;
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        // Only 3 one-pixel ripples inside the actual water footprint per light.
+        // Surges are brighter because canonical spellLight strength increases.
+        for (let line = 0; line < 3; line++) {
+            const drift = reducedMotion ? 0 : Math.sin(seconds * 1.3 + line * 2.2) * 4;
+            const y = nearestY + (line - 1) * 5;
+            const width = Math.min(36 + radius * .13 - line * 7, water.w * .63);
+            ctx.fillRect(nearestX + drift - width * .5, y, width, line === 1 ? 2 : 1);
+            reflections++;
+        }
+    }
+    ctx.restore();
+    return reflections;
+}
