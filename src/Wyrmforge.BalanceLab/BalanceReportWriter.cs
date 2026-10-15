@@ -20,7 +20,7 @@ internal static class BalanceReportWriter
     private static string Csv(IReadOnlyList<RunSelfPlayMetrics> runs)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,evolutions,evolutionIds,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes");
+        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,evolutions,evolutionIds,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes,focusedSurgesCast,extractionRitualsCompleted,deathsDuringExtraction");
 
         foreach (var run in runs)
         {
@@ -58,7 +58,10 @@ internal static class BalanceReportWriter
                 run.EncounterClimaxes,
                 run.EssenceSecured,
                 run.CompletedRouteNodes,
-                run.RareRouteNodes));
+                run.RareRouteNodes,
+                run.FocusedSurgesCast,
+                run.ExtractionRitualsCompleted,
+                run.DeathsDuringExtraction));
         }
 
         return builder.ToString();

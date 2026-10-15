@@ -1,0 +1,167 @@
+name: Focused magic comparison
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Application/**'
+      - 'src/Wyrmforge.Domain/**'
+      - 'src/Wyrmforge.BalanceLab/**'
+      - '.github/workflows/focused-magic-comparison.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Checkout last green focused control
+        run: git worktree add --detach "$RUNNER_TEMP/focused-control" b8d8970130d5a26a3c0c0cc59c5ec12cba9c8029
+
+      - name: Build candidate
+        run: dotnet build src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release
+
+      - name: Build control
+        run: dotnet build "$RUNNER_TEMP/focused-control/src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj" -c Release
+
+      - name: Run matched portrait hunts
+        run: |
+          for variant in control current; do
+            focused_source_dir="$GITHUB_WORKSPACE"
+            if [ "$variant" = "control" ]; then
+              focused_source_dir="$RUNNER_TEMP/focused-control"
+            fi
+            dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 240 --output "artifacts/focused-comparison/$variant/fresh"
+            dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 600 --output "artifacts/focused-comparison/$variant/fresh_extended"
+            dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 720 --output "artifacts/focused-comparison/$variant/established"
+          done
+
+      - name: Summarize reproducible evidence
+        id: evidence
+        run: |
+          python3 - <<'PY'
+          import json, os, statistics
+          from pathlib import Path
+          summaries = []
+          for variant in ("control", "current"):
+              for cohort in ("fresh", "fresh_extended", "established"):
+                  path = Path("artifacts/focused-comparison") / variant / cohort / "balance-report.json"
+                  runs = json.loads(path.read_text())["runs"]
+                  expected = 32 if cohort.startswith("fresh") else 96
+                  assert len(runs) == expected
+                  bosses = sum(run["wyrmsReached"] > 0 for run in runs)
+                  combinations = sum(run["synergies"] > 0 for run in runs)
+                  extracted = sum(run["outcome"] == 1 for run in runs)
+                  routes = statistics.mean(run["completedRouteNodes"] for run in runs)
+                  kills = statistics.mean(run["kills"] for run in runs)
+                  summary = f"bosses {bosses}/{len(runs)}, combos {combinations}, routes {routes:.2f}, kills {kills:.1f}, extracted {extracted}"
+                  summaries.append(f"{variant}/{cohort}: {summary}")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+                      print(f"{variant}_{cohort}={summary}", file=output)
+                  assert all(run["stopReason"] != 2 for run in runs), "Draft decision failure"
+                  assert all(run["peakActivePrimaryCount"] == 1 for run in runs), "Primary ownership regression"
+          report = "\n".join(summaries) + "\n"
+          Path("artifacts/focused-comparison/comparison.txt").write_text(report)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
+              print("## Matched focused-magic hunts\n\n" + report.replace("\n", "  \n"), file=output)
+          PY
+
+      - name: Explain matched build outcomes
+        run: |
+          python3 - <<'PY'
+          import json, os, statistics
+          from collections import defaultdict
+          from pathlib import Path
+
+          root = Path("artifacts/focused-comparison")
+          rows = ["## Paired build diagnosis", "",
+                  "Same build, agent and seed in both variants. Differences are diagnostic, not human win rates.", ""]
+          for cohort in ("fresh", "fresh_extended", "established"):
+              control = json.loads((root / "control" / cohort / "balance-report.json").read_text())["runs"]
+              candidate = json.loads((root / "current" / cohort / "balance-report.json").read_text())["runs"]
+              key = lambda run: (run["build"], run["agent"], run["seed"])
+              old = {key(run): run for run in control}
+              new = {key(run): run for run in candidate}
+              assert len(old) == len(control) and len(new) == len(candidate), "Duplicate matched run identity"
+              assert old.keys() == new.keys(), "Mismatched build/agent/seed cohorts"
+
+              groups = defaultdict(list)
+              for identity in sorted(old):
+                  groups[identity[0]].append((old[identity], new[identity]))
+
+              rows.extend([f"### {cohort.title()} runs", "",
+                  "| Build | Reached control→current | Wyrms slain control→current | Rituals complete control→current | Ritual deaths control→current | Extracted control→current | Routes Δ | Minimum HP Δ | Damage taken Δ | Avg surges |",
+                  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"])
+              for build, paired in sorted(groups.items()):
+                  reached = lambda i: sum(pair[i]["wyrmsReached"] > 0 for pair in paired)
+                  extracted = lambda i: sum(pair[i]["outcome"] == 1 for pair in paired)
+                  slain = lambda i: sum(pair[i]["dragonsSlain"] for pair in paired)
+                  rituals = lambda i: sum(pair[i].get("extractionRitualsCompleted", 0) for pair in paired)
+                  ritual_deaths = lambda i: sum(pair[i].get("deathsDuringExtraction", 0) for pair in paired)
+                  delta = lambda field: statistics.mean(pair[1][field] - pair[0][field] for pair in paired)
+                  avg_surges = statistics.mean(pair[1].get("focusedSurgesCast", 0) for pair in paired)
+                  rows.append(f"| {build} | {reached(0)}/{len(paired)} → {reached(1)}/{len(paired)} "
+                              f"| {slain(0)} → {slain(1)} | {rituals(0)} → {rituals(1)} | {ritual_deaths(0)} → {ritual_deaths(1)} "
+                              f"| {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
+                              f"| {delta('minimumHealthRatio'):+.2f} | {delta('damageTaken'):+.1f} | {avg_surges:.1f} |")
+              from collections import Counter
+              for label, cohort_runs in (("Control", control), ("Current", candidate)):
+                  stops = Counter(str(run["stopReason"]) for run in cohort_runs)
+                  mean_routes = statistics.mean(run["completedRouteNodes"] for run in cohort_runs)
+                  mean_seconds = statistics.mean(run["simulatedSeconds"] for run in cohort_runs)
+                  mean_min_hp = statistics.mean(run["minimumHealthRatio"] for run in cohort_runs)
+                  print(f"{cohort} {label}: stops={dict(stops)}, mean routes={mean_routes:.2f}, seconds={mean_seconds:.1f}, minimum HP={mean_min_hp:.2f}")
+                  rows.append(f"{label} outcomes: stop reasons `{dict(stops)}`; mean routes {mean_routes:.2f}; simulated seconds {mean_seconds:.1f}; minimum HP {mean_min_hp:.2f}.  ")
+              rows.append("")
+              before_extracted = sum(run["outcome"] == 1 for run in control)
+              after_extracted = sum(run["outcome"] == 1 for run in candidate)
+              if after_extracted < before_extracted:
+                  print(f"::warning::Focus Surge {cohort} extractions regressed: {before_extracted} → {after_extracted}; do not release on Wyrm reach alone.")
+              rows.append("")
+
+          detailed = "\n".join(rows) + "\n"
+          (root / "paired-diagnosis.md").write_text(detailed)
+          print(detailed)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("\n" + detailed)
+          PY
+
+      - name: "Control fresh — ${{ steps.evidence.outputs.control_fresh }}"
+        run: 'true'
+
+      - name: "Current fresh — ${{ steps.evidence.outputs.current_fresh }}"
+        run: 'true'
+
+      - name: "Control fresh extended — ${{ steps.evidence.outputs.control_fresh_extended }}"
+        run: 'true'
+
+      - name: "Current fresh extended — ${{ steps.evidence.outputs.current_fresh_extended }}"
+        run: 'true'
+
+      - name: "Control established — ${{ steps.evidence.outputs.control_established }}"
+        run: 'true'
+
+      - name: "Current established — ${{ steps.evidence.outputs.current_established }}"
+        run: 'true'
+
+      - name: Upload matched hunt evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: focused-magic-comparison-${{ github.sha }}
+          path: artifacts/focused-comparison
+          if-no-files-found: warn
+          retention-days: 14

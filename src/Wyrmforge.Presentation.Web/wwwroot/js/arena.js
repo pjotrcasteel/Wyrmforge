@@ -1,6 +1,10 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
+import { drawRecoveryGuide } from './arena-recovery.js';
+import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
+import { drawMage } from './arena-mage.js';
+import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
 const arenas = new WeakMap();
@@ -159,6 +163,8 @@ function draw(state, snapshot, width, height) {
     const visualSeconds = performance.now() / 1000;
     const worldWidth = camera.width;
     const worldHeight = camera.height;
+    const lightViewport = { x: camera.x, y: camera.y, width, height };
+    const spellLights = buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches, lightViewport);
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
@@ -168,7 +174,10 @@ function draw(state, snapshot, width, height) {
         drawGrid(ctx, worldWidth, worldHeight);
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+    // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
+    drawSpellLightSpill(ctx, spellLights, lightViewport, 'terrain');
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
+    drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
@@ -190,15 +199,12 @@ function draw(state, snapshot, width, height) {
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
-    for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
+    // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
+    drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
+    for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
-    for (const projectile of snapshot.projectiles) {
-        ctx.beginPath();
-        ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
-        ctx.fillStyle = projectile.inferno ? '#ffb04a' : projectileColor(projectile.spell);
-        ctx.fill();
-    }
+    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
     for (const trace of snapshot.lightning) {
         ctx.beginPath();
@@ -232,13 +238,9 @@ function draw(state, snapshot, width, height) {
     if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
     for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
 
-    ctx.beginPath();
-    ctx.arc(snapshot.player.x, snapshot.player.y, snapshot.player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = danger.hit ? '#ff8e9b' : snapshot.player.barrier ? '#b6efff' : '#f4e9ff';
-    ctx.fill();
-    ctx.strokeStyle = '#7f56c2';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+        sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y));
+    drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
@@ -762,34 +764,6 @@ function drawSplashPulse(ctx, pulse, school) {
     ctx.stroke();
 }
 
-function drawElementalImpact(ctx, impact) {
-    const progress = Math.min(1, Math.max(0, impact.progress));
-    const alpha = 1 - progress;
-    if (impact.spell === 1) {
-        drawImpactBurst(ctx, impact.x, impact.y, 7 + progress * 12, `rgba(255, 116, 54, ${alpha})`, 6);
-        return;
-    }
-    if (impact.spell === 2) {
-        drawImpactCross(ctx, impact.x, impact.y, 5 + progress * 10, `rgba(151, 224, 255, ${alpha})`, Math.PI / 4);
-        return;
-    }
-    if (impact.spell === 3) {
-        drawImpactCross(ctx, impact.x, impact.y, 6 + progress * 11, `rgba(255, 232, 101, ${alpha})`, 0);
-        return;
-    }
-
-    const radius = 5 + progress * 14;
-    ctx.beginPath();
-    ctx.arc(impact.x, impact.y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(190, 132, 255, ${alpha})`;
-    ctx.lineWidth = 2.5 - progress;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(impact.x, impact.y, Math.max(1, 4 * alpha), 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(224, 195, 255, ${alpha})`;
-    ctx.fill();
-}
-
 function drawDeathBurst(ctx, death) {
     const progress = Math.min(1, Math.max(0, death.progress));
     const alpha = 1 - progress;
@@ -851,7 +825,7 @@ function drawExtractionRitual(ctx, extraction) {
     ctx.fillStyle = extraction.isProgressing ? '#e8d7ff' : '#b8a6c9';
     ctx.font = '800 10px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    const label = extraction.isProgressing ? 'EXTRACTING' : 'RETURN TO RITUAL';
+    const label = extraction.isProgressing ? 'HOLD THE RITUAL' : 'RETURN TO RITUAL';
     ctx.fillText(`${label} ${Math.max(0, extraction.remainingSeconds).toFixed(1)}s`, extraction.x, extraction.y - extraction.radius - 12);
     ctx.restore();
 }

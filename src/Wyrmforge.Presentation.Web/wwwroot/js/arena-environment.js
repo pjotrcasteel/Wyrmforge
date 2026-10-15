@@ -187,6 +187,15 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     const color = experience ? '#b7a0f1' : '#b2d4aa';
     ctx.save();
     ctx.translate(x, y);
+    if (opened && !experience) {
+        drawOpenHealingCache(ctx);
+        ctx.fillStyle = '#cfdfc0';
+        ctx.font = 'bold 9px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('HEAL', 0, 45);
+        ctx.restore();
+        return;
+    }
     // Closed cache alcoves are an actual C# movement restriction, not scenery masquerading as cover.
     ctx.fillStyle = opened ? 'rgba(5,8,12,.54)' : 'rgba(8,7,12,.83)';
     ctx.strokeStyle = opened ? color : '#706067';
@@ -225,6 +234,50 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     ctx.textAlign = 'center';
     ctx.fillText(opened ? experience ? '+3 XP' : 'HEAL' : 'SEALED', 0, 47);
     ctx.restore();
+}
+
+function drawOpenHealingCache(ctx) {
+    // A recognizable broken stone basin and pale medicinal growth, not another XP crystal.
+    ctx.fillStyle = 'rgba(2,6,8,.48)';
+    ctx.beginPath();
+    ctx.ellipse(3, 12, 27, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#4b5a50';
+    ctx.beginPath();
+    ctx.moveTo(-23, -7);
+    ctx.lineTo(21, -7);
+    ctx.lineTo(17, 12);
+    ctx.lineTo(-18, 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#96a492';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-21, -7);
+    ctx.lineTo(20, -7);
+    ctx.stroke();
+
+    ctx.fillStyle = '#23382e';
+    ctx.fillRect(-17, -7, 34, 7);
+    ctx.fillStyle = '#9bb69b';
+    ctx.fillRect(-13, -6, 24, 3);
+    // Two herb stems; asymmetry preserves a hand-built, earthly silhouette.
+    for (const leaf of [{ x: -10, y: -11, shift: -1 }, { x: 9, y: -13, shift: 1 }]) {
+        ctx.strokeStyle = '#8da98a';
+        ctx.beginPath();
+        ctx.moveTo(leaf.x, -5);
+        ctx.lineTo(leaf.x + leaf.shift * 3, leaf.y);
+        ctx.stroke();
+        ctx.fillStyle = '#c7d6b0';
+        ctx.fillRect(leaf.x + leaf.shift * 4, leaf.y - 3, 5, 3);
+    }
+    ctx.strokeStyle = '#29372f';
+    ctx.beginPath();
+    ctx.moveTo(-4, 3);
+    ctx.lineTo(-1, 8);
+    ctx.lineTo(4, 12);
+    ctx.stroke();
 }
 
 export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {

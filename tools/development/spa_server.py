@@ -20,9 +20,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--directory", default="artifacts/web/wwwroot")
     parser.add_argument("--port", type=int, default=4173)
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="Bind address. Use 0.0.0.0 only on a trusted private network for phone playtests.")
     args = parser.parse_args()
     directory = str(Path(args.directory).resolve())
-    with ThreadingHTTPServer(("127.0.0.1", args.port), partial(SpaHandler, directory=directory)) as server:
+    with ThreadingHTTPServer((args.host, args.port), partial(SpaHandler, directory=directory)) as server:
         server.serve_forever()
 
 

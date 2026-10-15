@@ -32,6 +32,7 @@ public sealed class LevelChoiceServiceTests
         var build = new RunBuildState();
         Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.FireBolt));
         Assert.IsTrue(build.Spells.LearnOrUpgrade(SpellId.FrostShard));
+        Assert.IsTrue(build.Spells.TryFocus(SpellId.FireBolt));
         var service = new LevelChoiceService(new FirstRandomSource());
 
         var converge = service.Roll(build).Single(choice => choice.Role == LevelChoiceDraftRole.Converge);
@@ -198,6 +199,7 @@ public sealed class LevelChoiceServiceTests
         var build = new RunBuildState();
         build.Spells.LearnOrUpgrade(SpellId.FireBolt);
         build.Spells.LearnOrUpgrade(SpellId.FrostShard);
+        build.Spells.TryFocus(SpellId.FireBolt);
         var service = new LevelChoiceService(new FirstRandomSource());
         var choices = service.Roll(build, SpellSchool.Storm, count);
         Assert.IsTrue(choices.Any(choice => choice.Id.StartsWith("spell:", StringComparison.Ordinal)

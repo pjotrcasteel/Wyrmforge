@@ -27,4 +27,5 @@ public sealed record RunRenderSnapshot(
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }
     public ArenaExitRenderSnapshot? Exit { get; init; }
     public ArenaWorldRenderSnapshot? World { get; init; }
+    public CastMotionRenderSnapshot? CastMotion { get; init; }
 }

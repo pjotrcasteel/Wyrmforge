@@ -1,5 +1,6 @@
-using Wyrmforge.Domain.Combat.Geometry;
+﻿using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Domain.Combat.Projectiles;
 
@@ -14,6 +15,10 @@ public sealed class ProjectileState(Vector2D position, Vector2D velocity, double
     public int ChainsLeft => effects.ChainsLeft;
     public double SplashRadius => effects.SplashRadius;
     public ProjectileStatusEffect? Status => effects.Status;
+    public SynergyId? Combination => effects.Combination;
+    public int Rank => effects.Rank;
+    public bool Surge => effects.Surge;
+    public IReadOnlyList<ProjectileStatusEffect> AdditionalStatuses => effects.AdditionalStatuses ?? [];
     public double FrostNovaRadius => effects.FrostNovaRadius;
     public int PiercesRemaining { get; private set; } = effects.Pierces;
     public int IgnoredTargetId { get; private set; }

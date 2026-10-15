@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Domain.Combat.Enemies;
+﻿using Wyrmforge.Application.Runs.Extraction;
+using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -12,6 +13,12 @@ public sealed partial class RunSimulation
     private void UpdateSpawn(double delta, double width, double height)
     {
         if (developmentHunt || trailExitPending || dragon is { Health: > 0 }) return;
+        if (dragonEncounterStarted)
+        {
+            if (extractionState.IsActive) UpdateExtractionDefense(delta, width, height);
+            return;
+        }
+
         if (entryGraceRemaining > 0)
         {
             entryGraceRemaining = Math.Max(0, entryGraceRemaining - delta);
@@ -68,6 +75,23 @@ public sealed partial class RunSimulation
         var routeMultiplier = Math.Max(0.35, CurrentRoute?.Encounter.SpawnIntervalMultiplier ?? 1);
         spawnTimer = baseInterval * depthState.SpawnIntervalMultiplier * EnemyEncounterComposition.GetSpawnIntervalMultiplier(encounterPattern) * routeMultiplier
             * encounterModifiers.SpawnIntervalMultiplier * directive.SpawnIntervalMultiplier * (mapEncounter ? EnemyStagePressure.OpeningSpawnIntervalMultiplier(stage, depthState.Depth) : 1);
+    }
+
+    private void UpdateExtractionDefense(double delta, double width, double height)
+    {
+        // Wyrm victory transitions into a bounded final stand rather than endless normal waves.
+        spawnTimer -= delta;
+        if (spawnTimer > 0 || !ExtractionDefenseProfile.CanSpawn(extractionState.RemainingSeconds)) return;
+        if (enemies.Count >= ExtractionDefenseProfile.ActiveEnemyCap(depthState.Depth))
+        {
+            spawnTimer = 0.1;
+            return;
+        }
+
+        EnsureEncounterPlan(false);
+        if (encounterPlan is not null && encounterPlanIndex < encounterPlan.Enemies.Count)
+            SpawnEnemy(width, height, encounterPlan.Enemies[encounterPlanIndex++]);
+        spawnTimer = ExtractionDefenseProfile.SpawnIntervalSeconds(depthState.Depth);
     }
 
     private void EnsureEncounterPlan(bool mapEncounter)

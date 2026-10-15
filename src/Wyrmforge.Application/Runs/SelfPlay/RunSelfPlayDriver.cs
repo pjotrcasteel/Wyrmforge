@@ -53,7 +53,8 @@ public sealed class RunSelfPlayDriver
             if (stopReason == RunSelfPlayStopReason.NaturalEnd) stopReason = RunSelfPlayStopReason.TimeLimit;
             simulation.AbandonRun();
         }
-        return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason);
+        return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason,
+            simulation.FocusedSurgesCast, simulation.ExtractionRitualsCompleted, simulation.DeathsDuringExtraction);
     }
 
     private static RunAgentObservation CreateObservation(RunSimulation simulation, RunRenderSnapshot snapshot) => new(
@@ -123,6 +124,8 @@ public sealed class RunSelfPlayDriver
     {
         private readonly Dictionary<int, double> levelUpSeconds = new();
         private readonly List<string> decisions = [];
+        private readonly List<string> primarySpellSequence = [];
+        private int peakActivePrimaryCount;
         private double minimumHealthRatio = 1;
         private double damageTaken;
         private double previousHealth = double.NaN;
@@ -140,6 +143,11 @@ public sealed class RunSelfPlayDriver
 
         public void Observe(RunRenderSnapshot snapshot, double simulatedSeconds, EncounterPhase? encounterPhase)
         {
+            var primaries = snapshot.Hud.Spells.Where(spell => spell.IsActive).ToArray();
+            peakActivePrimaryCount = Math.Max(peakActivePrimaryCount, primaries.Length);
+            if (primaries.Length == 1 && primarySpellSequence.LastOrDefault() != primaries[0].Name)
+                primarySpellSequence.Add(primaries[0].Name);
+
             var hasDragon = snapshot.Dragon is not null;
             if (hasDragon && !dragonVisible)
             {
@@ -171,7 +179,8 @@ public sealed class RunSelfPlayDriver
             }
         }
 
-        public RunSelfPlayMetrics Complete(RunSummary summary, RunRenderSnapshot finalSnapshot, double simulatedSeconds, RunSelfPlayStopReason stopReason)
+        public RunSelfPlayMetrics Complete(RunSummary summary, RunRenderSnapshot finalSnapshot, double simulatedSeconds,
+            RunSelfPlayStopReason stopReason, int focusedSurgesCast, int extractionRitualsCompleted, int deathsDuringExtraction)
         {
             var totalExperience = finalSnapshot.Hud.Experience;
             for (var level = 1; level < finalSnapshot.Hud.Level; level++) totalExperience += ExperienceCurve.RequiredForLevel(level);
@@ -216,7 +225,15 @@ public sealed class RunSelfPlayDriver
                 summary.CompletedRouteNodes,
                 summary.RareRouteNodes,
                 new Dictionary<int, double>(levelUpSeconds),
-                decisions.ToArray());
+                decisions.ToArray())
+            {
+                FocusedSurgesCast = focusedSurgesCast,
+                ExtractionRitualsCompleted = extractionRitualsCompleted,
+                DeathsDuringExtraction = deathsDuringExtraction,
+                PrimarySwitches = Math.Max(0, primarySpellSequence.Count - 1),
+                PeakActivePrimaryCount = peakActivePrimaryCount,
+                PrimarySpellSequence = primarySpellSequence.ToArray(),
+            };
         }
     }
 }

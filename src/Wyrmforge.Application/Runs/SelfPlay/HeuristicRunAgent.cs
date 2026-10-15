@@ -1,4 +1,4 @@
-using Wyrmforge.Application.Abstractions.Randomness;
+﻿using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
@@ -35,6 +35,15 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         }
 
         var avoidance = CalculateAvoidance(snapshot, player);
+        var recovery = CalculateRecoveryCacheAttraction(snapshot, player);
+        if (recovery is { } directionToRecovery)
+        {
+            // Model the same recovery choice a human can make in the world. The agent
+            // must physically reach an opened cache; it cannot grant itself healing.
+            var urgency = snapshot.Hud.Health / Math.Max(1, snapshot.Hud.MaxHealth) < 0.4 ? 3.4 : 2.6;
+            return ToInput((directionToRecovery * urgency + avoidance * 1.1).Normalized());
+        }
+
         var pickup = CalculatePickupAttraction(snapshot, player);
         var orbit = new Vector2D(Math.Cos(snapshot.Hud.Seconds * 0.63), Math.Sin(snapshot.Hud.Seconds * 0.63));
 
@@ -74,19 +83,31 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
             return branches[index];
         }
 
+        var primary = observation.Snapshot.Hud.Spells.FirstOrDefault(spell => spell.IsActive);
         return PickBest(observation.LevelChoices, choice =>
         {
-        var score = RoleScore(choice.Role) + RarityScore(choice.Rarity);
-        var searchable = $"{choice.Name} {choice.Description} {choice.Hint}";
+            var score = RoleScore(choice.Role) + RarityScore(choice.Rarity);
+            var searchable = $"{choice.Name} {choice.Description} {choice.Hint}";
 
-        if (ContainsAny(searchable, "damage", "projectile", "chain", "echo", "multicast")) score += personality == RunAgentPersonality.Greedy ? 2.2 : 0.7;
-        if (ContainsAny(searchable, "health", "vitality", "barrier", "damage taken", "freeze")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
-        if (ContainsAny(searchable, "move speed", "cast speed", "cooldown")) score += personality == RunAgentPersonality.Kiter ? 1.8 : 0.8;
-        if (choice.Kind == LevelChoiceKind.Synergy) score += 2.4;
-        if (choice.Kind == LevelChoiceKind.Evolution) score += 3.2;
+            if (ContainsAny(searchable, "damage", "projectile", "chain", "echo", "multicast")) score += personality == RunAgentPersonality.Greedy ? 2.2 : 0.7;
+            if (ContainsAny(searchable, "health", "vitality", "barrier", "damage taken", "freeze")) score += personality is RunAgentPersonality.Casual or RunAgentPersonality.Kiter ? 2 : 0.4;
+            if (ContainsAny(searchable, "move speed", "cast speed", "cooldown")) score += personality == RunAgentPersonality.Kiter ? 1.8 : 0.8;
+            if (choice.Kind == LevelChoiceKind.Synergy) score += 2.4;
+            if (choice.Kind == LevelChoiceKind.Evolution) score += 3.2;
 
-        if (preferredSchool is { } school && searchable.Contains(school.ToString(), StringComparison.OrdinalIgnoreCase))
-            score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
+            if (choice.Kind is LevelChoiceKind.NewSpell or LevelChoiceKind.SpellUpgrade or LevelChoiceKind.SpellFocus)
+            {
+                var spell = SpellCatalog.Get(Enum.Parse<SpellId>(choice.Id[6..]));
+                if (spell.Name == primary?.Name) score += personality == RunAgentPersonality.BuildFocused ? 2.5 : 1.5;
+                else if (primary is not null)
+                {
+                    var resultingRank = choice.CurrentRank + (choice.Kind == LevelChoiceKind.SpellFocus ? 0 : 1);
+                    score -= Math.Max(0, primary.Rank - resultingRank) * 1.5;
+                }
+                if (spell.School == preferredSchool) score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
+            }
+            else if (preferredSchool is { } school && searchable.Contains(school.ToString(), StringComparison.OrdinalIgnoreCase))
+                score += personality == RunAgentPersonality.BuildFocused ? 3.5 : 0.8;
 
             return score;
         });
@@ -180,6 +201,19 @@ public sealed class HeuristicRunAgent(RunAgentPersonality personality, int seed,
         }
 
         return result;
+    }
+
+    private static Vector2D? CalculateRecoveryCacheAttraction(Wyrmforge.Application.Runs.Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)
+    {
+        if (snapshot.Hud.MaxHealth <= 0 || snapshot.Hud.Health / snapshot.Hud.MaxHealth >= 0.75 ||
+            snapshot.Environment is not { } environment || snapshot.World is not { } world) return null;
+
+        var available = environment.Supplies
+            .Where(supply => supply.Open && supply.Kind == "health")
+            .Select(supply => new Vector2D(supply.X * world.Width, supply.Y * world.Height))
+            .OrderBy(location => Vector2D.Distance(location, player))
+            .ToArray();
+        return available.Length == 0 ? null : Vector2D.DirectionTo(player, available[0]);
     }
 
     private static Vector2D CalculatePickupAttraction(Wyrmforge.Application.Runs.Simulation.Snapshots.RunRenderSnapshot snapshot, Vector2D player)

@@ -1,7 +1,8 @@
-using Wyrmforge.Domain.Combat.Projectiles;
+﻿using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
+using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -20,15 +21,23 @@ public sealed partial class RunSimulation
 
     private void ApplyAbilityStatus(SpellDefinition spell, int rank, ICombatTarget target)
     {
-        if (spell.Ability.Status is not { } status) return;
-        var evolution = EvolutionProfile(spell.Id);
-        var duration = status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier;
-        for (var stack = 0; stack < status.Stacks + evolution.BonusStatusStacks; stack++) ApplyStatus(target, status.Status, duration);
+        if (spell.Ability.Status is { } status)
+        {
+            var evolution = EvolutionProfile(spell.Id);
+            var duration = status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier;
+            for (var stack = 0; stack < status.Stacks + evolution.BonusStatusStacks; stack++) ApplyStatus(target, status.Status, duration);
+        }
+        foreach (var infusion in SpellCombinationResolver.Resolve(spell.Id, build.Spells, build.Synergies)) ApplyStatusEffect(target, infusion);
     }
 
     private void ApplyProjectileStatus(ProjectileState projectile, ICombatTarget target)
     {
-        if (projectile.Status is not { } status) return;
+        if (projectile.Status is { } status) ApplyStatusEffect(target, status);
+        foreach (var infusion in projectile.AdditionalStatuses) ApplyStatusEffect(target, infusion);
+    }
+
+    private void ApplyStatusEffect(ICombatTarget target, ProjectileStatusEffect status)
+    {
         for (var stack = 0; stack < status.Stacks; stack++) ApplyStatus(target, status.Status, status.DurationSeconds);
     }
 

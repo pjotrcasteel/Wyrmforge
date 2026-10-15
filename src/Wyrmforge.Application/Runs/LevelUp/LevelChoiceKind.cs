@@ -1,4 +1,4 @@
-namespace Wyrmforge.Application.Runs.LevelUp;
+﻿namespace Wyrmforge.Application.Runs.LevelUp;
 
 public enum LevelChoiceKind
 {
@@ -8,4 +8,5 @@ public enum LevelChoiceKind
     Evolution,
     Synergy,
     SchoolPower,
+    SpellFocus,
 }

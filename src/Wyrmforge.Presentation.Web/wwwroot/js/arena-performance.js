@@ -228,7 +228,7 @@ function updateCombatHud(state, snapshot) {
     const signature = JSON.stringify(hud.spells);
     if (dom.spells && dom.spells.dataset.loadout !== signature) {
         dom.spells.dataset.loadout = signature;
-        dom.spells.replaceChildren(...hud.spells.map(createSpellBadge));
+        dom.spells.replaceChildren(...hud.spells.filter(spell => spell.isActive !== false).map(createSpellBadge));
     }
     const hudPanel = dom.spells?.closest('.arena-top-hud');
     if (hudPanel) state.canvas.closest('.game-screen')?.style.setProperty('--combat-hud-bottom', `${hudPanel.getBoundingClientRect().bottom}px`);

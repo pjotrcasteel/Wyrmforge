@@ -12,6 +12,44 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_RecoveryTrail_OffscreenOpenedCacheHasVisibleButOptionalDiegeticGuide()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var result = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const recovery = await import('./js/arena-recovery.js');
+            const camera = { x: 250, y: 240, width: 950, height: 1550 };
+            const base = { player: { x: 500, y: 700 }, hud: { health: 45, maxHealth: 100 },
+                environment: { supplies: [{ kind: 'health', x: .5, y: .82, open: true }] } };
+            const canvas = document.createElement('canvas');
+            canvas.width = 950;
+            canvas.height = 1550;
+            const ctx = canvas.getContext('2d');
+            const image = render => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const drawn = render();
+                return { drawn, data: ctx.getImageData(370, 580, 255, 250).data };
+            };
+            const empty = image(() => recovery.drawRecoveryGuide(ctx, { ...base,
+                hud: { health: 95, maxHealth: 100 } }, camera, 390, 700, 0, true));
+            const full = image(() => recovery.drawRecoveryGuide(ctx, base, camera, 390, 700, 0, true));
+            const sealed = image(() => recovery.drawRecoveryGuide(ctx,
+                { ...base, environment: { supplies: [{ kind: 'health', x: .5, y: .82, open: false }] } },
+                camera, 390, 700, 0, true));
+            let painted = 0;
+            for (let i = 3; i < full.data.length; i += 4) if (full.data[i] !== empty.data[i]) painted++;
+            let leaked = 0;
+            for (let i = 3; i < sealed.data.length; i += 4) if (sealed.data[i] !== empty.data[i]) leaked++;
+            return { visible: full.drawn, healthyHidden: !empty.drawn, sealedHidden: !sealed.drawn, painted, leaked };
+        }");
+        Assert.IsTrue(result.GetProperty("visible").GetBoolean());
+        Assert.IsTrue(result.GetProperty("healthyHidden").GetBoolean());
+        Assert.IsTrue(result.GetProperty("sealedHidden").GetBoolean());
+        Assert.IsGreaterThan(35, result.GetProperty("painted").GetInt32(), "Ground marks must have visible actual canvas pixels.");
+        Assert.AreEqual(0, result.GetProperty("leaked").GetInt32(), "Sealed caches must not leak even one guidance pixel.");
+    }
+
+    [TestMethod]
     public async Task Mobile_FirstHunt_OnlyRunUnlockedAndGoalIsClear()
     {
         await Page.SetViewportSizeAsync(390, 844);
@@ -316,6 +354,144 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(state.GetProperty("text").GetString()!.Contains("♥"));
         Assert.IsTrue(int.TryParse(state.GetProperty("value").GetString(), out _));
         Assert.IsNotNull(state.GetProperty("state").GetString());
+    }
+
+    [TestMethod]
+    public async Task Mobile_SpellLighting_ActuallyIlluminatesGroundAndMageBySchoolAndSurge()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var pixels = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const lights = await import('./js/arena-spell-lighting.js');
+            const mage = await import('./js/arena-mage.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 240;
+            const ctx = canvas.getContext('2d');
+            const player = { x: 115, y: 115, radius: 12 };
+            const camera = { x: 0, y: 0, width: 240, height: 240 };
+            const sample = (spell, surge, includeMage) => {
+                ctx.clearRect(0, 0, 240, 240);
+                ctx.fillStyle = '#292a30';
+                ctx.fillRect(0, 0, 240, 240);
+                const snapshot = { projectiles: [], elementalImpacts: [{
+                    x: 125, y: 108, spell, rank: 3, progress: .16, surge }] };
+                const sources = lights.buildSpellLights(snapshot, 0, true);
+                lights.drawSpellLightSpill(ctx, sources, camera);
+                if (includeMage) mage.drawMage(ctx, player, null, false, true,
+                    lights.sampleSpellLight(sources, player.x, player.y));
+                return {
+                    ground: [...ctx.getImageData(126, 104, 24, 24).data],
+                    mage: [...ctx.getImageData(118, 103, 5, 8).data],
+                    pixels: [...ctx.getImageData(0, 0, 240, 240).data]
+                };
+            };
+            const fire = sample(1, false, true);
+            const frost = sample(2, false, true);
+            const arcane = sample(0, false, true);
+            const surge = sample(1, true, true);
+            const normalGround = sample(1, false, false);
+            const base = [...Array(240 * 240 * 4)].fill(0);
+            const differ = (a, b) => a.reduce((n, value, index) => n + (Math.abs(value - b[index]) > 12 ? 1 : 0), 0);
+            return { groundSchoolDifference: differ(fire.ground, frost.ground),
+                mageSchoolDifference: differ(fire.mage, arcane.mage),
+                surgeGroundDifference: differ(surge.pixels, fire.pixels),
+                magePresent: differ(fire.pixels, normalGround.pixels) };
+        }");
+        Assert.IsGreaterThan(35, pixels.GetProperty("groundSchoolDifference").GetInt32(), "A visible terrain patch must reflect different magic colors.");
+        Assert.IsGreaterThan(5, pixels.GetProperty("mageSchoolDifference").GetInt32(), "The lit side of the hood must reflect the spell color.");
+        Assert.IsGreaterThan(180, pixels.GetProperty("surgeGroundDifference").GetInt32(), "Surge must illuminate a visibly larger patch.");
+        Assert.IsGreaterThan(50, pixels.GetProperty("magePresent").GetInt32(), "The lighted mage must still be drawn over terrain.");
+    }
+
+    [TestMethod]
+    public async Task Mobile_MageAuthoredFrames_DifferentCastPhasesProduceVisiblePixelsAndStaffLighting()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const mage = await import('./js/arena-mage.js');
+            const light = await import('./js/arena-spell-lighting.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 180;
+            const ctx = canvas.getContext('2d');
+            const player = { x: 90, y: 92, radius: 12, focusCharge: 3 };
+            const sample = (progress, surge = false) => {
+                const cast = { x: 90, y: 92, angle: 0, spell: 1, rank: 3, progress, surge };
+                const sources = light.buildSpellLights({ castMotion: cast }, 0, true);
+                const illumination = light.sampleSpellLight(sources, player.x, player.y);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                mage.drawMage(ctx, player, cast, false, true, illumination);
+                return [...ctx.getImageData(0, 0, canvas.width, canvas.height).data];
+            };
+            const windup = sample(.12);
+            const release = sample(.32);
+            const followThrough = sample(.75);
+            const surged = sample(.32, true);
+            const difference = (a, b) => a.reduce((total, v, i) => total + (Math.abs(v - b[i]) > 16 ? 1 : 0), 0);
+            const visible = image => image.filter((v, i) => i % 4 === 3 && v > 32).length;
+            return { visible: visible(release), windupToRelease: difference(windup, release),
+                releaseToFollowThrough: difference(release, followThrough), releaseToSurge: difference(release, surged) };
+        }");
+
+        Assert.IsGreaterThan(175, pixels.GetProperty("visible").GetInt32());
+        Assert.IsGreaterThan(50, pixels.GetProperty("windupToRelease").GetInt32());
+        Assert.IsGreaterThan(45, pixels.GetProperty("releaseToFollowThrough").GetInt32());
+        Assert.IsGreaterThan(40, pixels.GetProperty("releaseToSurge").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task Mobile_FocusedMagic_MageAndRankedImpactsProduceDifferentActualPixels()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const mage = await import('./js/arena-mage.js');
+            const spells = await import('./js/arena-spell-vfx.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            const sample = draw => {
+                ctx.clearRect(0, 0, 160, 160);
+                draw();
+                return [...ctx.getImageData(0, 0, 160, 160).data];
+            };
+            const difference = (a, b) => a.reduce((n, value, i) =>
+                n + (Math.abs(value - b[i]) > 20 ? 1 : 0), 0);
+            const visible = a => a.filter((value, i) => i % 4 === 3 && value > 32).length;
+            const player = { x: 80, y: 80, radius: 12, barrier: false };
+            const idle = sample(() => mage.drawMage(ctx, player, null));
+            const charging = sample(() => mage.drawMage(ctx, { ...player, focusCharge: 3 }, null));
+            const casting = sample(() => mage.drawMage(ctx, player,
+                { spell: 1, rank: 3, progress: .36, angle: 0 }));
+            const basic = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, rank: 1, progress: .35 }));
+            const mastered = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, rank: 3, progress: .35 }));
+            const frostfire = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, combination: 0, rank: 3, progress: .35 }));
+            const surged = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, rank: 3, surge: true, progress: .35 }));
+            const surgedMage = sample(() => mage.drawMage(ctx, player,
+                { spell: 1, rank: 3, surge: true, progress: .36, angle: 0 }));
+            return { magePixels: visible(idle), spellPixels: visible(mastered),
+                castDifference: difference(idle, casting),
+                rankDifference: difference(basic, mastered),
+                combinationDifference: difference(mastered, frostfire),
+                surgeDifference: difference(mastered, surged),
+                surgedMageDifference: difference(casting, surgedMage),
+                chargeDifference: difference(idle, charging) };
+        }");
+
+        Assert.IsGreaterThan(150, pixels.GetProperty("magePixels").GetInt32(), "Mage must read as a silhouette, not a tiny marker.");
+        Assert.IsGreaterThan(40, pixels.GetProperty("spellPixels").GetInt32(), "Impact must be visible at mobile size.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("castDifference").GetInt32(), "Casting must visibly move the staff.");
+        Assert.IsGreaterThan(30, pixels.GetProperty("rankDifference").GetInt32(), "Mastery must visibly increase impact size.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("combinationDifference").GetInt32(), "Frostfire must visibly differ from basic fire.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("surgeDifference").GetInt32(), "Focus Surge must produce a visibly empowered impact.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("surgedMageDifference").GetInt32(), "Focus Surge must visibly empower the staff motion.");
+        Assert.IsGreaterThan(15, pixels.GetProperty("chargeDifference").GetInt32(), "Earned Focus Surge charge should be visible on the staff.");
     }
 
     [TestMethod]

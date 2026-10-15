@@ -44,6 +44,7 @@ public sealed partial class RunSimulation
     private readonly Dictionary<int, double> hitFlashRemaining = [];
     private readonly List<SplashPulseState> splashPulses = [];
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
+    private readonly Dictionary<SpellId, int> primaryCastCounts = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0);
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
     private IReadOnlyList<SpellHudSnapshot> spellHud = [];
@@ -55,6 +56,8 @@ public sealed partial class RunSimulation
     private double ashenWingMovementTime;
     private double ashenWingCooldown;
     private int castCount;
+    private CastMotionRenderSnapshot? lastCastMotion;
+    private double lastCastMotionStartedAt;
     private int projectileCastCount;
     private int hitCount;
     private int arcaneHitCount;
@@ -103,6 +106,9 @@ public sealed partial class RunSimulation
     public int DepthTrialKillsRequired => depthTrialState.KillsRequired;
     public int Depth => depthState.Depth;
     public int Level => level;
+    public int FocusedSurgesCast { get; private set; }
+    public int ExtractionRitualsCompleted { get; private set; }
+    public int DeathsDuringExtraction { get; private set; }
     public int CheckpointVisit => checkpointState.Visit;
     public double Health => player.Health;
     public double MaxHealth => player.MaxHealth;
@@ -158,6 +164,7 @@ public sealed partial class RunSimulation
         ResolvePlayerDamage();
         if (player.Health <= 0)
         {
+            if (extractionState.IsActive) DeathsDuringExtraction++;
             essenceCargoState.LosePending();
             extractionState.Cancel();
             outcome = RunOutcome.Defeated;
@@ -165,6 +172,7 @@ public sealed partial class RunSimulation
         }
         else if (extractionState.Tick(delta, player.Position))
         {
+            ExtractionRitualsCompleted++;
             essenceCargoState.SecurePending();
             ClearMapEncounterField();
             checkpointState.Enter();
@@ -267,18 +275,32 @@ public sealed partial class RunSimulation
     {
         var hud = new RunHudSnapshot(score, kills, (int)elapsed, player.Health, player.MaxHealth, level, experience, experienceToNext, spellHud, synergyHud);
         return new RunRenderSnapshot(
-            new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0),
+            new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
+            {
+                FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
+            },
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
                 Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind)).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
-            elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)).ToArray(),
+            elementalImpacts.Select(impact => new ElementalImpactRenderSnapshot(impact.Position.X, impact.Position.Y, impact.Spell, impact.Progress)
+            {
+                Rank = impact.Rank,
+                Combination = impact.Combination,
+                Surge = impact.Surge,
+            }).ToArray(),
             deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity)).ToArray(),
             CreateFieryAreaSnapshots(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
-            projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)).ToArray(),
+            projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)
+            {
+                Combination = projectile.Combination,
+                Angle = Math.Atan2(projectile.Velocity.Y, projectile.Velocity.X),
+                Rank = projectile.Rank,
+                Surge = projectile.Surge,
+            }).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
             !developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice),
@@ -286,8 +308,23 @@ public sealed partial class RunSimulation
             CreateDragonHuntSnapshot(),
             CreateDragonHuntHazardSnapshots(),
             ExperienceShards: experienceShards.Shards.Select(shard => new ExperienceShardRenderSnapshot(shard.Position.X, shard.Position.Y, shard.Value)).ToArray(),
-            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray()) { Trail = CreateTrailSnapshot(), PowerBurst = CreatePowerBurstSnapshot(), Environment = arenaEnvironment?.Snapshot(), Exit = CreateTrailExitSnapshot(),
-            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null };
+            ExperiencePickups: experiencePickupPulses.Select(pulse => new ExperiencePickupRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Value, pulse.Progress)).ToArray())
+        {
+            Trail = CreateTrailSnapshot(),
+            PowerBurst = CreatePowerBurstSnapshot(),
+            Environment = arenaEnvironment?.Snapshot(),
+            Exit = CreateTrailExitSnapshot(),
+            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
+            CastMotion = CreateCastMotionSnapshot(),
+        };
+    }
+
+    private CastMotionRenderSnapshot? CreateCastMotionSnapshot()
+    {
+        if (lastCastMotion is not { } cast) return null;
+        var duration = cast.Rank >= 3 ? .52 : cast.Rank == 2 ? .44 : .36;
+        var progress = (elapsed - lastCastMotionStartedAt) / duration;
+        return progress >= 1 ? null : cast with { Progress = Math.Clamp(progress, 0, 1) };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()
@@ -319,7 +356,11 @@ public sealed partial class RunSimulation
     {
         if (Offering is not { } offeringId) return;
         var offering = RunOfferingCatalog.Get(offeringId);
-        if (offering.StartingSpell is { } startingSpell) build.Spells.LearnOrUpgrade(startingSpell);
+        if (offering.StartingSpell is { } startingSpell)
+        {
+            build.Spells.LearnOrUpgrade(startingSpell);
+            build.Spells.TryFocus(startingSpell);
+        }
         if (offering.StartingUpgrade is { } startingUpgrade) build.RunUpgrades.Apply(startingUpgrade);
     }
 
@@ -329,7 +370,10 @@ public sealed partial class RunSimulation
         {
             var evolutionId = build.Evolutions.For(spell.Id);
             var evolution = evolutionId is { } id ? SpellEvolutionCatalog.Get(id) : null;
-            return new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id], evolution?.Icon, evolution?.Name);
+            return new SpellHudSnapshot(spell.Icon, spell.Name, build.Spells[spell.Id], evolution?.Icon, evolution?.Name)
+            {
+                IsActive = spell.Id == build.Spells.ActiveSpell,
+            };
         }).ToArray();
         synergyHud = SynergyCatalog.All.Where(synergy => build.Synergies.Contains(synergy.Id)).Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name)).ToArray();
     }
