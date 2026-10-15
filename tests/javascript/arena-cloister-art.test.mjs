@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCloisterPlan, drawCloisterFloor, drawCloisterWall, drawCloisterMist, drawCloisterReflections } from
+import { createCloisterPlan, drawCloisterFloor, drawCloisterWall, drawCloisterMist, drawCloisterReflections,
+    createCloisterElevationLayers, drawCloisterElevation, sortSceneDepthLayers } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-cloister-art.js';
 import { createTerrainPlan } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
@@ -93,4 +94,32 @@ test('water only reflects real nearby spell lights, with no autonomous glow in t
         'Reduced motion uses the same grounded water reflections without drifting.');
     const noPlan=fakeContext();
     assert.equal(drawCloisterReflections(noPlan,null,[fire],.25),0);
+});
+
+test('only actual closed monastery hitboxes receive perspective elevations, with no phantom spires', () => {
+    const plan = createCloisterPlan(scene, 900, 1500);
+    const layers = createCloisterElevationLayers(plan, walls, 900, 1500);
+    assert.equal(layers.length, walls.length);
+    assert.ok(layers.every(item => item.kind === 'masonry'));
+    assert.ok(layers.every(item => item.depth === (item.barrier.y + item.barrier.height) * 1500));
+    assert.equal(createCloisterElevationLayers(null, walls, 900, 1500).length, 0);
+    const open = createCloisterElevationLayers(plan, walls.map((b, i) => i === 1 ? {...b, open: true} : b), 900, 1500);
+    assert.equal(open.length, walls.length - 1, 'Unsealed gate loses its raised obstruction immediately.');
+    const ctx = fakeContext();
+    ctx.closePath = () => {};
+    assert.equal(drawCloisterElevation(ctx, walls[0], 900, 1500), true);
+    assert.ok(ctx.rectangles.some(rect => rect.args[1] < walls[0].y * 1500 &&
+        rect.args[3] >= 12), 'Raised wall facade must extend upward from the actual footprint.');
+    const missing = fakeContext();
+    assert.equal(drawCloisterElevation(missing, {...walls[1],open:true}, 900, 1500), false);
+    assert.equal(missing.rectangles.length, 0);
+});
+
+test('character feet cross in front of and behind world-space wall elevations', () => {
+    const wall = createCloisterElevationLayers(createCloisterPlan(scene,900,1500),[walls[0]],900,1500)[0];
+    const north = {kind:'mage',depth:wall.depth-40};
+    const south = {kind:'enemy',depth:wall.depth+40};
+    assert.deepEqual(sortSceneDepthLayers([south,wall,north]),[north,wall,south]);
+    assert.deepEqual(sortSceneDepthLayers([wall,{kind:'mage',depth:wall.depth}]),
+        [{kind:'mage',depth:wall.depth},wall], 'At the wall foot, facade wins the depth tie.');
 });
