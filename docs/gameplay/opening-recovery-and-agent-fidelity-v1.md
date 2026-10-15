@@ -14,3 +14,16 @@ The 240-second fresh seeded cohort had 29 natural deaths and three timeouts, wit
 - Agent tests verify damaged hunters seek unlocked caches but ignore sealed caches and refuse unnecessary healing detours at high health.
 - Reuse the 240-second and 600-second matching seeded cohorts, but note that a single small 32-run cohort cannot validate broad balance. Compare to prior green diagnostic commit `b8d8970` and check established 96-run regressions as well.
 - Do not merge PR #107 or deploy to main until fresh-hunter feel, real mobile readability and Wyrm balance are reviewed.
+
+## Controlled potency sweep (32 fresh / 96 established matched self-play)
+
+The 240s-versus-600s diagnostic on original mechanics showed 29 natural deaths and 3 timeouts at 240s, and 32 natural deaths at 600s; Wyrm reach was 0/32 and 1/32 respectively. This was a survival gap, not the horizon alone.
+
+With the agent physically pursuing the existing, unlockable recovery cache:
+
+| Initial-depth recovery | Fresh Wyrms at 600s | Fresh extracts | Established Wyrms at 720s | Established extracts |
+| --- | ---: | ---: | ---: | ---: |
+| Original 8% | 11/32 | 5 | 41/96 | 18 |
+| 16% | 16/32 | 6 | 58/96 | 18 |
+
+The dramatic benefit is largely due to honoring in-world recovery. To avoid promoting the top value without balance evidence, a **12% intermediate** is now under matched testing. The change to 8% at depth two and beyond is intentional; enemy damage, run length, Wyrm stats and permanent progression are unchanged.
