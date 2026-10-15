@@ -47,6 +47,14 @@ public sealed class LevelChoiceService(
                 if (evolutions.Count > 0) return evolutions;
             }
             var major = CreatePool(build).Where(choice => PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)).ToList();
+            // The first meaningful mastery is guaranteed, not a trap choice next to a
+            // flashier rune: everybody reaches Rank II at their level-five breakthrough.
+            if (rewardLevel == 5 && build.Spells[primary] == 1)
+            {
+                var rankTwo = major.SingleOrDefault(choice => choice.Id == $"spell:{primary}");
+                if (rankTwo is not null) return [rankTwo with { Role = LevelChoiceDraftRole.Converge,
+                    Hint = "YOUR FIRST BREAKTHROUGH • Rank II is earned before choosing alternate build directions." }];
+            }
             if (major.Count > 0) return DraftMilestone(major, build, rewardLevel, resonance, count);
         }
 

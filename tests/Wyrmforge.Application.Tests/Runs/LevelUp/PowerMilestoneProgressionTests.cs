@@ -34,7 +34,7 @@ public sealed class PowerMilestoneProgressionTests
         var service = new LevelChoiceService(new FirstRandomSource());
         var levelFive = service.RollForProgression(build, 5, trailReward: false);
         var spell = levelFive.Single(choice => choice.Id == "spell:FireBolt");
-        Assert.IsTrue(levelFive.All(choice => choice.Kind is LevelChoiceKind.SpellUpgrade or LevelChoiceKind.Rune));
+        Assert.AreEqual(1, levelFive.Count, "The first breakthrough always grants Rank II rather than offering a tempting alternative.");
         Assert.IsFalse(service.ApplyForProgression(build, spell, 4, trailReward: false));
         Assert.AreEqual(1, build.Spells[SpellId.FireBolt]);
         Assert.IsTrue(service.ApplyForProgression(build, spell, 5, trailReward: false));

@@ -6,7 +6,7 @@ The post-PR-109 iPhone build felt too easy and power arrived too quickly. The ol
 ## First playable rule
 - **Level 1:** commit exactly one primary spell, as before.
 - **Levels 2–4, 6–9, 11–14 etc.:** choose one modest refinement from three cards. New refinements scale gradually: Force +6% damage, Casting Rhythm -4% cast interval, Fleet Step +4% movement speed, Runic Ward -5% damage taken, Life Thread +8 maximum HP (and heals eight).
-- **Level 5:** first major breakthrough, with guaranteed primary Rank II among the offered choices.
+- **Level 5:** the first major breakthrough is a dedicated, **guaranteed primary Rank II**, not a three-card draft with tempting alternatives that leave fresh hunters badly underpowered.
 - **Level 10:** second major breakthrough: primary Rank III if Rank II was chosen, or an earned combination if eligible. Powerful combat runes (extra projectiles, Arcane Echo, elemental hit mechanics) can also appear here or at other breakthroughs.
 - **Level 15:** if the primary was mastered, choose an evolution branch **as the actual level-15 reward**. This is *not* granted immediately when Rank III is picked. If Rank III was skipped, later breakthroughs still allow mastering it, with evolution deferred to a later breakthrough.
 - **Later levels:** every fifth level permits another major reward, subject to actual build prerequisites. Normal levels remain refinements.
