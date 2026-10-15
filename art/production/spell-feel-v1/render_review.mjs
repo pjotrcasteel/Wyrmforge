@@ -9,7 +9,7 @@ for(let f=0;f<96;f++){
  ['ArcaneOrb','FireBolt','FrostShard','ChainLightning'].forEach((spellId,row)=>{
   for(let rank=1;rank<=3;rank++)drawSpellPanel(ctx,data,{x:(rank-1)*320,y:row*190,width:320,height:190,spellId,rank,seconds:f/30});
  });
- ctx.fillStyle='#b5c1b7';ctx.font='12px sans-serif';ctx.fillText('Spell identity / rank study · cast overlay + release + impact · gameplay timing unchanged · final art / audio pending',12,781);
+ ctx.fillStyle='#b5c1b7';ctx.font='12px sans-serif';ctx.fillText('Spell identity / rank study · cast overlay + release + impact · gameplay timing unchanged · final painted art / produced audio pending',12,781);
  writeFileSync(`${output}/frame-${String(f).padStart(3,'0')}.png`,canvas.toBuffer('image/png'));
  if(f===1)writeFileSync(new URL('./spell-rank-review.png',import.meta.url),canvas.toBuffer('image/png'));
 }

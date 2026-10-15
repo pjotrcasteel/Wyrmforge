@@ -1,0 +1,11 @@
+{
+  "audioCases": 48,
+  "distinctSoundSketches": 48,
+  "maxSingleVoicePeak": 0.5199999809265137,
+  "rankUsesVolumeMultiplier": false,
+  "distinctReleasePosesPerSpell": 3,
+  "launchTests": 1152,
+  "maxLaunchDriftPixels": 0,
+  "proceduralAudio": true,
+  "gameplayChanges": false
+}

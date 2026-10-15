@@ -15,13 +15,16 @@ function elbowFor(shoulder,elbow,wrist,target){
 export function applyCastPose(frame,data,cast){
  if(!cast||cast.seconds<0||cast.seconds>.65)return frame;
  const result=frame.map(p=>[...p]),ids=Object.fromEntries(data.jointNames.map((n,i)=>[n,i]));
- const envelope=Math.exp(-cast.seconds*8),weight=cast.look.weight;
+ const fade=Math.max(0,Math.min(1,(cast.seconds-.4)/.25));
+ const envelope=Math.exp(-cast.seconds*(cast.look.settleRate??8))*(1-fade*fade*(3-2*fade)),weight=cast.look.weight;
  const angle=-cast.look.recoilDegrees*Math.PI/180*envelope*weight,c=Math.cos(angle),s=Math.sin(angle),root=result[0];
  for(let i=11;i<result.length;i++){
   const d=sub(result[i],root);result[i]=add(root,[d[0],d[1]*c-d[2]*s,d[1]*s+d[2]*c]);
  }
  const shoulder=result[ids.lclavicle],elbow=result[ids.lhumerus],wrist=result[ids.lradius];
- const desired=add(shoulder,cast.look.releaseWrist),target=add(mul(wrist,1-envelope),mul(desired,envelope));
+ const offset=[...cast.look.releaseWrist];
+ offset[0]+=(cast.look.sweep??0)*Math.sin(Math.min(1,cast.seconds/.22)*Math.PI)*envelope;
+ const desired=add(shoulder,offset),target=add(mul(wrist,1-envelope),mul(desired,envelope));
  const reach=Math.hypot(...sub(elbow,shoulder))+Math.hypot(...sub(wrist,elbow));
  const vector=sub(target,shoulder),distance=Math.hypot(...vector);
  const reachable=distance>reach*.98?add(shoulder,mul(vector,reach*.98/distance)):target;

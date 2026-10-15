@@ -1,7 +1,7 @@
 import {applyCastPose} from './cast_pose.mjs';
 const color = { left: '#8da9b9', right: '#bd9781', body: '#b7b6a5', edge: '#202a29', floor: '#172322', line: '#304341' };
 
-export function drawView(ctx, data, phase, options) {
+export function resolveViewPose(data, phase, options) {
     const { x, y, width, height, yaw = 45, pitch = 25, travel = true, contacts = true, cycles = 0, label = 'Game camera', sprite = false } = options;
     if (data.injury) phase = ((phase + data.injury.phaseWarpAmplitude * Math.sin(2 * Math.PI * (phase - .515625))) % 1 + 1) % 1;
     const index = Math.min(data.frames.length - 1, Math.floor(phase * data.frames.length));
@@ -20,6 +20,12 @@ export function drawView(ctx, data, phase, options) {
         return [x + width * .5 + (dx * Math.cos(angle) + dz * Math.sin(angle)) * scale,
             y + height * .84 - p[1] * Math.cos(tilt) * scale + depth * Math.sin(tilt) * scale, depth];
     };
+    return {index,joint,root,angle,tilt,scale,offset,camera,project};
+}
+
+export function drawView(ctx, data, phase, options) {
+    const {x,y,width,height,travel=true,contacts=true,label='Game camera',sprite=false}=options;
+    const {index,joint,root,angle,tilt,scale,offset,camera,project}=resolveViewPose(data,phase,options);
     if (options.onProjectedJoints) options.onProjectedJoints(Object.fromEntries(Object.entries(joint).map(([n,p])=>[n,project(p)])));
     ctx.save();
     ctx.beginPath(); ctx.rect(x, y, width, height); ctx.clip();

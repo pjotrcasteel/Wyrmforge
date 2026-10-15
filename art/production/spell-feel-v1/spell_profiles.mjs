@@ -19,10 +19,22 @@ export const evolutionLooks = {
  StormCore:['BallLightning','living-web'],Overcharge:['BallLightning','compressed-storm'],ThunderCrown:['BallLightning','rapid-crown'],
  PhaseBarrage:['AetherDart','three-darts'],Markstorm:['AetherDart','rapid-marks'],MirrorChoir:['AetherDart','paired-darts'],
 };
+// Rank changes alter pose and recovery character, not combat timing.
+const gestureMotion = {
+ compress:{settle:5.5,sweep:0,offsets:[[0,0,0],[.04,.025,.035],[-.05,.055,-.035]],sound:'resonant'},
+ thrust:{settle:8,sweep:.035,offsets:[[0,0,0],[-.02,.025,.015],[-.055,.04,.025]],sound:'combustion'},
+ cut:{settle:12,sweep:.12,offsets:[[0,0,0],[.025,.02,.01],[-.025,.06,.005]],sound:'crystal'},
+ conduct:{settle:15,sweep:.025,offsets:[[0,0,0],[.035,.03,-.01],[.07,.055,-.035]],sound:'discharge'},
+ flick:{settle:20,sweep:.045,offsets:[[0,0,0],[.01,.015,.015],[.02,.025,.02]],sound:'ember'},
+ spear:{settle:6.5,sweep:.015,offsets:[[0,0,0],[-.025,.015,.015],[-.045,.025,.025]],sound:'ice-weight'},
+ pulse:{settle:9,sweep:.035,offsets:[[0,0,0],[.02,.025,-.015],[-.035,.05,-.035]],sound:'coil'},
+ mark:{settle:16,sweep:.08,offsets:[[0,0,0],[.025,.015,0],[-.025,.03,.015]],sound:'phase'},
+};
 export function resolveSpellLook({spellId,rank=1,evolutionId=null}) {
  const base=spellProfiles[spellId];if(!base)throw Error(`No visual identity for ${spellId}`);
  if(!Number.isInteger(rank)||rank<1||rank>3)throw Error('Rank must be 1, 2 or 3');
  const evolution=evolutionId?evolutionLooks[evolutionId]:null;
  if(evolutionId&&(!evolution||evolution[0]!==spellId))throw Error(`Evolution ${evolutionId} does not belong to ${spellId}`);
- return {...base,spellId,rank,weight:1+(rank-1)*.22,rankSignature:base.ranks[rank-1],evolutionSignature:evolution?.[1]??null,releaseOffsetSeconds:0};
+ const motion=gestureMotion[base.gesture];
+ return {...base,releaseWrist:base.releaseWrist.map((v,i)=>v+motion.offsets[rank-1][i]),settleRate:motion.settle,sweep:motion.sweep,soundIdentity:motion.sound,spellId,rank,weight:1+(rank-1)*.22,rankSignature:base.ranks[rank-1],evolutionSignature:evolution?.[1]??null,releaseOffsetSeconds:0};
 }
