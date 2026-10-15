@@ -1,7 +1,8 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
-import { drawSpellCastMotion, drawSpellProjectile } from './arena-spell-vfx.js';
+import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
+import { drawMage } from './arena-mage.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
 const arenas = new WeakMap();
@@ -191,7 +192,7 @@ function draw(state, snapshot, width, height) {
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
-    for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
+    for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
@@ -228,13 +229,7 @@ function draw(state, snapshot, width, height) {
     if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
     for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
 
-    ctx.beginPath();
-    ctx.arc(snapshot.player.x, snapshot.player.y, snapshot.player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = danger.hit ? '#ff8e9b' : snapshot.player.barrier ? '#b6efff' : '#f4e9ff';
-    ctx.fill();
-    ctx.strokeStyle = '#7f56c2';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches);
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
@@ -757,34 +752,6 @@ function drawSplashPulse(ctx, pulse, school) {
     ctx.strokeStyle = `rgba(${palette.rgb}, ${alpha})`;
     ctx.lineWidth = 4 - progress * 2;
     ctx.stroke();
-}
-
-function drawElementalImpact(ctx, impact) {
-    const progress = Math.min(1, Math.max(0, impact.progress));
-    const alpha = 1 - progress;
-    if (impact.spell === 1) {
-        drawImpactBurst(ctx, impact.x, impact.y, 7 + progress * 12, `rgba(255, 116, 54, ${alpha})`, 6);
-        return;
-    }
-    if (impact.spell === 2) {
-        drawImpactCross(ctx, impact.x, impact.y, 5 + progress * 10, `rgba(151, 224, 255, ${alpha})`, Math.PI / 4);
-        return;
-    }
-    if (impact.spell === 3) {
-        drawImpactCross(ctx, impact.x, impact.y, 6 + progress * 11, `rgba(255, 232, 101, ${alpha})`, 0);
-        return;
-    }
-
-    const radius = 5 + progress * 14;
-    ctx.beginPath();
-    ctx.arc(impact.x, impact.y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(190, 132, 255, ${alpha})`;
-    ctx.lineWidth = 2.5 - progress;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(impact.x, impact.y, Math.max(1, 4 * alpha), 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(224, 195, 255, ${alpha})`;
-    ctx.fill();
 }
 
 function drawDeathBurst(ctx, death) {
