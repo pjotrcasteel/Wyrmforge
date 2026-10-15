@@ -16,6 +16,7 @@ using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
 
@@ -26,6 +27,7 @@ public partial class ArenaView : IAsyncDisposable
     private IJSObjectReference? arenaModule;
     private DotNetObjectReference<ArenaView>? dotNetReference;
     private bool gameOverSent;
+    private bool ChoosingPrimary => simulation is { PrimaryCommitted: false };
 
     [Inject] public RunSimulationFactory SimulationFactory { get; set; } = null!;
     [Inject] public IJSRuntime JavaScript { get; set; } = null!;
@@ -40,6 +42,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
+    private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
     private IReadOnlyList<RelicDefinition> CurrentRelicChoices => simulation?.PendingRelicChoices ?? Array.Empty<RelicDefinition>();
@@ -92,6 +95,7 @@ public partial class ArenaView : IAsyncDisposable
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
+        if (ChoosingPrimary) return current.CreateSnapshot() with { SimulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds };
         var hadChoices = current.PendingChoices.Count > 0;
         var hadEssenceChoices = current.PendingDragonEssenceChoices.Count > 0;
         var hadRelicChoices = current.PendingRelicChoices.Count > 0;
@@ -130,6 +134,13 @@ public partial class ArenaView : IAsyncDisposable
             await OnGameOver.InvokeAsync(current.CreateEvaluationSummary());
         }
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
+    }
+
+    private async Task ChoosePrimaryAsync(SpellId id)
+    {
+        if (simulation?.ChoosePrimary(id) != true) return;
+        await TryPlayAudioAsync("upgrade-choice");
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ChooseAsync(string id)
