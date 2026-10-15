@@ -319,6 +319,49 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_FocusedMagic_MageAndRankedImpactsProduceDifferentActualPixels()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const mage = await import('./js/arena-mage.js');
+            const spells = await import('./js/arena-spell-vfx.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            const sample = draw => {
+                ctx.clearRect(0, 0, 160, 160);
+                draw();
+                return [...ctx.getImageData(0, 0, 160, 160).data];
+            };
+            const difference = (a, b) => a.reduce((n, value, i) =>
+                n + (Math.abs(value - b[i]) > 20 ? 1 : 0), 0);
+            const visible = a => a.filter((value, i) => i % 4 === 3 && value > 32).length;
+            const player = { x: 80, y: 80, radius: 12, barrier: false };
+            const idle = sample(() => mage.drawMage(ctx, player, null));
+            const casting = sample(() => mage.drawMage(ctx, player,
+                { spell: 1, rank: 3, progress: .36, angle: 0 }));
+            const basic = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, rank: 1, progress: .35 }));
+            const mastered = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, rank: 3, progress: .35 }));
+            const frostfire = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, combination: 0, rank: 3, progress: .35 }));
+            return { magePixels: visible(idle), spellPixels: visible(mastered),
+                castDifference: difference(idle, casting),
+                rankDifference: difference(basic, mastered),
+                combinationDifference: difference(mastered, frostfire) };
+        }");
+
+        Assert.IsGreaterThan(150, pixels.GetProperty("magePixels").GetInt32(), "Mage must read as a silhouette, not a tiny marker.");
+        Assert.IsGreaterThan(40, pixels.GetProperty("spellPixels").GetInt32(), "Impact must be visible at mobile size.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("castDifference").GetInt32(), "Casting must visibly move the staff.");
+        Assert.IsGreaterThan(30, pixels.GetProperty("rankDifference").GetInt32(), "Mastery must visibly increase impact size.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("combinationDifference").GetInt32(), "Frostfire must visibly differ from basic fire.");
+    }
+
+    [TestMethod]
     public async Task Mobile_Territories_DifferentDistrictsProduceDifferentActualCanvasPixels()
     {
         await Page.SetViewportSizeAsync(390, 844);
