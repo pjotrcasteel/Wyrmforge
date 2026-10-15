@@ -1,5 +1,5 @@
 import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
-import { drawCloisterWall, drawCloisterMist } from './arena-cloister-art.js';
+import { drawCloisterWall, drawCloisterMist, drawCloisterReflections } from './arena-cloister-art.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -171,6 +171,12 @@ function terrainTexture(environment, width, height) {
     const texture = { image, cloister: plan.story.cloister };
     textures.set(key, texture);
     return texture;
+}
+
+// Read the already-cached environment plan, without rerolling its procedural art.
+export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false) {
+    if (!environment) return 0;
+    return drawCloisterReflections(ctx, terrainTexture(environment, width, height).cloister, lights, seconds, reducedMotion);
 }
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {

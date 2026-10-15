@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCloisterPlan, drawCloisterFloor, drawCloisterWall, drawCloisterMist } from
+import { createCloisterPlan, drawCloisterFloor, drawCloisterWall, drawCloisterMist, drawCloisterReflections } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-cloister-art.js';
 import { createTerrainPlan } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
@@ -70,4 +70,27 @@ test('visual masonry follows actual hitbox dimensions and opens only with canoni
     assert.ok(open.rectangles.length<closed.rectangles.length);
     assert.equal(drawCloisterWall(open,null,900,1500),false);
     assert.equal(drawCloisterWall(open,{...b,width:0},900,1500),false);
+});
+
+test('water only reflects real nearby spell lights, with no autonomous glow in the monastery', () => {
+    const plan=createCloisterPlan(scene,900,1500),c=plan.court;
+    const water={x:c.x+c.w*.5,y:c.y+c.h*.6};
+    const ctx=fakeContext();
+    ctx.rect=()=>{};ctx.clip=()=>{};
+    assert.equal(drawCloisterReflections(ctx,plan,[],.25),0);
+    assert.equal(drawCloisterReflections(ctx,plan,[{
+        x:water.x+300,y:water.y+300,radius:50,strength:1,center:[255,170,92],
+    }],.25),0);
+    assert.equal(ctx.rectangles.length,0);
+    const fire={x:water.x,y:water.y,radius:100,strength:.9,center:[255,170,92]};
+    assert.equal(drawCloisterReflections(ctx,plan,[fire],.25,true),3);
+    assert.equal(ctx.rectangles.length,3);
+    assert.ok(ctx.rectangles.every(item=>item.color.includes('255,170,92')));
+    const before=ctx.rectangles.map(row=>row.args);
+    const stable=fakeContext();stable.rect=()=>{};stable.clip=()=>{};
+    drawCloisterReflections(stable,plan,[fire],900,true);
+    assert.deepEqual(stable.rectangles.map(row=>row.args),before,
+        'Reduced motion uses the same grounded water reflections without drifting.');
+    const noPlan=fakeContext();
+    assert.equal(drawCloisterReflections(noPlan,null,[fire],.25),0);
 });

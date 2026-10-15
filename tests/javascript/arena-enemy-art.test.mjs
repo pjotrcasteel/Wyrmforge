@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { enemyPixelFrames, drawEnemyPixelArt } from
+import { enemyPixelFrames, enemyWalkLegs, drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-art.js';
 
 test('four hand-authored enemy archetypes have different shapes, identifiable heads and limbs', () => {
@@ -35,4 +35,41 @@ test('lighting colors a side of the enemy without changing one sprite per actual
     } finally {
         globalThis.document=oldDocument;
     }
+});
+
+test('actual stable enemy identity animates only when the corresponding C# actor has moved', () => {
+    const state=createEnemyMotionState();
+    const baseline=[{entityId:101,x:15,y:20,kind:0},{entityId:102,x:39,y:21,kind:3}];
+    let poses=updateEnemyMotions(state,baseline,2);
+    assert.equal(poses.get(101),0);
+    assert.equal(poses.get(102),0);
+    poses=updateEnemyMotions(state,[{...baseline[0],x:23},baseline[1]],2.03);
+    assert.ok(poses.get(101)>0,'Moving enemies visibly advance their feet.');
+    assert.equal(poses.get(102),0,'A stationary enemy never walks just because time advances.');
+    assert.equal(updateEnemyMotions(state,[{...baseline[0],x:23},baseline[1]],2.3).get(101),0);
+    assert.equal(updateEnemyMotions(state,[{...baseline[0],x:30},baseline[1]],2.31,true).get(101),0,
+        'Reduced-motion accessibility suppresses foot-cycle changes.');
+    updateEnemyMotions(state,[baseline[1]],2.5);
+    assert.equal(state.entities.has(101),false,'Dead enemies release gait history immediately.');
+    assert.equal(state.entities.size,1);
+});
+
+test('each walking variant has separately authored lower-body pixel art, with no extra combat actor', () => {
+    for (const [kind,frames] of enemyWalkLegs.entries()) {
+        assert.equal(frames.length,2);
+        assert.notDeepEqual(frames[0],frames[1],`kind ${kind}`);
+        assert.ok(frames.every(frame=>frame.length>=6));
+        assert.ok(frames.flat().every(([,x,y,w,h])=>x>=-18&&x+w<=18&&y>=-20&&y+h<=24));
+    }
+    const original=globalThis.document;
+    try {
+        let frames=0;
+        globalThis.document={createElement:()=>({width:36,height:44,getContext:()=>({fillRect(){frames++;}})})};
+        const ctx={save(){},restore(){},drawImage(){draws++;}};
+        let draws=0;
+        drawEnemyPixelArt(ctx,{x:10,y:10,radius:12,kind:3},null,1);
+        drawEnemyPixelArt(ctx,{x:10,y:10,radius:12,kind:3},null,2);
+        assert.equal(draws,2);
+        assert.ok(frames>25);
+    } finally { globalThis.document=original; }
 });

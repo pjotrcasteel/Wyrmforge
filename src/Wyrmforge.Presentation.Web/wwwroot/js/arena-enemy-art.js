@@ -56,6 +56,65 @@ export const enemyPixelFrames = [
         ['body',-8,15,6,7],['body',3,15,6,7],
     ],
 ];
+// Distinct authored gait hems/leg silhouettes per kind. This is animation art,
+ // not physics: the sprite moves only because C# changes the enemy's position.
+export const enemyWalkLegs = [
+    [
+        [['edge',-8,11,5,8],['head',-7,12,3,6],['edge',4,11,5,11],
+         ['head',5,12,3,9],['edge',-12,18,8,3],['edge',5,21,9,3]],
+        [['edge',-6,11,5,11],['head',-5,12,3,9],['edge',6,11,5,8],
+         ['head',7,12,3,6],['edge',-9,21,8,3],['edge',6,18,9,3]],
+    ],
+    [
+        [['edge',-13,8,9,14],['shade',-12,10,8,11],['edge',0,8,10,11],
+         ['body',1,8,7,10],['light',-7,12,3,5],['shade',4,18,5,3]],
+        [['edge',-11,8,10,12],['shade',-10,10,8,10],['edge',2,8,11,14],
+         ['body',3,8,7,12],['light',5,13,3,5],['shade',-7,18,5,2]],
+    ],
+    [
+        [['edge',-10,11,6,12],['shade',-9,12,4,10],['edge',5,11,7,9],
+         ['shade',6,12,5,6],['edge',-12,21,8,3],['edge',5,18,9,3]],
+        [['edge',-7,11,6,8],['shade',-6,12,4,6],['edge',3,11,7,12],
+         ['shade',4,12,5,10],['edge',-9,18,8,3],['edge',4,21,9,3]],
+    ],
+    [
+        [['edge',-11,12,9,12],['body',-10,13,7,10],['edge',5,12,8,10],
+         ['body',6,13,6,7],['edge',-13,22,10,2],['edge',5,20,12,3]],
+        [['edge',-9,12,8,9],['body',-8,13,6,7],['edge',3,12,10,12],
+         ['body',4,13,8,10],['edge',-11,20,10,3],['edge',3,22,12,2]],
+    ],
+];
+
+export function createEnemyMotionState() { return { entities: new Map() }; }
+
+export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = false) {
+    const poses = new Map();
+    if (!motion?.entities || !Number.isFinite(seconds)) return poses;
+    const present = new Set();
+    for (const enemy of enemies ?? []) {
+        const id = Number(enemy.entityId);
+        if (!Number.isSafeInteger(id) || id < 0) continue;
+        present.add(id);
+        const old = motion.entities.get(id);
+        let traveled = old?.traveled ?? 0;
+        let lastMoved = old?.lastMoved ?? Number.NEGATIVE_INFINITY;
+        if (old) {
+            const dist = Math.hypot(enemy.x - old.x, enemy.y - old.y);
+            if (dist >= .35 && dist < 48) {
+                traveled += dist;
+                lastMoved = seconds;
+            }
+        }
+        const phase = reducedMotion || seconds - lastMoved > .20 ? 0 : (Math.floor(traveled / 6) % 2) + 1;
+        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved });
+        poses.set(id, phase);
+    }
+    // Remove dead/despawned entities to keep state bounded throughout long hunts.
+    for (const id of motion.entities.keys())
+        if (!present.has(id)) motion.entities.delete(id);
+    return poses;
+}
+
 const cached=new Map();
 function paletteFor(enemy) {
     const kind=Math.max(0,Math.min(3,Number(enemy?.kind)||0));
@@ -65,18 +124,23 @@ function paletteFor(enemy) {
         light:'#d0edf0',head:'#badde7',eye:'#395c68',weapon:'#c6e7eb'};
     return palettes[kind];
 }
-export function drawEnemyPixelArt(ctx,enemy,light=null){
+export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
     if(!enemy)return;
     const kind=Math.max(0,Math.min(3,Number(enemy.kind)||0));
     const variant=enemy.hitFlash?'hit':enemy.frozen?'frozen':'normal';
-    const key=kind+':'+variant;
+    const phase=Math.max(0,Math.min(2,Number(walkPhase)||0));
+    const key=kind+':'+variant+':'+phase;
     let art=cached.get(key);
     if(!art){
         const image=document.createElement('canvas');
         image.width=36;image.height=44;
         const brush=image.getContext('2d');
         const colors=paletteFor(enemy);
-        for(const [part,x,y,w,h] of enemyPixelFrames[kind]){
+        // The upper body remains hand-authored across phases. Each enemy kind
+        // has a separately authored step silhouette that replaces its lower hem.
+        const frame=phase===0?enemyPixelFrames[kind]:
+            enemyPixelFrames[kind].filter(([, , y])=>y<10).concat(enemyWalkLegs[kind][phase-1]);
+        for(const [part,x,y,w,h] of frame){
             brush.fillStyle=colors[part];brush.fillRect(x+18,y+20,w,h);
         }
         art=image;cached.set(key,image);
