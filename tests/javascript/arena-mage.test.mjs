@@ -56,3 +56,17 @@ test('staff runes show charge from the authoritative player snapshot, not animat
     assert.doesNotThrow(() => drawMage(fakeContext(), { ...player, focusCharge: -4 }, null));
     assert.doesNotThrow(() => drawMage(fakeContext(), { ...player, focusCharge: 20 }, null));
 });
+
+test('actual light direction and family shade one side of the mage, never movement state', () => {
+    const player = { x: 80, y: 70, radius: 12 };
+    const idle = fakeContext();
+    const fire = fakeContext();
+    const frost = fakeContext();
+    drawMage(idle, player, null);
+    drawMage(fire, player, null, false, false, { intensity: .6, color: [255, 160, 91], sourceX: 50 });
+    drawMage(frost, player, null, false, false, { intensity: .6, color: [175, 225, 244], sourceX: 110 });
+    assert.ok(fire.calls.filter(([name]) => name === 'fillRect').length > idle.calls.filter(([name]) => name === 'fillRect').length);
+    assert.notDeepEqual(fire.calls, frost.calls);
+    assert.doesNotThrow(() => drawMage(fakeContext(), player, null, false, true,
+        { intensity: .7, color: [255, 160, 91], sourceX: 20 }));
+});

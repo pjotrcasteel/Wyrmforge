@@ -21,7 +21,7 @@ export function magePose(cast, reducedMotion = false) {
     };
 }
 
-export function drawMage(ctx, player, cast, hit = false, reducedMotion = false) {
+export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null) {
     if (!player) return;
     const pose = magePose(cast, reducedMotion);
     const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
@@ -64,6 +64,19 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false) 
     ctx.fillRect(-5, -2, 3, 2);
     ctx.fillRect(3, -2, 3, 2);
 
+    if (lighting?.intensity > .015) {
+        // The face and cloak catch light from the actual nearby cast, projectile or impact.
+        // Shade the lit side only; never create a bright silhouette ring around the mage.
+        const [red, green, blue] = lighting.color;
+        const side = lighting.sourceX < player.x ? -1 : 1;
+        const strength = Math.min(.48, lighting.intensity * .9);
+        ctx.fillStyle = `rgba(${red},${green},${blue},${strength * .58})`;
+        ctx.fillRect(side < 0 ? -7 : 4, -10, 3, 5);
+        ctx.fillRect(side < 0 ? -8 : 5, -3, 3, 12);
+        ctx.fillStyle = `rgba(${red},${green},${blue},${strength})`;
+        ctx.fillRect(side < 0 ? -6 : 3, -5, 3, 2);
+    }
+
     // The staff is a readable weapon silhouette and leads the actual cast angle.
     // It follows the attack, not the movement controls, and cannot block movement.
     ctx.save();
@@ -83,6 +96,11 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false) 
     ctx.fillRect(9 + pose.reach, -4, 5, 9);
     ctx.fillStyle = '#6d798e';
     ctx.fillRect(10 + pose.reach, -2, 3, 5);
+    if (lighting?.intensity > .015) {
+        const [red, green, blue] = lighting.color;
+        ctx.fillStyle = `rgba(${red},${green},${blue},${Math.min(.8, lighting.intensity)})`;
+        ctx.fillRect(10 + pose.reach, -3, 3, 3);
+    }
     // Three tiny marks on the shaft show actual saved charge; no extra HUD button or halo.
     const charge = Math.max(0, Math.min(3, Number(player.focusCharge) || 0));
     for (let index = 0; index < 3; index++) {

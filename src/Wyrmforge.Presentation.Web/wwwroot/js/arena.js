@@ -4,6 +4,7 @@ import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage } from './arena-mage.js';
+import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
 const arenas = new WeakMap();
@@ -162,6 +163,7 @@ function draw(state, snapshot, width, height) {
     const visualSeconds = performance.now() / 1000;
     const worldWidth = camera.width;
     const worldHeight = camera.height;
+    const spellLights = buildSpellLights(snapshot, visualSeconds, state.reducedMotion.matches);
     ctx.clearRect(0, 0, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
@@ -171,6 +173,8 @@ function draw(state, snapshot, width, height) {
         drawGrid(ctx, worldWidth, worldHeight);
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
+    // World-space diffuse spell spill reaches actual masonry, terrain and the ground fog.
+    drawSpellLightSpill(ctx, spellLights, camera, 'terrain');
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
@@ -194,6 +198,8 @@ function draw(state, snapshot, width, height) {
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
+    // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
+    drawSpellLightSpill(ctx, spellLights, camera, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
@@ -231,7 +237,8 @@ function draw(state, snapshot, width, height) {
     if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
     for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
 
-    drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches);
+    drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+        sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y));
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();

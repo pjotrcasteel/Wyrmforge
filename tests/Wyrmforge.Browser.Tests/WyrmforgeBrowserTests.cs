@@ -357,6 +357,53 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_SpellLighting_ActuallyIlluminatesGroundAndMageBySchoolAndSurge()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var pixels = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const lights = await import('./js/arena-spell-lighting.js');
+            const mage = await import('./js/arena-mage.js');
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 240;
+            const ctx = canvas.getContext('2d');
+            const player = { x: 115, y: 115, radius: 12 };
+            const camera = { x: 0, y: 0, width: 240, height: 240 };
+            const sample = (spell, surge, includeMage) => {
+                ctx.clearRect(0, 0, 240, 240);
+                ctx.fillStyle = '#292a30';
+                ctx.fillRect(0, 0, 240, 240);
+                const snapshot = { projectiles: [], elementalImpacts: [{
+                    x: 125, y: 108, spell, rank: 3, progress: .16, surge }] };
+                const sources = lights.buildSpellLights(snapshot, 0, true);
+                lights.drawSpellLightSpill(ctx, sources, camera);
+                if (includeMage) mage.drawMage(ctx, player, null, false, true,
+                    lights.sampleSpellLight(sources, player.x, player.y));
+                return {
+                    ground: [...ctx.getImageData(135, 114, 1, 1).data],
+                    mage: [...ctx.getImageData(113, 105, 1, 1).data],
+                    pixels: [...ctx.getImageData(0, 0, 240, 240).data]
+                };
+            };
+            const fire = sample(1, false, true);
+            const frost = sample(2, false, true);
+            const arcane = sample(0, false, true);
+            const surge = sample(1, true, true);
+            const normalGround = sample(1, false, false);
+            const base = [...Array(240 * 240 * 4)].fill(0);
+            const differ = (a, b) => a.reduce((n, value, index) => n + (Math.abs(value - b[index]) > 12 ? 1 : 0), 0);
+            return { groundSchoolDifference: differ(fire.ground, frost.ground),
+                mageSchoolDifference: differ(fire.mage, arcane.mage),
+                surgeGroundDifference: differ(surge.pixels, fire.pixels),
+                magePresent: differ(fire.pixels, normalGround.pixels) };
+        }");
+        Assert.IsGreaterThan(1, pixels.GetProperty("groundSchoolDifference").GetInt32(), "Terrain must reflect different magic colors.");
+        Assert.IsGreaterThan(1, pixels.GetProperty("mageSchoolDifference").GetInt32(), "The mage must catch light from nearby spells.");
+        Assert.IsGreaterThan(180, pixels.GetProperty("surgeGroundDifference").GetInt32(), "Surge must illuminate a visibly larger patch.");
+        Assert.IsGreaterThan(50, pixels.GetProperty("magePresent").GetInt32(), "The lighted mage must still be drawn over terrain.");
+    }
+
+    [TestMethod]
     public async Task Mobile_FocusedMagic_MageAndRankedImpactsProduceDifferentActualPixels()
     {
         await Page.SetViewportSizeAsync(390, 844);
