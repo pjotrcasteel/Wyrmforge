@@ -27,3 +27,9 @@ With the agent physically pursuing the existing, unlockable recovery cache:
 | 16% | 16/32 | 6 | 58/96 | 18 |
 
 The dramatic benefit is largely due to honoring in-world recovery. To avoid promoting the top value without balance evidence, a **12% intermediate** is now under matched testing. The change to 8% at depth two and beyond is intentional; enemy damage, run length, Wyrm stats and permanent progression are unchanged.
+
+## Final tuning decision
+
+The additional matched **12%** trial reached 15/32 fresh Wyrms and 47/96 established Wyrms, but established extractions dropped to 14/96 compared with 18/96 at the original 8% recovery. The **16%** trial reached 16/32 and 58/96, with 18/96 established extractions. More recovery does not consistently translate into successful decisions after the boss.
+
+**Ship the original 8% healing per cache**, not a global buff. The change with the strongest backing is teaching the deterministic playtest agent to seek actual unlocked caches when wounded. Existing player gameplay pickup potency is unchanged. This final candidate removes the temporary recovery-tuning helper and leaves only the behavior/telemetry improvement. Retest on 240s and 600s fresh cohorts against `b8d8970` to isolate the gain.

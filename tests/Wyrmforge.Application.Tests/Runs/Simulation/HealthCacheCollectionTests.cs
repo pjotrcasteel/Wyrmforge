@@ -9,16 +9,8 @@ using Wyrmforge.Domain.Combat.Player;
 namespace Wyrmforge.Application.Tests.Runs.Simulation;
 
 [TestClass]
-public sealed class OpeningRecoveryProfileTests
+public sealed class HealthCacheCollectionTests
 {
-    [TestMethod]
-    public void HealthCacheFraction_OnlyUninvestedOpeningDepthReceivesExtraRecovery()
-    {
-        Assert.AreEqual(0.12, OpeningRecoveryProfile.HealthCacheFraction(1), .001);
-        Assert.AreEqual(0.08, OpeningRecoveryProfile.HealthCacheFraction(2), .001);
-        Assert.AreEqual(0.08, OpeningRecoveryProfile.HealthCacheFraction(6), .001);
-    }
-
     [TestMethod]
     public void CollectEnvironmentSupplies_OpenCache_HealsOnlyWhenPhysicallyCollected()
     {
@@ -36,10 +28,10 @@ public sealed class OpeningRecoveryProfileTests
 
         player.Position = new(cache.X * 950, cache.Y * 1550);
         InvokeCollect(simulation);
-        Assert.AreEqual(52, player.Health, .001);
+        Assert.AreEqual(48, player.Health, .001);
         Assert.IsFalse(arena.Snapshot().Supplies.Any(supply => supply.Kind == "health"));
         InvokeCollect(simulation);
-        Assert.AreEqual(52, player.Health, .001, "The physical cache can be collected only once.");
+        Assert.AreEqual(48, player.Health, .001, "The physical cache can be collected only once.");
     }
 
     private static T Field<T>(RunSimulation simulation, string name) =>

@@ -11,7 +11,7 @@ public sealed partial class RunSimulation
         switch (collected.Kind)
         {
             case "health":
-                player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth * OpeningRecoveryProfile.HealthCacheFraction(depthState.Depth));
+                player.Health = Math.Min(player.MaxHealth, player.Health + player.MaxHealth * 0.08);
                 break;
             case "experience":
                 // Ordinary earned experience: the temporary spell build and permanent Hunter track both receive it.
