@@ -82,6 +82,12 @@ public sealed class LevelChoiceService(
         if (primaryUpgrade.Count > 0)
             TakeInto(result, pool, primaryUpgrade, resonance, LevelChoiceDraftRole.Converge,
                 _ => $"LEVEL {level} BREAKTHROUGH • permanently strengthens your chosen primary for this hunt.");
+        // Keep an earned elemental combination visible alongside Rank III, instead of
+        // letting two unrelated rare runes exhaust the 3-card breakthrough draft.
+        var availableSynergies = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy).ToList();
+        if (availableSynergies.Count > 0 && result.Count < count)
+            TakeInto(result, pool, availableSynergies, resonance, LevelChoiceDraftRole.Venture,
+                _ => "Fuse your committed primary with a supporting element, without losing existing ranks.");
         var roles = new[] { LevelChoiceDraftRole.Reinforce, LevelChoiceDraftRole.Venture };
         while (result.Count < count && pool.Count > 0)
         {
