@@ -1,45 +1,84 @@
-# Legion Breaker / Battlemage — exact source art reference
+# Legion Breaker — verified Battlemage visual reference for WyrmForge
 
-**Exact player-selected video:** https://www.youtube.com/watch?v=WePyhtxZ4t0
+**Status: source identity, transcript and video visuals reviewed on 2026-10-15; art direction accepted as a design reference, not artwork to reproduce.** This is a design RFC, not a deployed feature.
 
-**Identity verified through YouTube metadata (vidIQ):** the video is titled *Highly Anticipated BATTLEMAGE Incremental is Here and It's Great!* by **Idle cub**, published 2026-10-14, runtime **2h44m55s**. Its subject is **Legion Breaker**, by Baffled Engineer, released October 13, 2026 on Steam: https://store.steampowered.com/app/4425980/Legion_Breaker/
+- User-selected gameplay video: **https://www.youtube.com/watch?v=WePyhtxZ4t0**
+- Video title: *Highly Anticipated BATTLEMAGE Incremental is Here and It's Great!*
+- Uploader: Idle cub; published 2026-10-14; duration 2h44m55s.
+- Actual game: **Legion Breaker**, developed by **Baffled Engineer**, released October 13, 2026.
+- Official page: https://store.steampowered.com/app/4425980/Legion_Breaker/
+- Developer's visual/UI evolution: May v0.4.0 overhaul introduced distinct battlefields and combat UI; June v0.5.0 improved upgrade-screen visuals and clarity (https://steamcommunity.com/app/4425980/allnews/).
+- Data provenance: video metadata and **full timestamped visual walkthrough** retrieved from connected vidIQ's `video_watch`; English transcript also reviewed. The creator explicitly admires the *clean pixel art*, mist and glowing pixels, and says shot lighting contributes materially to the look. Timed observations below are from analysis of the provided video. They are reference observations, not assertions that WyrmForge already renders these features.
+- Prior itch demo credits list character/environment art by **SanctumPixel**. Do not copy sprites/tiles/screenshots or infer rights for the commercial release: https://baffledengineer.itch.io/legion-breaker
 
-**Visual verification status:** full source-video visual analysis initiated through vidIQ; timestamped findings must be added only after the visual result completes. The name *Battlemage* describes the player fantasy and is used in the video headline, not the game's proper title. Do not substitute assets or screenshots from any other game with a similar name.
+## What is actually visible in the referenced footage
 
-**Grounded public design context:** Steam and the developer characterize Legion Breaker as *pixel graphics*, a 2D active incremental wizard-vs-undead game with handmade sprite art, distinct battlefields, many concurrent troops/enemies, powerful spells and a large skill tree. Developer notes identify a May visual-overhaul release and a June upgrade-screen clarity release. These are documented facts about the product, **not frame-by-frame observations from the user's video**. Its short 3–4 hour campaign and incremental auto-battler structure are *not* the target WyrmForge game loop.
-
-Use Legion Breaker as the preferred **art/readability** benchmark, while retaining WyrmForge's manually traversed dark Diablo-influenced roguelite world, one committed primary, combinations, 100+ meaningful hunts, and spell-lit architecture. Borrow abstract art-direction principles, not copyrighted sprites, interface composition or VFX artwork.
-
-## Source-frame audit — pending the full gameplay walkthrough
-
-Capture representative stills from (1) idle character in environment, (2) traveling cast, (3) elemental projectile in flight, (4) enemy impact or a powerful attack, (5) a decorated environment without combat, (6) upgrade/menu UI. Where applicable, note the camera view, original rendered pixel pitch, outlines, light source, palette, animation frames, and readability.
-
-Record a visual comparison using these objective questions:
-
-| Property | Observe in referenced frames | WyrmForge mobile requirement |
+| Visual principle | Specific source moment | What the footage shows |
 | --- | --- | --- |
-| Silhouette / proportions | How many readable body details, contrast of weapon to outfit, pose variance? | Mage recognizable at 390px; blue hood, pale collar and articulated staff persist. |
-| Pixel-art craft | Consistent pixel pitch and texture, or hybrid sprites and shapes? | Authored cohesive original animation frames; no arbitrary stretched block rectangles or mixed giant procedural shapes. |
-| Terrain | Materials, debris, negative space, layering, architectural evidence | Ruined monasteries and towns must look like real architecture; damaged materials rather than repeating square tiling and giant decorative rings. |
-| Elemental light | How cast, flight, impact affect characters and walls | Fire/frost/storm/arcane have distinct lighting identities with visible source falloff; avoid neon wash. |
-| Combat animation | Anticipation, release, recovery, recoil/hit feedback | Distinct motions and responsiveness, not a rigid mage body with overlapping decorative crescents. |
-| Focus Surge | How power is communicated by **shape and timing**, not only brightness | Rank/Surge changes silhouette and timing/lighting; avoid blocking visibility or unrelated full-screen geometry. |
-| Readability | Player/enemy separation in a dense battle and tiny viewport | Actual projectile/enemy tells stand out; calm negative space around player. |
-| UI | How actions, selected spells, upgrades and goals look in one glance | Picture-first + very short label; one major action, no long text stacks or mandatory scrolling. |
+| Small, readable mage | [early battle 01:10](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=70s) | Fixed orthographic 2D horizontal arena, mage at left firing bright cyan projectiles rightward. Small humanoid silhouette, weapon/magic source visibly distinct. |
+| Atmospheric but quiet terrain | [mist at 04:06](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=246s) | Dark, desaturated natural ground and sparse foliage with low-opacity ground fog; minimal floor detail competes with actors. |
+| Enemy hierarchy | [early skeletons 00:22](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=22s), [boss 58:43](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=3523s) | Pale skeletal fodder, more distinctive elites, very large boss silhouettes and readable boss HP. Body shapes communicate threat before textual labels. |
+| Magic at an actual position | [cyan missiles 03:04](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=184s) | Bright compact teardrop shots with fading pixel trails; local glow reaches terrain and near enemy sprites. |
+| Fire mastery escalation | [fireball impact 20:36](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=1236s), [22:08](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=1328s) | Warm orange spherical projectile, larger area burst on collision; spectacle tied to a game event, not orbiting decoration around the mage. |
+| Storm's distinct identity | [lightning 42:25](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=2545s) | Very brief, high-contrast vertical lightning strike: different silhouette, duration and cadence from fireballs. |
+| Upgrade-tree visual language | [tree at 00:44](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=44s), [42:22](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=2542s) | Bright rune glyphs connected by branch lines on a dark background; locked/unlocked progression is apparent visually. |
+| Strong environmental identity | [snow region at 34:40](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=2080s), [ashen at 73:08](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=4388s), [stone citadel at 133:50](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=8030s) | Palette and border materials change substantially between dark wooded glade, icy region, burnt landscape and weathered stone monuments; scenery marks progression while ground stays uncluttered. |
+| Clarity at large scale | [08:35](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=515s) vs [34:39](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=2079s) | Wider framing to keep increasingly large enemy hordes in view. Enemies remain classifiable by silhouette and scale. |
+| Combat memory | [02:20](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=140s), [24:20](https://www.youtube.com/watch?v=WePyhtxZ4t0&t=1460s) | Scattered defeated-bone remnants remain in the scene, hinting at battle history without replacing important silhouettes. |
 
-## WyrmForge issues already confirmed by actual user iPhone captures (not from the Battlemage link)
+### The look we are borrowing
 
-- Previous mage appeared very small and nearly static, with flat blue block geometry even after initial authored frames.
-- Oversized purple ritual arcs and repeated paving overshadowed the character and enemies. The clutter-removal iteration reduced them, but does not prove coherent authored environment art.
-- Player requested spells illuminate mage, staff, nearby enemies, masonry and terrain with school-specific light; a bounded Canvas2D prototype exists on `main`.
-- The user prefers dark, weathered Diablo I/II atmosphere, with consistency across mage, ruined masonry, wet forests and protected city.
+1. **Pixel-silhouette discipline.** Actor shape, pose, recognizable staff and enemy archetype must register before small interior pixels do.
+2. **Quiet environment, saturated actors and magic.** Desaturated, low-frequency ground textures and cohesive hand-authored props; bright magic is the intentional contrast. No unbounded violet ground geometry, repeated paving grids or faux architectural noise.
+3. **Light physically belongs to the cast.** Fire makes warm local light, frost a cool steady pool, storm a brief directional flash and arcane a haunting violet spill. Illuminate mage robe, staff, nearby enemies, fog, wet stone and walls at real world coordinates, not fake screen overlays.
+4. **One effect silhouette per magical behavior.** A traveling Fire Bolt, a Frost shard, a Storm strike, a single combination and a rank-5 Surge must be identifiable from their **motion/shape**, not just hue or particle count.
+5. **Visual achievement communication.** Bosses, improved spells and successful discoveries materially change art or animation; not only damage numbers and run-length labels.
+6. **Upgrade shapes and clear hierarchy.** A small set of readable, consistent illustrative runes + short labels; fewer visible choices with progressive disclosure on iPhone, unlike copying a sprawling desktop node tree.
 
-## Proposed original-art vertical slice after visual reference verification
+### Do NOT copy
 
-1. Establish one source-verified art board: palette/materials/pixel pitch, silhouette targets, three lighting frames, UI motif. Obtain user acceptance.
-2. Redraw **one** mage idle + wind-up + release + follow-through + impact reaction as one consistent original sprite sheet. Avoid replacing all schools at once.
-3. Redraw **one** ruined-monastery tile/prop set as physically plausible architecture with quiet playable space.
-4. Make Fire Bolt Rank I, Rank II, and Surge visibly different while lighting the authored sprite, wet stone, nearby props and enemies.
-5. Test on actual iPhone Safari and browser pixel snapshots for silhouette readability and VFX coverage in 390px viewport. Keep live `main` unchanged until acceptance.
+- **The 2D left-to-right lane/camera**: WyrmForge requires freely roaming around diverse, recognizable 2D environments. Never auto-zoom out until the phone-scale mage becomes unreadable.
+- **The incremental economy, 3–4 hour campaign or automatic regimented spell scheduler**: WyrmForge is designed for 100+ self-directed hunts, one committed primary and earned magical combinations.
+- **The low-movement mage animation literally.** Legion Breaker's short cast motion is appropriate for a mostly fixed turret mage; our user explicitly wants powerful wind-up/release/follow-through motion. Honor weight and anticipation without slowing movement or introducing long lockouts.
+- **Every single screen-height beam or very large burst.** On a phone, prominent attacks must respect the visible playable area and warning silhouette; bosses and enemies must remain readable.
+- **Its existing sprites, tiles, UI or sound**. Make original art using observed artistic principles.
 
-**Open dependency:** obtain the timestamped visual walkthrough from the connected vidIQ video-watching job before treating any observed look as verified. Identity and source are now confirmed; detailed graphics must be described only from the source visuals. No live-game changes made.
+## How this changes the WyrmForge plan
+
+### Visual pillar 1 — Original mage sprite bible
+
+- Keep the already approved **slate-blue hood, pale collar and staff**. Re-author in one consistent pixel scale with defined idle, walk, windup, release, recovery, Surge and damage frames.
+- At 390px mobile width, test silhouette at *actual on-screen size*, not an enlarged asset preview. A player must see which way the mage faces and whether the staff is charged with the next cast.
+- Cloth motion lags staff release; each school changes source light, not the underlying robe color. Body movement is forceful while gameplay mobility remains constant.
+
+### Visual pillar 2 — One environment scene that is actual architecture
+
+- Build a **ruined monastery / wet cloister** slice from legible walls, entrance, floors, damaged arch supports, waterline and scattered purposefully placed rubble. Not randomized columns, repetitive squares or fantasy cave arches.
+- Dark mossy/slate palette, subtle ground fog, low-contrast wet stone; damaged protective rune carvings belong on actual masonry, not floating 300px circles in the middle of combat.
+- Each depth/biome uses a different controlled palette and identifiable physical materials, like the source video's wooded, ice, ash and stone chapters, while keeping WyrmForge's independently designed geography.
+
+### Visual pillar 3 — One-school vertical spell-light showcase
+
+- Start **Fire Bolt** at rank I / rank II / Surge / a future Frostfire combination; reuse current C# cast-projectile-impact data.
+- Explicit VFX phases: anticipation at staff -> moving ember projectile -> collision burst -> scorch/debris -> smoke that dissipates. Each stage has appropriate warm light on robe, enemy and environment.
+- Use a strict bloom and on-screen coverage budget: peak spell light should *heighten*, not drown, silhouettes; reduced-motion keeps identity.
+- Upgrade animations must advance *mechanical identity*: Rank II's actual behavior, Surge intensity and a combination's freeze/burn interplay. Never draw fake effects unrelated to damage/status.
+
+### Visual pillar 4 — Picture-first UI for an eventual 100-hunt system
+
+- Use the recognizable rune-and-line *principle* for discovering family relationships, but default mobile screens to a **one-recipe rail**, not a giant full skill tree.
+- On the Hunt Hub: one illustrated pursuit, current primary/loadout, immediate BEGIN HUNT. On upgrades: one before/after spell silhouette and a one-line effect. In the Lab: one animated test dummy, three slots, clear valid/unknown/blocked states.
+- Same artwork IDs and icon silhouettes across Codex, Forge, reward cards and actual VFX. No emoji-placeholder art in final UI.
+
+## Single playable vertical slice acceptance criteria
+
+1. Compare screenshot of **current live mage** with redesigned mage at 390px viewport; silhouette is identifiable at actual size.
+2. Compare **monastery** wide shot against original WyrmForge environment and against source principle: dark, coherent architecture + uncluttered traversal; no floor matrix or meaningless runes.
+3. Show Fire Bolt I, II and Surge with camera and scene unchanged; player can correctly tell which is more powerful without looking at damage values.
+4. Verify *actual light spill* on mage, adjacent masonry and nearest enemy at cast, projectile and impact positions.
+5. Validate at least 15 dense combat encounters for VFX occlusion, meaningful FPS/budget, hit readability, safe area, and user-facing text.
+6. Playwright pixel regression tests and deterministic combat tests; no gameplay rule regressions. Release only after user reviews the art slice; the main GitHub Pages branch is unchanged by this document.
+
+## Product distinction that matters
+
+Developer and reviewer descriptions suggest Legion Breaker is a short incremental progression game. WyrmForge's long-term retention should **not** adopt repetitive identical battlefield loops or guaranteed flat upgrades. Its differentiator remains endless experimentation with carefully validated spell compositions, gradually harder self-directed hunts, Wyrm knowledge and meaningful optional discoveries.
