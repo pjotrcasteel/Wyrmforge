@@ -380,8 +380,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 if (includeMage) mage.drawMage(ctx, player, null, false, true,
                     lights.sampleSpellLight(sources, player.x, player.y));
                 return {
-                    ground: [...ctx.getImageData(135, 114, 1, 1).data],
-                    mage: [...ctx.getImageData(120, 106, 1, 1).data],
+                    ground: [...ctx.getImageData(126, 104, 24, 24).data],
+                    mage: [...ctx.getImageData(118, 103, 5, 8).data],
                     pixels: [...ctx.getImageData(0, 0, 240, 240).data]
                 };
             };
@@ -397,8 +397,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 surgeGroundDifference: differ(surge.pixels, fire.pixels),
                 magePresent: differ(fire.pixels, normalGround.pixels) };
         }");
-        Assert.IsGreaterThan(1, pixels.GetProperty("groundSchoolDifference").GetInt32(), "Terrain must reflect different magic colors.");
-        Assert.IsGreaterThan(1, pixels.GetProperty("mageSchoolDifference").GetInt32(), "The mage must catch light from nearby spells.");
+        Assert.IsGreaterThan(35, pixels.GetProperty("groundSchoolDifference").GetInt32(), "A visible terrain patch must reflect different magic colors.");
+        Assert.IsGreaterThan(5, pixels.GetProperty("mageSchoolDifference").GetInt32(), "The lit side of the hood must reflect the spell color.");
         Assert.IsGreaterThan(180, pixels.GetProperty("surgeGroundDifference").GetInt32(), "Surge must illuminate a visibly larger patch.");
         Assert.IsGreaterThan(50, pixels.GetProperty("magePresent").GetInt32(), "The lighted mage must still be drawn over terrain.");
     }
