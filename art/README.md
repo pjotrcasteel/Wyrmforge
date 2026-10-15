@@ -97,3 +97,12 @@ Research before generation:
 - [Papplewick engine house — Historic England](https://historicengland.org.uk/images-books/photos/item/DP572025): a spatial reference for purpose-built machinery rooms, not a period template.
 
 Generated using the built-in OpenAI image tool, with the previous study and approved forest encounter as direct references, followed by a targeted conduit correction. The revision prompt required a rectangular workshop, explicit roof cutaway, a simple masonry furnace, floor-level charging hatch, independent lever-operated bellows, and one continuous conduit terminating at the rune panel. Restrained detail and traceable construction take priority over decoration.
+
+
+## Movement and spell presentation — 15 October 2026
+
+- [Eight-direction mage motion sprites](production/mage-walk-blocking-v1/README.md): consistent right-hand staff, fixed export pivot, three visual injury states and identical locomotion timing. Motion blocking only; final painted sprite art remains pending.
+- [Spell/rank studies](production/spell-feel-v1/README.md): spell-specific cast overlays, release/travel/impact identities and ranks I–III. Eight spell profiles and 24 evolution identity routes anticipate multiple spells per school. Current evolution routes are future art hooks, not completed effects.
+- Injury must be visual only. Movement, damage, cooldown, action timing and responsiveness must not degrade. Casting takes visual priority over the guarded arm without modifying root/leg motion or delaying the cast event.
+- Upgrades must feel stronger through gesture, silhouette, timing accents, material response, release and impact. Do not indicate a damaging area or extra projectile unless the simulation actually provides it.
+- Keep combat readable at mobile scale. Use quiet tails and concentrated accents; do not escalate every upgrade into more persistent screen coverage. Sound production and final painted effects are still pending.

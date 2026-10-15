@@ -69,3 +69,8 @@ The viewer blends mage states over 280 ms while retaining locomotion phase. `ble
 Run `python retarget_mage.py`, then `node render_injury_preview.mjs /path/to/frames mage` and encode at 30 fps for `mage-injury-comparison.gif`. `node render_mage_scale.mjs` creates `mage-game-size.png`, comparing four phases at roughly 75-pixel body height. This shows that the critical guard is more readable than the subtle hurt posture at small scale; timing must be reviewed in motion. Remaining work includes game health-state hysteresis, combat-layer integration, art retargeting, cloth movement and production sprites. No game runtime or gameplay movement speed changes are included.
 
 `render_transition_preview.mjs` renders a continuous visual severity ramp and recovery alongside the healthy reference over four shared strides. The scrolling floor and locomotion phase are identical on both sides. This demonstrator uses a cosine ramp to inspect the blend, not scripted damage or healing in gameplay. Export: `mage-injury-transition.gif`.
+
+
+## Direction export and casting studies
+
+The shared renderer now supports transparent sprite cells and view-correct hood openings. The collar ends below the hood instead of covering it at sprite size. `art/production/mage-walk-blocking-v1` exports eight directions from the same model, with common pivots and injury timing. `cast_pose.mjs` adds an optional school/spell-specific free-arm and torso cast overlay; it preserves the root and legs. `art/production/spell-feel-v1` reviews cast gestures, rank identities and effect timing. These are still motion and effects studies rather than finished painted assets.

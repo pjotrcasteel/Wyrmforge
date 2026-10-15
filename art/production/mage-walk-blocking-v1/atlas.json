@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "status": "motion-blocking",
+  "artStyle": "analytical rig; final painted sprites pending",
+  "cell": {
+    "width": 128,
+    "height": 128,
+    "pivotX": 64,
+    "pivotY": 107.52
+  },
+  "directions": [
+    {
+      "name": "S",
+      "row": 0,
+      "yaw": 0
+    },
+    {
+      "name": "SE",
+      "row": 1,
+      "yaw": 45
+    },
+    {
+      "name": "E",
+      "row": 2,
+      "yaw": 90
+    },
+    {
+      "name": "NE",
+      "row": 3,
+      "yaw": 135
+    },
+    {
+      "name": "N",
+      "row": 4,
+      "yaw": 180
+    },
+    {
+      "name": "NW",
+      "row": 5,
+      "yaw": 225
+    },
+    {
+      "name": "W",
+      "row": 6,
+      "yaw": 270
+    },
+    {
+      "name": "SW",
+      "row": 7,
+      "yaw": 315
+    }
+  ],
+  "pitchDegrees": 25,
+  "framesPerDirection": 32,
+  "framesPerSecond": 30,
+  "strideDurationSeconds": 1.0666666666666667,
+  "injuryVisualOnly": true,
+  "staffHand": "right",
+  "states": {
+    "healthy": {
+      "file": "mage-walk-healthy.png",
+      "width": 4096,
+      "height": 1024,
+      "frames": 256,
+      "durationSeconds": 1.0666666666666667,
+      "source": "mage-cleaned-motion.json"
+    },
+    "hurt": {
+      "file": "mage-walk-hurt.png",
+      "width": 4096,
+      "height": 1024,
+      "frames": 256,
+      "durationSeconds": 1.0666666666666667,
+      "source": "mage-hurt-motion.json"
+    },
+    "critical": {
+      "file": "mage-walk-critical.png",
+      "width": 4096,
+      "height": 1024,
+      "frames": 256,
+      "durationSeconds": 1.0666666666666667,
+      "source": "mage-critical-motion.json"
+    }
+  }
+}

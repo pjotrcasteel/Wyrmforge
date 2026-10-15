@@ -1,10 +1,11 @@
+import {applyCastPose} from './cast_pose.mjs';
 const color = { left: '#8da9b9', right: '#bd9781', body: '#b7b6a5', edge: '#202a29', floor: '#172322', line: '#304341' };
 
 export function drawView(ctx, data, phase, options) {
-    const { x, y, width, height, yaw = 45, pitch = 25, travel = true, contacts = true, cycles = 0, label = 'Game camera' } = options;
+    const { x, y, width, height, yaw = 45, pitch = 25, travel = true, contacts = true, cycles = 0, label = 'Game camera', sprite = false } = options;
     if (data.injury) phase = ((phase + data.injury.phaseWarpAmplitude * Math.sin(2 * Math.PI * (phase - .515625))) % 1 + 1) % 1;
     const index = Math.min(data.frames.length - 1, Math.floor(phase * data.frames.length));
-    const frame = data.frames[index];
+    const frame = applyCastPose(data.frames[index], data, options.cast);
     const names = data.jointNames;
     const joint = Object.fromEntries(names.map((n, i) => [n, frame[i]]));
     const root = joint.root;
@@ -19,8 +20,10 @@ export function drawView(ctx, data, phase, options) {
         return [x + width * .5 + (dx * Math.cos(angle) + dz * Math.sin(angle)) * scale,
             y + height * .84 - p[1] * Math.cos(tilt) * scale + depth * Math.sin(tilt) * scale, depth];
     };
+    if (options.onProjectedJoints) options.onProjectedJoints(Object.fromEntries(Object.entries(joint).map(([n,p])=>[n,project(p)])));
     ctx.save();
     ctx.beginPath(); ctx.rect(x, y, width, height); ctx.clip();
+    if (!sprite) {
     ctx.fillStyle = color.floor; ctx.fillRect(x, y, width, height);
     ctx.lineWidth = 1; ctx.strokeStyle = color.line;
     // Moving capture: grid lives in world coordinates while the camera follows the pelvis.
@@ -35,7 +38,8 @@ export function drawView(ctx, data, phase, options) {
             ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
         }
     }
-    if (contacts) for (const [side, contactIndex] of [['l', 0], ['r', 1]]) {
+    }
+    if (contacts && !sprite) for (const [side, contactIndex] of [['l', 0], ['r', 1]]) {
         const toe = joint[side + 'toes'];
         const p = project([toe[0], 0, toe[2]]);
         ctx.beginPath(); ctx.ellipse(p[0], p[1], scale * .055, scale * .022, 0, 0, Math.PI * 2);
@@ -92,17 +96,22 @@ export function drawView(ctx, data, phase, options) {
         ctx.beginPath(); torso.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
         ctx.fillStyle = mage ? '#343a3b' : color.body; ctx.fill(); ctx.strokeStyle = color.edge; ctx.lineWidth = 2; ctx.stroke();
     } });
-    chain('thorax', 'upperneck', mage ? .13 : .075, mage ? '#bab9a4' : color.body);
-    const head = [...joint.head]; head[1] -= .06;
+    chain('thorax', mage ? 'lowerneck' : 'upperneck', mage ? .13 : .075, mage ? '#bab9a4' : color.body);
+    const head = [...joint.head]; head[1] -= mage ? .025 : .06;
     const hp = project(head);
     geometry.push({ depth: hp[2], draw() {
         ctx.beginPath(); ctx.ellipse(hp[0], hp[1], scale * .075, scale * .105, 0, 0, Math.PI * 2);
         ctx.fillStyle = mage ? '#42596a' : color.body; ctx.fill(); ctx.strokeStyle = color.edge; ctx.lineWidth = 2; ctx.stroke();
-        if(mage){ctx.fillStyle='#202b30';ctx.beginPath();ctx.ellipse(hp[0]+scale*.018,hp[1]+scale*.018,scale*.043,scale*.061,0,0,Math.PI*2);ctx.fill();}
+        if(mage && Math.cos(angle) > -.02){
+            // Hood opening follows world-facing +Z and disappears from rear views.
+            const face=project([head[0],head[1]-.01,head[2]+.065]);
+            ctx.fillStyle='#202b30';ctx.beginPath();ctx.ellipse(face[0],face[1],scale*(.008+.035*Math.max(0,Math.cos(angle))),scale*.061,0,0,Math.PI*2);ctx.fill();
+        }
     } });
     geometry.sort((a, b) => a.depth - b.depth);
     for (const item of geometry) item.draw();
     ctx.restore();
+    if (sprite) return index;
     ctx.save();
     ctx.fillStyle = '#d7ddcc'; ctx.font = '15px sans-serif'; ctx.fillText(label, x + 14, y + 24);
     ctx.fillStyle = '#8baba5'; ctx.font = '11px sans-serif'; ctx.fillText(mage ? 'Mage blocking · carried staff · fixed right-hand grip' : 'Blue: left · rust: right · gold: contact estimate', x + 14, y + height - 12);

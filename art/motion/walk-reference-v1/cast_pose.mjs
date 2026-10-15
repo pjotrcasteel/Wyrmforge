@@ -1,0 +1,32 @@
+const sub=(a,b)=>a.map((v,i)=>v-b[i]);
+const add=(a,b)=>a.map((v,i)=>v+b[i]);
+const mul=(a,s)=>a.map(v=>v*s);
+const dot=(a,b)=>a.reduce((sum,v,i)=>sum+v*b[i],0);
+const unit=a=>mul(a,1/Math.hypot(...a));
+function elbowFor(shoulder,elbow,wrist,target){
+ const upper=Math.hypot(...sub(elbow,shoulder)),lower=Math.hypot(...sub(wrist,elbow));
+ const vector=sub(target,shoulder),distance=Math.hypot(...vector),axis=unit(vector);
+ if(distance>=upper+lower||distance<=Math.abs(upper-lower))throw Error('Unreachable cast wrist');
+ const along=(upper*upper-lower*lower+distance*distance)/(2*distance);
+ let bend=sub(sub(elbow,shoulder),mul(axis,dot(sub(elbow,shoulder),axis)));
+ if(Math.hypot(...bend)<1e-7){const basis=Math.abs(axis[0])<.9?[1,0,0]:[0,0,1];bend=sub(basis,mul(axis,dot(basis,axis)));}
+ return add(add(shoulder,mul(axis,along)),mul(unit(bend),Math.sqrt(Math.max(0,upper*upper-along*along))));
+}
+export function applyCastPose(frame,data,cast){
+ if(!cast||cast.seconds<0||cast.seconds>.65)return frame;
+ const result=frame.map(p=>[...p]),ids=Object.fromEntries(data.jointNames.map((n,i)=>[n,i]));
+ const envelope=Math.exp(-cast.seconds*8),weight=cast.look.weight;
+ const angle=-cast.look.recoilDegrees*Math.PI/180*envelope*weight,c=Math.cos(angle),s=Math.sin(angle),root=result[0];
+ for(let i=11;i<result.length;i++){
+  const d=sub(result[i],root);result[i]=add(root,[d[0],d[1]*c-d[2]*s,d[1]*s+d[2]*c]);
+ }
+ const shoulder=result[ids.lclavicle],elbow=result[ids.lhumerus],wrist=result[ids.lradius];
+ const desired=add(shoulder,cast.look.releaseWrist),target=add(mul(wrist,1-envelope),mul(desired,envelope));
+ const reach=Math.hypot(...sub(elbow,shoulder))+Math.hypot(...sub(wrist,elbow));
+ const vector=sub(target,shoulder),distance=Math.hypot(...vector);
+ const reachable=distance>reach*.98?add(shoulder,mul(vector,reach*.98/distance)):target;
+ result[ids.lhumerus]=elbowFor(shoulder,elbow,wrist,reachable);
+ const delta=sub(reachable,wrist);
+ for(const n of ['lradius','lwrist','lhand','lfingers','lthumb'])result[ids[n]]=add(result[ids[n]],delta);
+ return result;
+}

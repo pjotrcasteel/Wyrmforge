@@ -1,0 +1,12 @@
+{
+  "spellIdentities": 8,
+  "evolutionIdentities": 24,
+  "ranks": 3,
+  "injuryStates": 3,
+  "poseCases": 13824,
+  "maxBoneLengthChangeMeters": 9.159339953157541e-16,
+  "maxRootOrLegChangeMeters": 0,
+  "releaseOffsetSeconds": 0,
+  "sourceFramesUnmodified": true,
+  "scope": "Motion/effects art studies; gameplay not modified"
+}

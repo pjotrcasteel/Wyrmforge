@@ -1,0 +1,16 @@
+{
+  "states": 3,
+  "directions": 8,
+  "framesPerDirection": 32,
+  "totalFrames": 768,
+  "transparentBackground": true,
+  "minimumNontransparentPixelPadding": 9,
+  "noMirroring": true,
+  "sharedPivot": {
+    "width": 128,
+    "height": 128,
+    "pivotX": 64,
+    "pivotY": 107.52
+  },
+  "sameTimingAcrossInjuryStates": true
+}
