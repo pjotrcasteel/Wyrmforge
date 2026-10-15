@@ -1,6 +1,7 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
-import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections } from './arena-environment.js';
+import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
+import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
@@ -190,9 +191,26 @@ function draw(state, snapshot, width, height) {
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
-    for (const enemy of snapshot.enemies)
-        drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-            enemyPoses.get(enemy.entityId) ?? 0);
+    // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
+    // a ruined wall goes behind its facade; walking south brings it forward.
+    const depthLayers = [
+        ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
+        { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
+        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight),
+    ];
+    for (const layer of sortSceneDepthLayers(depthLayers)) {
+        if (layer.kind === 'masonry') {
+            drawArenaCloisterElevation(ctx, layer);
+        } else if (layer.kind === 'enemy') {
+            const enemy = layer.enemy;
+            drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
+                enemyPoses.get(enemy.entityId) ?? 0);
+        } else {
+            drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
+                sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
+                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches));
+        }
+    }
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
@@ -247,9 +265,7 @@ function draw(state, snapshot, width, height) {
     if (snapshot.extraction) drawExtractionRitual(ctx, snapshot.extraction);
     for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
 
-    drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
-        sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
-        updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches));
+    // Cast VFX stay in the spell pass; they do not alter collision or cast timing.
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
