@@ -1,4 +1,5 @@
 import { createCloisterPlan, drawCloisterFloor } from './arena-cloister-art.js';
+import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 
 // Original procedural environmental art. Collision remains owned by ArenaEnvironmentState (C#).
 // These drawings are non-interactive scenery, generated once per seeded territory texture.
@@ -389,6 +390,21 @@ function drawSite(ctx, site, plan) {
     const scale = clamp(plan.width / 1100, .85, 1.3);
     const pigment = schoolPalette[plan.element];
     const surface = groundPalette[plan.biome];
+    if (artReady() && hasArtFrame('environment', `ruin.${site.kind}`)) {
+        // Authored low-profile ruin sprite; the place is read from its silhouette, not a text label.
+        const art = Math.max(1, Math.round(scale));
+        drawArtFrame(ctx, 'environment', `ruin.${site.kind}`, Math.round(site.x), Math.round(site.y + 30), { scale: art });
+        ctx.save();
+        ctx.translate(site.x, site.y);
+        ctx.strokeStyle = pigment.glow;
+        ctx.globalAlpha = .22 + plan.corruption * .5;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-29, 40); ctx.lineTo(-9, 32); ctx.lineTo(17, 41); ctx.lineTo(42, 33);
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
     ctx.save();
     ctx.translate(site.x, site.y);
     ctx.scale(scale, scale);

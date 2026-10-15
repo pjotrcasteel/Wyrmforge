@@ -1,5 +1,7 @@
 import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
+import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
+import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -59,7 +61,18 @@ function drawTerrain(ctx, plan, width, height) {
     gradient.addColorStop(1, colors[2]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
+    const tile = artReady() ? artTilePattern(ctx, `tile.${plan.biome}`) : null;
+    if (tile) {
+        // Hand-authored seamless ground texture; the old gradient stays as a mood wash on top.
+        ctx.fillStyle = tile;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = .38;
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+    }
     drawTerritoryGround(ctx, plan.story);
+    if (tile) drawGroundDecals(ctx, plan, width, height);
 
     // No shared road overlay: the canonical encounter district now owns the entire
     // large-scale ground composition through its deterministic territory story plan.
@@ -126,7 +139,9 @@ function drawTerrain(ctx, plan, width, height) {
     ctx.restore();
 
     // Fallen monoliths, blasted masonry and long shadows are non-colliding scenery for this slice.
-    for (const piece of plan.remains) {
+    for (const [index, piece] of plan.remains.entries()) {
+        if (artReady() && drawArtFrame(ctx, 'environment', index % 3 === 0 ? 'ruin.slab' : 'ruin.rubble',
+            Math.round(piece.x), Math.round(piece.y), { flipX: index % 2 === 1 })) continue;
         ctx.save();
         ctx.translate(piece.x, piece.y);
         ctx.rotate(piece.rotation);
@@ -143,6 +158,7 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.restore();
     }
     drawTerritoryLandmarks(ctx, plan.story);
+    if (artReady() && !plan.story.cloister) drawForestEdges(ctx, plan, width, height);
     if (plan.stage >= 5) {
         ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : 'rgba(128,178,153,.19)';
         ctx.lineWidth = 2;
@@ -163,7 +179,8 @@ function drawTerrain(ctx, plan, width, height) {
 }
 
 function terrainTexture(environment, width, height) {
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.stage, width, height].join(':');
+    // Art generation is part of the key: the bake refreshes once the atlases finish loading.
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.stage, width, height, artGeneration()].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
@@ -172,9 +189,56 @@ function terrainTexture(environment, width, height) {
     drawTerrain(image.getContext('2d'), plan, image.width, image.height);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
-    const texture = { image, cloister: plan.story.cloister };
+    const texture = { image, cloister: plan.story.cloister, plan };
     textures.set(key, texture);
     return texture;
+}
+
+const decalSets = {
+    valley: ['decal.tuft.a', 'decal.tuft.b', 'decal.tuft.a', 'decal.fern', 'decal.stones', 'decal.puddle', 'decal.mushrooms', 'decal.tuft.b'],
+    ash: ['decal.tuft.ash', 'decal.ember', 'decal.stones', 'decal.tuft.ash', 'decal.stones', 'decal.bones'],
+    ridge: ['decal.stones', 'decal.tuft.b', 'decal.stones', 'decal.puddle', 'decal.tuft.a', 'decal.stones', 'decal.bones'],
+};
+
+// Flat ground detail only (grass, stones, puddles). Nothing upright lands on the fighting floor.
+export function createDecalPlan(plan, width, height) {
+    const random = seededRandom((plan.story.seed ?? 1) ^ 0x2c9e11);
+    const set = decalSets[plan.biome] ?? decalSets.valley;
+    const count = Math.min(300, Math.ceil(width * height / 8200));
+    const decals = [];
+    for (let i = 0; i < count; i++)
+        decals.push({ name: set[Math.floor(random() * set.length)], x: Math.round(random() * width), y: Math.round(random() * height), flip: random() < .5 });
+    return decals;
+}
+
+function drawGroundDecals(ctx, plan, width, height) {
+    if (plan.story.cloister) return;
+    for (const decal of createDecalPlan(plan, width, height))
+        drawArtFrame(ctx, 'environment', decal.name, decal.x, decal.y, { flipX: decal.flip });
+}
+
+const edgeSets = {
+    valley: ['prop.pine.a', 'prop.pine.b', 'prop.pine.c', 'prop.bush.a', 'prop.pine.a', 'prop.bush.b'],
+    ash: ['prop.deadtree.a', 'prop.bush.ash', 'prop.deadtree.b', 'prop.rock.a', 'prop.bush.ash'],
+    ridge: ['prop.pine.b', 'prop.deadtree.a', 'prop.rock.a', 'prop.pine.c', 'prop.deadtree.b'],
+};
+
+// Forest and scrub frame the outer world band (outside the normal combat lanes) so territory
+// edges read as a place rather than a rectangle. Sorted by foot line within the bake.
+export function createForestEdgePlan(plan, width, height) {
+    const random = seededRandom((plan.story.seed ?? 1) ^ 0x5f17a3);
+    const set = edgeSets[plan.biome] ?? edgeSets.valley;
+    const props = [];
+    for (const side of [0, 1]) for (let y = 8; y < height + 30; y += 22 + random() * 18) {
+        const inset = random() * 26 - 10;
+        props.push({ name: set[Math.floor(random() * set.length)], x: Math.round(side ? width - inset : inset), y: Math.round(y), flip: random() < .5 });
+    }
+    return props.sort((a, b) => a.y - b.y);
+}
+
+function drawForestEdges(ctx, plan, width, height) {
+    for (const prop of createForestEdgePlan(plan, width, height))
+        drawArtFrame(ctx, 'environment', prop.name, prop.x, prop.y, { flipX: prop.flip });
 }
 
 // Read the already-cached environment plan, without rerolling its procedural art.
@@ -186,13 +250,16 @@ export function drawArenaCloisterReflections(ctx, environment, width, height, li
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0) {
     if (!environment) return [];
-    const cloister = terrainTexture(environment, width, height).cloister;
+    const texture = terrainTexture(environment, width, height);
+    const cloister = texture.cloister;
+    if (!cloister) return createTerritoryWallLayers(environment, texture.plan, width, height, seconds);
     return createCloisterElevationLayers(cloister, environment.barriers, width, height);
 }
 
 export function drawArenaCloisterElevation(ctx, layer) {
+    if (layer.style === 'territory') return drawTerritoryWall(ctx, layer);
     return drawCloisterElevation(ctx, layer.barrier, layer.width, layer.height);
 }
 
@@ -201,7 +268,13 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     const texture = terrainTexture(environment, width, height);
     ctx.drawImage(texture.image, 0, 0, width, height);
     const cloister = texture.cloister;
+    // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
+    const spriteWalls = !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
+        if (spriteWalls) {
+            if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
+            continue;
+        }
         if (!cloister || !drawCloisterWall(ctx, barrier, width, height))
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
@@ -217,6 +290,12 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     const opened = supply.open;
     const experience = supply.kind === 'experience';
     const color = experience ? '#b7a0f1' : '#b2d4aa';
+    if (artReady()) {
+        // Sealed reliquaries (real C# blockers) and their opened states as authored sprites.
+        const name = `cache.${experience ? 'experience' : 'health'}.${opened ? 'open' : 'sealed'}`;
+        const bob = opened ? Math.round(Math.sin(elapsed * 3) * 1) : 0;
+        if (drawArtFrame(ctx, 'environment', name, Math.round(x), Math.round(y) + bob)) return;
+    }
     ctx.save();
     ctx.translate(x, y);
     if (opened && !experience) {
@@ -316,6 +395,17 @@ export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
     if (!exit) return;
     const { x, y } = exit;
     const pulse = Math.sin(elapsedSeconds * 3) * .08;
+    if (artReady() && drawArtFrame(ctx, 'environment', 'exit.waystone', Math.round(x), Math.round(y))) {
+        // The waystone's portal breathes; the arrow guide (drawExitGuide) keeps the direction readable.
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = `rgba(161,106,208,${.16 + pulse})`;
+        ctx.beginPath();
+        ctx.ellipse(x, y - 8, 22 * (1 + pulse), 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+    }
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = 'rgba(5,3,12,.82)';

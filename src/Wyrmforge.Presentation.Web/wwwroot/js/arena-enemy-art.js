@@ -1,5 +1,6 @@
 // Original compact enemy pixel sprites. Four canonical enemy kinds use different
 // anatomical silhouettes; C# still owns hitboxes, health, AI and attacks.
+import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
     {edge:'#242726',body:'#788079',shade:'#4d5d58',light:'#bcc0aa',head:'#c0bda7',eye:'#242728',weapon:'#8b9382'},
     {edge:'#221b2d',body:'#5a486b',shade:'#3b3155',light:'#9477a8',head:'#72658b',eye:'#bcdbe7',weapon:'#ae9dbe'},
@@ -106,13 +107,27 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
             }
         }
         const phase = reducedMotion || seconds - lastMoved > .20 ? 0 : (Math.floor(traveled / 6) % 2) + 1;
-        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved });
+        // Sprites face east; remember the last clear horizontal travel so idle enemies don't flip.
+        let facing = old?.facing ?? 1;
+        if (old && Math.abs(enemy.x - old.x) > .2 && Math.abs(enemy.x - old.x) < 48) facing = enemy.x > old.x ? 1 : -1;
+        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved, facing });
         poses.set(id, phase);
     }
     // Remove dead/despawned entities to keep state bounded throughout long hunts.
     for (const id of motion.entities.keys())
         if (!present.has(id)) motion.entities.delete(id);
     return poses;
+}
+
+export function enemyFacing(motion, entityId) {
+    return motion?.entities?.get(Number(entityId))?.facing ?? 1;
+}
+
+export function enemySpriteName(enemy, walkPhase = 0) {
+    const kind = Math.max(0, Math.min(3, Number(enemy?.kind) || 0));
+    const variant = enemy?.hitFlash ? 'hit' : enemy?.frozen ? 'frozen' : 'normal';
+    const phase = Math.max(0, Math.min(2, Number(walkPhase) || 0));
+    return `enemy.${kind}.${phase}.${variant}`;
 }
 
 const cached=new Map();
@@ -124,8 +139,21 @@ function paletteFor(enemy) {
         light:'#d0edf0',head:'#badde7',eye:'#395c68',weapon:'#c6e7eb'};
     return palettes[kind];
 }
-export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
+export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
     if(!enemy)return;
+    const sprite=artReady()?artFrame('actors',enemySpriteName(enemy,walkPhase)):null;
+    if(sprite&&typeof ctx.drawImage==='function'){
+        const scale=Math.max(.62,Math.min(1.9,(Number(enemy.radius)||sprite.frame.radius)/sprite.frame.radius));
+        ctx.save();
+        ctx.fillStyle='rgba(5,7,10,.38)';
+        ctx.beginPath();
+        ctx.ellipse(enemy.x,enemy.y+(sprite.frame.h-sprite.frame.ay-3)*scale,(sprite.frame.w*.32)*scale,3.5*scale,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+        drawArtFrame(ctx,'actors',enemySpriteName(enemy,walkPhase),enemy.x,enemy.y,{scale,flipX:facing<0});
+        drawEnemyLight(ctx,enemy,light,scale);
+        return;
+    }
     const kind=Math.max(0,Math.min(3,Number(enemy.kind)||0));
     const variant=enemy.hitFlash?'hit':enemy.frozen?'frozen':'normal';
     const phase=Math.max(0,Math.min(2,Number(walkPhase)||0));
@@ -148,6 +176,11 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
     const scale=Math.max(.62,Math.min(1.9,(Number(enemy.radius)||12)/12));
     ctx.save();ctx.imageSmoothingEnabled=false;
     ctx.drawImage(art,enemy.x-18*scale,enemy.y-20*scale,36*scale,44*scale);
+    drawEnemyLight(ctx,enemy,light,scale);
+    ctx.restore();
+}
+
+function drawEnemyLight(ctx,enemy,light,scale){
     // Directional local illumination from actual spell cast, projectile or impact.
     // No halo, fake target ring or gameplay-based damage adjustment.
     if(light?.intensity>.045){
@@ -158,5 +191,4 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
         ctx.fillRect(enemy.x+(side<0?-9:5)*scale,enemy.y-10*scale,4*scale,15*scale);
         ctx.fillRect(enemy.x+(side<0?-6:2)*scale,enemy.y-14*scale,4*scale,3*scale);
     }
-    ctx.restore();
 }

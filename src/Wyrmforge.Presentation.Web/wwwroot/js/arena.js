@@ -5,7 +5,8 @@ import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
-import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions } from './arena-enemy-art.js';
+import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
+import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
@@ -13,6 +14,8 @@ const arenas = new WeakMap();
 
 export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
+    // Atlases stream in; until they decode, every layer uses its code-painted fallback.
+    loadArt(new URL('../art/', import.meta.url).href);
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -196,7 +199,7 @@ function draw(state, snapshot, width, height) {
     const depthLayers = [
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight),
+        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
     ];
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         if (layer.kind === 'masonry') {
@@ -204,11 +207,12 @@ function draw(state, snapshot, width, height) {
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
             drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                enemyPoses.get(enemy.entityId) ?? 0);
+                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId));
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                 sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
-                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches));
+                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
+                state.mageWalk.facing);
         }
     }
     if (snapshot.powerBurst) {
@@ -225,7 +229,7 @@ function draw(state, snapshot, width, height) {
         ctx.restore();
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
-    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
+    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches);
     // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
@@ -646,6 +650,12 @@ function drawWyrmEntranceSequence(ctx, hunt, dragon, width, height) {
     ctx.restore();
 }
 function drawExperienceShard(ctx, shard) {
+    if (artReady()) {
+        // Faceted crystal sprite sized by value; a slow 2-frame glint replaces the rotating square.
+        const size = shard.value >= 6 ? 'large' : shard.value >= 3 ? 'medium' : 'small';
+        const glint = Math.floor(performance.now() / 420 + shard.x * .07) % 2;
+        if (drawArtFrame(ctx, 'environment', `shard.${size}.${glint}`, Math.round(shard.x), Math.round(shard.y))) return;
+    }
     const valueScale = Math.min(1, Math.log2(Math.max(1, shard.value)) / 4);
     const pulse = 0.9 + Math.sin(performance.now() / 130 + shard.x * 0.03 + shard.y * 0.02) * 0.1;
     const size = (5 + valueScale * 5) * pulse;
@@ -719,8 +729,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.restore();
 }
 
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0) {
-    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase);
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1) {
+    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
     ctx.strokeStyle = `rgba(255, 205, 190, ${0.18 + damage * 0.5})`;
@@ -875,7 +885,7 @@ function drawDragonBreath(ctx, breath, school) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon) {
+function drawDragon(ctx, dragon, reducedMotion = false) {
     const palette = schoolPalette(dragon.school);
     ctx.save();
     ctx.translate(dragon.x, dragon.y);
@@ -899,7 +909,16 @@ function drawDragon(ctx, dragon) {
         ctx.shadowBlur = 0;
     }
 
-    if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
+    const art = artReady() ? `wyrm.${dragon.school}.${dragon.frozen ? 'frozen' : `p${dragon.phase === 2 ? 2 : 1}.f${reducedMotion ? 0 : Math.floor(performance.now() / 280) % 2}`}` : null;
+    if (art && hasArtFrame('wyrms', art)) {
+        // Authored wyrm sprite scaled to the canonical C# radius; flapping is presentation only.
+        ctx.fillStyle = 'rgba(4,6,9,.34)';
+        ctx.beginPath();
+        ctx.ellipse(6, dragon.radius * 1.15, dragon.radius * 1.5, dragon.radius * .38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        drawArtFrame(ctx, 'wyrms', art, 0, 0, { scale: dragon.radius / 34 });
+    }
+    else if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
     else if (dragon.school === 1) drawFireWyrm(ctx, dragon, palette);
     else if (dragon.school === 2) drawFrostWyrm(ctx, dragon, palette);
     else drawStormWyrm(ctx, dragon, palette);

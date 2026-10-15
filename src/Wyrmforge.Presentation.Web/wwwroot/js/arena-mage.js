@@ -1,6 +1,7 @@
 // Authored character frames now replace the temporary body geometry; the staff remains articulated.
 // Gameplay/physics never reads animation geometry.
 import { drawMagePixelFrame, mageFrameKey } from './arena-mage-frames.js';
+import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 
 const cloak = '#485b73';
 const cloakEdge = '#1b2637';
@@ -28,12 +29,30 @@ export function updateMageWalk(motion, player, seconds, reducedMotion = false) {
         const distance = Math.hypot(player.x - motion.x, player.y - motion.y);
         // Repeated render frames draw the same C# snapshot. Only fresh actual
         // world motion advances the brief walking phase; no animation owns movement.
-        if (distance > .3 && distance < 48) motion.lastMove = seconds;
+        if (distance > .3 && distance < 48) {
+            motion.lastMove = seconds;
+            motion.facing = mageFacing(player.x - motion.x, player.y - motion.y, motion.facing);
+        }
     }
     motion.x = player.x;
     motion.y = player.y;
     return reducedMotion || !Number.isFinite(motion.lastMove) || seconds - motion.lastMove > .16
         ? 0 : (Math.floor(seconds * 8) % 2 ? 1 : 2);
+}
+
+// Four readable facings from a presentation-only vector. Horizontal wins only when clearly
+// dominant, so diagonal walking does not flicker between sprites.
+export function mageFacing(dx, dy, previous = 'S') {
+    if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) < 1e-6) return previous ?? 'S';
+    if (Math.abs(dx) > Math.abs(dy) * 1.15) return dx > 0 ? 'E' : 'W';
+    return dy < 0 ? 'N' : 'S';
+}
+
+// While a cast is live the hunter turns toward the committed aim; otherwise toward travel.
+export function resolveMageFacing(walkFacing, cast) {
+    if (cast && Number.isFinite(cast.angle) && Number.isFinite(cast.progress) && cast.progress >= 0 && cast.progress < 1)
+        return mageFacing(Math.cos(cast.angle), Math.sin(cast.angle), walkFacing);
+    return walkFacing ?? 'S';
 }
 
 // The haft is continuous through the hand. Windup, release, Surge and walking have
@@ -67,7 +86,7 @@ function paintPixelShaft(ctx, from, to, thickness, pigment) {
     }
 }
 
-export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0) {
+export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0, facing = 'S') {
     if (!player) return;
     const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
 
@@ -83,7 +102,15 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
 
     // Distinct authored pixel silhouettes express weight transfer and cloak follow-through.
     const currentFrame = mageFrameKey(cast, walkPhase);
-    drawMagePixelFrame(ctx, currentFrame, hit);
+    const face = resolveMageFacing(facing, cast);
+    const sprite = `mage.${face === 'W' ? 'E' : face}.${currentFrame}${hit ? '.hit' : ''}`;
+    const useSprite = artReady() && hasArtFrame('actors', sprite);
+    // West reuses the east-facing sprite mirrored; the staff mirrors with it.
+    if (useSprite && face === 'W') ctx.scale(-1, 1);
+    // Seen from behind, the staff hand is in front of the cloak's far side: paint the staff first.
+    if (useSprite && face === 'N') drawMageStaff(ctx, player, cast, currentFrame, hit, reducedMotion, lighting);
+    if (!useSprite || !drawArtFrame(ctx, 'actors', sprite, 0, 0)) drawMagePixelFrame(ctx, currentFrame, hit);
+    if (useSprite && face === 'W') ctx.scale(-1, 1);
 
     if (lighting?.intensity > .015) {
         // The face and cloak catch light from the actual nearby cast, projectile or impact.
@@ -101,6 +128,22 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
         ctx.fillRect(side < 0 ? -6 : 3, -5, 3, 2);
     }
 
+    if (!(useSprite && face === 'N')) {
+        if (useSprite && face === 'W') ctx.scale(-1, 1);
+        drawMageStaff(ctx, player, cast, currentFrame, hit, reducedMotion, lighting);
+        if (useSprite && face === 'W') ctx.scale(-1, 1);
+    }
+
+    if (player.barrier) {
+        // A restrained shoulder seam is enough to read magical protection.
+        ctx.fillStyle = '#a9c8d3';
+        ctx.fillRect(-9, -3, 3, 8);
+        ctx.fillRect(6, -3, 3, 8);
+    }
+    ctx.restore();
+}
+
+function drawMageStaff(ctx, player, cast, currentFrame, hit, reducedMotion, lighting) {
     // Thin carved ash staff, never a broad hammer-shaped terminal.
     // Both ends and the hand are placed in character space: no camera-facing billboard.
     const staff = mageStaffGeometry(currentFrame, cast, reducedMotion);
@@ -136,12 +179,4 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
     ctx.fillRect(staff.grip.x - 2, staff.grip.y - 2, 5, 4);
     ctx.fillStyle = paleCollar;
     ctx.fillRect(staff.grip.x + 1, staff.grip.y - 1, 2, 2);
-
-    if (player.barrier) {
-        // A restrained shoulder seam is enough to read magical protection.
-        ctx.fillStyle = '#a9c8d3';
-        ctx.fillRect(-9, -3, 3, 8);
-        ctx.fillRect(6, -3, 3, 8);
-    }
-    ctx.restore();
 }
