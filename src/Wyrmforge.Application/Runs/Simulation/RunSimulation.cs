@@ -29,6 +29,10 @@ public sealed partial class RunSimulation
     private WyrmrealmMapState mapState;
     private readonly List<WyrmrealmMapNode> completedRouteNodes = [];
     private readonly RunBuildState build = new();
+    private IReadOnlySet<SpellId> availablePrimarySpells = new HashSet<SpellId>
+    {
+        SpellId.ArcaneOrb, SpellId.FireBolt, SpellId.FrostShard, SpellId.ChainLightning,
+    };
     private readonly RunDepthState depthState = new();
     private readonly RunDepthTrialState depthTrialState = new();
     private readonly RunExtractionState extractionState = new();
@@ -84,6 +88,19 @@ public sealed partial class RunSimulation
         RefreshBuildModifiers();
         player.Health = player.MaxHealth;
         if (passiveProfile.WinterShell) player.Barrier = true;
+    }
+
+    public bool PrimaryCommitted => build.Spells.IsPrimaryCommitted;
+    public IReadOnlyList<SpellDefinition> PrimaryChoices => SpellCatalog.All.Where(spell => availablePrimarySpells.Contains(spell.Id)).ToArray();
+
+    public bool ChoosePrimary(SpellId id)
+    {
+        if (!availablePrimarySpells.Contains(id) || elapsed > 0 || mapState.EncounterActive || completedRouteNodes.Count > 0 || IsEnded)
+            return false;
+        if (!build.Spells.TryChoosePrimary(id)) return false;
+        RefreshBuildModifiers();
+        RefreshBuildHud();
+        return true;
     }
 
     public IReadOnlyList<LevelChoice> PendingChoices => pendingChoices;

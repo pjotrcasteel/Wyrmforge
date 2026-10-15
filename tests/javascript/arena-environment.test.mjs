@@ -53,3 +53,9 @@ test('opened healing caches use their own stone-and-herb silhouette, not an XP d
     assert.match(source, /function drawOpenHealingCache\(ctx\)/);
     assert.match(source, /drawSupply\(ctx, supply/);
 });
+
+
+test('performance telemetry remains opt-in and never obscures ordinary combat', () => {
+    const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
+    assert.match(arena, /new URLSearchParams\(window\.location\.search\)\.get\('perf'\) !== '1'/);
+});

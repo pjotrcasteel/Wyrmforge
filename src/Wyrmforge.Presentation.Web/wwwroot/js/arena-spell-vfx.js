@@ -27,25 +27,26 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     const length = reach * extent;
     const sweep = reducedMotion ? 0 : (progress * 1.8 - 0.9);
     if (surge) {
-        // One restrained release arc: the fourth focused cast should feel earned, not spam extra shots.
-        ctx.strokeStyle = '#e0cbb6';
-        ctx.lineWidth = 3 + rank;
+        // Energy gathers at the staff tip. No floating semicircular targeting ring around the mage.
+        ctx.strokeStyle = '#dcc5a6';
+        ctx.lineWidth = 1.5 + rank * .4;
         ctx.beginPath();
-        ctx.arc(0, 0, length * .82, -.65 - progress, .55 + progress);
+        ctx.moveTo(length * .68, -5 - rank);
+        ctx.lineTo(length, -1);
+        ctx.lineTo(length * .68, 5 + rank);
         ctx.stroke();
     }
 
     if (family === 'fire' || family === 'frostfire') {
-        // Heavy overhand slash, followed by an outward surge.
+        // Short directional heat strokes at release: the projectile and impact carry the power.
         ctx.strokeStyle = '#ee8744';
-        ctx.lineWidth = 2.5 + rank;
+        ctx.lineWidth = 1.5 + rank * .5;
         ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.arc(0, 0, length, -1.35 + sweep, 0.6 + sweep);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(4, -10);
-        ctx.quadraticCurveTo(length * .7, -length * .55, length + progress * 9, 0);
+        ctx.moveTo(length * .4, -7 + sweep * 3);
+        ctx.lineTo(length + progress * 5, -2);
+        ctx.moveTo(length * .55, 7);
+        ctx.lineTo(length * .93, 3);
         ctx.stroke();
     }
     if (family === 'frost' || family === 'frostfire') {
@@ -77,15 +78,17 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
         ctx.stroke();
     }
     if (family === 'arcane') {
-        // An asymmetric crescent drawn across the casting arm.
+        // A compact staff-side arcane fracture, not a screen-filling rotating ring.
         ctx.strokeStyle = '#b9a3d8';
-        ctx.lineWidth = 2.3 + rank;
+        ctx.lineWidth = 1.6 + rank * .35;
         ctx.beginPath();
-        ctx.arc(length * .24, 0, length * .7, -1.65 + sweep, .65 + sweep);
+        ctx.moveTo(length * .58, -8);
+        ctx.lineTo(length + 4, -2);
+        ctx.lineTo(length * .8, 5);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(0, -5);
-        ctx.lineTo(length + 4, 0);
+        ctx.moveTo(length * .7, -4);
+        ctx.lineTo(length * .7 + 5, 6);
         ctx.stroke();
     }
     ctx.restore();

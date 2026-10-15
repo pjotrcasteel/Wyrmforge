@@ -25,8 +25,8 @@ public static class LevelChoicePresentation
     {
         LevelChoiceKind.SchoolPower => "ATTUNEMENT",
         LevelChoiceKind.Rune => "RUNE",
-        LevelChoiceKind.NewSpell => "NEW PRIMARY",
-        LevelChoiceKind.SpellFocus => "SWITCH PRIMARY",
+        LevelChoiceKind.NewSpell => "SUPPORT MAGIC",
+        LevelChoiceKind.SpellFocus => "PRIMARY FOCUS",
         LevelChoiceKind.SpellUpgrade => "SPELL UPGRADE",
         LevelChoiceKind.Evolution => "EVOLUTION",
         _ => "SYNERGY",
@@ -56,8 +56,8 @@ public static class LevelChoicePresentation
     public static string Footer(LevelChoice choice) => choice.Kind switch
     {
         LevelChoiceKind.Rune or LevelChoiceKind.SchoolPower => "TEMPORARY • THIS RUN ONLY",
-        LevelChoiceKind.NewSpell or LevelChoiceKind.SpellFocus => "THIS RUN • REPLACES PRIMARY CAST",
-        LevelChoiceKind.SpellUpgrade => "THIS RUN • EMPOWERS AND FOCUSES",
+        LevelChoiceKind.NewSpell or LevelChoiceKind.SpellFocus => "THIS RUN • NO MID-RUN PIVOT",
+        LevelChoiceKind.SpellUpgrade => "THIS RUN • STRENGTHENS YOUR PRIMARY",
         LevelChoiceKind.Evolution => "TEMPORARY • DEFINES THIS SPELL",
         _ => "THIS RUN • KEEPS PRIMARY CAST",
     };

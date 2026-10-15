@@ -64,7 +64,8 @@ public sealed class RunSelfPlayTests
         Assert.IsGreaterThan(0, result.TotalExperience);
         Assert.IsGreaterThan(0, result.Decisions.Count);
         Assert.AreEqual(1, result.PeakActivePrimaryCount);
-        Assert.AreEqual(result.PrimarySpellSequence.Count - 1, result.PrimarySwitches);
+        Assert.AreEqual(0, result.PrimarySwitches, "Real self-play must never pivot away from its opening oath.");
+        Assert.AreEqual(1, result.PrimarySpellSequence.Count);
     }
 
     private static RunSelfPlayMetrics Play(SelfPlayBuildDefinition build, RunAgentPersonality personality, int seed)

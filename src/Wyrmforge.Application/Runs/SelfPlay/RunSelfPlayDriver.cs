@@ -3,6 +3,7 @@ using Wyrmforge.Application.Runs.EndRun;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Progression.Experience;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.SelfPlay;
 
@@ -13,6 +14,17 @@ public sealed class RunSelfPlayDriver
         ArgumentNullException.ThrowIfNull(build);
         options ??= new RunSelfPlayOptions();
         var recorder = new MetricsRecorder(build.Name, build.Cohort, build.SpentPoints, agent.Name, seed);
+        // Model the exact same once-per-hunt starting oath a player must now choose.
+        var primary = build.PreferredSchool switch
+        {
+            SpellSchool.Fire => SpellId.FireBolt,
+            SpellSchool.Frost => SpellId.FrostShard,
+            SpellSchool.Storm => SpellId.ChainLightning,
+            _ => SpellId.ArcaneOrb,
+        };
+        if (!simulation.PrimaryCommitted && !simulation.ChoosePrimary(primary))
+            throw new InvalidOperationException($"Self-play could not commit starter {primary}.");
+        recorder.Decision($"primary:{primary}");
         var snapshot = simulation.CreateSnapshot();
         recorder.Observe(snapshot, 0, simulation.CurrentEncounterPhase);
 

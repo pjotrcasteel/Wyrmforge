@@ -374,3 +374,19 @@
     box-shadow:0 4px 20px rgba(0,0,0,.25); }
 .trail-exit-instruction strong { font-size:.63rem; letter-spacing:.1em; }
 .trail-exit-instruction span { font-size:.65rem; color:#cab9b5; }
+
+/* Choosing a primary takes place before combat; no new live HUD controls. */
+.primary-choice-overlay {position:fixed;z-index:15;inset:0;display:grid;place-items:center;padding:16px;background:rgba(7,8,13,.92);overflow:auto;overscroll-behavior:contain}
+.primary-choice-panel {width:min(540px,100%);max-height:min(94dvh,840px);overflow:auto;padding:24px 18px;border:1px solid rgba(173,151,123,.55);border-radius:14px;background:#181923;color:#eae3dc;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.7)}
+.primary-choice-eyebrow,.primary-choice-footer {font:700 .65rem/1.4 system-ui;letter-spacing:.15em;color:#bea77e}
+.primary-choice-panel h2 {margin:8px 0;font:700 clamp(1.2rem,5vw,1.65rem)/1.2 Georgia,serif}
+.primary-choice-panel p {margin:8px auto 18px;max-width:380px;color:#c4bdc0;font:.86rem/1.5 system-ui}
+.primary-choice-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.primary-choice {display:grid;justify-items:center;gap:6px;min-height:110px;padding:14px 8px;border:1px solid #62566a;border-radius:9px;background:#242431;color:#ece5dc;cursor:pointer;touch-action:manipulation}
+.primary-choice:focus-visible {outline:3px solid #e6bd83;outline-offset:2px}
+.primary-choice:active {background:#363344;transform:translateY(1px)}
+.primary-choice-icon {font-size:1.7rem;line-height:1.4}
+.primary-choice strong {font:700 .87rem/1.3 system-ui}
+.primary-choice small {font:.68rem/1.2 system-ui;color:#c4b4ad}
+.primary-fire {border-color:#97634a}.primary-frost {border-color:#6798ac}.primary-storm {border-color:#b29b5e}.primary-arcane {border-color:#8b6baf}
+@media(max-height:600px){.primary-choice-panel{padding:12px}.primary-choice{min-height:80px;padding:7px}.primary-choice-grid{gap:6px}}

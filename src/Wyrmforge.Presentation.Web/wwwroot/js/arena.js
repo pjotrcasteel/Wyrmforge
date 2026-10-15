@@ -662,6 +662,9 @@ function drawExperiencePickup(ctx, pickup) {
 }
 
 function drawPerformanceCounter(state, ctx, snapshot, width, height) {
+    // A large performance readout obscured monsters in the iPhone combat viewport.
+    // Keep diagnostics available to testers without making them part of the ordinary HUD.
+    if (typeof window === 'undefined' || new URLSearchParams(window.location.search).get('perf') !== '1') return;
     const panelWidth = Math.min(218, Math.max(160, width - 24));
     const panelHeight = 68;
     const x = Math.max(12, width - panelWidth - 14);
