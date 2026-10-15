@@ -39,6 +39,47 @@ public sealed class FirstHuntProgressTests
         Assert.IsTrue(progress.TutorialRun);
     }
 
+
+    [TestMethod]
+    public void AwardsArcanePoint_TutorialFinished_KeepsInitialPointWithoutDuplicateGrant()
+    {
+        var progress = new FirstHuntProgress();
+        Assert.IsFalse(progress.AwardsArcanePoint(tutorialRunAtStart: true, abandoned: false));
+        progress.CompleteRun(abandoned: false);
+        Assert.IsFalse(progress.AwardsArcanePoint(tutorialRunAtStart: true, abandoned: false));
+        Assert.IsTrue(progress.AtlasUnlocked);
+    }
+
+    [TestMethod]
+    public void AwardsArcanePoint_SecondAndLaterFinishedHunts_GrantsUntilPointCap()
+    {
+        var progress = new FirstHuntProgress();
+        progress.CompleteRun(false);
+        var selection = new PassiveTreeSelection(1);
+
+        for (var hunt = 2; hunt <= 50; hunt++)
+        {
+            Assert.IsTrue(progress.AwardsArcanePoint(tutorialRunAtStart: false, abandoned: false));
+            selection.GrantPoints(1);
+            progress.CompleteRun(false);
+        }
+
+        Assert.AreEqual(PassiveTreeCatalog.TotalPoints, selection.PointBudget);
+        Assert.IsTrue(progress.LeaderboardUnlocked);
+    }
+
+    [TestMethod]
+    public void AwardsArcanePoint_AbandonedHunt_DoesNotGrantOrAdvanceChapter()
+    {
+        var progress = new FirstHuntProgress();
+        progress.CompleteRun(false);
+        var selection = new PassiveTreeSelection(1);
+        Assert.IsFalse(progress.AwardsArcanePoint(tutorialRunAtStart: false, abandoned: true));
+        Assert.IsFalse(progress.CompleteRun(abandoned: true));
+        Assert.AreEqual(1, progress.CompletedRuns);
+        Assert.AreEqual(1, selection.PointBudget);
+    }
+
     [TestMethod]
     public void Restore_ExperiencedPlayerAndArcaneBudget_AreNotReset()
     {
