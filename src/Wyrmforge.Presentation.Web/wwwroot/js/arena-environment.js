@@ -1,4 +1,5 @@
 import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
+import { drawCloisterWall, drawCloisterMist } from './arena-cloister-art.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -173,9 +174,14 @@ function terrainTexture(environment, width, height) {
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {
     if (!environment) return false;
     ctx.drawImage(terrainTexture(environment, width, height), 0, 0, width, height);
-    for (const barrier of environment.barriers ?? []) drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
+    const cloister = createTerrainPlan(environment, width, height).story.cloister;
+    for (const barrier of environment.barriers ?? []) {
+        if (!cloister || !drawCloisterWall(ctx, barrier, width, height))
+            drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
+    }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
     drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
+    drawCloisterMist(ctx, cloister, elapsedSeconds);
     return true;
 }
 
