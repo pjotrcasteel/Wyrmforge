@@ -6,7 +6,8 @@ public sealed record RunRefinementDefinition(RunRefinementId Id, string Name, st
 {
     public const int MaxRank = 6;
 
-    public BuildModifierProfile ProfileForRank(int rank) => new([new BuildStatModifier(Stat, Operation, PerRank * rank)]);
+    public BuildModifierProfile ProfileForRank(int rank) =>
+        new([new BuildStatModifier(Stat, Operation, Operation == BuildStatOperation.Multiply ? 1 + PerRank * rank : PerRank * rank)]);
 }
 
 public static class RunRefinementCatalog

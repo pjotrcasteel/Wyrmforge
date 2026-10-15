@@ -2,6 +2,7 @@
 using Wyrmforge.Application.Runs.Resonance;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Domain.Progression.RunUpgrades;
+using Wyrmforge.Domain.Progression.Refinements;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -30,6 +31,79 @@ public sealed class LevelChoiceService(
 
     public IReadOnlyList<LevelChoice> Roll(RunBuildState build, SpellSchool preferredSchool, IReadOnlyList<RunResonanceEntry> resonance, int count = 3) =>
         RollInternal(build, preferredSchool, resonance, count);
+
+    // All real run rewards enter through this path. Legacy Roll/Apply remain for
+    // deterministic standalone catalogue tests and developer-owned simulations.
+    public IReadOnlyList<LevelChoice> RollForProgression(RunBuildState build, int rewardLevel, bool trailReward,
+        SpellSchool? preferredSchool = null, IReadOnlyList<RunResonanceEntry>? resonance = null, int count = 3)
+    {
+        if (count <= 0) return Array.Empty<LevelChoice>();
+        if (!trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel))
+        {
+            var primary = build.Spells.ActiveSpell;
+            if (PowerMilestoneProfile.CanEvolve(rewardLevel, build.Spells[primary]))
+            {
+                var evolutions = CreateEvolutionDraft(build, primary);
+                if (evolutions.Count > 0) return evolutions;
+            }
+            var major = CreatePool(build).Where(choice => PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)).ToList();
+            if (major.Count > 0) return DraftMilestone(major, build, rewardLevel, resonance, count);
+        }
+
+        return DraftRefinements(build, preferredSchool, resonance, count);
+    }
+
+    public bool ApplyForProgression(RunBuildState build, LevelChoice choice, int rewardLevel, bool trailReward)
+    {
+        if (choice.Kind == LevelChoiceKind.Refinement)
+            return Enum.TryParse<RunRefinementId>(choice.Id.AsSpan("refine:".Length), out var id) && build.Refinements.Apply(id);
+
+        if (trailReward || !PowerMilestoneProfile.IsMajorLevel(rewardLevel) ||
+            !PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)) return false;
+        return Apply(build, choice);
+    }
+
+    private IReadOnlyList<LevelChoice> DraftRefinements(RunBuildState build, SpellSchool? school,
+        IReadOnlyList<RunResonanceEntry>? resonance, int count)
+    {
+        var pool = RunRefinementCatalog.All.Where(item => build.Refinements[item.Id] < RunRefinementDefinition.MaxRank)
+            .Select(item => new LevelChoice($"refine:{item.Id}", LevelChoiceKind.Refinement, item.Name, item.Description, item.Icon,
+                build.Refinements[item.Id], RunRefinementDefinition.MaxRank)).ToList();
+        return DrawRewardOptions(pool, count, resonance, _ => school is { } attuned
+            ? $"A small {attuned} trail reward; the primary and its major abilities are unchanged."
+            : "A modest improvement while your next breakthrough draws closer.");
+    }
+
+    private IReadOnlyList<LevelChoice> DraftMilestone(List<LevelChoice> pool, RunBuildState build, int level,
+        IReadOnlyList<RunResonanceEntry>? resonance, int count)
+    {
+        var result = new List<LevelChoice>(Math.Min(count, pool.Count));
+        var primaryUpgrade = pool.Where(choice => choice.Kind == LevelChoiceKind.SpellUpgrade && choice.Id == $"spell:{build.Spells.ActiveSpell}").ToList();
+        if (primaryUpgrade.Count > 0)
+            TakeInto(result, pool, primaryUpgrade, resonance, LevelChoiceDraftRole.Converge,
+                _ => $"LEVEL {level} BREAKTHROUGH • permanently strengthens your chosen primary for this hunt.");
+        var roles = new[] { LevelChoiceDraftRole.Reinforce, LevelChoiceDraftRole.Venture };
+        while (result.Count < count && pool.Count > 0)
+        {
+            var role = roles[Math.Min(result.Count == 0 ? 0 : result.Count - 1, roles.Length - 1)];
+            TakeInto(result, pool, pool.ToList(), resonance, role,
+                choice => choice.Kind == LevelChoiceKind.Synergy ? "Combine schools without changing your primary cast."
+                    : "A rare, build-defining ability earned at a five-level breakthrough.");
+        }
+        RememberDraft(result);
+        return result;
+    }
+
+    private IReadOnlyList<LevelChoice> DrawRewardOptions(List<LevelChoice> pool, int count,
+        IReadOnlyList<RunResonanceEntry>? resonance, Func<LevelChoice, string> hint)
+    {
+        var result = new List<LevelChoice>(Math.Min(count, pool.Count));
+        var roles = new[] { LevelChoiceDraftRole.Converge, LevelChoiceDraftRole.Reinforce, LevelChoiceDraftRole.Venture };
+        while (result.Count < count && pool.Count > 0)
+            TakeInto(result, pool, pool.ToList(), resonance, roles[Math.Min(result.Count, roles.Length - 1)], choice => hint(choice));
+        RememberDraft(result);
+        return result;
+    }
 
     public bool Apply(RunBuildState build, LevelChoice choice)
     {
