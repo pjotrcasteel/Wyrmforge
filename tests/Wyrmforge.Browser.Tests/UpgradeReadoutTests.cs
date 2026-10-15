@@ -33,20 +33,20 @@ public sealed class UpgradeReadoutTests
     }
 
     [TestMethod]
-    public void Rank_FocusKnownSpell_DoesNotClaimAnotherRank()
+    public void Rank_LegacyFocusChoice_DoesNotClaimAnotherRank()
     {
         var choice = new LevelChoice("focus:FireBolt", LevelChoiceKind.SpellFocus, "Focus Fire Bolt", "Replaces primary", "fire", 3, 3);
-        Assert.AreEqual("SWITCH PRIMARY", LevelChoicePresentation.Badge(choice));
+        Assert.AreEqual("PRIMARY FOCUS", LevelChoicePresentation.Badge(choice));
         Assert.AreEqual("KNOWN RANK III", LevelChoicePresentation.Rank(choice));
         Assert.AreEqual("Replaces primary", LevelChoicePresentation.Delta(choice));
     }
 
     [TestMethod]
-    public void Footer_NewPrimary_ExplainsReplacementInsteadOfAdditionalAutoCast()
+    public void Footer_LegacyNewSpell_DoesNotPromiseReplacingCommittedPrimary()
     {
         var choice = Choice(SpellId.FireBolt, 0);
-        Assert.AreEqual("NEW PRIMARY", LevelChoicePresentation.Badge(choice));
-        StringAssert.Contains(LevelChoicePresentation.Footer(choice), "REPLACES PRIMARY");
+        Assert.AreEqual("SUPPORT MAGIC", LevelChoicePresentation.Badge(choice));
+        StringAssert.Contains(LevelChoicePresentation.Footer(choice), "NO MID-RUN PIVOT");
     }
 
 

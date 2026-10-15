@@ -1155,7 +1155,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await oath.Locator("button.primary-fire").ClickAsync();
         await Expect(oath).ToBeHiddenAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.Locator(".combat-vitals-spells")).ToContainTextAsync("🔥");
+        await Expect(Page.Locator(".combat-vitals-spells .combat-spell-badge")).ToHaveAttributeAsync("aria-label", "Fire Bolt, rank 1");
     }
 
     private async Task EnterFirstTrailAsync()
