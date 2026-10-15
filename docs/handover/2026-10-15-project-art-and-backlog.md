@@ -60,9 +60,9 @@ Spell identity should change with actual behavior: wind-up, projectile outline/t
 | [#94](https://github.com/pjotrcasteel/Wyrmforge/pull/94) | **Merged as archival docs** | Early recorded-audio research is HISTORICAL. Current recorded sources and real licensing are documented in [audio credits](../audio/recorded-audio-credits.md) and the shipped `audio/recorded/manifest.json`. The old candidates JSON cannot override them. |
 | [#67](https://github.com/pjotrcasteel/Wyrmforge/pull/67) | **Closed, obsolete implementation** | Would grant one additional Arcane point on each eligible hunt. Modern `HunterProgress` already earns permanent Arcane points from Hunter XP levels. Do NOT add another independent grant without revisiting the design; it risks double awards / bypassing XP pacing. |
 | [#64](https://github.com/pjotrcasteel/Wyrmforge/pull/64) | **Closed, historical experiment** | 0.0.83 9,552-scenario imperfect-player and boss-warning analysis. Its proposed timings are *unmerged* and must be revalidated on the latest code, not blindly replayed. |
-| [#115](https://github.com/pjotrcasteel/Wyrmforge/pull/115) | **Review hold (at time of handover)** | New remake of #67; also adds a point-per-hunt path alongside `Home.CreditHunterExperience` and `HunterProgress.AtlasBudget`. Review possible double awards and current intended pacing before merge. |
+| [#115](https://github.com/pjotrcasteel/Wyrmforge/pull/115) | **Merged (during handover work)** | Port of #67: adds a per-completed-hunt point **in addition to** the existing XP-driven budget. Design/test interaction is unresolved; tracked in [#117](https://github.com/pjotrcasteel/Wyrmforge/issues/117). |
 
-**Important:** PR state/CI can change after this handover. The PRs and code in GitHub, not this timestamped table, decide current truth.
+**Important:** PR state/CI can change after this handover. The PRs and code in GitHub, not this timestamped table, decide current truth. Since this audit, PR #115 merged as `a9d80e2d80`, and issue #117 was opened to preserve the review.
 
 ## 5. Open issues audited: preserve, don't falsely mark complete
 
@@ -72,6 +72,7 @@ Spell identity should change with actual behavior: wind-up, projectile outline/t
 | [#66 — Hall of Fame](https://github.com/pjotrcasteel/Wyrmforge/issues/66) | Real consented submission/receipt into D1, organizer moderation and delete, tamper-resistance and honest **COMMUNITY · UNVERIFIED** label. Fictional LEGEND · DEMO entries must remain visibly fake. Avoid public identities in test evidence. |
 | [#60 — Cloudflare 403 in GitHub CI](https://github.com/pjotrcasteel/Wyrmforge/issues/60) | Hosted-runner connectivity to Worker `/health` reportedly 403, while real iPhone feedback succeeded. Distinguish external check inconclusive from actual app outage; avoid blanket security bypass or false-green claims. Still open until measured/fixed. |
 | [#55 — native iOS/Android](https://github.com/pjotrcasteel/Wyrmforge/issues/55) | Eventually App Store/Play Store. Prototype a native shell / renderer and lifecycle without duplicating C# domain simulation, preserving migration, accessibility, touch, safe area and offline capability. Not the immediate art task. |
+| [#117 — Arcane double-credit review](https://github.com/pjotrcasteel/Wyrmforge/issues/117) | Newly identified after #115 merged; combined XP-level and per-hunt reward paths may both grant Atlas progression, with an inconsistent displayed earned amount. Decide intended economy and add integrated regression. |
 
 ### Historical fairness finding to carry forward (not a shipped fix)
 
@@ -79,7 +80,7 @@ PR #64 compared synthetic self-play agents, **not calibrated real users**. It fo
 
 ### Arcane reward semantics must be resolved, not accidentally doubled
 
-`src/Wyrmforge.Domain/Progression/Experience/HunterProgress.cs`: Hunter XP increases a persistent level; `AtlasBudget => Level`, with cap 24. `Home.CreditHunterExperience` uses the level budget, with migration support and saves. Original PR #67 and new #115 instead grant a separate point per non-abandoned hunt. **These are different reward models.** Unless the product explicitly chooses both and updates budget/UX/tests accordingly, avoid stacking them. Current XP-driven design is implemented and has tests in `HunterProgressTests.cs`.
+`src/Wyrmforge.Domain/Progression/Experience/HunterProgress.cs`: Hunter XP increases a persistent level; `AtlasBudget => Level`, with cap 24. `Home.CreditHunterExperience` uses the level budget, with migration support and saves. Original PR #67 proposed, and **merged PR #115 now implements**, another independent point per non-abandoned hunt. **Both models are currently active in main**, not just proposed: the handler grants the hunt point, then calls `CreditHunterExperience`. They may stack (subject to the 24-point cap). This is a **review finding, not yet a confirmed unintended bug**: settle whether both rewards are intentional, reconcile the displayed earned points, and write a combined integration test as requested in [#117](https://github.com/pjotrcasteel/Wyrmforge/issues/117). Existing `HunterProgressTests.cs` cover the XP model in isolation.
 
 ## 6. Build, art and release gates
 
