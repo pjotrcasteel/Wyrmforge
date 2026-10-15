@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spellFamily, castMotionProfile, drawSpellCastMotion, drawSpellProjectile, impactMotionProfile, drawSpellImpact } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-spell-vfx.js';
 
 function fakeContext() {
-    const methods = ['save', 'restore', 'translate', 'rotate', 'beginPath', 'arc', 'stroke', 'moveTo', 'quadraticCurveTo', 'lineTo', 'fill', 'ellipse', 'closePath'];
+    const methods = ['save', 'restore', 'translate', 'rotate', 'beginPath', 'arc', 'stroke', 'moveTo', 'quadraticCurveTo', 'lineTo', 'fill', 'ellipse', 'closePath', 'fillRect'];
     const context = { globalAlpha: 1 };
     for (const method of methods) context[method] = () => {};
     return context;
@@ -68,4 +68,23 @@ test('earned fourth-cast surge is visibly distinct but remains one attack', () =
     assert.doesNotThrow(() => drawSpellCastMotion(fakeContext(), { ...impact, surge: true, angle: .1 }));
     assert.doesNotThrow(() => drawSpellProjectile(fakeContext(), { ...impact, surge: true, radius: 10 }));
     assert.doesNotThrow(() => drawSpellImpact(fakeContext(), { ...impact, surge: true }, true));
+});
+
+test('only canonical fire events create pixel impacts and rank/Surge change output', async () => {
+    const { firePixelProfile, fireBurstProfile } =
+        await import('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-fire-pixels.js');
+    assert.ok(firePixelProfile({ rank: 3, radius: 8 }).tail > firePixelProfile({ rank: 1, radius: 8 }).tail);
+    assert.ok(fireBurstProfile({ rank: 3, progress: .25 }).segments > fireBurstProfile({ rank: 1, progress: .25 }).segments);
+    assert.ok(fireBurstProfile({ rank: 2, progress: .25, surge: true }).radius >
+        fireBurstProfile({ rank: 2, progress: .25 }).radius);
+    const calls = (rank, surge = false) => {
+        let rectangles = 0;
+        const ctx = fakeContext();
+        ctx.fillRect = () => rectangles++;
+        drawSpellProjectile(ctx, { x: 50, y: 55, spell: 1, angle: 0, radius: 9, rank, surge });
+        drawSpellImpact(ctx, { x: 50, y: 55, spell: 1, rank, progress: .22, surge });
+        return rectangles;
+    };
+    assert.ok(calls(3) > calls(1));
+    assert.ok(calls(3, true) > calls(3));
 });

@@ -1,3 +1,5 @@
+import { drawFirePixelProjectile, drawFirePixelImpact } from './arena-fire-pixels.js';
+
 // Simulation-authoritative spell identities and cast progress; all effects are cosmetic.
 // Keep one legible primary cast rather than filling the screen with unrelated spell spam.
 export function spellFamily(spell, combination = null) {
@@ -100,6 +102,11 @@ export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
     ctx.save();
     ctx.translate(projectile.x, projectile.y);
     ctx.rotate(Number(projectile.angle) || 0);
+    if (family === 'fire') {
+        drawFirePixelProjectile(ctx, projectile, reducedMotion);
+        ctx.restore();
+        return;
+    }
     ctx.lineJoin = 'round';
 
     // One velocity-aligned wake is visual evidence of impact, not another projectile.
@@ -225,6 +232,11 @@ export function drawSpellImpact(ctx, impact, reducedMotion = false) {
     const r = reducedMotion ? radius / (.45 + progress * .84) * .72 : radius;
     ctx.save();
     ctx.translate(impact.x, impact.y);
+    if (family === 'fire') {
+        drawFirePixelImpact(ctx, impact, reducedMotion);
+        ctx.restore();
+        return;
+    }
     ctx.globalAlpha *= alpha;
 
     if (surge) {
