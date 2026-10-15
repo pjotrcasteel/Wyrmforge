@@ -496,6 +496,57 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_EnemyGaitAndCloisterReflections_UseRealEnemyMotionAndSpellLocations()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const actors = await import('./js/arena-enemy-art.js');
+            const environment = await import('./js/arena-environment.js');
+            const state = actors.createEnemyMotionState();
+            const original = [{ entityId:4,kind:0,x:80,y:80,radius:12 },
+                { entityId:7,kind:3,x:135,y:80,radius:18 }];
+            const idle = actors.updateEnemyMotions(state,original,1);
+            const moved = actors.updateEnemyMotions(state,[{...original[0],x:90},original[1]],1.04);
+            const ctx = document.createElement('canvas');
+            ctx.width = ctx.height = 200;
+            const brush = ctx.getContext('2d');
+            const sample = phase => {
+                brush.clearRect(0,0,200,200);
+                actors.drawEnemyPixelArt(brush,original[0],null,phase);
+                return [...brush.getImageData(0,0,200,200).data];
+            };
+            const diff = (a,b) => a.reduce((n,v,i)=>n+(Math.abs(v-b[i])>15?1:0),0);
+            const changed = diff(sample(0),sample(moved.get(4)));
+            const boundaries = [.33,.69].flatMap(y => [
+                {x:0,y,width:.35,height:.02,open:false,kind:'ruin'},
+                {x:.35,y,width:.3,height:.02,open:false,kind:'gate'},
+                {x:.65,y,width:.35,height:.02,open:false,kind:'ruin'},
+            ]);
+            const env = {seed:78111,biome:'River valley',district:'sanctuary',
+                stage:3,element:'fire',barriers:boundaries,supplies:[]};
+            const world = document.createElement('canvas');
+            world.width=700;world.height=1050;
+            const draw=world.getContext('2d');
+            environment.drawArenaEnvironment(draw,env,700,1050,0);
+            const before=[...draw.getImageData(195,530,310,95).data];
+            const lights=[{x:350,y:565,radius:145,strength:1,center:[255,175,95]}];
+            const lines=environment.drawArenaCloisterReflections(draw,env,700,1050,lights,1,true);
+            const after=[...draw.getImageData(195,530,310,95).data];
+            return {firstIdle:idle.get(4),secondIdle:moved.get(7),
+                moving:moved.get(4),spriteDifference:changed,reflections:lines,
+                waterDifference:diff(before,after)};
+        }");
+        Assert.AreEqual(0,pixels.GetProperty("firstIdle").GetInt32());
+        Assert.AreEqual(0,pixels.GetProperty("secondIdle").GetInt32());
+        Assert.IsGreaterThan(0,pixels.GetProperty("moving").GetInt32());
+        Assert.IsGreaterThan(20,pixels.GetProperty("spriteDifference").GetInt32());
+        Assert.AreEqual(3,pixels.GetProperty("reflections").GetInt32());
+        Assert.IsGreaterThan(10,pixels.GetProperty("waterDifference").GetInt32(),
+            "At the real cloister waterline a canonical Fire cast must tint physical pixels.");
+    }
+
+    [TestMethod]
     public async Task Mobile_CloisterAndFireArt_SourceDrivenPixelsRemainDistinctAtPhoneSize()
     {
         await Page.SetViewportSizeAsync(390, 844);
