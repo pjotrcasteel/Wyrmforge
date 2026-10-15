@@ -46,6 +46,8 @@ test('courtyard derives its chapter-house boundaries from canonical C# crossings
 test('original monastery changes only a valley sanctuary and is cached in the world plan', () => {
     const plan=createTerrainPlan(scene,900,1500);
     assert.ok(plan.story.cloister);
+    assert.equal(plan.remains.length, 0, 'The cloister must not inherit random spire-like monoliths.');
+    assert.equal(createTerrainPlan({...scene,district:'causeway'},900,1500).remains.length,10);
     assert.equal(plan.story.cloister.north,createCloisterPlan(scene,900,1500).north);
     assert.equal(createTerrainPlan({...scene,district:'rift'},900,1500).story.cloister,null);
     const floor=fakeContext();
