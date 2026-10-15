@@ -26,12 +26,12 @@ export function drawCloisterFloor(ctx, plan) {
     const {court:c,path:p}=plan;
     ctx.save();
     ctx.globalAlpha=.6;ctx.fillStyle=ink.recess;ctx.fillRect(c.x-5,c.y-5,c.w+10,c.h+10);
-    ctx.globalAlpha=.32;ctx.fillStyle=ink.stone;ctx.fillRect(c.x,c.y,c.w,c.h);
-    ctx.globalAlpha=.95;ctx.fillStyle='#162b27';ctx.fillRect(c.x+p,c.y+p,c.w-2*p,c.h-2*p);
+    ctx.globalAlpha=.45;ctx.fillStyle=ink.stone;ctx.fillRect(c.x,c.y,c.w,c.h);
+    ctx.globalAlpha=.95;ctx.fillStyle='#203b34';ctx.fillRect(c.x+p,c.y+p,c.w-2*p,c.h-2*p);
     // Flooded monastery garden. Flat damp ground is intentionally traversable.
-    ctx.globalAlpha=.39;ctx.fillStyle=ink.water;
+    ctx.globalAlpha=.54;ctx.fillStyle=ink.water;
     ctx.fillRect(c.x+p*1.7,c.y+c.h*.52,c.w-p*3.4,c.h*.16);
-    ctx.globalAlpha=.12;ctx.fillStyle='#a6bbac';
+    ctx.globalAlpha=.23;ctx.fillStyle='#a6bbac';
     ctx.fillRect(c.x+p*2,c.y+c.h*.59,c.w*.28,2);
     for(const slab of plan.slabs){
         if(slab.tone<.28)continue;
@@ -194,16 +194,29 @@ export function drawCloisterElevation(ctx, barrier, width, height) {
     ctx.fillStyle = 'rgba(5, 10, 11, .4)';
     ctx.fillRect(x + 6, foot - 1, w, 6);
     if (barrier.kind === 'gate') {
-        // A sealed crossing is visually blocked only while C# says it is closed.
-        ctx.fillStyle = '#283331';
-        ctx.fillRect(x, foot - elevation, w, elevation);
-        ctx.fillStyle = '#778276';
-        ctx.fillRect(x, foot - elevation, w, 4);
-        ctx.fillStyle = '#171d20';
-        for (let offset = 8; offset < w - 4; offset += 15)
-            ctx.fillRect(x + offset, foot - elevation + 4, 3, elevation - 4);
-        ctx.fillStyle = '#647267';
-        ctx.fillRect(x, foot - 4, w, 3);
+        // An enormous iron grille reads as a prison, not a ruined monastery.
+        // Preserve the actual crossing and flank it with weathered gateway ends.
+        const pier = Math.min(16, Math.max(9, w * .055));
+        for (const px of [x, x + w - pier]) {
+            ctx.fillStyle = '#47594e';
+            ctx.fillRect(px, foot - elevation, pier, elevation);
+            stoneTop(ctx, px, foot - elevation, pier);
+            ctx.fillStyle = '#839285';
+            ctx.fillRect(px + 3, foot - elevation + 7, Math.max(2, pier - 8), 2);
+            ctx.fillStyle = '#30443a';
+            ctx.fillRect(px + 2, foot - 7, Math.max(2, pier - 4), 3);
+        }
+        // Faint warded empty space disappears completely when the gate opens.
+        const innerX = x + pier, innerWidth = Math.max(0, w - pier * 2);
+        ctx.fillStyle = 'rgba(78, 134, 105, .12)';
+        ctx.fillRect(innerX, foot - elevation * .82, innerWidth, elevation * .82);
+        ctx.fillStyle = 'rgba(147, 186, 143, .44)';
+        ctx.fillRect(innerX, foot - 4, innerWidth, 2);
+        ctx.fillStyle = 'rgba(151, 188, 160, .28)';
+        for (let mark = innerX + 34; mark < innerX + innerWidth - 14; mark += 65) {
+            ctx.fillRect(mark, foot - 15, 2, 7);
+            ctx.fillRect(mark - 3, foot - 12, 8, 2);
+        }
     } else {
         const segment = Math.max(22, Math.min(54, w / 5));
         for (let index = 0, offset = 0; offset < w; index++, offset += segment) {
