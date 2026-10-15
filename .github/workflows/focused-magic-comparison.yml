@@ -29,7 +29,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Checkout last green focused control
-        run: git worktree add --detach "$RUNNER_TEMP/focused-control" b8d8970130d5a26a3c0c0cc59c5ec12cba9c8029
+        run: git worktree add --detach "$RUNNER_TEMP/focused-control" 3edb22da336a067182728f4205e28add966493e0
 
       - name: Build candidate
         run: dotnet build src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release
