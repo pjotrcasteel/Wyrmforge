@@ -29,7 +29,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Checkout last green focused control
-        run: git worktree add --detach "$RUNNER_TEMP/focused-control" 54b9f0ebc9c2a1db86bd8e363662293d3d082a1b
+        run: git worktree add --detach "$RUNNER_TEMP/focused-control" 02966d081b4a9ba20ab27e53c7be98102a2753fb
 
       - name: Build candidate
         run: dotnet build src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release
@@ -102,15 +102,16 @@ jobs:
                   groups[identity[0]].append((old[identity], new[identity]))
 
               rows.extend([f"### {cohort.title()} runs", "",
-                  "| Build | Reached control→current | Extracted control→current | Routes Δ | Minimum HP Δ | Damage taken Δ | Avg surges |",
-                  "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"])
+                  "| Build | Reached control→current | Wyrms slain control→current | Extracted control→current | Routes Δ | Minimum HP Δ | Damage taken Δ | Avg surges |",
+                  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"])
               for build, paired in sorted(groups.items()):
                   reached = lambda i: sum(pair[i]["wyrmsReached"] > 0 for pair in paired)
                   extracted = lambda i: sum(pair[i]["outcome"] == 1 for pair in paired)
+                  slain = lambda i: sum(pair[i]["dragonsSlain"] for pair in paired)
                   delta = lambda field: statistics.mean(pair[1][field] - pair[0][field] for pair in paired)
                   avg_surges = statistics.mean(pair[1].get("focusedSurgesCast", 0) for pair in paired)
                   rows.append(f"| {build} | {reached(0)}/{len(paired)} → {reached(1)}/{len(paired)} "
-                              f"| {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
+                              f"| {slain(0)} → {slain(1)} | {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
                               f"| {delta('minimumHealthRatio'):+.2f} | {delta('damageTaken'):+.1f} | {avg_surges:.1f} |")
               before_extracted = sum(run["outcome"] == 1 for run in control)
               after_extracted = sum(run["outcome"] == 1 for run in candidate)
@@ -120,6 +121,7 @@ jobs:
 
           detailed = "\n".join(rows) + "\n"
           (root / "paired-diagnosis.md").write_text(detailed)
+          print(detailed)
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
               summary.write("\n" + detailed)
           PY
