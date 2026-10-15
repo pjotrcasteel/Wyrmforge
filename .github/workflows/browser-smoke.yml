@@ -63,6 +63,26 @@ jobs:
           WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/browser
         run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build
 
+      - name: Prepare playable PR preview package
+        if: success() && github.event_name == 'pull_request'
+        run: |
+          mkdir -p artifacts/playable-preview
+          cp -a artifacts/web/wwwroot artifacts/playable-preview/wwwroot
+          cp tools/development/spa_server.py artifacts/playable-preview/preview_server.py
+          cp docs/playtesting/pr-preview-playbook.md artifacts/playable-preview/README.md
+          test -f artifacts/playable-preview/wwwroot/_framework/blazor.webassembly.js
+          test -f artifacts/playable-preview/wwwroot/index.html
+          grep -q '<base href="/" />' artifacts/playable-preview/wwwroot/index.html
+
+      - name: Upload playable PR preview
+        if: success() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wyrmforge-playable-preview-${{ github.sha }}
+          path: artifacts/playable-preview
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@v4
