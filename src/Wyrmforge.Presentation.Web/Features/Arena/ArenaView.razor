@@ -100,7 +100,7 @@
                 @if (CurrentOffering is not null && RunOffering is { } offeringId)
                 {
                     var source = DragonEssenceCatalog.Get(offeringId);
-                    <span title="@CurrentOffering.Effect">🔥 OFFERING • @source.Icon @source.Name</span>
+                    <span title="@CurrentOffering.Effect">🔥 OFFERING • <GameIcon Glyph="@(source.Icon)" Size="sm" /> @source.Name</span>
                 }
                 @if (CurrentDepth > 1)
                 {
@@ -116,11 +116,11 @@
                 }
                 @foreach (var relic in CurrentRelics)
                 {
-                    <span title="@relic.Description">@relic.Icon @relic.Name</span>
+                    <span title="@relic.Description"><GameIcon Glyph="@(relic.Icon)" Size="sm" /> @relic.Name</span>
                 }
                 @foreach (var essence in CurrentEssences)
                 {
-                    <span title="@essence.Effect">@essence.Icon @essence.Name</span>
+                    <span title="@essence.Effect"><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name</span>
                 }
             </div>
         </details>

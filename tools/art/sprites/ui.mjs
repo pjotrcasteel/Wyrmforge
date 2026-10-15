@@ -33,6 +33,11 @@ export function icons() {
         'icon.rune': icon(b => { b.rect(2, 2, 12, 12, '#2b2e2e'); b.rect(2, 2, 12, 1, '#5a5f5c'); b.line(8, 4, 8, 12, '#c48aff'); b.line(5, 6, 11, 9, '#c48aff'); b.line(5, 9, 8, 12, '#c48aff'); b.set(8, 7, '#ffffff'); }),
         'icon.hourglass': icon(b => { b.rect(3, 1, 10, 2, '#8e6a26'); b.rect(3, 13, 10, 2, '#8e6a26'); b.poly([[4, 3], [12, 3], [8, 8]], '#9fb4c6'); b.poly([[8, 8], [12, 13], [4, 13]], '#9fb4c6'); b.poly([[6, 11], [10, 11], [11, 13], [5, 13]], '#d8b45a'); }),
         'icon.gate': icon(b => { b.rect(2, 3, 3, 12, '#5a625c'); b.rect(11, 3, 3, 12, '#5a625c'); b.poly([[2, 4], [8, 0], [14, 4]], '#6b736b'); b.rect(5, 5, 6, 10, '#1a1420'); b.ellipse(8, 10, 2.5, 4, '#a878e0'); }),
+        'icon.arrow': icon(b => { b.line(2, 14, 12, 4, '#c9cfd2', 2); b.poly([[14, 2], [14, 8], [8, 2]], '#eef2f2'); b.line(2, 11, 5, 14, '#8a6038', 2); }),
+        'icon.wing': icon(b => { b.poly([[1, 13], [6, 4], [14, 1], [12, 6], [15, 7], [11, 10], [13, 12], [6, 14]], '#5c3a50'); b.line(6, 4, 4, 13, '#8e6080'); b.line(14, 1, 7, 12, '#8e6080'); b.line(15, 7, 8, 13, '#8e6080'); }),
+        'icon.fang': icon(b => { b.poly([[3, 1], [13, 1], [12, 5], [9, 15], [7, 15], [4, 5]], '#e2dac2'); b.poly([[3, 1], [8, 1], [8, 15], [7, 15], [4, 5]], '#f8f2de'); b.rect(3, 1, 10, 2, '#a89e86'); }),
+        'icon.wave': icon(b => { for (const [y, c] of [[4, '#9fdcf0'], [8, '#5aa8d8'], [12, '#3a6e9a']]) for (let x = 1; x < 15; x++) b.rect(x, y + Math.round(Math.sin(x * .9) * 1.4), 1, 2, c); }),
+        'icon.cycle': icon(b => { for (let a = .5; a < 5.6; a += .12) b.rect(Math.round(8 + Math.cos(a) * 5.5), Math.round(8 + Math.sin(a) * 5.5), 2, 2, '#b98cff'); b.poly([[13, 1], [15, 6], [10, 5]], '#e4caff'); }),
         'icon.mage': icon(b => { b.ellipse(8, 5, 4, 4, '#576c84'); b.poly([[7, 0], [9, 0], [10, 3]], '#576c84'); b.ellipse(8, 6, 2, 2, '#1a202b'); b.poly([[4, 9], [12, 9], [13, 15], [3, 15]], '#485b73'); b.rect(4, 8, 8, 2, '#c8c6b8'); b.line(13, 2, 13, 15, '#766552'); }),
     };
 }

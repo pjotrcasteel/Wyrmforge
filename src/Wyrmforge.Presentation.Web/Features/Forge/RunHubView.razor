@@ -57,7 +57,7 @@
             {
                 var essence = DragonEssenceCatalog.Get(offering);
                 <div class="offering-display">
-                    <span class="offering-icon">@essence.Icon</span>
+                    <span class="offering-icon"><GameIcon Glyph="@(essence.Icon)" /></span>
                     <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(offering).Effect</small></div>
                 </div>
             }

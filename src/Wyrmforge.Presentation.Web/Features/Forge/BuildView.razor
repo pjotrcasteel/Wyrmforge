@@ -57,7 +57,7 @@
                                         @foreach (var bonus in bonuses)
                                         {
                                             <span class="minor-effect" title="@bonus.Label">
-                                                <i>@bonus.Icon</i>
+                                                <i><GameIcon Glyph="@(bonus.Icon)" /></i>
                                                 <b>@CompactValue(bonus.Value)</b>
                                             </span>
                                         }
@@ -132,7 +132,7 @@
                                 @foreach (var bonus in minorBonuses)
                                 {
                                     <div class="route-gain" title="@bonus.Label">
-                                        <i>@bonus.Icon</i>
+                                        <i><GameIcon Glyph="@(bonus.Icon)" /></i>
                                         <strong>@bonus.Value</strong>
                                         <small>@bonus.Label</small>
                                     </div>

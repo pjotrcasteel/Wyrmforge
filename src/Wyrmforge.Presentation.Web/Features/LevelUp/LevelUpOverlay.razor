@@ -12,11 +12,11 @@
                     <div class="evo-transformation">
                         <div class="evo-ring outer"></div>
                         <div class="evo-ring inner"></div>
-                        <div class="evo-original-icon">@EvolutionSpellIcon</div>
+                        <div class="evo-original-icon"><GameIcon Glyph="@EvolutionSpellIcon" Size="lg" /></div>
                         <div class="evo-possible-forms">
                             @foreach (var choice in Choices)
                             {
-                                <span>@choice.Icon</span>
+                                <span><GameIcon Glyph="@(choice.Icon)" /></span>
                             }
                         </div>
                     </div>
@@ -44,7 +44,7 @@
                                 <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
                                 <span class="choice-rarity">@choice.Rarity</span>
                             </span>
-                            <span class="upgrade-icon">@choice.Icon</span>
+                            <span class="upgrade-icon"><GameIcon Glyph="@(choice.Icon)" /></span>
                             <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
                             <strong>@choice.Name</strong>
                             <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>
@@ -65,7 +65,7 @@
                 <section class="evo-ceremony evo-confirmation @(finishing ? "evo-withdrawn" : "evo-visible")" role="status" aria-live="polite">
                     <div class="evo-ceremony-content">
                         <div class="evo-overline">A NEW FORM IS FORGED</div>
-                        <div class="evo-confirm-icon">@selected.Icon</div>
+                        <div class="evo-confirm-icon"><GameIcon Glyph="@(selected.Icon)" /></div>
                         <h2>@selected.Name</h2>
                         <p>@EvolutionSpellName HAS EVOLVED</p>
                         <div class="evo-ceremony-instruction">THIS FORM IS YOURS FOR THE REST OF THE HUNT</div>
@@ -90,7 +90,7 @@
                             <span class="choice-badge">@LevelChoicePresentation.Badge(choice)</span>
                             <span class="choice-rarity">@choice.Rarity</span>
                         </span>
-                        <span class="upgrade-icon">@choice.Icon</span>
+                        <span class="upgrade-icon"><GameIcon Glyph="@(choice.Icon)" /></span>
                         <span class="upgrade-rank">@LevelChoicePresentation.Rank(choice)</span>
                         <strong>@choice.Name</strong>
                         <span class="choice-delta">@LevelChoicePresentation.Delta(choice)</span>

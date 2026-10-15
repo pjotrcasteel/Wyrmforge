@@ -128,6 +128,17 @@ html:has(.game-screen), body:has(.game-screen) { overflow: hidden; overscroll-be
   .upgrade-icon { margin-bottom: 7px; font-size: 1.5rem; }
   .choice-delta { min-height: 0; }
   .choice-footer { margin-top: 12px; padding-top: 0; }
+  /* Icon rail + text column keeps all three choices near one phone screen. */
+  .run-upgrade { display: grid; grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; align-content: start; padding: 12px 13px 12px 16px; }
+  .run-upgrade > * { grid-column: 2; margin-left: 0; }
+  .run-upgrade > .upgrade-icon { grid-column: 1; grid-row: 1 / span 4; align-self: start; margin: 2px 0 0; }
+  .run-upgrade > .choice-card-header { margin-bottom: 6px; }
+  .run-upgrade strong { margin: 3px 0 3px; font-size: 1.02rem; }
+  .run-upgrade .choice-delta { margin: 0 0 5px; }
+  .run-upgrade small { line-height: 1.32; font-size: .8rem; }
+  .run-upgrade .draft-hint { margin-top: 6px; padding: 6px 9px; font-size: .74rem; }
+  .run-upgrade .choice-footer { margin-top: 7px; }
+  .upgrade-choices { gap: 9px; }
 }
 
 @media (max-width: 560px) {
@@ -171,3 +182,7 @@ body:has(.game-screen) .wyrmforge-sound-controls { display:none; }
   .wyrmforge-sound-controls { gap:4px; }
   .wyrmforge-sound-test, .wyrmforge-sound-toggle, .wyrmforge-sound-lab-toggle { padding-inline:7px; }
 }
+
+/* Shared pixel icon wrapper (Shared/GameIcon.razor). Combined glyphs sit side by side. */
+.game-icon { display: inline-flex; align-items: center; justify-content: center; gap: 2px; line-height: 1; vertical-align: middle; }
+.game-icon .px-icon { flex: none; }

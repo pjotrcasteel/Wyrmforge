@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { decodePng } from '../../tools/art/lib/png.mjs';
 import { artReady, drawArtFrame, hasArtFrame, installArtForTesting, resetArtForTesting, loadArt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/art-atlas.js';
@@ -155,6 +157,30 @@ test('mounted runes flicker deterministically and stay mostly lit', () => {
     assert.deepEqual(samples, Array.from({ length: 400 }, (_, i) => runeLit(i % 7, i * .05, 11)));
     const lit = samples.filter(Boolean).length / samples.length;
     assert.ok(lit > .7 && lit < 1, `lit ratio ${lit}`);
+});
+
+test('every catalog glyph icon resolves to a generated pixel icon', () => {
+    const repo = new URL('../../', import.meta.url);
+    const mapSource = readFileSync(new URL('src/Wyrmforge.Presentation.Web/Shared/GameIconMap.cs', repo), 'utf8');
+    const mapped = new Map([...mapSource.matchAll(/\["([^"]+)"\] = "([a-z]+)"/g)].map(m => [m[1], m[2]]));
+    for (const id of new Set(mapped.values())) assert.ok(frames('icons')[`icon.${id}`], `icon.${id} exists`);
+    const catalogs = ['src/Wyrmforge.Domain', 'src/Wyrmforge.Application'];
+    const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+    const missing = new Set();
+    const walk = dir => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            const path = join(dir, entry.name);
+            if (entry.isDirectory()) { if (!['bin', 'obj'].includes(entry.name)) walk(path); continue; }
+            if (!/(Catalog|Presentation)\.cs$/.test(entry.name)) continue;
+            for (const [, glyph] of readFileSync(path, 'utf8').matchAll(/"([^"\x00-\x7F]{1,3})"/g))
+                for (const { segment } of segmenter.segment(glyph)) {
+                    const symbol = segment.replace(/[\uFE0E\uFE0F]/g, '');
+                    if (symbol && !['•', '—'].includes(symbol) && !mapped.has(symbol)) missing.add(`${symbol} (${entry.name})`);
+                }
+        }
+    };
+    for (const dir of catalogs) walk(fileURLToPath(new URL(dir, repo)));
+    assert.deepEqual([...missing], [], 'add new catalog glyphs to Shared/GameIconMap.cs');
 });
 
 test('ground decals and forest edges are seeded, bounded and biome specific', () => {

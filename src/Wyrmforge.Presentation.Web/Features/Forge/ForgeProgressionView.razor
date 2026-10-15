@@ -123,7 +123,7 @@
                         <p class="sanctum-hint">Defeat @WyrmName(ActiveLineage) and return with its Essence to awaken this lineage.</p>
                     }
                     <div class="sanctum-material">
-                        <span class="material-icon">@cost.Icon</span>
+                        <span class="material-icon"><GameIcon Glyph="@(cost.Icon)" /></span>
                         <div>
                             <small>REQUIRED ESSENCE</small>
                             <strong>@cost.Name</strong>
@@ -161,7 +161,7 @@
                 }
                 @foreach (var essence in DragonEssenceCatalog.All.Where(essence => Vault.Count(essence.Id) > 0))
                 {
-                    <span class="essence-chip"><b>@essence.Icon</b>@essence.Name <strong>×@Vault.Count(essence.Id)</strong></span>
+                    <span class="essence-chip"><b><GameIcon Glyph="@(essence.Icon)" /></b>@essence.Name <strong>×@Vault.Count(essence.Id)</strong></span>
                 }
             </div>
             <div class="panel-heading">
@@ -173,7 +173,7 @@
                 {
                     var selected = SelectedOffering == essence.Id;
                     <button class="offering-card @(selected ? "selected" : string.Empty)" aria-pressed="@selected" @onclick="() => SelectOfferingAsync(essence.Id)">
-                        <span class="offering-icon">@essence.Icon</span>
+                        <span class="offering-icon"><GameIcon Glyph="@(essence.Icon)" /></span>
                         <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(essence.Id).Effect</small></div>
                         <b>@(selected ? "EQUIPPED" : $"×{Vault.Count(essence.Id)}")</b>
                     </button>

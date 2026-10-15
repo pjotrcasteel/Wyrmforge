@@ -16,7 +16,7 @@
             {
                 <button class="essence-choice" @onclick="() => ChooseAsync(essence.Id)">
                     <span class="essence-source">STOLEN FROM @essence.Source.ToUpperInvariant()</span>
-                    <span class="essence-icon">@essence.Icon</span>
+                    <span class="essence-icon"><GameIcon Glyph="@(essence.Icon)" /></span>
                     <strong>@essence.Name</strong>
                     <span class="essence-effect">@essence.Effect</span>
                     <small>@essence.Description</small>
