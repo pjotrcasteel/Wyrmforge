@@ -40,6 +40,7 @@ public sealed partial class RunSimulation
         {
             primaryCastCounts[spell.Id]++;
             surge = FocusedSurgeProfile.For(primaryCastCounts[spell.Id], rank);
+            if (surge.IsSurge) FocusedSurgesCast++;
             var target = NearestTarget(player.Position);
             var direction = target is null ? 0 : Math.Atan2(target.Position.Y - player.Position.Y, target.Position.X - player.Position.X);
             lastCastMotion = new CastMotionRenderSnapshot(player.Position.X, player.Position.Y, spell.Id, rank,

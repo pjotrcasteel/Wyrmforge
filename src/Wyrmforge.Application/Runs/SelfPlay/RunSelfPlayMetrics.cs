@@ -41,6 +41,7 @@ public sealed record RunSelfPlayMetrics(
     IReadOnlyDictionary<int, double> LevelUpSeconds,
     IReadOnlyList<string> Decisions)
 {
+    public int FocusedSurgesCast { get; init; }
     public int PrimarySwitches { get; init; }
     public int PeakActivePrimaryCount { get; init; }
     public IReadOnlyList<string> PrimarySpellSequence { get; init; } = [];

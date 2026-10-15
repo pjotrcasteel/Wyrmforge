@@ -106,6 +106,7 @@ public sealed partial class RunSimulation
     public int DepthTrialKillsRequired => depthTrialState.KillsRequired;
     public int Depth => depthState.Depth;
     public int Level => level;
+    public int FocusedSurgesCast { get; private set; }
     public int CheckpointVisit => checkpointState.Visit;
     public double Health => player.Health;
     public double MaxHealth => player.MaxHealth;
