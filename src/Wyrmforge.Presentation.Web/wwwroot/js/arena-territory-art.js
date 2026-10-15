@@ -1,3 +1,5 @@
+import { createCloisterPlan, drawCloisterFloor } from './arena-cloister-art.js';
+
 // Original procedural environmental art. Collision remains owned by ArenaEnvironmentState (C#).
 // These drawings are non-interactive scenery, generated once per seeded territory texture.
 const landmarkKinds = {
@@ -70,7 +72,8 @@ export function createTerritoryStoryPlan(environment, width, height) {
             branches: 2 + Math.floor(random() * 4),
         });
     }
-    return { biome, element, district, corruption, landmarks, patches, wounds, seed: environment.seed, width, height };
+    return { biome, element, district, corruption, landmarks, patches, wounds, seed: environment.seed, width, height,
+        cloister: createCloisterPlan(environment, width, height) };
 }
 
 function irregularShape(ctx, x, y, rx, ry, rotation, seed) {
@@ -110,6 +113,10 @@ export function drawTerritoryGround(ctx, plan) {
 // Large-scale composition comes first: the player must recognize a DIFFERENT place when a new node loads.
 // These are walkable floor materials, not collision or raised impassable walls.
 function drawDistrictFoundation(ctx, plan) {
+    if (plan.cloister) {
+        drawCloisterFloor(ctx, plan.cloister);
+        return;
+    }
     const { width: w, height: h, district, biome, seed } = plan;
     const palette = groundPalette[biome];
     const random = randomStream(seed ^ 0x31fdae94);
@@ -211,6 +218,9 @@ function drawDistrictFoundation(ctx, plan) {
 }
 
 function drawElementalLandform(ctx, plan) {
+    // The monastery's masonry and physical history define the scene; no giant
+    // glowing ritual geometry laid over its garden and central combat space.
+    if (plan.cloister) return;
     const { width: w, height: h, element, corruption, district, seed } = plan;
     const pigment = schoolPalette[element];
     const random = randomStream(seed ^ 0x72b48a1);
@@ -296,6 +306,8 @@ function drawElementalLandform(ctx, plan) {
 }
 
 function drawTerritoryWounds(ctx, plan) {
+    // Ruined cloister marks belong to the actual gates, not decorative floor halos.
+    if (plan.cloister) return;
     const pigment = schoolPalette[plan.element];
     for (const [i, wound] of plan.wounds.entries()) {
         ctx.save();
@@ -479,6 +491,7 @@ function drawSite(ctx, site, plan) {
 }
 
 export function drawTerritoryLandmarks(ctx, plan) {
+    if (plan.cloister) return; // Three purpose-built floor landmarks live in drawCloisterFloor.
     for (const site of plan.landmarks) drawSite(ctx, site, plan);
 }
 

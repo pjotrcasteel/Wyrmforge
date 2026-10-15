@@ -496,6 +496,73 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_CloisterAndFireArt_SourceDrivenPixelsRemainDistinctAtPhoneSize()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var result = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const environment = await import('./js/arena-environment.js');
+            const actors = await import('./js/arena-enemy-art.js');
+            const fire = await import('./js/arena-spell-vfx.js');
+            const makeCanvas = (width, height) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = width; canvas.height = height;
+                return canvas.getContext('2d');
+            };
+            const barriers = [.33, .69].flatMap(y => [
+                { x:0, y, width:.35, height:.02, kind:'ruin', open:false },
+                { x:.35, y, width:.3, height:.02, kind:'gate', open:false },
+                { x:.65, y, width:.35, height:.02, kind:'ruin', open:false },
+            ]);
+            const source = { seed:78111, biome:'River valley', district:'sanctuary',
+                stage:3, element:'fire', barriers, supplies:[] };
+            const terrain = (district, open = false) => {
+                const ctx = makeCanvas(700, 1050);
+                environment.drawArenaEnvironment(ctx, {
+                    ...source, district,
+                    barriers:barriers.map(b => ({ ...b, open:open && b.kind==='gate' })),
+                }, 700, 1050, 0);
+                return ctx;
+            };
+            const cloister = terrain('sanctuary');
+            const road = terrain('causeway');
+            const opened = terrain('sanctuary', true);
+            const region = (ctx, left, top, width, height) =>
+                [...ctx.getImageData(left, top, width, height).data];
+            const differences = (a, b) => a.reduce((n, v, i) => n + (Math.abs(v - b[i]) > 16 ? 1 : 0), 0);
+            const courtyard = differences(region(cloister, 230, 450, 250, 100),
+                region(road, 230, 450, 250, 100));
+            const gate = differences(region(cloister, 260, 346, 180, 19),
+                region(opened, 260, 346, 180, 19));
+            const sample = draw => {
+                const ctx = makeCanvas(150, 150);
+                draw(ctx);
+                return [...ctx.getImageData(0,0,150,150).data];
+            };
+            const skeleton = sample(ctx => actors.drawEnemyPixelArt(ctx, { x:75,y:75,radius:12,kind:0 }));
+            const reaper = sample(ctx => actors.drawEnemyPixelArt(ctx, { x:75,y:75,radius:12,kind:1 }));
+            const heavy = sample(ctx => actors.drawEnemyPixelArt(ctx, { x:75,y:75,radius:18,kind:3 }));
+            const spell = (rank, surge = false) => sample(ctx => {
+                fire.drawSpellProjectile(ctx, { x:75,y:75,angle:0,spell:1,radius:8,rank,surge });
+                fire.drawSpellImpact(ctx, { x:75,y:75,spell:1,rank,progress:.24,surge });
+            });
+            return { courtyard, gate, skeletonReaper: differences(skeleton,reaper),
+                reaperHeavy:differences(reaper,heavy),fireRanks:differences(spell(1),spell(3)),
+                fireSurge:differences(spell(3),spell(3,true)) };
+        }");
+        Assert.IsGreaterThan(200, result.GetProperty("courtyard").GetInt32(),
+            "Monastery courtyard should be distinguishable from the generic valley road.");
+        Assert.IsGreaterThan(70, result.GetProperty("gate").GetInt32(),
+            "The real C# gate state must change the rendered monastery crossing.");
+        Assert.IsGreaterThan(70, result.GetProperty("skeletonReaper").GetInt32(),
+            "Fodder and reaper must be different pixel silhouettes.");
+        Assert.IsGreaterThan(70, result.GetProperty("reaperHeavy").GetInt32(),
+            "Heavy enemies must have their own body silhouette.");
+        Assert.IsGreaterThan(30, result.GetProperty("fireRanks").GetInt32());
+        Assert.IsGreaterThan(25, result.GetProperty("fireSurge").GetInt32());
+    }
+
+    [TestMethod]
     public async Task Mobile_Territories_DifferentDistrictsProduceDifferentActualCanvasPixels()
     {
         await Page.SetViewportSizeAsync(390, 844);

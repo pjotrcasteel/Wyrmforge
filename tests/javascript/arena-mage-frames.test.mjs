@@ -21,7 +21,7 @@ test('all cast phases select actual individually authored mage animation silhoue
             w > 0 && h > 0 && x >= -16 && x + w <= 16 && y >= -18 && y + h <= 18), name);
     }
     const silhouettes = Object.values(magePixelFrames).map(frame => JSON.stringify(frame));
-    assert.equal(new Set(silhouettes).size, 5, 'Windup, release, follow-through, Surge and idle must be different drawings.');
+    assert.equal(new Set(silhouettes).size, 7, 'Casting, walking, Surge and idle must have independently drawn silhouettes.');
 });
 
 test('drawing all frames retains the slate-blue mage, pale collar and readable dark face', () => {
@@ -34,4 +34,10 @@ test('drawing all frames retains the slate-blue mage, pale collar and readable d
         assert.ok(calls.some(call => call.color === '#293241'), name);
         assert.ok(!calls.some(call => call.color === '#ffffff'), name);
     }
+});
+
+test('actual world movement chooses two walk frames, with stationary/reduced-motion safe fallback', () => {
+    assert.equal(mageFrameKey(null, 1), 'walkA');
+    assert.equal(mageFrameKey(null, 2), 'walkB');
+    assert.equal(mageFrameKey({ progress: .32 }, 2), 'release', 'Casting wins over gait.');
 });

@@ -1,4 +1,5 @@
 import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
+import { drawCloisterWall, drawCloisterMist } from './arena-cloister-art.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -163,19 +164,27 @@ function terrainTexture(environment, width, height) {
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
     image.height = Math.max(1, Math.round(height));
-    drawTerrain(image.getContext('2d'), createTerrainPlan(environment, image.width, image.height), image.width, image.height);
+    const plan = createTerrainPlan(environment, image.width, image.height);
+    drawTerrain(image.getContext('2d'), plan, image.width, image.height);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
-    textures.set(key, image);
-    return image;
+    const texture = { image, cloister: plan.story.cloister };
+    textures.set(key, texture);
+    return texture;
 }
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {
     if (!environment) return false;
-    ctx.drawImage(terrainTexture(environment, width, height), 0, 0, width, height);
-    for (const barrier of environment.barriers ?? []) drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
+    const texture = terrainTexture(environment, width, height);
+    ctx.drawImage(texture.image, 0, 0, width, height);
+    const cloister = texture.cloister;
+    for (const barrier of environment.barriers ?? []) {
+        if (!cloister || !drawCloisterWall(ctx, barrier, width, height))
+            drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
+    }
     for (const supply of environment.supplies ?? []) drawSupply(ctx, supply, width, height, elapsedSeconds);
     drawTerritoryMotes(ctx, environment, width, height, elapsedSeconds);
+    drawCloisterMist(ctx, cloister, elapsedSeconds);
     return true;
 }
 
