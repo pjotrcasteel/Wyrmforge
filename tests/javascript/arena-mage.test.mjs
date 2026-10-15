@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { drawMage, magePose } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-mage.js';
+import { drawMage, magePose, updateMageWalk } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-mage.js';
 
 function fakeContext() {
     const calls = [];
@@ -86,4 +86,14 @@ test('actual cast stages select visibly different authored body frames and artic
     assert.notDeepEqual(release, recovery);
     assert.notDeepEqual(surged, release);
     assert.deepEqual(sample(.1), windup, 'Explicit authored frames must be deterministic.');
+});
+
+test('walk animation follows actual C# player position updates and never invents locomotion', () => {
+    const state = { x: null, y: null, lastMove: -Infinity };
+    assert.equal(updateMageWalk(state, { x: 100, y: 100 }, 0), 0);
+    const phase = updateMageWalk(state, { x: 105, y: 101 }, .3);
+    assert.ok(phase === 1 || phase === 2);
+    assert.equal(updateMageWalk(state, { x: 105, y: 101 }, .6), 0);
+    assert.equal(updateMageWalk(state, { x: 108, y: 101 }, .65, true), 0);
+    assert.equal(updateMageWalk(state, { x: 108, y: 101 }, .66), Math.floor(.66 * 8) % 2 ? 1 : 2);
 });

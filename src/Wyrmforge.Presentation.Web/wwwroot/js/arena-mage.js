@@ -22,7 +22,21 @@ export function magePose(cast, reducedMotion = false) {
     };
 }
 
-export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null) {
+export function updateMageWalk(motion, player, seconds, reducedMotion = false) {
+    if (!motion || !player || !Number.isFinite(seconds)) return 0;
+    if (Number.isFinite(motion.x) && Number.isFinite(motion.y)) {
+        const distance = Math.hypot(player.x - motion.x, player.y - motion.y);
+        // Repeated render frames draw the same C# snapshot. Only fresh actual
+        // world motion advances the brief walking phase; no animation owns movement.
+        if (distance > .3 && distance < 48) motion.lastMove = seconds;
+    }
+    motion.x = player.x;
+    motion.y = player.y;
+    return reducedMotion || !Number.isFinite(motion.lastMove) || seconds - motion.lastMove > .16
+        ? 0 : (Math.floor(seconds * 8) % 2 ? 1 : 2);
+}
+
+export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0) {
     if (!player) return;
     const pose = magePose(cast, reducedMotion);
     const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
@@ -38,7 +52,7 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
     ctx.fill();
 
     // Distinct authored pixel silhouettes express weight transfer and cloak follow-through.
-    const currentFrame = mageFrameKey(cast);
+    const currentFrame = mageFrameKey(cast, walkPhase);
     drawMagePixelFrame(ctx, currentFrame, hit);
 
     if (lighting?.intensity > .015) {

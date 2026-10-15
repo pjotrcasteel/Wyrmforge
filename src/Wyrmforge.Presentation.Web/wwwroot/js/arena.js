@@ -3,7 +3,7 @@ import { attachArenaInput, getArenaMovement } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
-import { drawMage } from './arena-mage.js';
+import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt } from './arena-enemy-art.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -55,6 +55,7 @@ function createState(canvas, dotNetReference) {
         simulationBusy: false,
         latestSnapshot: null,
         playerDanger: createPlayerDangerState(),
+        mageWalk: { x: null, y: null, lastMove: Number.NEGATIVE_INFINITY },
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -241,7 +242,8 @@ function draw(state, snapshot, width, height) {
     for (const pickup of snapshot.experiencePickups ?? []) drawExperiencePickup(ctx, pickup);
 
     drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
-        sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y));
+        sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
+        updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches));
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
