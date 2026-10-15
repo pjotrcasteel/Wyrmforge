@@ -144,3 +144,90 @@ export function drawCloisterReflections(ctx, plan, lights, seconds = 0, reducedM
     ctx.restore();
     return reflections;
 }
+
+
+// Monastery elevations occupy the EXACT C# wall footprints, not decorative props
+// in walkable floor. The fixed world-space roof/front/side planes do not rotate
+// toward the viewer as the camera moves.
+export function createCloisterElevationLayers(plan, barriers, width, height) {
+    if (!plan) return [];
+    return (barriers ?? []).filter(barrier => !barrier.open && barrier.width > 0 && barrier.height > 0)
+        .map(barrier => ({ kind: 'masonry', depth: (barrier.y + barrier.height) * height,
+            barrier, width, height }));
+}
+
+// Actors whose feet are north of a wall must disappear behind its masonry;
+// actors south of it pass in front. Keep stable ties on the wall's side.
+export function sortSceneDepthLayers(layers) {
+    return [...layers].sort((a, b) => a.depth - b.depth ||
+        Number(a.kind === 'masonry') - Number(b.kind === 'masonry'));
+}
+
+function stoneTop(ctx, x, topY, width) {
+    ctx.fillStyle = '#778476';
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x + width, topY);
+    ctx.lineTo(x + width + 6, topY - 5);
+    ctx.lineTo(x + 6, topY - 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#46584e';
+    ctx.beginPath();
+    ctx.moveTo(x + width, topY);
+    ctx.lineTo(x + width + 6, topY - 5);
+    ctx.lineTo(x + width + 6, topY + 5);
+    ctx.lineTo(x + width, topY + 10);
+    ctx.closePath();
+    ctx.fill();
+}
+
+export function drawCloisterElevation(ctx, barrier, width, height) {
+    if (!barrier || barrier.open) return false;
+    const x = barrier.x * width, y = barrier.y * height;
+    const w = barrier.width * width, h = barrier.height * height;
+    if (!(w > 0 && h > 0)) return false;
+    const foot = y + h, elevation = Math.min(34, Math.max(21, h * 1.25));
+    ctx.save();
+    // A short north/south-aligned ruined curtain wall, NOT a camera-facing
+    // spire, billboard, or non-colliding tower rooted in the combat floor.
+    ctx.fillStyle = 'rgba(5, 10, 11, .4)';
+    ctx.fillRect(x + 6, foot - 1, w, 6);
+    if (barrier.kind === 'gate') {
+        // A sealed crossing is visually blocked only while C# says it is closed.
+        ctx.fillStyle = '#283331';
+        ctx.fillRect(x, foot - elevation, w, elevation);
+        ctx.fillStyle = '#778276';
+        ctx.fillRect(x, foot - elevation, w, 4);
+        ctx.fillStyle = '#171d20';
+        for (let offset = 8; offset < w - 4; offset += 15)
+            ctx.fillRect(x + offset, foot - elevation + 4, 3, elevation - 4);
+        ctx.fillStyle = '#647267';
+        ctx.fillRect(x, foot - 4, w, 3);
+    } else {
+        const segment = Math.max(22, Math.min(54, w / 5));
+        for (let index = 0, offset = 0; offset < w; index++, offset += segment) {
+            const span = Math.min(segment, w - offset);
+            // Coherent stepped weather damage, never a repeated needle/spire skyline.
+            const damage = [0, 7, 3, 11, 5, 2][index % 6];
+            const rise = Math.max(12, elevation - damage);
+            const left = x + offset, top = foot - rise;
+            ctx.fillStyle = index % 3 === 0 ? '#47584e' : '#566459';
+            ctx.fillRect(left, top, Math.max(1, span - 1), rise);
+            stoneTop(ctx, left, top, Math.max(1, span - 1));
+            ctx.fillStyle = '#303f39';
+            ctx.fillRect(left + 2, foot - 7, Math.max(1, span - 6), 2);
+            ctx.fillStyle = '#889286';
+            ctx.fillRect(left + 5, top + 8, Math.max(1, span * .28), 1);
+            ctx.fillStyle = '#33493c';
+            ctx.fillRect(left + span * .6, foot - 5, Math.max(1, span * .19), 3);
+        }
+        // Rare buttresses read as structural supports at the correct footprint.
+        // There are no tall random arches, giant pillars, or detached spires.
+        ctx.fillStyle = '#394c43';
+        for (const fraction of [.08, .92])
+            ctx.fillRect(x + w * fraction - 4, foot - elevation * .8, 8, elevation * .8);
+    }
+    ctx.restore();
+    return true;
+}
