@@ -77,8 +77,9 @@
     else
     {
         <section class="level-up-card run-overlay-surface">
-            <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD" : $"LEVEL {Level}")</div>
-            <h2>Choose an upgrade</h2>
+            <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD"
+                : Level > 0 && Level % 5 == 0 ? $"LEVEL {Level} • BREAKTHROUGH" : $"LEVEL {Level} • REFINEMENT")</div>
+            <h2>@(RewardSchool.HasValue ? "Strengthen your hunt" : Level > 0 && Level % 5 == 0 ? "Choose a major power" : "Refine your magic")</h2>
             <div class="upgrade-choices">
                 @foreach (var choice in Choices)
                 {

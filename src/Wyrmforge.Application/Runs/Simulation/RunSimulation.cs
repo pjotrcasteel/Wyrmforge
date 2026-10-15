@@ -200,22 +200,13 @@ public sealed partial class RunSimulation
     public bool ApplyChoice(string id)
     {
         var choice = pendingChoices.SingleOrDefault(candidate => candidate.Id == id);
-        if (choice is null || !levelChoiceService.Apply(build, choice)) return false;
+        if (choice is null || !levelChoiceService.ApplyForProgression(build, choice, level + 1, PendingRewardSchool.HasValue)) return false;
         choiceCount++;
         ApplyChoiceEffects(choice);
         RefreshBuildHud();
 
-        if (choice.Kind == LevelChoiceKind.SpellUpgrade)
-        {
-            var spellId = Enum.Parse<SpellId>(choice.Id[6..]);
-            var evolutionDraft = levelChoiceService.CreateEvolutionDraft(build, spellId);
-            if (evolutionDraft.Count > 0)
-            {
-                pendingChoices = evolutionDraft;
-                return true;
-            }
-        }
-
+        // Rank III no longer grants a free immediate evolution.
+        // The player earns a separate evolution choice at a later five-level breakthrough.
         pendingChoices = [];
         if (mapState.EncounterActive || dragonEncounterStarted) ReleaseUpgradePower();
         if (PendingRewardSchool.HasValue)
