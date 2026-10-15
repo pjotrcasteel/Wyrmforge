@@ -1,4 +1,4 @@
-> **ARCHIVED EXPERIMENT, NOT CURRENT BALANCE GUIDANCE** — study ran against WyrmForge 0.0.83 (8 October 2026). The source research came from superseded PR #64. It used hypothetical self-play policies, not calibrated real people or device evidence. Do not apply its optional old warning-time patch to current `main` without new deterministic trials and actual 390px/mobile testing. See [current handover](../../handover/current-handover.md) and [issue triage](../../handover/repository-triage-2026-10-15.md).
+> **ARCHIVED EXPERIMENT, NOT CURRENT BALANCE GUIDANCE** — study ran against WyrmForge 0.0.83 (8 October 2026). The source research came from superseded PR #64. It used hypothetical self-play policies, not calibrated real people or device evidence. Do not apply its optional old warning-time patch to current `main` without new deterministic trials and actual 390px/mobile testing. See [current handover](../../handover/2026-10-15-project-art-and-backlog.md) and [issue triage](../../handover/2026-10-15-project-art-and-backlog.md).
 
 # WyrmForge: testing results and fix direction
 
