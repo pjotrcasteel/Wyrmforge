@@ -16,6 +16,10 @@ public sealed class FirstHuntProgress
         return true;
     }
 
+    // The first finished hunt unlocks the Atlas and its initial point. Every later
+    // non-abandoned hunt earns another point; the selection itself enforces the cap.
+    public bool AwardsArcanePoint(bool tutorialRunAtStart, bool abandoned) => AtlasUnlocked && !tutorialRunAtStart && !abandoned;
+
     public void Restore(int completedRuns) => CompletedRuns = Math.Clamp(completedRuns, 0, 2);
     public void MigrateExperiencedPlayer() => CompletedRuns = 2;
 }

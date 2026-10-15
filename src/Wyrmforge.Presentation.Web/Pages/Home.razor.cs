@@ -177,8 +177,11 @@ public partial class Home
         {
             firstHunt.CompleteRun(false);
             await PersistFirstHuntAsync();
-            await SaveArcaneBuildAsync();
         }
+        // A completed tutorial already begins with one Atlas point. Subsequent hunts
+        // add one point, capped by PassiveTreeSelection; abandonment awards nothing.
+        if (firstHunt.AwardsArcanePoint(tutorialEnded, value.Outcome == RunOutcome.Abandoned))
+            selection.GrantPoints(1);
         hunterGain = CreditHunterExperience(value.ExperienceEarned);
         quests.Record(new HuntQuestEvidence(value.CompletedRouteNodes, value.RareRouteNodes, value.Depth, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds, value.EssenceIds, value.Synergies > 0, value.SpellLoadout.Any(spell => spell.Evolution.HasValue)));
