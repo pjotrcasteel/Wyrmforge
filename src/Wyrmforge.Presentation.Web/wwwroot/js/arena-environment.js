@@ -1,5 +1,5 @@
 import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
-import { drawCloisterWall, drawCloisterMist, drawCloisterReflections } from './arena-cloister-art.js';
+import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -23,8 +23,12 @@ export function createTerrainPlan(environment, width, height) {
     for (let index = 0; index < Math.min(260, Math.ceil(width * height / 900)); index++) {
         rubble.push({ x: random() * width, y: random() * height, size: .5 + random() * 2.4, tone: random() });
     }
+    const story = createTerritoryStoryPlan(environment, width, height);
+    // Remove the old randomly rotated monoliths from the monastery entirely.
+    // They read as arbitrary spires, sit on traversable floor and undermine
+    // its coherent historic layout. Other terrain biomes keep their debris.
     const remains = [];
-    for (let index = 0; index < 10; index++) {
+    if (!story.cloister) for (let index = 0; index < 10; index++) {
         const side = index % 2 === 0 ? 1 : -1;
         remains.push({ x: Math.max(9, Math.min(width - 9, width * .5 + side * (trailWidth * .68 + random() * width * .16))),
             y: 20 + random() * Math.max(1, height - 40), size: 7 + random() * 11, rotation: random() * Math.PI });
@@ -42,7 +46,7 @@ export function createTerrainPlan(environment, width, height) {
             angle: random() * Math.PI * 2 });
     }
     return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark,
-        story: createTerritoryStoryPlan(environment, width, height) };
+        story };
 }
 
 function drawTerrain(ctx, plan, width, height) {
@@ -153,7 +157,7 @@ function drawTerrain(ctx, plan, width, height) {
     const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
         width * .5, height * .49, Math.max(width, height) * .7);
     vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, 'rgba(1,3,7,.56)');
+    vignette.addColorStop(1, plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
 }
@@ -177,6 +181,19 @@ function terrainTexture(environment, width, height) {
 export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false) {
     if (!environment) return 0;
     return drawCloisterReflections(ctx, terrainTexture(environment, width, height).cloister, lights, seconds, reducedMotion);
+}
+
+
+// Cache owns the cloister's fixed plan; these lightweight wall items sort with
+// actor foot positions in world space rather than being pasted over the viewport.
+export function getArenaCloisterElevations(environment, width, height) {
+    if (!environment) return [];
+    const cloister = terrainTexture(environment, width, height).cloister;
+    return createCloisterElevationLayers(cloister, environment.barriers, width, height);
+}
+
+export function drawArenaCloisterElevation(ctx, layer) {
+    return drawCloisterElevation(ctx, layer.barrier, layer.width, layer.height);
 }
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {

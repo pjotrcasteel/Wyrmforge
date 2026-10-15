@@ -26,12 +26,12 @@ export function drawCloisterFloor(ctx, plan) {
     const {court:c,path:p}=plan;
     ctx.save();
     ctx.globalAlpha=.6;ctx.fillStyle=ink.recess;ctx.fillRect(c.x-5,c.y-5,c.w+10,c.h+10);
-    ctx.globalAlpha=.32;ctx.fillStyle=ink.stone;ctx.fillRect(c.x,c.y,c.w,c.h);
-    ctx.globalAlpha=.95;ctx.fillStyle='#162b27';ctx.fillRect(c.x+p,c.y+p,c.w-2*p,c.h-2*p);
+    ctx.globalAlpha=.45;ctx.fillStyle=ink.stone;ctx.fillRect(c.x,c.y,c.w,c.h);
+    ctx.globalAlpha=.95;ctx.fillStyle='#203b34';ctx.fillRect(c.x+p,c.y+p,c.w-2*p,c.h-2*p);
     // Flooded monastery garden. Flat damp ground is intentionally traversable.
-    ctx.globalAlpha=.39;ctx.fillStyle=ink.water;
+    ctx.globalAlpha=.54;ctx.fillStyle=ink.water;
     ctx.fillRect(c.x+p*1.7,c.y+c.h*.52,c.w-p*3.4,c.h*.16);
-    ctx.globalAlpha=.12;ctx.fillStyle='#a6bbac';
+    ctx.globalAlpha=.23;ctx.fillStyle='#a6bbac';
     ctx.fillRect(c.x+p*2,c.y+c.h*.59,c.w*.28,2);
     for(const slab of plan.slabs){
         if(slab.tone<.28)continue;
@@ -143,4 +143,104 @@ export function drawCloisterReflections(ctx, plan, lights, seconds = 0, reducedM
     }
     ctx.restore();
     return reflections;
+}
+
+
+// Monastery elevations occupy the EXACT C# wall footprints, not decorative props
+// in walkable floor. The fixed world-space roof/front/side planes do not rotate
+// toward the viewer as the camera moves.
+export function createCloisterElevationLayers(plan, barriers, width, height) {
+    if (!plan) return [];
+    return (barriers ?? []).filter(barrier => !barrier.open && barrier.width > 0 && barrier.height > 0)
+        .map(barrier => ({ kind: 'masonry', depth: (barrier.y + barrier.height) * height,
+            barrier, width, height }));
+}
+
+// Actors whose feet are north of a wall must disappear behind its masonry;
+// actors south of it pass in front. Keep stable ties on the wall's side.
+export function sortSceneDepthLayers(layers) {
+    return [...layers].sort((a, b) => a.depth - b.depth ||
+        Number(a.kind === 'masonry') - Number(b.kind === 'masonry'));
+}
+
+function stoneTop(ctx, x, topY, width) {
+    ctx.fillStyle = '#778476';
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x + width, topY);
+    ctx.lineTo(x + width + 6, topY - 5);
+    ctx.lineTo(x + 6, topY - 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#46584e';
+    ctx.beginPath();
+    ctx.moveTo(x + width, topY);
+    ctx.lineTo(x + width + 6, topY - 5);
+    ctx.lineTo(x + width + 6, topY + 5);
+    ctx.lineTo(x + width, topY + 10);
+    ctx.closePath();
+    ctx.fill();
+}
+
+export function drawCloisterElevation(ctx, barrier, width, height) {
+    if (!barrier || barrier.open) return false;
+    const x = barrier.x * width, y = barrier.y * height;
+    const w = barrier.width * width, h = barrier.height * height;
+    if (!(w > 0 && h > 0)) return false;
+    const foot = y + h, elevation = Math.min(34, Math.max(21, h * 1.25));
+    ctx.save();
+    // A short north/south-aligned ruined curtain wall, NOT a camera-facing
+    // spire, billboard, or non-colliding tower rooted in the combat floor.
+    ctx.fillStyle = 'rgba(5, 10, 11, .4)';
+    ctx.fillRect(x + 6, foot - 1, w, 6);
+    if (barrier.kind === 'gate') {
+        // An enormous iron grille reads as a prison, not a ruined monastery.
+        // Preserve the actual crossing and flank it with weathered gateway ends.
+        const pier = Math.min(16, Math.max(9, w * .055));
+        for (const px of [x, x + w - pier]) {
+            ctx.fillStyle = '#47594e';
+            ctx.fillRect(px, foot - elevation, pier, elevation);
+            stoneTop(ctx, px, foot - elevation, pier);
+            ctx.fillStyle = '#839285';
+            ctx.fillRect(px + 3, foot - elevation + 7, Math.max(2, pier - 8), 2);
+            ctx.fillStyle = '#30443a';
+            ctx.fillRect(px + 2, foot - 7, Math.max(2, pier - 4), 3);
+        }
+        // Faint warded empty space disappears completely when the gate opens.
+        const innerX = x + pier, innerWidth = Math.max(0, w - pier * 2);
+        ctx.fillStyle = 'rgba(78, 134, 105, .12)';
+        ctx.fillRect(innerX, foot - elevation * .82, innerWidth, elevation * .82);
+        ctx.fillStyle = 'rgba(147, 186, 143, .44)';
+        ctx.fillRect(innerX, foot - 4, innerWidth, 2);
+        ctx.fillStyle = 'rgba(151, 188, 160, .28)';
+        for (let mark = innerX + 34; mark < innerX + innerWidth - 14; mark += 65) {
+            ctx.fillRect(mark, foot - 15, 2, 7);
+            ctx.fillRect(mark - 3, foot - 12, 8, 2);
+        }
+    } else {
+        const segment = Math.max(22, Math.min(54, w / 5));
+        for (let index = 0, offset = 0; offset < w; index++, offset += segment) {
+            const span = Math.min(segment, w - offset);
+            // Coherent stepped weather damage, never a repeated needle/spire skyline.
+            const damage = [0, 7, 3, 11, 5, 2][index % 6];
+            const rise = Math.max(12, elevation - damage);
+            const left = x + offset, top = foot - rise;
+            ctx.fillStyle = index % 3 === 0 ? '#47584e' : '#566459';
+            ctx.fillRect(left, top, Math.max(1, span - 1), rise);
+            stoneTop(ctx, left, top, Math.max(1, span - 1));
+            ctx.fillStyle = '#303f39';
+            ctx.fillRect(left + 2, foot - 7, Math.max(1, span - 6), 2);
+            ctx.fillStyle = '#889286';
+            ctx.fillRect(left + 5, top + 8, Math.max(1, span * .28), 1);
+            ctx.fillStyle = '#33493c';
+            ctx.fillRect(left + span * .6, foot - 5, Math.max(1, span * .19), 3);
+        }
+        // Rare buttresses read as structural supports at the correct footprint.
+        // There are no tall random arches, giant pillars, or detached spires.
+        ctx.fillStyle = '#394c43';
+        for (const fraction of [.08, .92])
+            ctx.fillRect(x + w * fraction - 4, foot - elevation * .8, 8, elevation * .8);
+    }
+    ctx.restore();
+    return true;
 }

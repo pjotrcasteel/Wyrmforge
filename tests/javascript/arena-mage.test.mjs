@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { drawMage, magePose, updateMageWalk } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-mage.js';
+import { drawMage, magePose, mageStaffGeometry, updateMageWalk } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-mage.js';
 
 function fakeContext() {
     const calls = [];
@@ -96,4 +96,27 @@ test('walk animation follows actual C# player position updates and never invents
     assert.equal(updateMageWalk(state, { x: 105, y: 101 }, .6), 0);
     assert.equal(updateMageWalk(state, { x: 108, y: 101 }, .65, true), 0);
     assert.equal(updateMageWalk(state, { x: 108, y: 101 }, .66), Math.floor(.66 * 8) % 2 ? 1 : 2);
+});
+
+test('the mage holds a narrow upright continuous staff through all authored poses', () => {
+    const poses = [
+        ['idle', null], ['walkA', null], ['walkB', null],
+        ['windup', { angle: Math.PI, progress: .1, rank: 2 }],
+        ['release', { angle: 0, progress: .3, rank: 3 }],
+        ['surgeRelease', { angle: 0, progress: .3, rank: 3, surge: true }],
+        ['followThrough', { angle: Math.PI / 2, progress: .7, rank: 2 }],
+    ];
+    for (const [frame, cast] of poses) {
+        const staff = mageStaffGeometry(frame, cast);
+        assert.ok(staff.tip.y <= -29, frame);
+        assert.ok(staff.butt.y >= 14, frame);
+        const crossingX = staff.butt.x + (staff.tip.x - staff.butt.x) *
+            (staff.butt.y - staff.grip.y) / (staff.butt.y - staff.tip.y);
+        assert.ok(Math.abs(crossingX - staff.grip.x) <= 1, frame + ' must grip its shaft');
+        assert.deepEqual(mageStaffGeometry(frame, cast), staff, frame + ' stays deterministic');
+    }
+    assert.notDeepEqual(mageStaffGeometry('windup', poses[3][1]),
+        mageStaffGeometry('release', poses[4][1]));
+    assert.notDeepEqual(mageStaffGeometry('release', poses[4][1]),
+        mageStaffGeometry('surgeRelease', poses[5][1]));
 });

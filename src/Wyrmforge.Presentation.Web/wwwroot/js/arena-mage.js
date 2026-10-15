@@ -36,9 +36,39 @@ export function updateMageWalk(motion, player, seconds, reducedMotion = false) {
         ? 0 : (Math.floor(seconds * 8) % 2 ? 1 : 2);
 }
 
+// The haft is continuous through the hand. Windup, release, Surge and walking have
+// distinct upper endpoints; the player's authoritative cast angle only biases the lean.
+export function mageStaffGeometry(frameKey, cast = null, reducedMotion = false) {
+    const pose = magePose(cast, reducedMotion);
+    const grips = {
+        idle: [6, -2], walkA: [7, -3], walkB: [5, -2],
+        windup: [1, -4], release: [9, -5], followThrough: [7, -3], surgeRelease: [10, -6],
+    };
+    const [gx, gy] = grips[frameKey] ?? grips.idle;
+    const offsets = { idle: 6, walkA: 9, walkB: 3, windup: -9, release: 12,
+        followThrough: 8, surgeRelease: 15 };
+    const tipY = frameKey === 'surgeRelease' ? -36 : frameKey === 'windup' ? -29 : -31;
+    const lean = pose.active ? Math.round(Math.cos(pose.aim) * Math.min(11, pose.reach * .27)) : 0;
+    const tip = { x: gx + offsets[frameKey] + lean, y: tipY };
+    const grip = { x: gx, y: gy };
+    const buttY = 15;
+    // Collinearity prevents the staff from detaching or appearing as a separate hammer.
+    const butt = { x: Math.round(gx - (tip.x - gx) * (buttY - gy) / (gy - tipY)), y: buttY };
+    return { butt, grip, tip };
+}
+
+function paintPixelShaft(ctx, from, to, thickness, pigment) {
+    const steps = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y), 1);
+    ctx.fillStyle = pigment;
+    for (let step = 0; step <= steps; step++) {
+        const t = step / steps;
+        ctx.fillRect(Math.round(from.x + (to.x - from.x) * t) - Math.floor(thickness / 2),
+            Math.round(from.y + (to.y - from.y) * t), thickness, 2);
+    }
+}
+
 export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, lighting = null, walkPhase = 0) {
     if (!player) return;
-    const pose = magePose(cast, reducedMotion);
     const scale = Math.max(.7, Math.min(1.45, (Number(player.radius) || 12) / 12));
 
     ctx.save();
@@ -60,49 +90,52 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
         // Shade the lit side only; never create a bright silhouette ring around the mage.
         const [red, green, blue] = lighting.color;
         const side = lighting.sourceX < player.x ? -1 : 1;
-        const strength = Math.min(.48, lighting.intensity * .9);
+        // Broad enough to survive the 390px mobile pixel scale, but confined
+        // to the hood's material planes, never an emissive character outline.
+        const strength = Math.min(.65, lighting.intensity * 1.35);
+        ctx.fillStyle = `rgba(${red},${green},${blue},${strength * .82})`;
+        ctx.fillRect(side < 0 ? -8 : 3, -12, 5, 9);
         ctx.fillStyle = `rgba(${red},${green},${blue},${strength * .58})`;
-        ctx.fillRect(side < 0 ? -7 : 4, -10, 3, 5);
         ctx.fillRect(side < 0 ? -8 : 5, -3, 3, 12);
         ctx.fillStyle = `rgba(${red},${green},${blue},${strength})`;
         ctx.fillRect(side < 0 ? -6 : 3, -5, 3, 2);
     }
 
-    // The staff is a readable weapon silhouette and leads the actual cast angle.
-    // It follows the attack, not the movement controls, and cannot block movement.
-    ctx.save();
-    const staffGrip = currentFrame === 'windup' ? { x: 2, y: -4 }
-        : currentFrame === 'surgeRelease' ? { x: 10, y: -7 }
-        : currentFrame === 'release' ? { x: 9, y: -5 }
-        : currentFrame === 'followThrough' ? { x: 7, y: -3 } : { x: 5, y: -3 };
-    ctx.translate(staffGrip.x, staffGrip.y);
-    ctx.rotate(pose.aim + pose.sweep);
-    ctx.fillStyle = cloakEdge;
-    ctx.fillRect(1, -4, 8, 7);
-    ctx.fillStyle = hit ? '#966f76' : cloak;
-    ctx.fillRect(2, -3, 7, 5);
-    ctx.fillStyle = paleCollar;
-    ctx.fillRect(7, -2, 3, 3);
-    ctx.fillStyle = '#2a211f';
-    ctx.fillRect(8, -2, pose.reach + 1, 5);
-    ctx.fillStyle = staffWood;
-    ctx.fillRect(9, -1, pose.reach, 3);
-    ctx.fillStyle = '#aaa18c';
-    ctx.fillRect(9 + pose.reach, -4, 5, 9);
-    ctx.fillStyle = '#6d798e';
-    ctx.fillRect(10 + pose.reach, -2, 3, 5);
+    // Thin carved ash staff, never a broad hammer-shaped terminal.
+    // Both ends and the hand are placed in character space: no camera-facing billboard.
+    const staff = mageStaffGeometry(currentFrame, cast, reducedMotion);
+    paintPixelShaft(ctx, staff.butt, staff.tip, 4, '#211e22');
+    paintPixelShaft(ctx, staff.butt, staff.tip, 2, staffWood);
+    paintPixelShaft(ctx, staff.butt, staff.tip, 1, '#a79576');
+    // Narrow fork and inset crystal are smaller than the haft's silhouette.
+    ctx.fillStyle = '#302e36';
+    ctx.fillRect(staff.tip.x - 2, staff.tip.y + 1, 2, 5);
+    ctx.fillRect(staff.tip.x + 1, staff.tip.y + 1, 2, 5);
+    ctx.fillStyle = '#b4afa0';
+    ctx.fillRect(staff.tip.x - 1, staff.tip.y - 2, 3, 4);
+    ctx.fillStyle = '#819aaa';
+    ctx.fillRect(staff.tip.x, staff.tip.y - 1, 1, 3);
     if (lighting?.intensity > .015) {
         const [red, green, blue] = lighting.color;
         ctx.fillStyle = `rgba(${red},${green},${blue},${Math.min(.8, lighting.intensity)})`;
-        ctx.fillRect(10 + pose.reach, -3, 3, 3);
+        ctx.fillRect(staff.tip.x, staff.tip.y, 2, 2);
     }
-    // Three tiny marks on the shaft show actual saved charge; no extra HUD button or halo.
+    // Three tiny charge marks follow the shaft rather than floating at its old hammer head.
     const charge = Math.max(0, Math.min(3, Number(player.focusCharge) || 0));
     for (let index = 0; index < 3; index++) {
+        const t = .58 + index * .065;
+        const x = Math.round(staff.butt.x + (staff.tip.x - staff.butt.x) * t);
+        const y = Math.round(staff.butt.y + (staff.tip.y - staff.butt.y) * t);
         ctx.fillStyle = index < charge ? '#dfc4a5' : '#544d4b';
-        ctx.fillRect(9 + pose.reach - 12 + index * 4, -2, 2, 4);
+        ctx.fillRect(x - 1, y, 2, 2);
     }
-    ctx.restore();
+    // Hand is painted LAST, visibly wrapping the continuous staff shaft.
+    ctx.fillStyle = cloakEdge;
+    ctx.fillRect(staff.grip.x - 3, staff.grip.y - 3, 7, 6);
+    ctx.fillStyle = hit ? '#966f76' : cloak;
+    ctx.fillRect(staff.grip.x - 2, staff.grip.y - 2, 5, 4);
+    ctx.fillStyle = paleCollar;
+    ctx.fillRect(staff.grip.x + 1, staff.grip.y - 1, 2, 2);
 
     if (player.barrier) {
         // A restrained shoulder seam is enough to read magical protection.
