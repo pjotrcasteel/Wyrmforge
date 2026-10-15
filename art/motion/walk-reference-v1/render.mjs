@@ -42,6 +42,33 @@ export function drawView(ctx, data, phase, options) {
         ctx.fillStyle = data.contacts[index][contactIndex] ? '#d6bf68' : '#415957'; ctx.fill();
     }
     const geometry = [];
+    const mage = Boolean(data.mage);
+    const polygon = (points, fill, depthOffset = 0) => {
+        const projected = points.map(p => project(p));
+        geometry.push({depth: projected.reduce((sum,p)=>sum+p[2],0)/projected.length + depthOffset, draw() {
+            ctx.beginPath(); projected.forEach((p,i)=>i ? ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+            ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=color.edge;ctx.lineWidth=2;ctx.stroke();
+        }});
+    };
+    if (mage) {
+        // Open-front cloak: fixed body attachments, short rear hem keeps boots visible.
+        const l=joint.lclavicle,r=joint.rclavicle,lh=joint.lhipjoint,rh=joint.rhipjoint;
+        polygon([[l[0]+.07,l[1]+.02,l[2]-.05],[r[0]-.07,r[1]+.02,r[2]-.05],
+                 [rh[0]-.12,rh[1]-.40,rh[2]-.13],[lh[0]+.12,lh[1]-.40,lh[2]-.13]],'#354b5c',-.08);
+        polygon([[l[0]+.05,l[1],l[2]+.025],[l[0]-.08,l[1]-.04,l[2]+.07],
+                 [lh[0]-.035,lh[1]-.32,lh[2]+.10],[lh[0]+.10,lh[1]-.32,lh[2]+.04]],'#516778',.03);
+        polygon([[r[0]-.05,r[1],r[2]+.025],[r[0]+.08,r[1]-.04,r[2]+.07],
+                 [rh[0]+.035,rh[1]-.32,rh[2]+.10],[rh[0]-.10,rh[1]-.32,rh[2]+.04]],'#42596a',.03);
+        const grip=joint.rhand,base=grip.map((v,i)=>v+data.mage.staffBaseOffset[i]),tip=grip.map((v,i)=>v+data.mage.staffTipOffset[i]);
+        const bend=[grip[0]-.025,grip[1]+.68,grip[2]+.01];
+        const projected=[base,grip,bend,tip].map(p=>project(p));
+        geometry.push({depth:project(grip)[2]+.02,draw(){
+            ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=scale*.033;ctx.strokeStyle='#241b16';
+            ctx.beginPath();projected.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();
+            ctx.lineWidth=scale*.018;ctx.strokeStyle='#887054';ctx.stroke();
+            const t=projected[3];ctx.fillStyle='#d6a553';ctx.beginPath();ctx.arc(t[0],t[1],scale*.027,0,Math.PI*2);ctx.fill();
+        }});
+    }
     const chain = (a, b, radius, fill) => {
         const p = project(joint[a]), q = project(joint[b]);
         geometry.push({ depth: (p[2] + q[2]) / 2, draw() {
@@ -51,11 +78,11 @@ export function drawView(ctx, data, phase, options) {
             ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
         } });
     };
-    for (const [side, fill] of [['l', color.left], ['r', color.right]]) {
+    for (const [side, fill] of [['l', mage ? '#516778' : color.left], ['r', mage ? '#42596a' : color.right]]) {
         chain(side + 'hipjoint', side + 'femur', .105, fill);
-        chain(side + 'femur', side + 'tibia', .08, fill);
-        chain(side + 'tibia', side + 'foot', .075, fill);
-        chain(side + 'foot', side + 'toes', .07, fill);
+        chain(side + 'femur', side + 'tibia', .08, mage ? '#4a3b30' : fill);
+        chain(side + 'tibia', side + 'foot', .075, mage ? '#4a3b30' : fill);
+        chain(side + 'foot', side + 'toes', .07, mage ? '#4a3b30' : fill);
         chain(side + 'clavicle', side + 'humerus', .075, fill);
         chain(side + 'humerus', side + 'radius', .06, fill);
         chain(side + 'radius', side + 'hand', .06, fill);
@@ -63,21 +90,22 @@ export function drawView(ctx, data, phase, options) {
     const torso = ['lclavicle', 'rclavicle', 'rhipjoint', 'lhipjoint'].map(n => project(joint[n]));
     geometry.push({ depth: torso.reduce((sum, p) => sum + p[2], 0) / 4, draw() {
         ctx.beginPath(); torso.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
-        ctx.fillStyle = color.body; ctx.fill(); ctx.strokeStyle = color.edge; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = mage ? '#343a3b' : color.body; ctx.fill(); ctx.strokeStyle = color.edge; ctx.lineWidth = 2; ctx.stroke();
     } });
-    chain('thorax', 'upperneck', .075, color.body);
+    chain('thorax', 'upperneck', mage ? .13 : .075, mage ? '#bab9a4' : color.body);
     const head = [...joint.head]; head[1] -= .06;
     const hp = project(head);
     geometry.push({ depth: hp[2], draw() {
         ctx.beginPath(); ctx.ellipse(hp[0], hp[1], scale * .075, scale * .105, 0, 0, Math.PI * 2);
-        ctx.fillStyle = color.body; ctx.fill(); ctx.strokeStyle = color.edge; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = mage ? '#42596a' : color.body; ctx.fill(); ctx.strokeStyle = color.edge; ctx.lineWidth = 2; ctx.stroke();
+        if(mage){ctx.fillStyle='#202b30';ctx.beginPath();ctx.ellipse(hp[0]+scale*.018,hp[1]+scale*.018,scale*.043,scale*.061,0,0,Math.PI*2);ctx.fill();}
     } });
     geometry.sort((a, b) => a.depth - b.depth);
     for (const item of geometry) item.draw();
     ctx.restore();
     ctx.save();
     ctx.fillStyle = '#d7ddcc'; ctx.font = '15px sans-serif'; ctx.fillText(label, x + 14, y + 24);
-    ctx.fillStyle = '#8baba5'; ctx.font = '11px sans-serif'; ctx.fillText('Blue: left · rust: right · gold: contact estimate', x + 14, y + height - 12);
+    ctx.fillStyle = '#8baba5'; ctx.font = '11px sans-serif'; ctx.fillText(mage ? 'Mage blocking · carried staff · fixed right-hand grip' : 'Blue: left · rust: right · gold: contact estimate', x + 14, y + height - 12);
     ctx.restore();
     return index;
 }

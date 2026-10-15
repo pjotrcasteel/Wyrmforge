@@ -1,0 +1,23 @@
+{
+  "cleaned": {
+    "maxBoneLengthChangeMeters": 2.220446049250313e-16,
+    "maxHandGripErrorMeters": 1.2412670766236366e-16,
+    "legCoordinatesUnchanged": true,
+    "exportedMaxBoneLengthChangeMeters": 6.137160746266801e-07,
+    "staffGroundClearanceMeters": 0.23910600000000015
+  },
+  "hurt": {
+    "maxBoneLengthChangeMeters": 2.220446049250313e-16,
+    "maxHandGripErrorMeters": 1.2412670766236366e-16,
+    "legCoordinatesUnchanged": true,
+    "exportedMaxBoneLengthChangeMeters": 9.141773893162064e-07,
+    "staffGroundClearanceMeters": 0.23234200000000005
+  },
+  "critical": {
+    "maxBoneLengthChangeMeters": 2.220446049250313e-16,
+    "maxHandGripErrorMeters": 2.482534153247273e-16,
+    "legCoordinatesUnchanged": true,
+    "exportedMaxBoneLengthChangeMeters": 6.329899192303312e-07,
+    "staffGroundClearanceMeters": 0.22194400000000003
+  }
+}
