@@ -23,8 +23,12 @@ export function createTerrainPlan(environment, width, height) {
     for (let index = 0; index < Math.min(260, Math.ceil(width * height / 900)); index++) {
         rubble.push({ x: random() * width, y: random() * height, size: .5 + random() * 2.4, tone: random() });
     }
+    const story = createTerritoryStoryPlan(environment, width, height);
+    // Remove the old randomly rotated monoliths from the monastery entirely.
+    // They read as arbitrary spires, sit on traversable floor and undermine
+    // its coherent historic layout. Other terrain biomes keep their debris.
     const remains = [];
-    for (let index = 0; index < 10; index++) {
+    if (!story.cloister) for (let index = 0; index < 10; index++) {
         const side = index % 2 === 0 ? 1 : -1;
         remains.push({ x: Math.max(9, Math.min(width - 9, width * .5 + side * (trailWidth * .68 + random() * width * .16))),
             y: 20 + random() * Math.max(1, height - 40), size: 7 + random() * 11, rotation: random() * Math.PI });
@@ -42,7 +46,7 @@ export function createTerrainPlan(environment, width, height) {
             angle: random() * Math.PI * 2 });
     }
     return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark,
-        story: createTerritoryStoryPlan(environment, width, height) };
+        story };
 }
 
 function drawTerrain(ctx, plan, width, height) {
