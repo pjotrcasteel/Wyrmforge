@@ -97,3 +97,15 @@ Research before generation:
 - [Papplewick engine house — Historic England](https://historicengland.org.uk/images-books/photos/item/DP572025): a spatial reference for purpose-built machinery rooms, not a period template.
 
 Generated using the built-in OpenAI image tool, with the previous study and approved forest encounter as direct references, followed by a targeted conduit correction. The revision prompt required a rectangular workshop, explicit roof cutaway, a simple masonry furnace, floor-level charging hatch, independent lever-operated bellows, and one continuous conduit terminating at the rune panel. Restrained detail and traceable construction take priority over decoration.
+## Implementation direction locked — 15 October 2026
+
+**Continue from the [current WyrmForge art + backlog handover](../docs/handover/2026-10-15-project-art-and-backlog.md).** The concepts above are the source of character, mood, composition and construction continuity; artwork on the playable site is still subject to visual approval on a real phone.
+
+Recent user corrections are requirements, not optional sketches:
+- The mage must always wear the same slate-blue cloak / pale collar and hold a **thin, continuous staff**. Earlier raised hammer-like ends, white outfits and burgundy outfits are rejected.
+- Delete tall random spires/monoliths from the monastery. They read like **camera-facing billboards** and break 2.5D when walking away. A monastery means a deliberate connected building plan, purpose-built cloister, adjacent rooms, damaged supports and wet walkways, not a cave or a pile of ornamented arches.
+- Keep wall top/front/side planes fixed in world coordinates, with correct player/enemy foot-depth sorting when they pass behind the wall. Only C# collision footprints should look like impassable raised scenery.
+- Gates must visibly open based on actual simulation; do not use prison-wide railing/grille designs or make walkable floors look like solid obstacles.
+- The first playable art corrective pass [PR #114](https://github.com/pjotrcasteel/Wyrmforge/pull/114) merged. It does **not** signify final aesthetic approval. Review the real deployed asset and iPhone Safari at 390px scale.
+
+Preserve the artistic principles and gameplay decisions in the [Battlemage source study](../docs/design/battlemage-visual-reference.md), [visual-first UI RFC](../docs/design/visual-first-magic-ui-rfc.md), and [full continuation handover](../docs/handover/2026-10-15-project-art-and-backlog.md).
