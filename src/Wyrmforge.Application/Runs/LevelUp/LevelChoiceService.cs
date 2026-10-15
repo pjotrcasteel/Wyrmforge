@@ -39,12 +39,13 @@ public sealed class LevelChoiceService(
             return true;
         }
         if (choice.Id.StartsWith("rune:", StringComparison.Ordinal)) return build.RunUpgrades.Apply(ParseRunUpgrade(choice.Id));
-        if (choice.Id.StartsWith("focus:", StringComparison.Ordinal)) return build.Spells.TryFocus(ParseSpell(choice.Id));
+        if (choice.Id.StartsWith("focus:", StringComparison.Ordinal)) return !build.Spells.IsPrimaryCommitted && build.Spells.TryFocus(ParseSpell(choice.Id));
         if (choice.Id.StartsWith("spell:", StringComparison.Ordinal))
         {
             var spell = ParseSpell(choice.Id);
+            if (build.Spells.IsPrimaryCommitted && spell != build.Spells.ActiveSpell) return false;
             if (!build.Spells.LearnOrUpgrade(spell)) return false;
-            build.Spells.TryFocus(spell);
+            if (!build.Spells.IsPrimaryCommitted) build.Spells.TryFocus(spell);
             return true;
         }
         if (choice.Id.StartsWith("evolution:", StringComparison.Ordinal))
@@ -122,7 +123,8 @@ public sealed class LevelChoiceService(
                 upgrade.MaxRank,
                 RuneRarity(upgrade.Id))));
         choices.AddRange(SpellCatalog.All
-            .Where(spell => (availableSpells is null || availableSpells.Contains(spell.Id)) && build.Spells[spell.Id] < spell.MaxRank)
+            .Where(spell => (availableSpells is null || availableSpells.Contains(spell.Id)) && build.Spells[spell.Id] < spell.MaxRank
+                && (!build.Spells.IsPrimaryCommitted || spell.Id == build.Spells.ActiveSpell))
             .Select(spell =>
             {
                 var currentRank = build.Spells[spell.Id];
@@ -139,7 +141,7 @@ public sealed class LevelChoiceService(
                     SpellRarity(spell, currentRank));
             }));
         choices.AddRange(SpellCatalog.All
-            .Where(spell => build.Spells[spell.Id] == spell.MaxRank && spell.Id != build.Spells.ActiveSpell)
+            .Where(spell => !build.Spells.IsPrimaryCommitted && build.Spells[spell.Id] == spell.MaxRank && spell.Id != build.Spells.ActiveSpell)
             .Select(spell => new LevelChoice(
                 $"focus:{spell.Id}", LevelChoiceKind.SpellFocus, $"Focus {spell.Name}",
                 $"Replace {SpellCatalog.Get(build.Spells.ActiveSpell).Name} as your primary cast. Learned spells and ranks are retained for combinations.",
@@ -184,6 +186,21 @@ public sealed class LevelChoiceService(
     {
         if (preferredSchool is { } guaranteedSchool)
         {
+            // The route may be attuned to a different element, but the reward cannot
+            // encourage an unusable pivot or off-primary school-damage investment.
+            if (build.Spells.IsPrimaryCommitted && guaranteedSchool != SpellCatalog.Get(build.Spells.ActiveSpell).School)
+            {
+                var compatible = pool.Where(choice => choice.Kind == LevelChoiceKind.Synergy
+                    && SynergyCatalog.Get(ParseSynergy(choice.Id)).RequiredSpells
+                        .Any(spell => SpellCatalog.Get(spell).School == guaranteedSchool)).ToList();
+                if (compatible.Count > 0)
+                {
+                    TakeInto(result, pool, compatible, resonance, LevelChoiceDraftRole.Converge,
+                        _ => $"A {guaranteedSchool} interaction strengthens your committed primary.");
+                    return;
+                }
+                guaranteedSchool = SpellCatalog.Get(build.Spells.ActiveSpell).School;
+            }
             var matching = pool.Where(choice => IsSpellChoiceForSchool(choice, guaranteedSchool)).ToList();
             if (matching.Count == 0) matching = pool.Where(choice => choice.Kind == LevelChoiceKind.Rune && RuneSchool(ParseRunUpgrade(choice.Id)) == guaranteedSchool).ToList();
             if (matching.Count > 0)

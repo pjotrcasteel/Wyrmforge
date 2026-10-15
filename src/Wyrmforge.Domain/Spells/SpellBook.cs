@@ -8,9 +8,23 @@ public sealed class SpellBook
 
     public SpellId ActiveSpell { get; private set; } = SpellId.ArcaneOrb;
 
+    // The player commits to one primary before entering the first trail.
+    // Supporting schools are acquired via combinations rather than wasting ranks on pivots.
+    public bool IsPrimaryCommitted { get; private set; }
+
+    public bool TryChoosePrimary(SpellId id)
+    {
+        if (IsPrimaryCommitted || !ranks.ContainsKey(id)) return false;
+        if (id != SpellId.ArcaneOrb) ranks[SpellId.ArcaneOrb] = 0;
+        if (ranks[id] == 0) ranks[id] = 1;
+        ActiveSpell = id;
+        IsPrimaryCommitted = true;
+        return true;
+    }
+
     public bool TryFocus(SpellId id)
     {
-        if (!ranks.TryGetValue(id, out var rank) || rank <= 0 || id == ActiveSpell) return false;
+        if (IsPrimaryCommitted || !ranks.TryGetValue(id, out var rank) || rank <= 0 || id == ActiveSpell) return false;
         ActiveSpell = id;
         return true;
     }
