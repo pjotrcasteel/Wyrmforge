@@ -55,6 +55,8 @@ public sealed partial class RunSimulation
     private double ashenWingMovementTime;
     private double ashenWingCooldown;
     private int castCount;
+    private CastMotionRenderSnapshot? lastCastMotion;
+    private double lastCastMotionStartedAt;
     private int projectileCastCount;
     private int hitCount;
     private int arcaneHitCount;
@@ -281,6 +283,7 @@ public sealed partial class RunSimulation
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)
             {
                 Combination = projectile.Combination,
+                Angle = Math.Atan2(projectile.Velocity.Y, projectile.Velocity.X),
             }).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,
@@ -295,8 +298,17 @@ public sealed partial class RunSimulation
             PowerBurst = CreatePowerBurstSnapshot(),
             Environment = arenaEnvironment?.Snapshot(),
             Exit = CreateTrailExitSnapshot(),
-            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null
+            World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
+            CastMotion = CreateCastMotionSnapshot(),
         };
+    }
+
+    private CastMotionRenderSnapshot? CreateCastMotionSnapshot()
+    {
+        if (lastCastMotion is not { } cast) return null;
+        var duration = cast.Rank >= 3 ? .52 : cast.Rank == 2 ? .44 : .36;
+        var progress = (elapsed - lastCastMotionStartedAt) / duration;
+        return progress >= 1 ? null : cast with { Progress = Math.Clamp(progress, 0, 1) };
     }
 
     private ExtractionRenderSnapshot? CreateExtractionSnapshot()

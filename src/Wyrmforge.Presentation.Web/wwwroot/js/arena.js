@@ -1,6 +1,7 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
+import { drawSpellCastMotion, drawSpellProjectile } from './arena-spell-vfx.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
 const arenas = new WeakMap();
@@ -193,18 +194,7 @@ function draw(state, snapshot, width, height) {
     for (const impact of snapshot.elementalImpacts) drawElementalImpact(ctx, impact);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
-    for (const projectile of snapshot.projectiles) {
-        ctx.beginPath();
-        ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
-        ctx.fillStyle = projectile.combination === 0 ? '#94dfec' : projectile.inferno ? '#ffb04a' : projectileColor(projectile.spell);
-        ctx.fill();
-        if (projectile.combination === 0) {
-            ctx.beginPath();
-            ctx.arc(projectile.x, projectile.y, projectile.radius * .55, 0, Math.PI * 2);
-            ctx.fillStyle = '#ee8248';
-            ctx.fill();
-        }
-    }
+    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
     for (const trace of snapshot.lightning) {
         ctx.beginPath();
@@ -245,6 +235,7 @@ function draw(state, snapshot, width, height) {
     ctx.strokeStyle = '#7f56c2';
     ctx.lineWidth = 3;
     ctx.stroke();
+    drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);

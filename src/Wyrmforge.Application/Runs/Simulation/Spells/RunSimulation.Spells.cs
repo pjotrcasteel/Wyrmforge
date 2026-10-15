@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Domain.Combat.Abilities;
+﻿using Wyrmforge.Application.Runs.Simulation.Snapshots;
+using Wyrmforge.Domain.Combat.Abilities;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Combat.Projectiles;
@@ -36,6 +37,11 @@ public sealed partial class RunSimulation
     {
         if (!echo)
         {
+            var target = NearestTarget(player.Position);
+            var direction = target is null ? 0 : Math.Atan2(target.Position.Y - player.Position.Y, target.Position.X - player.Position.X);
+            lastCastMotion = new CastMotionRenderSnapshot(player.Position.X, player.Position.Y, spell.Id, rank,
+                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0);
+            lastCastMotionStartedAt = elapsed;
             castCount++;
             if (spell.Ability.Delivery is ProjectileAbilityProfile) projectileCastCount++;
             ApplyDragonEssenceCastEffects();

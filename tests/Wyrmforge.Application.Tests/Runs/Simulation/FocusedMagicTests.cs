@@ -86,6 +86,26 @@ public sealed class FocusedMagicTests
     }
 
     [TestMethod]
+    public void UpdateSpellcasting_FrostfireCast_ExposesActualPrimaryAndCombinationForPresentation()
+    {
+        var simulation = Create();
+        var build = PrepareFireAndFrost(simulation);
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        Assert.IsTrue(build.Synergies.Select(SynergyId.Frostfire, build.Spells));
+
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+
+        var cast = simulation.CreateSnapshot().CastMotion;
+        Assert.IsNotNull(cast);
+        Assert.AreEqual(SpellId.FireBolt, cast.Spell);
+        Assert.AreEqual(2, cast.Rank);
+        Assert.AreEqual(SynergyId.Frostfire, cast.Combination);
+        Assert.AreEqual(0d, cast.Progress);
+        Assert.AreEqual(1, Projectiles(simulation).Count);
+        Assert.AreEqual(SynergyId.Frostfire, simulation.CreateSnapshot().Projectiles.Single().Combination);
+    }
+
+    [TestMethod]
     public void UpdateSpellcasting_SwitchAwayAndBack_DoesNotResetPreviousCastCooldown()
     {
         var simulation = Create();
@@ -162,7 +182,7 @@ public sealed class FocusedMagicTests
         Invoke(simulation, "CastChainLightning", 3, new Vector2D(80, 80), 1d, 0);
         var supportHits = targets.Count(target => target.Health < 1000);
         // The fixture's existing enemy at the chain origin takes the first, unfaded hit.
-        // targets[0] receives jump two, which must keep native 0.84 chain falloff.
+        // targets[1] receives jump two, which must keep native 0.84 chain falloff.
         Assert.AreEqual(25, 1000 - Enemy(simulation).Health, .001);
         Assert.AreEqual(21, 1000 - targets[1].Health, .001);
         var before = targets.Select(target => target.Health).ToArray();
