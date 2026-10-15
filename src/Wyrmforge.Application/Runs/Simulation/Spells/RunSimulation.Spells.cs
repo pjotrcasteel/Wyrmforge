@@ -54,7 +54,8 @@ public sealed partial class RunSimulation
                 break;
             case ChainAbilityProfile chain:
                 var focusedChain = chain with { BaseJumpsAtRankOne = chain.BaseJumpsAtRankOne + FocusedCastProfile.For(spell.Id, rank).BonusChains };
-                CastChainSpell(spell, focusedChain, rank, player.Position, damageScale);
+                CastChainSpell(spell, focusedChain, rank, player.Position, damageScale,
+                    combination: SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies));
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported delivery profile {spell.Ability.Delivery.GetType().Name} for {spell.Id}.");
@@ -117,6 +118,7 @@ public sealed partial class RunSimulation
                 Math.Max(masteryNova, evolution.FrostNovaRadius))
             {
                 Combination = SpellCombinationResolver.ActiveFor(id, build.Spells, build.Synergies),
+                Rank = rank,
                 AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
             };
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
@@ -130,7 +132,8 @@ public sealed partial class RunSimulation
         CastChainSpell(spell, chain, rank, origin, damageScale, bonusJumps);
     }
 
-    private void CastChainSpell(SpellDefinition spell, ChainAbilityProfile profile, int rank, Vector2D origin, double damageScale, int bonusJumps = 0)
+    private void CastChainSpell(SpellDefinition spell, ChainAbilityProfile profile, int rank, Vector2D origin, double damageScale,
+        int bonusJumps = 0, SynergyId? combination = null)
     {
         var current = origin;
         var evolution = EvolutionProfile(spell.Id);
@@ -150,14 +153,14 @@ public sealed partial class RunSimulation
             hitCount++;
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
-            RegisterElementalImpact(target.Position, spell.Id);
+            RegisterElementalImpact(target.Position, spell.Id, rank, combination);
             var killed = DamageTarget(target, hitDamage);
             if (!killed) ApplyAbilityStatus(spell, rank, target);
             if (!killed) ApplyHitRules(spell.Id, target);
 
             if (forkPending)
             {
-                CastChainFork(spell, rank, target.Position, damage, hit, ref jumps, ref bonusJumpsTriggered);
+                CastChainFork(spell, rank, target.Position, damage, hit, ref jumps, ref bonusJumpsTriggered, combination);
                 forkPending = false;
             }
 
@@ -166,7 +169,8 @@ public sealed partial class RunSimulation
         }
     }
 
-    private void CastChainFork(SpellDefinition spell, int rank, Vector2D origin, double damage, HashSet<int> hit, ref int jumps, ref bool bonusJumpsTriggered)
+    private void CastChainFork(SpellDefinition spell, int rank, Vector2D origin, double damage, HashSet<int> hit, ref int jumps,
+        ref bool bonusJumpsTriggered, SynergyId? combination)
     {
         var target = NearestTarget(origin, hit);
         if (target is null) return;
@@ -174,7 +178,7 @@ public sealed partial class RunSimulation
         hitCount++;
         lightning.Add(new LightningTrace(origin, target.Position, 0.16));
         var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
-        RegisterElementalImpact(target.Position, spell.Id);
+        RegisterElementalImpact(target.Position, spell.Id, rank, combination);
         var killed = DamageTarget(target, forkDamage);
         if (!killed) ApplyAbilityStatus(spell, rank, target);
         if (!killed) ApplyHitRules(spell.Id, target);

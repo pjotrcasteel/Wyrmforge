@@ -7,4 +7,5 @@ public sealed record ProjectileRenderSnapshot(double X, double Y, double Radius,
 {
     public SynergyId? Combination { get; init; }
     public double Angle { get; init; }
+    public int Rank { get; init; } = 1;
 }

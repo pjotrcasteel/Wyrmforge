@@ -83,6 +83,8 @@ public sealed class FocusedMagicTests
 
         Assert.IsTrue(Enemy(simulation).Statuses.Has(CombatStatusId.Frozen));
         Assert.IsTrue(Enemy(simulation).Statuses.Has(CombatStatusId.Burning));
+        Assert.AreEqual(SynergyId.Frostfire, simulation.CreateSnapshot().ElementalImpacts.Single().Combination);
+        Assert.AreEqual(SpellId.FireBolt, simulation.CreateSnapshot().ElementalImpacts.Single().Spell);
     }
 
     [TestMethod]
@@ -141,6 +143,7 @@ public sealed class FocusedMagicTests
 
         Assert.IsTrue(Enemy(simulation).Health < 1000);
         Assert.IsTrue(neighbour.Health < 1000);
+        Assert.AreEqual(2, simulation.CreateSnapshot().ElementalImpacts.Single().Rank);
         Assert.AreEqual(0, Projectiles(simulation).Count);
     }
 
@@ -190,6 +193,7 @@ public sealed class FocusedMagicTests
         var primaryHits = targets.Where((target, index) => target.Health < before[index]).Count();
 
         Assert.IsTrue(primaryHits > supportHits);
+        Assert.IsTrue(simulation.CreateSnapshot().ElementalImpacts.All(impact => impact.Combination is null));
         Assert.AreEqual(0, Projectiles(simulation).Count);
     }
 
