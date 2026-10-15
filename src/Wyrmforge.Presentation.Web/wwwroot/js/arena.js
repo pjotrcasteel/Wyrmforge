@@ -4,6 +4,7 @@ import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage } from './arena-mage.js';
+import { drawEnemyPixelArt } from './arena-enemy-art.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 
@@ -183,7 +184,8 @@ function draw(state, snapshot, width, height) {
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
-    for (const enemy of snapshot.enemies) drawEnemy(ctx, enemy);
+    for (const enemy of snapshot.enemies)
+        drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y));
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
@@ -693,33 +695,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.restore();
 }
 
-function drawEnemy(ctx, enemy) {
-    ctx.save();
-    ctx.translate(enemy.x, enemy.y);
-    ctx.fillStyle = enemyColor(enemy);
-    ctx.strokeStyle = enemy.hitFlash ? '#fff7eb' : enemyEdgeColor(enemy.kind);
-    ctx.lineWidth = enemy.kind === 3 ? 2.5 : 1.4;
-
-    if (enemy.kind === 1) {
-        ctx.rotate(Math.PI / 4);
-        ctx.fillRect(-enemy.radius * 0.78, -enemy.radius * 0.78, enemy.radius * 1.56, enemy.radius * 1.56);
-        ctx.strokeRect(-enemy.radius * 0.78, -enemy.radius * 0.78, enemy.radius * 1.56, enemy.radius * 1.56);
-    } else if (enemy.kind === 2) {
-        drawPolygon(ctx, 0, 0, enemy.radius, 3, -Math.PI / 2);
-        ctx.fill();
-        ctx.stroke();
-    } else if (enemy.kind === 3) {
-        drawPolygon(ctx, 0, 0, enemy.radius, 6, Math.PI / 6);
-        ctx.fill();
-        ctx.stroke();
-    } else {
-        ctx.beginPath();
-        ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-    }
-    ctx.restore();
-
+function drawEnemy(ctx, enemy, lighting = null) {
+    drawEnemyPixelArt(ctx, enemy, lighting);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
     ctx.strokeStyle = `rgba(255, 205, 190, ${0.18 + damage * 0.5})`;
