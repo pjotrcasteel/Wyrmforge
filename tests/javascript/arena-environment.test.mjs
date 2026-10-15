@@ -46,7 +46,7 @@ test('missing environment has a safe fallback and game renders real arena scener
     assert.match(markup, /TRAIL VANQUISHED/);
     assert.match(markup, /Follow the illuminated passage north/);
 });
-\n
+
 test('opened healing caches use their own stone-and-herb silhouette, not an XP diamond', () => {
     const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
     assert.match(source, /if \(opened && !experience\) \{\s*drawOpenHealingCache\(ctx\)/);
