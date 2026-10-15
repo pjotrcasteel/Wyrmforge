@@ -29,7 +29,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Checkout last green focused control
-        run: git worktree add --detach "$RUNNER_TEMP/focused-control" 02966d081b4a9ba20ab27e53c7be98102a2753fb
+        run: git worktree add --detach "$RUNNER_TEMP/focused-control" 5a694132dd87c45475d8b551fe03c044256c60f6
 
       - name: Build candidate
         run: dotnet build src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release
@@ -45,6 +45,7 @@ jobs:
               focused_source_dir="$RUNNER_TEMP/focused-control"
             fi
             dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 240 --output "artifacts/focused-comparison/$variant/fresh"
+            dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 600 --output "artifacts/focused-comparison/$variant/fresh_extended"
             dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 720 --output "artifacts/focused-comparison/$variant/established"
           done
 
@@ -56,10 +57,10 @@ jobs:
           from pathlib import Path
           summaries = []
           for variant in ("control", "current"):
-              for cohort in ("fresh", "established"):
+              for cohort in ("fresh", "fresh_extended", "established"):
                   path = Path("artifacts/focused-comparison") / variant / cohort / "balance-report.json"
                   runs = json.loads(path.read_text())["runs"]
-                  expected = 32 if cohort == "fresh" else 96
+                  expected = 32 if cohort.startswith("fresh") else 96
                   assert len(runs) == expected
                   bosses = sum(run["wyrmsReached"] > 0 for run in runs)
                   combinations = sum(run["synergies"] > 0 for run in runs)
@@ -88,7 +89,7 @@ jobs:
           root = Path("artifacts/focused-comparison")
           rows = ["## Paired build diagnosis", "",
                   "Same build, agent and seed in both variants. Differences are diagnostic, not human win rates.", ""]
-          for cohort in ("fresh", "established"):
+          for cohort in ("fresh", "fresh_extended", "established"):
               control = json.loads((root / "control" / cohort / "balance-report.json").read_text())["runs"]
               candidate = json.loads((root / "current" / cohort / "balance-report.json").read_text())["runs"]
               key = lambda run: (run["build"], run["agent"], run["seed"])
@@ -116,6 +117,15 @@ jobs:
                               f"| {slain(0)} → {slain(1)} | {rituals(0)} → {rituals(1)} | {ritual_deaths(0)} → {ritual_deaths(1)} "
                               f"| {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
                               f"| {delta('minimumHealthRatio'):+.2f} | {delta('damageTaken'):+.1f} | {avg_surges:.1f} |")
+              from collections import Counter
+              for label, cohort_runs in (("Control", control), ("Current", candidate)):
+                  stops = Counter(str(run["stopReason"]) for run in cohort_runs)
+                  mean_routes = statistics.mean(run["completedRouteNodes"] for run in cohort_runs)
+                  mean_seconds = statistics.mean(run["simulatedSeconds"] for run in cohort_runs)
+                  mean_min_hp = statistics.mean(run["minimumHealthRatio"] for run in cohort_runs)
+                  print(f"{cohort} {label}: stops={dict(stops)}, mean routes={mean_routes:.2f}, seconds={mean_seconds:.1f}, minimum HP={mean_min_hp:.2f}")
+                  rows.append(f"{label} outcomes: stop reasons `{dict(stops)}`; mean routes {mean_routes:.2f}; simulated seconds {mean_seconds:.1f}; minimum HP {mean_min_hp:.2f}.  ")
+              rows.append("")
               before_extracted = sum(run["outcome"] == 1 for run in control)
               after_extracted = sum(run["outcome"] == 1 for run in candidate)
               if after_extracted < before_extracted:
@@ -133,6 +143,12 @@ jobs:
         run: 'true'
 
       - name: "Current fresh — ${{ steps.evidence.outputs.current_fresh }}"
+        run: 'true'
+
+      - name: "Control fresh extended — ${{ steps.evidence.outputs.control_fresh_extended }}"
+        run: 'true'
+
+      - name: "Current fresh extended — ${{ steps.evidence.outputs.current_fresh_extended }}"
         run: 'true'
 
       - name: "Control established — ${{ steps.evidence.outputs.control_established }}"
