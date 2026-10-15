@@ -1,12 +1,16 @@
-# Battlemage art reference — frame-by-frame review required
+# Legion Breaker / Battlemage — exact source art reference
 
-**User-provided exact reference:** https://www.youtube.com/watch?v=WePyhtxZ4t0
+**Exact player-selected video:** https://www.youtube.com/watch?v=WePyhtxZ4t0
 
-**Status: pending video-frame verification.** As of 2026-10-15 the source video could not be loaded or its identity/frames independently verified from this development environment. The name “Battlemage” is shared by multiple unrelated games, including top-down pixel-art and first-person 3D titles. **Do not claim that screenshots from one of the other games represent this particular video.** Never infer the linked game's appearance or graphics pipeline merely from its title.
+**Identity verified through YouTube metadata (vidIQ):** the video is titled *Highly Anticipated BATTLEMAGE Incremental is Here and It's Great!* by **Idle cub**, published 2026-10-14, runtime **2h44m55s**. Its subject is **Legion Breaker**, by Baffled Engineer, released October 13, 2026 on Steam: https://store.steampowered.com/app/4425980/Legion_Breaker/
 
-The user identifies this video as the recent Battlemage title whose **art style** should inspire WyrmForge. This supersedes using random generic fantasy references as the primary style baseline. Reference influence is for original art-direction principles only; do not copy proprietary sprites, environments, UI, or effects.
+**Visual verification status:** full source-video visual analysis initiated through vidIQ; timestamped findings must be added only after the visual result completes. The name *Battlemage* describes the player fantasy and is used in the video headline, not the game's proper title. Do not substitute assets or screenshots from any other game with a similar name.
 
-## Source-frame audit once video frames are available
+**Grounded public design context:** Steam and the developer characterize Legion Breaker as *pixel graphics*, a 2D active incremental wizard-vs-undead game with handmade sprite art, distinct battlefields, many concurrent troops/enemies, powerful spells and a large skill tree. Developer notes identify a May visual-overhaul release and a June upgrade-screen clarity release. These are documented facts about the product, **not frame-by-frame observations from the user's video**. Its short 3–4 hour campaign and incremental auto-battler structure are *not* the target WyrmForge game loop.
+
+Use Legion Breaker as the preferred **art/readability** benchmark, while retaining WyrmForge's manually traversed dark Diablo-influenced roguelite world, one committed primary, combinations, 100+ meaningful hunts, and spell-lit architecture. Borrow abstract art-direction principles, not copyrighted sprites, interface composition or VFX artwork.
+
+## Source-frame audit — pending the full gameplay walkthrough
 
 Capture representative stills from (1) idle character in environment, (2) traveling cast, (3) elemental projectile in flight, (4) enemy impact or a powerful attack, (5) a decorated environment without combat, (6) upgrade/menu UI. Where applicable, note the camera view, original rendered pixel pitch, outlines, light source, palette, animation frames, and readability.
 
@@ -38,4 +42,4 @@ Record a visual comparison using these objective questions:
 4. Make Fire Bolt Rank I, Rank II, and Surge visibly different while lighting the authored sprite, wet stone, nearby props and enemies.
 5. Test on actual iPhone Safari and browser pixel snapshots for silhouette readability and VFX coverage in 390px viewport. Keep live `main` unchanged until acceptance.
 
-**Open dependency:** obtain accessible video frames or screenshots from the exact user link, or user-connected video-analysis capability, before attributing any actual visible property to “Battlemage.” Until then, this is a carefully scoped inspection/implementation plan, not a completed visual review.
+**Open dependency:** obtain the timestamped visual walkthrough from the connected vidIQ video-watching job before treating any observed look as verified. Identity and source are now confirmed; detailed graphics must be described only from the source visuals. No live-game changes made.
