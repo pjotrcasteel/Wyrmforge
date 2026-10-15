@@ -12,6 +12,44 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_RecoveryTrail_OffscreenOpenedCacheHasVisibleButOptionalDiegeticGuide()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var result = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const recovery = await import('./js/arena-recovery.js');
+            const camera = { x: 250, y: 240, width: 950, height: 1550 };
+            const base = { player: { x: 500, y: 700 }, hud: { health: 45, maxHealth: 100 },
+                environment: { supplies: [{ kind: 'health', x: .5, y: .82, open: true }] } };
+            const canvas = document.createElement('canvas');
+            canvas.width = 950;
+            canvas.height = 1550;
+            const ctx = canvas.getContext('2d');
+            const image = render => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const drawn = render();
+                return { drawn, data: ctx.getImageData(370, 580, 255, 250).data };
+            };
+            const empty = image(() => recovery.drawRecoveryGuide(ctx, { ...base,
+                hud: { health: 95, maxHealth: 100 } }, camera, 390, 700, 0, true));
+            const full = image(() => recovery.drawRecoveryGuide(ctx, base, camera, 390, 700, 0, true));
+            const sealed = image(() => recovery.drawRecoveryGuide(ctx,
+                { ...base, environment: { supplies: [{ kind: 'health', x: .5, y: .82, open: false }] } },
+                camera, 390, 700, 0, true));
+            let painted = 0;
+            for (let i = 3; i < full.data.length; i += 4) if (full.data[i] !== empty.data[i]) painted++;
+            let leaked = 0;
+            for (let i = 3; i < sealed.data.length; i += 4) if (sealed.data[i] !== empty.data[i]) leaked++;
+            return { visible: full.drawn, healthyHidden: !empty.drawn, sealedHidden: !sealed.drawn, painted, leaked };
+        }");
+        Assert.IsTrue(result.GetProperty("visible").GetBoolean());
+        Assert.IsTrue(result.GetProperty("healthyHidden").GetBoolean());
+        Assert.IsTrue(result.GetProperty("sealedHidden").GetBoolean());
+        Assert.IsGreaterThan(35, result.GetProperty("painted").GetInt32(), "Ground marks must have visible actual canvas pixels.");
+        Assert.AreEqual(0, result.GetProperty("leaked").GetInt32(), "Sealed caches must not leak even one guidance pixel.");
+    }
+
+    [TestMethod]
     public async Task Mobile_FirstHunt_OnlyRunUnlockedAndGoalIsClear()
     {
         await Page.SetViewportSizeAsync(390, 844);

@@ -1,6 +1,7 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
 import { attachArenaInput, getArenaMovement } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit } from './arena-environment.js';
+import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage } from './arena-mage.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -171,6 +172,7 @@ function draw(state, snapshot, width, height) {
     }
     if (snapshot.hunt) drawHuntArena(ctx, snapshot.hunt, worldWidth, worldHeight);
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
+    drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
