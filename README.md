@@ -1,5 +1,7 @@
 # Wyrmforge
 
+**Development handover:** [current technical/art handover](docs/handover/current-handover.md) · [GitHub issue and PR audit (15 Oct 2026)](docs/handover/repository-triage-2026-10-15.md). These identify verified code, release gates and unresolved work separately.
+
 ## Prototype 0.0.117 — Health clarity and unmistakably different territories
 
 - **Remove the clickable health help question mark and modal entirely.** In combat, the green health bar, visible heart + HP current/maximum, and severity coloring (healthy / wounded / critical) convey the status immediately without interrupting movement. The health bar also exposes an accessible progress value.
