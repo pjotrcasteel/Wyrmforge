@@ -1,0 +1,100 @@
+name: Focused magic comparison
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Application/**'
+      - 'src/Wyrmforge.Domain/**'
+      - 'src/Wyrmforge.BalanceLab/**'
+      - '.github/workflows/focused-magic-comparison.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Checkout preceding focused control
+        run: git worktree add --detach "$RUNNER_TEMP/focused-control" 8e0ec63e63678baf93bd830d2797e42b6da517ae
+
+      - name: Build candidate
+        run: dotnet build src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release
+
+      - name: Build control
+        run: dotnet build "$RUNNER_TEMP/focused-control/src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj" -c Release
+
+      - name: Run matched portrait hunts
+        run: |
+          for variant in control current; do
+            focused_source_dir="$GITHUB_WORKSPACE"
+            if [ "$variant" = "control" ]; then
+              focused_source_dir="$RUNNER_TEMP/focused-control"
+            fi
+            dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --fresh-hunter --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 240 --output "artifacts/focused-comparison/$variant/fresh"
+            dotnet "$focused_source_dir/src/Wyrmforge.BalanceLab/bin/Release/net10.0/Wyrmforge.BalanceLab.dll" --arena-width 390 --arena-height 700 --runs-per-combination 2 --seed-start 9300 --max-seconds 720 --output "artifacts/focused-comparison/$variant/established"
+          done
+
+      - name: Summarize reproducible evidence
+        id: evidence
+        run: |
+          python3 - <<'PY'
+          import json, os, statistics
+          from pathlib import Path
+          summaries = []
+          for variant in ("control", "current"):
+              for cohort in ("fresh", "established"):
+                  path = Path("artifacts/focused-comparison") / variant / cohort / "balance-report.json"
+                  runs = json.loads(path.read_text())["runs"]
+                  expected = 32 if cohort == "fresh" else 96
+                  assert len(runs) == expected
+                  bosses = sum(run["wyrmsReached"] > 0 for run in runs)
+                  combinations = sum(run["synergies"] > 0 for run in runs)
+                  extracted = sum(run["outcome"] == 1 for run in runs)
+                  routes = statistics.mean(run["completedRouteNodes"] for run in runs)
+                  kills = statistics.mean(run["kills"] for run in runs)
+                  summary = f"bosses {bosses}/{len(runs)}, combos {combinations}, routes {routes:.2f}, kills {kills:.1f}, extracted {extracted}"
+                  summaries.append(f"{variant}/{cohort}: {summary}")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+                      print(f"{variant}_{cohort}={summary}", file=output)
+                  assert all(run["stopReason"] != 2 for run in runs), "Draft decision failure"
+                  assert all(run["peakActivePrimaryCount"] == 1 for run in runs), "Primary ownership regression"
+          report = "\n".join(summaries) + "\n"
+          Path("artifacts/focused-comparison/comparison.txt").write_text(report)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
+              print("## Matched focused-magic hunts\n\n" + report.replace("\n", "  \n"), file=output)
+          PY
+
+      - name: "Control fresh — ${{ steps.evidence.outputs.control_fresh }}"
+        run: 'true'
+
+      - name: "Current fresh — ${{ steps.evidence.outputs.current_fresh }}"
+        run: 'true'
+
+      - name: "Control established — ${{ steps.evidence.outputs.control_established }}"
+        run: 'true'
+
+      - name: "Current established — ${{ steps.evidence.outputs.current_established }}"
+        run: 'true'
+
+      - name: Upload matched hunt evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: focused-magic-comparison-${{ github.sha }}
+          path: artifacts/focused-comparison
+          if-no-files-found: warn
+          retention-days: 14

@@ -100,6 +100,76 @@ public sealed class FocusedMagicTests
         Assert.AreEqual(2, Projectiles(simulation).Count);
     }
 
+
+    [TestMethod]
+    public void UpdateSpellcasting_RankTwoFire_OneShotDamagesTargetAndNearbyEnemy()
+    {
+        var simulation = Create();
+        var build = Build(simulation);
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var neighbour = new EnemyState(2, new Vector2D(105, 80), 10, 1000, 0);
+        Field<List<EnemyState>>(simulation, "enemies").Add(neighbour);
+        Invoke(simulation, "RebuildCombatSpatialIndex");
+
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        var projectile = Projectiles(simulation).Single();
+        Assert.AreEqual(52.65, projectile.Damage, .001);
+        projectile.Position = Enemy(simulation).Position;
+        Invoke(simulation, "ResolveProjectileHits");
+
+        Assert.IsTrue(Enemy(simulation).Health < 1000);
+        Assert.IsTrue(neighbour.Health < 1000);
+        Assert.AreEqual(0, Projectiles(simulation).Count);
+    }
+
+    [TestMethod]
+    public void UpdateSpellcasting_MasteredFrost_PiercesThreeTargetsWithOneShard()
+    {
+        var simulation = Create();
+        var build = Build(simulation);
+        while (build.Spells.LearnOrUpgrade(SpellId.FrostShard)) { }
+        build.Spells.TryFocus(SpellId.FrostShard);
+        var targets = Field<List<EnemyState>>(simulation, "enemies");
+        targets.Add(new EnemyState(2, new Vector2D(180, 80), 10, 1000, 0));
+        targets.Add(new EnemyState(3, new Vector2D(280, 80), 10, 1000, 0));
+        Invoke(simulation, "RebuildCombatSpatialIndex");
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        var projectile = Projectiles(simulation).Single();
+
+        foreach (var target in targets)
+        {
+            projectile.Position = target.Position;
+            Invoke(simulation, "ResolveProjectileHits");
+        }
+
+        Assert.IsTrue(targets.All(target => target.Health < 1000));
+        Assert.AreEqual(0, Projectiles(simulation).Count);
+    }
+
+    [TestMethod]
+    public void CastChainLightning_SupportProc_DoesNotInheritPrimaryCoverageOrDamage()
+    {
+        var simulation = Create();
+        var build = Build(simulation);
+        while (build.Spells.LearnOrUpgrade(SpellId.ChainLightning)) { }
+        build.Spells.TryFocus(SpellId.ChainLightning);
+        var targets = Field<List<EnemyState>>(simulation, "enemies");
+        for (var id = 2; id <= 10; id++) targets.Add(new EnemyState(id, new Vector2D(80 + id * 30, 80), 10, 1000, 0));
+        Invoke(simulation, "RebuildCombatSpatialIndex");
+
+        Invoke(simulation, "CastChainLightning", 3, new Vector2D(80, 80), 1d, 0);
+        var supportHits = targets.Count(target => target.Health < 1000);
+        Assert.AreEqual(25, 1000 - targets[0].Health, .001);
+        var before = targets.Select(target => target.Health).ToArray();
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        var primaryHits = targets.Where((target, index) => target.Health < before[index]).Count();
+
+        Assert.IsTrue(primaryHits > supportHits);
+        Assert.AreEqual(0, Projectiles(simulation).Count);
+    }
+
     private static RunSimulation Create()
     {
         var random = new FirstRandomSource();

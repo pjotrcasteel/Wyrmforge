@@ -20,7 +20,7 @@ public sealed partial class RunSimulation
         var rank = build.Spells[spell.Id];
         spellCooldowns[spell.Id] -= delta;
         if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) return;
-        CastSpell(spell, rank, 1, false);
+        CastSpell(spell, rank, FocusedCastProfile.For(spell.Id, rank).DamageMultiplier, false);
         spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
     }
 
@@ -47,7 +47,8 @@ public sealed partial class RunSimulation
                 CastProjectileSpell(spell, projectile, rank, damageScale);
                 break;
             case ChainAbilityProfile chain:
-                CastChainSpell(spell, chain, rank, player.Position, damageScale);
+                var focusedChain = chain with { BaseJumpsAtRankOne = chain.BaseJumpsAtRankOne + FocusedCastProfile.For(spell.Id, rank).BonusChains };
+                CastChainSpell(spell, focusedChain, rank, player.Position, damageScale);
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported delivery profile {spell.Ability.Delivery.GetType().Name} for {spell.Id}.");
@@ -72,6 +73,7 @@ public sealed partial class RunSimulation
         var target = NearestTarget(player.Position);
         if (target is null) return;
         var id = spell.Id;
+        var focused = FocusedCastProfile.For(id, rank);
         var evolution = EvolutionProfile(id);
         var inferno = passiveProfile.Inferno && projectileCastCount > 0 && projectileCastCount % 5 == 0;
         var prismatic = passiveProfile.Prismatic && projectileCastCount > 0 && projectileCastCount % 5 == 0;
@@ -96,14 +98,14 @@ public sealed partial class RunSimulation
             var aimedDirection = Vector2D.DirectionTo(player.Position, volleyTarget.Position);
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
-            var radius = baseRadius * evolution.ProjectileRadiusMultiplier;
-            var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces;
+            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier;
+            var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces + focused.BonusPierces;
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
-                Math.Max(masterySplash, evolution.SplashRadius),
+                Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius)),
                 status,
                 pierces,
                 Math.Max(masteryNova, evolution.FrostNovaRadius))

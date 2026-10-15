@@ -59,7 +59,7 @@ public static class LevelChoicePresentation
         LevelChoiceKind.NewSpell or LevelChoiceKind.SpellFocus => "THIS RUN • REPLACES PRIMARY CAST",
         LevelChoiceKind.SpellUpgrade => "THIS RUN • EMPOWERS AND FOCUSES",
         LevelChoiceKind.Evolution => "TEMPORARY • DEFINES THIS SPELL",
-        _ => "TEMPORARY • CHANGES INTERACTIONS",
+        _ => "THIS RUN • KEEPS PRIMARY CAST",
     };
 
     private static string RuneDelta(RunUpgradeId id, int currentRank)
@@ -103,13 +103,13 @@ public static class LevelChoicePresentation
     {
         var spell = SpellCatalog.Get(id);
         var nextRank = currentRank + 1;
-        var nextDamage = spell.Ability.CalculateDamage(nextRank);
+        var nextDamage = FocusedCastProfile.CalculateDamage(spell, nextRank);
         var nextCooldown = spell.Ability.CalculateCooldownSeconds(nextRank);
         var effect = SpellEffect(spell, currentRank);
         var prefix = string.IsNullOrEmpty(effect) ? string.Empty : $"{effect} • ";
         if (currentRank == 0) return $"{prefix}{nextDamage:0.#} damage • {nextCooldown:0.00}s interval";
 
-        var currentDamage = spell.Ability.CalculateDamage(currentRank);
+        var currentDamage = FocusedCastProfile.CalculateDamage(spell, currentRank);
         var currentCooldown = spell.Ability.CalculateCooldownSeconds(currentRank);
         return $"{prefix}{currentDamage:0.#} → {nextDamage:0.#} damage • {currentCooldown:0.00} → {nextCooldown:0.00}s";
     }
@@ -117,18 +117,27 @@ public static class LevelChoicePresentation
     private static string SpellEffect(SpellDefinition spell, int currentRank)
     {
         var nextRank = currentRank + 1;
-        if (spell.Id == SpellId.ArcaneOrb && currentRank == 1) return "Pierce +1";
-        if (spell.Id == SpellId.ArcaneOrb && nextRank == spell.MaxRank) return "Wider bolt";
-        if (spell.Id == SpellId.FireBolt && nextRank == spell.MaxRank) return "Impact blast";
-        if (spell.Id == SpellId.FrostShard && nextRank == spell.MaxRank) return "Freezing nova";
-        if (spell.Id == SpellId.ChainLightning && nextRank == spell.MaxRank) return "Forked lightning";
+        var current = FocusedCastProfile.For(spell.Id, currentRank);
+        var next = FocusedCastProfile.For(spell.Id, nextRank);
+        var effects = new List<string>();
+        var mastery = nextRank == spell.MaxRank ? spell.Id switch
+        {
+            SpellId.ArcaneOrb => "Wider bolt",
+            SpellId.FrostShard => "Freezing nova",
+            SpellId.ChainLightning => "Forked lightning",
+            _ => null,
+        } : null;
+        if (mastery is not null) effects.Add(mastery);
+        var pierces = next.BonusPierces - current.BonusPierces + (spell.Id == SpellId.ArcaneOrb && currentRank == 1 ? 1 : 0);
+        if (pierces > 0) effects.Add($"Pierce +{pierces}");
+        if (next.SplashRadius > current.SplashRadius) effects.Add($"Impact blast {next.SplashRadius:0}");
         if (spell.Ability.Status is { Status: CombatStatusId.Frozen } freeze)
-            return currentRank == 0 ? $"Freeze {freeze.CalculateDurationSeconds(nextRank):0.00}s"
-                : $"Freeze {freeze.CalculateDurationSeconds(currentRank):0.00} → {freeze.CalculateDurationSeconds(nextRank):0.00}s";
+            effects.Add(currentRank == 0 ? $"Freeze {freeze.CalculateDurationSeconds(nextRank):0.00}s"
+                : $"Freeze {freeze.CalculateDurationSeconds(currentRank):0.00} → {freeze.CalculateDurationSeconds(nextRank):0.00}s");
         if (spell.Ability.Delivery is ChainAbilityProfile chain)
-            return currentRank == 0 ? $"{chain.CalculateJumps(nextRank)} targets"
-                : $"{chain.CalculateJumps(currentRank)} → {chain.CalculateJumps(nextRank)} targets";
-        return string.Empty;
+            effects.Add(currentRank == 0 ? $"{chain.CalculateJumps(nextRank) + next.BonusChains} chain targets"
+                : $"{chain.CalculateJumps(currentRank) + current.BonusChains} → {chain.CalculateJumps(nextRank) + next.BonusChains} targets");
+        return string.Join(" • ", effects);
     }
 
     public static string EvolutionSpellName(LevelChoice choice) =>

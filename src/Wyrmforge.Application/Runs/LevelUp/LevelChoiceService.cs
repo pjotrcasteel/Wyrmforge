@@ -55,7 +55,10 @@ public sealed class LevelChoiceService(
         if (choice.Id.StartsWith("synergy:", StringComparison.Ordinal))
         {
             var synergy = ParseSynergy(choice.Id);
-            return SynergyCatalog.Get(synergy).CanHost(build.Spells.ActiveSpell) && build.Synergies.Select(synergy, build.Spells);
+            var definition = SynergyCatalog.Get(synergy);
+            if (!CanAcquireCombination(build, definition)) return false;
+            foreach (var requirement in definition.RequiredSpells.Where(spell => build.Spells[spell] == 0)) build.Spells.LearnOrUpgrade(requirement);
+            return build.Synergies.Select(synergy, build.Spells);
         }
         return false;
     }
@@ -142,17 +145,24 @@ public sealed class LevelChoiceService(
                 $"Replace {SpellCatalog.Get(build.Spells.ActiveSpell).Name} as your primary cast. Learned spells and ranks are retained for combinations.",
                 spell.Icon, build.Spells[spell.Id], spell.MaxRank, RewardRarity.Common)));
         choices.AddRange(SynergyCatalog.All
-            .Where(synergy => build.Synergies.IsAvailable(synergy.Id, build.Spells) && synergy.CanHost(build.Spells.ActiveSpell))
+            .Where(synergy => CanAcquireCombination(build, synergy))
             .Select(synergy => new LevelChoice(
                 $"synergy:{synergy.Id}",
                 LevelChoiceKind.Synergy,
                 synergy.Name,
-                synergy.Description,
+                $"Keeps {SpellCatalog.Get(build.Spells.ActiveSpell).Name} as your primary cast. {synergy.Description}",
                 synergy.Icon,
                 0,
                 1,
                 RewardRarity.Legendary)));
         return choices;
+    }
+
+    private bool CanAcquireCombination(RunBuildState build, SynergyDefinition synergy)
+    {
+        if (build.Synergies.Contains(synergy.Id) || !synergy.CanHost(build.Spells.ActiveSpell)) return false;
+        if (synergy.RequiredSpells.Any(spell => build.Spells[spell] == 0 && availableSpells is not null && !availableSpells.Contains(spell))) return false;
+        return build.Spells[build.Spells.ActiveSpell] >= 2 || synergy.RequiredSpells.All(spell => build.Spells[spell] > 0);
     }
 
     private void AddReinforceChoice(List<LevelChoice> result, List<LevelChoice> pool, RunBuildState build, IReadOnlyList<RunResonanceEntry>? resonance)

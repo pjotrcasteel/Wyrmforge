@@ -123,4 +123,71 @@ public sealed class FocusedMagicChoiceTests
         Assert.AreEqual("spell:FrostShard", converge.Id);
         Assert.IsFalse(converge.Hint!.Contains("Stormglass", StringComparison.Ordinal));
     }
+
+    [TestMethod]
+    public void Apply_RankTwoPrimaryWithUnlockedSupport_AcquiresCombinationWithoutSwitching()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var choice = service.Roll(build, count: 50).Single(choice => choice.Id == "synergy:Frostfire");
+
+        Assert.AreEqual(0, build.Spells[SpellId.FrostShard]);
+        Assert.IsTrue(service.Apply(build, choice));
+
+        Assert.AreEqual(SpellId.FireBolt, build.Spells.ActiveSpell);
+        Assert.AreEqual(2, build.Spells[SpellId.FireBolt]);
+        Assert.AreEqual(1, build.Spells[SpellId.FrostShard]);
+        Assert.IsTrue(build.Synergies.Contains(SynergyId.Frostfire));
+        Assert.IsFalse(service.Apply(build, choice));
+        Assert.AreEqual(1, build.Spells[SpellId.FrostShard]);
+        StringAssert.Contains(choice.Description, "Keeps Fire Bolt");
+    }
+
+    [TestMethod]
+    public void Roll_RankOnePrimaryWithUnlearnedSupport_RequiresPrimaryUpgradeFirst()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var service = new LevelChoiceService(new FirstRandomSource());
+
+        Assert.IsFalse(service.Roll(build, count: 50).Any(choice => choice.Id == "synergy:Frostfire"));
+    }
+
+    [TestMethod]
+    public void Apply_LockedSupportingMagic_RejectsCombinationWithoutLearningIt()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var unrestricted = new LevelChoiceService(new FirstRandomSource());
+        var choice = unrestricted.Roll(build, count: 50).Single(choice => choice.Id == "synergy:Frostfire");
+        var restricted = new LevelChoiceService(new FirstRandomSource(), new HashSet<SpellId> { SpellId.ArcaneOrb, SpellId.FireBolt });
+
+        Assert.IsFalse(restricted.Roll(build, count: 50).Any(item => item.Id == choice.Id));
+        Assert.IsFalse(restricted.Apply(build, choice));
+        Assert.AreEqual(0, build.Spells[SpellId.FrostShard]);
+        Assert.IsFalse(build.Synergies.Contains(SynergyId.Frostfire));
+        Assert.AreEqual(SpellId.FireBolt, build.Spells.ActiveSpell);
+    }
+
+    [TestMethod]
+    public void Apply_AlreadyRankedSupportingMagic_PreservesItsRank()
+    {
+        var build = new RunBuildState();
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        while (build.Spells.LearnOrUpgrade(SpellId.FrostShard)) { }
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var service = new LevelChoiceService(new FirstRandomSource());
+        var choice = service.Roll(build, count: 50).Single(choice => choice.Id == "synergy:Frostfire");
+
+        Assert.IsTrue(service.Apply(build, choice));
+
+        Assert.AreEqual(3, build.Spells[SpellId.FrostShard]);
+        Assert.AreEqual(SpellId.FireBolt, build.Spells.ActiveSpell);
+    }
 }

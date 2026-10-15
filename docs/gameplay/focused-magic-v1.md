@@ -15,13 +15,17 @@ A mage owns one primary cast. Learning another spell does not add a second autom
 
 ## First combination: Frostfire
 
-After learning Fire Bolt and Frost Shard, a separate Frostfire choice becomes available while either is focused. While either is focused, one projectile carries both freezing and burning. The projectile retains the primary spell's damage, cadence, speed, mastery/evolution and earned volley effects. Frostfire adds Burning for 3.5 seconds; a Fire Bolt host also receives the learned Frost Shard rank's freeze duration. A Frost Shard host keeps its native freeze. Existing boss duration rules continue to apply.
+A focused Rank II Fire Bolt or Frost Shard can offer Frostfire when its supporting magic is unlocked. Selecting the separate skill teaches missing support knowledge at Rank I and keeps the primary. Existing support ranks are preserved. If both spells are already learned, the skill can appear at Rank I. Once selected, one projectile carries both freezing and burning. The projectile retains the primary spell's damage, cadence, speed, mastery/evolution and earned volley effects. Frostfire adds Burning for 3.5 seconds; a Fire Bolt host also receives the learned Frost Shard rank's freeze duration. A Frost Shard host keeps its native freeze. Existing boss duration rules continue to apply.
 
 Fire Bolt's existing shatter interaction still multiplies damage against an already-frozen enemy. Its first combined hit freezes/burns; subsequent hits can shatter. Burning continues while the target is frozen. This slice does not inherit the secondary spell's full damage or its mastery nova.
 
 The projectile captures its combination identity and additional statuses when cast. An in-flight shot keeps them if the player later switches focus. Chain continuations retain the captured payload. Render snapshots carry a generic combination ID; Frostfire currently renders as a cold exterior with a fire core, rather than a second independent ice projectile.
 
 Stormglass now allows a focused Chain Lightning to apply its frost knowledge itself; later discharges can use the existing frozen-target bonus. Arcane Conduit remains an explicitly selected on-hit combination proc. Combination infusions apply to the focused host, so a secondary proc does not inherit an unrelated inactive host's combination.
+
+## Earned primary power
+
+The [power and combination follow-up](focused-magic-power-v1.md) adds rank-dependent primary damage, larger projectile radii and distinct coverage upgrades. Upgrade readouts share the same profile. These tuning values require their own CI and matched hunt comparison; the historical figures below describe the preceding revision.
 
 ## Motion and presentation
 
