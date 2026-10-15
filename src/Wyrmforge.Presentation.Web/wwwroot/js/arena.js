@@ -815,7 +815,7 @@ function drawExtractionRitual(ctx, extraction) {
     ctx.fillStyle = extraction.isProgressing ? '#e8d7ff' : '#b8a6c9';
     ctx.font = '800 10px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    const label = extraction.isProgressing ? 'EXTRACTING' : 'RETURN TO RITUAL';
+    const label = extraction.isProgressing ? 'HOLD THE RITUAL' : 'RETURN TO RITUAL';
     ctx.fillText(`${label} ${Math.max(0, extraction.remainingSeconds).toFixed(1)}s`, extraction.x, extraction.y - extraction.radius - 12);
     ctx.restore();
 }

@@ -1,5 +1,6 @@
 using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Application.Runs.Extraction;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.GreatHunt;
@@ -297,7 +298,7 @@ public sealed partial class RunSimulation
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
         ascendantActive = false;
-        spawnTimer = 1.2;
+        spawnTimer = ExtractionDefenseProfile.OpeningGraceSeconds;
         mapState.CompleteDragon();
         if (firstHunt)
         {
