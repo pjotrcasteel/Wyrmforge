@@ -1,5 +1,5 @@
 import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
-import { drawCloisterWall, drawCloisterMist, drawCloisterReflections } from './arena-cloister-art.js';
+import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -177,6 +177,19 @@ function terrainTexture(environment, width, height) {
 export function drawArenaCloisterReflections(ctx, environment, width, height, lights, seconds = 0, reducedMotion = false) {
     if (!environment) return 0;
     return drawCloisterReflections(ctx, terrainTexture(environment, width, height).cloister, lights, seconds, reducedMotion);
+}
+
+
+// Cache owns the cloister's fixed plan; these lightweight wall items sort with
+// actor foot positions in world space rather than being pasted over the viewport.
+export function getArenaCloisterElevations(environment, width, height) {
+    if (!environment) return [];
+    const cloister = terrainTexture(environment, width, height).cloister;
+    return createCloisterElevationLayers(cloister, environment.barriers, width, height);
+}
+
+export function drawArenaCloisterElevation(ctx, layer) {
+    return drawCloisterElevation(ctx, layer.barrier, layer.width, layer.height);
 }
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {
