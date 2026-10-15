@@ -1,0 +1,33 @@
+{
+  "method": "5-harmonic periodic channel fit; inferred toe support; two-bone leg IK; two-frame correction ramps",
+  "durationSeconds": 1.0666666666666667,
+  "frames": 32,
+  "maxPeriodicFitClosureErrorMeters": 7.35931380097908e-16,
+  "maxBoneLengthChangeMeters": 1.609823385706477e-15,
+  "minimumFootEndpointY": -1.0408340855860843e-17,
+  "support": {
+    "l": {
+      "inferredSupportFrames": 16,
+      "interiorSupportFrames": 14,
+      "maxInteriorToeHorizontalSpeedMps": 0.0,
+      "maxInteriorToeVerticalSpeedMps": 1.0408340855860843e-16
+    },
+    "r": {
+      "inferredSupportFrames": 13,
+      "interiorSupportFrames": 9,
+      "maxInteriorToeHorizontalSpeedMps": 3.955255119209303e-15,
+      "maxInteriorToeVerticalSpeedMps": 0.07639735244156354
+    }
+  },
+  "maxJointAdjustmentMeters": 0.08633071736656998,
+  "maxBodyAccommodationMeters": 0.04717285992196796,
+  "limitations": [
+    "Inferred toe support is not ground-truth contact or force measurement.",
+    "Zero horizontal toe drift is asserted only inside those inferred support windows; vertical foot roll remains.",
+    "This is kinematic animation cleanup, not a balance or dynamics simulation.",
+    "No staff grip, mage retargeting, clothing or production sprite rendering yet.",
+    "Support correction ramps and the sampled loop still require visual review."
+  ],
+  "exportedJsonMaxBoneLengthErrorMeters": 1.0968595324789554e-06,
+  "exportedJsonMaxInteriorToeHorizontalSpeedMps": 1.4999999999598668e-05
+}

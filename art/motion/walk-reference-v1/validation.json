@@ -1,0 +1,50 @@
+{
+  "source": "CMU subject 07 trial 01",
+  "sourceCaptureFps": 120,
+  "sourceFrameCount": 316,
+  "metersPerSourceUnit": 0.05644444444444444,
+  "maxBoneLengthErrorMeters": 1.0685896612017132e-15,
+  "maxRootTranslationErrorMeters": 4.460365043975677e-16,
+  "groundOffsetMeters": 0.004890582034068113,
+  "footContactHeuristic": "toe y < 0.06m and world speed < 0.35m/s; not force/contact ground truth",
+  "feet": {
+    "l": {
+      "candidateContactFraction": 0.3703,
+      "medianCandidateToeSpeedMps": 0.1219,
+      "minToeY": -0.0078,
+      "maxToeY": 0.2119
+    },
+    "r": {
+      "candidateContactFraction": 0.3449,
+      "medianCandidateToeSpeedMps": 0.146,
+      "minToeY": -0.0108,
+      "maxToeY": 0.2017
+    }
+  },
+  "strideCandidate": {
+    "sourceStartFrame": 169,
+    "sourceEndFrameExclusive": 297,
+    "nativeFrames": 128,
+    "durationSeconds": 1.0666666666666667,
+    "previewFrames": 32,
+    "previewFps": 30,
+    "cadenceStepsPerMinute": 112.5,
+    "strideVectorMeters": [
+      0.005847164655858703,
+      0.022306844444444307,
+      1.4758709409882442
+    ],
+    "boundaryPoseRmsMeters": 0.018229790697746107,
+    "boundaryMetricDefinition": "boundaryPoseRmsMeters is RMS per coordinate; also report 3D joint distances below",
+    "boundaryJointRmsMeters": 0.03157492369984275,
+    "boundaryMaxJointDistanceMeters": 0.035815414640582764,
+    "boundaryVelocityRmsMps": 0.11032689905463028
+  },
+  "limitations": [
+    "Kinematic reconstruction, not a physical simulation or force-based balance test.",
+    "Captured free-arm walk has not been retargeted to a held staff or clothing.",
+    "Stride candidate is not crossfaded; inspect and polish its measured boundary.",
+    "CMU warns that early subjects and toe/hand channels can be noisy; this source is a reference, not a final cleaned clip.",
+    "Length invariance alone cannot establish rotation convention correctness; visual review is also required."
+  ]
+}

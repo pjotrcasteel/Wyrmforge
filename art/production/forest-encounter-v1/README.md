@@ -2,6 +2,8 @@
 
 **Walk review update, 15 October 2026:** the v2 loop is rejected as a convincing walk. See [the case studies and revised workflow](walk-case-studies-2026-10-15.md). It remains available for comparison, not as a production-approved animation.
 
+The next experiment is now available as a [controlled 3D body-motion study](../../motion/walk-reference-v1/README.md), with source capture, periodic cleanup, leg IK, measured invariants and a moving-world viewer. It is deliberately separate from the rejected mage sprite loop.
+
 First production-oriented art experiment, 15 October 2026. These files are not integrated into the live game and are not a completed animation pack.
 
 ## Included
