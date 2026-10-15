@@ -1,0 +1,3 @@
+# Generated art must stay byte-identical to tools/art/build-art.mjs output (--check).
+src/Wyrmforge.Presentation.Web/wwwroot/art/** -text
+docs/art/previews/** -text
