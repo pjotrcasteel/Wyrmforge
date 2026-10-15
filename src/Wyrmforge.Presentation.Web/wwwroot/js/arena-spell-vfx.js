@@ -90,6 +90,22 @@ export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
     ctx.rotate(Number(projectile.angle) || 0);
     ctx.lineJoin = 'round';
 
+    // One velocity-aligned wake is visual evidence of impact, not another projectile.
+    if (!reducedMotion) {
+        const rank = Math.max(1, Math.min(3, Number(projectile.rank) || 1));
+        const tail = radius * (1.5 + rank * .62);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = family === 'frostfire' ? 'rgba(149, 202, 209, .56)'
+            : family === 'fire' ? 'rgba(205, 106, 62, .45)'
+            : family === 'frost' ? 'rgba(159, 213, 227, .50)'
+            : family === 'storm' ? 'rgba(217, 208, 129, .46)' : 'rgba(167, 135, 191, .52)';
+        ctx.lineWidth = Math.max(1.5, radius * (.38 + (rank - 1) * .08));
+        ctx.beginPath();
+        ctx.moveTo(-tail, 0);
+        ctx.lineTo(-radius * .55, 0);
+        ctx.stroke();
+    }
+
     if (family === 'fire' || family === 'frostfire') {
         ctx.fillStyle = '#d76839';
         ctx.beginPath();
@@ -152,6 +168,99 @@ export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, 0, radius * 1.5, -.9, .9);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+
+// The simulation sends immutable hit identity; upgrades and combinations are not inferred
+// from whatever the player has focused by the time the impact reaches the canvas.
+export function impactMotionProfile(impact) {
+    const rank = Math.max(1, Math.min(3, Number(impact?.rank) || 1));
+    const progress = Math.max(0, Math.min(1, Number(impact?.progress) || 0));
+    return {
+        family: spellFamily(impact?.spell, impact?.combination),
+        rank,
+        progress,
+        radius: (11 + rank * 6) * (.45 + progress * .84),
+        alpha: (1 - progress) * .95,
+    };
+}
+
+function impactRay(ctx, angle, inner, outer, kink = 0) {
+    const x = Math.cos(angle);
+    const y = Math.sin(angle);
+    const px = Math.cos(angle + .23);
+    const py = Math.sin(angle + .23);
+    ctx.moveTo(x * inner, y * inner);
+    ctx.lineTo(x * (inner + outer) * .5 + px * kink, y * (inner + outer) * .5 + py * kink);
+    ctx.lineTo(x * outer, y * outer);
+}
+
+export function drawSpellImpact(ctx, impact, reducedMotion = false) {
+    if (!impact) return;
+    const { family, rank, progress, radius, alpha } = impactMotionProfile(impact);
+    if (alpha <= 0) return;
+    const r = reducedMotion ? radius / (.45 + progress * .84) * .72 : radius;
+    ctx.save();
+    ctx.translate(impact.x, impact.y);
+    ctx.globalAlpha *= alpha;
+
+    if (family === 'fire' || family === 'frostfire') {
+        // The first ring is close to the collision; rank upgrades push fragments farther.
+        ctx.strokeStyle = '#e38a58';
+        ctx.lineWidth = 1.5 + rank * .7;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * .55, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        for (let i = 0; i < 5 + rank; i++) impactRay(ctx, i * Math.PI * 2 / (5 + rank), r * .54, r * (1 + .07 * rank), r * .18);
+        ctx.stroke();
+    }
+    if (family === 'frost' || family === 'frostfire') {
+        // Clear sixfold crystalline fractures, visibly unlike a fiery explosion.
+        ctx.strokeStyle = family === 'frostfire' ? '#a5d7df' : '#c0e9ed';
+        ctx.lineWidth = 1.3 + rank * .6;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = i * Math.PI / 3 + Math.PI / 6;
+            impactRay(ctx, angle, r * .18, r * (1.0 + rank * .13));
+            const bx = Math.cos(angle) * r * .7;
+            const by = Math.sin(angle) * r * .7;
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(angle + .7) * r * .22, by + Math.sin(angle + .7) * r * .22);
+        }
+        ctx.stroke();
+    }
+    if (family === 'storm') {
+        const stormglass = impact.combination === 1;
+        ctx.strokeStyle = stormglass ? '#a7d9e1' : '#e3d48d';
+        ctx.lineWidth = 1.6 + rank * .85;
+        ctx.beginPath();
+        for (let i = 0; i < 3 + rank; i++)
+            impactRay(ctx, i * Math.PI * 2 / (3 + rank) + .15, r * .12, r * 1.05, r * .36);
+        ctx.stroke();
+        if (stormglass) {
+            ctx.strokeStyle = '#89afc6';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(0, 0, r * .4, Math.PI / 5, Math.PI * 1.9);
+            ctx.stroke();
+        }
+    }
+    if (family === 'arcane') {
+        // Uneven fractured orbit, not the same circular pulse as the other schools.
+        ctx.strokeStyle = '#c3a8d3';
+        ctx.lineWidth = 1.6 + rank * .5;
+        ctx.beginPath();
+        ctx.arc(-r * .1, 0, r * .68, -.65 - progress, Math.PI * 1.5);
+        ctx.stroke();
+        ctx.beginPath();
+        for (let i = 0; i < 4 + rank; i++) {
+            const a = i * Math.PI * 2 / (4 + rank);
+            impactRay(ctx, a, r * .52, r * 1.12, -r * .16);
+        }
         ctx.stroke();
     }
     ctx.restore();

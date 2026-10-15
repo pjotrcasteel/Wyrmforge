@@ -45,7 +45,7 @@ public sealed partial class RunSimulation
     private void RegisterSplashPulse(Vector2D position, double radius, double duration = SplashPulseSeconds) => splashPulses.Add(new SplashPulseState(position, radius, duration));
 
     private void RegisterElementalImpact(Vector2D position, SpellId spell, int rank = 1, SynergyId? combination = null) =>
-        elementalImpacts.Add(new ElementalImpactState(position, spell, ElementalImpactSeconds, rank, combination));
+        elementalImpacts.Add(new ElementalImpactState(position, spell, ElementalImpactSeconds + .05 * Math.Clamp(rank - 1, 0, 2), rank, combination));
 
     private void RegisterEnemyDeath(EnemyState enemy)
     {
