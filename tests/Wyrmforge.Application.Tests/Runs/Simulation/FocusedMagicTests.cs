@@ -161,7 +161,10 @@ public sealed class FocusedMagicTests
 
         Invoke(simulation, "CastChainLightning", 3, new Vector2D(80, 80), 1d, 0);
         var supportHits = targets.Count(target => target.Health < 1000);
-        Assert.AreEqual(25, 1000 - targets[0].Health, .001);
+        // The fixture's existing enemy at the chain origin takes the first, unfaded hit.
+        // targets[0] receives jump two, which must keep native 0.84 chain falloff.
+        Assert.AreEqual(25, 1000 - Enemy(simulation).Health, .001);
+        Assert.AreEqual(21, 1000 - targets[1].Health, .001);
         var before = targets.Select(target => target.Health).ToArray();
         Invoke(simulation, "UpdateSpellcasting", 0d, false);
         var primaryHits = targets.Where((target, index) => target.Health < before[index]).Count();
