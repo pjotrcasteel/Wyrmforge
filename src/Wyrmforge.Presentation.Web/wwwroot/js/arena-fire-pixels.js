@@ -60,7 +60,7 @@ export function drawFirePixelImpact(ctx,impact,reducedMotion=false){
     const profile=fireBurstProfile(impact);
     if(profile.alpha<=0)return;
     const {rank,segments,surge}=profile;
-    const radius=profile.radius*(reducedMotion?.72:1);
+    const radius=profile.radius*(reducedMotion ? .72 : 1);
     const px=clamp(radius*.17,2,7);
     ctx.save();
     ctx.globalAlpha*=profile.alpha;
