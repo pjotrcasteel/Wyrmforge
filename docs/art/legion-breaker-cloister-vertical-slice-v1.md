@@ -26,3 +26,10 @@ The original WyrmForge approved concept references remain in [art/README.md](../
 This is an original, deliberate **first production-oriented pixel-material slice**, not the finished character/tileset quality bar. The mage, enemies and masonry still use hand-painted Canvas pixels rather than an artist-created image atlas. More extensive character frame direction, camera-angle consistent building elevations, action animation, grounded props and biome-specific palettes should be refined after user iPhone review.
 
 Do not merge to live Pages without successful .NET/JavaScript and browser pixel CI, then human review of the authored sprites **at actual game size**. Avoid prematurely claiming that code acceptance proves art quality.
+## October 15 correction pass — PR #114 merged after this slice
+
+The statement above that camera-angle-consistent elevations were future work is **superseded at code level** by [PR #114](https://github.com/pjotrcasteel/Wyrmforge/pull/114). `arena-cloister-art.js` now projects restrained masonry elevations from the *canonical* C# barrier footprints; `arena.js` world-depth sorts those walls with the mage and enemies by their feet. Random rotated spire-like monoliths are removed from the cloister. Warded gateway piers replace full-width prison grilles; open gates remove their raised facade. The mage now draws a long narrow staff with a gripping hand instead of a hammer-like tip. Flooded paving contrast and mobile hood lighting were also corrected.
+
+These changes have JavaScript regression tests and the latest PR validation/browser smoke passed. They remain an **engineering acceptance**, not yet an independently approved visual final. The monastic campus, walkable space, architecture and character silhouette must be visually inspected at *actual* 390px iPhone gameplay scale. Do not paint new scenery that floats over traversable C# floor. Further art may require an original sprite atlas but must preserve clear geometry and perspective.
+
+See the dated [full project/art/backlog handover](../handover/2026-10-15-project-art-and-backlog.md) for the latest decisions, issue links and work remaining.
