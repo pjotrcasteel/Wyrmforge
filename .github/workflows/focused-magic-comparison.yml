@@ -102,16 +102,19 @@ jobs:
                   groups[identity[0]].append((old[identity], new[identity]))
 
               rows.extend([f"### {cohort.title()} runs", "",
-                  "| Build | Reached control→current | Wyrms slain control→current | Extracted control→current | Routes Δ | Minimum HP Δ | Damage taken Δ | Avg surges |",
-                  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"])
+                  "| Build | Reached control→current | Wyrms slain control→current | Rituals complete control→current | Ritual deaths control→current | Extracted control→current | Routes Δ | Minimum HP Δ | Damage taken Δ | Avg surges |",
+                  "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"])
               for build, paired in sorted(groups.items()):
                   reached = lambda i: sum(pair[i]["wyrmsReached"] > 0 for pair in paired)
                   extracted = lambda i: sum(pair[i]["outcome"] == 1 for pair in paired)
                   slain = lambda i: sum(pair[i]["dragonsSlain"] for pair in paired)
+                  rituals = lambda i: sum(pair[i].get("extractionRitualsCompleted", 0) for pair in paired)
+                  ritual_deaths = lambda i: sum(pair[i].get("deathsDuringExtraction", 0) for pair in paired)
                   delta = lambda field: statistics.mean(pair[1][field] - pair[0][field] for pair in paired)
                   avg_surges = statistics.mean(pair[1].get("focusedSurgesCast", 0) for pair in paired)
                   rows.append(f"| {build} | {reached(0)}/{len(paired)} → {reached(1)}/{len(paired)} "
-                              f"| {slain(0)} → {slain(1)} | {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
+                              f"| {slain(0)} → {slain(1)} | {rituals(0)} → {rituals(1)} | {ritual_deaths(0)} → {ritual_deaths(1)} "
+                              f"| {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
                               f"| {delta('minimumHealthRatio'):+.2f} | {delta('damageTaken'):+.1f} | {avg_surges:.1f} |")
               before_extracted = sum(run["outcome"] == 1 for run in control)
               after_extracted = sum(run["outcome"] == 1 for run in candidate)

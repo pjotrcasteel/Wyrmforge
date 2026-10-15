@@ -42,6 +42,8 @@ public sealed record RunSelfPlayMetrics(
     IReadOnlyList<string> Decisions)
 {
     public int FocusedSurgesCast { get; init; }
+    public int ExtractionRitualsCompleted { get; init; }
+    public int DeathsDuringExtraction { get; init; }
     public int PrimarySwitches { get; init; }
     public int PeakActivePrimaryCount { get; init; }
     public IReadOnlyList<string> PrimarySpellSequence { get; init; } = [];

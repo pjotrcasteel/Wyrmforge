@@ -53,7 +53,8 @@ public sealed class RunSelfPlayDriver
             if (stopReason == RunSelfPlayStopReason.NaturalEnd) stopReason = RunSelfPlayStopReason.TimeLimit;
             simulation.AbandonRun();
         }
-        return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason, simulation.FocusedSurgesCast);
+        return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason,
+            simulation.FocusedSurgesCast, simulation.ExtractionRitualsCompleted, simulation.DeathsDuringExtraction);
     }
 
     private static RunAgentObservation CreateObservation(RunSimulation simulation, RunRenderSnapshot snapshot) => new(
@@ -179,7 +180,7 @@ public sealed class RunSelfPlayDriver
         }
 
         public RunSelfPlayMetrics Complete(RunSummary summary, RunRenderSnapshot finalSnapshot, double simulatedSeconds,
-            RunSelfPlayStopReason stopReason, int focusedSurgesCast)
+            RunSelfPlayStopReason stopReason, int focusedSurgesCast, int extractionRitualsCompleted, int deathsDuringExtraction)
         {
             var totalExperience = finalSnapshot.Hud.Experience;
             for (var level = 1; level < finalSnapshot.Hud.Level; level++) totalExperience += ExperienceCurve.RequiredForLevel(level);
@@ -227,6 +228,8 @@ public sealed class RunSelfPlayDriver
                 decisions.ToArray())
             {
                 FocusedSurgesCast = focusedSurgesCast,
+                ExtractionRitualsCompleted = extractionRitualsCompleted,
+                DeathsDuringExtraction = deathsDuringExtraction,
                 PrimarySwitches = Math.Max(0, primarySpellSequence.Count - 1),
                 PeakActivePrimaryCount = peakActivePrimaryCount,
                 PrimarySpellSequence = primarySpellSequence.ToArray(),

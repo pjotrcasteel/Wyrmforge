@@ -107,6 +107,8 @@ public sealed partial class RunSimulation
     public int Depth => depthState.Depth;
     public int Level => level;
     public int FocusedSurgesCast { get; private set; }
+    public int ExtractionRitualsCompleted { get; private set; }
+    public int DeathsDuringExtraction { get; private set; }
     public int CheckpointVisit => checkpointState.Visit;
     public double Health => player.Health;
     public double MaxHealth => player.MaxHealth;
@@ -162,6 +164,7 @@ public sealed partial class RunSimulation
         ResolvePlayerDamage();
         if (player.Health <= 0)
         {
+            if (extractionState.IsActive) DeathsDuringExtraction++;
             essenceCargoState.LosePending();
             extractionState.Cancel();
             outcome = RunOutcome.Defeated;
@@ -169,6 +172,7 @@ public sealed partial class RunSimulation
         }
         else if (extractionState.Tick(delta, player.Position))
         {
+            ExtractionRitualsCompleted++;
             essenceCargoState.SecurePending();
             ClearMapEncounterField();
             checkpointState.Enter();
