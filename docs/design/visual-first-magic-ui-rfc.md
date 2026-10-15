@@ -8,7 +8,7 @@ On hunt 100, a player must immediately recognize: (1) what their single primary 
 
 **Design rule: show the effect first, the decision second, and the explanation on demand.** Interface complexity expands with player experience, not the number of catalog entries. Don't hide useful abilities behind long paragraphs, tutorials or hover-only hints.
 
-**Exact user-provided recent Battlemage art reference:** [YouTube video](https://www.youtube.com/watch?v=WePyhtxZ4t0). See [Battlemage visual reference review](battlemage-visual-reference.md) for the verified provenance, open video-frame dependency, art checklist, and first original-art slice. Do not substitute screenshots from a different same-named game.
+**Verified primary art reference:** [Legion Breaker gameplay video](https://www.youtube.com/watch?v=WePyhtxZ4t0), titled *Highly Anticipated BATTLEMAGE Incremental is Here and It's Great!* The specific video has been reviewed via connected vidIQ metadata, transcript and full visual walkthrough. See the [timestamped visual reference and original-art production brief](battlemage-visual-reference.md) for accurate footage observations, pixel-art and lighting principles, what NOT to copy, and the first playable art slice. This game's fixed battlefield/incremental loop is **not** our gameplay model.
 
 ## Research and application
 
