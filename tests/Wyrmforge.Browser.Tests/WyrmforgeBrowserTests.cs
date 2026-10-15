@@ -348,10 +348,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 { x: 80, y: 80, spell: 1, rank: 3, progress: .35 }));
             const frostfire = sample(() => spells.drawSpellImpact(ctx,
                 { x: 80, y: 80, spell: 1, combination: 0, rank: 3, progress: .35 }));
+            const surged = sample(() => spells.drawSpellImpact(ctx,
+                { x: 80, y: 80, spell: 1, rank: 3, surge: true, progress: .35 }));
+            const surgedMage = sample(() => mage.drawMage(ctx, player,
+                { spell: 1, rank: 3, surge: true, progress: .36, angle: 0 }));
             return { magePixels: visible(idle), spellPixels: visible(mastered),
                 castDifference: difference(idle, casting),
                 rankDifference: difference(basic, mastered),
-                combinationDifference: difference(mastered, frostfire) };
+                combinationDifference: difference(mastered, frostfire),
+                surgeDifference: difference(mastered, surged),
+                surgedMageDifference: difference(casting, surgedMage) };
         }");
 
         Assert.IsGreaterThan(150, pixels.GetProperty("magePixels").GetInt32(), "Mage must read as a silhouette, not a tiny marker.");
@@ -359,6 +365,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, pixels.GetProperty("castDifference").GetInt32(), "Casting must visibly move the staff.");
         Assert.IsGreaterThan(30, pixels.GetProperty("rankDifference").GetInt32(), "Mastery must visibly increase impact size.");
         Assert.IsGreaterThan(20, pixels.GetProperty("combinationDifference").GetInt32(), "Frostfire must visibly differ from basic fire.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("surgeDifference").GetInt32(), "Focus Surge must produce a visibly empowered impact.");
+        Assert.IsGreaterThan(20, pixels.GetProperty("surgedMageDifference").GetInt32(), "Focus Surge must visibly empower the staff motion.");
     }
 
     [TestMethod]
