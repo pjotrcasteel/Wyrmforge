@@ -381,7 +381,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                     lights.sampleSpellLight(sources, player.x, player.y));
                 return {
                     ground: [...ctx.getImageData(135, 114, 1, 1).data],
-                    mage: [...ctx.getImageData(113, 105, 1, 1).data],
+                    mage: [...ctx.getImageData(120, 106, 1, 1).data],
                     pixels: [...ctx.getImageData(0, 0, 240, 240).data]
                 };
             };
