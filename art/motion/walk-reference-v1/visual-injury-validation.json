@@ -1,0 +1,12 @@
+{
+  "states": 3,
+  "directedStatePairs": 9,
+  "blendWeightsPerPair": 21,
+  "framesPerWeight": 32,
+  "equalDuration": true,
+  "equalStride": true,
+  "equalContacts": true,
+  "maxLengthErrorMeters": 0.0000017316405605538598,
+  "maxRootOrLegDisplacementMeters": 3.351026004374306e-16,
+  "scope": "Art preview only; no gameplay files modified"
+}

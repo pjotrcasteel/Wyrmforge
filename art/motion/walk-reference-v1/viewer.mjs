@@ -1,13 +1,21 @@
 import { drawView } from './render.mjs';
+import { blendMotion } from './blend_motion.mjs';
 const [reference, cleaned, hurt, critical, mageCleaned, mageHurt, mageCritical] = await Promise.all(['motion.json', 'cleaned-motion.json', 'hurt-motion.json', 'critical-motion.json', 'mage-cleaned-motion.json', 'mage-hurt-motion.json', 'mage-critical-motion.json'].map(file => fetch(file).then(response => response.json())));
-let data = mageCleaned;
+let data = mageCleaned, transition = null;
 const canvas = document.querySelector('canvas'), ctx = canvas.getContext('2d');
 const phaseControl = document.querySelector('#phase'), cameraControl = document.querySelector('#camera');
 let playing = true, phase = 0, cycles = 0, last = performance.now();
-document.querySelector('#motion').addEventListener('change', event => { data = ({reference, cleaned, hurt, critical, mageCleaned, mageHurt, mageCritical})[event.target.value] || cleaned; });
+document.querySelector('#motion').addEventListener('change', event => { const target = ({reference, cleaned, hurt, critical, mageCleaned, mageHurt, mageCritical})[event.target.value] || cleaned;
+    transition = data.mage && target.mage ? {from:data,to:target,start:performance.now()} : null;
+    if (!transition) data=target; });
 document.querySelector('#play').addEventListener('click', event => { playing = !playing; event.target.textContent = playing ? 'Pause' : 'Play'; });
 phaseControl.addEventListener('input', () => { phase = Math.min(.999999, Number(phaseControl.value)); playing = false; document.querySelector('#play').textContent = 'Play'; });
 function draw(now) {
+    if (transition) {
+        const t=Math.min(1,Math.max(0,(now-transition.start)/280));
+        data=blendMotion(transition.from,transition.to,t*t*(3-2*t));
+        if(t===1) transition=null;
+    }
     if (playing) {
         const next = phase + Math.min(100, now - last) / (1000 * data.duration);
         cycles += Math.floor(next);
