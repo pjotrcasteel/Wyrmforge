@@ -24,7 +24,7 @@
                 {
                     var points = SchoolPoints(school);
                     if (points <= 0) continue;
-                    <span class="school-pill school-@school.ToString().ToLowerInvariant()">@SchoolIcon(school) @school <b>@points</b></span>
+                    <span class="school-pill school-@school.ToString().ToLowerInvariant()"><i class="px-icon px-sm px-@school.ToString().ToLowerInvariant()" aria-hidden="true"></i> @school <b>@points</b></span>
                 }
                 @if (Selection.SpentPoints == 0)
                 {
@@ -119,5 +119,4 @@
     private Task ToggleAscendantAsync(DragonId wyrm) => OnAscendantChanged.InvokeAsync(AscendantSelected == wyrm ? null : wyrm);
     private Task EditBuildAsync() => OnEditBuild.InvokeAsync();
     private Task EditForgeAsync() => OnEditForge.InvokeAsync();
-    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄", PassiveSchool.Storm => "⚡", _ => "✦" };
 }

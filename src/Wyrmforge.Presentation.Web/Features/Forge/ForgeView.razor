@@ -9,6 +9,10 @@
 @using Wyrmforge.Domain.Progression.Experience
 
 <main class="game-shell @(section == ShellSection.Run ? "menu-home" : string.Empty)">
+    @if (section == ShellSection.Run)
+    {
+        <div class="hub-backdrop" aria-hidden="true"><div class="hub-rain"></div></div>
+    }
     @if (section != ShellSection.Run)
     {
         <header class="menu-header">
@@ -51,11 +55,11 @@
                         {
                             var unlocked = IsUnlocked(item.Section);
                             <button class="menu-destination" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
-                                <span><i aria-hidden="true">@item.Icon</i>@item.Label</span>
+                                <span><i class="px-icon px-sm px-@item.Icon" aria-hidden="true"></i>@item.Label</span>
                                 <small>@(!unlocked ? $"◇ {UnlockHint(item.Section)}" : item.Section == ShellSection.Build ? $"{Selection.PointBudget - Selection.SpentPoints} points" : item.Section == ShellSection.Forge ? $"{Vault.TotalCount} Essence" : string.Empty)</small>
                             </button>
                         }
-                        <button class="menu-destination" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i aria-hidden="true">♜</i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
+                        <button class="menu-destination" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i class="px-icon px-sm px-crown" aria-hidden="true"></i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
                     </nav>
                     <footer class="menu-footer">
                         @if (!Progress.TutorialRun)
@@ -132,10 +136,10 @@
     private ShellSection section = ShellSection.Run;
     private static readonly NavigationItem[] Navigation =
     [
-        new(ShellSection.Run, "⚔", "Run"),
-        new(ShellSection.Build, "✦", "Arcane Atlas"),
-        new(ShellSection.Forge, "◆", "Forge"),
-        new(ShellSection.Codex, "▣", "Codex"),
+        new(ShellSection.Run, "sword", "Run"),
+        new(ShellSection.Build, "rune", "Arcane Atlas"),
+        new(ShellSection.Forge, "anvil", "Forge"),
+        new(ShellSection.Codex, "book", "Codex"),
     ];
 
     private string SectionTitle => section == ShellSection.Prepare ? "Hunt preparation" : section == ShellSection.Options ? "Options" : Navigation.Single(item => item.Section == section).Label;

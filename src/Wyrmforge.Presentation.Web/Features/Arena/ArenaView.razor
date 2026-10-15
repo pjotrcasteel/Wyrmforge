@@ -137,7 +137,7 @@
                     @foreach (var spell in PrimaryChoices)
                     {
                         <button class="primary-choice primary-@spell.School.ToString().ToLowerInvariant()" @onclick="() => ChoosePrimaryAsync(spell.Id)">
-                            <span class="primary-choice-icon" aria-hidden="true">@spell.Icon</span>
+                            <span class="primary-choice-icon px-icon px-lg px-@spell.School.ToString().ToLowerInvariant()" aria-hidden="true"></span>
                             <strong>@spell.Name</strong>
                             <small>@spell.School</small>
                         </button>
