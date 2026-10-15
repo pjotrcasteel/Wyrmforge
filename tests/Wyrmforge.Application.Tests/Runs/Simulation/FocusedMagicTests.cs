@@ -172,6 +172,93 @@ public sealed class FocusedMagicTests
     }
 
     [TestMethod]
+    public void UpdateSpellcasting_FourthFocusedCast_SurgesOneProjectileAndPreservesTheImpact()
+    {
+        var simulation = Create();
+        var build = Build(simulation);
+        build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+        build.Spells.TryFocus(SpellId.FireBolt);
+        var cooldowns = Field<Dictionary<SpellId, double>>(simulation, "spellCooldowns");
+
+        for (var index = 0; index < 4; index++)
+        {
+            cooldowns[SpellId.FireBolt] = 0;
+            Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        }
+
+        var shots = Projectiles(simulation);
+        Assert.AreEqual(4, shots.Count, "Focus Surge must not add a second scheduled projectile.");
+        Assert.IsTrue(shots.Take(3).All(projectile => !projectile.Surge));
+        var surge = shots[^1];
+        Assert.IsTrue(surge.Surge);
+        Assert.IsGreaterThan(shots[0].Damage, surge.Damage);
+        Assert.IsGreaterThan(shots[0].Radius, surge.Radius);
+        Assert.IsGreaterThan(shots[0].SplashRadius, surge.SplashRadius);
+        Assert.IsTrue(simulation.CreateSnapshot().CastMotion?.Surge == true);
+        Assert.IsTrue(simulation.CreateSnapshot().Projectiles.Last().Surge);
+
+        surge.Position = Enemy(simulation).Position;
+        Invoke(simulation, "ResolveProjectileHits");
+
+        var impact = simulation.CreateSnapshot().ElementalImpacts.Single();
+        Assert.IsTrue(impact.Surge);
+        Assert.AreEqual(SpellId.FireBolt, impact.Spell);
+    }
+
+    [TestMethod]
+    public void UpdateSpellcasting_SwitchingOrEchoes_DoesNotStealTheEarnedFourthCast()
+    {
+        var simulation = Create();
+        var build = PrepareFireAndFrost(simulation);
+        var cooldowns = Field<Dictionary<SpellId, double>>(simulation, "spellCooldowns");
+        var fire = SpellCatalog.Get(SpellId.FireBolt);
+        for (var index = 0; index < 3; index++)
+        {
+            cooldowns[SpellId.FireBolt] = 0;
+            Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        }
+        Invoke(simulation, "CastSpell", fire, 1, 1d, true);
+        Assert.IsFalse(Projectiles(simulation)[^1].Surge);
+
+        build.Spells.TryFocus(SpellId.FrostShard);
+        cooldowns[SpellId.FrostShard] = 0;
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        Assert.IsFalse(Projectiles(simulation)[^1].Surge);
+
+        build.Spells.TryFocus(SpellId.FireBolt);
+        cooldowns[SpellId.FireBolt] = 0;
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        Assert.IsTrue(Projectiles(simulation)[^1].Surge);
+    }
+
+    [TestMethod]
+    public void UpdateSpellcasting_FourthChainCast_SurgesButSupportProcDoesNot()
+    {
+        var simulation = Create();
+        var build = Build(simulation);
+        build.Spells.LearnOrUpgrade(SpellId.ChainLightning);
+        build.Spells.TryFocus(SpellId.ChainLightning);
+        var targets = Field<List<EnemyState>>(simulation, "enemies");
+        for (var id = 2; id <= 12; id++) targets.Add(new EnemyState(id, new Vector2D(80 + id * 30, 80), 10, 1000, 0));
+        var cooldowns = Field<Dictionary<SpellId, double>>(simulation, "spellCooldowns");
+
+        for (var index = 0; index < 3; index++)
+        {
+            cooldowns[SpellId.ChainLightning] = 0;
+            Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        }
+        Assert.IsTrue(simulation.CreateSnapshot().ElementalImpacts.All(impact => !impact.Surge));
+        cooldowns[SpellId.ChainLightning] = 0;
+        Invoke(simulation, "UpdateSpellcasting", 0d, false);
+        Assert.IsTrue(simulation.CreateSnapshot().ElementalImpacts.Any(impact => impact.Surge));
+        Assert.IsTrue(simulation.CreateSnapshot().CastMotion?.Surge == true);
+
+        // Arcane Conduit's helper is a separate proc and never charges or consumes a focus surge.
+        Invoke(simulation, "CastChainLightning", 1, new Vector2D(80, 80), 1d, 0);
+        Assert.IsFalse(simulation.CreateSnapshot().ElementalImpacts.Last().Surge);
+    }
+
+    [TestMethod]
     public void CastChainLightning_SupportProc_DoesNotInheritPrimaryCoverageOrDamage()
     {
         var simulation = Create();

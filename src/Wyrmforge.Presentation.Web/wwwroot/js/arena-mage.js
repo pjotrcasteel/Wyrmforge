@@ -15,7 +15,7 @@ export function magePose(cast, reducedMotion = false) {
     const release = t < .22 ? -(.22 - t) / .22 : t < .48 ? (t - .22) / .26 : 1 - (t - .48) / .52;
     return {
         active: true,
-        reach: 17 + rank * 4 + (reducedMotion ? 0 : Math.max(0, release) * (5 + rank * 3)),
+        reach: 17 + rank * 4 + (cast.surge ? 7 : 0) + (reducedMotion ? 0 : Math.max(0, release) * (5 + rank * 3)),
         sweep: reducedMotion ? 0 : -0.35 + Math.max(0, release) * .52,
         aim: Number.isFinite(cast.angle) ? cast.angle : -0.7,
     };

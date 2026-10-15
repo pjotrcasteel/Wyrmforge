@@ -44,6 +44,7 @@ public sealed partial class RunSimulation
     private readonly Dictionary<int, double> hitFlashRemaining = [];
     private readonly List<SplashPulseState> splashPulses = [];
     private readonly Dictionary<SpellId, double> spellCooldowns = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0d);
+    private readonly Dictionary<SpellId, int> primaryCastCounts = Enum.GetValues<SpellId>().ToDictionary(id => id, _ => 0);
     private IReadOnlyList<LevelChoice> pendingChoices = [];
     private IReadOnlyList<DragonEssenceDefinition> pendingDragonEssenceChoices = [];
     private IReadOnlyList<SpellHudSnapshot> spellHud = [];
@@ -280,6 +281,7 @@ public sealed partial class RunSimulation
             {
                 Rank = impact.Rank,
                 Combination = impact.Combination,
+                Surge = impact.Surge,
             }).ToArray(),
             deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity)).ToArray(),
             CreateFieryAreaSnapshots(),
@@ -289,6 +291,7 @@ public sealed partial class RunSimulation
                 Combination = projectile.Combination,
                 Angle = Math.Atan2(projectile.Velocity.Y, projectile.Velocity.X),
                 Rank = projectile.Rank,
+                Surge = projectile.Surge,
             }).ToArray(),
             lightning.Select(trace => new LightningRenderSnapshot(trace.From.X, trace.From.Y, trace.To.X, trace.To.Y, trace.Life)).ToArray(),
             hud,

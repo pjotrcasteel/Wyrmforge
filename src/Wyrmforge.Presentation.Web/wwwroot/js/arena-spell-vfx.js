@@ -11,12 +11,13 @@ export function spellFamily(spell, combination = null) {
 export function castMotionProfile(cast) {
     const rank = Math.max(1, Math.min(3, Number(cast?.rank) || 1));
     const progress = Math.max(0, Math.min(1, Number(cast?.progress) || 0));
-    return { family: spellFamily(cast?.spell, cast?.combination), reach: 21 + 7 * rank, rank, progress, alpha: 1 - progress };
+    const surge = cast?.surge === true;
+    return { family: spellFamily(cast?.spell, cast?.combination), reach: 21 + 7 * rank + (surge ? 12 : 0), rank, progress, alpha: 1 - progress, surge };
 }
 
 export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     if (!cast) return;
-    const { family, reach, rank, progress, alpha } = castMotionProfile(cast);
+    const { family, reach, rank, progress, alpha, surge } = castMotionProfile(cast);
     if (alpha <= 0) return;
     ctx.save();
     ctx.translate(cast.x, cast.y);
@@ -25,6 +26,14 @@ export function drawSpellCastMotion(ctx, cast, reducedMotion = false) {
     const extent = reducedMotion ? 0.72 : 1;
     const length = reach * extent;
     const sweep = reducedMotion ? 0 : (progress * 1.8 - 0.9);
+    if (surge) {
+        // One restrained release arc: the fourth focused cast should feel earned, not spam extra shots.
+        ctx.strokeStyle = '#e0cbb6';
+        ctx.lineWidth = 3 + rank;
+        ctx.beginPath();
+        ctx.arc(0, 0, length * .82, -.65 - progress, .55 + progress);
+        ctx.stroke();
+    }
 
     if (family === 'fire' || family === 'frostfire') {
         // Heavy overhand slash, followed by an outward surge.
@@ -93,7 +102,7 @@ export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
     // One velocity-aligned wake is visual evidence of impact, not another projectile.
     if (!reducedMotion) {
         const rank = Math.max(1, Math.min(3, Number(projectile.rank) || 1));
-        const tail = radius * (1.5 + rank * .62);
+        const tail = radius * (1.5 + rank * .62 + (projectile.surge ? 1.1 : 0));
         ctx.lineCap = 'round';
         ctx.strokeStyle = family === 'frostfire' ? 'rgba(149, 202, 209, .56)'
             : family === 'fire' ? 'rgba(205, 106, 62, .45)'
@@ -163,6 +172,13 @@ export function drawSpellProjectile(ctx, projectile, reducedMotion = false) {
         ctx.ellipse(0, 0, radius * .54, radius * .4, 0, 0, Math.PI * 2);
         ctx.fill();
     }
+    if (projectile.surge) {
+        ctx.strokeStyle = 'rgba(235, 214, 191, .85)';
+        ctx.lineWidth = 2 + Math.min(3, Number(projectile.rank) || 1) * .5;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 1.4, -.95, .95);
+        ctx.stroke();
+    }
     if (!reducedMotion && projectile.inferno && family === 'fire') {
         ctx.strokeStyle = 'rgba(244, 160, 104, .55)';
         ctx.lineWidth = 2;
@@ -183,8 +199,9 @@ export function impactMotionProfile(impact) {
         family: spellFamily(impact?.spell, impact?.combination),
         rank,
         progress,
-        radius: (11 + rank * 6) * (.45 + progress * .84),
+        radius: (11 + rank * 6) * (.45 + progress * .84) * (impact?.surge ? 1.36 : 1),
         alpha: (1 - progress) * .95,
+        surge: impact?.surge === true,
     };
 }
 
@@ -200,12 +217,20 @@ function impactRay(ctx, angle, inner, outer, kink = 0) {
 
 export function drawSpellImpact(ctx, impact, reducedMotion = false) {
     if (!impact) return;
-    const { family, rank, progress, radius, alpha } = impactMotionProfile(impact);
+    const { family, rank, progress, radius, alpha, surge } = impactMotionProfile(impact);
     if (alpha <= 0) return;
     const r = reducedMotion ? radius / (.45 + progress * .84) * .72 : radius;
     ctx.save();
     ctx.translate(impact.x, impact.y);
     ctx.globalAlpha *= alpha;
+
+    if (surge) {
+        ctx.strokeStyle = '#e1d2c4';
+        ctx.lineWidth = 2.4 + rank * .6;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.06, 0, Math.PI * 2);
+        ctx.stroke();
+    }
 
     if (family === 'fire' || family === 'frostfire') {
         // The first ring is close to the collision; rank upgrades push fragments farther.

@@ -35,27 +35,31 @@ public sealed partial class RunSimulation
 
     private void CastSpell(SpellDefinition spell, int rank, double damageScale, bool echo)
     {
+        var surge = FocusedSurgeProfile.Identity;
         if (!echo)
         {
+            primaryCastCounts[spell.Id]++;
+            surge = FocusedSurgeProfile.For(primaryCastCounts[spell.Id], rank);
             var target = NearestTarget(player.Position);
             var direction = target is null ? 0 : Math.Atan2(target.Position.Y - player.Position.Y, target.Position.X - player.Position.X);
             lastCastMotion = new CastMotionRenderSnapshot(player.Position.X, player.Position.Y, spell.Id, rank,
-                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0);
+                SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), direction, 0) { Surge = surge.IsSurge };
             lastCastMotionStartedAt = elapsed;
             castCount++;
             if (spell.Ability.Delivery is ProjectileAbilityProfile) projectileCastCount++;
             ApplyDragonEssenceCastEffects();
         }
 
+        var focusedDamageScale = damageScale * surge.DamageMultiplier;
         switch (spell.Ability.Delivery)
         {
             case ProjectileAbilityProfile projectile:
-                CastProjectileSpell(spell, projectile, rank, damageScale);
+                CastProjectileSpell(spell, projectile, rank, focusedDamageScale, surge);
                 break;
             case ChainAbilityProfile chain:
                 var focusedChain = chain with { BaseJumpsAtRankOne = chain.BaseJumpsAtRankOne + FocusedCastProfile.For(spell.Id, rank).BonusChains };
-                CastChainSpell(spell, focusedChain, rank, player.Position, damageScale,
-                    combination: SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies));
+                CastChainSpell(spell, focusedChain, rank, player.Position, focusedDamageScale,
+                    combination: SpellCombinationResolver.ActiveFor(spell.Id, build.Spells, build.Synergies), surge: surge);
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported delivery profile {spell.Ability.Delivery.GetType().Name} for {spell.Id}.");
@@ -75,7 +79,7 @@ public sealed partial class RunSimulation
         }
     }
 
-    private void CastProjectileSpell(SpellDefinition spell, ProjectileAbilityProfile profile, int rank, double damageScale)
+    private void CastProjectileSpell(SpellDefinition spell, ProjectileAbilityProfile profile, int rank, double damageScale, FocusedSurgeProfile surge)
     {
         var target = NearestTarget(player.Position);
         if (target is null) return;
@@ -105,20 +109,21 @@ public sealed partial class RunSimulation
             var aimedDirection = Vector2D.DirectionTo(player.Position, volleyTarget.Position);
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
-            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier;
-            var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces + focused.BonusPierces;
+            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier * surge.RadiusMultiplier;
+            var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces + focused.BonusPierces + surge.BonusPierces;
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
-                Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius)),
+                Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))),
                 status,
                 pierces,
                 Math.Max(masteryNova, evolution.FrostNovaRadius))
             {
                 Combination = SpellCombinationResolver.ActiveFor(id, build.Spells, build.Synergies),
                 Rank = rank,
+                Surge = surge.IsSurge,
                 AdditionalStatuses = SpellCombinationResolver.Resolve(id, build.Spells, build.Synergies),
             };
             projectiles.Add(new ProjectileState(player.Position, direction * speed, radius, damage * (inferno ? 4 : 1), id, effects));
@@ -133,13 +138,14 @@ public sealed partial class RunSimulation
     }
 
     private void CastChainSpell(SpellDefinition spell, ChainAbilityProfile profile, int rank, Vector2D origin, double damageScale,
-        int bonusJumps = 0, SynergyId? combination = null)
+        int bonusJumps = 0, SynergyId? combination = null, FocusedSurgeProfile? surge = null)
     {
         var current = origin;
+        var surgeProfile = surge ?? FocusedSurgeProfile.Identity;
         var evolution = EvolutionProfile(spell.Id);
         var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
         var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School);
-        var jumps = profile.CalculateJumps(rank) + buildModifiers.ApplyInt(BuildStatId.BonusChains) + bonusJumps + evolution.BonusChains;
+        var jumps = profile.CalculateJumps(rank) + buildModifiers.ApplyInt(BuildStatId.BonusChains) + bonusJumps + evolution.BonusChains + surgeProfile.BonusChains;
         var falloff = Math.Min(1, profile.DamageFalloff * evolution.ChainFalloffMultiplier);
         var hit = new HashSet<int>();
         var bonusJumpsTriggered = false;
@@ -153,14 +159,14 @@ public sealed partial class RunSimulation
             hitCount++;
             lightning.Add(new LightningTrace(current, target.Position, 0.12));
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
-            RegisterElementalImpact(target.Position, spell.Id, rank, combination);
+            RegisterElementalImpact(target.Position, spell.Id, rank, combination, surgeProfile.IsSurge);
             var killed = DamageTarget(target, hitDamage);
             if (!killed) ApplyAbilityStatus(spell, rank, target);
             if (!killed) ApplyHitRules(spell.Id, target);
 
             if (forkPending)
             {
-                CastChainFork(spell, rank, target.Position, damage, hit, ref jumps, ref bonusJumpsTriggered, combination);
+                CastChainFork(spell, rank, target.Position, damage, hit, ref jumps, ref bonusJumpsTriggered, combination, surgeProfile.IsSurge);
                 forkPending = false;
             }
 
@@ -170,7 +176,7 @@ public sealed partial class RunSimulation
     }
 
     private void CastChainFork(SpellDefinition spell, int rank, Vector2D origin, double damage, HashSet<int> hit, ref int jumps,
-        ref bool bonusJumpsTriggered, SynergyId? combination)
+        ref bool bonusJumpsTriggered, SynergyId? combination, bool surged)
     {
         var target = NearestTarget(origin, hit);
         if (target is null) return;
@@ -178,7 +184,7 @@ public sealed partial class RunSimulation
         hitCount++;
         lightning.Add(new LightningTrace(origin, target.Position, 0.16));
         var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
-        RegisterElementalImpact(target.Position, spell.Id, rank, combination);
+        RegisterElementalImpact(target.Position, spell.Id, rank, combination, surged);
         var killed = DamageTarget(target, forkDamage);
         if (!killed) ApplyAbilityStatus(spell, rank, target);
         if (!killed) ApplyHitRules(spell.Id, target);

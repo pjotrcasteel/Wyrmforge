@@ -7,4 +7,5 @@ public sealed record ElementalImpactRenderSnapshot(double X, double Y, SpellId S
 {
     public int Rank { get; init; } = 1;
     public SynergyId? Combination { get; init; }
+    public bool Surge { get; init; }
 }

@@ -55,3 +55,17 @@ test('school impacts render as distinct single effects on all supported skill sc
     assert.doesNotThrow(() => drawSpellImpact(ctx, { x: 30, y: 20, spell: 3, combination: 1, rank: 2, progress: .3 }));
     assert.doesNotThrow(() => drawSpellImpact(ctx, null));
 });
+
+
+test('earned fourth-cast surge is visibly distinct but remains one attack', () => {
+    const normal = castMotionProfile({ spell: 1, rank: 2, progress: .4 });
+    const surged = castMotionProfile({ spell: 1, rank: 2, progress: .4, surge: true });
+    assert.equal(normal.surge, false);
+    assert.equal(surged.surge, true);
+    assert.ok(surged.reach > normal.reach);
+    const impact = { x: 20, y: 30, spell: 1, rank: 2, progress: .3 };
+    assert.ok(impactMotionProfile({ ...impact, surge: true }).radius > impactMotionProfile(impact).radius);
+    assert.doesNotThrow(() => drawSpellCastMotion(fakeContext(), { ...impact, surge: true, angle: .1 }));
+    assert.doesNotThrow(() => drawSpellProjectile(fakeContext(), { ...impact, surge: true, radius: 10 }));
+    assert.doesNotThrow(() => drawSpellImpact(fakeContext(), { ...impact, surge: true }, true));
+});

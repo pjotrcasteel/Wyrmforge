@@ -41,7 +41,7 @@ public sealed partial class RunSimulation
             if (detonation is not null) damage *= detonation.DamageMultiplier;
             if (passiveProfile.AbsoluteZero && target.Statuses.Has(CombatStatusId.Frozen)) damage *= PassiveEffectResolver.AbsoluteZeroDamageMultiplier;
 
-            RegisterElementalImpact(target.Position, projectile.Spell, projectile.Rank, projectile.Combination);
+            RegisterElementalImpact(target.Position, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
             RegisterBurningGround(projectile, target.Position);
             RegisterFrostNova(projectile, target.Position, target.Id);
             var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
@@ -148,6 +148,7 @@ public sealed partial class RunSimulation
         {
             Combination = source.Combination,
             Rank = source.Rank,
+            Surge = source.Surge,
             AdditionalStatuses = source.AdditionalStatuses,
         };
         spawned.Add(new ProjectileState(position, direction * speed, Math.Max(4, source.Radius - 1), source.Damage * 0.82, source.Spell, effects));
