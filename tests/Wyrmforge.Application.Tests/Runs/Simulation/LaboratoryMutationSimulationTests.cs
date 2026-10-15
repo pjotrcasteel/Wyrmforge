@@ -178,6 +178,36 @@ public sealed class LaboratoryMutationSimulationTests
     }
 
     [TestMethod]
+    [DataRow(LaboratoryMutationId.RimeInfusion, SpellSchool.Fire)]
+    [DataRow(LaboratoryMutationId.StormInfusion, SpellSchool.Arcane)]
+    public void RealHunt_ReactionEventsStayWithinTheRulesetBudget(LaboratoryMutationId mutation, SpellSchool school)
+    {
+        var (_, _, simulation) = HuntWithSimulation(mutation, school);
+        Assert.IsTrue(simulation.PeakReactionEventsPerStep > 0, "The hunt must spawn reaction events.");
+        Assert.IsTrue(simulation.PeakReactionEventsPerStep <= Wyrmforge.Domain.Spells.Composition.BlueprintRuleset.Current.MaxReactionEventsPerStep);
+    }
+
+    [TestMethod]
+    public void ReactionBudget_WhenExhausted_SuppressesConduitDischargesButNotTheHit()
+    {
+        var simulation = Create(LaboratoryMutationId.StormInfusion);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.ArcaneOrb));
+        var budget = Field<Wyrmforge.Domain.Combat.Interactions.ReactionBudget>(simulation, "reactionBudget");
+        while (budget.TrySpend()) { }
+        var suppressedBefore = budget.Suppressed;
+        var enemy = Enemy(simulation);
+        for (var hit = 0; hit < 4; hit++)
+        {
+            Invoke(simulation, "UpdateSpellcasting", 10d, false);
+            Projectiles(simulation).Last().Position = enemy.Position;
+            Invoke(simulation, "ResolveProjectileHits");
+        }
+        Assert.AreEqual(0, simulation.ReactionsTriggered, "No discharge fires once the step budget is spent.");
+        Assert.AreEqual(suppressedBefore + 1, budget.Suppressed);
+        Assert.IsTrue(enemy.Health < 100000, "The orb hits still land.");
+    }
+
+    [TestMethod]
     public void ResearchLead_DecidesTheAttractedWyrm()
     {
         foreach (var wyrm in new[] { DragonId.Rimeclaw, DragonId.Stormcoil })
@@ -237,11 +267,17 @@ public sealed class LaboratoryMutationSimulationTests
 
     private static (RunSelfPlayMetrics Metrics, Wyrmforge.Application.Runs.EndRun.RunSummary Summary) Hunt(LaboratoryMutationId? mutation, SpellSchool school = SpellSchool.Fire)
     {
+        var (metrics, summary, _) = HuntWithSimulation(mutation, school);
+        return (metrics, summary);
+    }
+
+    private static (RunSelfPlayMetrics Metrics, Wyrmforge.Application.Runs.EndRun.RunSummary Summary, RunSimulation Simulation) HuntWithSimulation(LaboratoryMutationId? mutation, SpellSchool school)
+    {
         var build = SelfPlayBuildCatalog.All.First(candidate => candidate.PreferredSchool == school);
         var simulation = new RunSimulationFactory(new SeededRandomSource(1)).Create(build.SelectedNodes, seed: Seed, preparedMutation: mutation);
         var agent = new HeuristicRunAgent(RunAgentPersonality.BuildFocused, Seed, build.PreferredSchool);
         var metrics = new RunSelfPlayDriver().Play(build, Seed, simulation, agent, new RunSelfPlayOptions(MaximumSimulatedSeconds: 120));
-        return (metrics, simulation.CreateSummary());
+        return (metrics, simulation.CreateSummary(), simulation);
     }
 
     private static RunSimulation Create(LaboratoryMutationId? mutation)

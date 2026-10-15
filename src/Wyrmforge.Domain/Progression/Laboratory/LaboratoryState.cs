@@ -7,7 +7,7 @@ public enum ExperimentAvailability { Ready, AlreadyRecorded, MissingSample, Miss
 
 public enum MutationResearchStatus { MissingObservations, MissingStabilizer, ReadyToStabilize, Stabilized }
 
-public enum MutationEquipResult { Equipped, NotStabilized, SocketLocked }
+public enum MutationEquipResult { Equipped, NotStabilized, SocketLocked, InvalidBlueprint }
 
 public sealed record LaboratoryExperimentResult(LaboratoryExperimentDefinition Experiment, bool Novel, bool Rejected)
 {
@@ -87,6 +87,8 @@ public sealed class LaboratoryState
     {
         if (!stabilized.Contains(id)) return MutationEquipResult.NotStabilized;
         if (!SocketUnlocked(LaboratoryCatalog.Get(id).Socket, arcaneNodes)) return MutationEquipResult.SocketLocked;
+        // Rejected before a hunt can start, never discovered mid-fight.
+        if (!LaboratoryCatalog.Get(id).Validation.IsValid) return MutationEquipResult.InvalidBlueprint;
         Equipped = id;
         return MutationEquipResult.Equipped;
     }

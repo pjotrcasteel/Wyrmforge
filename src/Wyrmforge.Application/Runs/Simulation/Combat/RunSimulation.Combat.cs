@@ -55,7 +55,7 @@ public sealed partial class RunSimulation
             if (projectile.SplashRadius > 0) Splash(target.Position, damage * 0.4, projectile.SplashRadius, target.Id);
             foreach (var interaction in interactions)
             {
-                if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0)
+                if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0 && TrySpendReactionEvent())
                 {
                     Splash(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id);
                 }
@@ -65,7 +65,7 @@ public sealed partial class RunSimulation
             if (projectile.Spell == SpellId.ArcaneOrb)
             {
                 arcaneHitCount++;
-                if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0)
+                if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0 && TrySpendReactionEvent())
                 {
                     RecordReaction();
                     CastChainLightning(1, target.Position, 0.55, 1);

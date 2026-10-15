@@ -327,10 +327,16 @@ Every milestone must meet these shared gates:
 
 **C.1 done:** *Storm Infusion* (Arcane Orb × Storm Heart → Arcane Conduit), research leads that guarantee specimen access, a Laboratory advisor and a post-run research prompt. Self-play tuning proposals are in [`laboratory-tuning-v1.md`](../design/laboratory-tuning-v1.md).
 
+**Blueprint contracts done:** mutations are typed `SpellBlueprint`s with structural tags and a complexity budget, validated by a versioned `BlueprintRuleset`. Sockets accept tags instead of spell ids, and a per-step reaction-event budget caps secondary events. See [`spell-blueprint-contracts-v1.md`](../design/spell-blueprint-contracts-v1.md).
+
 **Next:**
 - **C.2:** a preparation economy.
-- **C.3:** two sockets, loadouts and event budgets.
+- **C.3:** two sockets and loadouts. The event budget is already in place.
 - After those: animated previews.
+
+### Deferred to the story phase: arena redesign (product-owner request)
+
+The arena is bland, every map looks the same, and the maps look poor. Enemies, the mage and spell effects are fine. **Redo the arena completely**, but only when the story is implemented (Phase D, Chronicle), so the story sets the art direction for each location. Don't polish arena tiles before then.
 
 ### Elder Wyrms (after M6)
 
@@ -452,10 +458,12 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 
 **Laboratory track (top priority, per the Spellcraft handover §15):**
 - Phase B: Rime Infusion. Done.
-- C.1: a second mutation on an existing synergy.
+- C.1: a second mutation on an existing synergy. Done.
+- Blueprint and compatibility contracts, with the reaction-event budget. Done.
 - C.2: a preparation economy with exact spend preview.
 - C.3: two sockets, loadouts, free respec, and event-budget tests.
 - Phases D to G stay gated on product-owner scheduling: Chronicle/FLC, offline blueprints, the verified Conclave, and content delivery.
+- Full arena redesign: deferred to the story phase (M7 note).
 
 **Deferred:**
 - Elder Wyrms.

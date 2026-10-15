@@ -157,6 +157,7 @@ public sealed partial class RunSimulation
             return CreateSnapshot();
         }
         delta = Math.Clamp(delta, 0, 0.05);
+        reactionBudget.BeginStep();
         BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);
         elapsed += delta;

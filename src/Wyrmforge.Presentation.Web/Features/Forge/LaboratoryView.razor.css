@@ -45,6 +45,10 @@
 .lab-recipe.stabilized { border-color: rgba(255, 210, 122, .5); box-shadow: 0 0 24px rgba(224, 112, 46, .18) inset; }
 .lab-kicker { color: #9fdcf0; font-size: .64rem; font-weight: 950; letter-spacing: .17em; }
 .lab-recipe p { margin: 0; color: #c9bfd0; font-size: .8rem; line-height: 1.45; }
+.lab-recipe p.lab-blueprint { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; font-size: .62rem; letter-spacing: .04em; }
+.lab-blueprint span { padding: 2px 6px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 6px; color: #d8cfe0; }
+.lab-blueprint span + span::before { content: "+ "; color: #8d8098; }
+.lab-blueprint small { margin-left: 4px; color: #8d8098; }
 
 .lab-equation { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .lab-equation b { color: #8d8098; font-size: 1.1rem; }

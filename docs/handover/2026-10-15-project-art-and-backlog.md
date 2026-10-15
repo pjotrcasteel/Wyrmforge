@@ -204,3 +204,20 @@ Details: `docs/design/laboratory-frostfire-slice-v1.md` §8.
 - Storm and Rime capture flows verified in emulated 390×844 Chromium.
 
 **Open decisions (product owner):** the tuning proposals in `laboratory-tuning-v1.md` §3, and whether a lead should expire after failed hunts.
+
+## 11. Continuation: Spell blueprint and compatibility contracts (same branch)
+
+**Built:**
+- `Wyrmforge.Domain/Spells/Composition`: structural `SpellTag`s, `SpellComponentCatalog`, `SpellBlueprint`, a versioned `BlueprintRuleset.V1` (complexity 6, 3 elements, 16 reaction events per step) and a deterministic `BlueprintValidator` with player-facing reasons and fixes.
+- Both mutations are now defined as blueprints. Sockets accept tags. `Equip` rejects invalid blueprints.
+- `ReactionBudget` caps secondary reaction events per combat step.
+- The Laboratory shows a blueprint line with complexity.
+- No gameplay change: in an 80-hunt probe the peak was 2 events per step, with 0 suppressed.
+
+Details: `docs/design/spell-blueprint-contracts-v1.md`.
+
+**Validation:** build clean; Domain 187 and Application 311 tests pass.
+
+**Product-owner request (deferred):** redo the arena completely. It is bland, the maps all look alike, and they look poor; enemies, the mage and effects are fine. Do this during the story phase (Phase D) so the story drives the art direction. It is recorded in the roadmap under M7.
+
+**Next options:** C.2 (preparation economy with rare-monster reagents), C.3 (two sockets and loadouts), element inversion, and tuning sign-off (`laboratory-tuning-v1.md` §3).

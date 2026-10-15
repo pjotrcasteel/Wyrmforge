@@ -1,7 +1,9 @@
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Interactions;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Composition;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -11,11 +13,14 @@ public sealed partial class RunSimulation
     private LaboratoryMutationId? activeLaboratoryMutation;
     private DragonId? researchLead;
     private int reactionsTriggered;
+    private readonly ReactionBudget reactionBudget = new(BlueprintRuleset.Current.MaxReactionEventsPerStep);
 
     public LaboratoryMutationId? PreparedLaboratoryMutation => preparedLaboratoryMutation;
     public LaboratoryMutationId? ActiveLaboratoryMutation => activeLaboratoryMutation;
     public DragonId? ResearchLead => researchLead;
     public int ReactionsTriggered => reactionsTriggered;
+    public int PeakReactionEventsPerStep => reactionBudget.PeakPerStep;
+    public int ReactionEventsSuppressed => reactionBudget.Suppressed;
 
     internal void EnableResearchLead(DragonId? wyrm) => researchLead = wyrm;
 
@@ -45,4 +50,7 @@ public sealed partial class RunSimulation
         activeLaboratoryMutation is { } id ? [LaboratoryCatalog.Get(id).Modifiers] : [];
 
     private void RecordReaction() => reactionsTriggered++;
+
+    // Secondary events spawned by reactions share one per-step budget (BlueprintRuleset), so chains stay bounded.
+    private bool TrySpendReactionEvent() => reactionBudget.TrySpend();
 }

@@ -1,6 +1,7 @@
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.DragonEssences
 @using Wyrmforge.Domain.Spells
+@using Wyrmforge.Domain.Spells.Composition
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.PassiveTree
 
@@ -30,6 +31,14 @@
             <span class="lab-glyph fused @FoundationIcon-@SpecimenIcon"><i class="px-icon px-lg px-@FoundationIcon"></i><i class="px-icon px-lg px-@SpecimenIcon"></i></span>
         </div>
         <p>@Mutation.Summary</p>
+        <p class="lab-blueprint" aria-label="Blueprint">
+            <span>@SpellCatalog.Get(Mutation.Foundation).Name</span>
+            @foreach (var (_, component) in Mutation.Blueprint.Components())
+            {
+                <span>@SpellComponentCatalog.Get(component).Name</span>
+            }
+            <small title="Complexity used of the ruleset budget">Complexity @Mutation.Validation.Complexity/@Mutation.Validation.Budget</small>
+        </p>
         <ol class="lab-pips" aria-label="@KnownCount of @Mutation.RequiresObservations.Count conditions understood">
             @foreach (var observation in Mutation.RequiresObservations)
             {

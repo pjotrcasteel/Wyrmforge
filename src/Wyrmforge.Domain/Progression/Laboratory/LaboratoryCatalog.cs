@@ -2,6 +2,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Composition;
 using Wyrmforge.Domain.Spells.Synergies;
 
 namespace Wyrmforge.Domain.Progression.Laboratory;
@@ -19,10 +20,11 @@ public sealed record LaboratoryExperimentDefinition(
     DragonEssenceId? RequiresSample,
     IReadOnlyList<LaboratoryObservationId> RequiresObservations);
 
-public sealed record ArcaneMutationSocketDefinition(ArcaneMutationSocketId Id, string Name, string NodeId, string NodeName, string Route);
+// A socket accepts blueprints by structural tags (its Arcane Web bridge's elements), not by SpellId.
+public sealed record ArcaneMutationSocketDefinition(ArcaneMutationSocketId Id, string Name, string NodeId, string NodeName, string Route, IReadOnlyList<SpellTag> Accepts);
 
 // A mutation changes the one primary cast; it never adds a second attack stream.
-// It realizes an existing synergy so the legacy and researched effect can never stack.
+// Its blueprint's reaction realizes an existing synergy so the legacy and researched effect can never stack.
 public sealed record LaboratoryMutationDefinition(
     LaboratoryMutationId Id,
     string Name,
@@ -30,13 +32,18 @@ public sealed record LaboratoryMutationDefinition(
     string TradeOff,
     string AwakenedText,
     string ReactionNoun,
-    SpellId Foundation,
-    SynergyId Realizes,
+    SpellBlueprint Blueprint,
     DragonEssenceId Stabilizer,
     ArcaneMutationSocketId Socket,
     IReadOnlyList<LaboratoryObservationId> RequiresObservations,
     BuildModifierProfile Modifiers)
 {
+    public SpellId Foundation => Blueprint.Foundation;
+
+    public BlueprintValidation Validation => BlueprintValidator.Validate(Blueprint, BlueprintRuleset.Current, LaboratoryCatalog.Get(Socket).Accepts);
+
+    public SynergyId Realizes => Validation.Realizes ?? throw new InvalidOperationException($"{Name}'s blueprint realizes no reaction.");
+
     public DragonEssenceDefinition Specimen => DragonEssenceCatalog.All.Single(essence => essence.Id == Stabilizer);
 
     public DragonId SpecimenWyrm => DragonCatalog.All.First(dragon => DragonEssenceCatalog.ChoicesFor(dragon.Id).Any(choice => choice.Id == Stabilizer)).Id;
@@ -103,8 +110,8 @@ public static class LaboratoryCatalog
 
     public static IReadOnlyList<ArcaneMutationSocketDefinition> Sockets { get; } =
     [
-        new(ArcaneMutationSocketId.Rimebrand, "Rimebrand socket", "hybrid-fire-frost-2", "Rimebrand", "Fire–Frost bridge"),
-        new(ArcaneMutationSocketId.ChargedFocus, "Charged Focus socket", "hybrid-storm-arcane-2", "Charged Focus", "Storm–Arcane bridge"),
+        new(ArcaneMutationSocketId.Rimebrand, "Rimebrand socket", "hybrid-fire-frost-2", "Rimebrand", "Fire–Frost bridge", [SpellTag.Fire, SpellTag.Frost]),
+        new(ArcaneMutationSocketId.ChargedFocus, "Charged Focus socket", "hybrid-storm-arcane-2", "Charged Focus", "Storm–Arcane bridge", [SpellTag.Storm, SpellTag.Arcane]),
     ];
 
     public static IReadOnlyList<LaboratoryMutationDefinition> Mutations { get; } =
@@ -113,14 +120,14 @@ public static class LaboratoryCatalog
             "Fire Bolt freezes and burns from the first cast. Frozen targets shatter (Frostfire).",
             "−10% spell damage while Fire Bolt carries the rime.",
             "Fire Bolt freezes and burns. Strike frozen foes to shatter them.", "shatter",
-            SpellId.FireBolt, SynergyId.Frostfire, DragonEssenceId.RimeHeart, ArcaneMutationSocketId.Rimebrand,
+            new SpellBlueprint(SpellId.FireBolt, SpellComponentId.Bolt, SpellComponentId.RimeInfusion, SpellComponentId.ThermalShatter), DragonEssenceId.RimeHeart, ArcaneMutationSocketId.Rimebrand,
             [LaboratoryObservationId.RimePreservesCold, LaboratoryObservationId.ThermalShockUnstable, LaboratoryObservationId.FireShattersFrozen],
             new BuildModifierProfile([new BuildStatModifier(BuildStatId.Damage, BuildStatOperation.PercentAdd, RimeInfusionDamageTradeOff)])),
         new(LaboratoryMutationId.StormInfusion, "Storm Infusion",
             "Arcane Orb stores charge from the first cast. Every 4th impact discharges chain lightning (Arcane Conduit).",
             "Casts 10% slower while Arcane Orb holds the storm.",
             "Arcane Orb holds the storm. Every 4th impact discharges lightning.", "discharge",
-            SpellId.ArcaneOrb, SynergyId.ArcaneConduit, DragonEssenceId.StormHeart, ArcaneMutationSocketId.ChargedFocus,
+            new SpellBlueprint(SpellId.ArcaneOrb, SpellComponentId.Bolt, SpellComponentId.StormCharge, SpellComponentId.ConduitDischarge), DragonEssenceId.StormHeart, ArcaneMutationSocketId.ChargedFocus,
             [LaboratoryObservationId.StormHeartKeepsRhythm, LaboratoryObservationId.ChargeBleedsOnContact, LaboratoryObservationId.OrbStoresCharge],
             new BuildModifierProfile([new BuildStatModifier(BuildStatId.CastInterval, BuildStatOperation.PercentAdd, StormInfusionCastIntervalTradeOff)])),
     ];
