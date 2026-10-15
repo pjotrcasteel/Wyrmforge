@@ -7,6 +7,7 @@
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.Onboarding
 @using Wyrmforge.Domain.Progression.Experience
+@using Wyrmforge.Domain.Progression.Laboratory
 
 <main class="game-shell @(section == ShellSection.Run ? "menu-home" : string.Empty)">
     @if (section == ShellSection.Run)
@@ -16,7 +17,7 @@
     @if (section != ShellSection.Run)
     {
         <header class="menu-header">
-            <button class="menu-back" aria-label="Back to main menu" @onclick="() => Navigate(ShellSection.Run)">‹</button>
+            <button class="menu-back" aria-label="@(section == ShellSection.Laboratory && ForgeUnlocked ? "Back to Forge" : "Back to main menu")" @onclick="() => Navigate(section == ShellSection.Laboratory && ForgeUnlocked ? ShellSection.Forge : ShellSection.Run)">‹</button>
             <h1>@SectionTitle</h1>
         </header>
     }
@@ -51,7 +52,7 @@
                         }</header>
                     <nav class="menu-actions" aria-label="Wyrmforge navigation">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
-                        @foreach (var item in Navigation.Where(item => item.Section != ShellSection.Run))
+                        @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run and not ShellSection.Laboratory))
                         {
                             var unlocked = IsUnlocked(item.Section);
                             <button class="menu-destination" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
@@ -75,7 +76,17 @@
                 <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" />
                 break;
             case ShellSection.Forge:
+                @if (IsUnlocked(ShellSection.Laboratory))
+                {
+                    <button class="forge-lab-entry" aria-label="Open Laboratory" @onclick="() => Navigate(ShellSection.Laboratory)">
+                        <span><i class="px-icon px-sm px-flask" aria-hidden="true"></i>Laboratory</span>
+                        <small>@LaboratoryStatus ›</small>
+                    </button>
+                }
                 <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
+                break;
+            case ShellSection.Laboratory:
+                <LaboratoryView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice" OnOpenAtlas="() => NavigateAsync(ShellSection.Build)" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" />
                 break;
             case ShellSection.Codex:
                 <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
@@ -115,6 +126,12 @@
     [Parameter] public int QuestRewards { get; set; }
     [Parameter] public int RewardCaches { get; set; }
     [Parameter] public HunterProgress Hunter { get; set; } = new();
+    [Parameter] public LaboratoryState Laboratory { get; set; } = new();
+    [Parameter] public string? LaboratoryNotice { get; set; }
+    [Parameter] public EventCallback OnDismissLaboratoryNotice { get; set; }
+    [Parameter] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>> RunExperiment { get; set; } = _ => throw new InvalidOperationException("Laboratory not wired.");
+    [Parameter] public Func<LaboratoryMutationId, Task<bool>> StabilizeMutation { get; set; } = _ => Task.FromResult(false);
+    [Parameter] public Func<LaboratoryMutationId?, Task> EquipMutation { get; set; } = _ => Task.CompletedTask;
 
     private bool editingName;
     private string nameDraft = "";
@@ -139,6 +156,7 @@
         new(ShellSection.Run, "sword", "Run"),
         new(ShellSection.Build, "rune", "Arcane Atlas"),
         new(ShellSection.Forge, "anvil", "Forge"),
+        new(ShellSection.Laboratory, "flask", "Laboratory"),
         new(ShellSection.Codex, "book", "Codex"),
     ];
 
@@ -147,7 +165,7 @@
     {
         ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
         ShellSection.Build => Progress.AtlasUnlocked,
-        ShellSection.Codex => Progress.CodexUnlocked,
+        ShellSection.Codex or ShellSection.Laboratory => Progress.CodexUnlocked,
         ShellSection.Forge => ForgeUnlocked,
         _ => false,
     };
@@ -155,6 +173,7 @@
     {
         ShellSection.Build => "Arcane Atlas locked until your First Hunt ends",
         ShellSection.Codex => "Codex locked until your First Hunt ends",
+        ShellSection.Laboratory => "Laboratory locked until your First Hunt ends",
         ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
         _ => "Locked",
     };
@@ -165,6 +184,11 @@
     private Task StartAsync() => OnStart.InvokeAsync();
     private string UnlockHint(ShellSection value) => value == ShellSection.Forge ? "Secure Essence" : "Finish first hunt";
 
-    private enum ShellSection { Run, Build, Forge, Codex, Prepare, Options }
+    private string LaboratoryStatus => Laboratory.Equipped is not null ? "Mutation equipped"
+        : Laboratory.Stabilized.Count > 0 ? "Recipe ready"
+        : Laboratory.Observations.Count > 0 ? $"{Laboratory.Observations.Count} findings"
+        : Vault.Count(DragonEssenceId.RimeHeart) > 0 ? "Specimen ready" : "Needs a Rime Heart";
+
+    private enum ShellSection { Run, Build, Forge, Laboratory, Codex, Prepare, Options }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
 }

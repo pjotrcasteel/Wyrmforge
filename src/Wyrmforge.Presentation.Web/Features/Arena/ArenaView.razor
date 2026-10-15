@@ -140,6 +140,10 @@
                             <span class="primary-choice-icon px-icon px-lg px-@spell.School.ToString().ToLowerInvariant()" aria-hidden="true"></span>
                             <strong>@spell.Name</strong>
                             <small>@spell.School</small>
+                            @if (PreparedMutationFoundation == spell.Id)
+                            {
+                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-frost" aria-hidden="true"></i>@PreparedMutationName</span>
+                            }
                         </button>
                     }
                 </div>

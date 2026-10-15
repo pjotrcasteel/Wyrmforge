@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -93,6 +93,9 @@ public partial class Home
         await TryLoadArcaneCodexAsync();
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
+        await TryLoadLaboratoryAsync();
+        laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
+        if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
         StateHasChanged();
     }
 
@@ -141,6 +144,7 @@ public partial class Home
             await TrySetEssenceVaultAsync();
         }
         selectedOffering = null;
+        activeLaboratoryMutation = laboratory.PreparedFor(selection.Selected);
         await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;
@@ -163,6 +167,11 @@ public partial class Home
         newlyUnlockedLineages = mastery.NewlyUnlocked;
         advancedSpellIds = mastery.Progressed;
         if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();
+        if (value.PreparedMutation is not null)
+        {
+            laboratory.RecordFieldTest(value.PreparedMutation, value.ReactionsTriggered);
+            await TrySetLaboratoryAsync();
+        }
         advancedOaths = greatHunt.RecordRun(new GreatHuntRunEvidence(value.CompletedRouteNodes, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds.ToHashSet(), value.DeepEvolvedWyrmDuels.ToHashSet(), value.EssenceIds)
         { AscendantVictories = value.AscendantDragonIds.ToHashSet() });
@@ -219,6 +228,7 @@ public partial class Home
         if (summary is null) return;
         await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
+        activeLaboratoryMutation = laboratory.PreparedFor(selection.Selected);
         activeRewardCache = false;
         summary = null;
         hunterGain = null;

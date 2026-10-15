@@ -152,3 +152,37 @@ PR #64 compared synthetic self-play agents, **not calibrated real users**. Its f
 - Pixel map-node badges.
 
 See audit §3b and §5.
+
+
+## 9. Continuation: Spellcraft handover, Laboratory Phase B (branch `feature/lab-frostfire-mutation`, local, not pushed)
+
+The product owner approved the 2026-10-15 Game Design & Spellcraft handover as the design direction. **Phase B, the first playable Frostfire invention, is implemented** as the researched mutation *Rime Infusion*.
+
+**Where things are:**
+- Design, contracts, migration, acceptance coverage, side effects and open decisions: `docs/design/laboratory-frostfire-slice-v1.md`.
+- Domain: `src/Wyrmforge.Domain/Progression/Laboratory/`.
+- Simulation: `src/Wyrmforge.Application/Runs/Simulation/RunSimulation.Laboratory.cs`.
+- UI: `Features/Forge/LaboratoryView.razor`, reached through the Forge's "Laboratory" entry. It is kept off the hub so the five-row menu still fits at 320×568 and 844×390.
+- Persistence: `Pages/Home.Laboratory.cs`, key `wyrmforge.laboratory.v1`. Existing saves are untouched.
+- New art: `icon.flask`.
+
+**Invariants to keep:**
+- One primary cast.
+- The mutation reuses the existing Frostfire rule and hides the legacy synergy offer, so they never stack.
+- Experiments never consume specimens, and repeats are not novel.
+- A specimen is spent only on explicit consent, with the Laboratory saved before the vault.
+- Losing the socket path unequips the mutation but keeps the recipe.
+
+**Validation:**
+- Domain 156, Application 298 and JS 107 tests pass. The 20 new tests include a seeded real hunt where reactions > 0.
+- Browser tests: 45 of 47 pass. `Mobile_DeveloperHuntTrials_*` and `Mobile_HuntLab_Autopilot*` also fail on base commit `435e941`, so they are pre-existing.
+- The Laboratory flow was verified in emulated 390×844 Chromium. No real-device or CI run has been done yet.
+
+**Open decisions (product owner):**
+- The −10% damage trade-off.
+- The Rime Heart stabilizer cost.
+- Free experiments versus a preparation currency.
+- Socket node placement and names.
+- Previews: static now, animated later.
+
+**Next:** Laboratory Phase C.1 (a second mutation), then C.2 (preparation economy) and C.3 (two sockets and loadouts). See roadmap §5 M7 and §11.

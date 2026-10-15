@@ -1,0 +1,173 @@
+@using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.PassiveTree
+
+<section class="lab-view" aria-label="Laboratory">
+    @if (Notice is not null)
+    {
+        <div class="lab-notice" role="status"><span>@Notice</span><button aria-label="Dismiss" @onclick="() => OnDismissNotice.InvokeAsync()">×</button></div>
+    }
+
+    <header class="lab-recipe @RecipeClass" aria-label="@Mutation.Name recipe">
+        <div class="lab-kicker">MUTATION · @Mutation.Name.ToUpperInvariant()</div>
+        <div class="lab-equation" aria-hidden="true">
+            <span class="lab-glyph fire"><i class="px-icon px-lg px-fire"></i></span>
+            <b>+</b>
+            <span class="lab-glyph frost"><i class="px-icon px-lg px-frost"></i><i class="px-icon px-heart lab-glyph-badge"></i></span>
+            <b>→</b>
+            <span class="lab-glyph frostfire"><i class="px-icon px-lg px-fire"></i><i class="px-icon px-lg px-frost"></i></span>
+        </div>
+        <p>@Mutation.Summary</p>
+        <ol class="lab-pips" aria-label="@KnownCount of @Mutation.RequiresObservations.Count conditions understood">
+            @foreach (var observation in Mutation.RequiresObservations)
+            {
+                <li class="@(Laboratory.HasObserved(observation) ? "known" : string.Empty)" title="@ObservationLabel(observation)">@ObservationLabel(observation)</li>
+            }
+        </ol>
+        <div class="lab-specimen">
+            <i class="px-icon px-sm px-frost" aria-hidden="true"></i>
+            <span>Rime Heart × @RimeHearts</span>
+            <small>@(RimeHearts == 0 ? "Hunt Rimeclaw to bring back a specimen." : "Specimens are only studied; experiments never consume them.")</small>
+        </div>
+    </header>
+
+    <section class="lab-bench" aria-label="Experiments">
+        <h2>Experiments</h2>
+        @foreach (var experiment in LaboratoryCatalog.Experiments)
+        {
+            var availability = Laboratory.Availability(experiment.Id, Vault);
+            var known = availability == ExperimentAvailability.AlreadyRecorded;
+            <article class="lab-experiment @OutcomeClass(experiment, known) @(lastResult?.Experiment.Id == experiment.Id ? "latest" : string.Empty)">
+                <button disabled="@(availability is ExperimentAvailability.MissingObservation or ExperimentAvailability.MissingSample)" @onclick="() => RunAsync(experiment.Id)" aria-label="@(known ? $"Review {experiment.Name}" : $"Run {experiment.Name}")">
+                    <span class="lab-experiment-state" aria-hidden="true">@StateGlyph(experiment, availability)</span>
+                    <span class="lab-experiment-text">
+                        <strong>@experiment.Name</strong>
+                        <small>@(known ? OutcomeLabel(experiment.Outcome) : availability switch
+                        {
+                            ExperimentAvailability.MissingSample => "Needs a Rime Heart in the vault",
+                            ExperimentAvailability.MissingObservation => "Needs an earlier finding",
+                            _ => experiment.Hypothesis,
+                        })</small>
+                    </span>
+                </button>
+                @if (known)
+                {
+                    <p class="lab-finding">@experiment.Finding</p>
+                }
+            </article>
+        }
+        @if (lastResult is { } result)
+        {
+            <div class="lab-result @(result.Novel ? "novel" : "repeat")" role="status" aria-live="polite">
+                <strong>@(result.Novel ? OutcomeLabel(result.Experiment.Outcome) : "ALREADY RECORDED")</strong>
+                <span>@result.Message</span>
+                @if (result.Novel) { <small>Next: @result.Experiment.NextStep</small> }
+            </div>
+        }
+    </section>
+
+    <section class="lab-stabilize" aria-label="Stabilize and equip">
+        @switch (Status)
+        {
+            case MutationResearchStatus.MissingObservations:
+                <p class="lab-hint">Understand @(Mutation.RequiresObservations.Count - KnownCount) more condition@(Mutation.RequiresObservations.Count - KnownCount == 1 ? string.Empty : "s") to stabilize the mutation.</p>
+                break;
+            case MutationResearchStatus.MissingStabilizer:
+                <p class="lab-hint">All conditions known. Stabilizing needs 1 secured Rime Heart.</p>
+                break;
+            case MutationResearchStatus.ReadyToStabilize:
+                @if (!confirming)
+                {
+                    <button class="lab-primary" @onclick="() => confirming = true">STABILIZE @Mutation.Name.ToUpperInvariant()</button>
+                }
+                else
+                {
+                    <div class="lab-consent" role="alertdialog" aria-label="Confirm Essence use">
+                        <strong>Consume 1 Rime Heart?</strong>
+                        <span>Vault: @RimeHearts → @(RimeHearts - 1). The Forge uses the same Rime Hearts.</span>
+                        <span>Success is certain: every condition is understood. The recipe is kept forever.</span>
+                        <div><button @onclick="() => confirming = false">CANCEL</button><button class="lab-primary" @onclick="StabilizeAsync">CONSUME &amp; STABILIZE</button></div>
+                    </div>
+                }
+                break;
+            case MutationResearchStatus.Stabilized:
+                <div class="lab-socket @(SocketReady ? "ready" : "locked")">
+                    <i class="px-icon px-sm px-@(SocketReady ? "rune" : "lock")" aria-hidden="true"></i>
+                    <span><strong>@Socket.Name</strong><small>@(SocketReady ? $"{Socket.NodeName} is allocated." : $"Allocate {Socket.NodeName} on the {Socket.Route} in the Arcane Atlas.")</small></span>
+                    @if (!SocketReady) { <button @onclick="() => OnOpenAtlas.InvokeAsync()">ATLAS</button> }
+                </div>
+                <button class="lab-primary @(IsEquipped ? "equipped" : string.Empty)" disabled="@(!SocketReady && !IsEquipped)" aria-pressed="@IsEquipped.ToString().ToLowerInvariant()" @onclick="ToggleEquipAsync">
+                    @(IsEquipped ? "EQUIPPED: unequip" : "EQUIP FOR NEXT HUNT")
+                </button>
+                <p class="lab-tradeoff">Active only when Fire Bolt is your primary. @Mutation.TradeOff</p>
+                break;
+        }
+        @if (Laboratory.FieldTests > 0)
+        {
+            <p class="lab-field-notes"><i class="px-icon px-sm px-book" aria-hidden="true"></i>Field notes: @Laboratory.FieldTests hunt@(Laboratory.FieldTests == 1 ? string.Empty : "s"), @Laboratory.FieldReactions shatter@(Laboratory.FieldReactions == 1 ? string.Empty : "s").</p>
+        }
+    </section>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public LaboratoryState Laboratory { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter] public string? Notice { get; set; }
+    [Parameter] public EventCallback OnDismissNotice { get; set; }
+    [Parameter] public EventCallback OnOpenAtlas { get; set; }
+    [Parameter, EditorRequired] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>> RunExperiment { get; set; } = null!;
+    [Parameter, EditorRequired] public Func<LaboratoryMutationId, Task<bool>> Stabilize { get; set; } = null!;
+    [Parameter, EditorRequired] public Func<LaboratoryMutationId?, Task> Equip { get; set; } = null!;
+
+    private static readonly LaboratoryMutationDefinition Mutation = LaboratoryCatalog.Get(LaboratoryMutationId.RimeInfusion);
+    private static readonly ArcaneMutationSocketDefinition Socket = LaboratoryCatalog.Get(Mutation.Socket);
+    private LaboratoryExperimentResult? lastResult;
+    private bool confirming;
+
+    private int RimeHearts => Vault.Count(Mutation.Stabilizer);
+    private int KnownCount => Mutation.RequiresObservations.Count(Laboratory.HasObserved);
+    private MutationResearchStatus Status => Laboratory.Status(Mutation.Id, Vault);
+    private bool SocketReady => LaboratoryState.SocketUnlocked(Socket.Id, Selection.Selected);
+    private bool IsEquipped => Laboratory.Equipped == Mutation.Id;
+    private string RecipeClass => Status == MutationResearchStatus.Stabilized ? "stabilized" : KnownCount > 0 ? "researching" : "unknown";
+
+    private async Task RunAsync(LaboratoryExperimentId id) => lastResult = await RunExperiment(id);
+
+    private async Task StabilizeAsync()
+    {
+        confirming = false;
+        await Stabilize(Mutation.Id);
+    }
+
+    private Task ToggleEquipAsync() => Equip(IsEquipped ? null : Mutation.Id);
+
+    private static string ObservationLabel(LaboratoryObservationId id) => id switch
+    {
+        LaboratoryObservationId.RimePreservesCold => "Rime holds cold",
+        LaboratoryObservationId.ThermalShockUnstable => "Cold must land first",
+        LaboratoryObservationId.FireShattersFrozen => "Fire shatters ice",
+        _ => "Smothered flame",
+    };
+
+    private static string OutcomeLabel(LaboratoryExperimentOutcome outcome) => outcome switch
+    {
+        LaboratoryExperimentOutcome.Insight => "INSIGHT",
+        LaboratoryExperimentOutcome.InstructiveFailure => "FAILED, AND LEARNED WHY",
+        _ => "DEAD END: RULED OUT",
+    };
+
+    private static string OutcomeClass(LaboratoryExperimentDefinition experiment, bool known) => !known ? "pending" : experiment.Outcome switch
+    {
+        LaboratoryExperimentOutcome.Insight => "insight",
+        LaboratoryExperimentOutcome.InstructiveFailure => "failure",
+        _ => "dead-end",
+    };
+
+    private static string StateGlyph(LaboratoryExperimentDefinition experiment, ExperimentAvailability availability) => availability switch
+    {
+        ExperimentAvailability.AlreadyRecorded => experiment.Outcome == LaboratoryExperimentOutcome.Insight ? "✓" : experiment.Outcome == LaboratoryExperimentOutcome.InstructiveFailure ? "!" : "✕",
+        ExperimentAvailability.Ready => "?",
+        _ => "·",
+    };
+}

@@ -181,6 +181,16 @@
             </div>
         }
 
+        @if (Summary.PreparedMutation is { } mutationId)
+        {
+            <div class="run-report-section">
+                <span>FIELD NOTES</span>
+                <div class="run-report-chips">
+                    <b><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @Wyrmforge.Domain.Progression.Laboratory.LaboratoryCatalog.Get(mutationId).Name · @Summary.ReactionsTriggered shatter@(Summary.ReactionsTriggered == 1 ? string.Empty : "s")</b>
+                </div>
+            </div>
+        }
+
         @if (Summary.RelicLoadout.Count > 0)
         {
             <div class="run-report-section">

@@ -200,6 +200,7 @@ public sealed partial class RunSimulation
     private double ApplyChainInteractions(SpellId spellId, ICombatTarget target, double damage, ref int jumps, ref bool bonusJumpsTriggered)
     {
         var interactions = ResolveStatusInteractions(spellId, target);
+        if (interactions.Count > 0) RecordReaction();
         foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
         if (bonusJumpsTriggered) return damage;
 

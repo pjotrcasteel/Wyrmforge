@@ -48,6 +48,7 @@ public sealed partial class RunSimulation
     {
         foreach (var relic in build.Relics.Equipped) yield return RelicCatalog.Get(relic).Modifiers;
         foreach (var essence in build.DragonEssences.Selected) yield return DragonEssenceCatalog.Get(essence).Modifiers;
+        foreach (var mutation in ActiveLaboratoryModifierProfiles()) yield return mutation;
     }
 
     private IEnumerable<BuildModifierProfile> ActiveResonanceModifierProfiles() => ResonanceThresholds.Select(threshold => threshold.Modifiers);

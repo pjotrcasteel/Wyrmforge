@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using Wyrmforge.Domain.Progression.Laboratory;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.Checkpoint;
@@ -40,8 +41,11 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public bool RewardCache { get; set; }
+    [Parameter] public LaboratoryMutationId? PreparedMutation { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
+    private SpellId? PreparedMutationFoundation => PreparedMutation is { } id ? LaboratoryCatalog.Get(id).Foundation : null;
+    private string PreparedMutationName => PreparedMutation is { } id ? LaboratoryCatalog.Get(id).Name : string.Empty;
     private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
@@ -78,7 +82,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, PreparedMutation);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -139,6 +143,8 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChoosePrimaryAsync(SpellId id)
     {
         if (simulation?.ChoosePrimary(id) != true) return;
+        if (simulation.ActiveLaboratoryMutation is { } mutation)
+            ShowRunMoment(new RunMoment("MUTATION AWAKENED", LaboratoryCatalog.Get(mutation).Name, "Fire Bolt freezes and burns. Strike frozen foes to shatter them.", RunMomentTone.Legendary));
         await TryPlayAudioAsync("upgrade-choice");
         await InvokeAsync(StateHasChanged);
     }

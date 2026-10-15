@@ -1,5 +1,6 @@
 ﻿using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells.Synergies;
 using Wyrmforge.Domain.Spells;
 
@@ -24,6 +25,8 @@ public sealed record RunSummary(
     public int CompletedRouteNodes { get; init; }
     public int RareRouteNodes { get; init; }
     public IReadOnlyList<SynergyId> SynergyIds { get; init; } = Array.Empty<SynergyId>();
+    public LaboratoryMutationId? PreparedMutation { get; init; }
+    public int ReactionsTriggered { get; init; }
     public IReadOnlyList<DragonId> DragonIds { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<DragonId> AscendantDragonIds { get; init; } = Array.Empty<DragonId>();
     public IReadOnlyList<SpellId> WyrmMasteryFeats { get; init; } = Array.Empty<SpellId>();

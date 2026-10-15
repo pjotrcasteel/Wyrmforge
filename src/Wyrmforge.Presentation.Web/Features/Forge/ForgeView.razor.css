@@ -66,3 +66,10 @@
     .menu-actions { grid-column:2; grid-row:1; }
     .menu-footer { grid-column:2; grid-row:2; }
 }
+
+/* Laboratory lives inside the Forge so the hub stays at its five-row mobile height. */
+.forge-lab-entry { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:48px; margin:0 0 12px; padding:10px 14px; border:1px solid #6f8fb0; border-radius:4px; background:linear-gradient(90deg,#1b2433,#1a1422); color:var(--menu-ink); font:inherit; text-align:left; cursor:pointer; }
+.forge-lab-entry>span { display:flex; align-items:center; gap:12px; font-weight:600; letter-spacing:.04em; }
+.forge-lab-entry small { color:#9fc4e4; font-size:.75rem; }
+.forge-lab-entry:hover { background:#24304a; }
+.forge-lab-entry i.px-icon { width:16px; }

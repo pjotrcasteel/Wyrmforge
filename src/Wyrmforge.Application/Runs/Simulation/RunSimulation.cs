@@ -98,6 +98,7 @@ public sealed partial class RunSimulation
         if (!availablePrimarySpells.Contains(id) || elapsed > 0 || mapState.EncounterActive || completedRouteNodes.Count > 0 || IsEnded)
             return false;
         if (!build.Spells.TryChoosePrimary(id)) return false;
+        ApplyPreparedLaboratoryMutation();
         RefreshBuildModifiers();
         RefreshBuildHud();
         return true;
@@ -277,6 +278,8 @@ public sealed partial class RunSimulation
     {
         SynergyIds = build.Synergies.Snapshot().ToArray(),
         ExperienceEarned = experienceEarned,
+        PreparedMutation = activeLaboratoryMutation,
+        ReactionsTriggered = reactionsTriggered,
     };
 
     public RunRenderSnapshot CreateSnapshot()

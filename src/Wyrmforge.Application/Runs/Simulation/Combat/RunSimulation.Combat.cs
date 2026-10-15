@@ -36,6 +36,7 @@ public sealed partial class RunSimulation
             hitCount++;
             var damage = projectile.Damage;
             var interactions = ResolveStatusInteractions(projectile.Spell, target);
+            if (interactions.Count > 0) RecordReaction();
             foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
             var detonation = PassiveEffectResolver.ResolveDetonation(passiveProfile, hitCount);
             if (detonation is not null) damage *= detonation.DamageMultiplier;

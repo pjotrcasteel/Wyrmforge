@@ -11,6 +11,12 @@ Legend:
 
 All source paths below are relative to `src/`.
 
+> **Direction update (2026-10-15, Spellcraft handover).** The product owner approved the Game Design & Spellcraft handover as the agreed direction. Its north star: the player becomes *the mage who knows how to create the spell*. As a result:
+>
+> - The Laboratory is no longer deferred. It is the spine of progression: **Laboratory × Arcane Web × Hunt**.
+> - **Phase B, the first playable Frostfire invention, is implemented.** See [`docs/design/laboratory-frostfire-slice-v1.md`](../design/laboratory-frostfire-slice-v1.md). It is the researched mutation *Rime Infusion*, which reuses the existing Frostfire rule, with fail-forward experiments, consented specimen spend and a Web socket.
+> - M1 to M6 stay valid as supporting milestones. They are now ordered after the Laboratory phases they feed (see §11).
+
 ---
 
 ## 1. Current-state audit
@@ -302,18 +308,28 @@ Every milestone must meet these shared gates:
 
 **Prerequisites:** M1 and M4.
 
-### M7: Arcane Laboratory, deferred (#108)
+### M7: Arcane Laboratory (#108), promoted to M0 and in progress
 
-**Approach:** Fixed, discoverable recipes in the style of Diablo II rune words. Specific harvested Wyrm hearts combine into one named modifier.
+**Status:** Superseded by the Spellcraft handover. **Phase B is done.** The design is in [`laboratory-frostfire-slice-v1.md`](../design/laboratory-frostfire-slice-v1.md), and the slice is on branch `feature/lab-frostfire-mutation`.
 
-**Complexity cap:**
+**What changed from the original plan:**
+- Recipes are researched through fail-forward experiments, not only found.
+- A mutation is equipped through an Arcane Web socket.
+- Mutations reuse existing synergy rules, so a legacy effect and its new counterpart never stack.
+
+**Complexity cap (still in force):**
 - No free-form crafting.
 - No random affixes.
-- At most 12 recipes at launch.
+- One primary cast.
+- Every specimen spend is consented and previewed.
 
-**Gate:** After M2 (reuses the recipe UI and Codex pages) and after M6.
+**Pillar-5 risk (a second economy):** mitigated in v1. Experiments are free, and the only cost is one consented Rime Heart at stabilization. A preparation currency is an open decision for Phase C.2.
 
-**Why not now:** It adds a second economy, which risks pillar 5.
+**Next:**
+- **C.1:** a second mutation on an existing synergy.
+- **C.2:** a preparation economy.
+- **C.3:** two sockets, loadouts and event budgets.
+- After those: animated previews and post-run research prompts.
 
 ### Elder Wyrms (after M6)
 
@@ -433,8 +449,14 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 - `EncounterObjective`.
 - `BiomeCatalog`.
 
+**Laboratory track (top priority, per the Spellcraft handover §15):**
+- Phase B: Rime Infusion. Done.
+- C.1: a second mutation on an existing synergy.
+- C.2: a preparation economy with exact spend preview.
+- C.3: two sockets, loadouts, free respec, and event-budget tests.
+- Phases D to G stay gated on product-owner scheduling: Chronicle/FLC, offline blueprints, the verified Conclave, and content delivery.
+
 **Deferred:**
-- Laboratory (#108).
 - Elder Wyrms.
 - Hall of Fame (#66).
 - Native mobile (#55).
@@ -447,6 +469,8 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 - Anything listed in §10.
 
 ### Top 3 immediate milestones and first coding actions
+
+> Since the Spellcraft handover, **Laboratory Phase C.1 comes first**: add a second `LaboratoryMutationId` to `LaboratoryCatalog` with its experiments and socket, plus Domain and Application tests mirroring the Rime Infusion ones. The three milestones below follow it. M2's visible recipe hints now also teach Laboratory findings.
 
 1. **M2: Visible recipes.** Highest Σ, lowest risk, and it fixes the weakest conversion.
    - Add `SynergyCatalog.Evaluate(RunBuildState)` returning per-synergy progress, with a Domain test for Fire Bolt + Frost Shard.
