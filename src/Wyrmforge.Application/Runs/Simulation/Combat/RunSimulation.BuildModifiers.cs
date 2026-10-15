@@ -2,6 +2,7 @@ using Wyrmforge.Domain.Combat.Modifiers;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.RunUpgrades;
+using Wyrmforge.Domain.Progression.Refinements;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -13,7 +14,7 @@ public sealed partial class RunSimulation
     private void RefreshBuildModifiers(bool healMaximumHealthIncrease = false)
     {
         var previousMaxHealth = player.MaxHealth;
-        var runProfiles = ActiveRunUpgradeModifierProfiles().ToArray();
+        var runProfiles = ActiveRunUpgradeModifierProfiles().Concat(ActiveRefinementModifierProfiles()).ToArray();
         runUpgradeModifiers = BuildModifierSet.Aggregate(runProfiles);
         buildModifiers = BuildModifierSet.Aggregate([.. runProfiles, .. ActiveEquippedModifierProfiles(), .. ActiveResonanceModifierProfiles()]);
         player.MaxHealth = buildModifiers.Apply(BuildStatId.MaxHealth, passiveProfile.MaxHealth);
@@ -31,6 +32,15 @@ public sealed partial class RunSimulation
         {
             var rank = build.RunUpgrades[upgrade.Id];
             if (rank > 0) yield return upgrade.ProfileForRank(rank);
+        }
+    }
+
+    private IEnumerable<BuildModifierProfile> ActiveRefinementModifierProfiles()
+    {
+        foreach (var refinement in RunRefinementCatalog.All)
+        {
+            var rank = build.Refinements[refinement.Id];
+            if (rank > 0) yield return refinement.ProfileForRank(rank);
         }
     }
 

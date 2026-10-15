@@ -3,6 +3,7 @@
 public enum LevelChoiceKind
 {
     Rune,
+    Refinement,
     NewSpell,
     SpellUpgrade,
     Evolution,
