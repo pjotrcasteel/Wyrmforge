@@ -78,6 +78,51 @@ jobs:
               print("## Matched focused-magic hunts\n\n" + report.replace("\n", "  \n"), file=output)
           PY
 
+      - name: Explain matched build outcomes
+        run: |
+          python3 - <<'PY'
+          import json, os, statistics
+          from collections import defaultdict
+          from pathlib import Path
+
+          root = Path("artifacts/focused-comparison")
+          rows = ["## Paired build diagnosis", "",
+                  "Same build, agent and seed in both variants. Differences are diagnostic, not human win rates.", ""]
+          for cohort in ("fresh", "established"):
+              control = json.loads((root / "control" / cohort / "balance-report.json").read_text())["runs"]
+              candidate = json.loads((root / "current" / cohort / "balance-report.json").read_text())["runs"]
+              key = lambda run: (run["build"], run["agent"], run["seed"])
+              old = {key(run): run for run in control}
+              new = {key(run): run for run in candidate}
+              assert len(old) == len(control) and len(new) == len(candidate), "Duplicate matched run identity"
+              assert old.keys() == new.keys(), "Mismatched build/agent/seed cohorts"
+
+              groups = defaultdict(list)
+              for identity in sorted(old):
+                  groups[identity[0]].append((old[identity], new[identity]))
+
+              rows.extend([f"### {cohort.title()} runs", "",
+                  "| Build | Reached control→current | Extracted control→current | Routes Δ | Minimum HP Δ | Damage taken Δ |",
+                  "| --- | ---: | ---: | ---: | ---: | ---: |"])
+              for build, paired in sorted(groups.items()):
+                  reached = lambda i: sum(pair[i]["wyrmsReached"] > 0 for pair in paired)
+                  extracted = lambda i: sum(pair[i]["outcome"] == 1 for pair in paired)
+                  delta = lambda field: statistics.mean(pair[1][field] - pair[0][field] for pair in paired)
+                  rows.append(f"| {build} | {reached(0)}/{len(paired)} → {reached(1)}/{len(paired)} "
+                              f"| {extracted(0)} → {extracted(1)} | {delta('completedRouteNodes'):+.2f} "
+                              f"| {delta('minimumHealthRatio'):+.2f} | {delta('damageTaken'):+.1f} |")
+              before_extracted = sum(run["outcome"] == 1 for run in control)
+              after_extracted = sum(run["outcome"] == 1 for run in candidate)
+              if after_extracted < before_extracted:
+                  print(f"::warning::Focus Surge {cohort} extractions regressed: {before_extracted} → {after_extracted}; do not release on Wyrm reach alone.")
+              rows.append("")
+
+          detailed = "\n".join(rows) + "\n"
+          (root / "paired-diagnosis.md").write_text(detailed)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("\n" + detailed)
+          PY
+
       - name: "Control fresh — ${{ steps.evidence.outputs.control_fresh }}"
         run: 'true'
 
