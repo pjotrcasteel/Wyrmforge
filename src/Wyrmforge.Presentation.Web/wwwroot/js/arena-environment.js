@@ -157,7 +157,7 @@ function drawTerrain(ctx, plan, width, height) {
     const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
         width * .5, height * .49, Math.max(width, height) * .7);
     vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, 'rgba(1,3,7,.56)');
+    vignette.addColorStop(1, plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
 }
