@@ -1,4 +1,4 @@
-import {applyCastPose} from './cast_pose.mjs';
+import {applyCastPose,castEnvelope} from './cast_pose.mjs';
 const color = { left: '#8da9b9', right: '#bd9781', body: '#b7b6a5', edge: '#202a29', floor: '#172322', line: '#304341' };
 
 export function resolveViewPose(data, phase, options) {
@@ -69,8 +69,11 @@ export function drawView(ctx, data, phase, options) {
                  [lh[0]-.035,lh[1]-.32,lh[2]+.10],[lh[0]+.10,lh[1]-.32,lh[2]+.04]],'#516778',.03);
         polygon([[r[0]-.05,r[1],r[2]+.025],[r[0]+.08,r[1]-.04,r[2]+.07],
                  [rh[0]+.035,rh[1]-.32,rh[2]+.10],[rh[0]-.10,rh[1]-.32,rh[2]+.04]],'#42596a',.03);
-        const grip=joint.rhand,base=grip.map((v,i)=>v+data.mage.staffBaseOffset[i]),tip=grip.map((v,i)=>v+data.mage.staffTipOffset[i]);
-        const bend=[grip[0]-.025,grip[1]+.68,grip[2]+.01];
+        const cast=options.cast,envelope=castEnvelope(cast);
+        const staffAngle=(cast?.look.staffSweepDegrees??0)*Math.PI/180*envelope;
+        const rotate=p=>[p[0],p[1]*Math.cos(staffAngle)-p[2]*Math.sin(staffAngle),p[1]*Math.sin(staffAngle)+p[2]*Math.cos(staffAngle)];
+        const grip=joint.rhand,base=rotate(data.mage.staffBaseOffset).map((v,i)=>v+grip[i]),tip=rotate(data.mage.staffTipOffset).map((v,i)=>v+grip[i]);
+        const bend=rotate([-.025,.68,.01]).map((v,i)=>v+grip[i]);
         const projected=[base,grip,bend,tip].map(p=>project(p));
         geometry.push({depth:project(grip)[2]+.02,draw(){
             ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=scale*.033;ctx.strokeStyle='#241b16';

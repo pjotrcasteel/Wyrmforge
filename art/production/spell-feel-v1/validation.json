@@ -4,7 +4,7 @@
   "ranks": 3,
   "injuryStates": 3,
   "poseCases": 13824,
-  "maxBoneLengthChangeMeters": 1.0547118733938987e-15,
+  "maxBoneLengthChangeMeters": 1.1102230246251565e-15,
   "maxRootOrLegChangeMeters": 0,
   "releaseOffsetSeconds": 0,
   "sourceFramesUnmodified": true,

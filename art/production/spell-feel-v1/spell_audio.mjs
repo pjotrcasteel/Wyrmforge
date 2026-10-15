@@ -36,6 +36,7 @@ export function synthesizeSpellSound(look,{event='release',sampleRate=22050}={})
    if(rank>=2)value+=Math.sin(phase*2.006)*.10*Math.exp(-t*14);
    if(rank===3)value+=Math.sin(TAU*72*t)*.19*body;
   }
+  if(look.combinationId==='Frostfire')value+=Math.sin(TAU*1570*t)*.12*Math.exp(-t*16);
   samples[i]=value*attack*(impact?1:Math.exp(-t*1.5))*(1-Math.min(1,(t/duration)**8));
  }
  // Equal bounded peak: higher ranks gain spectral weight, not a volume multiplier.

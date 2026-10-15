@@ -33,7 +33,7 @@ function impactEffect(ctx,x,y,look,age,radius){
  ctx.restore();
 }
 export function drawSpellPanel(ctx,data,options){
- const {x,y,width=320,height=190,spellId,rank,seconds}=options,look=resolveSpellLook({spellId,rank});
+ const {x,y,width=320,height=190,spellId,rank,seconds}=options,look=resolveSpellLook({spellId,rank,combinationId:options.combinationId??null});
  ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();ctx.fillStyle='#152321';ctx.fillRect(x,y,width,height);
  const castSeconds=seconds%1.6;
  drawView(ctx,data,(seconds/data.duration)%1,{x:x+2,y:y+15,width:160,height:height-20,yaw:75,pitch:25,sprite:true,cast:{look,seconds:castSeconds}});
@@ -74,9 +74,13 @@ export function drawSpellPanel(ctx,data,options){
    }else if(look.shape==='flame'){
     ctx.fillStyle='#733a2a';ctx.beginPath();ctx.moveTo(px+6,py);ctx.lineTo(px-21,py-7*w);ctx.lineTo(px-13,py);ctx.lineTo(px-24,py+6*w);ctx.closePath();ctx.fill();
     diamond(ctx,px,py,9*w,4*w,look.color);diamond(ctx,px+2,py,5,2,look.highlight);
+    if(look.combinationId==='Frostfire'){
+     for(const [dx,dy] of [[-5,-6],[4,-5],[-4,6]])diamond(ctx,px+dx,py+dy,3,1.5,'#a9e3ee');
+    }
     for(let i=0;i<3;i++)circle(ctx,px-12-i*8,py+Math.sin(t*16+i)*4,1.2,look.color);
    }else if(look.shape==='shard'||look.shape==='lance'){
     const length=look.shape==='lance'?17:10;diamond(ctx,px,py,length,3+rank*.6,look.color);line(ctx,[[px-length+3,py],[px+length-2,py]],look.highlight,1.1);
+    if(look.combinationId==='Frostfire')circle(ctx,px,py,2,'#ed9455');
     if(rank>1)line(ctx,[[px-20,py+3],[px-11,py+3]],look.color,1);
    }else{
     const length=look.shape==='needle'?11:8;diamond(ctx,px,py,length,2,look.highlight);line(ctx,[[px-26,py],[px-9,py]],look.color,rank);
@@ -84,6 +88,9 @@ export function drawSpellPanel(ctx,data,options){
    }
   }else if(t-arrival<.36){
    const age=t-arrival;
+   if(look.combinationId==='Frostfire'){
+    ctx.save();ctx.globalAlpha=1-clamp(age/.36);line(ctx,[[to[0]-5,to[1]+12],[to[0]-5,to[1]-10],[to[0]+6,to[1]-13]],'#b2e6ed',2);ctx.restore();
+   }
    if(look.shape==='flame'&&rank===3){
     const radius=56*.55;impactEffect(ctx,to[0],to[1],look,age,radius);
    }else if(look.shape==='shard'&&rank===3){
@@ -93,7 +100,7 @@ export function drawSpellPanel(ctx,data,options){
    }else impactEffect(ctx,to[0],to[1],look,age,8+rank*3);
   }
  }
- ctx.restore();ctx.fillStyle='#d7ddcc';ctx.font='13px sans-serif';ctx.fillText(`${spellId.replace(/([a-z])([A-Z])/g,'$1 $2')} · ${['I','II','III'][rank-1]}`,x+10,y+19);
+ ctx.restore();ctx.fillStyle='#d7ddcc';ctx.font='13px sans-serif';ctx.fillText(`${look.combinationId??spellId.replace(/([a-z])([A-Z])/g,'$1 $2')} · ${['I','II','III'][rank-1]}`,x+10,y+19);
  ctx.fillStyle='#92aaa1';ctx.font='11px sans-serif';ctx.fillText(look.rankSignature,x+10,y+height-8);
  return {look,castSeconds,arrivalSeconds,launch:from,target:to};
 }
