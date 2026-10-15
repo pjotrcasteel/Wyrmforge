@@ -90,9 +90,12 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
         // Shade the lit side only; never create a bright silhouette ring around the mage.
         const [red, green, blue] = lighting.color;
         const side = lighting.sourceX < player.x ? -1 : 1;
-        const strength = Math.min(.48, lighting.intensity * .9);
+        // Broad enough to survive the 390px mobile pixel scale, but confined
+        // to the hood's material planes, never an emissive character outline.
+        const strength = Math.min(.65, lighting.intensity * 1.35);
+        ctx.fillStyle = `rgba(${red},${green},${blue},${strength * .82})`;
+        ctx.fillRect(side < 0 ? -8 : 3, -12, 5, 9);
         ctx.fillStyle = `rgba(${red},${green},${blue},${strength * .58})`;
-        ctx.fillRect(side < 0 ? -7 : 4, -10, 3, 5);
         ctx.fillRect(side < 0 ? -8 : 5, -3, 3, 12);
         ctx.fillStyle = `rgba(${red},${green},${blue},${strength})`;
         ctx.fillRect(side < 0 ? -6 : 3, -5, 3, 2);
