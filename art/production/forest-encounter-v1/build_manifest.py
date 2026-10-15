@@ -47,6 +47,7 @@ for animation in (walk, cast):
     animation["fps"] = 7
     animation["direction"] = "SE"
     animation["status"] = "four-keyframe motion study; not final animation"
+walk["status"] = "rejected: cadence, support transitions and body mechanics; comparison only"
 
 manifest = {
     "version": 1,

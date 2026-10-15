@@ -1,5 +1,7 @@
 # Forest encounter art prototypes
 
+**Walk review update, 15 October 2026:** the v2 loop is rejected as a convincing walk. See [the case studies and revised workflow](walk-case-studies-2026-10-15.md). It remains available for comparison, not as a production-approved animation.
+
 First production-oriented art experiment, 15 October 2026. These files are not integrated into the live game and are not a completed animation pack.
 
 ## Included
