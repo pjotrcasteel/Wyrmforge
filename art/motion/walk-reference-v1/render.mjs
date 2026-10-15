@@ -2,6 +2,7 @@ const color = { left: '#8da9b9', right: '#bd9781', body: '#b7b6a5', edge: '#202a
 
 export function drawView(ctx, data, phase, options) {
     const { x, y, width, height, yaw = 45, pitch = 25, travel = true, contacts = true, cycles = 0, label = 'Game camera' } = options;
+    if (data.injury) phase = ((phase + data.injury.phaseWarpAmplitude * Math.sin(2 * Math.PI * (phase - .515625))) % 1 + 1) % 1;
     const index = Math.min(data.frames.length - 1, Math.floor(phase * data.frames.length));
     const frame = data.frames[index];
     const names = data.jointNames;

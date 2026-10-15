@@ -51,3 +51,11 @@ The database was created with funding from NSF EIA-0196217.
 CMU's [dataset home page](http://mocap.cs.cmu.edu/) permits use of the data, including in commercial products, while prohibiting resale of the data itself. These source files are retained solely for reproducibility and attribution as part of this motion study. See [subject 07](http://mocap.cs.cmu.edu/search.php?subjectnumber=7) and the [trial 07_01 preview](http://mocap.cs.cmu.edu/subjects/07/07_01.avi).
 
 Format references: [Acclaim ASF/AMC explanation, University of Wisconsin](https://research.cs.wisc.edu/graphics/Courses/cs-838-1999/Jeff/ASF-AMC.html) and [CMU-hosted Acclaim format details](https://graphics.cs.cmu.edu/nsp/course/cs229/info/ACCLAIMdef.html). The importer implements the conventions required by this source; it is not a general-purpose ASF/AMC library.
+
+## Injury studies
+
+`injury_motion.py` derives hurt and critical variants from the cleaned body. The injured side remains left. A monotonic cyclic phase warp spends less of each stride supporting that leg; the entire upper subtree rotates rigidly into a forward guard and a lean toward the healthy side. Leg coordinates, floor clearance and every skeletal edge remain unchanged within export precision. `injury-validation.json` records these checks. This is art direction, not a biomechanical injury model.
+
+The viewer adds both variants and retains cycle phase when changing motion. This avoids restarting the stride but does not blend poses: production transitions still need blending and health hysteresis. The three study durations are 1.067, 1.28 and 1.6 seconds. These illustrative timings do not modify gameplay movement speed. Shortened strides, collision-speed matching, staff support, clothing and mage retargeting are pending. A final gameplay implementation must match stride displacement and cadence to the actual movement speed rather than sliding feet.
+
+`render_injury_preview.mjs` renders a 6.4-second comparison at 30 fps, closing 6 healthy, 5 hurt and 4 critical strides. Blue always identifies the left side. Reproduce with `node render_injury_preview.mjs /path/to/frames`, then encode using FFmpeg at 30 fps. Preview: `injury-comparison.gif`.

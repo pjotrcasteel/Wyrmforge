@@ -1,10 +1,10 @@
 import { drawView } from './render.mjs';
-const [reference, cleaned] = await Promise.all(['motion.json', 'cleaned-motion.json'].map(file => fetch(file).then(response => response.json())));
+const [reference, cleaned, hurt, critical] = await Promise.all(['motion.json', 'cleaned-motion.json', 'hurt-motion.json', 'critical-motion.json'].map(file => fetch(file).then(response => response.json())));
 let data = cleaned;
 const canvas = document.querySelector('canvas'), ctx = canvas.getContext('2d');
 const phaseControl = document.querySelector('#phase'), cameraControl = document.querySelector('#camera');
 let playing = true, phase = 0, cycles = 0, last = performance.now();
-document.querySelector('#motion').addEventListener('change', event => { data = event.target.value === 'reference' ? reference : cleaned; phase = 0; cycles = 0; });
+document.querySelector('#motion').addEventListener('change', event => { data = ({reference, cleaned, hurt, critical})[event.target.value] || cleaned; });
 document.querySelector('#play').addEventListener('click', event => { playing = !playing; event.target.textContent = playing ? 'Pause' : 'Play'; });
 phaseControl.addEventListener('input', () => { phase = Math.min(.999999, Number(phaseControl.value)); playing = false; document.querySelector('#play').textContent = 'Play'; });
 function draw(now) {

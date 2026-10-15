@@ -1,0 +1,28 @@
+{
+  "hurt": {
+    "injuredSide": "left",
+    "severity": 0.55,
+    "durationSeconds": 1.28,
+    "phaseWarpAmplitude": 0.030250000000000003,
+    "minimumPhaseRate": 0.8099336444578175,
+    "leftSupportFraction": 0.44081,
+    "rightSupportFraction": 0.45366,
+    "maxExportBoneLengthErrorMeters": 1.1128442050645226e-06,
+    "legCoordinatesUnchanged": true,
+    "forwardGuardDegrees": 6.6000000000000005,
+    "healthySideLeanDegrees": 2.75
+  },
+  "critical": {
+    "injuredSide": "left",
+    "severity": 1.0,
+    "durationSeconds": 1.6,
+    "phaseWarpAmplitude": 0.055,
+    "minimumPhaseRate": 0.6544248081051227,
+    "leftSupportFraction": 0.3962,
+    "rightSupportFraction": 0.49186,
+    "maxExportBoneLengthErrorMeters": 1.2167811468330458e-06,
+    "legCoordinatesUnchanged": true,
+    "forwardGuardDegrees": 12.0,
+    "healthySideLeanDegrees": 5.0
+  }
+}
