@@ -1,6 +1,6 @@
 # WyrmForge — anonymized playtest insights
 
-Updated: 2026-10-14 (UTC)
+Updated: 2026-10-15 (UTC)
 
 > **PUBLIC AGGREGATES ONLY.** Individual reports, text, seeds, report IDs,
 > device fingerprints and raw session evidence are never published here.
@@ -11,3 +11,5 @@ Updated: 2026-10-14 (UTC)
 Not enough voluntary real-player submissions to publish meaningful statistics.
 A privacy threshold of at least 10 reports is required.
 No individual tester's results are exposed while the cohort is small.
+
+Statistics are withheld until a single game version has at least 10 consented reports. Versions are never pooled.
