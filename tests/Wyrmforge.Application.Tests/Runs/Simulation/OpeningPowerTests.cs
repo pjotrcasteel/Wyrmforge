@@ -138,7 +138,7 @@ public sealed class OpeningPowerTests
     private static ProjectileState Cast(RunSimulation simulation, SpellId id, int rank)
     {
         var spell = SpellCatalog.Get(id);
-        Invoke(simulation, "CastProjectileSpell", spell, (ProjectileAbilityProfile)spell.Ability.Delivery, rank, 1d);
+        Invoke(simulation, "CastProjectileSpell", spell, (ProjectileAbilityProfile)spell.Ability.Delivery, rank, 1d, FocusedSurgeProfile.Identity);
         return Field<List<ProjectileState>>(simulation, "projectiles").Single();
     }
 
