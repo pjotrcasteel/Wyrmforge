@@ -14,6 +14,19 @@ function mockContext() {
     return ctx;
 }
 
+test('elite grave and echo blasts are ground marks only: no ember ball or shadow', () => {
+    for (const style of ['grave', 'echo']) {
+        const ground = mockContext();
+        const blast = { x: 30, y: 40, height: 0, targetX: 30, targetY: 40, radius: 60, progress: .5, style };
+        drawHostileProjectileGround(ground, blast);
+        assert.deepEqual(ground.calls.find(c => c[0] === 'arc').slice(1, 4), [30, 40, 60]);
+        assert.equal(ground.calls.filter(c => c[0] === 'ellipse').length, 0);
+        const air = mockContext();
+        drawHostileProjectileEmber(air, blast);
+        assert.equal(air.calls.length, 0);
+    }
+});
+
 test('no telegraph draws nothing', () => {
     const ctx = mockContext();
     drawEnemyTelegraph(ctx, { x: 0, y: 0 });

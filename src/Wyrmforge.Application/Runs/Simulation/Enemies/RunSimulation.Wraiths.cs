@@ -59,8 +59,9 @@ public sealed partial class RunSimulation
     {
         switch (wraith.Tick(scaledDelta, enemy.Position, player.Position))
         {
-            case DrownedWraithEvent.Struck when wraith.StrikeHits(enemy.Position, player.Position, player.Radius):
-                DamagePlayer(DrownedWraithBehaviorState.StrikeDamage);
+            case DrownedWraithEvent.Struck:
+                if (wraith.StrikeHits(enemy.Position, player.Position, player.Radius)) DamagePlayer(DrownedWraithBehaviorState.StrikeDamage * EliteImpact(enemy));
+                if (enemy.Elite == EliteAffix.Drowncaller) AddDrowncallerEcho(enemy, wraith);
                 break;
             case DrownedWraithEvent.Submerged:
                 sinkingWraiths.Add(enemy);

@@ -31,7 +31,15 @@ public sealed class MireHoundBehaviorState(int orbitSign = 1)
     public const double StalkSpeedMultiplier = 1.1;
     private const double OrbitStepRadians = 0.7;
 
-    public int OrbitSign { get; } = orbitSign >= 0 ? 1 : -1;
+    /// <summary>Elite Thornrunner: one extra flank switch (and a short pause) before every lunge.</summary>
+    public const double FeintSeconds = 0.4;
+
+    public int OrbitSign { get; private set; } = orbitSign >= 0 ? 1 : -1;
+
+    public bool Thornrunner { get; internal set; }
+
+    /// <summary>The Thornrunner has already switched flanks for the coming lunge.</summary>
+    public bool Feinted { get; private set; }
 
     public MireHoundPhase Phase { get; private set; } = MireHoundPhase.Stalk;
 
@@ -82,6 +90,15 @@ public sealed class MireHoundBehaviorState(int orbitSign = 1)
 
         CooldownRemaining = Math.Max(0, CooldownRemaining - delta);
         if (CooldownRemaining > 0 || !mayCommit || Vector2D.Distance(position, target) > PounceRange) return false;
+        if (Thornrunner && !Feinted)
+        {
+            // Readable feint: the hound visibly darts to the other flank, then commits the normal telegraphed pounce.
+            Feinted = true;
+            OrbitSign = -OrbitSign;
+            CooldownRemaining = FeintSeconds;
+            return false;
+        }
+        Feinted = false;
         PounceDirection = Vector2D.DirectionTo(position, target);
         if (PounceDirection == Vector2D.Zero) PounceDirection = new Vector2D(OrbitSign, 0);
         PounceOrigin = position;

@@ -31,6 +31,22 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
 
+    /// <summary>Roster step 5 elite power; <see cref="EliteAffix.None"/> for an ordinary enemy.</summary>
+    public EliteAffix Elite
+    {
+        get => elite;
+        init
+        {
+            elite = value;
+            if (MireHound is { } hound) hound.Thornrunner = value == EliteAffix.Thornrunner;
+            if (Penitent is { } penitent) penitent.Oathshield = value == EliteAffix.Oathshield;
+        }
+    }
+
+    private readonly EliteAffix elite;
+
+    public bool IsElite => elite != EliteAffix.None;
+
     /// <summary>Raised by an Ash Priest: already paid out its experience once, so its second death drops none.</summary>
     public bool Revived { get; init; }
 

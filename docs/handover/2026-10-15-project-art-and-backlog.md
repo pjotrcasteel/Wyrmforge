@@ -302,3 +302,17 @@ Design: `docs/design/arena-roster-v1.md` §10.
 - **Director events.** Surge sends the habitat's signature pack; the Approach/Lair climax sends a Last Stand.
 - **Balance.** Damage is unchanged at about 161; defeats went from 86 to 65.
 - **Next:** step 5, ordinary elites.
+
+## 19. Arena roster — step 5 shipped (ordinary elites) and chain-lightning revamp
+
+Design: `docs/design/arena-roster-v1.md` §11.
+
+- **Elites.** One seeded roll per node from stage 3 onward: 10%, never on the Outskirts, at most 1 per node and 2 per hunt map.
+  - Each promotes an ordinary spawn: +35–60% HP, +10–25% impact, 2.5× XP paid once.
+  - It gains one readable power: Gravebound, Packblood, Ember Anointer, Cinder Marksman, Thornrunner, Oathshield or Drowncaller.
+  - On screen: an affix-coloured sigil and crest, plus a compact callout. `EliteDefeat` is the typed reward hook.
+- **Chain lightning.** The straight 3 px line is now `arena-lightning-vfx.js`:
+  - A seeded midpoint-displaced bolt with a glow, a white core, short forks and an endpoint spark.
+  - The shape re-rolls every 40 ms and is still under reduced motion. C# endpoints are kept exactly.
+- **Balance.** Flat. Kills 1219, damage 161, defeats 63.
+- **Next:** the Encountered Enemies book, then step 6, the Reliquary.

@@ -16,4 +16,7 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
 
     /// <summary>Body opacity: a Drowned Wraith rising out of or sinking back into the water. 1 for everything else.</summary>
     public double Opacity { get; init; } = 1;
+
+    /// <summary>Elite affix name (e.g. "Gravebound") for the sprite's visual signature; null for ordinary enemies.</summary>
+    public string? Elite { get; init; }
 }

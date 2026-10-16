@@ -2,6 +2,8 @@
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Rewards;
+using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Presentation.Web.Features.LevelUp;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
@@ -14,6 +16,13 @@ public partial class ArenaView
     private long runMomentVersion;
     private bool disposed;
     private bool trailTransition;
+
+    // Compact and low on screen: an elite is named without covering the fight (brief §7, no big boss bar).
+    private void ShowEliteSighted(EliteAffixDefinition elite) =>
+        ShowRunMoment(new RunMoment("ELITE", elite.Title, elite.Detail, RunMomentTone.Danger, Compact: true));
+
+    private void ShowEliteDefeated(EliteDefeat defeat) =>
+        ShowRunMoment(new RunMoment("ELITE SLAIN", EliteAffixCatalog.Get(defeat.Affix).Title, $"+{defeat.ExperienceAwarded} XP", RunMomentTone.Rare, Compact: true));
 
     private void ShowRunMoment(RunMoment value)
     {

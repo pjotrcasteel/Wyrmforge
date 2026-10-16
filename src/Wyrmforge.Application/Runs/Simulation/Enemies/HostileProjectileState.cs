@@ -2,6 +2,14 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
+/// <summary>Ember: a thrown arc. Grave and Echo: a zero-travel ground blast whose mark is its whole telegraph.</summary>
+public enum HostileProjectileStyle
+{
+    Ember,
+    Grave,
+    Echo,
+}
+
 /// <summary>An arcing enemy projectile. It cannot hit anything in flight; it resolves once, at its marked landing spot.</summary>
 internal sealed class HostileProjectileState(Vector2D origin, Vector2D target, double flightSeconds, double radius, double damage, double arcHeight)
 {
@@ -16,6 +24,8 @@ internal sealed class HostileProjectileState(Vector2D origin, Vector2D target, d
     public double Damage { get; } = damage;
 
     public double ArcHeight { get; } = arcHeight;
+
+    public HostileProjectileStyle Style { get; init; }
 
     public double Elapsed { get; private set; }
 

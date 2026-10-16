@@ -10,6 +10,8 @@ import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileE
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
+import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
+import { drawLightningTrace } from './arena-lightning-vfx.js';
 
 const arenas = new WeakMap();
 
@@ -195,6 +197,7 @@ function draw(state, snapshot, width, height) {
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
     for (const enemy of snapshot.enemies) {
+        drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         drawShieldGuard(ctx, enemy);
         drawEnemyTelegraph(ctx, enemy);
     }
@@ -217,6 +220,7 @@ function draw(state, snapshot, width, height) {
             const enemy = layer.enemy;
             drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
                 enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId));
+            drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                 sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
@@ -247,14 +251,7 @@ function draw(state, snapshot, width, height) {
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
-    for (const trace of snapshot.lightning) {
-        ctx.beginPath();
-        ctx.moveTo(trace.fromX, trace.fromY);
-        ctx.lineTo(trace.toX, trace.toY);
-        ctx.strokeStyle = `rgba(255, 229, 105, ${Math.min(1, trace.life / 0.12)})`;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-    }
+    for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
 
     for (const burst of snapshot.essenceBursts) {
         const alpha = Math.min(1, burst.life / 0.2);

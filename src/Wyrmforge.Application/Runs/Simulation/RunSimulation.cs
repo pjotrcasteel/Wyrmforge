@@ -300,6 +300,7 @@ public sealed partial class RunSimulation
                 Routed = enemy.RoutedRemaining > 0,
                 Revived = enemy.Revived,
                 Opacity = enemy.DrownedWraith?.Opacity ?? 1,
+                Elite = enemy.IsElite ? enemy.Elite.ToString() : null,
             }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),

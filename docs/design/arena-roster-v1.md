@@ -264,8 +264,43 @@ References: Hades' burrowing Wretched Sneaks and Monster Hunter's Jyuratodus (th
 
 **Tests.** `DrownedWraithBehaviorStateTests` (loop timing, ring band, forced rise, abort on the hunter, wedge, flank sides); `DrownedWraithTests` in a live simulation (untargetable and harmless while submerged, claw telegraph and cap, hit in front, miss after a dodge, sinks again, counts for clearing); `EnemyPackRecipeTests` (budget, habitat residents, priest order, wraith stagger, determinism, habitat identity); director events per habitat and none in the Outskirts; JS claw wedge and ripples.
 
-## 11. Next steps (brief §10 order)
+## 11. Step 5: Ordinary elites
 
-5. Ordinary elites: 10% per eligible node after node 2, at most 1 per node, +35–60% HP, 2–3× XP.
+References: Diablo champions and Hades armored foes (one sharpened rule on a familiar silhouette), and Monster Hunter tempered monsters (same counterplay, less margin).
+
+**Roll (`RunSimulation.Elites.cs`).** One roll per node, made in `ChooseMapNode`, never per spawn:
+- 10% from stage 3 onwards. Never on the two introductory stages, never on the Outskirts tutorial road.
+- At most one per node and two per hunt map. Nothing is guaranteed: about 45% of hunts meet one.
+- The roll uses its own FNV hash of map seed, depth and node id, so it never shifts the spawn stream.
+- A hit picks spawn 4–10 of that node. That ordinary spawn is promoted, whatever its kind; if the node ends sooner, there is no elite.
+
+**Stats.** +35–60% HP and +10–25% attack impact (bites, bashes, embers, claws, contact), with no cadence change. Each elite drops one shard worth 2.5× its threat cost. The payout is recorded once as a typed `EliteDefeat(Kind, Affix, ExperienceAwarded)`; that is the hook for future loot. An elite Ashling leaves no remains, so it can never be raised.
+
+| Affix | Base | HP / impact | Power | Counterplay |
+|---|---|---|---|---|
+| Gravebound | Hollow | 1.5 / 1.15 | On death, a 60 px ground blast after 0.9 s (16 damage) | Step out of the violet ring |
+| Packblood | Ashling | 1.6 / 1.1 | Ashlings within 150 px run 15% faster and ignore the priest-death rout | Kill it first |
+| Ember Anointer | Ash Priest | 1.4 / 1.1 | Heal restores 70% instead of 45%, same tether | Interrupt the cast |
+| Cinder Marksman | Ash Slinger | 1.4 / 1.15 | A second ember 52 px to the side, landing at 0.9 s | One sidestep clears both marks |
+| Thornrunner | Mire Hound | 1.45 / 1.2 | Switches flank once (0.4 s) before every pounce | Wait for the lane |
+| Oathshield | Penitent | 1.35 / 1.1 | Shield blocks 90% instead of 75% | Flank it or land a heavy hit |
+| Drowncaller | Drowned Wraith | 1.45 / 1.2 | Its strike leaves a 40 px echo that bursts after 0.7 s | Leave the ripple |
+
+**Presentation.**
+- A dashed sigil and a small diamond crest in the affix colour; no boss bar.
+- A compact low-screen callout names the elite and its counterplay. "ELITE SLAIN +N XP" confirms the payout.
+- The grave and echo blasts are ground marks only: a red danger edge, filled with the affix hue.
+
+**Balance check (25 runs × 48 combinations).** Elites are rare enough to leave pace intact: kills 1220 → 1219, damage 161.2 → 161.0, defeats 65 → 63, extracted 297 → 304.
+
+**Tests.** `EliteEncounterTests`:
+- Distribution over 2000 seeded hunts, and roll determinism.
+- Promotion of the k-th spawn, the stat bands, and a single payout.
+- Each of the seven powers, plus no remains from an elite Ashling.
+
+JS tests cover the sigil, the crest and the grave/echo marks.
+
+## 12. Next steps (brief §10 order)
+
 6. The Reliquary: 6% once per hunt, distinct from `WyrmrealmNodeRarity.Rare`.
 7. Bell Warden on the pre-lair beat, and Ashfang on the first hunt only.

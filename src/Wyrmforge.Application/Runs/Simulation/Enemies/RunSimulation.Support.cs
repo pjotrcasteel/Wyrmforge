@@ -38,11 +38,14 @@ public sealed partial class RunSimulation
     private void RegisterSupportDeath(EnemyState enemy)
     {
         // Only a first death leaves remains: a raised Ashling that falls again stays down.
-        if (enemy.Kind == EnemyKind.Ashling && !enemy.Revived) ashRemains.Add(new AshRemainsState(enemy.Position, AshRemainsSeconds));
+        // Elites leave no remains either: a raised Ashling would read as a second elite.
+        if (enemy.Kind == EnemyKind.Ashling && !enemy.Revived && !enemy.IsElite) ashRemains.Add(new AshRemainsState(enemy.Position, AshRemainsSeconds));
         if (enemy.Kind != EnemyKind.AshPriest) return;
+        RefreshPackbloodLeaders();
         foreach (var ally in enemies)
         {
-            if (ally.Kind == EnemyKind.Ashling && ally.Health > 0 && Vector2D.Distance(ally.Position, enemy.Position) <= PriestRoutRadius)
+            if (ally.Kind == EnemyKind.Ashling && ally.Health > 0 && Vector2D.Distance(ally.Position, enemy.Position) <= PriestRoutRadius
+                && ally.Elite != EliteAffix.Packblood && !IsPackbloodEmpowered(ally))
                 ally.RoutedRemaining = PriestRoutSeconds;
         }
     }
@@ -69,7 +72,8 @@ public sealed partial class RunSimulation
                 var healed = enemies.FirstOrDefault(ally => ally.Id == priest.HealTargetId);
                 // The heal lands only if its locked target survived and stayed within reach of the tether.
                 if (healed is { Health: > 0 } && Vector2D.Distance(healed.Position, enemy.Position) <= AshPriestBehaviorState.HealRange * 1.25)
-                    healed.Health = Math.Min(healed.MaxHealth, healed.Health + healed.MaxHealth * AshPriestBehaviorState.HealFraction);
+                    healed.Health = Math.Min(healed.MaxHealth, healed.Health + healed.MaxHealth
+                        * (enemy.Elite == EliteAffix.EmberAnointer ? EmberAnointerHealFraction : AshPriestBehaviorState.HealFraction));
                 break;
             case AshPriestEvent.ReviveCompleted:
                 RaiseAshlings(priest.CastPoint);
@@ -92,7 +96,7 @@ public sealed partial class RunSimulation
                 committed = 1;
                 break;
             case PenitentEvent.Bashed:
-                DamagePlayer(PenitentBehaviorState.BashDamage);
+                DamagePlayer(PenitentBehaviorState.BashDamage * EliteImpact(enemy));
                 break;
         }
         if (penitent.Phase != PenitentPhase.Guard) return (direction, 0, committed);

@@ -50,6 +50,7 @@ public sealed partial class RunSimulation
         ClearMapEncounterField();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
+        RollNodeElite(node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();

@@ -161,7 +161,9 @@ public sealed partial class RunSimulation
             if (arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius) is not { } safe) return;
             position = safe;
         }
-        var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind);
+        var elite = TakeEliteFor(kind);
+        if (elite != EliteAffix.None) health *= EliteAffixCatalog.Get(elite).HealthMultiplier;
+        var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind) { Elite = elite };
         enemy.Penitent?.Face(Vector2D.DirectionTo(position, player.Position));
         // Wraiths arrive under the water and only join the fight when they surface.
         if (enemy.DrownedWraith is not null) submergedWraiths.Add(enemy);
@@ -188,6 +190,7 @@ public sealed partial class RunSimulation
         var committed = CommittedThreatCount();
         var rangedAllowed = !mapState.EncounterActive || encounterSeconds >= EnemyStagePressure.RangedGraceSeconds;
         UpdateAshRemains(delta);
+        RefreshPackbloodLeaders();
         UpdateSubmergedWraiths(delta, ref committed, committedCap);
         // Raised Ashlings are appended mid-loop; walking the frame's original count lets them start acting next frame.
         for (int index = 0, count = enemies.Count; index < count; index++)
@@ -205,7 +208,8 @@ public sealed partial class RunSimulation
             var crossing = target != player.Position;
             var direction = Vector2D.DirectionTo(enemy.Position, target);
             var speed = enemy.Speed;
-            var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier;
+            var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier * EliteImpact(enemy);
+            if (packbloodLeaders.Count > 0 && IsPackbloodEmpowered(enemy)) speed *= PackbloodSpeedMultiplier;
             if (enemy.RoutedRemaining > 0)
             {
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
@@ -253,7 +257,8 @@ public sealed partial class RunSimulation
                         break;
                     case AshSlingerEvent.Released:
                         hostileProjectiles.Add(new HostileProjectileState(enemy.Position, slinger.Target, AshSlingerBehaviorState.FlightSeconds,
-                            AshSlingerBehaviorState.ImpactRadius, AshSlingerBehaviorState.Damage, AshSlingerBehaviorState.ArcHeight));
+                            AshSlingerBehaviorState.ImpactRadius, AshSlingerBehaviorState.Damage * EliteImpact(enemy), AshSlingerBehaviorState.ArcHeight));
+                        if (enemy.Elite == EliteAffix.CinderMarksman) AddCinderMarksmanEmber(enemy, slinger.Target);
                         break;
                 }
                 if (slinger.Phase != AshSlingerPhase.Reposition) speed = 0;
@@ -277,7 +282,7 @@ public sealed partial class RunSimulation
             if (enemy.MireHound is { Phase: MireHoundPhase.Pounce } biter)
             {
                 // One committed bite, then the hound is exposed; never a pounce-speed contact grind.
-                DamagePlayer(MireHoundBehaviorState.PounceDamage);
+                DamagePlayer(MireHoundBehaviorState.PounceDamage * EliteImpact(enemy));
                 biter.Land();
             }
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
@@ -325,5 +330,5 @@ public sealed partial class RunSimulation
 
     private IReadOnlyList<HostileProjectileRenderSnapshot> CreateHostileProjectileSnapshots() => hostileProjectiles
         .Select(ember => new HostileProjectileRenderSnapshot(ember.Position.X, ember.Position.Y, ember.Height, ember.Target.X, ember.Target.Y,
-            ember.Radius, ember.Progress)).ToArray();
+            ember.Radius, ember.Progress, ember.Style.ToString().ToLowerInvariant())).ToArray();
 }

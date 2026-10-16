@@ -9,6 +9,9 @@ const BASH = { edge: 'rgba(226, 70, 52, 0.9)', fill: 'rgba(226, 70, 52, 0.14)', 
 const CLAW = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(120, 190, 230, 0.14)', charge: 'rgba(170, 220, 250, 0.38)' };
 // Support casts are not attacks on the hunter, so they use cool/holy hues instead of the red-orange danger family.
 const HEAL = { edge: 'rgba(150, 232, 150, 0.85)', charge: 'rgba(190, 255, 170, 0.5)' };
+// Elite death blasts are attacks too (red edge), filled with the elite's own hue: grave violet, drowned blue.
+const GRAVE = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(150, 120, 255, 0.14)', charge: 'rgba(178, 156, 255, 0.36)' };
+const ECHO = { edge: 'rgba(226, 84, 74, 0.85)', fill: 'rgba(110, 190, 240, 0.12)', charge: 'rgba(127, 214, 255, 0.34)' };
 const REVIVE = { edge: 'rgba(196, 146, 255, 0.85)', fill: 'rgba(150, 100, 230, 0.1)', charge: 'rgba(210, 170, 255, 0.4)' };
 // Must match PenitentBehaviorState.ShieldHalfAngleRadians: the drawn guard is exactly the blocking arc.
 export const SHIELD_HALF_ANGLE = Math.PI / 3;
@@ -206,7 +209,11 @@ function drawLandingMark(ctx, x, y, radius, progress, colors) {
 // Ground half of an ember in flight: the landing mark plus a shadow under the ball.
 export function drawHostileProjectileGround(ctx, projectile) {
     if (!projectile) return;
-    drawLandingMark(ctx, projectile.targetX, projectile.targetY, projectile.radius, projectile.progress, LOB);
+    const style = projectile.style ?? 'ember';
+    drawLandingMark(ctx, projectile.targetX, projectile.targetY, projectile.radius, projectile.progress,
+        style === 'grave' ? GRAVE : style === 'echo' ? ECHO : LOB);
+    // Grave and echo blasts never travel: the mark is the whole telegraph, so there is no ball or shadow.
+    if (style !== 'ember') return;
     ctx.save();
     ctx.fillStyle = 'rgba(5, 7, 10, 0.4)';
     ctx.beginPath();
@@ -217,7 +224,7 @@ export function drawHostileProjectileGround(ctx, projectile) {
 
 // Airborne half, drawn above actors: the ember is lifted by the C#-reported arc height.
 export function drawHostileProjectileEmber(ctx, projectile) {
-    if (!projectile) return;
+    if (!projectile || (projectile.style ?? 'ember') !== 'ember') return;
     const y = projectile.y - (Number(projectile.height) || 0);
     ctx.save();
     ctx.fillStyle = 'rgba(255, 120, 40, 0.35)';

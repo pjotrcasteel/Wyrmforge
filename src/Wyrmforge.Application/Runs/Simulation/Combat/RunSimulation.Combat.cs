@@ -126,7 +126,7 @@ public sealed partial class RunSimulation
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
                 if (defeatedEnemy.Revived) break;
-                experienceShards.Drop(defeatedEnemy.Position, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost);
+                experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
                 break;

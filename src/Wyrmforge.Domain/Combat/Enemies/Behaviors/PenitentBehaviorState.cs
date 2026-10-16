@@ -28,6 +28,7 @@ public sealed class PenitentBehaviorState(Vector2D initialFacing)
     public const double TurnRadiansPerSecond = 1.6;
     public const double ShieldHalfAngleRadians = Math.PI / 3;
     public const double FrontalDamageMultiplier = 0.25;
+    public const double OathshieldFrontalDamageMultiplier = 0.1;
     public const double GuardBreakHealthFraction = 0.4;
     public const double WindupSeconds = 0.65;
     public const double RecoverSeconds = 0.9;
@@ -36,6 +37,9 @@ public sealed class PenitentBehaviorState(Vector2D initialFacing)
     public const double BashReach = 66;
     public const double BashDamage = 16;
     public const double WardDistance = 46;
+
+    /// <summary>Elite Oathshield: the raised shield blocks 90%; only a clear heavy hit or a flank gets through.</summary>
+    public bool Oathshield { get; internal set; }
 
     public PenitentPhase Phase { get; private set; } = PenitentPhase.Guard;
 
@@ -86,7 +90,7 @@ public sealed class PenitentBehaviorState(Vector2D initialFacing)
         if (!ShieldRaised) return 1;
         var from = Vector2D.DirectionTo(position, source);
         if (from == Vector2D.Zero) return 1;
-        return Dot(from, Facing) >= Math.Cos(ShieldHalfAngleRadians) ? FrontalDamageMultiplier : 1;
+        return Dot(from, Facing) >= Math.Cos(ShieldHalfAngleRadians) ? Oathshield ? OathshieldFrontalDamageMultiplier : FrontalDamageMultiplier : 1;
     }
 
     /// <summary>A blocked hit that would still have taken 40% of the Penitent's health knocks the shield aside.</summary>
