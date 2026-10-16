@@ -46,9 +46,11 @@ Compatibility checks read tags, never spell ids.
 - `LaboratoryMutationDefinition` takes a `SpellBlueprint`. `Foundation`, `Validation` and `Realizes` are derived from it.
   - Rime Infusion = Fire Bolt + Bolt + Rime Infusion + Thermal Shatter (complexity 4/6).
   - Storm Infusion = Arcane Orb + Bolt + Storm Charge + Conduit Discharge (complexity 4/6).
-- `ArcaneMutationSocketDefinition.Accepts` lists bridge elements:
+- `ArcaneMutationSocketDefinition.Accepts` lists bridge elements. A blueprint fits if it shares at least one (C.3 added two bridge sockets; see [`laboratory-sockets-loadouts-v1.md`](laboratory-sockets-loadouts-v1.md)):
   - Rimebrand: Fire, Frost.
   - Charged Focus: Storm, Arcane.
+  - Flashfire: Fire, Storm.
+  - Glacial Lens: Arcane, Frost.
 - `LaboratoryState.Equip` returns `InvalidBlueprint` if validation fails. This is checked after the socket check, and the shipped catalog never triggers it.
 - The Laboratory view shows a blueprint line: foundation · components · complexity X/Y.
 

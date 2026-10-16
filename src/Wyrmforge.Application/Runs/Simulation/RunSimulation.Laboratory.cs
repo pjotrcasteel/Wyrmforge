@@ -9,13 +9,13 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
-    private LaboratoryMutationId? preparedLaboratoryMutation;
+    private IReadOnlyList<LaboratoryMutationId> preparedLaboratoryMutations = [];
     private LaboratoryMutationId? activeLaboratoryMutation;
     private DragonId? researchLead;
     private int reactionsTriggered;
     private readonly ReactionBudget reactionBudget = new(BlueprintRuleset.Current.MaxReactionEventsPerStep);
 
-    public LaboratoryMutationId? PreparedLaboratoryMutation => preparedLaboratoryMutation;
+    public IReadOnlyList<LaboratoryMutationId> PreparedLaboratoryMutations => preparedLaboratoryMutations;
     public LaboratoryMutationId? ActiveLaboratoryMutation => activeLaboratoryMutation;
     public DragonId? ResearchLead => researchLead;
     public int ReactionsTriggered => reactionsTriggered;
@@ -24,18 +24,28 @@ public sealed partial class RunSimulation
 
     internal void EnableResearchLead(DragonId? wyrm) => researchLead = wyrm;
 
-    // The mutation is carried into the hunt but only wakes when its foundation spell becomes the primary.
-    public void PrepareLaboratoryMutation(LaboratoryMutationId? mutation)
+    public void PrepareLaboratoryMutation(LaboratoryMutationId? mutation) =>
+        PrepareLaboratoryMutations(mutation is { } id ? [id] : []);
+
+    // Socketed mutations are carried into the hunt; only the one whose foundation becomes the primary wakes.
+    // The socket limit and one-per-foundation rule are re-applied here so a tampered caller cannot exceed them.
+    public void PrepareLaboratoryMutations(IEnumerable<LaboratoryMutationId> mutations)
     {
+        ArgumentNullException.ThrowIfNull(mutations);
         if (build.Spells.IsPrimaryCommitted || elapsed > 0) return;
-        preparedLaboratoryMutation = mutation;
+        preparedLaboratoryMutations = mutations
+            .Distinct()
+            .DistinctBy(id => LaboratoryCatalog.Get(id).Foundation)
+            .Take(LaboratoryCatalog.MaxEquippedMutations)
+            .ToArray();
     }
 
     private void ApplyPreparedLaboratoryMutation()
     {
-        if (preparedLaboratoryMutation is not { } id || activeLaboratoryMutation is not null) return;
+        if (activeLaboratoryMutation is not null) return;
+        var match = preparedLaboratoryMutations.Where(id => LaboratoryCatalog.Get(id).Foundation == build.Spells.ActiveSpell).Select(id => (LaboratoryMutationId?)id).FirstOrDefault();
+        if (match is not { } id) return;
         var mutation = LaboratoryCatalog.Get(id);
-        if (build.Spells.ActiveSpell != mutation.Foundation) return;
         // Reuses the existing synergy, so a later level-up can never stack the legacy effect on top.
         if (!build.Synergies.Contains(mutation.Realizes))
         {

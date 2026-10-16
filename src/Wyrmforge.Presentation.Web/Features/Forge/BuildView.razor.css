@@ -1428,3 +1428,17 @@
 @media(max-width:760px){.atlas-stage{height:calc(100dvh - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom));min-height:260px;border-radius:4px}.atlas-action{width:44px;height:44px}.node-inspector{bottom:max(8px,env(safe-area-inset-bottom));max-height:min(60dvh,460px);border-radius:8px}.inspector-close{min-width:44px;min-height:44px}}
 
 .atlas-quest-link{min-height:44px;padding:8px;border:0;background:transparent;color:#cead74;font:inherit;font-size:.75rem;cursor:pointer}.build-heading{display:flex;justify-content:space-between;gap:8px;align-items:center}
+
+.loadout-strip { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid #31283a; border-radius: 14px; background: #141019; }
+.loadout-slots { display: flex; align-items: center; gap: 8px; }
+.loadout-kicker { margin-right: auto; color: #a47bc8; font-size: .62rem; font-weight: 950; letter-spacing: .18em; }
+.loadout-slot { min-width: 48px; min-height: 44px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; background: #1b1522; color: #d8cfe0; font-weight: 950; cursor: pointer; }
+.loadout-slot.empty { border-style: dashed; color: #8d8098; }
+.loadout-slot.filled { border-color: rgba(196, 138, 255, .5); color: #e4caff; }
+.loadout-slot.open { background: #2a1f33; box-shadow: 0 0 0 1px rgba(255, 210, 122, .5) inset; }
+.loadout-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.loadout-panel span { display: grid; flex: 1 1 160px; gap: 2px; min-width: 0; font-size: .78rem; }
+.loadout-panel small { color: #9f94a8; font-size: .66rem; line-height: 1.35; }
+.loadout-panel button { min-height: 44px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 10px; background: none; color: #d8cfe0; font-size: .7rem; font-weight: 950; letter-spacing: .06em; cursor: pointer; }
+.loadout-panel button.primary { border-color: rgba(255, 210, 122, .55); background: linear-gradient(180deg, #7a3a1e, #4a2416); color: #fff2d8; }
+.loadout-message { margin: 0; color: #9fdcf0; font-size: .7rem; line-height: 1.4; }

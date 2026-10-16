@@ -247,7 +247,46 @@ public sealed class LaboratoryMutationSimulationTests
         var simulation = Create(null);
         simulation.ChoosePrimary(SpellId.FireBolt);
         simulation.PrepareLaboratoryMutation(LaboratoryMutationId.RimeInfusion);
-        Assert.IsNull(simulation.PreparedLaboratoryMutation);
+        Assert.AreEqual(0, simulation.PreparedLaboratoryMutations.Count);
+    }
+
+    [TestMethod]
+    public void TwoPreparedMutations_OnlyThePrimarysOwnWakes()
+    {
+        foreach (var (primary, expected, synergy) in new[]
+        {
+            (SpellId.FireBolt, LaboratoryMutationId.RimeInfusion, SynergyId.Frostfire),
+            (SpellId.ArcaneOrb, LaboratoryMutationId.StormInfusion, SynergyId.ArcaneConduit),
+        })
+        {
+            var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: Seed,
+                preparedMutations: [LaboratoryMutationId.RimeInfusion, LaboratoryMutationId.StormInfusion]);
+            Assert.AreEqual(2, simulation.PreparedLaboratoryMutations.Count);
+            Assert.IsTrue(simulation.ChoosePrimary(primary));
+            var build = Build(simulation);
+            Assert.AreEqual(expected, simulation.ActiveLaboratoryMutation);
+            Assert.IsTrue(build.Synergies.Contains(synergy));
+            Assert.AreEqual(1, build.Synergies.Count, "One primary cast: the other mutation stays dormant.");
+        }
+    }
+
+    [TestMethod]
+    public void TwoPreparedMutations_PrimaryWithoutAMutation_WakesNothing()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: Seed,
+            preparedMutations: [LaboratoryMutationId.RimeInfusion, LaboratoryMutationId.StormInfusion]);
+        var other = Enum.GetValues<SpellId>().First(spell => spell is not SpellId.FireBolt and not SpellId.ArcaneOrb && simulation.ChoosePrimary(spell));
+        Assert.IsNull(simulation.ActiveLaboratoryMutation, other.ToString());
+    }
+
+    [TestMethod]
+    public void PrepareLaboratoryMutations_TrimsDuplicatesAndTheSocketLimit()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: Seed,
+            preparedMutation: LaboratoryMutationId.RimeInfusion,
+            preparedMutations: [LaboratoryMutationId.RimeInfusion, LaboratoryMutationId.StormInfusion, LaboratoryMutationId.RimeInfusion]);
+        CollectionAssert.AreEquivalent(new[] { LaboratoryMutationId.RimeInfusion, LaboratoryMutationId.StormInfusion }, simulation.PreparedLaboratoryMutations.ToArray());
+        Assert.IsTrue(simulation.PreparedLaboratoryMutations.Count <= LaboratoryCatalog.MaxEquippedMutations);
     }
 
     [TestMethod]

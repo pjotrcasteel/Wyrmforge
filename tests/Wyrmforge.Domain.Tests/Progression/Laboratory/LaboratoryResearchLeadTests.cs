@@ -73,7 +73,7 @@ public sealed class LaboratoryResearchLeadTests
         Assert.AreEqual(0, vault.Count(DragonEssenceId.StormHeart));
         Assert.AreEqual(MutationEquipResult.SocketLocked, lab.Equip(LaboratoryMutationId.StormInfusion, NoNodes));
         Assert.AreEqual(MutationEquipResult.Equipped, lab.Equip(LaboratoryMutationId.StormInfusion, ChargedFocus));
-        Assert.AreEqual(LaboratoryMutationId.StormInfusion, lab.PreparedFor(ChargedFocus));
+        CollectionAssert.AreEqual(new[] { LaboratoryMutationId.StormInfusion }, lab.PreparedFor(ChargedFocus).ToArray());
         Assert.AreEqual(MutationResearchStatus.MissingObservations, lab.Status(LaboratoryMutationId.RimeInfusion, vault), "Research is per recipe.");
     }
 

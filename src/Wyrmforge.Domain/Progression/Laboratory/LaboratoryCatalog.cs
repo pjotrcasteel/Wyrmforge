@@ -40,7 +40,14 @@ public sealed record LaboratoryMutationDefinition(
 {
     public SpellId Foundation => Blueprint.Foundation;
 
-    public BlueprintValidation Validation => BlueprintValidator.Validate(Blueprint, BlueprintRuleset.Current, LaboratoryCatalog.Get(Socket).Accepts);
+    // Socket is the home socket the research points to; any socket whose tags accept the blueprint can hold it.
+    public BlueprintValidation Validation => ValidationFor(Socket);
+
+    public BlueprintValidation ValidationFor(ArcaneMutationSocketId socket) =>
+        BlueprintValidator.Validate(Blueprint, BlueprintRuleset.Current, LaboratoryCatalog.Get(socket).Accepts);
+
+    public IReadOnlyList<ArcaneMutationSocketId> CompatibleSockets =>
+        LaboratoryCatalog.Sockets.Where(socket => ValidationFor(socket.Id).IsValid).Select(socket => socket.Id).ToArray();
 
     public SynergyId Realizes => Validation.Realizes ?? throw new InvalidOperationException($"{Name}'s blueprint realizes no reaction.");
 
@@ -54,6 +61,9 @@ public static class LaboratoryCatalog
     // Tuning hypotheses (handover §17), not balance commitments. See docs/design/laboratory-tuning-v1.md.
     public const double RimeInfusionDamageTradeOff = -0.10;
     public const double StormInfusionCastIntervalTradeOff = 0.10;
+
+    // Handover §15 Phase C: at most two socketed mutations; only the one matching the primary wakes.
+    public const int MaxEquippedMutations = 2;
 
     public static IReadOnlyList<LaboratoryExperimentDefinition> Experiments { get; } =
     [
@@ -112,6 +122,8 @@ public static class LaboratoryCatalog
     [
         new(ArcaneMutationSocketId.Rimebrand, "Rimebrand socket", "hybrid-fire-frost-2", "Rimebrand", "Fire–Frost bridge", [SpellTag.Fire, SpellTag.Frost]),
         new(ArcaneMutationSocketId.ChargedFocus, "Charged Focus socket", "hybrid-storm-arcane-2", "Charged Focus", "Storm–Arcane bridge", [SpellTag.Storm, SpellTag.Arcane]),
+        new(ArcaneMutationSocketId.Flashfire, "Flashfire socket", "hybrid-fire-storm-2", "Flashfire", "Fire–Storm bridge", [SpellTag.Fire, SpellTag.Storm]),
+        new(ArcaneMutationSocketId.GlacialLens, "Glacial Lens socket", "hybrid-arcane-frost-2", "Glacial Lens", "Arcane–Frost bridge", [SpellTag.Arcane, SpellTag.Frost]),
     ];
 
     public static IReadOnlyList<LaboratoryMutationDefinition> Mutations { get; } =

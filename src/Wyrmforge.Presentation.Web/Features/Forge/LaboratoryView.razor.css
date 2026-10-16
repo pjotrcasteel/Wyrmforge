@@ -158,7 +158,10 @@
 .lab-socket span { display: grid; gap: 2px; font-size: .78rem; }
 .lab-socket small { color: #9f94a8; font-size: .68rem; }
 .lab-socket.ready { box-shadow: 0 0 0 1px rgba(196, 138, 255, .45) inset; }
-.lab-socket button { margin-left: auto; min-height: 40px; padding: 0 12px; border: 1px solid rgba(196, 138, 255, .5); border-radius: 10px; background: none; color: #e4caff; font-weight: 900; cursor: pointer; }
+.lab-socket.equipped { box-shadow: 0 0 0 1px rgba(159, 220, 240, .6) inset; background: rgba(90, 168, 216, .1); }
+.lab-socket.locked { opacity: .78; }
+.lab-socket button { margin-left: auto; flex: 0 0 auto; min-height: 44px; padding: 0 12px; border: 1px solid rgba(196, 138, 255, .5); border-radius: 10px; background: none; color: #e4caff; font-weight: 900; cursor: pointer; }
+.lab-socket button.equipped { border-color: rgba(159, 220, 240, .6); color: #dff4fb; }
 
 @media (max-width: 480px) {
     .lab-glyph { min-width: 48px; height: 48px; }

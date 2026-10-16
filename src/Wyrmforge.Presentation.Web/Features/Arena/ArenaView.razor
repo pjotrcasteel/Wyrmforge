@@ -140,9 +140,9 @@
                             <span class="primary-choice-icon px-icon px-lg px-@spell.School.ToString().ToLowerInvariant()" aria-hidden="true"></span>
                             <strong>@spell.Name</strong>
                             <small>@spell.School</small>
-                            @if (PreparedMutationFoundation == spell.Id)
+                            @if (PreparedMutationFor(spell.Id) is { } mutation)
                             {
-                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-@PreparedMutationIcon" aria-hidden="true"></i>@PreparedMutationName</span>
+                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-@MutationIcon(mutation)" aria-hidden="true"></i>@mutation.Name</span>
                             }
                         </button>
                     }

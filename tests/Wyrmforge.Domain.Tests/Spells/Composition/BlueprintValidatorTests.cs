@@ -111,6 +111,7 @@ public sealed class BlueprintValidatorTests
     {
         var chargedFocus = LaboratoryCatalog.Get(ArcaneMutationSocketId.ChargedFocus).Accepts;
         CollectionAssert.AreEqual(new[] { BlueprintIssueCode.SocketRejects }, Codes(Rime, socket: chargedFocus));
+        Assert.AreEqual(0, Codes(Rime, socket: LaboratoryCatalog.Get(ArcaneMutationSocketId.Flashfire).Accepts).Length, "One shared element is enough.");
         Assert.AreEqual(0, Codes(Rime, socket: LaboratoryCatalog.Get(ArcaneMutationSocketId.Rimebrand).Accepts).Length);
     }
 

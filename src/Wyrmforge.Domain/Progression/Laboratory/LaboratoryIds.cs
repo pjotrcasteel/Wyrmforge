@@ -35,6 +35,8 @@ public enum ArcaneMutationSocketId
 {
     Rimebrand,
     ChargedFocus,
+    Flashfire,
+    GlacialLens,
 }
 
 public enum LaboratoryExperimentOutcome

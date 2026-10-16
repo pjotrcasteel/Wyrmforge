@@ -120,19 +120,31 @@
                 }
                 break;
             case MutationResearchStatus.Stabilized:
-                <div class="lab-socket @(SocketReady ? "ready" : "locked")">
-                    <i class="px-icon px-sm px-@(SocketReady ? "rune" : "lock")" aria-hidden="true"></i>
-                    <span><strong>@Socket.Name</strong><small>@(SocketReady ? $"{Socket.NodeName} is allocated." : $"Allocate {Socket.NodeName} on the {Socket.Route} in the Arcane Atlas.")</small></span>
-                    @if (!SocketReady) { <button @onclick="() => OnOpenAtlas.InvokeAsync()">ATLAS</button> }
-                </div>
-                <button class="lab-primary @(IsEquipped ? "equipped" : string.Empty)" disabled="@(!SocketReady && !IsEquipped)" aria-pressed="@IsEquipped.ToString().ToLowerInvariant()" @onclick="ToggleEquipAsync">
-                    @(IsEquipped ? "EQUIPPED: unequip" : "EQUIP FOR NEXT HUNT")
-                </button>
-                <p class="lab-tradeoff">Active only when @SpellCatalog.Get(Mutation.Foundation).Name is your primary. @Mutation.TradeOff</p>
-                @if (Laboratory.Equipped is { } other && other != Mutation.Id)
+                <h2>Sockets · @Laboratory.Slotted.Count/@LaboratoryCatalog.MaxEquippedMutations equipped</h2>
+                @foreach (var socketId in Mutation.CompatibleSockets)
                 {
-                    <p class="lab-tradeoff">One mutation at a time: equipping replaces @LaboratoryCatalog.Get(other).Name.</p>
+                    var socket = LaboratoryCatalog.Get(socketId);
+                    var holder = Laboratory.Slotted.TryGetValue(socketId, out var held) ? held : (LaboratoryMutationId?)null;
+                    var check = Laboratory.CheckEquip(Mutation.Id, socketId, Selection.Selected);
+                    var holdsThis = holder == Mutation.Id;
+                    <div class="lab-socket @SocketClass(holdsThis, check)">
+                        <i class="px-icon px-sm px-@(check == MutationEquipResult.SocketLocked ? "lock" : "rune")" aria-hidden="true"></i>
+                        <span><strong>@socket.Name</strong><small>@SocketLine(socket, holder, holdsThis, check)</small></span>
+                        @if (holdsThis)
+                        {
+                            <button class="equipped" aria-pressed="true" aria-label="@($"Unequip {Mutation.Name} from {socket.Name}")" @onclick="() => Equip(Mutation.Id, null)">UNEQUIP</button>
+                        }
+                        else if (check == MutationEquipResult.Equipped)
+                        {
+                            <button aria-label="@($"Equip {Mutation.Name} in {socket.Name}")" @onclick="() => Equip(Mutation.Id, socketId)">@(holder is null ? "EQUIP" : "SWAP")</button>
+                        }
+                        else if (check == MutationEquipResult.SocketLocked)
+                        {
+                            <button aria-label="@($"Open the Atlas to allocate {socket.NodeName}")" @onclick="() => OnOpenAtlas.InvokeAsync()">ATLAS</button>
+                        }
+                    </div>
                 }
+                <p class="lab-tradeoff">Active only when @SpellCatalog.Get(Mutation.Foundation).Name is your primary. @Mutation.TradeOff</p>
                 break;
         }
         @if (Laboratory.FieldTests > 0)
@@ -151,7 +163,7 @@
     [Parameter] public EventCallback OnOpenAtlas { get; set; }
     [Parameter, EditorRequired] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>> RunExperiment { get; set; } = null!;
     [Parameter, EditorRequired] public Func<LaboratoryMutationId, Task<bool>> Stabilize { get; set; } = null!;
-    [Parameter, EditorRequired] public Func<LaboratoryMutationId?, Task> Equip { get; set; } = null!;
+    [Parameter, EditorRequired] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task> Equip { get; set; } = null!;
     [Parameter] public Func<LaboratoryMutationId?, Task> Track { get; set; } = _ => Task.CompletedTask;
     [Parameter] public LaboratoryMutationId? Focus { get; set; }
 
@@ -168,13 +180,11 @@
     private int Specimens => Vault.Count(Mutation.Stabilizer);
     private int KnownCount => Mutation.RequiresObservations.Count(Laboratory.HasObserved);
     private MutationResearchStatus Status => Laboratory.Status(Mutation.Id, Vault);
-    private bool SocketReady => LaboratoryState.SocketUnlocked(Socket.Id, Selection.Selected);
-    private bool IsEquipped => Laboratory.Equipped == Mutation.Id;
     private string RecipeClass => Status == MutationResearchStatus.Stabilized ? "stabilized" : KnownCount > 0 ? "researching" : "unknown";
 
-    // Open on whatever the player is pursuing: an explicit focus, else the tracked lead, else the equipped recipe.
+    // Open on whatever the player is pursuing: an explicit focus, else the tracked lead, else an equipped recipe.
     protected override void OnInitialized() =>
-        selected = Focus ?? Laboratory.Tracked ?? Laboratory.Equipped ?? LaboratoryMutationId.RimeInfusion;
+        selected = Focus ?? Laboratory.Tracked ?? Laboratory.EquippedMutations.Select(id => (LaboratoryMutationId?)id).FirstOrDefault() ?? LaboratoryMutationId.RimeInfusion;
 
     private void Select(LaboratoryMutationId id)
     {
@@ -183,7 +193,7 @@
     }
 
     private string TabState(LaboratoryMutationId id) =>
-        Laboratory.Equipped == id ? "equipped"
+        Laboratory.IsEquipped(id) ? "equipped"
         : Laboratory.Stabilized.Contains(id) ? "stabilized"
         : Laboratory.Tracked == id ? "tracked"
         : $"{LaboratoryCatalog.Get(id).RequiresObservations.Count(Laboratory.HasObserved)}/{LaboratoryCatalog.Get(id).RequiresObservations.Count}";
@@ -214,7 +224,20 @@
         await Stabilize(Mutation.Id);
     }
 
-    private Task ToggleEquipAsync() => Equip(IsEquipped ? null : Mutation.Id);
+    private static string SocketClass(bool holdsThis, MutationEquipResult check) =>
+        holdsThis ? "ready equipped" : check == MutationEquipResult.Equipped ? "ready" : "locked";
+
+    private string SocketLine(ArcaneMutationSocketDefinition socket, LaboratoryMutationId? holder, bool holdsThis, MutationEquipResult check) => holdsThis
+        ? $"Equipped on the {socket.Route}."
+        : check switch
+        {
+            MutationEquipResult.SocketLocked => $"Allocate {socket.NodeName} on the {socket.Route}.",
+            MutationEquipResult.FoundationTaken => $"Another {SpellCatalog.Get(Mutation.Foundation).Name} mutation is equipped; only one can wake.",
+            MutationEquipResult.SocketLimitReached => $"Both sockets are in use. Unequip one first.",
+            MutationEquipResult.Equipped when holder is { } other => $"Holds {LaboratoryCatalog.Get(other).Name}. Swapping unequips it; its recipe is kept.",
+            MutationEquipResult.Equipped => $"{socket.NodeName} is allocated on the {socket.Route}.",
+            _ => "This socket cannot hold the blueprint.",
+        };
 
     private static string OutcomeLabel(LaboratoryExperimentOutcome outcome) => outcome switch
     {

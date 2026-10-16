@@ -221,3 +221,26 @@ Details: `docs/design/spell-blueprint-contracts-v1.md`.
 **Product-owner request (deferred):** redo the arena completely. It is bland, the maps all look alike, and they look poor; enemies, the mage and effects are fine. Do this during the story phase (Phase D) so the story drives the art direction. It is recorded in the roadmap under M7.
 
 **Next options:** C.2 (preparation economy with rare-monster reagents), C.3 (two sockets and loadouts), element inversion, and tuning sign-off (`laboratory-tuning-v1.md` §3).
+
+## 12. Continuation: Laboratory Phase C.3 sockets, loadouts and respec (same branch)
+
+**Built:**
+- Up to two equipped mutations. Sockets are generic by element: Rimebrand and Charged Focus, plus two new bridge sockets, Flashfire (Fire–Storm) and Glacial Lens (Arcane–Frost).
+- A blueprint fits any socket sharing one of its elements; `BlueprintValidator` now matches its documented "accepts none" contract.
+- One primary cast is preserved: only the mutation matching the chosen primary wakes, and there is one mutation per foundation.
+- Laboratory socket list (EQUIP / SWAP / UNEQUIP / ATLAS), per-socket reconcile on respec, and an advisor prompt for the second mutation.
+- `HuntLoadoutBook`: three Atlas loadouts (Web plus sockets) saved under `wyrmforge.loadouts.v1`. Apply is a free respec that reports anything it could not restore.
+- Saves migrate: `Slots` added; `Equipped` is still written for older builds.
+- The tutorial, story and first-hunt enemy brief (`user_handover_files/`) is committed as the arena-refactor reference.
+
+Details: `docs/design/laboratory-sockets-loadouts-v1.md`.
+
+**Validation:**
+- Domain 203, Application 314 and JS 107 tests pass.
+- The full flow was captured at 390×844.
+
+**Next options:**
+- C.2 once elites and the Reliquary exist (arena refactor, story phase).
+- Element inversion.
+- Tuning sign-off.
+- Open decisions: the socket names and placement.

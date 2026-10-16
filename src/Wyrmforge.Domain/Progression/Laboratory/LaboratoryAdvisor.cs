@@ -30,12 +30,16 @@ public static class LaboratoryAdvisor
                 return new(LaboratoryPromptKind.Experiment, mutation.Id, $"New research for {mutation.Name}: {experiment.Name}.");
         }
 
-        var unequipped = laboratory.Equipped is null
-            ? mutations.Where(candidate => laboratory.Stabilized.Contains(candidate.Id)).ToArray()
-            : [];
-        if (unequipped.FirstOrDefault(candidate => LaboratoryState.SocketUnlocked(candidate.Socket, arcaneNodes)) is { } equippable)
+        var slotted = laboratory.Slotted;
+        var equippable = mutations.FirstOrDefault(candidate =>
+            laboratory.Stabilized.Contains(candidate.Id)
+            && !laboratory.IsEquipped(candidate.Id)
+            && slotted.Count < LaboratoryCatalog.MaxEquippedMutations
+            && slotted.Values.All(other => LaboratoryCatalog.Get(other).Foundation != candidate.Foundation)
+            && candidate.CompatibleSockets.Any(socket => !slotted.ContainsKey(socket) && LaboratoryState.SocketUnlocked(socket, arcaneNodes)));
+        if (equippable is not null)
             return new(LaboratoryPromptKind.Equip, equippable.Id, $"Equip {equippable.Name} for your next hunt.");
-        if (unequipped.FirstOrDefault() is { } locked)
+        if (slotted.Count == 0 && mutations.FirstOrDefault(candidate => laboratory.Stabilized.Contains(candidate.Id)) is { } locked)
         {
             var socket = LaboratoryCatalog.Get(locked.Socket);
             return new(LaboratoryPromptKind.UnlockSocket, locked.Id, $"Allocate {socket.NodeName} on the {socket.Route} to equip {locked.Name}.");

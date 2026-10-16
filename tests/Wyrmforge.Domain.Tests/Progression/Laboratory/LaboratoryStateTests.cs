@@ -133,9 +133,9 @@ public sealed class LaboratoryStateTests
         Assert.AreEqual(MutationEquipResult.NotStabilized, lab.Equip(LaboratoryMutationId.RimeInfusion, SocketNodes));
         lab.Stabilize(LaboratoryMutationId.RimeInfusion, vault, consentToConsume: true);
         Assert.AreEqual(MutationEquipResult.SocketLocked, lab.Equip(LaboratoryMutationId.RimeInfusion, new HashSet<string> { "wyrmheart" }));
-        Assert.IsNull(lab.Equipped);
+        Assert.AreEqual(0, lab.EquippedMutations.Count);
         Assert.AreEqual(MutationEquipResult.Equipped, lab.Equip(LaboratoryMutationId.RimeInfusion, SocketNodes));
-        Assert.AreEqual(LaboratoryMutationId.RimeInfusion, lab.PreparedFor(SocketNodes));
+        CollectionAssert.AreEqual(new[] { LaboratoryMutationId.RimeInfusion }, lab.PreparedFor(SocketNodes).ToArray());
     }
 
     [TestMethod]
@@ -150,7 +150,7 @@ public sealed class LaboratoryStateTests
         var message = lab.ReconcileSocket(new HashSet<string> { "wyrmheart" });
         Assert.IsNotNull(message);
         StringAssert.Contains(message, "Rimebrand");
-        Assert.IsNull(lab.Equipped);
+        Assert.AreEqual(0, lab.EquippedMutations.Count);
         Assert.IsTrue(lab.Stabilized.Contains(LaboratoryMutationId.RimeInfusion));
         Assert.IsNull(lab.ReconcileSocket(new HashSet<string>()), "Nothing further to unequip.");
     }
@@ -168,12 +168,13 @@ public sealed class LaboratoryStateTests
         var save = lab.ToSave();
         var restored = new LaboratoryState();
         restored.Restore(save with { Observations = [.. save.Observations, "FutureObservation"], Mutations = [.. save.Mutations, "FutureMutation"] });
-        Assert.AreEqual(save, restored.ToSave() with { Observations = save.Observations, Mutations = save.Mutations });
+        Assert.AreEqual(save, restored.ToSave() with { Observations = save.Observations, Mutations = save.Mutations, Slots = save.Slots });
+        CollectionAssert.AreEqual(save.Slots, restored.ToSave().Slots);
         CollectionAssert.AreEqual(save.Observations, restored.ToSave().Observations);
         CollectionAssert.AreEqual(save.Mutations, restored.ToSave().Mutations);
         Assert.AreEqual(1, restored.FieldTests);
         Assert.AreEqual(7, restored.FieldReactions);
-        Assert.AreEqual(LaboratoryMutationId.RimeInfusion, restored.Equipped);
+        Assert.AreEqual(ArcaneMutationSocketId.Rimebrand, restored.SocketOf(LaboratoryMutationId.RimeInfusion));
     }
 
     [TestMethod]
@@ -181,7 +182,7 @@ public sealed class LaboratoryStateTests
     {
         var lab = new LaboratoryState();
         lab.Restore(new LaboratorySave(1, [], [], "RimeInfusion", -3, -1));
-        Assert.IsNull(lab.Equipped);
+        Assert.AreEqual(0, lab.EquippedMutations.Count);
         Assert.AreEqual(0, lab.FieldTests);
         lab.Restore(null);
         Assert.AreEqual(0, lab.Observations.Count);

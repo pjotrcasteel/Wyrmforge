@@ -8,6 +8,7 @@
 @using Wyrmforge.Domain.Progression.Onboarding
 @using Wyrmforge.Domain.Progression.Experience
 @using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.Loadouts
 
 <main class="game-shell @(section == ShellSection.Run ? "menu-home" : string.Empty)">
     @if (section == ShellSection.Run)
@@ -73,7 +74,7 @@
                 </section>
                 break;
             case ShellSection.Build:
-                <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" />
+                <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
                 break;
             case ShellSection.Forge:
                 @if (IsUnlocked(ShellSection.Laboratory))
@@ -131,8 +132,12 @@
     [Parameter] public EventCallback OnDismissLaboratoryNotice { get; set; }
     [Parameter] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>> RunExperiment { get; set; } = _ => throw new InvalidOperationException("Laboratory not wired.");
     [Parameter] public Func<LaboratoryMutationId, Task<bool>> StabilizeMutation { get; set; } = _ => Task.FromResult(false);
-    [Parameter] public Func<LaboratoryMutationId?, Task> EquipMutation { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task> EquipMutation { get; set; } = (_, _) => Task.CompletedTask;
     [Parameter] public Func<LaboratoryMutationId?, Task> TrackMutation { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
+    [Parameter] public Func<int, Task> SaveLoadout { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
+    [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
     [Parameter] public bool StartInLaboratory { get; set; }
     [Parameter] public LaboratoryMutationId? LaboratoryFocus { get; set; }
 
@@ -187,7 +192,7 @@
     private Task StartAsync() => OnStart.InvokeAsync();
     private string UnlockHint(ShellSection value) => value == ShellSection.Forge ? "Secure Essence" : "Finish first hunt";
 
-    private string LaboratoryStatus => Laboratory.Equipped is { } equipped ? $"{LaboratoryCatalog.Get(equipped).Name} equipped"
+    private string LaboratoryStatus => Laboratory.EquippedMutations.Count > 0 ? $"{string.Join(" + ", Laboratory.EquippedMutations.Select(id => LaboratoryCatalog.Get(id).Name))} equipped"
         : LaboratoryAdvisor.Next(Laboratory, Vault, Selection.Selected) is not { } prompt ? $"{Laboratory.Observations.Count} findings"
         : prompt.Kind switch
         {

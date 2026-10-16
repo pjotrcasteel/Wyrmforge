@@ -94,6 +94,7 @@ public partial class Home
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
         await TryLoadLaboratoryAsync();
+        await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
         StateHasChanged();

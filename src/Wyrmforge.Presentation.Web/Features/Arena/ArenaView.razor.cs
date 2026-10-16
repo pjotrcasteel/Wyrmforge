@@ -41,14 +41,14 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public bool RewardCache { get; set; }
-    [Parameter] public LaboratoryMutationId? PreparedMutation { get; set; }
+    [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
-    private SpellId? PreparedMutationFoundation => PreparedMutation is { } id ? LaboratoryCatalog.Get(id).Foundation : null;
-    private string PreparedMutationIcon => PreparedMutation is { } id && LaboratoryCatalog.Get(id).SpecimenWyrm == DragonId.Stormcoil ? "storm" : "frost";
-    private string PreparedMutationName => PreparedMutation is { } id ? LaboratoryCatalog.Get(id).Name : string.Empty;
+    private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
+        PreparedMutations.Select(LaboratoryCatalog.Get).FirstOrDefault(mutation => mutation.Foundation == spell);
+    private static string MutationIcon(LaboratoryMutationDefinition mutation) => mutation.SpecimenWyrm == DragonId.Stormcoil ? "storm" : "frost";
     private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
@@ -85,7 +85,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, PreparedMutation, ResearchLead);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations);
         if (RewardCache) simulation.OpenRewardCache();
     }
 

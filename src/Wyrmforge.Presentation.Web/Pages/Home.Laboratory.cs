@@ -9,7 +9,7 @@ public partial class Home
 {
     private const string LaboratoryKey = "wyrmforge.laboratory.v1";
     private readonly LaboratoryState laboratory = new();
-    private LaboratoryMutationId? activeLaboratoryMutation;
+    private IReadOnlyList<LaboratoryMutationId> activeLaboratoryMutations = [];
     private string? laboratoryNotice;
     private DragonId? activeResearchLead;
     private Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceId? activeResearchSpecimen;
@@ -21,7 +21,7 @@ public partial class Home
 
     private void PrepareLaboratoryRun()
     {
-        activeLaboratoryMutation = laboratory.PreparedFor(selection.Selected);
+        activeLaboratoryMutations = laboratory.PreparedFor(selection.Selected);
         activeResearchLead = laboratory.LeadWyrm(essenceVault);
         activeResearchSpecimen = activeResearchLead is not null && laboratory.Tracked is { } tracked ? LaboratoryCatalog.Get(tracked).Stabilizer : null;
         researchPrompt = null;
@@ -68,13 +68,14 @@ public partial class Home
         return true;
     }
 
-    private async Task EquipLaboratoryMutationAsync(LaboratoryMutationId? id)
+    // A socket equips (moving or swapping as needed); no socket unequips the mutation.
+    private async Task EquipLaboratoryMutationAsync(LaboratoryMutationId id, ArcaneMutationSocketId? socket)
     {
-        if (id is { } mutation)
+        if (socket is { } target)
         {
-            if (laboratory.Equip(mutation, selection.Selected) != MutationEquipResult.Equipped) return;
+            if (laboratory.Equip(id, target, selection.Selected) != MutationEquipResult.Equipped) return;
         }
-        else laboratory.Unequip();
+        else if (!laboratory.Unequip(id)) return;
         laboratoryNotice = null;
         await TrySetLaboratoryAsync();
     }

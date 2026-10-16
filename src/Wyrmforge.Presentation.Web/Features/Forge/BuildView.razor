@@ -1,5 +1,7 @@
 @using System.Globalization
 @using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.Loadouts
 @inject IJSRuntime JavaScript
 
 <section class="build-view">
@@ -7,6 +9,46 @@
         <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
         <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
     </header>
+
+    @if (Loadouts is not null)
+    {
+        <section class="loadout-strip" aria-label="Saved hunt loadouts">
+            <div class="loadout-slots">
+                <span class="loadout-kicker">LOADOUTS</span>
+                @for (var index = 0; index < HuntLoadoutBook.SlotCount; index++)
+                {
+                    var slot = index;
+                    var loadout = Loadouts[slot];
+                    <button class="loadout-slot @(loadout is null ? "empty" : "filled") @(openLoadout == slot ? "open" : string.Empty)"
+                        aria-expanded="@((openLoadout == slot).ToString().ToLowerInvariant())"
+                        aria-label="@(loadout is null ? $"{HuntLoadoutBook.DefaultName(slot)}, empty" : $"{loadout.Name}, {LoadoutSummary(loadout)}")"
+                        @onclick="() => ToggleLoadout(slot)">@(loadout is null ? "+" : RomanFor(slot))</button>
+                }
+            </div>
+            @if (openLoadout is { } open)
+            {
+                var loadout = Loadouts[open];
+                <div class="loadout-panel">
+                    @if (loadout is null)
+                    {
+                        <span><strong>@HuntLoadoutBook.DefaultName(open)</strong><small>Save this Web path and your equipped mutations.</small></span>
+                        <button class="primary" @onclick="() => SaveLoadoutAsync(open)">SAVE</button>
+                    }
+                    else
+                    {
+                        <span><strong>@loadout.Name</strong><small>@LoadoutSummary(loadout)</small></span>
+                        <button class="primary" aria-label="@($"Apply {loadout.Name}, free respec")" @onclick="() => ApplyLoadoutAsync(open)">APPLY</button>
+                        <button aria-label="@($"Overwrite {loadout.Name} with the current setup")" @onclick="() => ConfirmOrRun(LoadoutAction.Overwrite, () => SaveLoadoutAsync(open))">@(pendingAction == LoadoutAction.Overwrite ? "CONFIRM" : "OVERWRITE")</button>
+                        <button aria-label="@($"Clear {loadout.Name}")" @onclick="() => ConfirmOrRun(LoadoutAction.Clear, () => ClearLoadoutAsync(open))">@(pendingAction == LoadoutAction.Clear ? "CONFIRM" : "CLEAR")</button>
+                    }
+                </div>
+            }
+            @if (loadoutMessage is not null)
+            {
+                <p class="loadout-message" role="status">@loadoutMessage</p>
+            }
+        </section>
+    }
 
     <div class="web-layout">
         <div class="atlas-stage">
@@ -179,6 +221,60 @@
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public EventCallback OnSelectionChanged { get; set; }
     [Parameter] public EventCallback OnQuests { get; set; }
+    [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
+    [Parameter] public Func<int, Task> SaveLoadout { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
+    [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
+
+    private enum LoadoutAction { None, Overwrite, Clear }
+    private int? openLoadout;
+    private LoadoutAction pendingAction;
+    private string? loadoutMessage;
+
+    private static string RomanFor(int index) => HuntLoadoutBook.DefaultName(index)["Loadout ".Length..];
+
+    private static string LoadoutSummary(HuntLoadout loadout)
+    {
+        var mutations = loadout.Slots.Count == 0 ? "no mutations"
+            : string.Join(" + ", loadout.Slots.OrderBy(pair => pair.Key).Select(pair => LaboratoryCatalog.Get(pair.Value).Name));
+        return $"{loadout.Nodes.Count} nodes · {mutations}";
+    }
+
+    private void ToggleLoadout(int index)
+    {
+        openLoadout = openLoadout == index ? null : index;
+        pendingAction = LoadoutAction.None;
+        loadoutMessage = null;
+    }
+
+    private async Task ConfirmOrRun(LoadoutAction action, Func<Task> run)
+    {
+        if (pendingAction != action) { pendingAction = action; return; }
+        pendingAction = LoadoutAction.None;
+        await run();
+        loadoutMessage = action == LoadoutAction.Clear ? "Loadout cleared." : "Loadout overwritten with the current setup.";
+    }
+
+    private async Task SaveLoadoutAsync(int index)
+    {
+        await SaveLoadout(index);
+        loadoutMessage = $"Saved {Loadouts?[index]?.Name}.";
+    }
+
+    private async Task ClearLoadoutAsync(int index) => await ClearLoadout(index);
+
+    private async Task ApplyLoadoutAsync(int index)
+    {
+        pendingAction = LoadoutAction.None;
+        if (await ApplyLoadout(index) is not { } result) return;
+        focusedId = PassiveTreeCatalog.OriginId;
+        inspectorOpen = false;
+        var parts = new List<string> { $"Applied {Loadouts?[index]?.Name}: {result.NodesRestored} nodes" };
+        if (result.Equipped.Count > 0) parts.Add(string.Join(" + ", result.Equipped.Select(id => LaboratoryCatalog.Get(id).Name)) + " equipped");
+        if (result.NodesSkipped > 0) parts.Add($"{result.NodesSkipped} nodes could not be reached");
+        if (result.Skipped.Count > 0) parts.Add($"{string.Join(" + ", result.Skipped.Select(id => LaboratoryCatalog.Get(id).Name))} not equipped");
+        loadoutMessage = string.Join(" · ", parts) + ".";
+    }
 
     private ElementReference viewport;
     private string focusedId = PassiveTreeCatalog.OriginId;

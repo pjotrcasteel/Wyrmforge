@@ -21,7 +21,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null)
     {
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
@@ -33,7 +33,10 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         simulation.EnableFirstHunt(firstHunt);
         simulation.InitializeContentProfile(content);
         simulation.InitializeResonance(selectedNodes);
-        simulation.PrepareLaboratoryMutation(preparedMutation);
+        var prepared = new List<LaboratoryMutationId>();
+        if (preparedMutation is { } single) prepared.Add(single);
+        if (preparedMutations is not null) prepared.AddRange(preparedMutations);
+        simulation.PrepareLaboratoryMutations(prepared);
         simulation.EnableResearchLead(researchLead);
         return simulation;
     }

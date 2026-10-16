@@ -124,7 +124,7 @@ Status: implemented on the same branch.
 ## 9. Next slices
 
 1. ~~**Phase C.1:** a second mutation on another existing synergy.~~ Done as Storm Infusion (§8).
-2. **Phase C.2:** a preparation economy, meaning common reagents from non-Wyrm rares spent on experiments, shown with an exact spend preview. Forge and Laboratory must never consume the same Essence at the same time.
-3. **Phase C.3:** a two-socket limit with path prerequisites, saved loadouts and free respec. Event-budget tests for reaction chains are already done (blueprint slice).
+2. **Phase C.2:** a preparation economy, meaning common reagents from non-Wyrm rares spent on experiments, shown with an exact spend preview. Forge and Laboratory must never consume the same Essence at the same time. **Waits for** the elites and Reliquary from the arena refactor (roadmap M7), which supply those rares.
+3. ~~**Phase C.3:** a two-socket limit with path prerequisites, saved loadouts and free respec.~~ Done; see [`laboratory-sockets-loadouts-v1.md`](laboratory-sockets-loadouts-v1.md).
 4. Animated reaction previews that match the deterministic rules. (Post-run research prompts are done, §8.)
 5. ~~**Blueprint and compatibility contracts.**~~ Done. Mutations are typed blueprints with tags, a complexity budget and a reaction-event budget; see [`spell-blueprint-contracts-v1.md`](spell-blueprint-contracts-v1.md).

@@ -86,15 +86,12 @@ public static class BlueprintValidator
                 "Remove an infusion that adds another element."));
         }
 
-        if (socketAccepts is not null)
+        // A bridge socket holds any blueprint that shares at least one of its elements.
+        if (socketAccepts is not null && !socketAccepts.Any(tags.Contains))
         {
-            var unmet = socketAccepts.Where(tag => !tags.Contains(tag)).ToArray();
-            if (unmet.Length > 0)
-            {
-                issues.Add(new(BlueprintIssueCode.SocketRejects,
-                    $"This socket only accepts blueprints with {string.Join(" and ", unmet.Select(SpellTags.Describe))}.",
-                    "Equip it in a socket on a matching Arcane Web bridge."));
-            }
+            issues.Add(new(BlueprintIssueCode.SocketRejects,
+                $"This socket only accepts blueprints with {string.Join(" or ", socketAccepts.Select(SpellTags.Describe))}.",
+                "Equip it in a socket on a matching Arcane Web bridge."));
         }
 
         return new(issues, complexity, ruleset.ComplexityBudget, tags, elements, realizes);

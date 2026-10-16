@@ -329,14 +329,22 @@ Every milestone must meet these shared gates:
 
 **Blueprint contracts done:** mutations are typed `SpellBlueprint`s with structural tags and a complexity budget, validated by a versioned `BlueprintRuleset`. Sockets accept tags instead of spell ids, and a per-step reaction-event budget caps secondary events. See [`spell-blueprint-contracts-v1.md`](../design/spell-blueprint-contracts-v1.md).
 
+**C.3 done:** up to two mutations in generic, element-tagged bridge sockets (only the primary's one wakes), three saved hunt loadouts, and loadout apply as a free respec. See [`laboratory-sockets-loadouts-v1.md`](../design/laboratory-sockets-loadouts-v1.md).
+
 **Next:**
-- **C.2:** a preparation economy.
-- **C.3:** two sockets and loadouts. The event budget is already in place.
-- After those: animated previews.
+- **C.2:** a preparation economy. Its reagents come from non-Wyrm rares, elites and the Reliquary, so it waits for the arena refactor below.
+- After that: animated previews.
 
 ### Deferred to the story phase: arena redesign (product-owner request)
 
 The arena is bland, every map looks the same, and the maps look poor. Enemies, the mage and spell effects are fine. **Redo the arena completely**, but only when the story is implemented (Phase D, Chronicle), so the story sets the art direction for each location. Don't polish arena tiles before then.
+
+**Brief for that refactor:** `user_handover_files/WyrmForge_First_Hunt_Encounter_Design.md` and its ten concept sheets in `user_handover_files/concepts/` (reference art only, never runtime sprites). They define the enemies for the tutorial, the story and the first area hunt:
+- Commons: Hollow, Ashling, Ash Priest, Ash Slinger, Mire Hound, Penitent, Drowned Wraith.
+- Set pieces: the Bell Warden (pre-Wyrm), the ultra-rare Reliquary miniboss, and Ashfang as the climax.
+- Habitat-driven packs, per-node elite modifiers, and the doc's seven-step vertical implementation order.
+
+When the arena is redone, **replace the current mobs** with this roster. Until then it's a side note, not active work. Elites and the Reliquary are also the intended source of non-Wyrm Laboratory materials (Spellcraft handover §8).
 
 ### Elder Wyrms (after M6)
 
@@ -460,8 +468,8 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 - Phase B: Rime Infusion. Done.
 - C.1: a second mutation on an existing synergy. Done.
 - Blueprint and compatibility contracts, with the reaction-event budget. Done.
-- C.2: a preparation economy with exact spend preview.
-- C.3: two sockets, loadouts, free respec, and event-budget tests.
+- C.2: a preparation economy with exact spend preview (waits for elites/Reliquary from the arena refactor).
+- C.3: two sockets, loadouts, free respec, and event-budget tests. Done.
 - Phases D to G stay gated on product-owner scheduling: Chronicle/FLC, offline blueprints, the verified Conclave, and content delivery.
 - Full arena redesign: deferred to the story phase (M7 note).
 
