@@ -6,6 +6,7 @@
  "atlases": {
   "actors": {
    "image": "actors.png",
+   "hash": "d0abeb0cc0e1",
    "width": 512,
    "height": 422,
    "frames": {
@@ -889,6 +890,7 @@
   },
   "wyrms": {
    "image": "wyrms.png",
+   "hash": "0ceec306af7a",
    "width": 968,
    "height": 356,
    "frames": {
@@ -1076,6 +1078,7 @@
   },
   "tiles": {
    "image": "tiles.png",
+   "hash": "fe924d3aa01c",
    "width": 320,
    "height": 64,
    "frames": {
@@ -1123,6 +1126,7 @@
   },
   "environment": {
    "image": "environment.png",
+   "hash": "234907893263",
    "width": 502,
    "height": 242,
    "frames": {
@@ -1602,6 +1606,7 @@
   },
   "icons": {
    "image": "icons.png",
+   "hash": "363d424f6897",
    "width": 256,
    "height": 32,
    "frames": {

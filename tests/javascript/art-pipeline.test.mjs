@@ -4,8 +4,9 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { decodePng } from '../../tools/art/lib/png.mjs';
-import { artReady, drawArtFrame, hasArtFrame, installArtForTesting, resetArtForTesting, loadArt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/art-atlas.js';
+import { artReady, drawArtFrame, hasArtFrame, installArtForTesting, resetArtForTesting, loadArt, atlasImageUrl } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/art-atlas.js';
 import { createTerritoryWallLayers, runeLit, territoryRuneSchool, territoryWallStyle, drawTerritoryWall } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-walls.js';
 import { mageFacing, resolveMageFacing } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-mage.js';
 import { enemyFacing, enemySpriteName } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-art.js';
@@ -196,4 +197,14 @@ test('ground decals and forest edges are seeded, bounded and biome specific', ()
     assert.deepEqual(edges, createForestEdgePlan(plan, 1200, 2100));
     assert.ok(edges.every(p => frames('environment')[p.name] && (p.x < 40 || p.x > 1160)), 'props hug the outer band');
     assert.ok(edges.every((p, i) => i === 0 || edges[i - 1].y <= p.y), 'sorted by foot line');
+});
+
+test('atlas urls carry the content hash of the exact image the frame table was packed for', () => {
+    for (const [name, atlas] of Object.entries(manifest.atlases)) {
+        const digest = createHash('sha256').update(readFileSync(new URL(atlas.image, artRoot))).digest('hex').slice(0, 12);
+        assert.equal(atlas.hash, digest, `${name} hash`);
+        assert.equal(atlasImageUrl('art/', atlas), `art/${atlas.image}?v=${digest}`);
+    }
+    assert.equal(atlasImageUrl('art/', { image: 'x.png' }), 'art/x.png');
+    assert.ok(readFileSync(new URL('icons.css', artRoot), 'utf8').includes(`icons.png?v=${manifest.atlases.icons.hash}`));
 });

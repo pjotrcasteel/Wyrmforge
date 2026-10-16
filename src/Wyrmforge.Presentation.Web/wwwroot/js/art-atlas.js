@@ -14,6 +14,12 @@ export function artReady() { return state.ready; }
 export function artGeneration() { return state.generation; }
 export function onArtReady(listener) { state.listeners.add(listener); return () => state.listeners.delete(listener); }
 
+// The manifest is revalidated on every load and each atlas URL carries its content hash, so a browser can
+// never pair a cached image with another build's frame table (that tears every sprite apart).
+export function atlasImageUrl(baseUrl, atlas) {
+    return `${baseUrl}${atlas.image}${atlas.hash ? `?v=${atlas.hash}` : ''}`;
+}
+
 export function loadArt(baseUrl = 'art/') {
     if (state.loading) return state.loading;
     if (typeof document === 'undefined' || typeof Image === 'undefined' || typeof fetch === 'undefined') {
@@ -21,11 +27,14 @@ export function loadArt(baseUrl = 'art/') {
     }
     state.loading = (async () => {
         try {
-            const response = await fetch(`${baseUrl}manifest.json`, { cache: 'force-cache' });
+            const response = await fetch(`${baseUrl}manifest.json`, { cache: 'no-cache' });
             if (!response.ok) return false;
             const manifest = await response.json();
             const entries = Object.entries(manifest.atlases ?? {});
-            const images = await Promise.all(entries.map(([, atlas]) => loadImage(`${baseUrl}${atlas.image}`)));
+            const images = await Promise.all(entries.map(([, atlas]) => loadImage(atlasImageUrl(baseUrl, atlas))));
+            // Last line of defence: a size mismatch means a stale pairing; keep the code-painted fallbacks.
+            if (entries.some(([, atlas], index) => images[index].naturalWidth !== atlas.width || images[index].naturalHeight !== atlas.height))
+                return false;
             entries.forEach(([name], index) => state.images.set(name, images[index]));
             state.manifest = manifest;
             state.ready = true;
