@@ -179,7 +179,7 @@ The product owner approved the 2026-10-15 Game Design & Spellcraft handover as t
 - The Laboratory flow was verified in emulated 390×844 Chromium. No real-device or CI run has been done yet.
 
 **Open decisions (product owner):**
-- The −10% damage trade-off.
+- The −10% damage trade-off (since raised to −15%, §13).
 - The Rime Heart stabilizer cost.
 - Free experiments versus a preparation currency.
 - Socket node placement and names.
@@ -191,7 +191,7 @@ The product owner approved the 2026-10-15 Game Design & Spellcraft handover as t
 ## 10. Continuation: Laboratory Phase C.1 (same branch)
 
 **Built:**
-- **Storm Infusion**, a second mutation: Arcane Orb × Storm Heart → existing Arcane Conduit, socket Charged Focus (`hybrid-storm-arcane-2`), casts 10% slower.
+- **Storm Infusion**, a second mutation: Arcane Orb × Storm Heart → existing Arcane Conduit, socket Charged Focus (`hybrid-storm-arcane-2`), casts 10% slower (since 15%, §13).
 - **Research leads**: TRACK a mutation and the next hunt draws its specimen Wyrm (not in the First Hunt or a due Ascendant rite).
 - **`LaboratoryAdvisor`**: one next step, used by the Forge status line and the run summary's research prompt.
 - **BalanceLab `--laboratory`**: a self-play study. Proposals are in `docs/design/laboratory-tuning-v1.md`; no constants changed.
@@ -243,4 +243,13 @@ Details: `docs/design/laboratory-sockets-loadouts-v1.md`.
 - C.2 once elites and the Reliquary exist (arena refactor, story phase).
 - Element inversion.
 - Tuning sign-off.
-- Open decisions: the socket names and placement.
+- ~~Open decisions: the socket names and placement.~~ Resolved in §13.
+
+## 13. Product-owner decisions applied (same branch)
+
+- Sockets Flashfire and Glacial Lens are kept as named and placed.
+- Trade-offs raised: Rime Infusion −15% damage, Storm Infusion casts 15% slower. Re-run study: Rime +3.2% vs legacy Frostfire, Storm −1.1% vs legacy Conduit (both still well above baseline). See `docs/design/laboratory-tuning-v1.md` §5.
+- Research leads lapse after 3 finished hunts that miss the specimen; the Laboratory shows hunts left.
+- Loadouts also remember the preferred primary (highlighted as LAST OATH; the player still commits) and the Forge offering (re-selected only while held; never spends).
+- Storm Heart offering + Storm Infusion may stack; no change.
+- **Next build: the arena roster** from `user_handover_files/WyrmForge_First_Hunt_Encounter_Design.md` (habitats, new enemies, elites, Reliquary, Bell Warden), which unblocks Laboratory C.2.

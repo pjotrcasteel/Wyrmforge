@@ -50,7 +50,7 @@
             <span>@Mutation.Specimen.Name × @Specimens</span>
             @if (Laboratory.NeedsSpecimen(Mutation.Id, Vault))
             {
-                <small>@(IsTracked ? $"Tracked: {WyrmName} answers your next hunt." : $"Hunt {WyrmName} to bring back a specimen.")</small>
+                <small>@(IsTracked ? $"Tracked: {WyrmName} answers your next hunt ({Laboratory.LeadHuntsLeft} of {LaboratoryState.LeadHuntLimit} hunts left)." : $"Hunt {WyrmName} to bring back a specimen.")</small>
                 <button class="lab-track @(IsTracked ? "tracked" : string.Empty)" aria-pressed="@IsTracked.ToString().ToLowerInvariant()" @onclick="ToggleTrackAsync">@(IsTracked ? "TRACKING" : $"TRACK {WyrmName.ToUpperInvariant()}")</button>
             }
             else

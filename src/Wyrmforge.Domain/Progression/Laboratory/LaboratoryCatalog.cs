@@ -59,8 +59,8 @@ public sealed record LaboratoryMutationDefinition(
 public static class LaboratoryCatalog
 {
     // Tuning hypotheses (handover §17), not balance commitments. See docs/design/laboratory-tuning-v1.md.
-    public const double RimeInfusionDamageTradeOff = -0.10;
-    public const double StormInfusionCastIntervalTradeOff = 0.10;
+    public const double RimeInfusionDamageTradeOff = -0.15;
+    public const double StormInfusionCastIntervalTradeOff = 0.15;
 
     // Handover §15 Phase C: at most two socketed mutations; only the one matching the primary wakes.
     public const int MaxEquippedMutations = 2;
@@ -130,14 +130,14 @@ public static class LaboratoryCatalog
     [
         new(LaboratoryMutationId.RimeInfusion, "Rime Infusion",
             "Fire Bolt freezes and burns from the first cast. Frozen targets shatter (Frostfire).",
-            "−10% spell damage while Fire Bolt carries the rime.",
+            "−15% spell damage while Fire Bolt carries the rime.",
             "Fire Bolt freezes and burns. Strike frozen foes to shatter them.", "shatter",
             new SpellBlueprint(SpellId.FireBolt, SpellComponentId.Bolt, SpellComponentId.RimeInfusion, SpellComponentId.ThermalShatter), DragonEssenceId.RimeHeart, ArcaneMutationSocketId.Rimebrand,
             [LaboratoryObservationId.RimePreservesCold, LaboratoryObservationId.ThermalShockUnstable, LaboratoryObservationId.FireShattersFrozen],
             new BuildModifierProfile([new BuildStatModifier(BuildStatId.Damage, BuildStatOperation.PercentAdd, RimeInfusionDamageTradeOff)])),
         new(LaboratoryMutationId.StormInfusion, "Storm Infusion",
             "Arcane Orb stores charge from the first cast. Every 4th impact discharges chain lightning (Arcane Conduit).",
-            "Casts 10% slower while Arcane Orb holds the storm.",
+            "Casts 15% slower while Arcane Orb holds the storm.",
             "Arcane Orb holds the storm. Every 4th impact discharges lightning.", "discharge",
             new SpellBlueprint(SpellId.ArcaneOrb, SpellComponentId.Bolt, SpellComponentId.StormCharge, SpellComponentId.ConduitDischarge), DragonEssenceId.StormHeart, ArcaneMutationSocketId.ChargedFocus,
             [LaboratoryObservationId.StormHeartKeepsRhythm, LaboratoryObservationId.ChargeBleedsOnContact, LaboratoryObservationId.OrbStoresCharge],

@@ -34,11 +34,19 @@ public partial class Home
         await TrySetLaboratoryAsync();
     }
 
-    // Runs after the hunt's Essences are stored: a secured specimen ends its lead, then the summary
-    // points at the single most useful research step.
-    private async Task RefreshResearchPromptAsync()
+    // Runs after the hunt's Essences are stored: a secured specimen ends its lead, a finished hunt that
+    // missed it uses one of the lead's hunts, then the summary points at the most useful research step.
+    private async Task RefreshResearchPromptAsync(bool leadHunted = false)
     {
-        if (laboratory.ReconcileLead(essenceVault)) await TrySetLaboratoryAsync();
+        var changed = laboratory.ReconcileLead(essenceVault);
+        if (leadHunted && laboratory.RecordLeadHunt(essenceVault) is { } lapsed)
+        {
+            var mutation = LaboratoryCatalog.Get(lapsed);
+            laboratoryNotice = $"The {DragonCatalog.Get(mutation.SpecimenWyrm).Name} trail went cold after {LaboratoryState.LeadHuntLimit} hunts. Track {mutation.Name} again to renew it.";
+            changed = true;
+        }
+        else changed |= leadHunted;
+        if (changed) await TrySetLaboratoryAsync();
         researchPrompt = ForgeAvailable ? LaboratoryAdvisor.Next(laboratory, essenceVault, selection.Selected) : null;
     }
 

@@ -331,8 +331,11 @@ Every milestone must meet these shared gates:
 
 **C.3 done:** up to two mutations in generic, element-tagged bridge sockets (only the primary's one wakes), three saved hunt loadouts, and loadout apply as a free respec. See [`laboratory-sockets-loadouts-v1.md`](../design/laboratory-sockets-loadouts-v1.md).
 
+**Owner decisions applied:** trade-offs raised to 15%, research leads lapse after 3 missed hunts, loadouts also remember the primary and the offering ([`laboratory-tuning-v1.md`](../design/laboratory-tuning-v1.md) §5).
+
 **Next:**
-- **C.2:** a preparation economy. Its reagents come from non-Wyrm rares, elites and the Reliquary, so it waits for the arena refactor below.
+- **Arena roster (pulled forward by the product owner):** the first-hunt enemies, habitats, elites and the Reliquary, per the brief below.
+- **C.2:** a preparation economy. Its reagents come from non-Wyrm rares, elites and the Reliquary, so it follows the arena roster.
 - After that: animated previews.
 
 ### Deferred to the story phase: arena redesign (product-owner request)
@@ -344,7 +347,7 @@ The arena is bland, every map looks the same, and the maps look poor. Enemies, t
 - Set pieces: the Bell Warden (pre-Wyrm), the ultra-rare Reliquary miniboss, and Ashfang as the climax.
 - Habitat-driven packs, per-node elite modifiers, and the doc's seven-step vertical implementation order.
 
-When the arena is redone, **replace the current mobs** with this roster. Until then it's a side note, not active work. Elites and the Reliquary are also the intended source of non-Wyrm Laboratory materials (Spellcraft handover §8).
+**Update:** the product owner pulled the roster forward. The mechanics (habitats, enemies, packs, elites, Reliquary, Bell Warden) and their pixel actors are now active work; the full tile/location art redesign still waits for the story phase. The current mobs are replaced by this roster. Elites and the Reliquary are also the intended source of non-Wyrm Laboratory materials (Spellcraft handover §8).
 
 ### Elder Wyrms (after M6)
 
@@ -471,7 +474,7 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 - C.2: a preparation economy with exact spend preview (waits for elites/Reliquary from the arena refactor).
 - C.3: two sockets, loadouts, free respec, and event-budget tests. Done.
 - Phases D to G stay gated on product-owner scheduling: Chronicle/FLC, offline blueprints, the verified Conclave, and content delivery.
-- Full arena redesign: deferred to the story phase (M7 note).
+- Arena roster (enemies, habitats, elites, Reliquary): active, pulled forward. Full arena tile redesign: still deferred to the story phase (M7 note).
 
 **Deferred:**
 - Elder Wyrms.

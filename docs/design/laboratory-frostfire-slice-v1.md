@@ -90,7 +90,7 @@ North star: the player becomes *the mage who knows how to create the spell*, not
 
 ## 7. Open decisions (handover §17; product-owner sign-off needed)
 
-- The −10% damage trade-off, which is a placeholder.
+- ~~The −10% damage trade-off, which is a placeholder.~~ Resolved: −15% (see `laboratory-tuning-v1.md` §5).
 - The stabilizer cost of 1 Rime Heart. Its availability is gated by Rimeclaw hunts, which gates Laboratory access.
 - Experiments are free. A common preparation currency is not introduced yet.
 - Socket placement on `hybrid-fire-frost-2`, and the names "Rime Infusion" and "Rimebrand".
@@ -105,12 +105,12 @@ Status: implemented on the same branch.
 - Stormglass (Storm × Frost) was rejected: the Arcane Web has no Frost–Storm bridge, and its specimen would again come from Rimeclaw.
 - Experiments: *Examine the Storm Heart* (insight), *Charge Arcane Orb* (instructive failure: charge bleeds away), *Ground the orb* (dead end), *Count the impacts* (insight: every 4th impact discharges).
 - Stabilizer: 1 Storm Heart, on consent. Socket: **Charged Focus** on `hybrid-storm-arcane-2` (Storm–Arcane bridge).
-- Trade-off: casts 10% slower (`StormInfusionCastIntervalTradeOff`). Same no-stacking rule: the legacy `synergy:ArcaneConduit` offer is hidden.
+- Trade-off: casts 15% slower (`StormInfusionCastIntervalTradeOff`; raised from 10% by the product owner). Same no-stacking rule: the legacy `synergy:ArcaneConduit` offer is hidden.
 - Conduit discharges now count as reactions (`RecordReaction()`), so field notes report them.
 - The catalog is generalised: experiments, specimens, glyphs, awakened text and reaction nouns are per mutation. `LaboratoryView` has a tab per mutation.
 
 **Research leads (guaranteed specimen access).**
-- `LaboratoryState.Track` sets a lead while a mutation still needs its specimen. `LeadWyrm` returns the specimen Wyrm; `ReconcileLead` clears the lead once the specimen is held or the recipe is stabilized.
+- `LaboratoryState.Track` sets a lead while a mutation still needs its specimen. `LeadWyrm` returns the specimen Wyrm; `ReconcileLead` clears the lead once the specimen is held or the recipe is stabilized. A lead lapses after `LeadHuntLimit` (3) finished hunts that miss the specimen (`RecordLeadHunt`; abandoned hunts do not count); the player is told and can re-track for a fresh count.
 - In the hunt, `ResolveDragonAttraction` forces the lead Wyrm, except during the First Hunt or a due Ascendant rite, and only while that Wyrm is not yet defeated.
 - The arena shows the tracked specimen; the harvest overlay highlights it with a "LABORATORY SPECIMEN" tag but never preselects it.
 - Persisted as the optional `Tracked` field of `LaboratorySave`; older saves load with no lead.

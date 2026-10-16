@@ -52,7 +52,9 @@ So a player can run both mutations from two bridges that suit their route, inste
 - Domain 203, Application 314 and JS 107 tests pass.
 - Captured at 390×844: equip in two sockets → save Loadout I → respec (sockets cleared) → apply (8 nodes and both mutations restored) → reload → both primary badges.
 
-## 5. Open decisions (product owner)
+## 5. Product-owner decisions (resolved)
 
-- The names and placement of the two new bridge sockets (Flashfire, Glacial Lens).
-- Whether a loadout should also remember the Forge offering or the primary spell. v1 keeps it to Web plus sockets.
+- **Sockets:** Flashfire and Glacial Lens keep their names and placement.
+- **Loadouts also remember the primary spell and the Forge offering** (optional `Primary`/`Offering` fields in the slot save; older saves load without them).
+  - The primary is a *preference*, not an auto-pick: the "Choose your primary magic" modal marks it LAST OATH and the player still taps to commit, like Hades' weapon rack remembering the last aspect. The most recent committed primary is persisted under `wyrmforge.preferredPrimary.v1` and is what SAVE records.
+  - The offering is re-selected only while that Essence is in the vault and the Forge can offer it. Selecting never spends; only starting the hunt consumes it, as before. A missing offering is reported ("nothing was spent").

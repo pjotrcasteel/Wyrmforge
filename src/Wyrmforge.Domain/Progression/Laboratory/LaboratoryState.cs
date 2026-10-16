@@ -15,9 +15,9 @@ public sealed record LaboratoryExperimentResult(LaboratoryExperimentDefinition E
     public string Message => Rejected ? "Not possible yet." : Novel ? Experiment.Finding : "Already recorded. Repeating it teaches nothing new.";
 }
 
-// Tracked and Slots were added after v1 shipped; older saves omit them and deserialize them as null.
+// Tracked, Slots and LeadMisses were added after v1 shipped; older saves omit them and deserialize them as null.
 // Slots holds "Socket:Mutation" pairs; Equipped is still written (first slot) so older builds keep one mutation.
-public sealed record LaboratorySave(int Version, string[] Observations, string[] Mutations, string? Equipped, int FieldTests, int FieldReactions, string? Tracked = null, string[]? Slots = null);
+public sealed record LaboratorySave(int Version, string[] Observations, string[] Mutations, string? Equipped, int FieldTests, int FieldReactions, string? Tracked = null, string[]? Slots = null, int LeadMisses = 0);
 
 // Persistent research knowledge and up to two socketed mutations. Experiments are deterministic and
 // idempotent: a novel experiment always records its specific observation, a repeated one never farms
@@ -75,7 +75,7 @@ public sealed class LaboratoryState
     {
         if (!consentToConsume || Status(id, vault) != MutationResearchStatus.ReadyToStabilize) return false;
         if (!vault.Consume(LaboratoryCatalog.Get(id).Stabilizer)) return false;
-        if (Tracked == id) Tracked = null;
+        if (Tracked == id) Untrack();
         return stabilized.Add(id);
     }
 
@@ -174,14 +174,41 @@ public sealed class LaboratoryState
         return !stabilized.Contains(id) && vault.Count(LaboratoryCatalog.Get(id).Stabilizer) == 0;
     }
 
+    // A lead lapses after this many hunts that drew its Wyrm without securing the specimen.
+    public const int LeadHuntLimit = 3;
+
+    public int LeadMisses { get; private set; }
+
+    public int LeadHuntsLeft => Tracked is null ? 0 : LeadHuntLimit - LeadMisses;
+
     public bool Track(LaboratoryMutationId id, DragonEssenceVault vault)
     {
         if (!NeedsSpecimen(id, vault)) return false;
+        if (Tracked != id) LeadMisses = 0;
         Tracked = id;
         return true;
     }
 
-    public void Untrack() => Tracked = null;
+    public void Untrack()
+    {
+        Tracked = null;
+        LeadMisses = 0;
+    }
+
+    // Called once per hunt in which the lead steered the Wyrm, after its Essences are stored.
+    // Returns the mutation whose lead just lapsed; re-tracking it starts a fresh count.
+    public LaboratoryMutationId? RecordLeadHunt(DragonEssenceVault vault)
+    {
+        if (Tracked is not { } id) return null;
+        if (!NeedsSpecimen(id, vault))
+        {
+            Untrack();
+            return null;
+        }
+        if (++LeadMisses < LeadHuntLimit) return null;
+        Untrack();
+        return id;
+    }
 
     public DragonId? LeadWyrm(DragonEssenceVault vault) =>
         Tracked is { } id && NeedsSpecimen(id, vault) ? LaboratoryCatalog.Get(id).SpecimenWyrm : null;
@@ -189,7 +216,7 @@ public sealed class LaboratoryState
     public bool ReconcileLead(DragonEssenceVault vault)
     {
         if (Tracked is not { } id || NeedsSpecimen(id, vault)) return false;
-        Tracked = null;
+        Untrack();
         return true;
     }
 
@@ -204,7 +231,7 @@ public sealed class LaboratoryState
         observations.Order().Select(id => id.ToString()).ToArray(),
         stabilized.Order().Select(id => id.ToString()).ToArray(),
         EquippedMutations.Select(id => (LaboratoryMutationId?)id).FirstOrDefault()?.ToString(), FieldTests, FieldReactions, Tracked?.ToString(),
-        slotted.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}:{pair.Value}").ToArray());
+        slotted.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}:{pair.Value}").ToArray(), LeadMisses);
 
     public void Restore(LaboratorySave? save)
     {
@@ -213,7 +240,7 @@ public sealed class LaboratoryState
         slotted.Clear();
         FieldTests = 0;
         FieldReactions = 0;
-        Tracked = null;
+        Untrack();
         if (save is null) return;
         foreach (var name in save.Observations ?? []) if (Enum.TryParse<LaboratoryObservationId>(name, out var id) && Enum.IsDefined(id)) observations.Add(id);
         foreach (var name in save.Mutations ?? []) if (Enum.TryParse<LaboratoryMutationId>(name, out var id) && Enum.IsDefined(id)) stabilized.Add(id);
@@ -221,7 +248,11 @@ public sealed class LaboratoryState
         else if (Enum.TryParse<LaboratoryMutationId>(save.Equipped, out var equipped) && stabilized.Contains(equipped)) slotted[LaboratoryCatalog.Get(equipped).Socket] = equipped;
         FieldTests = Math.Max(0, save.FieldTests);
         FieldReactions = Math.Max(0, save.FieldReactions);
-        if (Enum.TryParse<LaboratoryMutationId>(save.Tracked, out var tracked) && Enum.IsDefined(tracked) && !stabilized.Contains(tracked)) Tracked = tracked;
+        if (Enum.TryParse<LaboratoryMutationId>(save.Tracked, out var tracked) && Enum.IsDefined(tracked) && !stabilized.Contains(tracked))
+        {
+            Tracked = tracked;
+            LeadMisses = Math.Clamp(save.LeadMisses, 0, LeadHuntLimit - 1);
+        }
     }
 
     // Tampered or outdated slots are dropped rather than trusted: unknown ids, unstabilized recipes,

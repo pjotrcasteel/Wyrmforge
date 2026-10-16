@@ -237,7 +237,10 @@
     {
         var mutations = loadout.Slots.Count == 0 ? "no mutations"
             : string.Join(" + ", loadout.Slots.OrderBy(pair => pair.Key).Select(pair => LaboratoryCatalog.Get(pair.Value).Name));
-        return $"{loadout.Nodes.Count} nodes · {mutations}";
+        var parts = new List<string> { $"{loadout.Nodes.Count} nodes", mutations };
+        if (loadout.Primary is { } primary) parts.Add(Wyrmforge.Domain.Spells.SpellCatalog.Get(primary).Name);
+        if (loadout.Offering is { } offering) parts.Add($"offers {Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceCatalog.Get(offering).Name}");
+        return string.Join(" · ", parts);
     }
 
     private void ToggleLoadout(int index)

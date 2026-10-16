@@ -1,7 +1,7 @@
 # Laboratory tuning v1: self-play measurements and proposals
 
-Status: proposals only. No constants were changed. Product-owner sign-off and a human playtest are required (handover §17).
-Constants: `LaboratoryCatalog.RimeInfusionDamageTradeOff = -0.10` and `LaboratoryCatalog.StormInfusionCastIntervalTradeOff = 0.10`.
+Status: §1–§4 are the original 0.10 study; §5 records the product-owner decisions and the re-run at 0.15. A human playtest is still required (handover §17).
+Constants: `LaboratoryCatalog.RimeInfusionDamageTradeOff = -0.15` and `LaboratoryCatalog.StormInfusionCastIntervalTradeOff = 0.15` (were ∓0.10).
 
 ## 1. Method
 
@@ -61,4 +61,18 @@ Every Fire baseline hunt bound legacy Frostfire, so the Rime legacy row equals i
 - The legacy Storm row (285 hunts) is a self-selected subset: hunts where the agent chose Arcane Conduit.
 - The Storm Heart's own Forge offering has a "every 5th cast" lightning proc. It can coexist with Storm Infusion; they are separate systems, as Rime Heart vitality is for Rime Infusion. Decide whether that overlap is desirable.
 - The 720 s cap and depth ≈2 mean late-game scaling is not measured.
-- Open: should a lead persist across several failed hunts, or expire? Currently it persists until the specimen is secured.
+- ~~Open: should a lead persist across several failed hunts, or expire?~~ Resolved in §5: it expires after 3.
+
+## 5. Decisions and re-run at 0.15 (product owner)
+
+- **Rime Infusion: −15% damage. Storm Infusion: casts 15% slower.** The same 2,880-hunt study (`--output artifacts\lab-study-015`):
+
+| Mutation | Baseline | Legacy synergy | Mutation at 0.10 | Mutation at 0.15 | Paired Δ mean (0.15) | Mutation scored higher |
+|---|---:|---:|---:|---:|---:|---:|
+| Rime Infusion | 1,750,951 | 1,750,951 | 1,829,804 (+4.5%) | 1,807,462 (+3.2%) | +56,511 | 63.4% |
+| Storm Infusion | 1,096,195 | 1,217,881 | 1,284,694 (+5.5% vs legacy) | 1,204,061 (−1.1% vs legacy) | +107,866 | 64.1% |
+
+  Death rates: Rime 6.9% (baseline 6.6%), Storm 33.8% (baseline 36.3%, legacy 28.4%). Reactions still rise sharply (Rime 64 vs 39, Storm 394 vs 234).
+  - Reading: both mutations are now **sidegrades with a reliability edge**, not raw upgrades. The reward for research is the reaction from the first cast and a distinct play pattern, the way Slay the Spire boss relics and Path of Exile keystones trade a real cost for a build-defining effect. Storm Infusion no longer out-scores the legacy synergy it replaces, so a player who skips the Laboratory is not punished.
+- **Storm Heart offering may stack with Storm Infusion.** They are separate systems (Forge offering vs. Laboratory mutation), as Rime Heart vitality is for Rime Infusion. No change.
+- **Research leads expire after 3 finished hunts that miss the specimen** (`LaboratoryState.LeadHuntLimit`, `RecordLeadHunt`, saved as `LeadMisses`). Abandoned hunts do not count; switching or re-tracking after a lapse starts a fresh count; re-confirming the same lead does not. The Laboratory shows "n of 3 hunts left" and a lapse notice names the Wyrm. Rationale: a lead is a strong steer (99%/79% specimen rate), so it should be a deliberate, renewable choice rather than a permanent override of Wyrm variety, much like Hades' bounties or Monster Hunter investigations that run out of attempts.

@@ -44,6 +44,8 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
+    [Parameter] public SpellId? PreferredPrimary { get; set; }
+    [Parameter] public EventCallback<SpellId> OnPrimaryChosen { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
@@ -148,6 +150,7 @@ public partial class ArenaView : IAsyncDisposable
         if (simulation?.ChoosePrimary(id) != true) return;
         if (simulation.ActiveLaboratoryMutation is { } mutation)
             ShowRunMoment(new RunMoment("MUTATION AWAKENED", LaboratoryCatalog.Get(mutation).Name, LaboratoryCatalog.Get(mutation).AwakenedText, RunMomentTone.Legendary));
+        await OnPrimaryChosen.InvokeAsync(id);
         await TryPlayAudioAsync("upgrade-choice");
         await InvokeAsync(StateHasChanged);
     }

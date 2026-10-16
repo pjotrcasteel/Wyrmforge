@@ -127,14 +127,69 @@ public sealed class LaboratoryResearchLeadTests
     }
 
     [TestMethod]
+    public void RecordLeadHunt_ThreeMissedHunts_LapsesTheLeadAndRetrackingStartsFresh()
+    {
+        var vault = new DragonEssenceVault();
+        var lab = new LaboratoryState();
+        lab.Track(LaboratoryMutationId.StormInfusion, vault);
+        Assert.AreEqual(LaboratoryState.LeadHuntLimit, lab.LeadHuntsLeft);
+        Assert.IsNull(lab.RecordLeadHunt(vault));
+        Assert.IsNull(lab.RecordLeadHunt(vault));
+        Assert.AreEqual(1, lab.LeadHuntsLeft);
+        Assert.IsTrue(lab.Track(LaboratoryMutationId.StormInfusion, vault), "Re-confirming the same lead does not reset it.");
+        Assert.AreEqual(1, lab.LeadHuntsLeft);
+        Assert.AreEqual(LaboratoryMutationId.StormInfusion, lab.RecordLeadHunt(vault));
+        Assert.IsNull(lab.Tracked);
+        Assert.IsNull(lab.LeadWyrm(vault));
+        Assert.IsTrue(lab.Track(LaboratoryMutationId.StormInfusion, vault));
+        Assert.AreEqual(LaboratoryState.LeadHuntLimit, lab.LeadHuntsLeft);
+    }
+
+    [TestMethod]
+    public void RecordLeadHunt_SpecimenSecured_ClearsWithoutReportingALapse()
+    {
+        var vault = new DragonEssenceVault();
+        var lab = new LaboratoryState();
+        lab.Track(LaboratoryMutationId.RimeInfusion, vault);
+        lab.RecordLeadHunt(vault);
+        vault.Store(DragonEssenceId.RimeHeart);
+        Assert.IsNull(lab.RecordLeadHunt(vault));
+        Assert.IsNull(lab.Tracked);
+        Assert.AreEqual(0, lab.LeadMisses);
+    }
+
+    [TestMethod]
+    public void Track_SwitchingLeads_ResetsTheMissCount()
+    {
+        var vault = new DragonEssenceVault();
+        var lab = new LaboratoryState();
+        lab.Track(LaboratoryMutationId.RimeInfusion, vault);
+        lab.RecordLeadHunt(vault);
+        lab.Track(LaboratoryMutationId.StormInfusion, vault);
+        Assert.AreEqual(LaboratoryState.LeadHuntLimit, lab.LeadHuntsLeft);
+    }
+
+    [TestMethod]
     public void SaveRoundTrip_PreservesTrackedLead()
     {
         var lab = new LaboratoryState();
         lab.Track(LaboratoryMutationId.StormInfusion, new DragonEssenceVault());
+        lab.RecordLeadHunt(new DragonEssenceVault());
         var json = JsonSerializer.Serialize(lab.ToSave());
         var restored = new LaboratoryState();
         restored.Restore(JsonSerializer.Deserialize<LaboratorySave>(json));
         Assert.AreEqual(LaboratoryMutationId.StormInfusion, restored.Tracked);
+        Assert.AreEqual(1, restored.LeadMisses);
+    }
+
+    [TestMethod]
+    public void Restore_TamperedLeadMisses_IsClampedSoTheLeadStillHasAHunt()
+    {
+        var lab = new LaboratoryState();
+        lab.Restore(new LaboratorySave(1, [], [], null, 0, 0, "StormInfusion", null, 99));
+        Assert.AreEqual(1, lab.LeadHuntsLeft);
+        lab.Restore(new LaboratorySave(1, [], [], null, 0, 0, null, null, 2));
+        Assert.AreEqual(0, lab.LeadMisses, "Misses without a lead are meaningless.");
     }
 
     [TestMethod]

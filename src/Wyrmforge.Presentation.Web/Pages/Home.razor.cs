@@ -219,7 +219,7 @@ public partial class Home
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
         }
-        await RefreshResearchPromptAsync();
+        await RefreshResearchPromptAsync(activeResearchLead is not null && value.Outcome != RunOutcome.Abandoned);
         if (value.Score <= bestScore) return;
         bestScore = value.Score;
         await TrySetBestScoreAsync(bestScore);

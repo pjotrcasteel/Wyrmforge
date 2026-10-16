@@ -136,10 +136,14 @@
                 <div class="primary-choice-grid">
                     @foreach (var spell in PrimaryChoices)
                     {
-                        <button class="primary-choice primary-@spell.School.ToString().ToLowerInvariant()" @onclick="() => ChoosePrimaryAsync(spell.Id)">
+                        <button class="primary-choice primary-@spell.School.ToString().ToLowerInvariant() @(spell.Id == PreferredPrimary ? "preferred" : string.Empty)" aria-describedby="@(spell.Id == PreferredPrimary ? "primary-preferred-note" : null)" @onclick="() => ChoosePrimaryAsync(spell.Id)">
                             <span class="primary-choice-icon px-icon px-lg px-@spell.School.ToString().ToLowerInvariant()" aria-hidden="true"></span>
                             <strong>@spell.Name</strong>
                             <small>@spell.School</small>
+                            @if (spell.Id == PreferredPrimary)
+                            {
+                                <span class="primary-preferred-badge" id="primary-preferred-note">LAST OATH</span>
+                            }
                             @if (PreparedMutationFor(spell.Id) is { } mutation)
                             {
                                 <span class="primary-mutation-badge"><i class="px-icon px-sm px-@MutationIcon(mutation)" aria-hidden="true"></i>@mutation.Name</span>
