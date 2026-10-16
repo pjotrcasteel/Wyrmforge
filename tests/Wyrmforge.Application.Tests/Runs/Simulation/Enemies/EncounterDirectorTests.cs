@@ -67,20 +67,20 @@ public sealed class EncounterDirectorTests
         director.RegisterProgress(8, 16);
         director.Tick(EncounterDirector.BreathingRoomSeconds);
         Assert.IsTrue(director.TryTakeInsert(out var surgeInsert));
-        Assert.AreEqual(EnemyKind.RiftStalker, surgeInsert);
+        Assert.AreEqual(EnemyKind.MireHound, surgeInsert);
 
         director.Tick(director.PhaseDuration);
         director.RegisterProgress(13, 16);
 
         Assert.AreEqual(EncounterPhase.Climax, director.Phase);
         Assert.IsTrue(director.TryTakeInsert(out var climaxInsert));
-        Assert.AreEqual(EnemyKind.Brute, climaxInsert);
+        Assert.AreEqual(EnemyKind.Penitent, climaxInsert);
         Assert.IsTrue(director.Directive.BatchSizeBonus > 0);
         Assert.IsTrue(director.Directive.SpawnIntervalMultiplier < 1);
     }
 
     [TestMethod]
-    public void Swarm_Climax_PreservesMassIdentityAndAddsBruteOnlyWhenEligible()
+    public void Swarm_Climax_PreservesMassIdentityAndAddsPenitentOnlyWhenEligible()
     {
         var depthOne = new EncounterDirector();
         depthOne.Start(EnemyEncounterPattern.Swarm, 1);
@@ -107,7 +107,7 @@ public sealed class EncounterDirectorTests
         depthTwo.RegisterProgress(20, 24);
 
         Assert.IsTrue(depthTwo.TryTakeInsert(out var insert));
-        Assert.AreEqual(EnemyKind.Brute, insert);
+        Assert.AreEqual(EnemyKind.Penitent, insert);
     }
 
     [TestMethod]
@@ -119,22 +119,22 @@ public sealed class EncounterDirectorTests
         director.Tick(director.PhaseDuration);
         director.RegisterProgress(3, 12);
         Assert.IsTrue(director.TryTakeInsert(out var escalationInsert));
-        Assert.AreEqual(EnemyKind.RiftStalker, escalationInsert);
+        Assert.AreEqual(EnemyKind.MireHound, escalationInsert);
 
         director.Tick(director.PhaseDuration);
         director.RegisterProgress(6, 12);
         director.Tick(EncounterDirector.BreathingRoomSeconds);
 
         Assert.IsTrue(director.TryTakeInsert(out var surgeInsert));
-        Assert.AreEqual(EnemyKind.RiftStalker, surgeInsert);
+        Assert.AreEqual(EnemyKind.MireHound, surgeInsert);
     }
     [TestMethod]
-    public void Start_FinalTrailAtDepthOne_LeadsWithBrute()
+    public void Start_FinalTrailAtDepthOne_LeadsWithPenitent()
     {
         var director = new EncounterDirector();
         director.Start(EnemyEncounterPattern.Mixed, 1, 8);
         Assert.IsTrue(director.TryTakeInsert(out var first));
-        Assert.AreEqual(EnemyKind.Brute, first);
+        Assert.AreEqual(EnemyKind.Penitent, first);
         Assert.IsFalse(director.TryTakeInsert(out _));
     }
     [TestMethod]
@@ -161,7 +161,7 @@ public sealed class EncounterDirectorTests
     }
 
     [TestMethod]
-    public void Tick_FinalTrail_PacesLongerAndReinforcesWithBrutes()
+    public void Tick_FinalTrail_PacesLongerAndReinforcesWithPenitents()
     {
         var director = new EncounterDirector();
         director.Start(EnemyEncounterPattern.Mixed, 1, 8);
@@ -170,7 +170,7 @@ public sealed class EncounterDirectorTests
         director.RegisterProgress(16, 16);
         director.Tick(director.PhaseDuration);
         Assert.IsTrue(director.TryTakeInsert(out var reinforcement));
-        Assert.AreEqual(EnemyKind.Brute, reinforcement);
+        Assert.AreEqual(EnemyKind.Penitent, reinforcement);
     }
 
 }

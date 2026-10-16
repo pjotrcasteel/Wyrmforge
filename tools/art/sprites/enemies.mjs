@@ -1,5 +1,6 @@
 // Enemy archetypes authored facing east (runtime mirrors for west). Silhouettes differ by anatomy:
-// Chaser = carrion hound, RiftStalker = hooded wraith, Skitter = many-legged crawler, Brute = cleaver revenant.
+// Frame order follows EnemyKind ints: 0 Hollow, 1 MireHound, 2 Ashling, 3 Penitent.
+// Legacy silhouettes (hound, hooded wraith, crawler, cleaver revenant) are replaced per roster step 2.
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
 
 function at(b, ox, oy) {

@@ -19,13 +19,15 @@ public static class WyrmrealmMapGenerator
         var drafts = new List<WyrmrealmNodeLayout>();
         var crossingX = RiverX(river, 92);
         var bridge = new[] { camp, new HuntPoint(crossingX - 4, 92), new HuntPoint(crossingX + 4, 92), opening };
-        Add("opening-1", 1, 0, [], opening, bridge);
-        Add("opening-2", 2, 0, [drafts[^1].Id], fork, [opening, fork]);
+        // Habitat forks are derived from the seed, never drawn from the layout stream, so existing layouts stay identical.
+        var habitatBits = HabitatBits(seed, depth);
+        Add("opening-1", 1, 0, [], opening, bridge, habitat: WyrmrealmHabitat.Outskirts);
+        Add("opening-2", 2, 0, [drafts[^1].Id], fork, [opening, fork], habitat: WyrmrealmHabitat.WetForest);
         var firstEnds = AddRoads(0, fork, clearing, 3, drafts[^1].Id);
-        Add("clearing", 5, 0, firstEnds, clearing, []);
+        Add("clearing", 5, 0, firstEnds, clearing, [], habitat: WyrmrealmHabitat.DesertedVillage);
         var secondEnds = AddRoads(1, clearing, approach, 6, drafts[^1].Id);
-        Add("approach", 8, 0, secondEnds, approach, []);
-        Add("wyrm", 9, 0, [drafts[^1].Id], lair, [approach, lair]);
+        Add("approach", 8, 0, secondEnds, approach, [], habitat: WyrmrealmHabitat.ScorchedApproach);
+        Add("wyrm", 9, 0, [drafts[^1].Id], lair, [approach, lair], habitat: WyrmrealmHabitat.Lair);
         var trails = drafts.SelectMany(d => d.PreviousNodeIds.Select(id => (First: drafts.Single(p => p.Id == id).Site.Point, Second: d.Site.Point)))
             .Concat(drafts.SelectMany(d => d.Site.IncomingTrail.Zip(d.Site.IncomingTrail.Skip(1))))
             .Concat(roads.SelectMany(r => r.Points.Zip(r.Points.Skip(1)))).ToArray();
@@ -61,15 +63,17 @@ public static class WyrmrealmMapGenerator
         return WyrmrealmRouteGenerator.CreateNodes(depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729)))
             .Select(node =>
             {
-                var site = drafts.Single(d => d.Id == node.Id).Site;
-                return node with { Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() }, Territory = territory };
+                var draft = drafts.Single(d => d.Id == node.Id);
+                var site = draft.Site;
+                return node with { Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
+                    Territory = territory, Habitat = draft.Habitat };
             }).ToArray();
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
-            string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null)
+            string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null, WyrmrealmHabitat habitat = WyrmrealmHabitat.Outskirts)
         {
             drafts.Add(new($"depth-{depth}-{suffix}", stage, lane, previous, WyrmrealmNodeRarity.Common,
-                new(point, roadId, index, bonus, trail), school));
+                new(point, roadId, index, bonus, trail), school, habitat));
         }
 
         string[] AddRoads(int sector, HuntPoint start, HuntPoint end, int stage, string previousId)
@@ -101,14 +105,15 @@ public static class WyrmrealmMapGenerator
                 points.Add(end);
                 var roadId = $"road-{sector}-{lane}";
                 var length = fights switch { 2 => "Short", 3 => "Medium", _ => "Long" };
-                var name = fights == 5 ? "Ruined spur" : lane == 0 ? "Sheltered valley" : lane == count - 1 ? "Exposed ridge" : "Narrow pass";
+                var roadHabitat = RoadHabitat(sector, lane, count, habitatBits);
+                var name = WyrmrealmHabitatCatalog.RoadName(roadHabitat);
                 roads.Add(new(roadId, name, length, fights, points, fights == 5));
                 var incoming = previousId;
                 for (var i = 0; i < fights; i++)
                 {
                     var bonus = fights == 5 && i == fights / 2;
                     Add($"sector-{sector}-road-{lane}-stop-{i}", stage + Math.Min(i, 1), lane, [incoming], points[i + 1],
-                        [points[i], points[i + 1]], roadId, i, bonus, schools[lane]);
+                        [points[i], points[i + 1]], roadId, i, bonus, schools[lane], StopHabitat(sector, i, roadHabitat));
                     incoming = drafts[^1].Id;
                 }
                 ends.Add(incoming);
@@ -138,6 +143,28 @@ public static class WyrmrealmMapGenerator
         }
     }
 
+    private static int HabitatBits(int seed, int depth) => (int)((unchecked((uint)seed * 2654435761u ^ (uint)depth * 40503u) >> 13) & 3);
+
+    /// <summary>
+    /// First fork: forest trail OR open field (a middle road becomes a dead hamlet).
+    /// Second fork: monastery grounds OR flooded cloister. Seed bits decide which side gets which.
+    /// </summary>
+    public static WyrmrealmHabitat RoadHabitat(int sector, int lane, int laneCount, int habitatBits)
+    {
+        var swap = ((habitatBits >> sector) & 1) == 1;
+        var last = lane == laneCount - 1;
+        if (sector == 0)
+        {
+            if (lane == 0 || last) return (lane == 0) ^ swap ? WyrmrealmHabitat.WetForest : WyrmrealmHabitat.OpenField;
+            return WyrmrealmHabitat.DesertedVillage;
+        }
+        return (lane % 2 == 0) ^ swap ? WyrmrealmHabitat.FloodedCloister : WyrmrealmHabitat.MonasteryGrounds;
+    }
+
+    // A long late road climbs out of the cloisters into the burnt country before the lair.
+    private static WyrmrealmHabitat StopHabitat(int sector, int stopIndex, WyrmrealmHabitat road)
+        => sector == 1 && stopIndex >= 3 ? WyrmrealmHabitat.ScorchedApproach : road;
+
     public static double RiverX(IReadOnlyList<HuntPoint> river, double y)
     {
         var index = Math.Clamp((int)(y / 5), 0, river.Count - 2);
@@ -160,4 +187,4 @@ public static class WyrmrealmMapGenerator
 }
 
 internal sealed record WyrmrealmNodeLayout(string Id, int Stage, int Lane, IReadOnlyList<string> PreviousNodeIds,
-    WyrmrealmNodeRarity Rarity, HuntSite Site, SpellSchool? School);
+    WyrmrealmNodeRarity Rarity, HuntSite Site, SpellSchool? School, WyrmrealmHabitat Habitat = WyrmrealmHabitat.Outskirts);

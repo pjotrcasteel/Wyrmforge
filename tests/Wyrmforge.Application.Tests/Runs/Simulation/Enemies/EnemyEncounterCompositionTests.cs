@@ -55,14 +55,14 @@ public sealed class EnemyEncounterCompositionTests
         var plan = EnemyEncounterComposition.CreatePlan(EnemyEncounterPattern.Mixed, depth, new FirstRandomSource());
 
         Assert.IsTrue(plan.Enemies.All(kind => EnemyCatalog.Get(kind).MinimumDepth <= depth));
-        Assert.IsFalse(plan.Enemies.Contains(EnemyKind.Brute));
+        Assert.IsFalse(plan.Enemies.Contains(EnemyKind.Penitent));
     }
 
     [TestMethod]
-    public void EnemyCatalog_Brute_BecomesEligibleFromDepthTwo()
+    public void EnemyCatalog_Penitent_BecomesEligibleFromDepthTwo()
     {
-        Assert.AreEqual(2, EnemyCatalog.Get(EnemyKind.Brute).MinimumDepth);
-        Assert.IsTrue(EnemyCatalog.Get(EnemyKind.Brute).ThreatCost > EnemyCatalog.Get(EnemyKind.Chaser).ThreatCost);
+        Assert.AreEqual(2, EnemyCatalog.Get(EnemyKind.Penitent).MinimumDepth);
+        Assert.IsTrue(EnemyCatalog.Get(EnemyKind.Penitent).ThreatCost > EnemyCatalog.Get(EnemyKind.Hollow).ThreatCost);
     }
 
 

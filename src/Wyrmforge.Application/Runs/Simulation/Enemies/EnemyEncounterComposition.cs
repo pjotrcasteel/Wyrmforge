@@ -1,4 +1,5 @@
 using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Combat.Enemies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
@@ -30,10 +31,12 @@ public static class EnemyEncounterComposition
             }, MinimumBatchSize: 2, MaximumBatchSize: 3),
         };
 
-    public static EnemyCompositionPlan CreatePlan(EnemyEncounterPattern pattern, int depth, IRandomSource randomSource, double threatBudgetMultiplier = 1)
+    public static EnemyCompositionPlan CreatePlan(EnemyEncounterPattern pattern, int depth, IRandomSource randomSource, double threatBudgetMultiplier = 1,
+        WyrmrealmHabitat? habitat = null)
     {
         var profile = GetProfile(pattern);
         var budget = Math.Max(1, (int)Math.Round(profile.BaseThreatBudget * Math.Max(0.25, threatBudgetMultiplier)));
+        if (habitat is { } local) return CreateHabitatPlan(local, budget, randomSource);
         var plan = new List<EnemyKind>();
         var spent = 0;
 
@@ -58,6 +61,33 @@ public static class EnemyEncounterComposition
             spent += selected.ThreatCost;
         }
 
+        return new EnemyCompositionPlan(plan, spent);
+    }
+
+    /// <summary>
+    /// Habitat plans replace role minimums and depth gates with the habitat's ecology: the pattern still sets
+    /// pacing and threat budget, while the habitat decides who lives there (brief §4–5).
+    /// </summary>
+    private static EnemyCompositionPlan CreateHabitatPlan(WyrmrealmHabitat habitat, int budget, IRandomSource randomSource)
+    {
+        var plan = new List<EnemyKind>();
+        var spent = 0;
+        while (true)
+        {
+            var remaining = budget - spent;
+            var eligible = EnemyCatalog.All.Where(definition => definition.ThreatCost <= remaining && EnemyHabitatProfile.Allows(habitat, definition.Kind)).ToArray();
+            if (eligible.Length == 0) break;
+            var total = eligible.Sum(definition => EnemyHabitatProfile.Weight(habitat, definition.Kind));
+            var roll = randomSource.NextDouble() * total;
+            var selected = eligible[^1];
+            foreach (var definition in eligible)
+            {
+                roll -= EnemyHabitatProfile.Weight(habitat, definition.Kind);
+                if (roll < 0) { selected = definition; break; }
+            }
+            plan.Add(selected.Kind);
+            spent += selected.ThreatCost;
+        }
         return new EnemyCompositionPlan(plan, spent);
     }
 

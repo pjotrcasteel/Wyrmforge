@@ -1,4 +1,5 @@
 ﻿using Wyrmforge.Application.Runs.Extraction;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 
@@ -9,6 +10,7 @@ public sealed partial class RunSimulation
     private EnemyEncounterPattern encounterPattern = EnemyEncounterPattern.Mixed;
     private EnemyCompositionPlan? encounterPlan;
     private int encounterPlanIndex;
+    private WyrmrealmHabitat? encounterHabitat;
 
     private void UpdateSpawn(double delta, double width, double height)
     {
@@ -99,19 +101,28 @@ public sealed partial class RunSimulation
         if (encounterPlan is not null && encounterPlanIndex < encounterPlan.Enemies.Count) return;
         if (!mapEncounter) encounterPattern = EnemyEncounterComposition.SelectNext(encounterPattern, randomSource.Next(2));
         var threatBudget = depthState.ThreatBudgetMultiplier * encounterModifiers.ThreatBudgetMultiplier;
-        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget);
+        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget,
+            mapEncounter ? encounterHabitat : null);
         encounterPlanIndex = 0;
     }
 
     private void SpawnEnemy(double width, double height, EnemyKind kind)
     {
         const double margin = 30;
-        var edge = encounterPattern switch
-        {
-            EnemyEncounterPattern.Swarm => enemyId % 2 * 2,
-            EnemyEncounterPattern.StalkerPressure => enemyId % 4,
-            _ => randomSource.Next(4),
-        };
+        // Map encounters enter from where their habitat hides them: along the road, out of the flanks, or from everywhere.
+        var edge = (mapState.EncounterActive ? encounterHabitat : null) is { } habitat
+            ? WyrmrealmHabitatCatalog.SpawnOrigin(habitat) switch
+            {
+                WyrmrealmSpawnOrigin.Road => enemyId % 2 * 2,
+                WyrmrealmSpawnOrigin.Flanks => 1 + enemyId % 2 * 2,
+                _ => randomSource.Next(4),
+            }
+            : encounterPattern switch
+            {
+                EnemyEncounterPattern.Swarm => enemyId % 2 * 2,
+                EnemyEncounterPattern.StalkerPressure => enemyId % 4,
+                _ => randomSource.Next(4),
+            };
         // Spawn around the hunter's *camera*, not at the remote edge of a multi-screen world.
         // Otherwise roaming makes the opening waves invisible and changes encounter difficulty.
         var localWidth = mapState.EncounterActive ? viewportWidth : width;
@@ -136,7 +147,11 @@ public sealed partial class RunSimulation
         var speed = EnemyStagePressure.BaseSpeed * EnemyStagePressure.SpeedMultiplier(stage) * depthState.EnemySpeedMultiplier * routeSpeed
             * definition.SpeedMultiplier;
         if (mapState.EncounterActive && arenaEnvironment is not null)
-            position = arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius);
+        {
+            // No valid ground outside the hunter's safety ring: skip this spawn rather than drop it on the player.
+            if (arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius) is not { } safe) return;
+            position = safe;
+        }
         enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, kind));
     }
 
@@ -155,10 +170,10 @@ public sealed partial class RunSimulation
             var direction = Vector2D.DirectionTo(enemy.Position, target);
             var speed = enemy.Speed;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier;
-            if (enemy.RiftStalker is { } stalker)
+            if (enemy.MireHound is { } stalker)
             {
                 var windupStarted = stalker.Tick(scaledDelta, enemy.Position, player.Position);
-                if (windupStarted) RegisterSplashPulse(enemy.Position, 44, RiftStalkerBehaviorState.WindupSeconds);
+                if (windupStarted) RegisterSplashPulse(enemy.Position, 44, MireHoundBehaviorState.WindupSeconds);
                 if (stalker.IsWindingUp) continue;
                 if (stalker.IsLunging)
                 {

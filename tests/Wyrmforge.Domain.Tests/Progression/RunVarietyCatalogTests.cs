@@ -46,8 +46,8 @@ public sealed class RunVarietyCatalogTests
     [TestMethod]
     public void EnemyCatalog_VarietyPass_ProvidesDistinctPressureProfiles()
     {
-        var skitter = EnemyCatalog.Get(EnemyKind.Skitter);
-        var brute = EnemyCatalog.Get(EnemyKind.Brute);
+        var skitter = EnemyCatalog.Get(EnemyKind.Ashling);
+        var brute = EnemyCatalog.Get(EnemyKind.Penitent);
 
         Assert.IsTrue(skitter.SpeedMultiplier > 1);
         Assert.IsTrue(skitter.HealthMultiplier < 1);

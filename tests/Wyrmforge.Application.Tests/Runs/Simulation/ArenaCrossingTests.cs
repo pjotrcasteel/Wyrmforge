@@ -75,12 +75,51 @@ public sealed class ArenaCrossingTests
         var hunter = new Vector2D(Width * .5, Height * .5);
         var northGate = terrain.Snapshot().Barriers.Where(barrier => barrier.Kind == "gate").Min(barrier => barrier.Y);
         var southGate = terrain.Snapshot().Barriers.Where(barrier => barrier.Kind == "gate").Max(barrier => barrier.Y);
-        var northSpawn = terrain.AdjustSpawnPosition(new Vector2D(Width * .5, Height * .1), hunter, Width, Height, 15);
-        var southSpawn = terrain.AdjustSpawnPosition(new Vector2D(Width * .5, Height * .9), hunter, Width, Height, 15);
+        var northSpawn = terrain.AdjustSpawnPosition(new Vector2D(Width * .5, Height * .1), hunter, Width, Height, 15)!.Value;
+        var southSpawn = terrain.AdjustSpawnPosition(new Vector2D(Width * .5, Height * .9), hunter, Width, Height, 15)!.Value;
         Assert.IsGreaterThan(northGate * Height, northSpawn.Y);
         Assert.IsLessThan(southGate * Height, southSpawn.Y);
         Assert.IsFalse(terrain.IsBlocked(northSpawn, Width, Height, 15));
         Assert.IsFalse(terrain.IsBlocked(southSpawn, Width, Height, 15));
+    }
+
+    [TestMethod]
+    public void AdjustSpawnPosition_RequestOnHunter_NeverSpawnsBesideHunter()
+    {
+        var map = new WyrmrealmMapState(seed: 71);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var gates = terrain.Snapshot().Barriers.Where(barrier => barrier.Kind == "gate").ToArray();
+        var hunter = new Vector2D(Width * .5, Height * .5);
+        foreach (var requested in new[] { hunter, new Vector2D(hunter.X + 20, hunter.Y), new Vector2D(Width * .5, gates.Min(gate => gate.Y) * Height) })
+        {
+            var spawn = terrain.AdjustSpawnPosition(requested, hunter, Width, Height, 15);
+            Assert.IsNotNull(spawn);
+            Assert.IsGreaterThanOrEqualTo(ArenaEnvironmentState.MinimumSpawnDistance, Vector2D.Distance(spawn.Value, hunter));
+            Assert.IsFalse(terrain.IsBlocked(spawn.Value, Width, Height, 15));
+            Assert.IsGreaterThan(gates.Min(gate => gate.Y + gate.Height) * Height, spawn.Value.Y, "No spawn behind the sealed north gate.");
+            Assert.IsLessThan(gates.Max(gate => gate.Y) * Height, spawn.Value.Y, "No spawn behind the sealed south gate.");
+        }
+    }
+
+    [TestMethod]
+    public void AdjustSpawnPosition_NoSafeGround_SkipsInsteadOfFallingBackToHunter()
+    {
+        var map = new WyrmrealmMapState(seed: 71);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        // A tiny arena where every reachable point lies inside the hunter's safety ring.
+        var spawn = terrain.AdjustSpawnPosition(new Vector2D(40, 40), new Vector2D(60, 60), 120, 120, 10);
+        Assert.IsNull(spawn);
+    }
+
+    [TestMethod]
+    public void AdjustSpawnPosition_SameInputs_IsDeterministic()
+    {
+        var map = new WyrmrealmMapState(seed: 33);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var hunter = new Vector2D(Width * .3, Height * .5);
+        var first = terrain.AdjustSpawnPosition(hunter, hunter, Width, Height, 14);
+        var second = terrain.AdjustSpawnPosition(hunter, hunter, Width, Height, 14);
+        Assert.AreEqual(first, second);
     }
 
     [TestMethod]

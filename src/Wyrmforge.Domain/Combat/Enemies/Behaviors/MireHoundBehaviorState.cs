@@ -2,7 +2,7 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Domain.Combat.Enemies;
 
-public sealed class RiftStalkerBehaviorState
+public sealed class MireHoundBehaviorState
 {
     public const double InitialCooldownSeconds = 1.2;
     public const double WindupSeconds = 0.65;

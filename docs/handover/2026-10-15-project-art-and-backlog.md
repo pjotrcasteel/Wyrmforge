@@ -253,3 +253,15 @@ Details: `docs/design/laboratory-sockets-loadouts-v1.md`.
 - Loadouts also remember the preferred primary (highlighted as LAST OATH; the player still commits) and the Forge offering (re-selected only while held; never spends).
 - Storm Heart offering + Storm Infusion may stack; no change.
 - **Next build: the arena roster** from `user_handover_files/WyrmForge_First_Hunt_Encounter_Design.md` (habitats, new enemies, elites, Reliquary, Bell Warden), which unblocks Laboratory C.2.
+
+## 14. Arena roster — step 1 shipped (habitats)
+
+Design: `docs/design/arena-roster-v1.md`.
+
+- **Roster renames.** The existing mobs are renamed with their `EnemyKind` ints unchanged: Hollow (was Chaser), Mire Hound (was RiftStalker), Ashling (was Skitter), Penitent (was Brute).
+- **Habitats.** Each map node now has a local `Habitat`, derived without touching the layout RNG. The sequence is outskirts → wet forest → (forest trail | open field | dead hamlet) → deserted village → (monastery grounds | flooded cloister) → scorched approach → lair.
+- **Habitat composition.** Map encounters draw their composition from the brief's habitat weights. Director inserts respect the habitat's introduction policy.
+- **Spawn origins and cues.** Spawns enter from the habitat's origin (road, flanks or all sides), and the HUD cues and edge warning name the habitat.
+- **Safe spawns.** Spawns can never fall back onto the hunter. A deterministic ring search keeps them 150 px or more away and skips the spawn when no safe ground exists.
+- **Balance.** Removing the on-hunter spawns halves BalanceLab damage taken (280 → 144; defeats 158 → 62). This was deliberate: the brief bans fake difficulty, and steps 2–4 restore pressure with readable threats. Target: 220–280 damage taken by step 4.
+- **Next:** roster step 2, Hound flank/pounce plus the Ash Slinger lob and new silhouettes.

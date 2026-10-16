@@ -12,6 +12,7 @@ public sealed record WyrmrealmMapNode(
 {
     public HuntSite? Site { get; init; }
     public WyrmrealmTerritory? Territory { get; init; }
+    public WyrmrealmHabitat Habitat { get; init; } = WyrmrealmHabitat.Outskirts;
     public int EncounterCueStage => Stage == WyrmrealmMapState.CombatStages ? 8 : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => 3,

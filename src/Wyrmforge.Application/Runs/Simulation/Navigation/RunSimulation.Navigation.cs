@@ -60,7 +60,8 @@ public sealed partial class RunSimulation
         var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
-        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage);
+        encounterHabitat = node.Habitat;
+        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat);
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         spawnTimer = 0.15;
@@ -129,6 +130,7 @@ public sealed partial class RunSimulation
         unstableRiftState.Reset();
         encounterPlan = null;
         encounterPlanIndex = 0;
+        encounterHabitat = null;
         encounterDirector.Reset();
         if (!preserveEnvironment) arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;

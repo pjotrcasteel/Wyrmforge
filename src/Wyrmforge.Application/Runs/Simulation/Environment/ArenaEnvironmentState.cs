@@ -7,6 +7,8 @@ namespace Wyrmforge.Application.Runs.Simulation;
 public sealed class ArenaEnvironmentState
 {
     private const double CacheRadius = 32;
+    /// <summary>No enemy may appear within this distance of the hunter (brief §6: never spawn on or beside the player).</summary>
+    public const double MinimumSpawnDistance = 150;
     private readonly List<Supply> supplies = [];
     private readonly List<Barrier> barriers = [];
     private readonly int seed;
@@ -15,6 +17,7 @@ public sealed class ArenaEnvironmentState
     private readonly int stage;
     private readonly string landmark;
     private readonly string district;
+    private readonly string habitat;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -28,8 +31,9 @@ public sealed class ArenaEnvironmentState
 
     private sealed record Barrier(double X, double Y, double Width, double Height, EncounterPhase? UnlockPhase, string Kind);
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat)
     {
+        this.habitat = habitat;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -46,18 +50,14 @@ public sealed class ArenaEnvironmentState
         var seed = unchecked(mapSeed * 486187739 + stage * 73856093 + node.Lane * 19349663);
         var random = new Random(seed);
         var biome = node.Territory?.Name ?? "River valley";
-        var landmark = biome switch
-        {
-            "Ashen caldera" => stage >= 6 ? "The dragon's scorched approach" : "Abandoned ashfall outpost",
-            "Broken ridge" => stage >= 6 ? "Collapsed guardian watch" : "Old pilgrim stones",
-            _ => stage >= 6 ? "The ruined river crossing" : "Forgotten hunter's trail",
-        };
+        var landmark = WyrmrealmHabitatCatalog.DisplayName(node.Habitat);
         var element = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
         // Each node belongs to a different local district even when its overarching biome is unchanged.
         // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district);
+        var habitat = node.Habitat.ToString();
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The hunter begins in the central courtyard. Both crossings have a permanent narrow throat.
@@ -81,7 +81,7 @@ public sealed class ArenaEnvironmentState
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
             .ToArray(),
         barriers.Select(barrier => new ArenaBarrierRenderSnapshot(barrier.X, barrier.Y, barrier.Width, barrier.Height,
-            IsOpen(barrier), barrier.Kind)).ToArray(), district);
+            IsOpen(barrier), barrier.Kind)).ToArray(), district, habitat);
 
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double width, double height, double radius = 0)
     {
@@ -116,7 +116,11 @@ public sealed class ArenaEnvironmentState
         return false;
     }
 
-    public Vector2D AdjustSpawnPosition(Vector2D requested, Vector2D hunter, double width, double height, double radius)
+    /// <summary>
+    /// Returns a reachable spawn point at least <see cref="MinimumSpawnDistance"/> from the hunter, or null when none exists.
+    /// The search is a deterministic ring walk around the request, so it consumes no randomness.
+    /// </summary>
+    public Vector2D? AdjustSpawnPosition(Vector2D requested, Vector2D hunter, double width, double height, double radius)
     {
         // Monsters may not spawn behind an unopened crossing, which would make a clear-all objective impossible.
         var minY = radius + 8;
@@ -128,10 +132,25 @@ public sealed class ArenaEnvironmentState
             if (hunter.Y >= bottom) minY = Math.Max(minY, bottom + radius + 8);
             else if (hunter.Y <= top) maxY = Math.Min(maxY, top - radius - 8);
         }
-        if (maxY < minY) return hunter;
-        var candidate = new Vector2D(Math.Clamp(requested.X, radius + 8, width - radius - 8),
-            Math.Clamp(requested.Y, minY, maxY));
-        return IsBlocked(candidate, width, height, radius) ? hunter : candidate;
+        if (maxY < minY) return null;
+        var minX = radius + 8;
+        var maxX = Math.Max(minX, width - radius - 8);
+        var origin = new Vector2D(Math.Clamp(requested.X, minX, maxX), Math.Clamp(requested.Y, minY, maxY));
+        const int Rings = 10;
+        const int Spokes = 12;
+        for (var ring = 0; ring <= Rings; ring++)
+        {
+            var reach = ring * 36d;
+            for (var spoke = 0; spoke < (ring == 0 ? 1 : Spokes); spoke++)
+            {
+                var angle = spoke * Math.PI * 2 / Spokes;
+                var candidate = new Vector2D(origin.X + Math.Cos(angle) * reach, origin.Y + Math.Sin(angle) * reach);
+                if (candidate.X < minX || candidate.X > maxX || candidate.Y < minY || candidate.Y > maxY) continue;
+                if (Vector2D.Distance(candidate, hunter) < MinimumSpawnDistance + radius) continue;
+                if (!IsBlocked(candidate, width, height, radius)) return candidate;
+            }
+        }
+        return null;
     }
 
     public Vector2D EnemyNavigationTarget(Vector2D enemy, Vector2D hunter, double width, double height, double radius)

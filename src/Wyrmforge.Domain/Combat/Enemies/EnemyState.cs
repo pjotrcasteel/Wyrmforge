@@ -4,7 +4,7 @@ using Wyrmforge.Domain.Combat.Targets;
 
 namespace Wyrmforge.Domain.Combat.Enemies;
 
-public sealed class EnemyState(int id, Vector2D position, double radius, double health, double speed, EnemyKind kind = EnemyKind.Chaser) : ICombatTarget
+public sealed class EnemyState(int id, Vector2D position, double radius, double health, double speed, EnemyKind kind = EnemyKind.Hollow) : ICombatTarget
 {
     public int Id { get; } = id;
 
@@ -20,7 +20,7 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public EnemyKind Kind { get; } = kind;
 
-    public RiftStalkerBehaviorState? RiftStalker { get; } = kind == EnemyKind.RiftStalker ? new RiftStalkerBehaviorState() : null;
+    public MireHoundBehaviorState? MireHound { get; } = kind == EnemyKind.MireHound ? new MireHoundBehaviorState() : null;
 
     public CombatStatusCollection Statuses { get; } = new();
 }

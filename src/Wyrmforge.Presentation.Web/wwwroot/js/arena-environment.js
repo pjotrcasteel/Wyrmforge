@@ -47,7 +47,7 @@ export function createTerrainPlan(environment, width, height) {
             length: (9 + random() * 31) * (.65 + proximity * 1.2),
             angle: random() * Math.PI * 2 });
     }
-    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark,
+    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark, habitat: environment.habitat,
         story };
 }
 
@@ -169,6 +169,12 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.lineTo(width * .55, height * .29);
         ctx.stroke();
     }
+    // A restrained habitat wash tells forest from flood from scorch at a glance; the full tile pass comes later.
+    const tint = habitatTint(plan.habitat);
+    if (tint) {
+        ctx.fillStyle = tint;
+        ctx.fillRect(0, 0, width, height);
+    }
     // Edge fog produces depth without obscuring attack telegraphs or the player's immediate surroundings.
     const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
         width * .5, height * .49, Math.max(width, height) * .7);
@@ -178,9 +184,23 @@ function drawTerrain(ctx, plan, width, height) {
     ctx.fillRect(0, 0, width, height);
 }
 
+const habitatTints = {
+    WetForest: 'rgba(34,96,58,.11)',
+    OpenField: 'rgba(170,132,62,.08)',
+    DesertedVillage: 'rgba(66,60,54,.12)',
+    MonasteryGrounds: 'rgba(160,150,128,.07)',
+    FloodedCloister: 'rgba(36,82,124,.13)',
+    ScorchedApproach: 'rgba(156,54,22,.12)',
+    Lair: 'rgba(124,30,14,.13)',
+};
+
+export function habitatTint(habitat) {
+    return habitatTints[habitat] ?? null;
+}
+
 function terrainTexture(environment, width, height) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.stage, width, height, artGeneration()].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, width, height, artGeneration()].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));

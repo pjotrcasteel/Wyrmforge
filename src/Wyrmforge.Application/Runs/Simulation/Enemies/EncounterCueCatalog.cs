@@ -14,22 +14,27 @@ public static class EncounterCueCatalog
         _ => "Trail",
     };
 
+    public static string Cue(WyrmrealmMapNode node, EncounterPhase? phase) => WyrmrealmHabitatCatalog.Cue(node.Habitat,
+        WyrmrealmStageCatalog.PressureStage(node.Stage), node.Stage == WyrmrealmMapState.CombatStages, phase);
+
+    public static string EdgeClass(WyrmrealmMapNode node) => WyrmrealmHabitatCatalog.EdgeClass(node.Habitat);
+
     public static string Cue(int stage, EncounterPhase? phase) => CueForPressure(WyrmrealmStageCatalog.PressureStage(stage), phase);
 
     private static string CueForPressure(int stage, EncounterPhase? phase) => phase switch
     {
         EncounterPhase.BreathingRoom => "Spawns paused · collect XP",
         EncounterPhase.Pressure => WyrmrealmStageCatalog.Hint(stage switch { 3 => 5, 4 => 8, 2 => 3, _ => stage }),
-        EncounterPhase.Escalation when stage == 3 => "Hunters on the flanks",
-        EncounterPhase.Escalation when stage == 4 => "Brute reinforcements",
+        EncounterPhase.Escalation when stage == 3 => "Mire Hounds on the flanks",
+        EncounterPhase.Escalation when stage == 4 => "Penitent reinforcements",
         EncounterPhase.Escalation => "Enemies arrive faster",
         EncounterPhase.Surge when stage == 2 => "Larger waves · north and south",
-        EncounterPhase.Surge when stage == 3 => "More hunters on the flanks",
-        EncounterPhase.Surge when stage == 4 => "Brutes press forward",
-        EncounterPhase.Surge => "Hunters join the fight",
+        EncounterPhase.Surge when stage == 3 => "More Mire Hounds on the flanks",
+        EncounterPhase.Surge when stage == 4 => "Penitents press forward",
+        EncounterPhase.Surge => "Mire Hounds join the fight",
         EncounterPhase.Climax when stage == 2 => "Massed final wave",
         EncounterPhase.Climax when stage == 3 => "Flanking assault",
-        EncounterPhase.Climax when stage == 4 => "Brutes and hunters · final assault",
+        EncounterPhase.Climax when stage == 4 => "Penitents and Mire Hounds · final assault",
         EncounterPhase.Climax => "Final wave · faster spawns",
         _ => "",
     };

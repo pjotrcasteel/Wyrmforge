@@ -120,7 +120,7 @@
                             @if (IsCompleted(node) || selectedNode?.Id == node.Id) { <span class="node-check">✓</span> }
                             @if (node.Rarity == WyrmrealmNodeRarity.Rare) { <span class="node-rare" aria-label="Rare trail">✦</span> }
                         </span>
-                        <span class="node-name">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : node.EncounterName)</span>
+                        <span class="node-name" title="@node.EncounterName">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : WyrmrealmHabitatCatalog.ShortName(node.Habitat))</span>
                         @if (node.Site?.BonusRelic == true) { <small class="node-bonus">◆ BONUS RELIC</small> }
                         <span class="node-badges">
                             @foreach (var badge in NodeBadges(node)) { <span class="node-badge @badge.ClassName" title="@badge.Label" aria-label="@badge.Label">@badge.Icon</span> }
@@ -145,7 +145,7 @@
                         {
                             <span class="sheet-road">@road.Length road · @road.Encounters fights @(road.BonusRelic ? "· Bonus relic" : "")</span>
                         }
-                        <span class="sheet-encounter">@selected.EncounterName</span>
+                        <span class="sheet-encounter">@WyrmrealmHabitatCatalog.DisplayName(selected.Habitat) · @selected.EncounterName</span>
                         <span class="sheet-guarantee"><i class="px-icon px-sm px-@route.Reward.AttunementSchool.ToString().ToLowerInvariant()" aria-hidden="true"></i> @route.Reward.AttunementSchool upgrade · guaranteed</span>
                         @if (route.Reward.RecoveryFraction > 0) { <span>♥ @($"{route.Reward.RecoveryFraction * 100:0}%") recovery</span> }
                         @if (route.Reward.Relic is not null) { <span>◆ Relic cache</span> }
