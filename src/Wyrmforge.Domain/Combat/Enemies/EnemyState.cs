@@ -25,5 +25,15 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public AshSlingerBehaviorState? AshSlinger { get; } = kind == EnemyKind.AshSlinger ? new AshSlingerBehaviorState(id % 2 == 0 ? 1 : -1) : null;
 
+    public AshPriestBehaviorState? AshPriest { get; } = kind == EnemyKind.AshPriest ? new AshPriestBehaviorState(id) : null;
+
+    public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
+
+    /// <summary>Raised by an Ash Priest: already paid out its experience once, so its second death drops none.</summary>
+    public bool Revived { get; init; }
+
+    /// <summary>Morale break after the pack's priest falls: the enemy flees for a bounded time, then re-engages.</summary>
+    public double RoutedRemaining { get; set; }
+
     public CombatStatusCollection Statuses { get; } = new();
 }

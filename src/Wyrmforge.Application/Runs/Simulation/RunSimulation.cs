@@ -294,7 +294,12 @@ public sealed partial class RunSimulation
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
                 Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id,
-                CreateEnemyTelegraph(enemy))).ToArray(),
+                CreateEnemyTelegraph(enemy))
+            {
+                ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
+                Routed = enemy.RoutedRemaining > 0,
+                Revived = enemy.Revived,
+            }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
@@ -330,6 +335,7 @@ public sealed partial class RunSimulation
             World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
             CastMotion = CreateCastMotionSnapshot(),
             HostileProjectiles = CreateHostileProjectileSnapshots(),
+            AshRemains = CreateAshRemainsSnapshots(),
         };
     }
 

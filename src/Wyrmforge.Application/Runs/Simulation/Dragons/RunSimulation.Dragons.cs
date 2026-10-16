@@ -185,6 +185,7 @@ public sealed partial class RunSimulation
         dragonPending = false;
         enemies.Clear();
         hostileProjectiles.Clear();
+        ClearSupportState();
         projectiles.Clear();
         lightning.Clear();
         ascendantActive = AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);

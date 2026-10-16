@@ -51,7 +51,7 @@ test('mage has every facing, pose and hit variant the renderer requests', () => 
 });
 
 test('every enemy kind, walk phase, attack pose and state, and every wyrm phase has a sprite', () => {
-    for (let kind = 0; kind < 5; kind++) for (const telegraph of [null, { kind: 'pounce' }])
+    for (let kind = 0; kind < 6; kind++) for (const telegraph of [null, { kind: 'pounce' }])
         for (let phase = 0; phase < 3; phase++) for (const state of [{}, { hitFlash: true }, { frozen: true }]) {
             const name = enemySpriteName({ kind, telegraph, ...state }, phase);
             assert.ok(frames('actors')[name], name);
@@ -123,7 +123,7 @@ test('mage facing follows dominant travel and turns toward an active cast', () =
 
 test('enemy sprite names clamp kind and phase and prioritise hit over frozen', () => {
     assert.equal(enemySpriteName({ kind: 3 }, 2), 'enemy.3.2.normal');
-    assert.equal(enemySpriteName({ kind: 9, hitFlash: true, frozen: true }, 7), 'enemy.4.2.hit');
+    assert.equal(enemySpriteName({ kind: 9, hitFlash: true, frozen: true }, 7), 'enemy.5.2.hit');
     assert.equal(enemySpriteName({ kind: 1, telegraph: { kind: 'pounce' } }, 2), 'enemy.1.3.normal', 'committed attacks show the attack pose');
     assert.equal(enemySpriteName({ kind: -1, frozen: true }), 'enemy.0.0.frozen');
     assert.equal(enemyFacing(null, 4), 1);

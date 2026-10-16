@@ -46,7 +46,9 @@ public sealed partial class RunSimulation
             RegisterBurningGround(projectile, target.Position);
             RegisterFrostNova(projectile, target.Position, target.Id);
             var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
-            var killed = DamageTarget(target, damage, projectile, spawnedForHit);
+            // The source point sits one second back along the flight path, so the shield reads where the shot came from.
+            var shield = ShieldMultiplier(target, projectile.Position - projectile.Velocity, damage);
+            var killed = DamageTarget(target, damage * shield, projectile, spawnedForHit);
             if (detonation is not null) Splash(target.Position, damage, detonation.Radius, target.Id);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed) ApplyProjectileStatus(projectile, target);
@@ -117,10 +119,13 @@ public sealed partial class RunSimulation
         {
             case EnemyState defeatedEnemy:
                 RegisterEnemyDeath(defeatedEnemy);
+                RegisterSupportDeath(defeatedEnemy);
                 kills++;
                 QueueRelicDefeatBursts(defeatedEnemy);
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);
+                // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
+                if (defeatedEnemy.Revived) break;
                 experienceShards.Drop(defeatedEnemy.Position, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost);
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
@@ -140,7 +145,7 @@ public sealed partial class RunSimulation
     {
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
-        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage);
+        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
     }
 
     private void ChainFrom(Vector2D position, ProjectileState source, ICollection<ProjectileState> spawned)

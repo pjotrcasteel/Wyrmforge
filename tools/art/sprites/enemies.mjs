@@ -1,8 +1,8 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
-// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger.
+// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest.
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
-// so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust).
+// so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
 
 function at(b, ox, oy) {
@@ -24,6 +24,7 @@ export const ENEMY_SPECS = [
     { kind: 2, name: 'ashling', size: [32, 32], origin: [15, 19], radius: 8 },
     { kind: 3, name: 'penitent', size: [46, 58], origin: [20, 35], radius: 19 },
     { kind: 4, name: 'ash-slinger', size: [44, 50], origin: [18, 29], radius: 11 },
+    { kind: 5, name: 'ash-priest', size: [44, 60], origin: [19, 36], radius: 12 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -224,7 +225,59 @@ function ashSlinger(pose) {
     return b;
 }
 
-const painters = [hollow, mireHound, ashling, penitent, ashSlinger];
+// Ash Priest: the tallest common silhouette - horned skull under a red hood, long tattered robes hung with bells, and a
+// staff crowned by a burning lantern. Pose 3 lifts the lantern high: the heal/raise cast the hunter should interrupt.
+function ashPriest(pose) {
+    const s = ENEMY_SPECS[5], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { robe: '#5e2a20', robeHi: '#8a3f2c', robeDk: '#331511', hood: '#7a3324', skull: '#d9cbb0', skullDk: '#9c8b70', void: '#120806',
+        horn: '#c9b28c', hornDk: '#7e6a4e', staff: '#4a3424', staffHi: '#6e5038', brass: '#b58d3c', flame: '#ffb347', core: '#fff3b8', flameDk: '#e2531e', hand: '#7c5a48' };
+    const step = stride(pose), cast = pose === 3;
+    // Robe hem sways with the stride; feet barely show under the long robe.
+    g.poly([[-7, -4], [6, -4], [9 + step, 18], [5, 16], [2, 19], [-1, 16], [-4, 19], [-8 - step, 17]], C.robe);
+    g.poly([[-7, -4], [-3, -4], [-5, 16], [-8 - step, 17]], C.robeDk);
+    g.line(2, -2, 4 + step, 15, C.robeHi);
+    // Brass sigil disc and hanging bells.
+    g.ell(0, 2, 2, 2, C.brass); g.px(0, 2, C.robeDk);
+    g.px(-6, 9, C.brass); g.px(6 + step, 12, C.brass); g.px(-2, 14, C.brass);
+    // Far arm: a clawed hand hanging a chain censer.
+    g.line(-5, -6, -9, 2, C.robeDk, 2); g.line(-9, 2, -9, 7, C.brass); g.px(-9, 8, C.flameDk);
+    // Hood and shoulder mantle.
+    g.poly([[-4, -10], [5, -10], [8, -4], [6, -2], [-7, -2], [-9, -4]], C.hood);
+    g.ell(1, -14, 4.6, 4.8, C.hood);
+    // Skull face with ember eyes, inside the hood.
+    g.ell(2, -13, 2.8, 3.2, C.skull);
+    g.px(1, -14, C.void); g.px(3, -14, C.void); g.px(1, -14, C.flameDk);
+    g.rect(1, -11, 3, 1, C.skullDk);
+    // Long curling horns.
+    g.line(-2, -17, -6, -21, C.horn); g.line(-6, -21, -5, -25, C.hornDk);
+    g.line(4, -17, 8, -21, C.horn); g.line(8, -21, 7, -25, C.hornDk);
+    // Staff and lantern: planted beside the priest while walking, lifted overhead during a cast.
+    const lantern = (x, y) => {
+        g.rect(x - 2, y - 3, 5, 6, C.brass);
+        g.rect(x - 1, y - 2, 3, 4, C.flame);
+        g.px(x, y - 1, C.core);
+        g.px(x, y - 5, C.flameDk); g.px(x, y - 4, C.flame);
+    };
+    if (cast) {
+        g.line(4, -7, 9, -15, C.hand, 2);
+        g.line(10, -26, 10, 14, C.staff, 1); g.line(11, -26, 11, 14, C.staffHi, 1);
+        lantern(10, -29);
+    } else {
+        const sw = pose === 1 ? 1 : pose === 2 ? -1 : 0;
+        g.line(4, -7, 9, -2, C.hand, 2);
+        g.line(10 + sw, -19, 10, 18, C.staff, 1); g.line(11 + sw, -19, 11, 18, C.staffHi, 1);
+        lantern(10 + sw, -22);
+    }
+    b.rim('#d98a66', '#0c0605', .35, .3);
+    b.outline('#120806');
+    // Lantern core stays bright above the outline: the priest is found by its light.
+    const o = s.origin;
+    if (cast) b.set(o[0] + 10, o[1] - 30, C.core);
+    else b.set(o[0] + 10 + (pose === 1 ? 1 : pose === 2 ? -1 : 0), o[1] - 23, C.core);
+    return b;
+}
+
+const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 

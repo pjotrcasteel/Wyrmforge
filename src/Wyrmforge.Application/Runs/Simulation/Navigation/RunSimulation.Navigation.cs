@@ -65,6 +65,7 @@ public sealed partial class RunSimulation
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
         encounterSeconds = 0;
+        ClearSupportState();
         spawnTimer = 0.15;
         return true;
     }
@@ -119,6 +120,7 @@ public sealed partial class RunSimulation
         CollectLooseExperienceShards();
         enemies.Clear();
         hostileProjectiles.Clear();
+        ClearSupportState();
         encounterSeconds = 0;
         rangedStaggerRemaining = 0;
         pendingRelicBursts.Clear();

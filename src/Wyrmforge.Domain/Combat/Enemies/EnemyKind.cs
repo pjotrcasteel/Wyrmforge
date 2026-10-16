@@ -7,4 +7,5 @@ public enum EnemyKind
     Ashling,
     Penitent,
     AshSlinger,
+    AshPriest,
 }

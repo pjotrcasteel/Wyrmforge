@@ -29,4 +29,7 @@ public sealed record RunRenderSnapshot(
     public ArenaWorldRenderSnapshot? World { get; init; }
     public CastMotionRenderSnapshot? CastMotion { get; init; }
     public IReadOnlyList<HostileProjectileRenderSnapshot> HostileProjectiles { get; init; } = [];
+
+    /// <summary>Fallen Ashlings an Ash Priest can still raise; Life runs 1→0 until the remains crumble.</summary>
+    public IReadOnlyList<AshRemainsRenderSnapshot> AshRemains { get; init; } = [];
 }

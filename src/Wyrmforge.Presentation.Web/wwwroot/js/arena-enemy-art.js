@@ -1,4 +1,4 @@
-// Fallback compact enemy pixel sprites used until the generated atlas loads. Five roster kinds;
+// Fallback compact enemy pixel sprites used until the generated atlas loads. Six roster kinds;
 // C# still owns hitboxes, health, AI and attacks.
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
@@ -6,12 +6,13 @@ const palettes = [
     {edge:'#221b2d',body:'#5a486b',shade:'#3b3155',light:'#9477a8',head:'#72658b',eye:'#bcdbe7',weapon:'#ae9dbe'},
     {edge:'#301f1f',body:'#785442',shade:'#513629',light:'#bb8860',head:'#ac8c70',eye:'#281f20',weapon:'#d6b49a'},
     {edge:'#271d26',body:'#692e38',shade:'#482632',light:'#b86468',head:'#ae8379',eye:'#e6bc94',weapon:'#877c82'},
-        {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
-    ];
-    export const ENEMY_KIND_COUNT = 5;
-    const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
-    // Kind 4 (Ash Slinger) borrows the slender spear-bearer fallback frame with its own ember palette.
-    const fallbackFrame = kind => kind <= 3 ? kind : 2;
+    {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
+    {edge:'#1e0d0a',body:'#5e2a20',shade:'#331511',light:'#8a3f2c',head:'#d9cbb0',eye:'#ffb347',weapon:'#ffc46a'},
+];
+export const ENEMY_KIND_COUNT = 6;
+const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
+// Kinds 4-5 (Ash Slinger, Ash Priest) borrow the slender spear-bearer fallback frame with their own palettes.
+const fallbackFrame = kind => kind <= 3 ? kind : 2;
 // Coordinates are drawn by hand at a single 32 x 36 scale. Material separation
 // and limb/weapon outline, not saturated outlines, carry actor recognition.
 export const enemyPixelFrames = [
@@ -147,6 +148,8 @@ function paletteFor(enemy) {
 }
 export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
     if(!enemy)return;
+    // A shielded Penitent faces its shield, not its last stride, so the sprite agrees with the blocking arc.
+    if(enemy.shieldFacing!=null&&Number.isFinite(Number(enemy.shieldFacing)))facing=Math.cos(Number(enemy.shieldFacing))>=0?1:-1;
     const sprite=artReady()?artFrame('actors',enemySpriteName(enemy,walkPhase)):null;
     if(sprite&&typeof ctx.drawImage==='function'){
         const scale=Math.max(.62,Math.min(1.9,(Number(enemy.radius)||sprite.frame.radius)/sprite.frame.radius));

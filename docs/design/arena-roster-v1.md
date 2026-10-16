@@ -48,7 +48,7 @@ The node sheet reads "Wet forest · Ambush", and the arena HUD reads "TRAIL n ·
 ## 4. Composition
 
 Map encounters use `EnemyHabitatProfile` weights, which hold the brief's §4 table verbatim. Kinds that have not shipped yet lend their weight to a stand-in with the same role:
-- Priest goes to Hollow.
+- Priest goes to Hollow (until step 3, which shipped the Ash Priest).
 - Slinger and Wraith (telegraphed harassers) go to Mire Hound.
 
 Without the stand-ins, the late cloister roads would lose their harassment pressure. The effective weights today:
@@ -170,9 +170,61 @@ Brief §3 attack contracts, all owned by C#. JS only draws what the snapshot rep
   - The committed cap is reached but never exceeded.
 - JS: the telegraph geometry matches the C# sizes, and every kind/pose/state has an atlas frame.
 
-## 9. Next steps (brief §10 order)
+## 9. Step 3: Ash Priest, Ashling morale, Penitent shield
 
-3. Ash Priest (revives at most 2) and the Penitent directional shield.
+The brief's support loop (§3): taking out one enemy should change the encounter. Two references set the rules:
+- **Diablo shamans / Hades' Wretched Sneaks behind shields:** the healer is the priority target, its casts are visible and breakable, and killing it is rewarded.
+- **Monster Hunter / Hades shield-bearers:** a shield covers its front only and turns slowly, so flanking, splash from behind or one heavy hit gets through.
+
+**Ash Priest (new `EnemyKind` 5, `Support` role, threat 3).**
+- Keeps 230–340 px from the hunter, drifting behind its pack's centre. Rooted while casting.
+- **Heal:** 0.9 s cast on the single most wounded ally (< 70% HP) within 230 px. The target is locked at cast start and shown with a green tether that closes on it. Restores 45% of that ally's max HP. Cooldown 9–13 s, deterministic per priest.
+- **Resurrection:** 1.5 s ritual circle over Ashling remains within 200 px. It takes precedence over healing. Raised Ashlings return at 50% HP.
+  - At most **2 per encounter**, counted by the encounter rather than the priest, so two priests cannot raise four.
+  - Remains are true corpse markers: only a first Ashling death leaves them, and they crumble after 8 s.
+  - A raised Ashling drops no experience and does not count toward the node's kill target a second time.
+- **Interrupt:** losing 20% of its health during a cast cancels it and returns it on half cooldown.
+- **Morale:** when a priest dies, Ashlings within 260 px rout for 2.5 s, then re-engage. Bounded, so clear-all objectives never soft-lock.
+- **Composition:** habitat plans only add a priest after at least 3 Ashlings are planned, with one priest per 5 allies. Plans spawn in order, so the priest arrives behind its pack. The §4 weights no longer lend Priest weight to Hollows.
+- Priest casts do not count toward the committed-threat cap; they never hurt the hunter.
+
+**Penitent directional shield.**
+- The shield faces the hunter and turns at 1.6 rad/s. Hits arriving within ±60° of the facing deal 25%.
+  - Projectiles are judged by the direction they flew in from; splash by its centre. Burning ground, statuses and chains are directionless and land in full.
+  - A blocked hit worth at least 40% of the Penitent's max HP breaks the guard (the brief's "high-impact spells" counter).
+- **Shield bash:** when the hunter is inside a 66 px frontal arc, a 0.65 s windup with the arc locked, then 16 damage only inside it. 0.9 s recovery with the shield down (full damage from any side), 2.6 s cooldown. It counts toward the committed-threat cap.
+- **Guarding:** with an Ash Priest or Slinger within 300 px, the Penitent stands 46 px in front of it toward the hunter instead of advancing.
+- Contact damage lowered from 1.8× to 1.2×: the bash is now its real threat, so the grind is not doubled.
+
+**Presentation.**
+- New Ash Priest sprite from `concepts/03-ash-priest.png`: horned skull under a red hood, bell-hung robes, a lantern staff. Pose 3 lifts the lantern during casts.
+- `arena-enemy-telegraphs.js` adds the bash wedge (red, exact reach and arc), heal tether (green) and revive circle (violet). Support casts use non-danger hues because they never hurt the hunter.
+- A thin bone-coloured arc marks each raised shield's blocking front; the Penitent sprite faces its shield. Remains draw as a fading ash pile.
+
+**Balance check (25 runs × 48 combinations)**
+
+| Build | Damage taken | Min HP | Defeats | Extracted | Wyrms reached |
+|---|---:|---:|---:|---:|---:|
+| Step 2 | 161 | 0.57 | 73 | 298 | 1.28 |
+| Step 3 | 162 | 0.57 | 86 | 290 | 1.25 |
+
+- Damage per run is unchanged; fights last slightly longer (kills 1247 → 1221, routes 15.3 → 15.1), which costs a few more runs at the margin.
+- No stalls: run time and stop reasons are unchanged.
+- Still below the 220–280 target; the Wraith, pack recipes and elites (steps 4–5) carry the remaining pressure.
+
+**Tests.**
+- `AshPriestBehaviorStateTests` and `PenitentBehaviorStateTests`: target lock, cooldown window, interrupt, revive priority, back-line movement, frontal-only block, turn rate, locked bash arc, guard break and guard point.
+- `SupportPackTests` inside a real simulation:
+  - The heal restores one ally only.
+  - At most 2 revives per encounter, at half health, with no experience on the second death.
+  - Rout then return.
+  - Splash blocked from the front only.
+  - The bash is telegraphed and counted against the cap.
+  - Habitat plans never field a priest before three Ashlings.
+- JS: bash, heal and revive geometry, the shield guard arc and remains fading.
+
+## 10. Next steps (brief §10 order)
+
 4. Drowned Wraith and pack recipes (Wandering Dead, Hunting Pack, Ashling Mob, Priest Warband, Bastion, Drowned Watch, Last Stand).
 5. Ordinary elites: 10% per eligible node after node 2, at most 1 per node, +35–60% HP, 2–3× XP.
 6. The Reliquary: 6% once per hunt, distinct from `WyrmrealmNodeRarity.Rare`.

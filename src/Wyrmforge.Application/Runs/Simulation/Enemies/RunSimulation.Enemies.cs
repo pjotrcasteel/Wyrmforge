@@ -144,6 +144,20 @@ public sealed partial class RunSimulation
         position = new Vector2D(Math.Clamp(position.X, margin, Math.Max(margin, width - margin)),
             Math.Clamp(position.Y, margin, Math.Max(margin, height - margin)));
         var definition = EnemyCatalog.Get(kind);
+        var (health, speed) = EnemyStats(definition);
+        if (mapState.EncounterActive && arenaEnvironment is not null)
+        {
+            // No valid ground outside the hunter's safety ring: skip this spawn rather than drop it on the player.
+            if (arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius) is not { } safe) return;
+            position = safe;
+        }
+        var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind);
+        enemy.Penitent?.Face(Vector2D.DirectionTo(position, player.Position));
+        enemies.Add(enemy);
+    }
+
+    private (double Health, double Speed) EnemyStats(EnemyDefinition definition)
+    {
         var stage = mapState.CurrentNode?.Stage ?? 1;
         var routeHealth = Math.Max(0.25, CurrentRoute?.Encounter.EnemyHealthMultiplier ?? 1) * encounterModifiers.EnemyHealthMultiplier;
         var routeSpeed = Math.Max(0.25, CurrentRoute?.Encounter.EnemySpeedMultiplier ?? 1) * encounterModifiers.EnemySpeedMultiplier;
@@ -151,13 +165,7 @@ public sealed partial class RunSimulation
             * definition.HealthMultiplier;
         var speed = EnemyStagePressure.BaseSpeed * EnemyStagePressure.SpeedMultiplier(stage) * depthState.EnemySpeedMultiplier * routeSpeed
             * definition.SpeedMultiplier;
-        if (mapState.EncounterActive && arenaEnvironment is not null)
-        {
-            // No valid ground outside the hunter's safety ring: skip this spawn rather than drop it on the player.
-            if (arenaEnvironment.AdjustSpawnPosition(position, player.Position, width, height, definition.Radius) is not { } safe) return;
-            position = safe;
-        }
-        enemies.Add(new EnemyState(++enemyId, position, definition.Radius, health, speed, kind));
+        return (health, speed);
     }
 
     private void UpdateEnemies(double delta)
@@ -167,8 +175,11 @@ public sealed partial class RunSimulation
         var committedCap = EnemyStagePressure.CommittedThreatCap(mapState.CurrentNode?.Stage ?? 1);
         var committed = CommittedThreatCount();
         var rangedAllowed = !mapState.EncounterActive || encounterSeconds >= EnemyStagePressure.RangedGraceSeconds;
-        foreach (var enemy in enemies)
+        UpdateAshRemains(delta);
+        // Raised Ashlings are appended mid-loop; walking the frame's original count lets them start acting next frame.
+        for (int index = 0, count = enemies.Count; index < count; index++)
         {
+            var enemy = enemies[index];
             enemy.Statuses.Tick(delta);
             var statusTimeScale = enemy.Statuses.TimeScale(false);
             if (statusTimeScale <= 0) continue;
@@ -182,7 +193,20 @@ public sealed partial class RunSimulation
             var direction = Vector2D.DirectionTo(enemy.Position, target);
             var speed = enemy.Speed;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier;
-            if (enemy.MireHound is { } hound)
+            if (enemy.RoutedRemaining > 0)
+            {
+                // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
+                enemy.RoutedRemaining = Math.Max(0, enemy.RoutedRemaining - scaledDelta);
+                if (!crossing) direction = Vector2D.DirectionTo(player.Position, enemy.Position);
+            }
+            else if (enemy.AshPriest is { } priest)
+                (direction, speed) = UpdateAshPriest(enemy, priest, scaledDelta, crossing, direction, speed);
+            else if (enemy.Penitent is { } penitent)
+            {
+                (direction, speed, var bashCommitted) = UpdatePenitent(enemy, penitent, scaledDelta, crossing, direction, speed, committed < committedCap);
+                committed += bashCommitted;
+            }
+            else if (enemy.MireHound is { } hound)
             {
                 if (hound.Tick(scaledDelta, enemy.Position, player.Position, !crossing && committed < committedCap)) committed++;
                 switch (hound.Phase)
@@ -248,7 +272,7 @@ public sealed partial class RunSimulation
     }
 
     private int CommittedThreatCount() => hostileProjectiles.Count
-        + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true);
+        + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true);
 
     private void UpdateHostileProjectiles(double delta)
     {
@@ -263,12 +287,20 @@ public sealed partial class RunSimulation
         hostileProjectiles.RemoveAll(ember => ember.Landed);
     }
 
-    private static EnemyTelegraphRenderSnapshot? CreateEnemyTelegraph(EnemyState enemy) => enemy switch
+    private EnemyTelegraphRenderSnapshot? CreateEnemyTelegraph(EnemyState enemy) => enemy switch
     {
         { MireHound: { Phase: MireHoundPhase.Windup } hound } => new EnemyTelegraphRenderSnapshot("pounce", hound.WindupProgress,
             hound.PounceEnd.X, hound.PounceEnd.Y, enemy.Radius),
         { AshSlinger: { Phase: AshSlingerPhase.Windup } slinger } => new EnemyTelegraphRenderSnapshot("lob", slinger.WindupProgress,
             slinger.Target.X, slinger.Target.Y, AshSlingerBehaviorState.ImpactRadius),
+        { Penitent: { Phase: PenitentPhase.Windup } penitent } => new EnemyTelegraphRenderSnapshot("bash", penitent.WindupProgress,
+            enemy.Position.X + penitent.Facing.X * PenitentBehaviorState.BashReach, enemy.Position.Y + penitent.Facing.Y * PenitentBehaviorState.BashReach,
+            PenitentBehaviorState.BashReach),
+        { AshPriest: { Phase: AshPriestPhase.Heal } healer } => enemies.FirstOrDefault(ally => ally.Id == healer.HealTargetId) is { } ward
+            ? new EnemyTelegraphRenderSnapshot("heal", healer.CastProgress, ward.Position.X, ward.Position.Y, ward.Radius)
+            : null,
+        { AshPriest: { Phase: AshPriestPhase.Revive } raiser } => new EnemyTelegraphRenderSnapshot("revive", raiser.CastProgress,
+            raiser.CastPoint.X, raiser.CastPoint.Y, AshPriestBehaviorState.ReviveRange * 0.5),
         _ => null,
     };
 

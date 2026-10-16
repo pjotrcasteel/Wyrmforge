@@ -75,7 +75,8 @@ public static class EnemyEncounterComposition
         while (true)
         {
             var remaining = budget - spent;
-            var eligible = EnemyCatalog.All.Where(definition => definition.ThreatCost <= remaining && EnemyHabitatProfile.Allows(habitat, definition.Kind)).ToArray();
+            var eligible = EnemyCatalog.All.Where(definition => definition.ThreatCost <= remaining && EnemyHabitatProfile.Allows(habitat, definition.Kind)
+                && (definition.Kind != EnemyKind.AshPriest || CanSupportPriest(plan))).ToArray();
             if (eligible.Length == 0) break;
             var total = eligible.Sum(definition => EnemyHabitatProfile.Weight(habitat, definition.Kind));
             var roll = randomSource.NextDouble() * total;
@@ -89,6 +90,17 @@ public static class EnemyEncounterComposition
             spent += selected.ThreatCost;
         }
         return new EnemyCompositionPlan(plan, spent);
+    }
+
+    /// <summary>
+    /// A priest only joins a pack it can tend (brief §3 support loop): at least three Ashlings already planned, and one
+    /// priest per five allies. Plans spawn in order, so the priest always arrives behind the pack it supports.
+    /// </summary>
+    public static bool CanSupportPriest(IReadOnlyCollection<EnemyKind> planned)
+    {
+        var priests = planned.Count(kind => kind == EnemyKind.AshPriest);
+        var ashlings = planned.Count(kind => kind == EnemyKind.Ashling);
+        return ashlings >= 3 && (priests + 1) * 5 <= planned.Count - priests;
     }
 
     public static EnemyCompositionProfile GetProfile(EnemyEncounterPattern pattern) => Profiles[pattern];

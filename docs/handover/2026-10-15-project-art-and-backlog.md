@@ -276,3 +276,15 @@ Design: `docs/design/arena-roster-v1.md` §8.
 - **Art.** New generated sprites for all five kinds (walk plus an attack pose). Ground telegraphs come from `arena-enemy-telegraphs.js`.
 - **Balance.** Damage taken went from 144 to 161 and defeats from 62 to 73, concentrated in the non-dodging Greedy agent.
 - **Next:** step 3, the Ash Priest (at most 2 revives, interruptible) and the Penitent directional shield.
+
+## 16. Arena roster — step 3 shipped (Ash Priest, morale, Penitent shield)
+
+Design: `docs/design/arena-roster-v1.md` §9.
+
+- **Ash Priest (new `EnemyKind` 5, `Support` role).** It stays behind its pack. Its 0.9 s heal restores 45% to one locked ally (cooldown 9–13 s). Its 1.5 s ritual raises Ashling remains at half health, at most 2 per encounter, with no second experience drop. 20% burst damage interrupts either cast.
+- **Morale.** Killing a priest routs nearby Ashlings for 2.5 s; then they return.
+- **Penitent shield.** Frontal hits (±60°) deal 25%, flanks and rear deal full damage, and a 40% hit breaks the guard. A 0.65 s locked-arc bash deals 16, followed by an exposed recovery. Penitents guard nearby priests and slingers.
+- **Composition.** A priest only spawns after three Ashlings are planned.
+- **Art.** A new Ash Priest sprite, plus bash, heal and revive telegraphs, shield arcs and remains markers.
+- **Balance.** Damage taken is unchanged at about 162; defeats went from 73 to 86 because fights run longer.
+- **Next:** step 4, the Drowned Wraith and pack recipes.
