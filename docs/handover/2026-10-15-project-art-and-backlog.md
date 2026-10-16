@@ -288,3 +288,7 @@ Design: `docs/design/arena-roster-v1.md` §9.
 - **Art.** A new Ash Priest sprite, plus bash, heal and revive telegraphs, shield arcs and remains markers.
 - **Balance.** Damage taken is unchanged at about 162; defeats went from 73 to 86 because fights run longer.
 - **Next:** step 4, the Drowned Wraith and pack recipes.
+
+## 17. End-of-run review prompt
+
+Every run end (extraction, death or abandon) opens a dismissible **How was that hunt?** card after any cinematic, leaderboard or quest overlay. It has five one-tap stars that open the feedback form with Enjoyment prefilled, **Write a review**, **Not now**, ✕, a backdrop click or Esc, and **Don't ask again**, which stores `wyrmforge.reviewPrompt.v1 = muted`. Like mobile in-app review prompts, it asks at a natural pause and never mid-fight. The run summary button is now the more visible **★ Review this hunt**.

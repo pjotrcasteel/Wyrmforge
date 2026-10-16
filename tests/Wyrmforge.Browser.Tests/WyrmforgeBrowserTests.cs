@@ -833,6 +833,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterFirstTrailAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Abandon run" }).ClickAsync();
 
+        var reviewPrompt = Page.GetByRole(AriaRole.Dialog, new() { Name = "How was that hunt?" });
+        await Expect(reviewPrompt).ToBeVisibleAsync();
+        await Expect(reviewPrompt.GetByText("HUNT LEFT EARLY")).ToBeVisibleAsync();
+        await ScreenshotAsync("mobile-review-prompt.png");
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(reviewPrompt).ToBeHiddenAsync();
+
         var report = Page.Locator(".run-report-card");
         await Expect(report).ToBeVisibleAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Return to Wyrmforge" })).ToBeVisibleAsync();
@@ -851,6 +858,29 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByText("Your next three pursuits", new() { Exact = true })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Return to Wyrmforge" }).ClickAsync();
         await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_ReviewPrompt_DontAskAgainPersistsAndSummaryButtonStillOpensReview()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await EnterFirstTrailAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Abandon run" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Don't ask again" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "How was that hunt?" })).ToBeHiddenAsync();
+        Assert.AreEqual("muted", await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.reviewPrompt.v1')"));
+
+        await Page.Locator("button.run-playtest-feedback").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Help shape the Wyrmrealm" })).ToBeVisibleAsync();
+        await Expect(Page.Locator("#playtest-fun")).ToHaveValueAsync("");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Close playtest feedback" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Return to Wyrmforge" }).ClickAsync();
+
+        await EnterFirstTrailAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Abandon run" }).ClickAsync();
+        await Expect(Page.Locator(".run-report-card")).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "How was that hunt?" })).ToHaveCountAsync(0);
     }
 
     [TestMethod]
@@ -959,8 +989,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await EnterFirstTrailAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Abandon run" }).ClickAsync();
-        await Page.Locator("button.run-playtest-feedback").ClickAsync();
-        await Page.Locator("#playtest-fun").SelectOptionAsync("4");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Rate 4 of 5 — Enjoyable" }).ClickAsync();
+        await Expect(Page.Locator("#playtest-fun")).ToHaveValueAsync("4");
         await Page.Locator("#playtest-clarity").SelectOptionAsync("3");
         await Page.Locator("#playtest-replay").SelectOptionAsync("yes");
         await Page.Locator("#playtest-area").SelectOptionAsync("movement");

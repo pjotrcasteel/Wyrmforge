@@ -43,9 +43,13 @@ else
 {
     <LeaderboardView Score="summary?.Score ?? bestScore" OnClose="CloseLeaderboard" />
 }
+@if (ReviewPromptVisible)
+{
+    <ReviewPrompt Outcome="reviewPromptOutcome" OnRate="RateFromReviewPrompt" OnDismiss="DismissReviewPromptAsync" />
+}
 @if (playtestFeedbackOpen)
 {
-    <PlaytestFeedbackPanel OnClose="ClosePlaytestFeedback" />
+    <PlaytestFeedbackPanel InitialEnjoyment="feedbackRating" OnClose="ClosePlaytestFeedback" />
 }
 
 <div data-game-version="@AppBuildInfo.Version" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>

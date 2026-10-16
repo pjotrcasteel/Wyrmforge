@@ -63,8 +63,39 @@ public partial class Home
     private bool ForgeAvailable => firstHunt.AtlasUnlocked && (essenceVault.TotalCount > 0 || forgeProgression.Discovered.Count > 0);
     private bool playtestFeedbackOpen;
 
-    private void OpenPlaytestFeedback() => playtestFeedbackOpen = true;
+    private int? feedbackRating;
+    private bool reviewPromptOpen;
+    private bool reviewPromptMuted;
+    private RunOutcome reviewPromptOutcome;
+    private const string ReviewPromptStorageKey = "wyrmforge.reviewPrompt.v1";
+
+    // Waits for cinematics and other modals so the ask never stacks on top of a reward moment.
+    private bool ReviewPromptVisible => reviewPromptOpen && !tutorialCinematic && !unlockCinematic && !questsOpen && !playtestFeedbackOpen
+        && !(leaderboardOpen && firstHunt.LeaderboardUnlocked);
+
+    private void OpenPlaytestFeedback()
+    {
+        reviewPromptOpen = false;
+        feedbackRating = null;
+        playtestFeedbackOpen = true;
+    }
+
     private void ClosePlaytestFeedback() => playtestFeedbackOpen = false;
+
+    private void RateFromReviewPrompt(int? rating)
+    {
+        OpenPlaytestFeedback();
+        feedbackRating = rating;
+    }
+
+    private async Task DismissReviewPromptAsync(bool never)
+    {
+        reviewPromptOpen = false;
+        if (!never) return;
+        reviewPromptMuted = true;
+        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", ReviewPromptStorageKey, "muted"); }
+        catch (JSException) { }
+    }
     private DragonId? selectedAscendant;
     private DragonId? activeAscendant;
 
@@ -79,6 +110,8 @@ public partial class Home
             playerName = await leaderboardModule.InvokeAsync<string>("getPlayerName");
             _ = leaderboardModule.InvokeAsync<string>("flush").AsTask();
         }
+        catch (JSException) { }
+        try { reviewPromptMuted = await JavaScript.InvokeAsync<string?>("localStorage.getItem", ReviewPromptStorageKey) == "muted"; }
         catch (JSException) { }
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
@@ -198,6 +231,8 @@ public partial class Home
         await SaveArcaneBuildAsync();
         summary = tutorialEnded ? null : value;
         if (chapterAdvanced) leaderboardOpen = true;
+        reviewPromptOutcome = value.Outcome;
+        reviewPromptOpen = !reviewPromptMuted;
         await TryRecordPlaytestFinishAsync(value);
         if (value.Outcome != RunOutcome.Abandoned && value.Score > 0 && leaderboardModule is not null)
         {
@@ -233,6 +268,7 @@ public partial class Home
         PrepareLaboratoryRun();
         activeRewardCache = false;
         summary = null;
+        reviewPromptOpen = false;
         hunterGain = null;
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
@@ -261,6 +297,7 @@ public partial class Home
     private void ReturnToForge()
     {
         summary = null;
+        reviewPromptOpen = false;
         openLaboratoryOnReturn = false;
         activeRewardCache = false;
         activeOffering = null;

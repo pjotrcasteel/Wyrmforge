@@ -1,0 +1,24 @@
+.review-prompt-backdrop { position:fixed;inset:0;z-index:29000;display:grid;place-items:center;padding:max(14px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:rgba(6,4,10,.72);backdrop-filter:blur(6px);animation:review-fade .22s ease-out; }
+.review-prompt { position:relative;box-sizing:border-box;width:min(400px,100%);padding:26px clamp(18px,5vw,28px) 16px;border:1px solid #6d4f8a;border-radius:18px;background:radial-gradient(ellipse at 50% 0,rgba(176,120,226,.22),transparent 60%),#19131f;color:#eaddf0;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 0 1px rgba(214,170,255,.08) inset;animation:review-rise .28s cubic-bezier(.2,.9,.3,1.2); }
+.review-prompt:focus { outline:none; }
+.review-prompt.victory { border-color:#a58a4d;background:radial-gradient(ellipse at 50% 0,rgba(240,196,98,.2),transparent 60%),#19131f; }
+.review-prompt.defeat { border-color:#7d4655;background:radial-gradient(ellipse at 50% 0,rgba(214,92,112,.18),transparent 60%),#19131f; }
+.review-prompt-close { position:absolute;top:10px;right:10px;width:40px;height:40px;border:1px solid #604c69;border-radius:11px;color:#eee0ef;background:#292032;cursor:pointer;touch-action:manipulation; }
+.review-prompt-kicker { color:#b992e7;font-size:.66rem;font-weight:900;letter-spacing:.14em; }
+.review-prompt.victory .review-prompt-kicker { color:#f0c462; }
+.review-prompt.defeat .review-prompt-kicker { color:#e88a9a; }
+.review-prompt h2 { margin:8px 0 6px;font:600 clamp(1.5rem,5vw,1.9rem) Georgia,serif; }
+.review-prompt p { margin:0 0 16px;color:#b9a9c4;font-size:.8rem;line-height:1.5; }
+.review-prompt-stars { display:flex;justify-content:center;gap:6px;margin-bottom:16px; }
+.review-prompt-star { width:52px;height:52px;padding:0;border:1px solid #5f447a;border-radius:12px;background:#231a2c;color:#6e5a7c;font-size:1.7rem;line-height:1;cursor:pointer;touch-action:manipulation;transition:color .12s,background .12s,transform .12s; }
+.review-prompt-stars:hover .review-prompt-star,.review-prompt-stars:focus-within .review-prompt-star { color:#f2c45f;background:#30233a; }
+.review-prompt-star:hover ~ .review-prompt-star,.review-prompt-star:focus-visible ~ .review-prompt-star { color:#6e5a7c;background:#231a2c; }
+.review-prompt-star:hover,.review-prompt-star:focus-visible { transform:scale(1.08); }
+.review-prompt-write { width:100%;min-height:48px;border:0;border-radius:12px;color:#1d1127;background:linear-gradient(125deg,#d7b0ff,#b27cea);font-size:.8rem;font-weight:950;letter-spacing:.08em;cursor:pointer;touch-action:manipulation; }
+.review-prompt-footer { display:flex;justify-content:space-between;gap:10px;margin-top:8px; }
+.review-prompt-footer button { min-height:40px;padding:8px 6px;border:0;background:none;color:#bda4d4;font-size:.72rem;text-decoration:underline;cursor:pointer; }
+.review-prompt :is(button):focus-visible { outline:2px solid #e3baff;outline-offset:3px; }
+@media(max-width:380px) { .review-prompt-star { width:46px;height:46px;font-size:1.5rem; } }
+@media(prefers-reduced-motion:reduce) { .review-prompt-backdrop,.review-prompt { animation:none; } }
+@keyframes review-fade { from { opacity:0; } }
+@keyframes review-rise { from { opacity:0;transform:translateY(18px) scale(.96); } }
