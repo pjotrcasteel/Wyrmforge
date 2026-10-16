@@ -281,6 +281,8 @@ public sealed partial class RunSimulation
         ExperienceEarned = experienceEarned,
         PreparedMutation = activeLaboratoryMutation,
         ReactionsTriggered = reactionsTriggered,
+        EnemyRecords = CreateEnemyRecords(),
+        ElitesSlain = defeatedElites.Select(defeat => defeat.Affix).Distinct().Order().ToArray(),
     };
 
     public RunRenderSnapshot CreateSnapshot()

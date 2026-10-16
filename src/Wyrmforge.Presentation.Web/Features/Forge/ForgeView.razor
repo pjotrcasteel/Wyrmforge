@@ -90,7 +90,7 @@
                 <LaboratoryView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice" OnOpenAtlas="() => NavigateAsync(ShellSection.Build)" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" Focus="LaboratoryFocus" />
                 break;
             case ShellSection.Codex:
-                <CodexView Codex="Codex" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
+                <CodexView Codex="Codex" Bestiary="Bestiary" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
                 break;
             case ShellSection.Prepare:
                 <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
@@ -112,6 +112,7 @@
     [Parameter] public EventCallback OnLeaderboard { get; set; }
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
+    [Parameter] public Wyrmforge.Domain.Progression.Bestiary.BestiaryState Bestiary { get; set; } = new();
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
     [Parameter] public GreatHuntState Hunt { get; set; } = new();

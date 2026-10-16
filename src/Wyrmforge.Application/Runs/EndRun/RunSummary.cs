@@ -1,4 +1,5 @@
 ﻿using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -35,4 +36,9 @@ public sealed record RunSummary(
     public IReadOnlyList<RunUpgradeSummary> UpgradeLoadout { get; init; } = Array.Empty<RunUpgradeSummary>();
     public IReadOnlyList<RunRelicSummary> RelicLoadout { get; init; } = Array.Empty<RunRelicSummary>();
     public IReadOnlyList<RunResonanceSummary> Resonance { get; init; } = Array.Empty<RunResonanceSummary>();
+    /// <summary>Every creature kind met this hunt, with how many fell (bestiary input).</summary>
+    public IReadOnlyList<RunEnemyRecord> EnemyRecords { get; init; } = Array.Empty<RunEnemyRecord>();
+    public IReadOnlyList<EliteAffix> ElitesSlain { get; init; } = Array.Empty<EliteAffix>();
 }
+
+public sealed record RunEnemyRecord(EnemyKind Kind, int Kills);

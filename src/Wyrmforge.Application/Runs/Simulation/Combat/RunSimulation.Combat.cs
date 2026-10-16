@@ -121,6 +121,7 @@ public sealed partial class RunSimulation
                 RegisterEnemyDeath(defeatedEnemy);
                 RegisterSupportDeath(defeatedEnemy);
                 kills++;
+                RecordEnemyKill(defeatedEnemy.Kind);
                 QueueRelicDefeatBursts(defeatedEnemy);
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);

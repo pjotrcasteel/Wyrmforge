@@ -116,6 +116,25 @@
             </section>
         }
 
+        @if (BestiaryDiscoveries is { HasDiscoveries: true } discoveries)
+        {
+            <section class="run-great-hunt-progress run-bestiary-progress" aria-label="New bestiary entries">
+                <span>◆ BESTIARY • NEW ENTRIES</span>
+                <div class="run-great-hunt-entries">
+                    @foreach (var kind in discoveries.NewCreatures)
+                    {
+                        var creature = Wyrmforge.Domain.Progression.Bestiary.BestiaryCatalog.Get(kind);
+                        <div><strong>@creature.Name</strong><small>@creature.Tier</small></div>
+                    }
+                    @foreach (var affix in discoveries.NewElites)
+                    {
+                        var elite = Wyrmforge.Domain.Combat.Enemies.EliteAffixCatalog.Get(affix);
+                        <div><strong>◆ @elite.Title</strong><small>Elite slain • recorded in the Codex</small></div>
+                    }
+                </div>
+            </section>
+        }
+
         @if (NewLineages.Count > 0)
         {
             <section class="run-lineage-reveal" aria-label="Wyrmforged lineage discovered">
@@ -249,6 +268,7 @@
     [Parameter] public IReadOnlyList<DragonId> NewAscendantVictories { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellEvolutionId> NewLineages { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellId> AdvancedSpells { get; set; } = [];
+    [Parameter] public Wyrmforge.Domain.Progression.Bestiary.BestiaryRunResult? BestiaryDiscoveries { get; set; }
     [Parameter] public EventCallback OnReplay { get; set; }
     [Parameter] public EventCallback OnReturn { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }

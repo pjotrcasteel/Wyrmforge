@@ -164,6 +164,7 @@ public sealed partial class RunSimulation
         var elite = TakeEliteFor(kind);
         if (elite != EliteAffix.None) health *= EliteAffixCatalog.Get(elite).HealthMultiplier;
         var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind) { Elite = elite };
+        RecordEnemyEncounter(kind);
         enemy.Penitent?.Face(Vector2D.DirectionTo(position, player.Position));
         // Wraiths arrive under the water and only join the fight when they surface.
         if (enemy.DrownedWraith is not null) submergedWraiths.Add(enemy);

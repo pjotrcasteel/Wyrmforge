@@ -124,6 +124,7 @@ public partial class Home
         if (restoredOathHistory) await TrySetGreatHuntAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
+        await TryLoadBestiaryAsync();
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
         await TryLoadLaboratoryAsync();
@@ -167,6 +168,7 @@ public partial class Home
         advancedOaths = [];
         newlySealedOaths = [];
         newlyConqueredAscendants = [];
+        bestiaryDiscoveries = null;
         activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
         activeRewardCache = !firstHunt.TutorialRun && quests.ConsumeCache();
@@ -247,6 +249,7 @@ public partial class Home
         var codexChanged = false;
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
         if (codexChanged) await TrySetArcaneCodexAsync();
+        await RecordBestiaryAsync(value);
 
         if (value.EssenceIds.Count > 0)
         {

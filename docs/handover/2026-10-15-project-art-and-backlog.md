@@ -316,3 +316,19 @@ Design: `docs/design/arena-roster-v1.md` §11.
   - The shape re-rolls every 40 ms and is still under reduced motion. C# endpoints are kept exactly.
 - **Balance.** Flat. Kills 1219, damage 161, defeats 63.
 - **Next:** the Encountered Enemies book, then step 6, the Reliquary.
+
+## 20. Encountered Enemies book (Codex → Bestiary)
+
+References: the Hades Codex (entries unlock by meeting and killing), Monster Hunter's research levels, and the Hollow Knight Hunter's Journal (silhouettes tease what is still out there).
+
+- **Data (C# only).**
+  - The simulation records each kind on spawn and counts kills per kind. `RunSummary.EnemyRecords` and `ElitesSlain` carry them out.
+  - `BestiaryState` (Domain) merges every ending, abandoned hunts included. It is saved as `wyrmforge.bestiary.v1`; unknown names and negative counts are dropped on load.
+- **Book.** A new **Bestiary** tab in the Codex.
+  - **Met creatures:** a cropped, pixel-crisp idle sprite, tier, kills, behaviour, counterplay and habitat. All text is from the brief §2.
+  - **10 kills** reveal a hunter's note. **50** mark the creature *Studied*.
+  - **A slain elite** adds its affix and counterplay.
+  - **Unmet creatures:** "???", a silhouette and a "Rumoured in" habitat hint.
+- **Run report.** A "Bestiary • new entries" block lists first sightings and new elites.
+- **Tests.** `BestiaryStateTests`, `BestiaryRecordTests` and `bestiary-portraits.test.mjs`.
+- **Next:** step 6, the Reliquary.
