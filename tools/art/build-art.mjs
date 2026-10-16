@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { encodePng } from './lib/png.mjs';
 import { Bitmap, packAtlas } from './lib/painter.mjs';
 import { paintMageFront, paintMageBack, paintMageSide, hitVariant, MAGE_POSES, MAGE_ORIGIN } from './sprites/mage.mjs';
-import { ENEMY_SPECS, paintEnemy, enemyHit, enemyFrozen } from './sprites/enemies.mjs';
+import { ENEMY_SPECS, ENEMY_POSES, paintEnemy, enemyHit, enemyFrozen } from './sprites/enemies.mjs';
 import { WYRM_SCHOOLS, WYRM_ORIGIN, WYRM_RADIUS, paintWyrm, wyrmFrozen } from './sprites/wyrms.mjs';
 import { tiles, decals, vegetation, ruins, walls, pickups } from './sprites/environment.mjs';
 import { icons, hubBackdrop } from './sprites/ui.mjs';
@@ -39,7 +39,7 @@ for (const [dir, paint] of Object.entries(painters)) for (const pose of Object.k
     actorEntries.push({ name: `mage.${dir}.${pose}`, bitmap: sprite, anchor: MAGE_ORIGIN });
     actorEntries.push({ name: `mage.${dir}.${pose}.hit`, bitmap: hitVariant(sprite), anchor: MAGE_ORIGIN });
 }
-for (const spec of ENEMY_SPECS) for (const pose of [0, 1, 2]) {
+for (const spec of ENEMY_SPECS) for (const pose of ENEMY_POSES) {
     const sprite = paintEnemy(spec.kind, pose);
     const meta = { radius: spec.radius };
     actorEntries.push({ name: `enemy.${spec.kind}.${pose}.normal`, bitmap: sprite, anchor: spec.origin, meta });

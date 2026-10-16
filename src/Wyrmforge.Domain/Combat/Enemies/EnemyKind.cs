@@ -6,4 +6,5 @@ public enum EnemyKind
     MireHound,
     Ashling,
     Penitent,
+    AshSlinger,
 }

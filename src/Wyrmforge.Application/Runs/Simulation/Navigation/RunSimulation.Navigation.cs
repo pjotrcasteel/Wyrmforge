@@ -64,6 +64,7 @@ public sealed partial class RunSimulation
         encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat);
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
+        encounterSeconds = 0;
         spawnTimer = 0.15;
         return true;
     }
@@ -117,6 +118,9 @@ public sealed partial class RunSimulation
         powerBurstRemaining = 0;
         CollectLooseExperienceShards();
         enemies.Clear();
+        hostileProjectiles.Clear();
+        encounterSeconds = 0;
+        rangedStaggerRemaining = 0;
         pendingRelicBursts.Clear();
         projectiles.Clear();
         lightning.Clear();

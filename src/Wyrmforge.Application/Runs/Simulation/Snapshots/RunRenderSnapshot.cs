@@ -28,4 +28,5 @@ public sealed record RunRenderSnapshot(
     public ArenaExitRenderSnapshot? Exit { get; init; }
     public ArenaWorldRenderSnapshot? World { get; init; }
     public CastMotionRenderSnapshot? CastMotion { get; init; }
+    public IReadOnlyList<HostileProjectileRenderSnapshot> HostileProjectiles { get; init; } = [];
 }

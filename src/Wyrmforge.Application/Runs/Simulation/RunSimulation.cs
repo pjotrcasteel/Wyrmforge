@@ -293,7 +293,8 @@ public sealed partial class RunSimulation
             },
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
-                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id)).ToArray(),
+                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id,
+                CreateEnemyTelegraph(enemy))).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
@@ -328,6 +329,7 @@ public sealed partial class RunSimulation
             Exit = CreateTrailExitSnapshot(),
             World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
             CastMotion = CreateCastMotionSnapshot(),
+            HostileProjectiles = CreateHostileProjectileSnapshots(),
         };
     }
 

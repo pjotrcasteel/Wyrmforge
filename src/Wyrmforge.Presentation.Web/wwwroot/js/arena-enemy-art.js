@@ -1,12 +1,17 @@
-// Original compact enemy pixel sprites. Four canonical enemy kinds use different
-// anatomical silhouettes; C# still owns hitboxes, health, AI and attacks.
+// Fallback compact enemy pixel sprites used until the generated atlas loads. Five roster kinds;
+// C# still owns hitboxes, health, AI and attacks.
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
     {edge:'#242726',body:'#788079',shade:'#4d5d58',light:'#bcc0aa',head:'#c0bda7',eye:'#242728',weapon:'#8b9382'},
     {edge:'#221b2d',body:'#5a486b',shade:'#3b3155',light:'#9477a8',head:'#72658b',eye:'#bcdbe7',weapon:'#ae9dbe'},
     {edge:'#301f1f',body:'#785442',shade:'#513629',light:'#bb8860',head:'#ac8c70',eye:'#281f20',weapon:'#d6b49a'},
     {edge:'#271d26',body:'#692e38',shade:'#482632',light:'#b86468',head:'#ae8379',eye:'#e6bc94',weapon:'#877c82'},
-];
+        {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
+    ];
+    export const ENEMY_KIND_COUNT = 5;
+    const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
+    // Kind 4 (Ash Slinger) borrows the slender spear-bearer fallback frame with its own ember palette.
+    const fallbackFrame = kind => kind <= 3 ? kind : 2;
 // Coordinates are drawn by hand at a single 32 x 36 scale. Material separation
 // and limb/weapon outline, not saturated outlines, carry actor recognition.
 export const enemyPixelFrames = [
@@ -123,16 +128,17 @@ export function enemyFacing(motion, entityId) {
     return motion?.entities?.get(Number(entityId))?.facing ?? 1;
 }
 
+// Pose 3 is the attack posture; it is shown exactly while C# reports a committed telegraph.
 export function enemySpriteName(enemy, walkPhase = 0) {
-    const kind = Math.max(0, Math.min(3, Number(enemy?.kind) || 0));
+    const kind = clampKind(enemy?.kind);
     const variant = enemy?.hitFlash ? 'hit' : enemy?.frozen ? 'frozen' : 'normal';
-    const phase = Math.max(0, Math.min(2, Number(walkPhase) || 0));
+    const phase = enemy?.telegraph ? 3 : Math.max(0, Math.min(2, Number(walkPhase) || 0));
     return `enemy.${kind}.${phase}.${variant}`;
 }
 
 const cached=new Map();
 function paletteFor(enemy) {
-    const kind=Math.max(0,Math.min(3,Number(enemy?.kind)||0));
+    const kind=clampKind(enemy?.kind);
     if(enemy?.hitFlash)return {edge:'#8e827a',body:'#f2e7d1',shade:'#b6a79c',
         light:'#fff7e5',head:'#fff4df',eye:'#7f655e',weapon:'#f6e8cf'};
     if(enemy?.frozen)return {edge:'#284b57',body:'#8abcc6',shade:'#5a91a3',
@@ -154,7 +160,7 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
         drawEnemyLight(ctx,enemy,light,scale);
         return;
     }
-    const kind=Math.max(0,Math.min(3,Number(enemy.kind)||0));
+    const kind=clampKind(enemy.kind);
     const variant=enemy.hitFlash?'hit':enemy.frozen?'frozen':'normal';
     const phase=Math.max(0,Math.min(2,Number(walkPhase)||0));
     const key=kind+':'+variant+':'+phase;
@@ -166,8 +172,9 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
         const colors=paletteFor(enemy);
         // The upper body remains hand-authored across phases. Each enemy kind
         // has a separately authored step silhouette that replaces its lower hem.
-        const frame=phase===0?enemyPixelFrames[kind]:
-            enemyPixelFrames[kind].filter(([, , y])=>y<10).concat(enemyWalkLegs[kind][phase-1]);
+        const f=fallbackFrame(kind);
+        const frame=phase===0?enemyPixelFrames[f]:
+            enemyPixelFrames[f].filter(([, , y])=>y<10).concat(enemyWalkLegs[f][phase-1]);
         for(const [part,x,y,w,h] of frame){
             brush.fillStyle=colors[part];brush.fillRect(x+18,y+20,w,h);
         }

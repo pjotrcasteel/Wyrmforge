@@ -6,6 +6,7 @@ import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
+import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber } from './arena-enemy-telegraphs.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -190,6 +191,9 @@ function draw(state, snapshot, width, height) {
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
+    // Enemy attack lanes and landing marks sit on the ground beneath every actor.
+    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileGround(ctx, ember);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
@@ -235,6 +239,7 @@ function draw(state, snapshot, width, height) {
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
+    for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
     for (const trace of snapshot.lightning) {

@@ -118,9 +118,60 @@ The old fallback put 6.3% of spawns on top of the hunter or within 150 px. That 
 - `HabitatSpawnTests`: three seeds walk all eight trails in a real `RunSimulation`. Every spawn is ≥150 px from the hunter and a legal resident of its habitat, and the hunt crosses at least 4 habitats.
 - JS: the habitat tint is distinct and restrained.
 
-## 8. Next steps (brief §10 order)
+## 8. Step 2: Hound pounce, Ash Slinger, new silhouettes
 
-2. Hound flank + pounce tuning and the Ash Slinger lob, plus new pixel silhouettes for all kinds.
+Brief §3 attack contracts, all owned by C#. JS only draws what the snapshot reports.
+
+**Mire Hound (Ambusher, radius 13, 0.9× HP, 1.2× speed).**
+- Stalks a flanking orbit point 140 px from the hunter, with the side set per hound.
+- Inside 170 px it winds up for **0.50 s**. The lane direction locks at windup start and cannot re-aim.
+- Then it pounces 150 px at 500 px/s. The first contact deals **15** (once), then it recovers for 0.65 s at a standstill and retreats.
+- Rationale: commit and recover is the Hades / Monster Hunter punish window. The locked lane means a side-step always works.
+
+**Ash Slinger (Artillery, radius 11, 0.75× HP, 0.95× speed, 0.5× contact).**
+- Keeps 175–330 px of range: it back-pedals when crowded and strafes otherwise.
+- Winds up for **0.65 s** with the landing spot locked at windup start. It then lobs an ember (0.6 s flight, 46 px arc).
+- The ember hits only if the hunter's centre is inside the **34 px** mark on landing: **14** damage plus a Fire impact.
+- Burst damage of 30% of its max HP during windup interrupts the throw (half cooldown). That is the brief's "gap-close or interrupt" answer.
+- Rationale: Enter the Gungeon's grenade kin. The mark shown is exactly the hit area, no larger and no smaller.
+- Only habitat plans spawn Slingers (forest 3, field 20, village 7, monastery 6, cloister 2, scorched 15). The `Artillery` role has zero weight in legacy role patterns.
+
+**Pacing (§5).**
+- At most **2 committed telegraphs** (Hound windup/pounce plus Slinger windup) at pressure stage ≤2, 3 at stage 3 and 4 after that. Extra enemies keep repositioning instead.
+- No ranged windup in the first **10 s** of an encounter, and Slinger windups are staggered at least 0.9 s apart.
+- Hounds never commit while the field is crossing to a gate (no pounces through walls).
+- Damage values are fixed and do not scale with stage. Pressure comes from numbers and composition, as in Vampire Survivors and Slay the Spire acts, not from hidden multipliers.
+
+**Presentation.**
+- New generated sprites for all five kinds, from the concept sheets: the Hollow, the Mire Hound, the Ashling, the Penitent and the Ash Slinger.
+- Each kind has walk poses 0–2 plus an attack pose 3, shown while C# reports a telegraph. The body is part of the warning: the hound crouches with spines bristling, the Slinger swings its ember overhead, the Hollow reaches out, and the Penitent thrusts its shield.
+- `arena-enemy-telegraphs.js` draws three things:
+  - The pounce lane (red, hound-width, with a charge fill and an arrowhead).
+  - The lob mark (an ember-orange circle at the impact radius whose inner disc fills to the ring).
+  - The ember's ground shadow, plus the airborne ember drawn above actors.
+
+**Balance check (25 runs × 48 combinations)**
+
+| Build | Damage taken | Min HP | Defeats | Extracted | Wyrms reached |
+|---|---:|---:|---:|---:|---:|
+| Step 1 | 144 | 0.60 | 62 | 293 | 1.30 |
+| Step 2 | 161 | 0.57 | 73 | 298 | 1.28 |
+
+- The extra pressure lands mostly on the Greedy agent, which does not dodge (defeats 40 → 50, damage 180 → 192). Casual defeats fell (8 → 6).
+- Bots do not read telegraphs, so this is an upper bound for an attentive player.
+- Kept below the 220–280 target on purpose: Priest revives, Wraith ambushes and elites (steps 3–5) still add pressure.
+
+**Tests.**
+- `MireHoundBehaviorStateTests` and `AshSlingerBehaviorStateTests` cover the phase cycles, locked aim, interrupts and range keeping.
+- `EnemyTelegraphTests` runs inside a real simulation:
+  - There is no lob during the 10 s grace.
+  - The ember damages only inside its mark.
+  - The hound bites once for 15, then recovers.
+  - The committed cap is reached but never exceeded.
+- JS: the telegraph geometry matches the C# sizes, and every kind/pose/state has an atlas frame.
+
+## 9. Next steps (brief §10 order)
+
 3. Ash Priest (revives at most 2) and the Penitent directional shield.
 4. Drowned Wraith and pack recipes (Wandering Dead, Hunting Pack, Ashling Mob, Priest Warband, Bastion, Drowned Watch, Last Stand).
 5. Ordinary elites: 10% per eligible node after node 2, at most 1 per node, +35–60% HP, 2–3× XP.

@@ -49,13 +49,14 @@ test('mage has every facing, pose and hit variant the renderer requests', () => 
         for (const hit of ['', '.hit']) assert.ok(frames('actors')[`mage.${face}.${pose}${hit}`], `mage.${face}.${pose}${hit}`);
 });
 
-test('every enemy kind, walk phase and state, and every wyrm phase has a sprite', () => {
-    for (let kind = 0; kind < 4; kind++) {
+test('every enemy kind, walk phase, attack pose and state, and every wyrm phase has a sprite', () => {
+    for (let kind = 0; kind < 5; kind++) for (const telegraph of [null, { kind: 'pounce' }])
         for (let phase = 0; phase < 3; phase++) for (const state of [{}, { hitFlash: true }, { frozen: true }]) {
-            const name = enemySpriteName({ kind, ...state }, phase);
+            const name = enemySpriteName({ kind, telegraph, ...state }, phase);
             assert.ok(frames('actors')[name], name);
             assert.ok(frames('actors')[name].radius > 0, `${name} radius`);
         }
+    for (let kind = 0; kind < 4; kind++) {
         assert.ok(frames('wyrms')[`wyrm.${kind}.frozen`]);
         for (const p of [1, 2]) for (const f of [0, 1]) assert.ok(frames('wyrms')[`wyrm.${kind}.p${p}.f${f}`]);
     }
@@ -121,7 +122,8 @@ test('mage facing follows dominant travel and turns toward an active cast', () =
 
 test('enemy sprite names clamp kind and phase and prioritise hit over frozen', () => {
     assert.equal(enemySpriteName({ kind: 3 }, 2), 'enemy.3.2.normal');
-    assert.equal(enemySpriteName({ kind: 9, hitFlash: true, frozen: true }, 7), 'enemy.3.2.hit');
+    assert.equal(enemySpriteName({ kind: 9, hitFlash: true, frozen: true }, 7), 'enemy.4.2.hit');
+    assert.equal(enemySpriteName({ kind: 1, telegraph: { kind: 'pounce' } }, 2), 'enemy.1.3.normal', 'committed attacks show the attack pose');
     assert.equal(enemySpriteName({ kind: -1, frozen: true }), 'enemy.0.0.frozen');
     assert.equal(enemyFacing(null, 4), 1);
     assert.equal(enemyFacing({ entities: new Map([[4, { facing: -1 }]]) }, '4'), -1);

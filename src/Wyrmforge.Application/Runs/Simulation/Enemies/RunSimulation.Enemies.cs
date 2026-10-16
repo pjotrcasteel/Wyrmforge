@@ -2,6 +2,8 @@
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Spells;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -11,6 +13,9 @@ public sealed partial class RunSimulation
     private EnemyCompositionPlan? encounterPlan;
     private int encounterPlanIndex;
     private WyrmrealmHabitat? encounterHabitat;
+    private readonly List<HostileProjectileState> hostileProjectiles = [];
+    private double encounterSeconds;
+    private double rangedStaggerRemaining;
 
     private void UpdateSpawn(double delta, double width, double height)
     {
@@ -157,6 +162,11 @@ public sealed partial class RunSimulation
 
     private void UpdateEnemies(double delta)
     {
+        encounterSeconds += delta;
+        rangedStaggerRemaining = Math.Max(0, rangedStaggerRemaining - delta);
+        var committedCap = EnemyStagePressure.CommittedThreatCap(mapState.CurrentNode?.Stage ?? 1);
+        var committed = CommittedThreatCount();
+        var rangedAllowed = !mapState.EncounterActive || encounterSeconds >= EnemyStagePressure.RangedGraceSeconds;
         foreach (var enemy in enemies)
         {
             enemy.Statuses.Tick(delta);
@@ -167,29 +177,102 @@ public sealed partial class RunSimulation
             var target = mapState.EncounterActive && arenaEnvironment is not null
                 ? arenaEnvironment.EnemyNavigationTarget(enemy.Position, player.Position, arenaWidth, arenaHeight, enemy.Radius)
                 : player.Position;
+            // While a ruined wall separates enemy and hunter, everyone simply heads for the crossing.
+            var crossing = target != player.Position;
             var direction = Vector2D.DirectionTo(enemy.Position, target);
             var speed = enemy.Speed;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier;
-            if (enemy.MireHound is { } stalker)
+            if (enemy.MireHound is { } hound)
             {
-                var windupStarted = stalker.Tick(scaledDelta, enemy.Position, player.Position);
-                if (windupStarted) RegisterSplashPulse(enemy.Position, 44, MireHoundBehaviorState.WindupSeconds);
-                if (stalker.IsWindingUp) continue;
-                if (stalker.IsLunging)
+                if (hound.Tick(scaledDelta, enemy.Position, player.Position, !crossing && committed < committedCap)) committed++;
+                switch (hound.Phase)
                 {
-                    direction = stalker.LungeDirection;
-                    speed *= 4;
-                    contactDamagePerSecond *= 4;
+                    case MireHoundPhase.Windup or MireHoundPhase.Recover:
+                        speed = 0;
+                        break;
+                    case MireHoundPhase.Pounce:
+                        direction = hound.PounceDirection;
+                        speed = MireHoundBehaviorState.PounceSpeed;
+                        break;
+                    case MireHoundPhase.Retreat:
+                        direction = Vector2D.DirectionTo(player.Position, enemy.Position);
+                        speed *= MireHoundBehaviorState.StalkSpeedMultiplier;
+                        break;
+                    default:
+                        if (!crossing) direction = Vector2D.DirectionTo(enemy.Position, hound.StalkPoint(enemy.Position, player.Position));
+                        speed *= MireHoundBehaviorState.StalkSpeedMultiplier;
+                        break;
+                }
+            }
+            else if (enemy.AshSlinger is { } slinger)
+            {
+                var mayThrow = rangedAllowed && rangedStaggerRemaining <= 0 && committed < committedCap;
+                switch (slinger.Tick(scaledDelta, enemy.Position, player.Position, enemy.Health, enemy.MaxHealth, mayThrow))
+                {
+                    case AshSlingerEvent.WindupStarted:
+                        committed++;
+                        rangedStaggerRemaining = EnemyStagePressure.RangedStaggerSeconds;
+                        break;
+                    case AshSlingerEvent.Released:
+                        hostileProjectiles.Add(new HostileProjectileState(enemy.Position, slinger.Target, AshSlingerBehaviorState.FlightSeconds,
+                            AshSlingerBehaviorState.ImpactRadius, AshSlingerBehaviorState.Damage, AshSlingerBehaviorState.ArcHeight));
+                        break;
+                }
+                if (slinger.Phase != AshSlingerPhase.Reposition) speed = 0;
+                else if (!crossing)
+                {
+                    var (away, multiplier) = slinger.Movement(enemy.Position, player.Position);
+                    direction = away;
+                    speed *= multiplier;
                 }
             }
 
-            var previous = enemy.Position;
-            var proposed = previous + direction * speed * scaledDelta;
-            enemy.Position = mapState.EncounterActive && arenaEnvironment is not null
-                ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius)
-                : proposed;
-            if (delta > 0 && Vector2D.Distance(enemy.Position, player.Position) <= enemy.Radius + player.Radius) DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
+            if (speed > 0)
+            {
+                var previous = enemy.Position;
+                var proposed = previous + direction * speed * scaledDelta;
+                enemy.Position = mapState.EncounterActive && arenaEnvironment is not null
+                    ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius)
+                    : proposed;
+            }
+            if (delta <= 0 || Vector2D.Distance(enemy.Position, player.Position) > enemy.Radius + player.Radius) continue;
+            if (enemy.MireHound is { Phase: MireHoundPhase.Pounce } biter)
+            {
+                // One committed bite, then the hound is exposed; never a pounce-speed contact grind.
+                DamagePlayer(MireHoundBehaviorState.PounceDamage);
+                biter.Land();
+            }
+            else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
+        UpdateHostileProjectiles(delta);
     }
 
+    private int CommittedThreatCount() => hostileProjectiles.Count
+        + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true);
+
+    private void UpdateHostileProjectiles(double delta)
+    {
+        foreach (var ember in hostileProjectiles)
+        {
+            ember.Advance(delta);
+            if (!ember.Landed) continue;
+            // Collision belongs to C#: the ember resolves once, exactly inside the mark the hunter was shown.
+            RegisterElementalImpact(ember.Target, SpellId.FireBolt);
+            if (Vector2D.Distance(player.Position, ember.Target) <= ember.Radius) DamagePlayer(ember.Damage);
+        }
+        hostileProjectiles.RemoveAll(ember => ember.Landed);
+    }
+
+    private static EnemyTelegraphRenderSnapshot? CreateEnemyTelegraph(EnemyState enemy) => enemy switch
+    {
+        { MireHound: { Phase: MireHoundPhase.Windup } hound } => new EnemyTelegraphRenderSnapshot("pounce", hound.WindupProgress,
+            hound.PounceEnd.X, hound.PounceEnd.Y, enemy.Radius),
+        { AshSlinger: { Phase: AshSlingerPhase.Windup } slinger } => new EnemyTelegraphRenderSnapshot("lob", slinger.WindupProgress,
+            slinger.Target.X, slinger.Target.Y, AshSlingerBehaviorState.ImpactRadius),
+        _ => null,
+    };
+
+    private IReadOnlyList<HostileProjectileRenderSnapshot> CreateHostileProjectileSnapshots() => hostileProjectiles
+        .Select(ember => new HostileProjectileRenderSnapshot(ember.Position.X, ember.Position.Y, ember.Height, ember.Target.X, ember.Target.Y,
+            ember.Radius, ember.Progress)).ToArray();
 }

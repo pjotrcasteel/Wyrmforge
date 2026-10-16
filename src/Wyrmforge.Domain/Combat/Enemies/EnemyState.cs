@@ -20,7 +20,10 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public EnemyKind Kind { get; } = kind;
 
-    public MireHoundBehaviorState? MireHound { get; } = kind == EnemyKind.MireHound ? new MireHoundBehaviorState() : null;
+    // Odd and even ids circle or strafe to opposite sides, so a pair of hounds or slingers pinches rather than stacks.
+    public MireHoundBehaviorState? MireHound { get; } = kind == EnemyKind.MireHound ? new MireHoundBehaviorState(id % 2 == 0 ? 1 : -1) : null;
+
+    public AshSlingerBehaviorState? AshSlinger { get; } = kind == EnemyKind.AshSlinger ? new AshSlingerBehaviorState(id % 2 == 0 ? 1 : -1) : null;
 
     public CombatStatusCollection Statuses { get; } = new();
 }

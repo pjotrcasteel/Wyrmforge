@@ -265,3 +265,14 @@ Design: `docs/design/arena-roster-v1.md`.
 - **Safe spawns.** Spawns can never fall back onto the hunter. A deterministic ring search keeps them 150 px or more away and skips the spawn when no safe ground exists.
 - **Balance.** Removing the on-hunter spawns halves BalanceLab damage taken (280 → 144; defeats 158 → 62). This was deliberate: the brief bans fake difficulty, and steps 2–4 restore pressure with readable threats. Target: 220–280 damage taken by step 4.
 - **Next:** roster step 2, Hound flank/pounce plus the Ash Slinger lob and new silhouettes.
+
+## 15. Arena roster — step 2 shipped (Hound pounce, Ash Slinger, silhouettes)
+
+Design: `docs/design/arena-roster-v1.md` §8.
+
+- **Mire Hound.** It flanks, then winds up for 0.5 s with the lane locked, then pounces 150 px for 15 damage (once). After that it recovers and retreats, which gives the player a punish window.
+- **Ash Slinger (new `EnemyKind` 4, `Artillery` role).** It holds range and winds up for 0.65 s with the landing spot locked. The ember lands in a 34 px mark for 14 damage. 30% burst damage interrupts the throw.
+- **Fairness caps.** No more than 2 committed telegraphs early in a hunt, no ranged attacks in the first 10 s, and Slinger windups are staggered. Damage is fixed, with no stage scaling.
+- **Art.** New generated sprites for all five kinds (walk plus an attack pose). Ground telegraphs come from `arena-enemy-telegraphs.js`.
+- **Balance.** Damage taken went from 144 to 161 and defeats from 62 to 73, concentrated in the non-dodging Greedy agent.
+- **Next:** step 3, the Ash Priest (at most 2 revives, interruptible) and the Penitent directional shield.
