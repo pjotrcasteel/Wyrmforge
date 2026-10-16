@@ -1,4 +1,4 @@
-// Fallback compact enemy pixel sprites used until the generated atlas loads. Six roster kinds;
+// Fallback compact enemy pixel sprites used until the generated atlas loads. Seven roster kinds;
 // C# still owns hitboxes, health, AI and attacks.
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
@@ -8,11 +8,13 @@ const palettes = [
     {edge:'#271d26',body:'#692e38',shade:'#482632',light:'#b86468',head:'#ae8379',eye:'#e6bc94',weapon:'#877c82'},
     {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
     {edge:'#1e0d0a',body:'#5e2a20',shade:'#331511',light:'#8a3f2c',head:'#d9cbb0',eye:'#ffb347',weapon:'#ffc46a'},
+    {edge:'#0b0f16',body:'#3c4a5c',shade:'#232c3a',light:'#61758c',head:'#b8c6d0',eye:'#8fc6e6',weapon:'#d8e4ec'},
 ];
-export const ENEMY_KIND_COUNT = 6;
+export const ENEMY_KIND_COUNT = 7;
 const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
-// Kinds 4-5 (Ash Slinger, Ash Priest) borrow the slender spear-bearer fallback frame with their own palettes.
-const fallbackFrame = kind => kind <= 3 ? kind : 2;
+// Kinds 4-5 (Ash Slinger, Ash Priest) borrow the slender spear-bearer fallback frame; the Drowned Wraith (6) reuses the
+// hooded, torn-hem wraith frame. Each keeps its own palette.
+const fallbackFrame = kind => kind <= 3 ? kind : kind === 6 ? 1 : 2;
 // Coordinates are drawn by hand at a single 32 x 36 scale. Material separation
 // and limb/weapon outline, not saturated outlines, carry actor recognition.
 export const enemyPixelFrames = [
@@ -148,6 +150,13 @@ function paletteFor(enemy) {
 }
 export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
     if(!enemy)return;
+    // A Drowned Wraith fades in from the water and out again; C# reports the opacity so the fade matches its window.
+    const opacity=Number(enemy.opacity??1);
+    if(Number.isFinite(opacity)&&opacity<1){
+        ctx.save();ctx.globalAlpha*=Math.max(0,opacity);
+        try{drawEnemyPixelArt(ctx,{...enemy,opacity:1},light,walkPhase,facing);}finally{ctx.restore();}
+        return;
+    }
     // A shielded Penitent faces its shield, not its last stride, so the sprite agrees with the blocking arc.
     if(enemy.shieldFacing!=null&&Number.isFinite(Number(enemy.shieldFacing)))facing=Math.cos(Number(enemy.shieldFacing))>=0?1:-1;
     const sprite=artReady()?artFrame('actors',enemySpriteName(enemy,walkPhase)):null;

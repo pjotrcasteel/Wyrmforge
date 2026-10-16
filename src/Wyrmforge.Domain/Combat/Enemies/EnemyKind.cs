@@ -8,4 +8,5 @@ public enum EnemyKind
     Penitent,
     AshSlinger,
     AshPriest,
+    DrownedWraith,
 }

@@ -299,6 +299,7 @@ public sealed partial class RunSimulation
                 ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
                 Routed = enemy.RoutedRemaining > 0,
                 Revived = enemy.Revived,
+                Opacity = enemy.DrownedWraith?.Opacity ?? 1,
             }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
@@ -336,6 +337,7 @@ public sealed partial class RunSimulation
             CastMotion = CreateCastMotionSnapshot(),
             HostileProjectiles = CreateHostileProjectileSnapshots(),
             AshRemains = CreateAshRemainsSnapshots(),
+            WraithRipples = CreateWraithRippleSnapshots(),
         };
     }
 

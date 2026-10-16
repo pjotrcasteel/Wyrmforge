@@ -1,6 +1,6 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
-// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest.
+// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith.
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
 // so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
@@ -25,6 +25,7 @@ export const ENEMY_SPECS = [
     { kind: 3, name: 'penitent', size: [46, 58], origin: [20, 35], radius: 19 },
     { kind: 4, name: 'ash-slinger', size: [44, 50], origin: [18, 29], radius: 11 },
     { kind: 5, name: 'ash-priest', size: [44, 60], origin: [19, 36], radius: 12 },
+    { kind: 6, name: 'drowned-wraith', size: [44, 54], origin: [19, 31], radius: 12 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -277,7 +278,53 @@ function ashPriest(pose) {
     return b;
 }
 
-const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest];
+// Drowned Wraith: a gaunt drowned woman in cold blue-grey, soaked hair hanging over a skull face, rusted chains, and a
+// shredded hem that never touches the ground - it dissolves into water. Pose 3 is the Chilling Touch: both clawed hands
+// thrust forward and the hair streams back, matching the frontal wedge C# tests.
+function drownedWraith(pose) {
+    const s = ENEMY_SPECS[6], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { shroud: '#3c4a5c', shroudHi: '#61758c', shroudDk: '#232c3a', skin: '#8496a6', skinDk: '#56677a', face: '#b8c6d0',
+        void: '#0b0f16', hair: '#1a1f28', hairHi: '#343d4c', chain: '#7a6248', water: '#8fc6e6', foam: '#d6f0ff', claw: '#d8e4ec' };
+    const bob = pose === 1 ? -1 : pose === 2 ? 1 : 0, strike = pose === 3;
+    const y = v => v + bob;
+    // Tattered hem: long ragged strips trailing back and dissolving into droplets instead of feet.
+    g.poly([[-7, y(-2)], [6, y(-2)], [9, y(12)], [6, y(10)], [5, y(18)], [2, y(13)], [0, y(20)], [-3, y(14)], [-5, y(19)], [-7, y(12)], [-10, y(15)]], C.shroud);
+    g.poly([[-7, y(-2)], [-3, y(-2)], [-4, y(14)], [-5, y(19)], [-7, y(12)], [-10, y(15)]], C.shroudDk);
+    g.line(2, y(0), 4, y(15), C.shroudHi); g.line(-1, y(2), 0, y(18), C.shroudHi);
+    for (const [x, d] of [[-9, 18], [-4, 22], [1, 23], [6, 21], [8, 15]]) { g.px(x, y(d), C.water); g.px(x, y(d) + 2, C.foam); }
+    // Rusted chain across the waist with a hanging cross.
+    g.line(-6, y(2), 6, y(5), C.chain); g.line(-2, y(3), -3, y(10), C.chain);
+    g.rect(-4, y(9), 3, 1, C.chain); g.rect(-3, y(8), 1, 4, C.chain);
+    // Far arm, then the gaunt chest.
+    if (strike) g.line(-2, y(-8), 9, y(-6), C.skinDk, 2);
+    else g.line(-5, y(-8), -9, y(1), C.skinDk, 2);
+    g.poly([[-5, y(-11)], [5, y(-11)], [6, y(-2)], [-6, y(-2)]], C.skin);
+    g.line(-1, y(-9), -1, y(-3), C.skinDk); g.line(2, y(-8), 3, y(-4), C.skinDk);
+    // Head bowed forward; hair hangs down past the shoulders, or streams back when it strikes.
+    g.ell(3, y(-15), 3.6, 4, C.face);
+    g.px(3, y(-16), C.void); g.px(5, y(-16), C.void); g.rect(3, y(-13), 3, 1, C.void);
+    if (strike) {
+        g.poly([[-1, y(-19)], [4, y(-20)], [1, y(-14)], [-9, y(-14)], [-13, y(-10)], [-8, y(-17)]], C.hair);
+        g.line(-2, y(-18), -11, y(-12), C.hairHi);
+    } else {
+        g.poly([[-1, y(-19)], [5, y(-20)], [6, y(-17)], [1, y(-16)], [0, y(-5)], [-3, y(0)], [-5, y(-6)], [-4, y(-15)]], C.hair);
+        g.line(-2, y(-15), -3, y(-3), C.hairHi);
+    }
+    // Near arm: long fingers hang low while drifting, or lunge out as a claw.
+    if (strike) {
+        g.line(3, y(-9), 13, y(-9), C.skin, 2);
+        for (const d of [-11, -9, -7]) g.line(14, y(d), 16, y(d + 1), C.claw);
+    } else {
+        const sway = pose === 1 ? 1 : pose === 2 ? -1 : 0;
+        g.line(3, y(-9), 7, y(-1 + sway), C.skin, 2); g.line(7, y(-1 + sway), 8, y(5 + sway), C.skin);
+        g.px(8, y(6 + sway), C.claw); g.px(9, y(6 + sway), C.claw); g.px(7, y(7 + sway), C.claw);
+    }
+    b.rim('#b6dcf2', '#06090e', .4, .3);
+    b.outline('#070a10');
+    return b;
+}
+
+const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 

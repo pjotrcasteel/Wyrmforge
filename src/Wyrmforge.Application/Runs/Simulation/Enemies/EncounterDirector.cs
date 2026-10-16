@@ -8,6 +8,7 @@ public sealed class EncounterDirector
     public const double BreathingRoomSeconds = 3;
 
     private readonly Queue<EnemyKind> pendingInserts = new();
+    private EnemyPackRecipe? pendingRecipe;
     private EnemyEncounterPattern pattern;
     private int depth;
     private int stage;
@@ -34,6 +35,7 @@ public sealed class EncounterDirector
         progress = 0;
         phaseElapsed = 0;
         pendingInserts.Clear();
+        pendingRecipe = null;
         if (stage == 4) Insert(EnemyKind.Penitent);
         Phase = EncounterPhase.Pressure;
     }
@@ -74,8 +76,18 @@ public sealed class EncounterDirector
         return false;
     }
 
+    /// <summary>A pack the director wants next: the current queue is replaced by this structured group.</summary>
+    public bool TryTakeRecipe(out EnemyPackRecipe recipe)
+    {
+        recipe = pendingRecipe ?? default;
+        if (pendingRecipe is null) return false;
+        pendingRecipe = null;
+        return true;
+    }
+
     public void Reset()
     {
+        pendingRecipe = null;
         Active = false;
         Phase = EncounterPhase.Pressure;
         progress = 0;
@@ -114,6 +126,12 @@ public sealed class EncounterDirector
         if (Phase == phase) return;
         Phase = phase;
         phaseElapsed = 0;
+        // Habitat events (brief §6): the surge is the habitat's signature pack; the final approach's climax is a Last Stand.
+        if (habitat is { } local && local != WyrmrealmHabitat.Outskirts)
+        {
+            if (phase == EncounterPhase.Surge) pendingRecipe = EnemyPackRecipeCatalog.SurgeEvent(local);
+            else if (phase == EncounterPhase.Climax && local is WyrmrealmHabitat.ScorchedApproach or WyrmrealmHabitat.Lair) pendingRecipe = EnemyPackRecipe.LastStand;
+        }
 
         if (stage == 4 && phase is EncounterPhase.Escalation or EncounterPhase.Surge or EncounterPhase.Climax)
         {

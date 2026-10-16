@@ -5,6 +5,8 @@
 const POUNCE = { edge: 'rgba(214, 64, 48, 0.85)', fill: 'rgba(214, 64, 48, 0.16)', charge: 'rgba(240, 92, 64, 0.34)' };
 const LOB = { edge: 'rgba(255, 150, 64, 0.9)', fill: 'rgba(255, 140, 56, 0.12)', charge: 'rgba(255, 170, 80, 0.32)' };
 const BASH = { edge: 'rgba(226, 70, 52, 0.9)', fill: 'rgba(226, 70, 52, 0.14)', charge: 'rgba(240, 96, 70, 0.36)' };
+// The wraith's claw is still an attack, so it keeps the red danger edge, with a cold drowned fill to name the attacker.
+const CLAW = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(120, 190, 230, 0.14)', charge: 'rgba(170, 220, 250, 0.38)' };
 // Support casts are not attacks on the hunter, so they use cool/holy hues instead of the red-orange danger family.
 const HEAL = { edge: 'rgba(150, 232, 150, 0.85)', charge: 'rgba(190, 255, 170, 0.5)' };
 const REVIVE = { edge: 'rgba(196, 146, 255, 0.85)', fill: 'rgba(150, 100, 230, 0.1)', charge: 'rgba(210, 170, 255, 0.4)' };
@@ -18,26 +20,27 @@ export function drawEnemyTelegraph(ctx, enemy) {
     if (!telegraph) return;
     if (telegraph.kind === 'pounce') drawPounceLane(ctx, enemy, telegraph);
     else if (telegraph.kind === 'lob') drawLandingMark(ctx, telegraph.targetX, telegraph.targetY, telegraph.radius, telegraph.progress, LOB);
-    else if (telegraph.kind === 'bash') drawBashArc(ctx, enemy, telegraph);
+    else if (telegraph.kind === 'bash') drawBashArc(ctx, enemy, telegraph, BASH);
+    else if (telegraph.kind === 'claw') drawBashArc(ctx, enemy, telegraph, CLAW);
     else if (telegraph.kind === 'heal') drawHealTether(ctx, enemy, telegraph);
     else if (telegraph.kind === 'revive') drawReviveCircle(ctx, telegraph);
 }
 
 // Frontal wedge: exactly the reach and arc C# tests against when the bash lands.
-function drawBashArc(ctx, enemy, telegraph) {
+function drawBashArc(ctx, enemy, telegraph, colors) {
     const angle = Math.atan2(telegraph.targetY - enemy.y, telegraph.targetX - enemy.x);
     const reach = Math.max(8, Number(telegraph.radius) || 0);
     const progress = clamp01(telegraph.progress);
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
     wedge(ctx, angle, reach);
-    ctx.fillStyle = BASH.fill;
+    ctx.fillStyle = colors.fill;
     ctx.fill();
-    ctx.strokeStyle = BASH.edge;
+    ctx.strokeStyle = colors.edge;
     ctx.lineWidth = 1.5;
     ctx.stroke();
     wedge(ctx, angle, reach * progress);
-    ctx.fillStyle = BASH.charge;
+    ctx.fillStyle = colors.charge;
     ctx.fill();
     ctx.restore();
 }
@@ -119,6 +122,37 @@ export function drawAshRemains(ctx, remains) {
     ctx.fillRect(remains.x + 2, remains.y + 1, 2, 2);
     ctx.fillStyle = 'rgba(190, 170, 150, 0.8)';
     ctx.fillRect(remains.x - 1, remains.y - 1, 3, 2);
+    ctx.restore();
+}
+
+// A Drowned Wraith under the water. Drifting: a faint pair of ripples, readable if you look for it (Hades' burrowing
+// enemies). Emerging: a bright ring that closes onto the exact body it will surface with - the 0.8s ambush tell.
+export function drawWraithRipple(ctx, ripple, seconds = 0) {
+    if (!ripple) return;
+    const body = Math.max(6, Number(ripple.radius) || 12);
+    ctx.save();
+    if (ripple.emerging) {
+        const p = clamp01(ripple.progress);
+        ctx.fillStyle = `rgba(120, 190, 230, ${0.1 + 0.18 * p})`;
+        ctx.beginPath();
+        ctx.ellipse(ripple.x, ripple.y, body * 1.6, body * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(200, 236, 255, ${0.55 + 0.4 * p})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(ripple.x, ripple.y, body * (2.6 - 1.2 * p), body * (1.3 - 0.6 * p), 0, 0, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        const t = (Number(seconds) || 0) * 1.4;
+        for (let i = 0; i < 2; i++) {
+            const phase = (t + i * 0.5) % 1;
+            ctx.strokeStyle = `rgba(170, 215, 240, ${0.32 * (1 - phase)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(ripple.x, ripple.y, body * (0.5 + phase), body * (0.25 + phase * 0.5), 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    }
     ctx.restore();
 }
 

@@ -27,6 +27,8 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public AshPriestBehaviorState? AshPriest { get; } = kind == EnemyKind.AshPriest ? new AshPriestBehaviorState(id) : null;
 
+    public DrownedWraithBehaviorState? DrownedWraith { get; } = kind == EnemyKind.DrownedWraith ? new DrownedWraithBehaviorState(id) : null;
+
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
 
     /// <summary>Raised by an Ash Priest: already paid out its experience once, so its second death drops none.</summary>

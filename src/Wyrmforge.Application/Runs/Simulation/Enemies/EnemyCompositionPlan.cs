@@ -2,4 +2,5 @@ using Wyrmforge.Domain.Combat.Enemies;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
-public sealed record EnemyCompositionPlan(IReadOnlyList<EnemyKind> Enemies, int ThreatSpent);
+/// <summary>One pack's spawn order. <see cref="Recipe"/> is the structured group it was built around, if any.</summary>
+public sealed record EnemyCompositionPlan(IReadOnlyList<EnemyKind> Enemies, int ThreatSpent, EnemyPackRecipe? Recipe = null);

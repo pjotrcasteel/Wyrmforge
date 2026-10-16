@@ -32,6 +32,7 @@ public sealed partial class RunSimulation
     {
         ashRemains.Clear();
         encounterRevives = 0;
+        ClearWraithState();
     }
 
     private void RegisterSupportDeath(EnemyState enemy)

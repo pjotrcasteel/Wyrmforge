@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, SHIELD_HALF_ANGLE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
+import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple, SHIELD_HALF_ANGLE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
 
 function mockContext() {
     const calls = [];
@@ -93,4 +93,26 @@ test('ash remains fade with their remaining life', () => {
     const alpha = ctx => ctx.calls.find(c => c[0] === 'set' && c[1] === 'globalAlpha')[2];
     assert.ok(alpha(fresh) > alpha(old));
     drawAshRemains(old, null);
+});
+
+test('wraith claw is the same locked wedge as the bash, at the C# reach, with its own cold fill', () => {
+    const ctx = mockContext();
+    drawEnemyTelegraph(ctx, { x: 10, y: 10, telegraph: { kind: 'claw', progress: .5, targetX: 10, targetY: 70, radius: 60 } });
+    const arcs = ctx.calls.filter(c => c[0] === 'arc');
+    assert.deepEqual(arcs[0].slice(1, 4), [0, 0, 60]);
+    assert.ok(Math.abs(arcs[0][4] - (Math.PI / 2 - SHIELD_HALF_ANGLE)) < 1e-9);
+    assert.deepEqual(arcs[1].slice(1, 4), [0, 0, 30], 'charge sweeps out with progress');
+    assert.ok(ctx.calls.some(c => c[0] === 'set' && c[1] === 'fillStyle' && String(c[2]).startsWith('rgba(120, 190, 230')));
+});
+
+test('wraith ripples are faint while drifting and close onto the body while emerging', () => {
+    const drifting = mockContext();
+    drawWraithRipple(drifting, { x: 50, y: 60, emerging: false, progress: 0, radius: 12 }, 0);
+    assert.equal(drifting.calls.filter(c => c[0] === 'ellipse').length, 2);
+    assert.ok(!drifting.calls.some(c => c[0] === 'fill'));
+    const rising = mockContext();
+    drawWraithRipple(rising, { x: 50, y: 60, emerging: true, progress: 1, radius: 12 }, 0);
+    const rings = rising.calls.filter(c => c[0] === 'ellipse');
+    for (const [actual, expected] of rings[1].slice(1, 5).map((v, i) => [v, [50, 60, 16.8, 8.4][i]])) assert.ok(Math.abs(actual - expected) < 1e-9);
+    drawWraithRipple(rising, null);
 });

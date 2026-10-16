@@ -36,7 +36,7 @@ public static class EnemyEncounterComposition
     {
         var profile = GetProfile(pattern);
         var budget = Math.Max(1, (int)Math.Round(profile.BaseThreatBudget * Math.Max(0.25, threatBudgetMultiplier)));
-        if (habitat is { } local) return CreateHabitatPlan(local, budget, randomSource);
+        if (habitat is { } local) return CreateHabitatPlan(local, budget, randomSource, EnemyPackRecipeCatalog.Choose(local, budget, randomSource));
         var plan = new List<EnemyKind>();
         var spent = 0;
 
@@ -65,13 +65,27 @@ public static class EnemyEncounterComposition
     }
 
     /// <summary>
-    /// Habitat plans replace role minimums and depth gates with the habitat's ecology: the pattern still sets
-    /// pacing and threat budget, while the habitat decides who lives there (brief §4–5).
+    /// A director event: the named pack (budget permitting, else loose habitat fillers) replaces whatever was still queued.
     /// </summary>
-    private static EnemyCompositionPlan CreateHabitatPlan(WyrmrealmHabitat habitat, int budget, IRandomSource randomSource)
+    public static EnemyCompositionPlan CreateRecipePlan(EnemyPackRecipe recipe, WyrmrealmHabitat habitat, EnemyEncounterPattern pattern,
+        IRandomSource randomSource, double threatBudgetMultiplier = 1)
     {
-        var plan = new List<EnemyKind>();
-        var spent = 0;
+        var scale = recipe == EnemyPackRecipe.LastStand ? EnemyPackRecipeCatalog.LastStandBudgetMultiplier : 1;
+        var budget = Math.Max(1, (int)Math.Round(GetProfile(pattern).BaseThreatBudget * Math.Max(0.25, threatBudgetMultiplier) * scale));
+        var members = EnemyPackRecipeCatalog.Build(recipe, habitat, budget, randomSource);
+        return CreateHabitatPlan(habitat, budget, randomSource, members is null ? null : (recipe, members));
+    }
+
+    /// <summary>
+    /// Habitat plans replace role minimums and depth gates with the habitat's ecology: the pattern still sets
+    /// pacing and threat budget, while the habitat decides who lives there (brief §4–5). A structured pack comes first;
+    /// weighted fillers spend what budget it leaves, adding texture without breaking the pack's relationships (brief §6).
+    /// </summary>
+    private static EnemyCompositionPlan CreateHabitatPlan(WyrmrealmHabitat habitat, int budget, IRandomSource randomSource,
+        (EnemyPackRecipe Recipe, IReadOnlyList<EnemyKind> Members)? pack)
+    {
+        var plan = new List<EnemyKind>(pack?.Members ?? []);
+        var spent = plan.Sum(kind => EnemyCatalog.Get(kind).ThreatCost);
         while (true)
         {
             var remaining = budget - spent;
@@ -89,7 +103,7 @@ public static class EnemyEncounterComposition
             plan.Add(selected.Kind);
             spent += selected.ThreatCost;
         }
-        return new EnemyCompositionPlan(plan, spent);
+        return new EnemyCompositionPlan(plan, spent, pack?.Recipe);
     }
 
     /// <summary>
@@ -123,7 +137,7 @@ public static class EnemyEncounterComposition
     }
 
     private static IEnumerable<EnemyDefinition> EligibleEnemies(EnemyCompositionProfile profile, int depth, int remainingBudget) =>
-        EnemyCatalog.All.Where(definition => definition.MinimumDepth <= depth && definition.ThreatCost <= remainingBudget && profile.WeightFor(definition.Role) > 0);
+        EnemyCatalog.All.Where(definition => !definition.HabitatOnly && definition.MinimumDepth <= depth && definition.ThreatCost <= remainingBudget && profile.WeightFor(definition.Role) > 0);
 
     private static EnemyDefinition SelectWeighted(IReadOnlyList<EnemyDefinition> eligible, EnemyCompositionProfile profile, IRandomSource randomSource)
     {

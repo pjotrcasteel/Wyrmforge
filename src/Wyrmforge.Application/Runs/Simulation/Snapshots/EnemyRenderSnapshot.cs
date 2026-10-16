@@ -13,4 +13,7 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
 
     /// <summary>Raised by an Ash Priest; drops no experience.</summary>
     public bool Revived { get; init; }
+
+    /// <summary>Body opacity: a Drowned Wraith rising out of or sinking back into the water. 1 for everything else.</summary>
+    public double Opacity { get; init; } = 1;
 }

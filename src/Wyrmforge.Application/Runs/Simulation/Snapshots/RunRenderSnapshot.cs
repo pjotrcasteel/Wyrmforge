@@ -32,4 +32,6 @@ public sealed record RunRenderSnapshot(
 
     /// <summary>Fallen Ashlings an Ash Priest can still raise; Life runs 1→0 until the remains crumble.</summary>
     public IReadOnlyList<AshRemainsRenderSnapshot> AshRemains { get; init; } = [];
+
+    public IReadOnlyList<WraithRippleRenderSnapshot> WraithRipples { get; init; } = [];
 }

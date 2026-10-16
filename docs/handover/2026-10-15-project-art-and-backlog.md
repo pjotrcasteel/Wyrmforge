@@ -292,3 +292,13 @@ Design: `docs/design/arena-roster-v1.md` §9.
 ## 17. End-of-run review prompt
 
 Every run end (extraction, death or abandon) opens a dismissible **How was that hunt?** card after any cinematic, leaderboard or quest overlay. It has five one-tap stars that open the feedback form with Enjoyment prefilled, **Write a review**, **Not now**, ✕, a backdrop click or Esc, and **Don't ask again**, which stores `wyrmforge.reviewPrompt.v1 = muted`. Like mobile in-app review prompts, it asks at a natural pause and never mid-fight. The run summary button is now the more visible **★ Review this hunt**.
+
+## 18. Arena roster — step 4 shipped (Drowned Wraith, pack recipes, director events)
+
+Design: `docs/design/arena-roster-v1.md` §10.
+
+- **Drowned Wraith (new `EnemyKind` 6).** Untargetable and harmless while submerged (a faint ripple), it rises 50 px from the hunter after a 0.8 s ring tell, locks a 0.4 s claw wedge (14 damage), then stays exposed for 1.5 s before sinking. It never rises on the hunter, and it is forced up after 6 s so it can never stall a clear.
+- **Pack recipes.** Seven named packs (Wandering Dead, Hunting Pack, Ashling Mob, Priest Warband, Bastion, Drowned Watch, Last Stand) open each habitat plan; fillers spend the rest.
+- **Director events.** Surge sends the habitat's signature pack; the Approach/Lair climax sends a Last Stand.
+- **Balance.** Damage is unchanged at about 161; defeats went from 86 to 65.
+- **Next:** step 5, ordinary elites.

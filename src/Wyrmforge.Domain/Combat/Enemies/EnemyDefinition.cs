@@ -8,4 +8,5 @@ public sealed record EnemyDefinition(
     int MinimumDepth = 1,
     double HealthMultiplier = 1,
     double SpeedMultiplier = 1,
-    double ContactDamageMultiplier = 1);
+    double ContactDamageMultiplier = 1,
+    bool HabitatOnly = false);

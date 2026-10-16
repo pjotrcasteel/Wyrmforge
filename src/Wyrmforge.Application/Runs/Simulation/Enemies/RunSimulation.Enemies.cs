@@ -39,7 +39,7 @@ public sealed partial class RunSimulation
             if (encounterDirector.CanComplete && mapState.CurrentNodeKills >= mapState.CurrentNodeKillsRequired)
             {
                 // Stop spawning after the finale, but do not open a passage with live enemies on the floor.
-                if (enemies.Count == 0 && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
+                if (HostileCount == 0 && mapState.CurrentNode is { } completed && mapState.TryCompleteEncounter())
                     CompleteTrail(completed);
                 spawnTimer = 0.08;
                 return;
@@ -56,7 +56,7 @@ public sealed partial class RunSimulation
 
         var stage = mapState.CurrentNode?.Stage ?? 1;
         var activeCap = mapEncounter ? EnemyStagePressure.ActiveEnemyCap(stage, depthState.Depth) : EnemyEncounterComposition.GetActiveEnemyCap(depthState.Depth);
-        if (enemies.Count >= activeCap)
+        if (HostileCount >= activeCap)
         {
             spawnTimer = 0.08;
             return;
@@ -65,13 +65,19 @@ public sealed partial class RunSimulation
         var directive = mapEncounter ? encounterDirector.Directive : EncounterDirective.Default;
         var batchSize = EnemyEncounterComposition.GetSpawnBatchSize(encounterPattern, randomSource) + directive.BatchSizeBonus;
         var spawned = 0;
-        if (mapEncounter && enemies.Count < activeCap && encounterDirector.TryTakeInsert(out var insert))
+        if (mapEncounter && encounterHabitat is { } habitat && encounterDirector.TryTakeRecipe(out var recipe))
+        {
+            encounterPlan = EnemyEncounterComposition.CreateRecipePlan(recipe, habitat, encounterPattern, randomSource,
+                depthState.ThreatBudgetMultiplier * encounterModifiers.ThreatBudgetMultiplier);
+            encounterPlanIndex = 0;
+        }
+        if (mapEncounter && HostileCount < activeCap && encounterDirector.TryTakeInsert(out var insert))
         {
             SpawnEnemy(width, height, insert);
             spawned++;
         }
 
-        for (var index = spawned; index < batchSize && enemies.Count < activeCap; index++)
+        for (var index = spawned; index < batchSize && HostileCount < activeCap; index++)
         {
             EnsureEncounterPlan(mapEncounter);
             if (encounterPlan is null || encounterPlanIndex >= encounterPlan.Enemies.Count) break;
@@ -89,7 +95,7 @@ public sealed partial class RunSimulation
         // Wyrm victory transitions into a bounded final stand rather than endless normal waves.
         spawnTimer -= delta;
         if (spawnTimer > 0 || !ExtractionDefenseProfile.CanSpawn(extractionState.RemainingSeconds)) return;
-        if (enemies.Count >= ExtractionDefenseProfile.ActiveEnemyCap(depthState.Depth))
+        if (HostileCount >= ExtractionDefenseProfile.ActiveEnemyCap(depthState.Depth))
         {
             spawnTimer = 0.1;
             return;
@@ -115,7 +121,11 @@ public sealed partial class RunSimulation
     {
         const double margin = 30;
         // Map encounters enter from where their habitat hides them: along the road, out of the flanks, or from everywhere.
-        var edge = (mapState.EncounterActive ? encounterHabitat : null) is { } habitat
+        var huntingPair = kind == EnemyKind.MireHound && encounterPlan?.Recipe == EnemyPackRecipe.HuntingPack;
+        var edge = huntingPair
+            // A hunting pack arrives in pairs, each pair from a different side (brief §6).
+            ? (encounterPlanIndex - 1) / 2 % 4
+            : (mapState.EncounterActive ? encounterHabitat : null) is { } habitat
             ? WyrmrealmHabitatCatalog.SpawnOrigin(habitat) switch
             {
                 WyrmrealmSpawnOrigin.Road => enemyId % 2 * 2,
@@ -153,7 +163,9 @@ public sealed partial class RunSimulation
         }
         var enemy = new EnemyState(++enemyId, position, definition.Radius, health, speed, kind);
         enemy.Penitent?.Face(Vector2D.DirectionTo(position, player.Position));
-        enemies.Add(enemy);
+        // Wraiths arrive under the water and only join the fight when they surface.
+        if (enemy.DrownedWraith is not null) submergedWraiths.Add(enemy);
+        else enemies.Add(enemy);
     }
 
     private (double Health, double Speed) EnemyStats(EnemyDefinition definition)
@@ -176,6 +188,7 @@ public sealed partial class RunSimulation
         var committed = CommittedThreatCount();
         var rangedAllowed = !mapState.EncounterActive || encounterSeconds >= EnemyStagePressure.RangedGraceSeconds;
         UpdateAshRemains(delta);
+        UpdateSubmergedWraiths(delta, ref committed, committedCap);
         // Raised Ashlings are appended mid-loop; walking the frame's original count lets them start acting next frame.
         for (int index = 0, count = enemies.Count; index < count; index++)
         {
@@ -206,6 +219,7 @@ public sealed partial class RunSimulation
                 (direction, speed, var bashCommitted) = UpdatePenitent(enemy, penitent, scaledDelta, crossing, direction, speed, committed < committedCap);
                 committed += bashCommitted;
             }
+            else if (enemy.DrownedWraith is { } wraith) speed = UpdateDrownedWraith(enemy, wraith, scaledDelta, speed);
             else if (enemy.MireHound is { } hound)
             {
                 if (hound.Tick(scaledDelta, enemy.Position, player.Position, !crossing && committed < committedCap)) committed++;
@@ -268,11 +282,13 @@ public sealed partial class RunSimulation
             }
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
+        SinkWraiths();
         UpdateHostileProjectiles(delta);
     }
 
-    private int CommittedThreatCount() => hostileProjectiles.Count
-        + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true);
+    private int CommittedThreatCount() => hostileProjectiles.Count + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
+        + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
+            || enemy.DrownedWraith?.IsCommitted == true);
 
     private void UpdateHostileProjectiles(double delta)
     {
@@ -296,6 +312,9 @@ public sealed partial class RunSimulation
         { Penitent: { Phase: PenitentPhase.Windup } penitent } => new EnemyTelegraphRenderSnapshot("bash", penitent.WindupProgress,
             enemy.Position.X + penitent.Facing.X * PenitentBehaviorState.BashReach, enemy.Position.Y + penitent.Facing.Y * PenitentBehaviorState.BashReach,
             PenitentBehaviorState.BashReach),
+        { DrownedWraith: { Phase: DrownedWraithPhase.Windup } claw } => new EnemyTelegraphRenderSnapshot("claw", claw.WindupProgress,
+            enemy.Position.X + claw.Facing.X * DrownedWraithBehaviorState.StrikeReach, enemy.Position.Y + claw.Facing.Y * DrownedWraithBehaviorState.StrikeReach,
+            DrownedWraithBehaviorState.StrikeReach),
         { AshPriest: { Phase: AshPriestPhase.Heal } healer } => enemies.FirstOrDefault(ally => ally.Id == healer.HealTargetId) is { } ward
             ? new EnemyTelegraphRenderSnapshot("heal", healer.CastProgress, ward.Position.X, ward.Position.Y, ward.Radius)
             : null,

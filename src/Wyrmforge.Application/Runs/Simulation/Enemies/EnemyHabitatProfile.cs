@@ -6,8 +6,6 @@ namespace Wyrmforge.Application.Runs.Simulation;
 /// <summary>
 /// Relative rarity weights per habitat, from the first-hunt encounter brief (§4). A zero weight is the
 /// introduction policy: that kind never appears in that habitat, not even as a director insert.
-/// Kinds that have not shipped yet lend their weight to a same-role stand-in so habitat pressure stays
-/// at its intended level: Wraith (telegraphed ambusher) → Mire Hound.
 /// </summary>
 public static class EnemyHabitatProfile
 {
@@ -39,8 +37,6 @@ public static class EnemyHabitatProfile
     private static IReadOnlyDictionary<EnemyKind, double> Row(double hollow = 0, double ashling = 0, double priest = 0, double slinger = 0,
         double hound = 0, double penitent = 0, double wraith = 0)
     {
-        // Stand-in until roster step 4 adds the Drowned Wraith kind.
-        hound += wraith;
         var row = new Dictionary<EnemyKind, double>();
         if (hollow > 0) row[EnemyKind.Hollow] = hollow;
         if (ashling > 0) row[EnemyKind.Ashling] = ashling;
@@ -48,6 +44,7 @@ public static class EnemyHabitatProfile
         if (penitent > 0) row[EnemyKind.Penitent] = penitent;
         if (slinger > 0) row[EnemyKind.AshSlinger] = slinger;
         if (priest > 0) row[EnemyKind.AshPriest] = priest;
+        if (wraith > 0) row[EnemyKind.DrownedWraith] = wraith;
         return row;
     }
 }

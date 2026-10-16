@@ -474,7 +474,7 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 - C.2: a preparation economy with exact spend preview (waits for elites/Reliquary from the arena refactor).
 - C.3: two sockets, loadouts, free respec, and event-budget tests. Done.
 - Phases D to G stay gated on product-owner scheduling: Chronicle/FLC, offline blueprints, the verified Conclave, and content delivery.
-- Arena roster (enemies, habitats, elites, Reliquary): active, pulled forward. Step 1 of 7 (habitats, renamed roster, safe spawns) step 2 (Hound pounce, Ash Slinger, new silhouettes and ground telegraphs) and step 3 (Ash Priest, morale, Penitent shield) shipped; see `docs/design/arena-roster-v1.md`. Full arena tile redesign: still deferred to the story phase (M7 note).
+- Arena roster (enemies, habitats, elites, Reliquary): active, pulled forward. Step 1 of 7 (habitats, renamed roster, safe spawns) step 2 (Hound pounce, Ash Slinger, new silhouettes and ground telegraphs), step 3 (Ash Priest, morale, Penitent shield) and step 4 (Drowned Wraith, pack recipes, director events) shipped; see `docs/design/arena-roster-v1.md`. Full arena tile redesign: still deferred to the story phase (M7 note).
 
 **Deferred:**
 - Elder Wyrms.

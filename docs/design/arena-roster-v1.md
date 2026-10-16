@@ -51,7 +51,7 @@ Map encounters use `EnemyHabitatProfile` weights, which hold the brief's §4 tab
 - Priest goes to Hollow (until step 3, which shipped the Ash Priest).
 - Slinger and Wraith (telegraphed harassers) go to Mire Hound.
 
-Without the stand-ins, the late cloister roads would lose their harassment pressure. The effective weights today:
+Without the stand-ins, the late cloister roads would lose their harassment pressure. The effective weights at step 1 (since step 4 every kind holds its own §4 weight and no stand-ins remain):
 
 | Habitat | Hollow | Ashling | Hound | Penitent |
 |---|---:|---:|---:|---:|
@@ -223,9 +223,49 @@ The brief's support loop (§3): taking out one enemy should change the encounter
   - Habitat plans never field a priest before three Ashlings.
 - JS: bash, heal and revive geometry, the shield guard arc and remains fading.
 
-## 10. Next steps (brief §10 order)
+## 10. Step 4: Drowned Wraith, pack recipes, director events
 
-4. Drowned Wraith and pack recipes (Wandering Dead, Hunting Pack, Ashling Mob, Priest Warband, Bastion, Drowned Watch, Last Stand).
+References: Hades' burrowing Wretched Sneaks and Monster Hunter's Jyuratodus (the tell is the threat, the recovery is the opening), Diablo's named monster packs (a group has a purpose), and Left 4 Dead's director (phases trigger events, not just faster timers).
+
+**Drowned Wraith (new `EnemyKind` 6, `Ambusher`, threat 2, 0.85× HP, habitat-only).**
+- **Submerged:** kept out of the enemy list entirely, so no spell, aura, chain or essence can touch it and it cannot touch the hunter. Shown only as a faint drifting ripple. It glides along walkable ground (never through walls) to an ambush point on a 50 px ring around the hunter, on its own side so pairs flank.
+- **Emerging (0.8 s):** a bright ring closes onto the exact spot it will rise; still untargetable. If the hunter steps into the ripple (< 17 px) it sinks and picks another spot. It never rises on the hunter.
+- **Windup (0.4 s):** materialized and targetable, the claw direction locked; red-edged cold wedge, 60 px reach, ±60°. **Strike:** 14 damage only inside the wedge.
+- **Exposed (1.5 s):** slow (0.55×) and solid: the punish window. **Fading (0.45 s):** still targetable, then it sinks for 2.1 s and repeats.
+- Emerging and windup count toward the committed-threat cap. After 6 s underwater it surfaces wherever it is (cap full or hunter kiting), so it can never hold a slot or stall a clear. Submerged wraiths count toward the active cap and node completion.
+- Habitat-only: legacy pattern plans never field it; it lives in the Flooded Cloister and the Monastery Grounds.
+
+**Pack recipes (brief §6, `EnemyPackRecipeCatalog`).**
+
+| Recipe | Members | Home habitats |
+|---|---|---|
+| Wandering Dead | 5–11 Hollows | Outskirts (only), Village, Monastery |
+| Hunting Pack | 3–6 Hounds, arriving in pairs from different sides | Wet Forest |
+| Ashling Mob | 7–12 Ashlings | Open Field, Approach |
+| Priest Warband | 5–8 Ashlings, then 1 Priest, 0–2 Slingers | Open Field, Village, Approach |
+| Bastion | 1–3 Penitents + Hollows + a Slinger, or 1–2 Penitents + Ashlings + a Priest | Monastery |
+| Drowned Watch | 4–8 Hollows with 1–2 Wraiths staggered between them | Flooded Cloister |
+| Last Stand | 12–22 mixed, every role | Director climax only |
+
+- A habitat plan opens with one weighted pack, then spends any leftover budget on the §4 fillers. Sizes are rolled, then the group with the most slack is trimmed until the pack fits the budget; a pack the habitat does not host (introduction policy) or cannot afford is skipped.
+- **Director events:** entering Surge replaces the queue with the habitat's signature pack (Forest → Hunting Pack, Field → Ashling Mob, Monastery → Bastion, Cloister → Drowned Watch, Approach/Lair → Priest Warband). The Approach and Lair climax sends a Last Stand at 1.8× budget. The Outskirts tutorial never gets events.
+
+**Presentation.** New wraith sprite from `concepts/07-drowned-wraith.png`: a drowned woman in cold blue-grey, soaked hair, rusted chain and cross, a shredded hem dissolving into droplets; pose 3 thrusts both claws forward. C# reports body opacity so the rise and sink fade match their windows.
+
+**Balance check (25 runs × 48 combinations)**
+
+| Build | Damage taken | Min HP | Defeats | Extracted | Wyrms reached |
+|---|---:|---:|---:|---:|---:|
+| Step 3 | 162 | 0.57 | 86 | 290 | 1.25 |
+| Step 4 | 161 | 0.58 | 65 | 297 | 1.26 |
+
+- The first version only emerged inside its ring; kiting bots kept wraiths underwater, holding cap slots and stalling clears (kills −31%). Forced surfacing after 6 s fixed it: kills 1221 → 1220, routes 15.1 → 15.2.
+- Recipes alone left pace unchanged and made fights slightly more readable; damage is still under the 220–280 target, which elites (step 5) and the Reliquary are meant to lift.
+
+**Tests.** `DrownedWraithBehaviorStateTests` (loop timing, ring band, forced rise, abort on the hunter, wedge, flank sides); `DrownedWraithTests` in a live simulation (untargetable and harmless while submerged, claw telegraph and cap, hit in front, miss after a dodge, sinks again, counts for clearing); `EnemyPackRecipeTests` (budget, habitat residents, priest order, wraith stagger, determinism, habitat identity); director events per habitat and none in the Outskirts; JS claw wedge and ripples.
+
+## 11. Next steps (brief §10 order)
+
 5. Ordinary elites: 10% per eligible node after node 2, at most 1 per node, +35–60% HP, 2–3× XP.
 6. The Reliquary: 6% once per hunt, distinct from `WyrmrealmNodeRarity.Rare`.
 7. Bell Warden on the pre-lair beat, and Ashfang on the first hunt only.

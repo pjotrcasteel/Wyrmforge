@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Enemies;
 
@@ -77,6 +78,46 @@ public sealed class EncounterDirectorTests
         Assert.AreEqual(EnemyKind.Penitent, climaxInsert);
         Assert.IsTrue(director.Directive.BatchSizeBonus > 0);
         Assert.IsTrue(director.Directive.SpawnIntervalMultiplier < 1);
+    }
+
+    [TestMethod]
+    [DataRow(WyrmrealmHabitat.FloodedCloister, EnemyPackRecipe.DrownedWatch, null)]
+    [DataRow(WyrmrealmHabitat.WetForest, EnemyPackRecipe.HuntingPack, null)]
+    [DataRow(WyrmrealmHabitat.Lair, EnemyPackRecipe.PriestWarband, EnemyPackRecipe.LastStand)]
+    public void HabitatPhases_TriggerPackEvents(WyrmrealmHabitat habitat, EnemyPackRecipe surge, EnemyPackRecipe? climax)
+    {
+        var director = new EncounterDirector();
+        director.Start(EnemyEncounterPattern.Mixed, 2, 3, habitat);
+        Assert.IsFalse(director.TryTakeRecipe(out _), "Pressure opens with the node's own plan.");
+        director.Tick(director.PhaseDuration);
+        director.RegisterProgress(4, 16);
+        director.Tick(director.PhaseDuration);
+        director.RegisterProgress(8, 16);
+        director.Tick(EncounterDirector.BreathingRoomSeconds);
+        Assert.IsTrue(director.TryTakeRecipe(out var surgeRecipe));
+        Assert.AreEqual(surge, surgeRecipe);
+        Assert.IsFalse(director.TryTakeRecipe(out _), "Each event fires once.");
+
+        director.Tick(director.PhaseDuration);
+        director.RegisterProgress(13, 16);
+        Assert.AreEqual(EncounterPhase.Climax, director.Phase);
+        Assert.AreEqual(climax is not null, director.TryTakeRecipe(out var climaxRecipe));
+        if (climax is not null) Assert.AreEqual(climax, climaxRecipe);
+    }
+
+    [TestMethod]
+    public void Outskirts_NeverQueuesPackEvents()
+    {
+        var director = new EncounterDirector();
+        director.Start(EnemyEncounterPattern.Mixed, 1, 1, WyrmrealmHabitat.Outskirts);
+        director.Tick(director.PhaseDuration);
+        director.RegisterProgress(4, 16);
+        director.Tick(director.PhaseDuration);
+        director.RegisterProgress(8, 16);
+        director.Tick(EncounterDirector.BreathingRoomSeconds);
+        director.Tick(director.PhaseDuration);
+        director.RegisterProgress(13, 16);
+        Assert.IsFalse(director.TryTakeRecipe(out _), "The tutorial stays a plain shamble.");
     }
 
     [TestMethod]
