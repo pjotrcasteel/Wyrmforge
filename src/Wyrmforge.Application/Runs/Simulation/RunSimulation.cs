@@ -171,7 +171,8 @@ public sealed partial class RunSimulation
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateSpellcasting(delta, movement.IsMoving);
-        UpdateEnemies(delta);
+        // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.
+        if (!UpdateReliquaryReveal(delta)) UpdateEnemies(delta);
         RebuildCombatSpatialIndex();
         UpdateBurningGrounds(delta);
         UpdateProjectiles(delta, width, height);
@@ -283,6 +284,7 @@ public sealed partial class RunSimulation
         ReactionsTriggered = reactionsTriggered,
         EnemyRecords = CreateEnemyRecords(),
         ElitesSlain = defeatedElites.Select(defeat => defeat.Affix).Distinct().Order().ToArray(),
+        ReliquarySlain = ReliquaryDefeat is not null,
     };
 
     public RunRenderSnapshot CreateSnapshot()
@@ -303,6 +305,7 @@ public sealed partial class RunSimulation
                 Revived = enemy.Revived,
                 Opacity = enemy.DrownedWraith?.Opacity ?? 1,
                 Elite = enemy.IsElite ? enemy.Elite.ToString() : null,
+                Empowered = IsWardEmpowered(enemy),
             }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
@@ -341,6 +344,8 @@ public sealed partial class RunSimulation
             HostileProjectiles = CreateHostileProjectileSnapshots(),
             AshRemains = CreateAshRemainsSnapshots(),
             WraithRipples = CreateWraithRippleSnapshots(),
+            Reliquary = CreateReliquarySnapshot(),
+            ReliquaryFields = CreateReliquaryFieldSnapshots(),
         };
     }
 

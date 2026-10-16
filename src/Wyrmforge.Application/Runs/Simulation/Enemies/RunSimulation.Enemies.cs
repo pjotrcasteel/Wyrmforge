@@ -31,6 +31,8 @@ public sealed partial class RunSimulation
             entryGraceRemaining = Math.Max(0, entryGraceRemaining - delta);
             return;
         }
+        // Nothing new walks in while the Reliquary rises.
+        if (ReliquaryStage is ReliquaryStage.Hush or ReliquaryStage.Emerging) return;
         var mapEncounter = mapState.EncounterActive;
         if (mapEncounter)
         {
@@ -211,7 +213,14 @@ public sealed partial class RunSimulation
             var speed = enemy.Speed;
             var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier * EliteImpact(enemy);
             if (packbloodLeaders.Count > 0 && IsPackbloodEmpowered(enemy)) speed *= PackbloodSpeedMultiplier;
-            if (enemy.RoutedRemaining > 0)
+            if (IsWardEmpowered(enemy)) speed *= ReliquaryWardSpeedMultiplier;
+            if (enemy.Ward is { } fuse)
+            {
+                UpdateReliquaryWard(enemy, fuse, scaledDelta);
+                continue;
+            }
+            if (enemy.Reliquary is { } rite) (direction, speed) = UpdateReliquary(enemy, rite, scaledDelta, crossing, direction, speed);
+            else if (enemy.RoutedRemaining > 0)
             {
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
                 enemy.RoutedRemaining = Math.Max(0, enemy.RoutedRemaining - scaledDelta);
@@ -290,9 +299,10 @@ public sealed partial class RunSimulation
         }
         SinkWraiths();
         UpdateHostileProjectiles(delta);
+        UpdateReliquaryFields(delta);
     }
 
-    private int CommittedThreatCount() => hostileProjectiles.Count + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
+    private int CommittedThreatCount() => hostileProjectiles.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
             || enemy.DrownedWraith?.IsCommitted == true);
 
@@ -326,6 +336,14 @@ public sealed partial class RunSimulation
             : null,
         { AshPriest: { Phase: AshPriestPhase.Revive } raiser } => new EnemyTelegraphRenderSnapshot("revive", raiser.CastProgress,
             raiser.CastPoint.X, raiser.CastPoint.Y, AshPriestBehaviorState.ReviveRange * 0.5),
+        { Reliquary: { IsCasting: true } rite } => rite.Rite == ReliquaryRite.Ward
+            ? new EnemyTelegraphRenderSnapshot("rite-ward", rite.CastProgress, enemy.Position.X, enemy.Position.Y, ReliquaryWardOffset)
+            : new EnemyTelegraphRenderSnapshot(rite.Rite == ReliquaryRite.Seal ? "rite-seal" : "rite-corruption", rite.CastProgress, rite.CastPoint.X,
+                rite.CastPoint.Y, rite.Rite == ReliquaryRite.Seal ? rite.Shifted ? ReliquaryShiftedSealRadius : ReliquarySealRadius : ReliquaryFieldRadius),
+        { Reliquary: { Phase: ReliquaryPhase.Shift } shifting } => new EnemyTelegraphRenderSnapshot("rite-shift", shifting.ShiftProgress,
+            enemy.Position.X, enemy.Position.Y, enemy.Radius * 2),
+        { Ward: { Warning: true } fuse } => new EnemyTelegraphRenderSnapshot("ward-fuse", fuse.WarningProgress, enemy.Position.X, enemy.Position.Y,
+            ReliquaryWardBlastRadius),
         _ => null,
     };
 

@@ -57,7 +57,7 @@ public sealed partial class RunSimulation
         var lowest = AshPriestBehaviorState.WoundedFraction;
         foreach (var ally in enemies)
         {
-            if (ally == enemy || ally.Health <= 0 || ally.Kind == EnemyKind.AshPriest) continue;
+            if (ally == enemy || ally.Health <= 0 || ally.Kind == EnemyKind.AshPriest || IsReliquaryKind(ally.Kind)) continue;
             if (Vector2D.Distance(ally.Position, enemy.Position) > AshPriestBehaviorState.HealRange) continue;
             var ratio = ally.Health / ally.MaxHealth;
             if (ratio >= lowest) continue;
@@ -154,7 +154,7 @@ public sealed partial class RunSimulation
         var count = 0;
         foreach (var ally in enemies)
         {
-            if (ally == priest || ally.Kind == EnemyKind.AshPriest || Vector2D.Distance(ally.Position, priest.Position) > PriestPackRadius) continue;
+            if (ally == priest || ally.Kind == EnemyKind.AshPriest || IsReliquaryKind(ally.Kind) || Vector2D.Distance(ally.Position, priest.Position) > PriestPackRadius) continue;
             x += ally.Position.X;
             y += ally.Position.Y;
             count++;

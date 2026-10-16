@@ -1,4 +1,4 @@
-// Fallback compact enemy pixel sprites used until the generated atlas loads. Seven roster kinds;
+// Fallback compact enemy pixel sprites used until the generated atlas loads. Nine roster kinds (7-8: Reliquary and ward);
 // C# still owns hitboxes, health, AI and attacks.
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
@@ -9,12 +9,14 @@ const palettes = [
     {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
     {edge:'#1e0d0a',body:'#5e2a20',shade:'#331511',light:'#8a3f2c',head:'#d9cbb0',eye:'#ffb347',weapon:'#ffc46a'},
     {edge:'#0b0f16',body:'#3c4a5c',shade:'#232c3a',light:'#61758c',head:'#b8c6d0',eye:'#8fc6e6',weapon:'#d8e4ec'},
+    {edge:'#24070c',body:'#7a1820',shade:'#45101a',light:'#c9a24a',head:'#e6dcc8',eye:'#14060a',weapon:'#f0d27a'},
+    {edge:'#1c171a',body:'#d8c8a4',shade:'#7e6228',light:'#c9a24a',head:'#b02a34',eye:'#fff1c0',weapon:'#ff8a3c'},
 ];
-export const ENEMY_KIND_COUNT = 7;
+export const ENEMY_KIND_COUNT = 9;
 const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
 // Kinds 4-5 (Ash Slinger, Ash Priest) borrow the slender spear-bearer fallback frame; the Drowned Wraith (6) reuses the
 // hooded, torn-hem wraith frame. Each keeps its own palette.
-const fallbackFrame = kind => kind <= 3 ? kind : kind === 6 ? 1 : 2;
+const fallbackFrame = kind => kind <= 3 ? kind : kind === 6 ? 1 : kind === 7 ? 3 : 2;
 // Coordinates are drawn by hand at a single 32 x 36 scale. Material separation
 // and limb/weapon outline, not saturated outlines, carry actor recognition.
 export const enemyPixelFrames = [

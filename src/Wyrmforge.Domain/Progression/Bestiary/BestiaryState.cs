@@ -27,9 +27,17 @@ public sealed class BestiaryState
 
     public bool EliteSlain(EliteAffix affix) => elites.Contains(affix);
 
-    public bool HunterNoteRevealed(EnemyKind kind) => Kills(kind) >= BestiaryCatalog.HunterNoteKills;
+    // A unique creature (the Reliquary) gives up its secrets in a single kill; nobody meets one fifty times.
+    public bool HunterNoteRevealed(EnemyKind kind) => Kills(kind) >= HunterNoteKillsFor(kind);
 
-    public bool Studied(EnemyKind kind) => Kills(kind) >= BestiaryCatalog.StudiedKills;
+    public bool Studied(EnemyKind kind) => Kills(kind) >= (IsUnique(kind) ? 1 : BestiaryCatalog.StudiedKills);
+
+    /// <summary>Kills that reveal this creature's hunter note: one for a unique, the catalog threshold otherwise.</summary>
+    public static int HunterNoteKillsFor(EnemyKind kind) => IsUnique(kind) ? 1 : BestiaryCatalog.HunterNoteKills;
+
+    public static bool IsUnique(EnemyKind kind) => Enum.IsDefined(kind) && EnemyCatalog.Get(kind).Unique;
+
+    private static bool IsCreature(EnemyKind kind) => Enum.IsDefined(kind) && EnemyCatalog.Get(kind).IsCreature;
 
     /// <summary>Merges a finished hunt. Kinds met but never killed still count as encountered.</summary>
     public BestiaryRunResult Record(IEnumerable<(EnemyKind Kind, int Kills)> encounters, IEnumerable<EliteAffix> elitesSlain)
@@ -39,7 +47,7 @@ public sealed class BestiaryState
         var newCreatures = new List<EnemyKind>();
         foreach (var (kind, count) in encounters)
         {
-            if (!Enum.IsDefined(kind)) continue;
+            if (!IsCreature(kind)) continue;
             if (!kills.ContainsKey(kind)) newCreatures.Add(kind);
             kills[kind] = SafeAdd(kills.GetValueOrDefault(kind), Math.Max(0, count));
         }
@@ -68,7 +76,7 @@ public sealed class BestiaryState
         if (save is null) return;
         foreach (var entry in save.Entries ?? [])
         {
-            if (entry is null || !Enum.TryParse<EnemyKind>(entry.Kind, out var kind) || !Enum.IsDefined(kind)) continue;
+            if (entry is null || !Enum.TryParse<EnemyKind>(entry.Kind, out var kind) || !IsCreature(kind)) continue;
             kills[kind] = SafeAdd(kills.GetValueOrDefault(kind), Math.Max(0, entry.Kills));
         }
         foreach (var name in save.Elites ?? [])

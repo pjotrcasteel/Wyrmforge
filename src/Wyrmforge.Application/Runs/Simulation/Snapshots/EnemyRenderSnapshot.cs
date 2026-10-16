@@ -19,4 +19,7 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
 
     /// <summary>Elite affix name (e.g. "Gravebound") for the sprite's visual signature; null for ordinary enemies.</summary>
     public string? Elite { get; init; }
+
+    /// <summary>Standing within a Reliquary ward's reach: faster and harder-hitting.</summary>
+    public bool Empowered { get; init; }
 }

@@ -117,6 +117,10 @@ public partial class ArenaView : IAsyncDisposable
         var previousEvacuationSecond = (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         var previousEliteSightings = current.EliteSightings;
         var previousEliteDefeats = current.DefeatedElites.Count;
+        var previousReliquarySightings = current.ReliquarySightings;
+        var previousReliquaryShifts = current.ReliquaryShifts;
+        var previousReliquaryWithdrawals = current.ReliquaryWithdrawals;
+        var reliquaryWasSlain = current.ReliquaryDefeat is not null;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
@@ -144,6 +148,29 @@ public partial class ArenaView : IAsyncDisposable
         else if (current.DefeatedElites.Count != previousEliteDefeats)
         {
             ShowEliteDefeated(current.DefeatedElites[^1]);
+            stateChanged = true;
+        }
+        // The Reliquary outranks elite callouts: it is the rarer, louder moment.
+        if (current.ReliquarySightings != previousReliquarySightings)
+        {
+            ShowReliquarySighted();
+            await TryPlayAudioAsync("hunt-start");
+            stateChanged = true;
+        }
+        else if (current.ReliquaryShifts != previousReliquaryShifts)
+        {
+            ShowReliquaryShift();
+            stateChanged = true;
+        }
+        else if (!reliquaryWasSlain && current.ReliquaryDefeat is { } relic)
+        {
+            ShowReliquaryDefeated(relic);
+            await TryPlayAudioAsync("reward");
+            stateChanged = true;
+        }
+        else if (current.ReliquaryWithdrawals != previousReliquaryWithdrawals)
+        {
+            ShowReliquaryWithdrawn();
             stateChanged = true;
         }
         if (!hadChoices && current.PendingChoices.Count > 0) await TryPlayAudioAsync("upgrade-open");

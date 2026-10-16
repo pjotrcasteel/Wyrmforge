@@ -12,6 +12,11 @@ const HEAL = { edge: 'rgba(150, 232, 150, 0.85)', charge: 'rgba(190, 255, 170, 0
 // Elite death blasts are attacks too (red edge), filled with the elite's own hue: grave violet, drowned blue.
 const GRAVE = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(150, 120, 255, 0.14)', charge: 'rgba(178, 156, 255, 0.36)' };
 const ECHO = { edge: 'rgba(226, 84, 74, 0.85)', fill: 'rgba(110, 190, 240, 0.12)', charge: 'rgba(127, 214, 255, 0.34)' };
+// The Reliquary's rites keep the red danger edge; gilt names the seal, crimson the ward burst, bruised violet the corruption.
+const SEAL = { edge: 'rgba(226, 84, 74, 0.95)', fill: 'rgba(240, 196, 96, 0.13)', charge: 'rgba(255, 214, 120, 0.36)' };
+const WARD = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(176, 42, 52, 0.16)', charge: 'rgba(255, 96, 90, 0.36)' };
+const CORRUPTION = { edge: 'rgba(226, 84, 74, 0.75)', fill: 'rgba(110, 30, 70, 0.14)', charge: 'rgba(160, 60, 120, 0.3)' };
+const RITE = { edge: 'rgba(240, 196, 96, 0.8)', charge: 'rgba(255, 224, 150, 0.55)' };
 const REVIVE = { edge: 'rgba(196, 146, 255, 0.85)', fill: 'rgba(150, 100, 230, 0.1)', charge: 'rgba(210, 170, 255, 0.4)' };
 // Must match PenitentBehaviorState.ShieldHalfAngleRadians: the drawn guard is exactly the blocking arc.
 export const SHIELD_HALF_ANGLE = Math.PI / 3;
@@ -27,6 +32,49 @@ export function drawEnemyTelegraph(ctx, enemy) {
     else if (telegraph.kind === 'claw') drawBashArc(ctx, enemy, telegraph, CLAW);
     else if (telegraph.kind === 'heal') drawHealTether(ctx, enemy, telegraph);
     else if (telegraph.kind === 'revive') drawReviveCircle(ctx, telegraph);
+    else if (telegraph.kind === 'rite-seal') drawRitePreview(ctx, telegraph, SEAL);
+    else if (telegraph.kind === 'rite-corruption') drawRitePreview(ctx, telegraph, CORRUPTION);
+    else if (telegraph.kind === 'rite-ward' || telegraph.kind === 'rite-shift') drawRiteRing(ctx, enemy, telegraph);
+    else if (telegraph.kind === 'ward-fuse') drawLandingMark(ctx, telegraph.targetX, telegraph.targetY, telegraph.radius, telegraph.progress, WARD);
+}
+
+// A rite being cast: a dashed outline exactly where it will land, its sweep closing as the censers rise. The live blast or
+// pool then takes over with its own mark, so the warning never shrinks or moves.
+function drawRitePreview(ctx, telegraph, colors) {
+    const r = Math.max(8, Number(telegraph.radius) || 0);
+    const p = clamp01(telegraph.progress);
+    ctx.save();
+    ctx.setLineDash?.([6, 5]);
+    ctx.strokeStyle = colors.edge;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(telegraph.targetX, telegraph.targetY, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash?.([]);
+    ctx.strokeStyle = colors.charge;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(telegraph.targetX, telegraph.targetY, r - 2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
+    ctx.stroke();
+    ctx.restore();
+}
+
+// Planting a ward or deepening the ritual: a gilt ring around the Reliquary itself; no damage, only a tell.
+function drawRiteRing(ctx, enemy, telegraph) {
+    const r = Math.max(10, Number(telegraph.radius) || 0);
+    const p = clamp01(telegraph.progress);
+    ctx.save();
+    ctx.strokeStyle = RITE.edge;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = RITE.charge;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, r + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
+    ctx.stroke();
+    ctx.restore();
 }
 
 // Frontal wedge: exactly the reach and arc C# tests against when the bash lands.
@@ -211,8 +259,8 @@ export function drawHostileProjectileGround(ctx, projectile) {
     if (!projectile) return;
     const style = projectile.style ?? 'ember';
     drawLandingMark(ctx, projectile.targetX, projectile.targetY, projectile.radius, projectile.progress,
-        style === 'grave' ? GRAVE : style === 'echo' ? ECHO : LOB);
-    // Grave and echo blasts never travel: the mark is the whole telegraph, so there is no ball or shadow.
+        style === 'grave' ? GRAVE : style === 'echo' ? ECHO : style === 'seal' ? SEAL : style === 'ward' ? WARD : LOB);
+    // Grave, echo, seal and ward blasts never travel: the mark is the whole telegraph, so there is no ball or shadow.
     if (style !== 'ember') return;
     ctx.save();
     ctx.fillStyle = 'rgba(5, 7, 10, 0.4)';

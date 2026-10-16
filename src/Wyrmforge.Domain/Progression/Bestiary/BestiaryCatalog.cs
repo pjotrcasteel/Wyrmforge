@@ -57,7 +57,15 @@ public static class BestiaryCatalog
             "Read the ripple and step out of the claw wedge; strike while it hangs exposed after the attack.",
             "Flooded cloister, drowned crypt",
             "The cloister bells rang the night the river rose. The wraiths still rise when they hear footsteps."),
+        new(EnemyKind.Reliquary, "The Reliquary", "Unique • ultra-rare ward-bearer",
+            "A crowned ritualist that rises from ruined sanctuaries. It plants wards that empower nearby monsters, seeds corruption under the hunter and marks delayed seal blasts. At half strength its ritual deepens.",
+            "Destroy the ward, break the support, then punish the caster: it is shielded while a ward stands. Leave every marked circle.",
+            "Ruined monastery, flooded cloister, scorched sanctuary",
+            "It carries a splinter of the Wyrm in its censers. The monks who built the cloister never wrote down what they were guarding."),
     ];
+
+    /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>
+    public static bool HasEntry(EnemyKind kind) => All.Any(entry => entry.Kind == kind);
 
     public static BestiaryEntry Get(EnemyKind kind) => All.Single(entry => entry.Kind == kind);
 }

@@ -300,7 +300,47 @@ References: Diablo champions and Hades armored foes (one sharpened rule on a fam
 
 JS tests cover the sigil, the crest and the grave/echo marks.
 
-## 12. Next steps (brief §10 order)
+## 12. Step 6: The Reliquary
 
-6. The Reliquary: 6% once per hunt, distinct from `WyrmrealmNodeRarity.Rare`.
+References: the Diablo treasure goblin and Hollow Knight's hidden fights (rare, never guaranteed), Hades' Elysium champions (a duel with a readable rite kit), and Monster Hunter's tempered monsters (the arena turns against you, but every hit is telegraphed).
+
+**Rarity (`RunSimulation.Reliquary.cs`).**
+- One 6% roll per hunt (`IsReliquaryHunt`), on its own FNV seed, so it never shifts the spawn or elite streams. It is separate from `WyrmrealmNodeRarity.Rare`.
+- It appears at most once, on the first eligible node walked: a Combat node at stages 4–7 in Monastery Grounds, Flooded Cloister or Scorched Approach. A node with the Reliquary never also gets an elite.
+- No reveal happens during mop-up: once the node objective is met, the chance passes silently.
+
+**Reveal.**
+- After 8 s on the node, the hunt **hushes** for 1.2 s. Enemies, embers and timers freeze; your spells still run.
+- A gilt sigil draws itself on one of 8 seeded compass spots, at least 240 px away and pushed off walls.
+- It **emerges** over 1.4 s exactly where it will fight. A "THE RELIQUARY" callout and the hunt horn mark it.
+
+**Duel kit** (HP 15× base, slow, weak contact). Its rites cycle Ward → Corruption → Seal with readable casts:
+
+| Rite | Tell | Effect | Counterplay |
+|---|---|---|---|
+| Ward | Gilt ring on the Reliquary, 1.1 s | Plants a ward (HP 2.4×) 70 px away; at most 2 live, 8 per fight | Kill the wards: while any stands, the Reliquary takes 40% damage and the chain shows which ward |
+| Ward power | Crimson ring at minion feet | Minions within 150 px of a ward move 20% faster and hit 25% harder | Fight away from wards |
+| Ward fuse | Red landing mark for the last 3 s of its 13 s life | Bursts for 14 in 70 px | Leave the ring, or break it early |
+| Corruption | Dashed outline at the pool, 0.9 s | A 64 px pool arms over 1 s, then burns 9 dps for 4.5 s; at most 3 | Step off; pools never spawn on a seal |
+| Seal | Dashed gilt outline at your position, 0.8 s, then a 1.8 s mark | A 90 px blast for 24 | One dash clears it |
+
+- **Deepening** at 50% HP: a 2 s gilt ring, a "THE RITUAL DEEPENS" callout, wider seals (110 px) and shorter gaps between rites.
+- **Fairness.** Wards and the Reliquary never count toward the node objective, so clearing the road is always possible. A frozen Reliquary pauses its rites and ward fuses.
+- **Payout.** Wards pay nothing. The Reliquary pays once: score, a 20 XP shard and a typed `ReliquaryDefeat` (the hook for C.2 reagents). Its death ends every rite.
+- **Withdrawal.** If the road is cleared first, it withdraws ("THE RELIQUARY WITHDRAWS") and is gone for the hunt.
+
+**Presentation.**
+- Sprites: a crimson-robed bearer with a censer crown, and a gilt ward lantern (atlas kinds 7 and 8).
+- A screen-edge hush veil, a distinct duel bar ("THE RELIQUARY", a WARDED state and a half-health notch), ward chains and corruption pools (`arena-reliquary-vfx.js`).
+- The Codex shows it as a ◆ Unique: one kill reveals the full entry, and it has no elite form.
+
+**Balance check (25 runs × 48 combinations).** At 6% on late nodes it barely moves pace: kills 1219 → 1219, damage 161.0 → 161.2, defeats 63 → 64, extracted 304 → 304.
+
+**Tests.**
+- `ReliquaryEncounterTests` (9): seeded rate, once-per-hunt and eligibility, hush, phase shift and ward cap, wards, the ward burst, a single payout, withdrawal, and rite marks.
+- `ReliquaryBehaviorStateTests` (7).
+- JS: `arena-reliquary-vfx.test.mjs`, plus the rite telegraphs and seal/ward marks.
+
+## 13. Next steps (brief §10 order)
+
 7. Bell Warden on the pre-lair beat, and Ashfang on the first hunt only.

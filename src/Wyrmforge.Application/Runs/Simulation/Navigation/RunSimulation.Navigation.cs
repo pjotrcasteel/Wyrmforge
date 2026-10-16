@@ -36,7 +36,7 @@ public sealed partial class RunSimulation
         var seconds = (int)Math.Ceiling(Math.Max(0, encounterDirector.PhaseDuration - encounterDirector.PhaseElapsed));
         var status = seconds > 0 ? $"{seconds}s" : "Clear enemies";
         var objective = killProgress < 1 ? $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills"
-            : encounterDirector.CanComplete ? $"Clear {enemies.Count} remaining" : "Hold the trail";
+            : encounterDirector.CanComplete ? $"Clear {HostileCount} remaining" : "Hold the trail";
         return new(Math.Min(killProgress, phaseFraction), status, objective);
     }
 
@@ -50,6 +50,7 @@ public sealed partial class RunSimulation
         ClearMapEncounterField();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
+        PrepareReliquaryNode(node);
         RollNodeElite(node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
@@ -89,6 +90,7 @@ public sealed partial class RunSimulation
     private void CompleteTrail(WyrmrealmMapNode completedNode)
     {
         completedRouteNodes.Add(completedNode);
+        WithdrawReliquary();
         trailExitPending = true;
         RefreshBuildModifiers(true);
         ApplyRouteReward(completedNode.Route?.Reward);
@@ -122,6 +124,7 @@ public sealed partial class RunSimulation
         enemies.Clear();
         hostileProjectiles.Clear();
         ClearSupportState();
+        ClearReliquaryState();
         encounterSeconds = 0;
         rangedStaggerRemaining = 0;
         pendingRelicBursts.Clear();

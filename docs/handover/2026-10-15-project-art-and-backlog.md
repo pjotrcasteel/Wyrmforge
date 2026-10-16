@@ -332,3 +332,15 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Run report.** A "Bestiary • new entries" block lists first sightings and new elites.
 - **Tests.** `BestiaryStateTests`, `BestiaryRecordTests` and `bestiary-portraits.test.mjs`.
 - **Next:** step 6, the Reliquary.
+
+## 21. Arena roster — step 6 shipped (the Reliquary)
+
+- **What.** An ultra-rare unique: a 6% chance once per hunt, on a stage 4–7 combat node in the monastery habitats.
+  - It reveals itself with a 1.2 s hush, then a sigil and an emergence, and fights a ward / corruption / seal rite duel that deepens at half health.
+  - It withdraws if the road is cleared first. Full rules are in `docs/design/arena-roster-v1.md` §12.
+- **Code.**
+  - `RunSimulation.Reliquary.cs`, `ReliquaryBehaviorState`, and `ReliquaryRenderSnapshot` / `ReliquaryFieldRenderSnapshot`.
+  - JS: `arena-reliquary-vfx.js`.
+  - Callouts are in `ArenaView.Moments.cs`.
+- **Codex.** A unique entry: unlocked by a single kill, with no elite form.
+- **Next:** step 7, the Bell Warden and Ashfang.

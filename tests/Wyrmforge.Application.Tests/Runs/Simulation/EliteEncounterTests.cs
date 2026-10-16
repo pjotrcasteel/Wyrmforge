@@ -78,7 +78,7 @@ public sealed class EliteEncounterTests
     [TestMethod]
     public void EliteStats_StayInsideTheBriefBands()
     {
-        Assert.HasCount(Enum.GetValues<EnemyKind>().Length, EliteAffixCatalog.All);
+        Assert.HasCount(Enum.GetValues<EnemyKind>().Count(kind => !EnemyCatalog.Get(kind).Unique), EliteAffixCatalog.All);
         foreach (var definition in EliteAffixCatalog.All)
         {
             Assert.IsTrue(definition.HealthMultiplier is >= 1.35 and <= 1.6, definition.Title);

@@ -2,12 +2,14 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
-/// <summary>Ember: a thrown arc. Grave and Echo: a zero-travel ground blast whose mark is its whole telegraph.</summary>
+/// <summary>Ember: a thrown arc. Grave, Echo, Seal and Ward: a zero-travel ground blast whose mark is its whole telegraph.</summary>
 public enum HostileProjectileStyle
 {
     Ember,
     Grave,
     Echo,
+    Seal,
+    Ward,
 }
 
 /// <summary>An arcing enemy projectile. It cannot hit anything in flight; it resolves once, at its marked landing spot.</summary>

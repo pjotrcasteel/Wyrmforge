@@ -36,5 +36,8 @@ public static class EliteAffixCatalog
 
     public static EliteAffixDefinition For(EnemyKind kind) => All.Single(definition => definition.Kind == kind);
 
+    /// <summary>The elite form of a common kind, or null for kinds that never roll elite (the Reliquary and its wards).</summary>
+    public static EliteAffixDefinition? TryFor(EnemyKind kind) => All.SingleOrDefault(definition => definition.Kind == kind);
+
     public static EliteAffixDefinition Get(EliteAffix affix) => All.Single(definition => definition.Affix == affix);
 }

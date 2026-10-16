@@ -111,12 +111,16 @@ public sealed partial class RunSimulation
             }
         }
 
+        if (target is EnemyState { Kind: EnemyKind.Reliquary } && reliquaryWards.Count > 0) damage *= ReliquaryWardedDamageMultiplier;
         target.Health -= damage;
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
 
         switch (target)
         {
+            case EnemyState { Kind: EnemyKind.Reliquary or EnemyKind.ReliquaryWard } rite:
+                ResolveReliquaryDeath(rite);
+                break;
             case EnemyState defeatedEnemy:
                 RegisterEnemyDeath(defeatedEnemy);
                 RegisterSupportDeath(defeatedEnemy);

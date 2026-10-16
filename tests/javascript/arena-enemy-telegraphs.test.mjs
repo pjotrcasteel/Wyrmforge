@@ -27,6 +27,32 @@ test('elite grave and echo blasts are ground marks only: no ember ball or shadow
     }
 });
 
+test('reliquary seal and ward blasts are ground marks only at their exact radius', () => {
+    for (const style of ['seal', 'ward']) {
+        const ground = mockContext();
+        const blast = { x: 10, y: 20, height: 0, targetX: 10, targetY: 20, radius: 90, progress: .4, style };
+        drawHostileProjectileGround(ground, blast);
+        assert.deepEqual(ground.calls.find(c => c[0] === 'arc').slice(1, 4), [10, 20, 90]);
+        assert.equal(ground.calls.filter(c => c[0] === 'ellipse').length, 0);
+        const air = mockContext();
+        drawHostileProjectileEmber(air, blast);
+        assert.equal(air.calls.length, 0);
+    }
+});
+
+test('reliquary rite previews outline the exact landing spot and rings sit on the caster', () => {
+    for (const kind of ['rite-seal', 'rite-corruption', 'ward-fuse']) {
+        const ctx = mockContext();
+        drawEnemyTelegraph(ctx, { x: 0, y: 0, telegraph: { kind, progress: .5, targetX: 200, targetY: 120, radius: 64 } });
+        assert.deepEqual(ctx.calls.find(c => c[0] === 'arc').slice(1, 4), [200, 120, 64], kind);
+    }
+    for (const kind of ['rite-ward', 'rite-shift']) {
+        const ctx = mockContext();
+        drawEnemyTelegraph(ctx, { x: 40, y: 50, telegraph: { kind, progress: .5, targetX: 200, targetY: 120, radius: 70 } });
+        assert.deepEqual(ctx.calls.find(c => c[0] === 'arc').slice(1, 4), [40, 50, 70], kind);
+    }
+});
+
 test('no telegraph draws nothing', () => {
     const ctx = mockContext();
     drawEnemyTelegraph(ctx, { x: 0, y: 0 });

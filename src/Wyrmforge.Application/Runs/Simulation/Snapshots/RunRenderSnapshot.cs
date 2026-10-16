@@ -34,4 +34,8 @@ public sealed record RunRenderSnapshot(
     public IReadOnlyList<AshRemainsRenderSnapshot> AshRemains { get; init; } = [];
 
     public IReadOnlyList<WraithRippleRenderSnapshot> WraithRipples { get; init; } = [];
+
+    public ReliquaryRenderSnapshot? Reliquary { get; init; }
+
+    public IReadOnlyList<ReliquaryFieldRenderSnapshot> ReliquaryFields { get; init; } = [];
 }

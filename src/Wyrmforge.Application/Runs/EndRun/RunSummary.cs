@@ -39,6 +39,8 @@ public sealed record RunSummary(
     /// <summary>Every creature kind met this hunt, with how many fell (bestiary input).</summary>
     public IReadOnlyList<RunEnemyRecord> EnemyRecords { get; init; } = Array.Empty<RunEnemyRecord>();
     public IReadOnlyList<EliteAffix> ElitesSlain { get; init; } = Array.Empty<EliteAffix>();
+    /// <summary>The ultra-rare Reliquary rose and fell this hunt.</summary>
+    public bool ReliquarySlain { get; init; }
 }
 
 public sealed record RunEnemyRecord(EnemyKind Kind, int Kills);

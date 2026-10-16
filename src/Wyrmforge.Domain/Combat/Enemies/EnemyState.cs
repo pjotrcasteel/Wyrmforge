@@ -29,6 +29,10 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public DrownedWraithBehaviorState? DrownedWraith { get; } = kind == EnemyKind.DrownedWraith ? new DrownedWraithBehaviorState(id) : null;
 
+    public ReliquaryBehaviorState? Reliquary { get; } = kind == EnemyKind.Reliquary ? new ReliquaryBehaviorState() : null;
+
+    public ReliquaryWardState? Ward { get; } = kind == EnemyKind.ReliquaryWard ? new ReliquaryWardState() : null;
+
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
 
     /// <summary>Roster step 5 elite power; <see cref="EliteAffix.None"/> for an ordinary enemy.</summary>

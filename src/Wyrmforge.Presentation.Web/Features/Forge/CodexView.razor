@@ -113,13 +113,15 @@
             {
                 var met = Bestiary.Encountered(creature.Kind);
                 var slain = Bestiary.Kills(creature.Kind);
-                var elite = EliteAffixCatalog.For(creature.Kind);
+                var elite = EliteAffixCatalog.TryFor(creature.Kind);
+                var unique = BestiaryState.IsUnique(creature.Kind);
+                var noteKills = BestiaryState.HunterNoteKillsFor(creature.Kind);
                 <article class="codex-card bestiary-card @(met ? "known" : "unknown-creature") @(Bestiary.Studied(creature.Kind) ? "studied" : string.Empty)" data-bestiary-entry="@creature.Kind">
                     <canvas class="bestiary-portrait" width="96" height="96" data-bestiary-kind="@((int)creature.Kind)" data-unknown="@(met ? "false" : "true")" aria-hidden="true"></canvas>
                     <div>
                         @if (met)
                         {
-                            <strong>@creature.Name @if (Bestiary.Studied(creature.Kind)) { <span class="bestiary-badge">STUDIED</span> }</strong>
+                            <strong>@creature.Name @if (Bestiary.Studied(creature.Kind)) { <span class="bestiary-badge">@(unique ? "DEFEATED" : "STUDIED")</span> }</strong>
                             <small class="bestiary-tier">@creature.Tier • @slain.ToString("N0") slain</small>
                             <small>@creature.Behavior</small>
                             <small class="bestiary-counter"><b>Counter:</b> @creature.Counterplay</small>
@@ -130,9 +132,13 @@
                             }
                             else
                             {
-                                <small class="bestiary-locked">◇ Hunter's note • @Math.Min(slain, BestiaryCatalog.HunterNoteKills) / @BestiaryCatalog.HunterNoteKills slain</small>
+                                <small class="bestiary-locked">◇ Hunter's note • @Math.Min(slain, noteKills) / @noteKills slain</small>
                             }
-                            @if (Bestiary.EliteSlain(elite.Affix))
+                            @if (elite is null)
+                            {
+                                <small class="bestiary-elite"><b>◆ Unique</b> There is only one. It has no elite form.</small>
+                            }
+                            else if (Bestiary.EliteSlain(elite.Affix))
                             {
                                 <small class="bestiary-elite"><b>◆ @elite.Title</b> @elite.Detail</small>
                             }
@@ -144,7 +150,7 @@
                         else
                         {
                             <strong>???</strong>
-                            <small class="bestiary-tier">Not yet encountered</small>
+                            <small class="bestiary-tier">@(unique ? "A rumour. Few hunters have seen it." : "Not yet encountered")</small>
                             <small class="bestiary-habitat"><b>Rumoured in:</b> @creature.Habitats</small>
                         }
                     </div>

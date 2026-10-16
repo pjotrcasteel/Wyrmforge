@@ -137,7 +137,7 @@ public static class EnemyEncounterComposition
     }
 
     private static IEnumerable<EnemyDefinition> EligibleEnemies(EnemyCompositionProfile profile, int depth, int remainingBudget) =>
-        EnemyCatalog.All.Where(definition => !definition.HabitatOnly && definition.MinimumDepth <= depth && definition.ThreatCost <= remainingBudget && profile.WeightFor(definition.Role) > 0);
+        EnemyCatalog.All.Where(definition => !definition.HabitatOnly && !definition.Unique && definition.MinimumDepth <= depth && definition.ThreatCost <= remainingBudget && profile.WeightFor(definition.Role) > 0);
 
     private static EnemyDefinition SelectWeighted(IReadOnlyList<EnemyDefinition> eligible, EnemyCompositionProfile profile, IRandomSource randomSource)
     {

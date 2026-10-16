@@ -54,6 +54,8 @@ public sealed partial class RunSimulation
             eliteMap = (mapState.Seed, depthState.Depth);
             elitesThisMap = 0;
         }
+        // The Reliquary's road carries no elite: one rare threat per road.
+        if (IsReliquaryNode) return;
         if (node.Type != WyrmrealmNodeType.Combat || node.Stage < EliteFirstEligibleStage || node.Habitat == WyrmrealmHabitat.Outskirts) return;
         if (elitesThisMap >= MaxElitesPerMap) return;
         var random = new Random(EliteRollSeed(mapState.Seed, depthState.Depth, node.Id));
@@ -89,7 +91,9 @@ public sealed partial class RunSimulation
         return definition.Affix;
     }
 
-    private static double EliteImpact(EnemyState enemy) => enemy.IsElite ? EliteAffixCatalog.Get(enemy.Elite).ImpactMultiplier : 1;
+    /// <summary>Impact multiplier from an elite affix and from standing near a Reliquary ward.</summary>
+    private double EliteImpact(EnemyState enemy) => (enemy.IsElite ? EliteAffixCatalog.Get(enemy.Elite).ImpactMultiplier : 1)
+        * (IsWardEmpowered(enemy) ? ReliquaryWardImpactMultiplier : 1);
 
     private void RefreshPackbloodLeaders()
     {

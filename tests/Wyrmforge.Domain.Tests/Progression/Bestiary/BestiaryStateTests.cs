@@ -10,7 +10,7 @@ public sealed class BestiaryStateTests
     [TestMethod]
     public void Catalog_HasOneEntryPerCreature_WithCounterplay()
     {
-        CollectionAssert.AreEquivalent(Enum.GetValues<EnemyKind>(), BestiaryCatalog.All.Select(entry => entry.Kind).ToArray());
+        CollectionAssert.AreEquivalent(Enum.GetValues<EnemyKind>().Where(kind => EnemyCatalog.Get(kind).IsCreature).ToArray(), BestiaryCatalog.All.Select(entry => entry.Kind).ToArray());
         foreach (var entry in BestiaryCatalog.All)
         {
             Assert.IsFalse(string.IsNullOrWhiteSpace(entry.Counterplay), entry.Name);

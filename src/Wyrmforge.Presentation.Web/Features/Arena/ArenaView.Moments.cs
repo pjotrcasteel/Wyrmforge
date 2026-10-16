@@ -24,6 +24,18 @@ public partial class ArenaView
     private void ShowEliteDefeated(EliteDefeat defeat) =>
         ShowRunMoment(new RunMoment("ELITE SLAIN", EliteAffixCatalog.Get(defeat.Affix).Title, $"+{defeat.ExperienceAwarded} XP", RunMomentTone.Rare, Compact: true));
 
+    private void ShowReliquarySighted() =>
+        ShowRunMoment(new RunMoment("THE RELIQUARY", "It has walked these grounds for longer than the monastery stood", "Break its wards to wound it • avoid the gilt seals", RunMomentTone.Legendary));
+
+    private void ShowReliquaryShift() =>
+        ShowRunMoment(new RunMoment("THE RITUAL DEEPENS", "The Reliquary", "Wider seals • more corruption", RunMomentTone.Danger, Compact: true));
+
+    private void ShowReliquaryDefeated(ReliquaryDefeat defeat) =>
+        ShowRunMoment(new RunMoment("RELIQUARY SLAIN", "The rites are broken", $"+{defeat.ExperienceAwarded} XP • recorded in the Codex", RunMomentTone.Legendary));
+
+    private void ShowReliquaryWithdrawn() =>
+        ShowRunMoment(new RunMoment("THE RELIQUARY WITHDRAWS", "It will not be found here again", "The trail is clear.", RunMomentTone.Standard, Compact: true));
+
     private void ShowRunMoment(RunMoment value)
     {
         runMoment = value;

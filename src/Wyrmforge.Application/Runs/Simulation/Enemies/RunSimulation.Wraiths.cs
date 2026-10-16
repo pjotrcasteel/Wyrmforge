@@ -14,8 +14,12 @@ public sealed partial class RunSimulation
     private readonly List<EnemyState> submergedWraiths = [];
     private readonly List<EnemyState> sinkingWraiths = [];
 
-    /// <summary>Everything still alive in the encounter, including wraiths under the water.</summary>
-    private int HostileCount => enemies.Count + submergedWraiths.Count;
+    /// <summary>
+    /// Everything still alive in the encounter, including wraiths under the water. The Reliquary and its wards are optional and
+    /// never hold a road open, so they are left out.
+    /// </summary>
+    private int HostileCount => (reliquary is null && reliquaryWards.Count == 0 ? enemies.Count : enemies.Count(enemy => !IsReliquaryKind(enemy.Kind)))
+        + submergedWraiths.Count;
 
     private void UpdateSubmergedWraiths(double delta, ref int committed, int committedCap)
     {

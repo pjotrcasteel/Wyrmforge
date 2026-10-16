@@ -1,6 +1,6 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
-// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith.
+// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith, 7 The Reliquary, 8 Reliquary ward.
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
 // so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
@@ -26,6 +26,8 @@ export const ENEMY_SPECS = [
     { kind: 4, name: 'ash-slinger', size: [44, 50], origin: [18, 29], radius: 11 },
     { kind: 5, name: 'ash-priest', size: [44, 60], origin: [19, 36], radius: 12 },
     { kind: 6, name: 'drowned-wraith', size: [44, 54], origin: [19, 31], radius: 12 },
+    { kind: 7, name: 'reliquary', size: [60, 76], origin: [28, 46], radius: 22 },
+    { kind: 8, name: 'reliquary-ward', size: [28, 38], origin: [13, 24], radius: 13 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -324,7 +326,91 @@ function drownedWraith(pose) {
     return b;
 }
 
-const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith];
+// The Reliquary (concept 09): a towering crowned celebrant in rigid crimson vestments, a spoked gilt crown behind a
+// porcelain mask, chains and bells across the robe, and a lantern censer swinging from each hand. It glides rather than
+// walks, so poses 1-2 only swing the censers and the hem. Pose 3 is every rite's cast: both censers lifted high.
+function reliquary(pose) {
+    const s = ENEMY_SPECS[7], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { robe: '#7a1820', robeHi: '#a8323a', robeDk: '#45101a', deep: '#24070c', stole: '#d8c8a4', stoleDk: '#a8977a', gold: '#c9a24a',
+        goldHi: '#f0d27a', goldDk: '#7e6228', mask: '#e6dcc8', void: '#14060a', chain: '#8a7a5a', flame: '#ff8a3c', core: '#fff1c0', ember: '#d9452a' };
+    const sway = pose === 1 ? 2 : pose === 2 ? -2 : 0, cast = pose === 3;
+    // Spoked crown behind the head: the silhouette that names it from across the field.
+    for (let i = 0; i < 9; i++) {
+        const a = Math.PI + (i + .5) * Math.PI / 9, r = i % 2 ? 11 : 15;
+        const x = Math.round(Math.cos(a) * r), y = Math.round(-26 + Math.sin(a) * r);
+        g.line(0, -26, x, y, C.gold); g.px(x, y, C.goldHi);
+    }
+    g.ell(0, -26, 7, 7, C.goldDk); g.ell(0, -26, 5.5, 5.5, C.deep);
+    // Rigid bell-shaped vestment; the hem only shifts a pixel as it glides.
+    g.poly([[-9, -14], [9, -14], [15 + sway / 2, 23], [-15 + sway / 2, 23]], C.robe);
+    g.poly([[-9, -14], [-4, -14], [-9 + sway / 2, 23], [-15 + sway / 2, 23]], C.robeDk);
+    g.line(6, -10, 11 + sway / 2, 22, C.robeHi); g.line(3, -8, 5 + sway / 2, 22, C.robeDk);
+    g.rect(-15 + sway / 2, 22, 31, 2, C.gold); g.rect(-15 + sway / 2, 24, 31, 1, C.goldDk);
+    // Bone stole down the front with a gilt sigil.
+    g.poly([[-3, -13], [3, -13], [4, 21], [-4, 21]], C.stole);
+    g.line(-3, -12, -4, 20, C.stoleDk);
+    g.ell(0, 4, 2.5, 2.5, C.gold); g.px(0, 4, C.ember); g.line(0, 7, 0, 12, C.gold); g.line(-2, 9, 2, 9, C.gold);
+    // Chains swagged across the robe, hung with bells.
+    g.line(-12, 8, 0, 13, C.chain); g.line(0, 13, 13, 8, C.chain);
+    for (const [x, y] of [[-12, 10], [-6, 13], [6, 13], [13, 10]]) { g.px(x, y, C.gold); g.px(x, y + 1, C.goldDk); }
+    // Mantle and high collar.
+    g.poly([[-11, -15], [11, -15], [13, -9], [-13, -9]], C.robeDk);
+    g.rect(-11, -16, 23, 2, C.gold);
+    // Hood and porcelain mask with hollow eyes.
+    g.ell(0, -22, 5.5, 6, C.robeDk);
+    g.ell(1, -21, 3.6, 4.2, C.mask);
+    g.rect(-1, -22, 2, 1, C.void); g.rect(2, -22, 2, 1, C.void); g.line(1, -19, 1, -18, C.stoleDk);
+    // Arms and twin censers: swinging at the hips, or lifted high to cast.
+    const censer = (x, y) => {
+        g.rect(x - 3, y - 3, 7, 8, C.goldDk); g.rect(x - 2, y - 2, 5, 6, C.gold);
+        g.rect(x - 1, y - 1, 3, 4, C.flame); g.px(x, y, C.core);
+        g.poly([[x - 3, y - 3], [x + 4, y - 3], [x, y - 7]], C.gold); g.px(x, y + 6, C.goldDk);
+    };
+    if (cast) {
+        g.line(-9, -13, -16, -26, C.robe, 3); g.line(9, -13, 16, -26, C.robe, 3);
+        g.line(-16, -27, -19, -21, C.chain); g.line(16, -27, 19, -21, C.chain);
+        censer(-20, -17); censer(20, -17);
+    } else {
+        g.line(-9, -13, -14, -3, C.robe, 3); g.line(9, -13, 14, -3, C.robe, 3);
+        g.line(-14, -2, -17 - sway, 9, C.chain); g.line(14, -2, 17 - sway, 9, C.chain);
+        censer(-17 - sway, 13); censer(17 - sway, 13);
+    }
+    b.rim('#e88a7a', '#0a0305', .35, .3);
+    b.outline('#0c0406');
+    // Censer cores stay lit above the outline: its light is how the hunter tracks it.
+    const o = s.origin;
+    for (const [x, y] of cast ? [[-20, -17], [20, -17]] : [[-17 - sway, 13], [17 - sway, 13]]) b.set(o[0] + x, o[1] + y, C.core);
+    return b;
+}
+
+// Reliquary ward: a bone-and-gilt reliquary box on an iron stake driven into the ground, crimson glass glowing and a
+// small flame on its spire. Poses 0-2 flicker; pose 3 (the fuse warning) flares white-hot.
+function reliquaryWard(pose) {
+    const s = ENEMY_SPECS[8], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { iron: '#3a3236', ironDk: '#1c171a', bone: '#d8c8a4', boneDk: '#a8977a', gold: '#c9a24a', goldDk: '#7e6228', glass: '#b02a34',
+        glassHi: '#e2525a', flame: '#ff8a3c', core: '#fff1c0', chain: '#8a7a5a' };
+    const flare = pose === 3, flick = pose === 1 ? -1 : 0;
+    // Stake and its splayed ground spikes.
+    g.line(0, -1, 0, 11, C.iron, 2); g.line(-5, 12, 0, 8, C.ironDk); g.line(5, 12, 0, 8, C.ironDk);
+    // Hanging chains with bells.
+    g.line(-6, -6, -8, 3, C.chain); g.line(6, -6, 8, 3, C.chain); g.px(-8, 4, C.gold); g.px(8, 4, C.gold);
+    // The reliquary box.
+    g.rect(-6, -12, 13, 11, C.goldDk); g.rect(-5, -11, 11, 9, C.bone); g.line(-5, -11, -5, -3, C.boneDk);
+    g.rect(-2, -10, 5, 6, flare ? C.glassHi : C.glass); g.px(0, -8, flare ? C.core : C.glassHi);
+    // Gabled spire and flame.
+    g.poly([[-7, -12], [7, -12], [0, -18]], C.gold);
+    const h = flare ? 6 : 3;
+    g.ell(0, -19 - h / 2 + flick, flare ? 3 : 2, h / 2 + 1, C.flame);
+    g.px(0, -19 + flick, C.core);
+    b.rim('#f0d27a', '#0a0305', .35, .3);
+    b.outline('#0c0406');
+    const o = s.origin;
+    b.set(o[0], o[1] - 19 + flick, C.core);
+    if (flare) b.set(o[0], o[1] - 8, C.core);
+    return b;
+}
+
+const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 
