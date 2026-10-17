@@ -383,6 +383,15 @@ References: Monster Hunter's arena entrance (the monster is marked before it can
 - `BellWardenBehaviorStateTests` (6).
 - JS: `arena-bellwarden-vfx.test.mjs`, plus the kind 9 art.
 
+### Presence scale
+
+Rare enemies must read as rare at a glance (Diablo champions, Hollow Knight bosses):
+- Elites: body ×1.25 (`EnemyState.EliteSizeScale`).
+- Reliquary: radius 22 → 27. Bell Warden: 30 → 38. Both outsize any elite.
+- Wyrms: radius ~1.75× (Ashfang 60, Stormcoil 56, Rimeclaw 61, Voidweaver 54), and Ascendants another ×1.15 (`WyrmTierCatalog`).
+
+The sprite follows the radius, so hit area and silhouette always match. BalanceLab (1,200 runs) is unchanged within noise: dragons slain 1.37 → 1.38, damage 159.0 → 157.1, per-element shifts ≤ 0.04.
+
 ## 14. Next steps
 
 The encounter brief's order is complete. The next work follows the reconciliation record: Fateweave, Frost telemetry, the first Nexus journey, then a contextual second auto-cast.

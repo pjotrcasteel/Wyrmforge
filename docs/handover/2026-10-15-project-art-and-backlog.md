@@ -361,3 +361,10 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
   - `RunSimulation.BellWarden.cs`, `BellWardenBehaviorState`, and `BellWardenRenderSnapshot` / `BellShockwaveRenderSnapshot`.
   - JS: `arena-bellwarden-vfx.js`.
 - **Next:** Fateweave per-card rerolls.
+
+## 24. Presence scale: bigger elites, uniques and tiered Wyrms
+
+- Elites ×1.25; the Reliquary (27) and Bell Warden (38) are larger than any elite.
+- Wyrms ~1.75× larger; `WyrmTier` (Wyrm / Ascendant / Elder / Divine, ×1 / 1.15 / 1.35 / 1.6) leaves room for godlike tiers. Elder and Divine are reserved and need a roaming lair camera.
+- Balance is unchanged within noise. Details: `docs/design/arena-roster-v1.md` §13 "Presence scale".
+- **Next:** Fateweave per-card rerolls.

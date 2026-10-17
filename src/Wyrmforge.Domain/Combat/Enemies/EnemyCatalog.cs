@@ -12,10 +12,10 @@ public static class EnemyCatalog
         new(EnemyKind.AshPriest, EnemyRole.Support, 3, 12, HealthMultiplier: 1.3, SpeedMultiplier: 0.85, ContactDamageMultiplier: 0.4),
         new(EnemyKind.DrownedWraith, EnemyRole.Ambusher, 2, 12, HealthMultiplier: 0.85, SpeedMultiplier: 0.9, ContactDamageMultiplier: 0.5, HabitatOnly: true),
         // Unique: only the Reliquary event spawns these, never a pack plan or a habitat table.
-        new(EnemyKind.Reliquary, EnemyRole.Support, 10, 22, HealthMultiplier: 15, SpeedMultiplier: 0.55, ContactDamageMultiplier: 0.6, Unique: true),
+        new(EnemyKind.Reliquary, EnemyRole.Support, 10, 27, HealthMultiplier: 15, SpeedMultiplier: 0.55, ContactDamageMultiplier: 0.6, Unique: true),
         new(EnemyKind.ReliquaryWard, EnemyRole.Support, 0, 13, HealthMultiplier: 2.4, SpeedMultiplier: 0, ContactDamageMultiplier: 0, Unique: true),
         // Unique: the Bell Warden only ever stands on the pre-lair road.
-        new(EnemyKind.BellWarden, EnemyRole.Pressure, 10, 30, HealthMultiplier: 18, SpeedMultiplier: 0.5, ContactDamageMultiplier: 1, Unique: true),
+        new(EnemyKind.BellWarden, EnemyRole.Pressure, 10, 38, HealthMultiplier: 18, SpeedMultiplier: 0.5, ContactDamageMultiplier: 1, Unique: true),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

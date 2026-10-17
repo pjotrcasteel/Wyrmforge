@@ -10,7 +10,13 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public Vector2D Position { get; set; } = position;
 
-    public double Radius { get; } = radius;
+    /// <summary>
+    /// Elites stand a head taller than their kin (Diablo's champions): the body, and so the drawn sprite, grows by
+    /// <see cref="EliteSizeScale"/>. Hit area and silhouette always match.
+    /// </summary>
+    public const double EliteSizeScale = 1.25;
+
+    public double Radius => IsElite ? radius * EliteSizeScale : radius;
 
     public double Health { get; set; } = health;
 

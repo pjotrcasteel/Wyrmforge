@@ -193,7 +193,8 @@ public sealed partial class RunSimulation
         var hunt = ascendantActive ? DragonHuntCatalog.GetAscendant(definition.Id) : DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
-        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1));
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1),
+            ascendantActive ? WyrmTier.Ascendant : WyrmTier.Wyrm);
     }
 
     private void MoveDragon(DragonState activeDragon, double delta)
@@ -330,7 +331,7 @@ public sealed partial class RunSimulation
         return new DragonRenderSnapshot(ascendantActive ? $"Ascendant {definition.Name}" : definition.Name, rite is null ? definition.Title : $"The {rite.Trophy}",
             definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
             activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
-        { IsAscendant = ascendantActive };
+        { IsAscendant = ascendantActive, Tier = activeDragon.Tier };
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
