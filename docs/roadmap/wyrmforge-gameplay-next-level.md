@@ -456,6 +456,14 @@ These rules are informed by [Behavioral Game Design (Hopson)](https://www.gamede
 
 ## 11. Prioritisation
 
+> **2026-10-17 design amendment.** This amendment takes precedence over the 2026-10-15 handover wherever the two conflict:
+> - 3–4 intelligently auto-cast spells instead of one primary for life;
+> - one Arcane Nexus instead of a separate Lab and Web;
+> - an optional campaign with a non-campaign route to the endgame;
+> - per-card Fateweave rerolls.
+>
+> The retained, superseded and pending decisions are listed in `docs/design/design-amendment-2026-10-17-reconciliation.md`. Next, after roster step 7: Fateweave, then Frost telemetry, the first Nexus journey and a contextual second auto-cast.
+
 **Quick wins (days):**
 - Card-hint dedupe.
 - Settle #117.

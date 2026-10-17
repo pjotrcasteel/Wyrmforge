@@ -1,5 +1,7 @@
 # Fixed Primary Oath, combinations, and visual hierarchy
 
+> **Transitional (2026-10-17 amendment, S1):** one committed primary is the current stage of a planned *primary plus up to three contextual auto-casts* model with a shared cast budget. No manual spell buttons and no independent streams. See `docs/design/design-amendment-2026-10-17-reconciliation.md`.
+
 The player's starting hunt now presents one explicit magical oath: Arcane Orb, Fire Bolt, Frost Shard, or Chain Lightning (plus any starter spells genuinely unlocked in the Forge). The decision happens before the first map selection or combat tick. `SpellBook.IsPrimaryCommitted` blocks `TryFocus` thereafter, and the reward pool offers only actual primary ranks, useful runes, evolutions, and host-compatible combinations. Existing direct domain setup paths stay available for deterministic legacy unit tests and developer-only boss test fixtures.
 
 Choosing Fire, Frost or Storm no longer retains the default Arcane knowledge as a false learned primary. Combinations may learn a supporting spell inside the original cast, and no separate cooldown or idle support spell starts auto-firing. Route attunements from a different school choose a genuinely compatible fusion if available; otherwise they reinforce the committed primary instead of giving inactive off-school damage.

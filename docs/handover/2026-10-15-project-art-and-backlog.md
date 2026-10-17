@@ -344,3 +344,9 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
   - Callouts are in `ArenaView.Moments.cs`.
 - **Codex.** A unique entry: unlocked by a single kill, with no elite form.
 - **Next:** step 7, the Bell Warden and Ashfang.
+
+## 22. Design amendment 2026-10-17 reconciled
+
+- The amendment takes precedence over the Spellcraft handover only where the two conflict. The record is `docs/design/design-amendment-2026-10-17-reconciliation.md`.
+- **Code conflicts.** The only one is single-primary combat, now marked transitional. No campaign gates exist, and pacing (minor refinements plus level 5/10/15 milestones) is confirmed.
+- **Order.** Roster step 7, then Fateweave per-card rerolls, then Frost telemetry, the first Nexus journey and a contextual second auto-cast.
