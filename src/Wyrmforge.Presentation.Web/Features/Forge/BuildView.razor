@@ -2,6 +2,7 @@
 @using Microsoft.JSInterop
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.Loadouts
+@using Wyrmforge.Application.Nexus
 @inject IJSRuntime JavaScript
 
 <section class="build-view">
@@ -69,6 +70,19 @@
 
             <div class="atlas-caption"><span>THE WYRMHEART</span></div>
 
+            @if (Notice is not null)
+            {
+                <div class="nexus-notice" role="status"><span>@Notice</span><button aria-label="Dismiss notice" @onclick="() => OnDismissNotice.InvokeAsync()">×</button></div>
+            }
+            @if (Suggestion is { } suggestion && !inspectorOpen)
+            {
+                <button class="nexus-next" aria-label="@($"Next discovery: {suggestion.Text} Show it on the Web.")" @onclick="() => FocusNodeAsync(suggestion.NodeId)">
+                    <i aria-hidden="true">✦</i>
+                    <span><small>NEXT DISCOVERY</small><b>@suggestion.Text</b></span>
+                    <em aria-hidden="true">›</em>
+                </button>
+            }
+
             <div class="arcane-web-viewport" @ref="viewport">
                 <div class="web-pan-space">
                     <div class="arcane-web-canvas">
@@ -91,7 +105,11 @@
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
                             <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
-                                aria-label="@($"{node.Name}. {node.Description}")" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
+                                aria-label="@NodeAriaLabel(node)" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
+                                @if (MarkFor(node.Id) is { } mark)
+                                {
+                                    <span class="nexus-mark stage-@StageClass(mark)" aria-hidden="true">@StageGlyph(mark)</span>
+                                }
                                 @if (node.Kind == PassiveNodeKind.Travel)
                                 {
                                     var bonuses = ArcaneNodePresentation.MinorBonuses(node);
@@ -134,6 +152,128 @@
                 </div>
             </div>
             <p class="inspector-effect">@FocusedNode.Description</p>
+
+            @if (FocusedNexus is { Socket: { } socket } nexus)
+            {
+                <section class="nexus-bench" aria-label="@($"Research at {FocusedNode.Name}")">
+                    @foreach (var research in nexus.Research)
+                    {
+                        var mutation = research.Mutation;
+                        <header class="nexus-bench-head">
+                            <span>RESEARCH</span>
+                            <strong>@mutation.Name</strong>
+                            <b class="nexus-stage stage-@StageClass(research.Stage)"><i aria-hidden="true">@StageGlyph(research.Stage)</i>@StageLabel(research.Stage)</b>
+                        </header>
+                        <p class="nexus-enables"><span>@mutation.Summary</span><small>@mutation.TradeOff</small></p>
+
+                        @if (research.Material is { } material)
+                        {
+                            <div class="nexus-material @(material.Met ? "met" : "missing")">
+                                <i aria-hidden="true">@(material.Met ? "✓" : "✗")</i>
+                                <span>
+                                    <b>@material.Material.Name <em>@material.Owned/@material.Needed</em></b>
+                                    <small>@MaterialHelp(material)</small>
+                                </span>
+                            </div>
+                        }
+
+                        <ol class="nexus-conditions" aria-label="@($"{research.ConditionsKnown} of {research.ConditionsNeeded} conditions understood")">
+                            @foreach (var observation in mutation.RequiresObservations)
+                            {
+                                var known = Laboratory!.HasObserved(observation);
+                                <li class="@(known ? "known" : string.Empty)"><i aria-hidden="true">@(known ? "✓" : "○")</i>@LaboratoryCatalog.ObservationLabel(observation)</li>
+                            }
+                        </ol>
+
+                        @if (research.Stage is NexusResearchStage.NeedsMaterial or NexusResearchStage.Experimenting or NexusResearchStage.ReadyToStabilize)
+                        {
+                            <details class="nexus-experiments" open="@(research.Stage == NexusResearchStage.Experimenting)">
+                                <summary>Experiments · @research.Experiments.Count(step => step.Known)/@research.Experiments.Count recorded</summary>
+                                @foreach (var step in research.Experiments)
+                                {
+                                    var experiment = step.Experiment;
+                                    <button class="nexus-experiment @(step.Known ? "known" : string.Empty) @(experiment.Outcome == LaboratoryExperimentOutcome.Incompatibility ? "dead-end" : string.Empty)"
+                                        disabled="@(step.Availability is ExperimentAvailability.MissingObservation or ExperimentAvailability.MissingSample)"
+                                        aria-label="@(step.Known ? $"Review {experiment.Name}" : $"Run {experiment.Name}")" @onclick="() => RunExperimentAsync(experiment.Id)">
+                                        <i aria-hidden="true">@ExperimentGlyph(step)</i>
+                                        <span><b>@experiment.Name</b><small>@ExperimentHelp(step, mutation)</small></span>
+                                    </button>
+                                }
+                            </details>
+                        }
+
+                        @if (lastResult is { } result && result.Experiment.Mutation == mutation.Id)
+                        {
+                            <div class="nexus-result @(result.Novel ? "novel" : "repeat")" role="status" aria-live="polite">
+                                <strong>@(result.Rejected ? "NOT YET" : result.Novel ? OutcomeLabel(result.Experiment.Outcome) : "ALREADY RECORDED")</strong>
+                                <span>@result.Message</span>
+                            </div>
+                        }
+
+                        <div class="nexus-loadouts">
+                            <span>LOADOUTS</span>
+                            @if (research.LoadoutReferences.Count > 0)
+                            {
+                                @foreach (var name in research.LoadoutReferences) { <b>@name</b> }
+                            }
+                            else
+                            {
+                                <small>@(research.Stage == NexusResearchStage.Equipped ? "Equipped for your next hunt · save a loadout above to keep it." : "Not in a saved loadout yet.")</small>
+                            }
+                        </div>
+
+                        <div class="nexus-action">
+                            <p>@research.Next.Text</p>
+                            @switch (research.Next.Kind)
+                            {
+                                case NexusActionKind.TrackMaterial:
+                                    <button class="nexus-primary" @onclick="() => TrackAsync(mutation.Id)">TRACK @research.Material!.SourceName.ToUpperInvariant()</button>
+                                    break;
+                                case NexusActionKind.HuntMaterial:
+                                    <button class="nexus-secondary" aria-pressed="true" @onclick="() => TrackAsync(null)">STOP TRACKING</button>
+                                    break;
+                                case NexusActionKind.RunExperiment:
+                                    <button class="nexus-primary" @onclick="() => RunExperimentAsync(research.Next.Experiment!.Value)">RUN · @research.Next.Text.ToUpperInvariant()</button>
+                                    break;
+                                case NexusActionKind.Stabilize when confirmingStabilize != mutation.Id:
+                                    <button class="nexus-primary" @onclick="() => confirmingStabilize = mutation.Id">STABILIZE · 1 @mutation.Specimen.Name.ToUpperInvariant()</button>
+                                    break;
+                                case NexusActionKind.Stabilize:
+                                    <div class="nexus-consent" role="alertdialog" aria-label="Confirm Essence use">
+                                        <strong>Consume 1 @mutation.Specimen.Name?</strong>
+                                        <span>Vault: @Vault!.Count(mutation.Stabilizer) → @(Vault.Count(mutation.Stabilizer) - 1). The Forge uses the same @(mutation.Specimen.Name)s. Success is certain and the recipe is kept forever.</span>
+                                        <div><button class="nexus-secondary" @onclick="() => confirmingStabilize = null">CANCEL</button><button class="nexus-primary" @onclick="() => StabilizeAsync(mutation.Id)">CONSUME &amp; STABILIZE</button></div>
+                                    </div>
+                                    break;
+                                case NexusActionKind.Equip:
+                                    var check = Laboratory!.CheckEquip(mutation.Id, mutation.Socket, Selection.Selected);
+                                    <button class="nexus-primary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(mutation.Id, mutation.Socket)">@(check == MutationEquipResult.Equipped ? $"EQUIP IN {socket.Definition.Name.ToUpperInvariant()}" : EquipBlocked(check))</button>
+                                    break;
+                                case NexusActionKind.None:
+                                    <button class="nexus-secondary" @onclick="() => EquipAsync(mutation.Id, null)">UNEQUIP</button>
+                                    break;
+                            }
+                        </div>
+                    }
+
+                    <div class="nexus-socket @(socket.Unlocked ? "open" : "closed")">
+                        <i aria-hidden="true">@(socket.Unlocked ? "◆" : "◇")</i>
+                        <span>
+                            <b>@socket.Definition.Name</b>
+                            <small>@SocketHelp(socket)</small>
+                        </span>
+                        @foreach (var other in socket.Equippable.Where(id => id != socket.Holder && nexus.Research.All(research => research.Mutation.Id != id)))
+                        {
+                            var check = Laboratory!.CheckEquip(other, socket.Definition.Id, Selection.Selected);
+                            <button class="nexus-secondary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(other, socket.Definition.Id)">EQUIP @LaboratoryCatalog.Get(other).Name.ToUpperInvariant()</button>
+                        }
+                        @if (socket.Holder is { } holder && nexus.Research.All(research => research.Mutation.Id != holder))
+                        {
+                            <button class="nexus-secondary" @onclick="() => EquipAsync(holder, null)">UNEQUIP @LaboratoryCatalog.Get(holder).Name.ToUpperInvariant()</button>
+                        }
+                    </div>
+                </section>
+            }
 
             @if (FocusedNode.Kind != PassiveNodeKind.Origin)
             {
@@ -226,6 +366,121 @@
     [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
     [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
 
+    // Arcane Nexus: research is embedded in the Web's node inspector (amendment §3). Null until research unlocks.
+    [Parameter] public LaboratoryState? Laboratory { get; set; }
+    [Parameter] public DragonEssenceVault? Vault { get; set; }
+    [Parameter] public string? Notice { get; set; }
+    [Parameter] public EventCallback OnDismissNotice { get; set; }
+    [Parameter] public string? FocusNodeId { get; set; }
+    [Parameter] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>>? RunExperiment { get; set; }
+    [Parameter] public Func<LaboratoryMutationId, Task<bool>>? Stabilize { get; set; }
+    [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task>? Equip { get; set; }
+    [Parameter] public Func<LaboratoryMutationId?, Task>? Track { get; set; }
+
+    private LaboratoryExperimentResult? lastResult;
+    private LaboratoryMutationId? confirmingStabilize;
+    private bool NexusReady => Laboratory is not null && Vault is not null;
+    private NexusNode? FocusedNexus => NexusReady && FocusedNode.Kind != PassiveNodeKind.Origin ? ArcaneNexus.Node(focusedId, Laboratory!, Vault!, Selection.Selected, Loadouts) : null;
+    private NexusSuggestion? Suggestion => NexusReady ? ArcaneNexus.Suggest(Laboratory!, Vault!, Selection.Selected) : null;
+    private NexusResearchStage? MarkFor(string nodeId) => NexusReady && ArcaneNexus.IsResearchNode(nodeId) ? ArcaneNexus.Mark(nodeId, Laboratory!, Vault!, Selection.Selected) : null;
+
+    private string NodeAriaLabel(PassiveNodeDefinition node) => MarkFor(node.Id) is { } mark
+        ? $"{node.Name}. {node.Description} Research: {StageLabel(mark)}."
+        : $"{node.Name}. {node.Description}";
+
+    private static string StageClass(NexusResearchStage stage) => stage.ToString().ToLowerInvariant();
+
+    // Shape and text carry the state as well as colour.
+    private static string StageGlyph(NexusResearchStage stage) => stage switch
+    {
+        NexusResearchStage.NeedsMaterial => "?",
+        NexusResearchStage.Experimenting => "!",
+        NexusResearchStage.ReadyToStabilize => "★",
+        NexusResearchStage.Discovered => "✓",
+        _ => "◆",
+    };
+
+    private static string StageLabel(NexusResearchStage stage) => stage switch
+    {
+        NexusResearchStage.NeedsMaterial => "Needs material",
+        NexusResearchStage.Experimenting => "Experiment ready",
+        NexusResearchStage.ReadyToStabilize => "Ready to stabilize",
+        NexusResearchStage.Discovered => "Discovered",
+        _ => "Equipped",
+    };
+
+    private static string MaterialHelp(NexusMaterialNeed material) => material.Met
+        ? "Secured in your vault. Experiments only study it."
+        : material.Tracked
+            ? $"Found on {material.SourceName} · tracked, {material.TrackedHuntsLeft} hunt{(material.TrackedHuntsLeft == 1 ? string.Empty : "s")} left"
+            : $"Found on {material.SourceName} · secure it after a hunt";
+
+    private static string ExperimentGlyph(NexusExperimentStep step) => step.Availability switch
+    {
+        ExperimentAvailability.AlreadyRecorded => step.Experiment.Outcome == LaboratoryExperimentOutcome.Incompatibility ? "✗" : "✓",
+        ExperimentAvailability.Ready => "▶",
+        _ => "🔒",
+    };
+
+    private static string ExperimentHelp(NexusExperimentStep step, LaboratoryMutationDefinition mutation) => step.Availability switch
+    {
+        ExperimentAvailability.AlreadyRecorded => step.Experiment.Finding,
+        ExperimentAvailability.MissingSample => $"Needs a {mutation.Specimen.Name} in the vault",
+        ExperimentAvailability.MissingObservation => "Needs an earlier finding",
+        _ => step.Experiment.Hypothesis,
+    };
+
+    private static string OutcomeLabel(LaboratoryExperimentOutcome outcome) => outcome switch
+    {
+        LaboratoryExperimentOutcome.Insight => "INSIGHT",
+        LaboratoryExperimentOutcome.InstructiveFailure => "INSTRUCTIVE FAILURE",
+        _ => "DEAD END · RULED OUT",
+    };
+
+    private static string EquipBlocked(MutationEquipResult result) => result switch
+    {
+        MutationEquipResult.SocketLocked => "ALLOCATE THIS NODE FIRST",
+        MutationEquipResult.FoundationTaken => "SAME SPELL ALREADY MUTATED",
+        MutationEquipResult.SocketLimitReached => $"{LaboratoryCatalog.MaxEquippedMutations} SOCKETS IN USE",
+        _ => "CANNOT EQUIP HERE",
+    };
+
+    private string SocketHelp(NexusSocket socket)
+    {
+        var accepts = string.Join(" + ", socket.Definition.Accepts);
+        var holds = socket.Holder is { } holder ? $"Holds {LaboratoryCatalog.Get(holder).Name}." : "Empty.";
+        return socket.Unlocked ? $"{holds} Accepts {accepts} blueprints." : $"Opens when you allocate {socket.Definition.NodeName}. Accepts {accepts} blueprints.";
+    }
+
+    private async Task RunExperimentAsync(LaboratoryExperimentId id)
+    {
+        if (RunExperiment is null) return;
+        lastResult = await RunExperiment(id);
+    }
+
+    private async Task StabilizeAsync(LaboratoryMutationId id)
+    {
+        confirmingStabilize = null;
+        if (Stabilize is not null) await Stabilize(id);
+    }
+
+    private async Task EquipAsync(LaboratoryMutationId id, ArcaneMutationSocketId? socket)
+    {
+        if (Equip is not null) await Equip(id, socket);
+    }
+
+    private async Task TrackAsync(LaboratoryMutationId? id)
+    {
+        if (Track is not null) await Track(id);
+    }
+
+    private async Task FocusNodeAsync(string nodeId)
+    {
+        var node = PassiveTreeCatalog.Get(nodeId);
+        InspectNode(node);
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, node.X, node.Y);
+    }
+
     private enum LoadoutAction { None, Overwrite, Clear }
     private int? openLoadout;
     private LoadoutAction pendingAction;
@@ -288,13 +543,24 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.initialize", viewport);
+        if (!firstRender) return;
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.initialize", viewport);
+        if (FocusNodeId is { } focus && PassiveTreeCatalog.All.Any(node => node.Id == focus))
+        {
+            await FocusNodeAsync(focus);
+            StateHasChanged();
+        }
     }
 
     private bool IsSelected(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin || Selection.Selected.Contains(node.Id);
 
     private void InspectNode(PassiveNodeDefinition node)
     {
+        if (focusedId != node.Id)
+        {
+            lastResult = null;
+            confirmingStabilize = null;
+        }
         focusedId = node.Id;
         inspectorOpen = true;
     }

@@ -50,7 +50,7 @@ public static class LaboratoryAdvisor
             var wyrm = DragonCatalog.Get(mutation.SpecimenWyrm).Name;
             return laboratory.Tracked == mutation.Id
                 ? new(LaboratoryPromptKind.HuntSpecimen, mutation.Id, $"{wyrm} answers your next hunt. Defeat it and secure a {mutation.Specimen.Name}.")
-                : new(LaboratoryPromptKind.HuntSpecimen, mutation.Id, $"{mutation.Name} needs a {mutation.Specimen.Name}. Track {wyrm} in the Laboratory.");
+                : new(LaboratoryPromptKind.HuntSpecimen, mutation.Id, $"{mutation.Name} needs a {mutation.Specimen.Name}. Track {wyrm} in the Arcane Nexus.");
         }
 
         return null;

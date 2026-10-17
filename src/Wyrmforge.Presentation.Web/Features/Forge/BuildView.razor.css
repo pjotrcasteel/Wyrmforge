@@ -1442,3 +1442,248 @@
 .loadout-panel button { min-height: 44px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 10px; background: none; color: #d8cfe0; font-size: .7rem; font-weight: 950; letter-spacing: .06em; cursor: pointer; }
 .loadout-panel button.primary { border-color: rgba(255, 210, 122, .55); background: linear-gradient(180deg, #7a3a1e, #4a2416); color: #fff2d8; }
 .loadout-message { margin: 0; color: #9fdcf0; font-size: .7rem; line-height: 1.4; }
+
+
+/* ── Arcane Nexus: research embedded in the Web (amendment §3; docs/design/arcane-nexus-v1.md) ── */
+/* Pad every node's hit area beyond its drawn ring so taps land at phone zoom levels. */
+.web-node::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; }
+
+.nexus-mark {
+    position: absolute;
+    z-index: 2;
+    top: -9px;
+    right: -9px;
+    display: grid;
+    width: 19px;
+    height: 19px;
+    place-items: center;
+    border: 2px solid #12101a;
+    border-radius: 50%;
+    color: #12101a;
+    background: #8d86a0;
+    font-size: .62rem;
+    font-weight: 950;
+    line-height: 1;
+    pointer-events: none;
+}
+.nexus-mark.stage-needsmaterial { color: #d7d2e2; background: #3a3348; border-style: dashed; border-color: #a99fc0; }
+.nexus-mark.stage-experimenting { background: #e2b660; }
+.nexus-mark.stage-readytostabilize { background: #f4d27a; box-shadow: 0 0 0 3px rgba(244, 210, 122, .28); }
+.nexus-mark.stage-discovered { background: #8fd3a8; }
+.nexus-mark.stage-equipped { color: #f1e6ff; background: #8a5cc4; border-radius: 4px; transform: rotate(45deg); }
+.nexus-mark.stage-equipped { font-size: 0; }
+.nexus-mark.stage-equipped::after { content: ""; width: 5px; height: 5px; border-radius: 1px; background: #f1e6ff; }
+@media (prefers-reduced-motion: no-preference) {
+    .nexus-mark.stage-experimenting, .nexus-mark.stage-readytostabilize { animation: nexus-beckon 1.6s ease-in-out infinite; }
+}
+@keyframes nexus-beckon { 50% { box-shadow: 0 0 0 6px rgba(226, 182, 96, .0), 0 0 12px 2px rgba(244, 210, 122, .55); } }
+
+.nexus-next {
+    position: absolute;
+    z-index: 12;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    display: flex;
+    max-width: 560px;
+    min-height: 52px;
+    margin: 0 auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #8a6a36;
+    border-radius: 12px;
+    color: #f2e6cf;
+    background: linear-gradient(135deg, rgba(42, 31, 18, .96), rgba(25, 19, 28, .96));
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.nexus-next > i { color: #e8c47e; font-style: normal; font-size: 1.05rem; }
+.nexus-next > span { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.nexus-next small { color: #c8a467; font-size: .56rem; font-weight: 950; letter-spacing: .14em; }
+.nexus-next b { overflow: hidden; font-size: .78rem; font-weight: 700; line-height: 1.3; }
+.nexus-next > em { color: #e8c47e; font-style: normal; font-size: 1.3rem; }
+
+.nexus-notice {
+    position: absolute;
+    z-index: 12;
+    top: 64px;
+    right: 12px;
+    left: 12px;
+    display: flex;
+    max-width: 560px;
+    margin: 0 auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 12px;
+    border: 1px solid #5a4766;
+    border-radius: 10px;
+    color: #ddd0e6;
+    background: rgba(28, 21, 34, .96);
+    font-size: .74rem;
+}
+.nexus-notice span { flex: 1; }
+.nexus-notice button { min-width: 44px; min-height: 44px; border: 0; color: inherit; background: transparent; font-size: 1.2rem; cursor: pointer; }
+
+.nexus-bench {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #2f2737;
+}
+.nexus-bench-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; }
+.nexus-bench-head > span { color: #c8a467; font-size: .56rem; font-weight: 950; letter-spacing: .16em; }
+.nexus-bench-head > strong { flex: 1; font-size: .95rem; }
+.nexus-stage {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: .58rem;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+.nexus-stage i { font-style: normal; }
+.nexus-stage.stage-needsmaterial { color: #b9b0cc; border-style: dashed; }
+.nexus-stage.stage-experimenting { color: #e2b660; }
+.nexus-stage.stage-readytostabilize { color: #f4d27a; }
+.nexus-stage.stage-discovered { color: #8fd3a8; }
+.nexus-stage.stage-equipped { color: #c6a2f0; }
+
+.nexus-enables { display: grid; gap: 3px; margin: 0; color: #c9bfd0; font-size: .78rem; line-height: 1.42; }
+.nexus-enables small { color: #c99a8a; font-size: .7rem; }
+
+.nexus-material, .nexus-socket {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 9px 10px;
+    border: 1px solid #3b3044;
+    border-radius: 10px;
+    background: #18131c;
+}
+.nexus-material > i, .nexus-socket > i {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    place-items: center;
+    border-radius: 50%;
+    font-style: normal;
+    font-weight: 950;
+}
+.nexus-material.missing { border-style: dashed; border-color: #6b5a78; }
+.nexus-material.missing > i { color: #f0b2a6; background: rgba(160, 70, 60, .25); }
+.nexus-material.met > i { color: #a6dfbe; background: rgba(68, 130, 96, .25); }
+.nexus-material > span, .nexus-socket > span { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.nexus-material b, .nexus-socket b { font-size: .8rem; }
+.nexus-material em { margin-left: 4px; color: #e8c47e; font-style: normal; }
+.nexus-material small, .nexus-socket small { color: #998ea2; font-size: .68rem; line-height: 1.35; }
+.nexus-socket.open > i { color: #d9c2f5; background: rgba(138, 92, 196, .3); }
+.nexus-socket.closed > i { color: #8f849a; background: #231c29; }
+
+.nexus-conditions { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.nexus-conditions li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px dashed #4a3f55;
+    border-radius: 999px;
+    color: #8c8197;
+    font-size: .66rem;
+}
+.nexus-conditions li i { font-style: normal; }
+.nexus-conditions li.known { border-style: solid; border-color: #4f7d62; color: #b5e2c6; }
+
+.nexus-experiments { border: 1px solid #30283a; border-radius: 10px; background: #141017; }
+.nexus-experiments > summary {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 0 12px;
+    color: #cbbcd6;
+    font-size: .72rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.nexus-experiment {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 0;
+    border-top: 1px solid #261f2d;
+    color: #ddd2e4;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.nexus-experiment:disabled { color: #6f6678; cursor: not-allowed; }
+.nexus-experiment > i { width: 18px; flex: 0 0 18px; padding-top: 1px; font-style: normal; }
+.nexus-experiment > span { display: grid; gap: 2px; }
+.nexus-experiment b { font-size: .76rem; }
+.nexus-experiment small { color: #958aa0; font-size: .67rem; line-height: 1.35; }
+.nexus-experiment.known > i { color: #8fd3a8; }
+.nexus-experiment.known.dead-end > i { color: #d9907e; }
+
+.nexus-result { display: grid; gap: 3px; padding: 9px 11px; border-left: 3px solid #e2b660; border-radius: 6px; background: rgba(226, 182, 96, .08); font-size: .72rem; }
+.nexus-result strong { color: #e8c47e; font-size: .6rem; letter-spacing: .12em; }
+.nexus-result.repeat { border-left-color: #6f6678; background: #18131c; }
+
+.nexus-loadouts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.nexus-loadouts > span { color: #8d82a0; font-size: .56rem; font-weight: 950; letter-spacing: .14em; }
+.nexus-loadouts b { padding: 3px 8px; border: 1px solid #5d4a72; border-radius: 6px; color: #d9c2f5; font-size: .66rem; }
+.nexus-loadouts small { color: #8c8197; font-size: .67rem; }
+
+/* The research action rides at the bottom of the sheet, inside the thumb zone. */
+.nexus-action {
+    position: sticky;
+    z-index: 1;
+    bottom: -12px;
+    display: grid;
+    gap: 7px;
+    margin: 0 -4px;
+    padding: 9px 4px 4px;
+    border-top: 1px solid #2f2737;
+    background: #17131b;
+    box-shadow: 0 -10px 14px -6px rgba(0, 0, 0, .55);
+}
+.nexus-action > p { margin: 0; color: #b8adc2; font-size: .72rem; line-height: 1.35; }
+.nexus-primary, .nexus-secondary {
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 10px;
+    font: inherit;
+    font-size: .74rem;
+    font-weight: 900;
+    letter-spacing: .03em;
+    cursor: pointer;
+}
+.nexus-primary { border: 1px solid #6e5530; color: #261c0f; background: linear-gradient(135deg, #e0b76f, #bc8d48); }
+.nexus-secondary { min-height: 44px; border: 1px solid #4b3c51; color: #d2c4d9; background: #211a25; }
+.nexus-primary:disabled, .nexus-secondary:disabled { opacity: .45; cursor: not-allowed; }
+.nexus-consent { display: grid; gap: 6px; padding: 10px; border: 1px solid #8a6a36; border-radius: 10px; background: #1f1812; font-size: .72rem; }
+.nexus-consent > span { color: #cdbfa8; line-height: 1.4; }
+.nexus-consent > div { display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; }
+.nexus-socket .nexus-secondary { flex: 1 1 100%; }
+
+@media (max-width: 760px) {
+    /* Fixed in the thumb zone: the stage itself can extend below the fold under the loadout strip. */
+    .nexus-next { position: fixed; z-index: 40; right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); left: 8px; }
+    .nexus-notice { top: 60px; right: 8px; left: 8px; }
+    .nexus-action { bottom: -11px; background: rgb(23, 18, 28); }
+    /* Anchor the sheet to the bottom (thumb zone) instead of the desktop sticky offset, at ~55% height. */
+    .node-inspector { top: auto; max-height: min(55dvh, 460px); }
+    .inspector-cost { margin-right: 46px; }
+}

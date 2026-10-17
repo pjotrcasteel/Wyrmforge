@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.Playwright;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -56,7 +56,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "WYRMFORGE", Exact = true })).ToBeVisibleAsync();
         var nav = Page.Locator("nav.menu-actions button");
-        await Expect(nav.Filter(new() { HasText = "Arcane Atlas" })).ToBeDisabledAsync();
+        await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToBeDisabledAsync();
         await Expect(nav.Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
         await Expect(nav.Filter(new() { HasText = "Codex" })).ToBeDisabledAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
@@ -134,11 +134,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','1'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:1, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" })).ToBeVisibleAsync();
-        await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Atlas" })).ToBeEnabledAsync();
+        await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Atlas", Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
     }
 
@@ -267,9 +267,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(Page.Locator(".codex-view .great-hunt-altar")).ToBeVisibleAsync();
             await ScreenshotAsync("mobile-mastery-codex.png");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
-            var mobileBuild = Page.Locator("nav.menu-actions button").Filter(new LocatorFilterOptions { HasText = "Arcane Atlas" });
+            var mobileBuild = Page.Locator("nav.menu-actions button").Filter(new LocatorFilterOptions { HasText = "Arcane Nexus" });
             await mobileBuild.EvaluateAsync("element => element.click()");
-            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Atlas", Exact = true })).ToBeVisibleAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
             Assert.IsLessThanOrEqualTo(1, overflow, $"Mobile page overflows horizontally by {overflow:0.#}px.");
@@ -324,9 +324,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await ScreenshotAsync("desktop-mastery-codex.png");
 
             await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
-            var desktopBuild = Page.Locator("nav.menu-actions button").Filter(new LocatorFilterOptions { HasText = "Arcane Atlas" });
+            var desktopBuild = Page.Locator("nav.menu-actions button").Filter(new LocatorFilterOptions { HasText = "Arcane Nexus" });
             await desktopBuild.EvaluateAsync("element => element.click()");
-            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Atlas", Exact = true })).ToBeVisibleAsync();
+            await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-atlas.png");
         }
         finally

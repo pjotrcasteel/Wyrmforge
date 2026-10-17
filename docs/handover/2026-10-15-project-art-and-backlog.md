@@ -397,3 +397,22 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
   - Frost's actual deficit is Wyrm kill speed.
 - **Proposals, not applied:** a proc guard on defeat-burst chill, Frost offer parity, then re-measure.
 - **Next:** the first Arcane Nexus journey (Frostfire).
+
+## 27. Arcane Nexus v1 (amendment §3, §11 step 2)
+
+- **One screen:** the Web screen is now the Arcane Nexus. Selecting a research node opens a bench in the inspector with these parts:
+  - stage;
+  - effect and trade-off;
+  - material owned/needed and where to find it;
+  - condition pills;
+  - experiments;
+  - one sticky primary action (track / run / stabilize with consent / equip).
+- **Guidance:** a "next discovery" chip (from `LaboratoryAdvisor`). Research nodes carry badges whose shapes differ per stage. The post-hunt prompt opens the Nexus focused on the node. Hunt prep lists equipped mutations.
+- **Mobile:** a bottom sheet at about 55% height that keeps the Web visible, 44+ px targets, a 20 px no-pan edge gutter, and extra scroll room so focused nodes sit above the sheet. Sound controls are hidden on this screen.
+- **Code:**
+  - `Application/Nexus/ArcaneNexus.cs`;
+  - `BuildView.razor`(+css);
+  - `arcane-web.js` (`focus`, gutter);
+  - `ForgeView`, `RunHubView`, `RunSummaryOverlay`.
+- **Tests:** `ArcaneNexusTests` (6). Browser tests now use "Arcane Nexus".
+- **Next:** a contextual second auto-cast (amendment §11 step 4).

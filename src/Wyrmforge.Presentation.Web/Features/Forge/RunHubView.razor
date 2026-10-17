@@ -3,6 +3,7 @@
 @using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.Laboratory
 
 <section class="run-hub">
     <button class="enter-realm" @onclick="StartAsync">BEGIN HUNT</button>
@@ -39,9 +40,13 @@
 
                 </div>
             }
-            else
+            @if (Laboratory is { Stabilized.Count: > 0 })
             {
-
+                var prepared = Laboratory.PreparedFor(Selection.Selected);
+                <div class="keystone-summary mutation-summary">
+                    <span>MUTATION@(prepared.Count == 1 ? string.Empty : "S")</span>
+                    <strong>@(prepared.Count > 0 ? string.Join(" • ", prepared.Select(id => $"{LaboratoryCatalog.Get(id).Name} ({LaboratoryCatalog.Get(Laboratory.SocketOf(id)!.Value).NodeName})")) : "None equipped · equip a discovery in the Arcane Nexus")</strong>
+                </div>
             }
         </article>
 
@@ -107,6 +112,7 @@
     [Parameter] public EventCallback OnStart { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
     [Parameter] public EventCallback OnEditBuild { get; set; }
+    [Parameter] public LaboratoryState? Laboratory { get; set; }
     [Parameter] public EventCallback OnEditForge { get; set; }
 
     private IReadOnlyList<PassiveNodeDefinition> SelectedKeystones => Selection.Selected.Select(PassiveTreeCatalog.Get).Where(node => node.Kind == PassiveNodeKind.Keystone).ToArray();

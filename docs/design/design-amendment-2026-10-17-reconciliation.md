@@ -58,7 +58,7 @@ These follow the amendment §11. They are candidates, not a fixed schedule.
    - a seeded golden flag that stays within the stage;
    - persistence and replay.
 3. **Frost telemetry.** Done (see below). Record offered, selected and rerolled cards, plus control utility, in BalanceLab and playtest signals. Diagnose the cause before tuning.
-4. **The first Arcane Nexus journey.** One existing legal combination (Frostfire): research a node with a visible material, reach a permanent discovery, and reference it from the loadout.
+4. **The first Arcane Nexus journey.** Done. One existing legal combination (Frostfire): research a node with a visible material, reach a permanent discovery, and reference it from the loadout. The Application read model `ArcaneNexus` composes Laboratory, Web, Vault and loadouts with no save changes. The Web screen is renamed Arcane Nexus and the research bench is embedded in its node inspector. The standalone LaboratoryView stays reachable from the Forge as a legacy surface until the Forge ritual facet merges. See `docs/design/arcane-nexus-v1.md`.
 5. **A contextual second auto-cast** (defense or control), with arbitration and decision traces.
 
 **Fateweave as shipped.**
