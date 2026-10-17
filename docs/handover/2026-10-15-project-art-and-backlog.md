@@ -350,3 +350,14 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - The amendment takes precedence over the Spellcraft handover only where the two conflict. The record is `docs/design/design-amendment-2026-10-17-reconciliation.md`.
 - **Code conflicts.** The only one is single-primary combat, now marked transitional. No campaign gates exist, and pacing (minor refinements plus level 5/10/15 milestones) is confirmed.
 - **Order.** Roster step 7, then Fateweave per-card rerolls, then Frost telemetry, the first Nexus journey and a contextual second auto-cast.
+
+## 23. Arena roster — step 7 shipped (the Bell Warden)
+
+- **What.** An authored set piece on every road that leads straight into the lair. The bell tolls and marks its spot, and the Warden fights a smash / shockwave / toll / rally kit.
+  - At half health it cracks: a stagger window, then three-lane tolls. A phase gate means no burst skips the crack.
+  - Its fall opens the road and the courtyard gates. Full rules are in `docs/design/arena-roster-v1.md` §13.
+- **First hunt.** Always Ashfang (provisional; see the reconciliation record).
+- **Code.**
+  - `RunSimulation.BellWarden.cs`, `BellWardenBehaviorState`, and `BellWardenRenderSnapshot` / `BellShockwaveRenderSnapshot`.
+  - JS: `arena-bellwarden-vfx.js`.
+- **Next:** Fateweave per-card rerolls.

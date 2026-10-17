@@ -18,6 +18,13 @@ const WARD = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(176, 42, 52, 0.16)', 
 const CORRUPTION = { edge: 'rgba(226, 84, 74, 0.75)', fill: 'rgba(110, 30, 70, 0.14)', charge: 'rgba(160, 60, 120, 0.3)' };
 const RITE = { edge: 'rgba(240, 196, 96, 0.8)', charge: 'rgba(255, 224, 150, 0.55)' };
 const REVIVE = { edge: 'rgba(196, 146, 255, 0.85)', fill: 'rgba(150, 100, 230, 0.1)', charge: 'rgba(210, 170, 255, 0.4)' };
+// The Bell Warden's blows keep the red danger edge with a bronze fill; its rally and crack are tells, not attacks.
+const BELL = { edge: 'rgba(226, 84, 74, 0.95)', fill: 'rgba(214, 160, 72, 0.15)', charge: 'rgba(255, 196, 96, 0.38)' };
+const TOLL = { edge: 'rgba(226, 84, 74, 0.85)', fill: 'rgba(214, 160, 72, 0.1)', charge: 'rgba(255, 210, 120, 0.34)' };
+const RALLY = { edge: 'rgba(240, 196, 96, 0.75)', charge: 'rgba(255, 224, 150, 0.5)' };
+const CRACK = { edge: 'rgba(230, 236, 240, 0.8)', charge: 'rgba(255, 255, 255, 0.55)' };
+// Must match RunSimulation.BellToll* and BellWardenBehaviorState.CrackedTollSpreadRadians: the previewed pulses are the pulses.
+export const BELL_TOLL = { pulses: 6, firstOffset: 70, spacing: 74, fanRadians: 25 * Math.PI / 180 };
 // Must match PenitentBehaviorState.ShieldHalfAngleRadians: the drawn guard is exactly the blocking arc.
 export const SHIELD_HALF_ANGLE = Math.PI / 3;
 
@@ -36,6 +43,46 @@ export function drawEnemyTelegraph(ctx, enemy) {
     else if (telegraph.kind === 'rite-corruption') drawRitePreview(ctx, telegraph, CORRUPTION);
     else if (telegraph.kind === 'rite-ward' || telegraph.kind === 'rite-shift') drawRiteRing(ctx, enemy, telegraph);
     else if (telegraph.kind === 'ward-fuse') drawLandingMark(ctx, telegraph.targetX, telegraph.targetY, telegraph.radius, telegraph.progress, WARD);
+    else if (telegraph.kind === 'bell-smash') drawLandingMark(ctx, telegraph.targetX, telegraph.targetY, telegraph.radius, telegraph.progress, BELL);
+    else if (telegraph.kind === 'bell-toll') drawTollLanes(ctx, enemy, telegraph, [0]);
+    else if (telegraph.kind === 'bell-toll-fan') drawTollLanes(ctx, enemy, telegraph, [-BELL_TOLL.fanRadians, 0, BELL_TOLL.fanRadians]);
+    else if (telegraph.kind === 'bell-rally') drawRiteRing(ctx, enemy, telegraph, RALLY);
+    else if (telegraph.kind === 'bell-crack') drawRiteRing(ctx, enemy, telegraph, CRACK);
+}
+
+// Every pulse of the coming toll, already in place: hollow rings along each lane that fill as the bell swings back
+// (Hades' Asterius lines / Gungeon's lane tells). The live pulses then ripple outward over the same rings.
+export function tollPulsePoints(enemy, telegraph, offsets = [0]) {
+    const base = Math.atan2(telegraph.targetY - enemy.y, telegraph.targetX - enemy.x);
+    const points = [];
+    for (const offset of offsets) {
+        const angle = base + offset;
+        for (let i = 0; i < BELL_TOLL.pulses; i++) {
+            const d = BELL_TOLL.firstOffset + i * BELL_TOLL.spacing;
+            points.push({ x: enemy.x + Math.cos(angle) * d, y: enemy.y + Math.sin(angle) * d });
+        }
+    }
+    return points;
+}
+
+function drawTollLanes(ctx, enemy, telegraph, offsets) {
+    const r = Math.max(8, Number(telegraph.radius) || 0);
+    const p = clamp01(telegraph.progress);
+    ctx.save();
+    for (const point of tollPulsePoints(enemy, telegraph, offsets)) {
+        ctx.setLineDash?.([5, 4]);
+        ctx.strokeStyle = TOLL.edge;
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash?.([]);
+        ctx.fillStyle = TOLL.charge;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, r * p, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
 }
 
 // A rite being cast: a dashed outline exactly where it will land, its sweep closing as the censers rise. The live blast or
@@ -60,16 +107,16 @@ function drawRitePreview(ctx, telegraph, colors) {
 }
 
 // Planting a ward or deepening the ritual: a gilt ring around the Reliquary itself; no damage, only a tell.
-function drawRiteRing(ctx, enemy, telegraph) {
+function drawRiteRing(ctx, enemy, telegraph, colors = RITE) {
     const r = Math.max(10, Number(telegraph.radius) || 0);
     const p = clamp01(telegraph.progress);
     ctx.save();
-    ctx.strokeStyle = RITE.edge;
+    ctx.strokeStyle = colors.edge;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, r, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.strokeStyle = RITE.charge;
+    ctx.strokeStyle = colors.charge;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, r + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p);
@@ -259,8 +306,8 @@ export function drawHostileProjectileGround(ctx, projectile) {
     if (!projectile) return;
     const style = projectile.style ?? 'ember';
     drawLandingMark(ctx, projectile.targetX, projectile.targetY, projectile.radius, projectile.progress,
-        style === 'grave' ? GRAVE : style === 'echo' ? ECHO : style === 'seal' ? SEAL : style === 'ward' ? WARD : LOB);
-    // Grave, echo, seal and ward blasts never travel: the mark is the whole telegraph, so there is no ball or shadow.
+        style === 'grave' ? GRAVE : style === 'echo' ? ECHO : style === 'seal' ? SEAL : style === 'ward' ? WARD : style === 'toll' ? TOLL : LOB);
+    // Grave, echo, seal, ward and toll blasts never travel: the mark is the whole telegraph, so there is no ball or shadow.
     if (style !== 'ember') return;
     ctx.save();
     ctx.fillStyle = 'rgba(5, 7, 10, 0.4)';

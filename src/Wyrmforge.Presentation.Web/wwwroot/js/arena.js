@@ -8,6 +8,7 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
+import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -197,6 +198,7 @@ function draw(state, snapshot, width, height) {
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
     for (const enemy of snapshot.enemies) {
         drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
@@ -231,6 +233,7 @@ function draw(state, snapshot, width, height) {
         }
     }
     drawReliquaryEmergence(ctx, snapshot.reliquary);
+    drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
@@ -290,7 +293,10 @@ function draw(state, snapshot, width, height) {
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     drawReliquaryHushVeil(ctx, snapshot.reliquary, width, height);
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
-    else drawReliquaryBar(ctx, snapshot.reliquary, width);
+    else {
+        drawReliquaryBar(ctx, snapshot.reliquary, width);
+        drawBellWardenBar(ctx, snapshot.bellWarden, width);
+    }
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);

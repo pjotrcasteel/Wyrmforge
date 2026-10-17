@@ -41,6 +41,13 @@ public sealed partial class RunSimulation
             attractedDragon = selectedAscendant;
             return;
         }
+        // First-hunt story qualification (encounter brief §5): the opening chapter always culminates in Ashfang. Later hunts keep
+        // the attraction roll's variety. Provisional until the campaign's element order is settled (amendment reconciliation).
+        if (firstHunt)
+        {
+            attractedDragon = DragonId.Ashfang;
+            return;
+        }
         // A tracked Laboratory lead decides which Wyrm answers, but never overrides an Ascendant rite or the First Hunt.
         if (researchLead is { } lead && !firstHunt && !defeatedDragonIds.Contains(lead))
         {

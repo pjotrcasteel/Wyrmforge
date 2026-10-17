@@ -121,6 +121,9 @@ public partial class ArenaView : IAsyncDisposable
         var previousReliquaryShifts = current.ReliquaryShifts;
         var previousReliquaryWithdrawals = current.ReliquaryWithdrawals;
         var reliquaryWasSlain = current.ReliquaryDefeat is not null;
+        var previousBellArrivals = current.BellWardenArrivals;
+        var previousBellCracks = current.BellWardenCracks;
+        var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
@@ -171,6 +174,23 @@ public partial class ArenaView : IAsyncDisposable
         else if (current.ReliquaryWithdrawals != previousReliquaryWithdrawals)
         {
             ShowReliquaryWithdrawn();
+            stateChanged = true;
+        }
+        if (current.BellWardenArrivals != previousBellArrivals)
+        {
+            ShowBellWardenArrived();
+            await TryPlayAudioAsync("hunt-start");
+            stateChanged = true;
+        }
+        else if (current.BellWardenCracks != previousBellCracks)
+        {
+            ShowBellCracked();
+            stateChanged = true;
+        }
+        else if (!bellWardenWasSlain && current.BellWardenDefeat is { } warden)
+        {
+            ShowBellWardenSlain(warden);
+            await TryPlayAudioAsync("reward");
             stateChanged = true;
         }
         if (!hadChoices && current.PendingChoices.Count > 0) await TryPlayAudioAsync("upgrade-open");

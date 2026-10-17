@@ -55,7 +55,7 @@ public sealed partial class RunSimulation
             elitesThisMap = 0;
         }
         // The Reliquary's road carries no elite: one rare threat per road.
-        if (IsReliquaryNode) return;
+        if (IsReliquaryNode || IsBellWardenNode) return;
         if (node.Type != WyrmrealmNodeType.Combat || node.Stage < EliteFirstEligibleStage || node.Habitat == WyrmrealmHabitat.Outskirts) return;
         if (elitesThisMap >= MaxElitesPerMap) return;
         var random = new Random(EliteRollSeed(mapState.Seed, depthState.Depth, node.Id));

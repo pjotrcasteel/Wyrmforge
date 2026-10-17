@@ -38,7 +38,9 @@ public sealed class HabitatSpawnTests
                 {
                     Assert.IsGreaterThanOrEqualTo(ArenaEnvironmentState.MinimumSpawnDistance,
                         Vector2D.Distance(enemy.Position, new Vector2D(hunter.X, hunter.Y)), $"{node.Habitat} spawned beside the hunter");
-                    Assert.IsTrue(EnemyHabitatProfile.Allows(node.Habitat, enemy.Kind), $"{enemy.Kind} does not live in {node.Habitat}");
+                    // Roster step 7: the pre-lair road is the Bell Warden's set piece, not a habitat horde.
+                    if (node.PreLair) Assert.AreEqual(EnemyKind.BellWarden, enemy.Kind, "Only the Warden walks onto the pre-lair road.");
+                    else Assert.IsTrue(EnemyHabitatProfile.Allows(node.Habitat, enemy.Kind), $"{enemy.Kind} does not live in {node.Habitat}");
                 }
             }
             Assert.IsNotEmpty(seen, $"{node.Habitat} produced no enemies");

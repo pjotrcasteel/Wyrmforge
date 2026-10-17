@@ -82,7 +82,7 @@ public sealed partial class RunSimulation
     public static bool IsReliquaryHunt(int seed, int depth) => new Random(EliteRollSeed(seed, depth, "reliquary")).NextDouble() < ReliquaryChance;
 
     /// <summary>A combat road on the monastery side of the realm, before the bell tower's approach. Never the tutorial road or a lair.</summary>
-    public static bool IsReliquaryEligible(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Combat
+    public static bool IsReliquaryEligible(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Combat && !node.PreLair
         && node.Stage is >= ReliquaryFirstStage and <= ReliquaryLastStage && ReliquaryHabitats.Contains(node.Habitat);
 
     private static bool IsReliquaryKind(EnemyKind kind) => kind is EnemyKind.Reliquary or EnemyKind.ReliquaryWard;
@@ -96,7 +96,8 @@ public sealed partial class RunSimulation
             reliquaryMap = (mapState.Seed, depthState.Depth);
             reliquaryMapPending = IsReliquaryHunt(mapState.Seed, depthState.Depth);
         }
-        if (!reliquaryMapPending || !IsReliquaryEligible(node)) return;
+        // Never on the Warden's road, whatever its habitat: one monumental threat at a time (brief §5).
+        if (!reliquaryMapPending || !IsReliquaryEligible(node) || IsBellWardenNode) return;
         reliquaryMapPending = false;
         ReliquaryStage = ReliquaryStage.Waiting;
         reliquaryTimer = ReliquaryRevealSeconds;

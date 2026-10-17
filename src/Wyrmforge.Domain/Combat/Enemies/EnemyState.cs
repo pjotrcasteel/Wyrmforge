@@ -31,6 +31,8 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public ReliquaryBehaviorState? Reliquary { get; } = kind == EnemyKind.Reliquary ? new ReliquaryBehaviorState() : null;
 
+    public BellWardenBehaviorState? BellWarden { get; } = kind == EnemyKind.BellWarden ? new BellWardenBehaviorState() : null;
+
     public ReliquaryWardState? Ward { get; } = kind == EnemyKind.ReliquaryWard ? new ReliquaryWardState() : null;
 
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;

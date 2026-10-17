@@ -33,6 +33,8 @@ public sealed partial class RunSimulation
         }
         // Nothing new walks in while the Reliquary rises.
         if (ReliquaryStage is ReliquaryStage.Hush or ReliquaryStage.Emerging) return;
+        // The Warden's road has no horde: its own set piece replaces the encounter director.
+        if (UpdateBellWardenRoad(delta)) return;
         var mapEncounter = mapState.EncounterActive;
         if (mapEncounter)
         {
@@ -220,6 +222,7 @@ public sealed partial class RunSimulation
                 continue;
             }
             if (enemy.Reliquary is { } rite) (direction, speed) = UpdateReliquary(enemy, rite, scaledDelta, crossing, direction, speed);
+            else if (enemy.BellWarden is { } bell) (direction, speed) = UpdateBellWarden(enemy, bell, scaledDelta, crossing, direction, speed);
             else if (enemy.RoutedRemaining > 0)
             {
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
@@ -300,9 +303,11 @@ public sealed partial class RunSimulation
         SinkWraiths();
         UpdateHostileProjectiles(delta);
         UpdateReliquaryFields(delta);
+        UpdateBellShockwaves(delta);
     }
 
-    private int CommittedThreatCount() => hostileProjectiles.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
+    private int CommittedThreatCount() => hostileProjectiles.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0)
+        + (bellWarden?.BellWarden?.IsCommitted == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
             || enemy.DrownedWraith?.IsCommitted == true);
 
@@ -341,6 +346,16 @@ public sealed partial class RunSimulation
             : new EnemyTelegraphRenderSnapshot(rite.Rite == ReliquaryRite.Seal ? "rite-seal" : "rite-corruption", rite.CastProgress, rite.CastPoint.X,
                 rite.CastPoint.Y, rite.Rite == ReliquaryRite.Seal ? rite.Shifted ? ReliquaryShiftedSealRadius : ReliquarySealRadius : ReliquaryFieldRadius),
         { Reliquary: { Phase: ReliquaryPhase.Shift } shifting } => new EnemyTelegraphRenderSnapshot("rite-shift", shifting.ShiftProgress,
+            enemy.Position.X, enemy.Position.Y, enemy.Radius * 2),
+        { BellWarden: { Phase: BellWardenPhase.Windup } bell } => bell.Move switch
+        {
+            BellWardenMove.Smash => new EnemyTelegraphRenderSnapshot("bell-smash", bell.WindupProgress, bell.Target.X, bell.Target.Y, BellSmashRadius),
+            BellWardenMove.Toll => new EnemyTelegraphRenderSnapshot(bell.Cracked ? "bell-toll-fan" : "bell-toll", bell.WindupProgress,
+                enemy.Position.X + bell.TollDirection.X * (BellTollFirstOffset + (BellTollPulses - 1) * BellTollSpacing),
+                enemy.Position.Y + bell.TollDirection.Y * (BellTollFirstOffset + (BellTollPulses - 1) * BellTollSpacing), BellTollRadius),
+            _ => new EnemyTelegraphRenderSnapshot("bell-rally", bell.WindupProgress, enemy.Position.X, enemy.Position.Y, BellRallyRadius),
+        },
+        { BellWarden: { Phase: BellWardenPhase.Crack } cracking } => new EnemyTelegraphRenderSnapshot("bell-crack", cracking.CrackProgress,
             enemy.Position.X, enemy.Position.Y, enemy.Radius * 2),
         { Ward: { Warning: true } fuse } => new EnemyTelegraphRenderSnapshot("ward-fuse", fuse.WarningProgress, enemy.Position.X, enemy.Position.Y,
             ReliquaryWardBlastRadius),

@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
@@ -112,7 +112,17 @@ public sealed partial class RunSimulation
         }
 
         if (target is EnemyState { Kind: EnemyKind.Reliquary } && reliquaryWards.Count > 0) damage *= ReliquaryWardedDamageMultiplier;
+        // Phase gate (Hades' bosses, Monster Hunter's topple): no burst skips the crack. Overflow past half health is discarded;
+        // reaching half health starts the stagger at once (below), and the stagger itself is a free damage window.
+        if (target is EnemyState { BellWarden: { Cracked: false, Phase: not BellWardenPhase.Crack } } gated)
+            damage = Math.Min(damage, Math.Max(0, gated.Health - gated.MaxHealth * BellWardenBehaviorState.CrackHealthFraction));
+        if (damage <= 0)
+        {
+            RegisterTargetHit(target);
+            return false;
+        }
         target.Health -= damage;
+        if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
 
@@ -120,6 +130,9 @@ public sealed partial class RunSimulation
         {
             case EnemyState { Kind: EnemyKind.Reliquary or EnemyKind.ReliquaryWard } rite:
                 ResolveReliquaryDeath(rite);
+                break;
+            case EnemyState { Kind: EnemyKind.BellWarden } warden:
+                ResolveBellWardenDeath(warden);
                 break;
             case EnemyState defeatedEnemy:
                 RegisterEnemyDeath(defeatedEnemy);

@@ -14,6 +14,8 @@ public static class EnemyCatalog
         // Unique: only the Reliquary event spawns these, never a pack plan or a habitat table.
         new(EnemyKind.Reliquary, EnemyRole.Support, 10, 22, HealthMultiplier: 15, SpeedMultiplier: 0.55, ContactDamageMultiplier: 0.6, Unique: true),
         new(EnemyKind.ReliquaryWard, EnemyRole.Support, 0, 13, HealthMultiplier: 2.4, SpeedMultiplier: 0, ContactDamageMultiplier: 0, Unique: true),
+        // Unique: the Bell Warden only ever stands on the pre-lair road.
+        new(EnemyKind.BellWarden, EnemyRole.Pressure, 10, 30, HealthMultiplier: 18, SpeedMultiplier: 0.5, ContactDamageMultiplier: 1, Unique: true),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

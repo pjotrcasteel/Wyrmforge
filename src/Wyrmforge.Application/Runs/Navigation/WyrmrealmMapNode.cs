@@ -13,13 +13,15 @@ public sealed record WyrmrealmMapNode(
     public HuntSite? Site { get; init; }
     public WyrmrealmTerritory? Territory { get; init; }
     public WyrmrealmHabitat Habitat { get; init; } = WyrmrealmHabitat.Outskirts;
+    /// <summary>A combat road that leads straight into a Wyrm's lair (route-graph semantics, not a stage number): the Bell Warden's road.</summary>
+    public bool PreLair { get; init; }
     public int EncounterCueStage => Stage == WyrmrealmMapState.CombatStages ? 8 : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => 3,
         WyrmrealmEncounterKind.StalkerPressure => 5,
         _ => 1,
     };
-    public string EncounterName => Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
+    public string EncounterName => PreLair ? "Bell Warden" : Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => "Horde",
         WyrmrealmEncounterKind.StalkerPressure => "Ambush",

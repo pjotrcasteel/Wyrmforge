@@ -1,6 +1,7 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
-// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith, 7 The Reliquary, 8 Reliquary ward.
+// 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith, 7 The Reliquary, 8 Reliquary ward,
+// 9 The Bell Warden.
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
 // so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
@@ -28,6 +29,7 @@ export const ENEMY_SPECS = [
     { kind: 6, name: 'drowned-wraith', size: [44, 54], origin: [19, 31], radius: 12 },
     { kind: 7, name: 'reliquary', size: [60, 76], origin: [28, 46], radius: 22 },
     { kind: 8, name: 'reliquary-ward', size: [28, 38], origin: [13, 24], radius: 13 },
+    { kind: 9, name: 'bell-warden', size: [84, 94], origin: [40, 61], radius: 30 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -410,7 +412,76 @@ function reliquaryWard(pose) {
     return b;
 }
 
-const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard];
+// The Bell Warden (concept 08): a hulking monastery guardian in rusted plate under a spiked skull helm, a torn crimson
+// tabard and a great bronze bell swung from its forward fist, a chained lantern in the other. Poses 1-2 are the heavy
+// stomp with the bell swaying; pose 3 is every tell: the bell heaved high overhead, so the raised bell itself is the warning.
+function bellWarden(pose) {
+    const s = ENEMY_SPECS[9], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { armor: '#3d322d', armorHi: '#6f5b4c', armorDk: '#1d1714', rust: '#7c4a2c', bronze: '#a8742e', bronzeHi: '#dcaa5c',
+        bronzeDk: '#5c3c17', cloth: '#8a1c1e', clothHi: '#b53a30', clothDk: '#4c0d11', bone: '#cfbd9b', boneDk: '#8e7c60', void: '#120606',
+        ember: '#ff7a2c', core: '#fff1c0', chain: '#6e6050' };
+    const step = pose === 1 ? 2 : pose === 2 ? -2 : 0, raised = pose === 3, sway = raised ? 0 : -step / 2;
+    const bell = (cx, top, h, w) => {
+        g.poly([[cx - w / 3, top], [cx + w / 3, top], [cx + w / 2, top + h], [cx - w / 2, top + h]], C.bronze);
+        g.poly([[cx - w / 3, top], [cx - w / 6, top], [cx - w / 4, top + h], [cx - w / 2, top + h]], C.bronzeDk);
+        g.line(cx + w / 5, top + 2, cx + w / 3, top + h - 2, C.bronzeHi);
+        g.rect(cx - w / 2 - 1, top + h, w + 3, 3, C.bronzeDk); g.rect(cx - w / 2, top + h, w + 1, 1, C.bronzeHi);
+        g.ell(cx, top - 1, w / 5, 2.5, C.bronzeDk);
+        // The cross cast into the bell's shoulder.
+        g.line(cx, top + 3, cx, top + h * .55, C.bronzeDk); g.line(cx - 3, top + 6, cx + 3, top + 6, C.bronzeDk);
+        for (const x of [cx - w / 2 + 2, cx, cx + w / 2 - 2]) g.px(x, top + h + 3, C.chain);
+    };
+    // Armoured legs in a wide, heavy stance.
+    g.poly([[-12, 6], [-4, 6], [-6 - step, 29], [-14 - step, 29]], C.armorDk);
+    g.poly([[4, 6], [12, 6], [13 + step, 29], [5 + step, 29]], C.armor);
+    g.line(9, 8, 10 + step, 27, C.armorHi);
+    g.rect(-16 - step, 28, 11, 4, C.armorDk); g.rect(4 + step, 28, 12, 4, C.armor); g.rect(5 + step, 28, 10, 1, C.armorHi);
+    g.ell(-9 - step / 2, 17, 4, 3, C.rust); g.ell(9 + step / 2, 17, 4, 3, C.armorHi);
+    // Massive breastplate and pauldrons.
+    g.poly([[-17, -27], [17, -27], [14, 8], [-14, 8]], C.armor);
+    g.poly([[-17, -27], [-6, -27], [-8, 8], [-14, 8]], C.armorDk);
+    g.line(10, -24, 9, 4, C.armorHi); g.line(-2, -20, 3, -12, C.rust); g.line(5, -6, 9, -1, C.rust);
+    // Overlapping plate seams and rivets break up the chest.
+    for (const y of [-18, -12]) { g.line(-15, y, 15, y, C.armorDk); g.line(-5, y + 1, 14, y + 1, C.armorHi); }
+    for (const [x, y] of [[-12, -22], [-4, -22], [6, -22], [13, -22], [-11, -15], [12, -15]]) g.px(x, y, C.rust);
+    g.ell(-18, -24, 8, 6, C.armorDk); g.ell(18, -24, 8, 6, C.armor); g.ell(19, -26, 5, 3, C.armorHi);
+    for (const [x0, y0, x1, y1] of [[-20, -28, -24, -35], [-15, -29, -16, -36], [17, -29, 18, -36], [22, -28, 26, -35]]) g.line(x0, y0, x1, y1, C.armorHi);
+    // Torn crimson tabard with a hanging gilt medallion.
+    g.poly([[-7, -6], [7, -6], [9 + sway, 25], [-9 + sway, 25]], C.cloth);
+    g.poly([[-7, -6], [-3, -6], [-5 + sway, 25], [-9 + sway, 25]], C.clothDk);
+    g.line(4, -4, 6 + sway, 23, C.clothHi);
+    for (const x of [-7, -3, 2, 6]) g.line(x + sway, 23, x + sway + 1, 27, C.clothDk);
+    g.rect(-15, -8, 31, 3, C.bronzeDk); g.rect(-15, -8, 31, 1, C.bronze);
+    g.ell(0, -1, 3.5, 3.5, C.bronze); g.px(0, -1, C.ember); g.line(0, -5, 0, -8, C.chain);
+    // Skull helm under a crown of spikes.
+    g.ell(1, -34, 7, 8, C.armorDk);
+    for (const [x, y] of [[-5, -44], [-1, -47], [3, -47], [7, -44]]) g.line(1, -38, x, y, C.armor);
+    g.ell(3, -33, 4.6, 5.2, C.bone); g.line(-1, -36, -1, -29, C.boneDk);
+    g.rect(1, -35, 2, 2, C.void); g.rect(5, -35, 2, 2, C.void); g.px(2, -34, C.ember); g.px(6, -34, C.ember);
+    g.rect(2, -30, 5, 2, C.void); g.px(3, -30, C.bone); g.px(5, -30, C.bone);
+    // Rear arm: a chained lantern swinging low.
+    g.line(-18, -21, -22, -3, C.armorDk, 4); g.ell(-22, -2, 3.5, 3, C.armor);
+    g.line(-22, 0, -24 + sway, 10, C.chain);
+    g.rect(-28 + sway, 10, 8, 10, C.bronzeDk); g.rect(-27 + sway, 11, 6, 8, C.ember); g.rect(-25 + sway, 13, 2, 4, C.core);
+    g.poly([[-29 + sway, 10], [-19 + sway, 10], [-24 + sway, 6]], C.bronze);
+    // Forward arm and the great bell: carried at the hip, or heaved high overhead before it falls.
+    if (raised) {
+        g.line(18, -26, 16, -44, C.armor, 5); g.ell(15, -46, 4, 3.5, C.armorHi);
+        bell(13, -59, 16, 22);
+    } else {
+        g.line(18, -21, 23, -8, C.armor, 5); g.ell(24, -7, 4, 3.5, C.armorHi);
+        g.line(24, -5, 26 + sway, -1, C.chain);
+        bell(27 + sway, -1, 17, 22);
+    }
+    b.rim('#f0b070', '#080404', .35, .3);
+    b.outline('#0a0606');
+    // Eyes, lantern and medallion stay lit above the outline: the Warden is tracked by its embers.
+    const o = s.origin;
+    for (const [x, y] of [[2, -34], [6, -34], [0, -1], [-24 + sway, 14], [-24 + sway, 15]]) b.set(o[0] + x, o[1] + y, C.core);
+    return b;
+}
+
+const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 

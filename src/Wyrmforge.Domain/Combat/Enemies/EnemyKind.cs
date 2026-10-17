@@ -13,4 +13,6 @@ public enum EnemyKind
     Reliquary,
     /// <summary>A breakable ward the Reliquary plants. A ritual object, not a creature: no bestiary entry, no payout.</summary>
     ReliquaryWard,
+    /// <summary>Roster step 7: the named pre-lair set piece. Only the pre-lair road spawns it, every hunt.</summary>
+    BellWarden,
 }

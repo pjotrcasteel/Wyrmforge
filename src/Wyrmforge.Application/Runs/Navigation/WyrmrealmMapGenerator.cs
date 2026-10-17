@@ -60,13 +60,15 @@ public static class WyrmrealmMapGenerator
         territory = territory with { Camp = Flip(camp), River = river.Select(Flip).ToArray(),
             Roads = roads.Select(r => r with { Points = r.Points.Select(Flip).ToArray() }).ToArray(),
             Features = features.Select(f => f with { Center = Flip(f.Center) }).ToArray() };
-        return WyrmrealmRouteGenerator.CreateNodes(depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729)))
+        var created = WyrmrealmRouteGenerator.CreateNodes(depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729))).ToArray();
+        var lairRoads = created.Where(node => node.Type == WyrmrealmNodeType.Dragon).SelectMany(node => node.PreviousNodeIds).ToHashSet(StringComparer.Ordinal);
+        return created
             .Select(node =>
             {
                 var draft = drafts.Single(d => d.Id == node.Id);
                 var site = draft.Site;
                 return node with { Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
-                    Territory = territory, Habitat = draft.Habitat };
+                    Territory = territory, Habitat = draft.Habitat, PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,

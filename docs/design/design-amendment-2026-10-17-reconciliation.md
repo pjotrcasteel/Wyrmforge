@@ -51,7 +51,7 @@ These stand as before. The amendment confirms them or does not touch them.
 
 These follow the amendment §11. They are candidates, not a fixed schedule.
 
-1. **Arena roster step 7.** The Bell Warden and Ashfang. This is the current work and finishes the brief.
+1. **Arena roster step 7.** Done: the Bell Warden on every pre-lair road, and Ashfang on the first hunt. The first-hunt Ashfang rule is **provisional**; it serves the tutorial/story track and may move into `ChronicleState` once the campaign exists (S3 keeps the campaign optional). The Ashfang polish slice is deferred to the story phase.
 2. **Fateweave.** Per-card rerolls on `LevelChoiceService` and the level-up overlay:
    - per-round slot flags;
    - a hunt-wide charge pool;

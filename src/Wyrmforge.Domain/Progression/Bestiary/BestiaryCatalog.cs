@@ -62,6 +62,11 @@ public static class BestiaryCatalog
             "Destroy the ward, break the support, then punish the caster: it is shielded while a ward stands. Leave every marked circle.",
             "Ruined monastery, flooded cloister, scorched sanctuary",
             "It carries a splinter of the Wyrm in its censers. The monks who built the cloister never wrote down what they were guarding."),
+        new(EnemyKind.BellWarden, "The Bell Warden", "Named • guardian of the lair road",
+            "An armoured giant that carries the monastery's great bell. It smashes the bell down behind a long raised tell, sends a tolling wave down the ground and rings in reinforcements. At half strength the bell cracks.",
+            "Leave the marked crater, then step inside it before the shockwave rolls out. Sidestep the toll. Strike while it heaves the bell back up.",
+            "Ruined bell arch before the Wyrm's lair",
+            "The bell once rang to warn the valley of the Wyrm. Now it rings for him."),
     ];
 
     /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>

@@ -38,4 +38,8 @@ public sealed record RunRenderSnapshot(
     public ReliquaryRenderSnapshot? Reliquary { get; init; }
 
     public IReadOnlyList<ReliquaryFieldRenderSnapshot> ReliquaryFields { get; init; } = [];
+
+    public BellWardenRenderSnapshot? BellWarden { get; init; }
+
+    public IReadOnlyList<BellShockwaveRenderSnapshot> BellShockwaves { get; init; } = [];
 }

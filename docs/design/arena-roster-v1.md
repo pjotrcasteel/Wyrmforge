@@ -341,6 +341,48 @@ References: the Diablo treasure goblin and Hollow Knight's hidden fights (rare, 
 - `ReliquaryBehaviorStateTests` (7).
 - JS: `arena-reliquary-vfx.test.mjs`, plus the rite telegraphs and seal/ward marks.
 
-## 13. Next steps (brief §10 order)
+## 13. Step 7: The Bell Warden and first-hunt Ashfang
 
-7. Bell Warden on the pre-lair beat, and Ashfang on the first hunt only.
+References: Monster Hunter's arena entrance (the monster is marked before it can act), Hades' Asterius (lane charges previewed on the floor), Hollow Knight's mid-bosses (a short readable kit and a mid-fight change), and Hades' phase thresholds (a burst never skips the second phase).
+
+**Where (`RunSimulation.BellWarden.cs`).**
+- Every combat road that leads straight into the lair (`WyrmrealmMapNode.PreLair`, set from route-graph predecessors of the Wyrm node) is the Warden's road, on every hunt. That is a graph rule, not a stage number.
+- The road has no horde, no elite and no Reliquary: one monumental threat at a time. The encounter director is not ticked there.
+- After the entry grace the bell **tolls** for 1.6 s and a bronze sigil marks the spot where it will stand (260 px ahead, then the compass points; no randomness consumed). It then steps out and the fight begins.
+- The road completes when the Warden falls and its adds are gone. Its fall also opens every courtyard gate, since the director that normally opens them never runs here.
+
+**Kit** (HP 18× base, speed 0.5×, radius 30). The cycle is Smash → Toll → Smash → Rally, with a 1.4 s gap (1.0 s once cracked):
+
+| Move | Tell | Effect | Counterplay |
+|---|---|---|---|
+| Smash | Crater mark (95 px) where it will land, 1.15 s | 26 damage in the crater, then a shockwave | Leave the crater |
+| Shockwave | Crater charge sweep plus a dashed ring at 300 px, 0.55 s | A 26 px band rolls out from 95 to 300 px over 0.9 s; it hits once for 10 | Step *into* the crater, or stay beyond the dashed ring |
+| Toll | Six hollow rings along the lane, filling, 1.0 s | Pulses ripple outward (70 + 74·i px, 40 px each, 15 damage) | Step out of the lane |
+| Rally | Gilt ring on the Warden, 1.3 s | 2 adds (3 once cracked), alternating Hollow and Ashling; at most 4 live and 12 per fight | Kill them, or ignore them for the Warden |
+
+- If the hunter is more than 230 px away, a Smash becomes a Toll. A Rally at the add cap becomes a Toll, never a wasted turn.
+- **Crack** at 50% HP: a 1.8 s stagger that cancels any windup (a free damage window), a "THE BELL CRACKS" callout, then the toll fans into three lanes at ±25° and the gap shortens.
+- **Phase gate.** Damage past half health is discarded until the crack begins, and reaching half health starts the crack from the blow itself, so a frozen or stunned Warden still cracks.
+- **Payout.** Pays once: score ×8, a 24 XP shard and a typed `BellWardenDefeat`. Its adds crumble with it, and its tolls and shockwaves clear.
+
+**First-hunt Ashfang (provisional).** The first hunt always climaxes with Ashfang (brief §5), after the Ascendant rule. Later hunts still roll their Wyrm. The Ashfang polish slice (telegraph and phase clarity, no new mechanics) is deferred to the story phase.
+
+**Presentation.**
+- Sprite: a skull-helmed, spiked bell-bearer with a lantern and a red tabard (atlas kind 9); the bell is raised overhead on its windup pose.
+- `arena-bellwarden-vfx.js`: the tolling sigil and entrance fade, shockwave rings (crater, charge sweep, dashed max reach, the hurting band at its exact thickness) and a "THE BELL WARDEN" bar with a CRACKED state and a half-health notch.
+- `arena-enemy-telegraphs.js`: `bell-smash`, `bell-toll`, `bell-toll-fan`, `bell-rally`, `bell-crack`, and the `toll` pulse mark.
+- Callouts: "THE BELL WARDEN" with the hunt horn, "THE BELL CRACKS", and "THE BELL FALLS SILENT" with the reward cue.
+- The Codex lists it as a ◆ Unique.
+
+**Balance check (25 runs × 48 combinations).** The Warden road replaces a horde road, so kills drop (1219 → 1136). Danger is unchanged: damage 161.2 → 159.0, defeats 64 → 59, extracted 304 → 299, Wyrms reached 1.26 → 1.38.
+- Fight length varies with build: about 1–6 s for burst Fire builds and 20–57 s for Frost kiters. Every hunter now sees the crack. If burst kills still feel too short in playtests, cap stagger damage before raising HP, because raising HP punishes slow builds.
+- A first run of the lab found that the sealed courtyard trapped every hunter after the kill, and a phase gate without the damage-path crack stalled frozen Wardens. Both are fixed and covered by regression tests.
+
+**Tests.**
+- `BellWardenEncounterTests` (8): the pre-lair graph, the toll entrance with no horde/elite/Reliquary, the bounded rally, the smash and its safe crater, the shockwave hitting once, the phase gate, a single payout that opens the road and gates, and first-hunt Ashfang.
+- `BellWardenBehaviorStateTests` (6).
+- JS: `arena-bellwarden-vfx.test.mjs`, plus the kind 9 art.
+
+## 14. Next steps
+
+The encounter brief's order is complete. The next work follows the reconciliation record: Fateweave, Frost telemetry, the first Nexus journey, then a contextual second auto-cast.

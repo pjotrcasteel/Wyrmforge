@@ -62,7 +62,10 @@ public sealed class OpeningPowerTests
         for (var frame = 0; frame < 500; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
         Assert.AreEqual(8, Field<List<EnemyState>>(simulation, "enemies").Count);
         var map = Field<WyrmrealmMapState>(simulation, "mapState");
-        foreach (var expectedCap in new[] { 8, 10, 10, 14, 14, 14, 22 })
+        // Stage 8 keeps its full horde cap for any non-lair road, but the pre-lair road is now the Bell Warden's set piece (roster
+        // step 7): it opens with the Warden alone, far below the horde peak, and only its rally call brings reinforcements.
+        Assert.AreEqual(22, EnemyStagePressure.ActiveEnemyCap(8, 1));
+        foreach (var expectedCap in new[] { 8, 10, 10, 14, 14, 14, 1 })
         {
             var quota = map.CurrentNodeKillsRequired;
             for (var kill = 0; kill < quota; kill++) map.RegisterKill();

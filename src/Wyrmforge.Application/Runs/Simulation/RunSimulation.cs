@@ -346,6 +346,8 @@ public sealed partial class RunSimulation
             WraithRipples = CreateWraithRippleSnapshots(),
             Reliquary = CreateReliquarySnapshot(),
             ReliquaryFields = CreateReliquaryFieldSnapshots(),
+            BellWarden = CreateBellWardenSnapshot(),
+            BellShockwaves = CreateBellShockwaveSnapshots(),
         };
     }
 

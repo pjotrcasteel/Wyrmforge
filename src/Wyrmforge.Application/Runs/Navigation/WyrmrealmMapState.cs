@@ -63,6 +63,14 @@ public sealed class WyrmrealmMapState
         return true;
     }
 
+    /// <summary>Completes a set-piece road whose objective is a named foe rather than a kill count (the Bell Warden).</summary>
+    public bool CompleteObjectiveEncounter()
+    {
+        if (!EncounterActive) return false;
+        CurrentNodeKills = CurrentNodeKillsRequired;
+        return TryCompleteEncounter();
+    }
+
     public void CompleteDragon()
     {
         if (CurrentNode is not { Type: WyrmrealmNodeType.Dragon } dragonNode) return;

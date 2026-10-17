@@ -22,6 +22,7 @@ public sealed partial class RunSimulation
     private TrailRenderSnapshot? CreateTrailSnapshot()
     {
         if (!mapState.EncounterActive || !encounterDirector.Active) return null;
+        if (IsBellWardenNode) return CreateBellWardenTrailSnapshot();
         var phase = encounterDirector.Phase;
         var phaseProgress = encounterDirector.PhaseProgress;
         var phaseFraction = phase switch
@@ -50,6 +51,7 @@ public sealed partial class RunSimulation
         ClearMapEncounterField();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
+        PrepareBellWardenNode(node);
         PrepareReliquaryNode(node);
         RollNodeElite(node);
         if (node.Type == WyrmrealmNodeType.Dragon)
@@ -125,6 +127,7 @@ public sealed partial class RunSimulation
         hostileProjectiles.Clear();
         ClearSupportState();
         ClearReliquaryState();
+        ClearBellWardenState();
         encounterSeconds = 0;
         rangedStaggerRemaining = 0;
         pendingRelicBursts.Clear();
