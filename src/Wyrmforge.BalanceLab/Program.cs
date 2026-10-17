@@ -22,7 +22,7 @@ var builds = options.FreshHunter
         $"Fresh {school}", SelfPlayBuildCohort.FullBuild, school, new HashSet<string>(), Array.Empty<string>(), 0)).ToArray()
     : SelfPlayBuildCatalog.All;
 
-Console.WriteLine($"Arena: {options.ArenaWidth} × {options.ArenaHeight}; fresh hunter: {options.FreshHunter}");
+Console.WriteLine($"Arena: {options.ArenaWidth} × {options.ArenaHeight}; fresh hunter: {options.FreshHunter}; contextual: {options.Contextual}");
 
 foreach (var build in builds)
 {
@@ -31,7 +31,8 @@ foreach (var build in builds)
         for (var index = 0; index < options.RunsPerCombination; index++)
         {
             var seed = options.SeedStart + index;
-            var simulation = factory.Create(build.SelectedNodes, seed: seed, progression: options.FreshHunter ? new ForgeProgressionState() : null);
+            var simulation = factory.Create(build.SelectedNodes, seed: seed, progression: options.FreshHunter ? new ForgeProgressionState() : null,
+                contextualSpell: options.Contextual);
             var agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
             var metrics = driver.Play(
                 build,

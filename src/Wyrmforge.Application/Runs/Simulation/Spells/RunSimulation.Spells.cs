@@ -20,6 +20,8 @@ public sealed partial class RunSimulation
         var spell = SpellCatalog.Get(build.Spells.ActiveSpell);
         var rank = build.Spells[spell.Id];
         spellCooldowns[spell.Id] -= delta;
+        // The contextual spell is judged every tick so a defence is never starved by the primary, but it spends the primary's cast.
+        if (TryCastContextualSpell(delta, spell, rank, moving)) return;
         if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) return;
         CastSpell(spell, rank, FocusedCastProfile.For(spell.Id, rank).DamageMultiplier, false);
         spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);

@@ -66,7 +66,10 @@ public sealed class RunSelfPlayDriver
             simulation.AbandonRun();
         }
         return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason,
-            simulation.FocusedSurgesCast, simulation.ExtractionRitualsCompleted, simulation.DeathsDuringExtraction);
+            simulation.FocusedSurgesCast, simulation.ExtractionRitualsCompleted, simulation.DeathsDuringExtraction) with
+        {
+            ContextualCasts = simulation.ContextualCasts,
+        };
     }
 
     private static RunAgentObservation CreateObservation(RunSimulation simulation, RunRenderSnapshot snapshot) => new(

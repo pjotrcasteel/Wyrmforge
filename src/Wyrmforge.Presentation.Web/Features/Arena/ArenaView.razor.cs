@@ -40,6 +40,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
@@ -87,7 +88,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell);
         if (RewardCache) simulation.OpenRewardCache();
     }
 

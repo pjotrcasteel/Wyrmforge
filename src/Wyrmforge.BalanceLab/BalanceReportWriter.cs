@@ -21,7 +21,7 @@ internal static class BalanceReportWriter
     private static string Csv(IReadOnlyList<RunSelfPlayMetrics> runs)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,evolutions,evolutionIds,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes,focusedSurgesCast,extractionRitualsCompleted,deathsDuringExtraction,draftRounds,rerolls,primaryOffered,primarySelected,enemyDeniedShare,threatDeniedShare,eliteDeniedShare,wyrmDeniedShare,controlledKillShare,pulseSecondsDenied");
+        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,evolutions,evolutionIds,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes,focusedSurgesCast,extractionRitualsCompleted,deathsDuringExtraction,draftRounds,rerolls,primaryOffered,primarySelected,enemyDeniedShare,threatDeniedShare,eliteDeniedShare,wyrmDeniedShare,controlledKillShare,pulseSecondsDenied,contextualCasts");
 
         foreach (var run in runs)
         {
@@ -72,7 +72,8 @@ internal static class BalanceReportWriter
                 F(run.Control.EliteShare),
                 F(run.Control.WyrmShare),
                 F(run.Control.ControlledKillShare),
-                F(run.Control.PulseSecondsDenied)));
+                F(run.Control.PulseSecondsDenied),
+                run.ContextualCasts));
         }
 
         return builder.ToString();

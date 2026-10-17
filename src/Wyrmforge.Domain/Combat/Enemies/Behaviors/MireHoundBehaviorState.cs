@@ -108,6 +108,12 @@ public sealed class MireHoundBehaviorState(int orbitSign = 1)
         return true;
     }
 
+    /// <summary>A shove during the windup carries the locked lane with the hound, so the drawn telegraph stays truthful.</summary>
+    public void Displace(Vector2D offset)
+    {
+        if (Phase == MireHoundPhase.Windup) PounceOrigin += offset;
+    }
+
     /// <summary>The bite connected: the pounce ends at once and the hound is exposed.</summary>
     public void Land()
     {

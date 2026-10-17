@@ -102,7 +102,7 @@
                 <CodexView Codex="Codex" Bestiary="Bestiary" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
                 break;
             case ShellSection.Prepare:
-                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(IsUnlocked(ShellSection.Laboratory) ? Laboratory : null)" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
+                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(IsUnlocked(ShellSection.Laboratory) ? Laboratory : null)" Hunter="Hunter" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                 break;
             case ShellSection.Options:
                 <div class="menu-options"><button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button><a href="combat-lab">Developer Combat Lab</a></div>

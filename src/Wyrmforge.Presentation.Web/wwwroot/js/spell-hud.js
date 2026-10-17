@@ -6,14 +6,15 @@ const shapes = {
     'Frost Shard': ['#9fe5ff', 'M12 2V22 M3 7 21 17 M3 17 21 7 M8 4 12 7 16 4 M8 20 12 17 16 20'],
     'Ice Lance': ['#9fe5ff', 'M12 2 17 12 12 22 7 12Z M12 2V22'],
     'Chain Lightning': ['#ffe765', 'M14 2 5 13 11 13 9 22 20 9 13 9Z'],
-    'Ball Lightning': ['#ffe765', 'M15 3 9 11 15 11 9 21 M5 5C0 12 3 21 10 23 M19 19C24 12 21 3 14 1']
+    'Ball Lightning': ['#ffe765', 'M15 3 9 11 15 11 9 21 M5 5C0 12 3 21 10 23 M19 19C24 12 21 3 14 1'],
+    'Warding Pulse': ['#ddd6ff', 'M12 9a3 3 0 1 0 .01 0Z M12 3a9 9 0 0 1 9 9 M12 21a9 9 0 0 1-9-9 M21 12a9 9 0 0 1-9 9 M3 12a9 9 0 0 1 9-9']
 };
 export function spellVisual(name) { return shapes[name] ?? shapes['Arcane Orb']; }
 export function createSpellBadge(spell) {
     const badge = document.createElement('span');
     badge.className = 'combat-spell-badge';
     badge.title = spell.evolutionName ?? spell.name;
-    badge.setAttribute('aria-label', `${badge.title}, rank ${spell.rank}`);
+    badge.setAttribute('aria-label', spell.contextual ? `${badge.title}, contextual auto-cast` : `${badge.title}, rank ${spell.rank}`);
     const [color, path] = spellVisual(spell.name);
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 24 24');
@@ -24,8 +25,9 @@ export function createSpellBadge(spell) {
     for (const [key, value] of Object.entries({ d:path, fill:'none', stroke:color, 'stroke-width':'1.8', 'stroke-linecap':'round', 'stroke-linejoin':'round' })) line.setAttribute(key, value);
     svg.append(line);
     const rank = document.createElement('b');
-    rank.textContent = ['0', 'I', 'II', 'III', 'IV', 'V'][spell.rank] ?? String(spell.rank);
+    rank.textContent = spell.contextual ? 'AUTO' : ['0', 'I', 'II', 'III', 'IV', 'V'][spell.rank] ?? String(spell.rank);
     badge.append(svg, rank);
+    if (spell.contextual) badge.classList.add('combat-spell-contextual');
     if (spell.evolutionName) badge.classList.add('combat-spell-evolved');
     return badge;
 }

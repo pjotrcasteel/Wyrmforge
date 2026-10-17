@@ -21,7 +21,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false)
     {
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
@@ -38,6 +38,8 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         if (preparedMutations is not null) prepared.AddRange(preparedMutations);
         simulation.PrepareLaboratoryMutations(prepared);
         simulation.EnableResearchLead(researchLead);
+        // The first hunt teaches one spell; the contextual slot waits for the hunter's first milestone.
+        simulation.PrepareContextualSpell(contextualSpell && !firstHunt);
         return simulation;
     }
 }

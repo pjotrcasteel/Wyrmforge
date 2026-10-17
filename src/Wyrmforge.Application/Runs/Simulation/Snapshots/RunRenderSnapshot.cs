@@ -42,4 +42,6 @@ public sealed record RunRenderSnapshot(
     public BellWardenRenderSnapshot? BellWarden { get; init; }
 
     public IReadOnlyList<BellShockwaveRenderSnapshot> BellShockwaves { get; init; } = [];
+
+    public WardPulseRenderSnapshot? WardPulse { get; init; }
 }

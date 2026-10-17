@@ -209,6 +209,8 @@ function draw(state, snapshot, width, height) {
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
+    if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
@@ -780,6 +782,65 @@ function enemyEdgeColor(kind) {
     if (kind === 2) return '#ffb07a';
     if (kind === 3) return '#d56b75';
     return '#e57b82';
+}
+
+// Warding Pulse readiness: a thin ground arc at the hunter's feet that closes as the ward recovers (Hades shows cast ammo on
+// the hero, not in a corner). Full ring = the ward will answer the next crowd or windup.
+function drawWardReadiness(ctx, player, seconds, reducedMotion) {
+    if (player?.wardCharge === null || player?.wardCharge === undefined) return;
+    const charge = Math.max(0, Math.min(1, player.wardCharge));
+    const radius = (player.radius || 12) + 9;
+    ctx.save();
+    ctx.translate(player.x, player.y + (player.radius || 12) * .55);
+    ctx.scale(1, .42);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(221, 214, 255, .14)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge);
+    const ready = charge >= 1;
+    const glow = ready && !reducedMotion ? .55 + .2 * Math.sin(seconds * 3) : ready ? .65 : .32;
+    ctx.strokeStyle = `rgba(221, 214, 255, ${glow})`;
+    ctx.lineWidth = ready ? 2.6 : 2;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// The pulse itself: a pale double ring that sweeps out to the exact push radius, with short outward ticks so the shove reads
+// as a push rather than a hit. Reduced motion shows the final ring fading in place.
+function drawWardPulse(ctx, pulse, reducedMotion) {
+    const progress = Math.min(1, Math.max(0, pulse.progress));
+    const eased = reducedMotion ? 1 : 1 - (1 - progress) * (1 - progress);
+    const radius = pulse.radius * (.2 + .8 * eased);
+    const alpha = 1 - progress;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pulse.x, pulse.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 190, 255, ${alpha * .1})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(232, 228, 255, ${alpha * .9})`;
+    ctx.lineWidth = 3.2 - progress * 1.6;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(pulse.x, pulse.y, radius * .82, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(170, 156, 240, ${alpha * .55})`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(232, 228, 255, ${alpha * .75})`;
+    ctx.lineWidth = 2;
+    for (let index = 0; index < 12; index++) {
+        const angle = index / 12 * Math.PI * 2;
+        const inner = radius + 3;
+        const outer = radius + 3 + 7 * alpha;
+        ctx.beginPath();
+        ctx.moveTo(pulse.x + Math.cos(angle) * inner, pulse.y + Math.sin(angle) * inner);
+        ctx.lineTo(pulse.x + Math.cos(angle) * outer, pulse.y + Math.sin(angle) * outer);
+        ctx.stroke();
+    }
+    ctx.restore();
 }
 
 function drawSplashPulse(ctx, pulse, school) {

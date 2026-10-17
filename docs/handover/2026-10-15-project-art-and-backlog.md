@@ -415,4 +415,15 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
   - `arcane-web.js` (`focus`, gutter);
   - `ForgeView`, `RunHubView`, `RunSummaryOverlay`.
 - **Tests:** `ArcaneNexusTests` (6). Browser tests now use "Arcane Nexus".
-- **Next:** a contextual second auto-cast (amendment §11 step 4).
+- **Next:** a contextual second auto-cast (amendment §11 step 4). Done in §28.
+
+## 28. Contextual second auto-cast: Warding Pulse (amendment §5, §11.4)
+
+- **The spell:** Warding Pulse ◎ (Hunter 3+, never in the first hunt). It deals no damage and shoves movable enemies 78 px out of a 118 px reach. Elites move half as far; set pieces don't move. Recovery 7 s.
+- **Arbitration:** the pure `SpellArbiter` with the Guard policy decides when to cast. Each pulse takes the primary's next cast, so there is one shared budget and no second stream.
+- **Honest telegraphs:** a pushed Penitent bash whiffs. A pushed hound's lane moves with it, and the telegraph stays truthful. Lobs still land.
+- **Traces:** `RunSimulation.DecisionTrace` holds 64 entries: casts plus the first tick of each Recovering/NothingToMove need.
+- **Visuals:** an AUTO badge in the HUD, a readiness ring at the hunter's feet and a pulse ring. Hunt prep shows "SECOND SPELL".
+- **BalanceLab:** `--contextual` adds the `contextualCasts` column. In the A/B, fragile schools gain the most (Arcane defeats 46→34%) and Storm pays a little (15→21%, within noise).
+- **Docs:** `docs/design/contextual-autocast-v1.md`.
+- **Next:** amendment §11.5, region and lineage data contracts with state separation. Alternatively, apply the Frost telemetry proposals.

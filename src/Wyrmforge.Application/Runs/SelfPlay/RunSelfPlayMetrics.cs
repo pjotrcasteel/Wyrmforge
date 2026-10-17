@@ -43,6 +43,9 @@ public sealed record RunSelfPlayMetrics(
     IReadOnlyList<string> Decisions)
 {
     public int FocusedSurgesCast { get; init; }
+
+    /// <summary>Contextual second-spell casts; each one spent a primary cast (shared budget).</summary>
+    public int ContextualCasts { get; init; }
     public int ExtractionRitualsCompleted { get; init; }
     public int DeathsDuringExtraction { get; init; }
     public int PrimarySwitches { get; init; }

@@ -16,6 +16,7 @@ using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Contextual;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -172,6 +173,7 @@ public sealed partial class RunSimulation
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateSpellcasting(delta, movement.IsMoving);
+        UpdateContextualEffects(delta);
         // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.
         if (!UpdateReliquaryReveal(delta)) UpdateEnemies(delta);
         RebuildCombatSpatialIndex();
@@ -290,6 +292,7 @@ public sealed partial class RunSimulation
         ReliquarySlain = ReliquaryDefeat is not null,
         Draft = DraftTelemetry,
         Control = ControlTelemetry,
+        ContextualCasts = ContextualCasts,
     };
 
     public RunRenderSnapshot CreateSnapshot()
@@ -299,6 +302,7 @@ public sealed partial class RunSimulation
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
+                WardCharge = WardCharge,
             },
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
@@ -353,6 +357,7 @@ public sealed partial class RunSimulation
             ReliquaryFields = CreateReliquaryFieldSnapshots(),
             BellWarden = CreateBellWardenSnapshot(),
             BellShockwaves = CreateBellShockwaveSnapshots(),
+            WardPulse = CreateWardPulseSnapshot(),
         };
     }
 
@@ -411,7 +416,7 @@ public sealed partial class RunSimulation
             {
                 IsActive = spell.Id == build.Spells.ActiveSpell,
             };
-        }).ToArray();
+        }).Concat(contextualPolicy is null ? [] : [new SpellHudSnapshot(WardingPulse.Icon, WardingPulse.Name, 0) { Contextual = true }]).ToArray();
         synergyHud = SynergyCatalog.All.Where(synergy => build.Synergies.Contains(synergy.Id)).Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name)).ToArray();
     }
 }

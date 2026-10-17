@@ -7,6 +7,8 @@ public sealed record HunterExperienceGain(int Experience, int FromLevel, int ToL
 public sealed class HunterProgress
 {
     public const int MaxLevel = 24;
+    /// <summary>Provisional cadence (amendment §14 leaves 1 → 2 → 3 → 4 open): the second, contextual spell at Hunter 3.</summary>
+    public const int ContextualSpellLevel = 3;
     public long TotalExperience { get; private set; }
     public int Level
     {
@@ -20,6 +22,7 @@ public sealed class HunterProgress
 
     public int AtlasBudget => Level;
     public bool AtCap => Level == MaxLevel;
+    public bool ContextualSpellUnlocked => Level >= ContextualSpellLevel;
     public int ExperienceInLevel => AtCap ? 0 : (int)(TotalExperience - TotalForLevel(Level));
     public int ExperienceToNext => RequiredForLevel(Level);
     public int EarnedCaches => Enumerable.Range(2, Level - 1).Sum(level => RewardForLevel(level).RelicCaches);
@@ -44,7 +47,8 @@ public sealed class HunterProgress
     // Add future level-specific unlocks here; XP and reward persistence remain the same.
     public static HunterLevelReward RewardForLevel(int level) => new(level, level is >= 2 and <= MaxLevel ? 1 : 0,
         level is 5 or 10 or 15 or 20 ? 1 : 0);
-    public static string RewardLabel(HunterLevelReward reward) => reward.RelicCaches > 0 ? "1 Arcane point + relic cache" : "1 Arcane point";
+    public static string RewardLabel(HunterLevelReward reward) => reward.Level == ContextualSpellLevel ? "1 Arcane point + Warding Pulse"
+        : reward.RelicCaches > 0 ? "1 Arcane point + relic cache" : "1 Arcane point";
 
     public HunterExperienceGain AddExperience(int amount)
     {

@@ -46,6 +46,9 @@ public sealed record RunSummary(
     public DraftTelemetry Draft { get; init; } = DraftTelemetry.Empty;
     /// <summary>Amendment §9 telemetry: enemy-seconds crowd control denied this hunt.</summary>
     public ControlTelemetry Control { get; init; } = ControlTelemetry.Empty;
+
+    /// <summary>Warding Pulse casts this hunt; each one spent a primary cast.</summary>
+    public int ContextualCasts { get; init; }
 }
 
 public sealed record RunEnemyRecord(EnemyKind Kind, int Kills);
