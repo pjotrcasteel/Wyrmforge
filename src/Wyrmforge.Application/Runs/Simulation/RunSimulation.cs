@@ -211,6 +211,7 @@ public sealed partial class RunSimulation
         // Rank III no longer grants a free immediate evolution.
         // The player earns a separate evolution choice at a later five-level breakthrough.
         pendingChoices = [];
+        CloseFateweaveRound();
         if (mapState.EncounterActive || dragonEncounterStarted) ReleaseUpgradePower();
         if (PendingRewardSchool.HasValue)
         {

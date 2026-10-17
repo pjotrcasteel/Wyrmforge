@@ -171,7 +171,8 @@
     }
     else if (!trailTransition && CurrentChoices.Count > 0)
     {
-        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync" />
+        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync"
+                        Fateweave="simulation?.Fateweave" OnReroll="RerollAsync" />
     }
     else if (PendingMapChoice && !trailTransition)
     {

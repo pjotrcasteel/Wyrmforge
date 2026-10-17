@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Domain.Progression.RunUpgrades;
 using Wyrmforge.Domain.Combat.Abilities;
 using Wyrmforge.Domain.Combat.Statuses;
@@ -21,7 +21,9 @@ public static class LevelChoicePresentation
 
     public static string RarityClass(LevelChoice choice) => choice.Rarity.ToString().ToLowerInvariant();
 
-    public static string Badge(LevelChoice choice) => choice.Kind switch
+    public static string Badge(LevelChoice choice) => choice.Gilded ? $"GILDED {KindBadge(choice)}" : KindBadge(choice);
+
+    private static string KindBadge(LevelChoice choice) => choice.Kind switch
     {
         LevelChoiceKind.SchoolPower => "ATTUNEMENT",
         LevelChoiceKind.Rune => "MAJOR RUNE",
@@ -35,7 +37,7 @@ public static class LevelChoicePresentation
 
     public static string Rank(LevelChoice choice)
     {
-        if (choice.Kind == LevelChoiceKind.Refinement) return $"{Roman(choice.CurrentRank)} → {Roman(choice.CurrentRank + 1)} / {Roman(choice.MaxRank)}";
+        if (choice.Kind == LevelChoiceKind.Refinement) return $"{Roman(choice.CurrentRank)} → {Roman(choice.CurrentRank + choice.RankStep)} / {Roman(choice.MaxRank)}";
         if (choice.Kind == LevelChoiceKind.SpellFocus) return $"KNOWN RANK {Roman(choice.CurrentRank)}";
         if (choice.Kind == LevelChoiceKind.SchoolPower) return $"+{(choice.CurrentRank + 1) * 10}% SCHOOL DAMAGE";
         if (choice.Kind == LevelChoiceKind.Synergy) return "NEW INTERACTION";
@@ -66,15 +68,20 @@ public static class LevelChoicePresentation
         _ => "THIS RUN • KEEPS PRIMARY CAST",
     };
 
-    private static string RefinementDelta(LevelChoice choice) => choice.Id switch
+    private static string RefinementDelta(LevelChoice choice)
     {
-        "refine:Force" => $"+{choice.CurrentRank * 6}% → +{(choice.CurrentRank + 1) * 6}% spell damage",
-        "refine:Rhythm" => $"{choice.CurrentRank * 4}% → {(choice.CurrentRank + 1) * 4}% shorter cast interval",
-        "refine:Footwork" => $"+{choice.CurrentRank * 4}% → +{(choice.CurrentRank + 1) * 4}% movement speed",
-        "refine:Warding" => $"{choice.CurrentRank * 5}% → {(choice.CurrentRank + 1) * 5}% damage reduction",
-        "refine:Vitality" => $"+{choice.CurrentRank * 8} → +{(choice.CurrentRank + 1) * 8} maximum HP • heal 8",
-        _ => choice.Description,
-    };
+        var from = choice.CurrentRank;
+        var to = choice.CurrentRank + choice.RankStep;
+        return choice.Id switch
+        {
+            "refine:Force" => $"+{from * 6}% → +{to * 6}% spell damage",
+            "refine:Rhythm" => $"{from * 4}% → {to * 4}% shorter cast interval",
+            "refine:Footwork" => $"+{from * 4}% → +{to * 4}% movement speed",
+            "refine:Warding" => $"{from * 5}% → {to * 5}% damage reduction",
+            "refine:Vitality" => $"+{from * 8} → +{to * 8} maximum HP • heal {choice.RankStep * 8}",
+            _ => choice.Description,
+        };
+    }
 
     private static string RuneDelta(RunUpgradeId id, int currentRank)
     {

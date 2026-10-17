@@ -223,6 +223,13 @@ public partial class ArenaView : IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task RerollAsync(int slot)
+    {
+        if (simulation?.RerollChoice(slot) != true) return;
+        await TryPlayAudioAsync("upgrade-open");
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task ChooseEssenceAsync(DragonEssenceId id)
     {
         var essence = CurrentEssenceChoices.SingleOrDefault(candidate => candidate.Id == id);

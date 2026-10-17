@@ -360,11 +360,25 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Code.**
   - `RunSimulation.BellWarden.cs`, `BellWardenBehaviorState`, and `BellWardenRenderSnapshot` / `BellShockwaveRenderSnapshot`.
   - JS: `arena-bellwarden-vfx.js`.
-- **Next:** Fateweave per-card rerolls.
+- **Next:** Fateweave per-card rerolls (done in §25).
 
 ## 24. Presence scale: bigger elites, uniques and tiered Wyrms
 
 - Elites ×1.25; the Reliquary (27) and Bell Warden (38) are larger than any elite.
 - Wyrms ~1.75× larger; `WyrmTier` (Wyrm / Ascendant / Elder / Divine, ×1 / 1.15 / 1.35 / 1.6) leaves room for godlike tiers. Elder and Divine are reserved and need a roaming lair camera.
 - Balance is unchanged within noise. Details: `docs/design/arena-roster-v1.md` §13 "Presence scale".
-- **Next:** Fateweave per-card rerolls.
+- **Next:** Fateweave (§25).
+
+## 25. Fateweave shipped (per-card rerolls)
+
+- Every level-up card has its own **Reroll** button beneath it; a hunt-wide purse shows the charges left.
+  - Each card can be rerolled once per round. Charges never refill on their own.
+  - A rare **Gilded reroll** spends the same charge for a stronger card within the same milestone.
+- **Code:**
+  - `FateweaveState` and `FateweaveSnapshot`;
+  - `LevelChoiceService.Reweave` / `CanReweave` / `CanGild`;
+  - `RunSimulation.Fateweave.cs`;
+  - `LevelUpOverlay` UI.
+- Determinism uses a separate seeded stream. Tuning (2 charges, capacity 4, 6% gilded) is provisional; see the reconciliation record.
+- **Tests:** `FateweaveTests` (11).
+- **Next:** Frost telemetry (offered / selected / rerolled per card).

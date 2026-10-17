@@ -394,4 +394,4 @@ The sprite follows the radius, so hit area and silhouette always match. BalanceL
 
 ## 14. Next steps
 
-The encounter brief's order is complete. The next work follows the reconciliation record: Fateweave, Frost telemetry, the first Nexus journey, then a contextual second auto-cast.
+The encounter brief's order is complete. The next work follows the reconciliation record: Frost telemetry (Fateweave has shipped), the first Nexus journey, then a contextual second auto-cast.

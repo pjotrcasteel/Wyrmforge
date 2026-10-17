@@ -80,10 +80,28 @@
             <div class="eyebrow">@(RewardSchool is { } school ? $"{school.ToString().ToUpperInvariant()} TRAIL REWARD"
                 : Level > 0 && Level % 5 == 0 ? $"LEVEL {Level} • BREAKTHROUGH" : $"LEVEL {Level} • REFINEMENT")</div>
             <h2>@(RewardSchool.HasValue ? "Strengthen your hunt" : Level > 0 && Level % 5 == 0 ? "Choose a major power" : "Refine your magic")</h2>
+            @if (Fateweave is { } weave)
+            {
+                <div class="fateweave-purse" aria-label="@($"Fateweave: {weave.Charges} of {weave.Capacity} rerolls left this hunt")"
+                     title="Fateweave: reroll a single card. Charges last the whole hunt; each card can be rerolled once per level-up.">
+                    <span class="fateweave-label">FATEWEAVE</span>
+                    <span class="fateweave-pips" aria-hidden="true">
+                        @for (var pip = 0; pip < weave.Capacity; pip++)
+                        {
+                            <i class="@(pip < weave.Charges ? "full" : "empty")"></i>
+                        }
+                    </span>
+                    <span class="fateweave-count">@weave.Charges/@weave.Capacity</span>
+                </div>
+            }
             <div class="upgrade-choices">
-                @foreach (var choice in Choices)
+                @for (var index = 0; index < Choices.Count; index++)
                 {
-                    <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice)"
+                    var choice = Choices[index];
+                    var slot = index;
+                    var weaveSlot = Fateweave is { } purse && slot < purse.Slots.Count ? purse.Slots[slot] : null;
+                    <div class="choice-slot">
+                    <button class="run-upgrade choice-@LevelChoicePresentation.KindClass(choice) rarity-@LevelChoicePresentation.RarityClass(choice) @(choice.Gilded ? "choice-gilded" : string.Empty)"
                             @onclick="() => ChooseAsync(choice)">
                         <span class="draft-role role-@choice.Role.ToString().ToLowerInvariant()">@choice.Role</span>
                         <span class="choice-card-header">
@@ -101,6 +119,16 @@
                         }
                         <span class="choice-footer">@LevelChoicePresentation.Footer(choice)</span>
                     </button>
+                    @if (weaveSlot is { } control)
+                    {
+                        <button class="fateweave-reroll @(control.Golden ? "gilded" : string.Empty) @(control.Used ? "spent" : string.Empty)"
+                                disabled="@(!control.Available)" @onclick="() => OnReroll.InvokeAsync(slot)"
+                                aria-label="@RerollLabel(control, choice)" title="@RerollTitle(control)">
+                            <span class="fateweave-glyph" aria-hidden="true">@(control.Golden ? "✦" : "↻")</span>
+                            <span>@(control.Used ? "Rewoven" : control.Golden ? "Gilded reroll" : "Reroll")</span>
+                        </button>
+                    }
+                    </div>
                 }
             </div>
         </section>
@@ -112,6 +140,8 @@
     [Parameter] public int Level { get; set; }
     [Parameter, EditorRequired] public IReadOnlyList<LevelChoice> Choices { get; set; } = Array.Empty<LevelChoice>();
     [Parameter] public EventCallback<string> OnChoose { get; set; }
+    [Parameter] public FateweaveSnapshot? Fateweave { get; set; }
+    [Parameter] public EventCallback<int> OnReroll { get; set; }
 
     private const int RevealDurationMilliseconds = 1950;
     private const int ConfirmationDurationMilliseconds = 690;
@@ -177,6 +207,17 @@
         await Task.Delay(ConfirmationFadeMilliseconds);
         if (!disposed) await OnChoose.InvokeAsync(choice.Id);
     }
+
+    private static string RerollLabel(FateweaveSlotSnapshot slot, LevelChoice choice) =>
+        slot.Used ? $"{choice.Name} was already rerolled this level-up"
+        : slot.Golden ? $"Gilded reroll {choice.Name}: one charge for a chance at a stronger card"
+        : $"Reroll {choice.Name} for one Fateweave charge";
+
+    private static string RerollTitle(FateweaveSlotSnapshot slot) =>
+        slot.Used ? "Each card can be rerolled once per level-up."
+        : !slot.Available ? "No charges left, or no other card can appear here."
+        : slot.Golden ? "Gilded Fateweave: same single charge, but the new card is stronger within this level's limits."
+        : "Replace only this card. The other cards stay.";
 
     public void Dispose()
     {

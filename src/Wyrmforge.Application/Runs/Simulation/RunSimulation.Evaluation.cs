@@ -13,6 +13,7 @@ public sealed partial class RunSimulation
     internal void InitializeRunSeed(int seed)
     {
         runSeed = seed;
+        InitializeFateweave(seed);
         mapState = CreateSeededMapState(depthState.Depth);
     }
 

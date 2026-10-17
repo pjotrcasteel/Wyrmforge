@@ -64,19 +64,114 @@ public sealed class LevelChoiceService(
     public bool ApplyForProgression(RunBuildState build, LevelChoice choice, int rewardLevel, bool trailReward)
     {
         if (choice.Kind == LevelChoiceKind.Refinement)
-            return Enum.TryParse<RunRefinementId>(choice.Id.AsSpan("refine:".Length), out var id) && build.Refinements.Apply(id);
+        {
+            if (!Enum.TryParse<RunRefinementId>(choice.Id.AsSpan("refine:".Length), out var id)
+                || build.Refinements[id] + choice.RankStep > RunRefinementDefinition.MaxRank) return false;
+            for (var rank = 0; rank < choice.RankStep; rank++) build.Refinements.Apply(id);
+            return true;
+        }
 
         if (trailReward || !PowerMilestoneProfile.IsMajorLevel(rewardLevel) ||
             !PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)) return false;
         return Apply(build, choice);
     }
 
+    /// <summary>
+    /// Fateweave: replaces exactly one visible card with another card from the same legal pool the draft was drawn from, so a
+    /// reroll can never reach past the current milestone (no evolutions at level 3, no illegal runes). Uses the caller's own
+    /// random stream, leaving the run's main reward stream, and so every later draft, untouched. Returns <c>null</c> when no
+    /// legal alternative exists; callers must check <see cref="CanReweave"/> before spending a charge.
+    /// </summary>
+    public LevelChoice? Reweave(RunBuildState build, IReadOnlyList<LevelChoice> visible, int slot, IReadOnlySet<string> retired, int rewardLevel,
+        bool trailReward, IReadOnlyList<RunResonanceEntry>? resonance, bool gilded, IRandomSource fateStream)
+    {
+        if (slot < 0 || slot >= visible.Count) return null;
+        var replaced = visible[slot];
+        var candidates = ReweaveCandidates(build, visible, retired, rewardLevel, trailReward);
+        if (gilded)
+        {
+            var boosted = GildedCandidates(build, candidates, replaced);
+            if (boosted.Count > 0) candidates = boosted;
+        }
+        if (candidates.Count == 0) return null;
+        var engine = new RewardChoiceEngine(fateStream);
+        var selected = engine.Roll(candidates.Select(choice => new RewardCandidate<LevelChoice>(choice.Id, choice, choice.Rarity, CalculateWeight(choice, resonance))), 1)
+            .Single().Value;
+        return selected with { Role = replaced.Role, Hint = ReweaveHint(build, selected, replaced, rewardLevel) };
+    }
+
+    public bool CanReweave(RunBuildState build, IReadOnlyList<LevelChoice> visible, IReadOnlySet<string> retired, int rewardLevel, bool trailReward) =>
+        ReweaveCandidates(build, visible, retired, rewardLevel, trailReward).Count > 0;
+
+    /// <summary>A golden opportunity is only offered when a genuinely stronger legal card exists for that slot.</summary>
+    public bool CanGild(RunBuildState build, IReadOnlyList<LevelChoice> visible, int slot, IReadOnlySet<string> retired, int rewardLevel, bool trailReward) =>
+        slot >= 0 && slot < visible.Count
+        && GildedCandidates(build, ReweaveCandidates(build, visible, retired, rewardLevel, trailReward), visible[slot]).Count > 0;
+
+    private List<LevelChoice> ReweaveCandidates(RunBuildState build, IReadOnlyList<LevelChoice> visible, IReadOnlySet<string> retired, int rewardLevel, bool trailReward)
+    {
+        var shown = visible.Select(choice => choice.Id).ToHashSet(StringComparer.Ordinal);
+        var fresh = DraftPool(build, rewardLevel, trailReward).Where(choice => !shown.Contains(choice.Id)).ToList();
+        var unseen = fresh.Where(choice => !retired.Contains(choice.Id)).ToList();
+        return unseen.Count > 0 ? unseen : fresh;
+    }
+
+    private static List<LevelChoice> GildedCandidates(RunBuildState build, IReadOnlyList<LevelChoice> candidates, LevelChoice replaced)
+    {
+        // Minor drafts stay inside the minor envelope: a gilded refinement is two ranks of the same small stat, never a major power.
+        if (replaced.Kind == LevelChoiceKind.Refinement)
+            return candidates.Where(choice => choice.Kind == LevelChoiceKind.Refinement && choice.CurrentRank + LevelChoice.GildedRefinementRanks <= RunRefinementDefinition.MaxRank)
+                .Select(choice => choice with
+                {
+                    Gilded = true,
+                    Name = $"Gilded {choice.Name}",
+                    Rarity = RewardRarity.Rare,
+                })
+                .ToList();
+        // Breakthrough drafts: a higher-rarity card from the very same legal milestone pool. Evolutions are never gilded.
+        if (replaced.Kind == LevelChoiceKind.Evolution) return [];
+        return candidates.Where(choice => choice.Rarity > replaced.Rarity).Select(choice => choice with { Gilded = true }).ToList();
+    }
+
+    /// <summary>The exact pool <see cref="RollForProgression"/> draws this round from, without consuming any randomness.</summary>
+    private List<LevelChoice> DraftPool(RunBuildState build, int rewardLevel, bool trailReward)
+    {
+        if (!trailReward && PowerMilestoneProfile.IsMajorLevel(rewardLevel))
+        {
+            var primary = build.Spells.ActiveSpell;
+            if (PowerMilestoneProfile.CanEvolve(rewardLevel, build.Spells[primary]))
+            {
+                var evolutions = CreateEvolutionDraft(build, primary);
+                if (evolutions.Count > 0) return evolutions.ToList();
+            }
+            var major = CreatePool(build).Where(choice => PowerMilestoneProfile.IsMajorChoice(build, choice, rewardLevel)).ToList();
+            if (rewardLevel == 5 && build.Spells[primary] == 1 && major.Any(choice => choice.Id == $"spell:{primary}"))
+                return major.Where(choice => choice.Id == $"spell:{primary}").ToList();
+            if (major.Count > 0) return major;
+        }
+        return RefinementPool(build);
+    }
+
+    private static List<LevelChoice> RefinementPool(RunBuildState build) =>
+        RunRefinementCatalog.All.Where(item => build.Refinements[item.Id] < RunRefinementDefinition.MaxRank)
+            .Select(item => new LevelChoice($"refine:{item.Id}", LevelChoiceKind.Refinement, item.Name, item.Description, item.Icon,
+                build.Refinements[item.Id], RunRefinementDefinition.MaxRank)).ToList();
+
+    private static string? ReweaveHint(RunBuildState build, LevelChoice selected, LevelChoice replaced, int rewardLevel)
+    {
+        if (selected.Kind == replaced.Kind && selected.Kind is LevelChoiceKind.Refinement or LevelChoiceKind.Evolution) return replaced.Hint;
+        return selected.Kind switch
+        {
+            LevelChoiceKind.SpellUpgrade => $"LEVEL {rewardLevel} BREAKTHROUGH • permanently strengthens your chosen primary for this hunt.",
+            LevelChoiceKind.Synergy => "Fuse your committed primary with a supporting element, without losing existing ranks.",
+            _ => "A rare, build-defining ability earned at a five-level breakthrough.",
+        };
+    }
+
     private IReadOnlyList<LevelChoice> DraftRefinements(RunBuildState build, SpellSchool? school,
         IReadOnlyList<RunResonanceEntry>? resonance, int count)
     {
-        var pool = RunRefinementCatalog.All.Where(item => build.Refinements[item.Id] < RunRefinementDefinition.MaxRank)
-            .Select(item => new LevelChoice($"refine:{item.Id}", LevelChoiceKind.Refinement, item.Name, item.Description, item.Icon,
-                build.Refinements[item.Id], RunRefinementDefinition.MaxRank)).ToList();
+        var pool = RefinementPool(build);
         return DrawRewardOptions(pool, count, resonance, _ => school is { } attuned
             ? $"A small {attuned} trail reward; the primary and its major abilities are unchanged."
             : "A modest improvement while your next breakthrough draws closer.");

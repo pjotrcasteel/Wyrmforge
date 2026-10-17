@@ -52,7 +52,7 @@ These stand as before. The amendment confirms them or does not touch them.
 These follow the amendment §11. They are candidates, not a fixed schedule.
 
 1. **Arena roster step 7.** Done: the Bell Warden on every pre-lair road, and Ashfang on the first hunt. The first-hunt Ashfang rule is **provisional**; it serves the tutorial/story track and may move into `ChronicleState` once the campaign exists (S3 keeps the campaign optional). The Ashfang polish slice is deferred to the story phase.
-2. **Fateweave.** Per-card rerolls on `LevelChoiceService` and the level-up overlay:
+2. **Fateweave.** Done (see below). Per-card rerolls on `LevelChoiceService` and the level-up overlay:
    - per-round slot flags;
    - a hunt-wide charge pool;
    - a seeded golden flag that stays within the stage;
@@ -60,6 +60,13 @@ These follow the amendment §11. They are candidates, not a fixed schedule.
 3. **Frost telemetry.** Record offered, selected and rerolled cards, plus control utility, in BalanceLab and playtest signals. Diagnose the cause before tuning.
 4. **The first Arcane Nexus journey.** One existing legal combination (Frostfire): research a node with a visible material, reach a permanent discovery, and reference it from the loadout.
 5. **A contextual second auto-cast** (defense or control), with arbitration and decision traces.
+
+**Fateweave as shipped.**
+- `FateweaveState` holds the hunt-wide charges, the capacity, per-round slot flags and golden flags. `RunSimulation.RerollChoice(slot)` replaces only that card, from the exact legal pool the draft came from (`LevelChoiceService.Reweave`). It never shows duplicates and avoids cards already rerolled away where possible.
+- Golden flags and replacements use a dedicated stream seeded from the run seed, so rerolls never shift any other draw. BalanceLab output is byte-identical with and without the feature.
+- **Gilded:** in minor drafts, two ranks of the same refinement (never past the cap). In breakthrough drafts, a higher-rarity card from the same milestone pool. A slot only turns gilded when such a card exists. Evolution drafts and the guaranteed Rank II card cannot be rerolled.
+- **Provisional tuning:** 2 starting charges, capacity 4, 6% golden chance per slot. `Grant`/`RaiseCapacity` are the seams for pickups and Nexus nodes; neither ships yet.
+- Runs are not saved mid-hunt, so reload cannot restore charges.
 
 **Presence scale (product-owner request, done ahead of S6).** `WyrmTier` (Wyrm, Ascendant, Elder, Divine) is a Domain contract whose only behaviour today is body size: ×1, ×1.15, ×1.35, ×1.6 of the catalog radius. The body is the hit area and drives the sprite. Wyrm radii rose ~1.75× (Ashfang 34→60). Only Wyrm and Ascendant are fought; Elder and Divine are reserved, their names stay provisional, and they need a roaming lair camera before they ship, because a Divine body fills a phone's width. Elites grow ×1.25; the Reliquary (27) and Bell Warden (38) outsize every elite.
 6. **Region and lineage data contracts** and a non-campaign start path.
