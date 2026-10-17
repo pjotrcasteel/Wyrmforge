@@ -245,6 +245,8 @@ public sealed class RunSelfPlayDriver
                 PrimarySwitches = Math.Max(0, primarySpellSequence.Count - 1),
                 PeakActivePrimaryCount = peakActivePrimaryCount,
                 PrimarySpellSequence = primarySpellSequence.ToArray(),
+                Draft = summary.Draft,
+                Control = summary.Control,
             };
         }
     }

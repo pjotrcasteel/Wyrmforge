@@ -203,6 +203,7 @@ public sealed partial class RunSimulation
             var enemy = enemies[index];
             enemy.Statuses.Tick(delta);
             var statusTimeScale = enemy.Statuses.TimeScale(false);
+            RecordEnemyControl(enemy, delta, statusTimeScale);
             if (statusTimeScale <= 0) continue;
 
             var scaledDelta = delta * statusTimeScale;

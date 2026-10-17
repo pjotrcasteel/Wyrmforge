@@ -57,7 +57,7 @@ These follow the amendment §11. They are candidates, not a fixed schedule.
    - a hunt-wide charge pool;
    - a seeded golden flag that stays within the stage;
    - persistence and replay.
-3. **Frost telemetry.** Record offered, selected and rerolled cards, plus control utility, in BalanceLab and playtest signals. Diagnose the cause before tuning.
+3. **Frost telemetry.** Done (see below). Record offered, selected and rerolled cards, plus control utility, in BalanceLab and playtest signals. Diagnose the cause before tuning.
 4. **The first Arcane Nexus journey.** One existing legal combination (Frostfire): research a node with a visible material, reach a permanent discovery, and reference it from the loadout.
 5. **A contextual second auto-cast** (defense or control), with arbitration and decision traces.
 
@@ -67,6 +67,22 @@ These follow the amendment §11. They are candidates, not a fixed schedule.
 - **Gilded:** in minor drafts, two ranks of the same refinement (never past the cap). In breakthrough drafts, a higher-rarity card from the same milestone pool. A slot only turns gilded when such a card exists. Evolution drafts and the guaranteed Rank II card cannot be rerolled.
 - **Provisional tuning:** 2 starting charges, capacity 4, 6% golden chance per slot. `Grant`/`RaiseCapacity` are the seams for pickups and Nexus nodes; neither ships yet.
 - Runs are not saved mid-hunt, so reload cannot restore charges.
+
+**Frost telemetry as shipped.**
+- `DraftLedger` counts, per school and per relation to the committed primary (Primary / Other / Neutral): rounds shown, cards offered (reroll replacements included), picks, cards rerolled away and in. A synergy counts for each school it fuses; refinements are neutral. `ControlLedger` measures enemy-seconds denied by freeze/chill: frozen seconds count fully, chilled seconds by their slow. It is split into all enemies, threats (within 160 px), elites and uniques, and the Wyrm, plus kills made on controlled targets.
+- The level-up pulse (`ReleaseUpgradePower`) freezes everything for every school. Its 0.85 s window is reported apart (`PulseSecondsDenied`) and never credited to a build.
+- Both ride on `RunSummary`, `RunSelfPlayMetrics`, the BalanceLab report (two new tables, nine new CSV columns, JSON) and the local playtest evidence (`draft`, `control`; whitelisted and clamped in `playtest.js`). The telemetry reads only; the original BalanceLab columns are byte-identical over 1,200 runs.
+
+**Frost diagnosis** (BalanceLab, 25 runs × 48 build/agent pairs; bots, so human pick rates still need playtest evidence):
+1. **Offer.** Frost primary cards are the least offered: 0.15–0.18 per round, against Fire 0.16–0.22, Arcane 0.17–0.25 and Storm 0.20–0.32. Bot pick rates once offered are flat (≈55–63% for every school), so "Frost rarely picked" is at least partly "Frost rarely shown".
+2. **Control is real, and where it should be.** Pure Frost denies 7–10% of all enemy-seconds, 18–28% of threat-seconds, 47–72% of elite-seconds and 21–32% of Wyrm-seconds. 26–65% of its kills land on controlled targets. Winter Shell is among the hardest builds to hurt (median damage taken 41–77).
+3. **Storm out-controls Frost, through a relic loop.** Storm builds that reach depth 2 deny 21–40% of enemy-seconds and 42–92% of elite-seconds (Casual bots rarely get there and show ~0%). The source is **Duelist Lens** (rare; +1 chain, chilled/frozen kills burst and spread chill): chain kills keep spreading the chill, so the cascade sustains itself once anything is chilled (the level-up pulse is enough). Fire builds carry the lens just as often and get ~0%. Frost Touch is rarely taken. Frost's identity is being delivered better by another school's chains.
+4. **Kill power, not control, is Frost's deficit.** Wyrm-seconds denied are healthy despite boss resistance (frozen ×0.45, duration ×0.35), yet Frost still slays fewest Wyrms (≈1.0 vs 1.4–1.7). The gap is damage on the clock, not denied time.
+
+**Bounded proposals, not yet applied:**
+- (a) Proc guard: a chill spread by a defeat burst cannot itself trigger another burst (the "triggered effects cannot trigger" rule from Diablo and Path of Exile). This is a loop fix, not a nerf to the lens's intended use.
+- (b) Draft parity: weight Frost primary cards until the offer rate per round is within ±10% of the other schools.
+- (c) Only after (a) and (b), re-measure. If Frost still slays fewest Wyrms, look at a frozen-target payoff outside Absolute Zero, e.g. shatter damage that scales with depth.
 
 **Presence scale (product-owner request, done ahead of S6).** `WyrmTier` (Wyrm, Ascendant, Elder, Divine) is a Domain contract whose only behaviour today is body size: ×1, ×1.15, ×1.35, ×1.6 of the catalog radius. The body is the hit area and drives the sprite. Wyrm radii rose ~1.75× (Ashfang 34→60). Only Wyrm and Ascendant are fought; Elder and Divine are reserved, their names stay provisional, and they need a roaming lair camera before they ship, because a Divine body fills a phone's width. Elites grow ×1.25; the Reliquary (27) and Bell Warden (38) outsize every elite.
 6. **Region and lineage data contracts** and a non-campaign start path.

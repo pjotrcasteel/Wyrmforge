@@ -57,7 +57,9 @@ public sealed partial class RunSimulation
         UpdateDragonHuntPressure(delta, activeDragon, width, height);
         UpdateDragonHuntSignature(delta, activeDragon, width, height);
         activeDragon.Statuses.Tick(delta);
-        var scaledDelta = delta * activeDragon.Statuses.TimeScale(true);
+        var dragonTimeScale = activeDragon.Statuses.TimeScale(true);
+        RecordWyrmControl(delta, dragonTimeScale);
+        var scaledDelta = delta * dragonTimeScale;
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond * depthState.DragonDamageMultiplier;

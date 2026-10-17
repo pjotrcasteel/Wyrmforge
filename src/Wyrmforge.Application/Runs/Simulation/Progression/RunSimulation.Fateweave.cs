@@ -28,6 +28,7 @@ public sealed partial class RunSimulation
             fateweave.IsGolden(slot), fateweave.Stream);
         if (replacement is null) return false;
         fateweave.Spend(slot);
+        RecordReroll(pendingChoices[slot], replacement);
         fateweaveRetired.Add(pendingChoices[slot].Id);
         var choices = pendingChoices.ToArray();
         choices[slot] = replacement;
@@ -45,6 +46,7 @@ public sealed partial class RunSimulation
             fateweaveHasAlternative = false;
             return;
         }
+        RecordDraftOpened();
         var trail = PendingRewardSchool.HasValue;
         fateweave.BeginRound(pendingChoices.Count, slot => levelChoiceService.CanGild(build, pendingChoices, slot, fateweaveRetired, level + 1, trail));
         RefreshFateweaveAlternatives();

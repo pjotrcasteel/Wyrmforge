@@ -135,6 +135,7 @@ public sealed partial class RunSimulation
                 ResolveBellWardenDeath(warden);
                 break;
             case EnemyState defeatedEnemy:
+                RecordControlledKill(defeatedEnemy);
                 RegisterEnemyDeath(defeatedEnemy);
                 RegisterSupportDeath(defeatedEnemy);
                 kills++;

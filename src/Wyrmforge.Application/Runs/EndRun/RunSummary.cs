@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Domain.Combat.Dragons;
+﻿using Wyrmforge.Application.Runs.Telemetry;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Laboratory;
@@ -41,6 +42,10 @@ public sealed record RunSummary(
     public IReadOnlyList<EliteAffix> ElitesSlain { get; init; } = Array.Empty<EliteAffix>();
     /// <summary>The ultra-rare Reliquary rose and fell this hunt.</summary>
     public bool ReliquarySlain { get; init; }
+    /// <summary>Amendment §9 telemetry: what the drafts offered, what was picked and rerolled, per school.</summary>
+    public DraftTelemetry Draft { get; init; } = DraftTelemetry.Empty;
+    /// <summary>Amendment §9 telemetry: enemy-seconds crowd control denied this hunt.</summary>
+    public ControlTelemetry Control { get; init; } = ControlTelemetry.Empty;
 }
 
 public sealed record RunEnemyRecord(EnemyKind Kind, int Kills);

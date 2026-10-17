@@ -15,6 +15,7 @@ public sealed partial class RunSimulation
     {
         powerBurstPosition = player.Position;
         powerBurstRemaining = UpgradePulseSeconds;
+        RecordUpgradePulse(UpgradeFreezeSeconds);
         foreach (var enemy in enemies.Where(enemy => enemy.Health > 0))
         {
             ApplyFreeze(enemy, UpgradeFreezeSeconds);

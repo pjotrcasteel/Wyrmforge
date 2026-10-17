@@ -69,7 +69,12 @@ var evolutions = results
     .OrderBy(row => row.Evolution)
     .ToArray();
 
-var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, evolutions, results);
+var draftSchools = DraftSchoolAggregate.Create(results);
+var control = aggregates
+    .Select(row => ControlAggregate.Create(row.Build, row.Agent, results.Where(run => run.Build == row.Build && run.Agent == row.Agent).ToArray()))
+    .ToArray();
+
+var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, evolutions, draftSchools, control, results);
 await BalanceReportWriter.WriteAsync(report, options.OutputDirectory);
 
 Console.WriteLine($"Balance report written to {Path.GetFullPath(options.OutputDirectory)}");

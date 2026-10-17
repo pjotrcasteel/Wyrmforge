@@ -161,6 +161,7 @@ public sealed partial class RunSimulation
         BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);
         elapsed += delta;
+        AdvanceControlTelemetry(delta);
         UpdatePlayer(delta, movement, width, height);
         CollectEnvironmentSupplies(width, height);
         UpdateExperienceShards(delta);
@@ -205,6 +206,7 @@ public sealed partial class RunSimulation
         var choice = pendingChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || !levelChoiceService.ApplyForProgression(build, choice, level + 1, PendingRewardSchool.HasValue)) return false;
         choiceCount++;
+        RecordSelection(choice);
         ApplyChoiceEffects(choice);
         RefreshBuildHud();
 
@@ -286,6 +288,8 @@ public sealed partial class RunSimulation
         EnemyRecords = CreateEnemyRecords(),
         ElitesSlain = defeatedElites.Select(defeat => defeat.Affix).Distinct().Order().ToArray(),
         ReliquarySlain = ReliquaryDefeat is not null,
+        Draft = DraftTelemetry,
+        Control = ControlTelemetry,
     };
 
     public RunRenderSnapshot CreateSnapshot()

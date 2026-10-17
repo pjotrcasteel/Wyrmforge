@@ -46,6 +46,22 @@
         perf.maxBridgeMs = Math.max(perf.maxBridgeMs, Math.min(10000, safeNumber(simulationMs)));
         // In-memory during combat. Persist only at a milestone or when the run ends.
     }
+    function cleanDraft(draft) {
+        const schools = ['Arcane', 'Fire', 'Frost', 'Storm', 'Neutral'];
+        const relations = ['Primary', 'Other', 'Neutral'];
+        const rows = Array.isArray(draft?.schools) ? draft.schools : [];
+        return {
+            rounds: safeNumber(draft?.rounds), rerolls: safeNumber(draft?.rerolls),
+            schools: rows.filter(row => schools.includes(row?.school) && relations.includes(row?.relation)).slice(0, 12).map(row => ({
+                school: row.school, relation: row.relation, offered: safeNumber(row.offered), selected: safeNumber(row.selected),
+                rerolledAway: safeNumber(row.rerolledAway), rerolledIn: safeNumber(row.rerolledIn)
+            }))
+        };
+    }
+    function cleanControl(control) {
+        const share = value => Number.isFinite(value) ? Math.round(Math.min(1, Math.max(0, value)) * 1000) / 1000 : 0;
+        return { enemy: share(control?.enemy), threat: share(control?.threat), elite: share(control?.elite), wyrm: share(control?.wyrm), controlledKills: share(control?.controlledKills) };
+    }
     function finishRun(report) {
         if (!report || typeof report !== 'object') return;
         const active = state.active ?? { runId: newId(), startedAt: Date.now(), ascendantRite: false, milestones: [], perf: { samples: 0, slowFrames: 0, maxBridgeMs: 0 } };
@@ -56,7 +72,8 @@
             kills: safeNumber(report.kills), trailsCompleted: safeNumber(report.trailsCompleted),
             rareTrails: safeNumber(report.rareTrails), wyrmsDefeated: safeNumber(report.wyrmsDefeated),
             essencesSecured: safeNumber(report.essencesSecured), spellEvolutions: Array.isArray(report.spellEvolutions) ? report.spellEvolutions.slice(0, 12) : [],
-            ascendantVictories: safeNumber(report.ascendantVictories)
+            ascendantVictories: safeNumber(report.ascendantVictories),
+            draft: cleanDraft(report.draft), control: cleanControl(report.control)
         });
         state.runs = state.runs.slice(-maximumRuns);
         state.ended++;

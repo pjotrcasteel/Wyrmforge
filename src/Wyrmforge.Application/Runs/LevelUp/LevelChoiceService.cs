@@ -586,14 +586,7 @@ public sealed class LevelChoiceService(
         _ => RewardRarity.Common,
     };
 
-    private static SpellSchool? RuneSchool(RunUpgradeId id) => id switch
-    {
-        RunUpgradeId.Quickening or RunUpgradeId.Fleetfoot or RunUpgradeId.ChainSpark or RunUpgradeId.StaticCharge => SpellSchool.Storm,
-        RunUpgradeId.Vitality or RunUpgradeId.FrostTouch or RunUpgradeId.Bulwark => SpellSchool.Frost,
-        RunUpgradeId.Multicast or RunUpgradeId.ArcaneEcho or RunUpgradeId.Velocity => SpellSchool.Arcane,
-        RunUpgradeId.Emberbrand => SpellSchool.Fire,
-        _ => null,
-    };
+    private static SpellSchool? RuneSchool(RunUpgradeId id) => Telemetry.ChoiceSchools.RuneSchool(id);
 
     private static int ResonanceValue(IReadOnlyList<RunResonanceEntry> resonance, SpellSchool school) => resonance.FirstOrDefault(entry => entry.School == school)?.Value ?? 0;
     private static RunUpgradeId ParseRunUpgrade(string id) => Enum.Parse<RunUpgradeId>(id[5..]);

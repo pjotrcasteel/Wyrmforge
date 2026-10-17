@@ -381,4 +381,19 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
   - `LevelUpOverlay` UI.
 - Determinism uses a separate seeded stream. Tuning (2 charges, capacity 4, 6% gilded) is provisional; see the reconciliation record.
 - **Tests:** `FateweaveTests` (11).
-- **Next:** Frost telemetry (offered / selected / rerolled per card).
+- **Next:** Frost telemetry (§26).
+
+## 26. Frost telemetry (amendment §9)
+
+- **Draft ledger:** what each round offered, what was picked and what was rerolled, per school and relative to the primary.
+- **Control ledger:** enemy-seconds denied by freeze/chill, split into threats, elites and the Wyrm. The level-up pulse is kept apart.
+- **Where it shows:** BalanceLab tables and CSV, `RunSummary`, and playtest evidence.
+- **Code:** `Runs/Telemetry/DraftLedger.cs`, `ControlLedger.cs`, `RunSimulation.Telemetry.cs`.
+- **Tests:** `FrostTelemetryTests` (7).
+- **Diagnosis** (full version in the reconciliation record):
+  - Frost primary cards are offered least often.
+  - Frost's control is real.
+  - Storm out-controls Frost through a Duelist Lens chill cascade.
+  - Frost's actual deficit is Wyrm kill speed.
+- **Proposals, not applied:** a proc guard on defeat-burst chill, Frost offer parity, then re-measure.
+- **Next:** the first Arcane Nexus journey (Frostfire).

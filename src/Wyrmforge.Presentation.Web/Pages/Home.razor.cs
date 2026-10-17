@@ -421,6 +421,22 @@ public partial class Home
                 rareTrails = run.RareRouteNodes, wyrmsDefeated = run.DragonsSlain, essencesSecured = run.DragonEssences,
                 ascendantVictories = run.AscendantDragonIds.Count,
                 spellEvolutions = run.SpellLoadout.Where(spell => spell.Evolution.HasValue).Select(spell => spell.Evolution!.Value.ToString()).ToArray(),
+                // Amendment §9: offer vs pick vs reroll per school, and what crowd control bought.
+                draft = new
+                {
+                    rounds = run.Draft.Rounds, rerolls = run.Draft.Rerolls,
+                    schools = run.Draft.Schools.Select(tally => new
+                    {
+                        school = tally.School?.ToString() ?? "Neutral", relation = tally.Relation.ToString(),
+                        offered = tally.Offered, selected = tally.Selected, rerolledAway = tally.RerolledAway, rerolledIn = tally.RerolledIn,
+                    }).ToArray(),
+                },
+                control = new
+                {
+                    enemy = Math.Round(run.Control.EnemyShare, 3), threat = Math.Round(run.Control.ThreatShare, 3),
+                    elite = Math.Round(run.Control.EliteShare, 3), wyrm = Math.Round(run.Control.WyrmShare, 3),
+                    controlledKills = Math.Round(run.Control.ControlledKillShare, 3),
+                },
             });
         }
         catch (JSException) { /* Diagnostics must never block progression or rewards. */ }
