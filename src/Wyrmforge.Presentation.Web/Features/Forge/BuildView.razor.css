@@ -1737,3 +1737,13 @@
     .node-inspector .route-landmarks { border:0; border-radius:0; background:transparent; padding:6px 0; }
     .nexus-action { position:static; }
 }
+
+/* Discovery belongs in the page flow, never over a tappable skill node. */
+.build-view > .nexus-next { position:relative; inset:auto; width:100%; max-width:none; min-height:42px;
+    margin:0; border:0; border-left:2px solid #ac8250; border-radius:0; box-shadow:none;
+    background:#211a23; padding:6px 10px; }
+.build-view > .nexus-next small { display:none; }
+.build-view > .nexus-next b { font-size:.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media(max-width:760px) {
+    .build-view > .nexus-next { position:relative; inset:auto; width:100%; max-width:none; min-height:42px; }
+}
