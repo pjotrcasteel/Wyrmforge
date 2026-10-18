@@ -133,7 +133,12 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
                 lastMoved = seconds;
             }
         }
-        const phase = reducedMotion || seconds - lastMoved > .20 ? 0 : (Math.floor(traveled / 6) % 2) + 1;
+        // Hounds use a grounded four-beat diagonal gait instead of swapping two stiff silhouettes
+        // at the same cadence as humanoids. A neutral contact phase between steps prevents skating.
+        const hound = Number(enemy.kind) === 1;
+        const houndGait = [1, 0, 2, 0][Math.floor(traveled / 3.5) % 4];
+        const phase = reducedMotion || seconds - lastMoved > .20 ? 0 :
+            hound ? houndGait : (Math.floor(traveled / 6) % 2) + 1;
         // Sprites face east; remember the last clear horizontal travel so idle enemies don't flip.
         let facing = old?.facing ?? 1;
         if (old && Math.abs(enemy.x - old.x) > .2 && Math.abs(enemy.x - old.x) < 48) facing = enemy.x > old.x ? 1 : -1;
@@ -187,7 +192,17 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
         ctx.ellipse(enemy.x,enemy.y+(sprite.frame.h-sprite.frame.ay-3)*scale,(sprite.frame.w*.32)*scale,3.5*scale,0,0,Math.PI*2);
         ctx.fill();
         ctx.restore();
+        // An undead canine plants its weight on diagonally opposing paws. The small uneven
+        // shoulder dip is tied to travelled distance, not wall-clock idle time or random noise.
+        const houndStride = Number(enemy.kind) === 1 && walkPhase > 0 && !enemy.telegraph && !enemy.frozen;
+        if (houndStride) {
+            ctx.save();
+            ctx.translate(enemy.x, enemy.y);
+            ctx.rotate((walkPhase === 1 ? -1 : 1) * 0.025 * (facing < 0 ? -1 : 1));
+            ctx.translate(-enemy.x, -enemy.y + (walkPhase === 1 ? -0.8 : 0.6) * scale);
+        }
         drawArtFrame(ctx,'actors',enemySpriteName(enemy,walkPhase),enemy.x,enemy.y,{scale,flipX:facing<0});
+        if (houndStride) ctx.restore();
         drawEnemyLight(ctx,enemy,light,scale);
         return;
     }
