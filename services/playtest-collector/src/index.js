@@ -9,7 +9,7 @@ const fields = new Set(['onboarding', 'movement', 'combat', 'rewards', 'forge', 
 const outcomes = new Set(['Extracted', 'Defeated', 'Abandoned', 'Interrupted', 'Unknown']);
 const milestones = new Set(['trail_entered', 'wyrm_entered', 'refuge_reached', 'descended', 'extracted']);
 const identifier = /^[a-zA-Z0-9-]{8,100}$/;
-const nicknameFormat = /^[a-zA-Z0-9 _-]{2,18}$/;
+const nicknameFormat = /^(?:[a-zA-Z0-9 _-]{2,18}|player#[a-z0-9]{8})$/i;
 
 function json(value, status = 200, headers = {}) {
     return new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json; charset=utf-8',

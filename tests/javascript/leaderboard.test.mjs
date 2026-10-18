@@ -55,3 +55,15 @@ test('existing local nicknames migrate into the cookie', () => {
     assert.match(document.cookie, /wyrmforge_player_name=Legacy%20Hunter/);
     assert.equal(storage.has('wyrmforge.player-name.v1'), false);
 });
+
+test('unnamed and legacy Wanderer profiles receive one persistent unique player code', () => {
+    document.cookie = '';
+    storage.delete('wyrmforge.player-name.v1');
+    assert.match(board.getPlayerName(), /^player#[a-z0-9]{8}$/);
+    const assigned = board.getPlayerName();
+    assert.equal(board.getPlayerName(), assigned);
+    assert.match(document.cookie, /wyrmforge_player_name=player%23/);
+    document.cookie = '';
+    storage.set('wyrmforge.player-name.v1', 'Wyrm Wanderer');
+    assert.match(board.getPlayerName(), /^player#[a-z0-9]{8}$/);
+});
