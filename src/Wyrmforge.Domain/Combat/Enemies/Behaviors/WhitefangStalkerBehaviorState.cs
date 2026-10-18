@@ -44,6 +44,7 @@ public sealed class WhitefangStalkerBehaviorState(int side = 1)
     public const int TendonChill = 2;
     public const double CloudRadius = 46;
     public const double CloudSeconds = 2.4;
+    public const double TwinleapRecoverSeconds = 0.3;
 
     public int Side { get; } = side >= 0 ? 1 : -1;
 
@@ -61,6 +62,11 @@ public sealed class WhitefangStalkerBehaviorState(int side = 1)
 
     public bool PounceLanded { get; private set; }
 
+    /// <summary>Twinfang elite: one more crouch and leap straight after the first, re-aimed at wherever the hunter went.</summary>
+    public bool Twinleap { get; set; }
+
+    private bool secondLeapReady;
+
     public bool IsCommitted => Phase is WhitefangPhase.Feint or WhitefangPhase.Windup or WhitefangPhase.Pounce;
 
     public double WindupProgress => Phase == WhitefangPhase.Windup ? Math.Clamp(1 - PhaseRemaining / WindupSeconds, 0, 1) : 0;
@@ -77,6 +83,7 @@ public sealed class WhitefangStalkerBehaviorState(int side = 1)
             if (CooldownRemaining > 0 || !mayCommit || Vector2D.Distance(position, target) > FeintRange) return WhitefangEvent.None;
             FeintTarget = FlankPoint(position, target, heading);
             PounceLanded = false;
+            secondLeapReady = Twinleap;
             CooldownRemaining = CooldownSeconds;
             Enter(WhitefangPhase.Feint, FeintSeconds);
             return WhitefangEvent.FeintStarted;
@@ -97,8 +104,16 @@ public sealed class WhitefangStalkerBehaviorState(int side = 1)
                 Enter(WhitefangPhase.Pounce, PounceSeconds);
                 break;
             case WhitefangPhase.Pounce:
-                Enter(WhitefangPhase.Recover, RecoverSeconds);
+                Enter(WhitefangPhase.Recover, AfterPounceSeconds);
                 break;
+            case WhitefangPhase.Recover when secondLeapReady:
+                secondLeapReady = false;
+                PounceLanded = false;
+                PounceOrigin = position;
+                PounceDirection = Vector2D.DirectionTo(position, target);
+                if (PounceDirection == Vector2D.Zero) PounceDirection = new Vector2D(Side, 0);
+                Enter(WhitefangPhase.Windup, WindupSeconds);
+                return WhitefangEvent.WindupStarted;
             default:
                 Enter(WhitefangPhase.Prowl, 0);
                 break;
@@ -133,8 +148,11 @@ public sealed class WhitefangStalkerBehaviorState(int side = 1)
     {
         if (Phase != WhitefangPhase.Pounce) return;
         PounceLanded = true;
-        Enter(WhitefangPhase.Recover, RecoverSeconds);
+        Enter(WhitefangPhase.Recover, AfterPounceSeconds);
     }
+
+    // A Twinfang barely lands before it gathers again; the long exposed recovery comes after the second leap.
+    private double AfterPounceSeconds => secondLeapReady ? TwinleapRecoverSeconds : RecoverSeconds;
 
     /// <summary>A shove during the crouch carries the locked lane with it, so the drawn telegraph stays truthful.</summary>
     public void Displace(Vector2D offset)

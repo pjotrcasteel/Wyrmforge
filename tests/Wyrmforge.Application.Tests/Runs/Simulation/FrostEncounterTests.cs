@@ -294,12 +294,42 @@ public sealed class FrostEncounterTests
             for (var depth = 1; depth <= 5; depth++)
             {
                 Assert.IsFalse(EnemyEncounterComposition.CreatePlan(pattern, depth, random).Enemies.Any(IsFrost), $"{pattern} depth {depth}");
-                foreach (var habitat in Enum.GetValues<WyrmrealmHabitat>())
+                foreach (var habitat in WyrmrealmHabitatCatalog.Fire)
                     Assert.IsFalse(EnemyEncounterComposition.CreatePlan(pattern, depth, random, habitat: habitat).Enemies.Any(IsFrost), $"{habitat}");
             }
         }
 
         static bool IsFrost(EnemyKind kind) => EnemyCatalog.Get(kind).Realm == EnemyRealm.Frost;
+    }
+
+    [TestMethod]
+    public void FrostPlansAndPacks_OnlyDrawTheFrostRoster()
+    {
+        var random = new SeededRandomSource(1702);
+        foreach (var habitat in WyrmrealmHabitatCatalog.Frost)
+        {
+            foreach (var pattern in Enum.GetValues<EnemyEncounterPattern>())
+                Assert.IsTrue(EnemyEncounterComposition.CreatePlan(pattern, 3, random, habitat: habitat).Enemies.All(IsFrost), $"{habitat}/{pattern}");
+            foreach (var recipe in Enum.GetValues<EnemyPackRecipe>())
+                Assert.IsTrue(EnemyEncounterComposition.CreateRecipePlan(recipe, habitat, EnemyEncounterPattern.Mixed, random).Enemies.All(IsFrost), $"{habitat}/{recipe}");
+            foreach (var kind in Enum.GetValues<EnemyKind>().Where(kind => EnemyCatalog.Get(kind).Realm != EnemyRealm.Frost))
+                Assert.IsTrue(IsFrost(EnemyHabitatProfile.Admit(habitat, kind)), $"{habitat} admitted {kind}");
+        }
+
+        static bool IsFrost(EnemyKind kind) => EnemyCatalog.Get(kind).Realm == EnemyRealm.Frost;
+    }
+
+    [TestMethod]
+    public void FrostRecipes_BuildInTheirHomeAndTheLastStandIsWhiteout()
+    {
+        var random = new SeededRandomSource(1703);
+        foreach (var recipe in new[] { EnemyPackRecipe.PacklingLitter, EnemyPackRecipe.WhitefangHunt, EnemyPackRecipe.ShardLine,
+            EnemyPackRecipe.CantorRite, EnemyPackRecipe.CairnWall, EnemyPackRecipe.WispVeil, EnemyPackRecipe.Whiteout })
+            Assert.IsNotNull(EnemyPackRecipeCatalog.Build(recipe, WyrmrealmHabitat.GlacierLair, 60, random), recipe.ToString());
+        Assert.AreEqual(EnemyPackRecipe.Whiteout, EnemyPackRecipeCatalog.LastStandFor(WyrmrealmHabitat.GlacierLair));
+        Assert.AreEqual(EnemyPackRecipe.LastStand, EnemyPackRecipeCatalog.LastStandFor(WyrmrealmHabitat.Lair));
+        var veil = EnemyPackRecipeCatalog.Build(EnemyPackRecipe.WispVeil, WyrmrealmHabitat.MirrorMere, 60, random)!;
+        Assert.AreNotEqual(EnemyKind.MirrorWisp, veil[0], "Packlings lead; the wisp slips in behind them.");
     }
 
     private static void Damage(RunSimulation simulation, EnemyState target, double amount) =>

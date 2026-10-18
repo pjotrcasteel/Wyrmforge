@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Persistence;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Application.World;
@@ -41,7 +42,18 @@ public sealed class RegionCatalogTests
         Assert.IsTrue(RegionCatalog.Starting.IsOpen(Newcomer));
         Assert.AreEqual(1, RegionCatalog.All.Count(region => region.IsOpen(Newcomer)));
         var veteran = new RegionAccessContext(true, 99, Enum.GetValues<DragonId>().ToHashSet());
-        Assert.AreEqual(1, RegionCatalog.All.Count(region => region.IsOpen(veteran)), "Planned regions stay closed until authored.");
+        Assert.AreEqual(2, RegionCatalog.All.Count(region => region.IsOpen(veteran)), "Planned regions stay closed until authored.");
+    }
+
+    [TestMethod]
+    public void FrostOpensOnlyOnceAshfangHasFallen()
+    {
+        var frost = RegionCatalog.Get(RegionCatalog.FrostRegionId);
+        Assert.AreEqual(RegionStatus.Playable, frost.Status);
+        Assert.IsFalse(frost.IsOpen(new RegionAccessContext(true, 99, new HashSet<DragonId> { DragonId.Rimeclaw })));
+        Assert.IsTrue(frost.IsOpen(Newcomer with { WyrmsSlain = new HashSet<DragonId> { DragonId.Ashfang } }));
+        Assert.AreEqual(DragonId.Rimeclaw, frost.HomeLineage);
+        CollectionAssert.Contains(frost.AbsentLineages.ToList(), DragonId.Ashfang);
     }
 
     [TestMethod]
@@ -68,7 +80,7 @@ public sealed class RegionCatalogTests
     {
         var factory = new RunSimulationFactory(new FirstRandomSource());
         Assert.AreSame(RegionCatalog.Starting, factory.Create(new HashSet<string>(), seed: 5).Region);
-        Assert.ThrowsExactly<InvalidOperationException>(() => factory.Create(new HashSet<string>(), seed: 5, region: RegionCatalog.FrostRegionId));
+        Assert.ThrowsExactly<InvalidOperationException>(() => factory.Create(new HashSet<string>(), seed: 5, region: RegionCatalog.StormRegionId));
     }
 
     [TestMethod]
@@ -76,6 +88,48 @@ public sealed class RegionCatalogTests
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 9, firstHunt: true);
         Assert.AreEqual(DragonId.Ashfang, Attract(simulation));
+    }
+
+    [TestMethod]
+    public void FrostFirstHuntCulminatesInRimeclaw()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 9, firstHunt: true, region: RegionCatalog.FrostRegionId);
+        Assert.AreEqual(DragonId.Rimeclaw, Attract(simulation));
+    }
+
+    [TestMethod]
+    public void FrostOpeningHuntMeetsRimeclawEvenWhenAResearchLeadPointsElsewhere()
+    {
+        for (var seed = 1; seed <= 12; seed++)
+        {
+            var simulation = new RunSimulationFactory(new SeededRandomSource(seed)).Create(new HashSet<string>(), seed: seed,
+                researchLead: DragonId.Stormcoil, region: RegionCatalog.FrostRegionId, regionOpening: true);
+            Assert.AreEqual(DragonId.Rimeclaw, Attract(simulation), $"seed {seed}");
+        }
+    }
+
+    [TestMethod]
+    public void FrostHuntsNeverAttractAshfang()
+    {
+        for (var seed = 1; seed <= 40; seed++)
+        {
+            var simulation = new RunSimulationFactory(new SeededRandomSource(seed)).Create(new HashSet<string>(), seed: seed, region: RegionCatalog.FrostRegionId);
+            Assert.AreNotEqual(DragonId.Ashfang, Attract(simulation), $"seed {seed}");
+        }
+    }
+
+    [TestMethod]
+    public void FrostHuntKeepsTheSeedsLayoutButRedrawsItsLand()
+    {
+        var factory = new RunSimulationFactory(new FirstRandomSource());
+        var fire = factory.Create(new HashSet<string>(), seed: 31);
+        var frost = factory.Create(new HashSet<string>(), seed: 31, region: RegionCatalog.FrostRegionId);
+        CollectionAssert.AreEqual(fire.MapNodes.Select(node => node.Id).ToArray(), frost.MapNodes.Select(node => node.Id).ToArray());
+        Assert.IsTrue(fire.MapNodes.All(node => WyrmrealmHabitatCatalog.Fire.Contains(node.Habitat)));
+        Assert.IsTrue(frost.MapNodes.All(node => WyrmrealmHabitatCatalog.Frost.Contains(node.Habitat)));
+        Assert.IsTrue(frost.MapNodes.Where(node => node.Stage == 1).All(node => node.Habitat == WyrmrealmHabitat.FrozenRoad));
+        Assert.IsFalse(frost.MapNodes.Any(node => node.EncounterName == "Bell Warden"));
+        Assert.IsTrue(fire.MapNodes.Any(node => node.EncounterName == "Bell Warden"));
     }
 
     [TestMethod]

@@ -35,7 +35,10 @@ public sealed partial class RunSimulation
     {
         ArgumentNullException.ThrowIfNull(region);
         if (region.Status != RegionStatus.Playable) throw new InvalidOperationException($"Region '{region.Id}' has no hunt content yet.");
+        var redraw = region.DominantSchool != Region.DominantSchool;
         Region = region;
+        // Same seed, same layout: only the habitats change. The generator owns its own stream, so no combat randomness shifts.
+        if (redraw) mapState = CreateSeededMapState(depthState.Depth);
     }
 
     internal void InitializeResonance(IReadOnlySet<string> selectedNodes)
@@ -54,7 +57,7 @@ public sealed partial class RunSimulation
         }
         // First-hunt story qualification (encounter brief §5): a region's opening hunt culminates in its home lineage (Ashfang for
         // the starting region). Later hunts keep the attraction roll's variety, limited to lineages that hunt in the region.
-        if (firstHunt)
+        if (firstHunt || regionOpening)
         {
             attractedDragon = Region.HomeLineage;
             return;

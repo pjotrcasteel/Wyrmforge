@@ -24,6 +24,10 @@ public sealed partial class RunSimulation
     private bool ascendantActive;
     private bool firstHunt;
     internal void EnableFirstHunt(bool enabled) => firstHunt = enabled;
+    // A hunter's first hunt in a region they have not walked before: it culminates in the home Wyrm, but unlike the tutorial
+    // First Hunt it is a full hunt with harvest, refuge and extraction.
+    private bool regionOpening;
+    internal void EnableRegionOpening(bool enabled) => regionOpening = enabled;
     private bool dragonPending;
     private bool dragonEncounterStarted;
 

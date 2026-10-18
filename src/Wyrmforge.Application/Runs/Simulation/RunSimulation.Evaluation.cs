@@ -56,6 +56,6 @@ public sealed partial class RunSimulation
     private WyrmrealmMapState CreateSeededMapState(int depth)
     {
         var mapSeed = unchecked((runSeed * 397) ^ (depth * 7919)) & int.MaxValue;
-        return new WyrmrealmMapState(depth, mapSeed);
+        return new WyrmrealmMapState(depth, mapSeed, Region.DominantSchool);
     }
 }

@@ -5,12 +5,16 @@ public sealed class WyrmrealmMapState
     public const int CombatStages = 8;
     private readonly List<WyrmrealmMapNode> completedNodes = [];
 
-    public WyrmrealmMapState(int depth = 1, int? seed = null)
+    public WyrmrealmMapState(int depth = 1, int? seed = null, Domain.Spells.SpellSchool region = Domain.Spells.SpellSchool.Fire)
     {
         Depth = depth;
         Seed = seed ?? Random.Shared.Next();
-        Nodes = WyrmrealmMapGenerator.Generate(depth, Seed);
+        Region = region;
+        Nodes = WyrmrealmMapGenerator.Generate(depth, Seed, region);
     }
+
+    /// <summary>The discipline of the region this map charts; it picks the habitats, never the layout.</summary>
+    public Domain.Spells.SpellSchool Region { get; }
 
     public int Depth { get; }
     public int Seed { get; }

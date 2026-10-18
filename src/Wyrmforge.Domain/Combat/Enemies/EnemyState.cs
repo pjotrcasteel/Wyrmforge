@@ -66,6 +66,7 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
             elite = value;
             if (MireHound is { } hound) hound.Thornrunner = value == EliteAffix.Thornrunner;
             if (Penitent is { } penitent) penitent.Oathshield = value == EliteAffix.Oathshield;
+            if (Whitefang is { } stalker) stalker.Twinleap = value == EliteAffix.Twinfang;
         }
     }
 

@@ -13,6 +13,12 @@ public sealed partial class RunSimulation
 {
     public const int MaxRimeHusks = 6;
     private const double ReknitSiteTolerance = 24;
+    public const double ChoirwardenHymnMultiplier = 1.8;
+    public const double ThousandfaceDoubleOffset = 46;
+
+    /// <summary>Choirwarden: the hymn carries across the whole pack, not just the knot around the chanter.</summary>
+    private static double HymnRadius(EnemyState cantor) =>
+        HoarfrostCantorBehaviorState.HymnRadius * (cantor.Elite == EliteAffix.Choirwarden ? ChoirwardenHymnMultiplier : 1);
 
     private readonly List<RimeHuskState> rimeHusks = [];
 
@@ -31,7 +37,7 @@ public sealed partial class RunSimulation
         foreach (var ally in enemies)
         {
             if (!MayTakeRime(enemy, ally) || ally.RimeArmor > 0) continue;
-            if (Vector2D.Distance(ally.Position, enemy.Position) <= HoarfrostCantorBehaviorState.HymnRadius) unarmored++;
+            if (Vector2D.Distance(ally.Position, enemy.Position) <= HymnRadius(enemy)) unarmored++;
         }
         Vector2D? husk = null;
         var best = HoarfrostCantorBehaviorState.ReknitRange;
@@ -51,7 +57,7 @@ public sealed partial class RunSimulation
             case CantorEvent.HymnCompleted:
                 foreach (var ally in enemies)
                 {
-                    if (!MayTakeRime(enemy, ally) || Vector2D.Distance(ally.Position, enemy.Position) > HoarfrostCantorBehaviorState.HymnRadius) continue;
+                    if (!MayTakeRime(enemy, ally) || Vector2D.Distance(ally.Position, enemy.Position) > HymnRadius(enemy)) continue;
                     ally.RimeArmor = ally.MaxHealth * HoarfrostCantorBehaviorState.RimeArmorFraction;
                     ally.RimeArmorRemaining = HoarfrostCantorBehaviorState.RimeArmorSeconds;
                 }
@@ -110,6 +116,13 @@ public sealed partial class RunSimulation
                 break;
             case WispEvent.Stepped:
                 SpawnReflectionDouble(enemy.Position);
+                if (enemy.Elite == EliteAffix.Thousandface)
+                {
+                    // A second image beside the first: two still mirrors, one moving Wisp.
+                    var away = Vector2D.DirectionTo(enemy.Position, wisp.Destination);
+                    var side = away == Vector2D.Zero ? new Vector2D(1, 0) : new Vector2D(-away.Y, away.X);
+                    SpawnReflectionDouble(SafeStepPoint(enemy.Position + side * ThousandfaceDoubleOffset, enemy.Radius));
+                }
                 enemy.Position = wisp.Destination;
                 break;
             case WispEvent.CutReleased:
@@ -196,7 +209,7 @@ public sealed partial class RunSimulation
     private EnemyTelegraphRenderSnapshot? CreateFrostRiteTelegraph(EnemyState enemy) => enemy switch
     {
         { Cantor: { Phase: CantorPhase.Chant, Verse: CantorVerse.RimeHymn } hymn } => new EnemyTelegraphRenderSnapshot("rime-hymn", hymn.ChantProgress,
-            enemy.Position.X, enemy.Position.Y, HoarfrostCantorBehaviorState.HymnRadius),
+            enemy.Position.X, enemy.Position.Y, HymnRadius(enemy)),
         { Cantor: { Phase: CantorPhase.Chant, Verse: CantorVerse.Reknit } reknit } => new EnemyTelegraphRenderSnapshot("reknit", reknit.ChantProgress,
             reknit.ReknitSite.X, reknit.ReknitSite.Y, EnemyCatalog.Get(EnemyKind.FrostlingPackling).Radius * 1.6),
         { Cantor: { Phase: CantorPhase.Chant, Verse: CantorVerse.StillnessVerse } verse } => new EnemyTelegraphRenderSnapshot("stillness",

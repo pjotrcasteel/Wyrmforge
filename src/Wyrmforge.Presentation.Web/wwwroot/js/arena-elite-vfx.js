@@ -10,6 +10,13 @@ export const ELITE_COLORS = Object.freeze({
     Thornrunner: '155, 227, 106',
     Oathshield: '236, 226, 196',
     Drowncaller: '127, 214, 255',
+    // Frost champions: cold hues, each still distinct so the rule reads on the snow.
+    Rimehowl: '196, 240, 255',
+    Splinterwright: '98, 176, 255',
+    Twinfang: '246, 250, 255',
+    Barrowlord: '150, 168, 196',
+    Choirwarden: '112, 255, 226',
+    Thousandface: '226, 196, 255',
 });
 
 export function eliteColor(affix) {

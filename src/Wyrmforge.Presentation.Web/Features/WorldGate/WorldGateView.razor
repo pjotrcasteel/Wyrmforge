@@ -22,6 +22,23 @@
         <article class="gate-sheet" aria-label="Free Exploration">
             <header><small>FREE EXPLORATION</small><h2>@Region.Name</h2></header>
             <p>Hunt where you choose. What you learn, secure and research is yours on every road, and the Campaign can begin at any time.</p>
+            <div class="gate-regions" role="radiogroup" aria-label="Choose a region">
+                @foreach (var region in RegionCatalog.All)
+                {
+                    var open = Access is { } access ? region.IsOpen(access) : region.Id == RegionCatalog.Starting.Id;
+                    var chosen = region.Id == Region.Id;
+                    <button class="gate-region @region.DominantSchool.ToString().ToLowerInvariant() @(chosen ? "chosen" : string.Empty) @(open ? string.Empty : "locked")"
+                            role="radio" aria-checked="@(chosen ? "true" : "false")" disabled="@(!open)"
+                            @onclick="() => OnRegionChanged.InvokeAsync(region.Id)">
+                        <strong>@region.Name</strong>
+                        <small>@(open ? $"{region.DominantSchool} · {DragonCatalog.Get(region.HomeLineage).Name}" : Requirement(region))</small>
+                        @if (open && World is { } world && !world.IsDiscovered(region.Id))
+                        {
+                            <em>New: your first hunt here ends at @DragonCatalog.Get(region.HomeLineage).Name</em>
+                        }
+                    </button>
+                }
+            </div>
             <dl class="gate-facts">
                 <div><dt>Ground</dt><dd>@Region.DominantSchool</dd></div>
                 <div><dt>Home Wyrm</dt><dd>@DragonCatalog.Get(Region.HomeLineage).Name</dd></div>
@@ -70,6 +87,18 @@
     [Parameter, EditorRequired] public AdvancementProgress Advancement { get; set; } = new(AdvancementRoute.None, 1, 0, 0);
     [Parameter] public StoryBookDefinition Book { get; set; } = StoryBookCatalog.BrokenCovenant;
     [Parameter] public EventCallback OnExplore { get; set; }
+    [Parameter] public RegionAccessContext? Access { get; set; }
+    [Parameter] public EventCallback<RegionId> OnRegionChanged { get; set; }
+
+    private static string Requirement(RegionDefinition region) => region.Status != RegionStatus.Playable
+        ? "Uncharted"
+        : region.Access.Kind switch
+        {
+            RegionAccessKind.WyrmSlain when region.Access.Wyrm is { } wyrm => $"Slay {DragonCatalog.Get(wyrm).Name} to open",
+            RegionAccessKind.HunterLevel => $"Reach Hunter {region.Access.HunterLevel} to open",
+            RegionAccessKind.FirstHuntComplete => "Finish the First Hunt to open",
+            _ => "Closed",
+        };
 
     private bool campaign;
 }

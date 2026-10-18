@@ -16,6 +16,9 @@ public sealed partial class RunSimulation
     public const double SnowCloudChillIntervalSeconds = 0.8;
     public const int MaxSnowClouds = 4;
     private const double PacklingSlotEaseDistance = 24;
+    public const int RimehowlExtraChill = 2;
+    public const double SplinterwrightSpacing = 90;
+    public const double BarrowlordEchoDelaySeconds = 0.45;
 
     private readonly List<IceLanceState> iceLances = [];
     private readonly List<SplinterBloomState> splinterBlooms = [];
@@ -79,7 +82,7 @@ public sealed partial class RunSimulation
     {
         // Hamstring Bite: one committed bite, harder against prey that is already cold.
         DamagePlayer(FrostlingPacklingBehaviorState.BiteDamageAgainst(player.Chill.IsChilled) * EliteImpact(enemy));
-        ChillPlayer(FrostlingPacklingBehaviorState.BiteChill);
+        ChillPlayer(FrostlingPacklingBehaviorState.BiteChill + (enemy.Elite == EliteAffix.Rimehowl ? RimehowlExtraChill : 0));
         packling.Land();
     }
 
@@ -94,7 +97,7 @@ public sealed partial class RunSimulation
                 rangedStaggerRemaining = EnemyStagePressure.RangedStaggerSeconds;
                 break;
             case ShardcasterEvent.LanceReleased:
-                iceLances.Add(new IceLanceState(enemy.Position, caster.Aim, EliteImpact(enemy)));
+                iceLances.Add(new IceLanceState(enemy.Position, caster.Aim, EliteImpact(enemy), enemy.Elite == EliteAffix.Splinterwright));
                 break;
             case ShardcasterEvent.PatchReleased:
                 AddBlackIcePatch(caster.Target);
@@ -159,6 +162,9 @@ public sealed partial class RunSimulation
                 break;
             case CairnEvent.Stamped:
                 avalancheRings.Add(new AvalancheRingState(enemy.Position, sentinel.Facing, EliteImpact(enemy)));
+                // Barrowlord: the barrow answers its stamp. A second ring follows, so stepping through the first is not enough.
+                if (enemy.Elite == EliteAffix.Barrowlord)
+                    avalancheRings.Add(new AvalancheRingState(enemy.Position, sentinel.Facing, EliteImpact(enemy), BarrowlordEchoDelaySeconds));
                 break;
         }
         if (crossing && sentinel.Phase == CairnPhase.March) return (direction, speed);
@@ -200,7 +206,12 @@ public sealed partial class RunSimulation
             }
             lance.Advance(next, Vector2D.Distance(previous, next));
             if (lance.Travelled >= ShardcasterBehaviorState.LanceRange - 1e-6) lance.Stopped = true;
-            if (lance.Stopped) splinterBlooms.Add(new SplinterBloomState(lance.Position, lance.Impact));
+            if (!lance.Stopped) continue;
+            splinterBlooms.Add(new SplinterBloomState(lance.Position, lance.Impact));
+            // Splinterwright: the whole lane blooms, not only where the shard broke.
+            if (lance.Splinters)
+                for (var along = SplinterwrightSpacing; along < lance.Travelled - SplinterwrightSpacing * 0.5; along += SplinterwrightSpacing)
+                    splinterBlooms.Add(new SplinterBloomState(lance.Origin + lance.Direction * along, lance.Impact));
         }
         iceLances.RemoveAll(lance => lance.Stopped);
 
@@ -218,7 +229,7 @@ public sealed partial class RunSimulation
         foreach (var ring in avalancheRings)
         {
             ring.Elapsed += delta;
-            if (ring.Hit || ring.Elapsed > CairnSentinelBehaviorState.RingSeconds) continue;
+            if (ring.Hit || ring.Elapsed < 0 || ring.Elapsed > CairnSentinelBehaviorState.RingSeconds) continue;
             // Only the rolling edge across the front arc hurts: beside or behind the Sentinel, or beyond its reach, is safe.
             if (Math.Abs(Vector2D.Distance(player.Position, ring.Center) - ring.Radius)
                 > CairnSentinelBehaviorState.RingThickness / 2 + player.Radius * 0.5) continue;
@@ -299,6 +310,7 @@ public sealed partial class RunSimulation
             Math.Clamp(cloud.Remaining / WhitefangStalkerBehaviorState.CloudSeconds, 0, 1))).ToArray();
 
     private IReadOnlyList<AvalancheRingRenderSnapshot> CreateAvalancheRingSnapshots() => avalancheRings
+        .Where(ring => ring.Elapsed >= 0)
         .Select(ring => new AvalancheRingRenderSnapshot(ring.Center.X, ring.Center.Y, ring.Radius, CairnSentinelBehaviorState.RingRadius,
             CairnSentinelBehaviorState.RingThickness, Math.Clamp(ring.Elapsed / CairnSentinelBehaviorState.RingSeconds, 0, 1),
             Math.Atan2(ring.Facing.Y, ring.Facing.X), CairnSentinelBehaviorState.BraceHalfAngleRadians)).ToArray();
@@ -316,8 +328,10 @@ public sealed partial class RunSimulation
         .Select(patch => new BlackIceRenderSnapshot(patch.Center.X, patch.Center.Y, patch.Radius,
             Math.Clamp(patch.Remaining / ShardcasterBehaviorState.PatchSeconds, 0, 1))).ToArray();
 
-    private sealed class IceLanceState(Vector2D origin, Vector2D direction, double impact)
+    private sealed class IceLanceState(Vector2D origin, Vector2D direction, double impact, bool splinters = false)
     {
+        public bool Splinters { get; } = splinters;
+
         public Vector2D Origin { get; } = origin;
 
         public Vector2D Direction { get; } = direction;
@@ -357,7 +371,7 @@ public sealed partial class RunSimulation
         public double Remaining { get; set; } = seconds;
     }
 
-    private sealed class AvalancheRingState(Vector2D center, Vector2D facing, double impact)
+    private sealed class AvalancheRingState(Vector2D center, Vector2D facing, double impact, double delay = 0)
     {
         public const double FadeSeconds = 0.25;
 
@@ -367,7 +381,8 @@ public sealed partial class RunSimulation
 
         public double Impact { get; } = impact;
 
-        public double Elapsed { get; set; }
+        /// <summary>Negative while a delayed ring waits to roll.</summary>
+        public double Elapsed { get; set; } = -delay;
 
         public bool Hit { get; set; }
 

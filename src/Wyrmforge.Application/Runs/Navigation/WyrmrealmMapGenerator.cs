@@ -4,7 +4,11 @@ namespace Wyrmforge.Application.Runs.Navigation;
 
 public static class WyrmrealmMapGenerator
 {
-    public static IReadOnlyList<WyrmrealmMapNode> Generate(int depth, int seed)
+    /// <summary>Territory names per region; the layout stream is shared, so a seed draws the same shape in every region.</summary>
+    private static readonly string[] FireTerritories = ["River valley", "Broken ridge", "Ashen caldera"];
+    private static readonly string[] FrostTerritories = ["Snowbound vale", "Rimewall heights", "Glacier basin"];
+
+    public static IReadOnlyList<WyrmrealmMapNode> Generate(int depth, int seed, SpellSchool region = SpellSchool.Fire)
     {
         var random = new Random(unchecked(seed * 397 ^ depth * 7919));
         var biome = random.Next(3);
@@ -53,8 +57,9 @@ public static class WyrmrealmMapGenerator
             var kind = biome switch { 0 when attempt % 3 != 0 => "forest", 2 when attempt % 3 != 0 => "rocks", _ => "mountain" };
             features.Add(new(kind, point, radiusX, radiusY));
         }
-        features.Add(new(biome == 2 ? "volcano" : "ridge", new(approach.X, 5), 17, 4));
-        var territory = new WyrmrealmTerritory(seed, new[] { "River valley", "Broken ridge", "Ashen caldera" }[biome], camp, river, roads, features);
+        // The Frost basin ends at a glacier's ridge, never a volcano.
+        features.Add(new(biome == 2 && region != SpellSchool.Frost ? "volcano" : "ridge", new(approach.X, 5), 17, 4));
+        var territory = new WyrmrealmTerritory(seed, (region == SpellSchool.Frost ? FrostTerritories : FireTerritories)[biome], camp, river, roads, features);
         var mirror = random.Next(2) == 1;
         HuntPoint Flip(HuntPoint point) => mirror ? point with { X = 100 - point.X } : point;
         territory = territory with { Camp = Flip(camp), River = river.Select(Flip).ToArray(),
@@ -68,7 +73,7 @@ public static class WyrmrealmMapGenerator
                 var draft = drafts.Single(d => d.Id == node.Id);
                 var site = draft.Site;
                 return node with { Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
-                    Territory = territory, Habitat = draft.Habitat, PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
+                    Territory = territory, Habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region), PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
@@ -108,7 +113,7 @@ public static class WyrmrealmMapGenerator
                 var roadId = $"road-{sector}-{lane}";
                 var length = fights switch { 2 => "Short", 3 => "Medium", _ => "Long" };
                 var roadHabitat = RoadHabitat(sector, lane, count, habitatBits);
-                var name = WyrmrealmHabitatCatalog.RoadName(roadHabitat);
+                var name = WyrmrealmHabitatCatalog.RoadName(WyrmrealmHabitatCatalog.ForSchool(roadHabitat, region));
                 roads.Add(new(roadId, name, length, fights, points, fights == 5));
                 var incoming = previousId;
                 for (var i = 0; i < fights; i++)

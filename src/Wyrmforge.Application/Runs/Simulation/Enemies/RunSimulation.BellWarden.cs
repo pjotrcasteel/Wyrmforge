@@ -70,6 +70,8 @@ public sealed partial class RunSimulation
     private void PrepareBellWardenNode(WyrmrealmMapNode node)
     {
         if (!node.PreLair || node.Type != WyrmrealmNodeType.Combat) return;
+        // The Bell Warden belongs to the first region; Rimeclaw's lair road keeps an ordinary horde until its own set piece lands.
+        if (WyrmrealmHabitatCatalog.School(node.Habitat) != Domain.Spells.SpellSchool.Fire) return;
         BellWardenStage = BellWardenStage.Waiting;
         bellWardenTimer = 0;
     }

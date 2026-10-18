@@ -21,7 +21,8 @@ public sealed record WyrmrealmMapNode(
         WyrmrealmEncounterKind.StalkerPressure => 5,
         _ => 1,
     };
-    public string EncounterName => PreLair ? "Bell Warden" : Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
+    // The Bell Warden guards the first region's lair roads; Rimeclaw's set piece is still to come (Frost F4b).
+    public string EncounterName => PreLair ? WyrmrealmHabitatCatalog.School(Habitat) == SpellSchool.Fire ? "Bell Warden" : "Last road" : Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => "Horde",
         WyrmrealmEncounterKind.StalkerPressure => "Ambush",

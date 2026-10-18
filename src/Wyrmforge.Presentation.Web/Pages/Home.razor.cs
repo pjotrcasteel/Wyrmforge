@@ -183,6 +183,7 @@ public partial class Home
         }
         selectedOffering = null;
         PrepareLaboratoryRun();
+        PrepareRegionRun();
         await DiscoverCurrentRegionAsync();
         await SaveArcaneBuildAsync();
         runNumber++;

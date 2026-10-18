@@ -1,4 +1,4 @@
-import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
+import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
@@ -18,7 +18,7 @@ function seededRandom(seed) {
 
 export function createTerrainPlan(environment, width, height) {
     const random = seededRandom(environment.seed);
-    const biome = environment.biome.includes('caldera') ? 'ash' : environment.biome.includes('ridge') ? 'ridge' : 'valley';
+    const biome = territoryBiome(environment.biome);
     const bend = (random() - .5) * Math.min(width * .22, 80);
     const trailWidth = Math.max(55, Math.min(width, height) * .24);
     const rubble = [];
@@ -54,7 +54,9 @@ export function createTerrainPlan(environment, width, height) {
 function drawTerrain(ctx, plan, width, height) {
     const ash = plan.biome === 'ash';
     const ridge = plan.biome === 'ridge';
-    const colors = ash ? ['#2a1b19', '#342721', '#121317'] : ridge ? ['#1d2028', '#292e30', '#11161b'] : ['#152326', '#242e27', '#10191c'];
+    const snow = plan.biome === 'snow';
+    const colors = ash ? ['#2a1b19', '#342721', '#121317'] : ridge ? ['#1d2028', '#292e30', '#11161b']
+        : snow ? ['#26303b', '#2e3945', '#141a21'] : ['#152326', '#242e27', '#10191c'];
     const gradient = ctx.createLinearGradient(0, 0, width * .3, height);
     gradient.addColorStop(0, colors[0]);
     gradient.addColorStop(.6, colors[1]);
@@ -93,7 +95,9 @@ function drawTerrain(ctx, plan, width, height) {
     }
 
     for (const piece of plan.rubble) {
-        ctx.fillStyle = piece.tone < .22 ? 'rgba(164,133,108,.15)' : piece.tone < .5 ? 'rgba(8,11,16,.22)' : 'rgba(154,135,108,.07)';
+        ctx.fillStyle = snow
+            ? piece.tone < .22 ? 'rgba(176,198,216,.14)' : piece.tone < .5 ? 'rgba(8,12,18,.2)' : 'rgba(150,172,190,.07)'
+            : piece.tone < .22 ? 'rgba(164,133,108,.15)' : piece.tone < .5 ? 'rgba(8,11,16,.22)' : 'rgba(154,135,108,.07)';
         ctx.fillRect(piece.x, piece.y, piece.size, piece.size * .6);
     }
 
@@ -147,7 +151,7 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.rotate(piece.rotation);
         ctx.fillStyle = 'rgba(0,0,0,.29)';
         ctx.fillRect(-piece.size * .3 + 4, 6, piece.size * .68, piece.size * 1.4);
-        ctx.fillStyle = ash ? '#4f3531' : ridge ? '#41484d' : '#3c4842';
+        ctx.fillStyle = ash ? '#4f3531' : ridge ? '#41484d' : snow ? '#4a5866' : '#3c4842';
         ctx.fillRect(-piece.size * .3, -piece.size * .65, piece.size * .6, piece.size * 1.2);
         ctx.strokeStyle = 'rgba(202,166,130,.2)';
         ctx.lineWidth = 1;
@@ -160,7 +164,7 @@ function drawTerrain(ctx, plan, width, height) {
     drawTerritoryLandmarks(ctx, plan.story);
     if (artReady() && !plan.story.cloister) drawForestEdges(ctx, plan, width, height);
     if (plan.stage >= 5) {
-        ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : 'rgba(128,178,153,.19)';
+        ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : snow ? 'rgba(150,206,236,.24)' : 'rgba(128,178,153,.19)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(width * .3, height * .1);
@@ -192,6 +196,15 @@ const habitatTints = {
     FloodedCloister: 'rgba(36,82,124,.13)',
     ScorchedApproach: 'rgba(156,54,22,.12)',
     Lair: 'rgba(124,30,14,.13)',
+    // Frost: the cold reads from the ground itself, so each wash only nudges the place's own mood.
+    FrozenRoad: 'rgba(120,140,160,.05)',
+    SnowboundPines: 'rgba(30,70,64,.1)',
+    WhiteoutPlain: 'rgba(206,222,236,.08)',
+    BuriedHamlet: 'rgba(70,64,60,.1)',
+    CairnBarrows: 'rgba(110,104,140,.09)',
+    MirrorMere: 'rgba(48,104,150,.13)',
+    GlacierApproach: 'rgba(96,170,214,.1)',
+    GlacierLair: 'rgba(70,150,210,.13)',
 };
 
 export function habitatTint(habitat) {
@@ -218,6 +231,7 @@ const decalSets = {
     valley: ['decal.tuft.a', 'decal.tuft.b', 'decal.tuft.a', 'decal.fern', 'decal.stones', 'decal.puddle', 'decal.mushrooms', 'decal.tuft.b'],
     ash: ['decal.tuft.ash', 'decal.ember', 'decal.stones', 'decal.tuft.ash', 'decal.stones', 'decal.bones'],
     ridge: ['decal.stones', 'decal.tuft.b', 'decal.stones', 'decal.puddle', 'decal.tuft.a', 'decal.stones', 'decal.bones'],
+    snow: ['decal.snowdrift', 'decal.tuft.frost', 'decal.icepatch', 'decal.snowdrift', 'decal.stones', 'decal.tuft.frost', 'decal.bones'],
 };
 
 // Flat ground detail only (grass, stones, puddles). Nothing upright lands on the fighting floor.
@@ -241,6 +255,7 @@ const edgeSets = {
     valley: ['prop.pine.a', 'prop.pine.b', 'prop.pine.c', 'prop.bush.a', 'prop.pine.a', 'prop.bush.b'],
     ash: ['prop.deadtree.a', 'prop.bush.ash', 'prop.deadtree.b', 'prop.rock.a', 'prop.bush.ash'],
     ridge: ['prop.pine.b', 'prop.deadtree.a', 'prop.rock.a', 'prop.pine.c', 'prop.deadtree.b'],
+    snow: ['prop.pine.snow.a', 'prop.pine.snow.b', 'prop.rock.snow', 'prop.pine.snow.c', 'prop.deadtree.a', 'prop.pine.snow.a'],
 };
 
 // Forest and scrub frame the outer world band (outside the normal combat lanes) so territory

@@ -511,3 +511,12 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Fixes:** `ENEMY_KIND_COUNT` was 10, so all Frost kinds rendered as the Bell Warden; it now follows the palette table (17). The Wisp's first step distance (90 px) sat outside its own cut, so it was moved to 56 px.
 - **Tests:** `FrostRiteAndMirrorBehaviorTests` (Domain), F3 cases in `FrostEncounterTests`, `arena-frost-vfx.test.mjs`, `art-pipeline.test.mjs`. Browser 47/49 (the two known mobile failures).
 - **Next:** F4, the Bell of Winter and Reliquary of Glass, Frost elite affixes, habitats and pack recipes, Rimeclaw lair, frost ground, `glacier-region` → Playable and the World Gate region picker.
+
+## 36. Frost region F4a: The Hoarfrost Reaches
+
+- **Region:** `glacier-region` is Playable as *The Hoarfrost Reaches* (working title) once Ashfang is slain. Frost habitats, pack recipes, territory names and extraction plans; Ashfang is Absent, so Frost hunts never attract him.
+- **Elites:** Rimehowl, Splinterwright, Twinfang, Barrowlord, Choirwarden, Thousandface (see `frost-region-roster-v1.md`).
+- **Snow biome:** its own tiles, drifts, ice patches, snow-laden pines, cairn stacks, a frozen icefall, a buried sledge and pale walls. Frost territories never get the cloister floor.
+- **World Gate:** a tap-sized region list with locked reasons; the choice is saved in `wyrmforge.world.v1` (`Selected`, optional). A first hunt in an uncharted region ends at its home Wyrm as a full hunt.
+- **Tests:** `RegionCatalogTests`, `FrostEncounterTests`, `FrostEliteTests`, JS snow-biome cases, browser `Mobile_WorldGate_FrostOpensAfterAshfangAndItsHuntRunsOnSnow`. Browser 48/50 (the two known mobile failures).
+- **Next:** F4b Bell of Winter, F4c Reliquary of Glass.

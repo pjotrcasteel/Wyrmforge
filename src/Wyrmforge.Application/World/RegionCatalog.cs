@@ -7,8 +7,8 @@ using Wyrmforge.Domain.World;
 namespace Wyrmforge.Application.World;
 
 /// <summary>
-/// The authored regions. Today one is playable: the first hunt's land, where Ashfang's cinder marks the ground but all four
-/// lineages answer a hunt's resonance (the behaviour hunts already had). The other three are charted from the owner's concept
+/// The authored regions. Two are playable. The first hunt's land, where Ashfang's cinder marks the ground but all four
+/// lineages answer a hunt's resonance (the behaviour hunts already had); Rimeclaw's frost opens after Ashfang falls. The other two are charted from the owner's concept
 /// sheets (<c>user_handover_files/concepts/&lt;School&gt;</c>) so their discipline, lineage and roster are fixed before content.
 /// </summary>
 public static class RegionCatalog
@@ -23,7 +23,7 @@ public static class RegionCatalog
         "The Cinder Frontier",
         SpellSchool.Fire,
         RegionStatus.Playable,
-        Enum.GetValues<WyrmrealmHabitat>(),
+        WyrmrealmHabitatCatalog.Fire,
         [EnemyKind.Hollow, EnemyKind.Ashling, EnemyKind.AshPriest, EnemyKind.AshSlinger, EnemyKind.MireHound, EnemyKind.Penitent,
             EnemyKind.DrownedWraith, EnemyKind.BellWarden, EnemyKind.Reliquary],
         ["The Hollow", "Ashlings", "Ash Priest", "Ash Slinger", "Mire Hound", "The Penitent", "Drowned Wraith", "Bell Warden",
@@ -31,12 +31,28 @@ public static class RegionCatalog
         Influence(DragonId.Ashfang, DragonId.Rimeclaw, DragonId.Stormcoil, DragonId.Voidweaver),
         RegionAccessRule.Open);
 
+    /// <summary>
+    /// Rimeclaw's land (frost roster F1-F4). Where the Cinder Frontier pressures, this region boxes the hunter in. It opens
+    /// once Ashfang has fallen: the first Great Hunt is the gate out of the starting land. Stormcoil and Voidweaver still
+    /// roam the ice; Ashfang's cinder does not reach it.
+    /// </summary>
+    public static RegionDefinition HoarfrostReaches { get; } = new(
+        FrostRegionId,
+        "The Hoarfrost Reaches",
+        SpellSchool.Frost,
+        RegionStatus.Playable,
+        WyrmrealmHabitatCatalog.Frost,
+        [EnemyKind.FrostlingPackling, EnemyKind.Shardcaster, EnemyKind.WhitefangStalker, EnemyKind.CairnSentinel,
+            EnemyKind.HoarfrostCantor, EnemyKind.MirrorWisp],
+        ["The Frostling Packling", "The Hoarfrost Cantor", "The Shardcaster", "The Whitefang Stalker", "The Cairn Sentinel",
+            "The Mirror Wisp", "The Bell of Winter", "The Reliquary of Glass", "Rimeclaw, the Glacier Wyrm"],
+        Influence(DragonId.Rimeclaw, DragonId.Stormcoil, DragonId.Voidweaver),
+        new RegionAccessRule(RegionAccessKind.WyrmSlain, Wyrm: DragonId.Ashfang));
+
     public static IReadOnlyList<RegionDefinition> All { get; } =
     [
         CinderFrontier,
-        Planned(FrostRegionId, "Uncharted Frost region", SpellSchool.Frost, DragonId.Rimeclaw,
-            ["The Frostling Packling", "The Hoarfrost Cantor", "The Shardcaster", "The Whitefang Stalker", "The Cairn Sentinel",
-                "The Mirror Wisp", "The Bell of Winter", "The Reliquary of Glass", "Rimeclaw, the Glacier Wyrm"]),
+        HoarfrostReaches,
         Planned(StormRegionId, "Uncharted Storm region", SpellSchool.Storm, DragonId.Stormcoil,
             ["Spark Swarm", "Volt Hound", "Ion Leech", "Charge Sentinel", "Storm Razor", "Magnet Colossus", "The Conduit",
                 "Stormcoil, the Tempest Wyrm"]),

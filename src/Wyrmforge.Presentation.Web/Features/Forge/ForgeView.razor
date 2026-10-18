@@ -105,7 +105,7 @@
                 <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(IsUnlocked(ShellSection.Laboratory) ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                 break;
             case ShellSection.Gate:
-                <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" OnExplore="StartAsync" />
+                <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" Access="RegionAccess" OnRegionChanged="OnRegionChanged" OnExplore="StartAsync" />
                 break;
             case ShellSection.Options:
                 <div class="menu-options"><button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button><a href="combat-lab">Developer Combat Lab</a></div>
@@ -142,6 +142,8 @@
     [Parameter] public HunterProgress Hunter { get; set; } = new();
     [Parameter] public Wyrmforge.Application.World.RegionDefinition Region { get; set; } = Wyrmforge.Application.World.RegionCatalog.Starting;
     [Parameter] public Wyrmforge.Domain.World.RegionDiscoveryState? World { get; set; }
+    [Parameter] public Wyrmforge.Application.World.RegionAccessContext? RegionAccess { get; set; }
+    [Parameter] public EventCallback<Wyrmforge.Domain.World.RegionId> OnRegionChanged { get; set; }
     [Parameter] public Wyrmforge.Application.Chronicles.AdvancementProgress Advancement { get; set; } = new(Wyrmforge.Application.Chronicles.AdvancementRoute.None, 1, 0, 0);
     [Parameter] public LaboratoryState Laboratory { get; set; } = new();
     [Parameter] public string? LaboratoryNotice { get; set; }

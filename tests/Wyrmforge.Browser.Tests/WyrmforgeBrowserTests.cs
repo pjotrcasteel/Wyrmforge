@@ -1138,6 +1138,40 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_WorldGate_FrostOpensAfterAshfangAndItsHuntRunsOnSnow()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','2');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));
+            localStorage.setItem('wyrmforge.greatHunt.v1', JSON.stringify([{Wyrm:0,Slain:true,EssenceSecured:true,DeepEvolvedDuel:false,AscendantDefeated:false}]));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "World Gate" }).ClickAsync();
+        var frost = Page.GetByRole(AriaRole.Radio, new() { Name = "The Hoarfrost Reaches" });
+        await Expect(frost).ToBeEnabledAsync();
+        await Expect(Page.Locator(".gate-region.locked")).Not.ToHaveCountAsync(0);
+        await frost.ClickAsync();
+        await Expect(frost).ToHaveAttributeAsync("aria-checked", "true");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "The Hoarfrost Reaches" })).ToBeVisibleAsync();
+        await ScreenshotAsync("world-gate-frost.png");
+        var save = await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.world.v1')");
+        StringAssert.Contains(save, "glacier-region");
+        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
+        Assert.IsLessThanOrEqualTo(1, horizontal);
+
+        await Page.Locator(".gate-cta").ClickAsync();
+        await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
+        await Page.Locator(".primary-frost").ClickAsync();
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByText(new System.Text.RegularExpressions.Regex("Snowbound vale|Rimewall heights|Glacier basin", System.Text.RegularExpressions.RegexOptions.IgnoreCase)).First).ToBeVisibleAsync();
+        await Page.Locator("button.route-node.available").First.ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
+        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+        await Page.WaitForTimeoutAsync(2500);
+        await ScreenshotAsync("frost-hunt-snow.png");
+    }
+
+    [TestMethod]
     public async Task Mobile_Atlas_CompleteWebAndBackNavigationArePreserved()
     {
         await Page.SetViewportSizeAsync(320, 568);

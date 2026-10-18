@@ -6,7 +6,7 @@ function rng(seed) {
     return () => { n^=n<<13; n^=n>>>17; n^=n<<5; return (n>>>0)/4294967296; };
 }
 export function createCloisterPlan(env, width, height) {
-    if (!env || env.district!=='sanctuary' || /caldera|ridge/i.test(env.biome??'')) return null;
+    if (!env || env.district!=='sanctuary' || /caldera|ridge|snow|rime|glacier|frost/i.test(env.biome??'')) return null;
     const gates=(env.barriers??[]).filter(b=>b.kind==='gate').map(b=>b.y+b.height*.5).sort((a,b)=>a-b);
     const north=height*(gates[0]??.33), south=height*(gates[1]??.69);
     const court={x:width*.2,y:north+height*.045,w:width*.6,h:Math.max(height*.12,south-north-height*.09)};

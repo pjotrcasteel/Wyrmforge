@@ -116,8 +116,12 @@ public sealed partial class RunSimulation
         if (encounterPlan is not null && encounterPlanIndex < encounterPlan.Enemies.Count) return;
         if (!mapEncounter) encounterPattern = EnemyEncounterComposition.SelectNext(encounterPattern, randomSource.Next(2));
         var threatBudget = depthState.ThreatBudgetMultiplier * encounterModifiers.ThreatBudgetMultiplier;
-        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget,
-            mapEncounter ? encounterHabitat : null);
+        // Off the map (the final stand after a Wyrm falls) the Cinder Frontier keeps its depth-gated mix; other regions
+        // draw from their own lair so no ash creature wanders onto the ice.
+        var habitat = mapEncounter ? encounterHabitat
+            : Region.DominantSchool == Domain.Spells.SpellSchool.Fire ? null
+            : WyrmrealmHabitatCatalog.ForSchool(WyrmrealmHabitat.Lair, Region.DominantSchool);
+        encounterPlan = EnemyEncounterComposition.CreatePlan(encounterPattern, depthState.Depth, randomSource, threatBudget, habitat);
         encounterPlanIndex = 0;
     }
 

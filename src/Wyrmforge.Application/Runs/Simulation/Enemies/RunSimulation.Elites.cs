@@ -9,7 +9,7 @@ public sealed record EliteDefeat(EnemyKind Kind, EliteAffix Affix, int Experienc
 
 /// <summary>
 /// Roster step 5 (encounter brief §7). One roll per eligible node, made when the node starts (never per spawn): about 10%
-/// after the two introductory stages, never on the Outskirts tutorial road, at most one per node and two per hunt map, and
+/// after the two introductory stages, never on a region's tutorial road, at most one per node and two per hunt map, and
 /// no guarantee. The roll uses its own hash of map seed, depth and node id, so it never shifts the spawn stream.
 /// </summary>
 public sealed partial class RunSimulation
@@ -56,7 +56,7 @@ public sealed partial class RunSimulation
         }
         // The Reliquary's road carries no elite: one rare threat per road.
         if (IsReliquaryNode || IsBellWardenNode) return;
-        if (node.Type != WyrmrealmNodeType.Combat || node.Stage < EliteFirstEligibleStage || node.Habitat == WyrmrealmHabitat.Outskirts) return;
+        if (node.Type != WyrmrealmNodeType.Combat || node.Stage < EliteFirstEligibleStage || WyrmrealmHabitatCatalog.IsOpening(node.Habitat)) return;
         if (elitesThisMap >= MaxElitesPerMap) return;
         var random = new Random(EliteRollSeed(mapState.Seed, depthState.Depth, node.Id));
         if (random.NextDouble() >= EliteChance) return;

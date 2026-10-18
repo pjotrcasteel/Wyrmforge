@@ -64,12 +64,12 @@ test('every enemy kind, walk phase, attack pose and state, and every wyrm phase 
 });
 
 test('environment covers biome walls, school runes, landmarks, shards, caches and tiles', () => {
-    for (const biome of ['valley', 'ash', 'ridge']) {
+    for (const biome of ['valley', 'ash', 'ridge', 'snow']) {
         for (const part of ['cap', 'face', 'foot']) assert.ok(frames('environment')[`wall.${biome}.${part}`]);
         assert.ok(frames('tiles')[`tile.${biome}`]);
     }
     for (const school of ['arcane', 'fire', 'frost', 'storm']) for (const s of ['lit', 'dim']) assert.ok(frames('environment')[`rune.${school}.${s}`]);
-    for (const kind of ['pyre', 'forge', 'caravan', 'watchtower', 'ossuary', 'banner', 'chapel', 'waystation', 'altar']) assert.ok(frames('environment')[`ruin.${kind}`], kind);
+    for (const kind of ['pyre', 'forge', 'caravan', 'watchtower', 'ossuary', 'banner', 'chapel', 'waystation', 'altar', 'cairnstack', 'icefall', 'sledge']) assert.ok(frames('environment')[`ruin.${kind}`], kind);
     for (const size of ['small', 'medium', 'large']) for (const g of [0, 1]) assert.ok(frames('environment')[`shard.${size}.${g}`]);
     for (const c of ['experience', 'health']) for (const s of ['open', 'sealed']) assert.ok(frames('environment')[`cache.${c}.${s}`]);
     for (const id of ['wall.portcullis', 'wall.rubble', 'exit.waystone', 'ruin.slab', 'ruin.rubble']) assert.ok(frames('environment')[id], id);
@@ -198,6 +198,12 @@ test('ground decals and forest edges are seeded, bounded and biome specific', ()
     assert.deepEqual(edges, createForestEdgePlan(plan, 1200, 2100));
     assert.ok(edges.every(p => frames('environment')[p.name] && (p.x < 40 || p.x > 1160)), 'props hug the outer band');
     assert.ok(edges.every((p, i) => i === 0 || edges[i - 1].y <= p.y), 'sorted by foot line');
+    // Frost ground has its own drifts and snow-laden pines, every one of them authored.
+    const snow = { biome: 'snow', story: { seed: 42 } };
+    const drifts = createDecalPlan(snow, 1200, 2100), pines = createForestEdgePlan(snow, 1200, 2100);
+    assert.ok(drifts.every(d => frames('environment')[d.name]) && drifts.some(d => d.name === 'decal.snowdrift'));
+    assert.ok(pines.every(p => frames('environment')[p.name]) && pines.some(p => p.name.startsWith('prop.pine.snow')));
+    assert.ok(!drifts.some(d => ['decal.fern', 'decal.mushrooms', 'decal.ember', 'decal.puddle'].includes(d.name)), 'no wet-valley or ash detail on the ice');
 });
 
 test('atlas urls carry the content hash of the exact image the frame table was packed for', () => {

@@ -70,7 +70,7 @@ public static class EnemyEncounterComposition
     public static EnemyCompositionPlan CreateRecipePlan(EnemyPackRecipe recipe, WyrmrealmHabitat habitat, EnemyEncounterPattern pattern,
         IRandomSource randomSource, double threatBudgetMultiplier = 1)
     {
-        var scale = recipe == EnemyPackRecipe.LastStand ? EnemyPackRecipeCatalog.LastStandBudgetMultiplier : 1;
+        var scale = EnemyPackRecipeCatalog.IsLastStand(recipe) ? EnemyPackRecipeCatalog.LastStandBudgetMultiplier : 1;
         var budget = Math.Max(1, (int)Math.Round(GetProfile(pattern).BaseThreatBudget * Math.Max(0.25, threatBudgetMultiplier) * scale));
         var members = EnemyPackRecipeCatalog.Build(recipe, habitat, budget, randomSource);
         return CreateHabitatPlan(habitat, budget, randomSource, members is null ? null : (recipe, members));

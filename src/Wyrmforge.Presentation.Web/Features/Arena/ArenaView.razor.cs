@@ -18,6 +18,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.World;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
 
@@ -40,6 +41,8 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public RegionId? Region { get; set; }
+    [Parameter] public bool RegionOpening { get; set; }
     [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
@@ -88,7 +91,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
         if (RewardCache) simulation.OpenRewardCache();
     }
 

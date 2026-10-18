@@ -20,21 +20,23 @@ This slice adds data contracts only. Hunts play exactly as before: the same seed
 | Id | Name (working title) | School | Home lineage | Status |
 |---|---|---|---|---|
 | `cinder-frontier` | The Cinder Frontier | Fire | Ashfang | Playable. All four lineages are Present, so the attraction roll keeps its variety. |
-| `glacier-region` | Uncharted Frost region | Frost | Rimeclaw | Planned, using the `concepts/Frost` roster. F1 kinds (Frostling Packling, Shardcaster) exist as `HabitatOnly`; see `frost-region-roster-v1.md`. |
+| `glacier-region` | The Hoarfrost Reaches | Frost | Rimeclaw | Playable once Ashfang is slain (provisional). Stormcoil and Voidweaver are Present, Ashfang is Absent. Roster and habitats: `frost-region-roster-v1.md`. |
 | `tempest-region` | Uncharted Storm region | Storm | Stormcoil | Planned, using the `concepts/Electric` roster. |
 | `aether-region` | Uncharted Arcane region | Arcane | Voidweaver | Planned, using the `concepts/Arcane` roster. |
 
-Region names are working titles until the product owner names them (§14). The three planned regions are deliberately left unnamed.
+Region names are working titles until the product owner names them (§14). The two planned regions are deliberately left unnamed.
 
 ## Simulation
 
 - `RunSimulationFactory.Create(..., region:)` defaults to the starting region. Requesting a planned region throws.
-- The first hunt culminates in the region's **home lineage**, which replaces the hard-coded Ashfang (same result today).
+- The first hunt culminates in the region's **home lineage**, which replaces the hard-coded Ashfang (same result today). `regionOpening:` does the same for a hunter's first hunt in a region they have not charted, without the tutorial's early ending.
+- A region's habitats, recipes, map territory names and the extraction-defence plan all follow its dominant school; the map keeps the seed's layout.
 - Lineages marked Absent can neither be rolled nor followed as a research lead. The starting region has no Absent lineages.
 
 ## Web
 
-- `wyrmforge.world.v1` stores `{"Discovered":[...]}`. A region is charted when a hunt starts in it.
+- `wyrmforge.world.v1` stores `{"Discovered":[...],"Selected":"..."}` (`Selected` is optional; older saves have none). A region is charted when a hunt starts in it.
+- The hunt runs in the selected region while it stays open, else in the starting region; the First Hunt always walks the starting region. An Ascendant rite whose lineage is Absent in the chosen region is not carried into that hunt.
 - Migration: a hunter with completed runs and no world save gets the starting region charted when the page loads.
 - Hunt prep shows a REGION line: name, dominant ground and "n of 4 regions charted".
 
@@ -42,7 +44,7 @@ Region names are working titles until the product owner names them (§14). The t
 
 - **World Gate** (main menu, unlocked after the first hunt): two equal roads. *Free Exploration* shows the current region, its home Wyrm, regions charted and the "Road to the Conclave" checklist, and enters a hunt. *Campaign* shows Book I as **In preparation** with its chapter outline. BEGIN HUNT still starts directly; the gate is a choice screen, not a toll.
 - The art (`wwwroot/art/world-gate.jpg`) is a crop of product-owner concept art (`user_handover_files/concepts/Menus/choice.jpg`), not code-generated, so it is not in the generated-art manifest.
-- A region choice appears once a second region becomes playable, opened by its access rule.
+- Free Exploration lists every region: open ones are tappable (school colour, home Wyrm, "New: your first hunt here ends at …"), locked ones say what opens them ("Slay Ashfang to open"), planned ones read *Uncharted*.
 
 ## Chronicles (campaign state)
 

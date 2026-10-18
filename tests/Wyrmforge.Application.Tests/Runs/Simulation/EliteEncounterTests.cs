@@ -78,8 +78,9 @@ public sealed class EliteEncounterTests
     [TestMethod]
     public void EliteStats_StayInsideTheBriefBands()
     {
-        // Every common Cinder kind has its elite; the Frost roster earns elite forms in a later slice.
-        Assert.HasCount(Enum.GetValues<EnemyKind>().Count(kind => !EnemyCatalog.Get(kind).Unique && EnemyCatalog.Get(kind).Realm == EnemyRealm.Cinder),
+        // Every common Cinder and Frost kind has its elite; a Mirror Wisp's double is an image, not a hunter.
+        Assert.HasCount(Enum.GetValues<EnemyKind>().Count(kind => !EnemyCatalog.Get(kind).Unique && kind != EnemyKind.MirrorDouble
+            && EnemyCatalog.Get(kind).Realm is EnemyRealm.Cinder or EnemyRealm.Frost),
             EliteAffixCatalog.All);
         foreach (var definition in EliteAffixCatalog.All)
         {

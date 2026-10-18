@@ -127,10 +127,10 @@ public sealed class EncounterDirector
         Phase = phase;
         phaseElapsed = 0;
         // Habitat events (brief §6): the surge is the habitat's signature pack; the final approach's climax is a Last Stand.
-        if (habitat is { } local && local != WyrmrealmHabitat.Outskirts)
+        if (habitat is { } local && !WyrmrealmHabitatCatalog.IsOpening(local))
         {
             if (phase == EncounterPhase.Surge) pendingRecipe = EnemyPackRecipeCatalog.SurgeEvent(local);
-            else if (phase == EncounterPhase.Climax && local is WyrmrealmHabitat.ScorchedApproach or WyrmrealmHabitat.Lair) pendingRecipe = EnemyPackRecipe.LastStand;
+            else if (phase == EncounterPhase.Climax && WyrmrealmHabitatCatalog.IsFinalApproach(local)) pendingRecipe = EnemyPackRecipeCatalog.LastStandFor(local);
         }
 
         if (stage == 4 && phase is EncounterPhase.Escalation or EncounterPhase.Surge or EncounterPhase.Climax)

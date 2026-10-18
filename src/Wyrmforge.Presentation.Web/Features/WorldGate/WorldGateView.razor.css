@@ -17,6 +17,17 @@
 .gate-sheet header small { color:#cead74; font-size:.66rem; letter-spacing:.14em; }
 .gate-sheet h2 { margin:2px 0 0; font:500 1.25rem/1.25 Georgia,serif; }
 .gate-sheet p { margin:0; color:#d8cfdd; font-size:.85rem; line-height:1.45; }
+/* Regions as one tap-sized list: open regions read first by their school colour; locked ones say what opens them. */
+.gate-regions { display:grid; gap:6px; }
+.gate-region { --school:#cead74; display:grid; gap:2px; min-height:48px; padding:8px 12px; border:1px solid #403346; border-left:3px solid var(--school);
+    background:#120e18; color:#eee5d4; font:inherit; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.gate-region.fire { --school:#e0743f; } .gate-region.frost { --school:#7cc4ea; } .gate-region.storm { --school:#b9a7ff; } .gate-region.arcane { --school:#c483e8; }
+.gate-region strong { font:500 .95rem/1.25 Georgia,serif; }
+.gate-region small { color:#b7aaba; font-size:.72rem; }
+.gate-region em { color:var(--school); font-size:.72rem; font-style:normal; }
+.gate-region.chosen { border-color:var(--school); background:#201828; box-shadow:inset 0 0 0 1px var(--school); }
+.gate-region.locked { border-left-color:#403346; opacity:.62; cursor:default; }
+.gate-region:focus-visible { outline:2px solid #cead74; outline-offset:2px; }
 .gate-facts { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0; }
 .gate-facts div { padding:6px 8px; border:1px solid #403346; }
 .gate-facts dt { color:#b7aaba; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; }

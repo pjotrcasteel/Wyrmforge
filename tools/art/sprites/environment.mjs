@@ -103,6 +103,21 @@ export function tiles() {
         for (let i = 0; i < 30; i++) b.set(Math.floor(random() * 64), [0, 16, 34, 48][Math.floor(random() * 4)], '#2b3b2a');
         out['tile.flag'] = b;
     }
+    // Moonlit snowfield: kept dusky blue so pale frost telegraphs still read on top of it.
+    {
+        const { b, random } = noiseTile(83, ['#232c35', '#28323c', '#2d3843', '#333e4a', '#394552'], { cells: 6, fine: 12, weight: .72 });
+        for (let i = 0; i < 16; i++) { // wind-combed sastrugi
+            const x = random() * 64, y = random() * 64, len = 5 + random() * 9;
+            b.line(x, y, x + len, y - len * .18, '#4a5868');
+            b.line(x + 1, y + 1, x + len - 1, y + 1 - len * .18, '#1d252d');
+        }
+        for (let i = 0; i < 3; i++) { // hairline ice cracks
+            let x = random() * 64, y = random() * 64;
+            for (let s = 0; s < 6; s++) { const nx = x + (random() - .3) * 6, ny = y + (random() - .5) * 5; b.line(x, y, nx, ny, '#5d7b90'); x = nx; y = ny; }
+        }
+        for (let i = 0; i < 22; i++) b.set(Math.floor(random() * 64), Math.floor(random() * 64), random() < .3 ? '#8aa4b8' : '#46535f');
+        out['tile.snow'] = b;
+    }
     return out;
 }
 
@@ -151,10 +166,22 @@ export function decals() {
         b.ellipse(9, 5, 8, 4, '#1a1110'); b.line(3, 5, 9, 4, '#a1401f'); b.line(9, 4, 15, 6, '#d0682c'); b.set(9, 4, '#ffb25a');
         out['decal.ember'] = b;
     }
+    out['decal.tuft.frost'] = tuft(19, '#3a4752', '#8399a9');
+    {
+        const b = new Bitmap(30, 12); // low snowdrift with a wind-carved lip
+        b.ellipse(15, 8, 14, 3.5, '#2a343e'); b.ellipse(14, 6, 12, 3.5, '#4b5a68'); b.ellipse(12, 5, 8, 2.2, '#62758a');
+        b.line(4, 5, 20, 3, '#8ea6ba'); b.line(22, 7, 27, 8, '#1e262e');
+        out['decal.snowdrift'] = b;
+    }
+    {
+        const b = new Bitmap(26, 12); // glassy ice patch with a cold glint
+        b.ellipse(13, 6, 12, 4.5, '#1a2631'); b.ellipse(12, 5, 9, 3, '#253746'); b.line(6, 4, 12, 3, '#7fa6bf'); b.set(13, 3, '#c9e4f2'); b.line(15, 7, 19, 6, '#3d5c70');
+        out['decal.icepatch'] = b;
+    }
     return out;
 }
 
-function pine(seed, h) {
+function pine(seed, h, snow = false) {
     const b = new Bitmap(36, h + 6), random = rng(seed), cx = 18;
     b.ellipse(cx, h + 2, 13, 3, [4, 7, 9, 150]);
     b.rect(cx - 1, h - 8, 3, 9, '#2b2019');
@@ -165,6 +192,12 @@ function pine(seed, h) {
         b.line(cx - w, y0 + 11, cx - 1, y0 + 3, '#24413a');
     }
     for (let i = 0; i < 14; i++) b.set(cx - 8 + Math.floor(random() * 16), 6 + Math.floor(random() * (h - 14)), '#2c4c40');
+    if (snow) for (let t = 0; t < 5; t++) {
+        // Snow loads the windward shoulder of every tier; no extra random draws, so the shapes stay the plain pine's.
+        const y0 = 2 + t * (h - 10) / 5, w = 4 + t * 3;
+        b.line(cx - w - 1, y0 + 11, cx, y0 + 1, '#a9bccb'); b.line(cx - w, y0 + 11, cx - 1, y0 + 4, '#7f93a4');
+        b.line(cx + 1, y0 + 2, cx + w * .6, y0 + 8, '#6d8191');
+    }
     b.outline('#060a09');
     return b;
 }
@@ -200,6 +233,8 @@ export function vegetation() {
         'prop.pine.a': pine(5, 64), 'prop.pine.b': pine(17, 56), 'prop.pine.c': pine(29, 72),
         'prop.deadtree.a': deadTree(41), 'prop.deadtree.b': deadTree(43),
         'prop.bush.a': bush(61, '#1e3326'), 'prop.bush.b': bush(67, '#23382a'), 'prop.bush.ash': bush(71, '#3a2822'),
+        'prop.pine.snow.a': pine(5, 64, true), 'prop.pine.snow.b': pine(17, 56, true), 'prop.pine.snow.c': pine(29, 72, true),
+        'prop.rock.snow': (() => { const b = new Bitmap(30, 20); b.ellipse(15, 17, 13, 2.5, [4, 7, 9, 130]); b.poly([[3, 16], [6, 6], [14, 3], [24, 6], [27, 16]], '#3b434b'); b.poly([[5, 8], [14, 3], [24, 6], [22, 9], [14, 7], [7, 10]], '#9fb2c2'); b.line(14, 3, 24, 6, '#c8d8e4'); b.line(14, 8, 17, 15, '#262c32'); b.outline('#0a0c0e'); return b; })(),
         'prop.rock.a': (() => { const b = new Bitmap(30, 20); b.ellipse(15, 17, 13, 2.5, [4, 7, 9, 130]); b.poly([[3, 16], [6, 6], [14, 3], [24, 6], [27, 16]], '#3a403e'); b.poly([[6, 6], [14, 3], [16, 9], [8, 10]], '#525a55'); b.line(14, 3, 17, 15, '#262b29'); b.outline('#0a0c0b'); return b; })(),
     };
 }
@@ -283,17 +318,50 @@ export function ruins() {
         const c = new Bitmap(18, 14); c.ellipse(9, 11, 8, 2.5, [3, 5, 7, 120]); stoneBlock(c, 2, 5, 7, 6, '#525852'); stoneBlock(c, 9, 7, 6, 5, '#474d48'); c.outline('#0b0d0c');
         out['ruin.rubble'] = c;
     }
+    // Frost sites. The concept sheets put the region in a buried, wind-scoured north: name cairns, a frozen fall of
+    // ice and a hunting sledge left where the cold caught it. They share no silhouette with the Cinder ruins.
+    const rime = (b, seed, n = 18) => { const r = rng(seed); for (let i = 0; i < n; i++) { const x = Math.floor(r() * b.width), y = Math.floor(r() * b.height); if (b.alpha(x, y) > 200) b.set(x, y, '#b8cad8'); } };
+    const freeze = (b, seed) => { rime(b, seed); b.outline('#0a0d10'); return b; };
+    {   // cairnstack: three stacked name cairns, snow on every shoulder
+        const b = base(84, 52);
+        for (const [x, h] of [[14, 3], [38, 4], [62, 3]]) for (let k = 0; k < h; k++) {
+            const w = 16 - k * 3, y = 38 - k * 7;
+            stoneBlock(b, x - w / 2 + 2, y, w, 7, ['#4a525a', '#545d66', '#5e6872', '#47505a'][k]);
+            b.line(x - w / 2 + 2, y, x + w / 2, y, '#b9cbd9');
+        }
+        out['ruin.cairnstack'] = freeze(b, 11);
+    }
+    {   // icefall: a frozen cascade of blue shards leaning out of a drift
+        const b = base(80, 54);
+        b.ellipse(40, 40, 30, 7, '#4e5f6e');
+        for (const [x, top, lean] of [[18, 22, -3], [30, 10, -1], [42, 4, 2], [54, 14, 3], [64, 26, 4]]) {
+            b.poly([[x - 5, 42], [x + lean, top], [x + 5, 42]], '#3d6a86'); b.line(x - 2, 40, x + lean, top + 2, '#8fc4dd'); b.line(x + 3, 41, x + lean + 1, top + 6, '#1f3a4c');
+        }
+        b.ellipse(40, 44, 26, 4, '#6c8090'); b.line(18, 43, 60, 42, '#9fb4c4');
+        out['ruin.icefall'] = freeze(b, 12);
+    }
+    {   // sledge: a hunter's sledge half under the snow, a broken runner and a frozen pack
+        const b = base(88, 46);
+        b.poly([[12, 26], [62, 22], [64, 30], [14, 34]], '#4a3a2e'); for (let x = 18; x < 60; x += 7) b.line(x, 25, x + 1, 32, '#30251c');
+        b.line(8, 36, 66, 31, '#6e6458', 2); b.line(66, 31, 72, 25, '#6e6458', 2); b.line(70, 40, 80, 36, '#5a5248', 2);
+        stoneBlock(b, 28, 14, 18, 10, '#5b4a3c'); b.line(28, 14, 46, 14, '#b4c6d4');
+        b.ellipse(24, 34, 16, 4, '#5f7282'); b.ellipse(54, 30, 10, 3, '#6c8092');
+        out['ruin.sledge'] = freeze(b, 13);
+    }
     return out;
 }
 
 // Rune walls: authoritative C# barrier rectangles are skinned with a cap, repeating stone courses and a footing.
 export function walls() {
     const out = {};
-    for (const [name, tone] of [['valley', '#4a514b'], ['ash', '#4c3c36'], ['ridge', '#474d52']]) {
+    for (const [name, tone] of [['valley', '#4a514b'], ['ash', '#4c3c36'], ['ridge', '#474d52'], ['snow', '#48525c']]) {
+        // Moss grows in the Cinder joints; on the ice the same joints hold packed snow.
+        const growth = name === 'snow' ? '#b7c9d6' : '#3b5a3c', footGrowth = name === 'snow' ? '#5c6f80' : '#203024';
+        const faceGrowth = name === 'snow' ? '#8ea3b4' : '#2f4a31';
         const cap = new Bitmap(32, 10), r = rng(name.length * 13);
         cap.rect(0, 2, 32, 8, mix(tone, '#c0c6b2', .2));
         for (let x = 0; x < 32; x += 8) { cap.rect(x, 2, 1, 8, mix(tone, '#000000', .35)); cap.rect(x + 1, 2, 7, 1, mix(tone, '#e0dccb', .35)); }
-        for (let i = 0; i < 9; i++) { const x = Math.floor(r() * 32); cap.line(x, 3, x + (r() < .5 ? -1 : 1), 0, '#3b5a3c'); }
+        for (let i = 0; i < 9; i++) { const x = Math.floor(r() * 32); cap.line(x, 3, x + (r() < .5 ? -1 : 1), 0, growth); }
         cap.rect(0, 9, 32, 1, mix(tone, '#000000', .5));
         out[`wall.${name}.cap`] = cap;
         const face = new Bitmap(32, 16);
@@ -304,11 +372,11 @@ export function walls() {
             face.rect(x + 1, row * 8 + 7, 11, 1, mix(t, '#000000', .3));
         }
         face.rect(0, 0, 32, 1, mix(tone, '#000000', .55)); face.rect(0, 8, 32, 1, mix(tone, '#000000', .55));
-        for (let i = 0; i < 6; i++) face.set(Math.floor(r() * 32), [0, 8][Math.floor(r() * 2)], '#2f4a31');
+        for (let i = 0; i < 6; i++) face.set(Math.floor(r() * 32), [0, 8][Math.floor(r() * 2)], faceGrowth);
         out[`wall.${name}.face`] = face;
         const foot = new Bitmap(32, 6);
         foot.rect(0, 0, 32, 4, mix(tone, '#000000', .45));
-        for (let i = 0; i < 10; i++) foot.set(Math.floor(r() * 32), 4 + Math.floor(r() * 2), '#203024');
+        for (let i = 0; i < 10; i++) foot.set(Math.floor(r() * 32), 4 + Math.floor(r() * 2), footGrowth);
         out[`wall.${name}.foot`] = foot;
     }
     // Failing runes mounted on the wall face: lit and guttering frames per school colour.

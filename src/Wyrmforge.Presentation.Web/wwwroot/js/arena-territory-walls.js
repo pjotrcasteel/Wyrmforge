@@ -4,11 +4,11 @@ import { artReady, drawArtFrame } from './art-atlas.js';
 // exact C# rectangles; this only projects them as short 2.5D curtain walls whose front face
 // rises from the footprint's south edge, so depth sorting by foot line is correct.
 const CAP = { w: 32, h: 10 }, FACE = { w: 32, h: 16 }, FOOT = { h: 6 }, RUNE = 14;
-const TOP_FILL = { valley: '#2b332f', ash: '#2e2522', ridge: '#2a2e33' };
+const TOP_FILL = { valley: '#2b332f', ash: '#2e2522', ridge: '#2a2e33', snow: '#8193a3' };
 export const TERRITORY_WALL_RISE = FACE.h;
 
 export function territoryWallStyle(biome) {
-    return biome === 'ash' || biome === 'ridge' ? biome : 'valley';
+    return biome === 'ash' || biome === 'ridge' || biome === 'snow' ? biome : 'valley';
 }
 
 export function territoryRuneSchool(element) {
