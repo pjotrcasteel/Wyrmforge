@@ -192,3 +192,27 @@ body:has(.spellcraft) .wyrmforge-sound-controls { display:none; }
 /* Shared pixel icon wrapper (Shared/GameIcon.razor). Combined glyphs sit side by side. */
 .game-icon { display: inline-flex; align-items: center; justify-content: center; gap: 2px; line-height: 1; vertical-align: middle; }
 .game-icon .px-icon { flex: none; }
+
+
+/* Sound controls are Settings content, not a permanent screen overlay.
+   audio.js re-parents the existing controls into the Settings host on navigation. */
+.wyrmforge-sound-controls { display:none !important; }
+.settings-audio-slot > .wyrmforge-sound-controls {
+  display:flex !important; flex-wrap:wrap; align-items:center; gap:10px;
+  position:static; inset:auto; width:100%; max-width:100%; padding:0;
+  background:transparent; box-shadow:none; z-index:auto;
+}
+.settings-audio-slot .wyrmforge-sound-lab {
+  position:static; order:5; flex:0 0 100%; width:100%; max-width:none;
+  max-height:none; overflow:visible; margin-top:8px; padding:15px;
+  border:1px solid #524259; border-radius:10px; background:#1b1523;
+}
+.settings-audio-slot .wyrmforge-sound-status {
+  position:static; order:4; flex:0 0 100%; white-space:normal;
+  color:#c7b8d1; font-size:.66rem; min-height:1em; text-shadow:none;
+}
+.settings-audio-slot .wyrmforge-sound-test,
+.settings-audio-slot .wyrmforge-sound-toggle,
+.settings-audio-slot .wyrmforge-sound-lab-toggle { flex:1 1 110px; min-height:46px; border-radius:8px; }
+.settings-audio-slot .wyrmforge-sound-samples { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.settings-audio-slot .wyrmforge-sound-volume { grid-template-columns:66px minmax(0,1fr) 36px; }
