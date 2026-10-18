@@ -16,6 +16,7 @@ using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells.Contextual;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -98,6 +99,7 @@ public sealed partial class RunSimulation
         if (!availablePrimarySpells.Contains(id) || elapsed > 0 || mapState.EncounterActive || completedRouteNodes.Count > 0 || IsEnded)
             return false;
         if (!build.Spells.TryChoosePrimary(id)) return false;
+        ApplyPreparedLaboratoryMutation();
         RefreshBuildModifiers();
         RefreshBuildHud();
         return true;
@@ -156,9 +158,11 @@ public sealed partial class RunSimulation
             return CreateSnapshot();
         }
         delta = Math.Clamp(delta, 0, 0.05);
+        reactionBudget.BeginStep();
         BeginPlayerDamageFrame(delta);
         UpdateCombatFeedback(delta);
         elapsed += delta;
+        AdvanceControlTelemetry(delta);
         UpdatePlayer(delta, movement, width, height);
         CollectEnvironmentSupplies(width, height);
         UpdateExperienceShards(delta);
@@ -169,7 +173,9 @@ public sealed partial class RunSimulation
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
         UpdateSpellcasting(delta, movement.IsMoving);
-        UpdateEnemies(delta);
+        UpdateContextualEffects(delta);
+        // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.
+        if (!UpdateReliquaryReveal(delta)) UpdateEnemies(delta);
         RebuildCombatSpatialIndex();
         UpdateBurningGrounds(delta);
         UpdateProjectiles(delta, width, height);
@@ -202,12 +208,14 @@ public sealed partial class RunSimulation
         var choice = pendingChoices.SingleOrDefault(candidate => candidate.Id == id);
         if (choice is null || !levelChoiceService.ApplyForProgression(build, choice, level + 1, PendingRewardSchool.HasValue)) return false;
         choiceCount++;
+        RecordSelection(choice);
         ApplyChoiceEffects(choice);
         RefreshBuildHud();
 
         // Rank III no longer grants a free immediate evolution.
         // The player earns a separate evolution choice at a later five-level breakthrough.
         pendingChoices = [];
+        CloseFateweaveRound();
         if (mapState.EncounterActive || dragonEncounterStarted) ReleaseUpgradePower();
         if (PendingRewardSchool.HasValue)
         {
@@ -277,6 +285,14 @@ public sealed partial class RunSimulation
     {
         SynergyIds = build.Synergies.Snapshot().ToArray(),
         ExperienceEarned = experienceEarned,
+        PreparedMutation = activeLaboratoryMutation,
+        ReactionsTriggered = reactionsTriggered,
+        EnemyRecords = CreateEnemyRecords(),
+        ElitesSlain = defeatedElites.Select(defeat => defeat.Affix).Distinct().Order().ToArray(),
+        ReliquarySlain = ReliquaryDefeat is not null,
+        Draft = DraftTelemetry,
+        Control = ControlTelemetry,
+        ContextualCasts = ContextualCasts,
     };
 
     public RunRenderSnapshot CreateSnapshot()
@@ -286,10 +302,23 @@ public sealed partial class RunSimulation
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
+                WardCharge = WardCharge,
+                Chill = player.Chill.Stacks,
+                OnBlackIce = PlayerOnBlackIce,
             },
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
-                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id)).ToArray(),
+                Math.Clamp(enemy.Health / enemy.MaxHealth, 0, 1), hitFlashRemaining.ContainsKey(enemy.Id), CreateStatusSnapshots(enemy.Statuses), enemy.Kind, enemy.Id,
+                CreateEnemyTelegraph(enemy))
+            {
+                ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
+                Routed = enemy.RoutedRemaining > 0,
+                Revived = enemy.Revived,
+                Opacity = enemy.DrownedWraith?.Opacity ?? FrostOpacity(enemy),
+                RimeArmor = RimeArmorRatio(enemy),
+                Elite = enemy.IsElite ? enemy.Elite.ToString() : null,
+                Empowered = IsWardEmpowered(enemy),
+            }).ToArray(),
             CreateDragonSnapshot(),
             CreateDragonBreathSnapshot(),
             splashPulses.Select(pulse => new SplashPulseRenderSnapshot(pulse.Position.X, pulse.Position.Y, pulse.Radius, pulse.Progress)).ToArray(),
@@ -324,6 +353,25 @@ public sealed partial class RunSimulation
             Exit = CreateTrailExitSnapshot(),
             World = arenaEnvironment is not null && (mapState.EncounterActive || trailExitPending) ? new ArenaWorldRenderSnapshot(arenaWidth, arenaHeight) : null,
             CastMotion = CreateCastMotionSnapshot(),
+            HostileProjectiles = CreateHostileProjectileSnapshots(),
+            AshRemains = CreateAshRemainsSnapshots(),
+            WraithRipples = CreateWraithRippleSnapshots(),
+            Reliquary = CreateReliquarySnapshot(),
+            ReliquaryFields = CreateReliquaryFieldSnapshots(),
+            BellWarden = CreateBellWardenSnapshot(),
+            BellShockwaves = CreateBellShockwaveSnapshots(),
+            PermafrostScars = CreatePermafrostScarSnapshots(),
+            GlassTethers = CreateGlassTetherSnapshots(),
+            GlassPrisons = CreateGlassPrisonSnapshots(),
+            WinterRings = CreateWinterRingSnapshots(),
+            Icicles = CreateIcicleSnapshots(),
+            WardPulse = CreateWardPulseSnapshot(),
+            IceLances = CreateIceLanceSnapshots(),
+            SplinterBlooms = CreateSplinterBloomSnapshots(),
+            BlackIce = CreateBlackIceSnapshots(),
+            SnowClouds = CreateSnowCloudSnapshots(),
+            RimeHusks = CreateRimeHuskSnapshots(),
+            AvalancheRings = CreateAvalancheRingSnapshots(),
         };
     }
 
@@ -382,7 +430,7 @@ public sealed partial class RunSimulation
             {
                 IsActive = spell.Id == build.Spells.ActiveSpell,
             };
-        }).ToArray();
+        }).Concat(contextualPolicy is null ? [] : [new SpellHudSnapshot(WardingPulse.Icon, WardingPulse.Name, 0) { Contextual = true }]).ToArray();
         synergyHud = SynergyCatalog.All.Where(synergy => build.Synergies.Contains(synergy.Id)).Select(synergy => new SynergyHudSnapshot(synergy.Icon, synergy.Name)).ToArray();
     }
 }

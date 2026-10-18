@@ -17,7 +17,7 @@
             <div class="resonance-panel" aria-label="Current magic resonance">
                 @foreach (var entry in Resonance)
                 {
-                    <span>@SchoolIcon(entry.School) @entry.School <b>@entry.Value</b></span>
+                    <span><i class="px-icon px-sm px-@entry.School.ToString().ToLowerInvariant()" aria-hidden="true"></i> @entry.School <b>@entry.Value</b></span>
                 }
                 <DragonSignsView Signs="Signs" Compact="true" />
             </div>
@@ -116,11 +116,11 @@
                         @if (IsCurrent(node)) { <span class="current-marker">YOU</span> }
                         <span class="node-core">
                             <svg class="node-main-icon" viewBox="0 0 46 34" aria-hidden="true"><path d="@LandmarkPath(node)" /></svg>
-                            @if (node.AttunementSchool is { } school) { <span class="node-school">@SchoolIcon(school)</span> }
+                            @if (node.AttunementSchool is { } school) { <span class="node-school"><i class="px-icon px-sm px-@school.ToString().ToLowerInvariant()" aria-hidden="true"></i></span> }
                             @if (IsCompleted(node) || selectedNode?.Id == node.Id) { <span class="node-check">✓</span> }
                             @if (node.Rarity == WyrmrealmNodeRarity.Rare) { <span class="node-rare" aria-label="Rare trail">✦</span> }
                         </span>
-                        <span class="node-name">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : node.EncounterName)</span>
+                        <span class="node-name" title="@node.EncounterName">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : WyrmrealmHabitatCatalog.ShortName(node.Habitat))</span>
                         @if (node.Site?.BonusRelic == true) { <small class="node-bonus">◆ BONUS RELIC</small> }
                         <span class="node-badges">
                             @foreach (var badge in NodeBadges(node)) { <span class="node-badge @badge.ClassName" title="@badge.Label" aria-label="@badge.Label">@badge.Icon</span> }
@@ -145,8 +145,8 @@
                         {
                             <span class="sheet-road">@road.Length road · @road.Encounters fights @(road.BonusRelic ? "· Bonus relic" : "")</span>
                         }
-                        <span class="sheet-encounter">@selected.EncounterName</span>
-                        <span class="sheet-guarantee">@SchoolIcon(route.Reward.AttunementSchool) @route.Reward.AttunementSchool upgrade · guaranteed</span>
+                        <span class="sheet-encounter">@WyrmrealmHabitatCatalog.DisplayName(selected.Habitat) · @selected.EncounterName</span>
+                        <span class="sheet-guarantee"><i class="px-icon px-sm px-@route.Reward.AttunementSchool.ToString().ToLowerInvariant()" aria-hidden="true"></i> @route.Reward.AttunementSchool upgrade · guaranteed</span>
                         @if (route.Reward.RecoveryFraction > 0) { <span>♥ @($"{route.Reward.RecoveryFraction * 100:0}%") recovery</span> }
                         @if (route.Reward.Relic is not null) { <span>◆ Relic cache</span> }
                         @if (selected.Rarity == WyrmrealmNodeRarity.Rare) { <span class="rare-trait">✦ Rare · stronger enemies</span> }

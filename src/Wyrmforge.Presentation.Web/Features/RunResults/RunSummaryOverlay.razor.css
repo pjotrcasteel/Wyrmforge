@@ -175,9 +175,10 @@
 @keyframes ascendant-victory-reveal { from {opacity:0;transform:scale(.95);filter:brightness(1.6);}to {opacity:1;transform:scale(1);filter:brightness(1);} }
 @media(prefers-reduced-motion:reduce) { .run-ascendant-victory { animation:none; } }
 
-.run-playtest-feedback { display:block;width:100%;min-height:36px;border:1px solid #554166;border-radius:9px;background:rgba(85,56,115,.13);color:#d9b9f0;font-size:.71rem;font-weight:850;cursor:pointer;touch-action:manipulation; }
+.run-playtest-feedback { display:block;width:100%;min-height:42px;border:1px solid #8a63ad;border-radius:10px;background:linear-gradient(125deg,rgba(150,98,200,.32),rgba(98,62,134,.22));color:#f0dcff;font-size:.76rem;font-weight:900;letter-spacing:.04em;cursor:pointer;touch-action:manipulation; }
 .run-playtest-feedback:focus-visible { outline:2px solid #e2bfff;outline-offset:3px; }
 
 .quest-reward-ready{width:100%;min-height:48px;margin-bottom:12px;border:1px solid #cead74;background:#302137;color:#eee5d4;font:inherit;font-size:.85rem;cursor:pointer}
+.research-prompt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-color:#7fb8d4;background:#1d2633;text-align:left;font-size:.78rem;line-height:1.35}.research-prompt b{margin-left:auto;color:#9fdcf0;font-size:.66rem;letter-spacing:.12em;white-space:nowrap}
 
 .hunter-run-progress{display:grid;gap:7px;margin-bottom:12px;padding:12px;border:1px solid #756044;background:#261c2f}.hunter-run-progress strong{font-size:.85rem;color:#eee5d4}.hunter-run-progress span,.hunter-run-progress small{font-size:.75rem;color:#cead74}.hunter-run-progress progress{width:100%;height:5px;accent-color:#cead74}

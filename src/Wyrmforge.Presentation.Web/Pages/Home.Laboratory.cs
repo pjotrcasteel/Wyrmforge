@@ -1,0 +1,119 @@
+using System.Text.Json;
+using Microsoft.JSInterop;
+using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Progression.Laboratory;
+
+namespace Wyrmforge.Presentation.Web.Pages;
+
+public partial class Home
+{
+    private const string LaboratoryKey = "wyrmforge.laboratory.v1";
+    private readonly LaboratoryState laboratory = new();
+    private IReadOnlyList<LaboratoryMutationId> activeLaboratoryMutations = [];
+    private string? laboratoryNotice;
+    private DragonId? activeResearchLead;
+    private Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceId? activeResearchSpecimen;
+    private LaboratoryPrompt? researchPrompt;
+    private bool openLaboratoryOnReturn;
+    private LaboratoryMutationId? laboratoryFocus;
+
+    private void DismissLaboratoryNotice() => laboratoryNotice = null;
+
+    private void PrepareLaboratoryRun()
+    {
+        activeLaboratoryMutations = laboratory.PreparedFor(selection.Selected);
+        activeResearchLead = laboratory.LeadWyrm(essenceVault);
+        activeResearchSpecimen = activeResearchLead is not null && laboratory.Tracked is { } tracked ? LaboratoryCatalog.Get(tracked).Stabilizer : null;
+        researchPrompt = null;
+    }
+
+    private async Task TrackLaboratoryMutationAsync(LaboratoryMutationId? id)
+    {
+        if (id is { } mutation) { if (!laboratory.Track(mutation, essenceVault)) return; }
+        else laboratory.Untrack();
+        await TrySetLaboratoryAsync();
+    }
+
+    // Runs after the hunt's Essences are stored: a secured specimen ends its lead, a finished hunt that
+    // missed it uses one of the lead's hunts, then the summary points at the most useful research step.
+    private async Task RefreshResearchPromptAsync(bool leadHunted = false)
+    {
+        var changed = laboratory.ReconcileLead(essenceVault);
+        if (leadHunted && laboratory.RecordLeadHunt(essenceVault) is { } lapsed)
+        {
+            var mutation = LaboratoryCatalog.Get(lapsed);
+            laboratoryNotice = $"The {DragonCatalog.Get(mutation.SpecimenWyrm).Name} trail went cold after {LaboratoryState.LeadHuntLimit} hunts. Track {mutation.Name} again to renew it.";
+            changed = true;
+        }
+        else changed |= leadHunted;
+        if (changed) await TrySetLaboratoryAsync();
+        researchPrompt = ForgeAvailable ? LaboratoryAdvisor.Next(laboratory, essenceVault, selection.Selected) : null;
+    }
+
+    private void OpenLaboratoryFromSummary()
+    {
+        laboratoryFocus = researchPrompt?.Mutation;
+        ReturnToForge();
+        openLaboratoryOnReturn = true;
+    }
+
+    private async Task<LaboratoryExperimentResult> RunLaboratoryExperimentAsync(LaboratoryExperimentId id)
+    {
+        var result = laboratory.Run(id, essenceVault);
+        if (result.Novel) await TrySetLaboratoryAsync();
+        return result;
+    }
+
+    // Consent is collected by the Laboratory UI; this is only invoked after the player confirms the exact spend.
+    private async Task<bool> StabilizeLaboratoryMutationAsync(LaboratoryMutationId id)
+    {
+        var stabilizer = LaboratoryCatalog.Get(id).Stabilizer;
+        if (!laboratory.Stabilize(id, essenceVault, consentToConsume: true)) return false;
+        if (selectedOffering == stabilizer && essenceVault.Count(stabilizer) == 0) selectedOffering = null;
+        // Save the recipe before the vault: an interrupted write can only leave the player with an extra Essence, never a lost one.
+        await TrySetLaboratoryAsync();
+        await TrySetEssenceVaultAsync();
+        return true;
+    }
+
+    // A socket equips (moving or swapping as needed); no socket unequips the mutation.
+    private async Task EquipLaboratoryMutationAsync(LaboratoryMutationId id, ArcaneMutationSocketId? socket)
+    {
+        if (socket is { } target)
+        {
+            if (laboratory.Equip(id, target, selection.Selected) != MutationEquipResult.Equipped) return;
+        }
+        else if (!laboratory.Unequip(id)) return;
+        laboratoryNotice = null;
+        await TrySetLaboratoryAsync();
+    }
+
+    private async Task SaveArcaneSelectionAsync()
+    {
+        await SaveArcaneBuildAsync();
+        if (laboratory.ReconcileSocket(selection.Selected) is not { } message) return;
+        laboratoryNotice = message;
+        await TrySetLaboratoryAsync();
+    }
+
+    private async Task TryLoadLaboratoryAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, LaboratoryKey);
+            if (string.IsNullOrWhiteSpace(stored)) return;
+            laboratory.Restore(JsonSerializer.Deserialize<LaboratorySave>(stored));
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task TrySetLaboratoryAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, LaboratoryKey, JsonSerializer.Serialize(laboratory.ToSave()));
+        }
+        catch (JSException) { }
+    }
+}

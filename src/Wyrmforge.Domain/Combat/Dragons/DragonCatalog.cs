@@ -9,7 +9,7 @@ public static class DragonCatalog
         "Ashfang",
         "Cinder Wyrm",
         SpellSchool.Fire,
-        new DragonStats(34, 1100, 78),
+        new DragonStats(60, 1100, 78),
         new DragonCombatProfile(
             new DragonMovementProfile(DragonMovementStyle.Pursue, 120, 190, 0, new DragonPhaseValues(1, 1.25)),
             new DragonAttackProfile(
@@ -27,7 +27,7 @@ public static class DragonCatalog
         "Stormcoil",
         "Tempest Wyrm",
         SpellSchool.Storm,
-        new DragonStats(32, 1500, 92),
+        new DragonStats(56, 1500, 92),
         new DragonCombatProfile(
             new DragonMovementProfile(DragonMovementStyle.Orbit, 160, 235, 0.55, new DragonPhaseValues(1, 1.2)),
             new DragonAttackProfile(
@@ -45,7 +45,7 @@ public static class DragonCatalog
         "Rimeclaw",
         "Glacier Wyrm",
         SpellSchool.Frost,
-        new DragonStats(35, 1350, 72),
+        new DragonStats(61, 1350, 72),
         new DragonCombatProfile(
             new DragonMovementProfile(DragonMovementStyle.Kite, 210, 305, 0.32, new DragonPhaseValues(1, 1.16)),
             new DragonAttackProfile(
@@ -63,7 +63,7 @@ public static class DragonCatalog
         "Voidweaver",
         "Aether Wyrm",
         SpellSchool.Arcane,
-        new DragonStats(31, 1425, 88),
+        new DragonStats(54, 1425, 88),
         new DragonCombatProfile(
             new DragonMovementProfile(DragonMovementStyle.Orbit, 145, 255, 0.88, new DragonPhaseValues(1, 1.3)),
             new DragonAttackProfile(

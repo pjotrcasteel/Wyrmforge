@@ -5,14 +5,25 @@ import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
-import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions } from './arena-enemy-art.js';
+import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
+import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
+import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
+import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
+import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
+import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
+import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
+import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
+import { drawLightningTrace } from './arena-lightning-vfx.js';
+import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, drawRimeHusk, drawRimeArmor } from './arena-frost-vfx.js';
 
 const arenas = new WeakMap();
 
 export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
+    // Atlases stream in; until they decode, every layer uses its code-painted fallback.
+    loadArt(new URL('../art/', import.meta.url).href);
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -187,16 +198,36 @@ function draw(state, snapshot, width, height) {
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
+    for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
+    for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
+    for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
+    for (const husk of snapshot.rimeHusks ?? []) drawRimeHusk(ctx, husk);
+    drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    drawWinterBellGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
+    drawGlassReliquaryGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
+    // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
+    for (const enemy of snapshot.enemies) {
+        drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
+        drawShieldGuard(ctx, enemy);
+        drawEnemyTelegraph(ctx, enemy);
+    }
+    for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileGround(ctx, ember);
+    for (const bloom of snapshot.splinterBlooms ?? []) drawSplinterBloom(ctx, bloom);
+    for (const wave of snapshot.avalancheRings ?? []) drawAvalancheWave(ctx, wave);
+    drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
+    if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const depthLayers = [
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
-        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight),
+        ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
     ];
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         if (layer.kind === 'masonry') {
@@ -204,13 +235,17 @@ function draw(state, snapshot, width, height) {
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
             drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                enemyPoses.get(enemy.entityId) ?? 0);
+                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId));
+            drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
                 sampleSpellLight(spellLights, snapshot.player.x, snapshot.player.y),
-                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches));
+                updateMageWalk(state.mageWalk, snapshot.player, visualSeconds, state.reducedMotion.matches),
+                state.mageWalk.facing);
         }
     }
+    drawReliquaryEmergence(ctx, snapshot.reliquary);
+    drawBellWardenEntrance(ctx, snapshot.bellWarden);
     if (snapshot.powerBurst) {
         const pulse = snapshot.powerBurst;
         const radius = pulse.radius * (state.reducedMotion.matches ? 0.7 : 0.15 + 0.85 * pulse.progress);
@@ -225,22 +260,20 @@ function draw(state, snapshot, width, height) {
         ctx.restore();
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
-    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon);
+    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches);
     // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
+    for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
+    for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);
+    drawWinterBellAir(ctx, snapshot);
+    drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
+    for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
-    for (const trace of snapshot.lightning) {
-        ctx.beginPath();
-        ctx.moveTo(trace.fromX, trace.fromY);
-        ctx.lineTo(trace.toX, trace.toY);
-        ctx.strokeStyle = `rgba(255, 229, 105, ${Math.min(1, trace.life / 0.12)})`;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-    }
+    for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
 
     for (const burst of snapshot.essenceBursts) {
         const alpha = Math.min(1, burst.life / 0.2);
@@ -274,7 +307,12 @@ function draw(state, snapshot, width, height) {
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
+    drawReliquaryHushVeil(ctx, snapshot.reliquary, width, height);
     if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
+    else {
+        drawReliquaryBar(ctx, snapshot.reliquary, width);
+        drawBellWardenBar(ctx, snapshot.bellWarden, width);
+    }
     if (snapshot.hunt && snapshot.hunt.stage !== 2) drawHuntStageBanner(ctx, snapshot.hunt, snapshot.dragon, width, height);
     drawTouchIndicator(state, ctx);
     drawPerformanceCounter(state, ctx, snapshot, width, height);
@@ -646,6 +684,12 @@ function drawWyrmEntranceSequence(ctx, hunt, dragon, width, height) {
     ctx.restore();
 }
 function drawExperienceShard(ctx, shard) {
+    if (artReady()) {
+        // Faceted crystal sprite sized by value; a slow 2-frame glint replaces the rotating square.
+        const size = shard.value >= 6 ? 'large' : shard.value >= 3 ? 'medium' : 'small';
+        const glint = Math.floor(performance.now() / 420 + shard.x * .07) % 2;
+        if (drawArtFrame(ctx, 'environment', `shard.${size}.${glint}`, Math.round(shard.x), Math.round(shard.y))) return;
+    }
     const valueScale = Math.min(1, Math.log2(Math.max(1, shard.value)) / 4);
     const pulse = 0.9 + Math.sin(performance.now() / 130 + shard.x * 0.03 + shard.y * 0.02) * 0.1;
     const size = (5 + valueScale * 5) * pulse;
@@ -719,8 +763,9 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.restore();
 }
 
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0) {
-    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase);
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1) {
+    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
+    drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
     ctx.strokeStyle = `rgba(255, 205, 190, ${0.18 + damage * 0.5})`;
@@ -752,6 +797,65 @@ function enemyEdgeColor(kind) {
     if (kind === 2) return '#ffb07a';
     if (kind === 3) return '#d56b75';
     return '#e57b82';
+}
+
+// Warding Pulse readiness: a thin ground arc at the hunter's feet that closes as the ward recovers (Hades shows cast ammo on
+// the hero, not in a corner). Full ring = the ward will answer the next crowd or windup.
+function drawWardReadiness(ctx, player, seconds, reducedMotion) {
+    if (player?.wardCharge === null || player?.wardCharge === undefined) return;
+    const charge = Math.max(0, Math.min(1, player.wardCharge));
+    const radius = (player.radius || 12) + 9;
+    ctx.save();
+    ctx.translate(player.x, player.y + (player.radius || 12) * .55);
+    ctx.scale(1, .42);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(221, 214, 255, .14)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge);
+    const ready = charge >= 1;
+    const glow = ready && !reducedMotion ? .55 + .2 * Math.sin(seconds * 3) : ready ? .65 : .32;
+    ctx.strokeStyle = `rgba(221, 214, 255, ${glow})`;
+    ctx.lineWidth = ready ? 2.6 : 2;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// The pulse itself: a pale double ring that sweeps out to the exact push radius, with short outward ticks so the shove reads
+// as a push rather than a hit. Reduced motion shows the final ring fading in place.
+function drawWardPulse(ctx, pulse, reducedMotion) {
+    const progress = Math.min(1, Math.max(0, pulse.progress));
+    const eased = reducedMotion ? 1 : 1 - (1 - progress) * (1 - progress);
+    const radius = pulse.radius * (.2 + .8 * eased);
+    const alpha = 1 - progress;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(pulse.x, pulse.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 190, 255, ${alpha * .1})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(232, 228, 255, ${alpha * .9})`;
+    ctx.lineWidth = 3.2 - progress * 1.6;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(pulse.x, pulse.y, radius * .82, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(170, 156, 240, ${alpha * .55})`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(232, 228, 255, ${alpha * .75})`;
+    ctx.lineWidth = 2;
+    for (let index = 0; index < 12; index++) {
+        const angle = index / 12 * Math.PI * 2;
+        const inner = radius + 3;
+        const outer = radius + 3 + 7 * alpha;
+        ctx.beginPath();
+        ctx.moveTo(pulse.x + Math.cos(angle) * inner, pulse.y + Math.sin(angle) * inner);
+        ctx.lineTo(pulse.x + Math.cos(angle) * outer, pulse.y + Math.sin(angle) * outer);
+        ctx.stroke();
+    }
+    ctx.restore();
 }
 
 function drawSplashPulse(ctx, pulse, school) {
@@ -875,7 +979,7 @@ function drawDragonBreath(ctx, breath, school) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon) {
+function drawDragon(ctx, dragon, reducedMotion = false) {
     const palette = schoolPalette(dragon.school);
     ctx.save();
     ctx.translate(dragon.x, dragon.y);
@@ -899,7 +1003,16 @@ function drawDragon(ctx, dragon) {
         ctx.shadowBlur = 0;
     }
 
-    if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
+    const art = artReady() ? `wyrm.${dragon.school}.${dragon.frozen ? 'frozen' : `p${dragon.phase === 2 ? 2 : 1}.f${reducedMotion ? 0 : Math.floor(performance.now() / 280) % 2}`}` : null;
+    if (art && hasArtFrame('wyrms', art)) {
+        // Authored wyrm sprite scaled to the canonical C# radius; flapping is presentation only.
+        ctx.fillStyle = 'rgba(4,6,9,.34)';
+        ctx.beginPath();
+        ctx.ellipse(6, dragon.radius * 1.15, dragon.radius * 1.5, dragon.radius * .38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        drawArtFrame(ctx, 'wyrms', art, 0, 0, { scale: dragon.radius / 34 });
+    }
+    else if (dragon.school === 0) drawArcaneWyrm(ctx, dragon, palette);
     else if (dragon.school === 1) drawFireWyrm(ctx, dragon, palette);
     else if (dragon.school === 2) drawFrostWyrm(ctx, dragon, palette);
     else drawStormWyrm(ctx, dragon, palette);

@@ -1,0 +1,18 @@
+@namespace Wyrmforge.Presentation.Web.Shared
+@if (GameIconMap.Resolve(Glyph) is { } ids)
+{
+    <span class="game-icon @Class" aria-hidden="true" data-glyph="@Glyph">@foreach (var id in ids)
+    {<i class="px-icon @SizeClass px-@id"></i>}</span>
+}
+else
+{
+    <span class="game-icon game-icon-glyph @Class" aria-hidden="true">@Glyph</span>
+}
+
+@code {
+    [Parameter] public string? Glyph { get; set; }
+    [Parameter] public string Size { get; set; } = "md";
+    [Parameter] public string? Class { get; set; }
+
+    private string SizeClass => Size switch { "sm" => "px-sm", "lg" => "px-lg", _ => string.Empty };
+}

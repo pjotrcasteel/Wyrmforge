@@ -45,7 +45,7 @@
         @if (MapCombatActive && CurrentMapNode is { } activeNode)
         {
             <section class="encounter-objective" aria-label="Current encounter objective">
-                <span title="@activeNode.Name">TRAIL @(CompletedMapNodes.Count + 1) · @activeNode.EncounterName.ToUpperInvariant()</span>
+                <span title="@activeNode.Name · @activeNode.EncounterName">TRAIL @(CompletedMapNodes.Count + 1) · @WyrmrealmHabitatCatalog.DisplayName(activeNode.Habitat).ToUpperInvariant()</span>
                 <div class="encounter-objective-progress">
                     <em class="encounter-phase">@EncounterPhaseLabel <small data-trail="phase-time"></small></em>
                     <strong data-trail="objective">@CurrentMapNodeKills/@CurrentMapNodeKillsRequired kills</strong>
@@ -73,11 +73,11 @@
     @if (MapCombatActive && !trailTransition && CurrentMapNode is { } cueNode)
     {
         <div @key="(cueNode.Id, CurrentEncounterPhase)" class="encounter-change" aria-live="polite">
-            @EncounterCueCatalog.Cue(cueNode.EncounterCueStage, CurrentEncounterPhase)
+            @EncounterCueCatalog.Cue(cueNode, CurrentEncounterPhase)
         </div>
         @if (CurrentEncounterPhase != EncounterPhase.BreathingRoom)
         {
-            <div @key="(cueNode.Id, CurrentEncounterPhase, 1)" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode.EncounterCueStage)" aria-hidden="true"></div>
+            <div @key="(cueNode.Id, CurrentEncounterPhase, 1)" class="encounter-edge-cue @EncounterCueCatalog.EdgeClass(cueNode)" aria-hidden="true"></div>
         }
     }
 
@@ -100,7 +100,7 @@
                 @if (CurrentOffering is not null && RunOffering is { } offeringId)
                 {
                     var source = DragonEssenceCatalog.Get(offeringId);
-                    <span title="@CurrentOffering.Effect">🔥 OFFERING • @source.Icon @source.Name</span>
+                    <span title="@CurrentOffering.Effect">🔥 OFFERING • <GameIcon Glyph="@(source.Icon)" Size="sm" /> @source.Name</span>
                 }
                 @if (CurrentDepth > 1)
                 {
@@ -116,11 +116,11 @@
                 }
                 @foreach (var relic in CurrentRelics)
                 {
-                    <span title="@relic.Description">@relic.Icon @relic.Name</span>
+                    <span title="@relic.Description"><GameIcon Glyph="@(relic.Icon)" Size="sm" /> @relic.Name</span>
                 }
                 @foreach (var essence in CurrentEssences)
                 {
-                    <span title="@essence.Effect">@essence.Icon @essence.Name</span>
+                    <span title="@essence.Effect"><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name</span>
                 }
             </div>
         </details>
@@ -136,10 +136,18 @@
                 <div class="primary-choice-grid">
                     @foreach (var spell in PrimaryChoices)
                     {
-                        <button class="primary-choice primary-@spell.School.ToString().ToLowerInvariant()" @onclick="() => ChoosePrimaryAsync(spell.Id)">
-                            <span class="primary-choice-icon" aria-hidden="true">@spell.Icon</span>
+                        <button class="primary-choice primary-@spell.School.ToString().ToLowerInvariant() @(spell.Id == PreferredPrimary ? "preferred" : string.Empty)" aria-describedby="@(spell.Id == PreferredPrimary ? "primary-preferred-note" : null)" @onclick="() => ChoosePrimaryAsync(spell.Id)">
+                            <span class="primary-choice-icon px-icon px-lg px-@spell.School.ToString().ToLowerInvariant()" aria-hidden="true"></span>
                             <strong>@spell.Name</strong>
                             <small>@spell.School</small>
+                            @if (spell.Id == PreferredPrimary)
+                            {
+                                <span class="primary-preferred-badge" id="primary-preferred-note">LAST OATH</span>
+                            }
+                            @if (PreparedMutationFor(spell.Id) is { } mutation)
+                            {
+                                <span class="primary-mutation-badge"><i class="px-icon px-sm px-@MutationIcon(mutation)" aria-hidden="true"></i>@mutation.Name</span>
+                            }
                         </button>
                     }
                 </div>
@@ -149,7 +157,7 @@
     }
     else if (!trailTransition && CurrentEssenceChoices.Count > 0)
     {
-        <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" />
+        <DragonHarvestOverlay Choices="CurrentEssenceChoices" OnChoose="ChooseEssenceAsync" ResearchSpecimen="ResearchSpecimen" />
     }
     else if (!trailTransition && CurrentRelicChoices.Count > 0)
     {
@@ -163,7 +171,8 @@
     }
     else if (!trailTransition && CurrentChoices.Count > 0)
     {
-        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync" />
+        <LevelUpOverlay Level="CurrentLevel + 1" RewardSchool="simulation?.PendingRewardSchool" Choices="CurrentChoices" OnChoose="ChooseAsync"
+                        Fateweave="simulation?.Fateweave" OnReroll="RerollAsync" />
     }
     else if (PendingMapChoice && !trailTransition)
     {

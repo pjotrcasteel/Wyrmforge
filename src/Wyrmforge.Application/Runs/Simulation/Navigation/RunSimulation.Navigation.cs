@@ -22,6 +22,7 @@ public sealed partial class RunSimulation
     private TrailRenderSnapshot? CreateTrailSnapshot()
     {
         if (!mapState.EncounterActive || !encounterDirector.Active) return null;
+        if (IsBellWardenNode) return CreateBellWardenTrailSnapshot();
         var phase = encounterDirector.Phase;
         var phaseProgress = encounterDirector.PhaseProgress;
         var phaseFraction = phase switch
@@ -36,7 +37,7 @@ public sealed partial class RunSimulation
         var seconds = (int)Math.Ceiling(Math.Max(0, encounterDirector.PhaseDuration - encounterDirector.PhaseElapsed));
         var status = seconds > 0 ? $"{seconds}s" : "Clear enemies";
         var objective = killProgress < 1 ? $"{CurrentMapNodeKills}/{CurrentMapNodeKillsRequired} kills"
-            : encounterDirector.CanComplete ? $"Clear {enemies.Count} remaining" : "Hold the trail";
+            : encounterDirector.CanComplete ? $"Clear {HostileCount} remaining" : "Hold the trail";
         return new(Math.Min(killProgress, phaseFraction), status, objective);
     }
 
@@ -50,6 +51,9 @@ public sealed partial class RunSimulation
         ClearMapEncounterField();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
+        PrepareBellWardenNode(node);
+        PrepareReliquaryNode(node);
+        RollNodeElite(node);
         if (node.Type == WyrmrealmNodeType.Dragon)
         {
             ResolveDragonAttraction();
@@ -60,9 +64,12 @@ public sealed partial class RunSimulation
         var route = node.Route ?? throw new InvalidOperationException("Combat nodes require a route profile.");
         encounterPattern = ToEnemyEncounterPattern(route.Encounter.Kind);
         encounterModifiers = ResolveEncounterModifiers(route);
-        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage);
+        encounterHabitat = node.Habitat;
+        encounterDirector.Start(encounterPattern, depthState.Depth, node.Stage, node.Habitat);
         arenaEnvironment.SetPhase(encounterDirector.Phase);
         entryGraceRemaining = 2;
+        encounterSeconds = 0;
+        ClearSupportState();
         spawnTimer = 0.15;
         return true;
     }
@@ -85,6 +92,7 @@ public sealed partial class RunSimulation
     private void CompleteTrail(WyrmrealmMapNode completedNode)
     {
         completedRouteNodes.Add(completedNode);
+        WithdrawReliquary();
         trailExitPending = true;
         RefreshBuildModifiers(true);
         ApplyRouteReward(completedNode.Route?.Reward);
@@ -116,6 +124,13 @@ public sealed partial class RunSimulation
         powerBurstRemaining = 0;
         CollectLooseExperienceShards();
         enemies.Clear();
+        hostileProjectiles.Clear();
+        ClearSupportState();
+        ClearReliquaryState();
+        ClearBellWardenState();
+        ClearFrostState();
+        encounterSeconds = 0;
+        rangedStaggerRemaining = 0;
         pendingRelicBursts.Clear();
         projectiles.Clear();
         lightning.Clear();
@@ -129,6 +144,7 @@ public sealed partial class RunSimulation
         unstableRiftState.Reset();
         encounterPlan = null;
         encounterPlanIndex = 0;
+        encounterHabitat = null;
         encounterDirector.Reset();
         if (!preserveEnvironment) arenaEnvironment = null;
         encounterModifiers = WyrmrealmEncounterModifierSet.Empty;

@@ -24,6 +24,10 @@ public sealed partial class RunSimulation
     private bool ascendantActive;
     private bool firstHunt;
     internal void EnableFirstHunt(bool enabled) => firstHunt = enabled;
+    // A hunter's first hunt in a region they have not walked before: it culminates in the home Wyrm, but unlike the tutorial
+    // First Hunt it is a full hunt with harvest, refuge and extraction.
+    private bool regionOpening;
+    internal void EnableRegionOpening(bool enabled) => regionOpening = enabled;
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
@@ -57,7 +61,9 @@ public sealed partial class RunSimulation
         UpdateDragonHuntPressure(delta, activeDragon, width, height);
         UpdateDragonHuntSignature(delta, activeDragon, width, height);
         activeDragon.Statuses.Tick(delta);
-        var scaledDelta = delta * activeDragon.Statuses.TimeScale(true);
+        var dragonTimeScale = activeDragon.Statuses.TimeScale(true);
+        RecordWyrmControl(delta, dragonTimeScale);
+        var scaledDelta = delta * dragonTimeScale;
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond * depthState.DragonDamageMultiplier;
@@ -184,6 +190,8 @@ public sealed partial class RunSimulation
         dragonEncounterStarted = true;
         dragonPending = false;
         enemies.Clear();
+        hostileProjectiles.Clear();
+        ClearSupportState();
         projectiles.Clear();
         lightning.Clear();
         ascendantActive = AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
@@ -191,7 +199,8 @@ public sealed partial class RunSimulation
         var hunt = ascendantActive ? DragonHuntCatalog.GetAscendant(definition.Id) : DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
-        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1));
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1),
+            ascendantActive ? WyrmTier.Ascendant : WyrmTier.Wyrm);
     }
 
     private void MoveDragon(DragonState activeDragon, double delta)
@@ -328,7 +337,7 @@ public sealed partial class RunSimulation
         return new DragonRenderSnapshot(ascendantActive ? $"Ascendant {definition.Name}" : definition.Name, rite is null ? definition.Title : $"The {rite.Trophy}",
             definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
             activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
-        { IsAscendant = ascendantActive };
+        { IsAscendant = ascendantActive, Tier = activeDragon.Tier };
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()

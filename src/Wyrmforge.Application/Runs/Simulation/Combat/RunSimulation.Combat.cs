@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Modifiers;
@@ -36,6 +36,7 @@ public sealed partial class RunSimulation
             hitCount++;
             var damage = projectile.Damage;
             var interactions = ResolveStatusInteractions(projectile.Spell, target);
+            if (interactions.Count > 0) RecordReaction();
             foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
             var detonation = PassiveEffectResolver.ResolveDetonation(passiveProfile, hitCount);
             if (detonation is not null) damage *= detonation.DamageMultiplier;
@@ -45,7 +46,9 @@ public sealed partial class RunSimulation
             RegisterBurningGround(projectile, target.Position);
             RegisterFrostNova(projectile, target.Position, target.Id);
             var spawnedForHit = projectile.ChainsLeft > 0 ? spawned ??= [] : null;
-            var killed = DamageTarget(target, damage, projectile, spawnedForHit);
+            // The source point sits one second back along the flight path, so the shield reads where the shot came from.
+            var shield = ShieldMultiplier(target, projectile.Position - projectile.Velocity, damage);
+            var killed = DamageTarget(target, damage * shield, projectile, spawnedForHit);
             if (detonation is not null) Splash(target.Position, damage, detonation.Radius, target.Id);
             ApplyDragonEssenceImpactEffects(target, damage, ref killed);
             if (!killed) ApplyProjectileStatus(projectile, target);
@@ -54,7 +57,7 @@ public sealed partial class RunSimulation
             if (projectile.SplashRadius > 0) Splash(target.Position, damage * 0.4, projectile.SplashRadius, target.Id);
             foreach (var interaction in interactions)
             {
-                if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0)
+                if (interaction.SplashRadius > 0 && interaction.SplashDamageMultiplier > 0 && TrySpendReactionEvent())
                 {
                     Splash(target.Position, damage * interaction.SplashDamageMultiplier, interaction.SplashRadius, target.Id);
                 }
@@ -64,7 +67,11 @@ public sealed partial class RunSimulation
             if (projectile.Spell == SpellId.ArcaneOrb)
             {
                 arcaneHitCount++;
-                if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0) CastChainLightning(1, target.Position, 0.55, 1);
+                if (build.Synergies.Contains(SynergyId.ArcaneConduit) && arcaneHitCount % 4 == 0 && TrySpendReactionEvent())
+                {
+                    RecordReaction();
+                    CastChainLightning(1, target.Position, 0.55, 1);
+                }
             }
             if (!projectile.ContinueAfterHit(target.Id)) (consumed ??= []).Add(projectile);
         }
@@ -104,19 +111,61 @@ public sealed partial class RunSimulation
             }
         }
 
+        if (target is EnemyState { Kind: EnemyKind.Reliquary } && reliquaryWards.Count > 0) damage *= ReliquaryWardedDamageMultiplier;
+        if (target is EnemyState { Kind: EnemyKind.ReliquaryOfGlass } glassTarget)
+        {
+            if (crystalWards.Count > 0) damage *= GlassWardedDamageMultiplier;
+            TryBreakGlassVeil(glassTarget);
+        }
+        // Phase gate (Hades' bosses, Monster Hunter's topple): no burst skips the crack. Overflow past half health is discarded;
+        // reaching half health starts the stagger at once (below), and the stagger itself is a free damage window.
+        if (target is EnemyState { BellWarden: { Cracked: false, Phase: not BellWardenPhase.Crack } } gated)
+            damage = Math.Min(damage, Math.Max(0, gated.Health - gated.MaxHealth * BellWardenBehaviorState.CrackHealthFraction));
+        if (target is EnemyState { WinterBell: { DeepWinter: false, Phase: not BellOfWinterPhase.Rime } } riming)
+            damage = Math.Min(damage, Math.Max(0, riming.Health - riming.MaxHealth * BellOfWinterBehaviorState.RimeHealthFraction));
+        if (target is EnemyState frostDefended) damage = ApplyFrostDefenses(frostDefended, damage);
+        if (damage <= 0)
+        {
+            RegisterTargetHit(target);
+            return false;
+        }
+        var shatters = source is not null && FrostShatter.Triggers(source.Spell, target.Statuses.Has(CombatStatusId.Frozen));
         target.Health -= damage;
+        if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
+        if (target is EnemyState { WinterBell: { } winter } rimed && winter.TryBeginRime(rimed.Health, rimed.MaxHealth)) BeginWinterRime();
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
 
         switch (target)
         {
+            case EnemyState { Kind: EnemyKind.Reliquary or EnemyKind.ReliquaryWard or EnemyKind.ReliquaryOfGlass or EnemyKind.CrystalWard } rite:
+                ResolveReliquaryDeath(rite);
+                break;
+            case EnemyState { Kind: EnemyKind.GlassFalseForm } falseForm:
+                // The wrong body: it breaks like glass and pays nothing.
+                RegisterEnemyDeath(falseForm);
+                glassFalseForms.Remove(falseForm);
+                break;
+            case EnemyState { Kind: EnemyKind.MirrorDouble } reflection:
+                // A false image breaks like glass: no kill, no payout, no record.
+                RegisterEnemyDeath(reflection);
+                break;
+            case EnemyState { Kind: EnemyKind.BellWarden or EnemyKind.BellOfWinter } warden:
+                ResolveBellWardenDeath(warden);
+                break;
             case EnemyState defeatedEnemy:
+                RecordControlledKill(defeatedEnemy);
                 RegisterEnemyDeath(defeatedEnemy);
+                RegisterSupportDeath(defeatedEnemy);
+                RegisterFrostDeath(defeatedEnemy);
                 kills++;
+                RecordEnemyKill(defeatedEnemy.Kind);
                 QueueRelicDefeatBursts(defeatedEnemy);
                 var baseScore = 100 + (int)(elapsed * 2);
                 score += (int)(baseScore * depthState.ScoreMultiplier);
-                experienceShards.Drop(defeatedEnemy.Position, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost);
+                // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
+                if (defeatedEnemy.Revived) break;
+                experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
                 break;
@@ -127,6 +176,7 @@ public sealed partial class RunSimulation
                 throw new InvalidOperationException($"Unsupported combat target type {target.GetType().Name}.");
         }
 
+        if (shatters && target is EnemyState shattered) Shatter(shattered.Position, FrostShatter.Damage(shattered.MaxHealth), shattered.Id);
         if (source is not null && source.ChainsLeft > 0 && spawned is not null) ChainFrom(target.Position, source, spawned);
         return true;
     }
@@ -135,7 +185,14 @@ public sealed partial class RunSimulation
     {
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
-        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage);
+        foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+    }
+
+    private void Shatter(Vector2D position, double damage, int ignoreId)
+    {
+        FrostShatters++;
+        RegisterFrostNovaFeedback(position, FrostShatter.Radius);
+        Splash(position, damage, FrostShatter.Radius, ignoreId);
     }
 
     private void ChainFrom(Vector2D position, ProjectileState source, ICollection<ProjectileState> spawned)

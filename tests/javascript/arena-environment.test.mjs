@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createTerrainPlan, drawArenaEnvironment } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
+import { createTerrainPlan, drawArenaEnvironment, habitatTint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
 const scene = { seed: 1204, biome: 'Ashen caldera', element: 'fire', stage: 6, landmark: 'The dragon\'s scorched approach',
     supplies: [{ kind: 'health', x: .83, y: .61, open: true }] };
@@ -58,4 +58,14 @@ test('opened healing caches use their own stone-and-herb silhouette, not an XP d
 test('performance telemetry remains opt-in and never obscures ordinary combat', () => {
     const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js', import.meta.url), 'utf8');
     assert.match(arena, /new URLSearchParams\(window\.location\.search\)\.get\('perf'\) !== '1'/);
+});
+
+test('habitats carry a distinct restrained wash, and the plan keeps the habitat', () => {
+    const habitats = ['WetForest', 'OpenField', 'DesertedVillage', 'MonasteryGrounds', 'FloodedCloister', 'ScorchedApproach', 'Lair'];
+    const tints = habitats.map(habitatTint);
+    assert.equal(new Set(tints).size, habitats.length);
+    for (const tint of tints) assert.ok(Number(tint.match(/,([.\d]+)\)$/)[1]) <= .15, 'tints must not hide telegraphs');
+    assert.equal(habitatTint('Outskirts'), null);
+    assert.equal(habitatTint(undefined), null);
+    assert.equal(createTerrainPlan({ ...scene, habitat: 'WetForest' }, 390, 700).habitat, 'WetForest');
 });

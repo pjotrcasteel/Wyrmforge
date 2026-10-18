@@ -10,7 +10,7 @@ Invite **10–15 independent testers**, including at least 5 who have never seen
 
 **Copyable invitation:**
 
-> We're playtesting WyrmForge, an early action roguelite you can play in your browser. Could you try it for 15 minutes without instructions and tell me where it's fun, confusing or frustrating? https://pjotrcasteel.github.io/Wyrmforge/ — At any point, tap **Tell us how your hunt felt** (or **Send playtest feedback** after a run). Tap **Tell us how your hunt felt** (or **Send playtest feedback** after a run), answer the quick questions, tick the consent box and choose **Send feedback privately**. That securely submits your report to WyrmForge; Share / Download JSON is an alternative. No account required, and nothing is sent without your choice.
+> We're playtesting WyrmForge, an early action roguelite you can play in your browser. Could you try it for 15 minutes without instructions and tell me where it's fun, confusing or frustrating? https://pjotrcasteel.github.io/Wyrmforge/ — After every run the game asks **How was that hunt?** — tap a star (or **Review this hunt** on the results screen, or **Tell us how your hunt felt** at any time), answer the quick questions, tick the consent box and choose **Send feedback privately**. That securely submits your report to WyrmForge; Share / Download JSON is an alternative. No account required, and nothing is sent without your choice.
 
 ## What gets recorded
 

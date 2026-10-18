@@ -25,7 +25,7 @@
             {
                 <button class="relic-choice rarity-@relic.Rarity.ToString().ToLowerInvariant()" @onclick="() => ChooseAsync(relic.Id)">
                     <span class="relic-rarity">@relic.Rarity.ToString().ToUpperInvariant()</span>
-                    <span class="relic-icon">@relic.Icon</span>
+                    <span class="relic-icon"><GameIcon Glyph="@(relic.Icon)" /></span>
                     <strong>@relic.Name</strong>
                     <span>@relic.Description</span>
                     <small>@RelicChoiceService.Role(relic.Id) · @(Equipped.Count < RelicInventoryState.MaxEquipped ? "Equip" : "Replace a relic")</small>

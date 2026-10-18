@@ -30,6 +30,10 @@
         {
             <button class="quest-reward-ready" @onclick="() => OnQuests.InvokeAsync()">✦ @QuestRewards quest reward@(QuestRewards == 1 ? string.Empty : "s") ready · CLAIM</button>
         }
+        @if (ResearchPrompt is { } research)
+        {
+            <button class="quest-reward-ready research-prompt" aria-label="Open Arcane Nexus: @research.Text" @onclick="() => OnOpenLaboratory.InvokeAsync()"><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @research.Text <b>NEXUS ›</b></button>
+        }
         <div class="run-report-grid">
             <section>
                 <span>YOUR BUILD</span>
@@ -47,7 +51,7 @@
         {
             var relic = RelicCatalog.Get(payoff.Id);
             <section class="hunter-run-progress" aria-label="Relic payoff">
-                <strong>@relic.Icon @relic.Name</strong>
+                <strong><GameIcon Glyph="@(relic.Icon)" Size="sm" /> @relic.Name</strong>
                 <small>@payoff.Bursts bursts · @payoff.BurstDamage.ToString("N0") burst damage · @payoff.BurstKills kills</small>
             </section>
         }
@@ -63,7 +67,7 @@
                         var state = Masteries.Get(id);
                         var spell = SpellCatalog.Get(id);
                         <div class="run-mastery-entry">
-                            <strong>@spell.Icon @spell.Name</strong>
+                            <strong><GameIcon Glyph="@(spell.Icon)" Size="sm" /> @spell.Name</strong>
                             <small>@Math.Min(state.MeaningfulRuns, definition.RequiredRuns) / @definition.RequiredRuns hunts • @(state.WyrmFeat ? "Wyrm feat ✓" : "Wyrm feat pending")</small>
                         </div>
                     }
@@ -112,6 +116,25 @@
             </section>
         }
 
+        @if (BestiaryDiscoveries is { HasDiscoveries: true } discoveries)
+        {
+            <section class="run-great-hunt-progress run-bestiary-progress" aria-label="New bestiary entries">
+                <span>◆ BESTIARY • NEW ENTRIES</span>
+                <div class="run-great-hunt-entries">
+                    @foreach (var kind in discoveries.NewCreatures)
+                    {
+                        var creature = Wyrmforge.Domain.Progression.Bestiary.BestiaryCatalog.Get(kind);
+                        <div><strong>@creature.Name</strong><small>@creature.Tier</small></div>
+                    }
+                    @foreach (var affix in discoveries.NewElites)
+                    {
+                        var elite = Wyrmforge.Domain.Combat.Enemies.EliteAffixCatalog.Get(affix);
+                        <div><strong>◆ @elite.Title</strong><small>Elite slain • recorded in the Codex</small></div>
+                    }
+                </div>
+            </section>
+        }
+
         @if (NewLineages.Count > 0)
         {
             <section class="run-lineage-reveal" aria-label="Wyrmforged lineage discovered">
@@ -119,7 +142,7 @@
                 @foreach (var evolutionId in NewLineages)
                 {
                     var evolution = SpellEvolutionCatalog.Get(evolutionId);
-                    <h3>@evolution.Icon @evolution.Name</h3>
+                    <h3><GameIcon Glyph="@(evolution.Icon)" Size="sm" /> @evolution.Name</h3>
                     <p>@evolution.Description</p>
                 }
                 <strong>NEW EVOLUTION AVAILABLE IN FUTURE HUNTS</strong>
@@ -131,7 +154,7 @@
             <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
         </div>
 
-        <button class="run-playtest-feedback" @onclick="() => OnFeedback.InvokeAsync()">✎ Send playtest feedback about this run</button>
+        <button class="run-playtest-feedback" @onclick="() => OnFeedback.InvokeAsync()">★ Review this hunt</button>
 
         <details class="run-report-details">
             <summary><span>BUILD, LOOT &amp; RUN DETAILS</span><span aria-hidden="true">⌄</span></summary>
@@ -148,7 +171,7 @@
                 {
                     var definition = SpellCatalog.Get(spell.Id);
                     var evolution = spell.Evolution is { } evolutionId ? SpellEvolutionCatalog.Get(evolutionId) : null;
-                    <b>@(evolution?.Icon ?? definition.Icon) @(evolution?.Name ?? definition.Name) @Roman(spell.Rank)@(evolution is null ? string.Empty : $" • {definition.Name}")</b>
+                    <b><GameIcon Glyph="@(evolution?.Icon ?? definition.Icon)" Size="sm" /> @(evolution?.Name ?? definition.Name) @Roman(spell.Rank)@(evolution is null ? string.Empty : $" • {definition.Name}")</b>
                 }
             </div>
         </div>
@@ -161,7 +184,7 @@
                     @foreach (var upgrade in Summary.UpgradeLoadout)
                     {
                         var definition = RunUpgradeCatalog.Get(upgrade.Id);
-                        <b>@definition.Icon @definition.Name @Roman(upgrade.Rank)</b>
+                        <b><GameIcon Glyph="@(definition.Icon)" Size="sm" /> @definition.Name @Roman(upgrade.Rank)</b>
                     }
                 </div>
             </div>
@@ -175,8 +198,18 @@
                     @foreach (var id in Summary.SynergyIds)
                     {
                         var synergy = SynergyCatalog.Get(id);
-                        <b>@synergy.Icon @synergy.Name</b>
+                        <b><GameIcon Glyph="@(synergy.Icon)" Size="sm" /> @synergy.Name</b>
                     }
+                </div>
+            </div>
+        }
+
+        @if (Summary.PreparedMutation is { } mutationId)
+        {
+            <div class="run-report-section">
+                <span>FIELD NOTES</span>
+                <div class="run-report-chips">
+                    <b><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @Wyrmforge.Domain.Progression.Laboratory.LaboratoryCatalog.Get(mutationId).Name · @Summary.ReactionsTriggered @Wyrmforge.Domain.Progression.Laboratory.LaboratoryCatalog.Get(mutationId).ReactionNoun@(Summary.ReactionsTriggered == 1 ? string.Empty : "s")</b>
                 </div>
             </div>
         }
@@ -189,7 +222,7 @@
                     @foreach (var relic in Summary.RelicLoadout)
                     {
                         var definition = RelicCatalog.Get(relic.Id);
-                        <b>@definition.Icon @definition.Name@(relic.Equipped ? " • equipped" : string.Empty)@(relic.Bursts > 0 ? $" · {relic.Bursts} bursts · {relic.BurstDamage:N0} burst damage · {relic.BurstKills} kills" : string.Empty)</b>
+                        <b><GameIcon Glyph="@(definition.Icon)" Size="sm" /> @definition.Name@(relic.Equipped ? " • equipped" : string.Empty)@(relic.Bursts > 0 ? $" · {relic.Bursts} bursts · {relic.BurstDamage:N0} burst damage · {relic.BurstKills} kills" : string.Empty)</b>
                     }
                 </div>
             </div>
@@ -206,7 +239,7 @@
                         @foreach (var essenceId in Summary.EssenceIds)
                         {
                             var essence = DragonEssenceCatalog.Get(essenceId);
-                            <b>@essence.Icon @essence.Name</b>
+                            <b><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name</b>
                         }
                     </div>
                 }
@@ -235,6 +268,7 @@
     [Parameter] public IReadOnlyList<DragonId> NewAscendantVictories { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellEvolutionId> NewLineages { get; set; } = [];
     [Parameter] public IReadOnlyList<SpellId> AdvancedSpells { get; set; } = [];
+    [Parameter] public Wyrmforge.Domain.Progression.Bestiary.BestiaryRunResult? BestiaryDiscoveries { get; set; }
     [Parameter] public EventCallback OnReplay { get; set; }
     [Parameter] public EventCallback OnReturn { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
@@ -243,6 +277,8 @@
     [Parameter] public int PointBudget { get; set; } = 1;
     [Parameter] public HunterProgress Hunter { get; set; } = new();
     [Parameter] public HunterExperienceGain? HunterGain { get; set; }
+    [Parameter] public Wyrmforge.Domain.Progression.Laboratory.LaboratoryPrompt? ResearchPrompt { get; set; }
+    [Parameter] public EventCallback OnOpenLaboratory { get; set; }
 
     private string BuildIdentity
     {

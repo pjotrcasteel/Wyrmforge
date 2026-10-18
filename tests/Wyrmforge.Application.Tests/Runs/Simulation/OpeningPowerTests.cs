@@ -62,7 +62,10 @@ public sealed class OpeningPowerTests
         for (var frame = 0; frame < 500; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
         Assert.AreEqual(8, Field<List<EnemyState>>(simulation, "enemies").Count);
         var map = Field<WyrmrealmMapState>(simulation, "mapState");
-        foreach (var expectedCap in new[] { 8, 10, 10, 14, 14, 14, 22 })
+        // Stage 8 keeps its full horde cap for any non-lair road, but the pre-lair road is now the Bell Warden's set piece (roster
+        // step 7): it opens with the Warden alone, far below the horde peak, and only its rally call brings reinforcements.
+        Assert.AreEqual(22, EnemyStagePressure.ActiveEnemyCap(8, 1));
+        foreach (var expectedCap in new[] { 8, 10, 10, 14, 14, 14, 1 })
         {
             var quota = map.CurrentNodeKillsRequired;
             for (var kill = 0; kill < quota; kill++) map.RegisterKill();
@@ -112,13 +115,43 @@ public sealed class OpeningPowerTests
         var projectile = Cast(simulation, SpellId.FrostShard, 1);
         projectile.Position = targets[0].Position;
         Invoke(simulation, "ResolveProjectileHits");
-        Assert.AreEqual(84d, targets[0].Health);
+        Assert.AreEqual(76d, targets[0].Health);
         Assert.IsTrue(targets[0].Statuses.Has(CombatStatusId.Frozen));
         Assert.IsFalse(targets[1].Statuses.Has(CombatStatusId.Frozen));
         targets[0].Statuses.Tick(0.6);
         Assert.AreEqual(0d, targets[0].Statuses.TimeScale(false));
         targets[0].Statuses.Tick(0.11);
         Assert.IsGreaterThan(0d, targets[0].Statuses.TimeScale(false));
+    }
+
+    [TestMethod]
+    public void FrostShard_KillingAFrozenEnemyShattersIntoNeighbours()
+    {
+        var simulation = Create();
+        var targets = AddTargets(simulation);
+        targets[0].Statuses.Apply(CombatStatusCatalog.Get(CombatStatusId.Frozen), 1);
+        targets[0].Health = 10;
+        var projectile = Cast(simulation, SpellId.FrostShard, 1);
+        projectile.Position = targets[0].Position;
+        Invoke(simulation, "ResolveProjectileHits");
+        Assert.IsLessThanOrEqualTo(0d, targets[0].Health);
+        Assert.AreEqual(1, simulation.FrostShatters);
+        Assert.AreEqual(100d - FrostShatter.Damage(targets[0].MaxHealth), targets[1].Health, 1e-9);
+    }
+
+    [TestMethod]
+    public void OtherSchoolsKillingAFrozenEnemyDoNotShatter()
+    {
+        var simulation = Create();
+        var targets = AddTargets(simulation);
+        targets[0].Statuses.Apply(CombatStatusCatalog.Get(CombatStatusId.Frozen), 1);
+        targets[0].Health = 10;
+        var projectile = Cast(simulation, SpellId.ArcaneOrb, 1);
+        projectile.Position = targets[0].Position;
+        Invoke(simulation, "ResolveProjectileHits");
+        Assert.IsLessThanOrEqualTo(0d, targets[0].Health);
+        Assert.AreEqual(0, simulation.FrostShatters);
+        Assert.AreEqual(100d, targets[1].Health);
     }
 
     private static RunSimulation Create()

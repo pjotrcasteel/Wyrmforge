@@ -2,6 +2,8 @@
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Rewards;
+using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Presentation.Web.Features.LevelUp;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
@@ -14,6 +16,47 @@ public partial class ArenaView
     private long runMomentVersion;
     private bool disposed;
     private bool trailTransition;
+
+    // Compact and low on screen: an elite is named without covering the fight (brief §7, no big boss bar).
+    private void ShowEliteSighted(EliteAffixDefinition elite) =>
+        ShowRunMoment(new RunMoment("ELITE", elite.Title, elite.Detail, RunMomentTone.Danger, Compact: true));
+
+    private void ShowEliteDefeated(EliteDefeat defeat) =>
+        ShowRunMoment(new RunMoment("ELITE SLAIN", EliteAffixCatalog.Get(defeat.Affix).Title, $"+{defeat.ExperienceAwarded} XP", RunMomentTone.Rare, Compact: true));
+
+    private bool GlassReliquary => simulation?.ReliquaryKind == EnemyKind.ReliquaryOfGlass;
+
+    private void ShowReliquarySighted() => ShowRunMoment(GlassReliquary
+        ? new RunMoment("THE RELIQUARY OF GLASS", "It keeps what the glacier preserved", "Break the crystals • find the lit lanterns • never stand still", RunMomentTone.Legendary)
+        : new RunMoment("THE RELIQUARY", "It has walked these grounds for longer than the monastery stood", "Break its wards to wound it • avoid the gilt seals", RunMomentTone.Legendary));
+
+    private void ShowReliquaryShift() => ShowRunMoment(GlassReliquary
+        ? new RunMoment("THE GLASS SHATTERS", "The Reliquary of Glass", "Every crystal rises • three false forms", RunMomentTone.Danger, Compact: true)
+        : new RunMoment("THE RITUAL DEEPENS", "The Reliquary", "Wider seals • more corruption", RunMomentTone.Danger, Compact: true));
+
+    private void ShowGlassVeilBroken() =>
+        ShowRunMoment(new RunMoment("VEIL BROKEN", "The true body staggers", "Strike now", RunMomentTone.Rare, Compact: true));
+
+    private void ShowReliquaryDefeated(ReliquaryDefeat defeat) =>
+        ShowRunMoment(new RunMoment(GlassReliquary ? "RELIQUARY OF GLASS SLAIN" : "RELIQUARY SLAIN", GlassReliquary ? "The cages melt" : "The rites are broken",
+            $"+{defeat.ExperienceAwarded} XP • recorded in the Codex", RunMomentTone.Legendary));
+
+    private void ShowBellWardenArrived() => ShowRunMoment(simulation?.BellRoadKind == EnemyKind.BellOfWinter
+        ? new RunMoment("THE BELL OF WINTER", "Its toll walls the road to Rimeclaw", "Run the open lanes • leave the marked shards • the scars stay", RunMomentTone.Legendary)
+        : new RunMoment("THE BELL WARDEN", "It guards the last road to the lair", "Step out of the crater • outrun the ring • it tolls in lines", RunMomentTone.Legendary));
+
+    private void ShowWinterBellRimed() =>
+        ShowRunMoment(new RunMoment("DEEP WINTER", "The Bell of Winter rimes over", "Strike now • then more rings, more scars", RunMomentTone.Danger, Compact: true));
+
+    private void ShowBellCracked() =>
+        ShowRunMoment(new RunMoment("THE BELL CRACKS", "The Bell Warden", "The toll splits three ways", RunMomentTone.Danger, Compact: true));
+
+    private void ShowBellWardenSlain(BellWardenDefeat defeat) =>
+        ShowRunMoment(new RunMoment(simulation?.BellRoadKind == EnemyKind.BellOfWinter ? "THE BELL OF WINTER FALLS SILENT" : "THE BELL FALLS SILENT",
+            simulation?.BellRoadKind == EnemyKind.BellOfWinter ? "The thaw opens Rimeclaw's road" : "The road to the lair is open", $"+{defeat.ExperienceAwarded} XP • recorded in the Codex", RunMomentTone.Legendary));
+
+    private void ShowReliquaryWithdrawn() =>
+        ShowRunMoment(new RunMoment(GlassReliquary ? "THE RELIQUARY OF GLASS WITHDRAWS" : "THE RELIQUARY WITHDRAWS", "It will not be found here again", "The trail is clear.", RunMomentTone.Standard, Compact: true));
 
     private void ShowRunMoment(RunMoment value)
     {

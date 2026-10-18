@@ -40,3 +40,18 @@
 .codex-section{padding:12px;border-radius:4px}
 .codex-card{border-radius:4px}.codex-card small{color:#b7aaba;font-size:.78rem}
 @media(min-width:700px){.collection-tabs{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.collection-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bestiary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.bestiary-card{align-items:flex-start}
+.bestiary-portrait{flex:0 0 96px;width:96px;height:96px;border:1px solid #3a3045;border-radius:4px;background:radial-gradient(ellipse at 50% 70%,rgba(158,120,206,.18),transparent 70%),#120e17;image-rendering:pixelated}
+.bestiary-card.unknown-creature{border-style:dashed;opacity:.72}
+.bestiary-card.unknown-creature .bestiary-portrait{background:radial-gradient(ellipse at 50% 70%,rgba(120,110,130,.16),transparent 70%),#120e17}
+.bestiary-card.studied{border-color:rgba(206,173,116,.6)}
+.bestiary-badge{margin-left:6px;padding:1px 5px;border:1px solid rgba(206,173,116,.6);border-radius:3px;color:#e8cf9f;font-size:.58rem;letter-spacing:.12em;vertical-align:middle}
+.codex-card .bestiary-tier{color:#c9b28a}
+.codex-card .bestiary-counter b,.codex-card .bestiary-habitat b{color:#d9cde0}
+.codex-card .bestiary-note{color:#c4b7d1;font-style:italic}
+.codex-card .bestiary-elite{padding:5px 7px;border:1px solid rgba(214,108,108,.45);border-radius:4px;background:rgba(120,40,40,.14)}
+.codex-card .bestiary-elite b{color:#f0b0a0}
+.codex-card .bestiary-locked{color:#7f7488}
+@media (max-width:720px){.bestiary-grid{grid-template-columns:1fr}.bestiary-portrait{flex-basis:72px;width:72px;height:72px}}

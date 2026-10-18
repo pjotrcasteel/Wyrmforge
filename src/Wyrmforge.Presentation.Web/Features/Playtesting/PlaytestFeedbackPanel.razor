@@ -72,6 +72,12 @@
 
 @code {
     [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public int? InitialEnjoyment { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (InitialEnjoyment is >= 1 and <= 5) enjoyment = InitialEnjoyment.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     private string enjoyment = "";
     private string clarity = "";

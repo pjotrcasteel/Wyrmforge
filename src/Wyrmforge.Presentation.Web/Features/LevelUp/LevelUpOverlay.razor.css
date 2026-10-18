@@ -227,3 +227,27 @@
     .evolution-draft .evo-crossroads.evo-many-branches.run-overlay-surface { width: min(1040px, calc(100vw - 36px)) !important; }
     .evolution-draft .evo-crossroads.evo-many-branches .upgrade-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Fateweave: one reroll control beneath each card, a hunt-wide purse above the draft. */
+.choice-slot { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
+.choice-slot > .run-upgrade { flex: 1; }
+.fateweave-purse { display: inline-flex; align-items: center; gap: 8px; margin: -4px 0 12px; padding: 4px 10px; border: 1px solid #3c3149; border-radius: 999px; color: #b9aec6; background: #18131f; font-size: .66rem; font-weight: 900; letter-spacing: .12em; }
+.fateweave-pips { display: inline-flex; gap: 4px; }
+.fateweave-pips i { width: 8px; height: 8px; border: 1px solid #a58ad0; transform: rotate(45deg); border-radius: 2px; }
+.fateweave-pips i.full { background: #c69aff; box-shadow: 0 0 6px rgba(198,154,255,.55); }
+.fateweave-count { color: #e7dcf5; }
+.fateweave-reroll { display: inline-flex; align-self: center; align-items: center; justify-content: center; gap: 7px; min-width: 132px; min-height: 36px; padding: 6px 14px; border: 1px solid #4b3d5c; border-radius: 999px; color: #d9cfe6; background: #1a1422; font-size: .74rem; font-weight: 800; letter-spacing: .06em; cursor: pointer; touch-action: manipulation; transition: background .12s ease, border-color .12s ease; }
+.fateweave-reroll:hover:not(:disabled) { border-color: #8f74b8; background: #241b30; }
+.fateweave-reroll:disabled { opacity: .42; cursor: default; }
+.fateweave-reroll.spent { opacity: .5; border-style: dashed; }
+.fateweave-glyph { font-size: .95rem; }
+.fateweave-reroll.gilded { border-color: #d6a84a; color: #2a1c05; background: linear-gradient(120deg, #b98a2f, #f3d27a 45%, #c8973a); box-shadow: 0 0 14px rgba(243,210,122,.45); animation: fateweave-gleam 2.4s ease-in-out infinite; }
+.fateweave-reroll.gilded:disabled { animation: none; }
+.choice-gilded { border: 2px solid #e2b664 !important; box-shadow: 0 0 22px rgba(226,182,100,.28), inset 0 0 30px rgba(226,182,100,.1); }
+@keyframes fateweave-gleam { 0%, 100% { box-shadow: 0 0 8px rgba(243,210,122,.3); } 50% { box-shadow: 0 0 18px rgba(243,210,122,.65); } }
+@media (max-width: 680px) {
+  .choice-slot { gap: 4px; }
+  .fateweave-reroll { align-self: flex-end; min-height: 32px; min-width: 112px; padding: 4px 12px; font-size: .7rem; }
+  .fateweave-purse { margin-bottom: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .fateweave-reroll.gilded { animation: none; } }

@@ -2,6 +2,7 @@
     const width = 1200;
     const height = 900;
     const states = new WeakMap();
+    const edgeGutter = 20;
 
     function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
@@ -28,7 +29,8 @@
         state.scale = nextScale;
         canvas.style.transform = `scale(${nextScale})`;
         space.style.width = `${width * nextScale}px`;
-        space.style.height = `${height * nextScale}px`;
+        // Phones get room below the Web so any node can be lifted above the bottom-sheet inspector.
+        space.style.height = `${height * nextScale + (window.innerWidth <= 760 ? viewport.clientHeight * 0.5 : 0)}px`;
         viewport.scrollLeft = worldX * nextScale - anchorX;
         viewport.scrollTop = worldY * nextScale - anchorY;
     }
@@ -65,6 +67,8 @@
 
         viewport.addEventListener('pointerdown', event => {
             if (event.target.closest('.web-node')) return;
+            // Leave the screen edge to the OS back gesture instead of starting a pan there.
+            if (event.pointerType === 'touch' && event.clientX < edgeGutter) return;
             viewport.setPointerCapture(event.pointerId);
             state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
             viewport.classList.add('dragging');
@@ -136,5 +140,22 @@
         center(viewport, state);
     }
 
-    window.wyrmforgeArcaneWeb = { initialize, zoom, reset };
+    // Bring a Web coordinate into view; on phones it centres in the band above the bottom-sheet inspector.
+    function focus(viewport, x, y) {
+        const state = states.get(viewport);
+        if (!state) return;
+        let anchorY = viewport.clientHeight / 2;
+        if (window.innerWidth <= 760) {
+            const rect = viewport.getBoundingClientRect();
+            const sheetTop = window.innerHeight - Math.min(window.innerHeight * 0.55, 460) - 8;
+            anchorY = clamp((Math.max(rect.top, 0) + sheetTop) / 2 - rect.top, 40, viewport.clientHeight / 2);
+        }
+        viewport.scrollTo({
+            left: Math.max(0, x * state.scale - viewport.clientWidth / 2),
+            top: Math.max(0, y * state.scale - anchorY),
+            behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
+    }
+
+    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus };
 })();

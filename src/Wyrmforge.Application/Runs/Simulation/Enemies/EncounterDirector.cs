@@ -8,9 +8,11 @@ public sealed class EncounterDirector
     public const double BreathingRoomSeconds = 3;
 
     private readonly Queue<EnemyKind> pendingInserts = new();
+    private EnemyPackRecipe? pendingRecipe;
     private EnemyEncounterPattern pattern;
     private int depth;
     private int stage;
+    private WyrmrealmHabitat? habitat;
     private double progress;
     private double phaseElapsed;
 
@@ -23,16 +25,18 @@ public sealed class EncounterDirector
     public EncounterPhase Phase { get; private set; } = EncounterPhase.Pressure;
     public EncounterDirective Directive => ResolveDirective();
 
-    public void Start(EnemyEncounterPattern encounterPattern, int encounterDepth, int encounterStage = 1)
+    public void Start(EnemyEncounterPattern encounterPattern, int encounterDepth, int encounterStage = 1, WyrmrealmHabitat? encounterHabitat = null)
     {
         Active = true;
+        habitat = encounterHabitat;
         pattern = encounterPattern;
         depth = Math.Max(1, encounterDepth);
         stage = WyrmrealmStageCatalog.PressureStage(encounterStage);
         progress = 0;
         phaseElapsed = 0;
         pendingInserts.Clear();
-        if (stage == 4) pendingInserts.Enqueue(EnemyKind.Brute);
+        pendingRecipe = null;
+        if (stage == 4) Insert(EnemyKind.Penitent);
         Phase = EncounterPhase.Pressure;
     }
 
@@ -72,14 +76,28 @@ public sealed class EncounterDirector
         return false;
     }
 
+    /// <summary>A pack the director wants next: the current queue is replaced by this structured group.</summary>
+    public bool TryTakeRecipe(out EnemyPackRecipe recipe)
+    {
+        recipe = pendingRecipe ?? default;
+        if (pendingRecipe is null) return false;
+        pendingRecipe = null;
+        return true;
+    }
+
     public void Reset()
     {
+        pendingRecipe = null;
         Active = false;
         Phase = EncounterPhase.Pressure;
         progress = 0;
         phaseElapsed = 0;
         pendingInserts.Clear();
+        habitat = null;
     }
+
+    // A habitat never receives a resident it does not host; its signature monster arrives instead.
+    private void Insert(EnemyKind kind) => pendingInserts.Enqueue(EnemyHabitatProfile.Admit(habitat, kind));
 
     private EncounterDirective ResolveDirective()
     {
@@ -108,23 +126,29 @@ public sealed class EncounterDirector
         if (Phase == phase) return;
         Phase = phase;
         phaseElapsed = 0;
+        // Habitat events (brief §6): the surge is the habitat's signature pack; the final approach's climax is a Last Stand.
+        if (habitat is { } local && !WyrmrealmHabitatCatalog.IsOpening(local))
+        {
+            if (phase == EncounterPhase.Surge) pendingRecipe = EnemyPackRecipeCatalog.SurgeEvent(local);
+            else if (phase == EncounterPhase.Climax && WyrmrealmHabitatCatalog.IsFinalApproach(local)) pendingRecipe = EnemyPackRecipeCatalog.LastStandFor(local);
+        }
 
         if (stage == 4 && phase is EncounterPhase.Escalation or EncounterPhase.Surge or EncounterPhase.Climax)
         {
-            pendingInserts.Enqueue(EnemyKind.Brute);
-            if (phase == EncounterPhase.Climax) pendingInserts.Enqueue(EnemyKind.RiftStalker);
+            Insert(EnemyKind.Penitent);
+            if (phase == EncounterPhase.Climax) Insert(EnemyKind.MireHound);
             return;
         }
 
         if (phase == EncounterPhase.Escalation && pattern == EnemyEncounterPattern.StalkerPressure)
         {
-            pendingInserts.Enqueue(EnemyKind.RiftStalker);
+            Insert(EnemyKind.MireHound);
             return;
         }
 
         if (phase == EncounterPhase.Surge && pattern is EnemyEncounterPattern.StalkerPressure or EnemyEncounterPattern.Mixed)
         {
-            pendingInserts.Enqueue(EnemyKind.RiftStalker);
+            Insert(EnemyKind.MireHound);
             return;
         }
 
@@ -132,13 +156,13 @@ public sealed class EncounterDirector
         switch (pattern)
         {
             case EnemyEncounterPattern.Swarm when depth >= 2:
-                pendingInserts.Enqueue(EnemyKind.Brute);
+                Insert(EnemyKind.Penitent);
                 break;
             case EnemyEncounterPattern.StalkerPressure:
-                pendingInserts.Enqueue(EnemyKind.RiftStalker);
+                Insert(EnemyKind.MireHound);
                 break;
             case EnemyEncounterPattern.Mixed:
-                pendingInserts.Enqueue(depth >= 2 || stage == 4 ? EnemyKind.Brute : EnemyKind.RiftStalker);
+                Insert(depth >= 2 || stage == 4 ? EnemyKind.Penitent : EnemyKind.MireHound);
                 break;
         }
     }

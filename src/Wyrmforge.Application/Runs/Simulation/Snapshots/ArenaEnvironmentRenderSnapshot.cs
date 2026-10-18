@@ -12,4 +12,5 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     string Landmark,
     IReadOnlyList<ArenaSupplyRenderSnapshot> Supplies,
     IReadOnlyList<ArenaBarrierRenderSnapshot> Barriers,
-    string District);
+    string District,
+    string Habitat = "Outskirts");

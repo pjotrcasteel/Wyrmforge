@@ -28,4 +28,39 @@ public sealed record RunRenderSnapshot(
     public ArenaExitRenderSnapshot? Exit { get; init; }
     public ArenaWorldRenderSnapshot? World { get; init; }
     public CastMotionRenderSnapshot? CastMotion { get; init; }
+    public IReadOnlyList<HostileProjectileRenderSnapshot> HostileProjectiles { get; init; } = [];
+
+    /// <summary>Fallen Ashlings an Ash Priest can still raise; Life runs 1→0 until the remains crumble.</summary>
+    public IReadOnlyList<AshRemainsRenderSnapshot> AshRemains { get; init; } = [];
+
+    public IReadOnlyList<WraithRippleRenderSnapshot> WraithRipples { get; init; } = [];
+
+    public ReliquaryRenderSnapshot? Reliquary { get; init; }
+
+    public IReadOnlyList<ReliquaryFieldRenderSnapshot> ReliquaryFields { get; init; } = [];
+
+    public IReadOnlyList<GlassTetherRenderSnapshot> GlassTethers { get; init; } = [];
+
+    public IReadOnlyList<GlassPrisonRenderSnapshot> GlassPrisons { get; init; } = [];
+
+    public BellWardenRenderSnapshot? BellWarden { get; init; }
+
+    public IReadOnlyList<BellShockwaveRenderSnapshot> BellShockwaves { get; init; } = [];
+    public IReadOnlyList<PermafrostScarRenderSnapshot> PermafrostScars { get; init; } = [];
+    public IReadOnlyList<WinterRingRenderSnapshot> WinterRings { get; init; } = [];
+    public IReadOnlyList<IcicleRenderSnapshot> Icicles { get; init; } = [];
+
+    public WardPulseRenderSnapshot? WardPulse { get; init; }
+
+    public IReadOnlyList<IceLanceRenderSnapshot> IceLances { get; init; } = [];
+
+    public IReadOnlyList<SplinterBloomRenderSnapshot> SplinterBlooms { get; init; } = [];
+
+    public IReadOnlyList<BlackIceRenderSnapshot> BlackIce { get; init; } = [];
+
+    public IReadOnlyList<SnowCloudRenderSnapshot> SnowClouds { get; init; } = [];
+
+    public IReadOnlyList<RimeHuskRenderSnapshot> RimeHusks { get; init; } = [];
+
+    public IReadOnlyList<AvalancheRingRenderSnapshot> AvalancheRings { get; init; } = [];
 }

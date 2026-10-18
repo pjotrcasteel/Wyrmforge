@@ -43,7 +43,7 @@
                     {
                         var equipped = EquippedRelics.Any(candidate => candidate.Id == relic.Id);
                         <button class="relic-loadout-item @(equipped ? "equipped" : "stored")" disabled="@(!equipped && EquippedRelics.Count >= RelicSlots)" @onclick="() => ToggleRelicAsync(relic.Id, equipped)">
-                            <span class="relic-loadout-icon">@relic.Icon</span>
+                            <span class="relic-loadout-icon"><GameIcon Glyph="@(relic.Icon)" /></span>
                             <div><strong>@relic.Name</strong><small>@relic.Description</small></div>
                             <b>@(equipped ? "EQUIPPED" : "IN PACK")</b>
                         </button>

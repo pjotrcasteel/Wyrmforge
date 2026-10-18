@@ -7,8 +7,12 @@
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Spells.Evolutions
 @using Wyrmforge.Domain.Spells.Synergies
+@using Wyrmforge.Domain.Combat.Enemies
+@using Wyrmforge.Domain.Progression.Bestiary
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
 
-<section class="codex-view">
+<section class="codex-view" @ref="root">
     <nav class="collection-tabs" aria-label="Codex categories">
         @foreach (var category in Categories)
         {
@@ -22,7 +26,7 @@
             {
                 var discovered = Codex.Contains(synergy.Id);
                 <article class="codex-card @(discovered ? "known" : "unknown")">
-                    <span class="codex-icon">@(discovered ? synergy.Icon : "?")</span>
+                    <span class="codex-icon"><GameIcon Glyph="@(discovered ? synergy.Icon : "?")" /></span>
                     <div><strong>@(discovered ? synergy.Name : "Undiscovered")</strong><small>@(discovered ? synergy.Description : "Undiscovered")</small></div>
                 </article>
             }
@@ -44,7 +48,7 @@
                 var awakened = progress.Unlocked;
                 var evolution = SpellEvolutionCatalog.Get(lineage.Evolution);
                 <article class="codex-card @(awakened ? "known" : "unknown-lineage")">
-                    <span class="codex-icon">@(awakened ? evolution.Icon : spell.Icon)</span>
+                    <span class="codex-icon"><GameIcon Glyph="@(awakened ? evolution.Icon : spell.Icon)" /></span>
                     <div>
                         <strong>@(awakened ? evolution.Name : $"{spell.Name} • unknown lineage")</strong>
                         <small>@lineage.Clue</small>
@@ -78,7 +82,7 @@
             {
                 var evolutions = SpellEvolutionCatalog.For(spell.Id);
                 <article class="codex-card">
-                    <span class="codex-icon">@spell.Icon</span>
+                    <span class="codex-icon"><GameIcon Glyph="@(spell.Icon)" /></span>
                     <div>
                         <strong>@spell.Name</strong>
                         <small>@spell.Description</small>
@@ -96,7 +100,61 @@
         <div class="codex-grid compact">
             @foreach (var relic in RelicCatalog.All)
             {
-                <article class="codex-card"><span class="codex-icon">@relic.Icon</span><div><strong>@relic.Name</strong><small>@relic.Description</small></div></article>
+                <article class="codex-card"><span class="codex-icon"><GameIcon Glyph="@(relic.Icon)" /></span><div><strong>@relic.Name</strong><small>@relic.Description</small></div></article>
+            }
+        </div>
+    </section>
+
+    <section class="codex-section bestiary" hidden="@(activeCategory != "Bestiary")" aria-label="Encountered enemies">
+        <div class="section-heading"><span class="section-kicker">ENCOUNTERED ENEMIES</span><small>@Bestiary.EncounteredCount / @BestiaryCatalog.All.Count recorded</small></div>
+        <p class="lineage-codex-guide">Every creature you meet is recorded here. Slay @BestiaryCatalog.HunterNoteKills to uncover the hunter's note, @BestiaryCatalog.StudiedKills to mark it studied. Elite variants are added when you slay them.</p>
+        <div class="codex-grid bestiary-grid">
+            @foreach (var creature in BestiaryCatalog.All)
+            {
+                var met = Bestiary.Encountered(creature.Kind);
+                var slain = Bestiary.Kills(creature.Kind);
+                var elite = EliteAffixCatalog.TryFor(creature.Kind);
+                var unique = BestiaryState.IsUnique(creature.Kind);
+                var noteKills = BestiaryState.HunterNoteKillsFor(creature.Kind);
+                <article class="codex-card bestiary-card @(met ? "known" : "unknown-creature") @(Bestiary.Studied(creature.Kind) ? "studied" : string.Empty)" data-bestiary-entry="@creature.Kind">
+                    <canvas class="bestiary-portrait" width="96" height="96" data-bestiary-kind="@((int)creature.Kind)" data-unknown="@(met ? "false" : "true")" aria-hidden="true"></canvas>
+                    <div>
+                        @if (met)
+                        {
+                            <strong>@creature.Name @if (Bestiary.Studied(creature.Kind)) { <span class="bestiary-badge">@(unique ? "DEFEATED" : "STUDIED")</span> }</strong>
+                            <small class="bestiary-tier">@creature.Tier • @slain.ToString("N0") slain</small>
+                            <small>@creature.Behavior</small>
+                            <small class="bestiary-counter"><b>Counter:</b> @creature.Counterplay</small>
+                            <small class="bestiary-habitat"><b>Habitat:</b> @creature.Habitats</small>
+                            @if (Bestiary.HunterNoteRevealed(creature.Kind))
+                            {
+                                <small class="bestiary-note">“@creature.HunterNote”</small>
+                            }
+                            else
+                            {
+                                <small class="bestiary-locked">◇ Hunter's note • @Math.Min(slain, noteKills) / @noteKills slain</small>
+                            }
+                            @if (elite is null)
+                            {
+                                <small class="bestiary-elite"><b>◆ Unique</b> There is only one. It has no elite form.</small>
+                            }
+                            else if (Bestiary.EliteSlain(elite.Affix))
+                            {
+                                <small class="bestiary-elite"><b>◆ @elite.Title</b> @elite.Detail</small>
+                            }
+                            else
+                            {
+                                <small class="bestiary-locked">◇ Elite variant unrecorded</small>
+                            }
+                        }
+                        else
+                        {
+                            <strong>???</strong>
+                            <small class="bestiary-tier">@(unique ? "A rumour. Few hunters have seen it." : "Not yet encountered")</small>
+                            <small class="bestiary-habitat"><b>Rumoured in:</b> @creature.Habitats</small>
+                        }
+                    </div>
+                </article>
             }
         </div>
     </section>
@@ -106,7 +164,7 @@
         <div class="codex-grid compact">
             @foreach (var dragon in DragonCatalog.All)
             {
-                <article class="codex-card wyrm-card"><span class="codex-icon">◈</span><div><strong>@dragon.Name</strong><small>@dragon.Title • @dragon.School</small></div></article>
+                <article class="codex-card wyrm-card"><span class="codex-icon"><i class="px-icon px-wyrm" aria-hidden="true"></i></span><div><strong>@dragon.Name</strong><small>@dragon.Title • @dragon.School</small></div></article>
             }
         </div>
     </section>
@@ -115,11 +173,30 @@
 </section>
 
 @code {
-    private static readonly string[] Categories = ["Spells", "Relics", "Wyrms", "Synergies", "Lineages", "Great Hunt"];
+    private static readonly string[] Categories = ["Spells", "Relics", "Wyrms", "Bestiary", "Synergies", "Lineages", "Great Hunt"];
     private string activeCategory = "Spells";
+    private bool bestiaryPainted;
+    private IJSObjectReference? portraitModule;
+    private ElementReference root;
+
+    [Parameter] public BestiaryState Bestiary { get; set; } = new();
 
     [Parameter, EditorRequired] public ArcaneCodex Codex { get; set; } = null!;
     [Parameter, EditorRequired] public ForgeProgressionState Progression { get; set; } = null!;
     [Parameter] public SpellMasteryState Masteries { get; set; } = new();
     [Parameter] public GreatHuntState Hunt { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Sections stay in the DOM while hidden, so the portraits are painted once, when the Bestiary is first opened.
+        if (activeCategory != "Bestiary" || bestiaryPainted) return;
+        bestiaryPainted = true;
+        try
+        {
+            portraitModule ??= await JavaScript.InvokeAsync<IJSObjectReference>("import", $"./js/bestiary-portraits.js?v={AppBuildInfo.Version}");
+            await portraitModule.InvokeVoidAsync("drawBestiaryPortraits", root);
+        }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
 }

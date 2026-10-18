@@ -15,8 +15,8 @@ public static class WyrmrealmStageCatalog
     public static string Hint(int stage) => PressureStage(stage) switch
     {
         2 => "Swarm from north and south",
-        3 => "Hunters from left and right",
-        4 => "Brutes lead the assault",
+        3 => "Mire Hounds from left and right",
+        4 => "Penitents lead the assault",
         _ => "Scattered enemies",
     };
 

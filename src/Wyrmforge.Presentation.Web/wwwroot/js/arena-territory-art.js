@@ -1,4 +1,5 @@
 import { createCloisterPlan, drawCloisterFloor } from './arena-cloister-art.js';
+import { artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 
 // Original procedural environmental art. Collision remains owned by ArenaEnvironmentState (C#).
 // These drawings are non-interactive scenery, generated once per seeded territory texture.
@@ -6,11 +7,13 @@ const landmarkKinds = {
     ash: ['pyre', 'forge', 'caravan'],
     ridge: ['watchtower', 'ossuary', 'banner'],
     valley: ['chapel', 'waystation', 'altar'],
+    snow: ['cairnstack', 'icefall', 'sledge'],
 };
 const groundPalette = {
     ash: { low: '#130f12', earth: '#392824', high: '#5c3a30', road: '#5b483b', edge: '#b27b5c' },
     ridge: { low: '#11161b', earth: '#30363a', high: '#536064', road: '#55565a', edge: '#96a0a0' },
     valley: { low: '#0f191b', earth: '#293a33', high: '#476051', road: '#565047', edge: '#8c9379' },
+    snow: { low: '#151c24', earth: '#34404c', high: '#5b6c7c', road: '#4a535c', edge: '#a9bccb' },
 };
 const schoolPalette = {
     fire: { dark: '#3e1717', glow: '#e7763e', pale: '#f9b266' },
@@ -31,22 +34,28 @@ function randomStream(seed) {
 
 function clamp(value, low, high) { return Math.max(low, Math.min(high, value)); }
 
+// Territory names come from C#. Frost lands are matched first: "Rimewall heights" is a snow ridge, not a Cinder one.
+export function territoryBiome(name) {
+    const text = (name ?? '').toLowerCase();
+    if (/snow|rime|glacier|frost/.test(text)) return 'snow';
+    return text.includes('caldera') ? 'ash' : text.includes('ridge') ? 'ridge' : 'valley';
+}
+
 export function createTerritoryStoryPlan(environment, width, height) {
     const random = randomStream(environment.seed);
-    const name = (environment.biome ?? '').toLowerCase();
-    const biome = name.includes('caldera') ? 'ash' : name.includes('ridge') ? 'ridge' : 'valley';
+    const biome = territoryBiome(environment.biome);
     const element = schoolPalette[environment.element] ? environment.element : 'arcane';
     const district = ['causeway', 'sanctuary', 'rift'].includes(environment.district) ? environment.district : 'causeway';
     const corruption = clamp(((environment.stage ?? 1) - 1) / 7, 0, 1);
     const districtShift = district === 'sanctuary' ? .11 : district === 'rift' ? -.095 : 0;
     const landmarks = [
         { kind: landmarkKinds[biome][district === 'rift' ? 2 : 0], x: width * (.31 + districtShift + random() * .035), y: height * .19,
-            title: { ash: 'THE BLACK PYRE', ridge: 'THE LAST WATCH', valley: 'THE SUNKEN CHAPEL' }[biome] },
+            title: { ash: 'THE BLACK PYRE', ridge: 'THE LAST WATCH', valley: 'THE SUNKEN CHAPEL', snow: 'CAIRN OF NAMES' }[biome] },
         { kind: landmarkKinds[biome][district === 'sanctuary' ? 0 : 1], x: width * (.615 - districtShift + random() * .025),
             y: height * (.475 + random() * .03),
-            title: { ash: 'RUINED FORGE', ridge: 'BONE SHRINE', valley: 'ABANDONED WAYSTATION' }[biome] },
+            title: { ash: 'RUINED FORGE', ridge: 'BONE SHRINE', valley: 'ABANDONED WAYSTATION', snow: 'THE STILL FALL' }[biome] },
         { kind: landmarkKinds[biome][district === 'rift' ? 1 : 2], x: width * (.29 - districtShift + random() * .04), y: height * .82,
-            title: { ash: 'THE ASH CONVOY', ridge: 'FALLEN BANNERS', valley: 'FLOODED ALTAR' }[biome] },
+            title: { ash: 'THE ASH CONVOY', ridge: 'FALLEN BANNERS', valley: 'FLOODED ALTAR', snow: 'THE LOST SLEDGE' }[biome] },
     ];
     const patches = [];
     for (let i = 0; i < 42; i++) {
@@ -389,6 +398,21 @@ function drawSite(ctx, site, plan) {
     const scale = clamp(plan.width / 1100, .85, 1.3);
     const pigment = schoolPalette[plan.element];
     const surface = groundPalette[plan.biome];
+    if (artReady() && hasArtFrame('environment', `ruin.${site.kind}`)) {
+        // Authored low-profile ruin sprite; the place is read from its silhouette, not a text label.
+        const art = Math.max(1, Math.round(scale));
+        drawArtFrame(ctx, 'environment', `ruin.${site.kind}`, Math.round(site.x), Math.round(site.y + 30), { scale: art });
+        ctx.save();
+        ctx.translate(site.x, site.y);
+        ctx.strokeStyle = pigment.glow;
+        ctx.globalAlpha = .22 + plan.corruption * .5;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-29, 40); ctx.lineTo(-9, 32); ctx.lineTo(17, 41); ctx.lineTo(42, 33);
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
     ctx.save();
     ctx.translate(site.x, site.y);
     ctx.scale(scale, scale);
@@ -461,6 +485,28 @@ function drawSite(ctx, site, plan) {
             ctx.strokeStyle = '#6d5643'; ctx.lineWidth = 8;
             ctx.beginPath(); ctx.moveTo(-49, -26); ctx.lineTo(-4, -51); ctx.lineTo(39, -23); ctx.stroke();
             ctx.fillStyle = '#3a3029'; ctx.fillRect(-27, 10, 45, 22);
+            break;
+        case 'cairnstack':
+            for (const [x, tiers] of [[-36, 3], [0, 4], [34, 3]]) for (let k = 0; k < tiers; k++) {
+                const w = 26 - k * 5;
+                stoneBlock(ctx, x - w / 2, 18 - k * 12, w, 11, '#55606a');
+                ctx.fillStyle = '#b9cbd9'; ctx.fillRect(x - w / 2, 18 - k * 12, w, 2);
+            }
+            break;
+        case 'icefall':
+            ctx.fillStyle = '#3d6a86';
+            for (const [x, top] of [[-36, -22], [-14, -48], [8, -60], [30, -38], [48, -16]]) {
+                ctx.beginPath(); ctx.moveTo(x - 9, 28); ctx.lineTo(x + 3, top); ctx.lineTo(x + 10, 28); ctx.closePath(); ctx.fill();
+            }
+            ctx.fillStyle = '#6c8090';
+            ctx.beginPath(); ctx.ellipse(0, 30, 58, 9, 0, 0, Math.PI * 2); ctx.fill();
+            break;
+        case 'sledge':
+            stoneBlock(ctx, -50, -6, 96, 24, '#4a3a2e');
+            ctx.strokeStyle = '#6e6458'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(-56, 26); ctx.lineTo(50, 18); ctx.lineTo(62, 4); ctx.stroke();
+            ctx.fillStyle = '#5f7282';
+            ctx.beginPath(); ctx.ellipse(-24, 24, 30, 7, 0, 0, Math.PI * 2); ctx.fill();
             break;
         case 'altar':
             stoneBlock(ctx, -45, -12, 90, 46, '#4b5a55');

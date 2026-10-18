@@ -1,4 +1,5 @@
 ﻿using Wyrmforge.Application.Runs.EndRun;
+using Wyrmforge.Application.Runs.Telemetry;
 using Wyrmforge.Domain.Spells.Evolutions;
 
 namespace Wyrmforge.Application.Runs.SelfPlay;
@@ -42,9 +43,14 @@ public sealed record RunSelfPlayMetrics(
     IReadOnlyList<string> Decisions)
 {
     public int FocusedSurgesCast { get; init; }
+
+    /// <summary>Contextual second-spell casts; each one spent a primary cast (shared budget).</summary>
+    public int ContextualCasts { get; init; }
     public int ExtractionRitualsCompleted { get; init; }
     public int DeathsDuringExtraction { get; init; }
     public int PrimarySwitches { get; init; }
     public int PeakActivePrimaryCount { get; init; }
     public IReadOnlyList<string> PrimarySpellSequence { get; init; } = [];
+    public DraftTelemetry Draft { get; init; } = DraftTelemetry.Empty;
+    public ControlTelemetry Control { get; init; } = ControlTelemetry.Empty;
 }

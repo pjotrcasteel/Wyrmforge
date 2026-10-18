@@ -1,5 +1,8 @@
 @using System.Globalization
 @using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.Loadouts
+@using Wyrmforge.Application.Nexus
 @inject IJSRuntime JavaScript
 
 <section class="build-view">
@@ -7,6 +10,46 @@
         <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
         <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
     </header>
+
+    @if (Loadouts is not null)
+    {
+        <section class="loadout-strip" aria-label="Saved hunt loadouts">
+            <div class="loadout-slots">
+                <span class="loadout-kicker">LOADOUTS</span>
+                @for (var index = 0; index < HuntLoadoutBook.SlotCount; index++)
+                {
+                    var slot = index;
+                    var loadout = Loadouts[slot];
+                    <button class="loadout-slot @(loadout is null ? "empty" : "filled") @(openLoadout == slot ? "open" : string.Empty)"
+                        aria-expanded="@((openLoadout == slot).ToString().ToLowerInvariant())"
+                        aria-label="@(loadout is null ? $"{HuntLoadoutBook.DefaultName(slot)}, empty" : $"{loadout.Name}, {LoadoutSummary(loadout)}")"
+                        @onclick="() => ToggleLoadout(slot)">@(loadout is null ? "+" : RomanFor(slot))</button>
+                }
+            </div>
+            @if (openLoadout is { } open)
+            {
+                var loadout = Loadouts[open];
+                <div class="loadout-panel">
+                    @if (loadout is null)
+                    {
+                        <span><strong>@HuntLoadoutBook.DefaultName(open)</strong><small>Save this Web path and your equipped mutations.</small></span>
+                        <button class="primary" @onclick="() => SaveLoadoutAsync(open)">SAVE</button>
+                    }
+                    else
+                    {
+                        <span><strong>@loadout.Name</strong><small>@LoadoutSummary(loadout)</small></span>
+                        <button class="primary" aria-label="@($"Apply {loadout.Name}, free respec")" @onclick="() => ApplyLoadoutAsync(open)">APPLY</button>
+                        <button aria-label="@($"Overwrite {loadout.Name} with the current setup")" @onclick="() => ConfirmOrRun(LoadoutAction.Overwrite, () => SaveLoadoutAsync(open))">@(pendingAction == LoadoutAction.Overwrite ? "CONFIRM" : "OVERWRITE")</button>
+                        <button aria-label="@($"Clear {loadout.Name}")" @onclick="() => ConfirmOrRun(LoadoutAction.Clear, () => ClearLoadoutAsync(open))">@(pendingAction == LoadoutAction.Clear ? "CONFIRM" : "CLEAR")</button>
+                    }
+                </div>
+            }
+            @if (loadoutMessage is not null)
+            {
+                <p class="loadout-message" role="status">@loadoutMessage</p>
+            }
+        </section>
+    }
 
     <div class="web-layout">
         <div class="atlas-stage">
@@ -27,15 +70,24 @@
 
             <div class="atlas-caption"><span>THE WYRMHEART</span></div>
 
+                    @if (Suggestion is { } suggestion && !inspectorOpen)
+            {
+                <button class="nexus-next" aria-label="@($"Next discovery: {suggestion.Text} Show it on the Web.")" @onclick="() => FocusNodeAsync(suggestion.NodeId)">
+                    <i aria-hidden="true">✦</i>
+                    <span><small>NEXT DISCOVERY</small><b>@suggestion.Text</b></span>
+                    <em aria-hidden="true">›</em>
+                </button>
+            }
+
             <div class="arcane-web-viewport" @ref="viewport">
                 <div class="web-pan-space">
                     <div class="arcane-web-canvas">
                         <div class="atlas-contours" aria-hidden="true"></div>
                         <div class="atlas-center-sigil" aria-hidden="true"><i></i><i></i><i></i></div>
-                        <div class="atlas-region region-fire" aria-hidden="true"><span>🔥</span><b>FIRE</b><small>Ruin • ignition • detonation</small></div>
-                        <div class="atlas-region region-frost" aria-hidden="true"><span>❄</span><b>FROST</b><small>Endurance • control • shatter</small></div>
-                        <div class="atlas-region region-storm" aria-hidden="true"><span>⚡</span><b>STORM</b><small>Tempo • chaining • momentum</small></div>
-                        <div class="atlas-region region-arcane" aria-hidden="true"><span>✦</span><b>ARCANE</b><small>Projection • echo • multiplicity</small></div>
+                        <div class="atlas-region region-fire" aria-hidden="true"><span class="px-icon px-lg px-fire"></span><b>FIRE</b><small>Ruin • ignition • detonation</small></div>
+                        <div class="atlas-region region-frost" aria-hidden="true"><span class="px-icon px-lg px-frost"></span><b>FROST</b><small>Endurance • control • shatter</small></div>
+                        <div class="atlas-region region-storm" aria-hidden="true"><span class="px-icon px-lg px-storm"></span><b>STORM</b><small>Tempo • chaining • momentum</small></div>
+                        <div class="atlas-region region-arcane" aria-hidden="true"><span class="px-icon px-lg px-arcane"></span><b>ARCANE</b><small>Projection • echo • multiplicity</small></div>
 
                         <svg class="web-connections" viewBox="0 0 1200 900" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
@@ -49,7 +101,11 @@
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
                             <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
-                                aria-label="@($"{node.Name}. {node.Description}")" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
+                                aria-label="@NodeAriaLabel(node)" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
+                                @if (MarkFor(node.Id) is { } mark)
+                                {
+                                    <span class="nexus-mark stage-@StageClass(mark)" aria-hidden="true">@StageGlyph(mark)</span>
+                                }
                                 @if (node.Kind == PassiveNodeKind.Travel)
                                 {
                                     var bonuses = ArcaneNodePresentation.MinorBonuses(node);
@@ -57,7 +113,7 @@
                                         @foreach (var bonus in bonuses)
                                         {
                                             <span class="minor-effect" title="@bonus.Label">
-                                                <i>@bonus.Icon</i>
+                                                <i><GameIcon Glyph="@(bonus.Icon)" /></i>
                                                 <b>@CompactValue(bonus.Value)</b>
                                             </span>
                                         }
@@ -92,6 +148,83 @@
                 </div>
             </div>
             <p class="inspector-effect">@FocusedNode.Description</p>
+
+            @if (FocusedNexus is { Socket: { } socket } nexus)
+            {
+                <section class="nexus-bench" aria-label="@($"Research at {FocusedNode.Name}")">
+                    @foreach (var research in nexus.Research)
+                    {
+                        var mutation = research.Mutation;
+                        <header class="nexus-bench-head">
+                            <span>RESEARCH</span>
+                            <strong>@mutation.Name</strong>
+                            <b class="nexus-stage stage-@StageClass(research.Stage)"><i aria-hidden="true">@StageGlyph(research.Stage)</i>@StageLabel(research.Stage)</b>
+                        </header>
+                        <p class="nexus-enables"><span>@mutation.Summary</span><small>@mutation.TradeOff</small></p>
+
+                        @if (research.Material is { } material)
+                        {
+                            <div class="nexus-material @(material.Met ? "met" : "missing")">
+                                <i aria-hidden="true">@(material.Met ? "✓" : "✗")</i>
+                                <span>
+                                    <b>@material.Material.Name <em>@material.Owned/@material.Needed</em></b>
+                                    <small>@MaterialHelp(material)</small>
+                                </span>
+                            </div>
+                        }
+
+                        <p class="nexus-progress"><b>@research.ConditionsKnown/@research.ConditionsNeeded</b> conditions understood · @Spellcraft.SeatsOf(mutation).Foundation + @Spellcraft.SeatsOf(mutation).Infusion</p>
+
+                        <div class="nexus-loadouts">
+                            <span>LOADOUTS</span>
+                            @if (research.LoadoutReferences.Count > 0)
+                            {
+                                @foreach (var name in research.LoadoutReferences) { <b>@name</b> }
+                            }
+                            else
+                            {
+                                <small>@(research.Stage == NexusResearchStage.Equipped ? "Equipped for your next hunt · save a loadout above to keep it." : "Not in a saved loadout yet.")</small>
+                            }
+                        </div>
+
+                        <div class="nexus-action">
+                            <p>@research.Next.Text</p>
+                            @switch (research.Next.Kind)
+                            {
+                                case NexusActionKind.Equip:
+                                    var check = Laboratory!.CheckEquip(mutation.Id, mutation.Socket, Selection.Selected);
+                                    <button class="nexus-primary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(mutation.Id, mutation.Socket)">@(check == MutationEquipResult.Equipped ? $"EQUIP IN {socket.Definition.Name.ToUpperInvariant()}" : EquipBlocked(check))</button>
+                                    break;
+                                case NexusActionKind.None:
+                                    <button class="nexus-secondary" @onclick="() => EquipAsync(mutation.Id, null)">UNEQUIP</button>
+                                    break;
+                                case NexusActionKind.AllocateNode:
+                                    break;
+                                default:
+                                    <button class="nexus-primary" @onclick="() => OnOpenSpellcraft.InvokeAsync(mutation.Id)">OPEN THE CIRCLE · SPELLCRAFT</button>
+                                    break;
+                            }
+                        </div>
+                    }
+
+                    <div class="nexus-socket @(socket.Unlocked ? "open" : "closed")">
+                        <i aria-hidden="true">@(socket.Unlocked ? "◆" : "◇")</i>
+                        <span>
+                            <b>@socket.Definition.Name</b>
+                            <small>@SocketHelp(socket)</small>
+                        </span>
+                        @foreach (var other in socket.Equippable.Where(id => id != socket.Holder && nexus.Research.All(research => research.Mutation.Id != id)))
+                        {
+                            var check = Laboratory!.CheckEquip(other, socket.Definition.Id, Selection.Selected);
+                            <button class="nexus-secondary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(other, socket.Definition.Id)">EQUIP @LaboratoryCatalog.Get(other).Name.ToUpperInvariant()</button>
+                        }
+                        @if (socket.Holder is { } holder && nexus.Research.All(research => research.Mutation.Id != holder))
+                        {
+                            <button class="nexus-secondary" @onclick="() => EquipAsync(holder, null)">UNEQUIP @LaboratoryCatalog.Get(holder).Name.ToUpperInvariant()</button>
+                        }
+                    </div>
+                </section>
+            }
 
             @if (FocusedNode.Kind != PassiveNodeKind.Origin)
             {
@@ -132,7 +265,7 @@
                                 @foreach (var bonus in minorBonuses)
                                 {
                                     <div class="route-gain" title="@bonus.Label">
-                                        <i>@bonus.Icon</i>
+                                        <i><GameIcon Glyph="@(bonus.Icon)" /></i>
                                         <strong>@bonus.Value</strong>
                                         <small>@bonus.Label</small>
                                     </div>
@@ -179,6 +312,133 @@
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public EventCallback OnSelectionChanged { get; set; }
     [Parameter] public EventCallback OnQuests { get; set; }
+    [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
+    [Parameter] public Func<int, Task> SaveLoadout { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
+    [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
+
+    // Arcane Nexus: research is embedded in the Web's node inspector (amendment §3). Null until research unlocks.
+    [Parameter] public LaboratoryState? Laboratory { get; set; }
+    [Parameter] public DragonEssenceVault? Vault { get; set; }
+    [Parameter] public string? FocusNodeId { get; set; }
+    [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task>? Equip { get; set; }
+    [Parameter] public EventCallback<LaboratoryMutationId?> OnOpenSpellcraft { get; set; }
+
+    private bool NexusReady => Laboratory is not null && Vault is not null;
+    private NexusNode? FocusedNexus => NexusReady && FocusedNode.Kind != PassiveNodeKind.Origin ? ArcaneNexus.Node(focusedId, Laboratory!, Vault!, Selection.Selected, Loadouts) : null;
+    private NexusSuggestion? Suggestion => NexusReady ? ArcaneNexus.Suggest(Laboratory!, Vault!, Selection.Selected) : null;
+    private NexusResearchStage? MarkFor(string nodeId) => NexusReady && ArcaneNexus.IsResearchNode(nodeId) ? ArcaneNexus.Mark(nodeId, Laboratory!, Vault!, Selection.Selected) : null;
+
+    private string NodeAriaLabel(PassiveNodeDefinition node) => MarkFor(node.Id) is { } mark
+        ? $"{node.Name}. {node.Description} Research: {StageLabel(mark)}."
+        : $"{node.Name}. {node.Description}";
+
+    private static string StageClass(NexusResearchStage stage) => stage.ToString().ToLowerInvariant();
+
+    // Shape and text carry the state as well as colour.
+    private static string StageGlyph(NexusResearchStage stage) => stage switch
+    {
+        NexusResearchStage.NeedsMaterial => "?",
+        NexusResearchStage.Experimenting => "!",
+        NexusResearchStage.ReadyToStabilize => "★",
+        NexusResearchStage.Discovered => "✓",
+        _ => "◆",
+    };
+
+    private static string StageLabel(NexusResearchStage stage) => stage switch
+    {
+        NexusResearchStage.NeedsMaterial => "Needs material",
+        NexusResearchStage.Experimenting => "Experiment ready",
+        NexusResearchStage.ReadyToStabilize => "Ready to stabilize",
+        NexusResearchStage.Discovered => "Discovered",
+        _ => "Equipped",
+    };
+
+    private static string MaterialHelp(NexusMaterialNeed material) => material.Met
+        ? "Secured in your vault. Research only studies it."
+        : material.Tracked
+            ? $"Found on {material.SourceName} · tracked, {material.TrackedHuntsLeft} hunt{(material.TrackedHuntsLeft == 1 ? string.Empty : "s")} left"
+            : $"Found on {material.SourceName} · secure it after a hunt";
+
+    private static string EquipBlocked(MutationEquipResult result) => result switch
+    {
+        MutationEquipResult.SocketLocked => "ALLOCATE THIS NODE FIRST",
+        MutationEquipResult.FoundationTaken => "SAME SPELL ALREADY MUTATED",
+        MutationEquipResult.SocketLimitReached => $"{LaboratoryCatalog.MaxEquippedMutations} SOCKETS IN USE",
+        _ => "CANNOT EQUIP HERE",
+    };
+
+    private string SocketHelp(NexusSocket socket)
+    {
+        var accepts = string.Join(" + ", socket.Definition.Accepts);
+        var holds = socket.Holder is { } holder ? $"Holds {LaboratoryCatalog.Get(holder).Name}." : "Empty.";
+        return socket.Unlocked ? $"{holds} Accepts {accepts} blueprints." : $"Opens when you allocate {socket.Definition.NodeName}. Accepts {accepts} blueprints.";
+    }
+
+    private async Task EquipAsync(LaboratoryMutationId id, ArcaneMutationSocketId? socket)
+    {
+        if (Equip is not null) await Equip(id, socket);
+    }
+
+    private async Task FocusNodeAsync(string nodeId)
+    {
+        var node = PassiveTreeCatalog.Get(nodeId);
+        InspectNode(node);
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, node.X, node.Y);
+    }
+
+    private enum LoadoutAction { None, Overwrite, Clear }
+    private int? openLoadout;
+    private LoadoutAction pendingAction;
+    private string? loadoutMessage;
+
+    private static string RomanFor(int index) => HuntLoadoutBook.DefaultName(index)["Loadout ".Length..];
+
+    private static string LoadoutSummary(HuntLoadout loadout)
+    {
+        var mutations = loadout.Slots.Count == 0 ? "no mutations"
+            : string.Join(" + ", loadout.Slots.OrderBy(pair => pair.Key).Select(pair => LaboratoryCatalog.Get(pair.Value).Name));
+        var parts = new List<string> { $"{loadout.Nodes.Count} nodes", mutations };
+        if (loadout.Primary is { } primary) parts.Add(Wyrmforge.Domain.Spells.SpellCatalog.Get(primary).Name);
+        if (loadout.Offering is { } offering) parts.Add($"offers {Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceCatalog.Get(offering).Name}");
+        return string.Join(" · ", parts);
+    }
+
+    private void ToggleLoadout(int index)
+    {
+        openLoadout = openLoadout == index ? null : index;
+        pendingAction = LoadoutAction.None;
+        loadoutMessage = null;
+    }
+
+    private async Task ConfirmOrRun(LoadoutAction action, Func<Task> run)
+    {
+        if (pendingAction != action) { pendingAction = action; return; }
+        pendingAction = LoadoutAction.None;
+        await run();
+        loadoutMessage = action == LoadoutAction.Clear ? "Loadout cleared." : "Loadout overwritten with the current setup.";
+    }
+
+    private async Task SaveLoadoutAsync(int index)
+    {
+        await SaveLoadout(index);
+        loadoutMessage = $"Saved {Loadouts?[index]?.Name}.";
+    }
+
+    private async Task ClearLoadoutAsync(int index) => await ClearLoadout(index);
+
+    private async Task ApplyLoadoutAsync(int index)
+    {
+        pendingAction = LoadoutAction.None;
+        if (await ApplyLoadout(index) is not { } result) return;
+        focusedId = PassiveTreeCatalog.OriginId;
+        inspectorOpen = false;
+        var parts = new List<string> { $"Applied {Loadouts?[index]?.Name}: {result.NodesRestored} nodes" };
+        if (result.Equipped.Count > 0) parts.Add(string.Join(" + ", result.Equipped.Select(id => LaboratoryCatalog.Get(id).Name)) + " equipped");
+        if (result.NodesSkipped > 0) parts.Add($"{result.NodesSkipped} nodes could not be reached");
+        if (result.Skipped.Count > 0) parts.Add($"{string.Join(" + ", result.Skipped.Select(id => LaboratoryCatalog.Get(id).Name))} not equipped");
+        loadoutMessage = string.Join(" · ", parts) + ".";
+    }
 
     private ElementReference viewport;
     private string focusedId = PassiveTreeCatalog.OriginId;
@@ -189,13 +449,22 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.initialize", viewport);
+        if (!firstRender) return;
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.initialize", viewport);
+        if (FocusNodeId is { } focus && PassiveTreeCatalog.All.Any(node => node.Id == focus))
+        {
+            await FocusNodeAsync(focus);
+            StateHasChanged();
+        }
     }
 
     private bool IsSelected(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin || Selection.Selected.Contains(node.Id);
 
     private void InspectNode(PassiveNodeDefinition node)
     {
+        if (focusedId != node.Id)
+        {
+        }
         focusedId = node.Id;
         inspectorOpen = true;
     }

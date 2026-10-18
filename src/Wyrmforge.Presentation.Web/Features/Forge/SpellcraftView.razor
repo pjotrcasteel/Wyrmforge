@@ -1,0 +1,462 @@
+@using Microsoft.JSInterop
+@using Wyrmforge.Application.Nexus
+@using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.Loadouts
+@using Wyrmforge.Domain.Progression.PassiveTree
+@using Wyrmforge.Domain.Spells
+@implements IAsyncDisposable
+@inject IJSRuntime JavaScript
+
+<section class="spellcraft" aria-label="Spellcraft">
+
+    @if (!string.IsNullOrEmpty(Notice))
+    {
+        <div class="spellcraft-notice" role="status">
+            <span>@Notice</span>
+            <button aria-label="Dismiss research notice" @onclick="() => OnDismissNotice.InvokeAsync()">×</button>
+        </div>
+    }
+
+    <nav class="spellcraft-grimoire" aria-label="@($"Grimoire, {KnownCount} of {Spellcraft.Families.Count} resonances bound")">
+        <span class="grimoire-count"><b>@KnownCount</b>/@Spellcraft.Families.Count<small>BOUND</small></span>
+        @foreach (var page in Grimoire)
+        {
+            var current = Circle.Family == page.Family;
+            <button class="grimoire-page @PageClass(page) @(current ? "current" : string.Empty)" aria-pressed="@(current.ToString().ToLowerInvariant())"
+                aria-label="@PageLabel(page)" @onclick="() => OpenPageAsync(page)">
+                <i class="pip el-@Css(page.Family.First)" aria-hidden="true"></i><i class="pip el-@Css(page.Family.Second)" aria-hidden="true"></i>
+                <span>@(page.Studied || page.Research is not null ? page.Family.Name : "?")</span>
+            </button>
+        }
+    </nav>
+
+    <div class="spellcraft-stage">
+        <div class="spellcraft-study" aria-hidden="true"></div>
+        <div class="ritual">
+            <canvas class="ritual-canvas" @ref="canvas" aria-hidden="true"></canvas>
+            <button class="seat seat-foundation @(foundation is null ? "empty" : $"el-{Css(foundation.Value)}")" aria-label="@SeatLabel("Foundation", foundation)" @onclick="() => ClearSeatAsync(Seat.Foundation)">
+                @if (foundation is not null) { <i aria-hidden="true">×</i> }
+            </button>
+            <button class="seat seat-infusion @(infusion is null ? "empty" : $"el-{Css(infusion.Value)}")" aria-label="@SeatLabel("Infusion", infusion)" @onclick="() => ClearSeatAsync(Seat.Infusion)">
+                @if (infusion is not null) { <i aria-hidden="true">×</i> }
+            </button>
+            <span class="seat seat-third" title="A third element is a later, advanced rite." aria-label="Third seat, sealed until advanced rites"></span>
+            <span class="seat-caption caption-foundation">@(foundation?.ToString() ?? "Foundation")</span>
+            <span class="seat-caption caption-infusion">@(infusion?.ToString() ?? "Infusion")</span>
+            @if (foundation is not null && infusion is not null)
+            {
+                <button class="seat-swap" aria-label="Swap foundation and infusion" @onclick="SwapAsync">⇄</button>
+            }
+            <button class="ritual-core" disabled="@(!CanTest)" aria-label="@(CanTest ? $"Test {Circle.Title}" : Circle.Title)" @onclick="TestAsync">
+                @if (CanTest) { <small>Tap to test</small> }
+            </button>
+        </div>
+
+        <header class="resonance-title" aria-live="polite">
+            <h2>@Circle.Title</h2>
+            <span class="resonance-pair">@PairLine</span>
+            @if (Circle.Research is { } staged)
+            {
+                <span class="resonance-stage stage-@staged.Stage.ToString().ToLowerInvariant()">@StageLabel(staged)</span>
+            }
+        </header>
+        @if (lastResult is { } result)
+        {
+            <div class="resonance-result outcome-@OutcomeClass(result)" role="status">
+                <strong>@OutcomeLabel(result)</strong>
+                <span>@result.Message</span>
+                @if (result.Novel && !result.Rejected) { <small>Written in the research log · @result.Experiment.NextStep</small> }
+            </div>
+        }
+    </div>
+
+    <section class="spellcraft-reading" aria-label="Reading of the circle">
+        <p class="resonance-text">@Circle.Text</p>
+
+        @if (Circle.Research is { } reading)
+        {
+            var mutation = reading.Mutation;
+            <ol class="resonance-shards" aria-label="@($"{reading.ConditionsKnown} of {reading.ConditionsNeeded} conditions understood")">
+                @foreach (var observation in mutation.RequiresObservations)
+                {
+                    var known = Laboratory!.HasObserved(observation);
+                    <li class="@(known ? "known" : string.Empty)"><i aria-hidden="true">@(known ? "◆" : "◇")</i>@(known ? LaboratoryCatalog.ObservationLabel(observation) : "Unread condition")</li>
+                }
+            </ol>
+
+            @if (reading.Stage is NexusResearchStage.Discovered or NexusResearchStage.Equipped)
+            {
+                <div class="resonance-pips">
+                    <span class="pip-effect"><b>EFFECT</b>@mutation.Summary</span>
+                    <span class="pip-cost"><b>TRADE-OFF</b>@mutation.TradeOff</span>
+                </div>
+            }
+
+            @if (SidePaths(reading) is { Count: > 0 } sides)
+            {
+                <details class="resonance-sides">
+                    <summary>Side paths · @sides.Count(step => step.Known)/@sides.Count tried</summary>
+                    @foreach (var step in sides)
+                    {
+                        <button class="side-path @(step.Known ? "known" : string.Empty)" disabled="@(step.Availability != ExperimentAvailability.Ready)" @onclick="() => RunAsync(step.Experiment.Id)">
+                            <b>@step.Experiment.Name</b><small>@(step.Known ? step.Experiment.Finding : step.Experiment.Hypothesis)</small>
+                        </button>
+                    }
+                </details>
+            }
+        }
+
+        @if (Log.Count > 0)
+        {
+            <details class="research-log">
+                <summary>Research log · @Log.Count @(Log.Count == 1 ? "entry" : "entries")</summary>
+                <ol>
+                    @foreach (var entry in Log)
+                    {
+                        <li class="outcome-@entry.Outcome.ToString().ToLowerInvariant()"><b>@entry.Label</b><span>@entry.Finding</span></li>
+                    }
+                </ol>
+            </details>
+        }
+    </section>
+
+    <div class="spellcraft-dock">
+    <div class="spellcraft-tray" role="group" aria-label="Elements">
+        @foreach (var element in Spellcraft.Elements)
+        {
+            var seated = foundation == element || infusion == element;
+            <button class="element-token el-@Css(element) @(seated ? "seated" : string.Empty)" aria-pressed="@(seated.ToString().ToLowerInvariant())" aria-label="@($"{element}{(seated ? ", seated" : string.Empty)}")" @onclick="() => PlaceAsync(element)">
+                <i aria-hidden="true"></i><span>@element</span>
+            </button>
+        }
+    </div>
+
+    <footer class="spellcraft-actions">
+        @if (Circle.Research is { } research)
+        {
+            var mutation = research.Mutation;
+            @if (research.Material is { } material)
+            {
+                <p class="material-line @(material.Met ? "met" : "missing")"><i class="wyrm-mark" aria-hidden="true">@material.SourceName[..1]</i>@material.Material.Name <b>@material.Owned/@material.Needed</b><small>@MaterialHelp(material)</small></p>
+            }
+            <div class="action-row">
+                @switch (research.Next.Kind)
+                {
+                    case NexusActionKind.TrackMaterial:
+                        <button class="rite-primary" @onclick="() => TrackAsync(mutation.Id)">TRACK @research.Material!.SourceName.ToUpperInvariant()</button>
+                        break;
+                    case NexusActionKind.HuntMaterial:
+                        <button class="rite-primary quiet" aria-pressed="true" @onclick="() => TrackAsync(null)">TRACKING · STOP</button>
+                        break;
+                    case NexusActionKind.RunExperiment:
+                        <button class="rite-primary" aria-label="@($"Research: {research.Next.Text}")" @onclick="() => RunAsync(research.Next.Experiment!.Value)">RESEARCH<small>@research.Next.Text</small></button>
+                        break;
+                    case NexusActionKind.Stabilize:
+                        <button class="rite-primary bind" @onclick="() => consenting = true">BIND THE RESONANCE<small>uses 1 @mutation.Specimen.Name</small></button>
+                        break;
+                    case NexusActionKind.AllocateNode:
+                        <button class="rite-primary" @onclick="() => OnOpenWeb.InvokeAsync(LaboratoryCatalog.Get(mutation.Socket).NodeId)">OPEN IN THE WEB<small>@LaboratoryCatalog.Get(mutation.Socket).NodeName</small></button>
+                        break;
+                    case NexusActionKind.Equip:
+                        var check = Laboratory!.CheckEquip(mutation.Id, mutation.Socket, Selection.Selected);
+                        <button class="rite-primary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(mutation.Id, mutation.Socket)">@(check == MutationEquipResult.Equipped ? "EQUIP" : "CANNOT EQUIP")<small>@(check == MutationEquipResult.Equipped ? LaboratoryCatalog.Get(mutation.Socket).Name : EquipBlocked(check))</small></button>
+                        break;
+                    default:
+                        <button class="rite-primary quiet" @onclick="() => EquipAsync(mutation.Id, null)">UNEQUIP<small>Equipped · wakes with @SpellCatalog.Get(mutation.Foundation).Name</small></button>
+                        break;
+                }
+                <button class="rite-test" disabled="@(!CanTest)" @onclick="TestAsync"><span aria-hidden="true">▷</span>Test</button>
+            </div>
+            @if (research.Next.Kind is NexusActionKind.TrackMaterial or NexusActionKind.HuntMaterial)
+            {
+                <p class="action-hint">@research.Next.Text</p>
+            }
+            @if (research.LoadoutReferences.Count > 0)
+            {
+                <p class="action-hint">In loadout: @string.Join(", ", research.LoadoutReferences)</p>
+            }
+        }
+        else
+        {
+            <div class="action-row">
+                <button class="rite-primary" disabled>@(Circle.State == SpellcraftState.Sealed ? "SEALED" : "SEAT TWO ELEMENTS")<small>@Circle.Title</small></button>
+                <button class="rite-test" disabled><span aria-hidden="true">▷</span>Test</button>
+            </div>
+        }
+    </footer>
+    </div>
+
+    @if (consenting && Circle.Research is { Next.Kind: NexusActionKind.Stabilize } binding)
+    {
+        var mutation = binding.Mutation;
+        var owned = Vault!.Count(mutation.Stabilizer);
+        <div class="consent-veil" @onclick="() => consenting = false"></div>
+        <section class="consent-sheet" role="alertdialog" aria-modal="true" aria-label="Bind the resonance">
+            <span class="consent-kicker">A PERMANENT BINDING</span>
+            <h3>Bind @mutation.Name?</h3>
+            <div class="consent-offer">
+                <i class="consent-specimen el-@Css(Spellcraft.SeatsOf(mutation).Infusion)" aria-hidden="true"></i>
+                <p><b>Consumes 1 @mutation.Specimen.Name</b><span>Vault @owned → @(owned - 1). The Forge uses the same hearts.</span></p>
+            </div>
+            <p class="consent-promise">Every condition is understood. The binding cannot fail, and @mutation.Name stays in your grimoire forever.</p>
+            <div class="consent-actions">
+                <button class="rite-secondary" @onclick="() => consenting = false">NOT YET</button>
+                <button class="rite-primary bind" @onclick="() => StabilizeAsync(mutation.Id)">CONSUME &amp; BIND</button>
+            </div>
+        </section>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public LaboratoryState? Laboratory { get; set; }
+    [Parameter, EditorRequired] public DragonEssenceVault? Vault { get; set; }
+    [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
+    [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
+    [Parameter] public LaboratoryMutationId? Focus { get; set; }
+    [Parameter] public string? Notice { get; set; }
+    [Parameter] public EventCallback OnDismissNotice { get; set; }
+    [Parameter] public EventCallback<string> OnOpenWeb { get; set; }
+    [Parameter] public Func<LaboratoryExperimentId, Task<LaboratoryExperimentResult>>? RunExperiment { get; set; }
+    [Parameter] public Func<LaboratoryMutationId, Task<bool>>? Stabilize { get; set; }
+    [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task>? Equip { get; set; }
+    [Parameter] public Func<LaboratoryMutationId?, Task>? Track { get; set; }
+
+    private enum Seat { Foundation, Infusion }
+
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private SpellSchool? foundation;
+    private SpellSchool? infusion;
+    private bool seeded;
+    private LaboratoryMutationId? seededFocus;
+    private LaboratoryExperimentResult? lastResult;
+    private bool consenting;
+    private (string Kind, string? Seat, string? Element)? pendingPulse;
+    private (string Family, bool Stable)? pendingTest;
+
+    private SpellcraftCircle Circle => Spellcraft.Circle(foundation, infusion, Laboratory!, Vault!, Selection.Selected, Loadouts);
+    private IReadOnlyList<SpellcraftPage> Grimoire => Spellcraft.Grimoire(Laboratory!, Vault!, Selection.Selected, Loadouts);
+    private IReadOnlyList<SpellcraftLogEntry> Log => Spellcraft.Log(Laboratory!);
+    private int KnownCount => Grimoire.Count(page => page.Known);
+    private bool CanTest => Circle.State == SpellcraftState.Research;
+    private string PairLine => foundation is { } a && infusion is { } b ? $"{a} + {b}" : foundation is { } only ? $"{only} + ?" : infusion is { } late ? $"? + {late}" : "Choose two elements";
+
+    protected override void OnParametersSet()
+    {
+        // Open on the recipe the player came for: an explicit focus, the tracked hunt, the advisor's step, else Frostfire.
+        if (seeded && Focus == seededFocus) return;
+        seeded = true;
+        seededFocus = Focus;
+        var target = Focus ?? Laboratory?.Tracked ?? (Laboratory is not null && Vault is not null ? LaboratoryAdvisor.Next(Laboratory, Vault, Selection.Selected)?.Mutation : null) ?? LaboratoryMutationId.RimeInfusion;
+        (foundation, infusion) = Spellcraft.SeatsOf(LaboratoryCatalog.Get(target));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                module = await JavaScript.InvokeAsync<IJSObjectReference>("import", $"./js/spellcraft-circle.js?v={AppBuildInfo.Version}");
+                await module.InvokeVoidAsync("attach", canvas, View());
+            }
+            else if (module is not null) await module.InvokeVoidAsync("update", canvas, View());
+
+            if (module is null) return;
+            if (pendingPulse is { } pulse)
+            {
+                pendingPulse = null;
+                await module.InvokeVoidAsync("pulse", canvas, pulse.Kind, pulse.Seat, pulse.Element);
+            }
+            if (pendingTest is { } test)
+            {
+                pendingTest = null;
+                await module.InvokeVoidAsync("test", canvas, test.Family, test.Stable);
+            }
+        }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
+
+    private object View()
+    {
+        var circle = Circle;
+        return new
+        {
+            foundation = foundation?.ToString().ToLowerInvariant(),
+            infusion = infusion?.ToString().ToLowerInvariant(),
+            state = circle.State switch
+            {
+                SpellcraftState.Empty => "empty",
+                SpellcraftState.AwaitingInfusion => "awaiting",
+                SpellcraftState.SameElement => "same",
+                SpellcraftState.Sealed => "sealed",
+                _ => "research",
+            },
+            known = circle.Research?.ConditionsKnown ?? 0,
+            needed = circle.Research?.ConditionsNeeded ?? 3,
+            stage = circle.Research?.Stage.ToString().ToLowerInvariant(),
+        };
+    }
+
+    private async Task PlaceAsync(SpellSchool element)
+    {
+        lastResult = null;
+        consenting = false;
+        if (foundation == element) { foundation = null; return; }
+        if (infusion == element) { infusion = null; return; }
+        var seat = foundation is null ? Seat.Foundation : Seat.Infusion;
+        if (seat == Seat.Foundation) foundation = element; else infusion = element;
+        var same = foundation == infusion;
+        pendingPulse = (same ? "reject" : "snap", seat == Seat.Foundation ? "foundation" : "infusion", Css(element));
+        await PlayAsync(same ? "hurt" : Cue(element));
+    }
+
+    private Task ClearSeatAsync(Seat seat)
+    {
+        lastResult = null;
+        consenting = false;
+        if (seat == Seat.Foundation) foundation = null; else infusion = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task SwapAsync()
+    {
+        lastResult = null;
+        (foundation, infusion) = (infusion, foundation);
+        pendingPulse = ("snap", null, foundation is { } a ? Css(a) : null);
+        await PlayAsync("ui");
+    }
+
+    private async Task OpenPageAsync(SpellcraftPage page)
+    {
+        lastResult = null;
+        consenting = false;
+        (foundation, infusion) = (page.RecipeFoundation ?? page.Family.First, page.RecipeInfusion ?? page.Family.Second);
+        pendingPulse = ("snap", null, Css(foundation.Value));
+        await PlayAsync("ui");
+    }
+
+    private async Task RunAsync(LaboratoryExperimentId id)
+    {
+        if (RunExperiment is null) return;
+        lastResult = await RunExperiment(id);
+        if (lastResult.Rejected) { pendingPulse = ("reject", null, null); return; }
+        if (!lastResult.Novel) return;
+        var (pulse, cue) = lastResult.Experiment.Outcome switch
+        {
+            LaboratoryExperimentOutcome.Insight => ("insight", "upgrade-open"),
+            LaboratoryExperimentOutcome.InstructiveFailure => ("failure", "impact"),
+            _ => ("incompatible", "enemy-down"),
+        };
+        pendingPulse = (pulse, null, null);
+        await PlayAsync(cue);
+    }
+
+    private async Task StabilizeAsync(LaboratoryMutationId id)
+    {
+        consenting = false;
+        if (Stabilize is null || !await Stabilize(id)) return;
+        lastResult = null;
+        pendingPulse = ("stabilize", null, null);
+        await PlayAsync("power-burst");
+    }
+
+    private async Task EquipAsync(LaboratoryMutationId id, ArcaneMutationSocketId? socket)
+    {
+        if (Equip is null) return;
+        await Equip(id, socket);
+        if (socket is not null)
+        {
+            pendingPulse = ("insight", null, null);
+            await PlayAsync("upgrade-choice");
+        }
+    }
+
+    private async Task TrackAsync(LaboratoryMutationId? id)
+    {
+        if (Track is null) return;
+        await Track(id);
+        if (id is not null) await PlayAsync("hunt-start");
+    }
+
+    private async Task TestAsync()
+    {
+        if (!CanTest || Circle is not { Family: { } family, Research: { } research }) return;
+        var stable = research.Stage is NexusResearchStage.Discovered or NexusResearchStage.Equipped;
+        pendingTest = (family.Name, stable);
+        await PlayAsync(stable && foundation is { } a ? Cue(a) : "impact");
+    }
+
+    private async Task PlayAsync(string cue)
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgeAudio.play", CancellationToken.None, cue); }
+        catch (JSException) { }
+        catch (InvalidOperationException) { }
+    }
+
+    private static string Cue(SpellSchool element) => element switch
+    {
+        SpellSchool.Fire => "fire",
+        SpellSchool.Frost => "frost",
+        SpellSchool.Storm => "lightning",
+        _ => "arcane",
+    };
+
+    private static string Css(SpellSchool element) => element.ToString().ToLowerInvariant();
+
+    private static string SeatLabel(string seat, SpellSchool? element) => element is { } value ? $"{seat} seat: {value}. Tap to clear." : $"{seat} seat, empty";
+
+    private static string PageClass(SpellcraftPage page) => page.Known ? "known" : page.Studied ? "studied" : page.Research is not null ? "open" : "sealed";
+
+    private static string PageLabel(SpellcraftPage page) => page.Known ? $"{page.Family.Name}, bound"
+        : page.Studied ? $"{page.Family.Name}, {page.Research!.ConditionsKnown} of {page.Research.ConditionsNeeded} conditions"
+        : page.Research is not null ? $"{page.Family.Name}, unresearched" : $"{page.Family.Name}, sealed";
+
+    private static string StageLabel(NexusResearch research) => research.Stage switch
+    {
+        NexusResearchStage.NeedsMaterial => "Needs a specimen",
+        NexusResearchStage.Experimenting => $"{research.ConditionsKnown}/{research.ConditionsNeeded} conditions",
+        NexusResearchStage.ReadyToStabilize => "Ready to bind",
+        NexusResearchStage.Discovered => "Bound · not equipped",
+        _ => "Equipped",
+    };
+
+    private static IReadOnlyList<NexusExperimentStep> SidePaths(NexusResearch research) =>
+        research.Experiments.Where(step => step.Experiment.Outcome == LaboratoryExperimentOutcome.Incompatibility).ToArray();
+
+    private static string OutcomeClass(LaboratoryExperimentResult result) => result.Rejected ? "rejected" : !result.Novel ? "repeat" : result.Experiment.Outcome.ToString().ToLowerInvariant();
+
+    private static string OutcomeLabel(LaboratoryExperimentResult result) => result.Rejected ? "NOT YET" : !result.Novel ? "ALREADY RECORDED" : result.Experiment.Outcome switch
+    {
+        LaboratoryExperimentOutcome.Insight => "INSIGHT · A SHARD WAKES",
+        LaboratoryExperimentOutcome.InstructiveFailure => "INSTRUCTIVE FAILURE · A CLUE",
+        _ => "DEAD END · RULED OUT",
+    };
+
+    private static string MaterialHelp(NexusMaterialNeed material) => material.Met
+        ? "In your vault · research only studies it"
+        : material.Tracked ? $"{material.SourceName} · tracked, {material.TrackedHuntsLeft} hunt{(material.TrackedHuntsLeft == 1 ? string.Empty : "s")} left"
+        : $"Found on {material.SourceName}";
+
+    private static string EquipBlocked(MutationEquipResult result) => result switch
+    {
+        MutationEquipResult.SocketLocked => "Allocate its Web node first",
+        MutationEquipResult.FoundationTaken => "That spell already carries a mutation",
+        MutationEquipResult.SocketLimitReached => $"{LaboratoryCatalog.MaxEquippedMutations} sockets in use",
+        _ => "No compatible socket",
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try
+        {
+            await module.InvokeVoidAsync("detach", canvas);
+            await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+        catch (JSException) { }
+    }
+}

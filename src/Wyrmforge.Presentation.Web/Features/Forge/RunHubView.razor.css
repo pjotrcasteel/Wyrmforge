@@ -72,3 +72,5 @@
 .run-hub{display:grid;gap:14px}.enter-realm{min-height:52px;border-radius:4px}.loadout-card{border-radius:4px}.text-action{min-height:44px}.ascendant-rite-card{border-radius:4px}
 
 .quest-cache-ready{padding:12px;border:1px solid #796443;color:#e4c68c;font-size:.8rem}
+/* The fixed sound dock sits over the bottom-right corner; leave room so the last card's action can scroll clear of it. */
+.run-hub { padding-bottom: 96px; }

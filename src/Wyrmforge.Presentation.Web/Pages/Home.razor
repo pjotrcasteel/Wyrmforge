@@ -4,12 +4,12 @@
 
 @if (!runActive)
 {
-    <ForgeView PlayerName="@playerName" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback"
-        OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneBuildAsync" OnLeaderboard="OpenLeaderboard" OnQuests="OpenQuests" QuestRewards="quests.ReadyCount" RewardCaches="quests.Caches" Hunter="hunter" />
+    <ForgeView PlayerName="@playerName" OnPlayerNameChanged="SavePlayerNameAsync" Selection="selection" Vault="essenceVault" Codex="arcaneCodex" Bestiary="bestiary" Progression="forgeProgression" Masteries="spellMastery" Hunt="greatHunt" SelectedOffering="selectedOffering" BestScore="bestScore" AscendantSelected="selectedAscendant" OnAscendantChanged="SelectAscendant" OnFeedback="OpenPlaytestFeedback"
+        OnOfferingChanged="SelectOffering" OnForgeMastery="ForgeMasteryAsync" OnStart="StartRunAsync" Progress="firstHunt" ForgeUnlocked="ForgeAvailable" OnSelectionChanged="SaveArcaneSelectionAsync" Laboratory="laboratory" LaboratoryNotice="@laboratoryNotice" OnDismissLaboratoryNotice="DismissLaboratoryNotice" RunExperiment="RunLaboratoryExperimentAsync" StabilizeMutation="StabilizeLaboratoryMutationAsync" EquipMutation="EquipLaboratoryMutationAsync" Loadouts="loadouts" SaveLoadout="SaveLoadoutAsync" ApplyLoadout="ApplyLoadoutAsync" ClearLoadout="ClearLoadoutAsync" TrackMutation="TrackLaboratoryMutationAsync" StartInLaboratory="openLaboratoryOnReturn" LaboratoryFocus="laboratoryFocus" OnLeaderboard="OpenLeaderboard" OnQuests="OpenQuests" QuestRewards="quests.ReadyCount" RewardCaches="quests.Caches" Hunter="hunter" Region="CurrentRegion" World="world" Advancement="Advancement" RegionAccess="RegionAccess" OnRegionChanged="SelectRegionAsync" />
 }
 else
 {
-    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" RewardCache="activeRewardCache" OnGameOver="HandleGameOverAsync" />
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" Region="activeRegion" RegionOpening="activeRegionOpening" ContextualSpell="hunter.ContextualSpellUnlocked" RewardCache="activeRewardCache" PreparedMutations="activeLaboratoryMutations" ResearchLead="activeResearchLead" ResearchSpecimen="activeResearchSpecimen" PreferredPrimary="preferredPrimary" OnPrimaryChosen="SetPreferredPrimaryAsync" OnGameOver="HandleGameOverAsync" />
 }
 
 @if (tutorialCinematic)
@@ -20,10 +20,10 @@ else
 {
     <div class="first-hunt-unlocks" role="dialog" aria-label="New chapters unlocked">
         <section>
-            <div class="unlock-padlock" aria-hidden="true">🔓</div>
+            <div class="unlock-padlock" aria-hidden="true"><i class="px-icon px-lg px-rune"></i></div>
             <h2>THE ARCANE ATLAS AWAKENS</h2>
             <p>You earned your first Arcane point. Shape your path before the next hunt.</p>
-            <div class="unlock-padlock second" aria-hidden="true">🔓</div>
+            <div class="unlock-padlock second" aria-hidden="true"><i class="px-icon px-lg px-book"></i></div>
             <h3>CODEX UNLOCKED</h3>
             <p>You have witnessed magic. Begin recording what you discover.</p>
             <button @onclick="DismissUnlocks">OPEN THE WYRMFORGE</button>
@@ -32,7 +32,7 @@ else
 }
 @if (summary is not null)
 {
-    <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" NewAscendantVictories="newlyConqueredAscendants" OnFeedback="OpenPlaytestFeedback" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" OnQuests="ReturnToQuests" QuestRewards="quests.ReadyCount" Hunter="hunter" PointBudget="selection.PointBudget" HunterGain="hunterGain" />
+    <RunSummaryOverlay Summary="summary" Progression="forgeProgression" Vault="essenceVault" Masteries="spellMastery" Hunt="greatHunt" NewLineages="newlyUnlockedLineages" AdvancedSpells="advancedSpellIds" AdvancedOaths="advancedOaths" NewSeals="newlySealedOaths" NewAscendantVictories="newlyConqueredAscendants" BestiaryDiscoveries="bestiaryDiscoveries" OnFeedback="OpenPlaytestFeedback" OnReplay="ReplayRunAsync" OnReturn="ReturnToForge" OnQuests="ReturnToQuests" QuestRewards="quests.ReadyCount" Hunter="hunter" PointBudget="selection.PointBudget" HunterGain="hunterGain" ResearchPrompt="researchPrompt" OnOpenLaboratory="OpenLaboratoryFromSummary" />
 }
 
 @if (questsOpen)
@@ -43,9 +43,13 @@ else
 {
     <LeaderboardView Score="summary?.Score ?? bestScore" OnClose="CloseLeaderboard" />
 }
+@if (ReviewPromptVisible)
+{
+    <ReviewPrompt Outcome="reviewPromptOutcome" OnRate="RateFromReviewPrompt" OnDismiss="DismissReviewPromptAsync" />
+}
 @if (playtestFeedbackOpen)
 {
-    <PlaytestFeedbackPanel OnClose="ClosePlaytestFeedback" />
+    <PlaytestFeedbackPanel InitialEnjoyment="feedbackRating" OnClose="ClosePlaytestFeedback" />
 }
 
 <div data-game-version="@AppBuildInfo.Version" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>

@@ -34,12 +34,14 @@ public sealed partial class RunSimulation
         {
             PendingRewardSchool = school;
             pendingChoices = levelChoiceService.RollForProgression(build, level + 1, trailReward: true, school, Resonance);
+            OpenFateweaveRound();
             return;
         }
         PendingRewardSchool = null;
         if (experience < experienceToNext) return;
         pendingChoices = levelChoiceService.RollForProgression(build, level + 1, trailReward: false,
             CurrentRoute?.Reward.AttunementSchool, Resonance);
+        OpenFateweaveRound();
         if (pendingChoices.Count == 0) CompleteLevelUp();
     }
 

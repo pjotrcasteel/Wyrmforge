@@ -3,6 +3,11 @@
 @using Wyrmforge.Domain.Progression.SpellMastery
 @using Wyrmforge.Domain.Progression.GreatHunt
 @using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.Experience
+@using Wyrmforge.Domain.Spells.Contextual
+@using Wyrmforge.Application.World
+@using Wyrmforge.Domain.World
 
 <section class="run-hub">
     <button class="enter-realm" @onclick="StartAsync">BEGIN HUNT</button>
@@ -24,7 +29,7 @@
                 {
                     var points = SchoolPoints(school);
                     if (points <= 0) continue;
-                    <span class="school-pill school-@school.ToString().ToLowerInvariant()">@SchoolIcon(school) @school <b>@points</b></span>
+                    <span class="school-pill school-@school.ToString().ToLowerInvariant()"><i class="px-icon px-sm px-@school.ToString().ToLowerInvariant()" aria-hidden="true"></i> @school <b>@points</b></span>
                 }
                 @if (Selection.SpentPoints == 0)
                 {
@@ -39,9 +44,27 @@
 
                 </div>
             }
-            else
+            @if (Laboratory is { Stabilized.Count: > 0 })
             {
-
+                var prepared = Laboratory.PreparedFor(Selection.Selected);
+                <div class="keystone-summary mutation-summary">
+                    <span>MUTATION@(prepared.Count == 1 ? string.Empty : "S")</span>
+                    <strong>@(prepared.Count > 0 ? string.Join(" • ", prepared.Select(id => $"{LaboratoryCatalog.Get(id).Name} ({LaboratoryCatalog.Get(Laboratory.SocketOf(id)!.Value).NodeName})")) : "None equipped · equip a discovery in the Arcane Nexus")</strong>
+                </div>
+            }
+            @if (AtlasUnlocked)
+            {
+                <div class="keystone-summary region-summary" title="Regions are charted by hunting in them. Region names are working titles.">
+                    <span>REGION</span>
+                    <strong>@Region.Name · @Region.DominantSchool ground · @ChartedLabel</strong>
+                </div>
+            }
+            @if (AtlasUnlocked && Hunter is not null)
+            {
+                <div class="keystone-summary contextual-summary" title="@WardingPulse.Summary">
+                    <span>SECOND SPELL</span>
+                    <strong>@(Hunter.ContextualSpellUnlocked ? $"{WardingPulse.Icon} {WardingPulse.Name} · auto when crowded or a strike winds up" : $"🔒 Unlocks at Hunter {HunterProgress.ContextualSpellLevel}")</strong>
+                </div>
             }
         </article>
 
@@ -57,7 +80,7 @@
             {
                 var essence = DragonEssenceCatalog.Get(offering);
                 <div class="offering-display">
-                    <span class="offering-icon">@essence.Icon</span>
+                    <span class="offering-icon"><GameIcon Glyph="@(essence.Icon)" /></span>
                     <div><strong>@essence.Name</strong><small>@RunOfferingCatalog.Get(offering).Effect</small></div>
                 </div>
             }
@@ -89,6 +112,11 @@
 </section>
 
 @code {
+    [Parameter] public RegionDefinition Region { get; set; } = RegionCatalog.Starting;
+    [Parameter] public RegionDiscoveryState? World { get; set; }
+
+    private string ChartedLabel => $"{Math.Max(1, World?.Discovered.Count ?? 0)} of {RegionCatalog.All.Count} regions charted";
+
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public int RewardCaches { get; set; }
@@ -107,6 +135,8 @@
     [Parameter] public EventCallback OnStart { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
     [Parameter] public EventCallback OnEditBuild { get; set; }
+    [Parameter] public LaboratoryState? Laboratory { get; set; }
+    [Parameter] public HunterProgress? Hunter { get; set; }
     [Parameter] public EventCallback OnEditForge { get; set; }
 
     private IReadOnlyList<PassiveNodeDefinition> SelectedKeystones => Selection.Selected.Select(PassiveTreeCatalog.Get).Where(node => node.Kind == PassiveNodeKind.Keystone).ToArray();
@@ -119,5 +149,4 @@
     private Task ToggleAscendantAsync(DragonId wyrm) => OnAscendantChanged.InvokeAsync(AscendantSelected == wyrm ? null : wyrm);
     private Task EditBuildAsync() => OnEditBuild.InvokeAsync();
     private Task EditForgeAsync() => OnEditForge.InvokeAsync();
-    private static string SchoolIcon(PassiveSchool school) => school switch { PassiveSchool.Fire => "🔥", PassiveSchool.Frost => "❄", PassiveSchool.Storm => "⚡", _ => "✦" };
 }

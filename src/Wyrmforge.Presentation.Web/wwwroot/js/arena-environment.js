@@ -1,5 +1,7 @@
-import { createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
+import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
+import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
+import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
 
 // The world is projected from canonical C# terrain state. Drawing never changes simulation outcomes.
 const textures = new Map();
@@ -16,7 +18,7 @@ function seededRandom(seed) {
 
 export function createTerrainPlan(environment, width, height) {
     const random = seededRandom(environment.seed);
-    const biome = environment.biome.includes('caldera') ? 'ash' : environment.biome.includes('ridge') ? 'ridge' : 'valley';
+    const biome = territoryBiome(environment.biome);
     const bend = (random() - .5) * Math.min(width * .22, 80);
     const trailWidth = Math.max(55, Math.min(width, height) * .24);
     const rubble = [];
@@ -45,21 +47,34 @@ export function createTerrainPlan(environment, width, height) {
             length: (9 + random() * 31) * (.65 + proximity * 1.2),
             angle: random() * Math.PI * 2 });
     }
-    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark,
+    return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark, habitat: environment.habitat,
         story };
 }
 
 function drawTerrain(ctx, plan, width, height) {
     const ash = plan.biome === 'ash';
     const ridge = plan.biome === 'ridge';
-    const colors = ash ? ['#2a1b19', '#342721', '#121317'] : ridge ? ['#1d2028', '#292e30', '#11161b'] : ['#152326', '#242e27', '#10191c'];
+    const snow = plan.biome === 'snow';
+    const colors = ash ? ['#2a1b19', '#342721', '#121317'] : ridge ? ['#1d2028', '#292e30', '#11161b']
+        : snow ? ['#26303b', '#2e3945', '#141a21'] : ['#152326', '#242e27', '#10191c'];
     const gradient = ctx.createLinearGradient(0, 0, width * .3, height);
     gradient.addColorStop(0, colors[0]);
     gradient.addColorStop(.6, colors[1]);
     gradient.addColorStop(1, colors[2]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
+    const tile = artReady() ? artTilePattern(ctx, `tile.${plan.biome}`) : null;
+    if (tile) {
+        // Hand-authored seamless ground texture; the old gradient stays as a mood wash on top.
+        ctx.fillStyle = tile;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = .38;
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+    }
     drawTerritoryGround(ctx, plan.story);
+    if (tile) drawGroundDecals(ctx, plan, width, height);
 
     // No shared road overlay: the canonical encounter district now owns the entire
     // large-scale ground composition through its deterministic territory story plan.
@@ -80,7 +95,9 @@ function drawTerrain(ctx, plan, width, height) {
     }
 
     for (const piece of plan.rubble) {
-        ctx.fillStyle = piece.tone < .22 ? 'rgba(164,133,108,.15)' : piece.tone < .5 ? 'rgba(8,11,16,.22)' : 'rgba(154,135,108,.07)';
+        ctx.fillStyle = snow
+            ? piece.tone < .22 ? 'rgba(176,198,216,.14)' : piece.tone < .5 ? 'rgba(8,12,18,.2)' : 'rgba(150,172,190,.07)'
+            : piece.tone < .22 ? 'rgba(164,133,108,.15)' : piece.tone < .5 ? 'rgba(8,11,16,.22)' : 'rgba(154,135,108,.07)';
         ctx.fillRect(piece.x, piece.y, piece.size, piece.size * .6);
     }
 
@@ -126,13 +143,15 @@ function drawTerrain(ctx, plan, width, height) {
     ctx.restore();
 
     // Fallen monoliths, blasted masonry and long shadows are non-colliding scenery for this slice.
-    for (const piece of plan.remains) {
+    for (const [index, piece] of plan.remains.entries()) {
+        if (artReady() && drawArtFrame(ctx, 'environment', index % 3 === 0 ? 'ruin.slab' : 'ruin.rubble',
+            Math.round(piece.x), Math.round(piece.y), { flipX: index % 2 === 1 })) continue;
         ctx.save();
         ctx.translate(piece.x, piece.y);
         ctx.rotate(piece.rotation);
         ctx.fillStyle = 'rgba(0,0,0,.29)';
         ctx.fillRect(-piece.size * .3 + 4, 6, piece.size * .68, piece.size * 1.4);
-        ctx.fillStyle = ash ? '#4f3531' : ridge ? '#41484d' : '#3c4842';
+        ctx.fillStyle = ash ? '#4f3531' : ridge ? '#41484d' : snow ? '#4a5866' : '#3c4842';
         ctx.fillRect(-piece.size * .3, -piece.size * .65, piece.size * .6, piece.size * 1.2);
         ctx.strokeStyle = 'rgba(202,166,130,.2)';
         ctx.lineWidth = 1;
@@ -143,8 +162,9 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.restore();
     }
     drawTerritoryLandmarks(ctx, plan.story);
+    if (artReady() && !plan.story.cloister) drawForestEdges(ctx, plan, width, height);
     if (plan.stage >= 5) {
-        ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : 'rgba(128,178,153,.19)';
+        ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : snow ? 'rgba(150,206,236,.24)' : 'rgba(128,178,153,.19)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(width * .3, height * .1);
@@ -152,6 +172,12 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.lineTo(width * .35, height * .22);
         ctx.lineTo(width * .55, height * .29);
         ctx.stroke();
+    }
+    // A restrained habitat wash tells forest from flood from scorch at a glance; the full tile pass comes later.
+    const tint = habitatTint(plan.habitat);
+    if (tint) {
+        ctx.fillStyle = tint;
+        ctx.fillRect(0, 0, width, height);
     }
     // Edge fog produces depth without obscuring attack telegraphs or the player's immediate surroundings.
     const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
@@ -162,8 +188,32 @@ function drawTerrain(ctx, plan, width, height) {
     ctx.fillRect(0, 0, width, height);
 }
 
+const habitatTints = {
+    WetForest: 'rgba(34,96,58,.11)',
+    OpenField: 'rgba(170,132,62,.08)',
+    DesertedVillage: 'rgba(66,60,54,.12)',
+    MonasteryGrounds: 'rgba(160,150,128,.07)',
+    FloodedCloister: 'rgba(36,82,124,.13)',
+    ScorchedApproach: 'rgba(156,54,22,.12)',
+    Lair: 'rgba(124,30,14,.13)',
+    // Frost: the cold reads from the ground itself, so each wash only nudges the place's own mood.
+    FrozenRoad: 'rgba(120,140,160,.05)',
+    SnowboundPines: 'rgba(30,70,64,.1)',
+    WhiteoutPlain: 'rgba(206,222,236,.08)',
+    BuriedHamlet: 'rgba(70,64,60,.1)',
+    CairnBarrows: 'rgba(110,104,140,.09)',
+    MirrorMere: 'rgba(48,104,150,.13)',
+    GlacierApproach: 'rgba(96,170,214,.1)',
+    GlacierLair: 'rgba(70,150,210,.13)',
+};
+
+export function habitatTint(habitat) {
+    return habitatTints[habitat] ?? null;
+}
+
 function terrainTexture(environment, width, height) {
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.stage, width, height].join(':');
+    // Art generation is part of the key: the bake refreshes once the atlases finish loading.
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, width, height, artGeneration()].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
@@ -172,9 +222,58 @@ function terrainTexture(environment, width, height) {
     drawTerrain(image.getContext('2d'), plan, image.width, image.height);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
-    const texture = { image, cloister: plan.story.cloister };
+    const texture = { image, cloister: plan.story.cloister, plan };
     textures.set(key, texture);
     return texture;
+}
+
+const decalSets = {
+    valley: ['decal.tuft.a', 'decal.tuft.b', 'decal.tuft.a', 'decal.fern', 'decal.stones', 'decal.puddle', 'decal.mushrooms', 'decal.tuft.b'],
+    ash: ['decal.tuft.ash', 'decal.ember', 'decal.stones', 'decal.tuft.ash', 'decal.stones', 'decal.bones'],
+    ridge: ['decal.stones', 'decal.tuft.b', 'decal.stones', 'decal.puddle', 'decal.tuft.a', 'decal.stones', 'decal.bones'],
+    snow: ['decal.snowdrift', 'decal.tuft.frost', 'decal.icepatch', 'decal.snowdrift', 'decal.stones', 'decal.tuft.frost', 'decal.bones'],
+};
+
+// Flat ground detail only (grass, stones, puddles). Nothing upright lands on the fighting floor.
+export function createDecalPlan(plan, width, height) {
+    const random = seededRandom((plan.story.seed ?? 1) ^ 0x2c9e11);
+    const set = decalSets[plan.biome] ?? decalSets.valley;
+    const count = Math.min(300, Math.ceil(width * height / 8200));
+    const decals = [];
+    for (let i = 0; i < count; i++)
+        decals.push({ name: set[Math.floor(random() * set.length)], x: Math.round(random() * width), y: Math.round(random() * height), flip: random() < .5 });
+    return decals;
+}
+
+function drawGroundDecals(ctx, plan, width, height) {
+    if (plan.story.cloister) return;
+    for (const decal of createDecalPlan(plan, width, height))
+        drawArtFrame(ctx, 'environment', decal.name, decal.x, decal.y, { flipX: decal.flip });
+}
+
+const edgeSets = {
+    valley: ['prop.pine.a', 'prop.pine.b', 'prop.pine.c', 'prop.bush.a', 'prop.pine.a', 'prop.bush.b'],
+    ash: ['prop.deadtree.a', 'prop.bush.ash', 'prop.deadtree.b', 'prop.rock.a', 'prop.bush.ash'],
+    ridge: ['prop.pine.b', 'prop.deadtree.a', 'prop.rock.a', 'prop.pine.c', 'prop.deadtree.b'],
+    snow: ['prop.pine.snow.a', 'prop.pine.snow.b', 'prop.rock.snow', 'prop.pine.snow.c', 'prop.deadtree.a', 'prop.pine.snow.a'],
+};
+
+// Forest and scrub frame the outer world band (outside the normal combat lanes) so territory
+// edges read as a place rather than a rectangle. Sorted by foot line within the bake.
+export function createForestEdgePlan(plan, width, height) {
+    const random = seededRandom((plan.story.seed ?? 1) ^ 0x5f17a3);
+    const set = edgeSets[plan.biome] ?? edgeSets.valley;
+    const props = [];
+    for (const side of [0, 1]) for (let y = 8; y < height + 30; y += 22 + random() * 18) {
+        const inset = random() * 26 - 10;
+        props.push({ name: set[Math.floor(random() * set.length)], x: Math.round(side ? width - inset : inset), y: Math.round(y), flip: random() < .5 });
+    }
+    return props.sort((a, b) => a.y - b.y);
+}
+
+function drawForestEdges(ctx, plan, width, height) {
+    for (const prop of createForestEdgePlan(plan, width, height))
+        drawArtFrame(ctx, 'environment', prop.name, prop.x, prop.y, { flipX: prop.flip });
 }
 
 // Read the already-cached environment plan, without rerolling its procedural art.
@@ -186,13 +285,16 @@ export function drawArenaCloisterReflections(ctx, environment, width, height, li
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0) {
     if (!environment) return [];
-    const cloister = terrainTexture(environment, width, height).cloister;
+    const texture = terrainTexture(environment, width, height);
+    const cloister = texture.cloister;
+    if (!cloister) return createTerritoryWallLayers(environment, texture.plan, width, height, seconds);
     return createCloisterElevationLayers(cloister, environment.barriers, width, height);
 }
 
 export function drawArenaCloisterElevation(ctx, layer) {
+    if (layer.style === 'territory') return drawTerritoryWall(ctx, layer);
     return drawCloisterElevation(ctx, layer.barrier, layer.width, layer.height);
 }
 
@@ -201,7 +303,13 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     const texture = terrainTexture(environment, width, height);
     ctx.drawImage(texture.image, 0, 0, width, height);
     const cloister = texture.cloister;
+    // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
+    const spriteWalls = !cloister && artReady();
     for (const barrier of environment.barriers ?? []) {
+        if (spriteWalls) {
+            if (barrier.open && barrier.kind === 'gate') drawOpenedGateRubble(ctx, barrier, width, height);
+            continue;
+        }
         if (!cloister || !drawCloisterWall(ctx, barrier, width, height))
             drawTerritoryBarrier(ctx, barrier, environment.element, width, height, elapsedSeconds);
     }
@@ -217,6 +325,12 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     const opened = supply.open;
     const experience = supply.kind === 'experience';
     const color = experience ? '#b7a0f1' : '#b2d4aa';
+    if (artReady()) {
+        // Sealed reliquaries (real C# blockers) and their opened states as authored sprites.
+        const name = `cache.${experience ? 'experience' : 'health'}.${opened ? 'open' : 'sealed'}`;
+        const bob = opened ? Math.round(Math.sin(elapsed * 3) * 1) : 0;
+        if (drawArtFrame(ctx, 'environment', name, Math.round(x), Math.round(y) + bob)) return;
+    }
     ctx.save();
     ctx.translate(x, y);
     if (opened && !experience) {
@@ -316,6 +430,17 @@ export function drawArenaExit(ctx, exit, elapsedSeconds = 0) {
     if (!exit) return;
     const { x, y } = exit;
     const pulse = Math.sin(elapsedSeconds * 3) * .08;
+    if (artReady() && drawArtFrame(ctx, 'environment', 'exit.waystone', Math.round(x), Math.round(y))) {
+        // The waystone's portal breathes; the arrow guide (drawExitGuide) keeps the direction readable.
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = `rgba(161,106,208,${.16 + pulse})`;
+        ctx.beginPath();
+        ctx.ellipse(x, y - 8, 22 * (1 + pulse), 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+    }
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = 'rgba(5,3,12,.82)';

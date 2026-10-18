@@ -1,5 +1,7 @@
 # Focused magic — first playable slice
 
+> **Transitional (2026-10-17 amendment, S1):** one committed primary is the current stage of a planned *primary plus up to three contextual auto-casts* model with a shared cast budget. No manual spell buttons and no independent streams. See `docs/design/design-amendment-2026-10-17-reconciliation.md`.
+
 A mage owns one primary cast. Learning another spell does not add a second automatic attack stream. A deliberate spell choice changes the primary; previous ranks and learned magic remain available as knowledge for combinations. This gives a larger cast gesture, its projectile and its impact room to read.
 
 ## Rules implemented

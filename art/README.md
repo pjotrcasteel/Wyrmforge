@@ -109,3 +109,14 @@ Recent user corrections are requirements, not optional sketches:
 - The first playable art corrective pass [PR #114](https://github.com/pjotrcasteel/Wyrmforge/pull/114) merged. It does **not** signify final aesthetic approval. Review the real deployed asset and iPhone Safari at 390px scale.
 
 Preserve the artistic principles and gameplay decisions in the [Battlemage source study](../docs/design/battlemage-visual-reference.md), [visual-first UI RFC](../docs/design/visual-first-magic-ui-rfc.md), and [full continuation handover](../docs/handover/2026-10-15-project-art-and-backlog.md).
+
+## Runtime pixel-art pipeline (code-authored)
+
+Production sprites are authored as deterministic code. They are not image-model output.
+
+- **Source.** Modules live in `tools/art/sprites/*.mjs`: actors, wyrms, tiles, environment and ui. Shared helpers (palette, canvas and PNG encoder) are in `tools/art/lib/`.
+- **Build.** `node tools/art/build-art.mjs` writes the atlases, `manifest.json` and `icons.css` to `src/Wyrmforge.Presentation.Web/wwwroot/art/`, and preview sheets to `docs/art/previews/`.
+- **Verify.** `node tools/art/build-art.mjs --check` fails if committed output differs from a fresh build. Tests are in `tests/javascript/art-pipeline.test.mjs`.
+- **Runtime.** Atlases are loaded by `wwwroot/js/art-atlas.js`. UI icons use `.px-icon .px-{id}` or the `<GameIcon Glyph="…">` component. Every catalog glyph must be mapped in `Shared/GameIconMap.cs`.
+- **Capture.** Run `node tools/art/capture-screens.mjs <outDir>` against a local published build. It needs `PLAYWRIGHT_CORE` and `CHROME_PATH`.
+- **Audit and gaps.** See `docs/art/asset-and-screen-audit.md`.

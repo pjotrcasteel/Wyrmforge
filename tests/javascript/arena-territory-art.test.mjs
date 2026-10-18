@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createTerritoryStoryPlan } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js';
+import { createTerritoryStoryPlan, territoryBiome } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js';
 import { createTerrainPlan } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
 const landscape = { seed: 47861, biome: 'Ashen caldera', element: 'fire', stage: 6, landmark: "The dragon's scorched approach" };
@@ -19,6 +19,20 @@ test('same route and seed produce stable large-scale environmental identity with
     assert.equal(first.landmarks[1].kind, 'forge');
     assert.ok(first.landmarks[1].title.includes('FORGE'));
     assert.ok(first.patches.every(patch => patch.x > 0 && patch.x < width && patch.y >= 0 && patch.y <= height));
+});
+
+test('frost territories read as their own snow biome, never as a Cinder ridge or cloister', () => {
+    for (const name of ['Snowbound vale', 'Rimewall heights', 'Glacier basin']) assert.equal(territoryBiome(name), 'snow', name);
+    assert.equal(territoryBiome('Broken ridge'), 'ridge');
+    assert.equal(territoryBiome('Ashen caldera'), 'ash');
+    assert.equal(territoryBiome(undefined), 'valley');
+    const scene = createTerritoryStoryPlan({ ...landscape, biome: 'Rimewall heights', element: 'frost', district: 'sanctuary' }, width, height);
+    assert.equal(scene.biome, 'snow');
+    assert.ok(scene.landmarks.every(site => ['cairnstack', 'icefall', 'sledge'].includes(site.kind)));
+    assert.equal(scene.cloister, null, 'no monastery floor under the snow');
+    const open = createTerritoryStoryPlan({ ...landscape, biome: 'Snowbound vale', element: 'frost' }, width, height);
+    assert.deepEqual(open.landmarks.map(site => site.kind).sort(), ['cairnstack', 'icefall', 'sledge']);
+    assert.equal(createTerrainPlan({ ...landscape, biome: 'Glacier basin' }, width, height).biome, 'snow');
 });
 
 test('distinct biomes contain distinct recognizable ruined sites and terrain materials', () => {

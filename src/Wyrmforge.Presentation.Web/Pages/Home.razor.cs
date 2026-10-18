@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -63,8 +63,39 @@ public partial class Home
     private bool ForgeAvailable => firstHunt.AtlasUnlocked && (essenceVault.TotalCount > 0 || forgeProgression.Discovered.Count > 0);
     private bool playtestFeedbackOpen;
 
-    private void OpenPlaytestFeedback() => playtestFeedbackOpen = true;
+    private int? feedbackRating;
+    private bool reviewPromptOpen;
+    private bool reviewPromptMuted;
+    private RunOutcome reviewPromptOutcome;
+    private const string ReviewPromptStorageKey = "wyrmforge.reviewPrompt.v1";
+
+    // Waits for cinematics and other modals so the ask never stacks on top of a reward moment.
+    private bool ReviewPromptVisible => reviewPromptOpen && !tutorialCinematic && !unlockCinematic && !questsOpen && !playtestFeedbackOpen
+        && !(leaderboardOpen && firstHunt.LeaderboardUnlocked);
+
+    private void OpenPlaytestFeedback()
+    {
+        reviewPromptOpen = false;
+        feedbackRating = null;
+        playtestFeedbackOpen = true;
+    }
+
     private void ClosePlaytestFeedback() => playtestFeedbackOpen = false;
+
+    private void RateFromReviewPrompt(int? rating)
+    {
+        OpenPlaytestFeedback();
+        feedbackRating = rating;
+    }
+
+    private async Task DismissReviewPromptAsync(bool never)
+    {
+        reviewPromptOpen = false;
+        if (!never) return;
+        reviewPromptMuted = true;
+        try { await JavaScript.InvokeVoidAsync("localStorage.setItem", ReviewPromptStorageKey, "muted"); }
+        catch (JSException) { }
+    }
     private DragonId? selectedAscendant;
     private DragonId? activeAscendant;
 
@@ -80,6 +111,8 @@ public partial class Home
             _ = leaderboardModule.InvokeAsync<string>("flush").AsTask();
         }
         catch (JSException) { }
+        try { reviewPromptMuted = await JavaScript.InvokeAsync<string?>("localStorage.getItem", ReviewPromptStorageKey) == "muted"; }
+        catch (JSException) { }
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
         await TryLoadForgeProgressionAsync();
@@ -91,8 +124,15 @@ public partial class Home
         if (restoredOathHistory) await TrySetGreatHuntAsync();
         if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(essenceVault.SecuredEssences)).Count > 0) await TrySetForgeProgressionAsync();
         await TryLoadArcaneCodexAsync();
+        await TryLoadBestiaryAsync();
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
+        await TryLoadWorldAsync();
+        await TryLoadChroniclesAsync();
+        await TryLoadLaboratoryAsync();
+        await TryLoadLoadoutsAsync();
+        laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
+        if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
         StateHasChanged();
     }
 
@@ -130,6 +170,7 @@ public partial class Home
         advancedOaths = [];
         newlySealedOaths = [];
         newlyConqueredAscendants = [];
+        bestiaryDiscoveries = null;
         activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
         activeRewardCache = !firstHunt.TutorialRun && quests.ConsumeCache();
@@ -141,6 +182,9 @@ public partial class Home
             await TrySetEssenceVaultAsync();
         }
         selectedOffering = null;
+        PrepareLaboratoryRun();
+        PrepareRegionRun();
+        await DiscoverCurrentRegionAsync();
         await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;
@@ -163,6 +207,11 @@ public partial class Home
         newlyUnlockedLineages = mastery.NewlyUnlocked;
         advancedSpellIds = mastery.Progressed;
         if (mastery.Progressed.Count > 0) await TrySetSpellMasteryAsync();
+        if (value.PreparedMutation is not null)
+        {
+            laboratory.RecordFieldTest(value.PreparedMutation, value.ReactionsTriggered);
+            await TrySetLaboratoryAsync();
+        }
         advancedOaths = greatHunt.RecordRun(new GreatHuntRunEvidence(value.CompletedRouteNodes, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds.ToHashSet(), value.DeepEvolvedWyrmDuels.ToHashSet(), value.EssenceIds)
         { AscendantVictories = value.AscendantDragonIds.ToHashSet() });
@@ -183,11 +232,14 @@ public partial class Home
         if (firstHunt.AwardsArcanePoint(tutorialEnded, value.Outcome == RunOutcome.Abandoned))
             selection.GrantPoints(1);
         hunterGain = CreditHunterExperience(value.ExperienceEarned);
+        await TryUnlockAdvancedAccessAsync();
         quests.Record(new HuntQuestEvidence(value.CompletedRouteNodes, value.RareRouteNodes, value.Depth, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds, value.EssenceIds, value.Synergies > 0, value.SpellLoadout.Any(spell => spell.Evolution.HasValue)));
         await SaveArcaneBuildAsync();
         summary = tutorialEnded ? null : value;
         if (chapterAdvanced) leaderboardOpen = true;
+        reviewPromptOutcome = value.Outcome;
+        reviewPromptOpen = !reviewPromptMuted;
         await TryRecordPlaytestFinishAsync(value);
         if (value.Outcome != RunOutcome.Abandoned && value.Score > 0 && leaderboardModule is not null)
         {
@@ -202,6 +254,7 @@ public partial class Home
         var codexChanged = false;
         foreach (var synergyId in value.SynergyIds) codexChanged |= arcaneCodex.Discover(synergyId);
         if (codexChanged) await TrySetArcaneCodexAsync();
+        await RecordBestiaryAsync(value);
 
         if (value.EssenceIds.Count > 0)
         {
@@ -209,6 +262,7 @@ public partial class Home
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
         }
+        await RefreshResearchPromptAsync(activeResearchLead is not null && value.Outcome != RunOutcome.Abandoned);
         if (value.Score <= bestScore) return;
         bestScore = value.Score;
         await TrySetBestScoreAsync(bestScore);
@@ -219,8 +273,10 @@ public partial class Home
         if (summary is null) return;
         await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
+        PrepareLaboratoryRun();
         activeRewardCache = false;
         summary = null;
+        reviewPromptOpen = false;
         hunterGain = null;
         newlyUnlockedLineages = [];
         advancedSpellIds = [];
@@ -249,6 +305,8 @@ public partial class Home
     private void ReturnToForge()
     {
         summary = null;
+        reviewPromptOpen = false;
+        openLaboratoryOnReturn = false;
         activeRewardCache = false;
         activeOffering = null;
         activeRunSeed = null;
@@ -368,6 +426,22 @@ public partial class Home
                 rareTrails = run.RareRouteNodes, wyrmsDefeated = run.DragonsSlain, essencesSecured = run.DragonEssences,
                 ascendantVictories = run.AscendantDragonIds.Count,
                 spellEvolutions = run.SpellLoadout.Where(spell => spell.Evolution.HasValue).Select(spell => spell.Evolution!.Value.ToString()).ToArray(),
+                // Amendment §9: offer vs pick vs reroll per school, and what crowd control bought.
+                draft = new
+                {
+                    rounds = run.Draft.Rounds, rerolls = run.Draft.Rerolls,
+                    schools = run.Draft.Schools.Select(tally => new
+                    {
+                        school = tally.School?.ToString() ?? "Neutral", relation = tally.Relation.ToString(),
+                        offered = tally.Offered, selected = tally.Selected, rerolledAway = tally.RerolledAway, rerolledIn = tally.RerolledIn,
+                    }).ToArray(),
+                },
+                control = new
+                {
+                    enemy = Math.Round(run.Control.EnemyShare, 3), threat = Math.Round(run.Control.ThreatShare, 3),
+                    elite = Math.Round(run.Control.EliteShare, 3), wyrm = Math.Round(run.Control.WyrmShare, 3),
+                    controlledKills = Math.Round(run.Control.ControlledKillShare, 3),
+                },
             });
         }
         catch (JSException) { /* Diagnostics must never block progression or rewards. */ }

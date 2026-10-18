@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Wyrmforge.Application.Runs.SelfPlay;
+using Wyrmforge.Application.Runs.Telemetry;
 
 namespace Wyrmforge.BalanceLab;
 
@@ -20,7 +21,7 @@ internal static class BalanceReportWriter
     private static string Csv(IReadOnlyList<RunSelfPlayMetrics> runs)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,evolutions,evolutionIds,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes,focusedSurgesCast,extractionRitualsCompleted,deathsDuringExtraction");
+        builder.AppendLine("build,cohort,spentArcanePoints,agent,seed,outcome,stopReason,depth,score,kills,seconds,level,totalExperience,killsPerMinute,experiencePerMinute,uncollectedExperience,experienceCollectionRate,minHealthRatio,damageTaken,peakEnemies,peakLooseXp,choices,synergies,evolutions,evolutionIds,dragonsSlain,wyrmsReached,firstWyrm,firstWyrmSeconds,breathingRooms,climaxes,essenceSecured,completedRoutes,rareRoutes,focusedSurgesCast,extractionRitualsCompleted,deathsDuringExtraction,draftRounds,rerolls,primaryOffered,primarySelected,enemyDeniedShare,threatDeniedShare,eliteDeniedShare,wyrmDeniedShare,controlledKillShare,pulseSecondsDenied,contextualCasts");
 
         foreach (var run in runs)
         {
@@ -61,7 +62,18 @@ internal static class BalanceReportWriter
                 run.RareRouteNodes,
                 run.FocusedSurgesCast,
                 run.ExtractionRitualsCompleted,
-                run.DeathsDuringExtraction));
+                run.DeathsDuringExtraction,
+                run.Draft.Rounds,
+                run.Draft.Rerolls,
+                run.Draft.Schools.Where(tally => tally.Relation == DraftRelation.Primary).Sum(tally => tally.Offered),
+                run.Draft.Schools.Where(tally => tally.Relation == DraftRelation.Primary).Sum(tally => tally.Selected),
+                F(run.Control.EnemyShare),
+                F(run.Control.ThreatShare),
+                F(run.Control.EliteShare),
+                F(run.Control.WyrmShare),
+                F(run.Control.ControlledKillShare),
+                F(run.Control.PulseSecondsDenied),
+                run.ContextualCasts));
         }
 
         return builder.ToString();
@@ -103,6 +115,30 @@ internal static class BalanceReportWriter
         foreach (var wyrm in report.Wyrms)
         {
             builder.AppendLine($"| {wyrm.Wyrm} | {wyrm.RunsReached} | {wyrm.WinRate:P0} | {wyrm.ExtractionRate:P0} | {wyrm.MedianFirstWyrmSeconds:0}s |");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("## Draft telemetry by school");
+        builder.AppendLine();
+        builder.AppendLine("Every reward round pooled. Primary = the build's committed school; a synergy counts for each school it fuses.");
+        builder.AppendLine();
+        builder.AppendLine("| School | Relation | Cards / round | Rounds shown | Pick rate | Rerolled away | Rerolled in |");
+        builder.AppendLine("| --- | --- | ---: | ---: | ---: | ---: | ---: |");
+        foreach (var school in report.DraftSchools)
+        {
+            builder.AppendLine($"| {school.School} | {school.Relation} | {school.OfferedPerRound:0.00} | {school.PresentInRounds:P0} | {school.PickRate:P0} | {school.RerollAwayRate:P0} | {school.RerolledIn} |");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("## Control utility by build");
+        builder.AppendLine();
+        builder.AppendLine("Denied = enemy-seconds removed by freeze/chill (frozen counts fully, chill by its slow). Threat = enemies within 160 px of the hunter. The level-up pulse freezes everything for every school, so it is reported apart and excluded from the shares.");
+        builder.AppendLine();
+        builder.AppendLine("| Build | Agent | Primary / round | Primary pick | Enemy denied | Threat denied | Elite denied | Wyrm denied | Kills while controlled | Pulse s/run | Median damage taken |");
+        builder.AppendLine("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
+        foreach (var row in report.Control)
+        {
+            builder.AppendLine($"| {row.Build} | {row.Agent} | {row.PrimaryOfferedPerRound:0.00} | {row.PrimaryPickRate:P0} | {row.EnemyDeniedShare:P1} | {row.ThreatDeniedShare:P1} | {row.EliteDeniedShare:P1} | {row.WyrmDeniedShare:P1} | {row.ControlledKillShare:P0} | {row.PulseSecondsPerRun:0} | {row.MedianDamageTaken:0} |");
         }
 
         builder.AppendLine();

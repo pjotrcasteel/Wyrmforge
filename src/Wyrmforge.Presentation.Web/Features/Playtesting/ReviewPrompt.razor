@@ -1,0 +1,73 @@
+@namespace Wyrmforge.Presentation.Web.Features.Playtesting
+
+<div class="review-prompt-backdrop" @onclick="() => DismissAsync(false)">
+    <section class="review-prompt @OutcomeClass" role="dialog" aria-modal="true" aria-labelledby="review-prompt-title" aria-describedby="review-prompt-body"
+             tabindex="-1" @ref="dialog" @onclick:stopPropagation="true" @onkeydown="HandleKeyAsync">
+        <button class="review-prompt-close" aria-label="Dismiss review prompt" @onclick="() => DismissAsync(false)">✕</button>
+        <span class="review-prompt-kicker">@Kicker</span>
+        <h2 id="review-prompt-title">How was that hunt?</h2>
+        <p id="review-prompt-body">@Body</p>
+        <div class="review-prompt-stars" role="group" aria-label="Rate this hunt">
+            @for (var star = 1; star <= 5; star++)
+            {
+                var rating = star;
+                <button class="review-prompt-star" aria-label="@($"Rate {rating} of 5 — {RatingLabel(rating)}")" title="@RatingLabel(rating)"
+                        @onclick="() => OnRate.InvokeAsync(rating)">★</button>
+            }
+        </div>
+        <button class="review-prompt-write" @onclick="() => OnRate.InvokeAsync(null)">WRITE A REVIEW</button>
+        <div class="review-prompt-footer">
+            <button @onclick="() => DismissAsync(false)">Not now</button>
+            <button @onclick="() => DismissAsync(true)">Don't ask again</button>
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public RunOutcome Outcome { get; set; }
+    [Parameter] public EventCallback<int?> OnRate { get; set; }
+    [Parameter] public EventCallback<bool> OnDismiss { get; set; }
+
+    private ElementReference dialog;
+
+    private string OutcomeClass => Outcome switch
+    {
+        RunOutcome.Extracted => "victory",
+        RunOutcome.Defeated => "defeat",
+        _ => "exited",
+    };
+
+    private string Kicker => Outcome switch
+    {
+        RunOutcome.Extracted => "HUNT SURVIVED",
+        RunOutcome.Defeated => "YOU FELL",
+        _ => "HUNT LEFT EARLY",
+    };
+
+    private string Body => Outcome switch
+    {
+        RunOutcome.Extracted => "Tell us what made it feel earned. One tap is enough; a few words help even more.",
+        RunOutcome.Defeated => "Did that death feel fair? One tap is enough; a few words help even more.",
+        _ => "What made you leave? One tap is enough; a few words help even more.",
+    };
+
+    internal static string RatingLabel(int rating) => rating switch
+    {
+        1 => "Not enjoyable",
+        2 => "Needs work",
+        3 => "Okay",
+        4 => "Enjoyable",
+        _ => "Loved it",
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try { await dialog.FocusAsync(); }
+        catch (Microsoft.JSInterop.JSException) { }
+    }
+
+    private Task HandleKeyAsync(KeyboardEventArgs args) => args.Key == "Escape" ? DismissAsync(false) : Task.CompletedTask;
+
+    private Task DismissAsync(bool never) => OnDismiss.InvokeAsync(never);
+}

@@ -6,10 +6,11 @@ namespace Wyrmforge.Domain.Combat.Dragons;
 
 public sealed class DragonState : ICombatTarget
 {
-    public DragonState(int id, DragonDefinition definition, Vector2D position, double healthMultiplier = 1)
+    public DragonState(int id, DragonDefinition definition, Vector2D position, double healthMultiplier = 1, WyrmTier tier = WyrmTier.Wyrm)
     {
         Id = id;
         Definition = definition;
+        Tier = tier;
         Position = position;
         MaxHealth = definition.MaxHealth * healthMultiplier;
         Health = MaxHealth;
@@ -18,7 +19,8 @@ public sealed class DragonState : ICombatTarget
     public int Id { get; }
     public DragonDefinition Definition { get; }
     public Vector2D Position { get; set; }
-    public double Radius => Definition.Radius;
+    public WyrmTier Tier { get; }
+    public double Radius => Definition.Radius * WyrmTierCatalog.SizeScale(Tier);
     public double Health { get; set; }
     public double MaxHealth { get; }
     public double Speed => Definition.Speed;

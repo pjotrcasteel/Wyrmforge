@@ -20,6 +20,8 @@ public sealed partial class RunSimulation
         var spell = SpellCatalog.Get(build.Spells.ActiveSpell);
         var rank = build.Spells[spell.Id];
         spellCooldowns[spell.Id] -= delta;
+        // The contextual spell is judged every tick so a defence is never starved by the primary, but it spends the primary's cast.
+        if (TryCastContextualSpell(delta, spell, rank, moving)) return;
         if (spellCooldowns[spell.Id] > 0 || !HasCombatTargets) return;
         CastSpell(spell, rank, FocusedCastProfile.For(spell.Id, rank).DamageMultiplier, false);
         spellCooldowns[spell.Id] = GetSpellCooldown(spell, rank, moving);
@@ -162,7 +164,7 @@ public sealed partial class RunSimulation
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
             RegisterElementalImpact(target.Position, spell.Id, rank, combination, surgeProfile.IsSurge);
             var killed = DamageTarget(target, hitDamage);
-            if (!killed) ApplyAbilityStatus(spell, rank, target);
+            if (!killed) ApplyAbilityStatus(spell, rank, target, firstLink: jump == 0);
             if (!killed) ApplyHitRules(spell.Id, target);
 
             if (forkPending)
@@ -187,7 +189,7 @@ public sealed partial class RunSimulation
         var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
         RegisterElementalImpact(target.Position, spell.Id, rank, combination, surged);
         var killed = DamageTarget(target, forkDamage);
-        if (!killed) ApplyAbilityStatus(spell, rank, target);
+        if (!killed) ApplyAbilityStatus(spell, rank, target, firstLink: false);
         if (!killed) ApplyHitRules(spell.Id, target);
     }
 
@@ -200,6 +202,7 @@ public sealed partial class RunSimulation
     private double ApplyChainInteractions(SpellId spellId, ICombatTarget target, double damage, ref int jumps, ref bool bonusJumpsTriggered)
     {
         var interactions = ResolveStatusInteractions(spellId, target);
+        if (interactions.Count > 0) RecordReaction();
         foreach (var interaction in interactions) damage *= interaction.DamageMultiplier;
         if (bonusJumpsTriggered) return damage;
 

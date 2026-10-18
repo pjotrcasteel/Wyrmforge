@@ -66,7 +66,10 @@ public sealed class RunSelfPlayDriver
             simulation.AbandonRun();
         }
         return recorder.Complete(simulation.CreateEvaluationSummary(), simulation.CreateSnapshot(), simulatedSeconds, stopReason,
-            simulation.FocusedSurgesCast, simulation.ExtractionRitualsCompleted, simulation.DeathsDuringExtraction);
+            simulation.FocusedSurgesCast, simulation.ExtractionRitualsCompleted, simulation.DeathsDuringExtraction) with
+        {
+            ContextualCasts = simulation.ContextualCasts,
+        };
     }
 
     private static RunAgentObservation CreateObservation(RunSimulation simulation, RunRenderSnapshot snapshot) => new(
@@ -245,6 +248,8 @@ public sealed class RunSelfPlayDriver
                 PrimarySwitches = Math.Max(0, primarySpellSequence.Count - 1),
                 PeakActivePrimaryCount = peakActivePrimaryCount,
                 PrimarySpellSequence = primarySpellSequence.ToArray(),
+                Draft = summary.Draft,
+                Control = summary.Control,
             };
         }
     }

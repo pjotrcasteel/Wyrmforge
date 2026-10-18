@@ -12,13 +12,22 @@ public sealed record WyrmrealmMapNode(
 {
     public HuntSite? Site { get; init; }
     public WyrmrealmTerritory? Territory { get; init; }
+    public WyrmrealmHabitat Habitat { get; init; } = WyrmrealmHabitat.Outskirts;
+    /// <summary>A combat road that leads straight into a Wyrm's lair (route-graph semantics, not a stage number): the Bell Warden's road.</summary>
+    public bool PreLair { get; init; }
     public int EncounterCueStage => Stage == WyrmrealmMapState.CombatStages ? 8 : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => 3,
         WyrmrealmEncounterKind.StalkerPressure => 5,
         _ => 1,
     };
-    public string EncounterName => Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
+    // Each region's lair road has its own set piece: the Bell Warden in the Cinder Frontier, the Bell of Winter on the glacier.
+    public string EncounterName => PreLair ? WyrmrealmHabitatCatalog.School(Habitat) switch
+        {
+            SpellSchool.Fire => "Bell Warden",
+            SpellSchool.Frost => "Bell of Winter",
+            _ => "Last road",
+        } : Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => "Horde",
         WyrmrealmEncounterKind.StalkerPressure => "Ambush",

@@ -6,6 +6,12 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.BalanceLab;
 
 var options = BalanceLabOptions.Parse(args);
+if (options.Laboratory)
+{
+    await LaboratoryStudy.RunAsync(options);
+    return;
+}
+
 var results = new List<RunSelfPlayMetrics>();
 var driver = new RunSelfPlayDriver();
 var factory = new RunSimulationFactory(new SeededRandomSource(1));
@@ -16,7 +22,7 @@ var builds = options.FreshHunter
         $"Fresh {school}", SelfPlayBuildCohort.FullBuild, school, new HashSet<string>(), Array.Empty<string>(), 0)).ToArray()
     : SelfPlayBuildCatalog.All;
 
-Console.WriteLine($"Arena: {options.ArenaWidth} × {options.ArenaHeight}; fresh hunter: {options.FreshHunter}");
+Console.WriteLine($"Arena: {options.ArenaWidth} × {options.ArenaHeight}; fresh hunter: {options.FreshHunter}; contextual: {options.Contextual}");
 
 foreach (var build in builds)
 {
@@ -25,7 +31,8 @@ foreach (var build in builds)
         for (var index = 0; index < options.RunsPerCombination; index++)
         {
             var seed = options.SeedStart + index;
-            var simulation = factory.Create(build.SelectedNodes, seed: seed, progression: options.FreshHunter ? new ForgeProgressionState() : null);
+            var simulation = factory.Create(build.SelectedNodes, seed: seed, progression: options.FreshHunter ? new ForgeProgressionState() : null,
+                contextualSpell: options.Contextual);
             var agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
             var metrics = driver.Play(
                 build,
@@ -63,7 +70,12 @@ var evolutions = results
     .OrderBy(row => row.Evolution)
     .ToArray();
 
-var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, evolutions, results);
+var draftSchools = DraftSchoolAggregate.Create(results);
+var control = aggregates
+    .Select(row => ControlAggregate.Create(row.Build, row.Agent, results.Where(run => run.Build == row.Build && run.Agent == row.Agent).ToArray()))
+    .ToArray();
+
+var report = new BalanceReport(DateTimeOffset.UtcNow, options.RunsPerCombination, results.Count, aggregates, wyrms, evolutions, draftSchools, control, results);
 await BalanceReportWriter.WriteAsync(report, options.OutputDirectory);
 
 Console.WriteLine($"Balance report written to {Path.GetFullPath(options.OutputDirectory)}");

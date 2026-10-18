@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using Wyrmforge.Domain.Progression.Laboratory;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Wyrmforge.Application.Runs.Checkpoint;
@@ -17,6 +18,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.World;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
 
@@ -39,9 +41,20 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public RegionId? Region { get; set; }
+    [Parameter] public bool RegionOpening { get; set; }
+    [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
+    [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
+    [Parameter] public DragonId? ResearchLead { get; set; }
+    [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
+    [Parameter] public SpellId? PreferredPrimary { get; set; }
+    [Parameter] public EventCallback<SpellId> OnPrimaryChosen { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
+    private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
+        PreparedMutations.Select(LaboratoryCatalog.Get).FirstOrDefault(mutation => mutation.Foundation == spell);
+    private static string MutationIcon(LaboratoryMutationDefinition mutation) => mutation.SpecimenWyrm == DragonId.Stormcoil ? "storm" : "frost";
     private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
@@ -78,7 +91,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -106,6 +119,17 @@ public partial class ArenaView : IAsyncDisposable
         var previousEncounterPhase = current.CurrentEncounterPhase;
         var previousEvacuation = current.EvacuationActive;
         var previousEvacuationSecond = (int)Math.Ceiling(current.EvacuationRemainingSeconds);
+        var previousEliteSightings = current.EliteSightings;
+        var previousEliteDefeats = current.DefeatedElites.Count;
+        var previousReliquarySightings = current.ReliquarySightings;
+        var previousReliquaryShifts = current.ReliquaryShifts;
+        var previousReliquaryWithdrawals = current.ReliquaryWithdrawals;
+        var previousVeilsBroken = current.GlassVeilsBroken;
+        var reliquaryWasSlain = current.ReliquaryDefeat is not null;
+        var previousBellArrivals = current.BellWardenArrivals;
+        var previousBellCracks = current.BellWardenCracks;
+        var previousWinterRimes = current.WinterBellRimes;
+        var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
@@ -125,6 +149,66 @@ public partial class ArenaView : IAsyncDisposable
             ShowTrailTransition();
             await TryPlayAudioAsync("trail-clear");
         }
+        if (current.EliteSightings != previousEliteSightings && current.LastEliteSighted is { } sighted)
+        {
+            ShowEliteSighted(sighted);
+            stateChanged = true;
+        }
+        else if (current.DefeatedElites.Count != previousEliteDefeats)
+        {
+            ShowEliteDefeated(current.DefeatedElites[^1]);
+            stateChanged = true;
+        }
+        // The Reliquary outranks elite callouts: it is the rarer, louder moment.
+        if (current.ReliquarySightings != previousReliquarySightings)
+        {
+            ShowReliquarySighted();
+            await TryPlayAudioAsync("hunt-start");
+            stateChanged = true;
+        }
+        else if (current.ReliquaryShifts != previousReliquaryShifts)
+        {
+            ShowReliquaryShift();
+            stateChanged = true;
+        }
+        else if (!reliquaryWasSlain && current.ReliquaryDefeat is { } relic)
+        {
+            ShowReliquaryDefeated(relic);
+            await TryPlayAudioAsync("reward");
+            stateChanged = true;
+        }
+        else if (current.ReliquaryWithdrawals != previousReliquaryWithdrawals)
+        {
+            ShowReliquaryWithdrawn();
+            stateChanged = true;
+        }
+        else if (current.GlassVeilsBroken != previousVeilsBroken)
+        {
+            ShowGlassVeilBroken();
+            stateChanged = true;
+        }
+        if (current.BellWardenArrivals != previousBellArrivals)
+        {
+            ShowBellWardenArrived();
+            await TryPlayAudioAsync("hunt-start");
+            stateChanged = true;
+        }
+        else if (current.BellWardenCracks != previousBellCracks)
+        {
+            ShowBellCracked();
+            stateChanged = true;
+        }
+        else if (current.WinterBellRimes != previousWinterRimes)
+        {
+            ShowWinterBellRimed();
+            stateChanged = true;
+        }
+        else if (!bellWardenWasSlain && current.BellWardenDefeat is { } warden)
+        {
+            ShowBellWardenSlain(warden);
+            await TryPlayAudioAsync("reward");
+            stateChanged = true;
+        }
         if (!hadChoices && current.PendingChoices.Count > 0) await TryPlayAudioAsync("upgrade-open");
         if (stateChanged) await InvokeAsync(StateHasChanged);
 
@@ -139,6 +223,9 @@ public partial class ArenaView : IAsyncDisposable
     private async Task ChoosePrimaryAsync(SpellId id)
     {
         if (simulation?.ChoosePrimary(id) != true) return;
+        if (simulation.ActiveLaboratoryMutation is { } mutation)
+            ShowRunMoment(new RunMoment("MUTATION AWAKENED", LaboratoryCatalog.Get(mutation).Name, LaboratoryCatalog.Get(mutation).AwakenedText, RunMomentTone.Legendary));
+        await OnPrimaryChosen.InvokeAsync(id);
         await TryPlayAudioAsync("upgrade-choice");
         await InvokeAsync(StateHasChanged);
     }
@@ -149,6 +236,13 @@ public partial class ArenaView : IAsyncDisposable
         if (choice is null || simulation?.ApplyChoice(id) != true) return;
         ShowChoiceMoment(choice);
         await TryPlayAudioAsync("upgrade-choice");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RerollAsync(int slot)
+    {
+        if (simulation?.RerollChoice(slot) != true) return;
+        await TryPlayAudioAsync("upgrade-open");
         await InvokeAsync(StateHasChanged);
     }
 

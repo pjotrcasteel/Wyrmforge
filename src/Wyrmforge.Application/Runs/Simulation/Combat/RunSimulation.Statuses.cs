@@ -19,7 +19,7 @@ public sealed partial class RunSimulation
             status.Stacks + evolution.BonusStatusStacks);
     }
 
-    private void ApplyAbilityStatus(SpellDefinition spell, int rank, ICombatTarget target)
+    private void ApplyAbilityStatus(SpellDefinition spell, int rank, ICombatTarget target, bool firstLink = true)
     {
         if (spell.Ability.Status is { } status)
         {
@@ -27,7 +27,7 @@ public sealed partial class RunSimulation
             var duration = status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier;
             for (var stack = 0; stack < status.Stacks + evolution.BonusStatusStacks; stack++) ApplyStatus(target, status.Status, duration);
         }
-        foreach (var infusion in SpellCombinationResolver.Resolve(spell.Id, build.Spells, build.Synergies)) ApplyStatusEffect(target, infusion);
+        foreach (var infusion in SpellCombinationResolver.Resolve(spell.Id, build.Spells, build.Synergies, firstLink)) ApplyStatusEffect(target, infusion);
     }
 
     private void ApplyProjectileStatus(ProjectileState projectile, ICombatTarget target)

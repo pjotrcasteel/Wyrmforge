@@ -1,11 +1,39 @@
-// Original compact enemy pixel sprites. Four canonical enemy kinds use different
-// anatomical silhouettes; C# still owns hitboxes, health, AI and attacks.
+// Fallback compact enemy pixel sprites used until the generated atlas loads. Twenty-one kinds (7-8: Reliquary and ward, 9: Bell Warden,
+// 10-16: the Frost roster and the Mirror Wisp's double, 17: the Bell of Winter, 18-20: the Reliquary of Glass, its Crystal Ward
+// and its false form);
+// C# still owns hitboxes, health, AI and attacks.
+import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
     {edge:'#242726',body:'#788079',shade:'#4d5d58',light:'#bcc0aa',head:'#c0bda7',eye:'#242728',weapon:'#8b9382'},
     {edge:'#221b2d',body:'#5a486b',shade:'#3b3155',light:'#9477a8',head:'#72658b',eye:'#bcdbe7',weapon:'#ae9dbe'},
     {edge:'#301f1f',body:'#785442',shade:'#513629',light:'#bb8860',head:'#ac8c70',eye:'#281f20',weapon:'#d6b49a'},
     {edge:'#271d26',body:'#692e38',shade:'#482632',light:'#b86468',head:'#ae8379',eye:'#e6bc94',weapon:'#877c82'},
+    {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
+    {edge:'#1e0d0a',body:'#5e2a20',shade:'#331511',light:'#8a3f2c',head:'#d9cbb0',eye:'#ffb347',weapon:'#ffc46a'},
+    {edge:'#0b0f16',body:'#3c4a5c',shade:'#232c3a',light:'#61758c',head:'#b8c6d0',eye:'#8fc6e6',weapon:'#d8e4ec'},
+    {edge:'#24070c',body:'#7a1820',shade:'#45101a',light:'#c9a24a',head:'#e6dcc8',eye:'#14060a',weapon:'#f0d27a'},
+    {edge:'#1c171a',body:'#d8c8a4',shade:'#7e6228',light:'#c9a24a',head:'#b02a34',eye:'#fff1c0',weapon:'#ff8a3c'},
+    {edge:'#141214',body:'#4a4f57',shade:'#2a2d33',light:'#8a919a',head:'#d9cfb8',eye:'#ffb347',weapon:'#c9a24a'},
+    // Frost roster (10-16): Packling, Shardcaster, Whitefang, Cairn Sentinel, Hoarfrost Cantor, Mirror Wisp, its double.
+    {edge:'#14202a',body:'#cfdde6',shade:'#7f9fb2',light:'#effbff',head:'#a9c4d4',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    {edge:'#080a0f',body:'#6f6a66',shade:'#433f3d',light:'#9d978f',head:'#211f21',eye:'#8ce8ff',weapon:'#a9dcf0'},
+    {edge:'#0b1218',body:'#dfe6ea',shade:'#93a7b4',light:'#f6fbfd',head:'#c3d3dc',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    {edge:'#0d1116',body:'#6c7680',shade:'#3b434c',light:'#a6b4bf',head:'#4f5b66',eye:'#8ce8ff',weapon:'#a9dcf0'},
+    {edge:'#0a0d12',body:'#cfc6b0',shade:'#8d846f',light:'#efe8d6',head:'#4f7d9a',eye:'#a9dcf0',weapon:'#e2dccb'},
+    {edge:'#0d1a24',body:'#c8dce6',shade:'#7f9fb2',light:'#f2fbff',head:'#f4f9fb',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    {edge:'#0d1a24',body:'#c8dce6',shade:'#7f9fb2',light:'#f2fbff',head:'#f4f9fb',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    // The Bell of Winter: a frosted iron keeper in rust-red rags, its bell rimed pale blue.
+    {edge:'#0c1218',body:'#5d6670',shade:'#2f363e',light:'#9fb8c8',head:'#8a3a2c',eye:'#9fe6ff',weapon:'#cfeaf8'},
+    // The Reliquary of Glass, its Crystal Ward, and its false form (dead lanterns: the identification tell).
+    {edge:'#070a10',body:'#d9d2c2',shade:'#a59c88',light:'#c9a24a',head:'#b8b0a0',eye:'#8fdcff',weapon:'#e8faff'},
+    {edge:'#070a10',body:'#5fb8e6',shade:'#2c6c94',light:'#bfeeff',head:'#c9a24a',eye:'#ffffff',weapon:'#bfeeff'},
+    {edge:'#070a10',body:'#d9d2c2',shade:'#a59c88',light:'#c9a24a',head:'#b8b0a0',eye:'#3d4650',weapon:'#59636e'},
 ];
+export const ENEMY_KIND_COUNT = palettes.length;
+const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
+// Kinds 4-5 (Ash Slinger, Ash Priest) borrow the slender spear-bearer fallback frame; the Drowned Wraith (6) reuses the
+// hooded, torn-hem wraith frame. Each keeps its own palette.
+const fallbackFrame = kind => kind <= 3 ? kind : kind === 6 ? 1 : kind === 7 || kind === 9 || kind === 17 || kind === 18 || kind === 20 ? 3 : 2;
 // Coordinates are drawn by hand at a single 32 x 36 scale. Material separation
 // and limb/weapon outline, not saturated outlines, carry actor recognition.
 export const enemyPixelFrames = [
@@ -106,7 +134,10 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
             }
         }
         const phase = reducedMotion || seconds - lastMoved > .20 ? 0 : (Math.floor(traveled / 6) % 2) + 1;
-        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved });
+        // Sprites face east; remember the last clear horizontal travel so idle enemies don't flip.
+        let facing = old?.facing ?? 1;
+        if (old && Math.abs(enemy.x - old.x) > .2 && Math.abs(enemy.x - old.x) < 48) facing = enemy.x > old.x ? 1 : -1;
+        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved, facing });
         poses.set(id, phase);
     }
     // Remove dead/despawned entities to keep state bounded throughout long hunts.
@@ -115,18 +146,52 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
     return poses;
 }
 
+export function enemyFacing(motion, entityId) {
+    return motion?.entities?.get(Number(entityId))?.facing ?? 1;
+}
+
+// Pose 3 is the attack posture; it is shown exactly while C# reports a committed telegraph.
+export function enemySpriteName(enemy, walkPhase = 0) {
+    const kind = clampKind(enemy?.kind);
+    const variant = enemy?.hitFlash ? 'hit' : enemy?.frozen ? 'frozen' : 'normal';
+    const phase = enemy?.telegraph ? 3 : Math.max(0, Math.min(2, Number(walkPhase) || 0));
+    return `enemy.${kind}.${phase}.${variant}`;
+}
+
 const cached=new Map();
 function paletteFor(enemy) {
-    const kind=Math.max(0,Math.min(3,Number(enemy?.kind)||0));
+    const kind=clampKind(enemy?.kind);
     if(enemy?.hitFlash)return {edge:'#8e827a',body:'#f2e7d1',shade:'#b6a79c',
         light:'#fff7e5',head:'#fff4df',eye:'#7f655e',weapon:'#f6e8cf'};
     if(enemy?.frozen)return {edge:'#284b57',body:'#8abcc6',shade:'#5a91a3',
         light:'#d0edf0',head:'#badde7',eye:'#395c68',weapon:'#c6e7eb'};
     return palettes[kind];
 }
-export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
+export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
     if(!enemy)return;
-    const kind=Math.max(0,Math.min(3,Number(enemy.kind)||0));
+    // A Drowned Wraith fades in from the water and out again; C# reports the opacity so the fade matches its window.
+    const opacity=Number(enemy.opacity??1);
+    if(Number.isFinite(opacity)&&opacity<1){
+        ctx.save();ctx.globalAlpha*=Math.max(0,opacity);
+        try{drawEnemyPixelArt(ctx,{...enemy,opacity:1},light,walkPhase,facing);}finally{ctx.restore();}
+        return;
+    }
+    // A shielded Penitent faces its shield, not its last stride, so the sprite agrees with the blocking arc.
+    if(enemy.shieldFacing!=null&&Number.isFinite(Number(enemy.shieldFacing)))facing=Math.cos(Number(enemy.shieldFacing))>=0?1:-1;
+    const sprite=artReady()?artFrame('actors',enemySpriteName(enemy,walkPhase)):null;
+    if(sprite&&typeof ctx.drawImage==='function'){
+        const scale=Math.max(.62,Math.min(1.9,(Number(enemy.radius)||sprite.frame.radius)/sprite.frame.radius));
+        ctx.save();
+        ctx.fillStyle='rgba(5,7,10,.38)';
+        ctx.beginPath();
+        ctx.ellipse(enemy.x,enemy.y+(sprite.frame.h-sprite.frame.ay-3)*scale,(sprite.frame.w*.32)*scale,3.5*scale,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+        drawArtFrame(ctx,'actors',enemySpriteName(enemy,walkPhase),enemy.x,enemy.y,{scale,flipX:facing<0});
+        drawEnemyLight(ctx,enemy,light,scale);
+        return;
+    }
+    const kind=clampKind(enemy.kind);
     const variant=enemy.hitFlash?'hit':enemy.frozen?'frozen':'normal';
     const phase=Math.max(0,Math.min(2,Number(walkPhase)||0));
     const key=kind+':'+variant+':'+phase;
@@ -138,8 +203,9 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
         const colors=paletteFor(enemy);
         // The upper body remains hand-authored across phases. Each enemy kind
         // has a separately authored step silhouette that replaces its lower hem.
-        const frame=phase===0?enemyPixelFrames[kind]:
-            enemyPixelFrames[kind].filter(([, , y])=>y<10).concat(enemyWalkLegs[kind][phase-1]);
+        const f=fallbackFrame(kind);
+        const frame=phase===0?enemyPixelFrames[f]:
+            enemyPixelFrames[f].filter(([, , y])=>y<10).concat(enemyWalkLegs[f][phase-1]);
         for(const [part,x,y,w,h] of frame){
             brush.fillStyle=colors[part];brush.fillRect(x+18,y+20,w,h);
         }
@@ -148,6 +214,11 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
     const scale=Math.max(.62,Math.min(1.9,(Number(enemy.radius)||12)/12));
     ctx.save();ctx.imageSmoothingEnabled=false;
     ctx.drawImage(art,enemy.x-18*scale,enemy.y-20*scale,36*scale,44*scale);
+    drawEnemyLight(ctx,enemy,light,scale);
+    ctx.restore();
+}
+
+function drawEnemyLight(ctx,enemy,light,scale){
     // Directional local illumination from actual spell cast, projectile or impact.
     // No halo, fake target ring or gameplay-based damage adjustment.
     if(light?.intensity>.045){
@@ -158,5 +229,4 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0){
         ctx.fillRect(enemy.x+(side<0?-9:5)*scale,enemy.y-10*scale,4*scale,15*scale);
         ctx.fillRect(enemy.x+(side<0?-6:2)*scale,enemy.y-14*scale,4*scale,3*scale);
     }
-    ctx.restore();
 }
