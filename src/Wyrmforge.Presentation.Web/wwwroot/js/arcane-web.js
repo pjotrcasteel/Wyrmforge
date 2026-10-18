@@ -9,7 +9,7 @@
     }
 
     function defaultScale(viewport) {
-        if (viewport.clientWidth < 700) return clamp(viewport.clientWidth / 710, 0.55, 0.68);
+        if (viewport.clientWidth < 700) return clamp(viewport.clientWidth / 460, 0.72, 0.95);
         if (viewport.clientWidth < 1100) return 0.82;
         return 0.92;
     }
