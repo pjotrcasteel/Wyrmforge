@@ -16,6 +16,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var result = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const recovery = await import('./js/arena-recovery.js');
             const camera = { x: 250, y: 240, width: 950, height: 1550 };
@@ -54,6 +55,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "WYRMFORGE", Exact = true })).ToBeVisibleAsync();
         var nav = Page.Locator("nav.menu-actions button");
         await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToBeDisabledAsync();
@@ -73,6 +75,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var test = Page.GetByRole(AriaRole.Button, new() { Name = "Play sound test" });
         var toggle = Page.GetByRole(AriaRole.Button, new() { Name = "Mute game sound effects" });
         await Expect(test).ToBeVisibleAsync();
@@ -96,6 +99,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var open = Page.GetByRole(AriaRole.Button, new() { Name = "Open Sound Atelier" });
         await open.ClickAsync();
 
@@ -133,6 +137,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','1'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:1, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" })).ToBeVisibleAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
@@ -148,6 +153,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['RimeHeart']));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" }).ClickAsync();
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Spellcraft" }).ClickAsync();
 
@@ -186,6 +192,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Open Hall of Fame" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Hall of Fame high scores" })).ToBeVisibleAsync();
         await Expect(Page.GetByText("LEGEND · DEMO").First).ToBeVisibleAsync();
@@ -202,6 +209,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Directory.CreateDirectory(ArtifactDirectory);
         await Page.SetViewportSizeAsync(320, 568);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var edit = Page.GetByRole(AriaRole.Button, new() { Name = "Edit player name", Exact = true });
         await Expect(Page.GetByRole(AriaRole.Textbox, new() { Name = "Player name", Exact = true })).ToHaveCountAsync(0);
         await edit.ClickAsync();
@@ -217,6 +225,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Alert)).ToHaveTextAsync("Choose a different name.");
         await Page.GetByRole(AriaRole.Button, new() { Name = "CANCEL", Exact = true }).ClickAsync();
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Expect(edit).ToContainTextAsync("Test Hunter");
         await Page.Locator("#wyrmforge-ignition").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         await ScreenshotAsync("mobile-player-name-320.png");
@@ -400,6 +409,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var pixels = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
             const lights = await import('./js/arena-spell-lighting.js');
             const mage = await import('./js/arena-mage.js');
@@ -447,6 +457,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
 
         var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const mage = await import('./js/arena-mage.js');
@@ -484,6 +495,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
 
         var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const mage = await import('./js/arena-mage.js');
@@ -538,6 +550,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var pixels = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const actors = await import('./js/arena-enemy-art.js');
             const environment = await import('./js/arena-environment.js');
@@ -589,6 +602,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var result = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const environment = await import('./js/arena-environment.js');
             const actors = await import('./js/arena-enemy-art.js');
@@ -1157,6 +1171,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "World Gate" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "World Gate" })).ToBeVisibleAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Road to the Conclave" })).ToBeVisibleAsync();
@@ -1184,6 +1199,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));
             localStorage.setItem('wyrmforge.greatHunt.v1', JSON.stringify([{Wyrm:0,Slain:true,EssenceSecured:true,DeepEvolvedDuel:false,AscendantDefeated:false}]));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "World Gate" }).ClickAsync();
         var frost = Page.GetByRole(AriaRole.Radio, new() { Name = "The Hoarfrost Reaches" });
         await Expect(frost).ToBeEnabledAsync();
@@ -1233,6 +1249,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:2,Nodes:[],Quests:{
                 Trails:4,RareTrails:1,Depth:1,Wyrms:[],Essences:[],Synergy:false,Evolution:false,Claimed:[],Caches:0}})); }");
         await Page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Quests") }).ClickAsync();
         var dialog = Page.GetByRole(AriaRole.Dialog, new() { Name = "Hunt quests" });
         await Expect(dialog).ToBeVisibleAsync();
@@ -1242,6 +1259,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var overflow = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - innerWidth");
         Assert.IsLessThanOrEqualTo(1, overflow);
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var save = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.arcaneBuild.v1')");
         using var json = JsonDocument.Parse(save);
         Assert.AreEqual(2, json.RootElement.GetProperty("Budget").GetInt32());
@@ -1418,11 +1436,22 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
     }
 
+    private async Task EnterTownIfNeededAsync()
+    {
+        // Wait until Blazor has finished its first render. Checking IsVisibleAsync too
+        // early can leave a test at the title scene even though the button appears later.
+        var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30000 });
+        await start.ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
+    }
+
     private async Task OpenAsync()
     {
         // Existing gameplay tests represent established accounts, not the new First Hunt tutorial.
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart']));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();
     }
 

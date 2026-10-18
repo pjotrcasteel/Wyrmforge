@@ -182,3 +182,35 @@
 .research-prompt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-color:#7fb8d4;background:#1d2633;text-align:left;font-size:.78rem;line-height:1.35}.research-prompt b{margin-left:auto;color:#9fdcf0;font-size:.66rem;letter-spacing:.12em;white-space:nowrap}
 
 .hunter-run-progress{display:grid;gap:7px;margin-bottom:12px;padding:12px;border:1px solid #756044;background:#261c2f}.hunter-run-progress strong{font-size:.85rem;color:#eee5d4}.hunter-run-progress span,.hunter-run-progress small{font-size:.75rem;color:#cead74}.hunter-run-progress progress{width:100%;height:5px;accent-color:#cead74}
+
+/* A death screen is a moment in the hunt, not a stack of competing dashboard cards. */
+.run-report-card { gap:12px; background:linear-gradient(180deg,#160e1c,#0f0b13); border:0; box-shadow:none; }
+.run-report-hero { padding:12px 0 7px; gap:8px; }
+.run-report-hero .eyebrow { color:#c6a3df; font-size:.8rem; font-weight:750; letter-spacing:.21em; }
+.run-report-hero h2 { font:600 clamp(2.4rem,10vw,4.5rem)/1 Georgia,serif; color:#f0dfcb; }
+.run-report-hero h2 small { color:#b2a0b2; font:.4em Georgia,serif; }
+.run-report-hero p { color:#9d91a4; font-size:.72rem; }
+.run-report-card .hunter-run-progress { border:0; border-top:1px solid #49384d; border-bottom:1px solid #49384d;
+    border-radius:0; padding:12px 3px; background:transparent; }
+.run-report-card .quest-reward-ready { border:0; border-bottom:1px solid #755a6a; border-radius:0;
+    background:transparent; padding:12px 6px; min-height:44px; font-size:.83rem; }
+.run-report-card .run-report-actions { margin:6px 0 0; gap:8px; }
+.run-report-card .run-report-actions button.primary { color:#1c1322; background:#d0a2ee; border-radius:4px; }
+.run-report-card .run-report-actions button.secondary { border:0; background:transparent; color:#c9b5d8; }
+.run-discoveries { border-top:1px solid #4b3950; }
+.run-discoveries > summary { display:flex; justify-content:space-between; align-items:center; gap:10px;
+    min-height:44px; cursor:pointer; list-style:none; color:#bdaac9; font-size:.69rem; font-weight:700; letter-spacing:.08em; }
+.run-discoveries > summary::-webkit-details-marker { display:none; }
+.run-discoveries[open] > summary span:last-child { transform:rotate(180deg); }
+.run-discoveries-content { display:grid; gap:10px; padding:5px 0 12px; }
+.run-discoveries-content .run-report-grid section,.run-discoveries-content .run-great-hunt-entries>div,
+.run-discoveries-content .run-great-hunt-progress,.run-discoveries-content .run-mastery-progress,
+.run-discoveries-content .run-great-hunt-seal { box-shadow:none; border-color:#392c3e; background:#17111c; }
+.run-reason { margin:0; color:#9d91a4; line-height:1.5; font-size:.76rem; }
+.run-report-details,.run-report-next { border:0; border-top:1px solid #3a2c41; border-radius:0; background:transparent; }
+.run-report-details>summary,.run-report-next>summary { padding:10px 0; font-weight:700; }
+.run-report-card .run-playtest-feedback { font-size:.72rem; }
+@media(max-width:620px) { .run-report-card { padding:18px 14px; gap:8px; }
+    .run-report-hero h2 { font-size:2.6rem; }
+    .run-report-card .run-report-actions { grid-template-columns:1fr 1.35fr; }
+}

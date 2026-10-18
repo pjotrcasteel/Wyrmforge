@@ -52,3 +52,9 @@
 @media(max-width:360px){ .gate-facts { grid-template-columns:1fr; } .gate-arch strong { font-size:1rem; } }
 @media(orientation:landscape) and (max-height:520px){ .world-gate { width:min(860px,100%); grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); align-items:start; } .gate-prompt { grid-column:1; } .gate-sheet { grid-column:2; grid-row:1 / span 2; } }
 @media(prefers-reduced-motion:reduce){ .gate-arch::after { transition:none; } }
+
+/* Campaign is a future road: desaturate only the right-hand landscape, never the live Exploration gate. */
+.gate-art::before { content:""; position:absolute; inset:0 0 0 50%; z-index:0; pointer-events:none;
+    backdrop-filter:grayscale(1) brightness(.54); -webkit-backdrop-filter:grayscale(1) brightness(.54); }
+.gate-arch { position:relative; z-index:1; }
+.gate-arch.campaign:not(.chosen) .arch-ring { filter:grayscale(1); opacity:.65; }

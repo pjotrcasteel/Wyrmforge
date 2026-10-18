@@ -13,7 +13,7 @@
 
     @if (Loadouts is not null)
     {
-        <section class="loadout-strip" aria-label="Saved hunt loadouts">
+        <details class="loadout-strip" aria-label="Saved hunt loadouts"><summary>Saved builds <span aria-hidden="true">⌄</span></summary>
             <div class="loadout-slots">
                 <span class="loadout-kicker">LOADOUTS</span>
                 @for (var index = 0; index < HuntLoadoutBook.SlotCount; index++)
@@ -48,10 +48,35 @@
             {
                 <p class="loadout-message" role="status">@loadoutMessage</p>
             }
+        </details>
+
+    }
+
+    @if (Laboratory is not null)
+    {
+        <section class="nexus-equipped" aria-label="Crafted spells and mutation sockets">
+            <div class="nexus-equipped-head">
+                <div><span>CRAFTED SPELL SOCKETS</span>
+                    <strong>@(Laboratory.EquippedMutations.Count) / @LaboratoryCatalog.MaxEquippedMutations equipped</strong></div>
+                <button @onclick="() => OnOpenSpellcraft.InvokeAsync(null)">CRAFT / EQUIP <span aria-hidden="true">›</span></button>
+            </div>
+            <div class="nexus-socket-rack" aria-label="Places for crafted spells">
+                @foreach (var rackSocket in LaboratoryCatalog.Sockets)
+                {
+                    var unlocked = LaboratoryState.SocketUnlocked(rackSocket.Id, Selection.Selected);
+                    var occupied = Laboratory.Slotted.TryGetValue(rackSocket.Id, out var mutationId);
+                    <button class="nexus-rack-rackSocket @(unlocked ? "unlocked" : "locked") @(occupied ? "occupied" : string.Empty)"
+                        aria-label="@($"{rackSocket.NodeName}: {(occupied ? LaboratoryCatalog.Get(mutationId).Name : unlocked ? "Empty rackSocket" : "Locked")}. Show on the Web.")"
+                        @onclick="() => FocusNodeAsync(rackSocket.NodeId)">
+                        <i aria-hidden="true">@(occupied ? "◆" : unlocked ? "◇" : "◈")</i>
+                        <span><b>@rackSocket.NodeName</b><small>@(occupied ? LaboratoryCatalog.Get(mutationId).Name : unlocked ? "Empty" : "Locked")</small></span>
+                    </button>
+                }
+            </div>
         </section>
     }
 
-    <div class="web-layout">
+    <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             <div class="atlas-toolbar">
                 <div class="build-legend" aria-label="Arcane Web legend">
@@ -69,15 +94,6 @@
             </div>
 
             <div class="atlas-caption"><span>THE WYRMHEART</span></div>
-
-                    @if (Suggestion is { } suggestion && !inspectorOpen)
-            {
-                <button class="nexus-next" aria-label="@($"Next discovery: {suggestion.Text} Show it on the Web.")" @onclick="() => FocusNodeAsync(suggestion.NodeId)">
-                    <i aria-hidden="true">✦</i>
-                    <span><small>NEXT DISCOVERY</small><b>@suggestion.Text</b></span>
-                    <em aria-hidden="true">›</em>
-                </button>
-            }
 
             <div class="arcane-web-viewport" @ref="viewport">
                 <div class="web-pan-space">
@@ -160,7 +176,7 @@
                             <strong>@mutation.Name</strong>
                             <b class="nexus-stage stage-@StageClass(research.Stage)"><i aria-hidden="true">@StageGlyph(research.Stage)</i>@StageLabel(research.Stage)</b>
                         </header>
-                        <p class="nexus-enables"><span>@mutation.Summary</span><small>@mutation.TradeOff</small></p>
+                        <p class="nexus-enables"><span>@mutation.Summary</span></p>
 
                         @if (research.Material is { } material)
                         {
@@ -173,22 +189,13 @@
                             </div>
                         }
 
-                        <p class="nexus-progress"><b>@research.ConditionsKnown/@research.ConditionsNeeded</b> conditions understood · @Spellcraft.SeatsOf(mutation).Foundation + @Spellcraft.SeatsOf(mutation).Infusion</p>
-
-                        <div class="nexus-loadouts">
-                            <span>LOADOUTS</span>
-                            @if (research.LoadoutReferences.Count > 0)
-                            {
-                                @foreach (var name in research.LoadoutReferences) { <b>@name</b> }
-                            }
-                            else
-                            {
-                                <small>@(research.Stage == NexusResearchStage.Equipped ? "Equipped for your next hunt · save a loadout above to keep it." : "Not in a saved loadout yet.")</small>
-                            }
-                        </div>
+                        <details class="nexus-details"><summary>Recipe details</summary>
+                            <p>@mutation.TradeOff</p>
+                            <p>@research.ConditionsKnown/@research.ConditionsNeeded conditions · @Spellcraft.SeatsOf(mutation).Foundation + @Spellcraft.SeatsOf(mutation).Infusion</p>
+                        </details>
 
                         <div class="nexus-action">
-                            <p>@research.Next.Text</p>
+                            <p class="nexus-next-action-copy">@research.Next.Text</p>
                             @switch (research.Next.Kind)
                             {
                                 case NexusActionKind.Equip:
@@ -238,11 +245,7 @@
 
             @if (IsSelected(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
-                <div class="route-summary traversed-route">
-                    <span>TRAVERSED LANDMARK</span>
-                    <strong>This effect is active in your starting build.</strong>
-                    <small>@RefundHelp</small>
-                </div>
+                <p class="nexus-active-note">✓ Active in your build</p>
                 <button class="route-action refund" disabled="@(!Selection.CanRemove(FocusedNode.Id))" @onclick="RefundFocused">Refund node</button>
             }
             else if (FocusedNode.Kind != PassiveNodeKind.Origin)

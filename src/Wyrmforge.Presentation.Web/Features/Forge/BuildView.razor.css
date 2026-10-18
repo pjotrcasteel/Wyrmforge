@@ -1689,3 +1689,106 @@
 }
 .nexus-progress { margin: 0; color: #b7aaba; font-size: .74rem; }
 .nexus-progress b { color: #d8b46a; }
+
+/* The active spell sockets are the entry point, not hidden in the node inspector. */
+.nexus-equipped { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 4px 11px;
+    border-bottom:1px solid #46364c; color:#e7d6ef; }
+.nexus-equipped > div { display:grid; gap:3px; min-width:0; }
+.nexus-equipped span { color:#b98ee0; font-size:.57rem; font-weight:800; letter-spacing:.11em; }
+.nexus-equipped strong { overflow:hidden; font:500 .92rem Georgia,serif; white-space:nowrap; text-overflow:ellipsis; }
+.nexus-equipped button { flex:none; min-height:46px; padding:8px 12px; border:1px solid #ae87c8; border-radius:3px;
+    background:#291d36; color:#f2e5ff; font:750 .69rem system-ui,sans-serif; cursor:pointer; }
+.nexus-equipped button span { color:#f1c77e; font-size:1.1rem; }
+.nexus-active-note { margin:0; color:#9fdbc3; font-weight:700; font-size:.8rem; }
+.nexus-details { color:#a999ae; font-size:.72rem; }
+.nexus-details summary { padding:8px 0; cursor:pointer; }
+.nexus-details p { margin:4px 0; line-height:1.45; }
+.nexus-bench { gap:7px; padding-top:8px; }
+.nexus-material,.nexus-socket { border:0; border-bottom:1px solid #453349; border-radius:0; padding:8px 2px; background:transparent; }
+.nexus-stage { border:0; padding:3px 0; }
+.nexus-enables { color:#e1d4e6; }
+.nexus-bench-head > span { display:none; }
+.nexus-action { padding:6px 0; margin:0; border:0; box-shadow:none; }
+.node-inspector { box-shadow:0 15px 40px #0008; }
+@media(max-width:760px) {
+    .build-view { gap:4px; }
+    .loadout-strip { border:0; border-bottom:1px solid #453449; border-radius:0; background:transparent; padding:5px 0; }
+    .loadout-slots { justify-content:flex-end; gap:4px; }
+    .loadout-kicker { font-size:.55rem; letter-spacing:.08em; }
+    .loadout-slot { min-width:42px; min-height:42px; padding:0; border-radius:4px; }
+    .build-heading { min-height:30px; padding:0 3px; }
+    .atlas-quest-link { min-height:42px; font-size:.67rem; }
+    .nexus-equipped { padding:7px 2px; }
+    .nexus-equipped strong { font-size:.83rem; }
+    .nexus-equipped button { font-size:.64rem; }
+    .atlas-stage { height:max(350px,calc(100dvh - 270px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); }
+    .atlas-toolbar { top:6px; left:6px; right:6px; }
+    .build-legend { padding:3px 4px; }
+    .nexus-next { position:absolute; top:63px; bottom:auto; left:8px; right:8px;
+        min-height:40px; padding:5px 8px; border:0; border-left:2px solid #d1a85e;
+        border-radius:2px; background:#1b1421db; box-shadow:none; }
+    .nexus-next small { display:none; }
+    .nexus-next b { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:.66rem; }
+    .web-layout.inspecting .nexus-next { display:none; }
+    .node-inspector { max-height:min(38dvh,305px); bottom:0; left:0; right:0; border-radius:15px 15px 0 0;
+        padding:9px 13px max(12px,env(safe-area-inset-bottom)); border-color:#755383; }
+    .node-inspector .inspector-effect { margin:0; }
+    .node-inspector .route-summary, .node-inspector .route-gains,
+    .node-inspector .route-landmarks { border:0; border-radius:0; background:transparent; padding:6px 0; }
+    .nexus-action { position:static; }
+}
+
+/* Discovery belongs in the page flow, never over a tappable skill node. */
+.build-view > .nexus-next { position:relative; inset:auto; width:100%; max-width:none; min-height:42px;
+    margin:0; border:0; border-left:2px solid #ac8250; border-radius:0; box-shadow:none;
+    background:#211a23; padding:6px 10px; }
+.build-view > .nexus-next small { display:none; }
+.build-view > .nexus-next b { font-size:.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media(max-width:760px) {
+    .build-view > .nexus-next { position:relative; inset:auto; width:100%; max-width:none; min-height:42px; }
+}
+
+/* A compact socket rack makes spell placement legible without opening a node inspector.
+   Selecting a socket follows that actual node in the Web, including when locked. */
+.loadout-strip { display:block; padding:0; border:0; background:transparent; }
+.loadout-strip > summary { display:flex; align-items:center; justify-content:space-between; min-height:35px;
+    color:#9c86b3; cursor:pointer; font-size:.7rem; letter-spacing:.04em; list-style:none; }
+.loadout-strip > summary::-webkit-details-marker { display:none; }
+.loadout-strip[open] > summary span { transform:rotate(180deg); }
+.loadout-strip .loadout-slots { margin:5px 0; }
+.nexus-equipped { display:grid; gap:8px; }
+.nexus-equipped-head { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.nexus-equipped-head > div { display:grid; gap:4px; min-width:0; }
+.nexus-equipped-head strong { font-size:.78rem; color:#d7c7df; }
+.nexus-socket-rack { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3px; width:100%; }
+.nexus-rack-socket { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    min-width:0; min-height:54px; padding:5px 4px; border:0; border-bottom:2px solid #493850;
+    background:linear-gradient(180deg,#291f2d77,#1b152100); color:#e3d2e7; cursor:pointer; }
+.nexus-rack-socket i { font:500 1.2rem/1 Georgia,serif; color:#aa80c9; }
+.nexus-rack-socket span { display:grid; gap:3px; width:100%; min-width:0; text-align:center; }
+.nexus-rack-socket b { overflow:hidden; font-size:.57rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
+.nexus-rack-socket small { font-size:.54rem; color:#ab9ab9; }
+.nexus-rack-socket.locked { opacity:.55; }
+.nexus-rack-socket.occupied { border-bottom-color:#d5ab70; }
+.nexus-rack-socket.occupied i { color:#edc68f; }
+.nexus-rack-socket:focus-visible { outline:2px solid #d6a7d9; outline-offset:-2px; }
+@media(max-width:760px) {
+    .loadout-strip { padding:0 2px; }
+    .loadout-strip > summary { min-height:31px; font-size:.66rem; }
+    .nexus-equipped { padding:6px 2px; }
+    .nexus-rack-socket { min-height:52px; }
+    .nexus-rack-socket b { font-size:.56rem; }
+}
+
+/* The compact four-slot rack must never impose the minimum intrinsic width of
+   its socket names on the full page (320px phones especially). */
+.build-view { min-width:0; max-width:100%; overflow-x:clip; }
+.nexus-equipped,.nexus-equipped-head,.nexus-socket-rack { min-width:0; max-width:100%; }
+.nexus-equipped .nexus-rack-socket { box-sizing:border-box; width:100%; min-width:0; max-width:100%;
+    padding:5px 2px; overflow:hidden; border:0; border-bottom:2px solid #493850;
+    background:linear-gradient(180deg,#291f2d77,#1b152100); }
+.nexus-equipped .nexus-rack-socket.occupied { border-bottom-color:#d5ab70; }
+.nexus-equipped .nexus-rack-socket span { display:grid; min-width:0; max-width:100%; overflow:hidden;
+    font-size:.6rem; color:inherit; }
+.nexus-equipped .nexus-rack-socket b,.nexus-equipped .nexus-rack-socket small {
+    overflow:hidden; max-width:100%; text-overflow:ellipsis; white-space:nowrap; }
