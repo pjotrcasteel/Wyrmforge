@@ -471,3 +471,19 @@
   width:100%; min-height:44px; padding:10px 12px; border:1px solid #584762;
   border-radius:5px; background:#201927; color:#e4d7e9; font:600 .82rem system-ui,sans-serif;
   text-decoration:none; text-align:left; cursor:pointer; }
+
+/* Portrait composition: the source image is wide. Give it a softly extended,
+   blurred backdrop rather than either extreme (cropped cover or a tiny contain
+   strip). The focal image occupies 78% of the welcome height on iPhone. */
+.arrival-home .hub-backdrop::before {
+  background-position:center 53%; background-size:cover;
+  filter:blur(15px) brightness(.57); opacity:.7;
+}
+.arrival-home .hub-backdrop::after {
+  background:url('art/refuge-scene.png') center 50% / auto 78% no-repeat;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 3%,#000 20%,#000 82%,transparent 97%);
+  mask-image:linear-gradient(to bottom,transparent 3%,#000 20%,#000 82%,transparent 97%);
+}
+@media (orientation:landscape) and (max-height:560px) {
+  .arrival-home .hub-backdrop::after { background-size:auto 95%; }
+}
