@@ -88,18 +88,28 @@
             }
         });
 
-        viewport.addEventListener('pointermove', event => {
-            if (!state.pointers.has(event.pointerId)) return;
-            state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-
+        // Coalesce high-frequency touch events into one scroll/zoom mutation per paint frame.
+        // Synchronous DOM writes on every touchmove caused perceptible Web stutter on iPhone.
+        let scheduled = false;
+        const renderPointers = () => {
+            scheduled = false;
             if (state.pointers.size === 1 && state.dragStart) {
-                viewport.scrollLeft = state.dragStart.left - (event.clientX - state.dragStart.x);
-                viewport.scrollTop = state.dragStart.top - (event.clientY - state.dragStart.y);
+                const point = Array.from(state.pointers.values())[0];
+                viewport.scrollLeft = state.dragStart.left - (point.x - state.dragStart.x);
+                viewport.scrollTop = state.dragStart.top - (point.y - state.dragStart.y);
             } else if (state.pointers.size === 2 && state.pinchDistance > 0) {
                 const points = Array.from(state.pointers.values());
                 const ratio = distance(points[0], points[1]) / state.pinchDistance;
                 const mid = midpoint(points[0], points[1], viewport);
                 apply(viewport, state, state.pinchScale * ratio, mid.x, mid.y);
+            }
+        };
+        viewport.addEventListener('pointermove', event => {
+            if (!state.pointers.has(event.pointerId)) return;
+            state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            if (!scheduled) {
+                scheduled = true;
+                requestAnimationFrame(renderPointers);
             }
         });
 
