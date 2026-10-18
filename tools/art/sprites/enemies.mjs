@@ -1,7 +1,8 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
 // 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith, 7 The Reliquary, 8 Reliquary ward,
-// 9 The Bell Warden, 10 Frostling Packling, 11 Shardcaster (the Frost roster: rime greys and glacial blues, never a recoloured Cinder kin).
+// 9 The Bell Warden, 10 Frostling Packling, 11 Shardcaster, 12 Whitefang Stalker, 13 Cairn Sentinel (the Frost roster: rime greys and
+// glacial blues, never a recoloured Cinder kin).
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
 // so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
@@ -32,6 +33,8 @@ export const ENEMY_SPECS = [
     { kind: 9, name: 'bell-warden', size: [84, 94], origin: [40, 61], radius: 30 },
     { kind: 10, name: 'frostling-packling', size: [40, 30], origin: [19, 18], radius: 9 },
     { kind: 11, name: 'shardcaster', size: [52, 62], origin: [23, 37], radius: 11 },
+    { kind: 12, name: 'whitefang-stalker', size: [60, 42], origin: [28, 25], radius: 13 },
+    { kind: 13, name: 'cairn-sentinel', size: [62, 74], origin: [28, 46], radius: 20 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -567,8 +570,107 @@ function shardcaster(pose) {
     return b;
 }
 
+// Whitefang Stalker: a big pale wolf-thing, shoulders higher than its haunches, its whole back and tail bristling with
+// long ice quills and two blue eyes over a snarling muzzle. Not the Mire Hound: pale where the hound is dark, tall where it
+// is low, a quill-crowned predator rather than a bone-spined scavenger. Pose 3 is the coiled flank crouch: haunches
+// raised, chest to the snow, quills flared - the body is the pounce tell.
+function whitefangStalker(pose) {
+    const s = ENEMY_SPECS[12], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { fur: '#b8b3ab', furHi: '#e2ded6', furDk: '#7d7872', deep: '#45413f', claw: '#1c1a1c', quill: '#a9dcf0',
+        quillHi: '#f1fcff', quillDk: '#4f8fb2', eye: '#7fe4ff', maw: '#3a1c24', tooth: '#f4f6f2' };
+    const coil = pose === 3, drop = coil ? 3 : 0, gait = pose === 1 ? 3 : pose === 2 ? -3 : 0;
+    const leg = (x, top, dx, c) => { g.line(x, top, x + dx, 10, c, 3); g.rect(x + dx - 1, 10, 4, 2, c); g.px(x + dx + 3, 11, C.claw); };
+    // Far legs.
+    leg(-10, 2 - (coil ? 2 : 0), -gait, C.furDk); leg(7, 2 + drop, gait, C.furDk);
+    // Long quilled tail swept back and up.
+    g.line(-13, -4, -21, -9, C.furDk, 3); g.line(-21, -9, -25, -8 + (pose === 1 ? -1 : 0), C.fur, 2);
+    for (const [x, y] of [[-16, -7], [-20, -9], [-23, -9]]) { g.line(x, y, x - 3, y - 4, C.quillDk); g.px(x - 3, y - 4, C.quillHi); }
+    // Deep-chested body: high shoulders, lean waist; the haunches rise in the coil.
+    g.ell(-6, -2 - (coil ? 2 : 0), 8, 5, C.fur);
+    g.ell(4, -4 + drop, 8, 6.5, C.fur);
+    g.ell(0, 2, 10, 1.8, C.furDk);
+    g.line(-12, -5, 8, -9 + drop, C.furHi);
+    // Ice quills down the whole back, longest at the shoulders, flared in the coil.
+    [-12, -9, -6, -3, 0, 3, 6, 9].forEach((x, i) => {
+        const shoulder = x > -2 ? 3 : 0, len = 4 + (i % 2) * 2 + shoulder + (coil ? 3 : 0);
+        const base = x > -2 ? -9 + drop : -7 - (coil ? 2 : 0);
+        g.line(x, base, x - 3, base - len, C.quillDk, 2);
+        g.line(x + 1, base, x - 2, base - len, C.quill);
+        g.px(x - 3, base - len, C.quillHi);
+    });
+    // Head: long wolf muzzle, snarling, ears pinned back, eyes lit.
+    const hy = drop + (coil ? 1 : 0);
+    g.ell(14, -6 + hy, 5, 4, C.furHi);
+    g.poly([[16, -7 + hy], [25, -4 + hy], [24, -1 + hy], [16, 0 + hy]], C.fur);
+    g.rect(18, -2 + hy, 6, 2, C.maw);
+    for (const x of [18, 20, 22]) g.px(x, -2 + hy, C.tooth);
+    g.px(19, -1 + hy, C.tooth); g.px(23, -1 + hy, C.tooth);
+    g.poly([[11, -9 + hy], [9, -14 + hy], [14, -9 + hy]], C.furDk);
+    g.px(16, -7 + hy, C.eye); g.px(17, -7 + hy, C.eye);
+    // Near legs over the body, forelimb reaching in the stride.
+    leg(-6, 2 - (coil ? 2 : 0), gait, C.fur); leg(10, 2 + drop, coil ? 4 : -gait, C.furHi);
+    b.rim('#eef9ff', '#0a0e13', .4, .3);
+    b.outline('#0a0d12');
+    const o = s.origin;
+    b.set(o[0] + 16, o[1] - 7 + hy, C.quillHi); b.set(o[0] + 17, o[1] - 7 + hy, C.eye);
+    return b;
+}
+
+// Cairn Sentinel: a frost-sealed monastery guardian in dark riveted plate, a great helm, icicles hanging from every edge,
+// a tall tower shield with a gilt cross-frame on its front arm and a heavy flanged mace trailing behind. Not the Penitent:
+// dark iron and ice where the Penitent is pale cloth and rust, a wall rather than a guard. Pose 3 is the Frost Brace:
+// shield planted low before it, body sunk behind it - the stance and the drawn front arc are the same tell.
+function cairnSentinel(pose) {
+    const s = ENEMY_SPECS[13], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { plate: '#3d3f45', plateHi: '#676b74', plateDk: '#24252a', deep: '#141518', rivet: '#8d9099', ice: '#cbe9f4',
+        iceHi: '#f4fdff', iceDk: '#6aa6c0', gilt: '#b78a3e', giltHi: '#e3bd6b', shield: '#2f3136', void: '#07080b', eye: '#8ce8ff' };
+    const step = stride(pose), brace = pose === 3, sink = brace ? 3 : 0;
+    const icicles = (x0, x1, y, every = 3) => { for (let x = x0; x <= x1; x += every) g.line(x, y, x, y + 2 + ((x * 7) & 3), C.ice); };
+    // Heavy legs and sabatons; braced, the stance widens.
+    const spread = brace ? 2 : 0;
+    g.rect(-9 - spread, 12 + sink + Math.max(0, step), 7, 13 - sink - Math.max(0, step), C.plate);
+    g.rect(2 + spread, 12 + sink + Math.max(0, -step), 7, 13 - sink - Math.max(0, -step), C.plateDk);
+    g.rect(-10 - spread, 24, 9, 3, C.deep); g.rect(1 + spread, 24, 9, 3, C.deep);
+    // Flanged mace trailing low behind.
+    g.line(-9, -2 + sink, -18, 14, C.plateDk, 2);
+    g.rect(-22, 13, 7, 7, C.plate); g.rect(-21, 14, 5, 5, C.plateHi);
+    for (const [x, y] of [[-23, 16], [-14, 16], [-19, 12], [-19, 20]]) g.px(x, y, C.rivet);
+    // Massive plated torso with a frosted tabard of hanging ice.
+    g.poly([[-11, -14 + sink], [9, -14 + sink], [10, 13 + sink], [-11, 13 + sink]], C.plate);
+    g.poly([[-11, -14 + sink], [-4, -14 + sink], [-5, 13 + sink], [-11, 13 + sink]], C.plateDk);
+    g.line(4, -12 + sink, 5, 12 + sink, C.plateHi);
+    for (const y of [-8, -2, 4]) g.line(-10, y + sink, 9, y + sink, C.deep);
+    for (const [x, y] of [[-8, -11], [6, -11], [-8, 9], [6, 9]]) g.px(x, y + sink, C.rivet);
+    icicles(-10, 9, 13 + sink, 2);
+    // Pauldrons crusted with ice.
+    g.ell(-10, -14 + sink, 5, 4, C.plate); g.ell(8, -14 + sink, 5, 4, C.plateHi);
+    icicles(-14, -6, -11 + sink); icicles(4, 12, -11 + sink);
+    // Great helm: flat-topped, a single dark slit with a cold glint.
+    g.rect(-6, -27 + sink, 12, 13, C.plate);
+    g.rect(-6, -27 + sink, 4, 13, C.plateDk);
+    g.rect(-5, -28 + sink, 10, 2, C.plateHi);
+    g.rect(-1, -22 + sink, 7, 2, C.void);
+    g.line(2, -20 + sink, 2, -15 + sink, C.deep);
+    icicles(-5, 5, -15 + sink, 2);
+    // Tower shield on the front arm, gilt cross-frame; braced, it is planted lower and further forward.
+    const x = 10 + (brace ? 3 : 0), top = -22 + (brace ? 4 : 0), bottom = 22 + (brace ? 3 : 0);
+    g.poly([[x, top + 2], [x + 11, top], [x + 12, bottom - 2], [x + 1, bottom]], C.shield);
+    g.line(x, top + 2, x + 1, bottom, C.deep); g.line(x + 11, top, x + 12, bottom - 2, C.plateHi);
+    g.line(x + 2, top + 3, x + 10, top + 1, C.gilt); g.line(x + 2, bottom - 2, x + 10, bottom - 3, C.gilt);
+    g.line(x + 6, top + 2, x + 7, bottom - 2, C.gilt, 2); g.line(x + 2, top + 12, x + 11, top + 11, C.gilt, 2);
+    g.px(x + 6, top + 11, C.giltHi); g.px(x + 7, top + 12, C.giltHi);
+    icicles(x + 1, x + 11, top + 1, 2);
+    for (const y of [top + 18, top + 30]) g.line(x + 1, y, x + 11, y - 1, C.iceDk);
+    if (brace) for (let i = 0; i < 4; i++) g.line(x + 1 + i * 3, bottom + 1, x + i * 3 - 1, bottom + 3, C.iceHi);
+    b.rim('#d9f2ff', '#060709', .3, .3);
+    b.outline('#06070a');
+    const o = s.origin;
+    b.set(o[0] + 3, o[1] - 22 + sink, C.eye); b.set(o[0] + 4, o[1] - 22 + sink, C.iceHi);
+    return b;
+}
+
 const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden,
-    frostlingPackling, shardcaster];
+    frostlingPackling, shardcaster, whitefangStalker, cairnSentinel];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 

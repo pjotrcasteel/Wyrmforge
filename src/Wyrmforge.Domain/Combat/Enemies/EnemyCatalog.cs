@@ -21,6 +21,10 @@ public static class EnemyCatalog
             HabitatOnly: true, Realm: EnemyRealm.Frost),
         new(EnemyKind.Shardcaster, EnemyRole.Artillery, 2, 11, HealthMultiplier: 0.7, SpeedMultiplier: 0.9, ContactDamageMultiplier: 0.4,
             HabitatOnly: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.WhitefangStalker, EnemyRole.Ambusher, 2, 13, HealthMultiplier: 0.95, SpeedMultiplier: 1.15, ContactDamageMultiplier: 0.5,
+            HabitatOnly: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.CairnSentinel, EnemyRole.Pressure, 3, 20, MinimumDepth: 2, HealthMultiplier: 2.3, SpeedMultiplier: 0.55, ContactDamageMultiplier: 1,
+            HabitatOnly: true, Realm: EnemyRealm.Frost),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

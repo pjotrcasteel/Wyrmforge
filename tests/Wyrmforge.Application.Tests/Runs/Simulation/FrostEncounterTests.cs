@@ -108,6 +108,71 @@ public sealed class FrostEncounterTests
     }
 
     [TestMethod]
+    public void Whitefang_FeintsBehindTheHunterInASnowCloudThenPouncesWithTendonChill()
+    {
+        var (simulation, player, enemies) = Encounter();
+        SetField(simulation, "playerHeading", new Vector2D(1, 0));
+        var stalker = new EnemyState(500, player.Position + new Vector2D(0, -200), 13, 1000, 70, EnemyKind.WhitefangStalker);
+        enemies.Add(stalker);
+        while (stalker.Whitefang!.Phase != WhitefangPhase.Windup) Step(simulation, 0.05);
+        var snapshot = simulation.CreateSnapshot();
+        Assert.HasCount(1, snapshot.SnowClouds, "The feint leaves a snow cloud where the hunter last saw it.");
+        Assert.IsLessThan(player.Position.X, stalker.Position.X, "It surfaces behind the hunter's heading.");
+        Assert.AreEqual("flank-pounce", snapshot.Enemies.Single().Telegraph?.Kind);
+        Assert.AreEqual(simulation.MaxHealth, simulation.Health, "The feint itself never hurts.");
+
+        for (var time = 0d; time < 2 && !stalker.Whitefang.PounceLanded; time += 0.05) Step(simulation, 0.05);
+        Assert.IsTrue(stalker.Whitefang.PounceLanded);
+        Assert.AreEqual(WhitefangStalkerBehaviorState.PounceDamage, simulation.MaxHealth - simulation.Health, 0.001);
+        Assert.AreEqual(WhitefangStalkerBehaviorState.TendonChill, player.Chill.Stacks);
+    }
+
+    [TestMethod]
+    [DataRow(0d, true)]
+    [DataRow(90d, false)]
+    [DataRow(180d, false)]
+    public void CairnSentinel_AvalancheStepOnlyRollsAcrossItsFront(double bearingDegrees, bool hit)
+    {
+        var (simulation, player, enemies) = Encounter();
+        var sentinel = new EnemyState(500, player.Position + new Vector2D(120, 0), 20, 1000, 0, EnemyKind.CairnSentinel);
+        enemies.Add(sentinel);
+        while (sentinel.Sentinel!.Phase != CairnPhase.Brace) Step(simulation, 0.05);
+        var telegraph = simulation.CreateSnapshot().Enemies.Single().Telegraph!;
+        Assert.AreEqual("avalanche", telegraph.Kind);
+        Assert.IsLessThan(sentinel.Position.X, telegraph.TargetX, "The wave is drawn toward the hunter it braced against.");
+        Assert.IsTrue(Invoke<bool>(simulation, "Immovable", sentinel), "A braced Sentinel cannot be shoved.");
+
+        // The shield faced the hunter when it planted; the hunter now steps around it.
+        var bearing = Math.PI - bearingDegrees * Math.PI / 180;
+        player.Position = sentinel.Position + new Vector2D(Math.Cos(bearing), Math.Sin(bearing)) * 120;
+        var start = simulation.Health;
+        var sawWave = false;
+        for (var time = 0d; time < CairnSentinelBehaviorState.BraceSeconds + CairnSentinelBehaviorState.RingSeconds + 0.2; time += 0.05)
+        {
+            Step(simulation, 0.05);
+            sawWave |= simulation.CreateSnapshot().AvalancheRings.Count > 0;
+        }
+        Assert.IsTrue(sawWave);
+        Assert.AreEqual(hit ? CairnSentinelBehaviorState.RingDamage : 0, start - simulation.Health, 0.001);
+        Assert.AreEqual(hit ? CairnSentinelBehaviorState.RingChill : 0, player.Chill.Stacks);
+    }
+
+    [TestMethod]
+    public void CairnSentinel_BraceSoaksFrontalProjectilesAndRecoveryIsExposed()
+    {
+        var sentinel = new EnemyState(1, Vector2D.Zero, 20, 1000, 0, EnemyKind.CairnSentinel);
+        var front = new Vector2D(100, 0);
+        while (sentinel.Sentinel!.Tick(0.05, sentinel.Position, front) != CairnEvent.BraceStarted) { }
+        Assert.AreEqual(CairnSentinelBehaviorState.BracedFrontMultiplier, Shield(sentinel, front));
+        Assert.AreEqual(1, Shield(sentinel, new Vector2D(-100, 0)));
+        sentinel.Sentinel.Tick(CairnSentinelBehaviorState.BraceSeconds, sentinel.Position, front);
+        Assert.AreEqual(CairnSentinelBehaviorState.ExposedMultiplier, Shield(sentinel, front));
+
+        static double Shield(EnemyState enemy, Vector2D source) => (double)typeof(RunSimulation)
+            .GetMethod("ShieldMultiplier", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [enemy, source, 1d])!;
+    }
+
+    [TestMethod]
     public void CinderPlans_NeverDrawTheFrostRoster()
     {
         var random = new SeededRandomSource(1701);
@@ -150,6 +215,9 @@ public sealed class FrostEncounterTests
 
     private static void SetField(RunSimulation simulation, string name, object value) =>
         typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(simulation, value);
+
+    private static T Invoke<T>(RunSimulation simulation, string name, params object?[] arguments) =>
+        (T)typeof(RunSimulation).GetMethod(name, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, arguments)!;
 
     private static void Invoke(RunSimulation simulation, string name, params object?[] arguments) =>
         typeof(RunSimulation).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, arguments);

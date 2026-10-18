@@ -363,6 +363,8 @@ public sealed partial class RunSimulation
             IceLances = CreateIceLanceSnapshots(),
             SplinterBlooms = CreateSplinterBloomSnapshots(),
             BlackIce = CreateBlackIceSnapshots(),
+            SnowClouds = CreateSnowCloudSnapshots(),
+            AvalancheRings = CreateAvalancheRingSnapshots(),
         };
     }
 

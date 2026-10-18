@@ -287,6 +287,10 @@ public sealed partial class RunSimulation
                 (direction, speed) = UpdatePackling(enemy, packling, scaledDelta, crossing, direction, speed, ref committed, committedCap);
             else if (enemy.Shardcaster is { } caster)
                 (direction, speed) = UpdateShardcaster(enemy, caster, scaledDelta, crossing, direction, speed, rangedAllowed, ref committed, committedCap);
+            else if (enemy.Whitefang is { } stalker)
+                (direction, speed) = UpdateWhitefang(enemy, stalker, scaledDelta, crossing, direction, speed, ref committed, committedCap);
+            else if (enemy.Sentinel is { } sentinel)
+                (direction, speed) = UpdateSentinel(enemy, sentinel, scaledDelta, crossing, direction, speed, ref committed, committedCap);
 
             if (speed > 0)
             {
@@ -304,6 +308,8 @@ public sealed partial class RunSimulation
                 biter.Land();
             }
             else if (enemy.Packling is { Phase: FrostlingPhase.Skitter } skitterer) BitePlayer(enemy, skitterer);
+            else if (enemy.Whitefang is { Phase: WhitefangPhase.Pounce } leaper) MaulPlayer(enemy, leaper);
+            else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint }) continue;
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
         SinkWraiths();
@@ -316,7 +322,8 @@ public sealed partial class RunSimulation
     private int CommittedThreatCount() => hostileProjectiles.Count + iceLances.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0)
         + (bellWarden?.BellWarden?.IsCommitted == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
-            || enemy.DrownedWraith?.IsCommitted == true || enemy.Packling?.IsCommitted == true || enemy.Shardcaster?.IsCommitted == true);
+            || enemy.DrownedWraith?.IsCommitted == true || enemy.Packling?.IsCommitted == true || enemy.Shardcaster?.IsCommitted == true
+            || enemy.Whitefang?.IsCommitted == true || enemy.Sentinel?.IsCommitted == true);
 
     private void UpdateHostileProjectiles(double delta)
     {

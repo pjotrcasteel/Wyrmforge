@@ -45,6 +45,10 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public ShardcasterBehaviorState? Shardcaster { get; } = kind == EnemyKind.Shardcaster ? new ShardcasterBehaviorState(id % 2 == 0 ? 1 : -1) : null;
 
+    public WhitefangStalkerBehaviorState? Whitefang { get; } = kind == EnemyKind.WhitefangStalker ? new WhitefangStalkerBehaviorState(id % 2 == 0 ? 1 : -1) : null;
+
+    public CairnSentinelBehaviorState? Sentinel { get; } = kind == EnemyKind.CairnSentinel ? new CairnSentinelBehaviorState() : null;
+
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
 
     /// <summary>Roster step 5 elite power; <see cref="EliteAffix.None"/> for an ordinary enemy.</summary>

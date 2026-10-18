@@ -77,6 +77,16 @@ public static class BestiaryCatalog
             "Step out of the lane and away from where it ends. Stay off black ice, then close in while it skates to its next spot.",
             "Glacier shelf, rime cliffs",
             "It never looks at you while it aims. It looks at the line, and the line looks at you."),
+        new(EnemyKind.WhitefangStalker, "Whitefang Stalker", "Common • flanker",
+            "A frost-maned predator that prowls wide. It kicks up a snow cloud where you last saw it and darts behind your heading, then crouches and leaps from the flank. Its Tendon Chill bite slows the escape.",
+            "Watch the cloud, not the spot it left. Keep your sides clear, step off the pounce lane during the crouch, and punish the long recovery.",
+            "Glacier shelf, wind-cut roads",
+            "It tests your focus before it tests your flesh."),
+        new(EnemyKind.CairnSentinel, "Cairn Sentinel", "Common • heavy guardian",
+            "A monastery guardian sealed in ice. It marches in, plants its tower shield in a Frost Brace that soaks hits from the front and cannot be shoved, then stamps an Avalanche Step: a wave of shock that rolls out across its front and chills.",
+            "Flank it instead of trading into the shield: beside or behind it, neither the brace nor the wave reaches you. Strike while it recovers.",
+            "Frozen cloister, rime cliffs",
+            "Rimeclaw's winter kept their oath and emptied their purpose."),
     ];
 
     /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>

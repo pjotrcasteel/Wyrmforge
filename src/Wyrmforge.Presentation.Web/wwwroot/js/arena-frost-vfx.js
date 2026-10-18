@@ -6,20 +6,89 @@
 const LANE = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(150, 214, 240, 0.12)', charge: 'rgba(200, 240, 255, 0.4)' };
 const SKITTER = { edge: 'rgba(226, 84, 74, 0.85)', fill: 'rgba(170, 220, 240, 0.14)', charge: 'rgba(220, 246, 255, 0.4)' };
 const BLOOM = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(140, 210, 240, 0.12)', charge: 'rgba(200, 240, 255, 0.36)' };
+const FANG = { edge: 'rgba(226, 84, 74, 0.95)', fill: 'rgba(230, 240, 248, 0.14)', charge: 'rgba(240, 250, 255, 0.45)' };
+const AVALANCHE = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(120, 180, 215, 0.12)', charge: 'rgba(190, 230, 250, 0.34)' };
 const GLAZE = { edge: 'rgba(170, 226, 255, 0.85)', fill: 'rgba(40, 70, 96, 0.22)', charge: 'rgba(120, 190, 230, 0.3)' };
 // Must match ShardcasterBehaviorState.BloomRadius: the dashed ring at the end of a lane is the bloom that will follow.
-export const FROST = { bloomRadius: 40, chillMaxStacks: 5 };
+// Must match CairnSentinelBehaviorState.BraceHalfAngleRadians: the drawn front arc is exactly where the brace and the wave reach.
+export const FROST = { bloomRadius: 40, chillMaxStacks: 5, braceHalfAngle: Math.PI / 3 };
 
 const clamp01 = value => Math.max(0, Math.min(1, Number(value) || 0));
 
 export function isFrostTelegraph(kind) {
-    return kind === 'skitter' || kind === 'ice-lance' || kind === 'black-ice';
+    return kind === 'skitter' || kind === 'ice-lance' || kind === 'black-ice' || kind === 'flank-pounce' || kind === 'avalanche';
 }
 
 export function drawFrostTelegraph(ctx, enemy, telegraph) {
     if (telegraph.kind === 'skitter') drawLane(ctx, enemy, telegraph, SKITTER, false);
     else if (telegraph.kind === 'ice-lance') drawLane(ctx, enemy, telegraph, LANE, true);
     else if (telegraph.kind === 'black-ice') drawGlazeMark(ctx, telegraph);
+    else if (telegraph.kind === 'flank-pounce') drawLane(ctx, enemy, telegraph, FANG, false);
+    else if (telegraph.kind === 'avalanche') drawAvalancheFront(ctx, enemy, telegraph);
+}
+
+// The Sentinel's Frost Brace: its whole front arc out to the wave's reach, filling as the stamp nears. The two flanks stay
+// unmarked on purpose - that is where the hunter belongs.
+function drawAvalancheFront(ctx, enemy, telegraph) {
+    const r = Math.max(4, Number(telegraph.radius) || 0);
+    const angle = Math.atan2(telegraph.targetY - enemy.y, telegraph.targetX - enemy.x);
+    const half = FROST.braceHalfAngle;
+    const p = clamp01(telegraph.progress);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y);
+    ctx.arc(enemy.x, enemy.y, r, angle - half, angle + half);
+    ctx.closePath();
+    ctx.fillStyle = AVALANCHE.fill;
+    ctx.fill();
+    ctx.strokeStyle = AVALANCHE.edge;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y);
+    ctx.arc(enemy.x, enemy.y, r * p, angle - half, angle + half);
+    ctx.closePath();
+    ctx.fillStyle = AVALANCHE.charge;
+    ctx.fill();
+    ctx.restore();
+}
+
+// The Avalanche Step in motion: a rolling band of snow and shock across the front arc; only this edge hurts.
+export function drawAvalancheWave(ctx, wave) {
+    const r = Math.max(1, Number(wave.radius) || 0);
+    const half = Number(wave.halfAngle) || FROST.braceHalfAngle;
+    const angle = Number(wave.angle) || 0;
+    const fade = 1 - clamp01((Number(wave.progress) || 0) - 0.85) / 0.15;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(wave.x, wave.y, r, angle - half, angle + half);
+    ctx.strokeStyle = `rgba(215, 240, 255, ${0.85 * fade})`;
+    ctx.lineWidth = Math.max(2, Number(wave.thickness) || 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(wave.x, wave.y, Math.max(1, r - 6), angle - half, angle + half);
+    ctx.strokeStyle = `rgba(120, 180, 215, ${0.5 * fade})`;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// Snowblind Feint: a soft drifting cloud where the Whitefang was. Drawn over the actors, so it hides what is inside it.
+export function drawSnowCloud(ctx, cloud, seconds = 0) {
+    const r = Math.max(4, Number(cloud.radius) || 0);
+    const life = clamp01(cloud.life);
+    const t = Number(seconds) || 0;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, life * 2.5) * 0.85;
+    for (let i = 0; i < 6; i++) {
+        const a = i * (Math.PI * 2 / 6) + t * 0.3;
+        const d = r * (0.35 + 0.1 * Math.sin(t * 0.8 + i));
+        ctx.beginPath();
+        ctx.arc(cloud.x + Math.cos(a) * d, cloud.y + Math.sin(a) * d * 0.7, r * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = i % 2 ? 'rgba(232, 242, 250, 0.55)' : 'rgba(200, 220, 236, 0.5)';
+        ctx.fill();
+    }
+    ctx.restore();
 }
 
 // A ruler-straight lane from the caster to its end. Ice lances also preview the splinter bloom at the lane's end:

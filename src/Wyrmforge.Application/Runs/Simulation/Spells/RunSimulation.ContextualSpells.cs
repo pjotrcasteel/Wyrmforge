@@ -73,7 +73,7 @@ public sealed partial class RunSimulation
             if (distance > WardingPulse.Radius + enemy.Radius) continue;
             crowd++;
             if (distance <= enemy.Radius + player.Radius + 2) contacts++;
-            if (WardingPulse.IsImmovable(enemy.Kind)) continue;
+            if (Immovable(enemy)) continue;
             movable++;
             if (IsDefusableWindup(enemy)) telegraphs++;
         }
@@ -86,8 +86,12 @@ public sealed partial class RunSimulation
         { Penitent: { Phase: PenitentPhase.Windup } penitent } => penitent.InBashArc(enemy.Position, player.Position, player.Radius),
         { DrownedWraith: { Phase: DrownedWraithPhase.Windup } wraith } => wraith.StrikeHits(enemy.Position, player.Position, player.Radius),
         { MireHound: { Phase: MireHoundPhase.Windup } } => true,
+        { Whitefang: { Phase: WhitefangPhase.Windup } } => true,
         _ => false,
     };
+
+    // A braced Cairn Sentinel is planted: the stance is exactly what a shove cannot move.
+    private static bool Immovable(EnemyState enemy) => WardingPulse.IsImmovable(enemy.Kind) || enemy.Sentinel?.IsBraced == true;
 
     private void CastWardingPulse()
     {
@@ -95,7 +99,7 @@ public sealed partial class RunSimulation
         wardPulseLife = WardingPulse.PulseSeconds;
         foreach (var enemy in enemies)
         {
-            if (enemy.Health <= 0 || WardingPulse.IsImmovable(enemy.Kind)) continue;
+            if (enemy.Health <= 0 || Immovable(enemy)) continue;
             if (Vector2D.Distance(enemy.Position, player.Position) > WardingPulse.Radius + enemy.Radius) continue;
             var direction = Vector2D.DirectionTo(player.Position, enemy.Position);
             if (direction == Vector2D.Zero) direction = new Vector2D(1, 0);
@@ -122,6 +126,7 @@ public sealed partial class RunSimulation
                     Math.Clamp(proposed.Y, radius, Math.Max(radius, arenaHeight - radius)));
             knock.Enemy.MireHound?.Displace(knock.Enemy.Position - previous);
             knock.Enemy.Packling?.Displace(knock.Enemy.Position - previous);
+            knock.Enemy.Whitefang?.Displace(knock.Enemy.Position - previous);
         }
         knockbacks.RemoveAll(knock => knock.Remaining <= 0 || knock.Enemy.Health <= 0);
     }

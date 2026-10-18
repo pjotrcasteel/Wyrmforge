@@ -14,7 +14,7 @@ import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
-import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill } from './arena-frost-vfx.js';
+import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud } from './arena-frost-vfx.js';
 
 const arenas = new WeakMap();
 
@@ -209,6 +209,7 @@ function draw(state, snapshot, width, height) {
     }
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileGround(ctx, ember);
     for (const bloom of snapshot.splinterBlooms ?? []) drawSplinterBloom(ctx, bloom);
+    for (const wave of snapshot.avalancheRings ?? []) drawAvalancheWave(ctx, wave);
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
@@ -262,6 +263,7 @@ function draw(state, snapshot, width, height) {
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);
+    for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);

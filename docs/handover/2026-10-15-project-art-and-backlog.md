@@ -494,4 +494,12 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Shardcaster (11):** planted caster; ice lances stop at walls and leave a splinter bloom; black ice patches make the hunter slide.
 - **Safety:** both kinds are `HabitatOnly` with `EnemyRealm.Frost`; no habitat lists them, so Fire runs are unchanged. Realms without elite affixes defer the champion to the next spawn.
 - **Tests:** `FrostRosterBehaviorTests` (Domain), `FrostEncounterTests` (Application), `arena-frost-vfx.test.mjs` (JS). Sprites were added to the actors atlas.
-- **Next:** F2, the Whitefang Stalker and Cairn Sentinel.
+- **Next:** F2 (shipped, §34).
+
+## 34. Frost region F2: Whitefang Stalker, Cairn Sentinel
+
+- **Whitefang Stalker (12):** flanks behind the hunter's heading, Snowblind Feint leaves a snow cloud (obscures, adds Chill), then a locked-lane pounce with Tendon Chill (+2).
+- **Cairn Sentinel (13):** Frost Brace (frontal ×0.3, immovable) into a frontal Avalanche wave (±60°, 170 px); exposed ×1.25 during recovery. Flanking beats both.
+- **Design change:** the wave started as a full ring; it became frontal so there is always a readable answer.
+- **Tests:** `FrostFlankAndGuardBehaviorTests` (Domain), new cases in `FrostEncounterTests`, `arena-frost-vfx.test.mjs`. Browser 47/49 (the two known mobile failures).
+- **Next:** F3, the Hoarfrost Cantor and Mirror Wisp.

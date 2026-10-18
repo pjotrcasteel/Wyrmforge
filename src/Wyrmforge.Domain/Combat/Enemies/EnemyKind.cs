@@ -19,4 +19,8 @@ public enum EnemyKind
     FrostlingPackling,
     /// <summary>Frost roster: a planted caster of straight ice lances, delayed splinter blooms and black ice.</summary>
     Shardcaster,
+    /// <summary>Frost roster: a wide-prowling flanker that feints behind a snow cloud and pounces from the side.</summary>
+    WhitefangStalker,
+    /// <summary>Frost roster: a heavy guardian whose Frost Brace soaks frontal hits before an Avalanche Step shock ring.</summary>
+    CairnSentinel,
 }

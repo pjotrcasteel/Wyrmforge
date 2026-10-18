@@ -13,13 +13,19 @@ public sealed partial class RunSimulation
     public const double BlackIceGrip = 2.6;
     public const double BlackIceChillIntervalSeconds = 0.6;
     public const int MaxBlackIcePatches = 4;
+    public const double SnowCloudChillIntervalSeconds = 0.8;
+    public const int MaxSnowClouds = 4;
     private const double PacklingSlotEaseDistance = 24;
 
     private readonly List<IceLanceState> iceLances = [];
     private readonly List<SplinterBloomState> splinterBlooms = [];
     private readonly List<BlackIcePatchState> blackIcePatches = [];
+    private readonly List<SnowCloudState> snowClouds = [];
+    private readonly List<AvalancheRingState> avalancheRings = [];
     private Vector2D playerSlide = Vector2D.Zero;
+    private Vector2D playerHeading = Vector2D.Zero;
     private double blackIceChillRemaining;
+    private double snowCloudChillRemaining;
 
     /// <summary>Chill bypasses nothing a hit would not: the developer invulnerability switch keeps the hunter warm too.</summary>
     private void ChillPlayer(int stacks)
@@ -37,6 +43,8 @@ public sealed partial class RunSimulation
     private Vector2D FrostMovementVelocity(Vector2D desired, double delta)
     {
         player.Chill.Tick(delta);
+        // The Whitefang reads which way the hunter is going; a standing hunter has no heading.
+        playerHeading = desired == Vector2D.Zero ? Vector2D.Zero : Vector2D.DirectionTo(Vector2D.Zero, desired);
         desired *= player.Chill.SpeedMultiplier;
         if (!PlayerOnBlackIce)
         {
@@ -97,6 +105,66 @@ public sealed partial class RunSimulation
         return crossing ? (direction, speed) : (intent, speed * multiplier);
     }
 
+    private (Vector2D Direction, double Speed) UpdateWhitefang(EnemyState enemy, WhitefangStalkerBehaviorState stalker, double delta, bool crossing,
+        Vector2D direction, double speed, ref int committed, int committedCap)
+    {
+        var feintFrom = enemy.Position;
+        switch (stalker.Tick(delta, enemy.Position, player.Position, playerHeading, !crossing && committed < committedCap))
+        {
+            case WhitefangEvent.FeintStarted:
+                committed++;
+                AddSnowCloud(feintFrom);
+                break;
+        }
+        switch (stalker.Phase)
+        {
+            case WhitefangPhase.Feint:
+                var gap = Vector2D.Distance(enemy.Position, stalker.FeintTarget);
+                return (Vector2D.DirectionTo(enemy.Position, stalker.FeintTarget),
+                    Math.Min(WhitefangStalkerBehaviorState.MaxFeintSpeed, gap / Math.Max(delta, stalker.PhaseRemaining)));
+            case WhitefangPhase.Windup:
+                return (direction, 0);
+            case WhitefangPhase.Pounce:
+                return (stalker.PounceDirection, WhitefangStalkerBehaviorState.PounceSpeed);
+            case WhitefangPhase.Recover:
+                return (direction, 0);
+        }
+        if (crossing) return (direction, speed);
+        var prowl = stalker.ProwlPoint(enemy.Position, player.Position);
+        return (Vector2D.DirectionTo(enemy.Position, prowl),
+            speed * WhitefangStalkerBehaviorState.ProwlSpeedMultiplier * Math.Min(1, Vector2D.Distance(enemy.Position, prowl) / PacklingSlotEaseDistance));
+    }
+
+    private void MaulPlayer(EnemyState enemy, WhitefangStalkerBehaviorState stalker)
+    {
+        // Tendon Chill: the leap that catches the hunter also slows the escape.
+        DamagePlayer(WhitefangStalkerBehaviorState.PounceDamage * EliteImpact(enemy));
+        ChillPlayer(WhitefangStalkerBehaviorState.TendonChill);
+        stalker.Land();
+    }
+
+    private void AddSnowCloud(Vector2D center)
+    {
+        if (snowClouds.Count >= MaxSnowClouds) snowClouds.RemoveAt(0);
+        snowClouds.Add(new SnowCloudState(center, WhitefangStalkerBehaviorState.CloudSeconds));
+    }
+
+    private (Vector2D Direction, double Speed) UpdateSentinel(EnemyState enemy, CairnSentinelBehaviorState sentinel, double delta, bool crossing,
+        Vector2D direction, double speed, ref int committed, int committedCap)
+    {
+        switch (sentinel.Tick(delta, enemy.Position, player.Position, !crossing && committed < committedCap))
+        {
+            case CairnEvent.BraceStarted:
+                committed++;
+                break;
+            case CairnEvent.Stamped:
+                avalancheRings.Add(new AvalancheRingState(enemy.Position, sentinel.Facing, EliteImpact(enemy)));
+                break;
+        }
+        if (crossing && sentinel.Phase == CairnPhase.March) return (direction, speed);
+        return (Vector2D.DirectionTo(enemy.Position, player.Position), speed * sentinel.MarchMultiplier(enemy.Position, player.Position));
+    }
+
     private void AddBlackIcePatch(Vector2D center)
     {
         if (blackIcePatches.Count >= MaxBlackIcePatches) blackIcePatches.RemoveAt(0);
@@ -146,6 +214,30 @@ public sealed partial class RunSimulation
         }
         splinterBlooms.RemoveAll(bloom => bloom.Elapsed >= ShardcasterBehaviorState.BloomDelaySeconds + SplinterBloomState.FadeSeconds);
 
+        foreach (var ring in avalancheRings)
+        {
+            ring.Elapsed += delta;
+            if (ring.Hit || ring.Elapsed > CairnSentinelBehaviorState.RingSeconds) continue;
+            // Only the rolling edge across the front arc hurts: beside or behind the Sentinel, or beyond its reach, is safe.
+            if (Math.Abs(Vector2D.Distance(player.Position, ring.Center) - ring.Radius)
+                > CairnSentinelBehaviorState.RingThickness / 2 + player.Radius * 0.5) continue;
+            if (!CairnSentinelBehaviorState.InFront(ring.Center, ring.Facing, player.Position)) continue;
+            ring.Hit = true;
+            DamagePlayer(CairnSentinelBehaviorState.RingDamage * ring.Impact);
+            ChillPlayer(CairnSentinelBehaviorState.RingChill);
+        }
+        avalancheRings.RemoveAll(ring => ring.Elapsed >= CairnSentinelBehaviorState.RingSeconds + AvalancheRingState.FadeSeconds);
+
+        foreach (var cloud in snowClouds) cloud.Remaining -= delta;
+        snowClouds.RemoveAll(cloud => cloud.Remaining <= 0);
+        snowCloudChillRemaining = Math.Max(0, snowCloudChillRemaining - delta);
+        if (snowCloudChillRemaining <= 0
+            && snowClouds.Any(cloud => Vector2D.Distance(player.Position, cloud.Center) <= WhitefangStalkerBehaviorState.CloudRadius))
+        {
+            ChillPlayer(1);
+            snowCloudChillRemaining = SnowCloudChillIntervalSeconds;
+        }
+
         foreach (var patch in blackIcePatches) patch.Remaining -= delta;
         blackIcePatches.RemoveAll(patch => patch.Remaining <= 0);
         blackIceChillRemaining = Math.Max(0, blackIceChillRemaining - delta);
@@ -162,6 +254,10 @@ public sealed partial class RunSimulation
         splinterBlooms.Clear();
         blackIcePatches.Clear();
         blackIceChillRemaining = 0;
+        snowClouds.Clear();
+        avalancheRings.Clear();
+        snowCloudChillRemaining = 0;
+        playerHeading = Vector2D.Zero;
         player.Chill.Clear();
         playerSlide = Vector2D.Zero;
     }
@@ -183,8 +279,27 @@ public sealed partial class RunSimulation
             lane.AimProgress, lane.LaneEnd(enemy.Position).X, lane.LaneEnd(enemy.Position).Y, ShardcasterBehaviorState.LanceHalfWidth),
         { Shardcaster: { Phase: ShardcasterPhase.Aim, Cast: ShardcasterCast.BlackIce } glaze } => new EnemyTelegraphRenderSnapshot("black-ice",
             glaze.AimProgress, glaze.Target.X, glaze.Target.Y, ShardcasterBehaviorState.PatchRadius),
+        { Whitefang: { Phase: WhitefangPhase.Windup } stalker } => new EnemyTelegraphRenderSnapshot("flank-pounce", stalker.WindupProgress,
+            stalker.PounceEnd.X, stalker.PounceEnd.Y, enemy.Radius),
+        // The target is the far middle of the front arc: the renderer reads the facing from it.
+        { Sentinel: { Phase: CairnPhase.Brace } sentinel } => new EnemyTelegraphRenderSnapshot("avalanche", sentinel.BraceProgress,
+            enemy.Position.X + sentinel.Facing.X * CairnSentinelBehaviorState.RingRadius,
+            enemy.Position.Y + sentinel.Facing.Y * CairnSentinelBehaviorState.RingRadius, CairnSentinelBehaviorState.RingRadius),
         _ => null,
     };
+
+    /// <summary>Hits on a Cairn Sentinel: braced fronts soak, flanks land, a recovering Sentinel is exposed.</summary>
+    private static double SentinelMultiplier(EnemyState enemy, Vector2D source) =>
+        enemy.Sentinel?.DamageMultiplier(enemy.Position, source) ?? 1;
+
+    private IReadOnlyList<SnowCloudRenderSnapshot> CreateSnowCloudSnapshots() => snowClouds
+        .Select(cloud => new SnowCloudRenderSnapshot(cloud.Center.X, cloud.Center.Y, WhitefangStalkerBehaviorState.CloudRadius,
+            Math.Clamp(cloud.Remaining / WhitefangStalkerBehaviorState.CloudSeconds, 0, 1))).ToArray();
+
+    private IReadOnlyList<AvalancheRingRenderSnapshot> CreateAvalancheRingSnapshots() => avalancheRings
+        .Select(ring => new AvalancheRingRenderSnapshot(ring.Center.X, ring.Center.Y, ring.Radius, CairnSentinelBehaviorState.RingRadius,
+            CairnSentinelBehaviorState.RingThickness, Math.Clamp(ring.Elapsed / CairnSentinelBehaviorState.RingSeconds, 0, 1),
+            Math.Atan2(ring.Facing.Y, ring.Facing.X), CairnSentinelBehaviorState.BraceHalfAngleRadians)).ToArray();
 
     private IReadOnlyList<IceLanceRenderSnapshot> CreateIceLanceSnapshots() => iceLances
         .Select(lance => new IceLanceRenderSnapshot(lance.Position.X, lance.Position.Y, Math.Atan2(lance.Direction.Y, lance.Direction.X), lance.Origin.X,
@@ -231,6 +346,30 @@ public sealed partial class RunSimulation
         public double Elapsed { get; set; }
 
         public bool Burst { get; set; }
+    }
+
+    private sealed class SnowCloudState(Vector2D center, double seconds)
+    {
+        public Vector2D Center { get; } = center;
+
+        public double Remaining { get; set; } = seconds;
+    }
+
+    private sealed class AvalancheRingState(Vector2D center, Vector2D facing, double impact)
+    {
+        public const double FadeSeconds = 0.25;
+
+        public Vector2D Center { get; } = center;
+
+        public Vector2D Facing { get; } = facing;
+
+        public double Impact { get; } = impact;
+
+        public double Elapsed { get; set; }
+
+        public bool Hit { get; set; }
+
+        public double Radius => CairnSentinelBehaviorState.RingRadius * Math.Clamp(Elapsed / CairnSentinelBehaviorState.RingSeconds, 0, 1);
     }
 
     private sealed class BlackIcePatchState(Vector2D center, double radius, double seconds)

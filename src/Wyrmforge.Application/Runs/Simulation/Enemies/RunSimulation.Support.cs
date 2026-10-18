@@ -110,6 +110,7 @@ public sealed partial class RunSimulation
     /// <summary>Frontal hits against a raised shield are blocked; a heavy enough blocked hit breaks the guard and lands in full.</summary>
     private static double ShieldMultiplier(ICombatTarget target, Vector2D source, double damage)
     {
+        if (target is EnemyState { Sentinel: not null } sentinel) return SentinelMultiplier(sentinel, source);
         if (target is not EnemyState { Penitent: { } penitent } enemy) return 1;
         var multiplier = penitent.DamageMultiplier(enemy.Position, source);
         if (multiplier < 1 && penitent.TryBreakGuard(damage, enemy.MaxHealth)) return 1;

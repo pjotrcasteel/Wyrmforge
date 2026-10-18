@@ -100,4 +100,4 @@ These are left to the product owner. Nothing here has been decided.
 - The Wyrm tier names beyond Ascendant (`WyrmTier.Elder`/`Primordial`/`Divine` are placeholders).
 - Region names: "The Cinder Frontier" is a working title, and the three planned regions are unnamed.
 
-**Frost region (amendment §11.5), 2026-10-18.** Slice F1 shipped (Chill, Frostling Packling, Shardcaster). The region stays Planned until F4 adds habitats, elites and the lair. See `frost-region-roster-v1.md`.
+**Frost region (amendment §11.5), 2026-10-18.** Slices F1 (Chill, Frostling Packling, Shardcaster) and F2 (Whitefang Stalker, Cairn Sentinel) shipped. The region stays Planned until F4 adds habitats, elites and the lair. See `frost-region-roster-v1.md`.

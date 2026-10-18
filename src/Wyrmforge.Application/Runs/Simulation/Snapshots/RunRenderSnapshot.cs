@@ -50,4 +50,8 @@ public sealed record RunRenderSnapshot(
     public IReadOnlyList<SplinterBloomRenderSnapshot> SplinterBlooms { get; init; } = [];
 
     public IReadOnlyList<BlackIceRenderSnapshot> BlackIce { get; init; } = [];
+
+    public IReadOnlyList<SnowCloudRenderSnapshot> SnowClouds { get; init; } = [];
+
+    public IReadOnlyList<AvalancheRingRenderSnapshot> AvalancheRings { get; init; } = [];
 }

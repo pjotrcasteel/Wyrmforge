@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drawEnemyTelegraph } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
-import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, isFrostTelegraph, FROST } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-frost-vfx.js';
+import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, isFrostTelegraph, FROST } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-frost-vfx.js';
 
 function mockContext() {
     const calls = [];
@@ -15,7 +15,7 @@ function mockContext() {
 }
 
 test('frost telegraph kinds are routed through the shared enemy telegraph entry point', () => {
-    for (const kind of ['skitter', 'ice-lance', 'black-ice']) {
+    for (const kind of ['skitter', 'ice-lance', 'black-ice', 'flank-pounce', 'avalanche']) {
         assert.ok(isFrostTelegraph(kind));
         const ctx = mockContext();
         drawEnemyTelegraph(ctx, { x: 0, y: 0, telegraph: { kind, progress: .5, targetX: 120, targetY: 0, radius: 7 } });
@@ -62,4 +62,22 @@ test('ice lance renders without gradient support', () => {
     const ctx = mockContext();
     drawIceLance(ctx, { x: 100, y: 0, angle: 0, originX: 0, originY: 0 });
     assert.ok(ctx.calls.some(c => c[0] === 'fill'));
+});
+
+test('cairn sentinel brace marks exactly its front arc toward the reported facing', () => {
+    const ctx = mockContext();
+    drawEnemyTelegraph(ctx, { x: 100, y: 100, telegraph: { kind: 'avalanche', progress: .5, targetX: 100, targetY: 270, radius: 170 } });
+    const arc = ctx.calls.find(c => c[0] === 'arc');
+    assert.deepEqual(arc.slice(1, 4), [100, 100, 170]);
+    assert.ok(Math.abs(arc[4] - (Math.PI / 2 - FROST.braceHalfAngle)) < 1e-9);
+    assert.ok(Math.abs(arc[5] - (Math.PI / 2 + FROST.braceHalfAngle)) < 1e-9);
+});
+
+test('avalanche wave is drawn at its live radius and snow clouds vanish when spent', () => {
+    const wave = mockContext();
+    drawAvalancheWave(wave, { x: 0, y: 0, radius: 80, maxRadius: 170, thickness: 22, progress: .5, angle: 0, halfAngle: FROST.braceHalfAngle });
+    assert.deepEqual(wave.calls.find(c => c[0] === 'arc').slice(1, 4), [0, 0, 80]);
+    const cloud = mockContext();
+    drawSnowCloud(cloud, { x: 0, y: 0, radius: 46, life: 0 });
+    assert.deepEqual(cloud.calls.find(c => c[0] === 'set' && c[1] === 'globalAlpha').slice(2), [0]);
 });
