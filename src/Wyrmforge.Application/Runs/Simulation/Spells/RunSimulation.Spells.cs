@@ -164,7 +164,7 @@ public sealed partial class RunSimulation
             var hitDamage = ApplyChainInteractions(spell.Id, target, damage, ref jumps, ref bonusJumpsTriggered);
             RegisterElementalImpact(target.Position, spell.Id, rank, combination, surgeProfile.IsSurge);
             var killed = DamageTarget(target, hitDamage);
-            if (!killed) ApplyAbilityStatus(spell, rank, target);
+            if (!killed) ApplyAbilityStatus(spell, rank, target, firstLink: jump == 0);
             if (!killed) ApplyHitRules(spell.Id, target);
 
             if (forkPending)
@@ -189,7 +189,7 @@ public sealed partial class RunSimulation
         var forkDamage = ApplyChainInteractions(spell.Id, target, ChainLightningMastery.CalculateForkDamage(damage), ref jumps, ref bonusJumpsTriggered);
         RegisterElementalImpact(target.Position, spell.Id, rank, combination, surged);
         var killed = DamageTarget(target, forkDamage);
-        if (!killed) ApplyAbilityStatus(spell, rank, target);
+        if (!killed) ApplyAbilityStatus(spell, rank, target, firstLink: false);
         if (!killed) ApplyHitRules(spell.Id, target);
     }
 

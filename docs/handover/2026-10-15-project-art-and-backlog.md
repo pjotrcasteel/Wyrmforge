@@ -439,3 +439,20 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Docs:** `docs/design/regions-and-lineages-v1.md`.
 - **Tests:** `RegionWorldTests` (8) and `RegionCatalogTests` (8).
 - **Next:** apply the Frost telemetry proposals (proc guard, draft parity), or start authoring the second region's enemies from the concept sheets.
+
+## 30. Frost telemetry follow-up: Stormglass, not Duelist Lens
+
+- **Finding:** a temporary trace of chill and freeze sources showed the Storm control came from the **Stormglass** synergy (freeze on every chain link, and frozen targets feed its own +2 jumps), not from the Duelist Lens. The proc guard was implemented, measured (no effect, Frost slightly worse) and reverted.
+- **Fix:** `SpellCombinationResolver.Resolve(..., firstLink)`. Only a chain's first strike freezes; later links and the Rank III fork carry no frost. The card text is updated.
+- **BalanceLab** (1,200 runs, same seeds):
+
+  | | Before | After |
+  |---|---|---|
+  | Storm enemy-seconds denied | 22.9% | 3.6% |
+  | Frost enemy-seconds denied (unchanged) | 7.8% | 7.8% |
+  | Storm Wyrms slain | 1.69 | 1.69 |
+  | Storm defeats | 75 | 75 |
+
+  No other school changed.
+- **Tests:** `StormglassDischargeTests` (2).
+- **Next:** draft parity for Frost primary cards (offered 0.16 per round vs 0.20–0.27), then re-measure Frost's kill power (Wyrms slain 0.99, the lowest).
