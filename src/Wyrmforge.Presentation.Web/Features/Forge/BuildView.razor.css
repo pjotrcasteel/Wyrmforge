@@ -1779,3 +1779,16 @@
     .nexus-rack-socket { min-height:52px; }
     .nexus-rack-socket b { font-size:.56rem; }
 }
+
+/* The compact four-slot rack must never impose the minimum intrinsic width of
+   its socket names on the full page (320px phones especially). */
+.build-view { min-width:0; max-width:100%; overflow-x:clip; }
+.nexus-equipped,.nexus-equipped-head,.nexus-socket-rack { min-width:0; max-width:100%; }
+.nexus-equipped .nexus-rack-socket { box-sizing:border-box; width:100%; min-width:0; max-width:100%;
+    padding:5px 2px; overflow:hidden; border:0; border-bottom:2px solid #493850;
+    background:linear-gradient(180deg,#291f2d77,#1b152100); }
+.nexus-equipped .nexus-rack-socket.occupied { border-bottom-color:#d5ab70; }
+.nexus-equipped .nexus-rack-socket span { display:grid; min-width:0; max-width:100%; overflow:hidden;
+    font-size:.6rem; color:inherit; }
+.nexus-equipped .nexus-rack-socket b,.nexus-equipped .nexus-rack-socket small {
+    overflow:hidden; max-width:100%; text-overflow:ellipsis; white-space:nowrap; }
