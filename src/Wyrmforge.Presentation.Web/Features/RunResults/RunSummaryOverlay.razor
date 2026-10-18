@@ -17,7 +17,7 @@
         <header class="run-report-hero">
             <span class="eyebrow">@OutcomeLabel</span>
             <h2>@Summary.Score.ToString("N0") <small>score</small></h2>
-            <p>@OutcomeMessage</p>
+            <p>@Summary.Kills kills · @Summary.CompletedRouteNodes trails · @Summary.Seconds s</p>
         </header>
 
         <section class="hunter-run-progress" aria-label="Hunter XP earned">
@@ -30,6 +30,15 @@
         {
             <button class="quest-reward-ready" @onclick="() => OnQuests.InvokeAsync()">✦ @QuestRewards quest reward@(QuestRewards == 1 ? string.Empty : "s") ready · CLAIM</button>
         }
+        <div class="run-report-actions">
+            <button class="secondary" @onclick="ReplayAsync">↻ Replay seed</button>
+            <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
+        </div>
+
+        <details class="run-discoveries">
+            <summary><span>DISCOVERIES &amp; BUILD</span><span aria-hidden="true">⌄</span></summary>
+            <div class="run-discoveries-content">
+                <p class="run-reason">@OutcomeMessage</p>
         @if (ResearchPrompt is { } research)
         {
             <button class="quest-reward-ready research-prompt" aria-label="Open Arcane Nexus: @research.Text" @onclick="() => OnOpenLaboratory.InvokeAsync()"><i class="px-icon px-sm px-flask" aria-hidden="true"></i> @research.Text <b>NEXUS ›</b></button>
@@ -149,15 +158,13 @@
             </section>
         }
 
-        <div class="run-report-actions">
-            <button class="secondary" @onclick="ReplayAsync">↻ Replay seed</button>
-            <button class="primary" @onclick="ReturnAsync">Return to Wyrmforge</button>
-        </div>
+            </div>
+        </details>
 
         <button class="run-playtest-feedback" @onclick="() => OnFeedback.InvokeAsync()">★ Review this hunt</button>
 
         <details class="run-report-details">
-            <summary><span>BUILD, LOOT &amp; RUN DETAILS</span><span aria-hidden="true">⌄</span></summary>
+            <summary><span>DETAILED STATS</span><span aria-hidden="true">⌄</span></summary>
             <div class="run-report-expanded">
                 <section class="run-story">
                     <span>RUN STORY</span>
@@ -251,7 +258,7 @@
             </div>
         </details>
         <details class="run-report-next">
-            <summary><span>YOUR NEXT THREE PURSUITS</span><span aria-hidden="true">⌄</span></summary>
+            <summary><span>NEXT OBJECTIVES</span><span aria-hidden="true">⌄</span></summary>
             <ForgeGoalBoard Progression="Progression" Vault="Vault" Masteries="Masteries" Hunt="Hunt" Compact="true" />
         </details>
     </div>
