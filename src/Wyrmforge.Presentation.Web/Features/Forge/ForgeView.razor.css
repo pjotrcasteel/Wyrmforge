@@ -287,3 +287,39 @@
  .refuge-home .town-square .town-map .menu-begin { bottom:11%; }
 }
 @media(prefers-reduced-motion:reduce) { .refuge-home .town-square::after { animation:none; } }
+
+
+/* Regression: physical location hit zones must never inherit the old menu's
+   opposite-side position, or Forge overlays Nexus and steals taps. */
+.refuge-home .town-square .town-map .town-door--gate { left:calc(50% - 45px); right:auto; }
+.refuge-home .town-square .town-map .town-door--build,
+.refuge-home .town-square .town-map .town-door--codex { left:6%; right:auto; }
+.refuge-home .town-square .town-map .town-door--forge,
+.refuge-home .town-square .town-map .town-door--legends { left:auto; right:6%; }
+/* The pictogram atlas makes overlapping unreadable glyphs at the game's menu
+   size. Use one in-world sigil for each destination, then a readable name. */
+.refuge-home .town-square .town-map .town-door i.px-icon { display:none; }
+.refuge-home .town-square .town-map .town-door > span::before {
+    content:"✦"; display:block; width:24px; height:24px; margin:0 auto 2px;
+    font:500 1.22rem/24px Georgia,serif; color:#dbaf73;
+    text-shadow:0 0 13px #c28f5c;
+}
+.refuge-home .town-square .town-map .town-door:disabled > span::before { color:#82788a; }
+.refuge-home .town-square .menu-footer > button:last-child {
+    position:fixed; right:10px; top:max(8px,env(safe-area-inset-top)); z-index:75;
+    min-width:44px; min-height:44px; padding:8px 12px; border:1px solid #634d62;
+    border-radius:22px; background:#191421df; color:#f5e5cc;
+}
+@media(max-width:370px) {
+    .refuge-home .town-square .town-map .town-door--build,
+    .refuge-home .town-square .town-map .town-door--codex { left:1%; right:auto; }
+    .refuge-home .town-square .town-map .town-door--forge,
+    .refuge-home .town-square .town-map .town-door--legends { left:auto; right:1%; }
+    .refuge-home .town-square .town-map .town-door--gate { left:calc(50% - 39px); right:auto; }
+}
+@media(orientation:landscape) and (max-height:530px) {
+    .refuge-home .town-square { min-height:calc(100dvh - 8px); }
+    .refuge-home .shell-content { min-height:0; }
+    .refuge-home .town-square .town-map .town-door { min-height:60px; }
+    .refuge-home .town-square .town-map .menu-begin { bottom:12%; min-height:45px; }
+}
