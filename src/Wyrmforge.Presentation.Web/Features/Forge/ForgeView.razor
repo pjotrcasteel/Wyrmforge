@@ -56,24 +56,26 @@
                 }
                 else
                 {
-                <section class="main-menu town-square" aria-label="Town square">
+                <section class="main-menu town-square" aria-label="Refuge town square">
+                    <div class="town-scene-shading" aria-hidden="true"></div>
                     <header class="menu-brand"><span class="menu-sigil" aria-hidden="true">W</span><h1>WYRMFORGE</h1>
                         @if (Progress.AtlasUnlocked)
                         {
                             <button class="hunter-menu-progress" @onclick="() => OnQuests.InvokeAsync()"><span>HUNTER @Hunter.Level</span><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></button>
                         }</header>
                     <div class="town-mage" aria-hidden="true"></div>
+                    <span class="town-place-name" aria-hidden="true">REFUGE</span>
                     <nav class="menu-actions town-map" aria-label="Town locations">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
                         @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                         {
                             var unlocked = IsUnlocked(item.Section);
-                            <button class="menu-destination" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
+                            <button class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant()" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
                                 <span><i class="px-icon px-sm px-@item.Icon" aria-hidden="true"></i>@item.Label</span>
                                 <small>@(!unlocked ? $"◇ {UnlockHint(item.Section)}" : item.Section == ShellSection.Build ? $"{Selection.PointBudget - Selection.SpentPoints} points" : item.Section == ShellSection.Forge ? $"{Vault.TotalCount} Essence" : item.Section == ShellSection.Gate ? "Choose your road" : string.Empty)</small>
                             </button>
                         }
-                        <button class="menu-destination" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i class="px-icon px-sm px-crown" aria-hidden="true"></i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
+                        <button class="menu-destination town-door town-door--legends" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i class="px-icon px-sm px-crown" aria-hidden="true"></i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
                     </nav>
                     <footer class="menu-footer">
                         @if (!Progress.TutorialRun)
