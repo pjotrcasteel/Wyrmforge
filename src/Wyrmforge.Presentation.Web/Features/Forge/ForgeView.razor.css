@@ -82,3 +82,73 @@
 .nexus-facets small { overflow:hidden; font-size:.64rem; letter-spacing:.04em; white-space:nowrap; text-overflow:ellipsis; }
 .nexus-facets button.active { background:linear-gradient(180deg,#2a2034,#1a1422); color:#fff2d0; box-shadow:inset 0 -2px 0 #cead74; }
 .nexus-facets button:focus-visible { outline:2px solid #cead74; outline-offset:-3px; }
+
+/* Game entry and diegetic town navigation. The existing pixel city and mage atlas are game assets,
+   not a dashboard backdrop. 44px+ destinations stay tappable on small phones. */
+.menu-home { display:block; min-height:100dvh; }
+.menu-home .shell-content { width:min(700px,100%); min-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding:0 10px; }
+.title-scene { position:relative; isolation:isolate; display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    min-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px);
+    padding:40px 14px max(10vh,65px); text-align:center; }
+.title-scene::before { content:""; position:absolute; inset:0 -12px; z-index:-1;
+    background:linear-gradient(180deg,#0b0a12a8 0%,#100d1799 35%,#07070fe8 96%); }
+.title-scene h1 { margin:0 0 28px; font:500 clamp(2rem,8vw,3.4rem)/1.1 Georgia,serif;
+    color:#eee1cc; letter-spacing:.16em; text-shadow:0 3px 18px #000; }
+.title-mage,.town-mage { width:36px; height:42px; flex:none;
+    background:url('art/actors.png') -458px -1918px/510px 2148px no-repeat;
+    image-rendering:pixelated; filter:drop-shadow(0 0 6px #826ebacc); pointer-events:none; }
+.title-mage { margin:0 auto 110px; transform:scale(4.2); transform-origin:center; }
+.title-start { display:flex; justify-content:center; gap:24px; align-items:center; width:min(300px,100%); min-height:64px;
+    border:1px solid #d0ad72; background:linear-gradient(100deg,#543420e6,#1d1824e8,#543420e6);
+    box-shadow:0 0 25px #000b,0 0 15px #aa754255; color:#ffdfad; font:700 1.08rem system-ui,sans-serif;
+    letter-spacing:.16em; cursor:pointer; }
+.title-start span { font-size:1.7rem; }
+.menu-home .town-square { position:relative; display:block; min-height:max(605px,calc(100dvh - 30px));
+    padding:0; border:0; box-shadow:none; background:transparent; backdrop-filter:none; }
+.town-square::before { content:""; position:absolute; inset:0 -10px; pointer-events:none;
+    background:linear-gradient(180deg,#0b0a10c9,#100e15aa 38%,#0a0810b8 78%,#090710e6);
+    image-rendering:pixelated; }
+.town-square .menu-brand { position:absolute; top:11%; left:0; right:0; z-index:2; padding:0; gap:3px; }
+.town-square .menu-brand h1 { margin:0; font-size:clamp(1.45rem,6.3vw,2.2rem); letter-spacing:.17em; }
+.town-square .menu-sigil { width:34px; height:34px; font-size:1.1rem; }
+.town-square .hunter-menu-progress { border:0; min-height:26px; padding:3px 8px; background:#0c091399; }
+.town-square .town-mage { position:absolute; left:calc(50% - 18px); top:49%; z-index:1;
+    transform:scale(2.5); filter:drop-shadow(0 4px 3px #000); }
+.town-square .town-map { position:absolute; inset:0; display:block; z-index:2; }
+.town-map .menu-destination { position:absolute; width:41%; min-height:64px; max-width:175px; padding:8px 7px;
+    flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    border:0!important; border-bottom:1px solid #6b5743aa!important; border-radius:2px;
+    background:linear-gradient(180deg,#1c1721e6,#100c16df); color:#f1e0c7; box-shadow:0 8px 14px #0007;
+    text-align:center; text-shadow:0 1px 2px #000; }
+.town-map .menu-destination>span { flex-direction:column; gap:4px; font:500 .95rem/1.1 Georgia,serif; }
+.town-map .menu-destination i.px-icon { font-size:1.2rem; color:#d8b67e; }
+.town-map .menu-destination small { display:block; max-width:100%; font-size:.57rem; color:#c6b4bb; }
+.town-map .menu-destination:disabled { opacity:.42; filter:grayscale(1); }
+.town-map .menu-destination:nth-of-type(2) { top:30%; left:4%; }
+.town-map .menu-destination:nth-of-type(3) { top:30%; right:4%; }
+.town-map .menu-destination:nth-of-type(4) { top:56%; left:4%; }
+.town-map .menu-destination:nth-of-type(5) { top:56%; right:4%; }
+.town-map .menu-destination:nth-of-type(6) { top:75%; right:4%; width:36%; min-height:50px; }
+.town-map .menu-begin { position:absolute; left:4%; bottom:13%; width:52%; min-height:59px; margin:0; padding:10px;
+    justify-content:center; border:1px solid #c7a26a; background:#291a21ef; box-shadow:0 5px 18px #0009;
+    text-align:center; color:#f8dcad; font:750 .86rem system-ui,sans-serif; }
+.town-map .menu-begin>span { display:none; }
+.town-square .menu-footer { position:absolute; bottom:2%; left:0; right:0; z-index:3;
+    border:0; border-top:1px solid #6b574344; justify-content:center; }
+.town-square .menu-footer button { font-size:.72rem; min-height:44px; }
+@media(orientation:landscape) and (max-height:520px) {
+    .menu-home .town-square { min-height:calc(100dvh - 10px); }
+    .town-square .menu-brand { top:4%; left:10%; right:10%; }
+    .town-square .town-mage { top:45%; }
+    .town-map .menu-destination:nth-of-type(2),.town-map .menu-destination:nth-of-type(3) { top:29%; }
+    .town-map .menu-destination:nth-of-type(4),.town-map .menu-destination:nth-of-type(5) { top:57%; }
+    .town-map .menu-destination:nth-of-type(6) { top:73%; right:4%; }
+    .town-map .menu-begin { bottom:10%; }
+    .town-square .menu-footer { bottom:1%; left:28%; right:28%; }
+}
+@media(max-width:355px) {
+    .town-map .menu-destination { width:43%; min-height:60px; }
+    .town-map .menu-destination>span { font-size:.85rem; }
+    .town-map .menu-destination small { font-size:.51rem; }
+}
+@media(prefers-reduced-motion:reduce) { .title-start,.town-map .menu-destination { transition:none; } }
