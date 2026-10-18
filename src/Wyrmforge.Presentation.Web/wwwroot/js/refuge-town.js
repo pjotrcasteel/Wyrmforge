@@ -8,7 +8,7 @@
     function show(index, smooth = true) {
         if (!mounted?.isConnected) return;
         slice = clamp(index);
-        mounted.scrollTo({left: mounted.clientWidth * slice, behavior: smooth ? 'smooth' : 'instant'});
+        mounted.scrollTo({left: mounted.clientWidth * slice, behavior: smooth ? 'smooth' : 'auto'});
     }
     function onScroll() {
         if (mounted?.clientWidth) slice = clamp(Math.round(mounted.scrollLeft / mounted.clientWidth));
