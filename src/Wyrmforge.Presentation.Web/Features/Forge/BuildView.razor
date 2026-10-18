@@ -51,7 +51,24 @@
         </section>
     }
 
-    <div class="web-layout">
+    @if (Laboratory is not null)
+    {
+        <section class="nexus-equipped" aria-label="Equipped spellcraft">
+            <div><span>YOUR CRAFTED SPELLS</span>
+                @if (Laboratory.EquippedMutations.Count == 0)
+                {
+                    <strong>Nothing equipped</strong>
+                }
+                else
+                {
+                    <strong>@string.Join(" · ", Laboratory.EquippedMutations.Select(id => LaboratoryCatalog.Get(id).Name))</strong>
+                }
+            </div>
+            <button @onclick="() => OnOpenSpellcraft.InvokeAsync(null)">CRAFT / EQUIP <span aria-hidden="true">›</span></button>
+        </section>
+    }
+
+    <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             <div class="atlas-toolbar">
                 <div class="build-legend" aria-label="Arcane Web legend">
@@ -160,7 +177,7 @@
                             <strong>@mutation.Name</strong>
                             <b class="nexus-stage stage-@StageClass(research.Stage)"><i aria-hidden="true">@StageGlyph(research.Stage)</i>@StageLabel(research.Stage)</b>
                         </header>
-                        <p class="nexus-enables"><span>@mutation.Summary</span><small>@mutation.TradeOff</small></p>
+                        <p class="nexus-enables"><span>@mutation.Summary</span></p>
 
                         @if (research.Material is { } material)
                         {
@@ -173,22 +190,13 @@
                             </div>
                         }
 
-                        <p class="nexus-progress"><b>@research.ConditionsKnown/@research.ConditionsNeeded</b> conditions understood · @Spellcraft.SeatsOf(mutation).Foundation + @Spellcraft.SeatsOf(mutation).Infusion</p>
-
-                        <div class="nexus-loadouts">
-                            <span>LOADOUTS</span>
-                            @if (research.LoadoutReferences.Count > 0)
-                            {
-                                @foreach (var name in research.LoadoutReferences) { <b>@name</b> }
-                            }
-                            else
-                            {
-                                <small>@(research.Stage == NexusResearchStage.Equipped ? "Equipped for your next hunt · save a loadout above to keep it." : "Not in a saved loadout yet.")</small>
-                            }
-                        </div>
+                        <details class="nexus-details"><summary>Recipe details</summary>
+                            <p>@mutation.TradeOff</p>
+                            <p>@research.ConditionsKnown/@research.ConditionsNeeded conditions · @Spellcraft.SeatsOf(mutation).Foundation + @Spellcraft.SeatsOf(mutation).Infusion</p>
+                        </details>
 
                         <div class="nexus-action">
-                            <p>@research.Next.Text</p>
+                            <p class="nexus-next-action-copy">@research.Next.Text</p>
                             @switch (research.Next.Kind)
                             {
                                 case NexusActionKind.Equip:
@@ -238,11 +246,7 @@
 
             @if (IsSelected(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
-                <div class="route-summary traversed-route">
-                    <span>TRAVERSED LANDMARK</span>
-                    <strong>This effect is active in your starting build.</strong>
-                    <small>@RefundHelp</small>
-                </div>
+                <p class="nexus-active-note">✓ Active in your build</p>
                 <button class="route-action refund" disabled="@(!Selection.CanRemove(FocusedNode.Id))" @onclick="RefundFocused">Refund node</button>
             }
             else if (FocusedNode.Kind != PassiveNodeKind.Origin)
