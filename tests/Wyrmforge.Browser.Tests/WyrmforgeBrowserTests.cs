@@ -12,6 +12,28 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_Welcome_HasFullArtworkAndAudioOnlyInsideSettings()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var title = Page.Locator(".title-scene");
+        await Expect(title).ToBeVisibleAsync();
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
+        await ScreenshotAsync("welcome-full-art.png");
+        var backgroundSize = await Page.Locator(".arrival-home .hub-backdrop")
+            .EvaluateAsync<string>("element => getComputedStyle(element, '::after').backgroundSize");
+        Assert.IsTrue(backgroundSize.Contains("78%", StringComparison.Ordinal),
+            "Welcome artwork must occupy most of the screen without the original excessive cover zoom.");
+        await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Settings", Exact = true }).ClickAsync();
+        await Expect(Page.Locator(".settings-audio-slot .wyrmforge-sound-controls")).ToBeVisibleAsync();
+        await ScreenshotAsync("settings-audio.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_Refuge_HasIllustratedTownAndAccessibleBuildings(int width, int height)
@@ -22,10 +44,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByLabel("Refuge town square")).ToBeVisibleAsync();
         await Expect(Page.Locator(".town-door")).ToHaveCountAsync(5);
 
-        var background = await Page.Locator(".hub-backdrop")
-            .EvaluateAsync<string>("element => getComputedStyle(element).backgroundImage");
-        Assert.IsTrue(background.Contains("refuge-scene.png", StringComparison.Ordinal),
-            "Refuge must use the illustrated city artwork, not the placeholder menu backdrop.");
+        var scene = Page.Locator(".town-viewport .town-scene");
+        await Expect(scene).ToBeVisibleAsync();
+        Assert.IsTrue((await scene.GetAttributeAsync("src"))?.Contains("refuge-square.svg", StringComparison.Ordinal) == true,
+            "Refuge must render the in-town courtyard, not the road-to-city welcome painting.");
 
         var positionsValid = await Page.EvaluateAsync<bool>(@"() => [...document.querySelectorAll('.town-door')].every(element => {
             const box = element.getBoundingClientRect();
@@ -33,6 +55,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 box.right <= innerWidth + 1 && box.top >= 0 && box.bottom <= innerHeight + 1;
         })");
         Assert.IsTrue(positionsValid, "All town buildings must remain reachable on a narrow phone.");
+        var mage = Page.Locator(".town-viewport .town-mage");
+        var before = await mage.EvaluateAsync<string>("element => element.style.left");
+        var bounds = await Page.Locator(".town-viewport").BoundingBoxAsync();
+        Assert.IsNotNull(bounds);
+        await Page.Mouse.ClickAsync((float)(bounds.X + bounds.Width * .63), (float)(bounds.Y + bounds.Height * .81));
+        await Page.WaitForTimeoutAsync(750);
+        var after = await mage.EvaluateAsync<string>("element => element.style.left");
+        Assert.AreNotEqual(before, after, "A player must be able to walk in Refuge, not just tap menu buttons.");
         await ScreenshotAsync($"refuge-town-{width}.png");
     }
 
@@ -120,7 +150,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "WYRMFORGE", Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "REFUGE", Exact = true })).ToBeVisibleAsync();
         var nav = Page.Locator("nav.menu-actions button");
         await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToBeDisabledAsync();
         await Expect(nav.Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
@@ -140,6 +170,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Play sound test" })).ToBeHiddenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        await Expect(Page.Locator(".settings-screen")).ToBeVisibleAsync();
         var test = Page.GetByRole(AriaRole.Button, new() { Name = "Play sound test" });
         var toggle = Page.GetByRole(AriaRole.Button, new() { Name = "Mute game sound effects" });
         await Expect(test).ToBeVisibleAsync();
@@ -154,6 +187,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Enable game sound effects" })).ToBeVisibleAsync();
         await Expect(test).ToBeDisabledAsync();
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Enable game sound effects" })).ToBeVisibleAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Play sound test" })).ToBeDisabledAsync();
     }
@@ -164,6 +199,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         var open = Page.GetByRole(AriaRole.Button, new() { Name = "Open Sound Atelier" });
         await open.ClickAsync();
 
@@ -191,6 +227,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(atelier).ToBeHiddenAsync();
 
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Open Sound Atelier" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Slider, new() { Name = "Combat volume" })).ToHaveValueAsync("30");
     }

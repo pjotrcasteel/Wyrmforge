@@ -616,6 +616,23 @@
         sync();
         controls.append(lab, status, labButton, testButton, toggleButton);
         document.body.appendChild(controls);
+        // Keep the audio UI attached to the actual Settings screen. On navigation
+        // away Blazor removes that screen, so restore the controls to the body
+        // (hidden there) and reattach on the next Settings visit.
+        const app = document.getElementById('app') ?? document.body;
+        const placeInSettings = () => {
+            const host = app.querySelector('.settings-audio-slot');
+            if (host) {
+                if (controls.parentElement !== host) host.appendChild(controls);
+            } else if (controls.parentElement !== document.body) {
+                document.body.appendChild(controls);
+                lab.hidden = true;
+                labButton?.setAttribute('aria-expanded', 'false');
+            }
+        };
+        const observer = new MutationObserver(placeInSettings);
+        observer.observe(app, { childList: true, subtree: true });
+        placeInSettings();
         observeMusicState();
         loadManifest();
     }
