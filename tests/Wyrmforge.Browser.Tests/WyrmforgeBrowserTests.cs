@@ -1062,6 +1062,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             JSON.stringify([{Spell:1,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true}]));");
 
         await OpenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Hunt preparation", Exact = true }).ClickAsync();
         var rite = Page.GetByRole(AriaRole.Button, new() { Name = "INVOKE ASCENDANT RITE" });
         await Expect(rite).ToBeVisibleAsync();
@@ -1088,6 +1089,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 {Spell:3,MeaningfulRuns:4,BestDepth:2,WyrmFeat:true}]));");
 
         await OpenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Hunt preparation", Exact = true }).ClickAsync();
         var fire = Page.Locator("section.ascendant-rite-card:not(.storm) button.ascendant-rite-action");
         var storm = Page.Locator("section.ascendant-rite-card.storm button.ascendant-rite-action");
@@ -1288,7 +1290,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "World Gate" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "World Gate and regions" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "World Gate" })).ToBeVisibleAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Road to the Conclave" })).ToBeVisibleAsync();
         await ScreenshotAsync("world-gate-explore.png");
@@ -1316,7 +1319,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.greatHunt.v1', JSON.stringify([{Wyrm:0,Slain:true,EssenceSecured:true,DeepEvolvedDuel:false,AscendantDefeated:false}]));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "World Gate" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "World Gate and regions" }).ClickAsync();
         var frost = Page.GetByRole(AriaRole.Radio, new() { Name = "The Hoarfrost Reaches" });
         await Expect(frost).ToBeEnabledAsync();
         await Expect(Page.Locator(".gate-region.locked")).Not.ToHaveCountAsync(0);
