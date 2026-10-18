@@ -1248,6 +1248,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:2,Nodes:[],Quests:{
                 Trails:4,RareTrails:1,Depth:1,Wyrms:[],Essences:[],Synergy:false,Evolution:false,Claimed:[],Caches:0}})); }");
         await Page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Quests") }).ClickAsync();
         var dialog = Page.GetByRole(AriaRole.Dialog, new() { Name = "Hunt quests" });
         await Expect(dialog).ToBeVisibleAsync();
@@ -1257,6 +1258,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var overflow = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - innerWidth");
         Assert.IsLessThanOrEqualTo(1, overflow);
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         var save = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.arcaneBuild.v1')");
         using var json = JsonDocument.Parse(save);
         Assert.AreEqual(2, json.RootElement.GetProperty("Budget").GetInt32());
@@ -1435,8 +1437,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
     private async Task EnterTownIfNeededAsync()
     {
+        // Wait until Blazor has finished its first render. Checking IsVisibleAsync too
+        // early can leave a test at the title scene even though the button appears later.
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
-        if (await start.IsVisibleAsync()) await start.ClickAsync();
+        await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30000 });
+        await start.ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
     }
 
     private async Task OpenAsync()
