@@ -68,6 +68,15 @@
         </section>
     }
 
+                    @if (Suggestion is { } suggestion)
+            {
+                <button class="nexus-next" aria-label="@($"Next discovery: {suggestion.Text} Show it on the Web.")" @onclick="() => FocusNodeAsync(suggestion.NodeId)">
+                    <i aria-hidden="true">✦</i>
+                    <span><small>NEXT DISCOVERY</small><b>@suggestion.Text</b></span>
+                    <em aria-hidden="true">›</em>
+                </button>
+            }
+
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             <div class="atlas-toolbar">
@@ -86,15 +95,6 @@
             </div>
 
             <div class="atlas-caption"><span>THE WYRMHEART</span></div>
-
-                    @if (Suggestion is { } suggestion && !inspectorOpen)
-            {
-                <button class="nexus-next" aria-label="@($"Next discovery: {suggestion.Text} Show it on the Web.")" @onclick="() => FocusNodeAsync(suggestion.NodeId)">
-                    <i aria-hidden="true">✦</i>
-                    <span><small>NEXT DISCOVERY</small><b>@suggestion.Text</b></span>
-                    <em aria-hidden="true">›</em>
-                </button>
-            }
 
             <div class="arcane-web-viewport" @ref="viewport">
                 <div class="web-pan-space">
