@@ -37,7 +37,8 @@ public sealed partial class RunSimulation
         player.Chill.Apply(stacks);
     }
 
-    private bool PlayerOnBlackIce => blackIcePatches.Any(patch => Vector2D.Distance(player.Position, patch.Center) <= patch.Radius);
+    // Permafrost scars from the Bell of Winter are black ice in every way that matters: no grip, and they chill.
+    private bool PlayerOnBlackIce => blackIcePatches.Any(patch => Vector2D.Distance(player.Position, patch.Center) <= patch.Radius) || PlayerOnPermafrost;
 
     /// <summary>
     /// Chill slows the hunter's pace; black ice takes away grip, so velocity eases toward the input instead of snapping.

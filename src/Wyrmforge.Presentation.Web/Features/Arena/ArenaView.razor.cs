@@ -127,6 +127,7 @@ public partial class ArenaView : IAsyncDisposable
         var reliquaryWasSlain = current.ReliquaryDefeat is not null;
         var previousBellArrivals = current.BellWardenArrivals;
         var previousBellCracks = current.BellWardenCracks;
+        var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
@@ -189,6 +190,11 @@ public partial class ArenaView : IAsyncDisposable
         else if (current.BellWardenCracks != previousBellCracks)
         {
             ShowBellCracked();
+            stateChanged = true;
+        }
+        else if (current.WinterBellRimes != previousWinterRimes)
+        {
+            ShowWinterBellRimed();
             stateChanged = true;
         }
         else if (!bellWardenWasSlain && current.BellWardenDefeat is { } warden)

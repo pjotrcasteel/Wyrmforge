@@ -9,6 +9,7 @@ import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFac
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
+import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
@@ -202,6 +203,7 @@ function draw(state, snapshot, width, height) {
     for (const husk of snapshot.rimeHusks ?? []) drawRimeHusk(ctx, husk);
     drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
+    drawWinterBellGround(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
     for (const enemy of snapshot.enemies) {
         drawEliteGround(ctx, enemy, visualSeconds, state.reducedMotion.matches);
@@ -264,6 +266,7 @@ function draw(state, snapshot, width, height) {
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
     for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);
+    drawWinterBellAir(ctx, snapshot);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 

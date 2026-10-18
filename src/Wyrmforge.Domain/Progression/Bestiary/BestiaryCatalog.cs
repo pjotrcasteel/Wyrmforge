@@ -97,6 +97,11 @@ public static class BestiaryCatalog
             "Do not chase the first apparition: the double only drifts. Step out of the cut, then punish the real Wisp while it hangs solid after the strike.",
             "Black-ice halls, frost-glass ruins",
             "It remembers a face but not a life."),
+        new(EnemyKind.BellOfWinter, "The Bell of Winter", "Named • set piece of the glacier road",
+            "A monumental keeper that drags a frozen bell on chains. Its Permafrost Slam leaves scars of ice that stay on the ground, its Winter Toll sends freezing rings with only a few open lanes, and its Icicle Recall calls the shards in those scars down from above. It never calls for help. At half strength the bell rimes over into Deep Winter.",
+            "Read the slow tells. Run the open lanes of each ring, keep the scars from walling you in, and leave every marked shard. Punish the long recovery after each swing: panic and greed are equally fatal.",
+            "Frozen bell road before Rimeclaw's lair",
+            "The bell once called the faithful to prayer. Now it tolls for the dead, and its ringing announces Rimeclaw's absolute winter."),
     ];
 
     /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>

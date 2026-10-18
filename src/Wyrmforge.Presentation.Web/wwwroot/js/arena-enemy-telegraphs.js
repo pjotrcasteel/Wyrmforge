@@ -2,6 +2,7 @@
 // every hit test; this module only draws what the snapshot reports, at exactly the reported size, so
 // the mark the player reads is the area that can hurt them (Enter the Gungeon / Hades readability rule).
 import { isFrostTelegraph, drawFrostTelegraph } from './arena-frost-vfx.js';
+import { isWinterBellTelegraph, drawWinterBellTelegraph } from './arena-winterbell-vfx.js';
 
 const POUNCE = { edge: 'rgba(214, 64, 48, 0.85)', fill: 'rgba(214, 64, 48, 0.16)', charge: 'rgba(240, 92, 64, 0.34)' };
 const LOB = { edge: 'rgba(255, 150, 64, 0.9)', fill: 'rgba(255, 140, 56, 0.12)', charge: 'rgba(255, 170, 80, 0.32)' };
@@ -50,6 +51,7 @@ export function drawEnemyTelegraph(ctx, enemy) {
     else if (telegraph.kind === 'bell-rally') drawRiteRing(ctx, enemy, telegraph, RALLY);
     else if (telegraph.kind === 'bell-crack') drawRiteRing(ctx, enemy, telegraph, CRACK);
     else if (isFrostTelegraph(telegraph.kind)) drawFrostTelegraph(ctx, enemy, telegraph);
+    else if (isWinterBellTelegraph(telegraph.kind)) drawWinterBellTelegraph(ctx, enemy, telegraph);
 }
 
 // Every pulse of the coming toll, already in place: hollow rings along each lane that fill as the bell swings back

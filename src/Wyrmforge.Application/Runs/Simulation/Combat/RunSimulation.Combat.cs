@@ -116,6 +116,8 @@ public sealed partial class RunSimulation
         // reaching half health starts the stagger at once (below), and the stagger itself is a free damage window.
         if (target is EnemyState { BellWarden: { Cracked: false, Phase: not BellWardenPhase.Crack } } gated)
             damage = Math.Min(damage, Math.Max(0, gated.Health - gated.MaxHealth * BellWardenBehaviorState.CrackHealthFraction));
+        if (target is EnemyState { WinterBell: { DeepWinter: false, Phase: not BellOfWinterPhase.Rime } } riming)
+            damage = Math.Min(damage, Math.Max(0, riming.Health - riming.MaxHealth * BellOfWinterBehaviorState.RimeHealthFraction));
         if (target is EnemyState frostDefended) damage = ApplyFrostDefenses(frostDefended, damage);
         if (damage <= 0)
         {
@@ -125,6 +127,7 @@ public sealed partial class RunSimulation
         var shatters = source is not null && FrostShatter.Triggers(source.Spell, target.Statuses.Has(CombatStatusId.Frozen));
         target.Health -= damage;
         if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
+        if (target is EnemyState { WinterBell: { } winter } rimed && winter.TryBeginRime(rimed.Health, rimed.MaxHealth)) BeginWinterRime();
         RegisterTargetHit(target);
         if (target.Health > 0) return false;
 
@@ -137,7 +140,7 @@ public sealed partial class RunSimulation
                 // A false image breaks like glass: no kill, no payout, no record.
                 RegisterEnemyDeath(reflection);
                 break;
-            case EnemyState { Kind: EnemyKind.BellWarden } warden:
+            case EnemyState { Kind: EnemyKind.BellWarden or EnemyKind.BellOfWinter } warden:
                 ResolveBellWardenDeath(warden);
                 break;
             case EnemyState defeatedEnemy:

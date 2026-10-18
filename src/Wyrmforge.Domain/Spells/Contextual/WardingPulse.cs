@@ -22,7 +22,7 @@ public static class WardingPulse
     public const double PulseSeconds = 0.32;
 
     /// <summary>Set pieces hold their ground: bells, rites and their wards are never moved.</summary>
-    public static bool IsImmovable(EnemyKind kind) => kind is EnemyKind.BellWarden or EnemyKind.Reliquary or EnemyKind.ReliquaryWard;
+    public static bool IsImmovable(EnemyKind kind) => kind is EnemyKind.BellWarden or EnemyKind.BellOfWinter or EnemyKind.Reliquary or EnemyKind.ReliquaryWard;
 
     public static double PushFor(bool elite) => PushDistance * (elite ? ElitePushScale : 1);
 }

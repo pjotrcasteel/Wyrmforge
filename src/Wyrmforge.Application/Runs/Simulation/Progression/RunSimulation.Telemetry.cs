@@ -26,7 +26,7 @@ public sealed partial class RunSimulation
     private void RecordSelection(LevelChoice choice) => draftLedger.Select(choice, PrimarySchool);
 
     private void RecordEnemyControl(EnemyState enemy, double delta, double timeScale) =>
-        controlLedger.ObserveEnemy(delta, timeScale, (enemy.Position - player.Position).Length, enemy.IsElite || enemy.Kind is EnemyKind.Reliquary or EnemyKind.BellWarden);
+        controlLedger.ObserveEnemy(delta, timeScale, (enemy.Position - player.Position).Length, enemy.IsElite || enemy.Kind is EnemyKind.Reliquary or EnemyKind.BellWarden or EnemyKind.BellOfWinter);
 
     private void RecordUpgradePulse(double seconds) => controlLedger.BeginPulse(seconds);
 

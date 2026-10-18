@@ -42,6 +42,9 @@ public sealed record RunRenderSnapshot(
     public BellWardenRenderSnapshot? BellWarden { get; init; }
 
     public IReadOnlyList<BellShockwaveRenderSnapshot> BellShockwaves { get; init; } = [];
+    public IReadOnlyList<PermafrostScarRenderSnapshot> PermafrostScars { get; init; } = [];
+    public IReadOnlyList<WinterRingRenderSnapshot> WinterRings { get; init; } = [];
+    public IReadOnlyList<IcicleRenderSnapshot> Icicles { get; init; } = [];
 
     public WardPulseRenderSnapshot? WardPulse { get; init; }
 

@@ -43,7 +43,7 @@ public static class RegionCatalog
         RegionStatus.Playable,
         WyrmrealmHabitatCatalog.Frost,
         [EnemyKind.FrostlingPackling, EnemyKind.Shardcaster, EnemyKind.WhitefangStalker, EnemyKind.CairnSentinel,
-            EnemyKind.HoarfrostCantor, EnemyKind.MirrorWisp],
+            EnemyKind.HoarfrostCantor, EnemyKind.MirrorWisp, EnemyKind.BellOfWinter],
         ["The Frostling Packling", "The Hoarfrost Cantor", "The Shardcaster", "The Whitefang Stalker", "The Cairn Sentinel",
             "The Mirror Wisp", "The Bell of Winter", "The Reliquary of Glass", "Rimeclaw, the Glacier Wyrm"],
         Influence(DragonId.Rimeclaw, DragonId.Stormcoil, DragonId.Voidweaver),

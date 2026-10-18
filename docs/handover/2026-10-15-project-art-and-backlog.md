@@ -520,3 +520,10 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **World Gate:** a tap-sized region list with locked reasons; the choice is saved in `wyrmforge.world.v1` (`Selected`, optional). A first hunt in an uncharted region ends at its home Wyrm as a full hunt.
 - **Tests:** `RegionCatalogTests`, `FrostEncounterTests`, `FrostEliteTests`, JS snow-biome cases, browser `Mobile_WorldGate_FrostOpensAfterAshfangAndItsHuntRunsOnSnow`. Browser 48/50 (the two known mobile failures).
 - **Next:** F4b Bell of Winter, F4c Reliquary of Glass.
+
+## 37. Frost region F4b: The Bell of Winter
+
+- **Set piece (17):** the Frost lair road now raises the Bell of Winter instead of the Bell Warden. The road picks its set piece by region school; regions without one keep an ordinary horde. No reinforcements: Permafrost Slam leaves lasting scars (black-ice footing), Winter Toll sends 3 rings with rotating open lanes, Icicle Recall drops marked icicles on the scars and clears them. Half health: a 2 s rime window, then Deep Winter. Details are in `frost-region-roster-v1.md`.
+- **Presentation:** the moments "THE BELL OF WINTER", "DEEP WINTER" and "THE BELL OF WINTER FALLS SILENT"; the bar and entrance follow the bell snapshot `Variant`; the new module is `arena-winterbell-vfx.js`; kind 17 has a sprite and a fallback palette.
+- **Tests:** `BellOfWinterBehaviorStateTests` (Domain), `BellOfWinterEncounterTests` (Application), `arena-winterbell-vfx.test.mjs`. Browser 48/50 (the two known mobile failures).
+- **Next:** F4c Reliquary of Glass, then the Nexus Spellcraft redesign. Balancing comes last.

@@ -21,8 +21,13 @@ public sealed record WyrmrealmMapNode(
         WyrmrealmEncounterKind.StalkerPressure => 5,
         _ => 1,
     };
-    // The Bell Warden guards the first region's lair roads; Rimeclaw's set piece is still to come (Frost F4b).
-    public string EncounterName => PreLair ? WyrmrealmHabitatCatalog.School(Habitat) == SpellSchool.Fire ? "Bell Warden" : "Last road" : Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
+    // Each region's lair road has its own set piece: the Bell Warden in the Cinder Frontier, the Bell of Winter on the glacier.
+    public string EncounterName => PreLair ? WyrmrealmHabitatCatalog.School(Habitat) switch
+        {
+            SpellSchool.Fire => "Bell Warden",
+            SpellSchool.Frost => "Bell of Winter",
+            _ => "Last road",
+        } : Stage == WyrmrealmMapState.CombatStages ? "Heavy assault" : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => "Horde",
         WyrmrealmEncounterKind.StalkerPressure => "Ambush",

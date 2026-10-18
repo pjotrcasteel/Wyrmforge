@@ -229,6 +229,7 @@ public sealed partial class RunSimulation
             if (enemy.Reflection is { } reflection) UpdateReflection(enemy, reflection, scaledDelta);
             if (enemy.Reliquary is { } rite) (direction, speed) = UpdateReliquary(enemy, rite, scaledDelta, crossing, direction, speed);
             else if (enemy.BellWarden is { } bell) (direction, speed) = UpdateBellWarden(enemy, bell, scaledDelta, crossing, direction, speed);
+            else if (enemy.WinterBell is { } winter) (direction, speed) = UpdateWinterBell(enemy, winter, scaledDelta, crossing, direction, speed);
             else if (enemy.RoutedRemaining > 0)
             {
                 // Morale break: flee the hunter, then re-engage once the timer ends. Bounded, so it never soft-locks a node.
@@ -325,11 +326,12 @@ public sealed partial class RunSimulation
         UpdateHostileProjectiles(delta);
         UpdateReliquaryFields(delta);
         UpdateBellShockwaves(delta);
+        UpdateWinterBellHazards(delta);
         UpdateFrostHazards(delta);
     }
 
     private int CommittedThreatCount() => hostileProjectiles.Count + iceLances.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0)
-        + (bellWarden?.BellWarden?.IsCommitted == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
+        + (bellWarden?.BellWarden?.IsCommitted == true || bellWarden?.WinterBell?.IsCommitted == true ? 1 : 0) + icicles.Count(icicle => !icicle.Fallen) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
             || enemy.DrownedWraith?.IsCommitted == true || enemy.Packling?.IsCommitted == true || enemy.Shardcaster?.IsCommitted == true
             || enemy.Whitefang?.IsCommitted == true || enemy.Sentinel?.IsCommitted == true || enemy.Cantor?.IsCommitted == true
@@ -383,6 +385,7 @@ public sealed partial class RunSimulation
             enemy.Position.X, enemy.Position.Y, enemy.Radius * 2),
         { Ward: { Warning: true } fuse } => new EnemyTelegraphRenderSnapshot("ward-fuse", fuse.WarningProgress, enemy.Position.X, enemy.Position.Y,
             ReliquaryWardBlastRadius),
+        { WinterBell: not null } => CreateWinterBellTelegraph(enemy),
         _ => CreateFrostTelegraph(enemy),
     };
 

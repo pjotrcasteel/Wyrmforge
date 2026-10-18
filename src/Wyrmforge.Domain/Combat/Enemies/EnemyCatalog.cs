@@ -32,6 +32,9 @@ public static class EnemyCatalog
         // Unique: only a Mirror Wisp's Glass Step leaves one. One hit breaks it.
         new(EnemyKind.MirrorDouble, EnemyRole.Ambusher, 0, 11, HealthMultiplier: 0.01, SpeedMultiplier: 0.6, ContactDamageMultiplier: 0,
             Unique: true, Realm: EnemyRealm.Frost),
+        // Unique: the Bell of Winter only ever stands on the Frost region's lair road.
+        new(EnemyKind.BellOfWinter, EnemyRole.Pressure, 10, 40, HealthMultiplier: 18, SpeedMultiplier: 0.42, ContactDamageMultiplier: 1,
+            Unique: true, Realm: EnemyRealm.Frost),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

@@ -29,4 +29,6 @@ public enum EnemyKind
     MirrorWisp,
     /// <summary>A Mirror Wisp's Reflection Double: a false image, not a creature. No bestiary entry, no payout.</summary>
     MirrorDouble,
+    /// <summary>Frost F4b: the named set piece on Rimeclaw's lair road. Its slam scars the ground, its toll rings box the hunter in.</summary>
+    BellOfWinter,
 }

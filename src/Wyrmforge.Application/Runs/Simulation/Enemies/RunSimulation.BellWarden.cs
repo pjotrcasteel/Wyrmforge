@@ -55,6 +55,7 @@ public sealed partial class RunSimulation
     private Vector2D bellWardenSpot;
     private EnemyState? bellWarden;
     private int bellWardenAddsRallied;
+    private EnemyKind bellRoadKind = EnemyKind.BellWarden;
 
     public BellWardenStage BellWardenStage { get; private set; }
 
@@ -67,11 +68,25 @@ public sealed partial class RunSimulation
 
     private bool IsBellWardenNode => BellWardenStage != BellWardenStage.Absent;
 
+    /// <summary>Which bell stands on this lair road: the Fire Warden or the Bell of Winter. The arena announces and draws it.</summary>
+    public EnemyKind BellRoadKind => bellRoadKind;
+
+    private string BellRoadName => bellRoadKind == EnemyKind.BellOfWinter ? "Bell of Winter" : "Bell Warden";
+
+    private string BellRoadTitle => BellRoadName;
+
+    private string BellRoadVariant => bellRoadKind == EnemyKind.BellOfWinter ? "winter" : "fire";
+
     private void PrepareBellWardenNode(WyrmrealmMapNode node)
     {
         if (!node.PreLair || node.Type != WyrmrealmNodeType.Combat) return;
-        // The Bell Warden belongs to the first region; Rimeclaw's lair road keeps an ordinary horde until its own set piece lands.
-        if (WyrmrealmHabitatCatalog.School(node.Habitat) != Domain.Spells.SpellSchool.Fire) return;
+        // Each region brings its own set piece to the same road semantics; a region without one keeps an ordinary horde.
+        switch (WyrmrealmHabitatCatalog.School(node.Habitat))
+        {
+            case Domain.Spells.SpellSchool.Fire: bellRoadKind = EnemyKind.BellWarden; break;
+            case Domain.Spells.SpellSchool.Frost: bellRoadKind = EnemyKind.BellOfWinter; break;
+            default: return;
+        }
         BellWardenStage = BellWardenStage.Waiting;
         bellWardenTimer = 0;
     }
@@ -107,7 +122,7 @@ public sealed partial class RunSimulation
 
     private Vector2D? FindBellWardenSpot()
     {
-        var radius = EnemyCatalog.Get(EnemyKind.BellWarden).Radius;
+        var radius = EnemyCatalog.Get(bellRoadKind).Radius;
         // Ahead of the hunter first (up the road toward the lair), then the remaining compass points; consumes no randomness.
         for (var step = 0; step < 8; step++)
         {
@@ -121,11 +136,11 @@ public sealed partial class RunSimulation
 
     private void BeginBellWardenFight()
     {
-        var definition = EnemyCatalog.Get(EnemyKind.BellWarden);
+        var definition = EnemyCatalog.Get(bellRoadKind);
         var (health, speed) = EnemyStats(definition);
-        bellWarden = new EnemyState(++enemyId, bellWardenSpot, definition.Radius, health, speed, EnemyKind.BellWarden);
+        bellWarden = new EnemyState(++enemyId, bellWardenSpot, definition.Radius, health, speed, bellRoadKind);
         enemies.Add(bellWarden);
-        RecordEnemyEncounter(EnemyKind.BellWarden);
+        RecordEnemyEncounter(bellRoadKind);
         BellWardenStage = BellWardenStage.Fight;
     }
 
@@ -214,6 +229,7 @@ public sealed partial class RunSimulation
         }
         bellWardenAdds.Clear();
         bellShockwaves.Clear();
+        ClearWinterBellHazards();
         hostileProjectiles.RemoveAll(toll => toll.Style == HostileProjectileStyle.Toll);
         bellWarden = null;
     }
@@ -222,6 +238,7 @@ public sealed partial class RunSimulation
     {
         bellWardenAdds.Clear();
         bellShockwaves.Clear();
+        ClearWinterBellHazards();
         bellWarden = null;
         bellWardenAddsRallied = 0;
         bellWardenTimer = 0;
@@ -230,18 +247,20 @@ public sealed partial class RunSimulation
 
     private TrailRenderSnapshot? CreateBellWardenTrailSnapshot() => BellWardenStage switch
     {
-        BellWardenStage.Waiting or BellWardenStage.Tolling => new(0, "The bell tolls", "Silence the Bell Warden"),
-        BellWardenStage.Fight when bellWarden is { } warden => new(Math.Clamp(1 - warden.Health / warden.MaxHealth, 0, 1), "Bell Warden",
-            "Silence the Bell Warden"),
+        BellWardenStage.Waiting or BellWardenStage.Tolling => new(0, "The bell tolls", $"Silence the {BellRoadName}"),
+        BellWardenStage.Fight when bellWarden is { } warden => new(Math.Clamp(1 - warden.Health / warden.MaxHealth, 0, 1), BellRoadTitle,
+            $"Silence the {BellRoadName}"),
         _ => new(1, "Clear enemies", $"Clear {HostileCount} remaining"),
     };
 
     private BellWardenRenderSnapshot? CreateBellWardenSnapshot() => BellWardenStage switch
     {
         BellWardenStage.Tolling => new("tolling", bellWardenSpot.X, bellWardenSpot.Y, Math.Clamp(1 - bellWardenTimer / BellWardenEntranceSeconds, 0, 1), 1,
-            false, 0),
-        BellWardenStage.Fight when bellWarden is { Health: > 0 } warden => new("fight", warden.Position.X, warden.Position.Y, 1,
-            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), warden.BellWarden!.Cracked, warden.BellWarden.CrackProgress),
+            false, 0, BellRoadVariant),
+        BellWardenStage.Fight when bellWarden is { Health: > 0, BellWarden: { } bell } warden => new("fight", warden.Position.X, warden.Position.Y, 1,
+            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), bell.Cracked, bell.CrackProgress),
+        BellWardenStage.Fight when bellWarden is { Health: > 0, WinterBell: { } winter } warden => new("fight", warden.Position.X, warden.Position.Y, 1,
+            Math.Clamp(warden.Health / warden.MaxHealth, 0, 1), winter.DeepWinter, winter.RimeProgress, BellRoadVariant),
         _ => null,
     };
 

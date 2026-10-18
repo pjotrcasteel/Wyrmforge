@@ -39,16 +39,32 @@ The Sentinel wave started as a full ring; a ring growing from the centre leaves 
 
 References: Diablo necromancer corpse use (husks), Hades' Satyr Cultist chants and Path of Exile totems (breakable support rites), Hollow Knight shade decoys and Nioh's Yuki-onna (Wisp), Hades' Wretched Witch / Gungeon lane tells (lanes), Risk of Rain and Hades pack orbiting (Packling ring), Celeste/Zelda ice physics (black ice slide).
 
+## F4b set piece: the Bell of Winter (17)
+
+The Frost lair road. It shares the Bell Warden's road semantics (entrance toll, no horde, no elite or Reliquary, the road opens when it falls) but fights the other way round: **it never calls reinforcements**; it closes the ground instead. Unique, radius 40, ×18 health, 0.42 speed; it only walks between moves. Its moves cycle **Slam → Toll → Slam → Recall**, and every move has a long tell and a long recovery: panic and greed are both punished.
+
+| Move | Tell / recover | Effect | Counterplay |
+|---|---|---|---|
+| **Permafrost Slam** | 1.3 s / 2.2 s | A crater 60–140 px ahead (90 px radius: 24 damage, +2 Chill). It leaves 3 **permafrost scars** (230 px long, 15 px half-width, 10 s; at most 8, oldest first), fanned out with the first one toward you. A scar is black ice: no grip, and it chills. If you are beyond 260 px, it tolls instead. | Step out of the crater; plan your footing around the scars. |
+| **Winter Toll** | 1.1 s / 1.6 s | 3 freezing rings from the bell, 0.45 s apart, each rolling from 50 to 360 px in 1.3 s (24 px band: 9 damage, +1 Chill, once per ring). Every ring has 3 **open lanes** (±17°). The first ring never opens straight at you, and each later ring turns by half a lane step. | Stand in a lane, then shift to the next one. |
+| **Icicle Recall** | 1.4 s / 1.9 s | Marked icicles fall 0.85 s later (40 px: 14 damage, +2 Chill): one on your spot at the tell, plus one on the middle and one on the tip of every scar. **The scars are used up.** On an empty floor (or in Deep Winter) four more ring your spot. At most 10. | Leave the marks; the floor is clear again afterwards. |
+
+**Rime (half health):** overflow damage stops at 50%. The bell rimes over for 2 s, a free window: it does not move or act, and hanging icicles melt. Then comes **Deep Winter**: 4 rings, 4 scars, recall always rings you, and 0.9 s between moves. Its fall thaws every scar, ring and icicle.
+
+Why: the Fire Warden pressures you with lanes to outrun and a rally of adds; the winter bell **boxes you in** with ground that stays and walls you can only cross through their gaps (Hades' Asterius and Theseus lanes, Enter the Gungeon bullet-ring gaps, Dark Souls' Bell Gargoyles/Old Iron King for the bell set piece, Elden Ring's frost-ground persistence). The scars → recall loop makes the floor itself the rhythm: it fills up, then it is called down and cleared.
+
 ## Implementation
 
 - Domain: `HunterChillState`, `FrostlingPacklingBehaviorState`, `ShardcasterBehaviorState`, `WhitefangStalkerBehaviorState`, `CairnSentinelBehaviorState`, `HoarfrostCantorBehaviorState`, `MirrorWispBehaviorState` (+ `MirrorDoubleState`); `EnemyRealm` on `EnemyDefinition`.
 - Application: `RunSimulation.Frost.cs` (lances, blooms, patches, snow clouds, avalanche waves, Chill, slide, telegraphs, snapshots) and `RunSimulation.FrostRites.cs` (Cantor rites, rime husks and crust, Wisp step, doubles and cut). The brace multiplier only applies to projectiles and splashes (accepted limitation). Rime crust soaks all `DamageTarget` damage.
 - Elites (F4a): six Frost affixes, one per non-unique kind. **Rimehowl** (Frostling: +2 Chill per bite), **Splinterwright** (Shardcaster: the lance blooms along its lane every 90 px), **Twinfang** (Whitefang: a second pounce after a 0.3 s recover), **Barrowlord** (Cairn Sentinel: a second avalanche ring 0.45 s later), **Choirwarden** (Cantor: hymn radius ×1.8), **Thousandface** (Mirror Wisp: a second double, 46 px aside). Mirror doubles never become elites.
+- F4b: `BellOfWinterBehaviorState` (Domain); `RunSimulation.BellOfWinter.cs` (scars, rings, icicles, telegraphs, snapshots), with the bell road in `RunSimulation.BellWarden.cs` choosing its set piece per region school (`BellRoadKind`). Permafrost counts as black ice in `PlayerOnBlackIce`. Rendering: `arena-winterbell-vfx.js` (scars, laned rings, icicle marks and drops, winter telegraphs); the bar and entrance in `arena-bellwarden-vfx.js` follow the snapshot `variant` ("fire"/"winter"). Sprite: kind 17, a gaunt horned keeper dragging an icicle-fringed bell.
 - Rendering: `arena-frost-vfx.js` (lane/skitter/glaze telegraphs, black ice, splinter bloom, lance, the chill rime with one crystal per stack, flank-pounce lane, avalanche front, avalanche wave, snow cloud, rime hymn / stillness rings, reknit thread, glass-step diamond, shiver-cut arc, rime husk, rime crust). Sprites: `tools/art/sprites/enemies.mjs` kinds 10–16. F3 also fixed `ENEMY_KIND_COUNT` in `arena-enemy-art.js` (was 10, which clamped every Frost kind to the Bell Warden sprite in-game).
 
 ## Plan
 
 - ~~F2~~ and ~~F3~~ shipped (see above).
 - ~~**F4a:**~~ Frost habitats (Frozen road, Snowbound pines, Whiteout plain, Buried hamlet, Cairn barrows, Mirror mere, Glacier approach, Glacier lair) and pack recipes (Packling litter, Whitefang hunt, Shard line, Cantor rite, Cairn wall, Wisp veil; last stand: Whiteout), Frost elite affixes, Frost territory names (Snowbound vale, Rimewall heights, Glacier basin), the snow biome (tiles, drifts, ice patches, snow pines, cairns, icefall, buried sledge, pale walls), `glacier-region` → Playable as **The Hoarfrost Reaches** (provisional: opens once Ashfang is slain; Ashfang is Absent there) and the World Gate region picker. A hunter's first hunt in a new region culminates in its home Wyrm but is a full hunt (`regionOpening`), unlike the tutorial First Hunt.
-- **F4b:** Bell of Winter (Frost Bell Warden; replaces "Last road" for Frost). **F4c:** Reliquary of Glass.
+- ~~**F4b:**~~ Bell of Winter (the Frost lair road; see above).
+- **F4c:** Reliquary of Glass.
 - All numbers are provisional; balancing waits for the final pass (owner decision 2026-10-18).

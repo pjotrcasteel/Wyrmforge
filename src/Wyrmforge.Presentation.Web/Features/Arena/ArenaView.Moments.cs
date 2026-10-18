@@ -33,14 +33,19 @@ public partial class ArenaView
     private void ShowReliquaryDefeated(ReliquaryDefeat defeat) =>
         ShowRunMoment(new RunMoment("RELIQUARY SLAIN", "The rites are broken", $"+{defeat.ExperienceAwarded} XP • recorded in the Codex", RunMomentTone.Legendary));
 
-    private void ShowBellWardenArrived() =>
-        ShowRunMoment(new RunMoment("THE BELL WARDEN", "It guards the last road to the lair", "Step out of the crater • outrun the ring • it tolls in lines", RunMomentTone.Legendary));
+    private void ShowBellWardenArrived() => ShowRunMoment(simulation?.BellRoadKind == EnemyKind.BellOfWinter
+        ? new RunMoment("THE BELL OF WINTER", "Its toll walls the road to Rimeclaw", "Run the open lanes • leave the marked shards • the scars stay", RunMomentTone.Legendary)
+        : new RunMoment("THE BELL WARDEN", "It guards the last road to the lair", "Step out of the crater • outrun the ring • it tolls in lines", RunMomentTone.Legendary));
+
+    private void ShowWinterBellRimed() =>
+        ShowRunMoment(new RunMoment("DEEP WINTER", "The Bell of Winter rimes over", "Strike now • then more rings, more scars", RunMomentTone.Danger, Compact: true));
 
     private void ShowBellCracked() =>
         ShowRunMoment(new RunMoment("THE BELL CRACKS", "The Bell Warden", "The toll splits three ways", RunMomentTone.Danger, Compact: true));
 
     private void ShowBellWardenSlain(BellWardenDefeat defeat) =>
-        ShowRunMoment(new RunMoment("THE BELL FALLS SILENT", "The road to the lair is open", $"+{defeat.ExperienceAwarded} XP • recorded in the Codex", RunMomentTone.Legendary));
+        ShowRunMoment(new RunMoment(simulation?.BellRoadKind == EnemyKind.BellOfWinter ? "THE BELL OF WINTER FALLS SILENT" : "THE BELL FALLS SILENT",
+            simulation?.BellRoadKind == EnemyKind.BellOfWinter ? "The thaw opens Rimeclaw's road" : "The road to the lair is open", $"+{defeat.ExperienceAwarded} XP • recorded in the Codex", RunMomentTone.Legendary));
 
     private void ShowReliquaryWithdrawn() =>
         ShowRunMoment(new RunMoment("THE RELIQUARY WITHDRAWS", "It will not be found here again", "The trail is clear.", RunMomentTone.Standard, Compact: true));

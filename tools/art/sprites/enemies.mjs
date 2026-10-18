@@ -1,8 +1,8 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
 // 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith, 7 The Reliquary, 8 Reliquary ward,
-// 9 The Bell Warden, 10 Frostling Packling, 11 Shardcaster, 12 Whitefang Stalker, 13 Cairn Sentinel (the Frost roster: rime greys and
-// glacial blues, never a recoloured Cinder kin).
+// 9 The Bell Warden, 10 Frostling Packling, 11 Shardcaster, 12 Whitefang Stalker, 13 Cairn Sentinel, 14 Hoarfrost Cantor, 15 Mirror
+// Wisp, 16 its double, 17 The Bell of Winter (the Frost roster: rime greys and glacial blues, never a recoloured Cinder kin).
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
 // so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
@@ -38,6 +38,7 @@ export const ENEMY_SPECS = [
     { kind: 14, name: 'hoarfrost-cantor', size: [50, 66], origin: [22, 40], radius: 13 },
     { kind: 15, name: 'mirror-wisp', size: [48, 56], origin: [22, 32], radius: 11 },
     { kind: 16, name: 'mirror-double', size: [48, 56], origin: [22, 32], radius: 11 },
+    { kind: 17, name: 'bell-of-winter', size: [92, 108], origin: [38, 70], radius: 40 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -787,8 +788,84 @@ function mirrorWisp(pose) {
 // The reflection the Wisp leaves where it stood is the same figure: it must be mistakable for her for a heartbeat.
 function mirrorDouble(pose) { return mirrorWisp(pose); }
 
+// The Bell of Winter (Frost F4b): not the Warden's squat bronze bulk but a gaunt, horned keeper, chain-wrapped iron in rust-red
+// rags, dragging a bell taller than its legs whose lip is a fringe of icicles. Idle poses drag the bell low and ahead along the
+// snow; pose 3 heaves it overhead by its chain, the tell for slam and toll alike.
+function bellOfWinter(pose) {
+    const s = ENEMY_SPECS[17], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { iron: '#4a525b', ironHi: '#8796a3', ironDk: '#1c2127', rag: '#7a2a22', ragHi: '#a8463a', ragDk: '#3e1210',
+        bell: '#7d8a92', bellHi: '#c6d6de', bellDk: '#3b454d', rime: '#dff2fb', ice: '#a9dcf0', bone: '#d8d2c2', boneDk: '#8e887a',
+        horn: '#cfc4a8', void: '#06090d', glow: '#9fe6ff', core: '#f2fcff', chain: '#5b5148' };
+    const step = pose === 1 ? 2 : pose === 2 ? -2 : 0, raised = pose === 3, sway = raised ? 0 : -step / 2;
+    const bell = (cx, top, h, w) => {
+        g.poly([[cx - w / 3, top], [cx + w / 3, top], [cx + w / 2, top + h], [cx - w / 2, top + h]], C.bell);
+        g.poly([[cx - w / 3, top], [cx - w / 8, top], [cx - w / 5, top + h], [cx - w / 2, top + h]], C.bellDk);
+        g.line(cx + w / 5, top + 2, cx + w / 3, top + h - 3, C.bellHi);
+        // Cast bands of old prayer script, frosted over.
+        for (const y of [top + h * .3, top + h * .62]) g.line(cx - w / 2.6, y, cx + w / 2.6, y, C.bellDk);
+        g.ell(cx, top - 1, w / 4.5, 2.5, C.bellDk);
+        g.rect(cx - w / 2 - 1, top + h, w + 3, 3, C.bellDk); g.rect(cx - w / 2, top + h, w + 1, 1, C.rime);
+        // The icicle fringe: uneven teeth hanging from the lip.
+        for (let x = cx - w / 2; x <= cx + w / 2; x += 3) {
+            const length = 3 + ((x * 7) & 3) + ((x * 3) & 1) * 2;
+            g.line(x, top + h + 2, x, top + h + 2 + length, C.ice);
+            g.px(x, top + h + 2, C.rime);
+        }
+        // Snow caked on the shoulder.
+        g.ell(cx - 1, top + 1, w / 3, 2, C.rime);
+    };
+    // Long, bowed legs in a dragging stride.
+    g.poly([[-10, 8], [-3, 8], [-5 - step, 33], [-12 - step, 33]], C.ironDk);
+    g.poly([[3, 8], [10, 8], [11 + step, 33], [4 + step, 33]], C.iron);
+    g.line(8, 10, 9 + step, 31, C.ironHi);
+    g.rect(-14 - step, 32, 10, 4, C.ironDk); g.rect(3 + step, 32, 11, 4, C.iron); g.rect(3 + step, 32, 11, 1, C.rime);
+    // Gaunt, stooped chest of overlapping iron, a chain wound across it.
+    g.poly([[-13, -30], [13, -30], [10, 9], [-10, 9]], C.iron);
+    g.poly([[-13, -30], [-4, -30], [-6, 9], [-10, 9]], C.ironDk);
+    g.line(8, -27, 7, 6, C.ironHi);
+    for (const y of [-22, -14, -6]) g.line(-11, y, 11, y, C.ironDk);
+    for (let i = 0; i < 7; i++) g.px(-11 + i * 4, -26 + i * 4, i % 2 ? C.chain : C.ironHi);
+    g.ell(-14, -27, 6, 5, C.ironDk); g.ell(14, -27, 6, 5, C.iron); g.ell(14, -29, 4, 2, C.rime);
+    // Rust-red rags torn into long tongues below the belt.
+    g.poly([[-9, 2], [9, 2], [8 + sway, 22], [-8 + sway, 22]], C.rag);
+    g.poly([[-9, 2], [-4, 2], [-5 + sway, 22], [-8 + sway, 22]], C.ragDk);
+    g.line(5, 4, 6 + sway, 21, C.ragHi);
+    for (const x of [-7, -3, 1, 5]) g.line(x + sway, 22, x + sway + (x & 1) - step / 2, 26 + (x & 3), x & 2 ? C.rag : C.ragDk);
+    g.rect(-12, 0, 25, 3, C.ironDk); g.rect(-12, 0, 25, 1, C.chain);
+    // Horned skull helm, iced at the brow, hunched forward on a long neck.
+    g.ell(3, -37, 6, 7, C.ironDk);
+    g.line(-2, -41, -8, -50, C.horn, 2); g.line(-8, -50, -6, -54, C.horn);
+    g.line(8, -41, 13, -50, C.horn, 2); g.line(13, -50, 11, -54, C.horn);
+    g.ell(4, -36, 4.4, 5, C.bone); g.line(0, -39, 0, -32, C.boneDk);
+    g.rect(2, -38, 2, 2, C.void); g.rect(6, -38, 2, 2, C.void);
+    g.rect(3, -33, 4, 2, C.void); g.px(4, -33, C.bone);
+    g.line(1, -42, 7, -42, C.rime);
+    for (const x of [1, 4, 7]) g.line(x, -31, x, -29 + (x & 1), C.ice);
+    // Rear arm: a loose length of chain trailing in the snow.
+    g.line(-14, -24, -19, -6, C.ironDk, 3); g.ell(-19, -5, 3, 3, C.iron);
+    for (let i = 0; i < 6; i++) g.px(-20 - i + sway, -2 + i * 5, C.chain);
+    // Forward arm and the bell: dragged low ahead of the keeper, or heaved overhead on its chain.
+    if (raised) {
+        g.line(14, -28, 12, -48, C.iron, 4); g.ell(12, -50, 3.5, 3, C.ironHi);
+        g.line(12, -52, 18, -56, C.chain);
+        bell(22, -64, 18, 26);
+    } else {
+        g.line(14, -24, 20, -10, C.iron, 4); g.ell(21, -9, 3.5, 3, C.ironHi);
+        g.line(21, -7, 26 + sway, -3, C.chain);
+        bell(28 + sway, -2, 22, 28);
+    }
+    b.rim('#cfeaf8', '#05080c', .35, .3);
+    b.outline('#05080a');
+    // The eye sockets burn cold above the outline: the keeper is tracked by its frostlight.
+    const o = s.origin;
+    for (const [x, y] of [[2, -37], [6, -37]]) b.set(o[0] + x, o[1] + y, C.glow);
+    b.set(o[0] + 3, o[1] - 37, C.core);
+    return b;
+}
+
 const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden,
-    frostlingPackling, shardcaster, whitefangStalker, cairnSentinel, hoarfrostCantor, mirrorWisp, mirrorDouble];
+    frostlingPackling, shardcaster, whitefangStalker, cairnSentinel, hoarfrostCantor, mirrorWisp, mirrorDouble,
+    bellOfWinter];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 
