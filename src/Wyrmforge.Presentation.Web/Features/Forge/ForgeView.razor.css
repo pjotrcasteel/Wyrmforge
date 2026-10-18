@@ -323,3 +323,21 @@
     .refuge-home .town-square .town-map .town-door { min-height:60px; }
     .refuge-home .town-square .town-map .menu-begin { bottom:12%; min-height:45px; }
 }
+
+
+/* Keep secondary town shortcuts outside the fixed sound dock's hit area.
+   Bottom-aligned menu controls looked tappable but were intercepted by audio. */
+.refuge-home .town-square .menu-footer { pointer-events:none; }
+.refuge-home .town-square .menu-footer > button { pointer-events:auto; }
+.refuge-home .town-square .menu-footer > button:first-child:not(:last-child) {
+    position:fixed; top:max(63px,calc(env(safe-area-inset-top) + 59px)); right:10px;
+    left:auto; min-height:44px; width:auto; max-width:45vw;
+    padding:6px 10px; background:#16121bd9; border:1px solid #57465e;
+    border-radius:4px; text-align:right; font-size:.72rem; z-index:65;
+}
+.refuge-home .town-square .menu-footer > button:nth-child(2):not(:last-child) {
+    position:fixed; top:max(109px,calc(env(safe-area-inset-top) + 105px)); right:10px;
+    left:auto; min-height:44px; width:auto; max-width:45vw;
+    padding:6px 10px; background:#16121bd9; border:1px solid #57465e;
+    border-radius:4px; text-align:right; font-size:.72rem; z-index:65;
+}
