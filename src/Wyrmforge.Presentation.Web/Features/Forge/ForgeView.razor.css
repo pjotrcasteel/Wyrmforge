@@ -103,7 +103,7 @@
     box-shadow:0 0 25px #000b,0 0 15px #aa754255; color:#ffdfad; font:700 1.08rem system-ui,sans-serif;
     letter-spacing:.16em; cursor:pointer; }
 .title-start span { font-size:1.7rem; }
-.menu-home .town-square { position:relative; display:block; min-height:max(605px,calc(100dvh - 30px));
+.menu-home .town-square { position:relative; display:block; min-height:calc(100dvh - 30px);
     padding:0; border:0; box-shadow:none; background:transparent; backdrop-filter:none; }
 .town-square::before { content:""; position:absolute; inset:0 -10px; pointer-events:none;
     background:linear-gradient(180deg,#0b0a10c9,#100e15aa 38%,#0a0810b8 78%,#090710e6);
@@ -152,3 +152,9 @@
     .town-map .menu-destination small { font-size:.51rem; }
 }
 @media(prefers-reduced-motion:reduce) { .title-start,.town-map .menu-destination { transition:none; } }
+
+/* The spatial map provides hit targets only at its locations, not an invisible
+   full-screen panel that blocks player identity and other town controls. */
+.town-square .town-map { pointer-events:none; }
+.town-square .town-map button { pointer-events:auto; }
+.menu-home .player-identity { z-index:5; }
