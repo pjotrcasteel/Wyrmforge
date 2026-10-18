@@ -1792,3 +1792,69 @@
     font-size:.6rem; color:inherit; }
 .nexus-equipped .nexus-rack-socket b,.nexus-equipped .nexus-rack-socket small {
     overflow:hidden; max-width:100%; text-overflow:ellipsis; white-space:nowrap; }
+
+
+/* Mobile Nexus v2: the Web owns the viewport; sockets expand when requested,
+   and the selected skill appears after the Web instead of covering its nodes. */
+.nexus-equipped { display:block; max-width:100%; padding:6px 0 3px; border-bottom:0; }
+.nexus-equipped-head { display:flex; gap:12px; min-width:0; align-items:center; justify-content:space-between; }
+.nexus-equipped-head > div { flex:1 1 auto; min-width:0; }
+.nexus-equipped-head span { font-size:.64rem; line-height:1.35; letter-spacing:.13em; }
+.nexus-equipped-head strong { font:500 .73rem/1.4 system-ui,sans-serif; color:#d8c6dd; }
+.nexus-equipped-head button { min-height:44px; padding:7px 12px; border:1px solid #9771ae; border-radius:3px;
+    background:#2a1d36; color:#f6eafc; white-space:nowrap; }
+.nexus-rack-details { width:100%; max-width:100%; margin-top:3px; border-bottom:1px solid #413348; }
+.nexus-rack-details > summary { display:flex; align-items:center; justify-content:space-between;
+    min-height:38px; padding:6px 0; font:600 .71rem/1.2 system-ui,sans-serif; letter-spacing:.01em;
+    color:#c4a4d8; list-style:none; cursor:pointer; }
+.nexus-rack-details > summary::-webkit-details-marker { display:none; }
+.nexus-rack-details > summary span { font-size:1.1rem; }
+.nexus-rack-details[open] > summary span { transform:rotate(180deg); }
+.nexus-equipped .nexus-socket-rack { display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px; padding:6px 1px 12px; max-width:100%; }
+.nexus-equipped .nexus-rack-socket { box-sizing:border-box; position:relative; display:flex;
+    flex-direction:row; justify-content:flex-start; gap:10px; width:100%; max-width:100%;
+    min-width:0; min-height:66px; padding:10px 12px; text-align:left;
+    border:1px solid #584363; border-radius:7px; background:linear-gradient(145deg,#2a2231,#1a1521);
+    color:#ebdeef; cursor:pointer; overflow:hidden; }
+.nexus-equipped .nexus-rack-socket::after { display:none; }
+.nexus-equipped .nexus-rack-socket i { flex:0 0 22px; font-size:1rem; text-align:center; }
+.nexus-equipped .nexus-rack-socket span { display:flex; flex-direction:column; gap:3px; min-width:0; max-width:100%;
+    overflow:visible; color:inherit; text-align:left; }
+.nexus-equipped .nexus-rack-socket b { font:600 .73rem/1.22 Georgia,serif; overflow:visible;
+    text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }
+.nexus-equipped .nexus-rack-socket small { font:.65rem/1.2 system-ui,sans-serif; color:#baa9c4;
+    white-space:normal; overflow:visible; overflow-wrap:anywhere; }
+.nexus-equipped .nexus-rack-socket.occupied { border-color:#c5a16d; }
+.nexus-equipped .nexus-rack-socket.locked { opacity:.65; }
+.nexus-equipped .nexus-rack-socket:focus-visible { outline:2px solid #f0ce98; outline-offset:2px; }
+
+@media(max-width:760px) {
+ .build-view { overflow-x:clip; gap:5px; }
+ .web-layout { display:grid; grid-template-columns:minmax(0,1fr); min-height:0; gap:8px; }
+ .web-layout .atlas-stage { order:0; min-height:0; height:clamp(340px,60dvh,700px); }
+ .web-layout.inspecting .atlas-stage { height:clamp(305px,47dvh,510px); }
+ .web-layout .arcane-web-viewport { height:100%; min-height:0; }
+ .web-layout .node-inspector { display:none; position:relative; top:auto; right:auto; bottom:auto; left:auto;
+    order:1; grid-column:1; width:100%; min-width:0; height:auto; min-height:0;
+    max-height:none; overflow:visible; transform:none; opacity:1; pointer-events:auto;
+    margin:0; padding:13px 14px 18px; gap:9px; border:1px solid #6e517a;
+    border-radius:8px; background:linear-gradient(160deg,#251d2b,#14121b);
+    box-shadow:none; backdrop-filter:none; transition:none; }
+ .web-layout .node-inspector.open { display:grid; transform:none; opacity:1; }
+ .web-layout .node-inspector .inspector-close { grid-row:1; align-self:start; }
+ .web-layout .node-inspector .inspector-title h2 { overflow-wrap:anywhere; }
+ .web-layout .node-inspector .nexus-action { position:static; }
+ .nexus-rack-details > summary { min-height:43px; }
+ .nexus-equipped .nexus-rack-socket { min-height:70px; }
+ .nexus-equipped-head { gap:8px; }
+ .nexus-equipped-head button { font-size:.67rem; padding:6px 9px; }
+ .nexus-equipped .nexus-socket-rack { gap:6px; }
+}
+@media(max-width:345px) {
+ .nexus-equipped .nexus-rack-socket { padding:8px 6px; gap:5px; }
+ .nexus-equipped .nexus-rack-socket b { font-size:.67rem; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .web-layout .node-inspector { transition:none; }
+}

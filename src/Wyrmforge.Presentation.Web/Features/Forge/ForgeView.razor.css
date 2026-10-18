@@ -202,3 +202,142 @@
 @media(prefers-reduced-motion:reduce) {
     .town-square::after { animation:none; }
 }
+
+
+/* Refuge environment, October visual acceptance.
+   Use the project's original illustrated protected-city scene, not the placeholder hub tile.
+   World locations are part of the scene; labels are map markers rather than menu cards. */
+.arrival-home .hub-backdrop,
+.refuge-home .hub-backdrop {
+    background: linear-gradient(180deg, rgba(8,9,12,.23) 0%, rgba(9,9,14,.11) 50%, rgba(6,7,12,.74) 100%),
+        url('art/refuge-scene.png') center 52% / cover no-repeat #131319;
+    image-rendering:auto;
+}
+.arrival-home .hub-rain,.refuge-home .hub-rain { opacity:.16; }
+.arrival-home .player-identity { display:none; }
+.arrival-home .title-scene { min-height:100dvh; justify-content:space-between; padding:clamp(70px,14dvh,160px) 10px max(6dvh,45px); }
+.arrival-home .title-scene::before { background:linear-gradient(180deg,#0a0c13af 0%,transparent 32%,transparent 58%,#090b12cc 100%); }
+.arrival-home .title-scene h1 { order:-1; margin:0; color:#f7ead0; font-size:clamp(2rem,9vw,3.6rem); text-shadow:0 3px 8px #0b0a0c,0 0 30px #000; }
+.arrival-home .title-mage { display:none; } /* The existing road illustration already has our mage. */
+.arrival-home .title-start { min-height:58px; width:min(310px,86%); background:linear-gradient(#d4ab66,#aa8043);
+    border:1px solid #eed19a; border-radius:3px; color:#201713; box-shadow:0 8px 30px #0008; font-size:.9rem; }
+.arrival-home .title-start span { color:#382313; }
+.refuge-home .shell-content { width:min(860px,100%); max-width:100%; }
+.refuge-home .town-square {
+    min-height:calc(100dvh - 8px); height:auto; isolation:isolate;
+    overflow:hidden; border:0; background:none; box-shadow:none; backdrop-filter:none;
+}
+.refuge-home .town-scene-shading { position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:linear-gradient(180deg,#0c0d14b8 0%,transparent 18%,transparent 62%,#09090fcf 94%); }
+.refuge-home .town-square::before { background:none; }
+.refuge-home .town-square::after { opacity:.43; }
+.refuge-home .town-square .menu-brand { top:7%; z-index:2; gap:2px; }
+.refuge-home .town-square .menu-brand .menu-sigil { display:none; }
+.refuge-home .town-square .menu-brand h1 { font-size:clamp(.95rem,3.6vw,1.25rem); letter-spacing:.3em; }
+.refuge-home .town-place-name { position:absolute; top:14%; left:0; width:100%; z-index:2; text-align:center;
+    color:#e9dccb; font:400 clamp(1.25rem,5vw,2rem)/1.1 Georgia,serif; letter-spacing:.23em;
+    text-shadow:0 3px 12px #0a0709; pointer-events:none; }
+.refuge-home .town-square .town-mage { top:64%; left:calc(50% - 18px); transform:scale(1.45);
+    filter:drop-shadow(0 4px 2px #080709); }
+.refuge-home .town-square .town-map { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.refuge-home .town-square .town-map button { pointer-events:auto; }
+.refuge-home .town-square .town-map .town-door { position:absolute; display:flex; flex-direction:column; justify-content:center;
+    align-items:center; gap:3px; width:90px; max-width:25%; min-height:74px; padding:4px;
+    clip-path:none; border:0!important; border-bottom:0!important; border-radius:10px; background:transparent;
+    color:#f5e5c9; box-shadow:none; text-shadow:0 2px 5px #000,0 0 11px #000; }
+.refuge-home .town-square .town-map .town-door::before { position:static; content:""; display:none; }
+.refuge-home .town-square .town-map .town-door::after { position:absolute; inset:0; height:auto; width:auto;
+    content:""; z-index:-1; border:0; border-radius:10px; background:#0c0a0f66;
+    box-shadow:0 0 0 1px #c79b5657 inset,0 6px 18px #0005; opacity:.78; }
+.refuge-home .town-square .town-map .town-door:not(:disabled):hover::after,
+.refuge-home .town-square .town-map .town-door:focus-visible::after { background:#33241ad9; opacity:1; }
+.refuge-home .town-square .town-map .town-door > span { display:flex; flex-direction:column; gap:3px; align-items:center;
+    min-width:0; font:500 .76rem/1.1 Georgia,serif; white-space:normal; text-align:center; }
+.refuge-home .town-square .town-map .town-door i.px-icon { display:grid; place-items:center; width:28px; height:28px;
+    color:#eec58c; font-size:1.15rem; filter:drop-shadow(0 0 6px #efaa5d75); }
+.refuge-home .town-square .town-map .town-door small { display:none; }
+.refuge-home .town-square .town-map .town-door:disabled { opacity:.48; filter:grayscale(1); }
+.refuge-home .town-square .town-map .town-door--gate { top:26%; left:calc(50% - 45px); }
+.refuge-home .town-square .town-map .town-door--build { top:38%; left:6%; }
+.refuge-home .town-square .town-map .town-door--forge { top:38%; right:6%; }
+.refuge-home .town-square .town-map .town-door--codex { top:59%; left:6%; }
+.refuge-home .town-square .town-map .town-door--legends { top:59%; right:6%; }
+.refuge-home .town-square .town-map .menu-begin { position:absolute; left:50%; bottom:12%; transform:translateX(-50%);
+    width:min(300px,82%); min-height:55px; margin:0; border:1px solid #dfba7d; border-radius:4px;
+    background:linear-gradient(130deg,#382c2af2,#1c171df5); box-shadow:0 6px 22px #0008;
+    color:#f6d9a6; font-size:.8rem; letter-spacing:.12em; }
+.refuge-home .town-square .menu-footer { left:7%; right:7%; bottom:2%; border:0; background:linear-gradient(90deg,transparent,#0b0b11b8,transparent); }
+.refuge-home .town-square .menu-footer button { color:#e0d2c8; }
+@media(max-width:370px) {
+ .refuge-home .town-square .town-map .town-door { width:78px; min-height:68px; }
+ .refuge-home .town-square .town-map .town-door--gate { left:calc(50% - 39px); }
+ .refuge-home .town-square .town-map .town-door--build,
+ .refuge-home .town-square .town-map .town-door--codex { left:1%; }
+ .refuge-home .town-square .town-map .town-door--forge,
+ .refuge-home .town-square .town-map .town-door--legends { right:1%; }
+}
+@media(orientation:landscape) and (max-height:530px) {
+ .refuge-home .town-square { min-height:440px; }
+ .refuge-home .town-place-name { top:11%; }
+ .refuge-home .town-square .town-map .town-door--gate { top:22%; }
+ .refuge-home .town-square .town-map .town-door--build,
+ .refuge-home .town-square .town-map .town-door--forge { top:35%; }
+ .refuge-home .town-square .town-map .town-door--codex,
+ .refuge-home .town-square .town-map .town-door--legends { top:57%; }
+ .refuge-home .town-square .town-map .menu-begin { bottom:11%; }
+}
+@media(prefers-reduced-motion:reduce) { .refuge-home .town-square::after { animation:none; } }
+
+
+/* Regression: physical location hit zones must never inherit the old menu's
+   opposite-side position, or Forge overlays Nexus and steals taps. */
+.refuge-home .town-square .town-map .town-door--gate { left:calc(50% - 45px); right:auto; }
+.refuge-home .town-square .town-map .town-door--build,
+.refuge-home .town-square .town-map .town-door--codex { left:6%; right:auto; }
+.refuge-home .town-square .town-map .town-door--forge,
+.refuge-home .town-square .town-map .town-door--legends { left:auto; right:6%; }
+/* The pictogram atlas makes overlapping unreadable glyphs at the game's menu
+   size. Use one in-world sigil for each destination, then a readable name. */
+.refuge-home .town-square .town-map .town-door i.px-icon { display:none; }
+.refuge-home .town-square .town-map .town-door > span::before {
+    content:"✦"; display:block; width:24px; height:24px; margin:0 auto 2px;
+    font:500 1.22rem/24px Georgia,serif; color:#dbaf73;
+    text-shadow:0 0 13px #c28f5c;
+}
+.refuge-home .town-square .town-map .town-door:disabled > span::before { color:#82788a; }
+.refuge-home .town-square .menu-footer > button:last-child {
+    position:fixed; right:10px; top:max(8px,env(safe-area-inset-top)); z-index:75;
+    min-width:44px; min-height:44px; padding:8px 12px; border:1px solid #634d62;
+    border-radius:22px; background:#191421df; color:#f5e5cc;
+}
+@media(max-width:370px) {
+    .refuge-home .town-square .town-map .town-door--build,
+    .refuge-home .town-square .town-map .town-door--codex { left:1%; right:auto; }
+    .refuge-home .town-square .town-map .town-door--forge,
+    .refuge-home .town-square .town-map .town-door--legends { left:auto; right:1%; }
+    .refuge-home .town-square .town-map .town-door--gate { left:calc(50% - 39px); right:auto; }
+}
+@media(orientation:landscape) and (max-height:530px) {
+    .refuge-home .town-square { min-height:calc(100dvh - 8px); }
+    .refuge-home .shell-content { min-height:0; }
+    .refuge-home .town-square .town-map .town-door { min-height:60px; }
+    .refuge-home .town-square .town-map .menu-begin { bottom:12%; min-height:45px; }
+}
+
+
+/* Keep secondary town shortcuts outside the fixed sound dock's hit area.
+   Bottom-aligned menu controls looked tappable but were intercepted by audio. */
+.refuge-home .town-square .menu-footer { pointer-events:none; }
+.refuge-home .town-square .menu-footer > button { pointer-events:auto; }
+.refuge-home .town-square .menu-footer > button:first-child:not(:last-child) {
+    position:fixed; top:max(63px,calc(env(safe-area-inset-top) + 59px)); right:10px;
+    left:auto; min-height:44px; width:auto; max-width:45vw;
+    padding:6px 10px; background:#16121bd9; border:1px solid #57465e;
+    border-radius:4px; text-align:right; font-size:.72rem; z-index:65;
+}
+.refuge-home .town-square .menu-footer > button:nth-child(2):not(:last-child) {
+    position:fixed; top:max(109px,calc(env(safe-area-inset-top) + 105px)); right:10px;
+    left:auto; min-height:44px; width:auto; max-width:45vw;
+    padding:6px 10px; background:#16121bd9; border:1px solid #57465e;
+    border-radius:4px; text-align:right; font-size:.72rem; z-index:65;
+}
