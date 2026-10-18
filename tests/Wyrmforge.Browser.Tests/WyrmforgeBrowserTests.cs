@@ -36,33 +36,41 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_Refuge_HasIllustratedTownAndAccessibleBuildings(int width, int height)
+    public async Task Mobile_Refuge_HasThreeScrollableSlicesAndClickableBuildings(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
         await OpenAsync();
 
         await Expect(Page.GetByLabel("Refuge town square")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".town-door")).ToHaveCountAsync(5);
-
-        var scene = Page.Locator(".town-viewport .town-scene");
+        await Expect(Page.Locator(".town-hotspot")).ToHaveCountAsync(5);
+        var scene = Page.Locator(".town-panorama-art");
         await Expect(scene).ToBeVisibleAsync();
-        Assert.IsTrue((await scene.GetAttributeAsync("src"))?.Contains("refuge-square.svg", StringComparison.Ordinal) == true,
-            "Refuge must render the in-town courtyard, not the road-to-city welcome painting.");
+        Assert.IsTrue((await scene.GetAttributeAsync("src"))?.Contains("refuge-town-panorama.png", StringComparison.Ordinal) == true,
+            "The approved panorama must replace the old SVG courtyard.");
 
-        var positionsValid = await Page.EvaluateAsync<bool>(@"() => [...document.querySelectorAll('.town-door')].every(element => {
-            const box = element.getBoundingClientRect();
-            return box.width >= 44 && box.height >= 44 && box.left >= 0 &&
-                box.right <= innerWidth + 1 && box.top >= 0 && box.bottom <= innerHeight + 1;
-        })");
-        Assert.IsTrue(positionsValid, "All town buildings must remain reachable on a narrow phone.");
-        var mage = Page.Locator(".town-viewport .town-mage");
-        var before = await mage.EvaluateAsync<string>("element => element.style.left");
-        var bounds = await Page.Locator(".town-viewport").BoundingBoxAsync();
-        Assert.IsNotNull(bounds);
-        await Page.Mouse.ClickAsync((float)(bounds.X + bounds.Width * .63), (float)(bounds.Y + bounds.Height * .81));
-        await Page.WaitForTimeoutAsync(750);
-        var after = await mage.EvaluateAsync<string>("element => element.style.left");
-        Assert.AreNotEqual(before, after, "A player must be able to walk in Refuge, not just tap menu buttons.");
+        await Page.WaitForFunctionAsync(@"() => {
+            const image = document.querySelector('.town-panorama-art');
+            return image && image.complete && image.naturalWidth === 2172 && image.naturalHeight === 724;
+        }");
+        var viewport = Page.Locator(".town-panorama-viewport");
+        await Page.WaitForFunctionAsync(@"() => {
+            const view = document.querySelector('.town-panorama-viewport');
+            return view && Math.abs(view.scrollLeft - view.clientWidth) < 3;
+        }");
+        var threeSlices = await viewport.EvaluateAsync<bool>("element => Math.abs(element.scrollWidth / element.clientWidth - 3) < .05");
+        Assert.IsTrue(threeSlices, "The same town art must occupy exactly three horizontal slices.");
+        await viewport.EvaluateAsync("element => element.scrollTo({ left: 0, behavior: 'auto' })");
+        await Page.WaitForFunctionAsync("() => document.querySelector('.town-panorama-viewport').scrollLeft < 3");
+        await Expect(Page.Locator(".town-hotspot--build")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-hotspot--forge")).ToHaveCountAsync(1);
+        await viewport.EvaluateAsync("element => element.scrollTo({ left: element.clientWidth * 2, behavior: 'auto' })");
+        await Page.WaitForFunctionAsync(@"() => {
+            const view = document.querySelector('.town-panorama-viewport');
+            return Math.abs(view.scrollLeft - view.clientWidth * 2) < 3;
+        }");
+        await Expect(Page.Locator(".town-hotspot--codex")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-hotspot--legends")).ToHaveCountAsync(1);
+        await viewport.EvaluateAsync("element => element.scrollTo({ left: element.clientWidth, behavior: 'auto' })");
         await ScreenshotAsync($"refuge-town-{width}.png");
     }
 

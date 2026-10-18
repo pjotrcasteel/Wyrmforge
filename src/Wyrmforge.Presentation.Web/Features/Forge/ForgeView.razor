@@ -68,27 +68,27 @@
                             </button>
                         }
                     </header>
-                    <div class="town-viewport" tabindex="0" aria-label="Walkable Refuge courtyard">
-                        <img class="town-scene" src="art/refuge-square.svg" alt="" draggable="false" />
-                        <div class="town-mage" aria-hidden="true"></div>
-                        <nav class="menu-actions town-map" aria-label="Town locations">
-                            @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
-                            {
-                                var unlocked = IsUnlocked(item.Section);
-                                <button class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant()"
-                                        disabled="@(!unlocked)"
-                                        aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)"
-                                        @onclick="() => Navigate(item.Section)">
-                                    <span><i class="px-icon px-sm px-@item.Icon" aria-hidden="true"></i>@item.Label</span>
-                                    <small>@(!unlocked ? UnlockHint(item.Section) : string.Empty)</small>
-                                </button>
-                            }
-                            <button class="menu-destination town-door town-door--legends"
-                                    disabled="@(!Progress.LeaderboardUnlocked)"
-                                    aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()">
-                                <span>Hall of Fame</span>
-                            </button>
-                        </nav>
+                    <div class="town-viewport town-panorama-viewport" tabindex="0" role="region" aria-label="Refuge town. Swipe left or right to explore. World Gate in the central square.">
+                        <div class="town-panorama">
+                            <img class="town-panorama-art" src="art/refuge-town-panorama.png" alt="" draggable="false" />
+                            <div class="town-snap" aria-hidden="true"></div>
+                            <div class="town-snap" aria-hidden="true"></div>
+                            <div class="town-snap" aria-hidden="true"></div>
+                            <nav class="menu-actions town-hotspots" aria-label="Town buildings">
+                                @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
+                                {
+                                    var unlocked = IsUnlocked(item.Section);
+                                    <button class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
+                                            type="button" disabled="@(!unlocked)"
+                                            title="@(!unlocked ? UnlockHint(item.Section) : item.Label)"
+                                            aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
+                                            @onclick="() => Navigate(item.Section)"><span class="town-location-label">@item.Label</span></button>
+                                }
+                                <button class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
+                                        disabled="@(!Progress.LeaderboardUnlocked)" title="Hall of Fame"
+                                        aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span class="town-location-label">Hall of Fame</span></button>
+                            </nav>
+                        </div>
                     </div>
                     <div class="town-action-dock">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") <span aria-hidden="true">›</span></button>
