@@ -1,0 +1,75 @@
+/* Exact approved 2172x724 artwork: one continuous 3-slice panorama.
+   This stylesheet loads AFTER ForgeView's scoped styles. */
+.refuge-home .town-panorama-viewport {
+  box-sizing:border-box;position:relative;display:block;flex:0 1 auto;
+  width:min(100%,calc(100dvh - 151px),724px);height:auto;max-height:none;
+  aspect-ratio:1/1;min-width:0;min-height:0;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;
+  border:1px solid #5c4b3a;border-radius:2px;background:#14121a;
+  box-shadow:0 8px 32px #0009;touch-action:pan-x;
+  -webkit-overflow-scrolling:touch;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.refuge-home .town-panorama-viewport::-webkit-scrollbar{display:none}
+.refuge-home .town-panorama-viewport:focus-visible{outline:2px solid #f1c683;outline-offset:3px}
+.refuge-home .town-panorama {
+  position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  width:300%;height:100%;isolation:isolate;
+}
+.refuge-home .town-panorama-art {
+  position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;
+  object-fit:fill;image-rendering:auto;pointer-events:none;-webkit-user-drag:none;
+}
+.refuge-home .town-snap {
+  position:relative;z-index:0;scroll-snap-align:start;scroll-snap-stop:always;pointer-events:none;
+}
+.refuge-home .town-hotspots{position:absolute;z-index:2;inset:0;pointer-events:none}
+.refuge-home .town-hotspot {
+  position:absolute;display:block;min-width:0;min-height:0;padding:0;margin:0;
+  border:0;border-radius:0;background:transparent;color:transparent;cursor:pointer;
+  pointer-events:auto;-webkit-tap-highlight-color:transparent;
+  transition:background-color 120ms ease-out,filter 120ms ease-out;
+}
+.refuge-home .town-hotspot:hover:not(:disabled),
+.refuge-home .town-hotspot:focus-visible {
+  background:rgba(242,184,97,.15);filter:drop-shadow(0 0 10px rgba(242,185,102,.85));
+}
+.refuge-home .town-hotspot:focus-visible{outline:3px solid #f1c683;outline-offset:-2px}
+.refuge-home .town-hotspot:disabled{cursor:default;pointer-events:none}
+/* Architecture-shaped hotspots rather than labels placed over the road. */
+.refuge-home .town-hotspot--nexus {
+  left:.7%;top:0;width:31.6%;height:45%;
+  clip-path:polygon(0 20%,14% 11%,33% 3%,66% 0,100% 23%,100% 100%,0 100%);
+}
+.refuge-home .town-hotspot--forge {
+  left:.6%;top:43%;width:31.4%;height:53%;
+  clip-path:polygon(0 5%,17% 2%,39% 0,100% 13%,100% 92%,10% 100%,0 80%);
+}
+.refuge-home .town-hotspot--gate {
+  left:42.3%;top:0;width:15.5%;height:38%;
+  clip-path:polygon(0 0,100% 0,100% 98%,76% 98%,71% 68%,29% 68%,23% 100%,0 100%);
+}
+.refuge-home .town-hotspot--codex {
+  left:67.5%;top:0;width:31%;height:46%;
+  clip-path:polygon(10% 18%,45% 0,97% 17%,100% 89%,75% 100%,0 99%,0 34%);
+}
+.refuge-home .town-hotspot--legends {
+  left:68.1%;top:43%;width:30.9%;height:53%;
+  clip-path:polygon(0 29%,18% 9%,51% 0,100% 28%,100% 95%,0 100%);
+}
+/* The illustrated central notice board is reserved for future features. */
+.refuge-home .town-square{gap:6px;background:#101118}
+.refuge-home .town-square .town-action-dock{min-height:78px;gap:0}
+.refuge-home .town-square .town-action-dock .menu-begin {
+  width:min(410px,100%);min-height:48px;background:linear-gradient(115deg,#3b2b23,#1d1821);
+}
+@media(max-width:520px) {
+  .refuge-home .town-square{justify-content:center}
+  .refuge-home .town-panorama-viewport{width:100%;max-height:none}
+}
+@media(orientation:landscape) and (max-height:540px){
+  .refuge-home .town-panorama-viewport{width:min(54dvh,55vw);height:auto;max-height:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .refuge-home .town-hotspot{transition:none}
+  .refuge-home .town-panorama-viewport{scroll-behavior:auto}
+}
