@@ -74,19 +74,19 @@
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
-                            <nav class="town-hotspots" aria-label="Town buildings">
+                            <nav class="menu-actions town-hotspots" aria-label="Town buildings">
                                 @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                                 {
                                     var unlocked = IsUnlocked(item.Section);
-                                    <button class="town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
+                                    <button class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
                                             type="button" disabled="@(!unlocked)"
                                             title="@(!unlocked ? UnlockHint(item.Section) : item.Label)"
-                                            aria-label="@(!unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
-                                            @onclick="() => Navigate(item.Section)"></button>
+                                            aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
+                                            @onclick="() => Navigate(item.Section)"><span class="town-location-label">@item.Label</span></button>
                                 }
-                                <button class="town-hotspot town-hotspot--legends" type="button"
+                                <button class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
                                         disabled="@(!Progress.LeaderboardUnlocked)" title="Hall of Fame"
-                                        aria-label="Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"></button>
+                                        aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span class="town-location-label">Hall of Fame</span></button>
                             </nav>
                         </div>
                     </div>

@@ -36,7 +36,7 @@
 .game-shell.refuge-home .town-hotspot:focus-visible{outline:3px solid #f1c683;outline-offset:-2px}
 .game-shell.refuge-home .town-hotspot:disabled{cursor:default;pointer-events:none}
 /* Architecture-shaped hotspots rather than labels placed over the road. */
-.game-shell.refuge-home .town-hotspot--nexus {
+.game-shell.refuge-home .town-hotspot--build {
   left:.7%;top:0;width:31.6%;height:45%;
   clip-path:polygon(0 20%,14% 11%,33% 3%,66% 0,100% 23%,100% 100%,0 100%);
 }
@@ -72,4 +72,10 @@
 @media(prefers-reduced-motion:reduce){
   .game-shell.refuge-home .town-hotspot{transition:none}
   .game-shell.refuge-home .town-panorama-viewport{scroll-behavior:auto}
+}
+
+/* Names remain accessible to screen readers and legacy navigation tests without overprinting the approved artwork. */
+.game-shell.refuge-home .town-location-label {
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
 }
