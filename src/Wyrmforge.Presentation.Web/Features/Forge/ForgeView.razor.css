@@ -341,3 +341,133 @@
     padding:6px 10px; background:#16121bd9; border:1px solid #57465e;
     border-radius:4px; text-align:right; font-size:.72rem; z-index:65;
 }
+
+
+/* October Refuge rebuild: ARRIVAL and TOWN are two different game locations.
+   Arrival displays the whole road illustration; the town is its own courtyard.
+   Keep click regions anchored to visible building entrances, not an overlay menu. */
+.arrival-home .hub-backdrop {
+  background:#0d0e16;
+  image-rendering:auto;
+}
+.arrival-home .hub-backdrop::before {
+  content:""; position:absolute; inset:-18px;
+  background:url('art/refuge-scene.png') center / cover no-repeat;
+  filter:blur(19px) brightness(.33); opacity:.67;
+}
+.arrival-home .hub-backdrop::after {
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg,#070910b9 0%,transparent 25%,transparent 70%,#07080ed9 100%),
+    url('art/refuge-scene.png') center / contain no-repeat;
+}
+.arrival-home .hub-rain { z-index:1; }
+.arrival-home .title-scene { min-height:100dvh; justify-content:space-between;
+  gap:16px; padding:max(60px,env(safe-area-inset-top)) 12px max(54px,env(safe-area-inset-bottom)); }
+.arrival-home .title-scene h1 { order:0; margin:0; max-width:100%;
+  font:500 clamp(1.7rem,8vw,3.6rem)/1.12 Georgia,serif; letter-spacing:.15em; }
+.arrival-home .title-scene .title-mage { display:none; }
+.arrival-home .title-scene .title-start { margin-top:auto; flex:0 0 auto; width:min(330px,92%);
+  min-height:56px; font-size:.87rem; }
+.arrival-home .title-settings { flex:0 0 auto; min-height:44px; padding:6px 18px; background:#09090ebd;
+  border:0; color:#eadbc7; font:500 .78rem/1.2 system-ui,sans-serif; cursor:pointer; }
+.arrival-home .title-settings:focus-visible { outline:2px solid #e7c481; outline-offset:2px; }
+
+.refuge-home { min-height:100dvh; background:#101118; }
+.refuge-home .hub-backdrop { display:none; }
+.refuge-home .shell-content { width:100%; min-height:100dvh; max-width:100%;
+  display:flex; justify-content:center; padding:0 6px; overflow:hidden; }
+.refuge-home .town-square { box-sizing:border-box; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:5px; width:min(760px,100%);
+  height:100dvh; min-height:0; max-height:100dvh; margin:0; padding:8px 0 max(8px,env(safe-area-inset-bottom));
+  overflow:hidden; border:0; box-shadow:none; background:#101118; backdrop-filter:none; }
+.refuge-home .town-square::before,.refuge-home .town-square::after { display:none!important; }
+.refuge-home .town-square .menu-brand { position:relative; inset:auto; z-index:2;
+  flex:0 0 auto; width:100%; min-height:29px; padding:0 68px; }
+.refuge-home .town-square .menu-brand h1 { margin:0; font:500 1.18rem/1.1 Georgia,serif;
+  letter-spacing:.27em; color:#e4cfaa; }
+.refuge-home .town-square .hunter-menu-progress { margin:2px auto 0; min-height:18px; max-width:230px;
+  padding:2px 6px; font-size:.6rem; }
+.refuge-home .town-viewport { box-sizing:border-box; position:relative; flex:0 1 auto;
+  width:min(100%,calc((100dvh - 167px)*.5625),640px); max-height:calc(100dvh - 167px);
+  aspect-ratio:9/16; min-width:0; min-height:0; overflow:hidden; isolation:isolate;
+  border:1px solid #524b49; border-radius:5px; background:#1b1a20; box-shadow:0 6px 34px #000a;
+  -webkit-tap-highlight-color:transparent; touch-action:pan-y; }
+.refuge-home .town-viewport:focus-visible { outline:2px solid #d2b079; outline-offset:2px; }
+.refuge-home .town-scene { display:block; position:absolute; inset:0; z-index:0;
+  width:100%; height:100%; object-fit:fill; user-select:none; pointer-events:none; }
+.refuge-home .town-square .town-mage { position:absolute; z-index:3; top:81%; left:50%;
+  width:36px; height:42px; transform:translate(-50%,-50%) scale(1.35);
+  transform-origin:center; pointer-events:none; background-color:transparent;
+  filter:drop-shadow(0 4px 3px #000); }
+.refuge-home .town-square .town-mage.walking { animation:refuge-mage-step .22s steps(2) infinite; }
+.refuge-home .town-square .town-mage.facing-left { filter:drop-shadow(0 4px 3px #000); }
+@keyframes refuge-mage-step { 50% { transform:translate(-50%,-50%) scale(1.36) translateY(-2px); } }
+.refuge-home .town-square .town-map { position:absolute; z-index:4; inset:0; display:block; pointer-events:none; }
+.refuge-home .town-square .town-map button { pointer-events:auto; }
+.refuge-home .town-square .town-map .town-door,
+.refuge-home .town-square .town-map .town-door:disabled {
+  position:absolute; box-sizing:border-box; width:24%; max-width:120px; min-width:65px;
+  min-height:55px; padding:5px 3px; display:flex; flex-direction:column; justify-content:center;
+  gap:3px; align-items:center; border:0!important; border-radius:0; clip-path:none;
+  background:none; color:#f1dfbf; box-shadow:none; text-align:center;
+  text-shadow:0 2px 4px #000,0 0 11px #000; opacity:1; cursor:pointer; }
+.refuge-home .town-square .town-map .town-door:disabled { opacity:.45; filter:grayscale(1); cursor:not-allowed; }
+.refuge-home .town-square .town-map .town-door::before,
+.refuge-home .town-square .town-map .town-door::after { display:none; content:none; }
+.refuge-home .town-square .town-map .town-door > span { display:flex; flex-direction:column;
+  align-items:center; min-width:0; font:600 clamp(.60rem,2.5vw,.88rem)/1.15 Georgia,serif; white-space:normal; }
+.refuge-home .town-square .town-map .town-door > span::before { content:"✦"; display:block; font-size:1.18rem;
+  margin:0 0 2px; color:#edc58a; text-shadow:0 0 8px #ddaa5a; }
+.refuge-home .town-square .town-map .town-door small,
+.refuge-home .town-square .town-map .town-door i.px-icon { display:none; }
+.refuge-home .town-square .town-map .town-door:focus-visible { outline:2px solid #edc58a; outline-offset:0; background:#15121a9c; }
+.refuge-home .town-square .town-map .town-door--gate { left:38%; top:13%; right:auto; }
+.refuge-home .town-square .town-map .town-door--build { left:0; top:39%; right:auto; }
+.refuge-home .town-square .town-map .town-door--forge { left:auto; right:0; top:40%; }
+.refuge-home .town-square .town-map .town-door--codex { left:0; top:72%; right:auto; }
+.refuge-home .town-square .town-map .town-door--legends { left:auto; right:0; top:72%; }
+.refuge-home .town-square .town-action-dock { box-sizing:border-box; position:static; flex:0 0 auto;
+  width:min(640px,100%); display:grid; gap:2px; justify-items:stretch; min-height:94px; padding:0 7px; }
+.refuge-home .town-square .town-action-dock .menu-begin { box-sizing:border-box; position:static;
+  width:100%; max-width:440px; min-height:50px; margin:0 auto; padding:8px 15px;
+  border:1px solid #bb9559; border-radius:4px; background:linear-gradient(120deg,#4c382d,#201923);
+  color:#f4dbb0; box-shadow:0 5px 18px #0009; text-align:center; transform:none; 
+  justify-content:center; font-size:.78rem; letter-spacing:.13em; }
+.refuge-home .town-square .town-action-dock .menu-footer { box-sizing:border-box; position:static;
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  border:0; background:none; padding:0; min-height:42px; }
+.refuge-home .town-square .town-action-dock .menu-footer > button,
+.refuge-home .town-square .town-action-dock .menu-footer > button:first-child:not(:last-child),
+.refuge-home .town-square .town-action-dock .menu-footer > button:nth-child(2):not(:last-child),
+.refuge-home .town-square .town-action-dock .menu-footer > button:last-child {
+  position:static; inset:auto; display:inline-flex; justify-content:center;
+  flex:0 1 auto; min-width:44px; min-height:42px; padding:5px 8px;
+  border:0; border-radius:4px; background:transparent; color:#d6c7b3;
+  font:600 .70rem/1.1 system-ui,sans-serif; text-align:center; z-index:4; }
+.refuge-home .town-square .town-action-dock .menu-footer > button:last-child { margin-left:auto; }
+.refuge-home .player-identity { position:absolute; top:max(8px,env(safe-area-inset-top));
+  left:10px; z-index:10; max-width:30%; }
+.refuge-home .player-identity small { display:none; }
+.refuge-home .player-name-edit { font-size:.62rem; color:#dbcab8; min-height:27px; }
+@media (orientation:landscape) and (max-height:540px) {
+  .refuge-home .town-square { flex-direction:row; justify-content:center; flex-wrap:wrap;
+    gap:6px; align-content:center; padding:4px 8px; }
+  .refuge-home .town-square .menu-brand { flex:0 0 100%; width:100%; min-height:18px; }
+  .refuge-home .town-viewport { width:min(53vh,40vw); max-height:calc(100dvh - 49px); }
+  .refuge-home .town-square .town-action-dock { width:min(38vw,270px); min-height:0; align-self:center; }
+  .refuge-home .town-square .town-action-dock .menu-footer { flex-wrap:wrap; }
+  .refuge-home .town-square .town-action-dock .menu-footer > button:last-child { margin-left:0; }
+}
+
+/* Settings is the only audio UI location. */
+.settings-screen { box-sizing:border-box; display:grid; gap:18px; width:min(560px,100%);
+  margin:0 auto 30px; padding:14px; color:#e8dbea; }
+.settings-screen > h2 { margin:0; color:#eee1c9; font:500 1.65rem Georgia,serif; }
+.settings-screen section { padding:15px; border:1px solid #4a3a52; border-radius:8px;
+  background:linear-gradient(150deg,#241c2b,#14121b); }
+.settings-screen h3 { margin:0 0 12px; color:#d7b68a; letter-spacing:.10em; font:700 .75rem system-ui,sans-serif; }
+.settings-screen .settings-support { display:grid; gap:7px; }
+.settings-screen .settings-support button,.settings-screen .settings-support a {
+  width:100%; min-height:44px; padding:10px 12px; border:1px solid #584762;
+  border-radius:5px; background:#201927; color:#e4d7e9; font:600 .82rem system-ui,sans-serif;
+  text-decoration:none; text-align:left; cursor:pointer; }
