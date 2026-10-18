@@ -71,6 +71,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-hotspot--codex")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-hotspot--legends")).ToHaveCountAsync(1);
         await viewport.EvaluateAsync("element => element.scrollTo({ left: element.clientWidth, behavior: 'auto' })");
+        var fullscreen = await viewport.EvaluateAsync<bool>(@"element => {
+            const rect = element.getBoundingClientRect();
+            return Math.abs(rect.width - innerWidth) <= 2 && Math.abs(rect.height - innerHeight) <= 2;
+        }");
+        Assert.IsTrue(fullscreen, "The town must occupy the full browser viewport rather than a square card.");
+        await Expect(Page.Locator(".town-action-dock")).ToHaveCountAsync(0);
         await ScreenshotAsync($"refuge-town-{width}.png");
     }
 

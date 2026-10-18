@@ -1,0 +1,31 @@
+name: Finalize approved Refuge artwork (one shot)
+on:
+  push:
+    branches:
+      - fix/refuge-fullscreen-vacant-forge-20261018
+    paths:
+      - .github/workflows/refuge-finalize-artwork.yml
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply deterministic art correction
+        run: |
+          python -m pip install --disable-pip-version-check pillow==11.3.0
+          python tools/art/finalize-refuge-panorama.py
+      - name: Commit final image and remove one-time generator
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/refuge-town-panorama.png
+          git rm .github/workflows/refuge-finalize-artwork.yml tools/art/finalize-refuge-panorama.py
+          git commit -m "Finalize Refuge town art: dark empty forge and seamless panorama"
+          git push origin HEAD:fix/refuge-fullscreen-vacant-forge-20261018

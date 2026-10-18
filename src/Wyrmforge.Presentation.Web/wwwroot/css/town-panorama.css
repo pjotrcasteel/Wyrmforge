@@ -79,3 +79,77 @@
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0,0,0,0);white-space:nowrap;border:0;
 }
+
+
+/* Full-viewport Refuge: world art replaces the header/card/dock, not the welcome screen.
+   On mobile the three slices are always full-screen and swipeable. */
+html:has(.refuge-home), body:has(.refuge-home) {
+  width:100%;height:100%;overflow:hidden;overscroll-behavior:none;
+}
+.game-shell.refuge-home {
+  position:relative;box-sizing:border-box;display:block!important;margin:0;padding:0!important;
+  width:100%;height:100dvh;min-height:100dvh;max-height:100dvh;overflow:hidden;
+  background:#0c0b0d;
+}
+.game-shell.refuge-home .shell-content {
+  box-sizing:border-box;position:relative;display:block;width:100vw!important;
+  max-width:none!important;height:100dvh;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden;
+}
+.game-shell.refuge-home .town-square {
+  position:relative;box-sizing:border-box;display:block!important;
+  width:100vw!important;max-width:none!important;height:100dvh!important;
+  min-height:100dvh!important;max-height:100dvh!important;
+  margin:0!important;padding:0!important;gap:0!important;border:0!important;overflow:hidden;
+  background:#0c0b0d;box-shadow:none!important;
+}
+.game-shell.refuge-home .town-panorama-viewport {
+  position:absolute!important;inset:0!important;box-sizing:border-box;display:block;
+  width:100vw!important;height:100dvh!important;max-height:none!important;
+  min-height:100dvh!important;aspect-ratio:auto!important;flex:none!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;background:#0a090b;
+}
+.game-shell.refuge-home .town-panorama {height:100%!important}
+.game-shell.refuge-home .town-panorama-art {width:100%;height:100%;object-fit:fill}
+.game-shell.refuge-home .town-square .menu-brand {
+  position:absolute!important;top:max(10px,env(safe-area-inset-top))!important;
+  right:58px!important;left:auto!important;bottom:auto!important;z-index:7;
+  display:block!important;flex:none;width:auto!important;min-height:0!important;
+  margin:0!important;padding:0!important;pointer-events:none;
+}
+.game-shell.refuge-home .town-square .menu-brand h1 {
+  position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);
+  overflow:hidden;white-space:nowrap;
+}
+.game-shell.refuge-home .town-square .hunter-menu-progress {
+  display:flex;flex-direction:column;gap:1px;align-items:flex-end;justify-content:center;
+  width:auto;max-width:none;min-height:38px;padding:3px 7px;
+  border:0;background:#09080b70;border-radius:5px;pointer-events:auto;
+  color:#f4dfbd;text-align:right;text-shadow:0 1px 7px #000,0 2px 3px #000;
+}
+.game-shell.refuge-home .town-square .hunter-menu-progress span {font-size:11px;line-height:1.2}
+.game-shell.refuge-home .player-identity {
+  position:fixed!important;z-index:40;top:max(11px,env(safe-area-inset-top))!important;
+  left:max(9px,env(safe-area-inset-left))!important;right:auto!important;
+  max-width:min(44vw,180px)!important;pointer-events:auto;
+}
+.game-shell.refuge-home .player-name-edit {
+  min-height:38px;max-width:100%;padding:4px 5px;
+  color:#f9e4c1;font-size:clamp(10px,2.9vw,13px);
+  text-shadow:0 1px 7px #000,0 2px 3px #000;
+  background:#09080b70;border-radius:5px;
+}
+.game-shell.refuge-home .player-name-edit span {overflow:hidden;text-overflow:ellipsis}
+.game-shell.refuge-home .town-settings {
+  position:absolute;top:max(10px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));
+  z-index:8;display:grid;place-items:center;width:44px;height:44px;
+  color:#f9dfb3;background:#09080bb5;border:1px solid #c9a46b77;
+  border-radius:50%;font:24px/1 system-ui,sans-serif;cursor:pointer;
+  text-shadow:0 2px 6px #000;
+}
+.game-shell.refuge-home .town-settings:focus-visible {outline:2px solid #ffd69b;outline-offset:2px}
+.game-shell.refuge-home .town-viewport .town-hotspot {z-index:3}
+.game-shell.refuge-home .town-hotspot--gate {min-width:44px;min-height:44px}
+@media(orientation:landscape) and (max-height:540px) {
+  .game-shell.refuge-home .town-square {display:block!important}
+  .game-shell.refuge-home .town-panorama-viewport {width:100vw!important;height:100dvh!important}
+}

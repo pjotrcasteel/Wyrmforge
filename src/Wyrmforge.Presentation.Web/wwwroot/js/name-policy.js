@@ -3,7 +3,10 @@ const words = new Set(['fuck','fucker','fucking','motherfucker','shit','shitty',
     'kanker','kut','lul','hoer','neuken','pik','tering','tyfus','godverdomme']);
 const embedded = ['fuck','bitch','asshole','faggot','nigger','nigga','kanker','godverdomme'];
 export function validateName(value) {
-    if (typeof value !== 'string' || !/^[A-Za-z0-9 _-]{2,18}$/.test(value.trim())) return 'Use 2–18 letters, numbers, spaces, _ or -.';
+    if (typeof value !== 'string') return 'Use 2–18 letters, numbers, spaces, _ or -.';
+    const nickname = value.trim();
+    if (!/^[A-Za-z0-9 _-]{2,18}$/.test(nickname) && !/^player#[a-z0-9]{8}$/i.test(nickname))
+        return 'Use 2–18 letters, numbers, spaces, _ or - (or an assigned player# code).';
     const normalized = value.trim().replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[013457]/g, digit => ({0:'o',1:'i',3:'e',4:'a',5:'s',7:'t'})[digit]);
     const tokens = normalized.split(/[ _-]+/);
     const joined = tokens.join('');

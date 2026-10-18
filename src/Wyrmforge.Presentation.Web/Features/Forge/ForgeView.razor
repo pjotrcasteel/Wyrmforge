@@ -60,17 +60,14 @@
                 <section class="main-menu town-square" aria-label="Refuge town square">
                     <header class="menu-brand">
                         <h1>REFUGE</h1>
-                        @if (Progress.AtlasUnlocked)
-                        {
-                            <button class="hunter-menu-progress" @onclick="() => OnQuests.InvokeAsync()">
-                                <span>HUNTER @Hunter.Level</span>
-                                <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
-                            </button>
-                        }
+                        <button class="hunter-menu-progress" aria-label="Hunter progress and quests" @onclick="() => OnQuests.InvokeAsync()">
+                            <span>HUNTER @Hunter.Level</span>
+                            <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
+                        </button>
                     </header>
                     <div class="town-viewport town-panorama-viewport" tabindex="0" role="region" aria-label="Refuge town. Swipe left or right to explore. World Gate in the central square.">
                         <div class="town-panorama">
-                            <img class="town-panorama-art" src="art/refuge-town-panorama.png" alt="" draggable="false" />
+                            <img class="town-panorama-art" src="art/refuge-town-panorama.png?v=closed-forge-2" alt="" draggable="false" />
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
@@ -79,10 +76,10 @@
                                 {
                                     var unlocked = IsUnlocked(item.Section);
                                     <button class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
-                                            type="button" disabled="@(!unlocked)"
-                                            title="@(!unlocked ? UnlockHint(item.Section) : item.Label)"
-                                            aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
-                                            @onclick="() => Navigate(item.Section)"><span class="town-location-label">@item.Label</span></button>
+                                            type="button" disabled="@(!unlocked && item.Section != ShellSection.Gate)"
+                                            title="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "Begin first hunt" : "Begin hunt") : !unlocked ? UnlockHint(item.Section) : item.Label)"
+                                            aria-label="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") : item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
+                                            @onclick="() => ActivateTownLocationAsync(item.Section)"><span class="town-location-label">@item.Label</span></button>
                                 }
                                 <button class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
                                         disabled="@(!Progress.LeaderboardUnlocked)" title="Hall of Fame"
@@ -90,17 +87,7 @@
                             </nav>
                         </div>
                     </div>
-                    <div class="town-action-dock">
-                        <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") <span aria-hidden="true">›</span></button>
-                        <footer class="menu-footer">
-                            @if (!Progress.TutorialRun)
-                            {
-                                <button @onclick="() => Navigate(ShellSection.Prepare)">Hunt preparation</button>
-                                <button @onclick="() => OnQuests.InvokeAsync()">Quests@(QuestRewards > 0 ? $" · {QuestRewards}" : string.Empty)</button>
-                            }
-                            <button aria-label="More options" @onclick="() => Navigate(ShellSection.Options)">⚙</button>
-                        </footer>
-                    </div>
+                    <button type="button" class="town-settings" aria-label="More options" @onclick="() => Navigate(ShellSection.Options)">⚙</button>
                 </section>
                 }
                 break;
@@ -154,6 +141,12 @@
                     </section>
                     <section class="settings-support">
                         <h3>Other</h3>
+                        @if (!Progress.TutorialRun)
+                        {
+                            <button @onclick="() => Navigate(ShellSection.Prepare)">Hunt preparation</button>
+                            <button @onclick="() => OnQuests.InvokeAsync()">Quests@(QuestRewards > 0 ? $" · {QuestRewards}" : string.Empty)</button>
+                            <button @onclick="() => Navigate(ShellSection.Gate)">World Gate and regions</button>
+                        }
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
                     </section>
@@ -280,6 +273,12 @@
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
     private Task StartAsync() => OnStart.InvokeAsync();
+    private Task ActivateTownLocationAsync(ShellSection destination)
+    {
+        if (destination == ShellSection.Gate) return StartAsync();
+        Navigate(destination);
+        return Task.CompletedTask;
+    }
     private string UnlockHint(ShellSection value) => value == ShellSection.Forge ? "Secure Essence" : "Finish first hunt";
 
     private string LaboratoryStatus => Laboratory.EquippedMutations.Count > 0 ? $"{string.Join(" + ", Laboratory.EquippedMutations.Select(id => LaboratoryCatalog.Get(id).Name))} equipped"

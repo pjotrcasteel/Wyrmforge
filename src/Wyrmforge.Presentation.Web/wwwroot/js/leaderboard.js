@@ -4,16 +4,24 @@ export { validateName } from './name-policy.js';
 const profileKey = 'wyrmforge.player-name.v1';
 const cookieKey = 'wyrmforge_player_name';
 const pendingKey = 'wyrmforge.hall-of-fame.pending.v1';
-let currentName = 'Wyrm Wanderer';
+let currentName = '';
+const isAnonymousDefault = name => !name || !name.trim() || name.trim() === 'Wyrm Wanderer';
+function newAnonymousName() {
+    const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+    const values = new Uint8Array(8);
+    crypto.getRandomValues(values);
+    return 'player#' + [...values].map(value => alphabet[value % alphabet.length]).join('');
+}
 export function getPlayerName() {
     try {
         const cookie = document.cookie.split(';').map(part => part.trim()).find(part => part.startsWith(`${cookieKey}=`));
         const name = cookie ? decodeURIComponent(cookie.slice(cookieKey.length + 1)) : localStorage.getItem(profileKey);
-        if (name && !validateName(name)) return setPlayerName(name);
+        if (!isAnonymousDefault(name) && !validateName(name)) return setPlayerName(name);
     } catch { }
-    return setPlayerName(currentName);
+    return setPlayerName(newAnonymousName());
 }
 export function setPlayerName(value) {
+    if (isAnonymousDefault(value)) value = newAnonymousName();
     if (validateName(value)) return currentName;
     currentName = value.trim();
     try {

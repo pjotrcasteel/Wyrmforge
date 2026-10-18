@@ -52,4 +52,4 @@ else
     <PlaytestFeedbackPanel InitialEnjoyment="feedbackRating" OnClose="ClosePlaytestFeedback" />
 }
 
-<div data-game-version="@AppBuildInfo.Version" style="position:fixed;right:8px;bottom:6px;z-index:10000;font:600 9px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(210,198,220,.4);pointer-events:none;">@AppBuildInfo.Display</div>
+<div data-game-version="@AppBuildInfo.Version" style="position:fixed;right:9px;bottom:max(9px,env(safe-area-inset-bottom));z-index:10000;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;color:rgba(235,215,185,.72);text-shadow:0 1px 5px #000,0 2px 14px #000;pointer-events:none;">@AppBuildInfo.Display</div>
