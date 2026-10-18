@@ -13,7 +13,7 @@
 
     @if (Loadouts is not null)
     {
-        <section class="loadout-strip" aria-label="Saved hunt loadouts">
+        <details class="loadout-strip" aria-label="Saved hunt loadouts"><summary>Saved builds <span aria-hidden="true">⌄</span></summary>
             <div class="loadout-slots">
                 <span class="loadout-kicker">LOADOUTS</span>
                 @for (var index = 0; index < HuntLoadoutBook.SlotCount; index++)
@@ -48,34 +48,33 @@
             {
                 <p class="loadout-message" role="status">@loadoutMessage</p>
             }
-        </section>
+        </details>
+
     }
 
     @if (Laboratory is not null)
     {
-        <section class="nexus-equipped" aria-label="Equipped spellcraft">
-            <div><span>YOUR CRAFTED SPELLS</span>
-                @if (Laboratory.EquippedMutations.Count == 0)
+        <section class="nexus-equipped" aria-label="Crafted spells and mutation sockets">
+            <div class="nexus-equipped-head">
+                <div><span>CRAFTED SPELL SOCKETS</span>
+                    <strong>@(Laboratory.EquippedMutations.Count) / @LaboratoryCatalog.MaxEquippedMutations equipped</strong></div>
+                <button @onclick="() => OnOpenSpellcraft.InvokeAsync(null)">CRAFT / EQUIP <span aria-hidden="true">›</span></button>
+            </div>
+            <div class="nexus-socket-rack" aria-label="Places for crafted spells">
+                @foreach (var socket in LaboratoryCatalog.Sockets)
                 {
-                    <strong>Nothing equipped</strong>
-                }
-                else
-                {
-                    <strong>@string.Join(" · ", Laboratory.EquippedMutations.Select(id => LaboratoryCatalog.Get(id).Name))</strong>
+                    var unlocked = LaboratoryState.SocketUnlocked(socket.Id, Selection.Selected);
+                    var occupied = Laboratory.Slotted.TryGetValue(socket.Id, out var mutationId);
+                    <button class="nexus-rack-socket @(unlocked ? "unlocked" : "locked") @(occupied ? "occupied" : string.Empty)"
+                        aria-label="@($"{socket.NodeName}: {(occupied ? LaboratoryCatalog.Get(mutationId).Name : unlocked ? "Empty socket" : "Locked")}. Show on the Web.")"
+                        @onclick="() => FocusNodeAsync(socket.NodeId)">
+                        <i aria-hidden="true">@(occupied ? "◆" : unlocked ? "◇" : "◈")</i>
+                        <span><b>@socket.NodeName</b><small>@(occupied ? LaboratoryCatalog.Get(mutationId).Name : unlocked ? "Empty" : "Locked")</small></span>
+                    </button>
                 }
             </div>
-            <button @onclick="() => OnOpenSpellcraft.InvokeAsync(null)">CRAFT / EQUIP <span aria-hidden="true">›</span></button>
         </section>
     }
-
-                    @if (Suggestion is { } suggestion)
-            {
-                <button class="nexus-next" aria-label="@($"Next discovery: {suggestion.Text} Show it on the Web.")" @onclick="() => FocusNodeAsync(suggestion.NodeId)">
-                    <i aria-hidden="true">✦</i>
-                    <span><small>NEXT DISCOVERY</small><b>@suggestion.Text</b></span>
-                    <em aria-hidden="true">›</em>
-                </button>
-            }
 
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
