@@ -139,7 +139,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "WYRMFORGE", Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "REFUGE", Exact = true })).ToBeVisibleAsync();
         var nav = Page.Locator("nav.menu-actions button");
         await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToBeDisabledAsync();
         await Expect(nav.Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
