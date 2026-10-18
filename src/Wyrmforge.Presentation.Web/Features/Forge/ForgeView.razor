@@ -52,6 +52,7 @@
                         <div class="title-mage" aria-hidden="true"></div>
                         <h1>WYRMFORGE</h1>
                         <button class="title-start" @onclick="EnterTown">START GAME <span aria-hidden="true">›</span></button>
+                        <button class="title-settings" aria-label="Settings" @onclick="() => Navigate(ShellSection.Options)">⚙ Settings</button>
                     </section>
                 }
                 else
@@ -131,7 +132,18 @@
                 <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" Access="RegionAccess" OnRegionChanged="OnRegionChanged" OnExplore="StartAsync" />
                 break;
             case ShellSection.Options:
-                <div class="menu-options"><button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button><a href="combat-lab">Developer Combat Lab</a></div>
+                <div class="menu-options settings-screen" aria-label="Settings">
+                    <h2>Settings</h2>
+                    <section class="settings-audio" aria-label="Audio settings">
+                        <h3>Audio</h3>
+                        <div class="settings-audio-slot" id="wyrmforge-audio-settings" aria-label="Sound settings"></div>
+                    </section>
+                    <section class="settings-support">
+                        <h3>Other</h3>
+                        <button @onclick="() => OnFeedback.InvokeAsync()">Send feedback</button>
+                        <a href="combat-lab">Developer Combat Lab</a>
+                    </section>
+                </div>
                 break;
         }
     </section>
@@ -215,7 +227,7 @@
         new(ShellSection.Codex, "book", "Codex"),
     ];
 
-    private string SectionTitle => section == ShellSection.Prepare ? "Hunt preparation" : section == ShellSection.Options ? "Options" : Navigation.Single(item => item.Section == section).Label;
+    private string SectionTitle => section == ShellSection.Prepare ? "Hunt preparation" : section == ShellSection.Options ? "Settings" : Navigation.Single(item => item.Section == section).Label;
     private bool IsUnlocked(ShellSection value) => value switch
     {
         ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
