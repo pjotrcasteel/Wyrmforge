@@ -1370,6 +1370,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 Trails:4,RareTrails:1,Depth:1,Wyrms:[],Essences:[],Synergy:false,Evolution:false,Claimed:[],Caches:0}})); }");
         await Page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Quests") }).ClickAsync();
         var dialog = Page.GetByRole(AriaRole.Dialog, new() { Name = "Hunt quests" });
         await Expect(dialog).ToBeVisibleAsync();
