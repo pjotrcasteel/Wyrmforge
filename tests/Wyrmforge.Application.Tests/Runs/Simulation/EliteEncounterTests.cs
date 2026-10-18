@@ -78,7 +78,9 @@ public sealed class EliteEncounterTests
     [TestMethod]
     public void EliteStats_StayInsideTheBriefBands()
     {
-        Assert.HasCount(Enum.GetValues<EnemyKind>().Count(kind => !EnemyCatalog.Get(kind).Unique), EliteAffixCatalog.All);
+        // Every common Cinder kind has its elite; the Frost roster earns elite forms in a later slice.
+        Assert.HasCount(Enum.GetValues<EnemyKind>().Count(kind => !EnemyCatalog.Get(kind).Unique && EnemyCatalog.Get(kind).Realm == EnemyRealm.Cinder),
+            EliteAffixCatalog.All);
         foreach (var definition in EliteAffixCatalog.All)
         {
             Assert.IsTrue(definition.HealthMultiplier is >= 1.35 and <= 1.6, definition.Title);

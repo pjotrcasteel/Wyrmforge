@@ -20,7 +20,7 @@ This slice adds data contracts only. Hunts play exactly as before: the same seed
 | Id | Name (working title) | School | Home lineage | Status |
 |---|---|---|---|---|
 | `cinder-frontier` | The Cinder Frontier | Fire | Ashfang | Playable. All four lineages are Present, so the attraction roll keeps its variety. |
-| `glacier-region` | Uncharted Frost region | Frost | Rimeclaw | Planned, using the `concepts/Frost` roster. |
+| `glacier-region` | Uncharted Frost region | Frost | Rimeclaw | Planned, using the `concepts/Frost` roster. F1 kinds (Frostling Packling, Shardcaster) exist as `HabitatOnly`; see `frost-region-roster-v1.md`. |
 | `tempest-region` | Uncharted Storm region | Storm | Stormcoil | Planned, using the `concepts/Electric` roster. |
 | `aether-region` | Uncharted Arcane region | Arcane | Voidweaver | Planned, using the `concepts/Arcane` roster. |
 

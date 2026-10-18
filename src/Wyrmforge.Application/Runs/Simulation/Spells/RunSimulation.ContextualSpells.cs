@@ -121,6 +121,7 @@ public sealed partial class RunSimulation
                 : new Vector2D(Math.Clamp(proposed.X, radius, Math.Max(radius, arenaWidth - radius)),
                     Math.Clamp(proposed.Y, radius, Math.Max(radius, arenaHeight - radius)));
             knock.Enemy.MireHound?.Displace(knock.Enemy.Position - previous);
+            knock.Enemy.Packling?.Displace(knock.Enemy.Position - previous);
         }
         knockbacks.RemoveAll(knock => knock.Remaining <= 0 || knock.Enemy.Health <= 0);
     }

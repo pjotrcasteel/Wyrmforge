@@ -44,4 +44,10 @@ public sealed record RunRenderSnapshot(
     public IReadOnlyList<BellShockwaveRenderSnapshot> BellShockwaves { get; init; } = [];
 
     public WardPulseRenderSnapshot? WardPulse { get; init; }
+
+    public IReadOnlyList<IceLanceRenderSnapshot> IceLances { get; init; } = [];
+
+    public IReadOnlyList<SplinterBloomRenderSnapshot> SplinterBlooms { get; init; } = [];
+
+    public IReadOnlyList<BlackIceRenderSnapshot> BlackIce { get; init; } = [];
 }

@@ -128,6 +128,7 @@ public sealed partial class RunSimulation
         ClearSupportState();
         ClearReliquaryState();
         ClearBellWardenState();
+        ClearFrostState();
         encounterSeconds = 0;
         rangedStaggerRemaining = 0;
         pendingRelicBursts.Clear();

@@ -14,6 +14,7 @@ import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
+import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill } from './arena-frost-vfx.js';
 
 const arenas = new WeakMap();
 
@@ -197,6 +198,7 @@ function draw(state, snapshot, width, height) {
     for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
+    for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
     drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
@@ -206,6 +208,8 @@ function draw(state, snapshot, width, height) {
         drawEnemyTelegraph(ctx, enemy);
     }
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileGround(ctx, ember);
+    for (const bloom of snapshot.splinterBlooms ?? []) drawSplinterBloom(ctx, bloom);
+    drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
@@ -257,6 +261,7 @@ function draw(state, snapshot, width, height) {
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
+    for (const lance of snapshot.iceLances ?? []) drawIceLance(ctx, lance);
     for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);

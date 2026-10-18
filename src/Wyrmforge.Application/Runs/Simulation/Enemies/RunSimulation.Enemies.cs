@@ -283,6 +283,10 @@ public sealed partial class RunSimulation
                     speed *= multiplier;
                 }
             }
+            else if (enemy.Packling is { } packling)
+                (direction, speed) = UpdatePackling(enemy, packling, scaledDelta, crossing, direction, speed, ref committed, committedCap);
+            else if (enemy.Shardcaster is { } caster)
+                (direction, speed) = UpdateShardcaster(enemy, caster, scaledDelta, crossing, direction, speed, rangedAllowed, ref committed, committedCap);
 
             if (speed > 0)
             {
@@ -299,18 +303,20 @@ public sealed partial class RunSimulation
                 DamagePlayer(MireHoundBehaviorState.PounceDamage * EliteImpact(enemy));
                 biter.Land();
             }
+            else if (enemy.Packling is { Phase: FrostlingPhase.Skitter } skitterer) BitePlayer(enemy, skitterer);
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
         SinkWraiths();
         UpdateHostileProjectiles(delta);
         UpdateReliquaryFields(delta);
         UpdateBellShockwaves(delta);
+        UpdateFrostHazards(delta);
     }
 
-    private int CommittedThreatCount() => hostileProjectiles.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0)
+    private int CommittedThreatCount() => hostileProjectiles.Count + iceLances.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0)
         + (bellWarden?.BellWarden?.IsCommitted == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
-            || enemy.DrownedWraith?.IsCommitted == true);
+            || enemy.DrownedWraith?.IsCommitted == true || enemy.Packling?.IsCommitted == true || enemy.Shardcaster?.IsCommitted == true);
 
     private void UpdateHostileProjectiles(double delta)
     {
@@ -360,7 +366,7 @@ public sealed partial class RunSimulation
             enemy.Position.X, enemy.Position.Y, enemy.Radius * 2),
         { Ward: { Warning: true } fuse } => new EnemyTelegraphRenderSnapshot("ward-fuse", fuse.WarningProgress, enemy.Position.X, enemy.Position.Y,
             ReliquaryWardBlastRadius),
-        _ => null,
+        _ => CreateFrostTelegraph(enemy),
     };
 
     private IReadOnlyList<HostileProjectileRenderSnapshot> CreateHostileProjectileSnapshots() => hostileProjectiles

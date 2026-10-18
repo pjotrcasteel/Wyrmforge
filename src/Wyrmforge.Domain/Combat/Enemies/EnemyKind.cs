@@ -15,4 +15,8 @@ public enum EnemyKind
     ReliquaryWard,
     /// <summary>Roster step 7: the named pre-lair set piece. Only the pre-lair road spawns it, every hunt.</summary>
     BellWarden,
+    /// <summary>Frost roster (Rimeclaw's region): a small pack hunter that circles and bites chilled prey.</summary>
+    FrostlingPackling,
+    /// <summary>Frost roster: a planted caster of straight ice lances, delayed splinter blooms and black ice.</summary>
+    Shardcaster,
 }

@@ -99,3 +99,5 @@ These are left to the product owner. Nothing here has been decided.
 - Book I canon (places, characters, endings) is provisional.
 - The Wyrm tier names beyond Ascendant (`WyrmTier.Elder`/`Primordial`/`Divine` are placeholders).
 - Region names: "The Cinder Frontier" is a working title, and the three planned regions are unnamed.
+
+**Frost region (amendment §11.5), 2026-10-18.** Slice F1 shipped (Chill, Frostling Packling, Shardcaster). The region stays Planned until F4 adds habitats, elites and the lair. See `frost-region-roster-v1.md`.

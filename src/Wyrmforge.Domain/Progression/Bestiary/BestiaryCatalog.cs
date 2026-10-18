@@ -67,6 +67,16 @@ public static class BestiaryCatalog
             "Leave the marked crater, then step inside it before the shockwave rolls out. Sidestep the toll. Strike while it heaves the bell back up.",
             "Ruined bell arch before the Wyrm's lair",
             "The bell once rang to warn the valley of the Wyrm. Now it rings for him."),
+        new(EnemyKind.FrostlingPackling, "Frostling Packling", "Common • pack encircler",
+            "Small rime-backed hunters that never chase in a line. Each takes a place on a slowly turning ring around the hunter, then skitters in low for a hamstring bite that chills. They bite faster and harder at prey that is already cold.",
+            "Break the ring before it closes, keep moving to stay warm, and punish the Packling that just lunged while it recovers.",
+            "Glacier shelf, frozen pass",
+            "A pack is patient. It does not need to kill you; it only needs you to slow down."),
+        new(EnemyKind.Shardcaster, "Shardcaster", "Common • ranged lane-caster",
+            "Plants itself at a distance, draws a straight lane and fires a fast ice lance down it. Where the lance stops, splinters bloom a heartbeat later. Every third cast it glazes the ground with slick black ice.",
+            "Step out of the lane and away from where it ends. Stay off black ice, then close in while it skates to its next spot.",
+            "Glacier shelf, rime cliffs",
+            "It never looks at you while it aims. It looks at the line, and the line looks at you."),
     ];
 
     /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>

@@ -83,6 +83,12 @@ public sealed partial class RunSimulation
         if (!mapState.EncounterActive) return EliteAffix.None;
         nodeSpawnCount++;
         if (nodeSpawnCount != eliteSpawnIndex) return EliteAffix.None;
+        if (EliteAffixCatalog.TryFor(kind) is null)
+        {
+            // A kind without an elite form yet (the newest realm's roster): the champion walks in with the next spawn instead.
+            eliteSpawnIndex++;
+            return EliteAffix.None;
+        }
         eliteSpawnIndex = -1;
         elitesThisMap++;
         var definition = EliteAffixCatalog.For(kind);

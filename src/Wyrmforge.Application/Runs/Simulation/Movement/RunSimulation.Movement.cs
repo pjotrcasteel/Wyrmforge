@@ -20,7 +20,7 @@ public sealed partial class RunSimulation
         var moveBonus = passiveProfile.TempestStep ? Math.Min(elapsed / 6, 1) * 0.25 : 0;
         var speed = buildModifiers.Apply(BuildStatId.MoveSpeed, player.Speed) * (1 + moveBonus) * encounterModifiers.PlayerMoveSpeedMultiplier;
         var previous = player.Position;
-        player.Position += direction * speed * delta;
+        player.Position += FrostMovementVelocity(direction * speed, delta) * delta;
         player.Position = new Vector2D(
             Math.Clamp(player.Position.X, player.Radius, Math.Max(player.Radius, width - player.Radius)),
             Math.Clamp(player.Position.Y, player.Radius, Math.Max(player.Radius, height - player.Radius)));

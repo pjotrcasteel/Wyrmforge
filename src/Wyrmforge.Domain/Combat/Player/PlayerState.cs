@@ -21,4 +21,7 @@ public sealed class PlayerState
     public double WinterShellRechargeRemaining { get; set; }
 
     public double WinterShellGuardRemaining { get; set; }
+
+    /// <summary>Frost's stacking slow; see <see cref="HunterChillState"/>.</summary>
+    public HunterChillState Chill { get; } = new();
 }

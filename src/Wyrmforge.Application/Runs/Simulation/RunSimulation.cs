@@ -303,6 +303,8 @@ public sealed partial class RunSimulation
             {
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
                 WardCharge = WardCharge,
+                Chill = player.Chill.Stacks,
+                OnBlackIce = PlayerOnBlackIce,
             },
             CreateExtractionSnapshot(),
             enemies.Select(enemy => new EnemyRenderSnapshot(enemy.Position.X, enemy.Position.Y, enemy.Radius, enemy.Statuses.Has(CombatStatusId.Frozen),
@@ -358,6 +360,9 @@ public sealed partial class RunSimulation
             BellWarden = CreateBellWardenSnapshot(),
             BellShockwaves = CreateBellShockwaveSnapshots(),
             WardPulse = CreateWardPulseSnapshot(),
+            IceLances = CreateIceLanceSnapshots(),
+            SplinterBlooms = CreateSplinterBloomSnapshots(),
+            BlackIce = CreateBlackIceSnapshots(),
         };
     }
 

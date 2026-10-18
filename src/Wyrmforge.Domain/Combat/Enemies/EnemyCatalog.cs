@@ -16,6 +16,11 @@ public static class EnemyCatalog
         new(EnemyKind.ReliquaryWard, EnemyRole.Support, 0, 13, HealthMultiplier: 2.4, SpeedMultiplier: 0, ContactDamageMultiplier: 0, Unique: true),
         // Unique: the Bell Warden only ever stands on the pre-lair road.
         new(EnemyKind.BellWarden, EnemyRole.Pressure, 10, 38, HealthMultiplier: 18, SpeedMultiplier: 0.5, ContactDamageMultiplier: 1, Unique: true),
+        // Frost roster (Rimeclaw). HabitatOnly until the Frost region's habitats host them: Fire runs never draw them.
+        new(EnemyKind.FrostlingPackling, EnemyRole.Pressure, 1, 9, HealthMultiplier: 0.6, SpeedMultiplier: 1.25, ContactDamageMultiplier: 0.4,
+            HabitatOnly: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.Shardcaster, EnemyRole.Artillery, 2, 11, HealthMultiplier: 0.7, SpeedMultiplier: 0.9, ContactDamageMultiplier: 0.4,
+            HabitatOnly: true, Realm: EnemyRealm.Frost),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

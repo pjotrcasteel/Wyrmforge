@@ -485,3 +485,13 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Menu:** six rows. In short landscape the footer moves under the brand; the floating sound controls hide on the World Gate and on short portrait menus (owner allowed hiding them).
 - **Tests:** `ChronicleTests` (Domain), `AdvancedAccessTests` (Application), `Mobile_WorldGate_ShowsBothRoadsAndExplorationStartsAHunt` (browser).
 - **Next:** author the second region's enemies from the concept folders, or the Arcane Nexus Spellcraft redesign (`concepts/Menus/spellcraft.jpg`). Balancing stays last.
+
+## 33. Frost region F1: Chill, Frostling Packling, Shardcaster
+
+- **Owner direction:** Frost must not feel like a recolour of the Cinder kin. Identity: Fire pressures, Frost boxes in (lanes, footing, slow). Full design: `docs/design/frost-region-roster-v1.md`.
+- **Chill:** hunter status, 8% slow per stack up to 5, never a full freeze. Shown as a rime ring at the hunter's feet with one crystal per stack.
+- **Frostling Packling (10):** circling pack, telegraphed skitter-bites that punish a chilled hunter.
+- **Shardcaster (11):** planted caster; ice lances stop at walls and leave a splinter bloom; black ice patches make the hunter slide.
+- **Safety:** both kinds are `HabitatOnly` with `EnemyRealm.Frost`; no habitat lists them, so Fire runs are unchanged. Realms without elite affixes defer the champion to the next spawn.
+- **Tests:** `FrostRosterBehaviorTests` (Domain), `FrostEncounterTests` (Application), `arena-frost-vfx.test.mjs` (JS). Sprites were added to the actors atlas.
+- **Next:** F2, the Whitefang Stalker and Cairn Sentinel.

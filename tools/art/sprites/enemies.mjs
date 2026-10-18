@@ -1,7 +1,7 @@
 // First-hunt roster sprites, authored facing east (runtime mirrors for west) from the concept sheets in
 // user_handover_files/concepts as art direction only. Frame order follows EnemyKind ints:
 // 0 Hollow, 1 Mire Hound, 2 Ashling, 3 Penitent, 4 Ash Slinger, 5 Ash Priest, 6 Drowned Wraith, 7 The Reliquary, 8 Reliquary ward,
-// 9 The Bell Warden.
+// 9 The Bell Warden, 10 Frostling Packling, 11 Shardcaster (the Frost roster: rime greys and glacial blues, never a recoloured Cinder kin).
 // Poses 0-2 are the idle/walk cycle; pose 3 is the attack posture shown while C# reports a telegraph,
 // so the body itself reads as the warning (crouched hound, ember swung overhead, reaching claws, shield thrust, staff raised).
 import { Bitmap, mix, hex } from '../lib/painter.mjs';
@@ -30,6 +30,8 @@ export const ENEMY_SPECS = [
     { kind: 7, name: 'reliquary', size: [60, 76], origin: [28, 46], radius: 22 },
     { kind: 8, name: 'reliquary-ward', size: [28, 38], origin: [13, 24], radius: 13 },
     { kind: 9, name: 'bell-warden', size: [84, 94], origin: [40, 61], radius: 30 },
+    { kind: 10, name: 'frostling-packling', size: [40, 30], origin: [19, 18], radius: 9 },
+    { kind: 11, name: 'shardcaster', size: [52, 62], origin: [23, 37], radius: 11 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -481,7 +483,92 @@ function bellWarden(pose) {
     return b;
 }
 
-const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden];
+// Frostling Packling: a small feral scavenger on long clawed limbs, its back a bristling mane of rime crystals and two cold
+// blue eyes. Pose 3 is the skitter crouch: belly to the snow, mane flared, claws planted - the body is the lunge tell.
+function frostlingPackling(pose) {
+    const s = ENEMY_SPECS[10], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { hide: '#8a8580', hideHi: '#b9b3aa', hideDk: '#57524f', deep: '#2c2a2b', claw: '#e7ecef', crystal: '#bfe6f4',
+        crystalHi: '#f2fdff', crystalDk: '#5f9cb8', eye: '#7fe4ff', maw: '#3b1f27', tooth: '#eef3f2' };
+    const crouch = pose === 3, low = crouch ? 2 : 0, gait = pose === 1 ? 2 : pose === 2 ? -2 : 0;
+    const limb = (x0, y0, x1, y1, c) => { g.line(x0, y0, x1, y1, c, 2); g.px(x1 + 1, y1 + 1, C.claw); g.px(x1 + 2, y1, C.claw); };
+    // Far limbs, splayed spider-wide so the silhouette reads as low and quick.
+    limb(-6, 1 + low, -11 - gait, 8, C.deep); limb(4, 0 + low, 8 + gait, 8, C.deep);
+    // Lean ribbed body slung between the limbs.
+    g.ell(-1, -1 + low, 8, 4, C.hide);
+    g.ell(-2, 1 + low, 6, 2, C.hideDk);
+    for (const x of [-4, -1, 2]) g.line(x, 0 + low, x + 1, 2 + low, C.hideDk);
+    // Rime mane: a crown of crystal spikes down the spine, longer and flared in the crouch.
+    [-8, -5, -2, 1, 4].forEach((x, i) => {
+        const len = 4 + (i % 2) * 2 + (crouch ? 3 : 0), lean = crouch ? -2 : -1;
+        g.line(x, -3 + low, x + lean, -3 + low - len, C.crystalDk);
+        g.line(x + 1, -3 + low, x + 1 + lean, -2 + low - len, C.crystal);
+        g.px(x + lean, -3 + low - len, C.crystalHi);
+    });
+    // Head thrust forward: a narrow skull, open maw and the cold eyes.
+    g.ell(9, -2 + low * 1.5, 4, 3, C.hideHi);
+    g.poly([[11, -1 + low * 1.5], [16, 0 + low * 1.5], [15, 2 + low * 1.5], [10, 2 + low * 1.5]], C.hide);
+    g.rect(12, 1 + low * 1.5, 4, 1, C.maw);
+    g.px(13, 1 + low * 1.5, C.tooth); g.px(15, 1 + low * 1.5, C.tooth);
+    g.px(10, -3 + low * 1.5, C.eye); g.px(12, -3 + low * 1.5, C.eye);
+    g.line(7, -4 + low, 6, -8 + low, C.crystal);
+    // Near limbs over the body; long hooked forelimb reaching ahead.
+    limb(-4, 1 + low, -7 + gait, 9, C.hideDk);
+    if (crouch) limb(6, 1 + low, 13, 8, C.hideHi);
+    else limb(6, 0, 10 - gait, 9, C.hideHi);
+    b.rim('#e6f6ff', '#0a0f14', .4, .3);
+    b.outline('#0b1016');
+    // Eyes stay lit over the outline: a pack is tracked by its eyes in the snow.
+    const o = s.origin;
+    b.set(o[0] + 10, o[1] - 3 + Math.round(low * 1.5), C.crystalHi);
+    return b;
+}
+
+// Shardcaster: a tall hooded winter adept in layered frost-stiff grey robes, ice shards bristling from its shoulders and
+// back, carrying a long jagged ice lance. Pose 3 draws the lance back level at the shoulder, point toward the hunter:
+// the straight lane on the ground and the levelled lance are the same tell.
+function shardcaster(pose) {
+    const s = ENEMY_SPECS[11], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { robe: '#6f6a66', robeHi: '#9d978f', robeDk: '#433f3d', deep: '#211f21', void: '#0b0d12', skin: '#a9b4bb',
+        ice: '#a9dcf0', iceHi: '#effcff', iceDk: '#4e8fb0', chain: '#7c7f86', eye: '#8ce8ff' };
+    const step = stride(pose), aim = pose === 3;
+    const shard = (x0, y0, x1, y1) => { g.line(x0, y0, x1, y1, C.iceDk, 2); g.line(x0, y0, x1, y1, C.ice); g.px(x1, y1, C.iceHi); };
+    // Legs hidden under a long, ragged hem; only the feet step.
+    g.rect(-5 - step, 19, 4, 2, C.deep); g.rect(2 + step, 19, 4, 2, C.deep);
+    // Back shards fan out behind the shoulders: the silhouette is a crown of ice, not horns.
+    for (const [x0, y0, x1, y1] of [[-6, -14, -15, -26], [-4, -16, -9, -30], [-1, -16, -1, -31], [-7, -10, -18, -17], [-6, -5, -16, -6]]) shard(x0, y0, x1, y1);
+    // Layered robe, stiff and torn into icicle-like strips at the hem.
+    g.poly([[-8, -14], [6, -14], [9, 19], [5, 15], [3, 20], [0, 15], [-3, 20], [-6, 15], [-9, 19]], C.robe);
+    g.poly([[-8, -14], [-3, -14], [-4, 18], [-9, 19]], C.robeDk);
+    g.line(3, -10, 5, 16, C.robeHi);
+    for (const x of [-6, -2, 2, 6]) g.px(x, 19 - (x & 1), C.iceHi);
+    g.line(-6, -4, 5, -2, C.chain);
+    // Shoulder shards.
+    shard(-5, -14, -8, -21); shard(4, -14, 8, -23);
+    // Deep hood with only the cold eyes showing.
+    g.poly([[-6, -15], [1, -27], [7, -15], [6, -9], [-5, -9]], C.robe);
+    g.poly([[-6, -15], [1, -27], [-1, -10], [-5, -9]], C.robeDk);
+    g.ell(3, -15, 2.8, 3.4, C.void);
+    g.px(2, -16, C.eye); g.px(4, -16, C.eye);
+    // Lance arm: carried trailing low while it walks, levelled at the shoulder while it aims.
+    if (aim) {
+        g.line(4, -11, -3, -11, C.skin, 2);
+        g.line(-12, -11, 22, -11, C.iceDk, 3); g.line(-12, -12, 22, -12, C.ice); g.line(16, -12, 24, -11, C.iceHi);
+        g.poly([[20, -14], [26, -11], [20, -8]], C.ice);
+    } else {
+        const sw = pose === 1 ? 1 : pose === 2 ? -1 : 0;
+        g.line(4, -11, 9, -2, C.skin, 2);
+        g.line(2, 10 + sw, 18, -12 + sw, C.iceDk, 2); g.line(3, 9 + sw, 18, -12 + sw, C.ice); g.px(19, -13 + sw, C.iceHi);
+    }
+    b.rim('#dff6ff', '#07090d', .35, .3);
+    b.outline('#080a0f');
+    const o = s.origin;
+    b.set(o[0] + 2, o[1] - 16, C.iceHi); b.set(o[0] + 4, o[1] - 16, C.iceHi);
+    if (aim) b.set(o[0] + 24, o[1] - 11, C.iceHi);
+    return b;
+}
+
+const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden,
+    frostlingPackling, shardcaster];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 
