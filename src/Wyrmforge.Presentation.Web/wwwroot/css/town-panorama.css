@@ -153,3 +153,25 @@ html:has(.refuge-home), body:has(.refuge-home) {
   .game-shell.refuge-home .town-square {display:block!important}
   .game-shell.refuge-home .town-panorama-viewport {width:100vw!important;height:100dvh!important}
 }
+
+
+/* Town v0.0.120: preserve the 2172×724 artwork's intrinsic 3:1 proportions.
+   A tall portrait viewport is a window into this square-per-slice panorama,
+   never permission to stretch its architecture vertically. */
+.game-shell.refuge-home .town-panorama {
+  box-sizing:border-box;
+  width:300dvh!important;
+  height:100dvh!important;
+  min-width:0;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+.game-shell.refuge-home .town-panorama-art {
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+}
+.game-shell.refuge-home .town-snap {
+  scroll-snap-align:center!important;
+}
+/* Touch can pan across the authentic image; overlays retain their own fixed positions. */
+.game-shell.refuge-home .town-panorama-viewport {scroll-padding-inline:0!important}

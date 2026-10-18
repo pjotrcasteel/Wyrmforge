@@ -45,39 +45,55 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-hotspot")).ToHaveCountAsync(5);
         var scene = Page.Locator(".town-panorama-art");
         await Expect(scene).ToBeVisibleAsync();
-        Assert.IsTrue((await scene.GetAttributeAsync("src"))?.Contains("refuge-town-panorama.png", StringComparison.Ordinal) == true,
-            "The approved panorama must replace the old SVG courtyard.");
+        Assert.IsTrue((await scene.GetAttributeAsync("src"))?.Contains("refuge-town-vacant.webp", StringComparison.Ordinal) == true,
+            "The town must load the corrected vacant blacksmith asset.");
 
         await Page.WaitForFunctionAsync(@"() => {
             const image = document.querySelector('.town-panorama-art');
             return image && image.complete && image.naturalWidth === 2172 && image.naturalHeight === 724;
         }");
         var viewport = Page.Locator(".town-panorama-viewport");
+        var proportionsCorrect = await viewport.EvaluateAsync<bool>(@"element => {
+            const img = element.querySelector('.town-panorama-art');
+            const rect = img.getBoundingClientRect();
+            const track = element.querySelector('.town-panorama');
+            return Math.abs(rect.width / rect.height - img.naturalWidth / img.naturalHeight) < .005
+                && Math.abs(track.clientWidth / 3 - rect.height) < 2
+                && Math.abs(rect.height - element.clientHeight) < 2
+                && element.scrollWidth > element.clientWidth * 2;
+        }");
+        Assert.IsTrue(proportionsCorrect, "Portrait screens must crop the naturally proportioned scene, never stretch it.");
+
         await Page.WaitForFunctionAsync(@"() => {
             const view = document.querySelector('.town-panorama-viewport');
-            return view && Math.abs(view.scrollLeft - view.clientWidth) < 3;
+            const expected = view.scrollWidth / 2 - view.clientWidth / 2;
+            return Math.abs(view.scrollLeft - expected) < 4;
         }");
-        var threeSlices = await viewport.EvaluateAsync<bool>("element => Math.abs(element.scrollWidth / element.clientWidth - 3) < .05");
-        Assert.IsTrue(threeSlices, "The same town art must occupy exactly three horizontal slices.");
-        await viewport.EvaluateAsync("element => element.scrollTo({ left: 0, behavior: 'auto' })");
-        await Page.WaitForFunctionAsync("() => document.querySelector('.town-panorama-viewport').scrollLeft < 3");
+        await ScreenshotAsync($"refuge-town-center-{width}.png");
+        await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(0, false)");
+        await Page.WaitForFunctionAsync(@"() => {
+            const view = document.querySelector('.town-panorama-viewport');
+            return Math.abs(view.scrollLeft - (view.scrollWidth / 6 - view.clientWidth / 2)) < 4;
+        }");
         await Expect(Page.Locator(".town-hotspot--build")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-hotspot--forge")).ToHaveCountAsync(1);
-        await viewport.EvaluateAsync("element => element.scrollTo({ left: element.clientWidth * 2, behavior: 'auto' })");
+        await ScreenshotAsync($"refuge-town-left-{width}.png");
+
+        await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(2, false)");
         await Page.WaitForFunctionAsync(@"() => {
             const view = document.querySelector('.town-panorama-viewport');
-            return Math.abs(view.scrollLeft - view.clientWidth * 2) < 3;
+            return Math.abs(view.scrollLeft - (view.scrollWidth * 5 / 6 - view.clientWidth / 2)) < 4;
         }");
         await Expect(Page.Locator(".town-hotspot--codex")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-hotspot--legends")).ToHaveCountAsync(1);
-        await viewport.EvaluateAsync("element => element.scrollTo({ left: element.clientWidth, behavior: 'auto' })");
+        await ScreenshotAsync($"refuge-town-right-{width}.png");
+
         var fullscreen = await viewport.EvaluateAsync<bool>(@"element => {
             const rect = element.getBoundingClientRect();
             return Math.abs(rect.width - innerWidth) <= 2 && Math.abs(rect.height - innerHeight) <= 2;
         }");
         Assert.IsTrue(fullscreen, "The town must occupy the full browser viewport rather than a square card.");
         await Expect(Page.Locator(".town-action-dock")).ToHaveCountAsync(0);
-        await ScreenshotAsync($"refuge-town-{width}.png");
     }
 
     [TestMethod]
