@@ -225,6 +225,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Alert)).ToHaveTextAsync("Choose a different name.");
         await Page.GetByRole(AriaRole.Button, new() { Name = "CANCEL", Exact = true }).ClickAsync();
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
         await Expect(edit).ToContainTextAsync("Test Hunter");
         await Page.Locator("#wyrmforge-ignition").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         await ScreenshotAsync("mobile-player-name-320.png");
