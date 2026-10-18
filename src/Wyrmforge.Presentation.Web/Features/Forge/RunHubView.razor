@@ -6,6 +6,8 @@
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.Experience
 @using Wyrmforge.Domain.Spells.Contextual
+@using Wyrmforge.Application.World
+@using Wyrmforge.Domain.World
 
 <section class="run-hub">
     <button class="enter-realm" @onclick="StartAsync">BEGIN HUNT</button>
@@ -48,6 +50,13 @@
                 <div class="keystone-summary mutation-summary">
                     <span>MUTATION@(prepared.Count == 1 ? string.Empty : "S")</span>
                     <strong>@(prepared.Count > 0 ? string.Join(" • ", prepared.Select(id => $"{LaboratoryCatalog.Get(id).Name} ({LaboratoryCatalog.Get(Laboratory.SocketOf(id)!.Value).NodeName})")) : "None equipped · equip a discovery in the Arcane Nexus")</strong>
+                </div>
+            }
+            @if (AtlasUnlocked)
+            {
+                <div class="keystone-summary region-summary" title="Regions are charted by hunting in them. Region names are working titles.">
+                    <span>REGION</span>
+                    <strong>@Region.Name · @Region.DominantSchool ground · @ChartedLabel</strong>
                 </div>
             }
             @if (AtlasUnlocked && Hunter is not null)
@@ -103,6 +112,11 @@
 </section>
 
 @code {
+    [Parameter] public RegionDefinition Region { get; set; } = RegionCatalog.Starting;
+    [Parameter] public RegionDiscoveryState? World { get; set; }
+
+    private string ChartedLabel => $"{Math.Max(1, World?.Discovered.Count ?? 0)} of {RegionCatalog.All.Count} regions charted";
+
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public int RewardCaches { get; set; }

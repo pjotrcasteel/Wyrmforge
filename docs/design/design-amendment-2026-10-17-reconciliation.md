@@ -85,7 +85,7 @@ These follow the amendment §11. They are candidates, not a fixed schedule.
 - (c) Only after (a) and (b), re-measure. If Frost still slays fewest Wyrms, look at a frozen-target payoff outside Absolute Zero, e.g. shatter damage that scales with depth.
 
 **Presence scale (product-owner request, done ahead of S6).** `WyrmTier` (Wyrm, Ascendant, Elder, Divine) is a Domain contract whose only behaviour today is body size: ×1, ×1.15, ×1.35, ×1.6 of the catalog radius. The body is the hit area and drives the sprite. Wyrm radii rose ~1.75× (Ashfang 34→60). Only Wyrm and Ascendant are fought; Elder and Divine are reserved, their names stay provisional, and they need a roaming lair camera before they ship, because a Divine body fills a phone's width. Elites grow ×1.25; the Reliquary (27) and Bell Warden (38) outsize every elite.
-6. **Region and lineage data contracts** and a non-campaign start path.
+6. **Region and lineage data contracts** and a non-campaign start path. **Done (contracts only):** `RegionCatalog` (1 playable, 3 planned from the concept folders), `WyrmLineageCatalog` (Primordial added as a reserved tier), `RegionDiscoveryState` in `wyrmforge.world.v1`, and `SaveLayout` that maps every key to a state domain. Attraction is unchanged for the starting region. ChronicleState and OneTimeGrantLedger stay as documented seams until a campaign exists. See `regions-and-lineages-v1.md`.
 
 ## Open questions
 
@@ -95,4 +95,5 @@ These are left to the product owner. Nothing here has been decided.
 - The loadout unlock cadence (1 → 4) and the weights used to choose between casts.
 - The full list of disciplines, the node count, and the point budget.
 - The campaign's element order and the thresholds for the non-campaign route.
-- The Wyrm tier names beyond Ascendant/Elder (`WyrmTier.Elder`/`Divine` are placeholders).
+- The Wyrm tier names beyond Ascendant (`WyrmTier.Elder`/`Primordial`/`Divine` are placeholders).
+- Region names: "The Cinder Frontier" is a working title, and the three planned regions are unnamed.

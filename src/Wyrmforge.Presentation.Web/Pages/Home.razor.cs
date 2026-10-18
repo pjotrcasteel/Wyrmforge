@@ -127,6 +127,7 @@ public partial class Home
         await TryLoadBestiaryAsync();
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
+        await TryLoadWorldAsync();
         await TryLoadLaboratoryAsync();
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
@@ -181,6 +182,7 @@ public partial class Home
         }
         selectedOffering = null;
         PrepareLaboratoryRun();
+        await DiscoverCurrentRegionAsync();
         await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;

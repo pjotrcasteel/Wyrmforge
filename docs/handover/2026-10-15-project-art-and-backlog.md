@@ -427,3 +427,15 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **BalanceLab:** `--contextual` adds the `contextualCasts` column. In the A/B, fragile schools gain the most (Arcane defeats 46→34%) and Storm pays a little (15→21%, within noise).
 - **Docs:** `docs/design/contextual-autocast-v1.md`.
 - **Next:** amendment §11.5, region and lineage data contracts with state separation. Alternatively, apply the Frost telemetry proposals.
+
+## 29. Region and lineage data contracts (amendment §6, §7, §11.5)
+
+- **Domain:** `RegionId`, `RegionDiscoveryState`, `WyrmLineageCatalog` (one lineage per school, Hunted ≤ Ascendant, Reserved above). `WyrmTier.Primordial` added (×1.48).
+- **Application:** `RegionDefinition`/`RegionCatalog`. The Cinder Frontier (working title) is playable. The Frost, Storm and Arcane regions are planned, with concept rosters taken from `user_handover_files/concepts`.
+- **Access and influence:** access uses account facts only. Influence is Home/Present/Absent.
+- **Persistence:** `SaveLayout` assigns every storage key a `SaveDomain`, and a test enforces it.
+- **Simulation:** the factory takes `region:`. The first hunt goes to the home lineage, and Absent lineages are excluded. The starting region is byte-identical.
+- **Web:** `wyrmforge.world.v1` with a migration for existing hunters. Hunt prep shows a REGION line.
+- **Docs:** `docs/design/regions-and-lineages-v1.md`.
+- **Tests:** `RegionWorldTests` (8) and `RegionCatalogTests` (8).
+- **Next:** apply the Frost telemetry proposals (proc guard, draft parity), or start authoring the second region's enemies from the concept sheets.
