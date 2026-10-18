@@ -73,3 +73,17 @@ test('each walking variant has separately authored lower-body pixel art, with no
         assert.ok(frames>25);
     } finally { globalThis.document=original; }
 });
+
+test('mire hounds step on a contact beat and never animate when standing still', () => {
+    const state=createEnemyMotionState();
+    const hound={entityId:221,x:0,y:0,kind:1};
+    assert.equal(updateEnemyMotions(state,[hound],0).get(221),0);
+    assert.equal(updateEnemyMotions(state,[{...hound,x:5}],.05).get(221),0,
+        'The second pose is a planted contact, not a teleporting paw.');
+    assert.equal(updateEnemyMotions(state,[{...hound,x:9}],.09).get(221),2,
+        'The opposite diagonal should take the next stride.');
+    assert.equal(updateEnemyMotions(state,[{...hound,x:9}],.4).get(221),0,
+        'Standing hounds return to the grounded pose.');
+    assert.equal(updateEnemyMotions(state,[{...hound,x:12}],.41,true).get(221),0,
+        'Accessibility settings suppress motion changes.');
+});
