@@ -18,7 +18,7 @@
     @if (section != ShellSection.Run)
     {
         <header class="menu-header">
-            <button class="menu-back" aria-label="@(section == ShellSection.Laboratory && ForgeUnlocked ? "Back to Forge" : "Back to main menu")" @onclick="() => Navigate(section == ShellSection.Laboratory && ForgeUnlocked ? ShellSection.Forge : ShellSection.Run)">‹</button>
+            <button class="menu-back" aria-label="Back to main menu" @onclick="() => Navigate(ShellSection.Run)">‹</button>
             <h1>@SectionTitle</h1>
         </header>
     }
@@ -53,7 +53,7 @@
                         }</header>
                     <nav class="menu-actions" aria-label="Wyrmforge navigation">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
-                        @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run and not ShellSection.Laboratory))
+                        @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                         {
                             var unlocked = IsUnlocked(item.Section);
                             <button class="menu-destination" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
@@ -74,11 +74,22 @@
                 </section>
                 break;
             case ShellSection.Build:
-                @if (IsUnlocked(ShellSection.Laboratory))
+                @if (SpellcraftOpen)
                 {
-                    <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
-                        Laboratory="Laboratory" Vault="Vault" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice" FocusNodeId="@nexusFocus"
-                        RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" />
+                    <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus facets">
+                        <button role="tab" aria-selected="@((facet == NexusFacet.Web).ToString().ToLowerInvariant())" class="@(facet == NexusFacet.Web ? "active" : string.Empty)" @onclick="() => OpenFacet(NexusFacet.Web)"><b>Web</b><small>where it lives</small></button>
+                        <button role="tab" aria-selected="@((facet == NexusFacet.Spellcraft).ToString().ToLowerInvariant())" class="@(facet == NexusFacet.Spellcraft ? "active" : string.Empty)" @onclick="() => OpenFacet(NexusFacet.Spellcraft)"><b>Spellcraft</b><small>@LaboratoryStatus</small></button>
+                    </div>
+                    @if (facet == NexusFacet.Spellcraft)
+                    {
+                        <SpellcraftView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Loadouts="Loadouts" Focus="spellcraftFocus" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice"
+                            OnOpenWeb="OpenWebAt" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" />
+                    }
+                    else
+                    {
+                        <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                            Laboratory="Laboratory" Vault="Vault" FocusNodeId="@nexusFocus" OnOpenSpellcraft="OpenSpellcraftFor" Equip="EquipMutation" />
+                    }
                 }
                 else
                 {
@@ -86,23 +97,20 @@
                 }
                 break;
             case ShellSection.Forge:
-                @if (IsUnlocked(ShellSection.Laboratory))
+                @if (SpellcraftOpen)
                 {
-                    <button class="forge-lab-entry" aria-label="Open Laboratory" @onclick="() => Navigate(ShellSection.Laboratory)">
-                        <span><i class="px-icon px-sm px-flask" aria-hidden="true"></i>Laboratory</span>
+                    <button class="forge-lab-entry" aria-label="Open Spellcraft" @onclick="() => OpenSpellcraftFor(null)">
+                        <span><i class="px-icon px-sm px-flask" aria-hidden="true"></i>Spellcraft</span>
                         <small>@LaboratoryStatus ›</small>
                     </button>
                 }
                 <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
                 break;
-            case ShellSection.Laboratory:
-                <LaboratoryView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice" OnOpenAtlas="() => NavigateAsync(ShellSection.Build)" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" Focus="LaboratoryFocus" />
-                break;
             case ShellSection.Codex:
                 <CodexView Codex="Codex" Bestiary="Bestiary" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
                 break;
             case ShellSection.Prepare:
-                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(IsUnlocked(ShellSection.Laboratory) ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
+                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(SpellcraftOpen ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                 break;
             case ShellSection.Gate:
                 <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" Access="RegionAccess" OnRegionChanged="OnRegionChanged" OnExplore="StartAsync" />
@@ -178,13 +186,14 @@
 
     private ShellSection section = ShellSection.Run;
     private string? nexusFocus;
+    private NexusFacet facet = NexusFacet.Web;
+    private LaboratoryMutationId? spellcraftFocus;
     private static readonly NavigationItem[] Navigation =
     [
         new(ShellSection.Run, "sword", "Run"),
         new(ShellSection.Gate, "gate", "World Gate"),
         new(ShellSection.Build, "rune", "Arcane Nexus"),
         new(ShellSection.Forge, "anvil", "Forge"),
-        new(ShellSection.Laboratory, "flask", "Laboratory"),
         new(ShellSection.Codex, "book", "Codex"),
     ];
 
@@ -193,7 +202,7 @@
     {
         ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
         ShellSection.Build or ShellSection.Gate => Progress.AtlasUnlocked,
-        ShellSection.Codex or ShellSection.Laboratory => Progress.CodexUnlocked,
+        ShellSection.Codex => Progress.CodexUnlocked,
         ShellSection.Forge => ForgeUnlocked,
         _ => false,
     };
@@ -202,11 +211,27 @@
         ShellSection.Build => "Arcane Nexus locked until your First Hunt ends",
         ShellSection.Gate => "World Gate locked until your First Hunt ends",
         ShellSection.Codex => "Codex locked until your First Hunt ends",
-        ShellSection.Laboratory => "Laboratory locked until your First Hunt ends",
         ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
         _ => "Locked",
     };
-    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; }
+    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = NexusFacet.Web; spellcraftFocus = null; }
+
+    // Spellcraft is the research facet of the Arcane Nexus: the Web says where a mutation lives, the circle what it becomes.
+    private bool SpellcraftOpen => IsUnlocked(ShellSection.Build) && Progress.CodexUnlocked;
+    private void OpenFacet(NexusFacet value) { facet = value; if (value == NexusFacet.Web) spellcraftFocus = null; }
+    private void OpenSpellcraftFor(LaboratoryMutationId? mutation)
+    {
+        if (!SpellcraftOpen) return;
+        section = ShellSection.Build;
+        facet = NexusFacet.Spellcraft;
+        spellcraftFocus = mutation;
+    }
+    private void OpenWebAt(string nodeId)
+    {
+        facet = NexusFacet.Web;
+        spellcraftFocus = null;
+        nexusFocus = nodeId;
+    }
     private Task NavigateAsync(ShellSection value) { Navigate(value); return Task.CompletedTask; }
     private Task SelectOfferingAsync(DragonEssenceId id) => OnOfferingChanged.InvokeAsync(id);
     private Task ForgeAsync(ForgeMasteryId id) => OnForgeMastery.InvokeAsync(id);
@@ -226,17 +251,11 @@
 
     protected override void OnInitialized()
     {
-        if (!StartInLaboratory || !IsUnlocked(ShellSection.Laboratory)) return;
-        // A post-hunt research prompt opens the Arcane Nexus on the node that hosts the recipe (amendment §3).
-        if (IsUnlocked(ShellSection.Build))
-        {
-            var mutation = LaboratoryFocus ?? Laboratory.Tracked ?? LaboratoryMutationId.RimeInfusion;
-            nexusFocus = LaboratoryCatalog.Get(LaboratoryCatalog.Get(mutation).Socket).NodeId;
-            section = ShellSection.Build;
-        }
-        else section = ShellSection.Laboratory;
+        // A post-hunt research prompt opens the Nexus on the Spellcraft circle with that recipe seated (amendment §3).
+        if (StartInLaboratory) OpenSpellcraftFor(LaboratoryFocus ?? Laboratory.Tracked);
     }
 
-    private enum ShellSection { Run, Gate, Build, Forge, Laboratory, Codex, Prepare, Options }
+    private enum ShellSection { Run, Gate, Build, Forge, Codex, Prepare, Options }
+    private enum NexusFacet { Web, Spellcraft }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
 }

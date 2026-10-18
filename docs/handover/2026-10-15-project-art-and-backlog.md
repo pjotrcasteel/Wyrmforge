@@ -534,3 +534,11 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Presentation:** the moments "THE RELIQUARY OF GLASS", "THE GLASS SHATTERS", "VEIL BROKEN" and the glass defeat and withdraw texts; the new module is `arena-glass-reliquary-vfx.js`; the Reliquary sigil, hush, emergence and bar are themed by the snapshot `Variant`; kinds 18–20 have sprites and fallback palettes.
 - **Tests:** `GlassReliquaryBehaviorStateTests` (Domain), `GlassReliquaryEncounterTests` (Application), `arena-glass-reliquary-vfx.test.mjs`. Domain 329, Application 479, JS 170, Browser 48/50 (the two known mobile failures).
 - **Next:** the Nexus Spellcraft redesign (handover + amendment). Balancing comes last.
+
+## 39. Arcane Nexus: Spellcraft
+
+- **One research surface:** the Nexus has two facets, Web (where a resonance lives) and Spellcraft (a live ritual circle). The standalone LaboratoryView is retired; the Forge entry opens Spellcraft. Details are in `docs/design/spellcraft-v1.md`.
+- **The circle:** Foundation and Infusion seats with a sealed third seat; element order matters (reversed order is sealed with a clue). The centre sigil has one glass shard per condition. A six-page grimoire (one per handover family) and a research log that keeps failures. Tap-to-place, a thumb-zone dock, a consent sheet before binding, a Test vignette, reduced-motion and additive haptics.
+- **Read model:** `Spellcraft` (Application) over the existing Laboratory and `ArcaneNexus.Research`; no domain or save changes. Rendering in `spellcraft-circle.js`. Art: `spellcraft-study.jpg`, a crop of the owner concept.
+- **Tests:** `SpellcraftTests` (Application), `spellcraft-circle.test.mjs`, browser `Mobile_Spellcraft_ResearchesAndBindsRimeInfusionWithConsent`. Domain 329, Application 486, JS 184, Browser 49/51 (the two known mobile failures).
+- **Next:** the next amendment step (handover + amendment). Balancing comes last.

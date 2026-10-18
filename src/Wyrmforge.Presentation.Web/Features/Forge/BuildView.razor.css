@@ -1687,3 +1687,5 @@
     .node-inspector { top: auto; max-height: min(55dvh, 460px); }
     .inspector-cost { margin-right: 46px; }
 }
+.nexus-progress { margin: 0; color: #b7aaba; font-size: .74rem; }
+.nexus-progress b { color: #d8b46a; }

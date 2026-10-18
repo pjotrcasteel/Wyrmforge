@@ -143,6 +143,44 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_Spellcraft_ResearchesAndBindsRimeInfusionWithConsent()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['RimeHeart']));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Spellcraft" }).ClickAsync();
+
+        await Expect(Page.Locator(".resonance-title h2")).ToHaveTextAsync("Frostfire");
+        await Expect(Page.Locator(".grimoire-count b")).ToHaveTextAsync("0");
+        Assert.IsTrue(await Page.Locator(".ritual-canvas").EvaluateAsync<bool>("canvas => canvas.width > 0 && canvas.height === canvas.width"), "The ritual circle renders on a square canvas.");
+
+        var primary = Page.Locator(".rite-primary");
+        for (var entries = 1; entries <= 6 && !(await Page.Locator(".resonance-stage").InnerTextAsync()).Contains("READY", StringComparison.OrdinalIgnoreCase); entries++)
+        {
+            await primary.ClickAsync();
+            await Expect(Page.Locator(".research-log summary")).ToContainTextAsync($"{entries} entr");
+        }
+        await Expect(Page.Locator(".resonance-stage")).ToHaveTextAsync("Ready to bind");
+
+        await primary.ClickAsync();
+        var consent = Page.GetByRole(AriaRole.Alertdialog, new() { Name = "Bind the resonance" });
+        await Expect(consent).ToBeVisibleAsync();
+        Assert.AreEqual("[\"RimeHeart\"]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceVault')"), "Nothing is consumed before consent.");
+        await consent.GetByRole(AriaRole.Button, new() { Name = "CONSUME & BIND" }).ClickAsync();
+
+        await Expect(Page.Locator(".resonance-title h2")).ToHaveTextAsync("Rime Infusion");
+        await Expect(Page.Locator(".grimoire-count b")).ToHaveTextAsync("1");
+        Assert.IsFalse((await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceVault') ?? '[]'")).Contains("RimeHeart"), "Binding consumes the Rime Heart.");
+
+        await Page.Locator(".element-token").Filter(new() { HasText = "Storm" }).ClickAsync();
+        await Page.Locator(".seat-infusion").ClickAsync();
+        await Page.Locator(".element-token").Filter(new() { HasText = "Storm" }).ClickAsync();
+        await Expect(Page.Locator(".resonance-title h2")).ToHaveTextAsync("Flashpoint");
+        await Expect(primary).ToContainTextAsync("SEALED");
+    }
+
+    [TestMethod]
     public async Task Mobile_HallOfFame_SeparatesFictionalLegendsAndAutomaticScores()
     {
         await Page.SetViewportSizeAsync(390, 844);

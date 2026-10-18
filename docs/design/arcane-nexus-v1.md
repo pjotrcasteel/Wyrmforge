@@ -13,7 +13,7 @@ The Design Amendment of 2026-10-17 (§3, §11 step 2) merges the Arcane Web and 
   - `Mark(...)` returns the per-node badge state.
   - The guided step skips dead-end (Incompatibility) experiments. The player can still run them from the experiments list.
 - **Rendering only in the UI.** `BuildView` renders the read model and invokes the existing Laboratory commands through `ForgeView`. C# owns every rule; JS only pans, zooms and focuses.
-- **Legacy surface.** The standalone `LaboratoryView` stays reachable from the Forge until the Forge ritual facet joins the Nexus.
+- **Spellcraft facet (2026-10-18).** The standalone `LaboratoryView` is retired. The Nexus now has two facets, Web and Spellcraft; research, binding and testing moved to the Spellcraft circle, and the node inspector keeps a progress line, Equip/Unequip and "OPEN THE CIRCLE". See `spellcraft-v1.md`.
 
 ## Mobile design decisions and research basis
 
@@ -33,7 +33,6 @@ The Design Amendment of 2026-10-17 (§3, §11 step 2) merges the Arcane Web and 
 
 ## Not in v1
 
-- The Forge ritual facet merging into the Nexus.
 - Recipes beyond the existing Rime and Storm infusions.
 - `NexusKnowledge` as a separate persisted state (S3).
-- A dedicated browser test for the full bench journey. It is currently verified by Playwright captures and `ArcaneNexusTests`.
+- The bench journey's browser test now lives with Spellcraft (`Mobile_Spellcraft_ResearchesAndBindsRimeInfusionWithConsent`).

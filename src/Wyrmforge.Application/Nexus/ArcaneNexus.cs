@@ -106,7 +106,7 @@ public static class ArcaneNexus
         return new(socket, LaboratoryState.SocketUnlocked(socket.Id, arcaneNodes), holder, equippable);
     }
 
-    private static NexusResearch Research(LaboratoryMutationDefinition mutation, LaboratoryState laboratory, DragonEssenceVault vault, IReadOnlySet<string> arcaneNodes, HuntLoadoutBook? loadouts)
+    public static NexusResearch Research(LaboratoryMutationDefinition mutation, LaboratoryState laboratory, DragonEssenceVault vault, IReadOnlySet<string> arcaneNodes, HuntLoadoutBook? loadouts)
     {
         var experiments = LaboratoryCatalog.ExperimentsFor(mutation.Id)
             .Select(experiment => new NexusExperimentStep(experiment, laboratory.Availability(experiment.Id, vault)))
