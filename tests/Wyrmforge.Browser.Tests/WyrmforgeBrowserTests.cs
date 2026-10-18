@@ -1113,6 +1113,31 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_WorldGate_ShowsBothRoadsAndExplorationStartsAHunt()
+    {
+        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.Locator("nav.menu-actions button").Filter(new() { HasText = "World Gate" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "World Gate" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Road to the Conclave" })).ToBeVisibleAsync();
+        await ScreenshotAsync("world-gate-explore.png");
+        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
+        Assert.IsLessThanOrEqualTo(1, horizontal);
+
+        await Page.Locator(".gate-arch.campaign").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "The Broken Covenant" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "IN PREPARATION", Exact = true })).ToBeDisabledAsync();
+        await ScreenshotAsync("world-gate-campaign.png");
+
+        await Page.Locator(".gate-arch.explore").ClickAsync();
+        await Page.Locator(".gate-cta").ClickAsync();
+        await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
+        await Expect(Page.Locator(".world-gate")).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
     public async Task Mobile_Atlas_CompleteWebAndBackNavigationArePreserved()
     {
         await Page.SetViewportSizeAsync(320, 568);

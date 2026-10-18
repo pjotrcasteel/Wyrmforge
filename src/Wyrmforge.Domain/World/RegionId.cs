@@ -8,8 +8,7 @@ public readonly record struct RegionId
 {
     public RegionId(string value)
     {
-        if (string.IsNullOrWhiteSpace(value) || value.Any(character => !(char.IsAsciiLetterLower(character) || char.IsAsciiDigit(character) || character == '-'))
-            || value.StartsWith('-') || value.EndsWith('-') || value.Contains("--", StringComparison.Ordinal))
+        if (!KebabCase.IsValid(value))
             throw new ArgumentException("A region id is lower-case kebab-case.", nameof(value));
         Value = value;
     }

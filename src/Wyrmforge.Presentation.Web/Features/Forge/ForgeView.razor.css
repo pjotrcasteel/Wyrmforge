@@ -27,7 +27,7 @@
 .menu-actions button:not(:disabled):hover,.menu-footer button:hover,.menu-back:hover{background:#36283f}
 .menu-actions button:not(:disabled):active{transform:translateY(1px)}
 @media(max-height:650px){.main-menu{gap:10px}.menu-brand{padding:0;gap:6px}.menu-sigil{width:40px;height:40px;font-size:1.3rem}.menu-brand h1{font-size:1.55rem}.menu-actions .menu-begin{min-height:48px;margin-bottom:2px}.menu-actions button{min-height:44px}.menu-home .shell-content{padding:12px}}
-@media(orientation:landscape) and (max-height:520px){.menu-home .shell-content{width:min(700px,100%)}.main-menu{display:grid;grid-template-columns:1fr 1.5fr;gap:12px 24px;align-items:center}.menu-brand{align-self:center}.menu-footer{grid-column:2}.menu-actions button{min-height:44px}.menu-brand h1{font-size:1.4rem}}
+@media(orientation:landscape) and (max-height:520px){.menu-home .shell-content{width:min(700px,100%)}.main-menu{display:grid;grid-template-columns:1fr 1.5fr;grid-template-rows:1fr auto;gap:12px 24px;align-items:center}.menu-brand{align-self:center}.menu-actions .menu-begin{margin-bottom:4px}.menu-actions button{min-height:44px}.menu-brand h1{font-size:1.4rem}}
 @media(prefers-reduced-motion:reduce){.menu-actions button:active{transform:none}}
 
 .hunter-menu-progress{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;width:100%;max-width:280px;padding:8px 12px;border:1px solid #403346;background:transparent;color:#cead74;font:600 .7rem/1.2 system-ui,sans-serif;cursor:pointer}.hunter-menu-progress span:last-child{color:#b7aaba;font-weight:400}.hunter-menu-progress:focus-visible{outline:2px solid #cead74;outline-offset:3px}
@@ -63,8 +63,9 @@
 .name-editor button { min-height:44px; padding:8px 14px; border:1px solid #655276; border-radius:5px; background:#302339; color:#eee4f8; font:inherit; cursor:pointer; }
 @media(orientation:landscape) and (max-height:520px) {
     .menu-brand { grid-column:1; grid-row:1; }
-    .menu-actions { grid-column:2; grid-row:1; }
-    .menu-footer { grid-column:2; grid-row:2; }
+    /* The footer sits under the brand so the six destinations fit a 390 px tall landscape phone. */
+    .menu-actions { grid-column:2; grid-row:1 / span 2; }
+    .menu-footer { grid-column:1; grid-row:2; }
 }
 
 /* Laboratory lives inside the Forge so the hub stays at its five-row mobile height. */

@@ -475,3 +475,13 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Tests:** `FrostShatterTests` (Domain), two shatter cases in `OpeningPowerTests`.
 - **Owner decision (2026-10-18):** balancing is deferred until every system is in place. Do not open new tuning passes before then; open findings such as Arcane's 20.5% defeat rate wait for that final pass.
 - **Next:** amendment §11 slice 5: a second non-campaign start path and clean Chronicle/World/Nexus/Endgame state separation.
+
+## 32. World Gate, Chronicles and the one-time grant ledger (amendment §11.5)
+
+- **World Gate:** a new main-menu destination (after the first hunt) with two arches over product-owner concept art: Free Exploration (region facts, "Road to the Conclave" checklist, ENTER) and Campaign (Book I outline, **In preparation**). BEGIN HUNT is unchanged.
+- **Chronicles (Domain):** `StoryBookCatalog` (Book I *The Broken Covenant*, provisional canon), `ChronicleState` (ordered choices, endings) and `ChronicleRegistry` (independent Chronicles, never overwritten). Saved as `wyrmforge.chronicles.v1`.
+- **OneTimeGrantLedger** (`wyrmforge.legacyGrants.v1`): permanent rewards are claimed once.
+- **AdvancedAccess:** Book I completion **or** every lineage's Wyrm + one Ascendant + Hunter 12. Claimed permanently; the Conclave arrives later.
+- **Menu:** six rows. In short landscape the footer moves under the brand; the floating sound controls hide on the World Gate and on short portrait menus (owner allowed hiding them).
+- **Tests:** `ChronicleTests` (Domain), `AdvancedAccessTests` (Application), `Mobile_WorldGate_ShowsBothRoadsAndExplorationStartsAHunt` (browser).
+- **Next:** author the second region's enemies from the concept folders, or the Arcane Nexus Spellcraft redesign (`concepts/Menus/spellcraft.jpg`). Balancing stays last.

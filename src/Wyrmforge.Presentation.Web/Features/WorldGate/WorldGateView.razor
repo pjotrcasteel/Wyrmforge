@@ -1,0 +1,75 @@
+@using Wyrmforge.Application.Chronicles
+@using Wyrmforge.Application.World
+@using Wyrmforge.Domain.Chronicles
+@using Wyrmforge.Domain.Combat.Dragons
+@using Wyrmforge.Domain.World
+
+@* The World Gate (amendment §6): two equal roads into one world. Free Exploration is today's hunting; the Campaign shows
+   Book I while its chapters are written. Both roads keep the same spells, research and charted regions. *@
+<section class="world-gate" aria-label="World Gate">
+    <div class="gate-art">
+        <button class="gate-arch explore @(campaign ? string.Empty : "chosen")" aria-pressed="@(!campaign)" @onclick="() => campaign = false">
+            <span class="arch-ring" aria-hidden="true"><i class="px-icon px-sm px-map"></i></span><strong>Free Exploration</strong>
+        </button>
+        <button class="gate-arch campaign @(campaign ? "chosen" : string.Empty)" aria-pressed="@campaign" @onclick="() => campaign = true">
+            <span class="arch-ring" aria-hidden="true"><i class="px-icon px-sm px-book"></i></span><strong>Campaign</strong><small>In preparation</small>
+        </button>
+    </div>
+    <p class="gate-prompt">Choose your own road</p>
+
+    @if (!campaign)
+    {
+        <article class="gate-sheet" aria-label="Free Exploration">
+            <header><small>FREE EXPLORATION</small><h2>@Region.Name</h2></header>
+            <p>Hunt where you choose. What you learn, secure and research is yours on every road, and the Campaign can begin at any time.</p>
+            <dl class="gate-facts">
+                <div><dt>Ground</dt><dd>@Region.DominantSchool</dd></div>
+                <div><dt>Home Wyrm</dt><dd>@DragonCatalog.Get(Region.HomeLineage).Name</dd></div>
+                <div><dt>Charted</dt><dd>@(World?.Discovered.Count ?? 0) of @RegionCatalog.All.Count regions</dd></div>
+            </dl>
+            <section class="gate-road" aria-label="Road to the Conclave">
+                <h3>Road to the Conclave</h3>
+                @if (Advancement.Unlocked)
+                {
+                    <p class="gate-earned">Earned @(Advancement.Route == AdvancementRoute.Campaign ? "through Book I" : "in the wild"). The Conclave and advanced research open in a later update; this is kept.</p>
+                }
+                else
+                {
+                    <p>Finish Book I, or prove the same mastery in the world:</p>
+                    <ul>
+                        <li class="@(Advancement.LineagesSlain >= AdvancedAccess.Lineages ? "met" : string.Empty)"><span>Slay a Wyrm of every lineage</span><b>@Advancement.LineagesSlain / @AdvancedAccess.Lineages</b></li>
+                        <li class="@(Advancement.AscendantsDefeated >= AdvancedAccess.ExplorationAscendants ? "met" : string.Empty)"><span>Defeat an Ascendant</span><b>@Math.Min(Advancement.AscendantsDefeated, AdvancedAccess.ExplorationAscendants) / @AdvancedAccess.ExplorationAscendants</b></li>
+                        <li class="@(Advancement.HunterLevel >= AdvancedAccess.ExplorationHunterLevel ? "met" : string.Empty)"><span>Reach Hunter @AdvancedAccess.ExplorationHunterLevel</span><b>@Math.Min(Advancement.HunterLevel, AdvancedAccess.ExplorationHunterLevel) / @AdvancedAccess.ExplorationHunterLevel</b></li>
+                    </ul>
+                }
+            </section>
+            <button class="gate-cta" @onclick="() => OnExplore.InvokeAsync()">ENTER @Region.Name.ToUpperInvariant()<span aria-hidden="true">›</span></button>
+        </article>
+    }
+    else
+    {
+        <article class="gate-sheet" aria-label="Campaign">
+            <header><small>CAMPAIGN</small><h2>@Book.Title</h2></header>
+            <p class="gate-question">@Book.CentralQuestion</p>
+            <p>@Book.Setting</p>
+            <ol class="gate-chapters">
+                @foreach (var segment in Book.Segments)
+                {
+                    <li><strong>@segment.Title</strong><span>@segment.Premise</span></li>
+                }
+            </ol>
+            <p class="gate-note">Book I is being written. When it opens, your spells, research and charted regions come with you, and nothing has to be replayed.</p>
+            <button class="gate-cta" disabled>IN PREPARATION</button>
+        </article>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public RegionDefinition Region { get; set; } = RegionCatalog.Starting;
+    [Parameter] public RegionDiscoveryState? World { get; set; }
+    [Parameter, EditorRequired] public AdvancementProgress Advancement { get; set; } = new(AdvancementRoute.None, 1, 0, 0);
+    [Parameter] public StoryBookDefinition Book { get; set; } = StoryBookCatalog.BrokenCovenant;
+    [Parameter] public EventCallback OnExplore { get; set; }
+
+    private bool campaign;
+}

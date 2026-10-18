@@ -162,6 +162,9 @@ html:has(.game-screen), body:has(.game-screen) { overflow: hidden; overscroll-be
 body:has(.game-screen) .wyrmforge-sound-controls { display:none; }
 /* The Arcane Nexus bottom sheet and next-discovery chip own the thumb zone; sound stays on the main menu. */
 body:has(.build-view) .wyrmforge-sound-controls { display:none; }
+/* The World Gate CTA and, on short phones, the six-row main menu own the thumb zone too (owner: sound controls may hide). */
+body:has(.world-gate) .wyrmforge-sound-controls { display:none; }
+@media (max-height:650px) and (orientation:portrait) { body:has(.main-menu) .wyrmforge-sound-controls { display:none; } }
 
 
 /* Sound Atelier 1.0 — stays in the home/forge only; combat, map and reward hit targets have priority. */

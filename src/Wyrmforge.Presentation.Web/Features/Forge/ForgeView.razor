@@ -58,7 +58,7 @@
                             var unlocked = IsUnlocked(item.Section);
                             <button class="menu-destination" disabled="@(!unlocked)" aria-label="@(item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : item.Label)" @onclick="() => Navigate(item.Section)">
                                 <span><i class="px-icon px-sm px-@item.Icon" aria-hidden="true"></i>@item.Label</span>
-                                <small>@(!unlocked ? $"◇ {UnlockHint(item.Section)}" : item.Section == ShellSection.Build ? $"{Selection.PointBudget - Selection.SpentPoints} points" : item.Section == ShellSection.Forge ? $"{Vault.TotalCount} Essence" : string.Empty)</small>
+                                <small>@(!unlocked ? $"◇ {UnlockHint(item.Section)}" : item.Section == ShellSection.Build ? $"{Selection.PointBudget - Selection.SpentPoints} points" : item.Section == ShellSection.Forge ? $"{Vault.TotalCount} Essence" : item.Section == ShellSection.Gate ? "Choose your road" : string.Empty)</small>
                             </button>
                         }
                         <button class="menu-destination" disabled="@(!Progress.LeaderboardUnlocked)" aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span><i class="px-icon px-sm px-crown" aria-hidden="true"></i>Hall of Fame</span><small>@(Progress.LeaderboardUnlocked ? BestScore.ToString("N0") : "◇ Finish two hunts")</small></button>
@@ -104,6 +104,9 @@
             case ShellSection.Prepare:
                 <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(IsUnlocked(ShellSection.Laboratory) ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
                 break;
+            case ShellSection.Gate:
+                <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" OnExplore="StartAsync" />
+                break;
             case ShellSection.Options:
                 <div class="menu-options"><button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button><a href="combat-lab">Developer Combat Lab</a></div>
                 break;
@@ -139,6 +142,7 @@
     [Parameter] public HunterProgress Hunter { get; set; } = new();
     [Parameter] public Wyrmforge.Application.World.RegionDefinition Region { get; set; } = Wyrmforge.Application.World.RegionCatalog.Starting;
     [Parameter] public Wyrmforge.Domain.World.RegionDiscoveryState? World { get; set; }
+    [Parameter] public Wyrmforge.Application.Chronicles.AdvancementProgress Advancement { get; set; } = new(Wyrmforge.Application.Chronicles.AdvancementRoute.None, 1, 0, 0);
     [Parameter] public LaboratoryState Laboratory { get; set; } = new();
     [Parameter] public string? LaboratoryNotice { get; set; }
     [Parameter] public EventCallback OnDismissLaboratoryNotice { get; set; }
@@ -175,6 +179,7 @@
     private static readonly NavigationItem[] Navigation =
     [
         new(ShellSection.Run, "sword", "Run"),
+        new(ShellSection.Gate, "gate", "World Gate"),
         new(ShellSection.Build, "rune", "Arcane Nexus"),
         new(ShellSection.Forge, "anvil", "Forge"),
         new(ShellSection.Laboratory, "flask", "Laboratory"),
@@ -185,7 +190,7 @@
     private bool IsUnlocked(ShellSection value) => value switch
     {
         ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
-        ShellSection.Build => Progress.AtlasUnlocked,
+        ShellSection.Build or ShellSection.Gate => Progress.AtlasUnlocked,
         ShellSection.Codex or ShellSection.Laboratory => Progress.CodexUnlocked,
         ShellSection.Forge => ForgeUnlocked,
         _ => false,
@@ -193,6 +198,7 @@
     private string NavHelp(ShellSection value) => IsUnlocked(value) ? value.ToString() : value switch
     {
         ShellSection.Build => "Arcane Nexus locked until your First Hunt ends",
+        ShellSection.Gate => "World Gate locked until your First Hunt ends",
         ShellSection.Codex => "Codex locked until your First Hunt ends",
         ShellSection.Laboratory => "Laboratory locked until your First Hunt ends",
         ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
@@ -229,6 +235,6 @@
         else section = ShellSection.Laboratory;
     }
 
-    private enum ShellSection { Run, Build, Forge, Laboratory, Codex, Prepare, Options }
+    private enum ShellSection { Run, Gate, Build, Forge, Laboratory, Codex, Prepare, Options }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
 }

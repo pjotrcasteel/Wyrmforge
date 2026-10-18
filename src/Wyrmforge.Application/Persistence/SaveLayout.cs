@@ -12,7 +12,7 @@ public enum SaveDomain
     PlayerLegacy,
     /// <summary>Regions discovered and their world facts.</summary>
     World,
-    /// <summary>Campaign choices and story flags. Reserved: no campaign exists yet, and a Chronicle may never grant power twice.</summary>
+    /// <summary>Independent story histories: book, chapter and choices. Never power; one-time rewards live in the PlayerLegacy grant ledger.</summary>
     Chronicle,
     /// <summary>Great Hunt, scores and hall of fame.</summary>
     Endgame,
@@ -24,6 +24,8 @@ public enum SaveDomain
 public static class SaveLayout
 {
     public const string World = "wyrmforge.world.v1";
+    public const string Chronicles = "wyrmforge.chronicles.v1";
+    public const string LegacyGrants = "wyrmforge.legacyGrants.v1";
 
     public static IReadOnlyDictionary<string, SaveDomain> Keys { get; } = new Dictionary<string, SaveDomain>(StringComparer.Ordinal)
     {
@@ -37,7 +39,9 @@ public static class SaveLayout
         ["wyrmforge.laboratory.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.loadouts.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.bestiary.v1"] = SaveDomain.PlayerLegacy,
+        [LegacyGrants] = SaveDomain.PlayerLegacy,
         [World] = SaveDomain.World,
+        [Chronicles] = SaveDomain.Chronicle,
         ["wyrmforge.greatHunt.v1"] = SaveDomain.Endgame,
         ["wyrmforge.bestScore"] = SaveDomain.Endgame,
         ["wyrmforge.hall-of-fame.local.v1"] = SaveDomain.Endgame,

@@ -128,6 +128,7 @@ public partial class Home
         await LoadFirstHuntAsync();
         await LoadArcaneBuildAsync();
         await TryLoadWorldAsync();
+        await TryLoadChroniclesAsync();
         await TryLoadLaboratoryAsync();
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
@@ -230,6 +231,7 @@ public partial class Home
         if (firstHunt.AwardsArcanePoint(tutorialEnded, value.Outcome == RunOutcome.Abandoned))
             selection.GrantPoints(1);
         hunterGain = CreditHunterExperience(value.ExperienceEarned);
+        await TryUnlockAdvancedAccessAsync();
         quests.Record(new HuntQuestEvidence(value.CompletedRouteNodes, value.RareRouteNodes, value.Depth, value.Outcome == RunOutcome.Abandoned,
             value.DragonIds, value.EssenceIds, value.Synergies > 0, value.SpellLoadout.Any(spell => spell.Evolution.HasValue)));
         await SaveArcaneBuildAsync();

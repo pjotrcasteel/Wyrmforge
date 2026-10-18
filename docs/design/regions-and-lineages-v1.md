@@ -38,9 +38,24 @@ Region names are working titles until the product owner names them (§14). The t
 - Migration: a hunter with completed runs and no world save gets the starting region charted when the page loads.
 - Hunt prep shows a REGION line: name, dominant ground and "n of 4 regions charted".
 
-## Non-campaign start path and future seams
+## Start paths: the World Gate
 
-- The current flow (first hunt → free hunting) already is the non-campaign path. Every region decision uses account facts only, so a future campaign joins as a second path into the same world.
-- A region choice appears once a second region becomes playable, opened by its access rule (thresholds are an open question, §14).
-- **ChronicleState** (campaign choices and flags) has a reserved `SaveDomain.Chronicle` but no key yet.
-- **OneTimeGrantLedger** (so that replaying a Chronicle never re-grants power) is deferred until the campaign exists. `RegionDiscoveryState.Discover` already returns true only once, which is the pattern the ledger will follow.
+- **World Gate** (main menu, unlocked after the first hunt): two equal roads. *Free Exploration* shows the current region, its home Wyrm, regions charted and the "Road to the Conclave" checklist, and enters a hunt. *Campaign* shows Book I as **In preparation** with its chapter outline. BEGIN HUNT still starts directly; the gate is a choice screen, not a toll.
+- The art (`wwwroot/art/world-gate.jpg`) is a crop of product-owner concept art (`user_handover_files/concepts/Menus/choice.jpg`), not code-generated, so it is not in the generated-art manifest.
+- A region choice appears once a second region becomes playable, opened by its access rule.
+
+## Chronicles (campaign state)
+
+- `StoryBookDefinition` / `StoryBookCatalog`: authored books. Book I, *The Broken Covenant*, has four segments (Prologue, Acts I–III), three major decisions and three endings. The final decision's options **are** the endings. All names and story are **provisional canon** (Highward, Cindervale, the Covenant Engines, the Sealed Testament, Commander Aldric Vane, Archivist Seren Thale, Enginekeeper Brannoc Hale, Scout Wren Ashby).
+- `ChronicleState`: one playthrough. Choices are only accepted in the current segment, once each; `Advance` waits until the segment's choices are made; the final choice completes the Chronicle and names its ending. Restore replays choices and never runs ahead of them.
+- `ChronicleRegistry` (`wyrmforge.chronicles.v1`, `SaveDomain.Chronicle`): several Chronicles side by side. Beginning a new one never overwrites another, numbers are never reused, and only Playable books can begin (Book I is not yet).
+- `OneTimeGrantLedger` (`wyrmforge.legacyGrants.v1`, `SaveDomain.PlayerLegacy`): a permanent reward is claimed once (`first-completion-{book}`, `advanced-access`). Replaying a Chronicle never pays twice.
+
+## Two routes to advanced access (amendment S3)
+
+`AdvancedAccess` (Application) opens the Conclave/advanced research by either route:
+
+- **Campaign:** complete Book I once.
+- **Exploration (proposal):** slay a Wyrm of every lineage (4), defeat one Ascendant and reach Hunter 12.
+
+The grant is claimed into the ledger on load and after each hunt and never relocks. The Conclave itself is not built yet; the gate says it opens in a later update.
