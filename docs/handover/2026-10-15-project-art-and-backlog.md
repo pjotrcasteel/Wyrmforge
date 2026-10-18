@@ -455,4 +455,22 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 
   No other school changed.
 - **Tests:** `StormglassDischargeTests` (2).
-- **Next:** draft parity for Frost primary cards (offered 0.16 per round vs 0.20–0.27), then re-measure Frost's kill power (Wyrms slain 0.99, the lowest).
+- **Next:** ~~draft parity for Frost primary cards~~ (misdiagnosis, see §31), then Frost's kill power (Wyrms slain 0.99, the lowest).
+
+## 31. Frost kill power: Frost Shatter
+
+- **Diagnosis:** draft offers are at parity per round. Frost sees fewer primary and evolution offers because it levels slower, and it levels slower because it kills slower. The fix belongs in kill power, not in draft weights.
+- **Change:** Frost Shard base damage 16 → 24. New `FrostShatter` (Domain): an enemy Frost Shard kills while Frozen bursts for 50% of its maximum health within 72 px (references: Diablo IV Shatter, Path of Exile freeze-shatter). Scaling from the shattered enemy's health keeps pace with depth. Only Frost Shard triggers it; the shatter splash has no source, so it cannot cascade. `RunSimulation.FrostShatters` counts them; the feedback reuses the Frost nova burst.
+- **Measured (BalanceLab, 1,200 runs, vs Stormglass fix `a66a145`):**
+
+| Frost | Before | Shard 24 | Shard 24 + Shatter |
+|---|---|---|---|
+| Defeated | 7.7% | 5.0% | 2.3% |
+| Wyrms slain | 0.99 | 1.12 | 1.18 |
+| First Wyrm (s) | 464 | — | 402 |
+| Level | 15.2 | 17.6 | 18.0 |
+| Enemy denial | 7.8% | 6.2% | 5.9% |
+
+  Arcane, Fire and Storm are unchanged. Kills per minute barely moves (44 → 61) because kills are bounded by spawns; progression speed is the better metric.
+- **Tests:** `FrostShatterTests` (Domain), two shatter cases in `OpeningPowerTests`.
+- **Next:** Arcane fragility (20.5% defeats, the highest), or start authoring the second region's enemies from the concept sheets.

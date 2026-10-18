@@ -121,6 +121,7 @@ public sealed partial class RunSimulation
             RegisterTargetHit(target);
             return false;
         }
+        var shatters = source is not null && FrostShatter.Triggers(source.Spell, target.Statuses.Has(CombatStatusId.Frozen));
         target.Health -= damage;
         if (target is EnemyState { BellWarden: { } bell } cracking && bell.TryBeginCrack(cracking.Health, cracking.MaxHealth)) BellWardenCracks++;
         RegisterTargetHit(target);
@@ -156,6 +157,7 @@ public sealed partial class RunSimulation
                 throw new InvalidOperationException($"Unsupported combat target type {target.GetType().Name}.");
         }
 
+        if (shatters && target is EnemyState shattered) Shatter(shattered.Position, FrostShatter.Damage(shattered.MaxHealth), shattered.Id);
         if (source is not null && source.ChainsLeft > 0 && spawned is not null) ChainFrom(target.Position, source, spawned);
         return true;
     }
@@ -165,6 +167,13 @@ public sealed partial class RunSimulation
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
         foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+    }
+
+    private void Shatter(Vector2D position, double damage, int ignoreId)
+    {
+        FrostShatters++;
+        RegisterFrostNovaFeedback(position, FrostShatter.Radius);
+        Splash(position, damage, FrostShatter.Radius, ignoreId);
     }
 
     private void ChainFrom(Vector2D position, ProjectileState source, ICollection<ProjectileState> spawned)

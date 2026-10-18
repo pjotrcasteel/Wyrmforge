@@ -6,6 +6,9 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    /// <summary>Frozen enemies Frost Shard has shattered this run (<see cref="FrostShatter"/>).</summary>
+    public int FrostShatters { get; private set; }
+
     private void RegisterFrostNova(ProjectileState projectile, Vector2D position, int hitTargetId)
     {
         if (projectile.FrostNovaRadius <= 0) return;
