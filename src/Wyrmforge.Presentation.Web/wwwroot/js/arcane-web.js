@@ -167,5 +167,15 @@
         });
     }
 
-    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus };
+    function revealInspector(element) {
+        if (!element || window.innerWidth > 760) return;
+        const rect = element.getBoundingClientRect();
+        if (rect.top >= 70 && rect.top < window.innerHeight - 170) return;
+        element.scrollIntoView({
+            block: 'nearest',
+            behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+        });
+    }
+
+    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector };
 })();
