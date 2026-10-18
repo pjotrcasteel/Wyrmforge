@@ -10,7 +10,7 @@
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.Loadouts
 
-<main class="game-shell @(section == ShellSection.Run ? "menu-home" : string.Empty)">
+<main class="game-shell @(section == ShellSection.Run ? (enteredTown || SkipTitle ? "menu-home refuge-home" : "menu-home arrival-home") : string.Empty)">
     @if (section == ShellSection.Run)
     {
         <div class="hub-backdrop" aria-hidden="true"><div class="hub-rain"></div></div>
