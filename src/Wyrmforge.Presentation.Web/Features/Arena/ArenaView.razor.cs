@@ -124,6 +124,7 @@ public partial class ArenaView : IAsyncDisposable
         var previousReliquarySightings = current.ReliquarySightings;
         var previousReliquaryShifts = current.ReliquaryShifts;
         var previousReliquaryWithdrawals = current.ReliquaryWithdrawals;
+        var previousVeilsBroken = current.GlassVeilsBroken;
         var reliquaryWasSlain = current.ReliquaryDefeat is not null;
         var previousBellArrivals = current.BellWardenArrivals;
         var previousBellCracks = current.BellWardenCracks;
@@ -179,6 +180,11 @@ public partial class ArenaView : IAsyncDisposable
         else if (current.ReliquaryWithdrawals != previousReliquaryWithdrawals)
         {
             ShowReliquaryWithdrawn();
+            stateChanged = true;
+        }
+        else if (current.GlassVeilsBroken != previousVeilsBroken)
+        {
+            ShowGlassVeilBroken();
             stateChanged = true;
         }
         if (current.BellWardenArrivals != previousBellArrivals)

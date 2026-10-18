@@ -21,5 +21,6 @@ public sealed record EnemyDefinition(
     EnemyRealm Realm = EnemyRealm.Cinder)
 {
     /// <summary>A creature the bestiary records; the Reliquary's wards and the Mirror Wisp's doubles are not creatures.</summary>
-    public bool IsCreature => Kind is not (EnemyKind.ReliquaryWard or EnemyKind.MirrorDouble);
+    public bool IsCreature => Kind is not (EnemyKind.ReliquaryWard or EnemyKind.MirrorDouble or EnemyKind.CrystalWard
+        or EnemyKind.GlassFalseForm);
 }

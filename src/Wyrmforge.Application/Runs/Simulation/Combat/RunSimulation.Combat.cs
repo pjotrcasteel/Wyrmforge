@@ -112,6 +112,11 @@ public sealed partial class RunSimulation
         }
 
         if (target is EnemyState { Kind: EnemyKind.Reliquary } && reliquaryWards.Count > 0) damage *= ReliquaryWardedDamageMultiplier;
+        if (target is EnemyState { Kind: EnemyKind.ReliquaryOfGlass } glassTarget)
+        {
+            if (crystalWards.Count > 0) damage *= GlassWardedDamageMultiplier;
+            TryBreakGlassVeil(glassTarget);
+        }
         // Phase gate (Hades' bosses, Monster Hunter's topple): no burst skips the crack. Overflow past half health is discarded;
         // reaching half health starts the stagger at once (below), and the stagger itself is a free damage window.
         if (target is EnemyState { BellWarden: { Cracked: false, Phase: not BellWardenPhase.Crack } } gated)
@@ -133,8 +138,13 @@ public sealed partial class RunSimulation
 
         switch (target)
         {
-            case EnemyState { Kind: EnemyKind.Reliquary or EnemyKind.ReliquaryWard } rite:
+            case EnemyState { Kind: EnemyKind.Reliquary or EnemyKind.ReliquaryWard or EnemyKind.ReliquaryOfGlass or EnemyKind.CrystalWard } rite:
                 ResolveReliquaryDeath(rite);
+                break;
+            case EnemyState { Kind: EnemyKind.GlassFalseForm } falseForm:
+                // The wrong body: it breaks like glass and pays nothing.
+                RegisterEnemyDeath(falseForm);
+                glassFalseForms.Remove(falseForm);
                 break;
             case EnemyState { Kind: EnemyKind.MirrorDouble } reflection:
                 // A false image breaks like glass: no kill, no payout, no record.

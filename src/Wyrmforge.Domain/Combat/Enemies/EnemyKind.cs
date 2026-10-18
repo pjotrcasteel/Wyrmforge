@@ -31,4 +31,10 @@ public enum EnemyKind
     MirrorDouble,
     /// <summary>Frost F4b: the named set piece on Rimeclaw's lair road. Its slam scars the ground, its toll rings box the hunter in.</summary>
     BellOfWinter,
+    /// <summary>Frost F4c: the Reliquary's winter rite. Crystal Wards, a Refraction Veil of false forms, Glacial Prisons.</summary>
+    ReliquaryOfGlass,
+    /// <summary>A crystal pylon the Reliquary of Glass raises; a light tether binds it to the caster. A ritual object, not a creature.</summary>
+    CrystalWard,
+    /// <summary>A mirrored false form of the Reliquary of Glass: one hit breaks it. Not a creature: no bestiary entry, no payout.</summary>
+    GlassFalseForm,
 }

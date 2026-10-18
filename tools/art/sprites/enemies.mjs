@@ -39,6 +39,9 @@ export const ENEMY_SPECS = [
     { kind: 15, name: 'mirror-wisp', size: [48, 56], origin: [22, 32], radius: 11 },
     { kind: 16, name: 'mirror-double', size: [48, 56], origin: [22, 32], radius: 11 },
     { kind: 17, name: 'bell-of-winter', size: [92, 108], origin: [38, 70], radius: 40 },
+    { kind: 18, name: 'reliquary-of-glass', size: [80, 92], origin: [39, 56], radius: 27 },
+    { kind: 19, name: 'crystal-ward', size: [30, 46], origin: [14, 31], radius: 14 },
+    { kind: 20, name: 'glass-false-form', size: [80, 92], origin: [39, 56], radius: 27 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -863,9 +866,95 @@ function bellOfWinter(pose) {
     return b;
 }
 
+// The Reliquary of Glass (Frost concept 08): a tall pale celebrant in long tattered vestments, a gilt spoked halo behind
+// a pointed mask, and a yoke across its shoulders hung with four gilt lanterns holding blue crystal light. Unlike the
+// crimson Reliquary it barely moves: poses 1-2 only sway the lanterns and the torn hem; pose 3 lifts the yoke to cast.
+// `lit` false paints a Refraction Veil false form: the same silhouette with dead, smoky lanterns (the identification tell).
+function reliquaryOfGlass(pose, lit = true, kind = 18) {
+    const s = ENEMY_SPECS[kind], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { robe: '#d9d2c2', robeHi: '#f3eee2', robeDk: '#a59c88', deep: '#5d574c', void: '#0d1218', stole: '#c9a24a', stoleDk: '#7e6228',
+        gold: '#c9a24a', goldHi: '#f0d27a', goldDk: '#7e6228', mask: '#b8b0a0', ice: lit ? '#8fdcff' : '#3d4650', iceHi: lit ? '#e8faff' : '#59636e',
+        core: lit ? '#ffffff' : '#6b7480', chain: '#8a7a5a' };
+    const sway = pose === 1 ? 1 : pose === 2 ? -1 : 0, cast = pose === 3, lift = cast ? -6 : 0;
+    // Gilt spoked halo: a full ring with twelve spokes, the silhouette read from across the snow.
+    for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6, r = i % 3 ? 11 : 15;
+        g.line(0, -36, Math.round(Math.cos(a) * r), Math.round(-36 + Math.sin(a) * r), i % 3 ? C.goldDk : C.gold);
+    }
+    g.ell(0, -36, 11, 11, C.gold); g.ell(0, -36, 9.5, 9.5, C.void);
+    for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.px(Math.round(Math.cos(a) * 10), Math.round(-36 + Math.sin(a) * 10), C.goldDk); }
+    g.line(0, -52, 0, -47, C.gold); g.px(0, -53, C.goldHi);
+    // Long vestment flaring to a wide, shredded hem that trails on the ground.
+    g.poly([[-8, -22], [8, -22], [20 + sway, 30], [-20 + sway, 30]], C.robe);
+    g.poly([[-8, -22], [-3, -22], [-11 + sway, 30], [-20 + sway, 30]], C.robeDk);
+    g.poly([[3, -18], [8, -22], [20 + sway, 30], [12 + sway, 30]], C.robeHi);
+    for (let x = -19; x <= 19; x += 4) {
+        const d = (x * 7 + 40) % 5 + 2;
+        g.poly([[x + sway, 29], [x + 3 + sway, 29], [x + 1 + sway, 30 + d]], (x / 4) % 2 ? C.robeDk : C.robe);
+    }
+    for (const [x, y] of [[-14, 14], [-9, 22], [10, 18], [15, 25], [-4, 26]]) g.line(x + sway, y, x + sway, y + 4, C.deep);
+    // Gilt stole with a sigil wheel.
+    g.poly([[-3, -20], [3, -20], [4, 28], [-4, 28]], C.stole);
+    g.line(-3, -19, -4, 27, C.stoleDk);
+    g.ell(0, -6, 3.5, 3.5, C.goldDk); g.ell(0, -6, 2, 2, C.void); g.px(0, -6, C.ice);
+    for (const y of [4, 12, 20]) { g.px(0, y, C.goldHi); g.px(-1, y + 1, C.goldDk); g.px(1, y + 1, C.goldDk); }
+    // Shoulders, hood and pointed mask.
+    g.poly([[-10, -24], [10, -24], [12, -16], [-12, -16]], C.robeDk);
+    g.poly([[-5, -24], [5, -24], [3, -36], [0, -44], [-3, -36]], C.robeDk);
+    g.poly([[-3, -26], [3, -26], [2, -34], [0, -40], [-2, -34]], C.mask);
+    g.px(-1, -32, C.void); g.px(1, -32, C.void); g.px(-1, -31, C.ice); g.px(1, -31, C.ice);
+    // The yoke: a gilt crossbar over the shoulders, hung with four lanterns.
+    const yy = -22 + lift;
+    g.line(-28, yy, 28, yy, C.goldDk, 2); g.line(-28, yy - 1, 28, yy - 1, C.gold);
+    for (const x of [-28, -18, 18, 28]) g.px(x, yy - 2, C.goldHi);
+    // Sleeves down to open hands below the yoke.
+    g.poly([[-9, -20], [-14, -20 + lift], [-17, -6 + lift], [-11, -8]], C.robe);
+    g.poly([[9, -20], [14, -20 + lift], [17, -6 + lift], [11, -8]], C.robe);
+    const lantern = (x, y) => {
+        g.line(x, yy, x, y - 6, C.chain);
+        g.rect(x - 3, y - 5, 7, 2, C.gold); g.rect(x - 3, y + 4, 7, 2, C.goldDk);
+        g.rect(x - 2, y - 3, 5, 7, C.ice); g.line(x - 2, y - 3, x - 2, y + 3, C.goldDk); g.line(x + 2, y - 3, x + 2, y + 3, C.goldDk);
+        g.px(x, y, C.iceHi); g.px(x, y - 1, C.core);
+        g.poly([[x - 2, y - 5], [x + 2, y - 5], [x, y - 9]], C.goldDk); g.px(x, y + 6, C.gold);
+    };
+    const hang = cast ? [[-28, -6], [-18, 2], [18, 2], [28, -6]] : [[-28 - sway, 0], [-18 - sway, 8], [18 - sway, 8], [28 - sway, 0]];
+    for (const [x, d] of hang) lantern(x, yy + 12 + d);
+    if (cast && lit) for (const x of [-34, 34]) { g.line(x, yy - 8, x, yy - 2, C.ice); g.px(x, yy - 9, C.iceHi); }
+    b.rim(lit ? '#cfeaff' : '#8a96a2', '#05080c', .35, .3);
+    b.outline('#070a10');
+    // Lit lantern cores sit above the outline: the light is how the hunter finds the true body.
+    if (lit) { const o = s.origin; for (const [x, d] of hang) b.set(o[0] + x, o[1] + yy + 12 + d - 1, C.core); }
+    return b;
+}
+
+// Crystal Ward (Frost concept 08): a jagged spire of blue glass rising from a cracked base, a gilt band at its waist.
+// Poses 0-2 shimmer; pose 3 (the tether kindling) flares white.
+function crystalWard(pose) {
+    const s = ENEMY_SPECS[19], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { ice: '#5fb8e6', iceHi: '#bfeeff', iceDk: '#2c6c94', deep: '#16324a', core: '#ffffff', gold: '#c9a24a', goldDk: '#7e6228',
+        rock: '#4a525c', rockDk: '#262c33', snow: '#e6eef2' };
+    const flare = pose === 3, glint = pose === 1 ? -6 : pose === 2 ? -14 : -10;
+    g.poly([[-9, 10], [9, 10], [7, 13], [-7, 13]], C.rockDk); g.poly([[-8, 8], [8, 8], [9, 11], [-9, 11]], C.rock);
+    g.line(-8, 8, -3, 8, C.snow); g.line(3, 8, 8, 8, C.snow);
+    g.poly([[-7, 9], [-9, -2], [-5, 4]], C.iceDk); g.poly([[7, 9], [9, -4], [5, 4]], C.iceDk);
+    g.poly([[-5, 9], [5, 9], [4, -12], [0, -27], [-4, -12]], C.ice);
+    g.poly([[-5, 9], [-1, 9], [-1, -20], [-4, -12]], C.iceDk);
+    g.line(1, -22, 3, 6, flare ? C.core : C.iceHi); g.line(-2, -6, -1, 6, C.deep);
+    g.rect(-5, -2, 11, 2, C.goldDk); g.rect(-5, -3, 11, 1, C.gold);
+    g.px(1, glint, C.core); g.px(2, glint + 1, C.iceHi);
+    b.rim(flare ? '#ffffff' : '#bfeeff', '#05080c', .35, .3);
+    b.outline('#070a10');
+    const o = s.origin;
+    b.set(o[0], o[1] - 26, C.core);
+    if (flare) for (let y = -18; y <= 2; y += 4) b.set(o[0] + 1, o[1] + y, C.core);
+    return b;
+}
+
+const glassFalseForm = pose => reliquaryOfGlass(pose, false, 20);
+
 const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden,
     frostlingPackling, shardcaster, whitefangStalker, cairnSentinel, hoarfrostCantor, mirrorWisp, mirrorDouble,
-    bellOfWinter];
+    bellOfWinter, reliquaryOfGlass, crystalWard, glassFalseForm];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 

@@ -527,3 +527,10 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Presentation:** the moments "THE BELL OF WINTER", "DEEP WINTER" and "THE BELL OF WINTER FALLS SILENT"; the bar and entrance follow the bell snapshot `Variant`; the new module is `arena-winterbell-vfx.js`; kind 17 has a sprite and a fallback palette.
 - **Tests:** `BellOfWinterBehaviorStateTests` (Domain), `BellOfWinterEncounterTests` (Application), `arena-winterbell-vfx.test.mjs`. Browser 48/50 (the two known mobile failures).
 - **Next:** F4c Reliquary of Glass, then the Nexus Spellcraft redesign. Balancing comes last.
+
+## 38. Frost region F4c: The Reliquary of Glass
+
+- **Rare boss (18), Crystal Ward (19), false form (20):** a Frost Reliquary habitat (Mirror mere, Cairn barrows, Buried hamlet) now raises the Reliquary of Glass. Crystal Ward pylons shield it and burn tethers between them; Glacial Prison cages rise over the hunter; Refraction Veil hides it among copies with dead lanterns, and hitting the true body exposes it. At half health it shatters into a deeper rite order. Details are in `frost-region-roster-v1.md`.
+- **Presentation:** the moments "THE RELIQUARY OF GLASS", "THE GLASS SHATTERS", "VEIL BROKEN" and the glass defeat and withdraw texts; the new module is `arena-glass-reliquary-vfx.js`; the Reliquary sigil, hush, emergence and bar are themed by the snapshot `Variant`; kinds 18–20 have sprites and fallback palettes.
+- **Tests:** `GlassReliquaryBehaviorStateTests` (Domain), `GlassReliquaryEncounterTests` (Application), `arena-glass-reliquary-vfx.test.mjs`. Domain 329, Application 479, JS 170, Browser 48/50 (the two known mobile failures).
+- **Next:** the Nexus Spellcraft redesign (handover + amendment). Balancing comes last.

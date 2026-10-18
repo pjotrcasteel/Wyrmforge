@@ -230,10 +230,13 @@ public sealed partial class RunSimulation
         { Wisp: { Phase: WispPhase.Shimmer } shimmer } => VeiledOpacity * (1 - shimmer.ShimmerProgress * 0.7),
         { Wisp.IsVeiled: true } => VeiledOpacity,
         { Reflection: { } reflection } => VeiledOpacity * Math.Clamp(reflection.Remaining / 0.5, 0, 1),
+        // The Refraction Veil: the true body and its false forms all look half-there. Only the lanterns tell them apart.
+        { GlassReliquary.IsVeiled: true } or { FalseForm: not null } => GlassVeiledOpacity,
         _ => 1,
     };
 
     private const double VeiledOpacity = 0.6;
+    private const double GlassVeiledOpacity = 0.78;
 
     private static double RimeArmorRatio(EnemyState enemy) => enemy.RimeArmor <= 0 ? 0
         : Math.Clamp(enemy.RimeArmor / (enemy.MaxHealth * HoarfrostCantorBehaviorState.RimeArmorFraction), 0, 1);

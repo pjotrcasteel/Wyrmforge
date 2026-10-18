@@ -361,6 +361,8 @@ public sealed partial class RunSimulation
             BellWarden = CreateBellWardenSnapshot(),
             BellShockwaves = CreateBellShockwaveSnapshots(),
             PermafrostScars = CreatePermafrostScarSnapshots(),
+            GlassTethers = CreateGlassTetherSnapshots(),
+            GlassPrisons = CreateGlassPrisonSnapshots(),
             WinterRings = CreateWinterRingSnapshots(),
             Icicles = CreateIcicleSnapshots(),
             WardPulse = CreateWardPulseSnapshot(),

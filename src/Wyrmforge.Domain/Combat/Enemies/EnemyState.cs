@@ -41,6 +41,10 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public BellOfWinterBehaviorState? WinterBell { get; } = kind == EnemyKind.BellOfWinter ? new BellOfWinterBehaviorState() : null;
 
+    public GlassReliquaryBehaviorState? GlassReliquary { get; } = kind == EnemyKind.ReliquaryOfGlass ? new GlassReliquaryBehaviorState() : null;
+
+    public GlassFalseFormState? FalseForm { get; } = kind == EnemyKind.GlassFalseForm ? new GlassFalseFormState() : null;
+
     public ReliquaryWardState? Ward { get; } = kind == EnemyKind.ReliquaryWard ? new ReliquaryWardState() : null;
 
     public FrostlingPacklingBehaviorState? Packling { get; } = kind == EnemyKind.FrostlingPackling ? new FrostlingPacklingBehaviorState(id) : null;

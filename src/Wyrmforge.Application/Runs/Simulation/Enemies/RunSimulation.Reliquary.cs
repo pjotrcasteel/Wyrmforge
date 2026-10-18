@@ -55,8 +55,10 @@ public sealed partial class RunSimulation
     public const double ReliquarySealDamage = 24;
     public const int ReliquaryExperience = 20;
 
+    // Frost F4c: the Frost region's shrines (the mere, the barrows, the buried hamlet) host the Reliquary of Glass instead.
     private static readonly WyrmrealmHabitat[] ReliquaryHabitats =
-        [WyrmrealmHabitat.MonasteryGrounds, WyrmrealmHabitat.FloodedCloister, WyrmrealmHabitat.ScorchedApproach];
+        [WyrmrealmHabitat.MonasteryGrounds, WyrmrealmHabitat.FloodedCloister, WyrmrealmHabitat.ScorchedApproach,
+            WyrmrealmHabitat.MirrorMere, WyrmrealmHabitat.CairnBarrows, WyrmrealmHabitat.BuriedHamlet];
 
     private readonly List<EnemyState> reliquaryWards = [];
     private readonly List<ReliquaryFieldState> reliquaryFields = [];
@@ -66,6 +68,10 @@ public sealed partial class RunSimulation
     private Vector2D reliquarySigil;
     private EnemyState? reliquary;
     private int reliquaryWardsPlanted;
+    private EnemyKind reliquaryKind = EnemyKind.Reliquary;
+
+    /// <summary>Which Reliquary rises on this road: the Fire ward-bearer or the Reliquary of Glass. The arena announces and draws it.</summary>
+    public EnemyKind ReliquaryKind => reliquaryKind;
 
     public ReliquaryStage ReliquaryStage { get; private set; }
 
@@ -85,7 +91,8 @@ public sealed partial class RunSimulation
     public static bool IsReliquaryEligible(WyrmrealmMapNode node) => node.Type == WyrmrealmNodeType.Combat && !node.PreLair
         && node.Stage is >= ReliquaryFirstStage and <= ReliquaryLastStage && ReliquaryHabitats.Contains(node.Habitat);
 
-    private static bool IsReliquaryKind(EnemyKind kind) => kind is EnemyKind.Reliquary or EnemyKind.ReliquaryWard;
+    private static bool IsReliquaryKind(EnemyKind kind) => kind is EnemyKind.Reliquary or EnemyKind.ReliquaryWard or EnemyKind.ReliquaryOfGlass
+        or EnemyKind.CrystalWard or EnemyKind.GlassFalseForm;
 
     private bool IsReliquaryNode => ReliquaryStage is not (ReliquaryStage.Absent or ReliquaryStage.Withdrawn or ReliquaryStage.Slain);
 
@@ -99,6 +106,7 @@ public sealed partial class RunSimulation
         // Never on the Warden's road, whatever its habitat: one monumental threat at a time (brief §5).
         if (!reliquaryMapPending || !IsReliquaryEligible(node) || IsBellWardenNode) return;
         reliquaryMapPending = false;
+        reliquaryKind = WyrmrealmHabitatCatalog.School(node.Habitat) == Domain.Spells.SpellSchool.Frost ? EnemyKind.ReliquaryOfGlass : EnemyKind.Reliquary;
         ReliquaryStage = ReliquaryStage.Waiting;
         reliquaryTimer = ReliquaryRevealSeconds;
     }
@@ -136,7 +144,7 @@ public sealed partial class RunSimulation
 
     private Vector2D? FindReliquarySigil()
     {
-        var radius = EnemyCatalog.Get(EnemyKind.Reliquary).Radius;
+        var radius = EnemyCatalog.Get(reliquaryKind).Radius;
         // A seeded opening angle, then the remaining compass points; the search consumes no randomness.
         var start = EliteRollSeed(mapState.Seed, depthState.Depth, "reliquary-sigil") % 8;
         for (var step = 0; step < 8; step++)
@@ -151,11 +159,11 @@ public sealed partial class RunSimulation
 
     private void BeginReliquaryDuel()
     {
-        var definition = EnemyCatalog.Get(EnemyKind.Reliquary);
+        var definition = EnemyCatalog.Get(reliquaryKind);
         var (health, speed) = EnemyStats(definition);
-        reliquary = new EnemyState(++enemyId, reliquarySigil, definition.Radius, health, speed, EnemyKind.Reliquary);
+        reliquary = new EnemyState(++enemyId, reliquarySigil, definition.Radius, health, speed, reliquaryKind);
         enemies.Add(reliquary);
-        RecordEnemyEncounter(EnemyKind.Reliquary);
+        RecordEnemyEncounter(reliquaryKind);
         ReliquaryStage = ReliquaryStage.Duel;
     }
 
@@ -262,6 +270,11 @@ public sealed partial class RunSimulation
             reliquaryWards.Remove(enemy);
             return;
         }
+        if (enemy.Kind == EnemyKind.CrystalWard)
+        {
+            crystalWards.RemoveAll(pylon => pylon.Ward == enemy);
+            return;
+        }
         kills++;
         RecordEnemyKill(enemy.Kind);
         score += (int)((100 + (int)(elapsed * 2)) * 10 * depthState.ScoreMultiplier);
@@ -286,6 +299,7 @@ public sealed partial class RunSimulation
         reliquaryWards.Clear();
         reliquaryFields.Clear();
         hostileProjectiles.RemoveAll(blast => blast.Style is HostileProjectileStyle.Seal or HostileProjectileStyle.Ward);
+        EndGlassRites();
         reliquary = null;
     }
 
@@ -293,17 +307,24 @@ public sealed partial class RunSimulation
     {
         reliquaryWards.Clear();
         reliquaryFields.Clear();
+        ClearGlassState();
         reliquary = null;
         reliquaryWardsPlanted = 0;
         reliquaryTimer = 0;
         ReliquaryStage = ReliquaryStage.Absent;
     }
 
+    private string ReliquaryVariant => reliquaryKind == EnemyKind.ReliquaryOfGlass ? "glass" : "fire";
+
     private ReliquaryRenderSnapshot? CreateReliquarySnapshot() => ReliquaryStage switch
     {
-        ReliquaryStage.Hush => new("hush", reliquarySigil.X, reliquarySigil.Y, Math.Clamp(1 - reliquaryTimer / ReliquaryHushSeconds, 0, 1), 1, false, false, 0),
+        ReliquaryStage.Hush => new("hush", reliquarySigil.X, reliquarySigil.Y, Math.Clamp(1 - reliquaryTimer / ReliquaryHushSeconds, 0, 1), 1, false, false, 0,
+            ReliquaryVariant),
         ReliquaryStage.Emerging => new("emerging", reliquarySigil.X, reliquarySigil.Y, Math.Clamp(1 - reliquaryTimer / ReliquaryEmergeSeconds, 0, 1), 1, false,
-            false, 0),
+            false, 0, ReliquaryVariant),
+        ReliquaryStage.Duel when reliquary is { Health: > 0, GlassReliquary: { } glass } boss => new("duel", boss.Position.X, boss.Position.Y, 1,
+            Math.Clamp(boss.Health / boss.MaxHealth, 0, 1), glass.Shifted, crystalWards.Count > 0, glass.ShiftProgress, "glass", glass.IsVeiled,
+            glass.Exposed),
         ReliquaryStage.Duel when reliquary is { Health: > 0 } boss => new("duel", boss.Position.X, boss.Position.Y, 1,
             Math.Clamp(boss.Health / boss.MaxHealth, 0, 1), boss.Reliquary!.Shifted, reliquaryWards.Count > 0, boss.Reliquary.ShiftProgress),
         _ => null,

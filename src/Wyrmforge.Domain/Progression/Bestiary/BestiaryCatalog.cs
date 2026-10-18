@@ -102,6 +102,11 @@ public static class BestiaryCatalog
             "Read the slow tells. Run the open lanes of each ring, keep the scars from walling you in, and leave every marked shard. Punish the long recovery after each swing: panic and greed are equally fatal.",
             "Frozen bell road before Rimeclaw's lair",
             "The bell once called the faithful to prayer. Now it tolls for the dead, and its ringing announces Rimeclaw's absolute winter."),
+        new(EnemyKind.ReliquaryOfGlass, "The Reliquary of Glass", "Unique • ultra-rare ritual keeper",
+            "A rare ritual keeper in pale robes with gilt lanterns and a halo of ice. It raises Crystal Wards whose light tethers cut across the field, hides among mirrored false forms behind a Refraction Veil, and closes Glacial Prisons around the unwary. At half strength the glass shatters and the ritual deepens.",
+            "Break the wards quickly: it is shielded while one stands. Find the body whose lanterns still burn and strike it to break the veil. Keep moving before a prison rises, or pay to cross its wall.",
+            "Mirror meres, cairn barrows, buried hamlets",
+            "It keeps what the glacier preserved. Every shrine it guards is a cage that has not closed yet."),
     ];
 
     /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>

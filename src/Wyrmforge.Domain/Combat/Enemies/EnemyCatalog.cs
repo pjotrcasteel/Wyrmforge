@@ -35,6 +35,13 @@ public static class EnemyCatalog
         // Unique: the Bell of Winter only ever stands on the Frost region's lair road.
         new(EnemyKind.BellOfWinter, EnemyRole.Pressure, 10, 40, HealthMultiplier: 18, SpeedMultiplier: 0.42, ContactDamageMultiplier: 1,
             Unique: true, Realm: EnemyRealm.Frost),
+        // Unique: only the Reliquary event on a Frost road raises the Reliquary of Glass and its ritual objects.
+        new(EnemyKind.ReliquaryOfGlass, EnemyRole.Support, 10, 27, HealthMultiplier: 15, SpeedMultiplier: 0.5, ContactDamageMultiplier: 0.6,
+            Unique: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.CrystalWard, EnemyRole.Support, 0, 14, HealthMultiplier: 2.6, SpeedMultiplier: 0, ContactDamageMultiplier: 0,
+            Unique: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.GlassFalseForm, EnemyRole.Support, 0, 27, HealthMultiplier: 0.01, SpeedMultiplier: 0.5, ContactDamageMultiplier: 0,
+            Unique: true, Realm: EnemyRealm.Frost),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

@@ -124,7 +124,7 @@ test('mage facing follows dominant travel and turns toward an active cast', () =
 test('enemy sprite names clamp kind and phase and prioritise hit over frozen', () => {
     assert.equal(enemySpriteName({ kind: 3 }, 2), 'enemy.3.2.normal');
     assert.equal(enemySpriteName({ kind: 11, hitFlash: true, frozen: true }, 7), 'enemy.11.2.hit', 'Frost kinds keep their own sprite');
-    assert.equal(enemySpriteName({ kind: 99, hitFlash: true }, 1), 'enemy.17.1.hit');
+    assert.equal(enemySpriteName({ kind: 99, hitFlash: true }, 1), 'enemy.20.1.hit');
     assert.equal(enemySpriteName({ kind: 1, telegraph: { kind: 'pounce' } }, 2), 'enemy.1.3.normal', 'committed attacks show the attack pose');
     assert.equal(enemySpriteName({ kind: -1, frozen: true }), 'enemy.0.0.frozen');
     assert.equal(enemyFacing(null, 4), 1);

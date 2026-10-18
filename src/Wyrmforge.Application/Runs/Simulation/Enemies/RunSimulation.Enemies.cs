@@ -226,8 +226,11 @@ public sealed partial class RunSimulation
                 UpdateReliquaryWard(enemy, fuse, scaledDelta);
                 continue;
             }
+            if (enemy.Kind == EnemyKind.CrystalWard) continue;
             if (enemy.Reflection is { } reflection) UpdateReflection(enemy, reflection, scaledDelta);
             if (enemy.Reliquary is { } rite) (direction, speed) = UpdateReliquary(enemy, rite, scaledDelta, crossing, direction, speed);
+            else if (enemy.GlassReliquary is { } glass) (direction, speed) = UpdateGlassReliquary(enemy, glass, scaledDelta, crossing, direction, speed);
+            else if (enemy.FalseForm is not null) (direction, speed) = UpdateGlassFalseForm(enemy, crossing, direction, speed);
             else if (enemy.BellWarden is { } bell) (direction, speed) = UpdateBellWarden(enemy, bell, scaledDelta, crossing, direction, speed);
             else if (enemy.WinterBell is { } winter) (direction, speed) = UpdateWinterBell(enemy, winter, scaledDelta, crossing, direction, speed);
             else if (enemy.RoutedRemaining > 0)
@@ -319,18 +322,19 @@ public sealed partial class RunSimulation
             }
             else if (enemy.Packling is { Phase: FrostlingPhase.Skitter } skitterer) BitePlayer(enemy, skitterer);
             else if (enemy.Whitefang is { Phase: WhitefangPhase.Pounce } leaper) MaulPlayer(enemy, leaper);
-            else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint } || enemy.Reflection is not null) continue;
+            else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint } || enemy.Reflection is not null || enemy.FalseForm is not null) continue;
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
         SinkWraiths();
         UpdateHostileProjectiles(delta);
         UpdateReliquaryFields(delta);
+        UpdateGlassReliquaryHazards(delta);
         UpdateBellShockwaves(delta);
         UpdateWinterBellHazards(delta);
         UpdateFrostHazards(delta);
     }
 
-    private int CommittedThreatCount() => hostileProjectiles.Count + iceLances.Count + (reliquary?.Reliquary?.IsCasting == true ? 1 : 0)
+    private int CommittedThreatCount() => hostileProjectiles.Count + iceLances.Count + (reliquary?.Reliquary?.IsCasting == true || reliquary?.GlassReliquary?.IsCasting == true ? 1 : 0)
         + (bellWarden?.BellWarden?.IsCommitted == true || bellWarden?.WinterBell?.IsCommitted == true ? 1 : 0) + icicles.Count(icicle => !icicle.Fallen) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
             || enemy.DrownedWraith?.IsCommitted == true || enemy.Packling?.IsCommitted == true || enemy.Shardcaster?.IsCommitted == true
@@ -386,6 +390,7 @@ public sealed partial class RunSimulation
         { Ward: { Warning: true } fuse } => new EnemyTelegraphRenderSnapshot("ward-fuse", fuse.WarningProgress, enemy.Position.X, enemy.Position.Y,
             ReliquaryWardBlastRadius),
         { WinterBell: not null } => CreateWinterBellTelegraph(enemy),
+        { GlassReliquary: not null } => CreateGlassReliquaryTelegraph(enemy),
         _ => CreateFrostTelegraph(enemy),
     };
 
