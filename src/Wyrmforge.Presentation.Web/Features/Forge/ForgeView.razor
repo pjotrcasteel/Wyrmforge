@@ -45,13 +45,25 @@
                         </form>
                     </div>
                 }
-                <section class="main-menu" aria-label="Main menu">
+                @if (!enteredTown && !SkipTitle)
+                {
+                    <section class="title-scene" aria-label="Start game">
+                        <span class="title-scene-moon" aria-hidden="true"></span>
+                        <div class="title-mage" aria-hidden="true"></div>
+                        <h1>WYRMFORGE</h1>
+                        <button class="title-start" @onclick="EnterTown">START GAME <span aria-hidden="true">›</span></button>
+                    </section>
+                }
+                else
+                {
+                <section class="main-menu town-square" aria-label="Town square">
                     <header class="menu-brand"><span class="menu-sigil" aria-hidden="true">W</span><h1>WYRMFORGE</h1>
                         @if (Progress.AtlasUnlocked)
                         {
                             <button class="hunter-menu-progress" @onclick="() => OnQuests.InvokeAsync()"><span>HUNTER @Hunter.Level</span><span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span></button>
                         }</header>
-                    <nav class="menu-actions" aria-label="Wyrmforge navigation">
+                    <div class="town-mage" aria-hidden="true"></div>
+                    <nav class="menu-actions town-map" aria-label="Town locations">
                         <button class="menu-begin" @onclick="StartAsync">@(Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT")<span aria-hidden="true">›</span></button>
                         @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                         {
@@ -72,6 +84,7 @@
                         <button aria-label="More options" @onclick="() => Navigate(ShellSection.Options)">•••</button>
                     </footer>
                 </section>
+                }
                 break;
             case ShellSection.Build:
                 @if (SpellcraftOpen)
@@ -124,6 +137,9 @@
 
 @code {
     [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
+    [Parameter] public bool SkipTitle { get; set; };
+    private bool enteredTown;
+    private void EnterTown() => enteredTown = true;
     [Parameter] public EventCallback<string> OnPlayerNameChanged { get; set; }
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter, EditorRequired] public FirstHuntProgress Progress { get; set; } = null!;
