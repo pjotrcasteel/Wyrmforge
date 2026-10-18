@@ -19,11 +19,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var title = Page.Locator(".title-scene");
         await Expect(title).ToBeVisibleAsync();
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
         await ScreenshotAsync("welcome-full-art.png");
         var backgroundSize = await Page.Locator(".arrival-home .hub-backdrop")
             .EvaluateAsync<string>("element => getComputedStyle(element, '::after').backgroundSize");
-        Assert.IsTrue(backgroundSize.Contains("contain", StringComparison.Ordinal),
-            "Welcome artwork must be fully framed rather than cropped with cover.");
+        Assert.IsTrue(backgroundSize.Contains("78%", StringComparison.Ordinal),
+            "Welcome artwork must occupy most of the screen without the original excessive cover zoom.");
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Settings", Exact = true }).ClickAsync();
         await Expect(Page.Locator(".settings-audio-slot .wyrmforge-sound-controls")).ToBeVisibleAsync();
