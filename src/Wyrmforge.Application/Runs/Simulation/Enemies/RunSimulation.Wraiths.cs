@@ -16,10 +16,9 @@ public sealed partial class RunSimulation
 
     /// <summary>
     /// Everything still alive in the encounter, including wraiths under the water. The Reliquary and its wards are optional and
-    /// never hold a road open, so they are left out.
+    /// never hold a road open, so they are left out; so are a Mirror Wisp's doubles, which are images, not foes.
     /// </summary>
-    private int HostileCount => (reliquary is null && reliquaryWards.Count == 0 ? enemies.Count : enemies.Count(enemy => !IsReliquaryKind(enemy.Kind)))
-        + submergedWraiths.Count;
+    private int HostileCount => enemies.Count(enemy => !IsReliquaryKind(enemy.Kind) && enemy.Kind != EnemyKind.MirrorDouble) + submergedWraiths.Count;
 
     private void UpdateSubmergedWraiths(double delta, ref int committed, int committedCap)
     {

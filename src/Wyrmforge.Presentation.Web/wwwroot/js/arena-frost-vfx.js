@@ -11,12 +11,19 @@ const AVALANCHE = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(120, 180, 215, 0
 const GLAZE = { edge: 'rgba(170, 226, 255, 0.85)', fill: 'rgba(40, 70, 96, 0.22)', charge: 'rgba(120, 190, 230, 0.3)' };
 // Must match ShardcasterBehaviorState.BloomRadius: the dashed ring at the end of a lane is the bloom that will follow.
 // Must match CairnSentinelBehaviorState.BraceHalfAngleRadians: the drawn front arc is exactly where the brace and the wave reach.
-export const FROST = { bloomRadius: 40, chillMaxStacks: 5, braceHalfAngle: Math.PI / 3 };
+// Must match MirrorWispBehaviorState.CutHalfAngleRadians: the Shiver Cut arc is exactly the wedge C# tests.
+export const FROST = { bloomRadius: 40, chillMaxStacks: 5, braceHalfAngle: Math.PI / 3, cutHalfAngle: 0.87 };
+// The Cantor's hymn and reknit are support rites, not hits: a cold blue edge, never the red danger edge.
+const RITE = { edge: 'rgba(170, 226, 255, 0.8)', fill: 'rgba(150, 210, 240, 0.08)', charge: 'rgba(200, 238, 255, 0.22)' };
+const STILLNESS = { edge: 'rgba(226, 84, 74, 0.9)', fill: 'rgba(200, 230, 245, 0.1)', charge: 'rgba(225, 245, 255, 0.32)' };
+const SHIVER = { edge: 'rgba(226, 84, 74, 0.95)', fill: 'rgba(225, 245, 255, 0.14)', charge: 'rgba(245, 252, 255, 0.45)' };
 
 const clamp01 = value => Math.max(0, Math.min(1, Number(value) || 0));
 
 export function isFrostTelegraph(kind) {
-    return kind === 'skitter' || kind === 'ice-lance' || kind === 'black-ice' || kind === 'flank-pounce' || kind === 'avalanche';
+    return kind === 'skitter' || kind === 'ice-lance' || kind === 'black-ice' || kind === 'flank-pounce' || kind === 'avalanche'
+        || kind === 'rime-hymn' || kind === 'reknit' || kind === 'stillness' || kind === 'glass-step'
+        || kind === 'shiver-cut' || kind === 'shiver-slash';
 }
 
 export function drawFrostTelegraph(ctx, enemy, telegraph) {
@@ -25,6 +32,122 @@ export function drawFrostTelegraph(ctx, enemy, telegraph) {
     else if (telegraph.kind === 'black-ice') drawGlazeMark(ctx, telegraph);
     else if (telegraph.kind === 'flank-pounce') drawLane(ctx, enemy, telegraph, FANG, false);
     else if (telegraph.kind === 'avalanche') drawAvalancheFront(ctx, enemy, telegraph);
+    else if (telegraph.kind === 'rime-hymn') drawRiteCircle(ctx, telegraph, RITE, false);
+    else if (telegraph.kind === 'stillness') drawRiteCircle(ctx, telegraph, STILLNESS, true);
+    else if (telegraph.kind === 'reknit') drawReknit(ctx, enemy, telegraph);
+    else if (telegraph.kind === 'glass-step') drawGlassStep(ctx, telegraph);
+    else if (telegraph.kind === 'shiver-cut' || telegraph.kind === 'shiver-slash') drawShiverCut(ctx, enemy, telegraph);
+}
+
+// A Cantor chant: a ring of slowly gathering verse-marks. The hymn (support) closes inward in cold blue; the Stillness
+// Verse (a hit) fills in from the centre under the shared red edge. Either can be broken by a burst or a shove.
+function drawRiteCircle(ctx, telegraph, colors, hostile) {
+    const r = Math.max(4, Number(telegraph.radius) || 0);
+    const p = clamp01(telegraph.progress);
+    const x = telegraph.targetX, y = telegraph.targetY;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = colors.fill;
+    ctx.fill();
+    if (!hostile) ctx.setLineDash([2, 6]);
+    ctx.strokeStyle = colors.edge;
+    ctx.lineWidth = hostile ? 1.5 : 1.25;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    if (hostile) ctx.arc(x, y, r * p, 0, Math.PI * 2);
+    else { ctx.arc(x, y, r, 0, Math.PI * 2); ctx.arc(x, y, r * (1 - p * 0.85), 0, Math.PI * 2, true); }
+    ctx.fillStyle = colors.charge;
+    ctx.fill();
+    // Six verse runes ride the rim and light up one by one as the chant completes.
+    for (let i = 0; i < 6; i++) {
+        const a = -Math.PI / 2 + i * Math.PI / 3;
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = i < Math.round(p * 6) ? 'rgba(240, 252, 255, 0.95)' : 'rgba(150, 200, 225, 0.35)';
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+// Reknit: a pale thread from the Cantor's lantern to the husk it is pulling back together, and a ring tightening on the
+// husk itself. Kill the Cantor or stand on the husk's ground - the thread tells you which one it is mending.
+function drawReknit(ctx, enemy, telegraph) {
+    const r = Math.max(4, Number(telegraph.radius) || 0);
+    const p = clamp01(telegraph.progress);
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.lineDashOffset = -p * 32;
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y - (Number(enemy.radius) || 0));
+    ctx.lineTo(telegraph.targetX, telegraph.targetY);
+    ctx.strokeStyle = RITE.edge;
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(telegraph.targetX, telegraph.targetY, r * (1.6 - 0.6 * p), 0, Math.PI * 2);
+    ctx.strokeStyle = RITE.edge;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(telegraph.targetX, telegraph.targetY, r * p, 0, Math.PI * 2);
+    ctx.fillStyle = RITE.charge;
+    ctx.fill();
+    ctx.restore();
+}
+
+// Glass Step: the place the Wisp will step out of, shimmering like a mirror catching light. A diamond, not a circle, so it
+// cannot be mistaken for a blast.
+function drawGlassStep(ctx, telegraph) {
+    const r = Math.max(4, Number(telegraph.radius) || 0);
+    const p = clamp01(telegraph.progress);
+    const x = telegraph.targetX, y = telegraph.targetY;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, y - r); ctx.lineTo(x + r * 0.7, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r * 0.7, y);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(225, 245, 255, ${0.1 + 0.3 * p})`;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(235, 250, 255, 0.85)';
+    ctx.lineWidth = 1.25;
+    ctx.stroke();
+    ctx.beginPath();
+    const glint = -r * 0.6 + r * 1.2 * p;
+    ctx.moveTo(x - r * 0.35, y + glint + r * 0.2);
+    ctx.lineTo(x + r * 0.35, y + glint - r * 0.2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.stroke();
+    ctx.restore();
+}
+
+// Shiver Cut: the exact wedge the glass blade sweeps, filling during the windup; the release flashes the whole arc.
+function drawShiverCut(ctx, enemy, telegraph) {
+    const r = Math.max(4, Number(telegraph.radius) || 0);
+    const angle = Math.atan2(telegraph.targetY - enemy.y, telegraph.targetX - enemy.x);
+    const half = FROST.cutHalfAngle;
+    const slash = telegraph.kind === 'shiver-slash';
+    const p = slash ? 1 : clamp01(telegraph.progress);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(enemy.x, enemy.y);
+    ctx.arc(enemy.x, enemy.y, r, angle - half, angle + half);
+    ctx.closePath();
+    ctx.fillStyle = slash ? 'rgba(245, 252, 255, 0.55)' : SHIVER.fill;
+    ctx.fill();
+    ctx.strokeStyle = SHIVER.edge;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    if (!slash) {
+        ctx.beginPath();
+        ctx.moveTo(enemy.x, enemy.y);
+        ctx.arc(enemy.x, enemy.y, r, angle - half, angle - half + half * 2 * p);
+        ctx.closePath();
+        ctx.fillStyle = SHIVER.charge;
+        ctx.fill();
+    }
+    ctx.restore();
 }
 
 // The Sentinel's Frost Brace: its whole front arc out to the wave's reach, filling as the stamp nears. The two flanks stay
@@ -289,5 +412,50 @@ export function drawPlayerChill(ctx, player, seconds = 0) {
         ctx.closePath();
         ctx.fill();
     }
+    ctx.restore();
+}
+
+// A rime husk: the frozen shell a fallen Frostling leaves, a Cantor's reknit target until it crumbles.
+export function drawRimeHusk(ctx, husk) {
+    const life = clamp01(husk.life);
+    ctx.save();
+    ctx.globalAlpha = 0.3 + 0.7 * Math.min(1, life * 3);
+    ctx.beginPath();
+    ctx.ellipse(husk.x, husk.y + 2, 9, 5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(30, 52, 70, 0.55)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(husk.x - 7, husk.y + 2);
+    ctx.lineTo(husk.x - 4, husk.y - 5);
+    ctx.lineTo(husk.x, husk.y - 2);
+    ctx.lineTo(husk.x + 3, husk.y - 7);
+    ctx.lineTo(husk.x + 7, husk.y + 2);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(190, 225, 242, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(70, 120, 150, 0.9)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// Rime armour from a Cantor's hymn: a crust of pale facets around the body that thins as it is chipped away.
+export function drawRimeArmor(ctx, enemy) {
+    const crust = clamp01(enemy.rimeArmor);
+    if (crust <= 0) return;
+    const r = (Number(enemy.radius) || 10) + 3;
+    ctx.save();
+    ctx.globalAlpha = Number.isFinite(enemy.opacity) ? enemy.opacity : 1;
+    ctx.strokeStyle = `rgba(215, 242, 255, ${0.45 + 0.45 * crust})`;
+    ctx.lineWidth = 1 + 2 * crust;
+    const facets = Math.max(3, Math.round(8 * crust));
+    ctx.beginPath();
+    for (let i = 0; i <= facets; i++) {
+        const a = Math.PI + i * Math.PI / facets;
+        const rr = r + (i % 2 ? 2 : 0);
+        const px = enemy.x + Math.cos(a) * rr, py = enemy.y + Math.sin(a) * rr * 1.1;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
     ctx.restore();
 }

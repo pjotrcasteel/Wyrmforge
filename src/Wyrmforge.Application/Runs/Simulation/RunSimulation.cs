@@ -314,7 +314,8 @@ public sealed partial class RunSimulation
                 ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
                 Routed = enemy.RoutedRemaining > 0,
                 Revived = enemy.Revived,
-                Opacity = enemy.DrownedWraith?.Opacity ?? 1,
+                Opacity = enemy.DrownedWraith?.Opacity ?? FrostOpacity(enemy),
+                RimeArmor = RimeArmorRatio(enemy),
                 Elite = enemy.IsElite ? enemy.Elite.ToString() : null,
                 Empowered = IsWardEmpowered(enemy),
             }).ToArray(),
@@ -364,6 +365,7 @@ public sealed partial class RunSimulation
             SplinterBlooms = CreateSplinterBloomSnapshots(),
             BlackIce = CreateBlackIceSnapshots(),
             SnowClouds = CreateSnowCloudSnapshots(),
+            RimeHusks = CreateRimeHuskSnapshots(),
             AvalancheRings = CreateAvalancheRingSnapshots(),
         };
     }

@@ -22,4 +22,7 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
 
     /// <summary>Standing within a Reliquary ward's reach: faster and harder-hitting.</summary>
     public bool Empowered { get; init; }
+
+    /// <summary>Hoarfrost Cantor frost armour left, as a fraction of a full Rime Hymn crust; 0 when bare.</summary>
+    public double RimeArmor { get; init; }
 }

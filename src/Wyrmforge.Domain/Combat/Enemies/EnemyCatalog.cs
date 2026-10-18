@@ -25,6 +25,13 @@ public static class EnemyCatalog
             HabitatOnly: true, Realm: EnemyRealm.Frost),
         new(EnemyKind.CairnSentinel, EnemyRole.Pressure, 3, 20, MinimumDepth: 2, HealthMultiplier: 2.3, SpeedMultiplier: 0.55, ContactDamageMultiplier: 1,
             HabitatOnly: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.HoarfrostCantor, EnemyRole.Support, 3, 13, HealthMultiplier: 1.4, SpeedMultiplier: 0.7, ContactDamageMultiplier: 0.4,
+            HabitatOnly: true, Realm: EnemyRealm.Frost),
+        new(EnemyKind.MirrorWisp, EnemyRole.Ambusher, 2, 11, HealthMultiplier: 0.75, SpeedMultiplier: 1, ContactDamageMultiplier: 0.3,
+            HabitatOnly: true, Realm: EnemyRealm.Frost),
+        // Unique: only a Mirror Wisp's Glass Step leaves one. One hit breaks it.
+        new(EnemyKind.MirrorDouble, EnemyRole.Ambusher, 0, 11, HealthMultiplier: 0.01, SpeedMultiplier: 0.6, ContactDamageMultiplier: 0,
+            Unique: true, Realm: EnemyRealm.Frost),
     ];
 
     public static EnemyDefinition Get(EnemyKind kind) => All.Single(definition => definition.Kind == kind);

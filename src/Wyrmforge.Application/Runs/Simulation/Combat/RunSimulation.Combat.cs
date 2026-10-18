@@ -116,6 +116,7 @@ public sealed partial class RunSimulation
         // reaching half health starts the stagger at once (below), and the stagger itself is a free damage window.
         if (target is EnemyState { BellWarden: { Cracked: false, Phase: not BellWardenPhase.Crack } } gated)
             damage = Math.Min(damage, Math.Max(0, gated.Health - gated.MaxHealth * BellWardenBehaviorState.CrackHealthFraction));
+        if (target is EnemyState frostDefended) damage = ApplyFrostDefenses(frostDefended, damage);
         if (damage <= 0)
         {
             RegisterTargetHit(target);
@@ -132,6 +133,10 @@ public sealed partial class RunSimulation
             case EnemyState { Kind: EnemyKind.Reliquary or EnemyKind.ReliquaryWard } rite:
                 ResolveReliquaryDeath(rite);
                 break;
+            case EnemyState { Kind: EnemyKind.MirrorDouble } reflection:
+                // A false image breaks like glass: no kill, no payout, no record.
+                RegisterEnemyDeath(reflection);
+                break;
             case EnemyState { Kind: EnemyKind.BellWarden } warden:
                 ResolveBellWardenDeath(warden);
                 break;
@@ -139,6 +144,7 @@ public sealed partial class RunSimulation
                 RecordControlledKill(defeatedEnemy);
                 RegisterEnemyDeath(defeatedEnemy);
                 RegisterSupportDeath(defeatedEnemy);
+                RegisterFrostDeath(defeatedEnemy);
                 kills++;
                 RecordEnemyKill(defeatedEnemy.Kind);
                 QueueRelicDefeatBursts(defeatedEnemy);

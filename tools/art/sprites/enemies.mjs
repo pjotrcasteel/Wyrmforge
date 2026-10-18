@@ -35,6 +35,9 @@ export const ENEMY_SPECS = [
     { kind: 11, name: 'shardcaster', size: [52, 62], origin: [23, 37], radius: 11 },
     { kind: 12, name: 'whitefang-stalker', size: [60, 42], origin: [28, 25], radius: 13 },
     { kind: 13, name: 'cairn-sentinel', size: [62, 74], origin: [28, 46], radius: 20 },
+    { kind: 14, name: 'hoarfrost-cantor', size: [50, 66], origin: [22, 40], radius: 13 },
+    { kind: 15, name: 'mirror-wisp', size: [48, 56], origin: [22, 32], radius: 11 },
+    { kind: 16, name: 'mirror-double', size: [48, 56], origin: [22, 32], radius: 11 },
 ];
 
 const stride = pose => pose === 1 ? 2 : pose === 2 ? -2 : 0;
@@ -669,8 +672,123 @@ function cairnSentinel(pose) {
     return b;
 }
 
+// Hoarfrost Cantor (concept 02): a tall hunched elder in a tattered ivory robe with a cold blue stole, a crown of pale antlers
+// strung with little bells, and a staff topped by a hanging rime lantern. Not the Ash Priest: ivory and blue where the priest
+// is ember-red, antlers instead of horns, and it never casts at the hunter - pose 3 is the chant, both arms raised and the
+// lantern held high over the pack.
+function hoarfrostCantor(pose) {
+    const s = ENEMY_SPECS[14], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { robe: '#cfc6b0', robeHi: '#efe8d6', robeDk: '#8d846f', stole: '#4f7d9a', stoleDk: '#2f5068', void: '#0c1016',
+        face: '#a9b6bd', antler: '#e2dccb', antlerDk: '#9a927e', bell: '#9fb7c6', staff: '#5c5348', staffHi: '#7d7262',
+        rime: '#a9dcf0', glow: '#effcff', hand: '#9aa6ad' };
+    const step = stride(pose), chant = pose === 3;
+    // Long robe, hem torn into frozen strips; it hunches forward.
+    g.poly([[-8, -8], [6, -8], [10 + step, 20], [6, 17], [3, 21], [0, 17], [-3, 21], [-6, 17], [-10 - step, 20]], C.robe);
+    g.poly([[-8, -8], [-3, -8], [-5, 19], [-10 - step, 20]], C.robeDk);
+    g.line(3, -5, 5 + step, 17, C.robeHi);
+    for (const x of [-7, -3, 1, 5]) g.px(x, 20 - (x & 1), C.rime);
+    // Blue stole hanging down the front with bell tassels.
+    g.poly([[-3, -8], [3, -8], [2, 12], [-2, 12]], C.stole);
+    g.line(-3, -8, -2, 12, C.stoleDk);
+    g.px(-2, 13, C.bell); g.px(2, 13, C.bell);
+    // Hood and bowed head.
+    g.poly([[-6, -9], [6, -9], [5, -17], [0, -20], [-5, -17]], C.robe);
+    g.poly([[-6, -9], [-2, -9], [-3, -18], [-5, -17]], C.robeDk);
+    g.ell(1, -14, 2.6, 3, C.void); g.px(0, -15, C.rime); g.px(2, -15, C.rime);
+    g.rect(0, -12, 2, 1, C.face);
+    // Antler crown: two branching racks, bells hung at the tips.
+    for (const [sx] of [[-1], [1]]) {
+        g.line(sx * 2, -19, sx * 7, -26, C.antler); g.line(sx * 7, -26, sx * 9, -32, C.antler);
+        g.line(sx * 5, -23, sx * 2, -28, C.antlerDk); g.line(sx * 7, -26, sx * 12, -27, C.antlerDk);
+        g.px(sx * 12, -26, C.bell); g.px(sx * 9, -33, C.bell);
+    }
+    const lantern = (x, y) => {
+        g.line(x, y - 3, x, y - 1, C.staff);
+        g.poly([[x - 2, y], [x + 2, y], [x + 1, y + 5], [x - 1, y + 5]], C.bell);
+        g.rect(x - 1, y + 1, 2, 3, C.rime); g.px(x, y + 2, C.glow);
+    };
+    if (chant) {
+        // Both arms lifted: the far one open-palmed, the near one raising the lantern staff.
+        g.line(-5, -7, -12, -18, C.hand, 2); g.px(-13, -20, C.glow);
+        g.line(4, -7, 11, -16, C.hand, 2);
+        g.line(12, -32, 12, 12, C.staff); g.line(13, -32, 13, 12, C.staffHi);
+        g.line(9, -32, 16, -32, C.staff);
+        lantern(15, -31);
+    } else {
+        const sw = pose === 1 ? 1 : pose === 2 ? -1 : 0;
+        g.line(-5, -7, -8, 3, C.robeDk, 2);
+        g.line(4, -7, 10, -1, C.hand, 2);
+        g.line(11 + sw, -24, 11, 20, C.staff); g.line(12 + sw, -24, 12, 20, C.staffHi);
+        g.line(8 + sw, -24, 15 + sw, -24, C.staff);
+        lantern(14 + sw, -23);
+    }
+    b.rim('#dff6ff', '#07090d', .35, .3);
+    b.outline('#0a0d12');
+    const o = s.origin;
+    if (chant) b.set(o[0] + 15, o[1] - 29, C.glow);
+    else b.set(o[0] + 14 + (pose === 1 ? 1 : pose === 2 ? -1 : 0), o[1] - 21, C.glow);
+    return b;
+}
+
+// Mirror Wisp (concept 06): a slender pale woman of frosted glass - long white hair, a shard-diamond diadem, a gown that
+// thins to nothing below the knees, and ice diamonds orbiting her. The renderer draws her translucent while veiled; the
+// sprite keeps hard, glassy facet light so she reads as "reflection", not "ghost". Pose 3 is the Shiver Cut wind-up: the
+// near arm drawn back with a long glass blade of a hand, hair flaring.
+function mirrorWisp(pose) {
+    const s = ENEMY_SPECS[15], b = new Bitmap(...s.size), g = at(b, ...s.origin);
+    const C = { gown: '#c8dce6', gownHi: '#f2fbff', gownDk: '#7f9fb2', skin: '#dce8ee', face: '#f4f9fb', void: '#1a2836',
+        hair: '#9fc0d2', hairDk: '#5f8296', ice: '#a9dcf0', iceHi: '#ffffff', iceDk: '#4e8fb0', eye: '#5fd2ff' };
+    const bob = pose === 1 ? -1 : pose === 2 ? 1 : 0, cut = pose === 3;
+    const y = v => v + bob;
+    const diamond = (x, yy) => { g.poly([[x, yy - 3], [x + 2, yy], [x, yy + 3], [x - 2, yy]], C.ice); g.px(x, yy - 1, C.iceHi); };
+    // Gown thinning to glass splinters instead of feet.
+    g.poly([[-6, y(-4)], [5, y(-4)], [8, y(10)], [5, y(16)], [2, y(12)], [0, y(19)], [-2, y(12)], [-5, y(16)], [-8, y(10)]], C.gown);
+    g.poly([[-6, y(-4)], [-2, y(-4)], [-2, y(12)], [-5, y(16)], [-8, y(10)]], C.gownDk);
+    g.line(2, y(-2), 4, y(12), C.gownHi);
+    for (const [x, d] of [[-6, 19], [-1, 22], [4, 20]]) g.px(x, y(d), C.ice);
+    // Narrow torso and shoulders.
+    g.poly([[-4, y(-12)], [4, y(-12)], [5, y(-4)], [-5, y(-4)]], C.gown);
+    g.line(0, y(-11), 0, y(-5), C.gownDk);
+    // Far arm.
+    if (cut) g.line(-3, y(-10), -9, y(-15), C.skin, 2); else g.line(-4, y(-10), -7, y(0), C.skin, 2);
+    // Head, long hair falling (or flaring back), shard diadem.
+    g.ell(1, y(-16), 3.2, 3.6, C.face);
+    g.px(0, y(-16), C.eye); g.px(2, y(-16), C.eye); g.px(1, y(-14), C.void);
+    if (cut) {
+        g.poly([[-2, y(-20)], [4, y(-20)], [-2, y(-15)], [-12, y(-12)], [-14, y(-16)]], C.hair);
+        g.line(-3, y(-18), -12, y(-14), C.hairDk);
+    } else {
+        g.poly([[-2, y(-20)], [4, y(-20)], [5, y(-16)], [3, y(-15)], [-2, y(-15)], [-3, y(0)], [-5, y(-6)], [-4, y(-17)]], C.hair);
+        g.line(-3, y(-14), -4, y(-3), C.hairDk);
+    }
+    for (const [x, d] of [[-2, -22], [1, -24], [4, -22]]) { g.line(x, y(d + 2), x, y(d), C.ice); g.px(x, y(d - 1), C.iceHi); }
+    // Near arm: hangs lightly while drifting; in the wind-up it trails a long glass blade.
+    if (cut) {
+        g.line(3, y(-10), 9, y(-6), C.skin, 2);
+        g.line(9, y(-6), 20, y(-14), C.iceDk, 2); g.line(9, y(-7), 20, y(-14), C.ice); g.px(21, y(-15), C.iceHi);
+    } else {
+        g.line(3, y(-10), 6, y(-2), C.skin, 2); g.line(6, y(-2), 8, y(4), C.ice); g.px(8, y(5), C.iceHi);
+    }
+    // Orbiting ice diamonds; their places shift with the pose so she shimmers as she drifts.
+    const orbit = [[-13, -6], [12, -19], [11, 8], [-10, 12]];
+    const k = cut ? 2 : pose;
+    for (let i = 0; i < orbit.length; i++) {
+        const [x, d] = orbit[(i + k) % orbit.length];
+        if (cut && i === 0) continue;
+        diamond(x, y(d));
+    }
+    b.rim('#ffffff', '#06090e', .3, .25);
+    b.outline('#0d1a24');
+    const o = s.origin;
+    b.set(o[0], o[1] - 16 + bob, C.iceHi); b.set(o[0] + 2, o[1] - 16 + bob, C.iceHi);
+    return b;
+}
+
+// The reflection the Wisp leaves where it stood is the same figure: it must be mistakable for her for a heartbeat.
+function mirrorDouble(pose) { return mirrorWisp(pose); }
+
 const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, drownedWraith, reliquary, reliquaryWard, bellWarden,
-    frostlingPackling, shardcaster, whitefangStalker, cairnSentinel];
+    frostlingPackling, shardcaster, whitefangStalker, cairnSentinel, hoarfrostCantor, mirrorWisp, mirrorDouble];
 
 export function paintEnemy(kind, pose) { return painters[kind](pose); }
 

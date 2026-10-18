@@ -53,5 +53,7 @@ public sealed record RunRenderSnapshot(
 
     public IReadOnlyList<SnowCloudRenderSnapshot> SnowClouds { get; init; } = [];
 
+    public IReadOnlyList<RimeHuskRenderSnapshot> RimeHusks { get; init; } = [];
+
     public IReadOnlyList<AvalancheRingRenderSnapshot> AvalancheRings { get; init; } = [];
 }

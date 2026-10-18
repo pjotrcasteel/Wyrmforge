@@ -1,4 +1,5 @@
-// Fallback compact enemy pixel sprites used until the generated atlas loads. Ten roster kinds (7-8: Reliquary and ward, 9: Bell Warden);
+// Fallback compact enemy pixel sprites used until the generated atlas loads. Seventeen kinds (7-8: Reliquary and ward, 9: Bell Warden,
+// 10-16: the Frost roster and the Mirror Wisp's double);
 // C# still owns hitboxes, health, AI and attacks.
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
@@ -12,8 +13,16 @@ const palettes = [
     {edge:'#24070c',body:'#7a1820',shade:'#45101a',light:'#c9a24a',head:'#e6dcc8',eye:'#14060a',weapon:'#f0d27a'},
     {edge:'#1c171a',body:'#d8c8a4',shade:'#7e6228',light:'#c9a24a',head:'#b02a34',eye:'#fff1c0',weapon:'#ff8a3c'},
     {edge:'#141214',body:'#4a4f57',shade:'#2a2d33',light:'#8a919a',head:'#d9cfb8',eye:'#ffb347',weapon:'#c9a24a'},
+    // Frost roster (10-16): Packling, Shardcaster, Whitefang, Cairn Sentinel, Hoarfrost Cantor, Mirror Wisp, its double.
+    {edge:'#14202a',body:'#cfdde6',shade:'#7f9fb2',light:'#effbff',head:'#a9c4d4',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    {edge:'#080a0f',body:'#6f6a66',shade:'#433f3d',light:'#9d978f',head:'#211f21',eye:'#8ce8ff',weapon:'#a9dcf0'},
+    {edge:'#0b1218',body:'#dfe6ea',shade:'#93a7b4',light:'#f6fbfd',head:'#c3d3dc',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    {edge:'#0d1116',body:'#6c7680',shade:'#3b434c',light:'#a6b4bf',head:'#4f5b66',eye:'#8ce8ff',weapon:'#a9dcf0'},
+    {edge:'#0a0d12',body:'#cfc6b0',shade:'#8d846f',light:'#efe8d6',head:'#4f7d9a',eye:'#a9dcf0',weapon:'#e2dccb'},
+    {edge:'#0d1a24',body:'#c8dce6',shade:'#7f9fb2',light:'#f2fbff',head:'#f4f9fb',eye:'#5fd2ff',weapon:'#a9dcf0'},
+    {edge:'#0d1a24',body:'#c8dce6',shade:'#7f9fb2',light:'#f2fbff',head:'#f4f9fb',eye:'#5fd2ff',weapon:'#a9dcf0'},
 ];
-export const ENEMY_KIND_COUNT = 10;
+export const ENEMY_KIND_COUNT = palettes.length;
 const clampKind = kind => Math.max(0, Math.min(ENEMY_KIND_COUNT - 1, Number(kind) || 0));
 // Kinds 4-5 (Ash Slinger, Ash Priest) borrow the slender spear-bearer fallback frame; the Drowned Wraith (6) reuses the
 // hooded, torn-hem wraith frame. Each keeps its own palette.

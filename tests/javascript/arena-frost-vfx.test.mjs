@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { drawEnemyTelegraph } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-telegraphs.js';
-import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, isFrostTelegraph, FROST } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-frost-vfx.js';
+import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, drawRimeHusk, drawRimeArmor, isFrostTelegraph, FROST } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-frost-vfx.js';
 
 function mockContext() {
     const calls = [];
@@ -15,7 +15,7 @@ function mockContext() {
 }
 
 test('frost telegraph kinds are routed through the shared enemy telegraph entry point', () => {
-    for (const kind of ['skitter', 'ice-lance', 'black-ice', 'flank-pounce', 'avalanche']) {
+    for (const kind of ['skitter', 'ice-lance', 'black-ice', 'flank-pounce', 'avalanche', 'rime-hymn', 'reknit', 'stillness', 'glass-step', 'shiver-cut', 'shiver-slash']) {
         assert.ok(isFrostTelegraph(kind));
         const ctx = mockContext();
         drawEnemyTelegraph(ctx, { x: 0, y: 0, telegraph: { kind, progress: .5, targetX: 120, targetY: 0, radius: 7 } });
@@ -80,4 +80,50 @@ test('avalanche wave is drawn at its live radius and snow clouds vanish when spe
     const cloud = mockContext();
     drawSnowCloud(cloud, { x: 0, y: 0, radius: 46, life: 0 });
     assert.deepEqual(cloud.calls.find(c => c[0] === 'set' && c[1] === 'globalAlpha').slice(2), [0]);
+});
+
+const RED_EDGE = '226, 84, 74';
+const strokes = ctx => ctx.calls.filter(c => c[0] === 'set' && c[1] === 'strokeStyle').map(c => c[2]);
+
+test('cantor rites: the hymn is a cold support ring, the stillness verse is a red-edged hit, both at the reported radius', () => {
+    const hymn = mockContext();
+    drawEnemyTelegraph(hymn, { x: 0, y: 0, telegraph: { kind: 'rime-hymn', progress: .5, targetX: 30, targetY: 40, radius: 200 } });
+    assert.deepEqual(hymn.calls.find(c => c[0] === 'arc').slice(1, 4), [30, 40, 200]);
+    assert.ok(strokes(hymn).every(s => !s.includes(RED_EDGE)), 'a buff never wears the danger edge');
+    const verse = mockContext();
+    drawEnemyTelegraph(verse, { x: 0, y: 0, telegraph: { kind: 'stillness', progress: .5, targetX: 0, targetY: 0, radius: 130 } });
+    assert.deepEqual(verse.calls.find(c => c[0] === 'arc').slice(1, 4), [0, 0, 130]);
+    assert.ok(strokes(verse).some(s => s.includes(RED_EDGE)));
+});
+
+test('reknit threads from the cantor to the husk it is mending', () => {
+    const ctx = mockContext();
+    drawEnemyTelegraph(ctx, { x: 10, y: 20, radius: 13, telegraph: { kind: 'reknit', progress: .5, targetX: 90, targetY: 80, radius: 14 } });
+    assert.deepEqual(ctx.calls.find(c => c[0] === 'moveTo').slice(1), [10, 7]);
+    assert.deepEqual(ctx.calls.find(c => c[0] === 'lineTo').slice(1), [90, 80]);
+    assert.ok(strokes(ctx).every(s => !s.includes(RED_EDGE)));
+});
+
+test('mirror wisp: glass step marks its landing and the shiver cut covers exactly the tested wedge', () => {
+    const step = mockContext();
+    drawEnemyTelegraph(step, { x: 0, y: 0, telegraph: { kind: 'glass-step', progress: .5, targetX: 50, targetY: 60, radius: 18 } });
+    assert.deepEqual(step.calls.find(c => c[0] === 'moveTo').slice(1), [50, 42]);
+    const cut = mockContext();
+    drawEnemyTelegraph(cut, { x: 100, y: 100, telegraph: { kind: 'shiver-cut', progress: .5, targetX: 174, targetY: 100, radius: 74 } });
+    const arc = cut.calls.find(c => c[0] === 'arc');
+    assert.deepEqual(arc.slice(1, 4), [100, 100, 74]);
+    assert.ok(Math.abs(arc[4] + FROST.cutHalfAngle) < 1e-9 && Math.abs(arc[5] - FROST.cutHalfAngle) < 1e-9);
+    assert.ok(strokes(cut).some(s => s.includes(RED_EDGE)));
+});
+
+test('rime husks draw at their spot and rime armour only shows on armoured enemies', () => {
+    const husk = mockContext();
+    drawRimeHusk(husk, { x: 5, y: 6, life: .5 });
+    assert.deepEqual(husk.calls.find(c => c[0] === 'ellipse').slice(1, 3), [5, 8]);
+    const bare = mockContext();
+    drawRimeArmor(bare, { x: 0, y: 0, radius: 11, rimeArmor: 0 });
+    assert.equal(bare.calls.length, 0);
+    const crusted = mockContext();
+    drawRimeArmor(crusted, { x: 0, y: 0, radius: 11, rimeArmor: 1, opacity: 1 });
+    assert.ok(crusted.calls.some(c => c[0] === 'stroke'));
 });

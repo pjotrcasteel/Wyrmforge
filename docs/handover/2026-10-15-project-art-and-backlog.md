@@ -503,3 +503,11 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 - **Design change:** the wave started as a full ring; it became frontal so there is always a readable answer.
 - **Tests:** `FrostFlankAndGuardBehaviorTests` (Domain), new cases in `FrostEncounterTests`, `arena-frost-vfx.test.mjs`. Browser 47/49 (the two known mobile failures).
 - **Next:** F3, the Hoarfrost Cantor and Mirror Wisp.
+
+## 35. Frost region F3: Hoarfrost Cantor, Mirror Wisp
+
+- **Hoarfrost Cantor (14):** a support that never heals. Breakable chants: Stillness Verse (near: 4 damage, +3 Chill), Reknit (a fallen Frostling's rime husk rises as a 50% thrall, max 2), Rime Hymn (35% max-health crust on 2+ allies for 10 s). A 15% burst, shove or Warding Pulse silences it.
+- **Mirror Wisp (15):** veiled (×0.5 damage, half opacity). The Glass Step lands on black ice or 56 px beside the hunter and leaves a harmless reflection double (16) that pays nothing and holds no road open. Then a locked ±50° Shiver Cut and an exposed ×1.4 window.
+- **Fixes:** `ENEMY_KIND_COUNT` was 10, so all Frost kinds rendered as the Bell Warden; it now follows the palette table (17). The Wisp's first step distance (90 px) sat outside its own cut, so it was moved to 56 px.
+- **Tests:** `FrostRiteAndMirrorBehaviorTests` (Domain), F3 cases in `FrostEncounterTests`, `arena-frost-vfx.test.mjs`, `art-pipeline.test.mjs`. Browser 47/49 (the two known mobile failures).
+- **Next:** F4, the Bell of Winter and Reliquary of Glass, Frost elite affixes, habitats and pack recipes, Rimeclaw lair, frost ground, `glacier-region` → Playable and the World Gate region picker.

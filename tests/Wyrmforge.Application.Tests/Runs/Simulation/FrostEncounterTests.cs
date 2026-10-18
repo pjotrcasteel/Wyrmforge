@@ -173,6 +173,119 @@ public sealed class FrostEncounterTests
     }
 
     [TestMethod]
+    public void Cantor_RimeHymnArmoursThePackButNeverItself()
+    {
+        var (simulation, player, enemies) = Encounter();
+        var cantor = new EnemyState(500, player.Position + new Vector2D(300, 0), 13, 1000, 0, EnemyKind.HoarfrostCantor);
+        var left = new EnemyState(501, cantor.Position + new Vector2D(0, 60), 11, 1000, 0);
+        var right = new EnemyState(502, cantor.Position + new Vector2D(0, -60), 11, 1000, 0);
+        enemies.AddRange([cantor, left, right]);
+        while (cantor.Cantor!.Phase != CantorPhase.Chant) Step(simulation, 0.05);
+        Assert.AreEqual("rime-hymn", simulation.CreateSnapshot().Enemies.First(enemy => enemy.Kind == EnemyKind.HoarfrostCantor).Telegraph?.Kind);
+        while (cantor.Cantor.Phase == CantorPhase.Chant) Step(simulation, 0.05);
+
+        var crust = 1000 * HoarfrostCantorBehaviorState.RimeArmorFraction;
+        Assert.AreEqual(crust, left.RimeArmor, 0.001);
+        Assert.AreEqual(crust, right.RimeArmor, 0.001);
+        Assert.AreEqual(0, cantor.RimeArmor, "The chanter stays bare: killing it is the answer.");
+        Assert.AreEqual(1, simulation.CreateSnapshot().Enemies.Single(enemy => enemy.EntityId == 501).RimeArmor, 0.001);
+
+        Damage(simulation, left, 100);
+        Assert.AreEqual(1000, left.Health, "The crust soaks the hit before health moves.");
+        Assert.AreEqual(crust - 100, left.RimeArmor, 0.001);
+        Damage(simulation, left, crust);
+        Assert.AreEqual(900, left.Health, 0.001, "Only the overflow past the crust lands.");
+        Assert.AreEqual(0, left.RimeArmor);
+    }
+
+    [TestMethod]
+    public void Cantor_ReknitsAFallenPacklingIntoAThrallThatPaysNothing()
+    {
+        var (simulation, player, enemies) = Encounter();
+        var cantor = new EnemyState(500, player.Position + new Vector2D(300, 0), 13, 1000, 0, EnemyKind.HoarfrostCantor);
+        var packling = new EnemyState(501, cantor.Position + new Vector2D(0, 80), 9, 10, 0, EnemyKind.FrostlingPackling);
+        enemies.AddRange([cantor, packling]);
+        Damage(simulation, packling, 50);
+        enemies.RemoveAll(enemy => enemy.Health <= 0);
+        Assert.HasCount(1, simulation.CreateSnapshot().RimeHusks, "A fallen Frostling leaves a rime husk.");
+
+        var sawThread = false;
+        for (var time = 0d; time < 5 && simulation.ReknitThralls == 0; time += 0.05)
+        {
+            Step(simulation, 0.05);
+            sawThread |= simulation.CreateSnapshot().Enemies.Any(enemy => enemy.Telegraph?.Kind == "reknit");
+        }
+        Assert.IsTrue(sawThread, "The reknit is telegraphed at the husk.");
+        var thrall = enemies.Single(enemy => enemy.Kind == EnemyKind.FrostlingPackling);
+        Assert.IsTrue(thrall.Revived);
+        Assert.AreEqual(thrall.MaxHealth * HoarfrostCantorBehaviorState.ThrallHealthFraction, thrall.Health, 0.001);
+        Assert.IsEmpty(simulation.CreateSnapshot().RimeHusks);
+
+        Damage(simulation, thrall, thrall.MaxHealth);
+        enemies.RemoveAll(enemy => enemy.Health <= 0);
+        Assert.IsEmpty(simulation.CreateSnapshot().RimeHusks, "A thrall that falls again shatters for good.");
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Cantor_StillnessVerseNumbsTheNearUnlessABurstBreaksIt(bool interrupt)
+    {
+        var (simulation, player, enemies) = Encounter();
+        var cantor = new EnemyState(500, player.Position + new Vector2D(100, 0), 13, 1000, 0, EnemyKind.HoarfrostCantor);
+        enemies.Add(cantor);
+        while (cantor.Cantor!.Phase != CantorPhase.Chant) Step(simulation, 0.05);
+        Assert.AreEqual(CantorVerse.StillnessVerse, cantor.Cantor.Verse);
+        Assert.AreEqual("stillness", simulation.CreateSnapshot().Enemies.Single().Telegraph?.Kind);
+        if (interrupt) Damage(simulation, cantor, 1000 * HoarfrostCantorBehaviorState.InterruptHealthFraction);
+        for (var time = 0d; time < HoarfrostCantorBehaviorState.VerseSeconds + 0.1; time += 0.05) Step(simulation, 0.05);
+
+        Assert.AreEqual(interrupt ? CantorPhase.Silenced : CantorPhase.Recover, cantor.Cantor.Phase);
+        Assert.AreEqual(interrupt ? 0 : HoarfrostCantorBehaviorState.VerseDamage, simulation.MaxHealth - simulation.Health, 0.001);
+        Assert.AreEqual(interrupt ? 0 : HoarfrostCantorBehaviorState.VerseChill, player.Chill.Stacks);
+    }
+
+    [TestMethod]
+    public void Wisp_GlassStepsBesideTheHunterLeavesAFalseDoubleAndCuts()
+    {
+        var (simulation, player, enemies) = Encounter();
+        var wisp = new EnemyState(500, player.Position + new Vector2D(250, 0), 11, 1000, 0, EnemyKind.MirrorWisp);
+        enemies.Add(wisp);
+        var origin = wisp.Position;
+        Assert.AreEqual(0.6, simulation.CreateSnapshot().Enemies.Single().Opacity, 0.001, "The veiled Wisp is half there.");
+        while (wisp.Wisp!.Phase != WispPhase.Shimmer) Step(simulation, 0.05);
+        Assert.AreEqual("glass-step", simulation.CreateSnapshot().Enemies.Single().Telegraph?.Kind);
+        while (wisp.Wisp.Phase == WispPhase.Shimmer) Step(simulation, 0.05);
+
+        var reflection = enemies.Single(enemy => enemy.Kind == EnemyKind.MirrorDouble);
+        Assert.AreEqual(origin, reflection.Position, "The double stays where the Wisp stood.");
+        Assert.AreEqual(MirrorWispBehaviorState.StepDistance, Vector2D.Distance(wisp.Position, player.Position), 1);
+        Assert.AreEqual("shiver-cut", simulation.CreateSnapshot().Enemies.Single(enemy => enemy.EntityId == 500).Telegraph?.Kind);
+        while (wisp.Wisp.Phase == WispPhase.Windup) Step(simulation, 0.05);
+        Assert.AreEqual(MirrorWispBehaviorState.CutDamage, simulation.MaxHealth - simulation.Health, 0.001);
+        Assert.AreEqual(MirrorWispBehaviorState.CutChill, player.Chill.Stacks);
+
+        // The double is an image: it holds no road open, and breaking it pays nothing.
+        wisp.Health = 0;
+        enemies.Remove(wisp);
+        Assert.AreEqual(0, (int)typeof(RunSimulation).GetProperty("HostileCount", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(simulation)!);
+        var kills = Field<int>(simulation, "kills");
+        Damage(simulation, reflection, 1);
+        Assert.IsLessThanOrEqualTo(0d, reflection.Health);
+        Assert.AreEqual(kills, Field<int>(simulation, "kills"));
+    }
+
+    [TestMethod]
+    public void Wisp_DoubleBreaksOnItsOwn()
+    {
+        var (simulation, player, enemies) = Encounter();
+        Invoke(simulation, "SpawnReflectionDouble", player.Position + new Vector2D(200, 0));
+        for (var time = 0d; time < MirrorWispBehaviorState.DoubleSeconds + 0.1; time += 0.05) Step(simulation, 0.05);
+        Assert.IsTrue(enemies.Single().Health <= 0);
+        Assert.AreEqual(simulation.MaxHealth, simulation.Health, "The double never hurts.");
+    }
+
+    [TestMethod]
     public void CinderPlans_NeverDrawTheFrostRoster()
     {
         var random = new SeededRandomSource(1701);
@@ -188,6 +301,9 @@ public sealed class FrostEncounterTests
 
         static bool IsFrost(EnemyKind kind) => EnemyCatalog.Get(kind).Realm == EnemyRealm.Frost;
     }
+
+    private static void Damage(RunSimulation simulation, EnemyState target, double amount) =>
+        Invoke(simulation, "DamageTarget", target, amount, null, null);
 
     private static Vector2D Velocity(RunSimulation simulation, Vector2D desired) =>
         (Vector2D)typeof(RunSimulation).GetMethod("FrostMovementVelocity", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, [desired, 0.05])!;

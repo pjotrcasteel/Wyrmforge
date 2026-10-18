@@ -20,6 +20,6 @@ public sealed record EnemyDefinition(
     bool Unique = false,
     EnemyRealm Realm = EnemyRealm.Cinder)
 {
-    /// <summary>A creature the bestiary records; the Reliquary's wards are ritual objects, not creatures.</summary>
-    public bool IsCreature => Kind != EnemyKind.ReliquaryWard;
+    /// <summary>A creature the bestiary records; the Reliquary's wards and the Mirror Wisp's doubles are not creatures.</summary>
+    public bool IsCreature => Kind is not (EnemyKind.ReliquaryWard or EnemyKind.MirrorDouble);
 }

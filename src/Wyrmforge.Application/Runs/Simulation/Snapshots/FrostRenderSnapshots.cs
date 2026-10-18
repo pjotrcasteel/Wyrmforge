@@ -15,3 +15,6 @@ public sealed record SnowCloudRenderSnapshot(double X, double Y, double Radius, 
 /// <summary>A Cairn Sentinel's Avalanche Step: a wave across the front arc (Angle ± HalfAngle); only its edge at Radius hurts.</summary>
 public sealed record AvalancheRingRenderSnapshot(double X, double Y, double Radius, double MaxRadius, double Thickness, double Progress,
     double Angle, double HalfAngle);
+
+/// <summary>A fallen Frostling's rime husk, waiting for a Hoarfrost Cantor to reknit it. Life runs 1 → 0 as it thaws.</summary>
+public sealed record RimeHuskRenderSnapshot(double X, double Y, double Life);

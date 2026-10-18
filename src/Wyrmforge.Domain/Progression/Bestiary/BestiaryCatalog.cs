@@ -87,6 +87,16 @@ public static class BestiaryCatalog
             "Flank it instead of trading into the shield: beside or behind it, neither the brace nor the wave reaches you. Strike while it recovers.",
             "Frozen cloister, rime cliffs",
             "Rimeclaw's winter kept their oath and emptied their purpose."),
+        new(EnemyKind.HoarfrostCantor, "Hoarfrost Cantor", "Common • support commander",
+            "A keeper of winter rites who stays behind its pack and chants. The Rime Hymn crusts nearby allies in frost armour, Reknit pulls a fallen Frostling's husk back into a thrall, and the Stillness Verse numbs anyone who comes close.",
+            "Pressure the backline and break the chant: a real burst or a shove mid-verse silences it. Every rite you let finish makes the pack harder to break.",
+            "Frozen cathedral, bell-hung cloisters",
+            "Its hymns stiffen flesh and preserve the dead for the glacier's liturgy."),
+        new(EnemyKind.MirrorWisp, "Mirror Wisp", "Uncommon • ambusher",
+            "A spectral shape that is never quite there: most of a hit passes through it. It glass-steps through black ice or beside you, leaves a false double behind, and strikes a short Shiver Cut.",
+            "Do not chase the first apparition: the double only drifts. Step out of the cut, then punish the real Wisp while it hangs solid after the strike.",
+            "Black-ice halls, frost-glass ruins",
+            "It remembers a face but not a life."),
     ];
 
     /// <summary>The creatures the book can list; ritual objects such as wards have no page.</summary>

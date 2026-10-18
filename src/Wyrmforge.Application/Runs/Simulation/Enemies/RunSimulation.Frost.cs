@@ -174,6 +174,7 @@ public sealed partial class RunSimulation
     private void UpdateFrostHazards(double delta)
     {
         if (delta <= 0) return;
+        UpdateRimeArmor(delta);
         foreach (var lance in iceLances)
         {
             var previous = lance.Position;
@@ -256,6 +257,7 @@ public sealed partial class RunSimulation
         blackIceChillRemaining = 0;
         snowClouds.Clear();
         avalancheRings.Clear();
+        rimeHusks.Clear();
         snowCloudChillRemaining = 0;
         playerHeading = Vector2D.Zero;
         player.Chill.Clear();
@@ -285,7 +287,7 @@ public sealed partial class RunSimulation
         { Sentinel: { Phase: CairnPhase.Brace } sentinel } => new EnemyTelegraphRenderSnapshot("avalanche", sentinel.BraceProgress,
             enemy.Position.X + sentinel.Facing.X * CairnSentinelBehaviorState.RingRadius,
             enemy.Position.Y + sentinel.Facing.Y * CairnSentinelBehaviorState.RingRadius, CairnSentinelBehaviorState.RingRadius),
-        _ => null,
+        _ => CreateFrostRiteTelegraph(enemy),
     };
 
     /// <summary>Hits on a Cairn Sentinel: braced fronts soak, flanks land, a recovering Sentinel is exposed.</summary>

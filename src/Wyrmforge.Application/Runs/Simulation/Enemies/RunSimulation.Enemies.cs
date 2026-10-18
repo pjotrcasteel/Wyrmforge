@@ -222,6 +222,7 @@ public sealed partial class RunSimulation
                 UpdateReliquaryWard(enemy, fuse, scaledDelta);
                 continue;
             }
+            if (enemy.Reflection is { } reflection) UpdateReflection(enemy, reflection, scaledDelta);
             if (enemy.Reliquary is { } rite) (direction, speed) = UpdateReliquary(enemy, rite, scaledDelta, crossing, direction, speed);
             else if (enemy.BellWarden is { } bell) (direction, speed) = UpdateBellWarden(enemy, bell, scaledDelta, crossing, direction, speed);
             else if (enemy.RoutedRemaining > 0)
@@ -291,6 +292,10 @@ public sealed partial class RunSimulation
                 (direction, speed) = UpdateWhitefang(enemy, stalker, scaledDelta, crossing, direction, speed, ref committed, committedCap);
             else if (enemy.Sentinel is { } sentinel)
                 (direction, speed) = UpdateSentinel(enemy, sentinel, scaledDelta, crossing, direction, speed, ref committed, committedCap);
+            else if (enemy.Cantor is { } cantor)
+                (direction, speed) = UpdateCantor(enemy, cantor, scaledDelta, crossing, direction, speed, ref committed, committedCap);
+            else if (enemy.Wisp is { } wisp)
+                (direction, speed) = UpdateWisp(enemy, wisp, scaledDelta, crossing, direction, speed, ref committed, committedCap);
 
             if (speed > 0)
             {
@@ -309,7 +314,7 @@ public sealed partial class RunSimulation
             }
             else if (enemy.Packling is { Phase: FrostlingPhase.Skitter } skitterer) BitePlayer(enemy, skitterer);
             else if (enemy.Whitefang is { Phase: WhitefangPhase.Pounce } leaper) MaulPlayer(enemy, leaper);
-            else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint }) continue;
+            else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint } || enemy.Reflection is not null) continue;
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
         SinkWraiths();
@@ -323,7 +328,8 @@ public sealed partial class RunSimulation
         + (bellWarden?.BellWarden?.IsCommitted == true ? 1 : 0) + submergedWraiths.Count(wraith => wraith.DrownedWraith!.IsCommitted)
         + enemies.Count(enemy => enemy.MireHound?.IsCommitted == true || enemy.AshSlinger?.IsCommitted == true || enemy.Penitent?.IsCommitted == true
             || enemy.DrownedWraith?.IsCommitted == true || enemy.Packling?.IsCommitted == true || enemy.Shardcaster?.IsCommitted == true
-            || enemy.Whitefang?.IsCommitted == true || enemy.Sentinel?.IsCommitted == true);
+            || enemy.Whitefang?.IsCommitted == true || enemy.Sentinel?.IsCommitted == true || enemy.Cantor?.IsCommitted == true
+            || enemy.Wisp?.IsCommitted == true);
 
     private void UpdateHostileProjectiles(double delta)
     {

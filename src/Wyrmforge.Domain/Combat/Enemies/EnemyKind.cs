@@ -23,4 +23,10 @@ public enum EnemyKind
     WhitefangStalker,
     /// <summary>Frost roster: a heavy guardian whose Frost Brace soaks frontal hits before an Avalanche Step shock ring.</summary>
     CairnSentinel,
+    /// <summary>Frost roster: a backline chanter whose interruptible rites armour the pack, reknit fallen Packlings and numb the near.</summary>
+    HoarfrostCantor,
+    /// <summary>Frost roster: a veiled ambusher that glass-steps beside the hunter, leaves a false double and strikes a Shiver Cut.</summary>
+    MirrorWisp,
+    /// <summary>A Mirror Wisp's Reflection Double: a false image, not a creature. No bestiary entry, no payout.</summary>
+    MirrorDouble,
 }

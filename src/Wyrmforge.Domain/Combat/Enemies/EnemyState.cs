@@ -49,6 +49,12 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     public CairnSentinelBehaviorState? Sentinel { get; } = kind == EnemyKind.CairnSentinel ? new CairnSentinelBehaviorState() : null;
 
+    public HoarfrostCantorBehaviorState? Cantor { get; } = kind == EnemyKind.HoarfrostCantor ? new HoarfrostCantorBehaviorState() : null;
+
+    public MirrorWispBehaviorState? Wisp { get; } = kind == EnemyKind.MirrorWisp ? new MirrorWispBehaviorState(id % 2 == 0 ? 1 : -1) : null;
+
+    public MirrorDoubleState? Reflection { get; } = kind == EnemyKind.MirrorDouble ? new MirrorDoubleState() : null;
+
     public PenitentBehaviorState? Penitent { get; } = kind == EnemyKind.Penitent ? new PenitentBehaviorState(new Vector2D(1, 0)) : null;
 
     /// <summary>Roster step 5 elite power; <see cref="EliteAffix.None"/> for an ordinary enemy.</summary>
@@ -69,6 +75,11 @@ public sealed class EnemyState(int id, Vector2D position, double radius, double 
 
     /// <summary>Raised by an Ash Priest: already paid out its experience once, so its second death drops none.</summary>
     public bool Revived { get; init; }
+
+    /// <summary>Hoarfrost Cantor's Rime Hymn: frost armour that soaks damage before health. Zero when bare.</summary>
+    public double RimeArmor { get; set; }
+
+    public double RimeArmorRemaining { get; set; }
 
     /// <summary>Morale break after the pack's priest falls: the enemy flees for a bounded time, then re-engages.</summary>
     public double RoutedRemaining { get; set; }

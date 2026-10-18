@@ -87,6 +87,9 @@ public sealed partial class RunSimulation
         { DrownedWraith: { Phase: DrownedWraithPhase.Windup } wraith } => wraith.StrikeHits(enemy.Position, player.Position, player.Radius),
         { MireHound: { Phase: MireHoundPhase.Windup } } => true,
         { Whitefang: { Phase: WhitefangPhase.Windup } } => true,
+        { Wisp: { Phase: WispPhase.Windup } } => true,
+        // A shove breaks any chant, not only the verse aimed at the hunter.
+        { Cantor.IsChanting: true } => true,
         _ => false,
     };
 
@@ -106,6 +109,7 @@ public sealed partial class RunSimulation
             var velocity = direction * (WardingPulse.PushFor(enemy.IsElite) / WardingPulse.PushSeconds);
             knockbacks.RemoveAll(knock => knock.Enemy == enemy);
             knockbacks.Add(new KnockbackState(enemy, velocity, WardingPulse.PushSeconds));
+            enemy.Cantor?.Interrupt();
         }
     }
 

@@ -1,6 +1,6 @@
 # Frost region roster v1 (Rimeclaw's glacier)
 
-- **Status:** F1 and F2 shipped. The region is still **Planned**; the kinds are `HabitatOnly` and no habitat lists them yet, so no live run spawns them.
+- **Status:** F1, F2 and F3 shipped. The region is still **Planned**; the kinds are `HabitatOnly` and no habitat lists them yet, so no live run spawns them.
 - **Sources:** amendment §11.5 (progressive world content), `user_handover_files/concepts/Frost/01–09`, owner direction (2026-10-18): "don't make an exact copy so it feels like a recoloring; make Ice feel different".
 
 ## Identity: Fire pressures, Frost boxes in
@@ -26,20 +26,28 @@ The Cinder kin threaten with damage over time and pressure: burning ground, embe
 | **Whitefang Stalker** (12) | Ambusher, cost 2 | Prowls at ~190 px, then works toward the point **behind your heading**. A **Snowblind Feint** (0.3 s) dashes sideways and leaves a snow cloud (r 46, 2.4 s, drawn above actors so it hides things; standing in it adds 1 Chill every 0.8 s). The pounce lane locks when the feint ends, then a 0.5 s windup and a 170 px pounce: 10 damage and **Tendon Chill** (+2). No contact damage during the feint. | Keep turning to face it; sidestep the locked lane; knockback or a Warding Pulse defuses the windup. |
 | **Cairn Sentinel** (13) | Pressure, cost 3, depth 2+ | Slow armoured march. Within 160 px it plants a **Frost Brace** (1.1 s): facing locks, frontal hits (±60°) take ×0.3 and it is immovable. It ends with an **Avalanche Step**: a frontal wave across the same ±60° arc out to 170 px (9 damage, +2 Chill, only the wave's edge hits, once). During the 1.1 s recovery every hit takes ×1.25. | Flank it: neither the brace nor the wave reaches its sides or back. Punish the recovery. |
 
+## F3 kinds
+
+| Kind | Role | Behaviour | Counterplay |
+|---|---|---|---|
+| **Hoarfrost Cantor** (14) | Support, cost 3 | Keeps 220–340 px back, near its pack. **It never heals and never shoots** (unlike the Ash Priest's single-target heal). Chants breakable rites: **Stillness Verse** (1.2 s, only if you are within 130 px: 4 damage, +3 Chill); **Reknit** (1.4 s: a fallen Frostling leaves a **rime husk** for 9 s, and the Cantor pulls it back up as a thrall at 50% health and 0.8 speed; at most 2 per Cantor; a thrall that falls again shatters for good); **Rime Hymn** (1.6 s, needs 2+ unarmoured allies in 200 px: each gains a **rime crust** of 35% max health for 10 s that soaks damage first; never the Cantor itself or other Cantors). Losing 15% health during a chant, a shove or a Warding Pulse **silences** it for 1.6 s. | Go for the Cantor first and break its chant with a burst. |
+| **Mirror Wisp** (15) | Ambusher, cost 2 | Always visible but **veiled**: half opacity, and while drifting or shimmering it takes ×0.5 damage. Every ~4.2 s a **Glass Step**: it shimmers (0.55 s) at a reflective spot (a **black-ice patch** 60–320 px from you when one exists, else 56 px beside you), then steps through. It leaves a **reflection double** (16) where it stood (3.5 s, harmless, not a hostile, pays nothing). A 0.45 s windup locks the **Shiver Cut**, a ±50° arc out to 74 px (8 damage, +1 Chill); then it is **exposed** for 0.9 s (×1.4 damage). | Watch the landing diamond, step out of the arc, punish the exposed window, ignore the double. Black ice makes it more dangerous: Frost kin combine. |
+
+The Wisp's step point was first 90 px from you, outside its own 74 px cut, so it could never hit; it now lands at 56 px, so the cut reaches you unless you move during the windup.
+
 The Sentinel wave started as a full ring; a ring growing from the centre leaves no safe answer, so it became a frontal wave that rewards the same flank that beats the brace (For Honor guard stance, Dark Souls shield knights).
 
-References: Hades' Wretched Witch / Gungeon lane tells (lanes), Risk of Rain and Hades pack orbiting (Packling ring), Celeste/Zelda ice physics (black ice slide).
+References: Diablo necromancer corpse use (husks), Hades' Satyr Cultist chants and Path of Exile totems (breakable support rites), Hollow Knight shade decoys and Nioh's Yuki-onna (Wisp), Hades' Wretched Witch / Gungeon lane tells (lanes), Risk of Rain and Hades pack orbiting (Packling ring), Celeste/Zelda ice physics (black ice slide).
 
 ## Implementation
 
-- Domain: `HunterChillState`, `FrostlingPacklingBehaviorState`, `ShardcasterBehaviorState`, `WhitefangStalkerBehaviorState`, `CairnSentinelBehaviorState`; `EnemyRealm` on `EnemyDefinition`.
-- Application: `RunSimulation.Frost.cs` (lances, blooms, patches, snow clouds, avalanche waves, Chill, slide, telegraphs, snapshots). The brace multiplier only applies to projectiles and splashes (accepted limitation).
+- Domain: `HunterChillState`, `FrostlingPacklingBehaviorState`, `ShardcasterBehaviorState`, `WhitefangStalkerBehaviorState`, `CairnSentinelBehaviorState`, `HoarfrostCantorBehaviorState`, `MirrorWispBehaviorState` (+ `MirrorDoubleState`); `EnemyRealm` on `EnemyDefinition`.
+- Application: `RunSimulation.Frost.cs` (lances, blooms, patches, snow clouds, avalanche waves, Chill, slide, telegraphs, snapshots) and `RunSimulation.FrostRites.cs` (Cantor rites, rime husks and crust, Wisp step, doubles and cut). The brace multiplier only applies to projectiles and splashes (accepted limitation). Rime crust soaks all `DamageTarget` damage.
 - Elites: realms without an affix table defer the champion to the next spawn. Frost affixes arrive in F4.
-- Rendering: `arena-frost-vfx.js` (lane/skitter/glaze telegraphs, black ice, splinter bloom, lance, the chill rime with one crystal per stack, flank-pounce lane, avalanche front, avalanche wave, snow cloud). Sprites: `tools/art/sprites/enemies.mjs` kinds 10–13.
+- Rendering: `arena-frost-vfx.js` (lane/skitter/glaze telegraphs, black ice, splinter bloom, lance, the chill rime with one crystal per stack, flank-pounce lane, avalanche front, avalanche wave, snow cloud, rime hymn / stillness rings, reknit thread, glass-step diamond, shiver-cut arc, rime husk, rime crust). Sprites: `tools/art/sprites/enemies.mjs` kinds 10–16. F3 also fixed `ENEMY_KIND_COUNT` in `arena-enemy-art.js` (was 10, which clamped every Frost kind to the Bell Warden sprite in-game).
 
 ## Plan
 
-- ~~F2~~ shipped (see above).
-- **F3:** Hoarfrost Cantor (Rime Hymn frost armour, Reknit thralls, interruptible Stillness Verse), Mirror Wisp (Glass Step teleport, decoy double, Shiver Cut).
+- ~~F2~~ and ~~F3~~ shipped (see above).
 - **F4:** Bell of Winter and Reliquary of Glass (elites/bosses), Frost elite affixes, Frost habitats and pack recipes, Rimeclaw lair, frost ground palette, `glacier-region` → Playable (provisional access rule: Ashfang slain), and a World Gate region picker.
 - All numbers are provisional; balancing waits for the final pass (owner decision 2026-10-18).

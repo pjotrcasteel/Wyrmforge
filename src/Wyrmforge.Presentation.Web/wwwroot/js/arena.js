@@ -14,7 +14,7 @@ import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
-import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud } from './arena-frost-vfx.js';
+import { drawBlackIce, drawSplinterBloom, drawIceLance, drawPlayerChill, drawAvalancheWave, drawSnowCloud, drawRimeHusk, drawRimeArmor } from './arena-frost-vfx.js';
 
 const arenas = new WeakMap();
 
@@ -199,6 +199,7 @@ function draw(state, snapshot, width, height) {
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
+    for (const husk of snapshot.rimeHusks ?? []) drawRimeHusk(ctx, husk);
     drawReliquaryGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     drawBellWardenGround(ctx, snapshot, visualSeconds, state.reducedMotion.matches);
     // Enemy attack lanes, landing marks and shield fronts sit on the ground beneath every actor.
@@ -758,6 +759,7 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
 
 function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1) {
     drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
+    drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
     ctx.strokeStyle = `rgba(255, 205, 190, ${0.18 + damage * 0.5})`;
