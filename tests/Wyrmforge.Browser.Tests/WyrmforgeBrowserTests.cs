@@ -12,6 +12,70 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_Refuge_HasIllustratedTownAndAccessibleBuildings(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await OpenAsync();
+
+        await Expect(Page.GetByLabel("Refuge town square")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".town-door")).ToHaveCountAsync(5);
+
+        var background = await Page.Locator(".hub-backdrop")
+            .EvaluateAsync<string>("element => getComputedStyle(element).backgroundImage");
+        Assert.IsTrue(background.Contains("refuge-scene.png", StringComparison.Ordinal),
+            "Refuge must use the illustrated city artwork, not the placeholder menu backdrop.");
+
+        var positionsValid = await Page.EvaluateAsync<bool>(@"() => [...document.querySelectorAll('.town-door')].every(element => {
+            const box = element.getBoundingClientRect();
+            return box.width >= 44 && box.height >= 44 && box.left >= 0 &&
+                box.right <= innerWidth + 1 && box.top >= 0 && box.bottom <= innerHeight + 1;
+        })");
+        Assert.IsTrue(positionsValid, "All town buildings must remain reachable on a narrow phone.");
+        await ScreenshotAsync($"refuge-town-{width}.png");
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_ArcaneNexus_SocketsWrapAndInspectorLeavesWebVisible(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.Locator("button.town-door--build").ClickAsync();
+
+        var rack = Page.Locator(".nexus-rack-details");
+        await Expect(rack).ToBeVisibleAsync();
+        await rack.Locator("summary").ClickAsync();
+        await Expect(Page.Locator(".nexus-rack-socket")).ToHaveCountAsync(4);
+
+        var socketsFit = await Page.Locator(".nexus-socket-rack").EvaluateAsync<bool>(@"rack => {
+            return [...rack.querySelectorAll('button')].every(button => {
+                const box = button.getBoundingClientRect();
+                const parent = rack.getBoundingClientRect();
+                return button.scrollWidth <= button.clientWidth + 2 &&
+                    box.left >= parent.left - 1 && box.right <= parent.right + 1;
+            });
+        }");
+        Assert.IsTrue(socketsFit, "Crafted spell socket names must wrap without clipping.");
+
+        await Page.Locator(".nexus-rack-socket").First.ClickAsync();
+        var inspector = Page.Locator(".node-inspector.open");
+        await Expect(inspector).ToBeVisibleAsync();
+
+        var webNotOccluded = await Page.EvaluateAsync<bool>(@"() => {
+            const web = document.querySelector('.atlas-stage').getBoundingClientRect();
+            const details = document.querySelector('.node-inspector.open').getBoundingClientRect();
+            return details.top >= web.bottom - 1;
+        }");
+        Assert.IsTrue(webNotOccluded, "The node inspector must sit beneath the Web, not over the skill nodes.");
+        await ScreenshotAsync($"nexus-sockets-{width}.png");
+    }
+
+    [TestMethod]
     public async Task Mobile_RecoveryTrail_OffscreenOpenedCacheHasVisibleButOptionalDiegeticGuide()
     {
         await Page.SetViewportSizeAsync(390, 844);
