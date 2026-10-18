@@ -473,4 +473,5 @@ References: the Hades Codex (entries unlock by meeting and killing), Monster Hun
 
   Arcane, Fire and Storm are unchanged. Kills per minute barely moves (44 → 61) because kills are bounded by spawns; progression speed is the better metric.
 - **Tests:** `FrostShatterTests` (Domain), two shatter cases in `OpeningPowerTests`.
-- **Next:** Arcane fragility (20.5% defeats, the highest), or start authoring the second region's enemies from the concept sheets.
+- **Owner decision (2026-10-18):** balancing is deferred until every system is in place. Do not open new tuning passes before then; open findings such as Arcane's 20.5% defeat rate wait for that final pass.
+- **Next:** amendment §11 slice 5: a second non-campaign start path and clean Chronicle/World/Nexus/Endgame state separation.
