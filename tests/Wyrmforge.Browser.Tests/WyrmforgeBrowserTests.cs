@@ -19,6 +19,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var title = Page.Locator(".title-scene");
         await Expect(title).ToBeVisibleAsync();
+        await ScreenshotAsync("welcome-full-art.png");
         var backgroundSize = await Page.Locator(".arrival-home .hub-backdrop")
             .EvaluateAsync<string>("element => getComputedStyle(element, '::after').backgroundSize");
         Assert.IsTrue(backgroundSize.Contains("contain", StringComparison.Ordinal),
@@ -26,6 +27,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Settings", Exact = true }).ClickAsync();
         await Expect(Page.Locator(".settings-audio-slot .wyrmforge-sound-controls")).ToBeVisibleAsync();
+        await ScreenshotAsync("settings-audio.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
     }
@@ -52,6 +54,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 box.right <= innerWidth + 1 && box.top >= 0 && box.bottom <= innerHeight + 1;
         })");
         Assert.IsTrue(positionsValid, "All town buildings must remain reachable on a narrow phone.");
+        var mage = Page.Locator(".town-viewport .town-mage");
+        var before = await mage.EvaluateAsync<string>("element => element.style.left");
+        var bounds = await Page.Locator(".town-viewport").BoundingBoxAsync();
+        Assert.IsNotNull(bounds);
+        await Page.Mouse.ClickAsync((float)(bounds.X + bounds.Width * .63), (float)(bounds.Y + bounds.Height * .81));
+        await Page.WaitForTimeoutAsync(750);
+        var after = await mage.EvaluateAsync<string>("element => element.style.left");
+        Assert.AreNotEqual(before, after, "A player must be able to walk in Refuge, not just tap menu buttons.");
         await ScreenshotAsync($"refuge-town-{width}.png");
     }
 
