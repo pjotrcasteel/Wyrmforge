@@ -49,6 +49,7 @@ public static class SaveLayout
         ["wyrmforge.preferredPrimary.v1"] = SaveDomain.Preferences,
         ["wyrmforge.reviewPrompt.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.enabled.v1"] = SaveDomain.Preferences,
+        ["wyrmforge.audio.menuPalette.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.combat.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.moment.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.music.v1"] = SaveDomain.Preferences,

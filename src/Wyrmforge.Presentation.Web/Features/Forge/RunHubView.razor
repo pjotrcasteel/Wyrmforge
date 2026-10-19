@@ -10,7 +10,7 @@
 @using Wyrmforge.Domain.World
 
 <section class="run-hub">
-    <button class="enter-realm" @onclick="StartAsync">BEGIN HUNT</button>
+    <button class="enter-realm" data-sound-cue="none" @onclick="StartAsync">BEGIN HUNT</button>
     @if (RewardCaches > 0)
     {
         <div class="quest-cache-ready">◆ @RewardCaches relic cache@(RewardCaches == 1 ? string.Empty : "s") · choose one relic when the next hunt begins</div>
