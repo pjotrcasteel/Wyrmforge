@@ -1,0 +1,26 @@
+name: Original town source attachment (review only)
+
+on:
+  push:
+    branches: [art/review-vacant-town-original-source]
+    paths:
+      - '.github/workflows/original-town-source-attachment.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  upload-original-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify full-res original lit panorama
+        run: |
+          file src/Wyrmforge.Presentation.Web/wwwroot/art/refuge-town-panorama.png
+          test -s src/Wyrmforge.Presentation.Web/wwwroot/art/refuge-town-panorama.png
+      - name: Attach full-resolution unmodified original for offline art review
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-fully-lit-town-panorama
+          path: src/Wyrmforge.Presentation.Web/wwwroot/art/refuge-town-panorama.png
+          retention-days: 7
