@@ -9,7 +9,10 @@ export function preloadPaintedEnemies() {
         return r.json();
     }).then(async data => {
         manifest = data;
-        const descriptors = [...Object.values(data.enemies), ...Object.values(data.wyrms)];
+        // Legacy painted Mire Hound remains in Git as a card reference, but is no
+        // longer loaded: gameplay uses the shared pixel atlas beside the mage.
+        const descriptors = [...Object.entries(data.enemies).filter(([kind]) => kind !== '1').map(([, entry]) => entry),
+            ...Object.values(data.wyrms)];
         await Promise.all(descriptors.flatMap(d => [[d.image,d.hash], ...(d.walkImage ? [[d.walkImage,d.walkHash]] : [])])
             .map(([name,hash]) => loadImage(name,hash)));
         return true;
@@ -51,6 +54,8 @@ function draw(ctx, descriptor, pose, x, y, size, facing, opacity = 1) {
     return true;
 }
 export function drawPaintedEnemy(ctx, enemy, gait = 0, facing = 1) {
+    // Pixel-native Mire Hound must never silently regress to a smooth painted cutout.
+    if (Number(enemy?.kind) === 1) return false;
     const d = manifest?.enemies?.[enemy.kind];
     if (!d) return false;
     // Match collision footprint without rescaling individual animation poses.
