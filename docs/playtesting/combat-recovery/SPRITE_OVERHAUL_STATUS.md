@@ -55,9 +55,9 @@ The four summons/clones still require visual/lifecycle checks **as distinct runt
 
 - [x] Verify `main`, #135, repo instructions, C# kinds versus summoned objects, gallery and existing assets.
 - [x] Tie both canine windup/attack/recovery poses and facing to **real C# phases**, not guessed windup disappearance; passed application and JavaScript validation, focused magic and browser smoke at `fcf8c28`.
-- [ ] Hollow: finish original-card comparison, true strike/hit/death/facing, capture evidence.
-- [ ] Mire Hound: verify each gait phase, direction, hit, actual bite and corpse against card, record actual gameplay.
-- [ ] Whitefang: C#-driven feint/pounce/recovery and native corpse-on-real-death now implemented and regression tested. **Still missing:** card-matched detailed sprites, 4+ facings, full verified lifecycle footage. A live capture action has been added; check its output before marking footage done.
+- [ ] Hollow: actual C# contact-triggered attack/recovery and genuine hit/death capture now published; **remaining** full visual card match, directional art, full lifecycle refinement and normal-hunt acceptance.
+- [ ] Mire Hound: captured actual C# Windup/Pounce/Recover, nonlethal hit and C# death in production renderer; **remaining** exact card match, four+ facings, paw-contact acceptance, ordinary hunts and iPhone.
+- [ ] Whitefang: C#-driven feint/pounce/recovery, real nonlethal damage flashes and identity-gated native corpse now recorded and regression tested; **remaining** detailed card-matched painted art, 4+ facings, anatomy/pivot review, normal hunts and physical devices.
 - [ ] Fire remaining creatures (2–7, 9): source images, runtime atlases, animation lifecycle, before/after footage.
 - [ ] Frost remaining creatures (10–11, 13–15, 17–18): same gates.
 - [ ] Summoned wards/false forms (8, 16, 19–20): shared identity plus correct object/illusion lifecycle.
@@ -73,7 +73,18 @@ The four summons/clones still require visual/lifecycle checks **as distinct runt
 
 - C# `EnemyRenderSnapshot.AnimationPhase` and `AnimationFacingX` now expose Mire Hound / Whitefang state-machine truth, and the production Canvas renderer selects their existing canine poses from `Windup`, `Pounce`, and `Recover`. A cancelled warning can no longer fabricate a canine attack.
 - `arena.js` now draws **Whitefang's existing native corpse pose** only from an identity-bearing C# `DeathBurstRenderSnapshot`, fading with the bounded corpse lifetime.
-- Application development lab and JavaScript regression tests cover canonical phase transitions, locked leap facing, cancellation, reduction of motion and real death identity. The first complete code checkpoint at `fcf8c28` passed all three PR workflows (validation, browser smoke, focused magic).
-- The **recording workflow** `.github/workflows/fire-frost-evidence.yml` publishes the actual Blazor game and captures Whitefang's original/updated production Canvas at the identical 1000×900 viewport, plus a real `cast=true` lethal attempt. The collector never synthesizes a damage event and its JSON states which phases/hits/deaths were observed. This recording must pass and its result be checked before footage is accepted. It commits and verifies remote evidence; uploads workflow artifacts if Git push fails.
+- Application development lab and JavaScript regression tests cover canonical canine phase transitions, Hollow's bounded contact/recovery, true damage and death identity, reduction of motion, developer-only isolation and deterministic snapshots. The first complete code checkpoint at `fcf8c28` passed all three PR workflows (validation, browser smoke, focused magic).
+- The **recording workflow** `.github/workflows/fire-frost-evidence.yml` builds the real Blazor game. At 1000×900 and seed 42 it has captured original/runtime comparisons plus moving, actual C# attacks (Hollow contact and canine phase actions), real nonlethal damage and authentic death for **Hollow, Mire Hound and Whitefang**. The opt-in developer-only `artEvents=true` scenario passes two nonlethal and one lethal hit through the canonical damage pipeline; it does not fabricate frontend damage or alter ordinary hunts. Recorded JSON shows 4 sampled hitFlash frames and 5 sampled death-burst frames **per actor**, all renderers without errors, and the expected actor phase transitions. The CI workflow [39247569756](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39247569756) passed and **verified its own push** of PNG/WebM/JSON to remote commit `8d807a2`. See [gallery](README.md) and [observations](evidence/after/art-results-hollow-mire-hound-whitefang.json).
 
 **Not delivered:** brand-new painted sprite art, full body animation sets and cardinal facings for the rest of the roster; verified death/hit/attack clips for every creature; physical iPhone measurements. PR #136 remains **draft**, no merge or new Pages deployment from this branch.
+
+## Remote validation trail
+
+- PR #135 merged into main `5d6b0df`, no original combat logic rebuilt.
+- PR #136 is a **draft** with real pushed code and capture assets, not merged or deployed as the live game.
+- `f4535e7`: full app validation passed after actual C# nonlethal/death testing.
+- `87e8508`: full app validation passed including Hollow C# contact animation; see [action](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39247578081).
+- The current proof capture passed [39247569756](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39247569756) and published matching before/after PNG and WebM and recorded telemetry for 3 actors.
+- Latest branch HEAD and browser smoke must be checked again at handoff. Published `main` still refers to PR #135, not the draft PR #136.
+
+**No artwork completion claim:** 19 of 21 C# kinds still use native art (including Whitefang, wards and illusions), and Rimeclaw still uses a native Wyrm atlas. No new painted sheet for these kinds has been committed by this checkpoint. Half-finished monster art is explicitly tracked as incomplete.
