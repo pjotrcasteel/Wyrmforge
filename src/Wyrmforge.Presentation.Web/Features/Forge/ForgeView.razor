@@ -47,12 +47,18 @@
                 }
                 @if (!enteredTown && !SkipTitle)
                 {
-                    <section class="title-scene" aria-label="Start game">
-                        <span class="title-scene-moon" aria-hidden="true"></span>
-                        <div class="title-mage" aria-hidden="true"></div>
-                        <h1>WYRMFORGE</h1>
-                        <button type="button" class="title-start" @onclick="EnterTown"><span class="title-start-label">START GAME</span><span class="title-start-arrow" aria-hidden="true">›</span></button>
-                        <button class="title-settings" aria-label="Settings" @onclick="() => Navigate(ShellSection.Options)">⚙ Settings</button>
+                    <section class="title-scene arrival-reference" aria-label="Wyrmforge welcome">
+                        @* Exact approved portrait artwork. The painted controls remain part of the artwork;
+                           invisible accessible hit targets preserve the real game navigation. *@
+                        <div class="arrival-reference-frame">
+                            <img class="arrival-reference-art" src="art/wyrmforge-welcome-reference.webp"
+                                 alt="" aria-hidden="true" draggable="false" loading="eager" />
+                            <h1 class="arrival-accessible-title">WYRMFORGE</h1>
+                            <button type="button" class="arrival-hitbox arrival-hitbox--start" aria-label="START GAME"
+                                    @onclick="EnterTown"><span class="arrival-screen-reader-only">START GAME</span></button>
+                            <button type="button" class="arrival-hitbox arrival-hitbox--settings" aria-label="Settings"
+                                    @onclick="() => Navigate(ShellSection.Options)"><span class="arrival-screen-reader-only">Settings</span></button>
+                        </div>
                     </section>
                 }
                 else

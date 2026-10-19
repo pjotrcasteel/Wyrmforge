@@ -21,19 +21,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(title).ToBeVisibleAsync();
         await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
         await ScreenshotAsync("welcome-full-art.png");
-        var backgroundSize = await Page.Locator(".arrival-home .hub-backdrop")
-            .EvaluateAsync<string>("element => getComputedStyle(element, '::after').backgroundSize");
-        Assert.IsTrue(backgroundSize.Contains("cover", StringComparison.Ordinal),
-            "Welcome artwork must fill the viewport without stretching or letterboxing.");
-        var artworkFillsViewport = await Page.Locator(".arrival-home .hub-backdrop")
-            .EvaluateAsync<bool>(@"element => {
-                const bounds = element.getBoundingClientRect();
-                const style = getComputedStyle(element, '::after');
-                return Math.abs(bounds.top) <= 1 && Math.abs(bounds.height - innerHeight) <= 2
-                    && style.maskImage === 'none' && style.backgroundImage.includes('refuge-scene.png');
-            }");
-        Assert.IsTrue(artworkFillsViewport, "The illustrated arrival must reach the top and bottom of the viewport.");
-        await Expect(Page.Locator(".title-start-label")).ToHaveTextAsync("START GAME");
+        var image = Page.Locator(".arrival-reference-art");
+        await Expect(image).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const image = document.querySelector('.arrival-reference-art');
+            return image && image.complete && image.naturalWidth === 864 && image.naturalHeight === 1222;
+        }");
+        var approvedPoster = await image.GetAttributeAsync("src");
+        Assert.IsTrue(approvedPoster?.EndsWith("wyrmforge-welcome-reference.webp", StringComparison.Ordinal) == true,
+            "Arrival must use the supplied approved portrait artwork, not the old landscape asset.");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "WYRMFORGE" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "START GAME", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Settings", Exact = true }).ClickAsync();
         await Expect(Page.Locator(".settings-audio-slot .wyrmforge-sound-controls")).ToBeVisibleAsync();
@@ -55,32 +53,27 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var fits = await Page.EvaluateAsync<bool>(@"() => {
             const scene = document.querySelector('.arrival-home .title-scene');
-            const start = document.querySelector('.arrival-home .title-start');
-            const settings = document.querySelector('.arrival-home .title-settings');
-            const frame = scene.getBoundingClientRect();
+            const frame = document.querySelector('.arrival-reference-frame');
+            const image = document.querySelector('.arrival-reference-art');
+            const start = document.querySelector('.arrival-hitbox--start');
+            const settings = document.querySelector('.arrival-hitbox--settings');
+            const bounds = scene.getBoundingClientRect();
+            const poster = frame.getBoundingClientRect();
+            const art = image.getBoundingClientRect();
             const button = start.getBoundingClientRect();
             const controls = settings.getBoundingClientRect();
-            return frame.top >= -1 && Math.abs(frame.bottom - innerHeight) <= 2
-                && button.width >= 205 && button.height >= 54
-                && button.left >= innerWidth * .25 && button.right <= innerWidth
-                && controls.bottom <= innerHeight && controls.top > button.bottom
+            const centerWithinScreen = rect =>
+                rect.left + rect.width / 2 > 0 && rect.left + rect.width / 2 < innerWidth
+                && rect.top + rect.height / 2 > 0 && rect.top + rect.height / 2 < innerHeight;
+            return bounds.top >= -1 && Math.abs(bounds.bottom - innerHeight) <= 2
+                && poster.width >= innerWidth - 2 && poster.height >= innerHeight - 2
+                && Math.abs(art.width / art.height - (864 / 1222)) < .005
+                && centerWithinScreen(button) && centerWithinScreen(controls)
+                && button.width >= 160 && button.height >= 48
                 && document.documentElement.scrollWidth <= innerWidth + 1;
         }");
-        Assert.IsTrue(fits, "Welcome artwork and game controls must fit without scrolling or covering the foreground mage.");
-
-        var visualReadability = await Page.EvaluateAsync<bool>(@"() => {
-            const label = document.querySelector('.arrival-home .title-start-label');
-            const button = document.querySelector('.arrival-home .title-start');
-            const backdrop = document.querySelector('.arrival-home .hub-backdrop');
-            const text = getComputedStyle(label);
-            const art = getComputedStyle(backdrop, '::after');
-            return text.color === 'rgb(255, 241, 214)'
-                && parseFloat(text.fontSize) >= 15 && parseFloat(text.fontSize) <= 18
-                && button.getBoundingClientRect().width <= 310
-                && art.backgroundPosition.includes('40%');
-        }");
-        Assert.IsTrue(visualReadability, "Start Game must use bright, readable lettering and the mage-focused artwork crop.");
-        await ScreenshotAsync($"welcome-refined-{width}x{height}.png");
+        Assert.IsTrue(fits, "Approved portrait scene must fully cover the screen with correctly aligned clickable targets.");
+        await ScreenshotAsync($"welcome-exact-art-{width}x{height}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
     }
