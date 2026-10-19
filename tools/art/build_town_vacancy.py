@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Build aligned, transparent dormant building plates for the Refuge town.
 
-Input is the approved 2172x724 panoramic painting. The same dormant-light\nconversion is reused for every locked building; per-building boundaries protect\nneighboring architecture and the permanently active World Gate. Unlike a black overlay, this
+Input is the approved 2172x724 panoramic painting. The same dormant-light
+conversion is reused for every locked building; per-building boundaries protect
+neighboring architecture and the permanently active World Gate. Unlike a black overlay, this
 pipeline removes figures and lit props from each sealed building and selectively
 extinguishes luminous pixels, keeping neighboring masonry and roads untouched.
 
@@ -160,7 +162,8 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
         r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
         light_mask = np.maximum(light_mask, np.clip(1.0 - r2, 0, 1) ** 0.7)
     # Shared across the Nexus, Codex and Hall: unlike a global grayscale wash,
-    # emissive suppression is evaluated only at actual painted light sources.\n    # Dark, unpowered windows and worktables have no radiant highlight even
+    # emissive suppression is evaluated only at actual painted light sources.
+    # Dark, unpowered windows and worktables have no radiant highlight even
     # when the source is white rather than warm/violet/blue. Keep original
     # painted masonry, geometry, signs and neighboring buildings intact.
     chroma = np.maximum.reduce([warm, violet * .9, blue, cyan])
