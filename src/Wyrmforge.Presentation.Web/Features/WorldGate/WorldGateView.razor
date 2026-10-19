@@ -4,95 +4,175 @@
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.World
 
-@* The World Gate (amendment §6) is where the hunter picks how to hunt. Every mode is shown so the world reads as larger
-   than today's build, but only Free Exploration is playable: modes that are not built yet stay visible, greyscaled and disabled. *@
+@* One decision per mobile screen. The original painted gateway is preserved; no companion or invented Wyrm artwork is added. *@
 <section class="world-gate" aria-label="World Gate">
-    <div class="gate-art" aria-hidden="true"></div>
-    <p class="gate-prompt">Choose your hunt</p>
-    <div class="gate-modes" role="radiogroup" aria-label="Choose your hunt">
-        @foreach (var mode in Modes)
-        {
-            <button class="gate-mode @mode.Key @(mode.Playable ? "chosen" : "unavailable")" role="radio"
-                    aria-checked="@(mode.Playable ? "true" : "false")" disabled="@(!mode.Playable)">
-                <span class="mode-ring" aria-hidden="true"><i class="px-icon px-sm px-@mode.Icon"></i></span>
-                <span class="mode-text"><strong>@mode.Title</strong><small>@mode.Summary</small></span>
-                <em>@(mode.Playable ? "Open" : "Coming later")</em>
-            </button>
-        }
-    </div>
-
-    <article class="gate-sheet" aria-label="Free Exploration">
-        <header><small>FREE EXPLORATION</small><h2>@Region.Name</h2></header>
-        <p>Hunt where you choose. What you learn, secure and research is yours on every road, and the other hunts keep it when they open.</p>
-        <div class="gate-regions" role="radiogroup" aria-label="Choose a region">
-            @foreach (var region in RegionCatalog.All)
+    @if (page is GatePage.Gateway or GatePage.Modes)
+    {
+        <div class="gate-scene">
+            <img class="gate-scene-art" src="art/world-gate.jpg" alt="" aria-hidden="true" draggable="false" />
+            <div class="gate-closed-side" aria-hidden="true"></div>
+            @if (page == GatePage.Gateway)
             {
-                var open = Access is { } access ? region.IsOpen(access) : region.Id == RegionCatalog.Starting.Id;
-                var chosen = region.Id == Region.Id;
-                <button class="gate-region @region.DominantSchool.ToString().ToLowerInvariant() @(chosen ? "chosen" : string.Empty) @(open ? string.Empty : "locked")"
-                        role="radio" aria-checked="@(chosen ? "true" : "false")" disabled="@(!open)"
-                        @onclick="() => OnRegionChanged.InvokeAsync(region.Id)">
-                    <strong>@region.Name</strong>
-                    <small>@(open ? $"{region.DominantSchool} · {DragonCatalog.Get(region.HomeLineage).Name}" : Requirement(region))</small>
-                    @if (open && World is { } world && !world.IsDiscovered(region.Id))
-                    {
-                        <em>New: your first hunt here ends at @DragonCatalog.Get(region.HomeLineage).Name</em>
-                    }
+                <button type="button" class="gate-arch-choice gate-arch-choice--free" @onclick="() => page = GatePage.Modes"
+                        aria-label="Enter Free Play">
+                    <span class="gate-arch-title">FREE PLAY</span>
                 </button>
-            }
-        </div>
-        <dl class="gate-facts">
-            <div><dt>Ground</dt><dd>@Region.DominantSchool</dd></div>
-            <div><dt>Home Wyrm</dt><dd>@DragonCatalog.Get(Region.HomeLineage).Name</dd></div>
-            <div><dt>Charted</dt><dd>@(World?.Discovered.Count ?? 0) of @RegionCatalog.All.Count regions</dd></div>
-        </dl>
-        <section class="gate-road" aria-label="Road to the Conclave">
-            <h3>Road to the Conclave</h3>
-            @if (Advancement.Unlocked)
-            {
-                <p class="gate-earned">Earned @(Advancement.Route == AdvancementRoute.Campaign ? "through Book I" : "in the wild"). The Conclave and advanced research open in a later update; this is kept.</p>
+                <div class="gate-arch-choice gate-arch-choice--campaign" aria-label="Campaign, coming later">
+                    <span class="gate-arch-title">CAMPAIGN</span>
+                    <small>COMING LATER</small>
+                </div>
             }
             else
             {
-                <p>Finish Book I, or prove the same mastery in the world:</p>
-                <ul>
-                    <li class="@(Advancement.LineagesSlain >= AdvancedAccess.Lineages ? "met" : string.Empty)"><span>Slay a Wyrm of every lineage</span><b>@Advancement.LineagesSlain / @AdvancedAccess.Lineages</b></li>
-                    <li class="@(Advancement.AscendantsDefeated >= AdvancedAccess.ExplorationAscendants ? "met" : string.Empty)"><span>Defeat an Ascendant</span><b>@Math.Min(Advancement.AscendantsDefeated, AdvancedAccess.ExplorationAscendants) / @AdvancedAccess.ExplorationAscendants</b></li>
-                    <li class="@(Advancement.HunterLevel >= AdvancedAccess.ExplorationHunterLevel ? "met" : string.Empty)"><span>Reach Hunter @AdvancedAccess.ExplorationHunterLevel</span><b>@Math.Min(Advancement.HunterLevel, AdvancedAccess.ExplorationHunterLevel) / @AdvancedAccess.ExplorationHunterLevel</b></li>
-                </ul>
+                <div class="gate-scene-dim" aria-hidden="true"></div>
             }
-        </section>
-        <button class="gate-cta" @onclick="() => OnExplore.InvokeAsync()">ENTER @Region.Name.ToUpperInvariant()<span aria-hidden="true">›</span></button>
-    </article>
+        </div>
+        @if (page == GatePage.Gateway)
+        {
+            <p class="gate-instruction">Choose your path</p>
+        }
+        else
+        {
+            <section class="gate-mode-sheet" aria-label="Free Play">
+                <div class="gate-sheet-handle" aria-hidden="true"></div>
+                <h2>FREE PLAY</h2>
+                <button type="button" class="gate-action gate-action--primary" @onclick="() => page = GatePage.Elements">
+                    <span class="gate-action-icon" aria-hidden="true">⚔</span>
+                    <span>New Hunt</span>
+                    <span aria-hidden="true">›</span>
+                </button>
+                <button type="button" class="gate-action gate-action--locked" disabled aria-label="Endless Hunt, coming later">
+                    <span class="gate-action-icon" aria-hidden="true">∞</span>
+                    <span>Endless Hunt</span>
+                    <span class="gate-lock" aria-hidden="true">◆</span>
+                </button>
+                <button type="button" class="gate-action gate-action--locked" disabled aria-label="Endless Arena, coming later">
+                    <span class="gate-action-icon" aria-hidden="true">♜</span>
+                    <span>Endless Arena</span>
+                    <span class="gate-lock" aria-hidden="true">◆</span>
+                </button>
+                <button type="button" class="gate-text-back" @onclick="Back">‹ Back to World Gate</button>
+            </section>
+        }
+    }
+    else if (page == GatePage.Elements)
+    {
+        <div class="gate-selection">
+            <header class="gate-selection-header">
+                <button type="button" class="gate-nav-back" aria-label="Back to Free Play" @onclick="Back">‹</button>
+                <div>
+                    <span class="gate-eyebrow">NEW HUNT</span>
+                    <h2>Choose your element</h2>
+                </div>
+            </header>
+            <div class="gate-lineage-grid" aria-label="Elemental Wyrm lineages">
+                @foreach (var lineage in Lineages)
+                {
+                    var available = IsAvailable(lineage);
+                    <button @key="lineage.Key" type="button"
+                            class="gate-lineage @(available ? $"gate-lineage--{lineage.Key}" : "gate-lineage--hidden")"
+                            disabled="@(!available)"
+                            aria-label="@(available ? $"{lineage.Name}, choose Wyrm tier" : "Unknown elemental lineage, not yet available")"
+                            @onclick="() => ChooseLineage(lineage)">
+                        <span class="gate-lineage-icon" aria-hidden="true">@lineage.Sigil</span>
+                        @if (available)
+                        {
+                            <span class="gate-lineage-name">@lineage.Name</span>
+                        }
+                    </button>
+                }
+            </div>
+            <p class="gate-discovery-hint">More lineages await discovery.</p>
+        </div>
+    }
+    else if (selectedLineage is { } selected)
+    {
+        <div class="gate-selection gate-selection--tiers">
+            <header class="gate-selection-header">
+                <button type="button" class="gate-nav-back" aria-label="Back to elements" @onclick="Back">‹</button>
+                <div>
+                    <span class="gate-eyebrow">NEW HUNT</span>
+                    <h2><span class="gate-heading-sigil gate-heading-sigil--@selected.Key" aria-hidden="true">@selected.Sigil</span> @selected.Name</h2>
+                    <p>Choose your Wyrm tier</p>
+                </div>
+            </header>
+            <div class="gate-tier-list" aria-label="@selected.Name Wyrm tiers">
+                @foreach (var tier in selected.Tiers)
+                {
+                    <button @key="tier.Number" type="button" class="gate-tier @(tier.Playable ? $"gate-tier--ready gate-tier--{selected.Key}" : "gate-tier--locked")"
+                            disabled="@(!tier.Playable || starting)" @onclick="() => BeginHuntAsync(tier)">
+                        <span class="gate-tier-number">Tier @tier.Number</span>
+                        <span class="gate-tier-label">@(tier.Playable ? "Begin Hunt" : "Not yet available")</span>
+                        <span class="gate-tier-chevron" aria-hidden="true">@(tier.Playable ? "›" : "◆")</span>
+                    </button>
+                }
+            </div>
+        </div>
+    }
 </section>
 
 @code {
     [Parameter, EditorRequired] public RegionDefinition Region { get; set; } = RegionCatalog.Starting;
     [Parameter] public RegionDiscoveryState? World { get; set; }
-    [Parameter, EditorRequired] public AdvancementProgress Advancement { get; set; } = new(AdvancementRoute.None, 1, 0, 0);
+    [Parameter] public AdvancementProgress Advancement { get; set; } = new(AdvancementRoute.None, 1, 0, 0);
     [Parameter] public StoryBookDefinition Book { get; set; } = StoryBookCatalog.BrokenCovenant;
-    [Parameter] public EventCallback OnExplore { get; set; }
     [Parameter] public RegionAccessContext? Access { get; set; }
     [Parameter] public EventCallback<RegionId> OnRegionChanged { get; set; }
+    [Parameter] public EventCallback OnExplore { get; set; }
 
-    private static string Requirement(RegionDefinition region) => region.Status != RegionStatus.Playable
-        ? "Uncharted"
-        : region.Access.Kind switch
-        {
-            RegionAccessKind.WyrmSlain when region.Access.Wyrm is { } wyrm => $"Slay {DragonCatalog.Get(wyrm).Name} to open",
-            RegionAccessKind.HunterLevel => $"Reach Hunter {region.Access.HunterLevel} to open",
-            RegionAccessKind.FirstHuntComplete => "Finish the First Hunt to open",
-            _ => "Closed",
-        };
+    private GatePage page = GatePage.Gateway;
+    private LineageChoice? selectedLineage;
+    private bool starting;
 
-    private sealed record GateMode(string Key, string Icon, string Title, string Summary, bool Playable);
-
-    private IReadOnlyList<GateMode> Modes =>
+    private static readonly IReadOnlyList<TierChoice> InitialTiers =
     [
-        new("free", "map", "Free Exploration", "Choose a region and hunt its trails to the home Wyrm.", true),
-        new("campaign", "book", "Story Campaign", $"{Book.Title}: the story road, being written.", false),
-        new("targeted", "wyrm", "Targeted Wyrm Hunt", "Track one chosen Wyrm. Opens when more lineages than Fire and Frost roam.", false),
-        new("endless-hunt", "cycle", "Endless Hunt", "One hunt that never ends. How deep can you go?", false),
-        new("endless-arena", "shield", "Endless Arena", "Wave after wave in the arena, until you fall.", false),
+        new(1, true), new(2, false), new(3, false), new(4, false), new(5, false),
     ];
+
+    // The roster has twelve visible slots, not twelve invented canon lineages. Add authored data when new regions actually ship.
+    private static readonly IReadOnlyList<LineageChoice> Lineages =
+    [
+        new("fire", "Fire", "♨", RegionCatalog.CinderFrontierId, InitialTiers),
+        new("frost", "Frost", "❄", RegionCatalog.FrostRegionId, InitialTiers),
+        .. Enumerable.Range(0, 10).Select(index => new LineageChoice($"unknown-{index}", "", PlaceholderSigils[index], null, [])),
+    ];
+
+    private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "◇", "☼", "❖", "◈", "☾", "♣", "◉", "✧"];
+
+    private bool IsAvailable(LineageChoice lineage) =>
+        lineage.Region is { } id && RegionCatalog.Find(id) is { } region && (Access is null || region.IsOpen(Access));
+
+    private void ChooseLineage(LineageChoice lineage)
+    {
+        if (!IsAvailable(lineage)) return;
+        selectedLineage = lineage;
+        page = GatePage.Tiers;
+    }
+
+    private async Task BeginHuntAsync(TierChoice tier)
+    {
+        if (starting || !tier.Playable || selectedLineage?.Region is not { } region || !IsAvailable(selectedLineage)) return;
+        starting = true;
+        try
+        {
+            await OnRegionChanged.InvokeAsync(region);
+            await OnExplore.InvokeAsync();
+        }
+        finally
+        {
+            starting = false;
+        }
+    }
+
+    private void Back() => page = page switch
+    {
+        GatePage.Modes => GatePage.Gateway,
+        GatePage.Elements => GatePage.Modes,
+        GatePage.Tiers => GatePage.Elements,
+        _ => GatePage.Gateway,
+    };
+
+    private enum GatePage { Gateway, Modes, Elements, Tiers }
+    private sealed record TierChoice(int Number, bool Playable);
+    private sealed record LineageChoice(string Key, string Name, string Sigil, RegionId? Region, IReadOnlyList<TierChoice> Tiers);
 }
