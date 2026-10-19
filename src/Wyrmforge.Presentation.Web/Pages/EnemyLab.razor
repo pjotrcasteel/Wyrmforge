@@ -22,7 +22,7 @@
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    <p class="note">Manual controls use the normal movement and aim inputs. Ritual objects appear with their actual caster; doubles naturally expire. Restart to repeat the same seed.</p>
+    <p class="note">Manual controls use the normal movement and aim inputs. Ritual objects appear with their actual caster; doubles naturally expire. Restart to repeat the same seed. The optional artEvents query exercises the real C# damage/death pipeline in this developer lab only.</p>
 </main>
 
 @code {
@@ -33,6 +33,7 @@
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "paused")] public bool? PausedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "artEvents")] public bool? ArtEventsQuery { get; set; }
     private ElementReference canvas;
     private IJSObjectReference? module;
     private DotNetObjectReference<EnemyLab>? reference;
@@ -44,6 +45,7 @@
     private bool casting;
     private bool paused;
     private double simulationSeconds;
+    private int artEventsApplied;
 
     protected override void OnParametersSet()
     {
@@ -77,9 +79,21 @@
             ? agent!.ChooseMovement(new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false))
             : new MovementInput(movementX, movementY, aimX, aimY);
         simulationSeconds += Math.Clamp(delta, 0, .05);
-        return Task.FromResult(simulation.Tick(delta, movement, width, height));
+        var frame = simulation.Tick(delta, movement, width, height);
+        // Opt-in reproducible art acceptance: nonlethal real damage at 2.5s and
+        // 4.5s, then a canonical lethal hit at 6.5s. Never used in normal hunts.
+        if (ArtEventsQuery == true && !casting)
+        {
+            while (artEventsApplied < 3 && simulationSeconds >= 2.5 + artEventsApplied * 2)
+            {
+                if (!simulation.ApplyDevelopmentArtHit(kind, lethal: artEventsApplied == 2)) break;
+                artEventsApplied++;
+            }
+            frame = simulation.CreateSnapshot();
+        }
+        return Task.FromResult(frame);
     }
-    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
+    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; artEventsApplied = 0; paused = false; }
     private void TogglePause() => paused = !paused;
     public async ValueTask DisposeAsync()
     {
