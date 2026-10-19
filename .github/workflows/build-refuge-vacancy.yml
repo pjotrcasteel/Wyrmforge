@@ -44,5 +44,7 @@ jobs:
             echo 'Rendered assets unchanged.'
           else
             git commit -m 'Add authored dormant Refuge building plates'
+            git fetch origin fix/town-building-vacancy-no-black-haze-20261019
+            git rebase origin/fix/town-building-vacancy-no-black-haze-20261019
             git push origin HEAD:fix/town-building-vacancy-no-black-haze-20261019
           fi
