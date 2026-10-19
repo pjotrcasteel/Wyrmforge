@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.127 — Vacant building light-source fidelity
+
+- Refine each authored dormant building plate to extinguish lit windows, purple magic, and stall lighting in the artwork itself instead of dimming the town with CSS.
+- Keep blacksmith vacancy, permanently open World Gate, and independent building unlock states unchanged. The new asset version prevents browsers retaining old town artwork.
+- [Before/after implementation and visual QA](docs/art/town-vacancy-correction-2026-10-19.md). Phone Safari acceptance remains a separate device check.
+
 ## Prototype 0.0.126 — Town building black-wash regression correction
 
 - Remove the black CSS overlays entirely; replace them with three **real transparent artwork plates** for the locked Arcane Nexus, Codex and Hall of Fame. Vacant plates eliminate painted pedestrians and suppress their warm/violet building lights while preserving stonework.
