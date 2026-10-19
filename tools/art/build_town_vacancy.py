@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build aligned, transparent dormant building plates for the Refuge town.
 
-Input is the approved 2172x724 panoramic painting. Unlike a black overlay, this
+Input is the approved 2172x724 panoramic painting. The same dormant-light\nconversion is reused for every locked building; per-building boundaries protect\nneighboring architecture and the permanently active World Gate. Unlike a black overlay, this
 pipeline removes figures and lit props from each sealed building and selectively
 extinguishes luminous pixels, keeping neighboring masonry and roads untouched.
 
