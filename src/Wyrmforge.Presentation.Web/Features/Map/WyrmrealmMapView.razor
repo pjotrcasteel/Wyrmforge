@@ -154,7 +154,7 @@
                     }
                     else { <span>Wyrm duel · Refuge beyond</span> }
                 </div>
-                <button class="enter-trail" disabled="@(!IsAvailable(selected))" @onclick="ConfirmSelectedAsync">@(IsAvailable(selected) ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : selected.Rarity == WyrmrealmNodeRarity.Rare ? "Enter rare trail" : "Enter trail" : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")</button>
+                <button class="enter-trail" data-sound-cue="none" disabled="@(!IsAvailable(selected))" @onclick="ConfirmSelectedAsync">@(IsAvailable(selected) ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : selected.Rarity == WyrmrealmNodeRarity.Rare ? "Enter rare trail" : "Enter trail" : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")</button>
             }
             else
             {
