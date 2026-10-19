@@ -4,7 +4,10 @@
 // In a later release these recipes may be replaced by recordings without changing the game event contract.
 (() => {
     const palette = Object.freeze({
-        ui: { label: 'Stone / vellum', bus: 'ui', volume: 0.25, cooldown: 110, duration: 0.12, priority: 1 },
+        ui: { label: 'Menu — tactile selection', bus: 'ui', volume: 0.32, cooldown: 100, duration: 0.12, priority: 1 },
+        'ui-back': { label: 'Menu — return', bus: 'ui', volume: 0.34, cooldown: 100, duration: 0.20, priority: 1 },
+        'ui-open': { label: 'Menu — open', bus: 'ui', volume: 0.38, cooldown: 160, duration: 0.28, priority: 1 },
+        'ui-confirm': { label: 'Menu — confirm', bus: 'ui', volume: 0.40, cooldown: 180, duration: 0.25, priority: 2 },
         arcane: { label: 'Arcane — woven aether', bus: 'combat', volume: 0.35, cooldown: 550, duration: 0.40, priority: 1 },
         fire: { label: 'Ember — breath and cinder', bus: 'combat', volume: 0.42, cooldown: 590, duration: 0.38, priority: 1 },
         frost: { label: 'Frost — glass and snow', bus: 'combat', volume: 0.37, cooldown: 620, duration: 0.47, priority: 1 },
@@ -106,6 +109,9 @@
 
         switch (name) {
             case 'ui':
+            case 'ui-back':
+            case 'ui-open':
+            case 'ui-confirm':
                 strike(0, 238, 0.42, 0.11, 'stone');
                 air(0, 0.07, 430, 210, 0.09, 0.003);
                 break;
