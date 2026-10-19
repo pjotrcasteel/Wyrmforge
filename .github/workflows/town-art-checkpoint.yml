@@ -1,0 +1,63 @@
+name: Town art checkpoint (task branch)
+
+on:
+  push:
+    branches: [feature/shared-town-building-visual-states]
+    paths:
+      - 'tools/art/build_town_vacancy.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-checkpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout task branch
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+
+      - name: Install art pipeline
+        run: python3 -m pip install --quiet Pillow numpy opencv-python-headless
+
+      - name: Regenerate actual WebP building plates and panorama QA proof
+        run: python3 tools/art/build_town_vacancy.py
+
+      - name: Verify authored layers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import numpy as np
+          from PIL import Image
+          art = Path("src/Wyrmforge.Presentation.Web/wwwroot/art")
+          base = np.array(Image.open(art / "refuge-town-vacant.webp").convert("RGB")).astype(np.float32)
+          for name in ("nexus", "codex", "legends"):
+              p = art / f"town-vacant-{name}.webp"
+              with Image.open(p) as im:
+                  assert im.size == (2172, 724) and im.mode == "RGBA", p
+                  rgb = np.array(im.convert("RGB")).astype(np.float32)
+                  alpha = np.array(im.getchannel("A"))
+              opaque = alpha > 240
+              assert np.count_nonzero(opaque) > 20000, name
+              delta = np.abs(rgb - base).mean(axis=2)[opaque]
+              assert np.count_nonzero(delta > 5) > 200, f"{name}: no painted-light conversion"
+              assert alpha[340,1086] == 0, f"{name}: central World Gate overwritten"
+              print(f"{name}: {np.count_nonzero(opaque)} opaque pixels, "
+                    f"{np.count_nonzero(delta > 5)} changed pixels")
+          assert Path("docs/art/previews/refuge-closed-2026-10-19.webp").is_file()
+          PY
+
+      - name: Save regenerated asset checkpoint on task branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-*.webp
+          git add docs/art/previews/refuge-closed-2026-10-19.webp
+          if git diff --cached --quiet; then
+            echo "Assets already match authoring source."
+          else
+            git commit -m "art: checkpoint shared dormant building plates"
+            git push origin HEAD:feature/shared-town-building-visual-states
+          fi
