@@ -187,7 +187,7 @@ public partial class Home
         awaitingPrimaryConfirmation = true;
     }
 
-    private async Task ConfirmPrimaryAsync(SpellId id)
+    private async Task ConfirmPrimaryAsync(Wyrmforge.Domain.Spells.SpellId id)
     {
         await SetPreferredPrimaryAsync(id);
         if (!awaitingPrimaryConfirmation) return;
