@@ -103,19 +103,21 @@ public sealed class DevelopmentEnemyTests
     }
 
     [TestMethod]
-    public void DevelopmentArtHit_UsesActualDamageAndDeathEvents_AndIsDisabledInOrdinaryRuns()
+    [DataRow(EnemyKind.MireHound)]
+    [DataRow(EnemyKind.WhitefangStalker)]
+    public void DevelopmentArtHit_UsesActualDamageAndDeathEvents_AndIsDisabledInOrdinaryRuns(EnemyKind kind)
     {
-        var lab = Create(EnemyKind.WhitefangStalker);
+        var lab = Create(kind);
         var original = lab.CreateSnapshot().Enemies.Single();
-        Assert.IsTrue(lab.ApplyDevelopmentArtHit(EnemyKind.WhitefangStalker));
+        Assert.IsTrue(lab.ApplyDevelopmentArtHit(kind));
         var damaged = lab.CreateSnapshot().Enemies.Single();
         Assert.IsTrue(damaged.HealthRatio < original.HealthRatio);
         Assert.IsTrue(damaged.HitFlash, "The actual C# damage pipeline must emit the visual injury state.");
         Assert.IsEmpty(lab.CreateSnapshot().DeathBursts);
 
-        Assert.IsTrue(lab.ApplyDevelopmentArtHit(EnemyKind.WhitefangStalker, lethal: true));
+        Assert.IsTrue(lab.ApplyDevelopmentArtHit(kind, lethal: true));
         var corpse = lab.CreateSnapshot().DeathBursts.Single();
-        Assert.AreEqual(EnemyKind.WhitefangStalker, corpse.Kind);
+        Assert.AreEqual(kind, corpse.Kind);
         Assert.AreEqual(original.EntityId, corpse.EntityId);
         Assert.IsEmpty(lab.CreateSnapshot().Enemies);
 
