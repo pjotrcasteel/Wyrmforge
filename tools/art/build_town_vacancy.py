@@ -127,16 +127,19 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
         center = ((x0 + x1) // 2, (y0 + y1) // 2)
         painted_bgr = cv2.seamlessClone(replacement, painted_bgr, local, center, cv2.NORMAL_CLONE)
 
-    # The same prop-removal stage may be supplied by future building plans.\n    # Use local wood/stone pixels to reconstruct a vacant alchemy counter.
-    # Masks are limited to the lit wares; masonry and tables remain legible.
+    # The same prop-removal stage may be supplied by future building plans.\n    painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
+
+    # Preserve painted table/wares brushwork. Inpainting entire 50px clusters
+    # produces obvious brown holes, so reduce their saturation and brightness
+    # instead: these are dusty, unpowered stock, not missing geometry.
     if plan.get("inactive_props"):
         props_mask = np.zeros((h, w), dtype=np.uint8)
         for polygon in plan["inactive_props"]:
             cv2.fillPoly(props_mask, [np.asarray(polygon, np.int32)], 255)
-        props_mask = cv2.dilate(props_mask, np.ones((3, 3), np.uint8), iterations=1)
-        painted_bgr = cv2.inpaint(painted_bgr, props_mask, 4, cv2.INPAINT_TELEA)
-
-    painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
+        soft = cv2.GaussianBlur(props_mask.astype(np.float32) / 255, (0, 0), 7) * .92
+        gray = painted[:, :, 0] * .24 + painted[:, :, 1] * .58 + painted[:, :, 2] * .18
+        unpowered = np.stack((gray * .41, gray * .42, gray * .45), axis=-1)
+        painted = painted * (1 - soft[:, :, None]) + unpowered * soft[:, :, None]
 
     # One universal state conversion for all buildings: extinguish bright
     # warm/cold/magical emissions in hand-authored local source zones.
