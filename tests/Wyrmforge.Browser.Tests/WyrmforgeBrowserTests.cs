@@ -1635,7 +1635,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-dormant-art--build")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".town-dormant-art")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-vacancy")).ToHaveCountAsync(0);
         Assert.IsTrue(await Page.Locator(".town-dormant-art").First.EvaluateAsync<bool>(
             "element => getComputedStyle(element).backgroundColor === 'rgba(0, 0, 0, 0)' && getComputedStyle(element).backdropFilter === 'none'"));
 
@@ -1656,7 +1656,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await OpenAsync();
-        await Expect(Page.Locator(".town-vacancy")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-dormant-art")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".town-panorama-open-forge")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-hotspot--build")).ToBeEnabledAsync();
         await Expect(Page.Locator(".town-hotspot--forge")).ToBeEnabledAsync();
