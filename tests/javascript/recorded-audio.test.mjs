@@ -87,21 +87,34 @@ test('every bundled file can be traced to verified CC0 or CC BY source records',
     assert.match(manifest.attribution, /JC Sounds.*CC BY 4.0/);
 });
 
-test('hunt and arena node transitions cannot play the rejected magic shield bell', () => {
-    const cue = manifest.cues['hunt-start'];
-    assert.equal(cue.source, 'doorOpen_1.ogg');
-    assert.equal(cue.library, 'kenney-rpg');
-    assert.equal(cue.author, 'Kenney');
-    assert.equal(cue.license, 'CC0');
-    assert.doesNotMatch(cue.source, /chime|shield|bell/i);
-    const recording = readFileSync(new URL(cue.file, directory));
-    assert.equal(recording.subarray(0, 4).toString(), 'OggS');
-    assert.equal(sha256(recording), cue.sha256);
-    assert.notEqual(cue.sha256, manifest.cues['upgrade-choice'].sha256);
-
-    const source = manifest.sources.find(source => source.key === cue.library);
+test('buildings, first hunt, arena trail and threatening encounter use distinct CC0 material sounds', () => {
+    const cues = ['building-open', 'hunt-start', 'trail-enter', 'threat-reveal'];
+    const samples = cues.map(name => manifest.cues[name]);
+    assert.deepEqual(samples.map(cue => cue.source), [
+        'doorOpen_1.ogg', 'footstep00.ogg', 'footstep02.ogg', 'creak1.ogg'
+    ]);
+    assert.equal(new Set(samples.map(cue => cue.sha256)).size, 4, 'different events must sound different');
+    assert.equal(manifest.transitionDesign.schemaVersion, 1);
+    for (const [index, cue] of samples.entries()) {
+        assert.equal(cue.library, 'kenney-rpg');
+        assert.equal(cue.author, 'Kenney');
+        assert.equal(cue.license, 'CC0');
+        assert.doesNotMatch(cue.source, /bell|chime|shield|magic/i);
+        const recording = readFileSync(new URL(cue.file, directory));
+        assert.equal(recording.subarray(0, 4).toString(), 'OggS', cues[index]);
+        assert.equal(sha256(recording), cue.sha256, cues[index]);
+    }
+    assert.deepEqual(manifest.cues['hunt-start'].layers.map(layer => layer.source), [
+        'cloth1.ogg', 'footstep02.ogg'
+    ]);
+    for (const layer of manifest.cues['hunt-start'].layers) {
+        assert.equal(layer.license, 'CC0');
+        assert.ok(layer.delaySeconds >= 0 && layer.delaySeconds < 0.3);
+        assert.ok(layer.gainScale > 0 && layer.gainScale < 0.8);
+        assert.equal(sha256(readFileSync(new URL(layer.file, directory))), layer.sha256);
+    }
+    const source = manifest.sources.find(source => source.key === 'kenney-rpg');
     assert.equal(source?.sourcePage, 'https://kenney.nl/assets/rpg-audio');
-    assert.equal(source?.originalSha256, cue.sha256);
 });
 
 test('gate clicks do not add the generic UI sound on top of the hunt entrance sound', () => {
@@ -111,5 +124,20 @@ test('gate clicks do not add the generic UI sound on top of the hunt entrance so
     const home = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/Home.razor.cs', import.meta.url), 'utf8');
     const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.cs', import.meta.url), 'utf8');
     assert.match(home, /TryPlayAudioAsync\("hunt-start"\)/);
-    assert.match(arena, /node\.Type == WyrmrealmNodeType\.Dragon \? "wyrm" : "hunt-start"/);
+    assert.match(arena, /node\.Type == WyrmrealmNodeType\.Dragon \? "wyrm" : "trail-enter"/);
+    assert.match(arena, /TryPlayAudioAsync\("threat-reveal"\)/);
+});
+
+test('built-in browser playback can layer physical departure Foley without changing simulation', () => {
+    const audio = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
+    const town = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor', import.meta.url), 'utf8');
+    assert.match(audio, /function prewarmTransitions\(\)/);
+    assert.match(audio, /entry\.layers\?\.length/);
+    assert.match(audio, /layer\.delaySeconds/);
+    assert.match(audio, /play\(cue && design\?\.palette\[cue\] \? cue : 'ui'\)/);
+    assert.match(town, /data-sound-cue="@\(item\.Section == ShellSection\.Gate \? "none" : "building-open"\)"/);
+    assert.ok(manifest.transitionDesign.events['building-open']);
+    assert.ok(manifest.transitionDesign.events['hunt-start']);
+    assert.ok(manifest.transitionDesign.events['trail-enter']);
+    assert.ok(manifest.transitionDesign.events['threat-reveal']);
 });
