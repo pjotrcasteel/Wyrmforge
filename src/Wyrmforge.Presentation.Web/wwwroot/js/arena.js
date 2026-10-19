@@ -238,6 +238,12 @@ function draw(state, snapshot, width, height) {
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds);
+    // Whitefang already has a native collapse pose, but previously vanished despite a
+    // genuine C# death burst. Share the identity-gated corpse lifetime with painted actors.
+    for (const corpse of state.paintedCorpses.corpses?.values() ?? [])
+        if (Number(corpse.kind) === 12)
+            drawEnemyPixelArt(ctx, { ...corpse, opacity: Math.max(0, 1 - (visualSeconds - corpse.at) / .8) },
+                null, 7, corpse.facing);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const depthLayers = [
