@@ -41,7 +41,7 @@
                             <input id="player-name" aria-label="Player name" maxlength="18" @bind="nameDraft" autofocus autocomplete="nickname" />
                             @if (nameError is not null) { <small class="name-error" role="alert">@nameError</small> }
                             <small>Used on the public leaderboard.</small>
-                            <div><button type="button" @onclick="() => editingName = false">CANCEL</button><button type="submit">SAVE</button></div>
+                            <div><button type="button" data-sound-cue="ui-back" @onclick="() => editingName = false">CANCEL</button><button type="submit" data-sound-cue="ui-confirm">SAVE</button></div>
                         </form>
                     </div>
                 }
@@ -75,7 +75,7 @@
                                 @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                                 {
                                     var unlocked = IsUnlocked(item.Section);
-                                    <button data-sound-cue="ui-open" class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
+                                    <button data-sound-cue="@(item.Section == ShellSection.Gate ? "none" : "ui-open")" class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
                                             type="button" disabled="@(!unlocked && item.Section != ShellSection.Gate)"
                                             title="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "Begin first hunt" : "Begin hunt") : !unlocked ? UnlockHint(item.Section) : item.Label)"
                                             aria-label="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") : item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
