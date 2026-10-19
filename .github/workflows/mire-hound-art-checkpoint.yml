@@ -1,0 +1,45 @@
+name: Mire Hound authored pixel atlas checkpoint
+
+on:
+  push:
+    branches: [codex/mire-hound-pixel-style-20261019]
+    paths:
+      - 'tools/art/sprites/enemies.mjs'
+      - 'tools/art/build-art.mjs'
+      - '.github/workflows/mire-hound-art-checkpoint.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mire-hound-art-checkpoint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Produce the deterministic real runtime atlas
+        run: |
+          node tools/art/build-art.mjs
+          node tools/art/build-art.mjs --check
+          node --test tests/javascript/arena-enemy-art.test.mjs
+      - name: Commit and push atlas alongside authored source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/actors.png src/Wyrmforge.Presentation.Web/wwwroot/art/manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Bake Mire Hound authored pixel poses into runtime atlas"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+          REMOTE="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
+          test "$REMOTE" = "$(git rev-parse HEAD)"
+          echo "Verified remote checkpoint: $REMOTE"
