@@ -19,9 +19,9 @@ public partial class Home
         hunter.Level,
         greatHunt.Snapshot().Where(entry => entry.Slain).Select(entry => entry.Wyrm).ToHashSet());
 
-    // The World Gate's choice, while it stays open. The First Hunt always walks the starting region.
+    // The World Gate's chosen region is preserved for the next hunt, including a hunter's first run.
     private RegionDefinition CurrentRegion =>
-        !firstHunt.TutorialRun && selectedRegion is { } id && RegionCatalog.Find(id) is { } region && region.IsOpen(RegionAccess)
+        selectedRegion is { } id && RegionCatalog.Find(id) is { } region && region.IsOpen(RegionAccess)
             ? region
             : RegionCatalog.Starting;
 
