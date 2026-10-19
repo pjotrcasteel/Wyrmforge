@@ -59,6 +59,7 @@
                     </select>
                 </label>
                 <button class="primary" @onclick="SpawnDummy">Spawn / reset</button>
+                <button class="secondary" @onclick="InspectSelectedEnemy">Inspect real monster ↗</button>
                 <button @onclick="ClearStatuses" disabled="@(!dummySpawned)">Clear statuses</button>
                 <button @onclick="DespawnDummy" disabled="@(!dummySpawned)">Despawn</button>
             </div>
@@ -131,6 +132,10 @@
     private CombatStatusCollection statuses = new();
     private Task? loopTask;
     private EnemyKind selectedEnemyKind = EnemyKind.Hollow;
+    // The mechanic test dummy is not the actual sprite. Open the production renderer with the same selected kind.
+    private void InspectSelectedEnemy() =>
+        Navigation.NavigateTo($"enemy-lab?kind={selectedEnemyKind}&seed=42&autoplay=false&cast=false");
+
     private SpellId? lastSpell;
     private double lastImpactRemaining;
     private double directDamage;
