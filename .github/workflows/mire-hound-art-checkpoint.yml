@@ -38,8 +38,13 @@ jobs:
           git add src/Wyrmforge.Presentation.Web/wwwroot/art/actors.png src/Wyrmforge.Presentation.Web/wwwroot/art/manifest.json
           if ! git diff --cached --quiet; then
             git commit -m "Bake Mire Hound authored pixel poses into runtime atlas"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
+          # Other checkpoints may have landed during this build. Rebase our
+          # generated binary/manifest commit onto the remote branch; never
+          # force push or overwrite source/code changes from another session.
+          git fetch origin "refs/heads/${GITHUB_REF_NAME}:refs/remotes/origin/${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
           REMOTE="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
           test "$REMOTE" = "$(git rev-parse HEAD)"
           echo "Verified remote checkpoint: $REMOTE"
