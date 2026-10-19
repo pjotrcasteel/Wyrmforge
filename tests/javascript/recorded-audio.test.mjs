@@ -77,7 +77,7 @@ test('every bundled file can be traced to verified CC0 or CC BY source records',
     assert.ok(sources.has('osare') && sources.has('cave'));
     assert.ok(sources.has('fantasy') && sources.has('rpg'));
     for (const source of sources.values()) {
-        assert.ok(source.url.startsWith('https://opengameart.org/sites/default/files/'));
+        assert.ok(source.url.startsWith('https://opengameart.org/sites/default/files/') || source.url === 'https://kenney.nl/assets/rpg-audio');
         assert.ok(source.originalSha256.match(/^[a-f0-9]{64}$/));
     }
     for (const entry of Object.values(manifest.cues)) {
@@ -85,4 +85,31 @@ test('every bundled file can be traced to verified CC0 or CC BY source records',
         assert.equal(entry.license, sources.get(entry.library).license);
     }
     assert.match(manifest.attribution, /JC Sounds.*CC BY 4.0/);
+});
+
+test('hunt and arena node transitions cannot play the rejected magic shield bell', () => {
+    const cue = manifest.cues['hunt-start'];
+    assert.equal(cue.source, 'doorOpen_1.ogg');
+    assert.equal(cue.library, 'kenney-rpg');
+    assert.equal(cue.author, 'Kenney');
+    assert.equal(cue.license, 'CC0');
+    assert.doesNotMatch(cue.source, /chime|shield|bell/i);
+    const recording = readFileSync(new URL(cue.file, directory));
+    assert.equal(recording.subarray(0, 4).toString(), 'OggS');
+    assert.equal(sha256(recording), cue.sha256);
+    assert.notEqual(cue.sha256, manifest.cues['upgrade-choice'].sha256);
+
+    const source = manifest.sources.find(source => source.key === cue.library);
+    assert.equal(source?.sourcePage, 'https://kenney.nl/assets/rpg-audio');
+    assert.equal(source?.originalSha256, cue.sha256);
+});
+
+test('gate clicks do not add the generic UI sound on top of the hunt entrance sound', () => {
+    const audio = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
+    assert.match(audio, /button\.matches\('\.town-door--gate, \.enter-realm, \.gate-cta'\)/);
+    assert.match(audio, /button\.getAttribute\('data-sound-cue'\) === 'none'/);
+    const home = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/Home.razor.cs', import.meta.url), 'utf8');
+    const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.cs', import.meta.url), 'utf8');
+    assert.match(home, /TryPlayAudioAsync\("hunt-start"\)/);
+    assert.match(arena, /node\.Type == WyrmrealmNodeType\.Dragon \? "wyrm" : "hunt-start"/);
 });
