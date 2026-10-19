@@ -139,17 +139,23 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
         let phase = reducedMotion || enemy.frozen || seconds - lastMoved > .12 ? 0 :
             canine ? 8 + Math.floor(traveled / 2) % 8 : (Math.floor(traveled / 6) % 2) + 1;
         const authoritativeCanine = canine && typeof enemy.animationPhase === 'string';
-        let releasedAt = reset || authoritativeCanine ? Number.NEGATIVE_INFINITY :
+        const authoritativeHollow = enemy.kind === 0 && typeof enemy.animationPhase === 'string';
+        let releasedAt = reset || authoritativeCanine || authoritativeHollow ? Number.NEGATIVE_INFINITY :
             old?.releasedAt ?? Number.NEGATIVE_INFINITY;
         // Existing legacy fallback for non-authoritative actors remains unchanged.
         // The canine's actual action is supplied by C#; cancellation or a telegraph
         // disappearing can never manufacture its pounce or recovery.
-        if (!authoritativeCanine && !reset && !enemy.telegraph && !enemy.frozen && old?.telegraphProgress >= .7)
+        if (!authoritativeCanine && !authoritativeHollow && !reset && !enemy.telegraph && !enemy.frozen && old?.telegraphProgress >= .7)
             releasedAt = seconds;
-        if (!authoritativeCanine && !reducedMotion && !enemy.frozen && !enemy.telegraph) {
+        if (!authoritativeCanine && !authoritativeHollow && !reducedMotion && !enemy.frozen && !enemy.telegraph) {
             const elapsed = seconds - releasedAt;
             if (elapsed >= 0 && elapsed < .10) phase = 4;
             else if (elapsed >= .10 && elapsed < .28) phase = 5;
+        }
+        if (authoritativeHollow) {
+            if (enemy.hitFlash || enemy.frozen || reducedMotion) phase = 0;
+            else phase = enemy.animationPhase === 'ContactStrike' ? 4 :
+                enemy.animationPhase === 'Recover' ? 5 : phase;
         }
         if (authoritativeCanine) {
             if (reducedMotion || enemy.frozen) phase = 0;
