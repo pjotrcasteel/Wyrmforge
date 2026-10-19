@@ -29,8 +29,8 @@
   pointer-events:auto;-webkit-tap-highlight-color:transparent;
   transition:background-color 120ms ease-out,filter 120ms ease-out;
 }
-.game-shell.refuge-home .town-hotspot[data-town-state="open"]:hover,
-.game-shell.refuge-home .town-hotspot[data-town-state="open"]:focus-visible {
+.game-shell.refuge-home .town-hotspot[data-town-state="active"]:hover,
+.game-shell.refuge-home .town-hotspot[data-town-state="active"]:focus-visible {
   background:rgba(242,184,97,.15);filter:drop-shadow(0 0 10px rgba(242,185,102,.85));
 }
 .game-shell.refuge-home .town-hotspot:focus-visible{outline:3px solid #f1c683;outline-offset:-2px}
