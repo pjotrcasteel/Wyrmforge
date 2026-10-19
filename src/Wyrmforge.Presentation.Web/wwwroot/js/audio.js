@@ -655,7 +655,7 @@
         levels.append(makeVolumeControl('ui', 'Interface'), makeVolumeControl('combat', 'Combat'), makeVolumeControl('moment', 'Moments'), makeVolumeControl('music', 'Music'));
         const close = makeButton('CLOSE', 'wyrmforge-sound-close', 'Close Sound Atelier', toggleLab);
         const credit = document.createElement('p');
-        credit.textContent = 'Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
+        credit.textContent = 'Menu Foley: Kenney (CC0). Recorded music: Brandon Morris (CC0). Spell effects: JC Sounds (CC BY 4.0) and rubberduck (CC0).';
         const creditLink = document.createElement('a');
         creditLink.textContent = 'Asset credits & licenses';
         creditLink.href = 'https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1';
