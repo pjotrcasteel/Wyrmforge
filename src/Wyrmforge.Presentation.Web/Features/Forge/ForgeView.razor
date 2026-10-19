@@ -314,7 +314,7 @@
     {
         if (!IsUnlocked(destination))
         {
-            var location = Navigation.Single(item => item.Section == destination).Label;
+            var location = destination == ShellSection.Forge ? "Blacksmith" : Navigation.Single(item => item.Section == destination).Label;
             townLockNotice = new TownLockNotice(location, UnlockMessage(destination));
             return Task.CompletedTask;
         }
