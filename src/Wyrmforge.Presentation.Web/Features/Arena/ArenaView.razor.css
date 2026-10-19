@@ -379,6 +379,10 @@
 /* Choosing a primary takes place before combat; no new live HUD controls. */
 .primary-choice-overlay {position:fixed;z-index:15;inset:0;display:grid;place-items:center;padding:16px;background:rgba(7,8,13,.92);overflow:auto;overscroll-behavior:contain}
 .primary-choice-panel {width:min(540px,100%);max-height:min(94dvh,840px);overflow:auto;padding:24px 18px;border:1px solid rgba(173,151,123,.55);border-radius:14px;background:#181923;color:#eae3dc;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.7)}
+.primary-choice-back {display:flex;align-items:center;justify-content:flex-start;gap:8px;width:max-content;min-width:142px;min-height:44px;margin:-12px 0 9px -6px;padding:5px 12px;border:1px solid #74614d;border-radius:7px;background:#24212a;color:#e9d4b8;font:700 .68rem system-ui;letter-spacing:.08em;cursor:pointer;touch-action:manipulation}
+.primary-choice-back span {font:normal 1.5rem/1 Georgia,serif}
+.primary-choice-back:focus-visible {outline:2px solid #f1c683;outline-offset:2px}
+.primary-choice-back:active {background:#39303a}
 .primary-choice-eyebrow,.primary-choice-footer {font:700 .65rem/1.4 system-ui;letter-spacing:.15em;color:#bea77e}
 .primary-choice-panel h2 {margin:8px 0;font:700 clamp(1.2rem,5vw,1.65rem)/1.2 Georgia,serif}
 .primary-choice-panel p {margin:8px auto 18px;max-width:380px;color:#c4bdc0;font:.86rem/1.5 system-ui}

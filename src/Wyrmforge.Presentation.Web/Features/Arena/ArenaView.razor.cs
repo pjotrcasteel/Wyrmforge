@@ -50,6 +50,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
     [Parameter] public SpellId? PreferredPrimary { get; set; }
     [Parameter] public EventCallback<SpellId> OnPrimaryChosen { get; set; }
+    [Parameter] public EventCallback OnCancelStart { get; set; }
     [Parameter] public EventCallback<RunSummary> OnGameOver { get; set; }
 
     private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
@@ -219,6 +220,8 @@ public partial class ArenaView : IAsyncDisposable
         }
         return snapshot with { SimulationMilliseconds = simulationMilliseconds };
     }
+
+    private Task CancelStartAsync() => ChoosingPrimary && !gameOverSent ? OnCancelStart.InvokeAsync() : Task.CompletedTask;
 
     private async Task ChoosePrimaryAsync(SpellId id)
     {

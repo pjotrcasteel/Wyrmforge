@@ -173,5 +173,26 @@ html:has(.refuge-home), body:has(.refuge-home) {
 .game-shell.refuge-home .town-snap {
   scroll-snap-align:center!important;
 }
+/* The reopened Forge restores the lit, populated original painting. Identical
+   3:1 dimensions keep alignment exact while the corrected vacant version remains the base. */
+.game-shell.refuge-home .town-panorama-open-forge {
+  position:absolute;inset:0;z-index:1;width:100%;height:100%;
+  display:block;object-fit:contain;pointer-events:none;-webkit-user-drag:none;
+  clip-path:polygon(0 42%,33% 42%,33% 100%,0 100%);
+}
+/* Sealed buildings sleep without clickable or glowing hotspots. Keep the road
+   and the permanently operational gate visible instead of covering the town. */
+.game-shell.refuge-home .town-vacancy {
+  position:absolute;z-index:1;display:block;pointer-events:none;
+  background:rgba(3,5,12,.48);
+  -webkit-backdrop-filter:grayscale(1) brightness(.15);
+  backdrop-filter:grayscale(1) brightness(.15);
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 64%,transparent 100%);
+  mask-image:radial-gradient(ellipse at center,#000 64%,transparent 100%);
+}
+.game-shell.refuge-home .town-vacancy--build {left:0;top:0;width:33%;height:54%}
+.game-shell.refuge-home .town-vacancy--codex {right:0;top:0;width:33%;height:55%}
+.game-shell.refuge-home .town-vacancy--legends {right:0;top:39%;width:33%;height:61%}
+.game-shell.refuge-home .town-square::after {display:none!important}
 /* Touch can pan across the authentic image; overlays retain their own fixed positions. */
 .game-shell.refuge-home .town-panorama-viewport {scroll-padding-inline:0!important}

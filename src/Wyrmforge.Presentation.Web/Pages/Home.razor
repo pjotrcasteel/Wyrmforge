@@ -9,7 +9,7 @@
 }
 else
 {
-    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" Region="activeRegion" RegionOpening="activeRegionOpening" ContextualSpell="hunter.ContextualSpellUnlocked" RewardCache="activeRewardCache" PreparedMutations="activeLaboratoryMutations" ResearchLead="activeResearchLead" ResearchSpecimen="activeResearchSpecimen" PreferredPrimary="preferredPrimary" OnPrimaryChosen="SetPreferredPrimaryAsync" OnGameOver="HandleGameOverAsync" />
+    <ArenaView @key="runNumber" SelectedNodes="selection.Selected" Progression="forgeProgression" Masteries="spellMastery" RunOffering="activeOffering" RunSeed="activeRunSeed" AscendantWyrm="activeAscendant" FirstHunt="firstHunt.TutorialRun" Region="activeRegion" RegionOpening="activeRegionOpening" ContextualSpell="hunter.ContextualSpellUnlocked" RewardCache="activeRewardCache" PreparedMutations="activeLaboratoryMutations" ResearchLead="activeResearchLead" ResearchSpecimen="activeResearchSpecimen" PreferredPrimary="preferredPrimary" OnPrimaryChosen="ConfirmPrimaryAsync" OnCancelStart="CancelRunStart" OnGameOver="HandleGameOverAsync" />
 }
 
 @if (tutorialCinematic)

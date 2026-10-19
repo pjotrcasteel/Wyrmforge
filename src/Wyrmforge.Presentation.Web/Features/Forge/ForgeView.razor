@@ -74,21 +74,38 @@
                     <div class="town-viewport town-panorama-viewport" tabindex="0" role="region" aria-label="Refuge town. Swipe left or right to explore. World Gate in the central square.">
                         <div class="town-panorama">
                             <img class="town-panorama-art" src="art/refuge-town-vacant.webp?v=120" alt="" draggable="false" />
+                            @* Keep the corrected vacant blacksmith as the base. Restore the occupied artwork only when the Forge is unlocked. *@
+                            @if (ForgeUnlocked)
+                            {
+                                <img class="town-panorama-open-forge" src="art/refuge-town-panorama.png" alt="" aria-hidden="true" draggable="false" />
+                            }
+                            @if (!IsUnlocked(ShellSection.Build))
+                            {
+                                <span class="town-vacancy town-vacancy--build" aria-hidden="true"></span>
+                            }
+                            @if (!IsUnlocked(ShellSection.Codex))
+                            {
+                                <span class="town-vacancy town-vacancy--codex" aria-hidden="true"></span>
+                            }
+                            @if (!Progress.LeaderboardUnlocked)
+                            {
+                                <span class="town-vacancy town-vacancy--legends" aria-hidden="true"></span>
+                            }
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
                             <nav class="menu-actions town-hotspots" aria-label="Town buildings">
                                 @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                                 {
-                                    var unlocked = IsUnlocked(item.Section);
+                                    var unlocked = item.Section == ShellSection.Gate || IsUnlocked(item.Section);
                                     <button class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
-                                            type="button" disabled="@(!unlocked && item.Section != ShellSection.Gate)"
+                                            type="button" disabled="@(!unlocked)" data-town-state="@(unlocked ? "open" : "vacant")"
                                             title="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "Begin first hunt" : "Begin hunt") : !unlocked ? UnlockHint(item.Section) : item.Label)"
                                             aria-label="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") : item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
                                             @onclick="() => ActivateTownLocationAsync(item.Section)"><span class="town-location-label">@item.Label</span></button>
                                 }
                                 <button class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
-                                        disabled="@(!Progress.LeaderboardUnlocked)" title="Hall of Fame"
+                                        disabled="@(!Progress.LeaderboardUnlocked)" data-town-state="@(Progress.LeaderboardUnlocked ? "open" : "vacant")" title="Hall of Fame"
                                         aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span class="town-location-label">Hall of Fame</span></button>
                             </nav>
                         </div>

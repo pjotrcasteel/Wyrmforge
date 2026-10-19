@@ -57,6 +57,7 @@ public partial class Home
     private int bestScore;
     private int runNumber;
     private bool runActive;
+    private bool awaitingPrimaryConfirmation;
     private bool tutorialCinematic;
     private bool unlockCinematic;
     private bool leaderboardOpen;
@@ -173,22 +174,40 @@ public partial class Home
         bestiaryDiscoveries = null;
         activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
-        activeRewardCache = !firstHunt.TutorialRun && quests.ConsumeCache();
-        activeOffering = null;
+        // A primary oath is still a preview. Nothing is charged, recorded or discovered
+        // until the player commits to a starting spell.
+        activeRewardCache = !firstHunt.TutorialRun && quests.Caches > 0;
+        activeOffering = selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Count(offering) > 0
+            ? offering : null;
         activeRunSeed = null;
-        if (selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Consume(offering))
-        {
-            activeOffering = offering;
-            await TrySetEssenceVaultAsync();
-        }
-        selectedOffering = null;
         PrepareLaboratoryRun();
         PrepareRegionRun();
-        await DiscoverCurrentRegionAsync();
-        await SaveArcaneBuildAsync();
         runNumber++;
         runActive = true;
+        awaitingPrimaryConfirmation = true;
+    }
+
+    private async Task ConfirmPrimaryAsync(Wyrmforge.Domain.Spells.SpellId id)
+    {
+        await SetPreferredPrimaryAsync(id);
+        if (!awaitingPrimaryConfirmation) return;
+        awaitingPrimaryConfirmation = false;
+
+        if (activeRewardCache) quests.ConsumeCache();
+        if (activeOffering is { } offering && essenceVault.Consume(offering))
+            await TrySetEssenceVaultAsync();
+
+        selectedOffering = null;
+        await DiscoverCurrentRegionAsync();
+        await SaveArcaneBuildAsync();
         await TryRecordPlaytestStartAsync();
+    }
+
+    private void CancelRunStart()
+    {
+        if (!runActive) return;
+        // Before confirmation no rewards, Essence, discovery or playtest run have changed.
+        ReturnToForge();
     }
 
     private async Task HandleGameOverAsync(RunSummary value)
@@ -304,6 +323,7 @@ public partial class Home
 
     private void ReturnToForge()
     {
+        awaitingPrimaryConfirmation = false;
         summary = null;
         reviewPromptOpen = false;
         openLaboratoryOnReturn = false;
