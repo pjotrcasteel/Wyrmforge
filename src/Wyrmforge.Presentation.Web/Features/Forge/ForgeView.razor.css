@@ -490,7 +490,8 @@
   padding:0;
 }
 .arrival-home .hub-backdrop::before {
-  background-position:center 54%;
+  /* Bias toward the foreground mage: centered cover clips him off the left edge. */
+  background-position:40% 54%;
   background-size:cover;
   filter:blur(12px) brightness(.62);
   opacity:.65;
@@ -498,7 +499,7 @@
 .arrival-home .hub-backdrop::after {
   background:
     linear-gradient(180deg,rgba(6,8,13,.53) 0%,transparent 28%,transparent 66%,rgba(6,7,11,.49) 100%),
-    url('art/refuge-scene.png') center 54% / cover no-repeat;
+    url('art/refuge-scene.png') 40% 54% / cover no-repeat;
   -webkit-mask-image:none;
   mask-image:none;
 }
@@ -507,36 +508,38 @@
   width:100%;
   height:100%;
   min-height:0;
-  gap:12px;
-  padding:clamp(42px,7dvh,90px) max(14px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom));
+  gap:8px;
+  padding:clamp(42px,7dvh,90px) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom));
 }
 .arrival-home .title-scene h1 {
   max-width:100%;
   font-size:clamp(1.7rem,8vw,3.6rem);
 }
-/* A carved, gold-inlaid RPG control rather than a flat web CTA. */
+/* Keep the button a compact, legible fantasy emblem rather than a wide, dark web bar. */
 .arrival-home .title-scene .title-start {
   position:relative;
   isolation:isolate;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 42px;
+  grid-template-columns:minmax(0,1fr) 36px;
   align-items:center;
   flex:0 0 auto;
   margin-top:auto;
-  width:min(380px,90%);
-  min-height:70px;
-  padding:9px 12px 9px 18px;
-  border:2px solid #dbad62;
-  border-radius:8px;
-  clip-path:polygon(0 21%,3% 21%,6% 0,94% 0,97% 21%,100% 21%,100% 79%,97% 79%,94% 100%,6% 100%,3% 79%,0 79%);
+  align-self:flex-end; /* Keep the foreground mage visible instead of covering him. */
+  margin-right:12px;
+  width:min(250px,72%);
+  min-height:64px;
+  padding:8px 16px 8px 20px;
+  border:2px solid #e7bc75;
+  border-radius:3px;
+  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
   background:
-    linear-gradient(140deg,transparent 38%,rgba(255,221,153,.11) 50%,transparent 61%),
-    linear-gradient(180deg,#785329 0%,#493019 18%,#231913 54%,#42291a 84%,#79502b 100%);
+    linear-gradient(140deg,transparent 35%,rgba(255,224,166,.12) 50%,transparent 65%),
+    linear-gradient(180deg,#9c713b 0%,#553a25 15%,#241a17 48%,#3d2b20 78%,#926333 100%);
   box-shadow:inset 0 2px 0 #ffe2a17a,inset 0 -3px 0 #090808b5,0 8px 26px #000a;
-  color:#f8dda5;
-  font:600 clamp(.91rem,3.7vw,1.13rem)/1.1 Georgia,serif;
+  color:#fff1d6;
+  font:700 clamp(.95rem,3.8vw,1.1rem)/1.1 Georgia,serif;
   letter-spacing:.16em;
-  text-shadow:0 2px 2px #100d0a,0 0 15px #edb96166;
+  text-shadow:0 2px 3px #090807,0 0 9px #e5bc7977;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   transition:filter .18s ease,transform .12s ease;
@@ -546,7 +549,8 @@
   position:absolute;
   inset:5px;
   border:1px solid #e7bf7d91;
-  border-radius:3px;
+  border-radius:2px;
+  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
   box-shadow:inset 0 0 0 1px #100c09aa;
   pointer-events:none;
 }
@@ -561,11 +565,14 @@
   text-shadow:0 1px #241207,0 0 8px #ecb55e;
   pointer-events:none;
 }
-.arrival-home .title-start-label {
+.arrival-home .title-scene .title-start .title-start-label {
   position:relative;
   z-index:1;
   min-width:0;
-  padding-left:8px;
+  padding-left:4px;
+  color:#fff1d6; /* Explicitly overrides the old dark .arrival-home .title-start span rule. */
+  font:700 clamp(.95rem,3.8vw,1.1rem)/1.1 Georgia,serif;
+  text-shadow:0 2px 3px #090807,0 0 9px #e5bc7977;
   white-space:nowrap;
 }
 .arrival-home .title-scene .title-start .title-start-arrow {
@@ -586,7 +593,7 @@
 .arrival-home .title-start:focus-visible { outline:3px solid #ffe2aa; outline-offset:4px; }
 @media (orientation:landscape) and (max-height:560px) {
   .arrival-home .title-scene { padding:18px 14px 12px; gap:5px; }
-  .arrival-home .title-scene .title-start { min-height:54px; }
+  .arrival-home .title-scene .title-start { min-height:54px; width:min(270px,78%); }
 }
 @media (prefers-reduced-motion:reduce) {
   .arrival-home .title-start { transition:none; }

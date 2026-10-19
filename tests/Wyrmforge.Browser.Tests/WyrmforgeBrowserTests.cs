@@ -44,6 +44,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
     [TestMethod]
     [DataRow(320, 568)]
+    [DataRow(375, 667)]
+    [DataRow(390, 640)] // Realistic Safari content height with browser chrome visible.
     [DataRow(390, 844)]
     public async Task Mobile_Welcome_StartButtonIsPlayableAndFitsOnScreen(int width, int height)
     {
@@ -59,12 +61,26 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const button = start.getBoundingClientRect();
             const controls = settings.getBoundingClientRect();
             return frame.top >= -1 && Math.abs(frame.bottom - innerHeight) <= 2
-                && button.width >= 220 && button.height >= 54
-                && button.left >= 0 && button.right <= innerWidth
+                && button.width >= 205 && button.height >= 54
+                && button.left >= innerWidth * .25 && button.right <= innerWidth
                 && controls.bottom <= innerHeight && controls.top > button.bottom
                 && document.documentElement.scrollWidth <= innerWidth + 1;
         }");
-        Assert.IsTrue(fits, "Welcome artwork and game controls should fit 320px and 390px phones without scrolling.");
+        Assert.IsTrue(fits, "Welcome artwork and game controls must fit without scrolling or covering the foreground mage.");
+
+        var visualReadability = await Page.EvaluateAsync<bool>(@"() => {
+            const label = document.querySelector('.arrival-home .title-start-label');
+            const button = document.querySelector('.arrival-home .title-start');
+            const backdrop = document.querySelector('.arrival-home .hub-backdrop');
+            const text = getComputedStyle(label);
+            const art = getComputedStyle(backdrop, '::after');
+            return text.color === 'rgb(255, 241, 214)'
+                && parseFloat(text.fontSize) >= 15 && parseFloat(text.fontSize) <= 18
+                && button.getBoundingClientRect().width <= 310
+                && art.backgroundPosition.includes('40%');
+        }");
+        Assert.IsTrue(visualReadability, "Start Game must use bright, readable lettering and the mage-focused artwork crop.");
+        await ScreenshotAsync($"welcome-refined-{width}x{height}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
     }
