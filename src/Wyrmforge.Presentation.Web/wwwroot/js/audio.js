@@ -125,6 +125,7 @@
             if (manifest.version !== 2 || !manifest.cues?.arcane?.variants?.length || !manifest.cues?.fire?.variants?.length || !manifest.cues?.frost?.variants?.length || !manifest.cues?.lightning?.variants?.length ||
                 !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
             recordedManifest = manifest;
+            prewarmMenu(); // Fetch/decode the most frequent tiny Foley files before the next navigation.
             if (status) status.textContent = 'RECORDED AUDIO READY';
             startMusicFromGesture(); // May be blocked outside a gesture; the next tap retries both tracks.
             syncMusic();
@@ -156,6 +157,14 @@
         const assetKey = mapping.variants?.[variation % mapping.variants.length] ?? mapping.asset;
         const source = recordedManifest?.menuAssets?.[assetKey];
         return source ? { ...source, mix: { ...source.mix, ...mapping.mix } } : null;
+    }
+
+    function prewarmMenu() {
+        if (!context || !recordedManifest || !enabled) return;
+        for (const name of ['ui', 'ui-back', 'ui-open', 'hunt-start']) {
+            const entry = menuEntry(name, 0);
+            if (entry) void loadRecordedBuffer(entry).catch(() => {}); // Optional audio must remain non-blocking.
+        }
     }
 
     function recordedEntry(name, type, variation) {
@@ -480,6 +489,7 @@
         if (!menuPaletteNames.includes(name)) return false;
         menuPalette = name;
         savePreference(menuPaletteKey, name);
+        prewarmMenu();
         return true;
     }
 
