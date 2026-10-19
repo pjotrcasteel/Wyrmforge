@@ -45,20 +45,30 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".enemy-lab")).ToBeVisibleAsync();
         await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("PIXEL ART PREVIEW");
         await Expect(Page.GetByRole(AriaRole.Combobox, new() { Name = "Mire Hound art style" })).ToHaveValueAsync("pixel");
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('.enemy-lab canvas');
-            return canvas && canvas.width > 0 && canvas.height > 0;
+            return canvas && canvas.width > 0 && canvas.height > 0
+                && canvas.getContext('2d') != null;
         }");
+        // Await a real render tick after hydration so screenshots cannot be
+        // taken of the startup veil with an allocated but still-empty canvas.
+        await Page.WaitForTimeoutAsync(600);
         await ScreenshotAsync("mire-hound-pixel-in-real-lab-390.png");
 
         await Page.GetByRole(AriaRole.Combobox, new() { Name = "Mire Hound art style" }).SelectOptionAsync("painted");
         await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("PUBLISHED ART");
         StringAssert.Contains(Page.Url, "mireStyle=painted");
         StringAssert.Contains(Page.Url, "seed=42");
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('.enemy-lab canvas');
-            return canvas && canvas.width > 0 && canvas.height > 0;
+            return canvas && canvas.width > 0 && canvas.height > 0
+                && canvas.getContext('2d') != null;
         }");
+        // Await a real render tick after hydration so screenshots cannot be
+        // taken of the startup veil with an allocated but still-empty canvas.
+        await Page.WaitForTimeoutAsync(600);
         await ScreenshotAsync("mire-hound-published-in-real-lab-390.png");
     }
 
