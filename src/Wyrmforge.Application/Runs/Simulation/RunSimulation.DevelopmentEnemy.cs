@@ -7,6 +7,21 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    /// <summary>
+    /// Reproducible visual acceptance only. This is a real hit routed through the
+    /// canonical damage/death pipeline, not a presentation-side invented event.
+    /// Normal runs can never use this development-only entry point.
+    /// </summary>
+    public bool ApplyDevelopmentArtHit(EnemyKind kind, bool lethal = false)
+    {
+        if (!developmentHunt || !developmentInvulnerable) return false;
+        var target = enemies.FirstOrDefault(enemy => enemy.Kind == kind && enemy.Health > 0);
+        if (target is null) return false;
+        var damage = lethal ? target.Health + 1 : target.MaxHealth * 0.2;
+        if (DamageTarget(target, damage)) enemies.Remove(target);
+        return true;
+    }
+
     internal void StartDevelopmentEnemy(DevelopmentEnemySetup setup)
     {
         setup.Validate();

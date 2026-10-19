@@ -138,17 +138,37 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
         const canine = Number(enemy.kind) === 1 || Number(enemy.kind) === 12;
         let phase = reducedMotion || enemy.frozen || seconds - lastMoved > .12 ? 0 :
             canine ? 8 + Math.floor(traveled / 2) % 8 : (Math.floor(traveled / 6) % 2) + 1;
-        let releasedAt = reset ? Number.NEGATIVE_INFINITY : old?.releasedAt ?? Number.NEGATIVE_INFINITY;
-        // A cancelled/frozen windup must not manufacture a visual strike. The pose adds
-        // no attack, displacement or damage: C# remains the sole gameplay authority.
-        if (!reset && !enemy.telegraph && !enemy.frozen && old?.telegraphProgress >= .7) releasedAt = seconds;
-        if (!reducedMotion && !enemy.frozen && !enemy.telegraph) {
+        const authoritativeCanine = canine && typeof enemy.animationPhase === 'string';
+        const authoritativeHollow = enemy.kind === 0 && typeof enemy.animationPhase === 'string';
+        let releasedAt = reset || authoritativeCanine || authoritativeHollow ? Number.NEGATIVE_INFINITY :
+            old?.releasedAt ?? Number.NEGATIVE_INFINITY;
+        // Existing legacy fallback for non-authoritative actors remains unchanged.
+        // The canine's actual action is supplied by C#; cancellation or a telegraph
+        // disappearing can never manufacture its pounce or recovery.
+        if (!authoritativeCanine && !authoritativeHollow && !reset && !enemy.telegraph && !enemy.frozen && old?.telegraphProgress >= .7)
+            releasedAt = seconds;
+        if (!authoritativeCanine && !authoritativeHollow && !reducedMotion && !enemy.frozen && !enemy.telegraph) {
             const elapsed = seconds - releasedAt;
             if (elapsed >= 0 && elapsed < .10) phase = 4;
             else if (elapsed >= .10 && elapsed < .28) phase = 5;
         }
+        if (authoritativeHollow) {
+            if (enemy.hitFlash || enemy.frozen || reducedMotion) phase = 0;
+            else phase = enemy.animationPhase === 'ContactStrike' ? 4 :
+                enemy.animationPhase === 'Recover' ? 5 : phase;
+        }
+        if (authoritativeCanine) {
+            if (reducedMotion || enemy.frozen) phase = 0;
+            else if (enemy.animationPhase === 'Windup') phase = 3;
+            else if (enemy.animationPhase === 'Pounce') phase = 4;
+            else if (enemy.animationPhase === 'Recover') phase = 5;
+            // Feint, stalk and prowl continue using the travel-driven gait.
+        }
         let facing = old?.facing ?? 1;
         if (old && !reset && Math.abs(enemy.x - old.x) > .2) facing = enemy.x > old.x ? 1 : -1;
+        if (authoritativeCanine && (enemy.animationPhase === 'Windup' || enemy.animationPhase === 'Pounce')
+            && Number.isFinite(enemy.animationFacingX) && Math.abs(enemy.animationFacingX) > .2)
+            facing = Math.sign(enemy.animationFacingX);
         motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved, facing, seconds,
             kind: Number(enemy.kind), releasedAt, telegraphProgress: Number(enemy.telegraph?.progress ?? -1) });
         poses.set(id, phase);

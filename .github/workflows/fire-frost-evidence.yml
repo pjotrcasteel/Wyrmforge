@@ -1,0 +1,102 @@
+name: Fire Frost evidence checkpoint
+
+on:
+  push:
+    branches: [codex/fire-frost-lifecycle-20261019]
+    paths:
+      - '.github/workflows/fire-frost-evidence.yml'
+      - 'src/Wyrmforge.Presentation.Web/**'
+      - 'src/Wyrmforge.Application/**'
+      - 'tools/art/capture-combat-recovery.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fire-frost-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canine-actual-game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Publish real Blazor game
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release -o artifacts/web
+
+      - name: Install headless Chromium for real game capture
+        run: |
+          npm install --prefix tools/art --no-package-lock --no-save playwright@1.56.1
+          tools/art/node_modules/.bin/playwright install --with-deps chromium
+          CHROME_PATH="$(find "$HOME/.cache/ms-playwright" -type f \( -name chrome-headless-shell -o -name headless_shell \) | head -n 1)"
+          test -n "$CHROME_PATH" && test -x "$CHROME_PATH"
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+
+      - name: Recover verified main baseline sprite renderer
+        run: |
+          mkdir -p artifacts/baseline
+          git show 5d6b0df1e6e3e12fe6a43abef1ec4a0021a07ada:src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-art.js > artifacts/baseline/arena-enemy-art.js
+          git show 5d6b0df1e6e3e12fe6a43abef1ec4a0021a07ada:src/Wyrmforge.Presentation.Web/wwwroot/art/actors.png > artifacts/baseline/actors.png
+          git show 5d6b0df1e6e3e12fe6a43abef1ec4a0021a07ada:src/Wyrmforge.Presentation.Web/wwwroot/art/manifest.json > artifacts/baseline/manifest.json
+
+      - name: Capture real canine before/after at identical resolution
+        env:
+          WEB_ROOT: ${{ github.workspace }}/artifacts/web/wwwroot
+          BASELINE_ART_ROOT: ${{ github.workspace }}/artifacts/baseline
+          ACTORS: hollow,mire-hound,whitefang
+        run: |
+          CAPTURE_MODE=before node tools/art/capture-combat-recovery.cjs
+          unset BASELINE_ART_ROOT
+          CAPTURE_MODE=after CAPTURE_LETHAL=1 node tools/art/capture-combat-recovery.cjs
+
+      - name: Commit and push recorded evidence to remote branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/playtesting/combat-recovery/evidence/before/hollow* docs/playtesting/combat-recovery/evidence/before/mire-hound* docs/playtesting/combat-recovery/evidence/before/whitefang*
+          git add docs/playtesting/combat-recovery/evidence/after/hollow* docs/playtesting/combat-recovery/evidence/after/mire-hound* docs/playtesting/combat-recovery/evidence/after/whitefang*
+          git add docs/playtesting/combat-recovery/evidence/before/art-results-hollow-mire-hound-whitefang.json docs/playtesting/combat-recovery/evidence/after/art-results-hollow-mire-hound-whitefang.json
+          if git diff --cached --quiet; then
+            echo "No changed evidence to publish."
+            exit 0
+          fi
+          git commit -m "test: checkpoint genuine canine gameplay recordings and metrics"
+          git fetch origin codex/fire-frost-lifecycle-20261019
+          git rebase origin/codex/fire-frost-lifecycle-20261019
+          git push origin HEAD:codex/fire-frost-lifecycle-20261019
+          remote="$(git ls-remote origin refs/heads/codex/fire-frost-lifecycle-20261019 | cut -f1)"
+          test "$remote" = "$(git rev-parse HEAD)"
+          echo "Verified remote checkpoint $remote"
+
+      - name: Preserve recordings even when publishing fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fire-frost-canine-evidence-${{ github.sha }}
+          path: |
+            docs/playtesting/combat-recovery/evidence/before/whitefang*
+            docs/playtesting/combat-recovery/evidence/before/hollow*
+            docs/playtesting/combat-recovery/evidence/before/mire-hound*
+            docs/playtesting/combat-recovery/evidence/after/whitefang*
+            docs/playtesting/combat-recovery/evidence/after/hollow*
+            docs/playtesting/combat-recovery/evidence/after/mire-hound*
+            docs/playtesting/combat-recovery/evidence/before/art-results-hollow-mire-hound-whitefang.json
+            docs/playtesting/combat-recovery/evidence/after/art-results-hollow-mire-hound-whitefang.json
+          if-no-files-found: warn
+          retention-days: 14

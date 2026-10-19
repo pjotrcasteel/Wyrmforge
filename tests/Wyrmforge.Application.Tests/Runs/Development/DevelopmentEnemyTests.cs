@@ -69,6 +69,88 @@ public sealed class DevelopmentEnemyTests
     }
 
     [TestMethod]
+    public void CanineSnapshot_ReportsActualPouncePhaseAndLockedFacing()
+    {
+        var hound = Create(EnemyKind.MireHound);
+        var houndEnemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(hound)!).Single();
+        var target = houndEnemy.Position + new Wyrmforge.Domain.Combat.Geometry.Vector2D(100, 0);
+
+        Assert.AreEqual("Stalk", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+        houndEnemy.MireHound!.Tick(MireHoundBehaviorState.InitialCooldownSeconds + .01, houndEnemy.Position, target);
+        Assert.AreEqual("Windup", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+        houndEnemy.MireHound.Tick(MireHoundBehaviorState.WindupSeconds, houndEnemy.Position, target);
+        Assert.AreEqual("Pounce", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+        Assert.AreEqual(1d, hound.CreateSnapshot().Enemies.Single().AnimationFacingX);
+        houndEnemy.MireHound.Land();
+        Assert.AreEqual("Recover", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+
+        var frost = Create(EnemyKind.WhitefangStalker);
+        var whitefangEnemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(frost)!).Single();
+        target = whitefangEnemy.Position + new Wyrmforge.Domain.Combat.Geometry.Vector2D(-100, 0);
+        var stalker = whitefangEnemy.Whitefang!;
+        Assert.AreEqual("Prowl", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        stalker.Tick(WhitefangStalkerBehaviorState.InitialCooldownSeconds + .01, whitefangEnemy.Position, target, default);
+        Assert.AreEqual("Feint", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        stalker.Tick(WhitefangStalkerBehaviorState.FeintSeconds, whitefangEnemy.Position, target, default);
+        Assert.AreEqual("Windup", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        stalker.Tick(WhitefangStalkerBehaviorState.WindupSeconds, whitefangEnemy.Position, target, default);
+        Assert.AreEqual("Pounce", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        Assert.AreEqual(-1d, frost.CreateSnapshot().Enemies.Single().AnimationFacingX);
+        stalker.Land();
+        Assert.AreEqual("Recover", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+    }
+
+    [TestMethod]
+    [DataRow(EnemyKind.MireHound)]
+    [DataRow(EnemyKind.WhitefangStalker)]
+    public void DevelopmentArtHit_UsesActualDamageAndDeathEvents_AndIsDisabledInOrdinaryRuns(EnemyKind kind)
+    {
+        var lab = Create(kind);
+        var original = lab.CreateSnapshot().Enemies.Single();
+        Assert.IsTrue(lab.ApplyDevelopmentArtHit(kind));
+        var damaged = lab.CreateSnapshot().Enemies.Single();
+        Assert.IsTrue(damaged.HealthRatio < original.HealthRatio);
+        Assert.IsTrue(damaged.HitFlash, "The actual C# damage pipeline must emit the visual injury state.");
+        Assert.IsEmpty(lab.CreateSnapshot().DeathBursts);
+
+        Assert.IsTrue(lab.ApplyDevelopmentArtHit(kind, lethal: true));
+        var corpse = lab.CreateSnapshot().DeathBursts.Single();
+        Assert.AreEqual(kind, corpse.Kind);
+        Assert.AreEqual(original.EntityId, corpse.EntityId);
+        Assert.IsEmpty(lab.CreateSnapshot().Enemies);
+
+        var normal = new RunSimulationFactory(new SeededRandomSource(1)).Create(SelfPlayBuildCatalog.All.First().SelectedNodes, seed: 42);
+        var before = JsonSerializer.Serialize(normal.CreateSnapshot());
+        Assert.IsFalse(normal.ApplyDevelopmentArtHit(EnemyKind.WhitefangStalker, lethal: true));
+        Assert.AreEqual(before, JsonSerializer.Serialize(normal.CreateSnapshot()),
+            "Visual acceptance must never mutate the actual player's run.");
+    }
+
+    [TestMethod]
+    public void HollowContact_HasRealAttackAndRecoveryWithoutChangingDamage()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var enemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!).Single();
+        var player = run.CreateSnapshot().Player;
+        Assert.IsNull(run.CreateSnapshot().Enemies.Single().AnimationPhase);
+
+        enemy.Position = new Wyrmforge.Domain.Combat.Geometry.Vector2D(player.X, player.Y);
+        var health = run.Health;
+        run.Tick(.02, default, 800, 600);
+        Assert.AreEqual("ContactStrike", run.CreateSnapshot().Enemies.Single().AnimationPhase);
+        Assert.AreEqual(health, run.Health, "Developer lab invulnerability must keep C# damage unchanged.");
+
+        enemy.Position = new Wyrmforge.Domain.Combat.Geometry.Vector2D(10, 10);
+        for (var frame = 0; frame < 9; frame++) run.Tick(.02, default, 800, 600);
+        Assert.AreEqual("Recover", run.CreateSnapshot().Enemies.Single().AnimationPhase);
+        for (var frame = 0; frame < 13; frame++) run.Tick(.02, default, 800, 600);
+        Assert.IsNull(run.CreateSnapshot().Enemies.Single().AnimationPhase);
+    }
+
+    [TestMethod]
     public void InvalidDimensionsOrKind_AreRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DevelopmentEnemySetup((EnemyKind)99, 1, 800, 600).Validate());

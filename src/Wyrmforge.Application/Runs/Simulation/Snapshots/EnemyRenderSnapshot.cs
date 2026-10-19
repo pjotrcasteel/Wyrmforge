@@ -8,6 +8,12 @@ public sealed record EnemyRenderSnapshot(double X, double Y, double Radius, bool
     /// <summary>Penitent shield direction in radians while the shield is raised; null when exposed or shieldless.</summary>
     public double? ShieldFacing { get; init; }
 
+    /// <summary>Actual C# locomotion/attack phase for canine sprites; never inferred from a disappearing telegraph.</summary>
+    public string? AnimationPhase { get; init; }
+
+    /// <summary>Locked leap direction on the east/west axis; null for enemies without a canine state.</summary>
+    public double? AnimationFacingX { get; init; }
+
     /// <summary>Fleeing after its priest fell.</summary>
     public bool Routed { get; init; }
 

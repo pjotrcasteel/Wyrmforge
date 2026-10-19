@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { enemyPixelFrames, enemyWalkLegs, drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions } from
+import { enemyPixelFrames, enemyWalkLegs, drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing, enemySpriteName } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-art.js';
 
 test('four hand-authored enemy archetypes have different shapes, identifiable heads and limbs', () => {
@@ -115,4 +115,51 @@ test('slow subpixel movement accumulates the same canine stride at different ren
     };
     assert.equal(poseAt(20),13);
     assert.equal(poseAt(144),13,'A high refresh display must not drop subpixel strides');
+});
+
+test('Mire Hound and Whitefang use C# phase truth for windup, committed pounce and recovery', () => {
+    for (const kind of [1, 12]) {
+        const state = createEnemyMotionState();
+        const dog = {entityId:900 + kind, kind, x:100, y:70, animationPhase:'Stalk', animationFacingX:-1};
+        assert.equal(updateEnemyMotions(state,[dog],0).get(dog.entityId),0);
+        const windup={...dog,animationPhase:'Windup',telegraph:{progress:.95}};
+        assert.equal(updateEnemyMotions(state,[windup],.05).get(dog.entityId),3);
+        assert.equal(enemyFacing(state,dog.entityId),-1,'Locked attack direction wins over stale travel');
+        const pounce={...dog,animationPhase:'Pounce'};
+        assert.equal(updateEnemyMotions(state,[pounce],.1).get(dog.entityId),4,'Only an actual C# pounce triggers attack art');
+        assert.equal(updateEnemyMotions(state,[{...pounce,x:104}],.2).get(dog.entityId),4);
+        assert.equal(enemyFacing(state,dog.entityId),-1,'Travel does not rotate a committed leap');
+        assert.equal(updateEnemyMotions(state,[{...dog,animationPhase:'Recover'}],.3).get(dog.entityId),5);
+        assert.equal(updateEnemyMotions(state,[dog],.65).get(dog.entityId),0);
+    }
+});
+
+test('cancelled canine windups never invent attacks even when their telegraph nearly completed', () => {
+    for (const kind of [1,12]) {
+        const state=createEnemyMotionState(), dog={entityId:kind,kind,x:100,y:70,animationPhase:'Stalk'};
+        updateEnemyMotions(state,[{...dog,animationPhase:'Windup',telegraph:{progress:.98}}],1);
+        assert.equal(updateEnemyMotions(state,[dog],1.02).get(kind),0);
+        assert.equal(updateEnemyMotions(state,[{...dog,animationPhase:'Recover',frozen:true}],1.06).get(kind),0);
+        assert.equal(updateEnemyMotions(state,[{...dog,animationPhase:'Pounce'}],1.1,true).get(kind),0,
+            'Reduced motion suppresses animated action poses, without changing C# combat');
+    }
+});
+
+test('Whitefang collapses on a real death event with its authored native corpse frame', () => {
+    assert.equal(enemySpriteName({kind:12,dead:true},0),'enemy.12.7.normal');
+    assert.equal(enemySpriteName({kind:12,hitFlash:true},0),'enemy.12.6.hit');
+    assert.equal(enemySpriteName({kind:12,frozen:true},0),'enemy.12.0.frozen');
+    assert.equal(enemySpriteName({kind:12,telegraph:{progress:.5}},10),'enemy.12.3.normal');
+    assert.equal(enemySpriteName({kind:1,dead:true},15),'enemy.1.7.normal');
+});
+
+test('Hollow contact attacks cannot be fabricated by art time or telegraph release', () => {
+    const state=createEnemyMotionState();
+    const hollow={entityId:24,kind:0,x:40,y:60};
+    assert.equal(updateEnemyMotions(state,[hollow],1).get(24),0);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'ContactStrike'}],1.02).get(24),4);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'Recover'}],1.2).get(24),5);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'ContactStrike',hitFlash:true}],1.3).get(24),0);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'ContactStrike'}],1.4,true).get(24),0);
+    assert.equal(updateEnemyMotions(state,[hollow],2).get(24),0);
 });

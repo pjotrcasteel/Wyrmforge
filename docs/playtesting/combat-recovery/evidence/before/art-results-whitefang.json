@@ -1,0 +1,153 @@
+{
+  "mode": "before",
+  "base": "http://127.0.0.1:40523/",
+  "results": [
+    {
+      "name": "whitefang",
+      "viewport": {
+        "width": 1000,
+        "height": 900
+      },
+      "start": {
+        "active": true,
+        "movement": {
+          "x": 0,
+          "y": 0
+        },
+        "aim": {
+          "x": 0,
+          "y": 0
+        },
+        "projectiles": [],
+        "castMotion": null,
+        "pointerId": null,
+        "touchId": null,
+        "player": {
+          "x": 636.4720682600462,
+          "y": 394.47685311707056,
+          "radius": 14,
+          "barrier": false,
+          "aimAngle": -2.2890229075148345,
+          "manualAim": false,
+          "aimTargetId": 1,
+          "focusCharge": 0,
+          "wardCharge": null,
+          "chill": 0,
+          "onBlackIce": false
+        },
+        "world": null,
+        "exit": null,
+        "enemies": [
+          {
+            "x": 483.3229990720389,
+            "y": 220.51379905306698,
+            "radius": 13,
+            "frozen": false,
+            "healthRatio": 1,
+            "hitFlash": false,
+            "statuses": [],
+            "kind": 12,
+            "entityId": 1,
+            "telegraph": null,
+            "shieldFacing": null,
+            "animationPhase": "Prowl",
+            "animationFacingX": 0,
+            "routed": false,
+            "revived": false,
+            "opacity": 1,
+            "elite": null,
+            "empowered": false,
+            "rimeArmor": 0
+          }
+        ],
+        "deathBursts": [],
+        "dragon": null,
+        "dragonBreath": null,
+        "performance": {
+          "fps": 53,
+          "simulationHz": 53,
+          "simulationMilliseconds": 0,
+          "bridgeMilliseconds": 6.800000000001136
+        },
+        "renderingFailed": false
+      },
+      "end": {
+        "active": true,
+        "movement": {
+          "x": 0,
+          "y": 0
+        },
+        "aim": {
+          "x": 0,
+          "y": 0
+        },
+        "projectiles": [],
+        "castMotion": null,
+        "pointerId": null,
+        "touchId": null,
+        "player": {
+          "x": 441.5027051631607,
+          "y": 583.9058362765435,
+          "radius": 14,
+          "barrier": false,
+          "aimAngle": 0.11818388308928379,
+          "manualAim": false,
+          "aimTargetId": 1,
+          "focusCharge": 0,
+          "wardCharge": null,
+          "chill": 0,
+          "onBlackIce": false
+        },
+        "world": null,
+        "exit": null,
+        "enemies": [
+          {
+            "x": 723.4983968504622,
+            "y": 616.8148400048933,
+            "radius": 13,
+            "frozen": false,
+            "healthRatio": 1,
+            "hitFlash": false,
+            "statuses": [],
+            "kind": 12,
+            "entityId": 1,
+            "telegraph": null,
+            "shieldFacing": null,
+            "animationPhase": "Prowl",
+            "animationFacingX": -0.30170708059188206,
+            "routed": false,
+            "revived": false,
+            "opacity": 1,
+            "elite": null,
+            "empowered": false,
+            "rimeArmor": 0
+          }
+        ],
+        "deathBursts": [],
+        "dragon": null,
+        "dragonBreath": null,
+        "performance": {
+          "fps": 60,
+          "simulationHz": 60,
+          "simulationMilliseconds": 0,
+          "bridgeMilliseconds": 3.573333333333075
+        },
+        "renderingFailed": false
+      },
+      "observed": {
+        "phases": [
+          "Feint",
+          "Pounce",
+          "Prowl",
+          "Recover",
+          "Windup"
+        ],
+        "hitFlashes": 0,
+        "deathEvents": 0,
+        "enemyCountPeak": 1,
+        "playerHealthMinimum": null
+      }
+    }
+  ],
+  "errors": []
+}

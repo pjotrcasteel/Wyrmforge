@@ -323,7 +323,11 @@ public sealed partial class RunSimulation
             else if (enemy.Packling is { Phase: FrostlingPhase.Skitter } skitterer) BitePlayer(enemy, skitterer);
             else if (enemy.Whitefang is { Phase: WhitefangPhase.Pounce } leaper) MaulPlayer(enemy, leaper);
             else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint } || enemy.Reflection is not null || enemy.FalseForm is not null) continue;
-            else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
+            else
+            {
+                RegisterHollowContactStrike(enemy);
+                DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
+            }
         }
         SinkWraiths();
         UpdateHostileProjectiles(delta);
