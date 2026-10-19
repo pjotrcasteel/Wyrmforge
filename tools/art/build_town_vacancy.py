@@ -37,7 +37,22 @@ PLATES = {
                            (378, 285, 65, 54), (505, 300, 80, 52),
                            (585, 294, 65, 48)],
         "clone_offsets": [(92, 34), (72, 12)],
-        "boundary": [(2, 74), (98, 22), (292, 0), (530, 13), (706, 94),
+        # Smoke is painted into the panorama; turning off particle effects
+        # cannot remove it. These regions are bounded to dormant chimneys.
+        "smoke": [
+            [(171, 0), (219, 0), (217, 22), (215, 42),
+             (206, 63), (187, 70), (174, 48)],
+        ],
+        "cold_sources": [
+            # Closed arched windows and the two still-bright wall lanterns.
+            (158, 225, 18, 32), (275, 227, 18, 33),
+            (381, 215, 20, 39), (479, 227, 21, 38),
+            (555, 224, 27, 41),
+            # Dusty, unpowered alchemy props on trading tables.
+            (209, 280, 44, 29), (423, 265, 39, 31),
+            (554, 279, 46, 36),
+        ],
+        "boundary": [(2, 74), (98, 22), (151, 0), (292, 0), (530, 13), (706, 94),
                      (705, 319), (596, 364), (367, 355), (123, 359), (3, 331)],
         # People and lit stall figures erased using nearby painted detail.
         "figures": [
@@ -60,7 +75,31 @@ PLATES = {
             (540, 212, 30, 57), (585, 278, 37, 44), (220, 213, 29, 63),
         ],
     },
+    "forge": {
+        # The supplied base panorama already depicts an unstaffed smithy,
+        # but its chimney still emits painted smoke. This transparent native
+        # plate removes that smoke without changing occupied Forge art.
+        "emission_zones": [],
+        "lamps": [],
+        "clone_offsets": [],
+        "figures": [],
+        "smoke": [
+            [(75, 319), (108, 314), (124, 340), (128, 375),
+             (116, 400), (99, 413), (91, 389), (79, 369)],
+        ],
+        "cold_sources": [],
+        "boundary": [(0, 322), (55, 316), (94, 305), (135, 323),
+                     (213, 352), (416, 354), (686, 414),
+                     (705, 588), (680, 723), (0, 723)],
+    },
     "codex": {
+        # Enforced OFF: upper sconces, red/white windows and doorway brazier.
+        "cold_sources": [
+            (1661, 113, 19, 28), (1924, 142, 19, 32),
+            (1650, 230, 24, 39), (1744, 244, 23, 39),
+            (1832, 245, 24, 44), (1886, 248, 20, 42),
+            (1940, 290, 30, 31),
+        ],
         "emission_zones": [(1551, 275, 35, 70), (1653, 258, 65, 62),
                            (1729, 191, 35, 56), (1816, 118, 71, 67),
                            (1820, 278, 77, 70), (1900, 240, 50, 65),
@@ -82,6 +121,11 @@ PLATES = {
         ],
     },
     "legends": {
+        "cold_sources": [
+            (1702, 532, 24, 39), (1820, 560, 24, 45),
+            (1892, 584, 23, 39), (1983, 603, 25, 47),
+            (2090, 602, 24, 43),
+        ],
         "emission_zones": [(1557, 482, 25, 44), (1665, 520, 80, 80),
                            (1748, 537, 64, 74), (1834, 540, 68, 95),
                            (1920, 555, 77, 104), (2020, 569, 83, 102),
@@ -114,6 +158,17 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     # Telea inpainting at 50+ px makes an obvious brown ghost; seamless texture
     # transfer preserves actual painted detail and adjusts local brightness.
     painted_bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
+
+    # Remove only the actual smoke strokes (rather than the entire roof). The
+    # surrounding roof/foliage texture is reconstructed locally; the active
+    # panorama is never touched.
+    if plan.get("smoke"):
+        smoke_mask = np.zeros((h, w), dtype=np.uint8)
+        for polygon in plan["smoke"]:
+            cv2.fillPoly(smoke_mask, [np.asarray(polygon, np.int32)], 255)
+        smoke_mask = cv2.dilate(smoke_mask, np.ones((3, 3), np.uint8), iterations=1)
+        painted_bgr = cv2.inpaint(painted_bgr, smoke_mask, 3, cv2.INPAINT_TELEA)
+
     for polygon, (dx, dy) in zip(plan["figures"], plan["clone_offsets"], strict=True):
         xs, ys = zip(*polygon)
         x0, x1 = max(0, min(xs) - 9), min(w, max(xs) + 10)
@@ -171,6 +226,17 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     gray = source_rgb[:, :, 0] * .24 + source_rgb[:, :, 1] * .58 + source_rgb[:, :, 2] * .18
     neutral = np.stack((gray * .30, gray * .33, gray * .39), axis=-1)
     painted = np.clip(painted * (1 - suppression[:, :, None]) + neutral * suppression[:, :, None], 0, 255)
+
+    # Colour-key filtering alone leaves lantern glass, flames and red windows
+    # looking inhabited. A shared, locally masked OFF treatment must remove
+    # the *light source*, not darken the entire building or courtyard.
+    for x, y, rx, ry in plan.get("cold_sources", []):
+        r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
+        source_mask = (np.clip((1 - r2) * 3.0, 0, 1) ** 1.2 * .98).astype(np.float32)
+        gray = painted[:, :, 0] * .24 + painted[:, :, 1] * .58 + painted[:, :, 2] * .18
+        off = np.stack((gray * .12, gray * .13, gray * .16), axis=-1)
+        painted = painted * (1 - source_mask[:, :, None]) + off * source_mask[:, :, None]
+
     cutout = Image.new("L", SIZE, 0)
     drawer = ImageDraw.Draw(cutout)
     drawer.polygon(plan["boundary"], fill=255)
