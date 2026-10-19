@@ -40,9 +40,10 @@ PLATES = {
         # Smoke is painted into the panorama; turning off particle effects
         # cannot remove it. These regions are bounded to dormant chimneys.
         "smoke": [
-            [(171, 0), (219, 0), (217, 22), (215, 42),
-             (206, 63), (187, 70), (174, 48)],
+            [(168, 0), (239, 0), (238, 26), (226, 47),
+             (211, 56), (181, 54), (168, 33)],
         ],
+        "smoke_clone_offset": (92, 0),
         "cold_sources": [
             # Closed arched windows and the two still-bright wall lanterns.
             (158, 225, 18, 32), (275, 227, 18, 33),
@@ -84,11 +85,12 @@ PLATES = {
         "clone_offsets": [],
         "figures": [],
         "smoke": [
-            [(75, 319), (108, 314), (124, 340), (128, 375),
-             (116, 400), (99, 413), (91, 389), (79, 369)],
+            [(58, 304), (125, 302), (134, 339), (138, 376),
+             (123, 411), (84, 415), (64, 383), (53, 337)],
         ],
         "cold_sources": [],
-        "boundary": [(0, 322), (55, 316), (94, 305), (135, 323),
+        "smoke_clone_offset": (106, 0),
+        "boundary": [(0, 299), (55, 316), (94, 305), (135, 323),
                      (213, 352), (416, 354), (686, 414),
                      (705, 588), (680, 723), (0, 723)],
     },
@@ -159,16 +161,26 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     # transfer preserves actual painted detail and adjusts local brightness.
     painted_bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
 
-    # Remove only the actual smoke strokes (rather than the entire roof).
-    # This is a pixel-source fix, not a runtime particle disable or black veil. The
-    # surrounding roof/foliage texture is reconstructed locally; the active
-    # panorama is never touched.
+    # Remove baked-in smoke using nearby authentic roof and foliage texture.
+    # Broad inpainting created gray smears, so feathered source replacement is
+    # confined to the chimney plume. The occupied painting remains untouched.
     if plan.get("smoke"):
+        dx, dy = plan["smoke_clone_offset"]
         smoke_mask = np.zeros((h, w), dtype=np.uint8)
         for polygon in plan["smoke"]:
             cv2.fillPoly(smoke_mask, [np.asarray(polygon, np.int32)], 255)
-        smoke_mask = cv2.dilate(smoke_mask, np.ones((3, 3), np.uint8), iterations=1)
-        painted_bgr = cv2.inpaint(painted_bgr, smoke_mask, 3, cv2.INPAINT_TELEA)
+        alpha = cv2.GaussianBlur(smoke_mask.astype(np.float32) / 255, (0, 0), 4.0)
+        affected_y, affected_x = np.where(alpha > 0.001)
+        if len(affected_x):
+            x0, x1 = max(0, affected_x.min() - 2), min(w, affected_x.max() + 3)
+            y0, y1 = max(0, affected_y.min() - 2), min(h, affected_y.max() + 3)
+            clone = painted_bgr[y0 + dy:y1 + dy, x0 + dx:x1 + dx].copy()
+            if clone.shape[:2] != (y1 - y0, x1 - x0):
+                raise SystemExit("Dormant smoke texture source is outside panorama")
+            a = alpha[y0:y1, x0:x1, None]
+            painted_bgr[y0:y1, x0:x1] = (
+                painted_bgr[y0:y1, x0:x1] * (1 - a) + clone * a
+            ).astype(np.uint8)
 
     for polygon, (dx, dy) in zip(plan["figures"], plan["clone_offsets"], strict=True):
         xs, ys = zip(*polygon)
@@ -232,10 +244,14 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     # looking inhabited. A shared, locally masked OFF treatment must remove
     # the *light source*, not darken the entire building or courtyard.
     for x, y, rx, ry in plan.get("cold_sources", []):
-        r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
-        source_mask = (np.clip((1 - r2) * 3.0, 0, 1) ** 1.2 * .98).astype(np.float32)
+        # Never blacken painted stone. Only bright pixels at the source core
+        # may dim; retain dark window frames and iron lamp housings.
+        r2 = ((xx - x) / (rx * .55)) ** 2 + ((yy - y) / (ry * .58)) ** 2
+        core = np.clip((1 - r2) * 2.0, 0, 1) ** 1.1
+        emissive = np.clip((np.max(painted, axis=2) - 58) / 125, 0, 1)
+        source_mask = (core * emissive * .94).astype(np.float32)
         gray = painted[:, :, 0] * .24 + painted[:, :, 1] * .58 + painted[:, :, 2] * .18
-        off = np.stack((gray * .12, gray * .13, gray * .16), axis=-1)
+        off = np.stack((gray * .22, gray * .24, gray * .28), axis=-1)
         painted = painted * (1 - source_mask[:, :, None]) + off * source_mask[:, :, None]
 
     cutout = Image.new("L", SIZE, 0)
