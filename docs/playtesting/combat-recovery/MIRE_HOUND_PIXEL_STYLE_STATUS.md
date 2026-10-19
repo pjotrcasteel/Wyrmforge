@@ -10,7 +10,7 @@ Real iPhone acceptance failed on `0.0.125`: Mire Hound was a smooth, detailed pa
 - Use the pre-existing 50×34 Mire Hound world-art bounds, 13-world-unit nominal collision radius, existing 16 pose atlas slots, sharp pixel filtering and the same shared atlas as the mage.
 - Re-author the dog as pixel shapes: low long canine silhouette, four distinct articulated limbs, shoulder/haunch masses, exposed ribs, ragged hooked bone ridge, heavy muzzle, amber eyes, restrained brown/bone/ember palette. The card is **not** scaled down into the frame.
 - Eight travel-driven diagonal-trot states, four foot contacts, windup crouch, committed pounce, recovery, genuine hurt, and identity-gated corpse. The canonical C# speed, collision and damage remain unchanged.
-- Preserve original highly textured assets as a reference but **do not load** them in regular gameplay or into GPU memory.
+- Keep existing painterly art in **ordinary hunts** until the owner approves the pixel version on an actual iPhone. Only `/enemy-lab?kind=MireHound&mireStyle=pixel` opts into the new native atlas; the lab skips decoding the superseded painted sheets in this mode.
 - Support camera scale and limit per-frame Canvas allocations: authored poses are baked by `tools/art/build-art.mjs` into the shared cached actor atlas.
 
 Research basis already recorded in the recovery handover: Carlisle et al. canine diagonal trot/ground contact (https://pubmed.ncbi.nlm.nih.gov/31122684/) and GDC / Mariel Cartwright on readable anticipation and attack follow-through (https://www.gdcvault.com/play/1021657/Powerful-and-Effective-Animation-for), balanced against the playable WyrmForge mage and the original creature card.
@@ -18,12 +18,20 @@ Research basis already recorded in the recovery handover: Carlisle et al. canine
 ## Checkpoints
 - [x] New branch off current main; repository and source checked before edits.
 - [x] Authored Mire Hound pixel sprites and game renderer selection pushed remotely.
-- [ ] Auto-baked `actors.png` and `art/manifest.json` are committed on this remote branch and `node tools/art/build-art.mjs --check` succeeds.
-- [ ] Test actual lab `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false` at a mobile viewport.
+- [x] Baked `actors.png` and `art/manifest.json` pushed and remote SHA verified by the [Mire Hound atlas workflow](https://github.com/pjotrcasteel/Wyrmforge/actions/workflows/mire-hound-art-checkpoint.yml). `node tools/art/build-art.mjs --check` and the focused JavaScript gait tests passed in that workflow.
+- [ ] Complete the 390×844 CI mobile browser test and real-game before/after screenshots for `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=pixel` versus `mireStyle=painted`. The Playwright test is committed but its latest workflow must finish.
 - [ ] Compare at **identical zoom and viewport** with original card and pre-change production screenshot.
 - [ ] Capture in-game idle/travel/turn/windup/bite/real nonlethal hit/real death; check paw phases against actual world movement.
 - [ ] Verify all CI and real browser smoke; obtain owner approval on iPhone before merge.
 - [ ] Integrate future real C# lifecycle from draft PR #136 after reconciling with main, not by copying speculative frontend timing. Until then this is **a visual recovery slice, not a finished animation overhaul**.
+
+## Owner comparison (preview only)
+
+After the preview PR is validated and merged, load the same real simulation at a fixed seed, without changing regular hunts:
+- New authored native pixel version: `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=pixel`
+- Currently published version: `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=painted`
+
+Selecting **Mire Hound art → Current art / Pixel preview** in the lab reloads the actual Canvas/simulation and leaves ordinary hunts intact. These links are not a claim that the preview exists on live Pages before merge/deploy.
 
 ## Concurrency notes
 The unmerged draft PR #136 contains other Fire/Frost lifecycle changes and earlier experimental UI modifications. This task starts from main (including merged developer-lab PR #137) to avoid exposing the rest of the unfinished art overhaul. Reconcile #136 before merging any overlapping edits; do **not** treat passing tests or a published atlas as visual sign-off.
