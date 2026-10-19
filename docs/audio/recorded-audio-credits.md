@@ -49,3 +49,17 @@ For each of Arcane, Fire, Frost and Lightning, v0.0.110 additionally imports thr
 ## Upgrade-reward listening revision (v0.0.111)
 
 The **upgrade revealed** cue now points to rubberduck's existing CC0 `item_gem_01.ogg` recording (also used for the normal relic pickup); it no longer uses JC Sounds' Magic Shield activation. The **upgrade chosen** cue retains JC Sounds' CC BY 4.0 `Healing Chime_01.wav` source with new runtime mix adjustments. Both are played at reduced relative gain, with gentle low-pass filtering and dedicated envelope releases. No new third-party asset or license was introduced.
+
+
+## Hunt entry bell removal (19 October 2026)
+
+The recorded `hunt-start` cue previously used JC Sounds' `Magic Shield_Activation_01.wav`, producing a repeated bell-like sound when entering from the town gate and when choosing ordinary arena map nodes.
+
+It now uses **Kenney — RPG Audio**, `doorOpen_1.ogg` (CC0), a physical door-opening recording.
+Official source: https://kenney.nl/assets/rpg-audio
+Verified Ogg mirror: https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_1.ogg
+SHA-256 of the original and deployed Ogg: `4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b`.
+
+Playback applies reduced gain, a low-pass filter and short fades. The game event name stays `hunt-start`, so both browser and future native mobile adapters can keep the same semantic trigger. The generic menu click is suppressed on hunt entry controls to prevent double playback.
+
+This is a narrow regression fix; the broader three-palette audition remains in draft PR #128 for human listening approval.
