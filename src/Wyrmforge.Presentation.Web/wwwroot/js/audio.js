@@ -89,6 +89,7 @@
         if (!enabled) return;
         unlocked = true;
         ensureContext();
+        prewarmTransitions();
         startMusicFromGesture();
         syncMusic();
     }
@@ -122,6 +123,7 @@
             if (manifest.version !== 2 || !manifest.cues?.arcane?.variants?.length || !manifest.cues?.fire?.variants?.length || !manifest.cues?.frost?.variants?.length || !manifest.cues?.lightning?.variants?.length ||
                 !manifest.music?.menu || !manifest.music?.hunt) throw new Error('Incomplete recorded fantasy audio manifest');
             recordedManifest = manifest;
+            prewarmTransitions();
             if (status) status.textContent = 'RECORDED AUDIO READY';
             startMusicFromGesture(); // May be blocked outside a gesture; the next tap retries both tracks.
             syncMusic();
@@ -144,6 +146,18 @@
         recordedBuffers.set(entry.file, pending);
         pending.catch(() => recordedBuffers.delete(entry.file));
         return pending;
+    }
+
+    // These shared semantic events can be implemented by a Web Audio or future native mobile adapter.
+    // Preload compact, often-used transitions; never block navigation if a recording is unavailable.
+    function prewarmTransitions() {
+        if (!recordedManifest || !context || !enabled) return;
+        for (const name of ['building-open', 'hunt-start', 'trail-enter', 'threat-reveal']) {
+            const cue = recordedManifest.cues?.[name];
+            for (const entry of cue ? [cue, ...(cue.layers ?? [])] : []) {
+                void loadRecordedBuffer(entry).catch(() => {});
+            }
+        }
     }
 
     function recordedEntry(name, type, variation) {
@@ -237,6 +251,13 @@
         const entry = recordedEntry(name, 'cast', count);
         if (!entry) return false;
         if (!playRecordedEntry(entry, sound, name, count, isSpell ? 0.72 : 1)) return false;
+        // The departure gesture is one semantic event made from physical sound layers.
+        // Distinct delay and gain profiles are declared in the portable manifest.
+        if (entry.layers?.length) {
+            for (const layer of entry.layers) {
+                playRecordedEntry(layer, sound, name + '-layer', count, layer.gainScale ?? 1, layer.delaySeconds ?? 0);
+            }
+        }
         variants.set(name, count + 1);
         lastCue.set(name, now);
         if (isSpell) {
@@ -656,9 +677,10 @@
         const button = event.target.closest('button');
         if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
         if (button.closest('.wyrmforge-sound-controls') || button.getAttribute('data-sound-cue') === 'none') return;
-        // Hunt entry already emits a physical 'hunt-start' sound from Blazor; do not add a generic click.
+        // Hunt entry already emits 'hunt-start' from Blazor. Never stack an unrelated menu click on it.
         if (button.matches('.town-door--gate, .enter-realm, .gate-cta')) return;
-        play('ui');
+        const cue = button.getAttribute('data-sound-cue');
+        play(cue && design?.palette[cue] ? cue : 'ui');
     });
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && lab && !lab.hidden) toggleLab();

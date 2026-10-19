@@ -63,3 +63,33 @@ SHA-256 of the original and deployed Ogg: `4ab93bab96522d8eb109ff96dc57cb6765deb
 Playback applies reduced gain, a low-pass filter and short fades. The game event name stays `hunt-start`, so both browser and future native mobile adapters can keep the same semantic trigger. The generic menu click is suppressed on hunt entry controls to prevent double playback.
 
 This is a narrow regression fix; the broader three-palette audition remains in draft PR #128 for human listening approval.
+
+
+## Semantic transition redesign — 19 October 2026
+
+Following listening feedback, we no longer map a *door* sound to `hunt-start`. Physical doors have the distinct `building-open` event; the hunt signals a hunter leaving the Refuge, followed by separate `trail-enter` events for successive arena nodes and `threat-reveal` for rare dangerous arrivals.
+
+**Research** supporting this decision:
+- FMOD's event-based design separates *gameplay intent* from sample selection and sound output: https://www.fmod.com/docs/2.04/studio/authoring-events.html
+- *Diablo II* sound designers used grounded Foley and precise material details to support world credibility: https://www.gamedeveloper.com/audio/how-audio-design-enhances-diablo-2
+- Power Up Audio's GDC talk on *TUNIC* stresses deriving sounds from actual gameplay and defining creative direction before choosing samples: https://www.gdcvault.com/play/1029369/The-TUNIC-Audio
+- Real smartphone speakers need their own review, particularly as low-frequency weight may be inaudible: https://aes.org/publications/elibrary/elibrary-page/?id=13399
+- Wwise documents layered composition (Blend Containers) and sample variation via Shuffle/Random Containers: https://www.audiokinetic.com/en/public-library/2024.1.4_8780/?id=creating_random_container&source=Help
+- Gaetan Troutet's game-audio lecture on restraint cautions that every extra sound consumes the listener's attention: https://blogs.napier.ac.uk/sounddesign/2026/04/20/gaetan-troutet-game-audio-sound-design/
+
+**New portable semantic events (candidate mixes, subject to listening on real devices):**
+
+| Event | Physical recordings | Meaning |
+| --- | --- | --- |
+| `building-open` | Kenney `doorOpen_1.ogg` | Enter a town building |
+| `hunt-start` | Kenney `footstep00.ogg`, `cloth1.ogg` and `footstep02.ogg` | Commit to a new expedition |
+| `trail-enter` | Kenney `footstep02.ogg` | Move into the next arena node |
+| `threat-reveal` | Kenney `creak1.ogg` | Dangerous encounter or elite reveal |
+| `wyrm` | Existing rubberduck creature roar | Wyrm entry; unchanged |
+
+The recordings are from **Kenney RPG Audio (CC0)**, official source https://kenney.nl/assets/rpg-audio,
+with exact Ogg bytes from https://github.com/Mcamento8/open-game-sfx-index/tree/main/audio/rpg-audio .
+Their individual SHA-256 hashes are in `audio/recorded/manifest.json`, which is the portable semantic contract.
+No third-party recordings are streamed at runtime. Different Foley layers are delayed and mixed through Web Audio today; native iOS/Android implementations can consume the same manifest without depending on browser APIs.
+
+A sound is not artistically approved just because hash/semantic tests pass. In-game listening must confirm the player's impression is `departing into danger`, rather than `opening a door` or `clicking an icon`. Reject and rework the candidate if it is too weak through a phone speaker.
