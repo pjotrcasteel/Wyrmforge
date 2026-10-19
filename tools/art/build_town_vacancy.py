@@ -86,7 +86,7 @@ PLATES = {
         "figures": [],
         "smoke": [
             [(58, 304), (125, 302), (134, 339), (138, 376),
-             (123, 411), (84, 415), (64, 383), (53, 337)],
+             (126, 420), (89, 423), (64, 383), (53, 337)],
         ],
         "cold_sources": [],
         "smoke_clone_offset": (106, 0),
@@ -97,10 +97,10 @@ PLATES = {
     "codex": {
         # Enforced OFF: upper sconces, red/white windows and doorway brazier.
         "cold_sources": [
-            (1661, 113, 19, 28), (1924, 142, 19, 32),
-            (1650, 230, 24, 39), (1744, 244, 23, 39),
+            (1705, 125, 23, 32), (1922, 145, 22, 33),
+            (1676, 230, 24, 39), (1744, 240, 23, 39),
             (1832, 245, 24, 44), (1886, 248, 20, 42),
-            (1940, 290, 30, 31),
+            (1921, 287, 36, 32),
         ],
         "emission_zones": [(1551, 275, 35, 70), (1653, 258, 65, 62),
                            (1729, 191, 35, 56), (1816, 118, 71, 67),
@@ -123,6 +123,12 @@ PLATES = {
         ],
     },
     "legends": {
+        "smoke_clone_offset": (-120, 0),
+        "smoke": [
+            # A sealed Hall of Fame must not burn fuel in its chimney.
+            [(2024, 334), (2087, 330), (2101, 357), (2100, 387),
+             (2080, 422), (2047, 426), (2032, 397), (2023, 358)],
+        ],
         "cold_sources": [
             (1702, 532, 24, 39), (1820, 560, 24, 45),
             (1892, 584, 23, 39), (1983, 603, 25, 47),
@@ -246,9 +252,9 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     for x, y, rx, ry in plan.get("cold_sources", []):
         # Never blacken painted stone. Only bright pixels at the source core
         # may dim; retain dark window frames and iron lamp housings.
-        r2 = ((xx - x) / (rx * .55)) ** 2 + ((yy - y) / (ry * .58)) ** 2
+        r2 = ((xx - x) / (rx * .60)) ** 2 + ((yy - y) / (ry * .62)) ** 2
         core = np.clip((1 - r2) * 2.0, 0, 1) ** 1.1
-        emissive = np.clip((np.max(painted, axis=2) - 58) / 125, 0, 1)
+        emissive = np.clip((np.max(painted, axis=2) - 41) / 95, 0, 1)
         source_mask = (core * emissive * .94).astype(np.float32)
         gray = painted[:, :, 0] * .24 + painted[:, :, 1] * .58 + painted[:, :, 2] * .18
         off = np.stack((gray * .22, gray * .24, gray * .28), axis=-1)
