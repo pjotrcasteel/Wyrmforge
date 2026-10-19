@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  whitefang-actual-game:
+  canine-actual-game:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -55,11 +55,11 @@ jobs:
           git show 5d6b0df1e6e3e12fe6a43abef1ec4a0021a07ada:src/Wyrmforge.Presentation.Web/wwwroot/art/actors.png > artifacts/baseline/actors.png
           git show 5d6b0df1e6e3e12fe6a43abef1ec4a0021a07ada:src/Wyrmforge.Presentation.Web/wwwroot/art/manifest.json > artifacts/baseline/manifest.json
 
-      - name: Capture real Whitefang before/after at identical resolution
+      - name: Capture real canine before/after at identical resolution
         env:
           WEB_ROOT: ${{ github.workspace }}/artifacts/web/wwwroot
           BASELINE_ART_ROOT: ${{ github.workspace }}/artifacts/baseline
-          ACTORS: whitefang
+          ACTORS: mire-hound,whitefang
         run: |
           CAPTURE_MODE=before node tools/art/capture-combat-recovery.cjs
           unset BASELINE_ART_ROOT
@@ -69,13 +69,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/playtesting/combat-recovery/evidence/before/whitefang* docs/playtesting/combat-recovery/evidence/after/whitefang*
-          git add docs/playtesting/combat-recovery/evidence/before/art-results-whitefang.json docs/playtesting/combat-recovery/evidence/after/art-results-whitefang.json
+          git add docs/playtesting/combat-recovery/evidence/before/mire-hound* docs/playtesting/combat-recovery/evidence/before/whitefang*
+          git add docs/playtesting/combat-recovery/evidence/after/mire-hound* docs/playtesting/combat-recovery/evidence/after/whitefang*
+          git add docs/playtesting/combat-recovery/evidence/before/art-results-mire-hound-whitefang.json docs/playtesting/combat-recovery/evidence/after/art-results-mire-hound-whitefang.json
           if git diff --cached --quiet; then
             echo "No changed evidence to publish."
             exit 0
           fi
-          git commit -m "test: checkpoint genuine Whitefang gameplay recordings and metrics"
+          git commit -m "test: checkpoint genuine canine gameplay recordings and metrics"
           git fetch origin codex/fire-frost-lifecycle-20261019
           git rebase origin/codex/fire-frost-lifecycle-20261019
           git push origin HEAD:codex/fire-frost-lifecycle-20261019
@@ -87,11 +88,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fire-frost-whitefang-evidence-${{ github.sha }}
+          name: fire-frost-canine-evidence-${{ github.sha }}
           path: |
             docs/playtesting/combat-recovery/evidence/before/whitefang*
+            docs/playtesting/combat-recovery/evidence/before/mire-hound*
             docs/playtesting/combat-recovery/evidence/after/whitefang*
-            docs/playtesting/combat-recovery/evidence/before/art-results-whitefang.json
-            docs/playtesting/combat-recovery/evidence/after/art-results-whitefang.json
+            docs/playtesting/combat-recovery/evidence/after/mire-hound*
+            docs/playtesting/combat-recovery/evidence/before/art-results-mire-hound-whitefang.json
+            docs/playtesting/combat-recovery/evidence/after/art-results-mire-hound-whitefang.json
           if-no-files-found: warn
           retention-days: 14
