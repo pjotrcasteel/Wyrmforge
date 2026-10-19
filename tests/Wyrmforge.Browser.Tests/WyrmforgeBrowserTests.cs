@@ -288,9 +288,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "REFUGE", Exact = true })).ToBeVisibleAsync();
         var nav = Page.Locator("nav.menu-actions button");
-        await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToBeDisabledAsync();
-        await Expect(nav.Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
-        await Expect(nav.Filter(new() { HasText = "Codex" })).ToBeDisabledAsync();
+        await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(nav.Filter(new() { HasText = "Forge" })).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(nav.Filter(new() { HasText = "Codex" })).ToHaveAttributeAsync("data-town-state", "vacant");
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
@@ -380,7 +380,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" })).ToBeVisibleAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
-        await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
+        await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Forge" })).ToHaveAttributeAsync("data-town-state", "vacant");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
