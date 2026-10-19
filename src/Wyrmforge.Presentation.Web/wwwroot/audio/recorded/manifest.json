@@ -365,11 +365,18 @@
     },
     "hunt-start": {
       "file": "hunt-start.ogg",
-      "source": "Fantasy SFX Pack Vol 1/Single_Fantasy SFX Pack Vol 1_Magic Shield_Activation_01.wav",
-      "library": "fantasy",
-      "author": "JC Sounds",
-      "license": "CC-BY-4.0",
-      "sha256": "24c37851adeb55a07d78cbac7c05c74175fd21fbb07422d04191b26023bc9d3e"
+      "source": "doorOpen_1.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
+      "intent": "Physical wooden gate opening for hunt and trail entry; no magical bell or shield tone.",
+      "mix": {
+        "gain": 0.42,
+        "lowpassHz": 3300,
+        "attackSeconds": 0.012,
+        "releaseSeconds": 0.18
+      }
     },
     "victory": {
       "file": "victory.ogg",
@@ -420,6 +427,17 @@
       "author": "rubberduck",
       "license": "CC0",
       "originalSha256": "1c2f06ff4e8563b5b8b745b23cf213c1474142a69bb82bd8f5e10d9b3f7a7bbd"
+    },
+    {
+      "key": "kenney-rpg",
+      "url": "https://kenney.nl/assets/rpg-audio",
+      "sourcePage": "https://kenney.nl/assets/rpg-audio",
+      "author": "Kenney",
+      "license": "CC0",
+      "originalSha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
+      "sourceFile": "doorOpen_1.ogg",
+      "mirror": "https://github.com/Mcamento8/open-game-sfx-index/blob/main/audio/rpg-audio/doorOpen_1.ogg",
+      "gitBlobSha": "7df28265312494fc053380002e551b001dea89ad"
     }
   ],
   "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
