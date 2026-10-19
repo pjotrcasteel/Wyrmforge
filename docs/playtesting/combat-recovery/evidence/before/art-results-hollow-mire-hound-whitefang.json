@@ -1,6 +1,6 @@
 {
   "mode": "before",
-  "base": "http://127.0.0.1:40151/",
+  "base": "http://127.0.0.1:41275/",
   "results": [
     {
       "name": "hollow",
@@ -23,11 +23,11 @@
         "pointerId": null,
         "touchId": null,
         "player": {
-          "x": 601.0053967746537,
-          "y": 439.5921572814025,
+          "x": 783.7115998578888,
+          "y": 614,
           "radius": 14,
           "barrier": false,
-          "aimAngle": -1.9305803838801487,
+          "aimAngle": -2.187975183946011,
           "manualAim": false,
           "aimTargetId": 1,
           "focusCharge": 0,
@@ -39,71 +39,8 @@
         "exit": null,
         "enemies": [
           {
-            "x": 529.9992203006731,
-            "y": 250.82442954324696,
-            "radius": 11,
-            "frozen": false,
-            "healthRatio": 1,
-            "hitFlash": false,
-            "statuses": [],
-            "kind": 0,
-            "entityId": 1,
-            "telegraph": null,
-            "shieldFacing": null,
-            "animationPhase": null,
-            "animationFacingX": null,
-            "routed": false,
-            "revived": false,
-            "opacity": 1,
-            "elite": null,
-            "empowered": false,
-            "rimeArmor": 0
-          }
-        ],
-        "deathBursts": [],
-        "dragon": null,
-        "dragonBreath": null,
-        "performance": {
-          "fps": 59,
-          "simulationHz": 59,
-          "simulationMilliseconds": 0,
-          "bridgeMilliseconds": 4.902272727271669
-        },
-        "renderingFailed": false
-      },
-      "end": {
-        "active": true,
-        "movement": {
-          "x": 0,
-          "y": 0
-        },
-        "aim": {
-          "x": 0,
-          "y": 0
-        },
-        "projectiles": [],
-        "castMotion": null,
-        "pointerId": null,
-        "touchId": null,
-        "player": {
-          "x": 397.0989157065866,
-          "y": 581.8283409754678,
-          "radius": 14,
-          "barrier": false,
-          "aimAngle": -0.46800068141774187,
-          "manualAim": false,
-          "aimTargetId": 1,
-          "focusCharge": 0,
-          "wardCharge": null,
-          "chill": 0,
-          "onBlackIce": false
-        },
-        "world": null,
-        "exit": null,
-        "enemies": [
-          {
-            "x": 593.3128755726168,
-            "y": 482.65135841376275,
+            "x": 570.2757367496191,
+            "y": 313.24147830671393,
             "radius": 11,
             "frozen": false,
             "healthRatio": 1,
@@ -130,7 +67,70 @@
           "fps": 60,
           "simulationHz": 60,
           "simulationMilliseconds": 0,
-          "bridgeMilliseconds": 2.652173913044111
+          "bridgeMilliseconds": 3.1543478260864504
+        },
+        "renderingFailed": false
+      },
+      "end": {
+        "active": true,
+        "movement": {
+          "x": 0,
+          "y": 0
+        },
+        "aim": {
+          "x": 0,
+          "y": 0
+        },
+        "projectiles": [],
+        "castMotion": null,
+        "pointerId": null,
+        "touchId": null,
+        "player": {
+          "x": 247.19523888647868,
+          "y": 364.6433939366497,
+          "radius": 14,
+          "barrier": false,
+          "aimAngle": 0.4082490755570168,
+          "manualAim": false,
+          "aimTargetId": 1,
+          "focusCharge": 0,
+          "wardCharge": null,
+          "chill": 0,
+          "onBlackIce": false
+        },
+        "world": null,
+        "exit": null,
+        "enemies": [
+          {
+            "x": 520.55339437603,
+            "y": 482.8847658463233,
+            "radius": 11,
+            "frozen": false,
+            "healthRatio": 1,
+            "hitFlash": false,
+            "statuses": [],
+            "kind": 0,
+            "entityId": 1,
+            "telegraph": null,
+            "shieldFacing": null,
+            "animationPhase": null,
+            "animationFacingX": null,
+            "routed": false,
+            "revived": false,
+            "opacity": 1,
+            "elite": null,
+            "empowered": false,
+            "rimeArmor": 0
+          }
+        ],
+        "deathBursts": [],
+        "dragon": null,
+        "dragonBreath": null,
+        "performance": {
+          "fps": 60,
+          "simulationHz": 60,
+          "simulationMilliseconds": 0,
+          "bridgeMilliseconds": 2.7217391304347194
         },
         "renderingFailed": false
       },
@@ -163,11 +163,11 @@
         "pointerId": null,
         "touchId": null,
         "player": {
-          "x": 594.6813268475593,
-          "y": 414.25838156905706,
+          "x": 796.9754622298142,
+          "y": 598.8780042089925,
           "radius": 14,
           "barrier": false,
-          "aimAngle": -2.0967071012771186,
+          "aimAngle": -2.3723207474550945,
           "manualAim": false,
           "aimTargetId": 1,
           "focusCharge": 0,
@@ -179,8 +179,8 @@
         "exit": null,
         "enemies": [
           {
-            "x": 490.2669983168268,
-            "y": 235.89475032394364,
+            "x": 522.6328209008823,
+            "y": 333.74028028201843,
             "radius": 13,
             "frozen": false,
             "healthRatio": 1,
@@ -204,10 +204,10 @@
         "dragon": null,
         "dragonBreath": null,
         "performance": {
-          "fps": 55,
-          "simulationHz": 55,
+          "fps": 60,
+          "simulationHz": 60,
           "simulationMilliseconds": 0,
-          "bridgeMilliseconds": 7.024390243902439
+          "bridgeMilliseconds": 3.060869565215873
         },
         "renderingFailed": false
       },
@@ -226,11 +226,11 @@
         "pointerId": null,
         "touchId": null,
         "player": {
-          "x": 746.0597737037181,
-          "y": 614,
+          "x": 783.7839625306121,
+          "y": 388.20615344937073,
           "radius": 14,
           "barrier": false,
-          "aimAngle": -2.883331208293576,
+          "aimAngle": 2.0220018900885615,
           "manualAim": false,
           "aimTargetId": 1,
           "focusCharge": 0,
@@ -242,8 +242,8 @@
         "exit": null,
         "enemies": [
           {
-            "x": 664.0956838816472,
-            "y": 592.3482994269157,
+            "x": 684.798890776505,
+            "y": 594.052287086033,
             "radius": 13,
             "frozen": false,
             "healthRatio": 1,
@@ -253,8 +253,8 @@
             "entityId": 1,
             "telegraph": null,
             "shieldFacing": null,
-            "animationPhase": "Retreat",
-            "animationFacingX": 0.6528017708412704,
+            "animationPhase": "Stalk",
+            "animationFacingX": 0.6524094955649121,
             "routed": false,
             "revived": false,
             "opacity": 1,
@@ -270,7 +270,7 @@
           "fps": 60,
           "simulationHz": 60,
           "simulationMilliseconds": 0,
-          "bridgeMilliseconds": 3.186956521739257
+          "bridgeMilliseconds": 2.4913043478281116
         },
         "renderingFailed": false
       },
@@ -309,11 +309,11 @@
         "pointerId": null,
         "touchId": null,
         "player": {
-          "x": 621.5537694453559,
-          "y": 392.28436864819093,
+          "x": 804.5710012420794,
+          "y": 560.3457784728147,
           "radius": 14,
           "barrier": false,
-          "aimAngle": -2.2249374439385927,
+          "aimAngle": -2.407157291520221,
           "manualAim": false,
           "aimTargetId": 1,
           "focusCharge": 0,
@@ -325,8 +325,8 @@
         "exit": null,
         "enemies": [
           {
-            "x": 484.5037426869611,
-            "y": 215.0086828987581,
+            "x": 513.0913635654325,
+            "y": 297.58470372373716,
             "radius": 13,
             "frozen": false,
             "healthRatio": 1,
@@ -350,10 +350,10 @@
         "dragon": null,
         "dragonBreath": null,
         "performance": {
-          "fps": 59,
-          "simulationHz": 59,
+          "fps": 60,
+          "simulationHz": 60,
           "simulationMilliseconds": 0,
-          "bridgeMilliseconds": 5.018181818183538
+          "bridgeMilliseconds": 3.2266666666669255
         },
         "renderingFailed": false
       },
@@ -372,11 +372,11 @@
         "pointerId": null,
         "touchId": null,
         "player": {
-          "x": 438.4338913973925,
-          "y": 579.1924877712665,
+          "x": 291.8036335641231,
+          "y": 392.20663664537807,
           "radius": 14,
           "barrier": false,
-          "aimAngle": 0.13024850066754834,
+          "aimAngle": 0.4434812773425119,
           "manualAim": false,
           "aimTargetId": 1,
           "focusCharge": 0,
@@ -388,8 +388,8 @@
         "exit": null,
         "enemies": [
           {
-            "x": 722.6673750186526,
-            "y": 615.8594133710909,
+            "x": 653.7414564209272,
+            "y": 563.800840746142,
             "radius": 13,
             "frozen": false,
             "healthRatio": 1,
@@ -400,7 +400,7 @@
             "telegraph": null,
             "shieldFacing": null,
             "animationPhase": "Prowl",
-            "animationFacingX": -0.22550471525164908,
+            "animationFacingX": -0.21932392060323483,
             "routed": false,
             "revived": false,
             "opacity": 1,
@@ -416,7 +416,7 @@
           "fps": 60,
           "simulationHz": 60,
           "simulationMilliseconds": 0,
-          "bridgeMilliseconds": 2.8999999999998733
+          "bridgeMilliseconds": 2.4217391304340232
         },
         "renderingFailed": false
       },
