@@ -74,16 +74,45 @@ test('each walking variant has separately authored lower-body pixel art, with no
     } finally { globalThis.document=original; }
 });
 
-test('mire hounds step on a contact beat and never animate when standing still', () => {
-    const state=createEnemyMotionState();
-    const hound={entityId:221,x:0,y:0,kind:1};
-    assert.equal(updateEnemyMotions(state,[hound],0).get(221),0);
-    assert.equal(updateEnemyMotions(state,[{...hound,x:5}],.05).get(221),0,
-        'The second pose is a planted contact, not a teleporting paw.');
-    assert.equal(updateEnemyMotions(state,[{...hound,x:9}],.09).get(221),2,
-        'The opposite diagonal should take the next stride.');
-    assert.equal(updateEnemyMotions(state,[{...hound,x:9}],.4).get(221),0,
-        'Standing hounds return to the grounded pose.');
-    assert.equal(updateEnemyMotions(state,[{...hound,x:12}],.41,true).get(221),0,
-        'Accessibility settings suppress motion changes.');
+test('both canines use all eight travel-driven poses and stop on freeze, rest, teleport and reduced motion', () => {
+    for (const kind of [1, 12]) {
+        const state = createEnemyMotionState(), hound = {entityId:221,x:0,y:0,kind};
+        assert.equal(updateEnemyMotions(state,[hound],0).get(221),0);
+        const poses = [];
+        for (let i=1;i<=8;i++) poses.push(updateEnemyMotions(state,[{...hound,x:i*2}],i*.02).get(221));
+        assert.deepEqual([...poses].sort((a,b)=>a-b),[8,9,10,11,12,13,14,15]);
+        assert.equal(updateEnemyMotions(state,[{...hound,x:16}],.5).get(221),0,'Rest returns to planted paws');
+        assert.equal(updateEnemyMotions(state,[{...hound,x:18,frozen:true}],.51).get(221),0);
+        assert.equal(updateEnemyMotions(state,[{...hound,x:20}],.52,true).get(221),0);
+        assert.equal(updateEnemyMotions(state,[{...hound,x:200}],.53).get(221),0,'Teleport resets stride');
+        assert.equal(updateEnemyMotions(state,[{...hound,x:201}],.01).get(221),0,'New clock resets stride');
+    }
+});
+
+test('canine strikes follow committed windups and recover, while cancelled windups remain quiet', () => {
+    for (const kind of [0,1,5,12]) {
+        const state=createEnemyMotionState(), hound={entityId:77,x:1,y:1,kind};
+        updateEnemyMotions(state,[{...hound,telegraph:{progress:.8}}],0);
+        assert.equal(updateEnemyMotions(state,[hound],.05).get(77),4);
+        assert.equal(updateEnemyMotions(state,[hound],.17).get(77),5);
+        assert.equal(updateEnemyMotions(state,[hound],.4).get(77),0);
+        updateEnemyMotions(state,[{...hound,telegraph:{progress:.2}}],.5);
+        assert.equal(updateEnemyMotions(state,[hound],.55).get(77),0,'An interrupted anticipation is not a strike');
+        updateEnemyMotions(state,[{...hound,telegraph:{progress:.9}}],.6);
+        assert.equal(updateEnemyMotions(state,[{...hound,frozen:true}],.65).get(77),0);
+        assert.equal(updateEnemyMotions(state,[hound],.7).get(77),0,'Thawing cannot invent a strike');
+    }
+});
+
+
+test('slow subpixel movement accumulates the same canine stride at different render frame rates', () => {
+    const poseAt = steps => {
+        const state=createEnemyMotionState(), enemy={entityId:9,x:0,y:0,kind:12};
+        updateEnemyMotions(state,[enemy],0);
+        let phase;
+        for(let i=1;i<=steps;i++) phase=updateEnemyMotions(state,[{...enemy,x:10.5*i/steps}],i/steps).get(9);
+        return phase;
+    };
+    assert.equal(poseAt(20),13);
+    assert.equal(poseAt(144),13,'A high refresh display must not drop subpixel strides');
 });

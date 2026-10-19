@@ -1,0 +1,53 @@
+using Wyrmforge.Application.Runs.Development;
+using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Spells;
+
+namespace Wyrmforge.Application.Runs.Simulation;
+
+public sealed partial class RunSimulation
+{
+    internal void StartDevelopmentEnemy(DevelopmentEnemySetup setup)
+    {
+        setup.Validate();
+        developmentHunt = true;
+        developmentInvulnerable = true;
+        arenaWidth = viewportWidth = setup.Width;
+        arenaHeight = viewportHeight = setup.Height;
+        EnsurePlayerPosition(setup.Width, setup.Height);
+        ChoosePrimary(SpellId.FireBolt);
+        if (!setup.Casting)
+            foreach (var spell in spellCooldowns.Keys) spellCooldowns[spell] = double.PositiveInfinity;
+        var spot = new Vector2D(setup.Width * .55, setup.Height * .32);
+        switch (setup.Kind)
+        {
+            case EnemyKind.BellWarden:
+            case EnemyKind.BellOfWinter:
+                bellRoadKind = setup.Kind;
+                bellWardenSpot = spot;
+                BeginBellWardenFight();
+                break;
+            case EnemyKind.Reliquary:
+            case EnemyKind.ReliquaryWard:
+            case EnemyKind.ReliquaryOfGlass:
+            case EnemyKind.CrystalWard:
+            case EnemyKind.GlassFalseForm:
+                reliquaryKind = setup.Kind is EnemyKind.Reliquary or EnemyKind.ReliquaryWard ? EnemyKind.Reliquary : EnemyKind.ReliquaryOfGlass;
+                reliquarySigil = spot;
+                BeginReliquaryDuel();
+                if (setup.Kind == EnemyKind.ReliquaryWard) PlantWard(reliquary!);
+                if (setup.Kind == EnemyKind.CrystalWard) RaiseCrystalWard(reliquary!);
+                if (setup.Kind == EnemyKind.GlassFalseForm) CastRefractionVeil(reliquary!, reliquary!.GlassReliquary!);
+                break;
+            case EnemyKind.MirrorDouble:
+                SpawnReflectionDouble(spot);
+                break;
+            default:
+                var definition = EnemyCatalog.Get(setup.Kind);
+                var (health, speed) = EnemyStats(definition);
+                enemies.Add(new EnemyState(++enemyId, spot, definition.Radius, health, speed, setup.Kind));
+                RecordEnemyEncounter(setup.Kind);
+                break;
+        }
+    }
+}

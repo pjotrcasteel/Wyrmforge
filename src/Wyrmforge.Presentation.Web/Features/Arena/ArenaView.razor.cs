@@ -105,7 +105,7 @@ public partial class ArenaView : IAsyncDisposable
     }
 
     [JSInvokable]
-    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY)
+    public async Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
     {
         var frameStarted = Stopwatch.GetTimestamp();
         var current = simulation ?? throw new InvalidOperationException("Arena simulation has not been initialized.");
@@ -131,7 +131,7 @@ public partial class ArenaView : IAsyncDisposable
         var previousBellCracks = current.BellWardenCracks;
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
-        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY), width, height);
+        var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
             || hadEssenceChoices != current.PendingDragonEssenceChoices.Count > 0

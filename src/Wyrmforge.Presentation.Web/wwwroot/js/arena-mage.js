@@ -102,7 +102,9 @@ export function drawMage(ctx, player, cast, hit = false, reducedMotion = false, 
 
     // Distinct authored pixel silhouettes express weight transfer and cloak follow-through.
     const currentFrame = mageFrameKey(cast, walkPhase);
-    const face = resolveMageFacing(facing, cast);
+    const aimFacing = Number.isFinite(player.aimAngle) && (player.manualAim || player.aimTargetId != null)
+        ? mageFacing(Math.cos(player.aimAngle), Math.sin(player.aimAngle), facing) : facing;
+    const face = resolveMageFacing(aimFacing, cast);
     const sprite = `mage.${face === 'W' ? 'E' : face}.${currentFrame}${hit ? '.hit' : ''}`;
     const useSprite = artReady() && hasArtFrame('actors', sprite);
     // West reuses the east-facing sprite mirrored; the staff mirrors with it.

@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Navigation;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
@@ -31,7 +31,7 @@ public sealed class WyrmrealmMapStateTests
         {
             var nodes = WyrmrealmMapGenerator.Generate(1, seed);
             foreach (var road in nodes.Where(n => n.Site!.RoadId is not null).GroupBy(n => n.Site!.RoadId))
-                Assert.IsTrue(road.Select(n => n.EncounterKind).Distinct().Count() >= 2);
+                Assert.IsTrue(road.Count() == 1 || road.Select(n => n.EncounterKind).Distinct().Count() >= 2);
             foreach (var node in nodes.Where(n => n.Site!.RoadId is not null))
             foreach (var previous in node.PreviousNodeIds.Select(id => nodes.Single(n => n.Id == id)))
             {
@@ -76,7 +76,7 @@ public sealed class WyrmrealmMapStateTests
             var nodes = WyrmrealmMapGenerator.Generate(1, seed);
             var land = nodes[0].Territory!;
             signatures.Add(string.Join("|", nodes.Select(n => $"{n.Id}:{n.Site!.Point}")));
-            Assert.AreEqual(8, MinimumFights(nodes, nodes.Single(n => n.Type == WyrmrealmNodeType.Dragon)));
+            Assert.AreEqual(WyrmrealmHuntLengthCatalog.Get(1).MinimumCombatEncounters, MinimumFights(nodes, nodes.Single(n => n.Type == WyrmrealmNodeType.Dragon)));
             foreach (var fork in nodes.Where(n => n.Site!.RoadId is null && nodes.Count(next => next.PreviousNodeIds.Contains(n.Id)) > 1))
             {
                 var next = nodes.Where(n => n.PreviousNodeIds.Contains(fork.Id)).ToArray();
@@ -93,7 +93,7 @@ public sealed class WyrmrealmMapStateTests
                 longRoads++;
                 var reward = stops.Single(n => n.Site!.BonusRelic);
                 Assert.IsNotNull(reward.Route!.Reward.Relic);
-                Assert.IsTrue(stops.Length > 3);
+                Assert.AreEqual(WyrmrealmHuntLengthCatalog.Get(1).LongRoadEncounters, stops.Length);
             }
             foreach (var node in nodes)
             {
@@ -208,10 +208,10 @@ public sealed class WyrmrealmMapStateTests
     }
 
     [TestMethod]
-    public void CompletingEightShortestRoadCombatNodes_RevealsUnknownWyrm()
+    public void CompletingTheShortestRoad_RevealsUnknownWyrm()
     {
         var state = new WyrmrealmMapState(seed: 8021);
-        for (var stage = 0; stage < WyrmrealmMapState.CombatStages; stage++)
+        for (var stage = 0; stage < WyrmrealmHuntLengthCatalog.Get(1).MinimumCombatEncounters; stage++)
         {
             Assert.IsNotNull(state.Choose(state.AvailableNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id));
             CompleteEncounter(state);

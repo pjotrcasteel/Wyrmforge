@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Navigation;
 
@@ -10,6 +10,7 @@ public static class WyrmrealmMapGenerator
 
     public static IReadOnlyList<WyrmrealmMapNode> Generate(int depth, int seed, SpellSchool region = SpellSchool.Fire)
     {
+        var pacing = WyrmrealmHuntLengthCatalog.Get(depth);
         var random = new Random(unchecked(seed * 397 ^ depth * 7919));
         var biome = random.Next(3);
         var river = Enumerable.Range(0, 21).Select(i => new HuntPoint(16 + Math.Sin(i * .48 + seed % 13) * 4, i * 5d)).ToArray();
@@ -85,11 +86,11 @@ public static class WyrmrealmMapGenerator
 
         string[] AddRoads(int sector, HuntPoint start, HuntPoint end, int stage, string previousId)
         {
-            var count = random.Next(2, 5);
+            var count = random.Next(2, pacing.MaximumRoadChoices + 1);
             var schools = Enum.GetValues<SpellSchool>().OrderBy(_ => random.Next()).ToArray();
-            var lengths = new List<int> { 2 };
-            for (var i = 1; i < count; i++) lengths.Add(random.NextDouble() < .35 ? 2 : random.NextDouble() < .45 ? 5 : 3);
-            if (lengths.All(length => length == 2)) lengths[^1] = 3;
+            var lengths = new List<int> { pacing.ShortRoadEncounters };
+            for (var i = 1; i < count; i++) lengths.Add(random.NextDouble() < .35 ? pacing.ShortRoadEncounters : random.NextDouble() < .45 ? pacing.LongRoadEncounters : pacing.MediumRoadEncounters);
+            if (lengths.All(length => length == pacing.ShortRoadEncounters)) lengths[^1] = pacing.MediumRoadEncounters;
             var ends = new List<string>();
             for (var lane = 0; lane < count; lane++)
             {
@@ -111,14 +112,15 @@ public static class WyrmrealmMapGenerator
                 }
                 points.Add(end);
                 var roadId = $"road-{sector}-{lane}";
-                var length = fights switch { 2 => "Short", 3 => "Medium", _ => "Long" };
+                var length = fights == pacing.ShortRoadEncounters ? "Short" : fights == pacing.MediumRoadEncounters ? "Medium" : "Long";
+                var hasDetourReward = fights == pacing.LongRoadEncounters;
                 var roadHabitat = RoadHabitat(sector, lane, count, habitatBits);
                 var name = WyrmrealmHabitatCatalog.RoadName(WyrmrealmHabitatCatalog.ForSchool(roadHabitat, region));
-                roads.Add(new(roadId, name, length, fights, points, fights == 5));
+                roads.Add(new(roadId, name, length, fights, points, hasDetourReward));
                 var incoming = previousId;
                 for (var i = 0; i < fights; i++)
                 {
-                    var bonus = fights == 5 && i == fights / 2;
+                    var bonus = hasDetourReward && i == fights / 2;
                     Add($"sector-{sector}-road-{lane}-stop-{i}", stage + Math.Min(i, 1), lane, [incoming], points[i + 1],
                         [points[i], points[i + 1]], roadId, i, bonus, schools[lane], StopHabitat(sector, i, roadHabitat));
                     incoming = drafts[^1].Id;
@@ -126,7 +128,7 @@ public static class WyrmrealmMapGenerator
                 ends.Add(incoming);
             }
             // Cross trails run uphill between neighbouring roads; they never skip a road's first fight
-            // or its reward stop. Equal-or-greater stop indices preserve the quick route's length.
+            // or its reward stop. Advancing exactly one stop preserves the quick route's length.
             var sectorNodes = drafts.Where(d => d.Site.RoadId?.StartsWith($"road-{sector}-") == true).ToArray();
             for (var lane = 0; lane < count - 1; lane++)
             {
@@ -138,7 +140,7 @@ public static class WyrmrealmMapGenerator
                                       from destination in sectorNodes.Where(d => d.Lane == toLane)
                                       where destination.Site.RoadIndex == source.Site.RoadIndex + 1
                                           && destination.Site.Point.Y < source.Site.Point.Y - 1.5
-                                          && (lengths[toLane] != 5 || destination.Site.RoadIndex <= 2)
+                                          && (lengths[toLane] != pacing.LongRoadEncounters || destination.Site.RoadIndex <= lengths[toLane] / 2)
                                       select (source, destination)).ToArray();
                     if (candidates.Length == 0) continue;
                     var link = candidates[random.Next(candidates.Length)];

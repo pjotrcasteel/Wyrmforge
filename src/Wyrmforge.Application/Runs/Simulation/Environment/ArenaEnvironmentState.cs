@@ -93,6 +93,31 @@ public sealed class ArenaEnvironmentState
         return IsBlocked(vertical, width, height, radius) ? horizontal : vertical;
     }
 
+    /// <summary>Authoritative acquisition tests closed masonry and gates, using the same world rectangles as movement.</summary>
+    public bool HasLineOfSight(Vector2D from, Vector2D to, double width, double height)
+    {
+        if (width <= 0 || height <= 0) return true;
+        foreach (var barrier in barriers)
+        {
+            if (IsOpen(barrier)) continue;
+            var enter = 0d;
+            var leave = 1d;
+            if (Clip(from.X, to.X - from.X, barrier.X * width, (barrier.X + barrier.Width) * width, ref enter, ref leave) &&
+                Clip(from.Y, to.Y - from.Y, barrier.Y * height, (barrier.Y + barrier.Height) * height, ref enter, ref leave)) return false;
+        }
+        return true;
+    }
+
+    private static bool Clip(double origin, double delta, double min, double max, ref double enter, ref double leave)
+    {
+        if (Math.Abs(delta) < 1e-9) return origin >= min && origin <= max;
+        var a = (min - origin) / delta;
+        var b = (max - origin) / delta;
+        enter = Math.Max(enter, Math.Min(a, b));
+        leave = Math.Min(leave, Math.Max(a, b));
+        return enter <= leave;
+    }
+
     public bool IsBlocked(Vector2D position, double width, double height, double radius = 0)
     {
         foreach (var barrier in barriers)

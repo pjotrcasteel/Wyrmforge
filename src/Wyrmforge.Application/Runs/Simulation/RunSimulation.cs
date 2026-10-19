@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Checkpoint;
 using Wyrmforge.Application.Runs.Depth;
 using Wyrmforge.Application.Runs.EndRun;
@@ -172,6 +172,7 @@ public sealed partial class RunSimulation
         enemies.RemoveAll(enemy => enemy.Health <= 0);
         UpdateDragonEncounter(delta, width, height);
         UpdateSpawn(delta, width, height);
+        UpdateAim(movement);
         UpdateSpellcasting(delta, movement.IsMoving);
         UpdateContextualEffects(delta);
         // The Reliquary's hush: one held breath in which nothing hostile moves or strikes.
@@ -301,6 +302,9 @@ public sealed partial class RunSimulation
         return new RunRenderSnapshot(
             new PlayerRenderSnapshot(player.Position.X, player.Position.Y, player.Radius, player.Barrier || player.WinterShellGuardRemaining > 0)
             {
+                AimAngle = Math.Atan2(effectiveAim.Y, effectiveAim.X),
+                ManualAim = manualAimEngaged,
+                AimTargetId = automaticTargetId,
                 FocusCharge = primaryCastCounts[build.Spells.ActiveSpell] % FocusedSurgeProfile.CastInterval,
                 WardCharge = WardCharge,
                 Chill = player.Chill.Stacks,
@@ -328,7 +332,7 @@ public sealed partial class RunSimulation
                 Combination = impact.Combination,
                 Surge = impact.Surge,
             }).ToArray(),
-            deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity)).ToArray(),
+            deathBursts.Select(burst => new DeathBurstRenderSnapshot(burst.Position.X, burst.Position.Y, burst.Radius, burst.Progress, burst.Intensity, burst.Kind, burst.EntityId, burst.BodyRadius)).ToArray(),
             CreateFieryAreaSnapshots(),
             essenceBolts.Select(bolt => new EssenceBoltRenderSnapshot(bolt.From.X, bolt.From.Y, bolt.To.X, bolt.To.Y, bolt.Life)).ToArray(),
             projectiles.Select(projectile => new ProjectileRenderSnapshot(projectile.Position.X, projectile.Position.Y, projectile.Radius, projectile.Spell, projectile.Inferno)

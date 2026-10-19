@@ -1,0 +1,2353 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": 2,
+  "metrics": {
+    "region": "Frost",
+    "Depth": 4,
+    "seed": 42,
+    "combatNodes": 26,
+    "shortestPathCombatEncounters": 12,
+    "longestPathCombatEncounters": 14,
+    "optionalCombatEncounters": 2,
+    "decisionPoints": 8,
+    "legalPaths": 50
+  },
+  "pacing": {
+    "Depth": 4,
+    "ShortRoadEncounters": 4,
+    "MediumRoadEncounters": 5,
+    "LongRoadEncounters": 6,
+    "MaximumRoadChoices": 4,
+    "MinimumCombatEncounters": 12,
+    "MaximumCombatEncounters": 16
+  },
+  "territory": {
+    "Seed": 42,
+    "Name": "Snowbound vale",
+    "Camp": {
+      "X": 93,
+      "Y": 96
+    },
+    "River": [
+      {
+        "X": 83.43551996776053,
+        "Y": 0
+      },
+      {
+        "X": 85.32794075288294,
+        "Y": 5
+      },
+      {
+        "X": 86.9202334433572,
+        "Y": 10
+      },
+      {
+        "X": 87.85252372229327,
+        "Y": 15
+      },
+      {
+        "X": 87.91410451976455,
+        "Y": 20
+      },
+      {
+        "X": 87.09105795022396,
+        "Y": 25
+      },
+      {
+        "X": 85.56940089596581,
+        "Y": 30
+      },
+      {
+        "X": 83.69304330282992,
+        "Y": 35
+      },
+      {
+        "X": 81.88606104022827,
+        "Y": 40
+      },
+      {
+        "X": 80.55685044840439,
+        "Y": 45
+      },
+      {
+        "X": 80.00582661850157,
+        "Y": 50
+      },
+      {
+        "X": 80.35752653141708,
+        "Y": 55
+      },
+      {
+        "X": 81.53246243551582,
+        "Y": 60
+      },
+      {
+        "X": 83.26508688565367,
+        "Y": 65
+      },
+      {
+        "X": 85.16380916226595,
+        "Y": 70
+      },
+      {
+        "X": 86.79949875037417,
+        "Y": 75
+      },
+      {
+        "X": 87.80247319355172,
+        "Y": 80
+      },
+      {
+        "X": 87.94605008299524,
+        "Y": 85
+      },
+      {
+        "X": 87.19777958374738,
+        "Y": 90
+      },
+      {
+        "X": 85.72677842690713,
+        "Y": 95
+      },
+      {
+        "X": 83.86550781111545,
+        "Y": 100
+      }
+    ],
+    "Roads": [
+      {
+        "Id": "road-0-0",
+        "Name": "Pine trail",
+        "Length": "Short",
+        "Encounters": 4,
+        "Points": [
+          {
+            "X": 45.49107526405299,
+            "Y": 80
+          },
+          {
+            "X": 74,
+            "Y": 74.42001591323876
+          },
+          {
+            "X": 74,
+            "Y": 68.63968916621046
+          },
+          {
+            "X": 64.64900484972169,
+            "Y": 62.173923047396315
+          },
+          {
+            "X": 63.297354084003764,
+            "Y": 57.109088158974934
+          },
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          }
+        ],
+        "BonusRelic": false
+      },
+      {
+        "Id": "road-0-1",
+        "Name": "Whiteout plain",
+        "Length": "Medium",
+        "Encounters": 5,
+        "Points": [
+          {
+            "X": 45.49107526405299,
+            "Y": 80
+          },
+          {
+            "X": 12,
+            "Y": 74.9475177345584
+          },
+          {
+            "X": 12.03106508239955,
+            "Y": 70.04760449939451
+          },
+          {
+            "X": 23.82188582368896,
+            "Y": 65.30345363067623
+          },
+          {
+            "X": 26,
+            "Y": 61.77168035328311
+          },
+          {
+            "X": 17.988030423324375,
+            "Y": 56.31084368567176
+          },
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          }
+        ],
+        "BonusRelic": false
+      },
+      {
+        "Id": "road-1-0",
+        "Name": "Mirror mere",
+        "Length": "Short",
+        "Encounters": 4,
+        "Points": [
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          },
+          {
+            "X": 68.75590572612013,
+            "Y": 44.89083756465038
+          },
+          {
+            "X": 67.37106882623102,
+            "Y": 36.847721449131015
+          },
+          {
+            "X": 74,
+            "Y": 31.4148543711914
+          },
+          {
+            "X": 74,
+            "Y": 22.75709135842374
+          },
+          {
+            "X": 55.97911851293367,
+            "Y": 17
+          }
+        ],
+        "BonusRelic": false
+      },
+      {
+        "Id": "road-1-1",
+        "Name": "Cairn barrows",
+        "Length": "Short",
+        "Encounters": 4,
+        "Points": [
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          },
+          {
+            "X": 49.20863373491243,
+            "Y": 43.908511473968865
+          },
+          {
+            "X": 40.74084857263224,
+            "Y": 37.86717069570309
+          },
+          {
+            "X": 37.136317302019265,
+            "Y": 30.146022913887176
+          },
+          {
+            "X": 41.42699370053306,
+            "Y": 24.427131696756526
+          },
+          {
+            "X": 55.97911851293367,
+            "Y": 17
+          }
+        ],
+        "BonusRelic": false
+      },
+      {
+        "Id": "road-1-2",
+        "Name": "Mirror mere",
+        "Length": "Medium",
+        "Encounters": 5,
+        "Points": [
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          },
+          {
+            "X": 19.236440510316484,
+            "Y": 44.95705280350074
+          },
+          {
+            "X": 15.085017127555247,
+            "Y": 40.791141463293606
+          },
+          {
+            "X": 12,
+            "Y": 34.397022286791824
+          },
+          {
+            "X": 12,
+            "Y": 27.779995848915227
+          },
+          {
+            "X": 12.93983925382706,
+            "Y": 23.395671445337282
+          },
+          {
+            "X": 55.97911851293367,
+            "Y": 17
+          }
+        ],
+        "BonusRelic": false
+      }
+    ],
+    "Features": [
+      {
+        "Kind": "bridge",
+        "Center": {
+          "X": 86.60937912101127,
+          "Y": 92
+        },
+        "RadiusX": 4,
+        "RadiusY": 0.6
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 2.066080412858213,
+          "Y": 44.17440380955786
+        },
+        "RadiusX": 9.291791603570708,
+        "RadiusY": 2.162752916460276
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 65.65358013177922,
+          "Y": 81.006380607377
+        },
+        "RadiusX": 7.2790479600797635,
+        "RadiusY": 2.079599556829594
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 8.586099375312259,
+          "Y": 60.68580338623645
+        },
+        "RadiusX": 7.650698431604868,
+        "RadiusY": 2.4118343441802237
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 6.556291601879664,
+          "Y": 52.121608938612795
+        },
+        "RadiusX": 7.2378564194021076,
+        "RadiusY": 2.0363160603848827
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 98.82603534442654,
+          "Y": 53.60846672887377
+        },
+        "RadiusX": 9.340953591438454,
+        "RadiusY": 2.4823031279641685
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 59.143742248017226,
+          "Y": 72.56375296114187
+        },
+        "RadiusX": 9.069467852390122,
+        "RadiusY": 2.541827963638039
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 8.719717435873903,
+          "Y": 80.14783473552569
+        },
+        "RadiusX": 6.313674529694801,
+        "RadiusY": 2.177340694320081
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 56.08457697373097,
+          "Y": 31.73245503787531
+        },
+        "RadiusX": 6.287716092210131,
+        "RadiusY": 1.9149724782048596
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 94.06016603766949,
+          "Y": 45.74154587403943
+        },
+        "RadiusX": 5.986240129445791,
+        "RadiusY": 2.574073214071837
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 99.49097516922791,
+          "Y": 68.53680110514946
+        },
+        "RadiusX": 5.716111241241969,
+        "RadiusY": 2.3855239703252558
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 24.534306872884883,
+          "Y": 27.227305334167234
+        },
+        "RadiusX": 6.2395584682186875,
+        "RadiusY": 2.0601721179951786
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 34.488775410917015,
+          "Y": 73.86149562656018
+        },
+        "RadiusX": 6.623686292033497,
+        "RadiusY": 2.5654276482599916
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 38.25181989849165,
+          "Y": 57.2237604810967
+        },
+        "RadiusX": 8.399842539057062,
+        "RadiusY": 2.1171399535225426
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 98.20610494269343,
+          "Y": 60.809428227976625
+        },
+        "RadiusX": 7.313623021968464,
+        "RadiusY": 2.3137049397983147
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 99.88921736361888,
+          "Y": 25.3981841795138
+        },
+        "RadiusX": 6.11328019346729,
+        "RadiusY": 2.119302029683861
+      },
+      {
+        "Kind": "mountain",
+        "Center": {
+          "X": 98.78030917550451,
+          "Y": 34.41425435124629
+        },
+        "RadiusX": 8.28427699081799,
+        "RadiusY": 2.5054001595384445
+      },
+      {
+        "Kind": "forest",
+        "Center": {
+          "X": 0.9008829020433495,
+          "Y": 32.22146576793001
+        },
+        "RadiusX": 6.08915435433814,
+        "RadiusY": 2.1513146376010566
+      },
+      {
+        "Kind": "ridge",
+        "Center": {
+          "X": 55.97911851293367,
+          "Y": 5
+        },
+        "RadiusX": 17,
+        "RadiusY": 4
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "Id": "depth-4-opening-1",
+      "Stage": 1,
+      "Lane": 0,
+      "Name": "Tempest Spine",
+      "Type": 0,
+      "Habitat": 8,
+      "PreLair": false,
+      "PreviousNodeIds": [],
+      "Site": {
+        "Point": {
+          "X": 51.71478900765757,
+          "Y": 88
+        },
+        "RoadId": null,
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 93,
+            "Y": 96
+          },
+          {
+            "X": 90.60937912101127,
+            "Y": 92
+          },
+          {
+            "X": 82.60937912101127,
+            "Y": 92
+          },
+          {
+            "X": 51.71478900765757,
+            "Y": 88
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 1.014794127342661,
+          "EnemyHealthMultiplier": 1.2913075469719746,
+          "EnemySpeedMultiplier": 1.1984988824476017
+        },
+        "Reward": {
+          "AttunementSchool": 3,
+          "ScoreBonus": 498,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.919413580209675
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 3,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-opening-2",
+      "Stage": 2,
+      "Lane": 0,
+      "Name": "Void Conduit",
+      "Type": 0,
+      "Habitat": 9,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-opening-1"
+      ],
+      "Site": {
+        "Point": {
+          "X": 45.49107526405299,
+          "Y": 80
+        },
+        "RoadId": null,
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 51.71478900765757,
+            "Y": 88
+          },
+          {
+            "X": 45.49107526405299,
+            "Y": 80
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.9911015087417799,
+          "EnemyHealthMultiplier": 1.253743316309407,
+          "EnemySpeedMultiplier": 1.1436567746790391
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 555,
+          "RecoveryFraction": 0,
+          "Relic": {
+            "ChoiceCount": 3
+          }
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.8572777993359034
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-0-stop-0",
+      "Stage": 3,
+      "Lane": 0,
+      "Name": "Arcane Scar",
+      "Type": 0,
+      "Habitat": 9,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-opening-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 74,
+          "Y": 74.42001591323876
+        },
+        "RoadId": "road-0-0",
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 45.49107526405299,
+            "Y": 80
+          },
+          {
+            "X": 74,
+            "Y": 74.42001591323876
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 1.0013585035043575,
+          "EnemyHealthMultiplier": 1.281507445432482,
+          "EnemySpeedMultiplier": 1.163615883825168
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 598,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.0609465374476028
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-0-stop-1",
+      "Stage": 4,
+      "Lane": 0,
+      "Name": "Aether Break",
+      "Type": 0,
+      "Habitat": 9,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-0-stop-0"
+      ],
+      "Site": {
+        "Point": {
+          "X": 74,
+          "Y": 68.63968916621046
+        },
+        "RoadId": "road-0-0",
+        "RoadIndex": 1,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 74,
+            "Y": 74.42001591323876
+          },
+          {
+            "X": 74,
+            "Y": 68.63968916621046
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.96472200796228,
+          "EnemyHealthMultiplier": 1.3607054462682946,
+          "EnemySpeedMultiplier": 1.139678600031733
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 610,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-0-stop-2",
+      "Stage": 4,
+      "Lane": 0,
+      "Name": "Aether Break",
+      "Type": 0,
+      "Habitat": 9,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-0-stop-1"
+      ],
+      "Site": {
+        "Point": {
+          "X": 64.64900484972169,
+          "Y": 62.173923047396315
+        },
+        "RoadId": "road-0-0",
+        "RoadIndex": 2,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 74,
+            "Y": 68.63968916621046
+          },
+          {
+            "X": 64.64900484972169,
+            "Y": 62.173923047396315
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.9735136636595771,
+          "EnemyHealthMultiplier": 1.3097895652310874,
+          "EnemySpeedMultiplier": 1.182068615633095
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 614,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-0-stop-3",
+      "Stage": 4,
+      "Lane": 0,
+      "Name": "Void Conduit",
+      "Type": 0,
+      "Habitat": 9,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-0-stop-2",
+        "depth-4-sector-0-road-1-stop-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 63.297354084003764,
+          "Y": 57.109088158974934
+        },
+        "RoadId": "road-0-0",
+        "RoadIndex": 3,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 64.64900484972169,
+            "Y": 62.173923047396315
+          },
+          {
+            "X": 63.297354084003764,
+            "Y": 57.109088158974934
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 0.9760227846149462,
+          "EnemyHealthMultiplier": 1.3441847632961277,
+          "EnemySpeedMultiplier": 1.2111719367630651
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 616,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.1100512617361038
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-1-stop-0",
+      "Stage": 3,
+      "Lane": 1,
+      "Name": "Frozen Vein",
+      "Type": 0,
+      "Habitat": 10,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-opening-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 12,
+          "Y": 74.9475177345584
+        },
+        "RoadId": "road-0-1",
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 45.49107526405299,
+            "Y": 80
+          },
+          {
+            "X": 12,
+            "Y": 74.9475177345584
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 0.9868033086074531,
+          "EnemyHealthMultiplier": 1.2855579901675498,
+          "EnemySpeedMultiplier": 1.1642946861536685
+        },
+        "Reward": {
+          "AttunementSchool": 2,
+          "ScoreBonus": 545,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.07376085067343
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 2,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-1-stop-1",
+      "Stage": 4,
+      "Lane": 1,
+      "Name": "Frozen Vein",
+      "Type": 0,
+      "Habitat": 10,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-1-stop-0"
+      ],
+      "Site": {
+        "Point": {
+          "X": 12.03106508239955,
+          "Y": 70.04760449939451
+        },
+        "RoadId": "road-0-1",
+        "RoadIndex": 1,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 12,
+            "Y": 74.9475177345584
+          },
+          {
+            "X": 12.03106508239955,
+            "Y": 70.04760449939451
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.9372775744820375,
+          "EnemyHealthMultiplier": 1.3712743424234326,
+          "EnemySpeedMultiplier": 1.2046083346515002
+        },
+        "Reward": {
+          "AttunementSchool": 2,
+          "ScoreBonus": 609,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.8545541936925399
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 2,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-1-stop-2",
+      "Stage": 4,
+      "Lane": 1,
+      "Name": "Frostbound Vault",
+      "Type": 0,
+      "Habitat": 10,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-1-stop-1",
+        "depth-4-sector-0-road-0-stop-1"
+      ],
+      "Site": {
+        "Point": {
+          "X": 23.82188582368896,
+          "Y": 65.30345363067623
+        },
+        "RoadId": "road-0-1",
+        "RoadIndex": 2,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 12.03106508239955,
+            "Y": 70.04760449939451
+          },
+          {
+            "X": 23.82188582368896,
+            "Y": 65.30345363067623
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.9971723806472367,
+          "EnemyHealthMultiplier": 1.3127077504329885,
+          "EnemySpeedMultiplier": 1.1999434348214155
+        },
+        "Reward": {
+          "AttunementSchool": 2,
+          "ScoreBonus": 658,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.1661591310874369
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 2,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-1-stop-3",
+      "Stage": 4,
+      "Lane": 1,
+      "Name": "Frostbound Vault",
+      "Type": 0,
+      "Habitat": 10,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-1-stop-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 26,
+          "Y": 61.77168035328311
+        },
+        "RoadId": "road-0-1",
+        "RoadIndex": 3,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 23.82188582368896,
+            "Y": 65.30345363067623
+          },
+          {
+            "X": 26,
+            "Y": 61.77168035328311
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 0.872946562912756,
+          "EnemyHealthMultiplier": 1.3421979598734517,
+          "EnemySpeedMultiplier": 1.2134840731590448
+        },
+        "Reward": {
+          "AttunementSchool": 2,
+          "ScoreBonus": 642,
+          "RecoveryFraction": 0.09,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.8819613129794417
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 2,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-0-road-1-stop-4",
+      "Stage": 4,
+      "Lane": 1,
+      "Name": "Frostbound Vault",
+      "Type": 0,
+      "Habitat": 10,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-1-stop-3"
+      ],
+      "Site": {
+        "Point": {
+          "X": 17.988030423324375,
+          "Y": 56.31084368567176
+        },
+        "RoadId": "road-0-1",
+        "RoadIndex": 4,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 26,
+            "Y": 61.77168035328311
+          },
+          {
+            "X": 17.988030423324375,
+            "Y": 56.31084368567176
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.9188608892629206,
+          "EnemyHealthMultiplier": 1.3404185793061827,
+          "EnemySpeedMultiplier": 1.2300804271521422
+        },
+        "Reward": {
+          "AttunementSchool": 2,
+          "ScoreBonus": 581,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.8294900294390927
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 2,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-clearing",
+      "Stage": 5,
+      "Lane": 0,
+      "Name": "Static Crossing",
+      "Type": 0,
+      "Habitat": 11,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-0-road-0-stop-3",
+        "depth-4-sector-0-road-1-stop-4"
+      ],
+      "Site": {
+        "Point": {
+          "X": 50.34444886741436,
+          "Y": 51
+        },
+        "RoadId": null,
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": []
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.9862608264695205,
+          "EnemyHealthMultiplier": 1.3145228838243164,
+          "EnemySpeedMultiplier": 1.1819808428110468
+        },
+        "Reward": {
+          "AttunementSchool": 3,
+          "ScoreBonus": 641,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 3,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-0-stop-0",
+      "Stage": 6,
+      "Lane": 0,
+      "Name": "Static Crossing",
+      "Type": 0,
+      "Habitat": 13,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-clearing"
+      ],
+      "Site": {
+        "Point": {
+          "X": 68.75590572612013,
+          "Y": 44.89083756465038
+        },
+        "RoadId": "road-1-0",
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          },
+          {
+            "X": 68.75590572612013,
+            "Y": 44.89083756465038
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 0.9515975093057367,
+          "EnemyHealthMultiplier": 1.390102635892156,
+          "EnemySpeedMultiplier": 1.1592500075992431
+        },
+        "Reward": {
+          "AttunementSchool": 3,
+          "ScoreBonus": 699,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 3,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-0-stop-1",
+      "Stage": 7,
+      "Lane": 0,
+      "Name": "Static Crossing",
+      "Type": 0,
+      "Habitat": 13,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-0-stop-0"
+      ],
+      "Site": {
+        "Point": {
+          "X": 67.37106882623102,
+          "Y": 36.847721449131015
+        },
+        "RoadId": "road-1-0",
+        "RoadIndex": 1,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 68.75590572612013,
+            "Y": 44.89083756465038
+          },
+          {
+            "X": 67.37106882623102,
+            "Y": 36.847721449131015
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.875431684886772,
+          "EnemyHealthMultiplier": 1.321563932025602,
+          "EnemySpeedMultiplier": 1.2189316045599672
+        },
+        "Reward": {
+          "AttunementSchool": 3,
+          "ScoreBonus": 782,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.7851341439202121
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 3,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-0-stop-2",
+      "Stage": 7,
+      "Lane": 0,
+      "Name": "Tempest Spine",
+      "Type": 0,
+      "Habitat": 13,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-0-stop-1"
+      ],
+      "Site": {
+        "Point": {
+          "X": 74,
+          "Y": 31.4148543711914
+        },
+        "RoadId": "road-1-0",
+        "RoadIndex": 2,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 67.37106882623102,
+            "Y": 36.847721449131015
+          },
+          {
+            "X": 74,
+            "Y": 31.4148543711914
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.9272736897260294,
+          "EnemyHealthMultiplier": 1.3282432159261048,
+          "EnemySpeedMultiplier": 1.1731889744183
+        },
+        "Reward": {
+          "AttunementSchool": 3,
+          "ScoreBonus": 820,
+          "RecoveryFraction": 0.07,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.7695755145417412
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 3,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-0-stop-3",
+      "Stage": 7,
+      "Lane": 0,
+      "Name": "Thunder Maw",
+      "Type": 0,
+      "Habitat": 14,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-0-stop-2",
+        "depth-4-sector-1-road-1-stop-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 74,
+          "Y": 22.75709135842374
+        },
+        "RoadId": "road-1-0",
+        "RoadIndex": 3,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 74,
+            "Y": 31.4148543711914
+          },
+          {
+            "X": 74,
+            "Y": 22.75709135842374
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 1.0052235674509888,
+          "EnemyHealthMultiplier": 1.363918961069509,
+          "EnemySpeedMultiplier": 1.1690912066833543
+        },
+        "Reward": {
+          "AttunementSchool": 3,
+          "ScoreBonus": 784,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.9087270915874872
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 3,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-1-stop-0",
+      "Stage": 6,
+      "Lane": 1,
+      "Name": "Aether Break",
+      "Type": 0,
+      "Habitat": 12,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-clearing"
+      ],
+      "Site": {
+        "Point": {
+          "X": 49.20863373491243,
+          "Y": 43.908511473968865
+        },
+        "RoadId": "road-1-1",
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          },
+          {
+            "X": 49.20863373491243,
+            "Y": 43.908511473968865
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.8894569633758893,
+          "EnemyHealthMultiplier": 1.3823299941198575,
+          "EnemySpeedMultiplier": 1.1627192607460168
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 716,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.9883385147612256
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-1-stop-1",
+      "Stage": 7,
+      "Lane": 1,
+      "Name": "Aether Break",
+      "Type": 0,
+      "Habitat": 12,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-1-stop-0",
+        "depth-4-sector-1-road-0-stop-0"
+      ],
+      "Site": {
+        "Point": {
+          "X": 40.74084857263224,
+          "Y": 37.86717069570309
+        },
+        "RoadId": "road-1-1",
+        "RoadIndex": 1,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 49.20863373491243,
+            "Y": 43.908511473968865
+          },
+          {
+            "X": 40.74084857263224,
+            "Y": 37.86717069570309
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.9413216797361718,
+          "EnemyHealthMultiplier": 1.3970712756258767,
+          "EnemySpeedMultiplier": 1.2195677616743221
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 758,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.0641011119420178
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-1-stop-2",
+      "Stage": 7,
+      "Lane": 1,
+      "Name": "Void Conduit",
+      "Type": 0,
+      "Habitat": 12,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-1-stop-1",
+        "depth-4-sector-1-road-2-stop-1"
+      ],
+      "Site": {
+        "Point": {
+          "X": 37.136317302019265,
+          "Y": 30.146022913887176
+        },
+        "RoadId": "road-1-1",
+        "RoadIndex": 2,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 40.74084857263224,
+            "Y": 37.86717069570309
+          },
+          {
+            "X": 37.136317302019265,
+            "Y": 30.146022913887176
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 1.0064624978166365,
+          "EnemyHealthMultiplier": 1.3678568053235565,
+          "EnemySpeedMultiplier": 1.1653961010600424
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 805,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-1-stop-3",
+      "Stage": 7,
+      "Lane": 1,
+      "Name": "Void Conduit",
+      "Type": 0,
+      "Habitat": 14,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-1-stop-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 41.42699370053306,
+          "Y": 24.427131696756526
+        },
+        "RoadId": "road-1-1",
+        "RoadIndex": 3,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 37.136317302019265,
+            "Y": 30.146022913887176
+          },
+          {
+            "X": 41.42699370053306,
+            "Y": 24.427131696756526
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.9998616805858266,
+          "EnemyHealthMultiplier": 1.384975715416938,
+          "EnemySpeedMultiplier": 1.1820212491257216
+        },
+        "Reward": {
+          "AttunementSchool": 0,
+          "ScoreBonus": 746,
+          "RecoveryFraction": 0.08,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.9444623833962076
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 0,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-2-stop-0",
+      "Stage": 6,
+      "Lane": 2,
+      "Name": "Furnace Walk",
+      "Type": 0,
+      "Habitat": 13,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-clearing"
+      ],
+      "Site": {
+        "Point": {
+          "X": 19.236440510316484,
+          "Y": 44.95705280350074
+        },
+        "RoadId": "road-1-2",
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 50.34444886741436,
+            "Y": 51
+          },
+          {
+            "X": 19.236440510316484,
+            "Y": 44.95705280350074
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 0.9315490081866966,
+          "EnemyHealthMultiplier": 1.323609411406149,
+          "EnemySpeedMultiplier": 1.1540913366517478
+        },
+        "Reward": {
+          "AttunementSchool": 1,
+          "ScoreBonus": 761,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 1,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-2-stop-1",
+      "Stage": 7,
+      "Lane": 2,
+      "Name": "Furnace Walk",
+      "Type": 0,
+      "Habitat": 13,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-2-stop-0"
+      ],
+      "Site": {
+        "Point": {
+          "X": 15.085017127555247,
+          "Y": 40.791141463293606
+        },
+        "RoadId": "road-1-2",
+        "RoadIndex": 1,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 19.236440510316484,
+            "Y": 44.95705280350074
+          },
+          {
+            "X": 15.085017127555247,
+            "Y": 40.791141463293606
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.9195596126744335,
+          "EnemyHealthMultiplier": 1.4028858798988564,
+          "EnemySpeedMultiplier": 1.1660299196234114
+        },
+        "Reward": {
+          "AttunementSchool": 1,
+          "ScoreBonus": 800,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.1275880617823395
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 1,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-2-stop-2",
+      "Stage": 7,
+      "Lane": 2,
+      "Name": "Ashen Fall",
+      "Type": 0,
+      "Habitat": 13,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-2-stop-1",
+        "depth-4-sector-1-road-1-stop-1"
+      ],
+      "Site": {
+        "Point": {
+          "X": 12,
+          "Y": 34.397022286791824
+        },
+        "RoadId": "road-1-2",
+        "RoadIndex": 2,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 15.085017127555247,
+            "Y": 40.791141463293606
+          },
+          {
+            "X": 12,
+            "Y": 34.397022286791824
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.8818432839223386,
+          "EnemyHealthMultiplier": 1.3916543841323137,
+          "EnemySpeedMultiplier": 1.2287166534609706
+        },
+        "Reward": {
+          "AttunementSchool": 1,
+          "ScoreBonus": 777,
+          "RecoveryFraction": 0,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.0499229330382882
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 1,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-2-stop-3",
+      "Stage": 7,
+      "Lane": 2,
+      "Name": "Cinder Reach",
+      "Type": 0,
+      "Habitat": 14,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-2-stop-2"
+      ],
+      "Site": {
+        "Point": {
+          "X": 12,
+          "Y": 27.779995848915227
+        },
+        "RoadId": "road-1-2",
+        "RoadIndex": 3,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 12,
+            "Y": 34.397022286791824
+          },
+          {
+            "X": 12,
+            "Y": 27.779995848915227
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 0,
+          "SpawnIntervalMultiplier": 0.8607493982933226,
+          "EnemyHealthMultiplier": 1.4191814070610242,
+          "EnemySpeedMultiplier": 1.1515313055159206
+        },
+        "Reward": {
+          "AttunementSchool": 1,
+          "ScoreBonus": 800,
+          "RecoveryFraction": 0.07,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.1119543184255969
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 1,
+      "EncounterKind": 0,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-sector-1-road-2-stop-4",
+      "Stage": 7,
+      "Lane": 2,
+      "Name": "Cinder Reach",
+      "Type": 0,
+      "Habitat": 14,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-2-stop-3"
+      ],
+      "Site": {
+        "Point": {
+          "X": 12.93983925382706,
+          "Y": 23.395671445337282
+        },
+        "RoadId": "road-1-2",
+        "RoadIndex": 4,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 12,
+            "Y": 27.779995848915227
+          },
+          {
+            "X": 12.93983925382706,
+            "Y": 23.395671445337282
+          }
+        ]
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 1,
+          "SpawnIntervalMultiplier": 0.9608607522495374,
+          "EnemyHealthMultiplier": 1.3387757368659488,
+          "EnemySpeedMultiplier": 1.1976194774273874
+        },
+        "Reward": {
+          "AttunementSchool": 1,
+          "ScoreBonus": 819,
+          "RecoveryFraction": 0.09,
+          "Relic": null
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 0.8555747580461086
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 1,
+      "EncounterKind": 1,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-approach",
+      "Stage": 8,
+      "Lane": 0,
+      "Name": "Rime Descent",
+      "Type": 0,
+      "Habitat": 14,
+      "PreLair": true,
+      "PreviousNodeIds": [
+        "depth-4-sector-1-road-0-stop-3",
+        "depth-4-sector-1-road-1-stop-3",
+        "depth-4-sector-1-road-2-stop-4"
+      ],
+      "Site": {
+        "Point": {
+          "X": 55.97911851293367,
+          "Y": 17
+        },
+        "RoadId": null,
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": []
+      },
+      "Route": {
+        "Encounter": {
+          "Kind": 2,
+          "SpawnIntervalMultiplier": 0.8803274054174905,
+          "EnemyHealthMultiplier": 1.435134256864029,
+          "EnemySpeedMultiplier": 1.1681682292242388
+        },
+        "Reward": {
+          "AttunementSchool": 2,
+          "ScoreBonus": 821,
+          "RecoveryFraction": 0,
+          "Relic": {
+            "ChoiceCount": 3
+          }
+        },
+        "EncounterModifiers": [
+          {
+            "Id": "unstable-rifts",
+            "SpawnIntervalMultiplier": 1,
+            "EnemyHealthMultiplier": 1,
+            "EnemySpeedMultiplier": 1,
+            "ThreatBudgetMultiplier": 1,
+            "RecoveryMultiplier": 1,
+            "PlayerMoveSpeedMultiplier": 1,
+            "DamageTakenMultiplier": 1,
+            "HazardKind": 1,
+            "HazardIntervalMultiplier": 1.078682851627787
+          }
+        ],
+        "ModifierSet": {
+          "SpawnIntervalMultiplier": 1,
+          "EnemyHealthMultiplier": 1,
+          "EnemySpeedMultiplier": 1,
+          "ThreatBudgetMultiplier": 1,
+          "RecoveryMultiplier": 1,
+          "PlayerMoveSpeedMultiplier": 1,
+          "DamageTakenMultiplier": 1
+        }
+      },
+      "Rarity": 0,
+      "AttunementSchool": 2,
+      "EncounterKind": 2,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    },
+    {
+      "Id": "depth-4-wyrm",
+      "Stage": 9,
+      "Lane": 0,
+      "Name": "Unknown Wyrm",
+      "Type": 1,
+      "Habitat": 15,
+      "PreLair": false,
+      "PreviousNodeIds": [
+        "depth-4-approach"
+      ],
+      "Site": {
+        "Point": {
+          "X": 55.97911851293367,
+          "Y": 5
+        },
+        "RoadId": null,
+        "RoadIndex": 0,
+        "BonusRelic": false,
+        "IncomingTrail": [
+          {
+            "X": 55.97911851293367,
+            "Y": 17
+          },
+          {
+            "X": 55.97911851293367,
+            "Y": 5
+          }
+        ]
+      },
+      "Route": null,
+      "Rarity": 0,
+      "AttunementSchool": null,
+      "EncounterKind": null,
+      "territory": {
+        "$ref": "#/territory"
+      }
+    }
+  ]
+}
