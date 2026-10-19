@@ -42,6 +42,13 @@ PLATES = {
             [(400, 255), (429, 249), (442, 285), (436, 313), (393, 322), (389, 285)],
             [(143, 303), (165, 298), (178, 319), (174, 340), (139, 341)],
         ],
+        # Erase luminous market stock, not just its colour: active potion
+        # silhouettes made this building appear occupied while locked.
+        "inactive_props": [
+            [(202, 260), (226, 244), (252, 246), (272, 265), (267, 287), (204, 296)],
+            [(411, 230), (427, 217), (452, 220), (469, 242), (466, 263), (411, 272)],
+            [(528, 263), (552, 249), (574, 259), (584, 288), (568, 304), (527, 301)],
+        ],
         "lamps": [
             (20, 250, 28, 50), (112, 216, 18, 43), (220, 230, 16, 37),
             (275, 218, 23, 45), (381, 209, 22, 52), (482, 215, 19, 48),
@@ -119,6 +126,16 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
         local = cv2.dilate(local, np.ones((3, 3), np.uint8), iterations=1)
         center = ((x0 + x1) // 2, (y0 + y1) // 2)
         painted_bgr = cv2.seamlessClone(replacement, painted_bgr, local, center, cv2.NORMAL_CLONE)
+
+    # Use local wood/stone pixels to reconstruct a vacant alchemy counter.
+    # Masks are limited to the lit wares; masonry and tables remain legible.
+    if plan.get("inactive_props"):
+        props_mask = np.zeros((h, w), dtype=np.uint8)
+        for polygon in plan["inactive_props"]:
+            cv2.fillPoly(props_mask, [np.asarray(polygon, np.int32)], 255)
+        props_mask = cv2.dilate(props_mask, np.ones((3, 3), np.uint8), iterations=1)
+        painted_bgr = cv2.inpaint(painted_bgr, props_mask, 4, cv2.INPAINT_TELEA)
+
     painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
 
     # One universal state conversion for all buildings: extinguish bright
