@@ -138,7 +138,7 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     for x, y, rx, ry in plan["lamps"] + plan["emission_zones"]:
         r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
         light_mask = np.maximum(light_mask, np.clip(1.0 - r2, 0, 1) ** 0.7)
-    # Dark, unpowered windows and worktables have no radiant highlight even
+    # Shared across the Nexus, Codex and Hall: unlike a global grayscale wash,\n    # emissive suppression is evaluated only at actual painted light sources.\n    # Dark, unpowered windows and worktables have no radiant highlight even
     # when the source is white rather than warm/violet/blue. Keep original
     # painted masonry, geometry, signs and neighboring buildings intact.
     chroma = np.maximum.reduce([warm, violet * .9, blue, cyan])
