@@ -49,3 +49,20 @@ For each of Arcane, Fire, Frost and Lightning, v0.0.110 additionally imports thr
 ## Upgrade-reward listening revision (v0.0.111)
 
 The **upgrade revealed** cue now points to rubberduck's existing CC0 `item_gem_01.ogg` recording (also used for the normal relic pickup); it no longer uses JC Sounds' Magic Shield activation. The **upgrade chosen** cue retains JC Sounds' CC BY 4.0 `Healing Chime_01.wav` source with new runtime mix adjustments. Both are played at reduced relative gain, with gentle low-pass filtering and dedicated envelope releases. No new third-party asset or license was introduced.
+
+## Phase 1 menu Foley candidates — CC0 (unapproved listening prototypes)
+
+**Kenney RPG Audio** by **Kenney**; official publisher source: https://kenney.nl/assets/rpg-audio
+License: CC0 1.0 (commercial use and adaptation permitted). Attribution is appreciated, not required.
+
+Twelve original Ogg recordings (`bookOpen`, `bookClose`, `bookPlace1`, `bookPlace2`,
+`handleSmallLeather`, `handleSmallLeather2`, `metalClick`, `metalLatch`, `creak1`,
+`doorOpen_1`, `doorOpen_2` and `doorClose_1`) were sourced from the independently maintained
+https://github.com/Mcamento8/open-game-sfx-index/tree/main/audio/rpg-audio mirror of Kenney's CC0 pack.
+
+The source files are preserved byte-for-byte as `menu-*.ogg`; `manifest.json` records per-file
+Git blob checksums to verify exact provenance. Runtime playback may apply gain, envelope and low-pass filtering.
+The existing rubberduck CC0 stone recording is reused in the Stone preview preset.
+
+These are **audition candidates, not quality-approved replacements**. Compare all three material palettes
+on real phones before production merge; see [Phase 1 audition and portable event contract](phase1-menu-audition.md).
