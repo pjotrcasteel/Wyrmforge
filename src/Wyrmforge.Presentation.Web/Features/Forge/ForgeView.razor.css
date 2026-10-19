@@ -598,3 +598,95 @@
 @media (prefers-reduced-motion:reduce) {
   .arrival-home .title-start { transition:none; }
 }
+
+
+/* Exact approved portrait welcome artwork (not a CSS reconstruction).
+   The frame and hit targets share the artwork's natural coordinate system,
+   keeping the interactive regions aligned with the painted controls. */
+.arrival-home.menu-home {
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  padding:0;
+  overflow:hidden;
+}
+.arrival-home .hub-backdrop { display:none; }
+.arrival-home .shell-content {
+  width:100%;
+  max-width:none;
+  height:100%;
+  min-height:0;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+.arrival-home .title-scene.arrival-reference {
+  position:relative;
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  height:100%;
+  min-height:0;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:#101117;
+}
+.arrival-home .title-scene.arrival-reference::before { content:none; display:none; }
+.arrival-reference-frame {
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:max(100%, calc(100dvh * 864 / 1222));
+  height:auto;
+  aspect-ratio:864 / 1222;
+  transform:translate(-50%,-50%);
+  overflow:hidden;
+}
+.arrival-reference-art {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  user-select:none;
+  -webkit-user-drag:none;
+  pointer-events:none;
+}
+.arrival-accessible-title,
+.arrival-screen-reader-only {
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  clip-path:inset(50%)!important;
+}
+.arrival-hitbox {
+  position:absolute;
+  z-index:3;
+  display:block;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:transparent;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+/* Percentages measured from the approved 864x1222 artwork, including ornamented edges. */
+.arrival-hitbox--start { left:10.8%; top:77.1%; width:78.5%; height:11.2%; }
+.arrival-hitbox--settings { left:37.4%; top:90.1%; width:25.2%; height:6.4%; }
+.arrival-hitbox:focus-visible {
+  outline:3px solid #fff2c5;
+  outline-offset:3px;
+  box-shadow:0 0 0 5px #000b,0 0 16px #ffdc87;
+}
+@media (orientation:landscape) and (max-height:560px) {
+  .arrival-reference-frame { width:max(100%, calc(100dvh * 864 / 1222)); }
+}
