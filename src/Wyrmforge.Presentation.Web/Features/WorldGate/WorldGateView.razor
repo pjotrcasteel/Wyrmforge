@@ -129,6 +129,8 @@
         new(1, true), new(2, false), new(3, false), new(4, false), new(5, false),
     ];
 
+    private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "◇", "☼", "❖", "◈", "☾", "♣", "◉", "✧"];
+
     // The roster has twelve visible slots, not twelve invented canon lineages. Add authored data when new regions actually ship.
     private static readonly IReadOnlyList<LineageChoice> Lineages =
     [
@@ -136,8 +138,6 @@
         new("frost", "Frost", "❄", RegionCatalog.FrostRegionId, InitialTiers),
         .. Enumerable.Range(0, 10).Select(index => new LineageChoice($"unknown-{index}", "", PlaceholderSigils[index], null, [])),
     ];
-
-    private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "◇", "☼", "❖", "◈", "☾", "♣", "◉", "✧"];
 
     private bool IsAvailable(LineageChoice lineage) =>
         lineage.Region is { } id && RegionCatalog.Find(id) is { } region && (Access is null || region.IsOpen(Access));
