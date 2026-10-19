@@ -1632,9 +1632,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Expect(Page.Locator(".town-hotspot--gate")).ToBeEnabledAsync();
         await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
-        await Expect(Page.Locator(".town-vacancy--build")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".town-vacancy--codex")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".town-vacancy--legends")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art")).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.Locator(".town-dormant-art").First.EvaluateAsync<bool>(
+            "element => getComputedStyle(element).backgroundColor === 'rgba(0, 0, 0, 0)' && getComputedStyle(element).backdropFilter === 'none'"));
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
