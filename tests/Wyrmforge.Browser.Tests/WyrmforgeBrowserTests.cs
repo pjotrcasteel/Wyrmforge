@@ -36,6 +36,33 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_MireHound_RealLabCanCompareNativePixelsAgainstPublishedArt()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var baseUrl = BaseUrl.TrimEnd('/');
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=pixel",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(Page.Locator(".enemy-lab")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("PIXEL ART PREVIEW");
+        await Expect(Page.GetByRole(AriaRole.Combobox, new() { Name = "Mire Hound art style" })).ToHaveValueAsync("pixel");
+        await Page.WaitForFunctionAsync(@"() => {
+            const canvas = document.querySelector('.enemy-lab canvas');
+            return canvas && canvas.width > 0 && canvas.height > 0;
+        }");
+        await ScreenshotAsync("mire-hound-pixel-in-real-lab-390.png");
+
+        await Page.GetByRole(AriaRole.Combobox, new() { Name = "Mire Hound art style" }).SelectOptionAsync("painted");
+        await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("PUBLISHED ART");
+        StringAssert.Contains(Page.Url, "mireStyle=painted");
+        StringAssert.Contains(Page.Url, "seed=42");
+        await Page.WaitForFunctionAsync(@"() => {
+            const canvas = document.querySelector('.enemy-lab canvas');
+            return canvas && canvas.width > 0 && canvas.height > 0;
+        }");
+        await ScreenshotAsync("mire-hound-published-in-real-lab-390.png");
+    }
+
+    [TestMethod]
     public async Task Mobile_Welcome_HasFullArtworkAndAudioOnlyInsideSettings()
     {
         await Page.SetViewportSizeAsync(390, 844);
