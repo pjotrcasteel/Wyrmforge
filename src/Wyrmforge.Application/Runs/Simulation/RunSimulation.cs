@@ -323,7 +323,7 @@ public sealed partial class RunSimulation
                 CreateEnemyTelegraph(enemy))
             {
                 ShieldFacing = enemy.Penitent is { ShieldRaised: true } shield ? Math.Atan2(shield.Facing.Y, shield.Facing.X) : null,
-                AnimationPhase = enemy.MireHound?.Phase.ToString() ?? enemy.Whitefang?.Phase.ToString(),
+                AnimationPhase = enemy.MireHound?.Phase.ToString() ?? enemy.Whitefang?.Phase.ToString() ?? GetHollowContactAnimation(enemy),
                 AnimationFacingX = enemy.MireHound?.PounceDirection.X ?? enemy.Whitefang?.PounceDirection.X,
                 Routed = enemy.RoutedRemaining > 0,
                 Revived = enemy.Revived,
