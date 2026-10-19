@@ -293,6 +293,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(nav.Filter(new() { HasText = "Codex" })).ToBeDisabledAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         await Page.WaitForFunctionAsync("() => { const audio = window.wyrmforgeAudio.diagnostics(); return audio.music === 'hunt' && audio.musicPlaying; }");
@@ -468,6 +469,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator("#wyrmforge-ignition").WaitForAsync(new() { State = WaitForSelectorState.Hidden });
         await ScreenshotAsync("mobile-player-name-320.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.Locator(".game-screen canvas[aria-hidden='true']")).ToHaveCountAsync(1);
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
@@ -1405,71 +1407,68 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    public async Task Mobile_WorldGate_ShowsEveryHuntModeAndExplorationStartsAHunt()
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_WorldGate_FollowsFreePlayElementAndTierSteps(int width, int height)
     {
-        Directory.CreateDirectory(ArtifactDirectory);
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.Locator(".town-hotspot--gate").ClickAsync();
+
+        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "World Gate" })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".gate-scene-art")).ToHaveAttributeAsync("src", "art/world-gate.jpg");
+        await Expect(Page.Locator(".gate-closed-side")).ToBeVisibleAsync();
+        await ScreenshotAsync($"world-gate-{width}.png");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Expect(Page.Locator(".gate-action--locked")).ToHaveCountAsync(2);
+        foreach (var mode in await Page.Locator(".gate-action--locked").AllAsync()) await Expect(mode).ToBeDisabledAsync();
+        await ScreenshotAsync($"world-gate-modes-{width}.png");
+
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Expect(Page.Locator(".gate-lineage")).ToHaveCountAsync(12);
+        await Expect(Page.Locator(".gate-lineage--hidden")).ToHaveCountAsync(10);
+        await Expect(Page.Locator(".gate-lineage--fire")).ToBeEnabledAsync();
+        await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
+        foreach (var teaser in await Page.Locator(".gate-lineage--hidden").AllAsync()) await Expect(teaser).ToBeDisabledAsync();
+        await ScreenshotAsync($"world-gate-lineages-{width}.png");
+
+        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
+        Assert.IsLessThanOrEqualTo(1, horizontal, "The 12-slot element grid must not overflow mobile screens.");
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Expect(Page.Locator(".gate-tier")).ToHaveCountAsync(5);
+        await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(4);
+        await ScreenshotAsync($"world-gate-fire-tiers-{width}.png");
+
+        await Page.Locator(".gate-tier--ready").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToHaveCountAsync(0);
+        await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_WorldGate_FrostCanBeSelectedWithoutDefeatingAshfangAndStartsInSnow()
+    {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "World Gate and regions" }).ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "World Gate" })).ToBeVisibleAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Road to the Conclave" })).ToBeVisibleAsync();
-        await ScreenshotAsync("world-gate-explore.png");
-        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
-        Assert.IsLessThanOrEqualTo(1, horizontal);
+        await Page.Locator(".town-hotspot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
+        await Page.Locator(".gate-lineage--frost").ClickAsync();
+        await Expect(Page.Locator(".gate-heading-sigil--frost")).ToBeVisibleAsync();
+        await ScreenshotAsync("world-gate-frost-tiers.png");
 
-        await Expect(Page.GetByRole(AriaRole.Radio, new() { Name = "Free Exploration" })).ToHaveAttributeAsync("aria-checked", "true");
-        foreach (var future in new[] { "Campaign", "Targeted Wyrm Hunt", "Endless Hunt", "Endless Arena" })
-        {
-            var mode = Page.GetByRole(AriaRole.Radio, new() { Name = future });
-            await Expect(mode).ToBeVisibleAsync();
-            await Expect(mode).ToBeDisabledAsync();
-            var filter = await mode.EvaluateAsync<string>("e => getComputedStyle(e).filter");
-            StringAssert.Contains(filter, "grayscale");
-        }
-        var modeHeights = await Page.Locator(".gate-mode").EvaluateAllAsync<double[]>("els => els.map(e => e.getBoundingClientRect().height)");
-        Assert.IsTrue(modeHeights.All(h => h >= 44));
-        await Page.Locator(".gate-cta").ClickAsync();
-        await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
-        await Expect(Page.Locator(".world-gate")).ToHaveCountAsync(0);
-    }
-
-    [TestMethod]
-    public async Task Mobile_WorldGate_FrostOpensAfterAshfangAndItsHuntRunsOnSnow()
-    {
-        Directory.CreateDirectory(ArtifactDirectory);
-        await Page.SetViewportSizeAsync(390, 844);
-        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','2');
-            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));
-            localStorage.setItem('wyrmforge.greatHunt.v1', JSON.stringify([{Wyrm:0,Slain:true,EssenceSecured:true,DeepEvolvedDuel:false,AscendantDefeated:false}]));");
-        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await EnterTownIfNeededAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "World Gate and regions" }).ClickAsync();
-        var frost = Page.GetByRole(AriaRole.Radio, new() { Name = "The Hoarfrost Reaches" });
-        await Expect(frost).ToBeEnabledAsync();
-        await Expect(Page.Locator(".gate-region.locked")).Not.ToHaveCountAsync(0);
-        await frost.ClickAsync();
-        await Expect(frost).ToHaveAttributeAsync("aria-checked", "true");
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "The Hoarfrost Reaches" })).ToBeVisibleAsync();
-        await ScreenshotAsync("world-gate-frost.png");
+        await Page.Locator(".gate-tier--ready").ClickAsync();
         var save = await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.world.v1')");
         StringAssert.Contains(save, "glacier-region");
-        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
-        Assert.IsLessThanOrEqualTo(1, horizontal);
-
-        await Page.Locator(".gate-cta").ClickAsync();
-        await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
         await Page.Locator(".primary-frost").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         await Expect(Page.GetByText(new System.Text.RegularExpressions.Regex("Snowbound vale|Rimewall heights|Glacier basin", System.Text.RegularExpressions.RegexOptions.IgnoreCase)).First).ToBeVisibleAsync();
-        await Page.Locator("button.route-node.available").First.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
-        await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
-        await Page.WaitForTimeoutAsync(2500);
-        await ScreenshotAsync("frost-hunt-snow.png");
     }
 
     [TestMethod]
@@ -1686,6 +1685,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveAttributeAsync("src", "art/town-vacant-legends.webp?v=127");
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
         await Expect(oath).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel hunt and return to town" }).ClickAsync();
@@ -1694,6 +1694,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
     }
 
@@ -1739,6 +1740,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await route.ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Enter (rare )?trail$") }).ClickAsync();
         await Expect(Page.Locator("canvas.game-canvas")).ToBeVisibleAsync();
+    }
+
+    private async Task ContinueThroughWorldGateAsync()
+    {
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").ClickAsync();
     }
 
     private async Task EnterTownIfNeededAsync()
