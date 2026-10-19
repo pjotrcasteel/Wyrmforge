@@ -19,7 +19,7 @@ Research basis already recorded in the recovery handover: Carlisle et al. canine
 - [x] New branch off current main; repository and source checked before edits.
 - [x] Authored Mire Hound pixel sprites and game renderer selection pushed remotely.
 - [x] Baked `actors.png` and `art/manifest.json` pushed and remote SHA verified by the [Mire Hound atlas workflow](https://github.com/pjotrcasteel/Wyrmforge/actions/workflows/mire-hound-art-checkpoint.yml). `node tools/art/build-art.mjs --check` and the focused JavaScript gait tests passed in that workflow.
-- [ ] Complete the 390×844 CI mobile browser test and real-game before/after screenshots for `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=pixel` versus `mireStyle=painted`. The Playwright test is committed but its latest workflow must finish.
+- [x] Completed 390×844 Chromium game-browser comparison and actual screenshots for `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=pixel` versus `mireStyle=painted`. The Playwright test is committed but its latest workflow must finish.
 - [ ] Compare at **identical zoom and viewport** with original card and pre-change production screenshot.
 - [ ] Capture in-game idle/travel/turn/windup/bite/real nonlethal hit/real death; check paw phases against actual world movement.
 - [ ] Verify all CI and real browser smoke; obtain owner approval on iPhone before merge.
@@ -32,6 +32,16 @@ After the preview PR is validated and merged, load the same real simulation at a
 - Currently published version: `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=painted`
 
 Selecting **Mire Hound art → Current art / Pixel preview** in the lab reloads the actual Canvas/simulation and leaves ordinary hunts intact. These links are not a claim that the preview exists on live Pages before merge/deploy.
+
+## Real-game comparison evidence — validated
+
+The code-only preview was merged in [PR #140](https://github.com/pjotrcasteel/Wyrmforge/pull/140) at `64f7d6a`. The 390×844 actual-game comparison test passed in [Browser smoke #39256081689](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39256081689), with normal .NET validation [#39256081688](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39256081688). Corrected screenshots were recovered from the passing browser artifact and pushed to GitHub independently.
+
+| Current (painted) | Mire Hound pixel-art preview |
+|---|---|
+| ![Mire Hound currently published in the game](evidence/mire-hound-mobile-review/current-painted-390.png) | ![New Mire Hound pixels rendered next to real mage](evidence/mire-hound-mobile-review/pixel-preview-390.png) |
+
+Both screenshots were captured through the actual `/enemy-lab` Blazor simulation and Canvas renderer with seed 42 and viewport 390×844, after the startup overlay disappeared. These are **mobile Chromium emulation captures**, not proof of performance or subjective quality on a physical iPhone. Complete 4-way animation, real hit/death clips, human visual acceptance and enabling this art in ordinary hunts remain unfinished.
 
 ## Concurrency notes
 The unmerged draft PR #136 contains other Fire/Frost lifecycle changes and earlier experimental UI modifications. This task starts from main (including merged developer-lab PR #137) to avoid exposing the rest of the unfinished art overhaul. Reconcile #136 before merging any overlapping edits; do **not** treat passing tests or a published atlas as visual sign-off.
