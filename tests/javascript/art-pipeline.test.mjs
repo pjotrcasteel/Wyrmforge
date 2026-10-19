@@ -64,6 +64,22 @@ test('every enemy kind, walk phase, attack pose and state, and every wyrm phase 
     }
 });
 
+test('Mire Hound native poses are individual wizard-scale pixel anatomy, not the painted card', () => {
+    const poses = enemyPoses(1);
+    assert.equal(poses.length, 16);
+    const frames = poses.map(pose => paintEnemy(1, pose));
+    for (const [index, bitmap] of frames.entries()) {
+        assert.deepEqual([bitmap.width, bitmap.height], [50, 34], `Mire Hound frame ${index} scale`);
+        const opaque = [...bitmap.data].filter((_, i) => i % 4 === 3 && bitmap.data[i] > 0).length;
+        assert.ok(opaque > 100 && opaque < 1000, `Mire Hound frame ${index} must retain a clear small silhouette`);
+    }
+    assert.equal(new Set(frames.slice(8).map(frame => Buffer.from(frame.data).toString('base64'))).size, 8,
+        'The eight travel-driven diagonal-trot stages must all contain distinct leg positions');
+    assert.notDeepEqual(frames[3].data, frames[4].data, 'Crouch differs from bite/pounce');
+    assert.notDeepEqual(frames[4].data, frames[5].data, 'Recovery differs from active bite');
+    assert.notDeepEqual(frames[6].data, frames[7].data, 'Real damage and collapsed corpse are not interchangeable');
+});
+
 test('environment covers biome walls, school runes, landmarks, shards, caches and tiles', () => {
     for (const biome of ['valley', 'ash', 'ridge', 'snow']) {
         for (const part of ['cap', 'face', 'foot']) assert.ok(frames('environment')[`wall.${biome}.${part}`]);
