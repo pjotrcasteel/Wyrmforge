@@ -381,6 +381,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Forge" })).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(Page.Locator(".town-building-layer[data-town-building='build']")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-building-layer[data-town-building='codex']")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-building-layer[data-town-building='legends'][data-building-state='vacant']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-panorama-open-forge")).ToHaveCountAsync(0);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
