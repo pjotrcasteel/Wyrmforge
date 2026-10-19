@@ -1520,11 +1520,22 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThanOrEqualTo(44, touchTarget.Width);
         Assert.IsGreaterThanOrEqualTo(44, touchTarget.Height);
         await territory.EvaluateAsync("element => element.scrollTop = element.scrollHeight * .48");
-        var roadStop = Page.Locator("button.route-node[data-road]").First;
+        // Introductory short roads have a single encounter. Exercise a real multi-stop road
+        // when checking that the preview highlights the whole route, independently of DOM order.
+        var previewRoad = await Page.Locator("button.route-node[data-road]").EvaluateAllAsync<string>(@"nodes => {
+            const roads = new Map();
+            for (const node of nodes) roads.set(node.dataset.road, (roads.get(node.dataset.road) || 0) + 1);
+            return [...roads].find(([, stops]) => stops > 1)?.[0] || '';
+        }");
+        Assert.IsFalse(string.IsNullOrEmpty(previewRoad), "A Hunt fork must offer a multi-stop alternative to its short road.");
+        var previewStops = Page.Locator($"button.route-node[data-road='{previewRoad}']");
+        var expectedPreviewCount = await previewStops.CountAsync();
+        var roadStop = previewStops.First;
         await roadStop.ScrollIntoViewIfNeededAsync();
         await roadStop.ClickAsync();
         await Expect(Page.Locator(".route-link.preview").First).ToBeVisibleAsync();
         Assert.IsGreaterThan(1, await Page.Locator(".route-node.road-preview").CountAsync());
+        await Expect(Page.Locator(".route-node.road-preview")).ToHaveCountAsync(expectedPreviewCount);
         await Expect(Page.Locator(".enter-trail")).ToBeDisabledAsync();
         await ScreenshotAsync($"mobile-road-preview-{width}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Close trail details" }).ClickAsync();
@@ -1686,9 +1697,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
             document.body.innerHTML = '<canvas id=""danger-test"" style=""position:fixed;inset:0;width:100vw;height:100vh;touch-action:none""></canvas>';
             window.__dangerHealth = 100;
             window.__dangerMovement = 0;
+            window.__dangerLatestMovement = 0;
             arena.initializeArena(document.querySelector('canvas'), {
                 invokeMethodAsync: async (method, delta, width, height, x, y) => {
-                    window.__dangerMovement = Math.max(window.__dangerMovement, Math.abs(x) + Math.abs(y));
+                    window.__dangerLatestMovement = Math.abs(x) + Math.abs(y);
+                    window.__dangerMovement = Math.max(window.__dangerMovement, window.__dangerLatestMovement);
                     return { player: { x:195, y:400, radius:12, barrier:false }, hud: { health:window.__dangerHealth, maxHealth:100 },
                         enemies:[], splashPulses:[], elementalImpacts:[], deathBursts:[], essenceBursts:[], essenceBolts:[], projectiles:[], lightning:[], paused:false, ended:false };
                 }
@@ -1702,11 +1715,22 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return pixel[0] > 30 && pixel[0] > pixel[1] * 1.5;
         }");
         await ScreenshotAsync("mobile-critical-health.png");
-        await Page.Mouse.MoveAsync(190, 600);
-        await Page.Mouse.DownAsync();
-        await Page.Mouse.MoveAsync(250, 600);
-        await Page.WaitForFunctionAsync("() => window.__dangerMovement > .5");
-        await Page.Mouse.UpAsync();
+        // A held mouse now deliberately aims. Exercise the actual mobile movement
+        // gesture with a native left-side touch, while the critical-health cue is live.
+        var touchSession = await Page.Context.NewCDPSessionAsync(Page);
+        try
+        {
+            await touchSession.SendAsync("Emulation.setTouchEmulationEnabled", new Dictionary<string, object> { ["enabled"] = true, ["maxTouchPoints"] = 2 });
+            await touchSession.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchStart", ["touchPoints"] = new[] { new { x = 90, y = 600, id = 71 } } });
+            await touchSession.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchMove", ["touchPoints"] = new[] { new { x = 150, y = 600, id = 71 } } });
+            await Page.WaitForFunctionAsync("() => window.__dangerMovement > .5");
+            await touchSession.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchEnd", ["touchPoints"] = Array.Empty<object>() });
+            await Page.WaitForFunctionAsync("() => window.__dangerLatestMovement < .01");
+        }
+        finally
+        {
+            await touchSession.DetachAsync();
+        }
     }
 
     [TestMethod]

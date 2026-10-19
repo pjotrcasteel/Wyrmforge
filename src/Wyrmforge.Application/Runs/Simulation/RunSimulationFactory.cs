@@ -23,6 +23,15 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
+    public RunSimulation CreateDevelopmentEnemy(IReadOnlySet<string> selectedNodes, DevelopmentEnemySetup setup)
+    {
+        ArgumentNullException.ThrowIfNull(setup);
+        setup.Validate();
+        var simulation = Create(selectedNodes, seed: setup.Seed);
+        simulation.StartDevelopmentEnemy(setup);
+        return simulation;
+    }
+
     public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false)
     {
         var runSeed = seed ?? seedSource.Next(int.MaxValue);

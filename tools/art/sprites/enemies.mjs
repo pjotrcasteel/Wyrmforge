@@ -18,6 +18,33 @@ function at(b, ox, oy) {
 }
 
 export const ENEMY_POSES = [0, 1, 2, 3];
+// The two canines have eight articulated trot frames plus release/recovery/recoil/collapse.
+// Keep the shared roster compact: humanoid art remains its authored four-pose set.
+export const enemyPoses = kind => kind === 1 || kind === 12 ? Array.from({ length: 16 }, (_, i) => i) : ENEMY_POSES;
+
+// A trot pairs the near forelimb with the far hindlimb. Contact paws sweep backwards
+// under the body; during swing the elbow/hock bends and the paw clears the ground.
+// Reference: Carlisle et al., 2019, doi:10.1053/j.tcam.2019.03.003.
+export function caninePawPhase(pose, front, near) {
+    if (pose < 8) return { stride: 0, lift: 0 };
+    const pair = front === near ? 0 : 4;
+    const t = ((pose - 8 + pair) % 8) / 8;
+    return t < .625 ? { stride: 4 - 8 * t / .625, lift: 0 } :
+        { stride: -4 + 8 * (t - .625) / .375, lift: Math.sin((t - .625) / .375 * Math.PI) * 4 };
+}
+function canineLeg(g, pose, x, top, front, near, color, paw, width = 2) {
+    const gait = caninePawPhase(pose, front, near);
+    const crouch = pose === 3, strike = pose === 4, recover = pose === 5;
+    const dx = pose === 7 ? (front ? 5 : -2) : crouch ? (front ? 3 : -3) :
+        strike ? (front ? 6 : -5) : recover ? (front ? 1 : -3) : gait.stride;
+    const footY = pose === 7 ? 6 : 10 - gait.lift;
+    const jointX = x + dx * .45 + (front ? -2 : 3);
+    const jointY = (top + footY) / 2 - (gait.lift > 0 ? 1 : 0);
+    g.line(x, top, jointX, jointY, color, width);
+    g.line(jointX, jointY, x + dx, footY, color, width);
+    g.rect(x + dx - 1, footY, width + 1, 1, color);
+    g.px(x + dx + width, footY, paw);
+}
 
 // Canvas size, origin (enemy x,y) and the nominal C# radius each sprite was drawn for.
 export const ENEMY_SPECS = [
@@ -82,19 +109,38 @@ function hollow(pose) {
     return b;
 }
 
+// Collapsed canines retain their bone/ice ridge and long muzzle; paws fold beneath
+// the torso. This is a separately authored corpse pose, not a scaled standing sprite.
+function deadCanine(kind) {
+    const s=ENEMY_SPECS[kind], b=new Bitmap(...s.size), g=at(b,...s.origin), frost=kind===12;
+    const fur=frost?'#b8b3ab':'#3b2b22', hi=frost?'#e2ded6':'#6e5c4d', dark=frost?'#45413f':'#1d1511';
+    const spike=frost?'#a9dcf0':'#c9b591';
+    g.line(-10,6,-18,7,dark,2); g.line(-18,7,-21,5,dark);
+    g.ell(-2,5,frost?13:11,3.5,fur);g.ell(7,5,7,3,fur);
+    g.line(-10,6,-5,9,dark,2);g.line(-5,9,-1,9,hi);
+    g.line(4,6,8,9,dark,2);g.line(8,9,14,9,hi);
+    for (const x of [-10,-6,-2,2,6])g.line(x,3,x-2,frost?-2:0,spike);
+    g.ell(14,7,5,2.5,hi);g.rect(17,7,6,2,fur);g.px(16,6,dark);
+    g.poly([[11,6],[9,3],[14,6]],fur);g.line(18,8,23,8,dark);
+    b.rim(frost?'#eef9ff':'#a08872','#0a0808',.3,.3);b.outline('#0a0808');
+    return b;
+}
+
 // Mire Hound: wide, low, wet dark hide with a ridge of bone spines and ember eyes. Pose 3 is the pounce crouch:
 // head dropped, haunches up, spines bristling - the body is the telegraph.
 function mireHound(pose) {
+    if (pose === 7) return deadCanine(1);
     const s = ENEMY_SPECS[1], b = new Bitmap(...s.size), g = at(b, ...s.origin);
     const C = { fur: '#3b2b22', furHi: '#5c4433', deep: '#1d1511', wet: '#6e5c4d', spine: '#8c7860', spineHi: '#c9b591', eye: '#ff8f2e', maw: '#7c1f1a', tooth: '#eadfc6' };
-    const crouch = pose === 3, drop = crouch ? 2 : 0, swing = pose === 1 ? 3 : pose === 2 ? -3 : 0;
-    const leg = (x, dx, c, top = 1) => { g.line(x, top, x + dx, 8, c, 2); g.rect(x + dx - 1, 9, 3, 1, C.spine); };
+    const crouch = pose === 3, drop = pose === 7 ? 6 : crouch ? 2 : pose === 5 ? 1 : pose === 4 ? -1 : 0;
+    const leg = (x, front, near, c, top = 1) => canineLeg(g, pose, x, top, front, near, c, C.spine);
+    if (pose === 6 || pose === 7) C.eye = C.deep;
     // Far legs.
-    leg(-9, -swing, C.deep, crouch ? -1 : 1); leg(6, swing, C.deep, 1 + drop);
+    leg(-9, false, false, C.deep, crouch ? -1 : 1); leg(6, true, false, C.deep, 1 + drop);
     // Ragged tail held low behind.
     g.line(-11, -3, -16, -5, C.fur, 2); g.line(-16, -5, -19, -3 + (pose === 1 ? -1 : 0), C.fur);
     // Long low body with a shoulder hump; the rear rises in the crouch.
-    g.ell(-2, -2 + (crouch ? -1 : 0), 11, 5, C.fur);
+    g.ell(-2, -2 + (pose === 7 ? 6 : crouch ? -1 : 0), 11, 5, C.fur);
     g.ell(5, -3 + drop / 2, 5.5, 4.5, C.fur);
     g.ell(-2, 1, 9, 1.6, C.deep);
     g.line(-9, -5, 0, -6, C.wet); g.line(2, -6, 6, -7 + drop / 2, C.wet);
@@ -104,15 +150,16 @@ function mireHound(pose) {
         g.line(x, base, x - 2, base - len, C.spine); g.px(x - 2, base - len, C.spineHi);
     });
     // Neck, skull and an open, toothed maw.
-    g.poly([[6, -7 + drop], [11, -8 + drop], [13, -2 + drop], [7, 0 + drop]], C.fur);
-    g.ell(14, -4 + drop, 4, 3, C.furHi);
-    g.poly([[15, -6 + drop], [22, -4 + drop], [22, -2 + drop], [15, -1 + drop]], C.fur);
-    g.rect(16, -2 + drop, 6, 2, C.maw);
-    g.px(17, -2 + drop, C.tooth); g.px(19, -2 + drop, C.tooth); g.px(21, -2 + drop, C.tooth); g.px(18, -1 + drop, C.tooth);
-    g.poly([[11, -7 + drop], [9, -12 + drop], [13, -7 + drop]], C.fur);
-    g.px(15, -5 + drop, C.eye); g.px(16, -5 + drop, C.eye);
+    const head = at(b, s.origin[0] + (pose === 4 ? 2 : pose === 6 ? -2 : 0), s.origin[1]);
+    head.poly([[6, -7 + drop], [11, -8 + drop], [13, -2 + drop], [7, 0 + drop]], C.fur);
+    head.ell(14, -4 + drop, 4, 3, C.furHi);
+    head.poly([[15, -6 + drop], [22, -4 + drop], [22, -2 + drop], [15, -1 + drop]], C.fur);
+    head.rect(16, -2 + drop, 6, 2, C.maw);
+    head.px(17, -2 + drop, C.tooth); head.px(19, -2 + drop, C.tooth); head.px(21, -2 + drop, C.tooth); head.px(18, -1 + drop, C.tooth);
+    head.poly([[11, -7 + drop], [9, -12 + drop], [13, -7 + drop]], C.fur);
+    head.px(15, -5 + drop, C.eye); head.px(16, -5 + drop, C.eye);
     // Near legs over the body.
-    leg(-6, swing, C.fur, crouch ? -1 : 1); leg(9, -swing, C.fur, 1 + drop);
+    leg(-6, false, true, C.fur, crouch ? -1 : 1); leg(9, true, true, C.fur, 1 + drop);
     b.rim('#a08872', '#0b0806', .35, .3);
     b.outline('#0e0a08');
     return b;
@@ -582,13 +629,15 @@ function shardcaster(pose) {
 // is low, a quill-crowned predator rather than a bone-spined scavenger. Pose 3 is the coiled flank crouch: haunches
 // raised, chest to the snow, quills flared - the body is the pounce tell.
 function whitefangStalker(pose) {
+    if (pose === 7) return deadCanine(12);
     const s = ENEMY_SPECS[12], b = new Bitmap(...s.size), g = at(b, ...s.origin);
     const C = { fur: '#b8b3ab', furHi: '#e2ded6', furDk: '#7d7872', deep: '#45413f', claw: '#1c1a1c', quill: '#a9dcf0',
         quillHi: '#f1fcff', quillDk: '#4f8fb2', eye: '#7fe4ff', maw: '#3a1c24', tooth: '#f4f6f2' };
-    const coil = pose === 3, drop = coil ? 3 : 0, gait = pose === 1 ? 3 : pose === 2 ? -3 : 0;
-    const leg = (x, top, dx, c) => { g.line(x, top, x + dx, 10, c, 3); g.rect(x + dx - 1, 10, 4, 2, c); g.px(x + dx + 3, 11, C.claw); };
+    const coil = pose === 3, drop = pose === 7 ? 6 : coil ? 3 : pose === 5 ? 1 : pose === 4 ? -1 : 0;
+    const leg = (x, top, front, near, c) => canineLeg(g, pose, x, top, front, near, c, C.claw, 3);
+    if (pose === 6 || pose === 7) C.eye = C.deep;
     // Far legs.
-    leg(-10, 2 - (coil ? 2 : 0), -gait, C.furDk); leg(7, 2 + drop, gait, C.furDk);
+    leg(-10, 2 - (coil ? 2 : 0), false, false, C.furDk); leg(7, 2 + drop, true, false, C.furDk);
     // Long quilled tail swept back and up.
     g.line(-13, -4, -21, -9, C.furDk, 3); g.line(-21, -9, -25, -8 + (pose === 1 ? -1 : 0), C.fur, 2);
     for (const [x, y] of [[-16, -7], [-20, -9], [-23, -9]]) { g.line(x, y, x - 3, y - 4, C.quillDk); g.px(x - 3, y - 4, C.quillHi); }
@@ -606,20 +655,22 @@ function whitefangStalker(pose) {
         g.px(x - 3, base - len, C.quillHi);
     });
     // Head: long wolf muzzle, snarling, ears pinned back, eyes lit.
+    const head = at(b, s.origin[0] + (pose === 4 ? 2 : pose === 6 ? -2 : 0), s.origin[1]);
     const hy = drop + (coil ? 1 : 0);
-    g.ell(14, -6 + hy, 5, 4, C.furHi);
-    g.poly([[16, -7 + hy], [25, -4 + hy], [24, -1 + hy], [16, 0 + hy]], C.fur);
-    g.rect(18, -2 + hy, 6, 2, C.maw);
-    for (const x of [18, 20, 22]) g.px(x, -2 + hy, C.tooth);
-    g.px(19, -1 + hy, C.tooth); g.px(23, -1 + hy, C.tooth);
-    g.poly([[11, -9 + hy], [9, -14 + hy], [14, -9 + hy]], C.furDk);
-    g.px(16, -7 + hy, C.eye); g.px(17, -7 + hy, C.eye);
+    head.ell(14, -6 + hy, 5, 4, C.furHi);
+    head.poly([[16, -7 + hy], [25, -4 + hy], [24, -1 + hy], [16, 0 + hy]], C.fur);
+    head.rect(18, -2 + hy, 6, 2, C.maw);
+    for (const x of [18, 20, 22]) head.px(x, -2 + hy, C.tooth);
+    head.px(19, -1 + hy, C.tooth); head.px(23, -1 + hy, C.tooth);
+    head.poly([[11, -9 + hy], [9, -14 + hy], [14, -9 + hy]], C.furDk);
+    head.px(16, -7 + hy, C.eye); head.px(17, -7 + hy, C.eye);
     // Near legs over the body, forelimb reaching in the stride.
-    leg(-6, 2 - (coil ? 2 : 0), gait, C.fur); leg(10, 2 + drop, coil ? 4 : -gait, C.furHi);
+    leg(-6, 2 - (coil ? 2 : 0), false, true, C.fur); leg(10, 2 + drop, true, true, C.furHi);
     b.rim('#eef9ff', '#0a0e13', .4, .3);
     b.outline('#0a0d12');
     const o = s.origin;
-    b.set(o[0] + 16, o[1] - 7 + hy, C.quillHi); b.set(o[0] + 17, o[1] - 7 + hy, C.eye);
+    const headOffset = pose === 4 ? 2 : pose === 6 ? -2 : 0;
+    b.set(o[0] + 16 + headOffset, o[1] - 7 + hy, pose === 6 ? C.deep : C.quillHi); b.set(o[0] + 17 + headOffset, o[1] - 7 + hy, C.eye);
     return b;
 }
 
@@ -956,7 +1007,7 @@ const painters = [hollow, mireHound, ashling, penitent, ashSlinger, ashPriest, d
     frostlingPackling, shardcaster, whitefangStalker, cairnSentinel, hoarfrostCantor, mirrorWisp, mirrorDouble,
     bellOfWinter, reliquaryOfGlass, crystalWard, glassFalseForm];
 
-export function paintEnemy(kind, pose) { return painters[kind](pose); }
+export function paintEnemy(kind, pose) { return painters[kind]((kind === 1 || kind === 12) && (pose === 1 || pose === 2) ? (pose === 1 ? 8 : 12) : pose); }
 
 export function enemyHit(bitmap) {
     return bitmap.clone().recolor(c => mix(c, '#fff0dc', .62));

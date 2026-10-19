@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.125 — Combat recovery and longer hunts
+
+- Automatic targeting remains the default. Held mouse/right-touch/gamepad aim takes temporary precedence; tap-to-aim expires after 350 ms, then automatic targeting resumes. A small ground rune shows the direction.
+- Hunt route budgets scale by difficulty depth: shortest legal routes contain 6/8/10/12 battles before the Wyrm. Optional branches retain protected rewards and existing capped refinements.
+- Mire Hound and Whitefang gain eight travel-driven canine trot frames and distinct pounce/recoil/recovery poses. Recovered painted Hollow, Mire Hound and Ashfang sheets are integrated with native-art fallback.
+- `/enemy-lab` runs every implemented Fire/Frost enemy through the actual simulation and renderer without saving progress. [Seeded hunt evidence](docs/playtesting/hunt-length/README.md) and [aim rules](docs/playtesting/hybrid-aim-2026-10-19.md).
+- **Art milestone remains partial:** other generated enemy sheets and earlier recordings were lost before publication. Those enemies retain their native art; this version does not claim the full all-roster card-quality overhaul.
+
 ## Authoritative product design and development continuation
 
 **Single product-design source of truth:** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md).

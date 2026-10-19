@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.LevelUp;
 using Wyrmforge.Application.Runs.Navigation;
@@ -65,14 +65,17 @@ public sealed class OpeningPowerTests
         // Stage 8 keeps its full horde cap for any non-lair road, but the pre-lair road is now the Bell Warden's set piece (roster
         // step 7): it opens with the Warden alone, far below the horde peak, and only its rally call brings reinforcements.
         Assert.AreEqual(22, EnemyStagePressure.ActiveEnemyCap(8, 1));
-        foreach (var expectedCap in new[] { 8, 10, 10, 14, 14, 14, 1 })
+        while (map.AvailableNodes.Count == 0 || map.AvailableNodes[0].Type != WyrmrealmNodeType.Dragon)
         {
             var quota = map.CurrentNodeKillsRequired;
             for (var kill = 0; kill < quota; kill++) map.RegisterKill();
             Field<List<EnemyState>>(simulation, "enemies").Clear();
+            if (simulation.AvailableMapNodes.All(n => n.Type == WyrmrealmNodeType.Dragon)) break;
             Assert.IsTrue(simulation.ChooseMapNode(simulation.AvailableMapNodes.OrderBy(n => n.Site!.RoadId is null ? 0 : n.Territory!.Roads.Single(r => r.Id == n.Site.RoadId).Encounters).First().Id));
             for (var frame = 0; frame < 600; frame++) Invoke(simulation, "UpdateSpawn", 0.05d, 390d, 700d);
-            Assert.AreEqual(expectedCap, Field<List<EnemyState>>(simulation, "enemies").Count);
+            var node = map.CurrentNode!;
+            var expectedCap = node.PreLair ? 1 : EnemyStagePressure.ActiveEnemyCap(node.Stage, 1);
+            Assert.AreEqual(expectedCap, Field<List<EnemyState>>(simulation, "enemies").Count, $"stage {node.Stage}");
         }
     }
 

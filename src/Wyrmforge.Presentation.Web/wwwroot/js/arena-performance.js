@@ -94,7 +94,7 @@ async function invokeFrame(state, args) {
     const now = performance.now();
     const delta = Math.min((now - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = now;
-    const snapshot = await state.dotNetReference.invokeMethodAsync('Frame', delta, args[1], args[2], args[3], args[4]);
+    const snapshot = await state.dotNetReference.invokeMethodAsync('Frame', delta, ...args.slice(1));
     if (state.active) {
         state.latestSnapshot = snapshot;
         for (const cue of collectSoundEvents(state.soundEvents, snapshot, now)) window.wyrmforgeAudio?.play(cue);

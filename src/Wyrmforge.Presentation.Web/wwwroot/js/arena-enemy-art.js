@@ -5,7 +5,7 @@
 import { artReady, artFrame, drawArtFrame } from './art-atlas.js';
 const palettes = [
     {edge:'#242726',body:'#788079',shade:'#4d5d58',light:'#bcc0aa',head:'#c0bda7',eye:'#242728',weapon:'#8b9382'},
-    {edge:'#221b2d',body:'#5a486b',shade:'#3b3155',light:'#9477a8',head:'#72658b',eye:'#bcdbe7',weapon:'#ae9dbe'},
+    {edge:'#0e0a08',body:'#3b2b22',shade:'#1d1511',light:'#6e5c4d',head:'#5c4433',eye:'#ff8f2e',weapon:'#c9b591'},
     {edge:'#301f1f',body:'#785442',shade:'#513629',light:'#bb8860',head:'#ac8c70',eye:'#281f20',weapon:'#d6b49a'},
     {edge:'#271d26',body:'#692e38',shade:'#482632',light:'#b86468',head:'#ae8379',eye:'#e6bc94',weapon:'#877c82'},
     {edge:'#2a1210',body:'#6c2b1f',shade:'#3e1812',light:'#97432c',head:'#cfba95',eye:'#ffb347',weapon:'#ffb347'},
@@ -126,23 +126,31 @@ export function updateEnemyMotions(motion, enemies, seconds, reducedMotion = fal
         const old = motion.entities.get(id);
         let traveled = old?.traveled ?? 0;
         let lastMoved = old?.lastMoved ?? Number.NEGATIVE_INFINITY;
-        if (old) {
-            const dist = Math.hypot(enemy.x - old.x, enemy.y - old.y);
-            if (dist >= .35 && dist < 48) {
-                traveled += dist;
-                lastMoved = seconds;
-            }
+        const dist = old ? Math.hypot(enemy.x - old.x, enemy.y - old.y) : 0;
+        const reset = old && (seconds < old.seconds || dist >= 48 || old.kind !== Number(enemy.kind));
+        if (reset) { traveled = 0; lastMoved = Number.NEGATIVE_INFINITY; }
+        if (old && !reset && !enemy.frozen && dist >= .001) {
+            traveled += dist;
+            lastMoved = seconds;
         }
-        // Hounds use a grounded four-beat diagonal gait instead of swapping two stiff silhouettes
-        // at the same cadence as humanoids. A neutral contact phase between steps prevents skating.
-        const hound = Number(enemy.kind) === 1;
-        const houndGait = [1, 0, 2, 0][Math.floor(traveled / 3.5) % 4];
-        const phase = reducedMotion || seconds - lastMoved > .20 ? 0 :
-            hound ? houndGait : (Math.floor(traveled / 6) % 2) + 1;
-        // Sprites face east; remember the last clear horizontal travel so idle enemies don't flip.
+        // Eight distance-driven frames. Opposite fore/hind paws share contact timing;
+        // standing, frozen and reduced-motion actors never run a wall-clock treadmill.
+        const canine = Number(enemy.kind) === 1 || Number(enemy.kind) === 12;
+        let phase = reducedMotion || enemy.frozen || seconds - lastMoved > .12 ? 0 :
+            canine ? 8 + Math.floor(traveled / 2) % 8 : (Math.floor(traveled / 6) % 2) + 1;
+        let releasedAt = reset ? Number.NEGATIVE_INFINITY : old?.releasedAt ?? Number.NEGATIVE_INFINITY;
+        // A cancelled/frozen windup must not manufacture a visual strike. The pose adds
+        // no attack, displacement or damage: C# remains the sole gameplay authority.
+        if (!reset && !enemy.telegraph && !enemy.frozen && old?.telegraphProgress >= .7) releasedAt = seconds;
+        if (!reducedMotion && !enemy.frozen && !enemy.telegraph) {
+            const elapsed = seconds - releasedAt;
+            if (elapsed >= 0 && elapsed < .10) phase = 4;
+            else if (elapsed >= .10 && elapsed < .28) phase = 5;
+        }
         let facing = old?.facing ?? 1;
-        if (old && Math.abs(enemy.x - old.x) > .2 && Math.abs(enemy.x - old.x) < 48) facing = enemy.x > old.x ? 1 : -1;
-        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved, facing });
+        if (old && !reset && Math.abs(enemy.x - old.x) > .2) facing = enemy.x > old.x ? 1 : -1;
+        motion.entities.set(id, { x: enemy.x, y: enemy.y, traveled, lastMoved, facing, seconds,
+            kind: Number(enemy.kind), releasedAt, telegraphProgress: Number(enemy.telegraph?.progress ?? -1) });
         poses.set(id, phase);
     }
     // Remove dead/despawned entities to keep state bounded throughout long hunts.
@@ -159,7 +167,10 @@ export function enemyFacing(motion, entityId) {
 export function enemySpriteName(enemy, walkPhase = 0) {
     const kind = clampKind(enemy?.kind);
     const variant = enemy?.hitFlash ? 'hit' : enemy?.frozen ? 'frozen' : 'normal';
-    const phase = enemy?.telegraph ? 3 : Math.max(0, Math.min(2, Number(walkPhase) || 0));
+    const canine = kind === 1 || kind === 12;
+    const requested = Math.floor(Number(walkPhase) || 0);
+    const phase = canine && enemy?.dead ? 7 : canine && enemy?.frozen ? 0 : canine && enemy?.hitFlash ? 6 : enemy?.telegraph ? 3 :
+        canine && requested >= 4 && requested <= 15 ? requested : !canine && (requested === 4 || requested === 5) ? 0 : Math.max(0, Math.min(2, requested));
     return `enemy.${kind}.${phase}.${variant}`;
 }
 
@@ -192,17 +203,7 @@ export function drawEnemyPixelArt(ctx,enemy,light=null,walkPhase=0,facing=1){
         ctx.ellipse(enemy.x,enemy.y+(sprite.frame.h-sprite.frame.ay-3)*scale,(sprite.frame.w*.32)*scale,3.5*scale,0,0,Math.PI*2);
         ctx.fill();
         ctx.restore();
-        // An undead canine plants its weight on diagonally opposing paws. The small uneven
-        // shoulder dip is tied to travelled distance, not wall-clock idle time or random noise.
-        const houndStride = Number(enemy.kind) === 1 && walkPhase > 0 && !enemy.telegraph && !enemy.frozen;
-        if (houndStride) {
-            ctx.save();
-            ctx.translate(enemy.x, enemy.y);
-            ctx.rotate((walkPhase === 1 ? -1 : 1) * 0.025 * (facing < 0 ? -1 : 1));
-            ctx.translate(-enemy.x, -enemy.y + (walkPhase === 1 ? -0.8 : 0.6) * scale);
-        }
         drawArtFrame(ctx,'actors',enemySpriteName(enemy,walkPhase),enemy.x,enemy.y,{scale,flipX:facing<0});
-        if (houndStride) ctx.restore();
         drawEnemyLight(ctx,enemy,light,scale);
         return;
     }

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { caninePawPhase, paintEnemy, enemyPoses } from '../../tools/art/sprites/enemies.mjs';
 import { decodePng } from '../../tools/art/lib/png.mjs';
 import { artReady, drawArtFrame, hasArtFrame, installArtForTesting, resetArtForTesting, loadArt, atlasImageUrl } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/art-atlas.js';
 import { createTerritoryWallLayers, runeLit, territoryRuneSchool, territoryWallStyle, drawTerritoryWall } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-walls.js';
@@ -214,4 +215,25 @@ test('atlas urls carry the content hash of the exact image the frame table was p
     }
     assert.equal(atlasImageUrl('art/', { image: 'x.png' }), 'art/x.png');
     assert.ok(readFileSync(new URL('icons.css', artRoot), 'utf8').includes(`icons.png?v=${manifest.atlases.icons.hash}`));
+});
+
+
+test('canine atlas has eight distinct articulated trot silhouettes and paired diagonal contacts', () => {
+    for (const kind of [1,12]) {
+        const hashes = new Set();
+        for (let pose=8;pose<=15;pose++) {
+            hashes.add(createHash('sha256').update(paintEnemy(kind,pose).data).digest('hex'));
+            assert.deepEqual(caninePawPhase(pose,true,true),caninePawPhase(pose,false,false));
+            assert.deepEqual(caninePawPhase(pose,true,false),caninePawPhase(pose,false,true));
+            for (const variant of ['normal','hit','frozen']) assert.ok(frames('actors')[`enemy.${kind}.${pose}.${variant}`]);
+        }
+        assert.equal(hashes.size,8,`kind ${kind} has eight real limb drawings`);
+        assert.ok([...Array(8)].some((_,i)=>caninePawPhase(8+i,true,true).lift>0),'Swing paws clear the floor');
+        assert.equal(enemyPoses(kind).length,16);
+        assert.equal(enemySpriteName({kind},15),`enemy.${kind}.15.normal`);
+        assert.equal(enemySpriteName({kind,hitFlash:true},15),`enemy.${kind}.6.hit`);
+        assert.equal(enemySpriteName({kind,frozen:true},15),`enemy.${kind}.0.frozen`);
+        assert.equal(enemySpriteName({kind,dead:true}),`enemy.${kind}.7.normal`);
+    }
+    assert.equal(enemyPoses(0).length,4,'Other creatures keep their authored roster poses');
 });

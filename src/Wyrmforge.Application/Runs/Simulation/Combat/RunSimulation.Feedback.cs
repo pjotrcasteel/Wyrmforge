@@ -52,7 +52,7 @@ public sealed partial class RunSimulation
     {
         var intensity = EnemyCatalog.Get(enemy.Kind).ThreatCost;
         var radius = enemy.Radius * (1 + Math.Max(0, intensity - 1) * 0.18);
-        deathBursts.Add(new DeathBurstState(enemy.Position, radius, DeathBurstSeconds, intensity));
+        deathBursts.Add(new DeathBurstState(enemy.Position, radius, DeathBurstSeconds, intensity, enemy.Kind, enemy.Id, enemy.Radius));
     }
 
     private void RegisterExperiencePickup(int value)
@@ -92,8 +92,12 @@ public sealed partial class RunSimulation
         public double Progress => 1 - Math.Clamp(Life / Duration, 0, 1);
     }
 
-    private sealed class DeathBurstState(Vector2D position, double radius, double duration, int intensity)
+    private sealed class DeathBurstState(Vector2D position, double radius, double duration, int intensity, EnemyKind kind, int entityId, double bodyRadius)
     {
+        public EnemyKind Kind { get; } = kind;
+        public int EntityId { get; } = entityId;
+        public double BodyRadius { get; } = bodyRadius;
+
         public Vector2D Position { get; } = position;
 
         public double Radius { get; } = radius;

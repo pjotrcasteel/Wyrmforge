@@ -1,11 +1,12 @@
 import { createPlayerDangerState, updatePlayerDanger, playerDangerPresentation, drawPlayerDanger } from './player-danger.js';
-import { attachArenaInput, getArenaMovement } from './arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim } from './arena-input.js';
 import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
+import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses } from './painted-enemies.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
@@ -24,6 +25,7 @@ export function initializeArena(canvas, dotNetReference) {
     disposeArena(canvas);
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
+    preloadPaintedEnemies();
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -40,11 +42,19 @@ export function readArenaDiagnostics(canvas) {
     return {
         active: state.active,
         movement: getArenaMovement(state),
+        aim: getArenaAim(state),
+        projectiles: state.latestSnapshot?.projectiles ?? [],
+        castMotion: state.latestSnapshot?.castMotion ?? null,
         pointerId: state.pointerId,
         touchId: state.touchId,
         player: state.latestSnapshot?.player ?? null,
         world: state.latestSnapshot?.world ?? null,
         exit: state.latestSnapshot?.exit ?? null,
+        enemies: state.latestSnapshot?.enemies ?? [],
+        deathBursts: state.latestSnapshot?.deathBursts ?? [],
+        dragon: state.latestSnapshot?.dragon ?? null,
+        dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
+        performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
     };
 }
@@ -69,6 +79,7 @@ function createState(canvas, dotNetReference) {
         playerDanger: createPlayerDangerState(),
         mageWalk: { x: null, y: null, lastMove: Number.NEGATIVE_INFINITY },
         enemyMotion: createEnemyMotionState(),
+        paintedCorpses: {},
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -117,12 +128,14 @@ function startSimulationFrame(state, timestamp, rect) {
     const delta = Math.min((timestamp - state.lastSimulationTimestamp) / 1000, 0.05);
     state.lastSimulationTimestamp = timestamp;
     const movement = getArenaMovement(state);
+    const aim = getArenaAim(state);
     const bridgeStarted = performance.now();
 
-    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y)
+    state.dotNetReference.invokeMethodAsync('Frame', delta, rect.width, rect.height, movement.x, movement.y, aim.x, aim.y)
         .then(snapshot => {
             if (!state.active) return;
             updatePlayerDanger(state.playerDanger, snapshot, performance.now());
+            if (snapshot.paused) state.resetInput?.();
             state.latestSnapshot = snapshot;
             state.simulationFrameCount++;
             state.simulationMillisecondsTotal += snapshot.simulationMilliseconds ?? 0;
@@ -219,9 +232,12 @@ function draw(state, snapshot, width, height) {
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
     if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
+    drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
+    updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
+    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
     const depthLayers = [
@@ -260,7 +276,7 @@ function draw(state, snapshot, width, height) {
         ctx.restore();
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
-    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches);
+    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches, snapshot.dragonBreath);
     // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
@@ -764,7 +780,7 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
 }
 
 function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1) {
-    drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
+    if (!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
@@ -979,7 +995,7 @@ function drawDragonBreath(ctx, breath, school) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon, reducedMotion = false) {
+function drawDragon(ctx, dragon, reducedMotion = false, breath = null) {
     const palette = schoolPalette(dragon.school);
     ctx.save();
     ctx.translate(dragon.x, dragon.y);
@@ -1004,7 +1020,9 @@ function drawDragon(ctx, dragon, reducedMotion = false) {
     }
 
     const art = artReady() ? `wyrm.${dragon.school}.${dragon.frozen ? 'frozen' : `p${dragon.phase === 2 ? 2 : 1}.f${reducedMotion ? 0 : Math.floor(performance.now() / 280) % 2}`}` : null;
-    if (art && hasArtFrame('wyrms', art)) {
+    if (drawPaintedWyrm(ctx, dragon, breath ? 3 : 0)) {
+        // Canonical breath telegraph and phase/ascendant crests remain separate from the bitmap.
+    } else if (art && hasArtFrame('wyrms', art)) {
         // Authored wyrm sprite scaled to the canonical C# radius; flapping is presentation only.
         ctx.fillStyle = 'rgba(4,6,9,.34)';
         ctx.beginPath();
@@ -1233,4 +1251,19 @@ function drawPolygon(ctx, x, y, radius, sides, rotation) {
 function roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.roundRect(x, y, width, height, radius);
+}
+
+// Snapshot direction is the same C# direction used to launch the primary spell.
+function drawAimRune(ctx, player) {
+    if (!Number.isFinite(player.aimAngle) || (!player.manualAim && player.aimTargetId == null)) return;
+    ctx.save();
+    ctx.translate(player.x, player.y + 7);
+    ctx.rotate(player.aimAngle);
+    ctx.strokeStyle = player.manualAim ? 'rgba(225,204,159,.72)' : 'rgba(162,176,195,.36)';
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 29, 20, 0, -.4, .4);
+    ctx.moveTo(34, 0); ctx.lineTo(38, -3); ctx.lineTo(42, 0); ctx.lineTo(38, 3); ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
 }

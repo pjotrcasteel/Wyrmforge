@@ -1,104 +1,169 @@
-// Arena-specific input lifecycle. On iOS Safari, touch events survive pointer-capture loss
-// during scrolling/viewport changes; the two paths must never fight over one virtual stick.
-const navigationKeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']);
+import { resolveArenaCamera } from './arena-camera.js';
 
+// Touch Events back up Pointer Events on Safari. Each channel has its own owner;
+// a simultaneous second finger can never replace the movement finger.
+const navigationKeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']);
 export function attachArenaInput(state, browserWindow = window, browserDocument = document) {
     const { canvas } = state;
-    state.touchId = null;
+    state.touchId = state.aimTouchId = state.aimPointerId = null;
+    state.aimPoint = null;
+    state.tapAimUntil = 0;
+    state.inputSuspended = false;
     const reset = () => {
         state.keys.clear();
-        state.pointerId = null;
-        state.touchId = null;
+        state.pointerId = state.touchId = state.aimTouchId = state.aimPointerId = null;
+        state.aimPoint = null;
+        state.tapAimUntil = 0;
     };
+    state.resetInput = reset;
+    const rightSide = point => {
+        const rect = canvas.getBoundingClientRect?.();
+        return rect && point.clientX >= rect.left + rect.width * .55;
+    };
+    const setMove = point => {
+        state.touchOrigin = { x: point.clientX, y: point.clientY };
+        state.touchCurrent = { ...state.touchOrigin };
+    };
+    const setAim = point => { state.aimPoint = { x: point.clientX, y: point.clientY }; };
     const onKeyDown = event => {
-        if (event.target?.isContentEditable ||
-            event.target?.closest?.('input, textarea, select, [contenteditable], [role="dialog"]')) return;
+        state.inputSuspended = false;
+        if (event.target?.isContentEditable || event.target?.closest?.('input, textarea, select, [contenteditable], [role="dialog"]')) return;
         if (navigationKeys.has(event.key)) event.preventDefault();
         state.keys.add(event.key.toLowerCase());
     };
     const onKeyUp = event => state.keys.delete(event.key.toLowerCase());
     const onPointerDown = event => {
-        if (state.touchId !== null || state.pointerId !== null || event.isPrimary === false ||
-            (event.pointerType === 'mouse' && event.button !== 0)) return;
-        state.pointerId = event.pointerId;
-        state.touchOrigin = { x: event.clientX, y: event.clientY };
-        state.touchCurrent = { ...state.touchOrigin };
-        try { canvas.setPointerCapture?.(event.pointerId); }
-        catch { /* The document still tracks captured touches through touch events. */ }
+        state.inputSuspended = false;
+        if ((event.pointerType === 'mouse' && event.button !== 0) || state.touchId !== null || state.aimTouchId !== null) return;
+        if (event.pointerType === 'mouse' || rightSide(event)) {
+            if (state.aimPointerId !== null) return;
+            state.aimPointerId = event.pointerId;
+            state.aimIsTouch = event.pointerType === 'touch';
+            state.aimStartedAt = Date.now();
+            state.aimStart = { x: event.clientX, y: event.clientY };
+            setAim(event);
+        } else {
+            if (state.pointerId !== null || event.isPrimary === false) return;
+            state.pointerId = event.pointerId;
+            setMove(event);
+        }
+        try { canvas.setPointerCapture?.(event.pointerId); } catch { /* Touch Events remain active. */ }
         if (event.pointerType === 'touch' && event.cancelable) event.preventDefault();
     };
     const onPointerMove = event => {
-        if (state.touchId !== null || event.pointerId !== state.pointerId) return;
-        state.touchCurrent = { x: event.clientX, y: event.clientY };
+        if (state.touchId !== null || state.aimTouchId !== null) return;
+        if (event.pointerId === state.aimPointerId) setAim(event);
+        if (event.pointerId === state.pointerId) state.touchCurrent = { x: event.clientX, y: event.clientY };
         if (event.pointerType === 'touch' && event.cancelable) event.preventDefault();
     };
     const onPointerEnd = event => {
         if (event.pointerId === state.pointerId) state.pointerId = null;
+        if (event.pointerId === state.aimPointerId) {
+            state.aimPointerId = null;
+            state.tapAimUntil = 0; // Mouse release and interrupted capture restore auto immediately.
+        }
     };
     const onTouchStart = event => {
-        if (state.touchId !== null) return;
-        const touch = event.changedTouches?.[0];
-        if (!touch) return;
-        state.touchId = touch.identifier;
-        state.pointerId = null;
-        state.touchOrigin = { x: touch.clientX, y: touch.clientY };
-        state.touchCurrent = { ...state.touchOrigin };
+        state.inputSuspended = false;
+        for (const touch of Array.from(event.changedTouches ?? [])) {
+            if (rightSide(touch)) {
+                if (state.aimTouchId !== null) continue;
+                state.aimTouchId = touch.identifier;
+                state.aimIsTouch = true;
+                state.aimPointerId = null;
+                state.aimStartedAt = Date.now();
+                state.aimStart = { x: touch.clientX, y: touch.clientY };
+                state.tapAimUntil = 0;
+                setAim(touch);
+            } else if (state.touchId === null) {
+                state.touchId = touch.identifier;
+                state.pointerId = null;
+                setMove(touch);
+            }
+        }
         if (event.cancelable) event.preventDefault();
     };
     const onTouchMove = event => {
-        if (state.touchId === null) return;
-        // Touches remain targeted at the canvas even if the finger leaves its bounding rectangle.
-        const touch = Array.from(event.touches ?? []).find(touch => touch.identifier === state.touchId);
-        if (touch) state.touchCurrent = { x: touch.clientX, y: touch.clientY };
+        for (const touch of Array.from(event.touches ?? [])) {
+            if (touch.identifier === state.touchId) state.touchCurrent = { x: touch.clientX, y: touch.clientY };
+            if (touch.identifier === state.aimTouchId) setAim(touch);
+        }
         if (event.cancelable) event.preventDefault();
     };
     const onTouchEnd = event => {
-        if (Array.from(event.changedTouches ?? []).some(touch => touch.identifier === state.touchId)) state.touchId = null;
+        for (const touch of Array.from(event.changedTouches ?? [])) {
+            if (touch.identifier === state.touchId) state.touchId = null;
+            if (touch.identifier === state.aimTouchId) {
+                state.aimTouchId = null;
+                const tap = event.type === 'touchend' && Date.now() - state.aimStartedAt <= 180 &&
+                    Math.hypot(touch.clientX - state.aimStart.x, touch.clientY - state.aimStart.y) < 8;
+                // A short-lived point cast cue makes the tap's endpoint explicit, never a latched heading.
+                state.tapAimUntil = tap ? Date.now() + 350 : 0;
+            }
+        }
     };
-    const onBlur = () => reset();
-    const onVisibilityChange = () => { if (browserDocument.hidden) reset(); };
+    const suspend = () => { reset(); state.inputSuspended = true; };
+    const onVisibilityChange = () => { if (browserDocument.hidden) suspend(); else state.inputSuspended = false; };
+    const listen = (target, name, fn, options) => {
+        target.addEventListener(name, fn, options);
+        return () => target.removeEventListener(name, fn);
+    };
+    const detach = [
+        listen(browserWindow, 'keydown', onKeyDown, { passive: false }),
+        listen(browserWindow, 'keyup', onKeyUp), listen(browserWindow, 'blur', suspend),
+        listen(browserWindow, 'focus', () => { state.inputSuspended = false; }),
+        listen(browserWindow, 'resize', reset), listen(browserWindow, 'orientationchange', reset),
+        listen(browserWindow, 'pointerup', onPointerEnd), listen(browserWindow, 'pointercancel', onPointerEnd),
+        listen(browserDocument, 'visibilitychange', onVisibilityChange),
+        listen(canvas, 'pointerdown', onPointerDown, { passive: false }),
+        listen(canvas, 'pointermove', onPointerMove, { passive: false }),
+        ...['pointerup', 'pointercancel', 'lostpointercapture'].map(name => listen(canvas, name, onPointerEnd)),
+        listen(canvas, 'touchstart', onTouchStart, { passive: false }),
+        listen(canvas, 'touchmove', onTouchMove, { passive: false }),
+        ...['touchend', 'touchcancel'].map(name => listen(canvas, name, onTouchEnd)),
+    ];
+    return () => { for (const remove of detach) remove(); reset(); };
+}
 
-    browserWindow.addEventListener('keydown', onKeyDown, { passive: false });
-    browserWindow.addEventListener('keyup', onKeyUp);
-    browserWindow.addEventListener('blur', onBlur);
-    browserDocument.addEventListener('visibilitychange', onVisibilityChange);
-    canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
-    canvas.addEventListener('pointermove', onPointerMove, { passive: false });
-    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, onPointerEnd);
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
-    for (const name of ['touchend', 'touchcancel']) canvas.addEventListener(name, onTouchEnd);
-    return () => {
-        browserWindow.removeEventListener('keydown', onKeyDown);
-        browserWindow.removeEventListener('keyup', onKeyUp);
-        browserWindow.removeEventListener('blur', onBlur);
-        browserDocument.removeEventListener('visibilitychange', onVisibilityChange);
-        canvas.removeEventListener('pointerdown', onPointerDown);
-        canvas.removeEventListener('pointermove', onPointerMove);
-        for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.removeEventListener(name, onPointerEnd);
-        canvas.removeEventListener('touchstart', onTouchStart);
-        canvas.removeEventListener('touchmove', onTouchMove);
-        for (const name of ['touchend', 'touchcancel']) canvas.removeEventListener(name, onTouchEnd);
-        reset();
-    };
+function stick(state, offset) {
+    const pads = state.gamepads?.() ?? globalThis.navigator?.getGamepads?.() ?? [];
+    for (const pad of pads) {
+        if (!pad || pad.connected === false) continue;
+        const x = pad.axes?.[offset] ?? 0, y = pad.axes?.[offset + 1] ?? 0;
+        if (Number.isFinite(x) && Number.isFinite(y) && Math.hypot(x, y) > .24) return normalize(x, y);
+    }
+    return { x: 0, y: 0 };
 }
 
 export function getArenaMovement(state) {
-    let x = 0;
-    let y = 0;
+    if (state.inputSuspended) return { x: 0, y: 0 };
+    let x = 0, y = 0;
     if (state.keys.has('arrowleft') || state.keys.has('a')) x -= 1;
     if (state.keys.has('arrowright') || state.keys.has('d')) x += 1;
     if (state.keys.has('arrowup') || state.keys.has('w')) y -= 1;
     if (state.keys.has('arrowdown') || state.keys.has('s')) y += 1;
     if (x !== 0 || y !== 0) return normalize(x, y);
-    if (state.pointerId === null && state.touchId === null) return { x: 0, y: 0 };
-
-    const dx = state.touchCurrent.x - state.touchOrigin.x;
-    const dy = state.touchCurrent.y - state.touchOrigin.y;
-    if (Math.hypot(dx, dy) < 5) return { x: 0, y: 0 };
-    return normalize(dx, dy);
+    if (state.pointerId === null && state.touchId === null) return stick(state, 0);
+    const dx = state.touchCurrent.x - state.touchOrigin.x, dy = state.touchCurrent.y - state.touchOrigin.y;
+    return Math.hypot(dx, dy) < 5 ? { x: 0, y: 0 } : normalize(dx, dy);
 }
 
+export function getArenaAim(state, now = Date.now()) {
+    if (state.inputSuspended || state.latestSnapshot?.paused) return { x: 0, y: 0 };
+    const engaged = state.aimTouchId != null || state.aimPointerId != null || state.tapAimUntil > now;
+    if (!engaged || !state.aimPoint) return stick(state, 2);
+    if (state.aimIsTouch && state.aimStart) {
+        const dx = state.aimPoint.x - state.aimStart.x, dy = state.aimPoint.y - state.aimStart.y;
+        if (Math.hypot(dx, dy) >= 8) return normalize(dx, dy);
+    }
+    const rect = state.canvas.getBoundingClientRect?.();
+    const player = state.latestSnapshot?.player;
+    if (!rect || !player) return { x: 0, y: 0 };
+    const camera = resolveArenaCamera(state.latestSnapshot.world, player, rect.width, rect.height);
+    const dx = state.aimPoint.x - rect.left + camera.x - player.x;
+    const dy = state.aimPoint.y - rect.top + camera.y - player.y;
+    return Math.hypot(dx, dy) < 5 ? { x: 0, y: 0 } : normalize(dx, dy);
+}
 function normalize(x, y) {
     const length = Math.hypot(x, y) || 1;
     return { x: x / length, y: y / length };

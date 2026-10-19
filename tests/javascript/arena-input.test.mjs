@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { attachArenaInput, getArenaMovement } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-input.js';
+import { attachArenaInput, getArenaMovement, getArenaAim } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-input.js';
 
 class FakeTarget {
     listeners = new Map();
@@ -132,4 +132,98 @@ test('active hunts lock background scrolling while passive health display remain
     assert.match(markup, /role="progressbar" aria-label="Health"/);
     assert.match(markup, /class="combat-hp-value">♥ HP 100\/100/);
     assert.doesNotMatch(markup, /Explain health and recovery|healthHelpOpen/);
+});
+
+function aimedArena() {
+    const a = arena();
+    a.canvas.getBoundingClientRect = () => ({ left: 10, top: 20, width: 390, height: 700 });
+    a.state.latestSnapshot = { player: { x: 500, y: 700 }, world: { width: 1000, height: 1800 } };
+    return a;
+}
+const touchAt = (identifier, clientX, clientY) => ({ identifier, clientX, clientY });
+
+test('WASD and deliberately held mouse aim coexist; idle mouse and window release restore auto', () => {
+    const a = aimedArena();
+    a.canvas.dispatch('pointermove', { pointerType: 'mouse', clientX: 390, clientY: 370 });
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+    a.win.dispatch('keydown', { key: 'w' });
+    a.canvas.dispatch('pointerdown', { pointerType: 'mouse', clientX: 390, clientY: 370 });
+    assert.deepEqual(getArenaMovement(a.state), { x: 0, y: -1 });
+    assert.deepEqual(getArenaAim(a.state), { x: 1, y: 0 });
+    a.win.dispatch('pointerup', { pointerType: 'mouse' });
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+    a.detach();
+});
+
+test('two simultaneous Safari touches retain independent move/aim owners in either changedTouches order', () => {
+    for (const reversed of [false, true]) {
+        const a = aimedArena();
+        const left = touchAt(17, 90, 500), right = touchAt(18, 380, 370);
+        a.canvas.dispatch('touchstart', { changedTouches: reversed ? [right, left] : [left, right] });
+        a.canvas.dispatch('touchmove', { touches: [{ ...left, clientY: 470 }, right] });
+        assert.deepEqual(getArenaMovement(a.state), { x: 0, y: -1 });
+        assert.deepEqual(getArenaAim(a.state), { x: 1, y: 0 });
+        a.canvas.dispatch('touchcancel', { changedTouches: [right] });
+        assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+        assert.deepEqual(getArenaMovement(a.state), { x: 0, y: -1 });
+        a.canvas.dispatch('touchend', { changedTouches: [left] });
+        assert.deepEqual(getArenaMovement(a.state), { x: 0, y: 0 });
+        a.detach();
+    }
+});
+
+test('right-side tap expires rather than latching a manual heading; drag release immediately restores auto', () => {
+    const a = aimedArena(), right = touchAt(3, 380, 370);
+    a.canvas.dispatch('touchstart', { changedTouches: [right] });
+    a.canvas.dispatch('touchend', { changedTouches: [right] });
+    assert.deepEqual(getArenaAim(a.state, a.state.tapAimUntil - 1), { x: 1, y: 0 });
+    assert.deepEqual(getArenaAim(a.state, a.state.tapAimUntil + 1), { x: 0, y: 0 });
+    a.canvas.dispatch('touchstart', { changedTouches: [right] });
+    const moved = { ...right, clientY: 410 };
+    a.canvas.dispatch('touchmove', { touches: [moved] });
+    a.canvas.dispatch('touchend', { changedTouches: [moved] });
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+    a.detach();
+});
+
+test('resize, blur, hidden document and capture cancellation release manual aim', () => {
+    for (const ending of ['resize', 'blur', 'hidden', 'pointercancel', 'lostpointercapture']) {
+        const a = aimedArena();
+        a.canvas.dispatch('pointerdown', { pointerType: 'mouse', clientX: 390, clientY: 370 });
+        if (ending === 'hidden') { a.doc.hidden = true; a.doc.dispatch('visibilitychange'); }
+        else if (ending === 'pointercancel' || ending === 'lostpointercapture') a.canvas.dispatch(ending);
+        else a.win.dispatch(ending);
+        assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 }, ending);
+        a.detach();
+    }
+});
+
+test('camera offset and canvas origin transform to authoritative world direction, including edges', () => {
+    const a = aimedArena();
+    a.state.latestSnapshot.player = { x: 30, y: 50 };
+    a.canvas.dispatch('pointerdown', { pointerType: 'mouse', clientX: 140, clientY: 70 });
+    assert.deepEqual(getArenaAim(a.state), { x: 1, y: 0 });
+    a.detach();
+});
+
+test('controller right-stick deadzone returns auto; left and right sticks remain independent', () => {
+    const a = aimedArena();
+    a.state.gamepads = () => [{ connected: true, axes: [0, -1, .1, .1] }];
+    assert.deepEqual(getArenaMovement(a.state), { x: 0, y: -1 });
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+    a.state.gamepads = () => [{ connected: true, axes: [0, -1, -1, 0] }];
+    assert.deepEqual(getArenaAim(a.state), { x: -1, y: 0 });
+    a.state.gamepads = () => [{ connected: true, axes: [0, 0, 0, 0] }];
+    assert.deepEqual(getArenaAim(a.state), { x: 0, y: 0 });
+    a.detach();
+});
+
+
+test('right thumb can aim west with a short drag while remaining on the right half', () => {
+    const a = aimedArena(), left = touchAt(11, 80, 500), right = touchAt(12, 370, 420);
+    a.canvas.dispatch('touchstart', { changedTouches: [left, right] });
+    a.canvas.dispatch('touchmove', { touches: [{ ...left, clientX: 110 }, { ...right, clientX: 340 }] });
+    assert.deepEqual(getArenaMovement(a.state), { x: 1, y: 0 });
+    assert.deepEqual(getArenaAim(a.state), { x: -1, y: 0 });
+    a.detach();
 });

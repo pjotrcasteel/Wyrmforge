@@ -1,7 +1,8 @@
-﻿namespace Wyrmforge.Application.Runs.Navigation;
+namespace Wyrmforge.Application.Runs.Navigation;
 
 public sealed class WyrmrealmMapState
 {
+    /// <summary>Pressure stages, not the number of encounters on a generated route.</summary>
     public const int CombatStages = 8;
     private readonly List<WyrmrealmMapNode> completedNodes = [];
 

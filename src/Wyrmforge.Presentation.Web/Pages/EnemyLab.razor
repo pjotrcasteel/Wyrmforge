@@ -1,0 +1,93 @@
+@page "/enemy-lab"
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using Wyrmforge.Application.Abstractions.Randomness
+@using Wyrmforge.Application.Runs.Development
+@using Wyrmforge.Application.Runs.SelfPlay
+@using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Application.Runs.Simulation.Snapshots
+@using Wyrmforge.Domain.Combat.Enemies
+
+<main class="enemy-lab">
+    <header><span>WYRMFORGE • DEVELOPER INSPECTION</span><h1>Fire & Frost enemy lab</h1>
+        <p>The real combat simulation and canvas renderer. This practice encounter never saves progress.</p></header>
+    <section class="settings">
+        <label>Enemy<select @bind="kind">@foreach (var value in Enum.GetValues<EnemyKind>()) { <option value="@value">@value</option> }</select></label>
+        <label>Seed<input type="number" @bind="seed" /></label>
+        <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
+        <label><input type="checkbox" @bind="casting" /> Autocast</label>
+        <button @onclick="Restart">Restart</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="hunt-lab">Wyrm lab</a>
+    </section>
+    <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
+        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • INVULNERABLE • NO PROGRESS</div>
+    </section>
+    <p class="note">Manual controls use the normal movement and aim inputs. Ritual objects appear with their actual caster; doubles naturally expire. Restart to repeat the same seed.</p>
+</main>
+
+@code {
+    [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "paused")] public bool? PausedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<EnemyLab>? reference;
+    private RunSimulation? simulation;
+    private HeuristicRunAgent? agent;
+    private EnemyKind kind = EnemyKind.MireHound;
+    private int seed = 42;
+    private bool autoplay = true;
+    private bool casting;
+    private bool paused;
+    private double simulationSeconds;
+
+    protected override void OnParametersSet()
+    {
+        if (Enum.TryParse<EnemyKind>(KindQuery, true, out var parsed) && Enum.IsDefined(parsed)) kind = parsed;
+        if (SeedQuery is { } value) seed = value;
+        if (AutoplayQuery is { } auto) autoplay = auto;
+        if (CastQuery is { } cast) casting = cast;
+        if (PausedQuery is { } pause) paused = pause;
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena.js");
+        reference = DotNetObjectReference.Create(this);
+        await module.InvokeVoidAsync("initializeArena", canvas, reference);
+    }
+    [JSInvokable]
+    public Task<RunRenderSnapshot> Frame(double delta, double width, double height, double movementX, double movementY, double aimX = 0, double aimY = 0)
+    {
+        if (simulation is null)
+        {
+            var build = SelfPlayBuildCatalog.All.First();
+            simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentEnemy(build.SelectedNodes,
+                new DevelopmentEnemySetup(kind, seed, Math.Clamp(width, 240, 2560), Math.Clamp(height, 240, 2560), casting));
+            agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
+        }
+        var snapshot = simulation.CreateSnapshot();
+        if (paused || simulation.IsEnded) return Task.FromResult(snapshot);
+        if (SecondsQuery is { } limit && double.IsFinite(limit) && simulationSeconds >= Math.Max(0, limit)) return Task.FromResult(snapshot);
+        var movement = autoplay
+            ? agent!.ChooseMovement(new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false))
+            : new MovementInput(movementX, movementY, aimX, aimY);
+        simulationSeconds += Math.Clamp(delta, 0, .05);
+        return Task.FromResult(simulation.Tick(delta, movement, width, height));
+    }
+    private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
+    private void TogglePause() => paused = !paused;
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            try { await module.InvokeVoidAsync("disposeArena", canvas); } catch (JSDisconnectedException) { }
+            await module.DisposeAsync();
+        }
+        reference?.Dispose();
+    }
+}
