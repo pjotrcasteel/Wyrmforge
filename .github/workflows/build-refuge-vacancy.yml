@@ -31,13 +31,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wyrmforge-refuge-vacant-buildings
-          path: src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-*.webp
+          path: |
+            src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-*.webp
+            docs/art/previews/refuge-closed-2026-10-19.webp
           retention-days: 14
       - name: Publish art to task branch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-*.webp
+          git add src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-*.webp docs/art/previews/refuge-closed-2026-10-19.webp
           if git diff --cached --quiet; then
             echo 'Rendered assets unchanged.'
           else
