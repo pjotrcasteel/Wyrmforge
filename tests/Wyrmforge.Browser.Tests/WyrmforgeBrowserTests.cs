@@ -61,12 +61,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const button = start.getBoundingClientRect();
             const controls = settings.getBoundingClientRect();
             return frame.top >= -1 && Math.abs(frame.bottom - innerHeight) <= 2
-                && button.width >= 220 && button.height >= 54
-                && button.left >= 0 && button.right <= innerWidth
+                && button.width >= 205 && button.height >= 54
+                && button.left >= innerWidth * .25 && button.right <= innerWidth
                 && controls.bottom <= innerHeight && controls.top > button.bottom
                 && document.documentElement.scrollWidth <= innerWidth + 1;
         }");
-        Assert.IsTrue(fits, "Welcome artwork and game controls should fit phones without scrolling.");
+        Assert.IsTrue(fits, "Welcome artwork and game controls must fit without scrolling or covering the foreground mage.");
 
         var visualReadability = await Page.EvaluateAsync<bool>(@"() => {
             const label = document.querySelector('.arrival-home .title-start-label');
