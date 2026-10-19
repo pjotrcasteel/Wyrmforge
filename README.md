@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.130 — Unified active and vacant town buildings
+
+- All locked buildings use the same `Active / Vacant` rendering contract driven by their existing progression unlocks. Blacksmith, Nexus, Codex and Hall of Fame switch independently.
+- The painted dormant-art generator now suppresses cyan/blue magic alongside white, violet and warm lamps/windows; people and powered props are removed from individual building layers, **never via a CSS black haze**.
+- The World Gate remains permanently active; tapping a vacant building still explains the unlock requirement without opening it.
+- [Art pipeline and acceptance notes](docs/art/shared-building-states-2026-10-19.md). Physical iPhone Safari acceptance is still required.
+
 ## Prototype 0.0.129 — Vacant building interaction feedback
 
 - Vacant Arcane Nexus, Blacksmith, Codex and Hall of Fame buildings still use their authentic dark, unoccupied paintings.
