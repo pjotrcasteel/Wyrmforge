@@ -12,6 +12,30 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_CombatLab_SelectedMonsterOpensInRealEnemyLab_AndSwitchesImmediately()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/combat-lab", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(Page.Locator(".combat-lab")).ToBeVisibleAsync();
+        await Page.Locator(".dummy-toolbar select").SelectOptionAsync("MireHound");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect live monster ↗" }).ClickAsync();
+
+        await Expect(Page.Locator(".enemy-lab")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("MireHound");
+        await Expect(Page.Locator(".enemy-lab canvas")).ToBeVisibleAsync();
+
+        // The chooser must reload the encounter, not just rename a static test dummy.
+        await Page.GetByRole(AriaRole.Combobox, new() { Name = "Monster to inspect" })
+            .SelectOptionAsync("WhitefangStalker");
+        await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("WhitefangStalker");
+        StringAssert.Contains(Page.Url, "kind=WhitefangStalker");
+        await Page.GetByRole(AriaRole.Combobox, new() { Name = "Monster to inspect" })
+            .SelectOptionAsync("MireHound");
+        await Expect(Page.Locator(".enemy-lab .status")).ToContainTextAsync("MireHound");
+        StringAssert.Contains(Page.Url, "kind=MireHound");
+    }
+
+    [TestMethod]
     public async Task Mobile_Welcome_HasFullArtworkAndAudioOnlyInsideSettings()
     {
         await Page.SetViewportSizeAsync(390, 844);
