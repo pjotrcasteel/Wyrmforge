@@ -3,15 +3,22 @@ const base = new URL('../art/enemies/', import.meta.url);
 const images = new Map();
 let manifest;
 let loading;
+export function mireHoundPixelPreviewEnabled() {
+    const location = globalThis.location;
+    if (!location || !/(^|\\/)enemy-lab\\/?$/.test(location.pathname || '')) return false;
+    return new URLSearchParams(location.search || '').get('mireStyle') === 'pixel';
+}
 export function preloadPaintedEnemies() {
     return loading ??= fetch(new URL('manifest.json', base)).then(r => {
         if (!r.ok) throw new Error('Painted manifest unavailable');
         return r.json();
     }).then(async data => {
         manifest = data;
-        // Legacy painted Mire Hound remains in Git as a card reference, but is no
-        // longer loaded: gameplay uses the shared pixel atlas beside the mage.
-        const descriptors = [...Object.entries(data.enemies).filter(([kind]) => kind !== '1').map(([, entry]) => entry),
+        // The approved painted assets remain in regular hunts. In the explicit
+        // developer preview we skip decoding those 768x384 sheets, using the
+        // same cached native actor atlas and pixel density as the mage.
+        const descriptors = [...Object.entries(data.enemies)
+            .filter(([kind]) => kind !== '1' || !mireHoundPixelPreviewEnabled()).map(([, entry]) => entry),
             ...Object.values(data.wyrms)];
         await Promise.all(descriptors.flatMap(d => [[d.image,d.hash], ...(d.walkImage ? [[d.walkImage,d.walkHash]] : [])])
             .map(([name,hash]) => loadImage(name,hash)));
@@ -54,8 +61,9 @@ function draw(ctx, descriptor, pose, x, y, size, facing, opacity = 1) {
     return true;
 }
 export function drawPaintedEnemy(ctx, enemy, gait = 0, facing = 1) {
-    // Pixel-native Mire Hound must never silently regress to a smooth painted cutout.
-    if (Number(enemy?.kind) === 1) return false;
+    // Only the explicit developer lab art preview swaps the canine to pixels;
+    // regular hunts keep their previously published art pending iPhone approval.
+    if (Number(enemy?.kind) === 1 && mireHoundPixelPreviewEnabled()) return false;
     const d = manifest?.enemies?.[enemy.kind];
     if (!d) return false;
     // Match collision footprint without rescaling individual animation poses.
