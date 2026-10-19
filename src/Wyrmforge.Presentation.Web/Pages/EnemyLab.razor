@@ -29,15 +29,21 @@
                 </optgroup>
             </select>
         </label>
+        <label>Mire Hound art
+            <select aria-label="Mire Hound art style" @bind="mireStyle" @bind:after="SwitchMireStyle" disabled="@(kind != EnemyKind.MireHound)">
+                <option value="painted">Current art</option>
+                <option value="pixel">Pixel preview</option>
+            </select>
+        </label>
         <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
         <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a>
     </section>
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
-        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • INVULNERABLE • NO PROGRESS</div>
+        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    <p class="note">Selecting a monster immediately reloads the actual C# encounter in the production renderer, alongside the mage. Turn off Autocast to inspect movement and attacks without killing the target. Ritual objects appear with their actual caster; doubles naturally expire. No saves or player progress are changed.</p>
+    <p class="note">Selecting a monster immediately reloads the actual C# encounter in the production renderer, alongside the mage. For Mire Hound, switch between current art and the opt-in pixel preview at the same viewport and seed; ordinary hunts are unchanged. Turn off Autocast to inspect movement and attacks without killing the target. Ritual objects appear with their actual caster; doubles naturally expire. No saves or player progress are changed.</p>
 </main>
 
 @code {
@@ -49,6 +55,7 @@
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "paused")] public bool? PausedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seconds")] public double? SecondsQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "mireStyle")] public string? MireStyleQuery { get; set; }
     private ElementReference canvas;
     private IJSObjectReference? module;
     private DotNetObjectReference<EnemyLab>? reference;
@@ -58,6 +65,7 @@
     private int seed = 42;
     private bool autoplay = true;
     private bool casting;
+    private string mireStyle = "painted";
     private bool paused;
     private double simulationSeconds;
 
@@ -68,6 +76,7 @@
         if (AutoplayQuery is { } auto) autoplay = auto;
         if (CastQuery is { } cast) casting = cast;
         if (PausedQuery is { } pause) paused = pause;
+        mireStyle = MireStyleQuery == "pixel" ? "pixel" : "painted";
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -107,6 +116,12 @@
             ["cast"] = casting
         });
         Navigation.NavigateTo(url, replace: true);
+    }
+    private void SwitchMireStyle()
+    {
+        // Full reload is deliberate: the texture loader must choose precisely
+        // one source for this animal, not retain an outdated decoded image.
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("mireStyle", mireStyle), forceLoad: true, replace: true);
     }
     private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
     private void TogglePause() => paused = !paused;
