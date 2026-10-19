@@ -54,10 +54,10 @@ The four summons/clones still require visual/lifecycle checks **as distinct runt
 ## Checkpoints and gates
 
 - [x] Verify `main`, #135, repo instructions, C# kinds versus summoned objects, gallery and existing assets.
-- [ ] Tie both canine action/recovery poses to **C# phases**, not guessed windup disappearance; run focused regression.
+- [x] Tie both canine windup/attack/recovery poses and facing to **real C# phases**, not guessed windup disappearance; passed application and JavaScript validation, focused magic and browser smoke at `fcf8c28`.
 - [ ] Hollow: finish original-card comparison, true strike/hit/death/facing, capture evidence.
 - [ ] Mire Hound: verify each gait phase, direction, hit, actual bite and corpse against card, record actual gameplay.
-- [ ] Whitefang: preserve distinct feint, stalk, leap and recovery; replace native pixel silhouette with card-matched detailed sprites and capture all states.
+- [ ] Whitefang: C#-driven feint/pounce/recovery and native corpse-on-real-death now implemented and regression tested. **Still missing:** card-matched detailed sprites, 4+ facings, full verified lifecycle footage. A live capture action has been added; check its output before marking footage done.
 - [ ] Fire remaining creatures (2–7, 9): source images, runtime atlases, animation lifecycle, before/after footage.
 - [ ] Frost remaining creatures (10–11, 13–15, 17–18): same gates.
 - [ ] Summoned wards/false forms (8, 16, 19–20): shared identity plus correct object/illusion lifecycle.
@@ -68,3 +68,12 @@ The four summons/clones still require visual/lifecycle checks **as distinct runt
 **Deployment issue observed on base:** build and GitHub Pages deploy jobs passed on `main` in run [39240320024](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39240320024), and real browser scene smoke passed, but the run was marked failed because the separate live playtest collector connectivity check returned HTTP **403**. This is not proof that the game assets failed to deploy; the collector integration remains an unresolved external gate. Do not declare full deployment verification.
 
 **Remote checkpoint policy:** push each coherent change to this branch, verify branch HEAD, and update this file. All detailed creature art source files, runtime atlases, atlas metadata and captured screenshots/clips must be published before checking off any visual gate.
+
+## Actual code delivered on this draft branch (not merged)
+
+- C# `EnemyRenderSnapshot.AnimationPhase` and `AnimationFacingX` now expose Mire Hound / Whitefang state-machine truth, and the production Canvas renderer selects their existing canine poses from `Windup`, `Pounce`, and `Recover`. A cancelled warning can no longer fabricate a canine attack.
+- `arena.js` now draws **Whitefang's existing native corpse pose** only from an identity-bearing C# `DeathBurstRenderSnapshot`, fading with the bounded corpse lifetime.
+- Application development lab and JavaScript regression tests cover canonical phase transitions, locked leap facing, cancellation, reduction of motion and real death identity. The first complete code checkpoint at `fcf8c28` passed all three PR workflows (validation, browser smoke, focused magic).
+- The **recording workflow** `.github/workflows/fire-frost-evidence.yml` publishes the actual Blazor game and captures Whitefang's original/updated production Canvas at the identical 1000×900 viewport, plus a real `cast=true` lethal attempt. The collector never synthesizes a damage event and its JSON states which phases/hits/deaths were observed. This recording must pass and its result be checked before footage is accepted. It commits and verifies remote evidence; uploads workflow artifacts if Git push fails.
+
+**Not delivered:** brand-new painted sprite art, full body animation sets and cardinal facings for the rest of the roster; verified death/hit/attack clips for every creature; physical iPhone measurements. PR #136 remains **draft**, no merge or new Pages deployment from this branch.
