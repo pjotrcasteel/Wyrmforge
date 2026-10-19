@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.126 — Town building black-wash regression correction
+
+- Remove the opaque black and backdrop-blur masks from unopened town buildings; use architecture-clipped painted layers instead, retaining the road, sky and playable World Gate.
+- Keep the corrected vacant blacksmith and its independent lit/occupied unlock artwork unchanged; locked buildings are still non-interactive.
+- **Artwork remains partial:** real unlit/uninhabited paintings for Arcane Nexus, Codex and Hall of Fame are still needed before the visual milestone is accepted. [See visual follow-up](docs/art/town-vacancy-correction-2026-10-19.md).
+
 ## Prototype 0.0.125 — Combat recovery and longer hunts
 
 - Automatic targeting remains the default. Held mouse/right-touch/gamepad aim takes temporary precedence; tap-to-aim expires after 350 ms, then automatic targeting resumes. A small ground rune shows the direction.
