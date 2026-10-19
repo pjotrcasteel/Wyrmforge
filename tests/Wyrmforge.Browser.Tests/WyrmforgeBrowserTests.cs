@@ -1589,6 +1589,45 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_PrimaryOath_CancelReturnsToTownWithoutConsumingOrUnlocking()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        await Expect(Page.Locator(".town-hotspot--gate")).ToBeEnabledAsync();
+        await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
+        await Expect(Page.Locator(".town-vacancy--build")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-vacancy--codex")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-vacancy--legends")).ToHaveCountAsync(1);
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
+        await Expect(oath).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel hunt and return to town" }).ClickAsync();
+        await Expect(oath).ToBeHiddenAsync();
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_Refuge_UnlocksOccupiedBuildingsWithClickableHotspots()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Expect(Page.Locator(".town-vacancy")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-panorama-open-forge")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-hotspot--build")).ToBeEnabledAsync();
+        await Expect(Page.Locator(".town-hotspot--forge")).ToBeEnabledAsync();
+        await Expect(Page.Locator(".town-hotspot--codex")).ToBeEnabledAsync();
+        await Page.Locator(".town-hotspot--build").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     public async Task Mobile_PrimaryOath_RequiresStartingSpellBeforeShowingRouteMap()
     {
         await Page.SetViewportSizeAsync(390, 844);
