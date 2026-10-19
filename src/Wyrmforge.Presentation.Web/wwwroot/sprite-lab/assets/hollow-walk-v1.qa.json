@@ -1,0 +1,54 @@
+{
+  "source": "art/source/enemies/hollow/walk/hollow-walk-v1-rejected.png",
+  "output": "src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-v1.png",
+  "ready": false,
+  "technicalPass": true,
+  "visualAccepted": false,
+  "checks": [
+    {
+      "severity": "pass",
+      "title": "Eight-way navigation",
+      "message": "All eight facing directions have their own art rows."
+    },
+    {
+      "severity": "pass",
+      "title": "Walk cycle frames",
+      "message": "8 frames per authored direction."
+    },
+    {
+      "severity": "pass",
+      "title": "Grid bounds",
+      "message": "The 8 × 8 source grid fits within 1536 × 1536 pixels."
+    },
+    {
+      "severity": "pass",
+      "title": "Unique 8-way art",
+      "message": "No mirrored direction is required."
+    },
+    {
+      "severity": "pass",
+      "title": "Transparent artwork",
+      "message": "83% of sampled pixels are fully transparent."
+    },
+    {
+      "severity": "pass",
+      "title": "All frames contain artwork",
+      "message": "Every required frame has nontransparent pixels."
+    },
+    {
+      "severity": "pass",
+      "title": "No detected frame clipping",
+      "message": "Artwork has clear alpha padding at sampled frame boundaries."
+    },
+    {
+      "severity": "pass",
+      "title": "Pivot stability",
+      "message": "Detected alpha silhouettes have consistent foot and center alignment."
+    }
+  ],
+  "outstanding": [
+    "Human motion/style review at gameplay scale",
+    "Physical iPhone Safari review",
+    "Runtime adapter is outside this art review"
+  ]
+}

@@ -5,13 +5,13 @@
 This is an independent browser-only tool; it does not modify the game simulation or its asset loaders. Source code is in `src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/`, published by the existing `.github/workflows/pages.yml` (the full `wwwroot` output is deployed).
 
 ## Usage
-1. Load the included Hollow reference or choose/drag a new PNG/WebP/JPEG.
+1. Inspect the default Hollow walking candidate, choose **Original concept**, or choose/drag a new PNG/WebP/JPEG.
 2. Preview eight directions; five-row concept sheets use mirrored W/SW/NW directions.
 3. Play/pause, step frames, adjust FPS, inspect movement and chase a player target.
 4. Validate dimensions, clipping, alpha/transparency and frame coverage.
 5. Export the normalized eight-row PNG, manifest and QA report.
 
-**The included Hollow art is a non-production concept reference** (opaque background, only five authored viewpoints). It is deliberately NOT READY. Export does not invent new poses or remove opaque pixels.
+**The original Hollow concept reference** has an opaque background and only five authored viewpoints. It is deliberately NOT READY. The new default [walking candidate](hollow-walk-production.md) has real alpha and eight authored rows, but remains subject to motion/style review. Export does not invent new poses or remove opaque pixels. A format pass never grants production/visual approval in exported metadata.
 
 ## Production contract
 - Eight unique rows: N, NE, E, SE, S, SW, W, NW.

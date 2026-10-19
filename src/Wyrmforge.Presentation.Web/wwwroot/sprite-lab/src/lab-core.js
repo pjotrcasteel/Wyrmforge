@@ -144,7 +144,8 @@
         const normalized = manifest({ ...config, layout: 'eight', rows: 8, offsetX: 0, offsetY: 0 },
             (file || 'unnamed-creature').replace(/\.(png|jpe?g|webp)$/i, '') + '-8way-export.png', columns * cw, 8 * ch);
         normalized.origin = { file, imageWidth: originalWidth, imageHeight: originalHeight, sourceLayout: config.layout,
-            mirroredDirections: config.layout === 'five' ? ['NW', 'W', 'SW'] : [], productionValidated: ready };
+            mirroredDirections: config.layout === 'five' ? ['NW', 'W', 'SW'] : [], technicalValidated: ready,
+            productionValidated: false, visualAccepted: false };
         normalized.notes = config.layout === 'five'
             ? 'EXPORT: 8 rows exist in the output image, but NW, W, SW were mirrored from the original 5-row concept. Transparency has NOT been repaired.'
             : 'EXPORT: each direction is represented by original artwork. Transparency has NOT been repaired.';

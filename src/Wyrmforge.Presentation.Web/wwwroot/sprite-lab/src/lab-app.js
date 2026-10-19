@@ -3,7 +3,7 @@
     'use strict';
     const C = globalThis.SpriteLabCore;
     const $ = id => document.getElementById(id);
-    const dom = Object.fromEntries(['assetLabel','fileInput','dropzone','imageDimensions','loadDemo','layoutPreset',
+    const dom = Object.fromEntries(['assetLabel','assetNote','fileInput','dropzone','imageDimensions','loadDemo','loadWalk','layoutPreset',
         'columns','rows','frameWidth','frameHeight','offsetX','offsetY','fps','fpsValue','scale','scaleValue','resetLayout',
         'stageCanvas','stageHint','sheetCanvas','playBtn','stepBtn','manualBtn','chaseBtn','modeStatus','compass',
         'directionName','directionMeta','frameIndicator','filmstrip','checkList','resultPill','statFrames','statDirections',
@@ -51,6 +51,9 @@
             dom.playBtn.textContent = '❚❚'; dom.assetLabel.textContent = name.replace(/\.(png|jpg|jpeg|webp)$/i,'').replaceAll('-',' ').toUpperCase();
             dom.imageDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
             dom.footerState.textContent = `Loaded ${name}`;
+            dom.assetNote.textContent = isDemo
+                ? 'Original concept reference: painted background and five drawn views. This is not a production atlas.'
+                : 'The Hollow · first walking candidate. Transparent, eight drawn directions. Motion and style await visual approval.';
             setMode('manual'); refresh();
         };
         img.onerror = () => { dom.footerState.textContent = `Unable to load ${name}. Use Import to select a local image.`; };
@@ -72,6 +75,7 @@
         state.dir='S';state.frame=0;state.elapsed=0;state.playing=true;
         dom.playBtn.textContent='❚❚';dom.imageDimensions.textContent=`${img.naturalWidth} × ${img.naturalHeight}`;
         dom.assetLabel.textContent=name.toUpperCase();dom.footerState.textContent=`Loaded ${name}`;
+        dom.assetNote.textContent='Imported artwork. Format checks do not establish motion quality or visual approval.';
         setMode('manual');refresh();
     }
     function setMode(mode) {
@@ -97,7 +101,7 @@
         const fatal=state.checks.some(c=>c.severity==='fail');
         const warnings=state.checks.some(c=>c.severity==='warn');
         dom.resultPill.className=`result-pill ${fatal?'fail':warnings?'warn':'pass'}`;
-        dom.resultPill.textContent=fatal?'NOT READY':warnings?'REVIEW':'PASS';
+        dom.resultPill.textContent=fatal?'NOT READY':warnings?'REVIEW':'FORMAT PASS';
         dom.checkList.replaceChildren(...state.checks.map(item=>{
             const el=document.createElement('div');el.className='check';
             const marker=document.createElement('div');marker.className='check-icon '+item.severity;marker.textContent={pass:'✓',warn:'!',fail:'×'}[item.severity];
@@ -224,6 +228,7 @@
         cv.toBlob(blob=>{if(blob)downloadBlob(`${stem()}-8way-export.png`,blob);},'image/png');
     }
     function bind() {
+        dom.loadWalk.addEventListener('click',()=>loadImage('./assets/hollow-walk-v1.png','hollow-walk-v1.png'));
         dom.loadDemo.addEventListener('click',()=>loadImage('./assets/hollow-walk-reference-5dir.png','hollow-walk-reference-5dir.png',true));
         dom.fileInput.addEventListener('change',e=>loadFile(e.target.files?.[0]));
         dom.dropzone.addEventListener('dragover',e=>{e.preventDefault();dom.dropzone.classList.add('dragging');});
@@ -249,13 +254,14 @@
         dom.exportAtlas.addEventListener('click',exportAtlas);
         dom.exportManifest.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-8way-manifest.json`,C.normalizedManifest(state.cfg,state.filename,state.image.naturalWidth,state.image.naturalHeight,state.checks.every(c=>c.severity==='pass')));});
         dom.exportReport.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-qa-report.json`,{
-            source:state.filename,createdAt:new Date().toISOString(),checks:state.checks,ready:state.checks.every(c=>c.severity==='pass')
+            source:state.filename,createdAt:new Date().toISOString(),checks:state.checks,
+            technicalPass:state.checks.every(c=>c.severity==='pass'),ready:false,visualAccepted:false
         });});
         window.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;
             if(e.code==='Space'){e.preventDefault();dom.playBtn.click();}
             if(e.code==='ArrowRight')dom.stepBtn.click();
         });
     }
-    bind();loadImage('./assets/hollow-walk-reference-5dir.png','hollow-walk-reference-5dir.png',true);
+    bind();loadImage('./assets/hollow-walk-v1.png','hollow-walk-v1.png');
     requestAnimationFrame(tick);
 })();

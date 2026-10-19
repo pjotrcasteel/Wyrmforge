@@ -9,7 +9,7 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="crest">✧</span><div><div class="eyebrow">WYRMFORGE // TOOLS</div><h1>Sprite Lab<span class="version">v0.1</span></h1></div></div>
+    <div class="brand"><span class="crest">✧</span><div><div class="eyebrow">WYRMFORGE // TOOLS</div><h1>Sprite Lab<span class="version">v0.2</span></h1></div></div>
     <div class="top-meta"><span class="live-dot"></span> LOCAL · OFFLINE <span class="top-sep"></span> <span id="assetLabel">THE HOLLOW / WALK</span></div>
   </header>
   <main class="workspace">
@@ -17,7 +17,7 @@
       <div class="section-heading"><div><div class="eyebrow">01 / ASSET</div><h2>Source sheet</h2></div><span id="imageDimensions" class="dim-label">—</span></div>
       <label for="fileInput" id="dropzone" class="dropzone"><span class="upload-icon">⇧</span><strong>Drop a sprite PNG here</strong><small>or tap to choose a PNG, WebP or JPG</small><span class="upload-link">Load artwork <span aria-hidden="true">↗</span></span></label>
       <input id="fileInput" type="file" accept="image/png,image/webp,image/jpeg" hidden>
-      <div class="preset-row"><span class="tiny">QUICK START</span><button id="loadDemo" type="button" class="ghost small">↶ Hollow example</button></div>
+      <div class="preset-row"><button id="loadWalk" type="button" class="ghost small">Hollow · walk v1</button><button id="loadDemo" type="button" class="ghost small">Original concept</button></div>
       <div class="source-canvas-wrap"><canvas id="sheetCanvas" width="420" height="290" aria-label="Spritesheet preview with highlighted frame"></canvas></div>
       <div class="subheading"><span>FRAME LAYOUT</span><button id="resetLayout" type="button" class="text-btn">Reset</button></div>
       <label class="form-label" for="layoutPreset">Direction mapping</label>
@@ -30,7 +30,7 @@
         <label>Offset X<input id="offsetX" type="number" min="0" max="4096" value="0"></label>
         <label>Offset Y<input id="offsetY" type="number" min="0" max="4096" value="0"></label>
       </div>
-      <p class="note">The example uses artwork from our concept sheet. It is <strong>not yet a production-transparent atlas</strong>; the validator will identify that.</p>
+      <p id="assetNote" class="note">The Hollow · first walking candidate. Inspect all eight directions and the loop before approving it.</p>
     </aside>
     <section class="center-panel">
       <div class="stage-header"><div><div class="eyebrow">02 / ANIMATION</div><h2>Motion preview <span class="stage-caption">· in-engine approximation</span></h2></div><span id="modeStatus" class="state-tag">MANUAL</span></div>
@@ -65,7 +65,7 @@
       <div class="separator"></div>
       <div class="subheading">EXPORTS</div>
       <div class="export-group"><button id="exportAtlas" class="primary" type="button">Export 8-way atlas <span>↗</span></button><button id="exportManifest" class="secondary" type="button">Export animation manifest</button><button id="exportReport" class="secondary" type="button">Export QA report</button></div>
-      <p class="note export-note">Atlas export builds 8 direction rows (mirroring missing views if needed). It <strong>does not remove painted backgrounds</strong> or invent animation frames.</p>
+      <p class="note export-note">These checks validate the file format. <strong>Motion and art still need visual review.</strong> Export never invents frames or removes backgrounds.</p>
       <div class="file-note"><strong>PRODUCTION TARGET</strong><span>8 directions × 8 frames<br>Transparent PNG · consistent pivot<br>One character · no captions or borders</span></div>
     </aside>
   </main>
