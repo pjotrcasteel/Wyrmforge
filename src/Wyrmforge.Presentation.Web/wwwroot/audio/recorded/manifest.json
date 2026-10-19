@@ -365,18 +365,54 @@
     },
     "hunt-start": {
       "file": "hunt-start.ogg",
-      "source": "doorOpen_1.ogg",
+      "source": "footstep00.ogg",
       "library": "kenney-rpg",
       "author": "Kenney",
       "license": "CC0",
-      "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
-      "intent": "Physical wooden gate opening for hunt and trail entry; no magical bell or shield tone.",
+      "sha256": "6fe61ef1fc3bcf0e253bf2eb64759db6cb69e2fe452f4d88cc597ecf78a3d601",
+      "intent": "A hunter leaves the Refuge: boots, traveling cloak, a committed second step; neither a door nor a magic chime.",
       "mix": {
-        "gain": 0.42,
-        "lowpassHz": 3300,
-        "attackSeconds": 0.012,
-        "releaseSeconds": 0.18
-      }
+        "gain": 0.72,
+        "lowpassHz": 4600,
+        "attackSeconds": 0.003,
+        "releaseSeconds": 0.085
+      },
+      "layers": [
+        {
+          "file": "hunt-cloak.ogg",
+          "source": "cloth1.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "intent": "Traveling cloak moving with the hunter",
+          "mix": {
+            "gain": 0.35,
+            "lowpassHz": 3700,
+            "attackSeconds": 0.003,
+            "releaseSeconds": 0.09
+          },
+          "gainScale": 0.48,
+          "delaySeconds": 0.07
+        },
+        {
+          "file": "hunt-stride.ogg",
+          "source": "footstep02.ogg",
+          "library": "kenney-rpg",
+          "author": "Kenney",
+          "license": "CC0",
+          "sha256": "2d9575b7dead6e1217ca113991fc5229e9b6d998ea0726ebbb277e7398ab888f",
+          "intent": "Committed second stride on departure",
+          "mix": {
+            "gain": 0.55,
+            "lowpassHz": 4300,
+            "attackSeconds": 0.003,
+            "releaseSeconds": 0.075
+          },
+          "gainScale": 0.67,
+          "delaySeconds": 0.2
+        }
+      ]
     },
     "victory": {
       "file": "victory.ogg",
@@ -393,6 +429,51 @@
       "author": "rubberduck",
       "license": "CC0",
       "sha256": "7d5b37cc3659833e9a476298423049f6a52ab0aa27c09b571dd2716943df8673"
+    },
+    "building-open": {
+      "file": "building-open.ogg",
+      "source": "doorOpen_1.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
+      "intent": "A physical occupied town building opens",
+      "mix": {
+        "gain": 0.4,
+        "lowpassHz": 3350,
+        "attackSeconds": 0.013,
+        "releaseSeconds": 0.18
+      }
+    },
+    "trail-enter": {
+      "file": "hunt-stride.ogg",
+      "source": "footstep02.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "2d9575b7dead6e1217ca113991fc5229e9b6d998ea0726ebbb277e7398ab888f",
+      "intent": "Advancing to a connected trail: single quieter step rather than restarting an entire hunt",
+      "mix": {
+        "gain": 0.56,
+        "lowpassHz": 4100,
+        "attackSeconds": 0.004,
+        "releaseSeconds": 0.085
+      }
+    },
+    "threat-reveal": {
+      "file": "threat-reveal.ogg",
+      "source": "creak1.ogg",
+      "library": "kenney-rpg",
+      "author": "Kenney",
+      "license": "CC0",
+      "sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e",
+      "intent": "Threat approaching: ominous grounded wood movement, not a door/hunt start",
+      "mix": {
+        "gain": 0.46,
+        "lowpassHz": 2400,
+        "attackSeconds": 0.025,
+        "releaseSeconds": 0.16
+      }
     }
   },
   "sources": [
@@ -441,5 +522,34 @@
     }
   ],
   "attribution": "JC Sounds · CC BY 4.0 · https://opengameart.org/content/jc-sounds-fantasy-sfx-pack-vol-1 (edited: trimmed, filtered, resampled and converted)",
-  "mixVersion": "0.0.110"
+  "mixVersion": "0.0.110",
+  "transitionDesign": {
+    "schemaVersion": 1,
+    "goal": "Each action has a distinctive acoustic meaning across browser, iOS and Android.",
+    "events": {
+      "building-open": {
+        "action": "Enter a town building",
+        "material": "old door"
+      },
+      "hunt-start": {
+        "action": "Start a new expedition",
+        "material": "boots and cloak",
+        "layers": 3
+      },
+      "trail-enter": {
+        "action": "Begin next arena/map node",
+        "material": "single footstep",
+        "layers": 1
+      },
+      "threat-reveal": {
+        "action": "Special enemy approaches",
+        "material": "ominous creaking",
+        "layers": 1
+      },
+      "wyrm": {
+        "action": "Encounter the Wyrm",
+        "material": "creature roar"
+      }
+    }
+  }
 }
