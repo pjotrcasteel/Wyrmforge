@@ -1,0 +1,49 @@
+name: Mire Hound real-game comparison checkpoint
+
+on:
+  push:
+    branches: [codex/mire-hound-pixel-style-20261019]
+    paths: ['.github/workflows/mire-hound-preview-evidence.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Recover successful real-browser comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 39256081689 \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "wyrmforge-browser-a2025850dd343df9b6eaeeb82efbdc7fa30bc80f" \
+            --dir /tmp/mire-hound-browser
+          SOURCE=/tmp/mire-hound-browser/browser
+          TARGET=docs/playtesting/combat-recovery/evidence/mire-hound-mobile-review
+          mkdir -p "$TARGET"
+          test -s "$SOURCE/mire-hound-pixel-in-real-lab-390.png"
+          test -s "$SOURCE/mire-hound-published-in-real-lab-390.png"
+          cp "$SOURCE/mire-hound-pixel-in-real-lab-390.png" "$TARGET/pixel-preview-390.png"
+          cp "$SOURCE/mire-hound-published-in-real-lab-390.png" "$TARGET/current-painted-390.png"
+          file "$TARGET/"*.png
+      - name: Publish and verify remote comparison evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/playtesting/combat-recovery/evidence/mire-hound-mobile-review
+          if ! git diff --cached --quiet; then
+            git commit -m "Store verified 390px real-game Mire Hound comparison captures"
+          fi
+          git fetch origin "refs/heads/${GITHUB_REF_NAME}:refs/remotes/origin/${GITHUB_REF_NAME}"
+          git rebase "origin/${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          REMOTE="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
+          test "$REMOTE" = "$(git rev-parse HEAD)"
+          echo "Verified remote evidence checkpoint: $REMOTE"
