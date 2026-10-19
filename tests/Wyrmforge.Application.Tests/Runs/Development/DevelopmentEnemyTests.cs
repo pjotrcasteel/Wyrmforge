@@ -69,6 +69,40 @@ public sealed class DevelopmentEnemyTests
     }
 
     [TestMethod]
+    public void CanineSnapshot_ReportsActualPouncePhaseAndLockedFacing()
+    {
+        var hound = Create(EnemyKind.MireHound);
+        var houndEnemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(hound)!).Single();
+        var target = houndEnemy.Position + new Wyrmforge.Domain.Combat.Geometry.Vector2D(100, 0);
+
+        Assert.AreEqual("Stalk", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+        houndEnemy.MireHound!.Tick(MireHoundBehaviorState.InitialCooldownSeconds + .01, houndEnemy.Position, target);
+        Assert.AreEqual("Windup", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+        houndEnemy.MireHound.Tick(MireHoundBehaviorState.WindupSeconds, houndEnemy.Position, target);
+        Assert.AreEqual("Pounce", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+        Assert.AreEqual(1d, hound.CreateSnapshot().Enemies.Single().AnimationFacingX);
+        houndEnemy.MireHound.Land();
+        Assert.AreEqual("Recover", hound.CreateSnapshot().Enemies.Single().AnimationPhase);
+
+        var frost = Create(EnemyKind.WhitefangStalker);
+        var whitefangEnemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(frost)!).Single();
+        target = whitefangEnemy.Position + new Wyrmforge.Domain.Combat.Geometry.Vector2D(-100, 0);
+        var stalker = whitefangEnemy.Whitefang!;
+        Assert.AreEqual("Prowl", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        stalker.Tick(WhitefangStalkerBehaviorState.InitialCooldownSeconds + .01, whitefangEnemy.Position, target, default);
+        Assert.AreEqual("Feint", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        stalker.Tick(WhitefangStalkerBehaviorState.FeintSeconds, whitefangEnemy.Position, target, default);
+        Assert.AreEqual("Windup", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        stalker.Tick(WhitefangStalkerBehaviorState.WindupSeconds, whitefangEnemy.Position, target, default);
+        Assert.AreEqual("Pounce", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+        Assert.AreEqual(-1d, frost.CreateSnapshot().Enemies.Single().AnimationFacingX);
+        stalker.Land();
+        Assert.AreEqual("Recover", frost.CreateSnapshot().Enemies.Single().AnimationPhase);
+    }
+
+    [TestMethod]
     public void InvalidDimensionsOrKind_AreRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DevelopmentEnemySetup((EnemyKind)99, 1, 800, 600).Validate());
