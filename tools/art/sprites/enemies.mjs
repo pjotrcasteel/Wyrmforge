@@ -131,37 +131,103 @@ function deadCanine(kind) {
 function mireHound(pose) {
     if (pose === 7) return deadCanine(1);
     const s = ENEMY_SPECS[1], b = new Bitmap(...s.size), g = at(b, ...s.origin);
-    const C = { fur: '#3b2b22', furHi: '#5c4433', deep: '#1d1511', wet: '#6e5c4d', spine: '#8c7860', spineHi: '#c9b591', eye: '#ff8f2e', maw: '#7c1f1a', tooth: '#eadfc6' };
-    const crouch = pose === 3, drop = pose === 7 ? 6 : crouch ? 2 : pose === 5 ? 1 : pose === 4 ? -1 : 0;
-    const leg = (x, front, near, c, top = 1) => canineLeg(g, pose, x, top, front, near, c, C.spine);
-    if (pose === 6 || pose === 7) C.eye = C.deep;
-    // Far legs.
-    leg(-9, false, false, C.deep, crouch ? -1 : 1); leg(6, true, false, C.deep, 1 + drop);
-    // Ragged tail held low behind.
-    g.line(-11, -3, -16, -5, C.fur, 2); g.line(-16, -5, -19, -3 + (pose === 1 ? -1 : 0), C.fur);
-    // Long low body with a shoulder hump; the rear rises in the crouch.
-    g.ell(-2, -2 + (pose === 7 ? 6 : crouch ? -1 : 0), 11, 5, C.fur);
-    g.ell(5, -3 + drop / 2, 5.5, 4.5, C.fur);
-    g.ell(-2, 1, 9, 1.6, C.deep);
-    g.line(-9, -5, 0, -6, C.wet); g.line(2, -6, 6, -7 + drop / 2, C.wet);
-    // Bone spines along the back, longer when bristling.
-    [-10, -7, -4, -1, 2, 5].forEach((x, i) => {
-        const len = 3 + (i % 2) + (crouch ? 2 : 0), base = -6 + (x > 0 ? drop / 2 : crouch ? -1 : 0);
-        g.line(x, base, x - 2, base - len, C.spine); g.px(x - 2, base - len, C.spineHi);
-    });
-    // Neck, skull and an open, toothed maw.
-    const head = at(b, s.origin[0] + (pose === 4 ? 2 : pose === 6 ? -2 : 0), s.origin[1]);
-    head.poly([[6, -7 + drop], [11, -8 + drop], [13, -2 + drop], [7, 0 + drop]], C.fur);
-    head.ell(14, -4 + drop, 4, 3, C.furHi);
-    head.poly([[15, -6 + drop], [22, -4 + drop], [22, -2 + drop], [15, -1 + drop]], C.fur);
-    head.rect(16, -2 + drop, 6, 2, C.maw);
-    head.px(17, -2 + drop, C.tooth); head.px(19, -2 + drop, C.tooth); head.px(21, -2 + drop, C.tooth); head.px(18, -1 + drop, C.tooth);
-    head.poly([[11, -7 + drop], [9, -12 + drop], [13, -7 + drop]], C.fur);
-    head.px(15, -5 + drop, C.eye); head.px(16, -5 + drop, C.eye);
-    // Near legs over the body.
-    leg(-6, false, true, C.fur, crouch ? -1 : 1); leg(9, true, true, C.fur, 1 + drop);
-    b.rim('#a08872', '#0b0806', .35, .3);
-    b.outline('#0e0a08');
+    // Original Mire Hound identity: low dog anatomy, bare rib splits, raised bone
+    // hooks, soaked dark hide and two ember eyes. Same pixel density and crisp
+    // limited-material shading as the player's authored 24x32 mage.
+    const C = {
+        void: '#171311', shadow: '#29201c', hide: '#4e3930', hideHi: '#715447',
+        muscle: '#886557', bone: '#a49178', boneHi: '#c8baa0',
+        wound: '#763a30', woundHi: '#a85c43', eye: '#f69b4d', pupil: '#fff0b0'
+    };
+    const windup = pose === 3, pounce = pose === 4, recover = pose === 5, recoil = pose === 6;
+    const travel = pose >= 8 && pose <= 15;
+    const bob = travel && (pose === 9 || pose === 13) ? -1 : 0;
+    const spineLift = windup ? 2 : 0, headDip = windup ? 2 : recover ? 1 : recoil ? 3 : pounce ? -1 : 0;
+    const shift = pounce ? 2 : windup ? -1 : recoil ? -1 : 0;
+    // Four independent limbs in diagonal contact pairs; each paw touches y=11
+    // during stance and lifts on swing. Legs are drawn FAR then NEAR so the
+    // shoulder and haunch remain readable at a phone's actual game camera.
+    const limb = (front, near) => {
+        const rootX = (front ? 6 : -9) + shift, rootY = (front ? 0 : 1) + bob;
+        const gait = travel ? caninePawPhase(pose, front, near) : { stride: 0, lift: 0 };
+        const step = pounce ? (front ? 7 : -7) : windup ? (front ? 2 : -3) :
+            recover ? (front ? 1 : -2) : recoil ? (front ? -2 : 1) : gait.stride;
+        const pawX = rootX + step;
+        const pawY = pounce ? (front ? 5 : 9) : windup ? 10 : 11 - gait.lift;
+        const jointX = rootX + (front ? 2 : -4) + step * .55;
+        const jointY = rootY + (pawY-rootY) * .57 - (gait.lift > 0 ? 2 : 0);
+        const primary = near ? C.hide : C.shadow;
+        g.line(rootX, rootY, jointX, jointY, C.void, 4);
+        g.line(jointX, jointY, pawX, pawY, C.void, 3);
+        g.line(rootX, rootY, jointX, jointY, primary, near ? 3 : 2);
+        g.line(jointX, jointY, pawX, pawY, near ? C.hideHi : C.hide, 2);
+        g.line(pawX-2, pawY, pawX+3, pawY, C.shadow, 2);
+        g.px(pawX+3, pawY, C.bone);
+        if (near) g.px(jointX, jointY-1, C.muscle);
+    };
+
+    // Far back foot and far forefoot sit BEHIND the ribcage.
+    limb(false, false);
+    limb(true, false);
+    // Low hanging scarred tail -- a hooked spine, not a dog's bushy tail.
+    g.line(-12, -4+bob, -18, -6+bob, C.void, 3);
+    g.line(-18, -6+bob, -21, -10+bob, C.hide, 2);
+    g.px(-21, -11+bob, C.bone);
+    g.line(-16, -5+bob, -20, -6+bob, C.hideHi);
+    // Haunch and barrel taper to a larger muscular forequarter.
+    g.ell(-7+shift, -4+bob, 7, 6, C.void);
+    g.ell(-7+shift, -5+bob, 6, 5, C.hide);
+    g.ell(0+shift, -6+bob, 11, 6, C.shadow);
+    g.ell(0+shift, -6+bob, 10, 5, C.hide);
+    g.ell(6+shift, -6+bob, 6, 6, C.hide);
+    g.poly([[-12+shift,-7+bob],[-7+shift,-11+bob],[4+shift,-11+bob],
+        [10+shift,-8+bob],[9+shift,-5+bob],[-6+shift,-7+bob]],C.hideHi);
+    g.line(-11+shift,-7+bob,-5+shift,-10+bob,C.muscle);
+    g.line(0+shift,-11+bob,7+shift,-9+bob,C.muscle);
+    // Rib cavity: three separated rust-red cuts bounded by old ivory bone.
+    g.poly([[-6+shift,-4+bob],[4+shift,-4+bob],[2+shift,1+bob],[-7+shift,0+bob]],C.void);
+    for(const x of [-5,-2,1]) {
+        g.line(x+shift,-4+bob,x+1+shift,-1+bob,C.bone);
+        g.px(x+shift,0+bob,C.woundHi);
+    }
+    g.line(-5+shift,1+bob,4+shift,1+bob,C.wound);
+    // Large staggered bone hooks; irregular lengths, NOT a uniform comb.
+    for(const [x,len] of [[-11,3],[-8,5],[-4,4],[0,7],[4,5],[7,4]]) {
+        const y = -10+bob-(x>=4?0:1);
+        g.line(x+shift,y,x-2+shift,y-len-spineLift,C.bone,2);
+        g.px(x-2+shift,y-len-spineLift,C.boneHi);
+    }
+    // Angled wedge neck, heavy skull, long canine muzzle and an authentic bite.
+    g.poly([[5+shift,-8+bob],[11+shift,-10+bob+headDip],
+        [16+shift,-6+bob+headDip],[13+shift,0+bob+headDip],
+        [7+shift,-1+bob]],C.shadow);
+    g.ell(13+shift,-5+bob+headDip,5,4,C.void);
+    g.ell(13+shift,-6+bob+headDip,4,3,C.hideHi);
+    g.poly([[14+shift,-7+bob+headDip],[22+shift,-5+bob+headDip],
+        [23+shift,-3+bob+headDip],[19+shift,0+bob+headDip],
+        [15+shift,-1+bob+headDip]],C.hide);
+    g.line(16+shift,-5+bob+headDip,22+shift,-4+bob+headDip,C.muscle);
+    // Ear, orbital cavity, blazing small ember eye.
+    g.poly([[9+shift,-8+bob+headDip],[10+shift,-13+bob+headDip],
+        [14+shift,-9+bob+headDip]],C.void);
+    g.px(11+shift,-12+bob+headDip,C.bone);
+    g.rect(14+shift,-8+bob+headDip,3,2,C.void);
+    g.px(15+shift,-8+bob+headDip,recoil?C.woundHi:C.eye);
+    if(!recoil)g.px(16+shift,-8+bob+headDip,C.pupil);
+    // Open jaws actually widen on the committed lunge.
+    const jaw = pounce ? 3 : windup ? 2 : 1;
+    g.poly([[17+shift,-1+bob+headDip],[23+shift,0+bob+headDip],
+        [21+shift,1+jaw+bob+headDip],[17+shift,1+jaw+bob+headDip]],C.void);
+    g.line(18+shift,1+jaw+bob+headDip,22+shift,1+jaw+bob+headDip,C.woundHi);
+    g.px(19+shift,0+bob+headDip,C.boneHi);
+    g.px(21+shift,0+bob+headDip,C.boneHi);
+    g.px(20+shift,1+jaw+bob+headDip,C.bone);
+    // Near paws cross the ribcage and prove four planted, independently moving legs.
+    limb(false, true);
+    limb(true, true);
+    if (pounce) g.px(23+shift,-2+bob+headDip,C.boneHi);
+    b.rim('#9d8270', '#16100e', .33, .26);
+    b.outline('#14100e');
     return b;
 }
 

@@ -12,6 +12,25 @@ test('painted pose precedence follows real frozen, damage and telegraph state',(
     assert.equal(mod.paintedPose({kind:1,dead:true},15),7);
     assert.equal(mod.paintedPose({kind:0},5),5);
 });
+test('Mire Hound pixels are opt-in for Enemy Lab only and regular hunts keep existing art',()=>{
+    const original = globalThis.location;
+    try {
+        globalThis.location = { pathname: '/Wyrmforge/enemy-lab', search: '?kind=MireHound&mireStyle=pixel' };
+        assert.equal(mod.mireHoundPixelPreviewEnabled(), true);
+        const ctx = { drawImage(){ throw new Error('Painted hound drawn during pixel preview'); } };
+        for(const gait of [0,3,4,5,6,7,8,9,10,11,12,13,14,15])
+            assert.equal(mod.drawPaintedEnemy(ctx,{kind:1,x:50,y:50,radius:13},gait),false);
+
+        globalThis.location = { pathname: '/Wyrmforge/hunt', search: '?mireStyle=pixel' };
+        assert.equal(mod.mireHoundPixelPreviewEnabled(), false, 'Never change normal gameplay through a query parameter');
+        globalThis.location = { pathname: '/Wyrmforge/enemy-lab', search: '?mireStyle=painted' };
+        assert.equal(mod.mireHoundPixelPreviewEnabled(), false, 'The current comparison mode remains available');
+    } finally {
+        if(original === undefined) delete globalThis.location;
+        else globalThis.location = original;
+    }
+});
+
 test('only authoritative death events create once-only bounded corpses',()=>{
     const state={};
     mod.updatePaintedCorpses(state,[],null,1);assert.equal(state.corpses.size,0);
