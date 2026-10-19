@@ -653,9 +653,12 @@
     });
     document.addEventListener('click', event => {
         if (!event.target?.closest || document.querySelector('.game-screen')) return;
-        if (event.target.closest('button:not(.wyrmforge-sound-toggle):not(.wyrmforge-sound-test):not(.wyrmforge-sound-lab-toggle):not(.wyrmforge-sound-sample):not(.wyrmforge-sound-close)')) {
-            play('ui');
-        }
+        const button = event.target.closest('button');
+        if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+        if (button.closest('.wyrmforge-sound-controls') || button.getAttribute('data-sound-cue') === 'none') return;
+        // Hunt entry already emits a physical 'hunt-start' sound from Blazor; do not add a generic click.
+        if (button.matches('.town-door--gate, .enter-realm, .gate-cta')) return;
+        play('ui');
     });
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && lab && !lab.hidden) toggleLab();
