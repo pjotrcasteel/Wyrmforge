@@ -112,8 +112,10 @@ async function aimAcceptance(base,mobile){
    // Developer lab uses the canonical C# DamageTarget path for two nonlethal hits
    // and a lethal hit. No fabricated renderer-side flashes or corpses. The JSON
    // reports the actual snapshots observed so missed frames remain visible.
-   if(mode==='after'&&process.env.CAPTURE_LETHAL==='1'&&(!selected||selected.includes('whitefang')))
-    await capture(base,'whitefang-lifecycle','enemy-lab?kind=WhitefangStalker&seed=42&autoplay=true&cast=false&artEvents=true',{duration:10000});
+   if(mode==='after'&&process.env.CAPTURE_LETHAL==='1')
+    for(const [name,kind] of [['mire-hound','MireHound'],['whitefang','WhitefangStalker']])
+     if(!selected||selected.includes(name))
+      await capture(base,name+'-lifecycle',`enemy-lab?kind=${kind}&seed=42&autoplay=true&cast=false&artEvents=true`,{duration:10000});
   }
   if(mode==='after'&&!selected){await aimAcceptance(base,false);await aimAcceptance(base,true);}
   assert.deepEqual(errors,[],'no browser errors');
