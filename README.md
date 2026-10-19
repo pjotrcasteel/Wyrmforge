@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.128 — Mobile World Gate and Wyrm selection
+
+- Town World Gate now opens the original twin-arch Free Play / grayscale Campaign scene instead of immediately launching combat.
+- Free Play leads through New Hunt (Endless Hunt/Arena visible but disabled), Fire/Frost element selection, and Tier 1. Ten dark anonymous sigils reserve room for future lineages; higher Wyrm tiers are locked rather than presenting unimplemented encounters as playable.
+- Both Fire and Frost can be selected from the first hunt; the existing region and Wyrm combat simulation remain authoritative. The choice is persisted before launching the run.
+- Portrait 320px/390px flow coverage and corrected legacy run-start browser tests. See [World Gate implementation and validation](docs/art/world-gate-mobile-2026-10-19.md).
+
 ## Prototype 0.0.127 — Vacant building light-source fidelity
 
 - Refine each authored dormant building plate to extinguish lit windows, purple magic, and stall lighting in the artwork itself instead of dimming the town with CSS.
