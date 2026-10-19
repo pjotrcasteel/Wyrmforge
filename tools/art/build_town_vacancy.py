@@ -289,6 +289,27 @@ def main() -> None:
     proof.convert("RGB").save(preview, "WEBP", quality=91, method=6)
     print(f"Built {preview.relative_to(ROOT)} ({preview.stat().st_size} bytes)")
 
+    # Review-only coordinate map; needed to place small emission masks precisely.
+    # Never load this annotated diagnostic image into the actual game.
+    grid = proof.convert("RGB")
+    d = ImageDraw.Draw(grid)
+    for gx in range(0, SIZE[0], 100):
+        d.line((gx, 0, gx, SIZE[1]), fill=(32, 205, 138), width=1)
+        d.text((gx + 2, 2), str(gx), fill=(255, 255, 255), stroke_width=1,
+               stroke_fill=(0, 0, 0))
+    for gy in range(100, SIZE[1], 100):
+        d.line((0, gy, SIZE[0], gy), fill=(32, 205, 138), width=1)
+        d.text((2, gy + 2), str(gy), fill=(255, 255, 255), stroke_width=1,
+               stroke_fill=(0, 0, 0))
+    for name, plan in PLATES.items():
+        for x, y, _, _ in plan.get("cold_sources", []):
+            d.ellipse((x - 5, y - 5, x + 5, y + 5), outline=(255, 58, 49), width=2)
+            d.text((x + 7, y - 12), f"{x},{y}", fill=(255, 225, 166),
+                   stroke_width=1, stroke_fill=(0, 0, 0))
+    coordinate_proof = ROOT / "docs/art/previews/refuge-vacancy-coordinate-map.webp"
+    grid.save(coordinate_proof, "WEBP", quality=91, method=5)
+    print(f"Built {coordinate_proof.relative_to(ROOT)}")
+
 
 if __name__ == "__main__":
     main()
