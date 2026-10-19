@@ -180,19 +180,24 @@ html:has(.refuge-home), body:has(.refuge-home) {
   display:block;object-fit:contain;pointer-events:none;-webkit-user-drag:none;
   clip-path:polygon(0 42%,33% 42%,33% 100%,0 100%);
 }
-/* Sealed buildings sleep without clickable or glowing hotspots. Keep the road
-   and the permanently operational gate visible instead of covering the town. */
-.game-shell.refuge-home .town-vacancy {
-  position:absolute;z-index:1;display:block;pointer-events:none;
-  background:rgba(3,5,12,.48);
-  -webkit-backdrop-filter:grayscale(1) brightness(.15);
-  backdrop-filter:grayscale(1) brightness(.15);
-  -webkit-mask-image:radial-gradient(ellipse at center,#000 64%,transparent 100%);
-  mask-image:radial-gradient(ellipse at center,#000 64%,transparent 100%);
+/* Restored architectural presentation: modify the painted buildings themselves,
+   never the road, sky or neighboring buildings. No black translucent layers,
+   radial shadows, blur or backdrop filters. The authored vacant blacksmith below
+   remains the reference for the eventual bespoke inactive art variants. */
+.game-shell.refuge-home .town-dormant-art {
+  position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;
+  object-fit:contain;image-rendering:auto;pointer-events:none;-webkit-user-drag:none;
+  filter:saturate(.45) brightness(.72);
 }
-.game-shell.refuge-home .town-vacancy--build {left:0;top:0;width:33%;height:54%}
-.game-shell.refuge-home .town-vacancy--codex {right:0;top:0;width:33%;height:55%}
-.game-shell.refuge-home .town-vacancy--legends {right:0;top:39%;width:33%;height:61%}
+.game-shell.refuge-home .town-dormant-art--build {
+  clip-path:polygon(.7% 9%,5% 5%,11% 1%,22% 0,32% 10%,32% 45%,.7% 45%);
+}
+.game-shell.refuge-home .town-dormant-art--codex {
+  clip-path:polygon(70% 9%,81% 0,98% 8%,99% 42%,90% 46%,67.5% 46%,67.5% 16%);
+}
+.game-shell.refuge-home .town-dormant-art--legends {
+  clip-path:polygon(68% 59%,74% 48%,84% 43%,99% 58%,99% 94%,68% 96%);
+}
 .game-shell.refuge-home .town-square::after {display:none!important}
 /* Touch can pan across the authentic image; overlays retain their own fixed positions. */
 .game-shell.refuge-home .town-panorama-viewport {scroll-padding-inline:0!important}
