@@ -29,7 +29,11 @@ PLATES = {
         "emission_zones": [(100, 196, 45, 65), (190, 208, 46, 55), (273, 216, 55, 62),
                            (334, 192, 45, 55), (403, 203, 47, 60), (485, 190, 43, 62),
                            (542, 216, 55, 73), (122, 289, 80, 45), (363, 286, 72, 47),
-                           (510, 294, 92, 46), (630, 280, 44, 41)],
+                           (510, 294, 92, 46), (630, 280, 44, 41),
+                           # Blue and cyan bottles, shop displays and dormant rune sconces.
+                           (150, 306, 65, 45), (260, 295, 70, 55),
+                           (378, 285, 65, 54), (505, 300, 80, 52),
+                           (585, 294, 65, 48)],
         "clone_offsets": [(92, 34), (72, 12)],
         "boundary": [(2, 74), (98, 22), (292, 0), (530, 13), (706, 94),
                      (705, 319), (596, 364), (367, 355), (123, 359), (3, 331)],
@@ -117,24 +121,30 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
         painted_bgr = cv2.seamlessClone(replacement, painted_bgr, local, center, cv2.NORMAL_CLONE)
     painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
 
-    # Extinguish only high-luminance warm or violet light within hand-authored
-    # light-source ellipses. The stonework, tile roof and ambient daylight remain.
+    # One universal state conversion for all buildings: extinguish bright
+    # warm/cold/magical emissions in hand-authored local source zones.
+    # Do not darken all pixels in a building or create a transparent black haze.
     yy, xx = np.ogrid[:h, :w]
     source_rgb = painted.copy()
     red, green, blue = source_rgb[:, :, 0], source_rgb[:, :, 1], source_rgb[:, :, 2]
     warm = np.clip((red - green * .92) / 80, 0, 1) * np.clip((green - blue * .9) / 70, 0, 1)
     violet = np.clip((red + blue - green * 2) / 130, 0, 1)
-    luminous = np.clip((np.max(source_rgb, axis=2) - 60) / 135, 0, 1)
+    # Previous art only identified warm/violet emissive pixels. Arcane Nexus
+    # retained living cyan/blue highlights even while the building was locked.
+    blue = np.clip((blue - red * .78) / 75, 0, 1)
+    cyan = np.clip((blue * .65 + green * .65 - red * 1.1) / 110, 0, 1)
+    luminous = np.clip((np.max(source_rgb, axis=2) - 44) / 125, 0, 1)
     light_mask = np.zeros((h, w), dtype=np.float32)
     for x, y, rx, ry in plan["lamps"] + plan["emission_zones"]:
         r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
         light_mask = np.maximum(light_mask, np.clip(1.0 - r2, 0, 1) ** 0.7)
-    # A sleeping building may retain readable masonry, never emitting bright
-    # orange windows, magical purple runes or lit trading stalls.
-    suppression = np.clip(light_mask * luminous * np.maximum(warm, violet * .85) * 1.75, 0, .96)
-    # Preserve the painting's texture; only the emissive chroma and intensity go.
-    gray = (source_rgb[:, :, 0] * .24 + source_rgb[:, :, 1] * .58 + source_rgb[:, :, 2] * .18)
-    neutral = np.stack((gray * .43, gray * .46, gray * .51), axis=-1)
+    # Dark, unpowered windows and worktables have no radiant highlight even
+    # when the source is white rather than warm/violet/blue. Keep original
+    # painted masonry, geometry, signs and neighboring buildings intact.
+    chroma = np.maximum.reduce([warm, violet * .9, blue, cyan])
+    suppression = np.clip(light_mask * luminous * (.42 + chroma * 2.35), 0, .97)
+    gray = source_rgb[:, :, 0] * .24 + source_rgb[:, :, 1] * .58 + source_rgb[:, :, 2] * .18
+    neutral = np.stack((gray * .30, gray * .33, gray * .39), axis=-1)
     painted = np.clip(painted * (1 - suppression[:, :, None]) + neutral * suppression[:, :, None], 0, 255)
     cutout = Image.new("L", SIZE, 0)
     drawer = ImageDraw.Draw(cutout)
