@@ -78,6 +78,18 @@ The four summons/clones still require visual/lifecycle checks **as distinct runt
 
 **Not delivered:** brand-new painted sprite art, full body animation sets and cardinal facings for the rest of the roster; verified death/hit/attack clips for every creature; physical iPhone measurements. PR #136 remains **draft**, no merge or new Pages deployment from this branch.
 
+## Owner art acceptance and one-monster workflow — 19 October 2026
+
+**FAILED visual acceptance on physical iPhone, live version 0.0.125 / `5d6b0df` (merged #135):** the recovered painted Mire Hound looks incompatible with the currently playable mage. The mage uses authored, discrete-color pixel-art shapes; the hounds look like heavily textured painted illustrations pasted into a pixel-art world. The owner also rejects their apparent scale and animation quality. Existing browser recordings and passing regression tests do not cancel this rejection.
+
+**Locked production direction:** grounded Gothic dark fantasy **in coherent game-resolution pixel art**, as established in `art/README.md`. Preserve original monster cards for anatomy, identity, materials and silhouettes, but do not just shrink/quantize the card. Match the **actual playable mage** for pixel density, values, lighting, shadow, perspective, perceived scale, depth placement, and sharp contours. Individual actors must have anatomically credible, C#-event-driven animation, not simply recolored frames.
+
+**New workflow: finish ONE monster at a time.** First Mire Hound. Check original card against the actual animated actor beside the mage in a normal mobile viewport. Inspect idle/travel, direction, grounded paw contact, real attack, real nonlethal hit and real death. Preserve original collision and attack behavior. No second monster begins before the first is visually accepted or checkpointed as explicitly unfinished. Push source art, runtime sheets and metadata with every completed slice and verify remote HEAD. Never mark all-roster art done without all acceptance evidence.
+
+**Developer lab:** isolated UI PR [#137](https://github.com/pjotrcasteel/Wyrmforge/pull/137) connects Combat Lab selection to the real `/enemy-lab` renderer and reloads selected monsters on change. It is a separate draft based on main to permit early validation/deployment without merging this unfinished overhaul. Draft #136 also carries early unmerged lab changes; reconcile/avoid duplicate commits or conflicts when #137 is merged.
+
+**No new sprite art or iPhone acceptance is claimed by this status update.**
+
 ## Remote validation trail
 
 - PR #135 merged into main `5d6b0df`, no original combat logic rebuilt.
