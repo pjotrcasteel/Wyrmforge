@@ -15,6 +15,26 @@ public sealed partial class RunSimulation
     private const double ExperiencePickupPulseSeconds = 0.22;
     private readonly List<ElementalImpactState> elementalImpacts = [];
     private readonly List<DeathBurstState> deathBursts = [];
+    private readonly Dictionary<int, double> hollowContactStrikes = [];
+    private const double HollowStrikeIntervalSeconds = 0.55;
+
+    // An actual overlap that goes through DamagePlayerContact is a combat event,
+    // even when developer invulnerability prevents health loss. No art clock can
+    // manufacture a contact strike from a disappearing telegraph.
+    private void RegisterHollowContactStrike(EnemyState enemy)
+    {
+        if (enemy.Kind != EnemyKind.Hollow) return;
+        if (!hollowContactStrikes.TryGetValue(enemy.Id, out var last) || elapsed - last >= HollowStrikeIntervalSeconds)
+            hollowContactStrikes[enemy.Id] = elapsed;
+    }
+
+    private string? GetHollowContactAnimation(EnemyState enemy)
+    {
+        if (enemy.Kind != EnemyKind.Hollow || !hollowContactStrikes.TryGetValue(enemy.Id, out var started)) return null;
+        var since = elapsed - started;
+        return since < 0.14 ? "ContactStrike" : since < 0.30 ? "Recover" : null;
+    }
+
     private readonly List<ExperiencePickupPulseState> experiencePickupPulses = [];
 
     private void UpdateCombatFeedback(double delta)
@@ -31,6 +51,11 @@ public sealed partial class RunSimulation
         splashPulses.RemoveAll(pulse => pulse.Life <= 0);
         foreach (var impact in elementalImpacts) impact.Life -= delta;
         elementalImpacts.RemoveAll(impact => impact.Life <= 0);
+        // Bounded visual-only contact history, never accumulated across a long hunt.
+        foreach (var id in hollowContactStrikes.Keys.ToArray())
+            if (elapsed - hollowContactStrikes[id] > HollowStrikeIntervalSeconds)
+                hollowContactStrikes.Remove(id);
+
         foreach (var burst in deathBursts) burst.Life -= delta;
         deathBursts.RemoveAll(burst => burst.Life <= 0);
         foreach (var pickup in experiencePickupPulses) pickup.Life -= delta;
