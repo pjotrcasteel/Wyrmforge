@@ -130,6 +130,9 @@
     {
         <div class="primary-choice-overlay" role="dialog" aria-modal="true" aria-label="Choose your primary magic">
             <section class="primary-choice-panel">
+                <button type="button" class="primary-choice-back" aria-label="Cancel hunt and return to town" @onclick="CancelStartAsync">
+                    <span aria-hidden="true">‹</span> RETURN TO TOWN
+                </button>
                 <span class="primary-choice-eyebrow">THE FIRST OATH</span>
                 <h2>Choose your primary magic</h2>
                 <p>Your choice stays for this entire hunt. Upgrades strengthen it; other elements are earned through combinations.</p>
