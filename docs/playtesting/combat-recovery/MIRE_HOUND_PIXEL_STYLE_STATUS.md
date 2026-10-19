@@ -19,11 +19,21 @@ Research basis already recorded in the recovery handover: Carlisle et al. canine
 - [x] New branch off current main; repository and source checked before edits.
 - [x] Authored Mire Hound pixel sprites and game renderer selection pushed remotely.
 - [x] Baked `actors.png` and `art/manifest.json` pushed and remote SHA verified by the [Mire Hound atlas workflow](https://github.com/pjotrcasteel/Wyrmforge/actions/workflows/mire-hound-art-checkpoint.yml). `node tools/art/build-art.mjs --check` and the focused JavaScript gait tests passed in that workflow.
-- [ ] Complete the 390×844 CI mobile browser test and real-game before/after screenshots for `/enemy-lab?kind=MireHound&seed=42&autoplay=false&cast=false&mireStyle=pixel` versus `mireStyle=painted`. The Playwright test is committed but its latest workflow must finish.
+- [x] Full .NET validation and 390×844 mobile Chromium browser suite passed on code SHA `11587c7d`. Actual comparison screenshot evidence was published and remote-verified in workflow [39257065616](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39257065616). This is browser emulation, **not physical iPhone approval**.
 - [ ] Compare at **identical zoom and viewport** with original card and pre-change production screenshot.
 - [ ] Capture in-game idle/travel/turn/windup/bite/real nonlethal hit/real death; check paw phases against actual world movement.
 - [ ] Verify all CI and real browser smoke; obtain owner approval on iPhone before merge.
 - [ ] Integrate future real C# lifecycle from draft PR #136 after reconciling with main, not by copying speculative frontend timing. Until then this is **a visual recovery slice, not a finished animation overhaul**.
+
+## Real-game visual comparisons (390 × 844)
+
+Original design authority: [Mire Hound monster card](../../../user_handover_files/concepts/Fire/05-mire-hound.png).
+
+| Current painted version | New authored pixel preview |
+|---|---|
+| ![Actual production renderer in Enemy Lab, currently published art](evidence/mire-hound-mobile-review/current-painted-390.png) | ![Actual production renderer in Enemy Lab, pixel-art preview](evidence/mire-hound-mobile-review/pixel-preview-390.png) |
+
+These are real Blazor simulation/Canvas screenshots from browser acceptance CI at the same mobile viewport and seed 42. The app's startup overlay was explicitly awaited before recapturing. They demonstrate coherent pixel scale, but **do not** prove all directional, attack, nonlethal-hit, death or iPhone lifecycle acceptance gates. The current build is *preview only*; ordinary hunts are left unchanged.
 
 ## Owner comparison (preview only)
 
