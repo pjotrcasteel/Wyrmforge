@@ -1,8 +1,12 @@
 # Wyrmforge
 
-## Current continuation and handover (15 October 2026)
+## Authoritative product design and development continuation
 
-Start with the [canonical project, art, game-UX and GitHub backlog handover](docs/handover/2026-10-15-project-art-and-backlog.md). It preserves **approved/rejected artwork**, the correct staff and monastery 2.5D rules, focused spell identity, mobile picture-first design, and reviewed PRs/issues. The [approved image references](art/README.md) and [visual-first Magic Lab/Battlemage research](docs/design/visual-first-magic-ui-rfc.md) are complementary. Research designs are not automatically playable features; inspect current source and PR/CI before continuing.
+**Single product-design source of truth:** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md).
+
+This consolidates the four earlier handovers, resolves their contradictory instructions, and includes the explicit **P0–P9 priorities in §12**. Claude and other development agents should follow this file for intended product behavior, rather than layering older specifications.
+
+**Implementation/status evidence, not additional product specifications:** [dated project, art, UX and GitHub handover](docs/handover/2026-10-15-project-art-and-backlog.md), [17 October design reconciliation record](docs/design/design-amendment-2026-10-17-reconciliation.md), the existing [historical gameplay roadmap](docs/roadmap/wyrmforge-gameplay-next-level.md), [approved image references](art/README.md), and current GitHub branches, PRs, CI and code. Verify progress against today's repository; do not restart completed work or interpret old status snapshots as current design decisions.
 
 
 ## Prototype 0.0.117 — Health clarity and unmistakably different territories
