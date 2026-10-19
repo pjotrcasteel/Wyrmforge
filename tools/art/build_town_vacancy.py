@@ -25,6 +25,11 @@ SIZE = (2172, 724)
 # cobbled public square or other properties. The edges are art alignment masks.
 PLATES = {
     "nexus": {
+        # Include window panes, purple sigils and the trading stall, not just street lamps.
+        "emission_zones": [(100, 196, 45, 65), (190, 208, 46, 55), (273, 216, 55, 62),
+                           (334, 192, 45, 55), (403, 203, 47, 60), (485, 190, 43, 62),
+                           (542, 216, 55, 73), (122, 289, 80, 45), (363, 286, 72, 47),
+                           (510, 294, 92, 46), (630, 280, 44, 41)],
         "clone_offsets": [(92, 34), (72, 12)],
         "boundary": [(2, 74), (98, 22), (292, 0), (530, 13), (706, 94),
                      (705, 319), (596, 364), (367, 355), (123, 359), (3, 331)],
@@ -43,6 +48,10 @@ PLATES = {
         ],
     },
     "codex": {
+        "emission_zones": [(1551, 275, 35, 70), (1653, 258, 65, 62),
+                           (1729, 191, 35, 56), (1816, 118, 71, 67),
+                           (1820, 278, 77, 70), (1900, 240, 50, 65),
+                           (2003, 247, 55, 75), (2105, 261, 45, 71)],
         "clone_offsets": [(-88, 32), (88, 20)],
         "boundary": [(1475, 97), (1575, 46), (1700, 9), (1793, 0), (1938, 0),
                      (2111, 8), (2171, 63), (2171, 346), (2075, 369),
@@ -60,6 +69,10 @@ PLATES = {
         ],
     },
     "legends": {
+        "emission_zones": [(1557, 482, 25, 44), (1665, 520, 80, 80),
+                           (1748, 537, 64, 74), (1834, 540, 68, 95),
+                           (1920, 555, 77, 104), (2020, 569, 83, 102),
+                           (2115, 580, 81, 98)],
         "clone_offsets": [(-75, 21), (-70, 10), (85, 12)],
         "boundary": [(1481, 479), (1565, 413), (1746, 353), (1924, 356),
                      (2083, 390), (2171, 463), (2171, 715), (2052, 722),
@@ -113,13 +126,15 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     violet = np.clip((red + blue - green * 2) / 130, 0, 1)
     luminous = np.clip((np.max(source_rgb, axis=2) - 60) / 135, 0, 1)
     light_mask = np.zeros((h, w), dtype=np.float32)
-    for x, y, rx, ry in plan["lamps"]:
+    for x, y, rx, ry in plan["lamps"] + plan["emission_zones"]:
         r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
         light_mask = np.maximum(light_mask, np.clip(1.0 - r2, 0, 1) ** 0.7)
-    suppression = np.clip(light_mask * luminous * np.maximum(warm, violet * .85) * 1.25, 0, .87)
+    # A sleeping building may retain readable masonry, never emitting bright
+    # orange windows, magical purple runes or lit trading stalls.
+    suppression = np.clip(light_mask * luminous * np.maximum(warm, violet * .85) * 1.75, 0, .96)
     # Preserve the painting's texture; only the emissive chroma and intensity go.
     gray = (source_rgb[:, :, 0] * .24 + source_rgb[:, :, 1] * .58 + source_rgb[:, :, 2] * .18)
-    neutral = np.stack((gray * .69, gray * .72, gray * .78), axis=-1)
+    neutral = np.stack((gray * .43, gray * .46, gray * .51), axis=-1)
     painted = np.clip(painted * (1 - suppression[:, :, None]) + neutral * suppression[:, :, None], 0, 255)
     cutout = Image.new("L", SIZE, 0)
     drawer = ImageDraw.Draw(cutout)

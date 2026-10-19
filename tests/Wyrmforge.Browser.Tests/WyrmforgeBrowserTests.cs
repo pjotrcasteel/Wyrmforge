@@ -1681,9 +1681,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(await Page.Locator(".town-dormant-art").First.EvaluateAsync<bool>(
             "element => element.complete && element.naturalWidth === 2172 && element.naturalHeight === 724 && " +
             "getComputedStyle(element).filter === 'none' && getComputedStyle(element).backdropFilter === 'none'"));
-        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveAttributeAsync("src", "art/town-vacant-nexus.webp?v=126");
-        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveAttributeAsync("src", "art/town-vacant-codex.webp?v=126");
-        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveAttributeAsync("src", "art/town-vacant-legends.webp?v=126");
+        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveAttributeAsync("src", "art/town-vacant-nexus.webp?v=127");
+        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveAttributeAsync("src", "art/town-vacant-codex.webp?v=127");
+        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveAttributeAsync("src", "art/town-vacant-legends.webp?v=127");
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });

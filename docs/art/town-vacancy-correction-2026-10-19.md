@@ -1,5 +1,7 @@
 # Refuge town vacant buildings — 19 October 2026
 
+> Follow-up 0.0.127: extended the paint-level light masks to windows, purple runes and stalls; all three RGBA plates were rebuilt and the native panorama proof refreshed. Building artwork is replaced selectively, with no full-screen or CSS darkening. The in-person iPhone Safari swipe and framing check is still outstanding.
+
 ## Regression corrected
 
 PR #131 added opaque black shapes, backdrop filters and feathered masks over locked buildings. They covered parts of the town and never removed people or actual lights. They have been removed.
