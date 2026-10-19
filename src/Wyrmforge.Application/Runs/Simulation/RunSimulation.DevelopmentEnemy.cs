@@ -18,7 +18,7 @@ public sealed partial class RunSimulation
         var target = enemies.FirstOrDefault(enemy => enemy.Kind == kind && enemy.Health > 0);
         if (target is null) return false;
         var damage = lethal ? target.Health + 1 : target.MaxHealth * 0.2;
-        DamageTarget(target, damage);
+        if (DamageTarget(target, damage)) enemies.Remove(target);
         return true;
     }
 
