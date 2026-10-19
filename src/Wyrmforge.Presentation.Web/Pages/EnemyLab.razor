@@ -99,7 +99,14 @@
     {
         Restart();
         // Shareable kind links allow before/after capture with the same actor and seed.
-        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("kind", kind.ToString()), replace: true);
+        var url = Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            ["kind"] = kind.ToString(),
+            ["seed"] = seed,
+            ["autoplay"] = autoplay,
+            ["cast"] = casting
+        });
+        Navigation.NavigateTo(url, replace: true);
     }
     private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
     private void TogglePause() => paused = !paused;
