@@ -164,7 +164,7 @@ public partial class ArenaView : IAsyncDisposable
         if (current.ReliquarySightings != previousReliquarySightings)
         {
             ShowReliquarySighted();
-            await TryPlayAudioAsync("hunt-start");
+            await TryPlayAudioAsync("threat-reveal");
             stateChanged = true;
         }
         else if (current.ReliquaryShifts != previousReliquaryShifts)
@@ -191,7 +191,7 @@ public partial class ArenaView : IAsyncDisposable
         if (current.BellWardenArrivals != previousBellArrivals)
         {
             ShowBellWardenArrived();
-            await TryPlayAudioAsync("hunt-start");
+            await TryPlayAudioAsync("threat-reveal");
             stateChanged = true;
         }
         else if (current.BellWardenCracks != previousBellCracks)
@@ -272,7 +272,7 @@ public partial class ArenaView : IAsyncDisposable
         var node = MapNodes.SingleOrDefault(candidate => candidate.Id == id);
         if (node is null || simulation?.ChooseMapNode(id) != true) return;
         ShowMapMoment(node);
-        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "hunt-start");
+        await TryPlayAudioAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm" : "trail-enter");
         await TryRecordPlaytestMilestoneAsync(node.Type == WyrmrealmNodeType.Dragon ? "wyrm_entered" : "trail_entered");
         await InvokeAsync(StateHasChanged);
     }
@@ -282,7 +282,7 @@ public partial class ArenaView : IAsyncDisposable
         if (simulation?.UseCheckpointAction(id) != true) return;
         ShowCheckpointMoment(id);
         if (id == RunCheckpointActionId.MendWounds) await TryPlayAudioAsync("reward");
-        if (id == RunCheckpointActionId.Descend) await TryPlayAudioAsync("hunt-start");
+        if (id == RunCheckpointActionId.Descend) await TryPlayAudioAsync("trail-enter");
         if (id == RunCheckpointActionId.Descend) await TryRecordPlaytestMilestoneAsync("descended");
         if (id == RunCheckpointActionId.LeaveRealm) await TryRecordPlaytestMilestoneAsync("extracted");
         await InvokeAsync(StateHasChanged);
