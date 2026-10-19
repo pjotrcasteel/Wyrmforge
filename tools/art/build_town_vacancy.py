@@ -95,6 +95,14 @@ PLATES = {
                      (705, 588), (680, 723), (0, 723)],
     },
     "codex": {
+        # The fire itself has to disappear, not merely lose orange saturation.
+        # These tiny hand-painted flame tips are small enough for local
+        # reconstruction; the sconce and brazier stonework remain untouched.
+        "cold_flames": [
+            [(1699, 121), (1705, 112), (1712, 130), (1709, 145), (1698, 145)],
+            [(1916, 137), (1923, 126), (1930, 146), (1927, 161), (1916, 157)],
+            [(1916, 278), (1922, 268), (1930, 283), (1929, 301), (1914, 303)],
+        ],
         # Enforced OFF: upper sconces, red/white windows and doorway brazier.
         "cold_sources": [
             (1705, 125, 23, 32), (1922, 145, 22, 33),
@@ -187,6 +195,14 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
             painted_bgr[y0:y1, x0:x1] = (
                 painted_bgr[y0:y1, x0:x1] * (1 - a) + clone * a
             ).astype(np.uint8)
+
+    # Tiny actual flame shapes can be reconstructed locally without the
+    # black disks that a building-wide darkening pass would create.
+    if plan.get("cold_flames"):
+        flame_mask = np.zeros((h, w), dtype=np.uint8)
+        for polygon in plan["cold_flames"]:
+            cv2.fillPoly(flame_mask, [np.asarray(polygon, np.int32)], 255)
+        painted_bgr = cv2.inpaint(painted_bgr, flame_mask, 2, cv2.INPAINT_TELEA)
 
     for polygon, (dx, dy) in zip(plan["figures"], plan["clone_offsets"], strict=True):
         xs, ys = zip(*polygon)
