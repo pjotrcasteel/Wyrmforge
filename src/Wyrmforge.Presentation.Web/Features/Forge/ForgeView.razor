@@ -79,19 +79,18 @@
                             {
                                 <img class="town-panorama-open-forge" src="art/refuge-town-panorama.png" alt="" aria-hidden="true" draggable="false" />
                             }
-                            @* Closed buildings use paint-matched, architecture-clipped art, not opaque black overlays.
-                               Keep the original painting underneath so the gate, sky, roads and adjacent buildings stay intact. *@
+                            @* Pixel-aligned vacant plates remove occupants and extinguish building lighting. No black CSS veil. *@
                             @if (!IsUnlocked(ShellSection.Build))
                             {
-                                <img class="town-dormant-art town-dormant-art--build" src="art/refuge-town-vacant.webp?v=120" alt="" aria-hidden="true" draggable="false" />
+                                <img class="town-dormant-art town-dormant-art--build" src="art/town-vacant-nexus.webp?v=126" alt="" aria-hidden="true" draggable="false" />
                             }
                             @if (!IsUnlocked(ShellSection.Codex))
                             {
-                                <img class="town-dormant-art town-dormant-art--codex" src="art/refuge-town-vacant.webp?v=120" alt="" aria-hidden="true" draggable="false" />
+                                <img class="town-dormant-art town-dormant-art--codex" src="art/town-vacant-codex.webp?v=126" alt="" aria-hidden="true" draggable="false" />
                             }
                             @if (!Progress.LeaderboardUnlocked)
                             {
-                                <img class="town-dormant-art town-dormant-art--legends" src="art/refuge-town-vacant.webp?v=120" alt="" aria-hidden="true" draggable="false" />
+                                <img class="town-dormant-art town-dormant-art--legends" src="art/town-vacant-legends.webp?v=126" alt="" aria-hidden="true" draggable="false" />
                             }
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
