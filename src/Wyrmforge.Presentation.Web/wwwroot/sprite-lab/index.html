@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e11">
+  <title>WyrmForge Sprite Lab — Animation Validation</title>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="crest">✧</span><div><div class="eyebrow">WYRMFORGE // TOOLS</div><h1>Sprite Lab<span class="version">v0.1</span></h1></div></div>
+    <div class="top-meta"><span class="live-dot"></span> LOCAL · OFFLINE <span class="top-sep"></span> <span id="assetLabel">THE HOLLOW / WALK</span></div>
+  </header>
+  <main class="workspace">
+    <aside class="left-panel panel">
+      <div class="section-heading"><div><div class="eyebrow">01 / ASSET</div><h2>Source sheet</h2></div><span id="imageDimensions" class="dim-label">—</span></div>
+      <label for="fileInput" id="dropzone" class="dropzone"><span class="upload-icon">⇧</span><strong>Drop a sprite PNG here</strong><small>or tap to choose a PNG, WebP or JPG</small><span class="upload-link">Load artwork <span aria-hidden="true">↗</span></span></label>
+      <input id="fileInput" type="file" accept="image/png,image/webp,image/jpeg" hidden>
+      <div class="preset-row"><span class="tiny">QUICK START</span><button id="loadDemo" type="button" class="ghost small">↶ Hollow example</button></div>
+      <div class="source-canvas-wrap"><canvas id="sheetCanvas" width="420" height="290" aria-label="Spritesheet preview with highlighted frame"></canvas></div>
+      <div class="subheading"><span>FRAME LAYOUT</span><button id="resetLayout" type="button" class="text-btn">Reset</button></div>
+      <label class="form-label" for="layoutPreset">Direction mapping</label>
+      <select id="layoutPreset"><option value="five">5 drawn views · mirrored to 8</option><option value="eight">8 unique views · production</option></select>
+      <div class="field-grid">
+        <label>Columns<input id="columns" type="number" min="1" max="32" value="8"></label>
+        <label>Rows<input id="rows" type="number" min="1" max="32" value="5"></label>
+        <label>Frame width<input id="frameWidth" type="number" min="1" max="2048" value="166"></label>
+        <label>Frame height<input id="frameHeight" type="number" min="1" max="2048" value="160"></label>
+        <label>Offset X<input id="offsetX" type="number" min="0" max="4096" value="0"></label>
+        <label>Offset Y<input id="offsetY" type="number" min="0" max="4096" value="0"></label>
+      </div>
+      <p class="note">The example uses artwork from our concept sheet. It is <strong>not yet a production-transparent atlas</strong>; the validator will identify that.</p>
+    </aside>
+    <section class="center-panel">
+      <div class="stage-header"><div><div class="eyebrow">02 / ANIMATION</div><h2>Motion preview <span class="stage-caption">· in-engine approximation</span></h2></div><span id="modeStatus" class="state-tag">MANUAL</span></div>
+      <div class="stage-frame">
+        <canvas id="stageCanvas" width="720" height="440" aria-label="Animated enemy preview; click to move player target"></canvas>
+        <span class="stage-hint" id="stageHint">Tap the arena to place the player target</span>
+        <div class="stage-corner top-left">SIMULATION / 60 FPS RENDER</div><div class="stage-corner bottom-right">NO GAMEPLAY DATA WRITTEN</div>
+      </div>
+      <div class="direction-section">
+        <div class="control-head"><div class="tiny">MOVEMENT</div><div class="toggle-group"><button class="active" id="manualBtn" type="button">Direction preview</button><button id="chaseBtn" type="button">Chase player</button></div></div>
+        <div class="direction-layout">
+          <div id="compass" class="compass" role="group" aria-label="Preview direction"><button data-dir="NW">↖</button><button data-dir="N">↑</button><button data-dir="NE">↗</button><button data-dir="W">←</button><button data-dir="STAY" class="compass-center" disabled aria-label="Center">✥</button><button data-dir="E">→</button><button data-dir="SW">↙</button><button data-dir="S">↓</button><button data-dir="SE">↘</button></div>
+          <div class="direction-details"><div class="tiny">FACING</div><div id="directionName" class="direction-name">SOUTH <span>↓</span></div><div id="directionMeta" class="meta-line">Row 1 · original artwork</div><div class="tiny subtle">Move the player marker on the stage in chase mode to test automatic 8-way facing.</div></div>
+        </div>
+      </div>
+      <div class="transport">
+        <button id="playBtn" class="play-btn" type="button" aria-label="Pause animation">❚❚</button>
+        <button id="stepBtn" class="transport-btn" type="button" aria-label="Advance one frame">▸│</button>
+        <label class="range-label">SPEED <span id="fpsValue">8 FPS</span><input id="fps" type="range" min="1" max="24" value="8"></label>
+        <label class="range-label">SIZE <span id="scaleValue">100%</span><input id="scale" type="range" min="40" max="200" value="100"></label>
+        <span id="frameIndicator" class="frame-readout">01 / 08</span>
+      </div>
+      <div class="filmstrip-heading"><span class="tiny">FRAME-BY-FRAME INSPECTION</span><span class="keyhint">Select a frame to pause there</span></div>
+      <div id="filmstrip" class="filmstrip" role="group" aria-label="Individual animation frames"></div>
+    </section>
+    <aside class="right-panel panel">
+      <div class="section-heading"><div><div class="eyebrow">03 / GATE</div><h2>Validation</h2></div><span id="resultPill" class="result-pill checking">CHECKING</span></div>
+      <div id="checkList" class="checklist" aria-live="polite"></div>
+      <div class="separator"></div>
+      <div class="subheading">ATLAS INFORMATION</div>
+      <div class="stats"><div><span>Animation</span><strong>Walk / Chase</strong></div><div><span>Frames / direction</span><strong id="statFrames">8</strong></div><div><span>Directions usable</span><strong id="statDirections">8</strong></div><div><span>Source directions</span><strong id="statNative">5</strong></div><div><span>Layout</span><strong id="statSize">166 × 160</strong></div></div>
+      <div class="separator"></div>
+      <div class="subheading">EXPORTS</div>
+      <div class="export-group"><button id="exportAtlas" class="primary" type="button">Export 8-way atlas <span>↗</span></button><button id="exportManifest" class="secondary" type="button">Export animation manifest</button><button id="exportReport" class="secondary" type="button">Export QA report</button></div>
+      <p class="note export-note">Atlas export builds 8 direction rows (mirroring missing views if needed). It <strong>does not remove painted backgrounds</strong> or invent animation frames.</p>
+      <div class="file-note"><strong>PRODUCTION TARGET</strong><span>8 directions × 8 frames<br>Transparent PNG · consistent pivot<br>One character · no captions or borders</span></div>
+    </aside>
+  </main>
+  <footer>WyrmForge Sprite Lab · Independent visual tooling · No CDN, account, or server required · <span id="footerState">Loading reference…</span></footer>
+  <script src="src/lab-core.js"></script>
+  <script src="src/lab-app.js"></script>
+</body>
+</html>
