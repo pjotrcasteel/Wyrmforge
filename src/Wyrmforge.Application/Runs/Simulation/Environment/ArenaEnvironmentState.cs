@@ -93,19 +93,74 @@ public sealed class ArenaEnvironmentState
         return IsBlocked(vertical, width, height, radius) ? horizontal : vertical;
     }
 
-    /// <summary>Authoritative acquisition tests closed masonry and gates, using the same world rectangles as movement.</summary>
-    public bool HasLineOfSight(Vector2D from, Vector2D to, double width, double height)
+    /// <summary>Acquisition and projectile physics share the actual closed obstacles.</summary>
+    public bool HasLineOfSight(Vector2D from, Vector2D to, double width, double height) =>
+        !BlocksSegment(from, to, width, height);
+
+    /// <summary>Continuous swept-circle collision; thin barriers cannot be skipped by a fast projectile.</summary>
+    public bool BlocksSegment(Vector2D from, Vector2D to, double width, double height, double radius = 0)
     {
-        if (width <= 0 || height <= 0) return true;
+        if (width <= 0 || height <= 0) return false;
         foreach (var barrier in barriers)
         {
             if (IsOpen(barrier)) continue;
-            var enter = 0d;
-            var leave = 1d;
-            if (Clip(from.X, to.X - from.X, barrier.X * width, (barrier.X + barrier.Width) * width, ref enter, ref leave) &&
-                Clip(from.Y, to.Y - from.Y, barrier.Y * height, (barrier.Y + barrier.Height) * height, ref enter, ref leave)) return false;
+            var minX = barrier.X * width;
+            var maxX = (barrier.X + barrier.Width) * width;
+            var minY = barrier.Y * height;
+            var maxY = (barrier.Y + barrier.Height) * height;
+            // Two side strips and four rounded corners are the exact rectangle/circle
+            // Minkowski sum, matching IsBlocked rather than inflating square corners.
+            if (IntersectsRectangle(from, to, minX - radius, maxX + radius, minY, maxY) ||
+                IntersectsRectangle(from, to, minX, maxX, minY - radius, maxY + radius)) return true;
+            if (radius > 0 &&
+                (SegmentDistanceSquared(new Vector2D(minX, minY), from, to) <= radius * radius ||
+                 SegmentDistanceSquared(new Vector2D(minX, maxY), from, to) <= radius * radius ||
+                 SegmentDistanceSquared(new Vector2D(maxX, minY), from, to) <= radius * radius ||
+                 SegmentDistanceSquared(new Vector2D(maxX, maxY), from, to) <= radius * radius)) return true;
         }
+        foreach (var supply in supplies)
+        {
+            if (supply.Collected || IsOpen(supply)) continue;
+            var combinedRadius = CacheRadius + radius;
+            if (SegmentDistanceSquared(new Vector2D(supply.X * width, supply.Y * height), from, to) <= combinedRadius * combinedRadius) return true;
+        }
+        return false;
+    }
+
+    public bool TryProjectileCollision(Vector2D from, Vector2D to, double width, double height, double radius, out Vector2D contact)
+    {
+        contact = to;
+        if (!BlocksSegment(from, to, width, height, radius)) return false;
+        // Only actual impacts pay for locating the first contact. The segment predicate
+        // is monotonic as its endpoint advances, even when several walls lie on the ray.
+        var low = 0d;
+        var high = 1d;
+        for (var iteration = 0; iteration < 16; iteration++)
+        {
+            var middle = (low + high) / 2;
+            if (BlocksSegment(from, from + (to - from) * middle, width, height, radius)) high = middle;
+            else low = middle;
+        }
+        contact = from + (to - from) * high;
         return true;
+    }
+
+    private static double SegmentDistanceSquared(Vector2D point, Vector2D from, Vector2D to)
+    {
+        var direction = to - from;
+        var lengthSquared = direction.X * direction.X + direction.Y * direction.Y;
+        var offset = point - from;
+        var t = lengthSquared <= 1e-12 ? 0 : Math.Clamp((offset.X * direction.X + offset.Y * direction.Y) / lengthSquared, 0, 1);
+        var distance = point - (from + direction * t);
+        return distance.X * distance.X + distance.Y * distance.Y;
+    }
+
+    private static bool IntersectsRectangle(Vector2D from, Vector2D to, double minX, double maxX, double minY, double maxY)
+    {
+        var enter = 0d;
+        var leave = 1d;
+        return Clip(from.X, to.X - from.X, minX, maxX, ref enter, ref leave) &&
+            Clip(from.Y, to.Y - from.Y, minY, maxY, ref enter, ref leave);
     }
 
     private static bool Clip(double origin, double delta, double min, double max, ref double enter, ref double leave)

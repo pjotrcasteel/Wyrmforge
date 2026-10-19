@@ -85,14 +85,15 @@ async function aimAcceptance(base,mobile){
  fs.chmodSync(executablePath,0o755);
  browser=await chromium.launch({executablePath,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
  try{
+  const selected=process.env.ACTORS?.split(',');
   if(!process.env.AIM_ONLY){
-   for(const [name,kind] of [['hollow','Hollow'],['mire-hound','MireHound'],['whitefang','WhitefangStalker']])await capture(base,name,`enemy-lab?kind=${kind}&seed=42&cast=false`);
-   await capture(base,'ashfang','hunt-lab?wyrm=Ashfang&ascendant=false&seed=42');
+   for(const [name,kind] of [['hollow','Hollow'],['mire-hound','MireHound'],['whitefang','WhitefangStalker']])if(!selected||selected.includes(name))await capture(base,name,`enemy-lab?kind=${kind}&seed=42&cast=false`);
+   if(!selected||selected.includes('ashfang'))await capture(base,'ashfang','hunt-lab?wyrm=Ashfang&ascendant=false&seed=42');
   }
-  if(mode==='after'){await aimAcceptance(base,false);await aimAcceptance(base,true);}
+  if(mode==='after'&&!selected){await aimAcceptance(base,false);await aimAcceptance(base,true);}
   assert.deepEqual(errors,[],'no browser errors');
  }finally{
-  fs.writeFileSync(path.join(output,process.env.AIM_ONLY?'aim-results.json':'results.json'),JSON.stringify({mode,base,results,errors},null,2));
+  fs.writeFileSync(path.join(output,process.env.AIM_ONLY?'aim-results.json':process.env.ACTORS?'art-results.json':'results.json'),JSON.stringify({mode,base,results,errors},null,2));
   await browser.close();server.close();
  }
 })().catch(error=>{console.error(error);process.exitCode=1;server.close();});

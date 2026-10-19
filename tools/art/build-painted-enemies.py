@@ -69,7 +69,7 @@ def main():
       'provenance':'Original generated eight-pose sprites, recovered from the authorized Wyrmforge milestone. Canonical cards remain unchanged. Source sheets in art/runtime/enemies/source; Hollow compact atlas recovered from GitHub blob 07e66d5c7013c7023b08c42823dc0eb9c1e590c7.',
       'enemies':{'0':{'image':'hollow.png','hash':hollow,'worldSize':60},
                  '1':{'image':'mire-hound.png','hash':hound,'walkImage':'mire-hound-walk.png','walkHash':walk,'worldSize':63}},
-      'wyrms':{'1':{'image':'ashfang.png','hash':ashfang,'worldSize':220}},
+      'wyrms':{'1':{'image':'ashfang.png','hash':ashfang,'worldSize':100}},
       'limitations':['Two mirrored lateral facings, not an eight-direction rig.','Only Hollow, Mire Hound and Ashfang painted assets were recoverable; remaining roster uses native art.']}
     data = json.dumps(manifest, indent=2)+'\n'
     target=OUTPUT/'manifest.json'

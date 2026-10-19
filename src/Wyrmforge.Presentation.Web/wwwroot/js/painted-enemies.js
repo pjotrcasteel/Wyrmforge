@@ -60,7 +60,7 @@ export function drawPaintedEnemy(ctx, enemy, gait = 0, facing = 1) {
 export function drawPaintedWyrm(ctx, dragon, pose = 0) {
     const d = manifest?.wyrms?.[dragon.school];
     if (!d) return false;
-    return draw(ctx,d,dragon.frozen?0:pose,0,dragon.radius*.9,d.worldSize*dragon.radius/34,1);
+    return draw(ctx,d,dragon.frozen?0:pose,0,dragon.radius*1.1,d.worldSize*dragon.radius/34,1);
 }
 
 // A disappearance can be a phase transition or despawn. Only actual C# death events leave bodies.

@@ -15,7 +15,21 @@ public sealed partial class RunSimulation
 {
     private void UpdateProjectiles(double delta, double width, double height)
     {
-        foreach (var projectile in projectiles) projectile.Position += projectile.Velocity * delta;
+        for (var index = projectiles.Count - 1; index >= 0; index--)
+        {
+            var projectile = projectiles[index];
+            var destination = projectile.Position + projectile.Velocity * delta;
+            if (arenaEnvironment is not null && arenaEnvironment.TryProjectileCollision(projectile.Position, destination,
+                width, height, projectile.Radius, out var contact))
+            {
+                // A wall contact is visual feedback only: no enemy hit, damage, status,
+                // chain, splash, experience or reward can be fabricated by this branch.
+                RegisterElementalImpact(contact, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
+                projectiles.RemoveAt(index);
+                continue;
+            }
+            projectile.Position = destination;
+        }
         projectiles.RemoveAll(projectile => !IsOnScreen(projectile.Position, width, height, 80));
     }
 
