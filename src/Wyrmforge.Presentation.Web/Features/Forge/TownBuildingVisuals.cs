@@ -9,13 +9,14 @@ internal enum TownBuildingState { Active, Vacant }
 
 internal sealed record TownBuildingVisual(string Key, TownBuildingState State, string? Image, string? CssClass)
 {
-    public string StateName => State == TownBuildingState.Active ? "active" : "vacant";
+    public string StateName => TownBuildingVisuals.StateName(State == TownBuildingState.Active);
 }
 
 internal static class TownBuildingVisuals
 {
     // Update after regenerating and committing the pre-painted dormant plates.
     internal const string AssetVersion = "130";
+    internal static string StateName(bool unlocked) => unlocked ? "active" : "vacant";
 
     internal static IReadOnlyList<TownBuildingVisual> Resolve(bool nexusUnlocked, bool forgeUnlocked, bool codexUnlocked, bool hallUnlocked)
     {
