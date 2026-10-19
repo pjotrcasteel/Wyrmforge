@@ -12,6 +12,12 @@ test('painted pose precedence follows real frozen, damage and telegraph state',(
     assert.equal(mod.paintedPose({kind:1,dead:true},15),7);
     assert.equal(mod.paintedPose({kind:0},5),5);
 });
+test('Mire Hound is always rendered by the same cached pixel atlas as the mage, never by the painterly texture',()=>{
+    const ctx={ drawImage(){ throw new Error('Painted hound drawn despite native pixel selection'); } };
+    for(const gait of [0,3,4,5,6,7,8,9,10,11,12,13,14,15])
+        assert.equal(mod.drawPaintedEnemy(ctx,{kind:1,x:50,y:50,radius:13},gait),false);
+});
+
 test('only authoritative death events create once-only bounded corpses',()=>{
     const state={};
     mod.updatePaintedCorpses(state,[],null,1);assert.equal(state.corpses.size,0);
