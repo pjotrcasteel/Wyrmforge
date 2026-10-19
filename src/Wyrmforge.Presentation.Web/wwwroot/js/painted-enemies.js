@@ -5,7 +5,7 @@ let manifest;
 let loading;
 export function mireHoundPixelPreviewEnabled() {
     const location = globalThis.location;
-    if (!location || !/(^|\\/)enemy-lab\\/?$/.test(location.pathname || '')) return false;
+    if (!location || !/(^|[/])enemy-lab[/]?$/.test(location.pathname || '')) return false;
     return new URLSearchParams(location.search || '').get('mireStyle') === 'pixel';
 }
 export function preloadPaintedEnemies() {
