@@ -127,7 +127,7 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
         center = ((x0 + x1) // 2, (y0 + y1) // 2)
         painted_bgr = cv2.seamlessClone(replacement, painted_bgr, local, center, cv2.NORMAL_CLONE)
 
-    # Use local wood/stone pixels to reconstruct a vacant alchemy counter.
+    # The same prop-removal stage may be supplied by future building plans.\n    # Use local wood/stone pixels to reconstruct a vacant alchemy counter.
     # Masks are limited to the lit wares; masonry and tables remain legible.
     if plan.get("inactive_props"):
         props_mask = np.zeros((h, w), dtype=np.uint8)
