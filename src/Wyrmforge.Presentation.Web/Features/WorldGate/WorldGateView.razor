@@ -60,7 +60,7 @@
                     </ul>
                 }
             </section>
-            <button class="gate-cta" @onclick="() => OnExplore.InvokeAsync()">ENTER @Region.Name.ToUpperInvariant()<span aria-hidden="true">›</span></button>
+            <button class="gate-cta" data-sound-cue="none" @onclick="() => OnExplore.InvokeAsync()">ENTER @Region.Name.ToUpperInvariant()<span aria-hidden="true">›</span></button>
         </article>
     }
     else
