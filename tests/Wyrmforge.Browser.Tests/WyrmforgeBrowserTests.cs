@@ -1514,6 +1514,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(2, json.RootElement.GetProperty("Quests").GetProperty("Claimed").GetArrayLength());
         Assert.AreEqual(1, json.RootElement.GetProperty("Quests").GetProperty("Caches").GetInt32());
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose a relic", Exact = true })).ToBeVisibleAsync();
         await ScreenshotAsync("mobile-quest-relic-cache.png");
@@ -1559,6 +1560,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0, new() { Timeout = 30000 });
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         var wyrm = await Page.Locator("button.route-node.dragon").BoundingBoxAsync();
@@ -1718,6 +1720,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(390, 844);
         await OpenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
         await Expect(oath).ToBeVisibleAsync();
         await Expect(oath.Locator("button.primary-choice")).ToHaveCountAsync(4);
@@ -1732,6 +1735,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await ContinueThroughWorldGateAsync();
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
         await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
