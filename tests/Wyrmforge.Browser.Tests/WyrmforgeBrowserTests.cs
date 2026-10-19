@@ -1368,7 +1368,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    public async Task Mobile_WorldGate_ShowsBothRoadsAndExplorationStartsAHunt()
+    public async Task Mobile_WorldGate_ShowsEveryHuntModeAndExplorationStartsAHunt()
     {
         Directory.CreateDirectory(ArtifactDirectory);
         await Page.SetViewportSizeAsync(390, 844);
@@ -1383,12 +1383,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
         Assert.IsLessThanOrEqualTo(1, horizontal);
 
-        await Page.Locator(".gate-arch.campaign").ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "The Broken Covenant" })).ToBeVisibleAsync();
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "IN PREPARATION", Exact = true })).ToBeDisabledAsync();
-        await ScreenshotAsync("world-gate-campaign.png");
-
-        await Page.Locator(".gate-arch.explore").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Radio, new() { Name = "Free Exploration" })).ToHaveAttributeAsync("aria-checked", "true");
+        foreach (var future in new[] { "Campaign", "Targeted Wyrm Hunt", "Endless Hunt", "Endless Arena" })
+        {
+            var mode = Page.GetByRole(AriaRole.Radio, new() { Name = future });
+            await Expect(mode).ToBeVisibleAsync();
+            await Expect(mode).ToBeDisabledAsync();
+            var filter = await mode.EvaluateAsync<string>("e => getComputedStyle(e).filter");
+            StringAssert.Contains(filter, "grayscale");
+        }
+        var modeHeights = await Page.Locator(".gate-mode").EvaluateAllAsync<double[]>("els => els.map(e => e.getBoundingClientRect().height)");
+        Assert.IsTrue(modeHeights.All(h => h >= 44));
         await Page.Locator(".gate-cta").ClickAsync();
         await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
         await Expect(Page.Locator(".world-gate")).ToHaveCountAsync(0);

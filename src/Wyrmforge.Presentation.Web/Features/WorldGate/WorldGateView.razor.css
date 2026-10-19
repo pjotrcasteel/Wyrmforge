@@ -1,19 +1,22 @@
 .world-gate { display:grid; gap:12px; width:min(480px,100%); margin:0 auto; color:#eee5d4; }
 /* Product-owner concept art (user_handover_files/concepts/Menus/choice.jpg): the wild road left, the city right. */
-.gate-art { position:relative; display:grid; grid-template-columns:1fr 1fr; aspect-ratio:706/690; overflow:hidden; border:1px solid #403346;
-    background:linear-gradient(180deg,#0b0a1000 55%,#0b0a10d9 100%),url('art/world-gate.jpg') center/cover no-repeat,#0e1016; }
-.gate-arch { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; min-height:44px; padding:0 8px 14px;
-    border:0; background:transparent; color:#eee5d4; font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.arch-ring { display:grid; place-items:center; width:44px; height:44px; border:1px solid #cead7499; border-radius:50%; background:#120e18cc; color:#cead74; }
-.gate-arch strong { font:500 1.15rem/1.2 Georgia,serif; text-shadow:0 2px 0 #000,0 0 12px #000; }
-.gate-arch small { color:#b7aaba; font-size:.68rem; letter-spacing:.06em; text-shadow:0 1px 0 #000; }
-.gate-arch::after { content:''; width:60%; height:2px; margin-top:4px; background:transparent; transition:background .2s; }
-.gate-arch.chosen::after { background:#cead74; box-shadow:0 0 10px #cead74aa; }
-.gate-arch.chosen .arch-ring { border-color:#cead74; box-shadow:0 0 14px #cead7466; }
-.gate-arch:not(.chosen) strong { opacity:.78; }
-.gate-arch:focus-visible { outline:2px solid #cead74; outline-offset:-4px; }
-.gate-prompt { margin:0; text-align:center; color:#b7aaba; font-size:.78rem; letter-spacing:.08em; }
-.gate-sheet { display:grid; gap:10px; padding:14px; border:1px solid #403346; background:linear-gradient(180deg,#17121fee,#100c16f2); }
+.gate-art { aspect-ratio:706/300; border:1px solid #403346;
+    background:linear-gradient(180deg,#0b0a1000 45%,#0b0a10e6 100%),url('art/world-gate.jpg') center 38%/cover no-repeat,#0e1016; }
+.gate-prompt { margin:-30px 0 0; position:relative; text-align:center; color:#cead74; font:500 1.05rem/1.2 Georgia,serif; letter-spacing:.04em; text-shadow:0 2px 0 #000,0 0 12px #000; }
+/* Every hunt mode is listed; only playable ones keep colour. Future modes are greyscaled and inert, never hidden. */
+.gate-modes { display:grid; gap:6px; }
+.gate-mode { display:grid; grid-template-columns:44px minmax(0,1fr) auto; align-items:center; gap:10px; min-height:56px; padding:6px 10px;
+    border:1px solid #403346; background:#120e18; color:#eee5d4; font:inherit; text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.mode-ring { display:grid; place-items:center; width:44px; height:44px; border:1px solid #cead7499; border-radius:50%; background:#120e18cc; color:#cead74; }
+.mode-text { display:grid; gap:2px; min-width:0; }
+.gate-mode strong { font:500 1rem/1.2 Georgia,serif; }
+.gate-mode small { color:#b7aaba; font-size:.72rem; line-height:1.35; }
+.gate-mode em { color:#cead74; font-size:.62rem; font-style:normal; font-weight:650; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; }
+.gate-mode.chosen { border-color:#cead74; background:#201828; box-shadow:inset 0 0 0 1px #cead74,0 0 14px #cead7433; }
+.gate-mode.chosen .mode-ring { border-color:#cead74; box-shadow:0 0 14px #cead7466; }
+.gate-mode.unavailable { filter:grayscale(1); opacity:.5; cursor:not-allowed; }
+.gate-mode.unavailable em { color:#8f8299; }
+.gate-mode:focus-visible { outline:2px solid #cead74; outline-offset:2px; }.gate-sheet { display:grid; gap:10px; padding:14px; border:1px solid #403346; background:linear-gradient(180deg,#17121fee,#100c16f2); }
 .gate-sheet header small { color:#cead74; font-size:.66rem; letter-spacing:.14em; }
 .gate-sheet h2 { margin:2px 0 0; font:500 1.25rem/1.25 Georgia,serif; }
 .gate-sheet p { margin:0; color:#d8cfdd; font-size:.85rem; line-height:1.45; }
@@ -38,23 +41,11 @@
 .gate-road li { display:flex; justify-content:space-between; gap:8px; font-size:.8rem; color:#d8cfdd; }
 .gate-road li b { color:#b7aaba; font-weight:600; }
 .gate-road li.met b, .gate-earned { color:#a8d39a !important; }
-.gate-question { font-style:italic; color:#eee5d4 !important; }
-.gate-chapters { display:grid; gap:8px; margin:0; padding-left:18px; }
-.gate-chapters li { display:grid; gap:2px; font-size:.8rem; color:#b7aaba; }
-.gate-chapters strong { color:#eee5d4; font-weight:600; }
-.gate-note { color:#b7aaba !important; font-size:.78rem !important; }
 .gate-cta { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; padding:10px 14px; border:1px solid #cead74;
     background:#302339; color:#eee5d4; font:inherit; font-weight:650; letter-spacing:.07em; cursor:pointer; }
 .gate-cta span { color:#cead74; font-size:1.5rem; }
 .gate-cta:disabled { justify-content:center; border-color:#403346; background:transparent; color:#8f8299; cursor:default; }
 .gate-cta:not(:disabled):hover { background:#3a2b45; }
 .gate-cta:focus-visible { outline:2px solid #cead74; outline-offset:3px; }
-@media(max-width:360px){ .gate-facts { grid-template-columns:1fr; } .gate-arch strong { font-size:1rem; } }
-@media(orientation:landscape) and (max-height:520px){ .world-gate { width:min(860px,100%); grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); align-items:start; } .gate-prompt { grid-column:1; } .gate-sheet { grid-column:2; grid-row:1 / span 2; } }
-@media(prefers-reduced-motion:reduce){ .gate-arch::after { transition:none; } }
-
-/* Campaign is a future road: desaturate only the right-hand landscape, never the live Exploration gate. */
-.gate-art::before { content:""; position:absolute; inset:0 0 0 50%; z-index:0; pointer-events:none;
-    backdrop-filter:grayscale(1) brightness(.54); -webkit-backdrop-filter:grayscale(1) brightness(.54); }
-.gate-arch { position:relative; z-index:1; }
-.gate-arch.campaign:not(.chosen) .arch-ring { filter:grayscale(1); opacity:.65; }
+@media(max-width:360px){ .gate-facts { grid-template-columns:1fr; } .gate-mode { grid-template-columns:44px minmax(0,1fr); } .gate-mode em { grid-column:2; } }
+@media(orientation:landscape) and (max-height:520px){ .world-gate { width:min(860px,100%); grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); align-items:start; } .gate-prompt, .gate-modes { grid-column:1; } .gate-sheet { grid-column:2; grid-row:1 / span 3; } }
