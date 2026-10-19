@@ -37,23 +37,7 @@ PLATES = {
                            (378, 285, 65, 54), (505, 300, 80, 52),
                            (585, 294, 65, 48)],
         "clone_offsets": [(92, 34), (72, 12)],
-        # Smoke is painted into the panorama; turning off particle effects
-        # cannot remove it. These regions are bounded to dormant chimneys.
-        "smoke": [
-            [(168, 0), (239, 0), (238, 26), (226, 47),
-             (211, 56), (181, 54), (168, 33)],
-        ],
-        "smoke_clone_offset": (92, 0),
-        "cold_sources": [
-            # Closed arched windows and the two still-bright wall lanterns.
-            (158, 225, 18, 32), (275, 227, 18, 33),
-            (381, 215, 20, 39), (479, 227, 21, 38),
-            (555, 224, 27, 41),
-            # Dusty, unpowered alchemy props on trading tables.
-            (209, 280, 44, 29), (423, 265, 39, 31),
-            (554, 279, 46, 36),
-        ],
-        "boundary": [(2, 74), (98, 22), (151, 0), (292, 0), (530, 13), (706, 94),
+        "boundary": [(2, 74), (98, 22), (292, 0), (530, 13), (706, 94),
                      (705, 319), (596, 364), (367, 355), (123, 359), (3, 331)],
         # People and lit stall figures erased using nearby painted detail.
         "figures": [
@@ -76,41 +60,7 @@ PLATES = {
             (540, 212, 30, 57), (585, 278, 37, 44), (220, 213, 29, 63),
         ],
     },
-    "forge": {
-        # The supplied base panorama already depicts an unstaffed smithy,
-        # but its chimney still emits painted smoke. This transparent native
-        # plate removes that smoke without changing occupied Forge art.
-        "emission_zones": [],
-        "lamps": [],
-        "clone_offsets": [],
-        "figures": [],
-        "smoke": [
-            [(58, 304), (125, 302), (134, 339), (138, 376),
-             (126, 420), (89, 423), (64, 383), (53, 337)],
-        ],
-        "cold_sources": [],
-        "smoke_clone_offset": (106, 0),
-        "boundary": [(0, 299), (55, 316), (94, 305), (135, 323),
-                     (213, 352), (416, 354), (686, 414),
-                     (705, 588), (680, 723), (0, 723)],
-    },
     "codex": {
-        # The fire itself has to disappear, not merely lose orange saturation.
-        # These tiny hand-painted flame tips are small enough for local
-        # reconstruction; the sconce and brazier stonework remain untouched.
-        "cold_flames": [
-            [(1699, 121), (1705, 112), (1712, 130), (1709, 145), (1698, 145)],
-            [(1916, 137), (1923, 126), (1930, 146), (1927, 161), (1916, 157)],
-            [(1909, 277), (1920, 265), (1932, 283),
-             (1933, 314), (1916, 322), (1907, 306)],
-        ],
-        # Enforced OFF: upper sconces, red/white windows and doorway brazier.
-        "cold_sources": [
-            (1705, 125, 23, 32), (1922, 145, 22, 33),
-            (1676, 230, 24, 39), (1744, 240, 23, 39),
-            (1832, 245, 24, 44), (1886, 248, 20, 42),
-            (1921, 301, 36, 44),
-        ],
         "emission_zones": [(1551, 275, 35, 70), (1653, 258, 65, 62),
                            (1729, 191, 35, 56), (1816, 118, 71, 67),
                            (1820, 278, 77, 70), (1900, 240, 50, 65),
@@ -132,24 +82,13 @@ PLATES = {
         ],
     },
     "legends": {
-        "smoke_clone_offset": (-120, 0),
-        "smoke": [
-            # A sealed Hall of Fame must not burn fuel in its chimney.
-            [(2024, 334), (2087, 330), (2101, 357), (2100, 387),
-             (2080, 422), (2047, 426), (2032, 397), (2023, 358)],
-        ],
-        "cold_sources": [
-            (1702, 532, 24, 39), (1820, 560, 24, 45),
-            (1892, 584, 23, 39), (1983, 603, 25, 47),
-            (2090, 602, 24, 43),
-        ],
         "emission_zones": [(1557, 482, 25, 44), (1665, 520, 80, 80),
                            (1748, 537, 64, 74), (1834, 540, 68, 95),
                            (1920, 555, 77, 104), (2020, 569, 83, 102),
                            (2115, 580, 81, 98)],
         "clone_offsets": [(-75, 21), (-70, 10), (85, 12)],
         "boundary": [(1481, 479), (1565, 413), (1746, 353), (1924, 356),
-                     (2022, 323), (2104, 320), (2171, 463), (2171, 715), (2052, 722),
+                     (2083, 390), (2171, 463), (2171, 715), (2052, 722),
                      (1887, 715), (1730, 689), (1579, 666), (1473, 638)],
         "figures": [
             [(1746, 547), (1777, 540), (1796, 565), (1795, 604), (1750, 612)],
@@ -175,36 +114,6 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     # Telea inpainting at 50+ px makes an obvious brown ghost; seamless texture
     # transfer preserves actual painted detail and adjusts local brightness.
     painted_bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
-
-    # Remove baked-in smoke using nearby authentic roof and foliage texture.
-    # Broad inpainting created gray smears, so feathered source replacement is
-    # confined to the chimney plume. The occupied painting remains untouched.
-    if plan.get("smoke"):
-        dx, dy = plan["smoke_clone_offset"]
-        smoke_mask = np.zeros((h, w), dtype=np.uint8)
-        for polygon in plan["smoke"]:
-            cv2.fillPoly(smoke_mask, [np.asarray(polygon, np.int32)], 255)
-        alpha = cv2.GaussianBlur(smoke_mask.astype(np.float32) / 255, (0, 0), 4.0)
-        affected_y, affected_x = np.where(alpha > 0.001)
-        if len(affected_x):
-            x0, x1 = max(0, affected_x.min() - 2), min(w, affected_x.max() + 3)
-            y0, y1 = max(0, affected_y.min() - 2), min(h, affected_y.max() + 3)
-            clone = painted_bgr[y0 + dy:y1 + dy, x0 + dx:x1 + dx].copy()
-            if clone.shape[:2] != (y1 - y0, x1 - x0):
-                raise SystemExit("Dormant smoke texture source is outside panorama")
-            a = alpha[y0:y1, x0:x1, None]
-            painted_bgr[y0:y1, x0:x1] = (
-                painted_bgr[y0:y1, x0:x1] * (1 - a) + clone * a
-            ).astype(np.uint8)
-
-    # Tiny actual flame shapes can be reconstructed locally without the
-    # black disks that a building-wide darkening pass would create.
-    if plan.get("cold_flames"):
-        flame_mask = np.zeros((h, w), dtype=np.uint8)
-        for polygon in plan["cold_flames"]:
-            cv2.fillPoly(flame_mask, [np.asarray(polygon, np.int32)], 255)
-        painted_bgr = cv2.inpaint(painted_bgr, flame_mask, 2, cv2.INPAINT_TELEA)
-
     for polygon, (dx, dy) in zip(plan["figures"], plan["clone_offsets"], strict=True):
         xs, ys = zip(*polygon)
         x0, x1 = max(0, min(xs) - 9), min(w, max(xs) + 10)
@@ -262,21 +171,6 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     gray = source_rgb[:, :, 0] * .24 + source_rgb[:, :, 1] * .58 + source_rgb[:, :, 2] * .18
     neutral = np.stack((gray * .30, gray * .33, gray * .39), axis=-1)
     painted = np.clip(painted * (1 - suppression[:, :, None]) + neutral * suppression[:, :, None], 0, 255)
-
-    # Colour-key filtering alone leaves lantern glass, flames and red windows
-    # looking inhabited. A shared, locally masked OFF treatment must remove
-    # the *light source*, not darken the entire building or courtyard.
-    for x, y, rx, ry in plan.get("cold_sources", []):
-        # Never blacken painted stone. Only bright pixels at the source core
-        # may dim; retain dark window frames and iron lamp housings.
-        r2 = ((xx - x) / (rx * .60)) ** 2 + ((yy - y) / (ry * .62)) ** 2
-        core = np.clip((1 - r2) * 2.0, 0, 1) ** 1.1
-        emissive = np.clip((np.max(painted, axis=2) - 41) / 95, 0, 1)
-        source_mask = (core * emissive * .94).astype(np.float32)
-        gray = painted[:, :, 0] * .24 + painted[:, :, 1] * .58 + painted[:, :, 2] * .18
-        off = np.stack((gray * .22, gray * .24, gray * .28), axis=-1)
-        painted = painted * (1 - source_mask[:, :, None]) + off * source_mask[:, :, None]
-
     cutout = Image.new("L", SIZE, 0)
     drawer = ImageDraw.Draw(cutout)
     drawer.polygon(plan["boundary"], fill=255)
@@ -311,27 +205,6 @@ def main() -> None:
     preview.parent.mkdir(parents=True, exist_ok=True)
     proof.convert("RGB").save(preview, "WEBP", quality=91, method=6)
     print(f"Built {preview.relative_to(ROOT)} ({preview.stat().st_size} bytes)")
-
-    # Review-only coordinate map; needed to place small emission masks precisely.
-    # Never load this annotated diagnostic image into the actual game.
-    grid = proof.convert("RGB")
-    d = ImageDraw.Draw(grid)
-    for gx in range(0, SIZE[0], 100):
-        d.line((gx, 0, gx, SIZE[1]), fill=(32, 205, 138), width=1)
-        d.text((gx + 2, 2), str(gx), fill=(255, 255, 255), stroke_width=1,
-               stroke_fill=(0, 0, 0))
-    for gy in range(100, SIZE[1], 100):
-        d.line((0, gy, SIZE[0], gy), fill=(32, 205, 138), width=1)
-        d.text((2, gy + 2), str(gy), fill=(255, 255, 255), stroke_width=1,
-               stroke_fill=(0, 0, 0))
-    for name, plan in PLATES.items():
-        for x, y, _, _ in plan.get("cold_sources", []):
-            d.ellipse((x - 5, y - 5, x + 5, y + 5), outline=(255, 58, 49), width=2)
-            d.text((x + 7, y - 12), f"{x},{y}", fill=(255, 225, 166),
-                   stroke_width=1, stroke_fill=(0, 0, 0))
-    coordinate_proof = ROOT / "docs/art/previews/refuge-vacancy-coordinate-map.webp"
-    grid.save(coordinate_proof, "WEBP", quality=91, method=5)
-    print(f"Built {coordinate_proof.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
