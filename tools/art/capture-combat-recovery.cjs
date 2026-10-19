@@ -120,7 +120,7 @@ async function aimAcceptance(base,mobile){
   if(mode==='after'&&!selected){await aimAcceptance(base,false);await aimAcceptance(base,true);}
   assert.deepEqual(errors,[],'no browser errors');
  }finally{
-  fs.writeFileSync(path.join(output,process.env.AIM_ONLY?'aim-results.json':process.env.ACTORS?'art-results-'+process.env.ACTORS.replace(/[^a-z0-9,-]/gi,'-')+'.json':'results.json'),JSON.stringify({mode,base,results,errors},null,2));
+  fs.writeFileSync(path.join(output,process.env.AIM_ONLY?'aim-results.json':process.env.ACTORS?'art-results-'+process.env.ACTORS.replace(/[^a-z0-9]+/gi,'-')+'.json':'results.json'),JSON.stringify({mode,base,results,errors},null,2));
   await browser.close();server.close();
  }
 })().catch(error=>{console.error(error);process.exitCode=1;server.close();});
