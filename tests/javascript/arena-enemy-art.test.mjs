@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { enemyPixelFrames, enemyWalkLegs, drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from
+import { enemyPixelFrames, enemyWalkLegs, drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing, enemySpriteName } from
     '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-enemy-art.js';
 
 test('four hand-authored enemy archetypes have different shapes, identifiable heads and limbs', () => {
@@ -143,4 +143,12 @@ test('cancelled canine windups never invent attacks even when their telegraph ne
         assert.equal(updateEnemyMotions(state,[{...dog,animationPhase:'Pounce'}],1.1,true).get(kind),0,
             'Reduced motion suppresses animated action poses, without changing C# combat');
     }
+});
+
+test('Whitefang collapses on a real death event with its authored native corpse frame', () => {
+    assert.equal(enemySpriteName({kind:12,dead:true},0),'enemy.12.7.normal');
+    assert.equal(enemySpriteName({kind:12,hitFlash:true},0),'enemy.12.6.hit');
+    assert.equal(enemySpriteName({kind:12,frozen:true},0),'enemy.12.0.frozen');
+    assert.equal(enemySpriteName({kind:12,telegraph:{progress:.5}},10),'enemy.12.3.normal');
+    assert.equal(enemySpriteName({kind:1,dead:true},15),'enemy.1.7.normal');
 });
