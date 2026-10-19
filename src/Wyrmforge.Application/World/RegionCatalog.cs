@@ -32,8 +32,8 @@ public static class RegionCatalog
         RegionAccessRule.Open);
 
     /// <summary>
-    /// Rimeclaw's land (frost roster F1-F4). Where the Cinder Frontier pressures, this region boxes the hunter in. It opens
-    /// once Ashfang has fallen: the first Great Hunt is the gate out of the starting land. Stormcoil and Voidweaver still
+    /// Rimeclaw's land (frost roster F1-F4). Where the Cinder Frontier pressures, this region boxes the hunter in.
+    /// Free Play allows Fire or Frost from the World Gate; Stormcoil and Voidweaver still
     /// roam the ice; Ashfang's cinder does not reach it.
     /// </summary>
     public static RegionDefinition HoarfrostReaches { get; } = new(
@@ -47,7 +47,7 @@ public static class RegionCatalog
         ["The Frostling Packling", "The Hoarfrost Cantor", "The Shardcaster", "The Whitefang Stalker", "The Cairn Sentinel",
             "The Mirror Wisp", "The Bell of Winter", "The Reliquary of Glass", "Rimeclaw, the Glacier Wyrm"],
         Influence(DragonId.Rimeclaw, DragonId.Stormcoil, DragonId.Voidweaver),
-        new RegionAccessRule(RegionAccessKind.WyrmSlain, Wyrm: DragonId.Ashfang));
+        RegionAccessRule.Open);
 
     public static IReadOnlyList<RegionDefinition> All { get; } =
     [
@@ -61,7 +61,7 @@ public static class RegionCatalog
                 "Weightbearer", "Spell Leech", "The Astral Gaoler", "The Last Cartographer", "Voidweaver, the Aether Wyrm"]),
     ];
 
-    /// <summary>Where every hunter begins, whether through the campaign or free exploration.</summary>
+    /// <summary>Default region when a hunter has not yet made a World Gate choice.</summary>
     public static RegionDefinition Starting => CinderFrontier;
 
     public static RegionDefinition Get(RegionId id) => All.Single(region => region.Id == id);
