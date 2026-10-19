@@ -35,7 +35,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/Wyrmforge.Presentation.Web/wwwroot/art/actors.png src/Wyrmforge.Presentation.Web/wwwroot/art/manifest.json
+          # The deterministic packer may also re-emit dependent previews.
+          # Stage ALL generator-owned output, rather than leaving unstaged files
+          # that would block a non-destructive rebase.
+          git add -A src/Wyrmforge.Presentation.Web/wwwroot/art docs/art/previews
+          git status --short
+          git diff --exit-code
           if ! git diff --cached --quiet; then
             git commit -m "Bake Mire Hound authored pixel poses into runtime atlas"
           fi
