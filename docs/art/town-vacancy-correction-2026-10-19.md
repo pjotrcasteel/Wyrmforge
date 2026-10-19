@@ -1,24 +1,28 @@
-# Refuge buildings: remove the black-wash regression (19 October 2026)
+# Refuge town vacant buildings — 19 October 2026
 
-## Regression and correction
+## Regression corrected
 
-PR #131 used transparent black rectangles with `backdrop-filter: grayscale(1) brightness(.15)` and an elliptical mask over unopened Arcane Nexus, Codex and Hall of Fame. The effect clouds the surrounding painting and does not match the blacksmith's deliberately repainted vacant state.
+PR #131 added opaque black shapes, backdrop filters and feathered masks over locked buildings. They covered parts of the town and never removed people or actual lights. They have been removed.
 
-In 0.0.126 the overlays are gone. The unchanged vacant blacksmith asset remains the base panorama. Arcane Nexus, Codex and Hall of Fame now use geometry-clipped copies of the existing painted panorama with mild saturation/brightness adjustment, restricted to their architecture. The World Gate, roads, sky and neighboring buildings must not be obscured. Clickability still follows existing unlock flags.
+The town now has a real image-based state for **each** of Arcane Nexus, Codex and Hall of Fame, parallel to the existing blacksmith treatment. Each initially locked building shows its own transparent, pixel-aligned vacant plate. The scene switches to the unchanged occupied/lit painting when that building unlocks. The World Gate stays unlocked and visually unchanged.
 
-## Artwork still required before final acceptance
+## Committed runtime artwork
 
-This is a visual regression correction, **not** the final handcrafted vacant-art implementation. The current closed versions still originate from occupied paintings: window light and people may remain faintly visible, rather than being genuinely painted out. Do not mistake a CSS art treatment for the approved blacksmith workflow.
+- `src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-nexus.webp`
+- `src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-codex.webp`
+- `src/Wyrmforge.Presentation.Web/wwwroot/art/town-vacant-legends.webp`
+- [Full dormant town visual proof](previews/refuge-closed-2026-10-19.webp)
 
-The required final production follow-up is to create individual, same-dimension (2172×724) *vacant* and *occupied* building art variants for Nexus, Codex and Hall of Fame, with:
+All plates are exactly 2172×724 RGBA WebP. Their alpha boundaries replace only the appropriate building and immediate doorway; there are **no** CSS brightness, grayscale or backdrop-filter effects. Dormant plates contain edited pixels with painted figures removed by neighboring-texture transfer and warm/violet emission locally extinguished. Lighting in the always-open town gate and its public courtyard is intentionally preserved.
 
-- All inhabitants actually removed from closed buildings (including surrounding doorways).
-- Window, torch and furnace lighting painted off in the closed image, not filtered by CSS.
-- Architecture and adjacent ground pixel-aligned with `refuge-town-vacant.webp`, with no artificial borders or black veil.
-- Open variants show the intended warm lights and people, but only when the matching location is unlocked.
-- The World Gate remains usable and unchanged, and the existing vacant/open Forge transition stays intact.
-- Full-screen portrait iPhone crop and left/center/right swipe reviewed in Safari before calling this art milestone done.
+`tools/art/build_town_vacancy.py` is the retained editable source pipeline. Install `pillow numpy opencv-python-headless` in a Python environment and run `python tools/art/build_town_vacancy.py` if the approved original panorama changes. Keep the committed generated runtime plates in sync.
 
-## Validation
+## Behavior and verification
 
-Browser tests assert the three initially locked art layers, no old black-overlay elements, accessible disabled hotspots, and restoration when unlocked. CI and real-phone visual acceptance remain separate gates.
+- Before unlock: Nexus, Codex and Hall of Fame are individually vacant, visually altered in the image assets, and not clickable. The vacant blacksmith stays as before.
+- After unlock: only the relevant building switches back to the lit and populated painting; hotspot is enabled.
+- The World Gate, central characters, architecture, camera proportions and swipeable left/center/right town panels are unchanged.
+- Browser regressions check matching plate paths, loaded native dimensions, absence of black backdrop filters, locked hotspots and the fully unlocked case.
+- CI and code checks run on the PR. The full-town proof was inspected at native panorama scale. Physical iPhone Safari swipe/crop is not yet independently tested and should be confirmed during normal device QA.
+
+This is the actual implementation rather than a proposal. If any remaining light source or texture-transfer artifact is noticed on a phone, correct the precise building's `lamps` / `figures` coordinates in the source script; never reintroduce a black cover.
