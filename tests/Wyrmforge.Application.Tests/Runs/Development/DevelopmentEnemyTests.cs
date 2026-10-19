@@ -129,6 +129,28 @@ public sealed class DevelopmentEnemyTests
     }
 
     [TestMethod]
+    public void HollowContact_HasRealAttackAndRecoveryWithoutChangingDamage()
+    {
+        var run = Create(EnemyKind.Hollow);
+        var enemy = ((List<EnemyState>)typeof(RunSimulation)
+            .GetField("enemies", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(run)!).Single();
+        var player = run.CreateSnapshot().Player;
+        Assert.IsNull(run.CreateSnapshot().Enemies.Single().AnimationPhase);
+
+        enemy.Position = new Wyrmforge.Domain.Combat.Geometry.Vector2D(player.X, player.Y);
+        var health = run.Health;
+        run.Tick(.02, default, 800, 600);
+        Assert.AreEqual("ContactStrike", run.CreateSnapshot().Enemies.Single().AnimationPhase);
+        Assert.AreEqual(health, run.Health, "Developer lab invulnerability must keep C# damage unchanged.");
+
+        enemy.Position = new Wyrmforge.Domain.Combat.Geometry.Vector2D(10, 10);
+        for (var frame = 0; frame < 9; frame++) run.Tick(.02, default, 800, 600);
+        Assert.AreEqual("Recover", run.CreateSnapshot().Enemies.Single().AnimationPhase);
+        for (var frame = 0; frame < 13; frame++) run.Tick(.02, default, 800, 600);
+        Assert.IsNull(run.CreateSnapshot().Enemies.Single().AnimationPhase);
+    }
+
+    [TestMethod]
     public void InvalidDimensionsOrKind_AreRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new DevelopmentEnemySetup((EnemyKind)99, 1, 800, 600).Validate());
