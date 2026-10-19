@@ -262,7 +262,8 @@
     private bool IsUnlocked(ShellSection value) => value switch
     {
         ShellSection.Run or ShellSection.Prepare or ShellSection.Options => true,
-        ShellSection.Build or ShellSection.Gate => Progress.AtlasUnlocked,
+        ShellSection.Build => Progress.AtlasUnlocked,
+        ShellSection.Gate => true,
         ShellSection.Codex => Progress.CodexUnlocked,
         ShellSection.Forge => ForgeUnlocked,
         _ => false,
@@ -299,7 +300,6 @@
     private Task StartAsync() => OnStart.InvokeAsync();
     private Task ActivateTownLocationAsync(ShellSection destination)
     {
-        if (destination == ShellSection.Gate) return StartAsync();
         Navigate(destination);
         return Task.CompletedTask;
     }
