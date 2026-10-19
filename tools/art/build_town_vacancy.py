@@ -25,6 +25,7 @@ SIZE = (2172, 724)
 # cobbled public square or other properties. The edges are art alignment masks.
 PLATES = {
     "nexus": {
+        "clone_offsets": [(92, 34), (72, 12)],
         "boundary": [(2, 74), (98, 22), (292, 0), (530, 13), (706, 94),
                      (705, 319), (596, 364), (367, 355), (123, 359), (3, 331)],
         # People and lit stall figures erased using nearby painted detail.
@@ -41,6 +42,7 @@ PLATES = {
         ],
     },
     "codex": {
+        "clone_offsets": [(-88, 32), (88, 20)],
         "boundary": [(1475, 97), (1575, 46), (1700, 9), (1793, 0), (1938, 0),
                      (2111, 8), (2171, 63), (2171, 346), (2075, 369),
                      (1911, 369), (1812, 361), (1611, 354), (1473, 328)],
@@ -56,6 +58,7 @@ PLATES = {
         ],
     },
     "legends": {
+        "clone_offsets": [(-75, 21), (-70, 10), (85, 12)],
         "boundary": [(1481, 479), (1565, 413), (1746, 353), (1924, 356),
                      (2083, 390), (2171, 463), (2171, 715), (2052, 722),
                      (1887, 715), (1730, 689), (1579, 666), (1473, 638)],
@@ -77,13 +80,25 @@ PLATES = {
 
 def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     h, w, _ = original.shape
-    figure_mask = np.zeros((h, w), dtype=np.uint8)
-    for polygon in plan["figures"]:
-        cv2.fillPoly(figure_mask, [np.array(polygon, dtype=np.int32)], 255)
-    # Slight mask dilation includes shoes, robes and highlights before inpainting.
-    figure_mask = cv2.dilate(figure_mask, np.ones((5, 5), np.uint8), iterations=1)
-    painted = cv2.inpaint(cv2.cvtColor(original, cv2.COLOR_RGB2BGR), figure_mask, 5, cv2.INPAINT_TELEA)
-    painted = cv2.cvtColor(painted, cv2.COLOR_BGR2RGB).astype(np.float32)
+    # Large figures are filled from matching nearby real paving and stonework.
+    # Telea inpainting at 50+ px makes an obvious brown ghost; seamless texture
+    # transfer preserves actual painted detail and adjusts local brightness.
+    painted_bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
+    for polygon, (dx, dy) in zip(plan["figures"], plan["clone_offsets"], strict=True):
+        xs, ys = zip(*polygon)
+        x0, x1 = max(0, min(xs) - 9), min(w, max(xs) + 10)
+        y0, y1 = max(0, min(ys) - 9), min(h, max(ys) + 10)
+        crop = original[y0 + dy:y1 + dy, x0 + dx:x1 + dx]
+        if crop.shape[:2] != (y1 - y0, x1 - x0):
+            raise SystemExit(f"Invalid neighboring art region at {(x0, y0, dx, dy)}")
+        replacement = cv2.cvtColor(crop, cv2.COLOR_RGB2BGR)
+        local = np.zeros((y1 - y0, x1 - x0), dtype=np.uint8)
+        vertices = np.asarray([(x - x0, y - y0) for x, y in polygon], np.int32)
+        cv2.fillPoly(local, [vertices], 255)
+        local = cv2.dilate(local, np.ones((3, 3), np.uint8), iterations=1)
+        center = ((x0 + x1) // 2, (y0 + y1) // 2)
+        painted_bgr = cv2.seamlessClone(replacement, painted_bgr, local, center, cv2.NORMAL_CLONE)
+    painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
 
     # Extinguish only high-luminance warm or violet light within hand-authored
     # light-source ellipses. The stonework, tile roof and ambient daylight remain.
@@ -118,11 +133,24 @@ def main() -> None:
     for name, plan in PLATES.items():
         image = dormant_plate(src, plan)
         path = ART / f"town-vacant-{name}.webp"
-        image.save(path, format="WEBP", quality=94, method=6, exact=True)
+        image.save(path, format="WEBP", quality=94, method=6)
         verified = Image.open(path)
-        if verified.size != SIZE or verified.mode != "RGBA" or not verified.getchannel("A").getbbox():
+        alpha = verified.getchannel("A")
+        if verified.size != SIZE or verified.mode != "RGBA" or not alpha.getbbox():
             raise SystemExit(f"Invalid dormant plate: {path}")
+        if alpha.getpixel((1086, 340)) != 0 or alpha.getpixel(plan["boundary"][0]) > 254:
+            raise SystemExit(f"Dormant art alpha mask must leave the world gate untouched: {path}")
         print(f"Built {path.relative_to(ROOT)} ({path.stat().st_size} bytes)")
+    # Inspect this 3:1 proof image at native scale, including all three building
+    # patches and their unchanged surroundings. It is not rendered in gameplay.
+    proof = Image.open(INPUT).convert("RGBA")
+    for name in PLATES:
+        with Image.open(ART / f"town-vacant-{name}.webp") as layer:
+            proof.alpha_composite(layer)
+    preview = ROOT / "docs/art/previews/refuge-closed-2026-10-19.webp"
+    preview.parent.mkdir(parents=True, exist_ok=True)
+    proof.convert("RGB").save(preview, "WEBP", quality=91, method=6)
+    print(f"Built {preview.relative_to(ROOT)} ({preview.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
