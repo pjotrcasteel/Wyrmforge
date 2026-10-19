@@ -524,7 +524,9 @@
   align-items:center;
   flex:0 0 auto;
   margin-top:auto;
-  width:min(280px,78%);
+  align-self:flex-end; /* Keep the foreground mage visible instead of covering him. */
+  margin-right:12px;
+  width:min(250px,72%);
   min-height:64px;
   padding:8px 16px 8px 20px;
   border:2px solid #e7bc75;
