@@ -13,20 +13,36 @@
     <header><span>WYRMFORGE • DEVELOPER INSPECTION</span><h1>Fire & Frost enemy lab</h1>
         <p>The real combat simulation and canvas renderer. This practice encounter never saves progress.</p></header>
     <section class="settings">
-        <label>Enemy<select @bind="kind">@foreach (var value in Enum.GetValues<EnemyKind>()) { <option value="@value">@value</option> }</select></label>
-        <label>Seed<input type="number" @bind="seed" /></label>
+        <label>Monster
+            <select aria-label="Monster to inspect" @bind="kind" @bind:after="LoadSelectedEnemy">
+                <optgroup label="Fire">
+                    @foreach (var value in Enum.GetValues<EnemyKind>().Where(value => (int)value < (int)EnemyKind.FrostlingPackling))
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </optgroup>
+                <optgroup label="Frost">
+                    @foreach (var value in Enum.GetValues<EnemyKind>().Where(value => (int)value >= (int)EnemyKind.FrostlingPackling))
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </optgroup>
+            </select>
+        </label>
+        <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
-        <label><input type="checkbox" @bind="casting" /> Autocast</label>
-        <button @onclick="Restart">Restart</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="hunt-lab">Wyrm lab</a>
+        <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
+        <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a>
     </section>
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    <p class="note">Manual controls use the normal movement and aim inputs. Ritual objects appear with their actual caster; doubles naturally expire. Restart to repeat the same seed.</p>
+    <p class="note">Selecting a monster immediately reloads the actual C# encounter in the production renderer, alongside the mage. Turn off Autocast to inspect movement and attacks without killing the target. Ritual objects appear with their actual caster; doubles naturally expire. No saves or player progress are changed.</p>
 </main>
 
 @code {
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
@@ -78,6 +94,12 @@
             : new MovementInput(movementX, movementY, aimX, aimY);
         simulationSeconds += Math.Clamp(delta, 0, .05);
         return Task.FromResult(simulation.Tick(delta, movement, width, height));
+    }
+    private void LoadSelectedEnemy()
+    {
+        Restart();
+        // Shareable kind links allow before/after capture with the same actor and seed.
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("kind", kind.ToString()), replace: true);
     }
     private void Restart() { simulation = null; agent = null; simulationSeconds = 0; paused = false; }
     private void TogglePause() => paused = !paused;
