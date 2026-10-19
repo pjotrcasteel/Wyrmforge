@@ -127,7 +127,8 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
         center = ((x0 + x1) // 2, (y0 + y1) // 2)
         painted_bgr = cv2.seamlessClone(replacement, painted_bgr, local, center, cv2.NORMAL_CLONE)
 
-    # The same prop-removal stage may be supplied by future building plans.\n    painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
+    # The same prop-removal stage may be supplied by future building plans.
+    painted = cv2.cvtColor(painted_bgr, cv2.COLOR_BGR2RGB).astype(np.float32)
 
     # Preserve painted table/wares brushwork. Inpainting entire 50px clusters
     # produces obvious brown holes, so reduce their saturation and brightness
@@ -158,7 +159,8 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     for x, y, rx, ry in plan["lamps"] + plan["emission_zones"]:
         r2 = ((xx - x) / rx) ** 2 + ((yy - y) / ry) ** 2
         light_mask = np.maximum(light_mask, np.clip(1.0 - r2, 0, 1) ** 0.7)
-    # Shared across the Nexus, Codex and Hall: unlike a global grayscale wash,\n    # emissive suppression is evaluated only at actual painted light sources.\n    # Dark, unpowered windows and worktables have no radiant highlight even
+    # Shared across the Nexus, Codex and Hall: unlike a global grayscale wash,
+    # emissive suppression is evaluated only at actual painted light sources.\n    # Dark, unpowered windows and worktables have no radiant highlight even
     # when the source is white rather than warm/violet/blue. Keep original
     # painted masonry, geometry, signs and neighboring buildings intact.
     chroma = np.maximum.reduce([warm, violet * .9, blue, cyan])
