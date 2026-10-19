@@ -79,17 +79,19 @@
                             {
                                 <img class="town-panorama-open-forge" src="art/refuge-town-panorama.png" alt="" aria-hidden="true" draggable="false" />
                             }
+                            @* Closed buildings use paint-matched, architecture-clipped art, not opaque black overlays.
+                               Keep the original painting underneath so the gate, sky, roads and adjacent buildings stay intact. *@
                             @if (!IsUnlocked(ShellSection.Build))
                             {
-                                <span class="town-vacancy town-vacancy--build" aria-hidden="true"></span>
+                                <img class="town-dormant-art town-dormant-art--build" src="art/refuge-town-vacant.webp?v=120" alt="" aria-hidden="true" draggable="false" />
                             }
                             @if (!IsUnlocked(ShellSection.Codex))
                             {
-                                <span class="town-vacancy town-vacancy--codex" aria-hidden="true"></span>
+                                <img class="town-dormant-art town-dormant-art--codex" src="art/refuge-town-vacant.webp?v=120" alt="" aria-hidden="true" draggable="false" />
                             }
                             @if (!Progress.LeaderboardUnlocked)
                             {
-                                <span class="town-vacancy town-vacancy--legends" aria-hidden="true"></span>
+                                <img class="town-dormant-art town-dormant-art--legends" src="art/refuge-town-vacant.webp?v=120" alt="" aria-hidden="true" draggable="false" />
                             }
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>
