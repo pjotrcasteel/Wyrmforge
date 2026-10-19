@@ -12,7 +12,14 @@ const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json
 const server=http.createServer((req,res)=>{
  let name=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\/Wyrmforge\//,'/');
  let file=path.resolve(root,'.'+name);
- if(!file.startsWith(root+path.sep))file=path.join(root,'index.html');
+ const baseline=process.env.BASELINE_ART_ROOT;
+ const nativeNames={'/js/arena-enemy-art.js':'arena-enemy-art.js','/art/actors.png':'actors.png','/art/manifest.json':'manifest.json'};
+ if(baseline&&nativeNames[name])file=path.resolve(baseline,nativeNames[name]);
+ if(baseline&&name==='/js/painted-enemies.js'){
+  res.setHeader('Content-Type','text/javascript');
+  res.end('export const preloadPaintedEnemies=async()=>false;export const drawPaintedEnemy=()=>false;export const drawPaintedWyrm=()=>false;export const updatePaintedCorpses=()=>new Map();export const drawPaintedCorpses=()=>{};');return;
+ }
+ if(!file.startsWith(root+path.sep)&&!(baseline&&nativeNames[name]))file=path.join(root,'index.html');
  if(!fs.existsSync(file)||fs.statSync(file).isDirectory())file=path.join(root,'index.html');
  res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');
  res.setHeader('Cache-Control','no-store');fs.createReadStream(file).pipe(res);
