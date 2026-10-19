@@ -152,3 +152,14 @@ test('Whitefang collapses on a real death event with its authored native corpse 
     assert.equal(enemySpriteName({kind:12,telegraph:{progress:.5}},10),'enemy.12.3.normal');
     assert.equal(enemySpriteName({kind:1,dead:true},15),'enemy.1.7.normal');
 });
+
+test('Hollow contact attacks cannot be fabricated by art time or telegraph release', () => {
+    const state=createEnemyMotionState();
+    const hollow={entityId:24,kind:0,x:40,y:60};
+    assert.equal(updateEnemyMotions(state,[hollow],1).get(24),0);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'ContactStrike'}],1.02).get(24),4);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'Recover'}],1.2).get(24),5);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'ContactStrike',hitFlash:true}],1.3).get(24),0);
+    assert.equal(updateEnemyMotions(state,[{...hollow,animationPhase:'ContactStrike'}],1.4,true).get(24),0);
+    assert.equal(updateEnemyMotions(state,[hollow],2).get(24),0);
+});
