@@ -36,7 +36,7 @@ async function ready(page,url){
  await page.waitForFunction(async()=>{try {const m=await import('./js/arena.js');return !!m.readArenaDiagnostics(document.querySelector('canvas'))?.player;}catch{return false;}},null,{timeout:45000});
  if(mode==='after')assert.equal(await page.evaluate(async()=>{const m=await import('./js/painted-enemies.js');return m.preloadPaintedEnemies();}),true);
 }
-async function capture(base,name,route){
+async function capture(base,name,route,{duration=5000}={}){
  const context=await browser.newContext({viewport:{width:1000,height:900},recordVideo:{dir:output,size:{width:1000,height:900}}});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(name+': '+e.message));
  page.on('console',m=>{if(m.type()==='error')errors.push(name+': '+m.text());});
@@ -44,8 +44,21 @@ async function capture(base,name,route){
  catch(error) { await page.screenshot({path:path.join(output,name+'-failure.png')});fs.writeFileSync(path.join(output,name+'-failure.txt'),await page.locator('body').innerText());throw error; }
  await page.locator('canvas').screenshot({path:path.join(output,name+'.png')});
  const start=await diagnostic(page);assert.equal(start.renderingFailed,false);
- await wait(5000);const end=await diagnostic(page);assert.equal(end.active,true);assert.equal(end.renderingFailed,false);
- results.push({name,viewport:{width:1000,height:900},start,end});
+ const observed={phases:new Set(),hitFlashes:0,deathEvents:0,enemyCountPeak:0,playerHealthMinimum:Infinity};
+ for(let t=0;t<duration;t+=125){
+  await wait(Math.min(125,duration-t));
+  const live=await diagnostic(page);
+  for(const enemy of live.enemies ?? []){
+   if(enemy.animationPhase)observed.phases.add(enemy.animationPhase);
+   if(enemy.hitFlash)observed.hitFlashes++;
+  }
+  observed.deathEvents+=live.deathBursts?.filter(b=>b.entityId!=null&&b.kind!=null).length??0;
+  observed.enemyCountPeak=Math.max(observed.enemyCountPeak,live.enemies?.length??0);
+  if(live.player)observed.playerHealthMinimum=Math.min(observed.playerHealthMinimum,live.player.health??Infinity);
+ }
+ const end=await diagnostic(page);assert.equal(end.active,true);assert.equal(end.renderingFailed,false);
+ results.push({name,viewport:{width:1000,height:900},start,end,observed:{...observed,
+   phases:[...observed.phases].sort(),playerHealthMinimum:Number.isFinite(observed.playerHealthMinimum)?observed.playerHealthMinimum:null}});
  const video=page.video();await context.close();await video.saveAs(path.join(output,name+'.webm'));fs.unlinkSync(await video.path());
  console.log('captured',mode,name);
 }
@@ -96,6 +109,10 @@ async function aimAcceptance(base,mobile){
   if(!process.env.AIM_ONLY){
    for(const [name,kind] of [['hollow','Hollow'],['mire-hound','MireHound'],['whitefang','WhitefangStalker']])if(!selected||selected.includes(name))await capture(base,name,`enemy-lab?kind=${kind}&seed=42&cast=false`);
    if(!selected||selected.includes('ashfang'))await capture(base,'ashfang','hunt-lab?wyrm=Ashfang&ascendant=false&seed=42');
+   // Real lethal trial: C# autocast drives damage. Do not manufacture a death for the recording.
+   // The JSON explicitly records whether the lifecycle event was actually observed.
+   if(mode==='after'&&process.env.CAPTURE_LETHAL==='1'&&(!selected||selected.includes('whitefang')))
+    await capture(base,'whitefang-lethal','enemy-lab?kind=WhitefangStalker&seed=42&autoplay=true&cast=true',{duration:10000});
   }
   if(mode==='after'&&!selected){await aimAcceptance(base,false);await aimAcceptance(base,true);}
   assert.deepEqual(errors,[],'no browser errors');
