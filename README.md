@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.129 — Vacant building interaction feedback
+
+- Vacant Arcane Nexus, Blacksmith, Codex and Hall of Fame buildings still use their authentic dark, unoccupied paintings.
+- Tapping a locked building shows a compact, dismissible in-world notice explaining the actual unlock requirement. Locked locations do not navigate or trigger the opening-door sound.
+- The Hall of Fame correctly requires **two completed hunts**; Arcane Nexus and Codex require one, while the Blacksmith requires a secured Essence.
+- Mobile browser regression coverage taps all four dormant locations and confirms that the player remains in Refuge. The new branch requires GitHub CI and physical iPhone Safari confirmation before visual acceptance.
+
 ## Prototype 0.0.128 — Mobile World Gate and Wyrm selection
 
 - Town World Gate now opens the original twin-arch Free Play / grayscale Campaign scene instead of immediately launching combat.
