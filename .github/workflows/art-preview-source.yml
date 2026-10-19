@@ -1,0 +1,40 @@
+name: Prepare original town art for review (temporary)
+
+on:
+  push:
+    branches: [art/review-vacant-town-original-source]
+    paths:
+      - '.github/workflows/art-preview-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  original-art-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - name: Prepare non-game review image from the true all-active original
+        run: |
+          python -m pip install --quiet Pillow
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          source = Path("src/Wyrmforge.Presentation.Web/wwwroot/art/refuge-town-panorama.png")
+          image = Image.open(source).convert("RGB")
+          assert image.size == (2172, 724), image.size
+          destination = Path("docs/art/reviews/original-town-all-lights.webp")
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          image.save(destination, "WEBP", quality=81, method=6)
+          print(destination, destination.stat().st_size)
+          PY
+      - name: Save source to review branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/art/reviews/original-town-all-lights.webp
+          git commit -m "art: capture original fully active panorama for user review"
+          git push origin HEAD:art/review-vacant-town-original-source
