@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.131 — Genuine unpowered town art
+
+- Fixed the remaining painted smoke, wall lanterns, windows and brazier flames from the on-device green-circle review.
+- A **fourth native vacant plate** now removes smoke from the locked Blacksmith as well; the occupied paintings are unchanged.
+- All four locations still share the same independent Active/Vacant progression rules, with no black CSS wash and unchanged public World Gate lighting.
+- See the art authoring notes below; native phone acceptance must still be checked after Pages deployment.
+
 ## Prototype 0.0.130 — Unified active and vacant town buildings
 
 - All locked buildings use the same `Active / Vacant` rendering contract driven by their existing progression unlocks. Blacksmith, Nexus, Codex and Hall of Fame switch independently.
