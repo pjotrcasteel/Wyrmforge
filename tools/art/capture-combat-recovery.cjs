@@ -45,8 +45,8 @@ async function capture(base,name,route,{duration=5000}={}){
  await page.locator('canvas').screenshot({path:path.join(output,name+'.png')});
  const start=await diagnostic(page);assert.equal(start.renderingFailed,false);
  const observed={phases:new Set(),hitFlashes:0,deathEvents:0,enemyCountPeak:0,playerHealthMinimum:Infinity};
- for(let t=0;t<duration;t+=125){
-  await wait(Math.min(125,duration-t));
+ for(let t=0;t<duration;t+=50){
+  await wait(Math.min(50,duration-t));
   const live=await diagnostic(page);
   for(const enemy of live.enemies ?? []){
    if(enemy.animationPhase)observed.phases.add(enemy.animationPhase);
@@ -109,10 +109,11 @@ async function aimAcceptance(base,mobile){
   if(!process.env.AIM_ONLY){
    for(const [name,kind] of [['hollow','Hollow'],['mire-hound','MireHound'],['whitefang','WhitefangStalker']])if(!selected||selected.includes(name))await capture(base,name,`enemy-lab?kind=${kind}&seed=42&cast=false`);
    if(!selected||selected.includes('ashfang'))await capture(base,'ashfang','hunt-lab?wyrm=Ashfang&ascendant=false&seed=42');
-   // Real lethal trial: C# autocast drives damage. Do not manufacture a death for the recording.
-   // The JSON explicitly records whether the lifecycle event was actually observed.
+   // Developer lab uses the canonical C# DamageTarget path for two nonlethal hits
+   // and a lethal hit. No fabricated renderer-side flashes or corpses. The JSON
+   // reports the actual snapshots observed so missed frames remain visible.
    if(mode==='after'&&process.env.CAPTURE_LETHAL==='1'&&(!selected||selected.includes('whitefang')))
-    await capture(base,'whitefang-lethal','enemy-lab?kind=WhitefangStalker&seed=42&autoplay=true&cast=true',{duration:10000});
+    await capture(base,'whitefang-lifecycle','enemy-lab?kind=WhitefangStalker&seed=42&autoplay=true&cast=false&artEvents=true',{duration:10000});
   }
   if(mode==='after'&&!selected){await aimAcceptance(base,false);await aimAcceptance(base,true);}
   assert.deepEqual(errors,[],'no browser errors');
