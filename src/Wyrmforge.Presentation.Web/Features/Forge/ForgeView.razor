@@ -79,17 +79,18 @@
                             {
                                 <img class="town-panorama-open-forge" src="art/refuge-town-panorama.png" alt="" aria-hidden="true" draggable="false" />
                             }
+                            @* Pixel-aligned vacant plates remove occupants and extinguish building lighting. No black CSS veil. *@
                             @if (!IsUnlocked(ShellSection.Build))
                             {
-                                <span class="town-vacancy town-vacancy--build" aria-hidden="true"></span>
+                                <img class="town-dormant-art town-dormant-art--build" src="art/town-vacant-nexus.webp?v=126" alt="" aria-hidden="true" draggable="false" />
                             }
                             @if (!IsUnlocked(ShellSection.Codex))
                             {
-                                <span class="town-vacancy town-vacancy--codex" aria-hidden="true"></span>
+                                <img class="town-dormant-art town-dormant-art--codex" src="art/town-vacant-codex.webp?v=126" alt="" aria-hidden="true" draggable="false" />
                             }
                             @if (!Progress.LeaderboardUnlocked)
                             {
-                                <span class="town-vacancy town-vacancy--legends" aria-hidden="true"></span>
+                                <img class="town-dormant-art town-dormant-art--legends" src="art/town-vacant-legends.webp?v=126" alt="" aria-hidden="true" draggable="false" />
                             }
                             <div class="town-snap" aria-hidden="true"></div>
                             <div class="town-snap" aria-hidden="true"></div>

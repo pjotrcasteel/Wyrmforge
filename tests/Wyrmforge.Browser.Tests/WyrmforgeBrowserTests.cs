@@ -1637,9 +1637,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Expect(Page.Locator(".town-hotspot--gate")).ToBeEnabledAsync();
         await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
-        await Expect(Page.Locator(".town-vacancy--build")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".town-vacancy--codex")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".town-vacancy--legends")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".town-vacancy")).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.Locator(".town-dormant-art").First.EvaluateAsync<bool>(
+            "element => element.complete && element.naturalWidth === 2172 && element.naturalHeight === 724 && " +
+            "getComputedStyle(element).filter === 'none' && getComputedStyle(element).backdropFilter === 'none'"));
+        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveAttributeAsync("src", "art/town-vacant-nexus.webp?v=126");
+        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveAttributeAsync("src", "art/town-vacant-codex.webp?v=126");
+        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveAttributeAsync("src", "art/town-vacant-legends.webp?v=126");
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
@@ -1658,7 +1665,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(390, 844);
         await OpenAsync();
-        await Expect(Page.Locator(".town-vacancy")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-dormant-art")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".town-panorama-open-forge")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-hotspot--build")).ToBeEnabledAsync();
         await Expect(Page.Locator(".town-hotspot--forge")).ToBeEnabledAsync();

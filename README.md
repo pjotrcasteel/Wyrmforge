@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.126 — Town building black-wash regression correction
+
+- Remove the black CSS overlays entirely; replace them with three **real transparent artwork plates** for the locked Arcane Nexus, Codex and Hall of Fame. Vacant plates eliminate painted pedestrians and suppress their warm/violet building lights while preserving stonework.
+- Keep the correctly vacant blacksmith and its original populated/lit unlock artwork intact. Each other building independently returns to the original lively painting on unlock, with the same hit-target rules.
+- Building patches are generated reproducibly from the original 2172×724 panorama by `tools/art/build_town_vacancy.py`. [Art implementation and full-town visual proof](docs/art/town-vacancy-correction-2026-10-19.md). Physical iPhone Safari review is still an outstanding device QA check, not an omitted game feature.
+
 ## Prototype 0.0.125 — Combat recovery and longer hunts
 
 - Automatic targeting remains the default. Held mouse/right-touch/gamepad aim takes temporary precedence; tap-to-aim expires after 350 ms, then automatic targeting resumes. A small ground rune shows the direction.
