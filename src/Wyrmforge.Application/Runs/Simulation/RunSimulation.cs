@@ -147,12 +147,19 @@ public sealed partial class RunSimulation
         width = arenaWidth;
         height = arenaHeight;
         EnsurePlayerPosition(width, height);
-        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice))) return CreateSnapshot();
+        if (IsEnded || (!developmentHunt && (HasPendingRunChoice || AtCheckpoint || PendingMapChoice)))
+        {
+            // A paused choice/map is an input boundary, not a latched manual heading.
+            manualAimEngaged = false;
+            automaticTargetId = null;
+            return CreateSnapshot();
+        }
         if (trailExitPending)
         {
             delta = Math.Clamp(delta, 0, 0.05);
             elapsed += delta;
             UpdatePlayer(delta, movement, width, height);
+            UpdateAim(movement);
             CollectEnvironmentSupplies(width, height);
             TryReachTrailExit();
             return CreateSnapshot();

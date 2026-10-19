@@ -144,6 +144,18 @@ public sealed class HybridAimTests
         Assert.IsFalse(terrain.HasLineOfSight(wallAbove, wallBelow, width, height));
     }
 
+    [TestMethod]
+    public void EnteringPausedMapClearsAuthoritativeManualEngagement()
+    {
+        var simulation = Scene();
+        Invoke(simulation, "UpdateAim", new MovementInput(0, 0, 1, 0));
+        Assert.IsTrue(simulation.CreateSnapshot().Player.ManualAim);
+        var paused = simulation.Tick(.05, new MovementInput(0, 0, 1, 0), 800, 600);
+        Assert.IsTrue(paused.Paused);
+        Assert.IsFalse(paused.Player.ManualAim);
+        Assert.IsNull(paused.Player.AimTargetId);
+    }
+
     private static RunSimulation Scene()
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42);
