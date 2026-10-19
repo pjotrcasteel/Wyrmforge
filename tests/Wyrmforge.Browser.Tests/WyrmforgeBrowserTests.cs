@@ -385,7 +385,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-building-layer[data-town-building='codex']")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".town-building-layer[data-town-building='legends'][data-building-state='vacant']")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-panorama-open-forge")).ToHaveCountAsync(0);
-        await Expect(Page.Locator(".town-dormant-art--forge")).ToHaveCountAsync(1);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
@@ -1722,12 +1721,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".town-hotspot--gate")).ToBeEnabledAsync();
         await Expect(Page.Locator(".town-hotspot--build")).ToHaveAttributeAsync("data-town-state", "vacant");
         await Expect(Page.Locator(".town-dormant-art--build")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".town-dormant-art--forge")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-vacancy")).ToHaveCountAsync(0);
         var dormantLayers = Page.Locator(".town-building-layer[data-building-state='vacant']");
-        await Expect(dormantLayers).ToHaveCountAsync(4);
+        await Expect(dormantLayers).ToHaveCountAsync(3);
         await Expect(Page.Locator(".town-building-layer[data-building-state='active']")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".town-building-layer[data-town-building='build']")).ToHaveCountAsync(1);
         Assert.IsTrue(await dormantLayers.First.EvaluateAsync<bool>(
@@ -1736,10 +1734,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(await Page.Locator(".town-dormant-art").First.EvaluateAsync<bool>(
             "element => element.complete && element.naturalWidth === 2172 && element.naturalHeight === 724 && " +
             "getComputedStyle(element).filter === 'none' && getComputedStyle(element).backdropFilter === 'none'"));
-        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveAttributeAsync("src", "art/town-vacant-nexus.webp?v=131");
-        await Expect(Page.Locator(".town-dormant-art--forge")).ToHaveAttributeAsync("src", "art/town-vacant-forge.webp?v=131");
-        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveAttributeAsync("src", "art/town-vacant-codex.webp?v=131");
-        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveAttributeAsync("src", "art/town-vacant-legends.webp?v=131");
+        await Expect(Page.Locator(".town-dormant-art--build")).ToHaveAttributeAsync("src", "art/town-vacant-nexus.webp?v=130");
+        await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveAttributeAsync("src", "art/town-vacant-codex.webp?v=130");
+        await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveAttributeAsync("src", "art/town-vacant-legends.webp?v=130");
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
