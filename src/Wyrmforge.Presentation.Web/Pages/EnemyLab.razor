@@ -13,20 +13,37 @@
     <header><span>WYRMFORGE • DEVELOPER INSPECTION</span><h1>Fire & Frost enemy lab</h1>
         <p>The real combat simulation and canvas renderer. This practice encounter never saves progress.</p></header>
     <section class="settings">
-        <label>Enemy<select @bind="kind">@foreach (var value in Enum.GetValues<EnemyKind>()) { <option value="@value">@value</option> }</select></label>
-        <label>Seed<input type="number" @bind="seed" /></label>
+        <label>Enemy
+            <select aria-label="Monster to inspect" @bind="kind" @bind:after="LoadSelectedEnemy">
+                <optgroup label="Fire">
+                    @foreach (var value in Enum.GetValues<EnemyKind>().Where(value => (int)value < (int)EnemyKind.FrostlingPackling))
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </optgroup>
+                <optgroup label="Frost">
+                    @foreach (var value in Enum.GetValues<EnemyKind>().Where(value => (int)value >= (int)EnemyKind.FrostlingPackling))
+                    {
+                        <option value="@value">@value</option>
+                    }
+                </optgroup>
+            </select>
+        </label>
+        <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
-        <label><input type="checkbox" @bind="casting" /> Autocast</label>
-        <button @onclick="Restart">Restart</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="hunt-lab">Wyrm lab</a>
+        <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
+        <label><input type="checkbox" @bind="artEvents" @bind:after="Restart" /> Test real damage / death</label>
+        <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a>
     </section>
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
-        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • INVULNERABLE • NO PROGRESS</div>
+        <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(artEvents && !casting ? "REAL HIT / DEATH TEST" : "LIVE BEHAVIOR") • INVULNERABLE • NO PROGRESS</div>
     </section>
-    <p class="note">Manual controls use the normal movement and aim inputs. Ritual objects appear with their actual caster; doubles naturally expire. Restart to repeat the same seed. The optional artEvents query exercises the real C# damage/death pipeline in this developer lab only.</p>
+    <p class="note">Selecting a monster immediately creates a fresh encounter in the real renderer alongside the mage. For repeatable animation inspection, disable autocast and enable real damage/death; nonlethal hits occur before a lethal hit through the existing C# pipeline. Ritual objects appear with their actual caster; doubles naturally expire. No saves or player progress are changed.</p>
 </main>
 
 @code {
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery(Name = "kind")] public string? KindQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "autoplay")] public bool? AutoplayQuery { get; set; }
@@ -43,6 +60,7 @@
     private int seed = 42;
     private bool autoplay = true;
     private bool casting;
+    private bool artEvents;
     private bool paused;
     private double simulationSeconds;
     private int artEventsApplied;
@@ -54,6 +72,7 @@
         if (AutoplayQuery is { } auto) autoplay = auto;
         if (CastQuery is { } cast) casting = cast;
         if (PausedQuery is { } pause) paused = pause;
+        if (ArtEventsQuery is { } eventsEnabled) artEvents = eventsEnabled;
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -82,7 +101,7 @@
         var frame = simulation.Tick(delta, movement, width, height);
         // Opt-in reproducible art acceptance: nonlethal real damage at 2.5s and
         // 4.5s, then a canonical lethal hit at 6.5s. Never used in normal hunts.
-        if (ArtEventsQuery == true && !casting)
+        if (artEvents && !casting)
         {
             while (artEventsApplied < 3 && simulationSeconds >= 2.5 + artEventsApplied * 2)
             {
@@ -92,6 +111,12 @@
             frame = simulation.CreateSnapshot();
         }
         return Task.FromResult(frame);
+    }
+    private void LoadSelectedEnemy()
+    {
+        Restart();
+        // Keep one shareable, reproducible URL per selected monster. Reuse the live simulation instead of spawning a dummy.
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("kind", kind.ToString()), replace: true);
     }
     private void Restart() { simulation = null; agent = null; simulationSeconds = 0; artEventsApplied = 0; paused = false; }
     private void TogglePause() => paused = !paused;
