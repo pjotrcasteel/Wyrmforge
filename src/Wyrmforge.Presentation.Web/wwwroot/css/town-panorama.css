@@ -29,12 +29,13 @@
   pointer-events:auto;-webkit-tap-highlight-color:transparent;
   transition:background-color 120ms ease-out,filter 120ms ease-out;
 }
-.game-shell.refuge-home .town-hotspot:hover:not(:disabled),
-.game-shell.refuge-home .town-hotspot:focus-visible {
+.game-shell.refuge-home .town-hotspot[data-town-state="open"]:hover,
+.game-shell.refuge-home .town-hotspot[data-town-state="open"]:focus-visible {
   background:rgba(242,184,97,.15);filter:drop-shadow(0 0 10px rgba(242,185,102,.85));
 }
 .game-shell.refuge-home .town-hotspot:focus-visible{outline:3px solid #f1c683;outline-offset:-2px}
-.game-shell.refuge-home .town-hotspot:disabled{cursor:default;pointer-events:none}
+.game-shell.refuge-home .town-hotspot[data-town-state="vacant"]{cursor:help}
+.game-shell.refuge-home .town-hotspot[data-town-state="vacant"]:focus-visible{background:transparent;filter:none}
 /* Architecture-shaped hotspots rather than labels placed over the road. */
 .game-shell.refuge-home .town-hotspot--build {
   left:.7%;top:0;width:31.6%;height:45%;

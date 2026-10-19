@@ -288,9 +288,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "REFUGE", Exact = true })).ToBeVisibleAsync();
         var nav = Page.Locator("nav.menu-actions button");
-        await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToBeDisabledAsync();
-        await Expect(nav.Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
-        await Expect(nav.Filter(new() { HasText = "Codex" })).ToBeDisabledAsync();
+        await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(nav.Filter(new() { HasText = "Forge" })).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(nav.Filter(new() { HasText = "Codex" })).ToHaveAttributeAsync("data-town-state", "vacant");
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
@@ -380,7 +380,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" })).ToBeVisibleAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Arcane Nexus" })).ToBeEnabledAsync();
         await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
-        await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Forge" })).ToBeDisabledAsync();
+        await Expect(Page.Locator("nav.menu-actions button").Filter(new() { HasText = "Forge" })).ToHaveAttributeAsync("data-town-state", "vacant");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
@@ -1667,6 +1667,47 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_VacantBuildings_ExplainUnlockRequirementsOnTap()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var viewport = Page.Locator(".town-panorama-viewport");
+        var notice = Page.Locator(".town-lock-notice");
+
+        await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(0, false)");
+        await Page.WaitForFunctionAsync(@"() => {
+            const view = document.querySelector('.town-panorama-viewport');
+            return Math.abs(view.scrollLeft - (view.scrollWidth / 6 - view.clientWidth / 2)) < 4;
+        }");
+        await Expect(Page.Locator(".town-hotspot--forge")).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Page.Locator(".town-hotspot--forge").ClickAsync();
+        await Expect(notice).ToContainTextAsync("Blacksmith");
+        await Expect(notice).ToContainTextAsync("first secured Essence");
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
+
+        await Page.Locator(".town-hotspot--build").ClickAsync();
+        await Expect(notice).ToContainTextAsync("Arcane Nexus");
+        await Expect(notice).ToContainTextAsync("first hunt");
+
+        await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(2, false)");
+        await Page.WaitForFunctionAsync(@"() => {
+            const view = document.querySelector('.town-panorama-viewport');
+            return Math.abs(view.scrollLeft - (view.scrollWidth * 5 / 6 - view.clientWidth / 2)) < 4;
+        }");
+        await Page.Locator(".town-hotspot--codex").ClickAsync();
+        await Expect(notice).ToContainTextAsync("Codex");
+        await Expect(notice).ToContainTextAsync("first hunt");
+        await Page.Locator(".town-hotspot--legends").ClickAsync();
+        await Expect(notice).ToContainTextAsync("Hall of Fame");
+        await Expect(notice).ToContainTextAsync("two hunts");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Dismiss building notice" }).ClickAsync();
+        await Expect(notice).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     public async Task Mobile_PrimaryOath_CancelReturnsToTownWithoutConsumingOrUnlocking()
     {
         await Page.SetViewportSizeAsync(390, 844);
@@ -1674,7 +1715,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
 
         await Expect(Page.Locator(".town-hotspot--gate")).ToBeEnabledAsync();
-        await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
+        await Expect(Page.Locator(".town-hotspot--build")).ToHaveAttributeAsync("data-town-state", "vacant");
         await Expect(Page.Locator(".town-dormant-art--build")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-dormant-art--codex")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".town-dormant-art--legends")).ToHaveCountAsync(1);
@@ -1693,7 +1734,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel hunt and return to town" }).ClickAsync();
         await Expect(oath).ToBeHiddenAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".town-hotspot--build")).ToBeDisabledAsync();
+        await Expect(Page.Locator(".town-hotspot--build")).ToHaveAttributeAsync("data-town-state", "vacant");
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();

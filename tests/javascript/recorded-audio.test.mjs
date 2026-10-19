@@ -135,7 +135,8 @@ test('built-in browser playback can layer physical departure Foley without chang
     assert.match(audio, /entry\.layers\?\.length/);
     assert.match(audio, /layer\.delaySeconds/);
     assert.match(audio, /play\(cue && design\?\.palette\[cue\] \? cue : 'ui'\)/);
-    assert.match(town, /data-sound-cue="@\(item\.Section == ShellSection\.Gate \? "none" : "building-open"\)"/);
+    assert.match(town, /data-sound-cue="@\(unlocked && item\.Section != ShellSection\.Gate \? "building-open" : "none"\)"/);
+    assert.match(town, /data-sound-cue="@\(Progress\.LeaderboardUnlocked \? "building-open" : "none"\)"/);
     assert.ok(manifest.transitionDesign.events['building-open']);
     assert.ok(manifest.transitionDesign.events['hunt-start']);
     assert.ok(manifest.transitionDesign.events['trail-enter']);

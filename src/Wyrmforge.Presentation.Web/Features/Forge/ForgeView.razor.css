@@ -690,3 +690,75 @@
 @media (orientation:landscape) and (max-height:560px) {
   .arrival-reference-frame { width:max(100%, calc(100dvh * 864 / 1222)); }
 }
+
+/* Vacant buildings remain illustrated as dormant, but tapping them explains the unlock.
+   The notice sits outside the scrolling artwork and does not obstruct the town hotspots. */
+.refuge-home .town-square .town-hotspot[data-town-state="vacant"] {
+  cursor:help;
+}
+.refuge-home .town-square .town-hotspot[data-town-state="vacant"]:hover,
+.refuge-home .town-square .town-hotspot[data-town-state="vacant"]:active {
+  background:transparent;
+  box-shadow:none;
+}
+.refuge-home .town-square .town-lock-notice {
+  position:absolute;
+  z-index:80;
+  left:50%;
+  bottom:max(58px,calc(env(safe-area-inset-bottom) + 46px));
+  transform:translateX(-50%);
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr) 40px;
+  align-items:center;
+  gap:10px;
+  width:min(360px,calc(100% - 24px));
+  padding:10px 7px 10px 13px;
+  border:1px solid #96744a;
+  border-radius:4px;
+  background:linear-gradient(145deg,#2a2029f7,#110f17f5);
+  box-shadow:inset 0 0 0 1px #241a1a,0 10px 32px #000c;
+  color:#efe0c5;
+  text-align:left;
+  pointer-events:auto;
+}
+.refuge-home .town-lock-symbol {
+  color:#bf9869;
+  font:700 .85rem/1 Georgia,serif;
+}
+.refuge-home .town-lock-copy {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  gap:4px;
+}
+.refuge-home .town-lock-copy strong {
+  color:#dfba87;
+  font:700 .76rem/1.2 Georgia,serif;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.refuge-home .town-lock-copy span {
+  color:#ddd0c0;
+  font:500 .76rem/1.35 system-ui,sans-serif;
+}
+.refuge-home .town-lock-dismiss {
+  display:grid;
+  place-items:center;
+  width:40px;
+  min-width:40px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  border-radius:3px;
+  background:transparent;
+  color:#e3c8a5;
+  font:400 1.5rem/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+.refuge-home .town-lock-dismiss:active { background:#ffffff14; }
+.refuge-home .town-lock-dismiss:focus-visible { outline:2px solid #e3c8a5; outline-offset:1px; }
+@media(max-width:360px) {
+  .refuge-home .town-square .town-lock-notice { gap:7px; padding-left:10px; }
+  .refuge-home .town-lock-copy span { font-size:.70rem; }
+}

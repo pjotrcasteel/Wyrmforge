@@ -99,18 +99,29 @@
                                 @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
                                 {
                                     var unlocked = item.Section == ShellSection.Gate || IsUnlocked(item.Section);
-                                    <button data-sound-cue="@(item.Section == ShellSection.Gate ? "none" : "building-open")" class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
-                                            type="button" disabled="@(!unlocked)" data-town-state="@(unlocked ? "open" : "vacant")"
+                                    <button data-sound-cue="@(unlocked && item.Section != ShellSection.Gate ? "building-open" : "none")" class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
+                                            type="button" data-town-state="@(unlocked ? "open" : "vacant")"
                                             title="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "Begin first hunt" : "Begin hunt") : !unlocked ? UnlockHint(item.Section) : item.Label)"
                                             aria-label="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") : item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
                                             @onclick="() => ActivateTownLocationAsync(item.Section)"><span class="town-location-label">@item.Label</span></button>
                                 }
-                                <button data-sound-cue="building-open" class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
-                                        disabled="@(!Progress.LeaderboardUnlocked)" data-town-state="@(Progress.LeaderboardUnlocked ? "open" : "vacant")" title="Hall of Fame"
-                                        aria-label="Open Hall of Fame" @onclick="() => OnLeaderboard.InvokeAsync()"><span class="town-location-label">Hall of Fame</span></button>
+                                <button data-sound-cue="@(Progress.LeaderboardUnlocked ? "building-open" : "none")" class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
+                                        data-town-state="@(Progress.LeaderboardUnlocked ? "open" : "vacant")" title="@(Progress.LeaderboardUnlocked ? "Hall of Fame" : "Complete two hunts to unlock")"
+                                        aria-label="@(Progress.LeaderboardUnlocked ? "Open Hall of Fame" : "Hall of Fame locked: complete two hunts")" @onclick="OpenHallOfFameAsync"><span class="town-location-label">Hall of Fame</span></button>
                             </nav>
                         </div>
                     </div>
+                    @if (townLockNotice is { } notice)
+                    {
+                        <div class="town-lock-notice" role="status" aria-live="polite" aria-atomic="true">
+                            <span class="town-lock-symbol" aria-hidden="true">◆</span>
+                            <div class="town-lock-copy">
+                                <strong>@notice.Location — LOCKED</strong>
+                                <span>@notice.Message</span>
+                            </div>
+                            <button type="button" class="town-lock-dismiss" aria-label="Dismiss building notice" @onclick="() => townLockNotice = null">×</button>
+                        </div>
+                    }
                     <button type="button" class="town-settings" aria-label="More options" @onclick="() => Navigate(ShellSection.Options)">⚙</button>
                 </section>
                 }
@@ -231,6 +242,7 @@
     private bool editingName;
     private string nameDraft = "";
     private string? nameError;
+    private TownLockNotice? townLockNotice;
     private void OpenNameEditor() { nameDraft = PlayerName; nameError = null; editingName = true; }
     private async Task SaveNameAsync()
     {
@@ -300,9 +312,38 @@
     private Task StartAsync() => OnStart.InvokeAsync();
     private Task ActivateTownLocationAsync(ShellSection destination)
     {
+        if (!IsUnlocked(destination))
+        {
+            var location = destination == ShellSection.Forge ? "Blacksmith" : Navigation.Single(item => item.Section == destination).Label;
+            townLockNotice = new TownLockNotice(location, UnlockMessage(destination));
+            return Task.CompletedTask;
+        }
+
+        townLockNotice = null;
         Navigate(destination);
         return Task.CompletedTask;
     }
+
+    private Task OpenHallOfFameAsync()
+    {
+        if (!Progress.LeaderboardUnlocked)
+        {
+            townLockNotice = new TownLockNotice("Hall of Fame", "Complete two hunts to unlock.");
+            return Task.CompletedTask;
+        }
+
+        townLockNotice = null;
+        return OnLeaderboard.InvokeAsync();
+    }
+
+    private static string UnlockMessage(ShellSection destination) => destination switch
+    {
+        ShellSection.Build => "Complete your first hunt to unlock.",
+        ShellSection.Codex => "Complete your first hunt to unlock.",
+        ShellSection.Forge => "Bring home your first secured Essence to unlock.",
+        _ => "This location is not yet unlocked.",
+    };
+
     private string UnlockHint(ShellSection value) => value == ShellSection.Forge ? "Secure Essence" : "Finish first hunt";
 
     private string LaboratoryStatus => Laboratory.EquippedMutations.Count > 0 ? $"{string.Join(" + ", Laboratory.EquippedMutations.Select(id => LaboratoryCatalog.Get(id).Name))} equipped"
@@ -331,4 +372,5 @@
     private enum ShellSection { Run, Gate, Build, Forge, Codex, Prepare, Options }
     private enum NexusFacet { Web, Spellcraft }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
+    private sealed record TownLockNotice(string Location, string Message);
 }
