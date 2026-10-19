@@ -51,7 +51,7 @@
                         <span class="title-scene-moon" aria-hidden="true"></span>
                         <div class="title-mage" aria-hidden="true"></div>
                         <h1>WYRMFORGE</h1>
-                        <button class="title-start" @onclick="EnterTown">START GAME <span aria-hidden="true">›</span></button>
+                        <button type="button" class="title-start" @onclick="EnterTown"><span class="title-start-label">START GAME</span><span class="title-start-arrow" aria-hidden="true">›</span></button>
                         <button class="title-settings" aria-label="Settings" @onclick="() => Navigate(ShellSection.Options)">⚙ Settings</button>
                     </section>
                 }

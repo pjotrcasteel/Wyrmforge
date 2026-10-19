@@ -23,14 +23,50 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync("welcome-full-art.png");
         var backgroundSize = await Page.Locator(".arrival-home .hub-backdrop")
             .EvaluateAsync<string>("element => getComputedStyle(element, '::after').backgroundSize");
-        Assert.IsTrue(backgroundSize.Contains("78%", StringComparison.Ordinal),
-            "Welcome artwork must occupy most of the screen without the original excessive cover zoom.");
+        Assert.IsTrue(backgroundSize.Contains("cover", StringComparison.Ordinal),
+            "Welcome artwork must fill the viewport without stretching or letterboxing.");
+        var artworkFillsViewport = await Page.Locator(".arrival-home .hub-backdrop")
+            .EvaluateAsync<bool>(@"element => {
+                const bounds = element.getBoundingClientRect();
+                const style = getComputedStyle(element, '::after');
+                return Math.abs(bounds.top) <= 1 && Math.abs(bounds.height - innerHeight) <= 2
+                    && style.maskImage === 'none' && style.backgroundImage.includes('refuge-scene.png');
+            }");
+        Assert.IsTrue(artworkFillsViewport, "The illustrated arrival must reach the top and bottom of the viewport.");
+        await Expect(Page.Locator(".title-start-label")).ToHaveTextAsync("START GAME");
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Settings", Exact = true }).ClickAsync();
         await Expect(Page.Locator(".settings-audio-slot .wyrmforge-sound-controls")).ToBeVisibleAsync();
         await ScreenshotAsync("settings-audio.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
         await Expect(Page.Locator(".wyrmforge-sound-controls")).ToBeHiddenAsync();
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_Welcome_StartButtonIsPlayableAndFitsOnScreen(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
+
+        var fits = await Page.EvaluateAsync<bool>(@"() => {
+            const scene = document.querySelector('.arrival-home .title-scene');
+            const start = document.querySelector('.arrival-home .title-start');
+            const settings = document.querySelector('.arrival-home .title-settings');
+            const frame = scene.getBoundingClientRect();
+            const button = start.getBoundingClientRect();
+            const controls = settings.getBoundingClientRect();
+            return frame.top >= -1 && Math.abs(frame.bottom - innerHeight) <= 2
+                && button.width >= 220 && button.height >= 54
+                && button.left >= 0 && button.right <= innerWidth
+                && controls.bottom <= innerHeight && controls.top > button.bottom
+                && document.documentElement.scrollWidth <= innerWidth + 1;
+        }");
+        Assert.IsTrue(fits, "Welcome artwork and game controls should fit 320px and 390px phones without scrolling.");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME" }).ClickAsync();
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
     }
 
     [TestMethod]
