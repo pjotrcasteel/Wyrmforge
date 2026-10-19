@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.125 — Combat recovery and longer hunts
+
+- Automatic targeting remains the default. Held mouse/right-touch/gamepad aim takes temporary precedence; tap-to-aim expires after 350 ms, then automatic targeting resumes. A small ground rune shows the direction.
+- Hunt route budgets scale by difficulty depth: shortest legal routes contain 6/8/10/12 battles before the Wyrm. Optional branches retain protected rewards and existing capped refinements.
+- Mire Hound and Whitefang gain eight travel-driven canine trot frames and distinct pounce/recoil/recovery poses. Recovered painted Hollow, Mire Hound and Ashfang sheets are integrated with native-art fallback.
+- `/enemy-lab` runs every implemented Fire/Frost enemy through the actual simulation and renderer without saving progress. [Seeded hunt evidence](docs/playtesting/hunt-length/README.md) and [aim rules](docs/playtesting/hybrid-aim-2026-10-19.md).
+- **Art milestone remains partial:** other generated enemy sheets and earlier recordings were lost before publication. Those enemies retain their native art; this version does not claim the full all-roster card-quality overhaul.
+
 ## Authoritative product design and development continuation
 
 **Single product-design source of truth:** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md).
@@ -228,60 +236,7 @@ The existing public **[Balance Lab](https://pjotrcasteel.github.io/Wyrmforge/bal
 - Developer trials bypass persistent progression and never grant Great Hunt oaths, Essence, trophies, or playtest telemetry. All ordinary-game startup, achievements and saves remain untouched.
 - This supports iteration on difficulty and mobile reachability without repeatedly losing a real run. It cannot objectively determine subjective fun, cinematic appeal or real-touch comfort; those remain complementary visual/playtest gates.
 
-The original headless self-play and Combat Lab are retained. The remaining Rimeclaw/Voidweaver Ascendants and later Elder Wyrms can enter the same bench when their actual combat content is implemented.
-
-## Prototype 0.0.82 — Ascendant Stormcoil: Stormbound Halo
-
-**The next playable Great Hunt challenge** builds on the existing oath, Mastery and Ascendant architecture instead of adding a prestige currency.
-
-- Seal the **Oath of the Unbroken Sky** to invoke **Ascendant Stormcoil** from the Run Hub; the Ashfang rite remains available and choosing either deselects the other. Ordinary runs and Depth I remain unchanged.
-- At the Depth II gate, a chosen Ascendant forces its corresponding Wyrm once per run. Stormcoil receives an extended, school-colored cinematic reveal and a distinct **Skybreak Crossing** signature: a warning corridor of lightning runs horizontally, then vertically; phase two adds an angled third crossing. Telegraphs and strike radii are scaled for portrait and landscape movement.
-- Winning permanently awards the **Stormbound Halo** trophy, celebrated post-run and displayed at the Great Hunt altar. Saved Ashfang crowns and sealed oaths remain compatible with the existing v1 save record.
-- All four ordinary Wyrms retain their signatures. The other two Ascendants are **not** represented as playable yet; Rimeclaw, Voidweaver and Elder Wyrms remain future milestones.
-- Deterministic attack geometry, exclusive rite selection, persistent reward semantics and mobile/browser coverage are included. Balance and actual player experience remain subject to feedback; no flat account stat bonuses are awarded.
-- The existing consent-only 0.0.81 playtest collector stays live. Reports include game version; first-cohort feedback must be interpreted carefully if testers played different deployed versions.
-
-**Next:** validate mobile readability and intensity in human testing while returning to the two remaining distinct Ascendant encounters, then Elder Wyrms. Keep Build Evolution open for future mechanical branches.
-
-## Playtest feedback insights — scheduled aggregation
-
-The external playtest collector can now produce an automatic, privacy-safe development summary without exposing individual tester records. A scheduled GitHub workflow queries aggregate counts, ratings and recent-run metrics through Cloudflare D1, excludes the owner's synthetic integration test, and publishes only aggregate data after a ten-report privacy threshold.
-
-- [Automated insight pipeline and privacy boundaries](docs/playtesting/insights-automation.md)
-- Once the first cohort reaches the threshold, review `playtest-insights/docs/playtesting/insights/latest.md` on the separate GitHub branch.
-- The public report contains no verbatim comments or reproduction seeds. Access those only through the existing private Cloudflare owner tools when necessary.
-
-## Prototype 0.0.81 — Private, consent-only feedback collector
-
-- A separately deployable Cloudflare Worker + D1 database accepts **only reports sent via the explicit in-game consent checkbox**, validates/sanitizes the `wyrmforge.playtest.report.v1` schema and saves them for up to 30 days.
-- Anonymous report intake uses exact-origin CORS, capped request bodies, an hourly HMAC rate limiter, no raw IP storage, idempotent report IDs and no analytics tracking SDK.
-- Owner-only admin endpoints aggregate feedback and allow private export/deletion. The administrator token is never shipped with the game.
-- The Send button appears only once `WYRMFORGE_FEEDBACK_ENDPOINT` is set for GitHub Pages. Share/download JSON remains usable at all times and on failure.
-- Deployment needs a Cloudflare account with a real D1 database and provisioned GitHub secrets. **Building this milestone does not automatically provision an external Cloudflare account or enable intake**. See [collector deployment guide](docs/playtesting/collector-deployment.md).
-- Shared C# gameplay and planned native iOS/Android adapters are unaffected.
-
-### 0.0.80 — Community playtesting and evidence
-
-Before another Wyrm chapter, WyrmForge now has a built-in, mobile-first playtest loop.
-
-- Run Hub and post-run screens offer a one-minute feedback survey for external testers (enjoyment, clarity, replay intent, trouble area and optional comments).
-- The browser keeps **local-only** anonymized run and funnel evidence: recent run outcomes and seeds, trail/Wyrm gates, depth, Essence, evolved spells and sparse frame-performance samples.
-- Testers decide whether to include run data and explicitly **share a JSON report** through the native phone share sheet, or download it to send to the playtest organizer. No server-side telemetry or automatic uploading is represented as enabled.
-- Reports can be deduplicated and summarized offline with `python3 tools/playtesting/analyze.py playtest-reports/`. Reports are ignored by Git.
-- `docs/playtesting/community-round-1.md` sets the first external testing protocol and pass/fail gates.
-- `docs/design/mobile-platform-roadmap.md` establishes iOS and Android releases as explicit future goals without forking deterministic C# gameplay.
-
-**Next release depends on feedback evidence.** Keep Ascendant/Elder Wyrms, Build Evolution expansion and native packaging on the roadmap, but prioritize blockers revealed by testers.
-
-### 0.0.79 — The First Ascendant: Crown of Embers
-
-The first playable Great Hunt rite begins after the Oath of the First Flame is sealed. The Run Hub exposes an opt-in Ascendant Ashfang encounter; regular hunts and early progression remain unchanged.
-
-- Invoke the rite in the Run Hub to guarantee **Ascendant Ashfang at the Depth II Wyrm encounter**. The Depth I fight remains ordinary, so building/evolving a spell and reaching the second depth are part of the challenge.
-- Crownfall is a distinct signature: sequential rows of warning circles leave one shifting safe lane; the second phase adds a third wave. Distinct gold telegraphs, crowned Wyrm silhouette, longer entrance and phase-break presentation communicate the upgrade.
-- Victory earns the **permanent Crown of Embers trophy** in the Great Hunt altar. It saves within the existing v1 Great Hunt record as an optional field, with no new currency or power inflation. The rite remains replayable.
-- Existing Ashfang Essence and Spell Mastery systems continue to work. Defeats are captured in the run summary at kill time and credited once, with abandoned runs excluded from persistent progress.
-- Normal runs do not opt into the challenge and retain their original seeded combat behavior. Portrait and landscape Crownfall safe-lane tests and a mobile unlocked-rite browser check protect accessibility.
+The original headless self-play and Combat Lab are retained. The remaining Rimeclaw/Voidweaver…1616 tokens truncated… the challenge and retain their original seeded combat behavior. Portrait and landscape Crownfall safe-lane tests and a mobile unlocked-rite browser check protect accessibility.
 
 The three remaining Ascendant encounters and Elder Wyrms are intentionally not misrepresented as implemented. Build Evolution remains expandable.
 

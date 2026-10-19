@@ -31,6 +31,12 @@ jobs:
       - name: Restore
         run: dotnet restore Wyrmforge.slnx
 
+      - name: Verify reproducible sprite atlases
+        run: |
+          python3 -m pip install -r tools/art/painted-requirements.txt
+          node tools/art/build-art.mjs --check
+          python3 tools/art/build-painted-enemies.py --check
+
       - name: Check playtest and collector JavaScript
         run: |
           node --test tests/javascript/*.test.mjs
