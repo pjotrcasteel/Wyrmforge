@@ -159,7 +159,8 @@ def dormant_plate(original: np.ndarray, plan: dict) -> Image.Image:
     # transfer preserves actual painted detail and adjusts local brightness.
     painted_bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
 
-    # Remove only the actual smoke strokes (rather than the entire roof). The
+    # Remove only the actual smoke strokes (rather than the entire roof).
+    # This is a pixel-source fix, not a runtime particle disable or black veil. The
     # surrounding roof/foliage texture is reconstructed locally; the active
     # panorama is never touched.
     if plan.get("smoke"):
