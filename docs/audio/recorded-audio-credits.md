@@ -71,6 +71,9 @@ Following listening feedback, we no longer map a *door* sound to `hunt-start`. P
 
 **Research** supporting this decision:
 - FMOD's event-based design separates *gameplay intent* from sample selection and sound output: https://www.fmod.com/docs/2.04/studio/authoring-events.html
+- *Diablo II* sound designers used grounded Foley and precise material details to support world credibility: https://www.gamedeveloper.com/audio/how-audio-design-enhances-diablo-2
+- Power Up Audio's GDC talk on *TUNIC* stresses deriving sounds from actual gameplay and defining creative direction before choosing samples: https://www.gdcvault.com/play/1029369/The-TUNIC-Audio
+- Real smartphone speakers need their own review, particularly as low-frequency weight may be inaudible: https://aes.org/publications/elibrary/elibrary-page/?id=13399
 - Wwise documents layered composition (Blend Containers) and sample variation via Shuffle/Random Containers: https://www.audiokinetic.com/en/public-library/2024.1.4_8780/?id=creating_random_container&source=Help
 - Gaetan Troutet's game-audio lecture on restraint cautions that every extra sound consumes the listener's attention: https://blogs.napier.ac.uk/sounddesign/2026/04/20/gaetan-troutet-game-audio-sound-design/
 
