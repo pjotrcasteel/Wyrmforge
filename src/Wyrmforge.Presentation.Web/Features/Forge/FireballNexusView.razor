@@ -1,0 +1,170 @@
+@using Wyrmforge.Domain.Progression.DragonEssences
+@using Wyrmforge.Domain.Progression.Fireball
+
+<section class="fireball-nexus" aria-label="Fireball Spellcraft">
+    <header class="fireball-header">
+        <span>ARCANE NEXUS</span>
+        <h2>Fireball <small>Lv @Core.Level</small></h2>
+    </header>
+
+    <div class="fireball-chamber" aria-label="Fireball and its mutation sockets">
+        <div class="fireball-altar" aria-hidden="true"></div>
+        <button type="button" class="fireball-core @(selectedSocket is null ? "chosen" : "") @MorphClass"
+                aria-label="Fireball level @Core.Level. View core upgrade requirements"
+                aria-pressed="@(selectedSocket is null)" @onclick="ShowUpgrade">
+            <span class="fireball-flames" aria-hidden="true"><i></i></span>
+            <span class="fireball-core-caption">FIREBALL</span>
+        </button>
+
+        @for (var position = 0; position < 5; position++)
+        {
+            var index = position;
+            var open = index < Core.Level;
+            var held = Core.Slots[index];
+            var desc = held is null ? (open ? "Empty" : $"Lv {index + 1}") : FireballCoreCatalog.Get(held.Value).Name;
+            <button type="button" class="fireball-socket socket-@index @(open ? "open" : "sealed") @(selectedSocket == index ? "chosen" : "")"
+                    aria-label="@(open ? $"Socket {index + 1}, {desc}. Choose a mutator" : $"Socket {index + 1} locked. Requires Fireball level {index + 1}. View upgrade")"
+                    aria-pressed="@(selectedSocket == index)" @onclick="() => SelectSocket(index)">
+                <span class="fireball-socket-icon" aria-hidden="true">@(held is not null ? FireballCoreCatalog.Get(held.Value).Sigil : open ? "+" : "◆")</span>
+                <span class="fireball-socket-caption">@(held is null ? open ? "EMPTY" : $"LV {index + 1}" : FireballCoreCatalog.Get(held.Value).Name)</span>
+            </button>
+        }
+    </div>
+
+    <section class="fireball-context" aria-live="polite">
+        @if (selectedSocket is null)
+        {
+            <h3>Strengthen Fireball</h3>
+            @if (Core.AtCap)
+            {
+                <p>Fireball is level 5. All five mutator sockets are open.</p>
+            }
+            else
+            {
+                <p>Lv @Core.Level → Lv @(Core.Level + 1) <span class="fireball-reward">Unlocks socket @(Core.Level + 1)</span></p>
+                <h4>Required secured Essences</h4>
+                <div class="fireball-materials">
+                    @foreach (var need in Core.NextUpgrade)
+                    {
+                        var item = DragonEssenceCatalog.Get(need.Essence);
+                        var owned = Vault.Count(need.Essence);
+                        <div class="fireball-material @(owned >= need.Count ? "enough" : "missing")">
+                            <span class="fireball-material-icon" aria-hidden="true"><GameIcon Glyph="@item.Icon" /></span>
+                            <span>@item.Name</span>
+                            <strong>@owned / @need.Count</strong>
+                        </div>
+                    }
+                </div>
+                <button class="fireball-primary" type="button" disabled="@(!Core.CanUpgrade(Vault))" @onclick="UpgradeCoreAsync">
+                    Upgrade to Lv @(Core.Level + 1)
+                </button>
+                @if (!Core.CanUpgrade(Vault))
+                {
+                    <small class="fireball-hint">Bring the missing Essences back from a Hunt.</small>
+                }
+            }
+        }
+        else
+        {
+            var index = selectedSocket.Value;
+            <header class="fireball-picker-header">
+                <h3>Socket @(index + 1) · Choose a mutator</h3>
+                <button type="button" @onclick="ShowUpgrade" aria-label="Back to Fireball upgrades">×</button>
+            </header>
+            <div class="fireball-mutation-scroll">
+                @if (Core.Slots[index] is not null)
+                {
+                    <button class="fireball-remove" type="button" @onclick="() => EquipAsync(index, null)">Remove mutator from socket</button>
+                }
+                @foreach (var mutation in FireballCoreCatalog.Mutators)
+                {
+                    var learned = Core.Knows(mutation.Id);
+                    var equippedHere = Core.Slots[index] == mutation.Id;
+                    var equippedElsewhere = Core.Equipped.Contains(mutation.Id) && !equippedHere;
+                    var formConflict = mutation.ChangesForm && Core.Slots.Where((_, other) => other != index)
+                        .OfType<FireballMutatorId>().Any(id => FireballCoreCatalog.Get(id).ChangesForm);
+                    var material = DragonEssenceCatalog.Get(mutation.ResearchMaterial);
+                    <div class="fireball-mutation-choice @(equippedHere ? "equipped" : "")">
+                        <span class="fireball-mutation-icon" aria-hidden="true">@mutation.Sigil</span>
+                        <div class="fireball-mutation-description">
+                            <strong>@mutation.Name</strong>
+                            <span>@mutation.Description</span>
+                            @if (!learned)
+                            {
+                                <small>Research: 1 @material.Name (@Vault.Count(mutation.ResearchMaterial) owned)</small>
+                            }
+                            else if (formConflict)
+                            {
+                                <small>Another Form mutation is already equipped.</small>
+                            }
+                        </div>
+                        @if (equippedHere)
+                        {
+                            <span class="fireball-equipped">Equipped</span>
+                        }
+                        else if (learned)
+                        {
+                            <button type="button" class="fireball-small-button" disabled="@(equippedElsewhere || formConflict)"
+                                    @onclick="() => EquipAsync(index, mutation.Id)">Equip</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="fireball-small-button" disabled="@(!Core.CanStudy(mutation.Id, Vault))"
+                                    @onclick="() => StudyAsync(mutation.Id)">Study</button>
+                        }
+                    </div>
+                }
+                <p class="fireball-hint">More mutations will appear as their gameplay is implemented and researched.</p>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <p class="fireball-message" role="status">@message</p>
+        }
+    </section>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public FireballCoreState Core { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter] public Func<Task>? OnUpgrade { get; set; }
+    [Parameter] public Func<FireballMutatorId, Task>? OnStudy { get; set; }
+    [Parameter] public Func<int, FireballMutatorId?, Task>? OnEquip { get; set; }
+
+    private int? selectedSocket;
+    private string? message;
+    private string MorphClass => Core.Equipped.Contains(FireballMutatorId.MeteorHeart) ? "meteor" :
+        Core.Equipped.Contains(FireballMutatorId.CinderNeedle) ? "needle" :
+        Core.Equipped.Contains(FireballMutatorId.PhoenixVolley) ? "volley" : "standard";
+
+    private void ShowUpgrade() { selectedSocket = null; message = null; }
+
+    private void SelectSocket(int position)
+    {
+        selectedSocket = position < Core.Level ? position : null;
+        message = position < Core.Level ? null : $"Unlock this socket by strengthening Fireball to Lv {position + 1}.";
+    }
+
+    private async Task UpgradeCoreAsync()
+    {
+        if (OnUpgrade is null || !Core.CanUpgrade(Vault)) return;
+        var previous = Core.Level;
+        await OnUpgrade();
+        message = Core.Level > previous ? $"Fireball strengthened to Lv {Core.Level}. New socket available." : "Upgrade unavailable.";
+    }
+
+    private async Task StudyAsync(FireballMutatorId id)
+    {
+        if (OnStudy is null || !Core.CanStudy(id, Vault)) return;
+        await OnStudy(id);
+        message = Core.Knows(id) ? $"{FireballCoreCatalog.Get(id).Name} researched. Choose a socket to equip it." : "Research unavailable.";
+    }
+
+    private async Task EquipAsync(int position, FireballMutatorId? mutation)
+    {
+        if (OnEquip is null) return;
+        await OnEquip(position, mutation);
+        message = Core.Slots[position] == mutation ? mutation is null ? "Socket emptied." :
+            $"{FireballCoreCatalog.Get(mutation.Value).Name} equipped." : "Mutation is incompatible or still locked.";
+    }
+}
