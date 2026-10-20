@@ -36,7 +36,7 @@
     }
 
     function versionFrom(source) {
-        return source?.match(/[?&]v=([^&#]+)/)?.[1] ?? "132";
+        return source?.match(/[?&]v=([^&#]+)/)?.[1] ?? "139";
     }
 
     function assetUrl(path, version) {
@@ -89,7 +89,7 @@
         if (loadedDay || typeof Image === "undefined") return;
         loadedDay = true;
         const image = new Image();
-        image.src = assetUrl("day-active.webp", "132");
+        image.src = assetUrl("day-active.webp", "139");
     }
 
     function setMode(next) {

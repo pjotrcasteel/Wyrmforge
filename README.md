@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.139 — Repair vacant Refuge artwork
+
+- Replace independently regenerated vacancy patches with pixel-registered corrections of the current day/night panorama. Each locked building retains its exact geometry and working interaction while its powered fixtures are dimmed, chimney plumes are removed, and the Hall entrance is repaired from same-scene wood.
+- No modifications to the eight owner-approved canonical source building PNGs. Shared environment and the World Gate remain unchanged. Reproducible art generation and visual proof in `tools/art/repair_refuge_vacancy.py` and `docs/art/previews/refuge-{day,night}-all-vacant.webp`.
+- Full real-device iPhone Safari acceptance remains separate from GitHub CI.
+
+
 **Canonical product documentation:** [docs/canon/](docs/canon/README.md). Intended gameplay, art, audio, UX, modes and engineering rules each have one current topic home. The prototype changelog below is historical delivery evidence, not a second design specification.
 
 ## Prototype 0.0.139 — Faster first launch and stable cache reuse
