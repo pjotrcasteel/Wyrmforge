@@ -1,6 +1,6 @@
 # Ashling death candidate
 
-Current review: `art/source/enemies/ashling/exports/death-eight-directions-v3/`. Owner acceptance pending; no runtime integration or deployment. The owner has approved the preceding weighted fire-claw attack.
+Approved death source: `art/source/enemies/ashling/exports/death-eight-directions-v3/`. The owner's “awesome” reply accepted this preview and requested a general fiery-eye appearance revision, tracked in `ashling-fiery-eyes-2026-10-20.md`. No runtime integration or deployment. The preceding weighted fire-claw attack is also approved.
 
 The non-looping 28-frame clip at 24 fps has an initial recoil, failed hand brace, low forward collapse, a small asymmetric roll and impact rebound, then folded limbs and tail settling behind a prone corpse. Residual claw heat and embers extinguish by frame 9. Frames 23–27 hold an identical settled mesh and identical pixels. Review GIFs repeat only to aid inspection; playback metadata is non-looping.
 

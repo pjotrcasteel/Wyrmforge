@@ -2979,6 +2979,6 @@
   "fireEffect": "fading residual claw embers",
   "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-death-v3/ashling-death.blend",
   "atlasSha256": "0e8f23448af23af0e1f3ab2965ba996f2e9a721759cb3f6ed6941b9b81480858",
-  "ownerAccepted": false,
+  "ownerAccepted": true,
   "runtimeIntegrated": false
 }
