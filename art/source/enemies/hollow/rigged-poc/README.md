@@ -1,8 +1,8 @@
-> Current proof, 20 October 2026: **a 16-frame mobile pixel walking sheet now
-> exists**, rendered from one UV-textured, weighted 3D rig on the local RTX 5090.
-> [Deliverables and evidence](exports/pixel-walk-poc-v1/README.md).
-> Agent self-review supports this one-view proof; owner approval, remaining
-> directions and the combat lifecycle are pending. Runtime hunt art is unchanged.
+> Current export, 20 October 2026: **8 directions × 16 mobile pixel walk frames**,
+> rendered from one UV-textured, weighted 3D rig on the local RTX 5090.
+> [Directional deliverables and evidence](exports/movement-eight-directions-v1/README.md).
+> Owner accepted the original one-view zombie waddle. Directional sheet review
+> and death animation are next. Runtime hunt art is unchanged.
 >
 > The text below records the earlier hosted-service attempt, not current status.
 # The Hollow: rigged-source proof status

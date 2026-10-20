@@ -1,0 +1,64 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "direction": "N",
+      "first": "02 / 16",
+      "second": "05 / 16",
+      "meta": "Row 1 · original artwork"
+    },
+    {
+      "direction": "NE",
+      "first": "06 / 16",
+      "second": "09 / 16",
+      "meta": "Row 2 · original artwork"
+    },
+    {
+      "direction": "E",
+      "first": "09 / 16",
+      "second": "12 / 16",
+      "meta": "Row 3 · original artwork"
+    },
+    {
+      "direction": "SE",
+      "first": "12 / 16",
+      "second": "15 / 16",
+      "meta": "Row 4 · original artwork"
+    },
+    {
+      "direction": "S",
+      "first": "15 / 16",
+      "second": "02 / 16",
+      "meta": "Row 5 · original artwork"
+    },
+    {
+      "direction": "SW",
+      "first": "02 / 16",
+      "second": "05 / 16",
+      "meta": "Row 6 · original artwork"
+    },
+    {
+      "direction": "W",
+      "first": "05 / 16",
+      "second": "08 / 16",
+      "meta": "Row 7 · original artwork"
+    },
+    {
+      "direction": "NW",
+      "first": "08 / 16",
+      "second": "11 / 16",
+      "meta": "Row 8 · original artwork"
+    }
+  ],
+  "nativeDirections": "8",
+  "manifest": {
+    "columns": 16,
+    "rows": 8,
+    "frames": 128,
+    "anchor": [
+      48,
+      72
+    ]
+  },
+  "passed": true
+}
