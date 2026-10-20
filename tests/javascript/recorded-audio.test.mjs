@@ -130,13 +130,13 @@ test('gate clicks do not add the generic UI sound on top of the hunt entrance so
 
 test('built-in browser playback can layer physical departure Foley without changing simulation', () => {
     const audio = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
-    const town = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor', import.meta.url), 'utf8');
+    const town = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor', import.meta.url), 'utf8');
     assert.match(audio, /function prewarmTransitions\(\)/);
     assert.match(audio, /entry\.layers\?\.length/);
     assert.match(audio, /layer\.delaySeconds/);
     assert.match(audio, /play\(cue && design\?\.palette\[cue\] \? cue : 'ui'\)/);
-    assert.match(town, /data-sound-cue="@\(unlocked && item\.Section != ShellSection\.Gate \? "building-open" : "none"\)"/);
-    assert.match(town, /data-sound-cue="@\(Progress\.LeaderboardUnlocked \? "building-open" : "none"\)"/);
+    assert.match(town, /data-sound-cue="@\\(building\\.State == TownBuildingState\\.Active \\? "building-open" : "none"\\)"/);
+    assert.match(town, /data-sound-cue="none"/);
     assert.ok(manifest.transitionDesign.events['building-open']);
     assert.ok(manifest.transitionDesign.events['hunt-start']);
     assert.ok(manifest.transitionDesign.events['trail-enter']);
