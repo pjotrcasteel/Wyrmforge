@@ -111,8 +111,8 @@ public sealed class TownCrowdTests
     {
         var map = Scene();
         var origin = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
-        Assert.IsGreaterThanOrEqualTo(7, map.Obstacles.Count);
-        Assert.IsGreaterThanOrEqualTo(10, map.Clearance);
+        Assert.IsTrue(map.Obstacles.Count >= 7);
+        Assert.IsTrue(map.Clearance >= 10);
 
         foreach (var destination in map.Destinations)
         {
@@ -127,8 +127,8 @@ public sealed class TownCrowdTests
     {
         var map = Scene();
         var foreground = map.Occluders.Single(part => part.Id == "well-foreground");
-        Assert.IsLessThan(365, foreground.Clip.Min(point => point.Y));
-        Assert.IsGreaterThan(580, foreground.DepthY);
+        Assert.IsTrue(foreground.Clip.Min(point => point.Y) < 365);
+        Assert.IsTrue(foreground.DepthY > 580);
         Assert.IsTrue(foreground.Clip.Any(point => point.X < 670),
             "Sign and well sides need an occlusion silhouette, not only a roof rectangle.");
     }
