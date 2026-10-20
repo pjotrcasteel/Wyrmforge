@@ -126,11 +126,18 @@ def paint(base, building, night):
         # Repair the chimney plume from the roof behind the vacant workshop.
         replace_from_neighbour([(109, 425), (163, 423), (175, 481), (112, 486)], offset_x=-70, softness=5)
         # The fire is *inside* the forge cavity; retain brick arches and the anvil.
-        # Transfer adjacent intact dark workshop masonry; a generic inpaint
-        # blurred the hearth into a brown amorphous hole.
-        replace_from_neighbour([(155, 657), (180, 650), (211, 653),
-                                (229, 689), (217, 707), (155, 710)],
-                               offset_x=-84, darkness=.52 if night else .66, softness=3)
+        # Keep the illustrated brick opening and tools, but neutralise every
+        # emission pixel *inside* the hearth. Donor foliage/inpainting previously
+        # looked like a pasted hole and obscured the workshop entrance.
+        hearth_mask = mask_ellipse(size, 194, 674, 44, 40, 5)
+        hsv = cv2.cvtColor(canvas, cv2.COLOR_RGB2HSV).astype(np.float32)
+        warm = (hsv[..., 0] < 28) & (hsv[..., 1] > 72) & (hsv[..., 2] > 70)
+        core = hearth_mask * warm.astype(np.float32)
+        hsv[..., 1] *= 1 - core * .8
+        hsv[..., 2] *= 1 - core * .86
+        replacement = cv2.cvtColor(np.clip(hsv, 0, 255).astype(np.uint8),
+                                   cv2.COLOR_HSV2RGB)
+        canvas = apply_masked(canvas, replacement, hearth_mask)
         for entry in [(186, 686, 38, 40), (298, 659, 20, 28),
                       (394, 647, 18, 29), (453, 661, 18, 25),
                       (54, 670, 23, 43), (324, 628, 24, 28)]:
@@ -152,16 +159,16 @@ def paint(base, building, night):
         # The hallucinated black silhouette drawn across the wooden Hall door
         # is repaired from the neighbouring door texture only for the VACANT
         # variant. No human silhouettes should be baked into an empty Hall.
-        # Mirror the undamaged left-hand wooden door planks across the hinge,
-        # not a smeared inpainting circle or a separately generated doorway.
-        left = canvas[626:708, 1290:1310].copy()
-        mirrored = cv2.resize(np.flip(left, axis=1), (25, 82),
-                              interpolation=cv2.INTER_LINEAR)
+        # Borrow existing carved door timber from the Hall's own right-hand
+        # entrance, instead of hallucinating a blurred replacement. The tall
+        # central wooden door remains inside its original masonry arch.
+        timber = cv2.resize(base[652:750, 1520:1558], (37, 77),
+                            interpolation=cv2.INTER_LINEAR)
         repaired = canvas.copy()
-        repaired[626:708, 1310:1335] = mirrored
+        repaired[631:708, 1297:1334] = timber
         canvas = apply_masked(canvas, repaired,
-                              mask_polygon(size, [(1310, 628), (1327, 633),
-                                                  (1330, 697), (1310, 705)], 2))
+                              mask_polygon(size, [(1305, 635), (1323, 636),
+                                                  (1329, 701), (1299, 700)], 3))
     else:
         raise ValueError(building)
 
