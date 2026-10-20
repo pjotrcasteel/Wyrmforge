@@ -5,7 +5,7 @@ import numpy as np,torch
 import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
 rig=Path(sys.argv[1]);out=rig/'motion-review-v1';out.mkdir(exist_ok=False);profile=json.loads((rig/'profile.json').read_text());cell=192
-t=lambda a,dtype=torch.float32:torch.tensor(a,dtype=dtype,device='cuda').contiguous();ctx=dr.RasterizeCudaContext();texture_image=Image.open(rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(texture_image)/255).flip(0)[None];palette=texture_image.quantize(colors=56);pal=palette.getpalette()[:168]+[82,15,12,145,30,10,214,55,9,255,100,12,255,153,25,255,204,58,255,237,130,255,251,211];palette.putpalette(pal)
+t=lambda a,dtype=torch.float32:torch.tensor(np.asarray(a),dtype=dtype,device='cuda').contiguous();ctx=dr.RasterizeCudaContext();texture_image=Image.open(rig/'ashfang-albedo.png' if (rig/'ashfang-albedo.png').exists() else rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(texture_image)/255).flip(0)[None];palette=texture_image.quantize(colors=56);pal=palette.getpalette()[:168]+[82,15,12,145,30,10,214,55,9,255,100,12,255,153,25,255,204,58,255,237,130,255,251,211];palette.putpalette(pal)
 mvps=[]
 for eye in [(2,-3,2.2),(3,0,.7)]:
     f=-np.array(eye,float);f/=np.linalg.norm(f);right=np.cross(f,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(right,f);m=np.eye(4,dtype=np.float32);m[0,:3]=right/1.2;m[1,:3]=up/1.2;m[2,:3]=f*.2;m[1,3]=-.10;mvps.append(m)

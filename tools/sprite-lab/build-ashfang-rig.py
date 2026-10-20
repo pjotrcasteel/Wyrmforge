@@ -5,22 +5,28 @@ import bpy,sys,math,json
 import numpy as np
 from pathlib import Path
 from mathutils import Vector,Quaternion
+sys.path.insert(0,str(Path(__file__).parent))
+from ashfang_wings import rebuild_wings,wing_layout
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
+v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
-material=bpy.data.materials.new('Ashfang original card-derived appearance');material.use_nodes=True;texture=material.node_tree.nodes.new('ShaderNodeTexImage');texture.image=bpy.data.images.load(str(folder/'textured-v1/hollow-albedo.png'));texture.image.pack();texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
+material=bpy.data.materials.new('Ashfang original card-derived appearance');material.use_nodes=True;texture=material.node_tree.nodes.new('ShaderNodeTexImage')
+base=bpy.data.images.load(str(folder/'textured-v1/hollow-albedo.png'));raw=np.empty(len(base.pixels),np.float32);base.pixels.foreach_get(raw);raw=raw.reshape(1024,1024,4)
+card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.png'));cp=np.empty(len(card.pixels),np.float32);card.pixels.foreach_get(cp);cp=cp.reshape(card.size[1],card.size[0],4);rows=(np.arange(1024)*card.size[1]//1024);cols=(np.arange(1024)*card.size[0]//1024);atlas=np.concatenate([raw,cp[rows[:,None],cols[None,:]]],axis=1)
+image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
 def bone(n,a,b,parent=None,deform=True):bones[n]=dict(head=np.array(a,float),tail=np.array(b,float),parent=parent,deform=deform)
 bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.035),'chest');bone('neck.1',(0,-.25,.035),(0,-.32,.045),'neck.0');bone('head',(0,-.32,.045),(0,-.43,.015),'neck.1');bone('jaw',(0,-.32,.012),(0,-.43,-.035),'head');bone('mouth',(0,-.435,-.005),(0,-.49,-.005),'head',False)
 for side,sign in [('L',1),('R',-1)]:
     for limb,points,parent in [('fore',[(sign*.115,-.18,-.005),(sign*.15,-.22,-.075),(sign*.17,-.29,-.165),(sign*.17,-.37,-.185)],'chest'),('hind',[(sign*.105,.17,-.025),(sign*.18,.095,-.075),(sign*.18,.23,-.16),(sign*.18,.13,-.185)],'pelvis')]:
         for i in range(3):bone(f'{limb}.{i}.{side}',points[i],points[i+1],parent if i==0 else f'{limb}.{i-1}.{side}')
-    points=[(sign*.075,-.11,.055),(sign*.17,.015,.12),(sign*.205,.205,.13)]
+    wr,we,ww,middles,tips=wing_layout(sign);points=[wr,we,ww]
     bone('wing.upper.'+side,points[0],points[1],'chest');bone('wing.fore.'+side,points[1],points[2],'wing.upper.'+side)
     for finger in range(4):
-        middle=(sign*(.11+finger*.035),.28+finger*.012,.12-finger*.012);tip=(sign*(.075+finger*.048),.39-finger*.015,.09-finger*.018)
+        middle=middles[finger];tip=tips[finger]
         bone(f'wing.finger.{finger}.0.{side}',points[2],middle,'wing.fore.'+side);bone(f'wing.finger.{finger}.1.{side}',middle,tip,f'wing.finger.{finger}.0.{side}')
 tail=[(0,.23,-.025),(0,.28,-.04),(0,.33,-.055),(-.01,.38,-.065),(-.025,.43,-.08),(-.035,.47,-.10),(-.04,.495,-.12)]
 for i in range(6):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
@@ -36,12 +42,12 @@ def distance(p,a,b):
 ownership={}
 for index,p in enumerate(v):
     x,y,z=p;side='L' if x>=0 else 'R'
-    if z>.055 and y>-.22 and abs(x)>.065:
+    if index>=body_count:
         permitted=[n for n in names if n.startswith('wing.') and n.endswith('.'+side)];region='wing'
     elif y>.27 and abs(x)<.075:permitted=[n for n in names if n.startswith('tail.')];region='tail'
-    elif y<-.30 and abs(x)<.105:
+    elif y<-.30 and abs(x)<.105 and z>-.08:
         permitted=['head','jaw'] if z<.02 else ['head','neck.1'];region='head'
-    elif z<-.055 and abs(x)>.07:
+    elif z<-.055 and abs(x)>.035:
         limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.2.{side}'] if z<-.15 else [f'{limb}.{i}.{side}' for i in range(3)];region=limb
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
     else:permitted=['pelvis','spine','chest'];region='body'
