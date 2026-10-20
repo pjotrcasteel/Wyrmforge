@@ -1,5 +1,8 @@
 # WyrmForge art direction
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../docs/canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 ## Approved world concept — 14 October 2026
 
 ![Protected city and abandoned outskirts](world/protected-city-outskirts-v1.png)

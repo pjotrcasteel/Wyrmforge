@@ -1,5 +1,8 @@
 # WyrmForge long-term progression contract
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 ## North star
 
 Persistent progression exists to make the player think **"one more run, because I want to try or unlock that"**, not to make old content trivial through permanent numerical inflation.
