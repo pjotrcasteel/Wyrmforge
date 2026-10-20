@@ -366,6 +366,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
         await Expect(Page.Locator(".fireball-hero-art")).ToBeVisibleAsync();
+        Assert.IsTrue(await Page.Locator(".fireball-chamber").EvaluateAsync<bool>(
+            "element => getComputedStyle(element).backgroundImage.includes('arcane-nexus/ritual-chamber.svg')"),
+            "The live Nexus must load its independent Gothic chamber layer.");
         Assert.IsTrue(await Page.Locator(".fireball-hero-art").EvaluateAsync<bool>("img => img.complete && img.naturalWidth > 0"),
             "The approved Fireball artwork must actually load, rather than silently falling back to CSS.");
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
@@ -382,15 +385,26 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "The upgrade panel must render the same canonical Fire sigil as character creation.");
         await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+        await ScreenshotAsync("arcane-nexus-fireball-390.png");
 
         await Page.Locator(".fireball-socket--1").ClickAsync();
+        await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
         await Expect(Page.Locator(".fireball-context h3")).ToContainTextAsync("Select a mutator");
         await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
+        Assert.AreEqual(3, await Page.Locator(".fireball-mutator img.fireball-mutation-art").CountAsync(),
+            "Implemented mutations each have authored, separate pixel-art assets.");
+        Assert.IsTrue(await Page.Locator(".fireball-mutator img.fireball-mutation-art").EvaluateAllAsync<bool>(
+            "images => images.every(image => image.complete && image.naturalWidth > 0)"),
+            "All implemented Fireball mutation art must load in the actual selector.");
         await Page.Locator(".fireball-mutator").Filter(new() { HasText = "Detonation" }).ClickAsync();
         await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Detonation");
+        await Expect(Page.Locator(".fireball-socket--1 img.fireball-mutation-art")).ToBeVisibleAsync();
 
         await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        Assert.AreEqual("hidden", await Page.Locator("[data-game-version]").EvaluateAsync<string>("element => getComputedStyle(element).visibility"));
+        await Expect(Page.Locator(".fireball-mini-pips i")).ToHaveCountAsync(10);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
         await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(3);

@@ -216,3 +216,6 @@ body:has(.spellcraft) .wyrmforge-sound-controls { display:none; }
 .settings-audio-slot .wyrmforge-sound-lab-toggle { flex:1 1 110px; min-height:46px; border-radius:8px; }
 .settings-audio-slot .wyrmforge-sound-samples { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .settings-audio-slot .wyrmforge-sound-volume { grid-template-columns:66px minmax(0,1fr) 36px; }
+
+/* The build stamp must not obscure the Fireball upgrade preview on mobile. */
+body:has(.fireball-ritual) [data-game-version] { visibility: hidden; }
