@@ -385,6 +385,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "The upgrade panel must render the same canonical Fire sigil as character creation.");
         await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+        await ScreenshotAsync("arcane-nexus-fireball-390.png");
 
         await Page.Locator(".fireball-socket--1").ClickAsync();
         await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
