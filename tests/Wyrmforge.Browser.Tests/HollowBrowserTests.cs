@@ -8,6 +8,37 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class HollowBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task Mobile_MovingAttack_KeepsLocomotionPhase_AndPausesBothLayers()
+    {
+        var baseUrl = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false");
+        await AttachDiagnosticsAsync();
+        await Page.WaitForFunctionAsync(@"() => window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hollow.entities.some(e=>e.clip==='attack'&&e.frame<4)");
+        await Page.Locator(".enemy-lab canvas").FocusAsync();
+        await Page.Keyboard.DownAsync("ArrowRight");
+        // Sample inside the page so browser round trips cannot skip the action.
+        var advanced = await Page.EvaluateAsync<bool>(@"async () => {
+            const base=new Set(),action=new Set();
+            for(let i=0;i<16;i++){
+                await new Promise(resolve=>setTimeout(resolve,50));
+                const d=window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
+                if(d.renderingFailed)return false;
+                for(const e of d.hollow.entities)if(e.layered&&e.clip==='attack'){base.add(e.baseFrame);action.add(e.frame);}
+            }
+            return base.size>2&&action.size>2;
+        }");
+        await Page.Keyboard.UpAsync("ArrowRight");
+        Assert.IsTrue(advanced, "Walking support and attack frames must both advance during pursuit.");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Pause", Exact = true }).ClickAsync();
+        await Page.WaitForTimeoutAsync(150);
+        const string read = "() => JSON.stringify(window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas')).hollow.entities)";
+        var before = await Page.EvaluateAsync<string>(read);
+        await Page.WaitForTimeoutAsync(300);
+        Assert.AreEqual(before, await Page.EvaluateAsync<string>(read));
+    }
+
+    [TestMethod]
     public async Task Mobile_Hollow_UsesApprovedWalkAttackAndHeldDeath_InRealCombat()
     {
         var baseUrl = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
