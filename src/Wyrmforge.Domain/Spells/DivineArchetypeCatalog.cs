@@ -61,6 +61,12 @@ public static class DivineArchetypeCatalog
             null, null, null),
     ];
 
+    /// <summary>
+    /// Current character-creation release gate: build and validate the complete Tier-I Fire experience
+    /// before opening additional schools. Existing characters keep their saved affinity.
+    /// </summary>
+    public static bool CanCreateCharacter(DivineArchetype id) => id == DivineArchetype.Pyromancer;
+
     public static DivineArchetypeDefinition Get(DivineArchetype id) => All.Single(definition => definition.Id == id);
 
     /// <summary>Migration bridge for the existing four-school implementation, not a character-school respec operation.</summary>

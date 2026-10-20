@@ -18,6 +18,15 @@ public sealed class DivineArchetypeCatalogTests
     }
 
     [TestMethod]
+    public void CharacterCreation_FireOnlyUntilOtherSchoolsAreReleased()
+    {
+        var available = DivineArchetypeCatalog.All.Where(definition =>
+            DivineArchetypeCatalog.CanCreateCharacter(definition.Id)).ToArray();
+        Assert.AreEqual(1, available.Length);
+        Assert.AreEqual(DivineArchetype.Pyromancer, available[0].Id);
+    }
+
+    [TestMethod]
     public void ExistingSchools_KeepTheirSignatureAndLesserWyrmMappings()
     {
         var anchors = new (DivineArchetype Archetype, SpellSchool School, SpellId Signature, DragonId Wyrm)[]

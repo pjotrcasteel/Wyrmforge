@@ -46,6 +46,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
+    [Parameter] public IReadOnlyList<Wyrmforge.Domain.Progression.Signature.FireballMutationId> FireballMutations { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
     [Parameter] public SpellId? PreferredPrimary { get; set; }
@@ -56,7 +57,7 @@ public partial class ArenaView : IAsyncDisposable
     private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
         PreparedMutations.Select(LaboratoryCatalog.Get).FirstOrDefault(mutation => mutation.Foundation == spell);
     private static string MutationIcon(LaboratoryMutationDefinition mutation) => mutation.SpecimenWyrm == DragonId.Stormcoil ? "storm" : "frost";
-    private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
+
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
     private IReadOnlyList<RelicDefinition> CurrentRelicChoices => simulation?.PendingRelicChoices ?? Array.Empty<RelicDefinition>();
@@ -92,7 +93,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -102,6 +103,9 @@ public partial class ArenaView : IAsyncDisposable
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
+        // Character creation already chose the Divine school. Commit its signature without a Hunt overlay.
+        if (PreferredPrimary is { } signature && ChoosingPrimary)
+            await ChoosePrimaryAsync(signature);
     }
 
     [JSInvokable]

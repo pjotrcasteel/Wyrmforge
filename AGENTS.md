@@ -1,6 +1,6 @@
 # Working on Wyrmforge
 
-Read the authoritative design linked at the top of README.md before changing gameplay. Check current main and open PRs; preserve work from concurrent sessions.
+Start at [docs/canon/README.md](docs/canon/README.md). Read only the relevant canonical topic documents before changing gameplay, art, audio, UI or platform behavior. They are the sole intended-design authority; README release entries, dated handovers, RFCs and playtest notes are evidence, not competing specifications. Check current main and open PRs; preserve work from concurrent sessions. Check current main and open PRs; preserve work from concurrent sessions.
 
 ## Git checkpoints
 

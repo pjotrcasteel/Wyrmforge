@@ -13,6 +13,9 @@ public sealed partial class RunSimulation
     private void RegisterBurningGround(ProjectileState projectile, Vector2D position)
     {
         if (projectile.Spell != SpellId.FireBolt || projectile.SplashRadius <= 0) return;
+        // Detonation alone grants an explosion, not a free persistent hazard at Rank I.
+        // Keep existing Rank II+ Fireball behavior, while Scorched Earth enables ground fire at Rank I.
+        if (projectile.Rank < 2 && !HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)) return;
         burningGrounds.Add(new BurningGroundState(position, projectile.Damage * BurningGroundDamageFraction));
     }
 

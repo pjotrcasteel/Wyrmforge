@@ -39,16 +39,21 @@
             const splash = document.getElementById("wyrmforge-ignition");
             const status = document.getElementById("ignition-status");
             const retry = document.getElementById("ignition-retry");
-            const retryKey = "wyrmforge-boot-retry-" + build;
             const startedAt = performance.now();
+            performance.mark("wyrmforge:boot-start");
             const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const minimumIntroMs = reducedMotion ? 0 : 1100;
             let started = false;
 
-            const versionedResource = (type, name, defaultUri) => {
+            // The framework supplies a SHA-256 integrity hash for immutable boot assets.
+            // Reuse their cached URLs between releases; change only when bytes change.
+            // Files without a hash still use the deployment SHA for cache invalidation.
+            const versionedResource = (type, name, defaultUri, integrity) => {
                 if (!defaultUri) return defaultUri;
                 const uri = new URL(defaultUri, document.baseURI);
-                uri.searchParams.set("v", build);
+                const revision = typeof integrity === "string" && /^sha256-[A-Za-z0-9+/=]+$/.test(integrity)
+                    ? integrity : build;
+                uri.searchParams.set("v", revision);
                 return uri.toString();
             };
 
@@ -60,29 +65,15 @@
                 retry.hidden = false;
             };
 
-            retry.addEventListener("click", () => {
-                try { sessionStorage.removeItem(retryKey); } catch { /* Storage can be disabled. */ }
-                window.location.reload();
-            });
-
+            // A real first download can exceed nine seconds on mobile. Never reload a
+            // healthy, still-progressing WASM download: it would discard all progress.
+            retry.addEventListener("click", () => window.location.reload());
+            const slowStartupTimer = window.setTimeout(() => {
+                if (!started) status.textContent = "FIRST LAUNCH MAY TAKE A MOMENT";
+            }, 8000);
             const recoveryTimer = window.setTimeout(() => {
-                if (started) return;
-                const url = new URL(window.location.href);
-                if (url.searchParams.get("boot") === build) {
-                    fail(new Error("Blazor startup timed out after automatic retry."));
-                    return;
-                }
-
-                try {
-                    if (sessionStorage.getItem(retryKey)) {
-                        fail(new Error("Blazor startup timed out after automatic retry."));
-                        return;
-                    }
-                    sessionStorage.setItem(retryKey, "1");
-                } catch { /* The URL marker still prevents repeated automatic retries. */ }
-                url.searchParams.set("boot", build);
-                window.location.replace(url.toString());
-            }, 9000);
+                if (!started) fail(new Error("Startup still incomplete. Manual retry available."));
+            }, 90000);
 
             Promise.resolve()
                 .then(() => {
@@ -92,7 +83,9 @@
                 .then(() => {
                     started = true;
                     window.clearTimeout(recoveryTimer);
-                    try { sessionStorage.removeItem(retryKey); } catch { /* Storage can be disabled. */ }
+                    window.clearTimeout(slowStartupTimer);
+                    performance.mark("wyrmforge:boot-ready");
+                    performance.measure("wyrmforge:boot", "wyrmforge:boot-start", "wyrmforge:boot-ready");
 
                     const remaining = Math.max(0, minimumIntroMs - (performance.now() - startedAt));
                     window.setTimeout(() => {
@@ -103,6 +96,7 @@
                 })
                 .catch(error => {
                     window.clearTimeout(recoveryTimer);
+                    window.clearTimeout(slowStartupTimer);
                     fail(error);
                 });
         })();

@@ -1,67 +1,53 @@
-@using Microsoft.JSInterop
-@inject IJSRuntime JavaScript
-
-@* A single registered 1672×941 panorama across three horizontally swipeable
-   views. Vacant patches are authored image layers, never CSS dimming filters.
-   Preview states are local to this component and do not change progression. *@
+@* Night town vacancy follows actual game progress, not a local preview toggle. *@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
     <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square">
-        <img class="refuge-town-night-base" src="art/town/night-active.webp?v=132"
+        <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
-        @if (!nexusActive)
+        @if (!NexusUnlocked)
         {
-            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-ArcaneNexus.png?v=132"
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-ArcaneNexus.png?v=140"
                  style="left:0%;top:0%;width:36.9617%;height:61.8491%" alt="" draggable="false" />
         }
-        @if (!blacksmithActive)
+        @if (!ForgeUnlocked)
         {
-            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Blacksmith.png?v=132"
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Blacksmith.png?v=140"
                  style="left:0%;top:37.5133%;width:37.8589%;height:62.4867%" alt="" draggable="false" />
         }
-        @if (!codexActive)
+        @if (!CodexUnlocked)
         {
-            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Codex.png?v=132"
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Codex.png?v=140"
                  style="left:58.7321%;top:0%;width:41.2679%;height:58.2359%" alt="" draggable="false" />
         }
-        @if (!hallActive)
+        @if (!HallUnlocked)
         {
-            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-HallOfFame.png?v=132"
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-HallOfFame.png?v=140"
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
         <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
-                data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(nexusActive))"
-                data-sound-cue="none" title="@ToggleLabel("Arcane Nexus", nexusActive)"
-                aria-label="@ToggleLabel("Arcane Nexus", nexusActive)" @onclick='() => ToggleBuilding("build")'></button>
+                data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(NexusUnlocked))"
+                data-sound-cue="@(NexusUnlocked ? "building-open" : "none")" title="@BuildingLabel("Arcane Nexus", NexusUnlocked)"
+                aria-label="@BuildingLabel("Arcane Nexus", NexusUnlocked)" @onclick='() => OnBuilding.InvokeAsync("build")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--blacksmith"
-                data-town-building="forge" data-town-state="@(TownBuildingVisuals.StateName(blacksmithActive))"
-                data-sound-cue="none" title="@ToggleLabel("Blacksmith", blacksmithActive)"
-                aria-label="@ToggleLabel("Blacksmith", blacksmithActive)" @onclick='() => ToggleBuilding("forge")'></button>
+                data-town-building="forge" data-town-state="@(TownBuildingVisuals.StateName(ForgeUnlocked))"
+                data-sound-cue="@(ForgeUnlocked ? "building-open" : "none")" title="@BuildingLabel("Blacksmith", ForgeUnlocked)"
+                aria-label="@BuildingLabel("Blacksmith", ForgeUnlocked)" @onclick='() => OnBuilding.InvokeAsync("forge")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--codex"
-                data-town-building="codex" data-town-state="@(TownBuildingVisuals.StateName(codexActive))"
-                data-sound-cue="none" title="@ToggleLabel("Codex", codexActive)"
-                aria-label="@ToggleLabel("Codex", codexActive)" @onclick='() => ToggleBuilding("codex")'></button>
+                data-town-building="codex" data-town-state="@(TownBuildingVisuals.StateName(CodexUnlocked))"
+                data-sound-cue="@(CodexUnlocked ? "building-open" : "none")" title="@BuildingLabel("Codex", CodexUnlocked)"
+                aria-label="@BuildingLabel("Codex", CodexUnlocked)" @onclick='() => OnBuilding.InvokeAsync("codex")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--hall"
-                data-town-building="legends" data-town-state="@(TownBuildingVisuals.StateName(hallActive))"
-                data-sound-cue="none" title="@ToggleLabel("Hall of Fame", hallActive)"
-                aria-label="@ToggleLabel("Hall of Fame", hallActive)" @onclick='() => ToggleBuilding("legends")'></button>
+                data-town-building="legends" data-town-state="@(TownBuildingVisuals.StateName(HallUnlocked))"
+                data-sound-cue="@(HallUnlocked ? "building-open" : "none")" title="@BuildingLabel("Hall of Fame", HallUnlocked)"
+                aria-label="@BuildingLabel("Hall of Fame", HallUnlocked)" @onclick='() => OnBuilding.InvokeAsync("legends")'></button>
 
         <button type="button" class="refuge-town-spot refuge-town-spot--gate"
                 data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
                 @onclick="() => OnGate.InvokeAsync()"></button>
     </div>
 </div>
-<div class="refuge-town-toggle-announcement" role="status" aria-live="polite">@lastToggle</div>
-<nav class="refuge-canonical-districts" aria-label="Explore the town">
-    <button type="button" data-sound-cue="none" aria-label="Show west town with Arcane Nexus and Blacksmith"
-            @onclick="() => ShowDistrictAsync(0)">WEST</button>
-    <button type="button" data-sound-cue="none" aria-label="Show World Gate"
-            @onclick="() => ShowDistrictAsync(1)">GATE</button>
-    <button type="button" data-sound-cue="none" aria-label="Show east town with Codex and Hall of Fame"
-            @onclick="() => ShowDistrictAsync(2)">EAST</button>
-</nav>
 
 @code {
     [Parameter] public bool NexusUnlocked { get; set; }
@@ -71,42 +57,11 @@
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public bool NexusPointsAvailable { get; set; }
     [Parameter] public EventCallback OnGate { get; set; }
+    [Parameter] public EventCallback<string> OnBuilding { get; set; }
 
-    // Temporary preview mode: every building starts active, regardless of player
-    // unlocks; toggling must never mutate the account or unlock gameplay systems.
-    private bool nexusActive = true;
-    private bool blacksmithActive = true;
-    private bool codexActive = true;
-    private bool hallActive = true;
-    private string lastToggle = string.Empty;
     private string GateLabel => FirstHunt ? "BEGIN FIRST HUNT" : "BEGIN HUNT";
 
-    private void ToggleBuilding(string key)
-    {
-        switch (key)
-        {
-            case "build":
-                nexusActive = !nexusActive;
-                lastToggle = $"Arcane Nexus: {(nexusActive ? "active" : "vacant")}";
-                break;
-            case "forge":
-                blacksmithActive = !blacksmithActive;
-                lastToggle = $"Blacksmith: {(blacksmithActive ? "active" : "vacant")}";
-                break;
-            case "codex":
-                codexActive = !codexActive;
-                lastToggle = $"Codex: {(codexActive ? "active" : "vacant")}";
-                break;
-            case "legends":
-                hallActive = !hallActive;
-                lastToggle = $"Hall of Fame: {(hallActive ? "active" : "vacant")}";
-                break;
-        }
-    }
-
-    private static string ToggleLabel(string name, bool active) =>
-        $"{name} — { (active ? "active" : "vacant") }. Tap to mark {(active ? "vacant" : "active")}.";
-
-    private Task ShowDistrictAsync(int index) =>
-        JavaScript.InvokeVoidAsync("wyrmforgeTown.show", index).AsTask();
+    private static string BuildingLabel(string name, bool unlocked) => unlocked
+        ? $"Enter {name}"
+        : $"{name} locked. Tap for unlock requirements.";
 }

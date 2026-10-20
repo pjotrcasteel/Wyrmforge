@@ -1,4 +1,7 @@
 # WyrmForge — Ancient Resonance
+
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
 Sound identity 1.0 · Prototype 0.0.108
 
 ## Intent

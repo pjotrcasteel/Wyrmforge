@@ -1,5 +1,57 @@
 # Wyrmforge
 
+## Hotfix 0.0.140 — Night-only Refuge, rollback of damaged v0.0.139 images
+
+- Reverted all eight v0.0.139 daytime and nighttime vacancy image changes **byte-for-byte** to the previous v0.0.138 artwork. No new generation, image processing, or redesign.
+- Temporarily removed the Day/Auto/Night preference controls; the town always uses the original night panorama and original nighttime vacancy layers, regardless of local browser clock or saved choice. Daytime assets remain in the repo but cannot load in the live town.
+- Gameplay unlock conditions, hit targets, the World Gate, NPC plans, and the eight approved canonical building source images are unchanged.
+- Further visual repairs require explicitly approved per-building artwork, one at a time. This hotfix intentionally does not claim to improve the old art.
+
+
+## Prototype 0.0.139 — Repair vacant Refuge artwork
+
+- Replace independently regenerated vacancy patches with pixel-registered corrections of the current day/night panorama. Each locked building retains its exact geometry and working interaction while its powered fixtures are dimmed, chimney plumes are removed, and the Hall entrance is repaired from same-scene wood.
+- No modifications to the eight owner-approved canonical source building PNGs. Shared environment and the World Gate remain unchanged. Reproducible art generation and visual proof in `tools/art/repair_refuge_vacancy.py` and `docs/art/previews/refuge-{day,night}-all-vacant.webp`.
+- Full real-device iPhone Safari acceptance remains separate from GitHub CI.
+
+
+**Canonical product documentation:** [docs/canon/](docs/canon/README.md). Intended gameplay, art, audio, UX, modes and engineering rules each have one current topic home. The prototype changelog below is historical delivery evidence, not a second design specification.
+
+## Prototype 0.0.139 — Faster first launch and stable cache reuse
+
+- Slow first launches no longer trigger a forced reload after 9 seconds. The initial WASM download continues normally, with a clear slow-start notice; a manual **Try Again** remains for actual failures.
+- Blazor boot resources use their .NET-provided SHA-256 integrity hash as a stable URL cache key, so unchanged DLL/WASM assets can be reused across releases. Unhashed resources remain deployment-versioned.
+- Record the startup duration as a browser performance measure `wyrmforge:boot`. JS regression tests check the boot-resource and retry contracts.
+
+## Prototype 0.0.138 — Refuge Day / Night / Auto lighting
+
+- Settings now provides **Auto / Day / Night**. Auto follows the browser/device local time (day 07:00–18:59); the override persists and does not change gameplay progress or building vacancy rules.
+- Uses the approved matching daylight panorama and authored daylight vacancy layers; preserves the canonical nighttime art.
+- Implemented and tested in [the town lighting record](docs/art/town-day-night-device-clock-2026-10-20.md).
+
+
+## Prototype 0.0.138 — Fire-first character creation
+
+- Choose your magic: **Fire is the only available new-character school** until its Tier-I signature and mutation gameplay are fully implemented and accepted. Frost, Storm, Arcane, Necromancer and Summoner remain visible and locked.
+- Character creation removes the long lore explanation and speculative respec instructions. Only the direct choice and character name remain.
+- Existing non-Fire characters remain intact; the gate is for **new** characters only. The World Gate still independently chooses Hunt region.
+- Six-school mutation canon is documented in the authoritative design §3.0.
+
+## Prototype 0.0.137 — Gameplay night town and swipe-only navigation
+
+- The accepted night panorama now uses the player's persistent building unlocks, opens real destinations, and explains locked buildings without toggling game state.
+- WEST / GATE / EAST preview controls, temporary building switches, and Settings preview shortcuts are removed. Swipe, desktop drag and accessible keyboard navigation remain.
+- World Gate, author-approved images and all Divine school creation behavior from v0.0.136 are preserved. [Night town integration](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+
+
+## Prototype 0.0.136 — Character school creation and elemental icon cleanup
+
+- Choose a permanent Divine magic school once during character creation, before entering Refuge. Four schools have working signatures; Necromancer and Summoner remain reserved.
+- Arena uses the character's saved signature automatically, without an additional First Oath after launching each Hunt. Existing preferred-primary saves migrate safely, and loadouts never respec the Divine school.
+- World Gate reuses the approved pixel paintings with hard square cutoffs and baked labels masked away; each tile has just one accessible label.
+- Wyrm lineage and Hunt tier remain independent from the character school. Full respec remains intentionally locked/TBD.
+- [Compatibility and QA](docs/handover/2026-10-20-character-school-and-sigil-fix.md).
+
 ## Prototype 0.0.135 — Moving attacks and directional sprite layers
 
 - Hollow attacks retain their walking support animation while pursuing the player, and turn through existing directional views without restarting either clip.
@@ -23,7 +75,7 @@
 
 - World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
 - Hunt tiers I–V are derived from the existing WyrmTier contract; **only Tier I is playable**. Five future mutation-mastery tiers are a separate domain concept and must not affect currently earned spell ranks.
-- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
+- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/canon/magic-and-combat.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
 - **Not shipped:** new character creation or school-respec flows, Fireball rework, ten playable mutations per school, and higher-tier encounters. [Implementation checkpoint](docs/handover/2026-10-20-divine-magic-foundation-status.md).
 
 ## Prototype 0.0.132 — Unified night Refuge town preview (draft)
@@ -86,9 +138,9 @@
 
 ## Authoritative product design and development continuation
 
-**Single product-design source of truth:** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md).
+**Canonical topic index (single source of truth):** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/canon/README.md).
 
-This consolidates the four earlier handovers, resolves their contradictory instructions, and includes the explicit **P0–P9 priorities in §12**. Claude and other development agents should follow this file for intended product behavior, rather than layering older specifications.
+The living canonical documents are now split by topic in `docs/canon/`, including the [priorities](docs/canon/roadmap.md). The former combined handover is [archived](docs/archive/2026-10-20-unified-master-design-v1.3.md). Agents must follow the topic documents, not layer dated handovers.
 
 **Animated character production:** follow the [art-card-to-spritesheet production algorithm](docs/art/card-to-spritesheet-production.md) for source preparation, rigging, walking/attack/hurt/death, transitions, rendering, export, visual acceptance and integration. This is a documented procedure; its new rigged-character pipeline is not yet implemented or proven with an accepted Hollow asset.
 

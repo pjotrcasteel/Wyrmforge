@@ -75,13 +75,15 @@
 .forge-lab-entry:hover { background:#24304a; }
 .forge-lab-entry i.px-icon { width:16px; }
 /* Arcane Nexus facets: one place, two questions. Web = where a power lives; Spellcraft = what elements become. */
-.nexus-facets { display:grid; grid-template-columns:1fr 1fr; gap:0; width:min(520px,100%); margin:0 auto 10px; border:1px solid #403346; border-radius:6px; overflow:hidden; }
+.nexus-facets { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; width:min(520px,100%); margin:0 auto 10px; border:1px solid #403346; border-radius:6px; overflow:hidden; }
 .nexus-facets button { display:grid; gap:2px; min-height:48px; padding:6px 10px; border:0; background:#120e18; color:#b7aaba; font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .nexus-facets button + button { border-left:1px solid #403346; }
 .nexus-facets b { font:500 .95rem/1.1 Georgia,serif; }
 .nexus-facets small { overflow:hidden; font-size:.64rem; letter-spacing:.04em; white-space:nowrap; text-overflow:ellipsis; }
 .nexus-facets button.active { background:linear-gradient(180deg,#2a2034,#1a1422); color:#fff2d0; box-shadow:inset 0 -2px 0 #cead74; }
 .nexus-facets button:focus-visible { outline:2px solid #cead74; outline-offset:-3px; }
+.nexus-facets button:disabled { opacity:.48; cursor:not-allowed; }
+@media(max-width:360px) { .nexus-facets b { font-size:.79rem; } .nexus-facets button { padding:6px 3px; } }
 
 /* Game entry and diegetic town navigation. The existing pixel city and mage atlas are game assets,
    not a dashboard backdrop. 44px+ destinations stay tappable on small phones. */
@@ -761,4 +763,64 @@
 @media(max-width:360px) {
   .refuge-home .town-square .town-lock-notice { gap:7px; padding-left:10px; }
   .refuge-home .town-lock-copy span { font-size:.70rem; }
+}
+
+
+/* Character creation owns the one-time Divine Wyrm school choice.
+   Emblems come from the approved pixel-art sheet, not recolored glyphs. */
+.character-creation {
+  display:grid;
+  gap:12px;
+  width:min(100%,460px);
+  margin:20px auto;
+  padding:20px 14px;
+  border:1px solid #66523f;
+  border-radius:6px;
+  background:linear-gradient(180deg,#211c29,#100f19);
+  color:#efe4d4;
+  text-align:center;
+  box-shadow:0 15px 35px #000a;
+}
+.character-creation-eyebrow { color:#cfac77; font:600 .72rem/1.2 Georgia,serif; letter-spacing:.23em; }
+.character-creation h1 { margin:0; font:500 clamp(1.35rem,5vw,1.85rem)/1.15 Georgia,serif; }
+.character-creation p { margin:0; font:400 .84rem/1.4 Georgia,serif; color:#bfb2b0; }
+.character-creation-name {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  min-height:44px; border:1px solid #544959; background:#13121c; color:#ead7c4; cursor:pointer;
+  font:500 1rem/1.3 Georgia,serif;
+}
+.character-creation-name small { font:.6rem/1.2 system-ui,sans-serif; color:#caaa76; letter-spacing:.1em; }
+.character-school-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.character-school {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  min-width:0; min-height:114px; border:1px solid #68594e; padding:6px;
+  background:#0d0c15; color:#e9decf; cursor:pointer;
+  font:500 .75rem/1.2 Georgia,serif; letter-spacing:.04em;
+}
+.character-school:focus-visible { outline:2px solid #dfbe82; outline-offset:2px; }
+.character-school:not(:disabled):active { transform:translateY(1px); }
+.character-school:disabled { cursor:not-allowed; border-color:#332e38; color:#807782; }
+.character-school-icon {
+  display:block; width:76px; height:76px;
+  background-image:url('art/divine-lineage-sigils.webp?v=134');
+  background-size:300% 200%; background-repeat:no-repeat;
+  image-rendering:pixelated;
+  /* Hide the baked lettering and hard square edges of the source crop;
+     only the approved central painting remains visible. */
+  -webkit-mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
+  mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
+}
+.character-school--pyromancer .character-school-icon { background-position:0 0; }
+.character-school--cryomancer .character-school-icon { background-position:50% 0; }
+.character-school--stormcaller .character-school-icon { background-position:100% 0; }
+.character-school--arcanist .character-school-icon { background-position:0 100%; }
+.character-school--necromancer .character-school-icon { background-position:50% 100%; }
+.character-school--summoner .character-school-icon { background-position:100% 100%; }
+.character-school:disabled .character-school-icon { filter:grayscale(.9) brightness(.43); }
+.character-school small { color:#aa9b91; font:.65rem/1.2 system-ui,sans-serif; }
+.character-creation-note { color:#ae9f95; font:.67rem/1.4 Georgia,serif; }
+@media(max-width:350px) {
+  .character-creation { gap:8px; padding:14px 9px; }
+  .character-school { min-height:104px; }
+  .character-school-icon { width:64px; height:64px; }
 }

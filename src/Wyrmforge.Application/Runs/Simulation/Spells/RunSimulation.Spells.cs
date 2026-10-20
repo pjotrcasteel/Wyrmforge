@@ -6,6 +6,7 @@ using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -94,10 +95,11 @@ public sealed partial class RunSimulation
         var count = baseCount + buildModifiers.ApplyInt(BuildStatId.ExtraProjectiles) + evolution.ExtraProjectiles;
         var volleyTargets = prismatic && !manualAimEngaged ? NearestTargets(player.Position, count) : Array.Empty<ICombatTarget>();
         var baseDirection = effectiveAim;
+        var meteorHeart = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.MeteorHeart);
         var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier * evolution.ProjectileSpeedMultiplier;
-        var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed);
+        var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed) * (meteorHeart ? 0.75 : 1);
         var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
-        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School);
+        var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School) * (meteorHeart ? 1.15 : 1);
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var piercingArcaneOrb = id == SpellId.ArcaneOrb && rank >= 2;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
@@ -111,14 +113,17 @@ public sealed partial class RunSimulation
             var aimedDirection = manualAimEngaged || volleyTarget is null ? baseDirection : Vector2D.DirectionTo(player.Position, volleyTarget.Position);
             var direction = Vector2D.Rotate(prismatic ? aimedDirection : baseDirection, offset);
             var baseRadius = inferno ? 9 : masteredArcaneOrb ? 7 : profile.Radius;
-            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier * surge.RadiusMultiplier;
+            var radius = baseRadius * evolution.ProjectileRadiusMultiplier * focused.RadiusMultiplier * surge.RadiusMultiplier * (meteorHeart ? 1.45 : 1);
             var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces + focused.BonusPierces + surge.BonusPierces;
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
+            var mutationSplash = id != SpellId.FireBolt ? 0 :
+                HasFireballMutation(FireballMutationId.Detonation) ? 46 :
+                HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
-                Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))),
+                Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius)))),
                 status,
                 pierces,
                 Math.Max(masteryNova, evolution.FrostNovaRadius))

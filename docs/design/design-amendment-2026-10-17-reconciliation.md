@@ -1,5 +1,8 @@
 # Design amendment 2026-10-17 — reconciliation record
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 The 2026-10-17 design amendment overrides the 2026-10-15 Spellcraft handover only where the two conflict. Everything else in the handover still applies.
 
 `Effective design = 2026-10-15 handover + 2026-10-17 amendment − superseded clauses`

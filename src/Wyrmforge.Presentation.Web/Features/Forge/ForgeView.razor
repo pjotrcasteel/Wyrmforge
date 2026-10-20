@@ -1,5 +1,6 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JavaScript
+@using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
@@ -8,6 +9,7 @@
 @using Wyrmforge.Domain.Progression.Onboarding
 @using Wyrmforge.Domain.Progression.Experience
 @using Wyrmforge.Domain.Progression.Laboratory
+@using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.Loadouts
 
 <main class="game-shell @(section == ShellSection.Run ? (enteredTown || SkipTitle ? "menu-home refuge-home" : "menu-home arrival-home") : string.Empty)">
@@ -61,6 +63,30 @@
                         </div>
                     </section>
                 }
+                else if (CharacterSchool is null)
+                {
+                    <section class="character-creation" aria-label="Character creation">
+                        <h1>Choose your magic</h1>
+                        <button class="character-creation-name" type="button" @onclick="OpenNameEditor" aria-label="Edit your character name">
+                            <span>@PlayerName</span><small>EDIT NAME</small>
+                        </button>
+                        <div class="character-school-grid" aria-label="Choose your primary magic school">
+                            @foreach (var school in DivineArchetypeCatalog.All)
+                            {
+                                var ready = DivineArchetypeCatalog.CanCreateCharacter(school.Id) && school.ExistingSignature is not null;
+                                <button @key="school.Id" type="button"
+                                        class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
+                                        disabled="@(!ready)"
+                                        aria-label="@(ready ? $"Choose {school.Name}" : $"{school.Name}, not yet available")"
+                                        @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
+                                    <span class="character-school-icon" aria-hidden="true"></span>
+                                    <strong>@school.Name</strong>
+                                    <small>@(ready ? "AVAILABLE" : "LOCKED")</small>
+                                </button>
+                            }
+                        </div>
+                    </section>
+                }
                 else
                 {
                 <section class="main-menu town-square" aria-label="Refuge town square">
@@ -71,14 +97,15 @@
                             <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
                         </button>
                     </header>
-                    @* Night town preview: tapping buildings toggles local state; the World Gate still opens normally. *@
+                    @* Night town buildings use saved gameplay unlocks; active hotspots navigate to their real destinations. *@
                     <CanonicalTownView NexusUnlocked="@IsUnlocked(ShellSection.Build)"
                                        ForgeUnlocked="@ForgeUnlocked"
                                        CodexUnlocked="@IsUnlocked(ShellSection.Codex)"
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
-                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)" />
+                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)"
+                                        OnBuilding="ActivateCanonicalBuildingAsync" />
                     @if (townLockNotice is { } notice)
                     {
                         <div class="town-lock-notice" role="status" aria-live="polite" aria-atomic="true">
@@ -95,22 +122,28 @@
                 }
                 break;
             case ShellSection.Build:
-                @if (SpellcraftOpen)
+                <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus">
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Fireball)" disabled="@(CharacterSchool != DivineArchetype.Pyromancer)" class="@(facet == NexusFacet.Fireball ? "active" : "")"
+                            @onclick="() => OpenFacet(NexusFacet.Fireball)"><b>Fireball</b></button>
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Spellcraft)" disabled="@(!SpellcraftOpen)"
+                            class="@(facet == NexusFacet.Spellcraft ? "active" : "")"
+                            @onclick="() => OpenFacet(NexusFacet.Spellcraft)"><b>Research</b></button>
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Web)" class="@(facet == NexusFacet.Web ? "active" : "")"
+                            @onclick="() => OpenFacet(NexusFacet.Web)"><b>Arcane Web</b></button>
+                </div>
+                @if (facet == NexusFacet.Fireball)
                 {
-                    <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus facets">
-                        <button role="tab" aria-selected="@((facet == NexusFacet.Web).ToString().ToLowerInvariant())" class="@(facet == NexusFacet.Web ? "active" : string.Empty)" @onclick="() => OpenFacet(NexusFacet.Web)"><b>Skill Tree</b></button>
-                        <button role="tab" aria-selected="@((facet == NexusFacet.Spellcraft).ToString().ToLowerInvariant())" class="@(facet == NexusFacet.Spellcraft ? "active" : string.Empty)" @onclick="() => OpenFacet(NexusFacet.Spellcraft)"><b>Spellcraft</b></button>
-                    </div>
-                    @if (facet == NexusFacet.Spellcraft)
-                    {
-                        <SpellcraftView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Loadouts="Loadouts" Focus="spellcraftFocus" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice"
-                            OnOpenWeb="OpenWebAt" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" />
-                    }
-                    else
-                    {
-                        <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
-                            Laboratory="Laboratory" Vault="Vault" FocusNodeId="@nexusFocus" OnOpenSpellcraft="OpenSpellcraftFor" Equip="EquipMutation" />
-                    }
+                    <FireballRitualView Core="FireballCore" Vault="Vault" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" />
+                }
+                else if (facet == NexusFacet.Spellcraft && SpellcraftOpen)
+                {
+                    <SpellcraftView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Loadouts="Loadouts" Focus="spellcraftFocus" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice"
+                        OnOpenWeb="OpenWebAt" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" />
+                }
+                else if (SpellcraftOpen)
+                {
+                    <BuildView Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                        Laboratory="Laboratory" Vault="Vault" FocusNodeId="@nexusFocus" OnOpenSpellcraft="OpenSpellcraftFor" Equip="EquipMutation" />
                 }
                 else
                 {
@@ -153,19 +186,6 @@
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
                     </section>
-                    @if (!Progress.TutorialRun)
-                    {
-                        <section class="settings-support" aria-label="Temporary menu previews">
-                            <h3>Town preview destinations</h3>
-                            <button @onclick="() => Navigate(ShellSection.Build)">Preview Arcane Nexus menu</button>
-                            <button @onclick="() => Navigate(ShellSection.Forge)">Preview Blacksmith menu</button>
-                            <button @onclick="() => Navigate(ShellSection.Codex)">Preview Codex menu</button>
-                            @if (Progress.LeaderboardUnlocked)
-                            {
-                                <button @onclick="OpenHallOfFameAsync">Preview Hall of Fame menu</button>
-                            }
-                        </section>
-                    }
                 </div>
                 break;
         }
@@ -174,6 +194,8 @@
 
 @code {
     [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
+    [Parameter] public DivineArchetype? CharacterSchool { get; set; }
+    [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;
     private void EnterTown() => enteredTown = true;
@@ -206,6 +228,9 @@
     [Parameter] public Wyrmforge.Application.World.RegionAccessContext? RegionAccess { get; set; }
     [Parameter] public EventCallback<Wyrmforge.Domain.World.RegionId> OnRegionChanged { get; set; }
     [Parameter] public Wyrmforge.Application.Chronicles.AdvancementProgress Advancement { get; set; } = new(Wyrmforge.Application.Chronicles.AdvancementRoute.None, 1, 0, 0);
+    [Parameter, EditorRequired] public FireballCoreState FireballCore { get; set; } = null!;
+    [Parameter] public Func<Task<bool>> UpgradeFireball { get; set; } = () => Task.FromResult(false);
+    [Parameter] public Func<int, FireballMutationId?, Task<bool>> EquipFireball { get; set; } = (_, _) => Task.FromResult(false);
     [Parameter] public LaboratoryState Laboratory { get; set; } = new();
     [Parameter] public string? LaboratoryNotice { get; set; }
     [Parameter] public EventCallback OnDismissLaboratoryNotice { get; set; }
@@ -240,7 +265,7 @@
 
     private ShellSection section = ShellSection.Run;
     private string? nexusFocus;
-    private NexusFacet facet = NexusFacet.Web;
+    private NexusFacet facet = NexusFacet.Fireball;
     private LaboratoryMutationId? spellcraftFocus;
     private static readonly NavigationItem[] Navigation =
     [
@@ -269,7 +294,7 @@
         ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
         _ => "Locked",
     };
-    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = NexusFacet.Web; spellcraftFocus = null; }
+    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = CharacterSchool == DivineArchetype.Pyromancer ? NexusFacet.Fireball : NexusFacet.Web; spellcraftFocus = null; }
 
     // Spellcraft is the research facet of the Arcane Nexus: the Web says where a mutation lives, the circle what it becomes.
     private bool SpellcraftOpen => IsUnlocked(ShellSection.Build) && Progress.CodexUnlocked;
@@ -360,7 +385,7 @@
     }
 
     private enum ShellSection { Run, Gate, Build, Forge, Codex, Prepare, Options }
-    private enum NexusFacet { Web, Spellcraft }
+    private enum NexusFacet { Fireball, Spellcraft, Web }
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
     private sealed record TownLockNotice(string Location, string Message);
 }
