@@ -20,8 +20,9 @@ const fs=require('node:fs');const path=require('node:path');
  await wait('walk');const walk=await diagnostics();await page.screenshot({path:path.join(output,'ashling-walk-390.png'),fullPage:true});
  await page.goto(base+'/enemy-lab?kind=Ashling&seed=42&autoplay=false&cast=false');await attach();
  await wait('attack');const attack=await diagnostics();await page.screenshot({path:path.join(output,'ashling-attack-390.png'),fullPage:true});
- await page.goto(base+'/enemy-lab?kind=Ashling&seed=42&autoplay=true&cast=true');
+ await page.goto(base+'/enemy-lab?kind=Ashling&seed=42&autoplay=false&cast=false');
  await attach();
+ await page.getByLabel('Movement agent').check();await page.getByLabel('Autocast').check();
  await page.waitForFunction(()=>{
   const canvas=document.querySelector('.enemy-lab canvas');if(!canvas)return false;
   const d=window.__ashlingArena.readArenaDiagnostics(canvas);
@@ -42,5 +43,6 @@ const fs=require('node:fs');const path=require('node:path');
  fs.writeFileSync(path.join(output,'browser-report.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
  await browser.close();if(!result.passed)process.exitCode=1;
 })().catch(e=>{console.error(e);process.exitCode=1});
+
 
 
