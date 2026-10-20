@@ -96,8 +96,8 @@
             agent = new HeuristicRunAgent(RunAgentPersonality.Kiter, seed, build.PreferredSchool);
         }
         var snapshot = simulation.CreateSnapshot();
-        if (paused || simulation.IsEnded) return Task.FromResult(snapshot);
-        if (SecondsQuery is { } limit && double.IsFinite(limit) && simulationSeconds >= Math.Max(0, limit)) return Task.FromResult(snapshot);
+        if (paused || simulation.IsEnded) return Task.FromResult(snapshot with { Paused = paused });
+        if (SecondsQuery is { } limit && double.IsFinite(limit) && simulationSeconds >= Math.Max(0, limit)) return Task.FromResult(snapshot with { Paused = true });
         var movement = autoplay
             ? agent!.ChooseMovement(new RunAgentObservation(snapshot, [], [], [], [], [], simulation.Depth, 0, false))
             : new MovementInput(movementX, movementY, aimX, aimY);

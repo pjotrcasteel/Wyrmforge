@@ -3,7 +3,7 @@
     'use strict';
     const C = globalThis.SpriteLabCore;
     const $ = id => document.getElementById(id);
-    const dom = Object.fromEntries(['assetLabel','assetNote','fileInput','dropzone','imageDimensions','loadDemo','loadWalk','loadBefore','layoutPreset',
+    const dom = Object.fromEntries(['assetLabel','assetNote','fileInput','dropzone','imageDimensions','loadDemo','loadWalk','loadBefore','loadMovement','loadDeath','loadAttack','layoutPreset',
         'columns','rows','frameWidth','frameHeight','offsetX','offsetY','fps','fpsValue','scale','scaleValue','resetLayout',
         'stageCanvas','stageHint','sheetCanvas','playBtn','stepBtn','manualBtn','chaseBtn','modeStatus','compass',
         'directionName','directionMeta','frameIndicator','filmstrip','checkList','resultPill','statFrames','statDirections',
@@ -13,8 +13,8 @@
     const state = {
         image: null, filename: 'hollow-walk-reference-5dir.png', pixelData: null,
         cfg: { ...C.DEFAULT_CONFIG }, dir: 'S', frame: 0, fps: 8, playing: true, scale: 1,
-        mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 },
-        started: 0, last: 0, elapsed: 0, checks: [], dragging: false,
+        mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 }, pixelCandidate: false, deathCandidate: false, attackCandidate: false, finiteCandidate: false,
+        started: 0, last: 0, elapsed: 0, checks: [], dragging: false, mage: null,
     };
     function readConfig() {
         state.cfg = {
@@ -30,6 +30,9 @@
         readConfig();
     }
     function autoGrid(w, h, mode = 'five') {
+        if(w===2048&&h===1024)return {...C.DEFAULT_CONFIG,layout:'eight',rows:8,columns:16,cellWidth:128,cellHeight:128,fps:12};
+        if(w===3072&&h===1024)return {...C.DEFAULT_CONFIG,layout:'eight',rows:8,columns:24,cellWidth:128,cellHeight:128,fps:12};
+        if(w===1536&&h===768)return {...C.DEFAULT_CONFIG,layout:'eight',rows:8,columns:16,cellWidth:96,cellHeight:96,fps:12};
         if(mode==='single')return {...C.DEFAULT_CONFIG,layout:'single',rows:1,columns:16,cellWidth:w/16,cellHeight:h,fps:12};
         // The annotated image from chat includes a title and compass labels. Detect that known poster size on import.
         if (w === 1536 && h === 1024) return { ...C.DEFAULT_CONFIG, offsetX: 154, offsetY: 151, cellWidth: 166, cellHeight: 159 };
@@ -45,19 +48,33 @@
         const img = new Image();
         img.onload = () => {
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
-            const layout = img.naturalWidth===3072&&img.naturalHeight===192?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
+            state.deathCandidate = name==='hollow-death-eight-directions-v1.png';
+            state.attackCandidate = name==='hollow-attack-eight-directions-v1.png';
+            state.finiteCandidate=state.deathCandidate||state.attackCandidate;
+            state.pixelCandidate = state.finiteCandidate||['hollow-local-3d-pixel-walk-v1.png','hollow-movement-eight-directions-v1.png'].includes(name);
+            dom.stageCanvas.style.imageRendering=state.pixelCandidate?'pixelated':'auto';
+            if(state.pixelCandidate&&!state.mage)loadMageReference();
+            const layout = img.naturalWidth===img.naturalHeight*16?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
             updateFields(autoGrid(img.naturalWidth, img.naturalHeight, layout));
             state.dir = layout==='single'?'SE':'S'; state.frame = 0; state.elapsed = 0; state.playing = true; state.mode = 'manual';
             state.actor = { x: 360, y: 240 }; state.player = { x: 530, y: 270 };
             dom.playBtn.textContent = '❚❚'; dom.assetLabel.textContent = name.replace(/\.(png|jpg|jpeg|webp)$/i,'').replaceAll('-',' ').toUpperCase();
             dom.imageDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
             dom.footerState.textContent = `Loaded ${name}`;
-            dom.assetNote.textContent = isDemo
+            dom.assetNote.textContent = state.pixelCandidate ? (layout==='eight'?'Local RTX 5090: accepted zombie gait rendered in 8 actual 3D facings, 16 frames each. Select any compass direction. Directional art review and runtime integration remain pending.':'Local RTX 5090 proof: one textured, skinned 3D character; 16 crisp pixel frames. Native-size review; one facing only. Art approval and runtime integration remain pending.') : isDemo
                 ? 'Original concept reference: painted background and five drawn views. This is not a production atlas.'
                 : layout==='single'?'Rigged walk: one painted character, constant limb lengths, alternating planted feet. One view only; review the gait before adding facings.'
                 : 'Earlier generated walk. Compare its changing anatomy and inconsistent foot motion with the rigged version.';
             dom.exportAtlas.textContent=layout==='single'?'Export walk sheet ↗':'Export 8-way atlas ↗';
             dom.chaseBtn.textContent=layout==='single'?'Stride test':'Chase player';
+            dom.chaseBtn.disabled=state.pixelCandidate;
+            if(state.deathCandidate){
+                dom.assetNote.textContent='Local RTX 5090: 8 actual facings × 24 death frames. Recoil, buckle, collapse, settle. Plays once and holds the corpse; press Play or a compass direction to replay. Extra transparent padding preserves the walk pixel scale.';
+                dom.statFrames.closest('.stats').querySelector('div strong').textContent='Death · holds corpse';
+            }else if(state.attackCandidate){
+                dom.assetNote.textContent='Local RTX 5090: 8 actual facings × 16 attack frames. Wind-up, claw swipe, recovery into walking stance. Plays once; press Play or select a direction to replay. Contact frames are visual reference only.';
+                dom.statFrames.closest('.stats').querySelector('div strong').textContent='Attack · recovers to stance';
+            }else dom.statFrames.closest('.stats').querySelector('div strong').textContent='Walk / Chase';
             setMode('manual'); refresh();
         };
         img.onerror = () => { dom.footerState.textContent = `Unable to load ${name}. Use Import to select a local image.`; };
@@ -71,10 +88,19 @@
         img.onerror = () => {URL.revokeObjectURL(url);dom.footerState.textContent='Invalid image file.';};
         img.src=url;
     }
+    async function loadMageReference() {
+        try {
+            const manifest=await fetch('../art/manifest.json').then(r=>r.json());
+            const frame=manifest.atlases.actors.frames['mage.S.idle'];
+            const image=new Image();
+            image.onload=()=>{state.mage={image,frame};};
+            image.src='../art/actors.png';
+        } catch { /* The existing player marker remains if reference art is offline. */ }
+    }
     function loadImageFromImage(img, name) {
         // Reuse a decoded upload directly: object URLs are revoked safely after decode.
-        state.image=img;state.filename=name;state.pixelData=readPixels(img);
-        const mode = img.naturalWidth===3072&&img.naturalHeight===192?'single':(img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
+        state.image=img;state.filename=name;state.pixelData=readPixels(img);state.pixelCandidate=false;state.deathCandidate=false;state.attackCandidate=false;state.finiteCandidate=false;dom.chaseBtn.disabled=false;
+        const mode = img.naturalWidth===img.naturalHeight*16?'single':(img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
         updateFields(autoGrid(img.naturalWidth,img.naturalHeight,mode));
         state.dir=mode==='single'?'SE':'S';state.frame=0;state.elapsed=0;state.playing=true;
         dom.playBtn.textContent='❚❚';dom.imageDimensions.textContent=`${img.naturalWidth} × ${img.naturalHeight}`;
@@ -86,12 +112,15 @@
         state.mode=mode;dom.manualBtn.classList.toggle('active',mode==='manual');dom.chaseBtn.classList.toggle('active',mode==='chase');
         dom.modeStatus.textContent=mode==='chase'?'CHASE ACTIVE':'MANUAL';
         dom.stageHint.textContent=state.cfg.layout==='single'?(mode==='chase'?'Stride test: ground speed follows the walk cycle':'One three-quarter view · inspect planted and passing feet'):mode==='chase'?'Move the target: the Hollow will pursue':'Tap the arena to position the player target';
+        if(state.deathCandidate)dom.stageHint.textContent='Death plays once · select a direction or press Play to replay';
+        if(state.attackCandidate)dom.stageHint.textContent='Attack → recovery · select a direction or press Play to replay';
         dom.compass.querySelectorAll('button[data-dir]').forEach(b=>b.disabled=b.dataset.dir==='STAY'||mode==='chase'||state.cfg.layout==='single'&&b.dataset.dir!=='SE');
         if(state.cfg.layout==='single')state.dir='SE';
         updateDirection();
     }
     function setDir(dir) {
         if (!C.DIRECTIONS.includes(dir)) return;
+        if(state.finiteCandidate){state.frame=0;state.playing=true;dom.playBtn.textContent='❚❚';}
         state.dir=dir; state.elapsed=0; updateDirection();buildFilmstrip();drawSheet();
     }
     function updateDirection() {
@@ -127,8 +156,8 @@
         if (!sourceValid) return;
         const h=p.height*scale,w=p.width*scale;
         g.save();g.translate(Math.round(x),Math.round(y));if(p.flipX)g.scale(-1,1);
-        g.imageSmoothingEnabled=true;
-        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*.85,w,h);
+        g.imageSmoothingEnabled=!state.pixelCandidate;
+        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*(state.finiteCandidate?88/128:state.pixelCandidate?72/96:.85),w,h);
         g.restore();
     }
     function drawSheet() {
@@ -173,9 +202,17 @@
         for(let y=0;y<h;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
         // Player marker: orange central rune with a small readable target indicator.
         const player=state.player;
+        if(state.pixelCandidate&&state.mage){
+            const {image,frame:f}=state.mage;
+            const nativeScale=dom.stageCanvas.width/Math.max(1,dom.stageCanvas.getBoundingClientRect().width);
+            ctx.save();ctx.imageSmoothingEnabled=false;
+            ctx.drawImage(image,f.x,f.y,f.w,f.h,player.x-f.w*nativeScale/2,player.y-f.h*nativeScale,f.w*nativeScale,f.h*nativeScale);
+            ctx.restore();
+        } else {
         ctx.strokeStyle='rgba(214,166,110,.46)';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(player.x,player.y,24,0,Math.PI*2);ctx.stroke();
         ctx.fillStyle='rgba(218,171,109,.16)';ctx.beginPath();ctx.arc(player.x,player.y,21,0,Math.PI*2);ctx.fill();
         ctx.fillStyle='#efc68b';ctx.font='bold 19px Georgia,serif';ctx.textAlign='center';ctx.fillText('✦',player.x,player.y+7);
+        }
         ctx.fillStyle='#c7b899';ctx.font='10px system-ui,sans-serif';ctx.fillText('PLAYER',player.x,player.y+42);
         // Locomotion path and footprint (the real game will own the movement physics).
         if(state.mode==='chase'){
@@ -183,7 +220,7 @@
             ctx.beginPath();ctx.moveTo(state.actor.x,state.actor.y);ctx.lineTo(player.x,player.y);ctx.stroke();ctx.restore();
         }
         ctx.save();ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(state.actor.x,state.actor.y+8,40,13,0,0,Math.PI*2);ctx.fill();ctx.restore();
-        if(state.image){const fit=Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight)*state.scale;
+        if(state.image){const fit=(state.pixelCandidate?dom.stageCanvas.width/Math.max(1,dom.stageCanvas.getBoundingClientRect().width):Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight))*state.scale;
             try{renderFrame(ctx,state.image,state.cfg,state.dir,state.frame,state.actor.x,state.actor.y,fit);}catch{/* inspector reports layout errors */}
         }
         ctx.fillStyle='rgba(203,213,206,.75)';ctx.font='12px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('THE HOLLOW',state.actor.x,state.actor.y+29);
@@ -195,7 +232,9 @@
             state.elapsed+=delta;
             const frameDuration=1/Math.max(1,Number(state.cfg.fps)||8);
             if(state.elapsed>=frameDuration){
-                const advance=Math.floor(state.elapsed/frameDuration);state.frame=(state.frame+advance)%Math.max(1,state.cfg.columns);
+                const advance=Math.floor(state.elapsed/frameDuration);
+                state.frame=state.finiteCandidate?Math.min(state.frame+advance,state.cfg.columns-1):(state.frame+advance)%Math.max(1,state.cfg.columns);
+                if(state.finiteCandidate&&state.frame===state.cfg.columns-1){state.playing=false;dom.playBtn.textContent='▶';}
                 state.elapsed%=frameDuration;markFilmstrip();drawSheet();
             }
         }
@@ -243,6 +282,9 @@
         cv.toBlob(blob=>{if(blob)downloadBlob(`${stem()}-8way-export.png`,blob);},'image/png');
     }
     function bind() {
+        dom.loadAttack.addEventListener('click',()=>loadImage('./assets/hollow-attack-eight-directions-v1.png','hollow-attack-eight-directions-v1.png'));
+        dom.loadMovement.addEventListener('click',()=>loadImage('./assets/hollow-movement-eight-directions-v1.png','hollow-movement-eight-directions-v1.png'));
+        dom.loadDeath.addEventListener('click',()=>loadImage('./assets/hollow-death-eight-directions-v1.png','hollow-death-eight-directions-v1.png'));
         dom.loadWalk.addEventListener('click',()=>loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png'));
         dom.loadBefore.addEventListener('click',()=>loadImage('./assets/hollow-walk-v1.png','hollow-walk-v1.png'));
         dom.loadDemo.addEventListener('click',()=>loadImage('./assets/hollow-walk-reference-5dir.png','hollow-walk-reference-5dir.png',true));
@@ -253,8 +295,8 @@
         dom.compass.querySelectorAll('button[data-dir]').forEach(btn=>btn.addEventListener('click',()=>{if(state.mode==='manual')setDir(btn.dataset.dir);}));
         dom.manualBtn.addEventListener('click',()=>setMode('manual'));
         dom.chaseBtn.addEventListener('click',()=>setMode('chase'));
-        dom.playBtn.addEventListener('click',()=>{state.playing=!state.playing;dom.playBtn.textContent=state.playing?'❚❚':'▶';});
-        dom.stepBtn.addEventListener('click',()=>{state.playing=false;dom.playBtn.textContent='▶';state.frame=(state.frame+1)%Math.max(1,state.cfg.columns);markFilmstrip();drawSheet();});
+        dom.playBtn.addEventListener('click',()=>{if(state.finiteCandidate&&state.frame===state.cfg.columns-1){state.frame=0;state.elapsed=0;}state.playing=!state.playing;dom.playBtn.textContent=state.playing?'❚❚':'▶';});
+        dom.stepBtn.addEventListener('click',()=>{state.playing=false;dom.playBtn.textContent='▶';state.frame=state.finiteCandidate?Math.min(state.frame+1,state.cfg.columns-1):(state.frame+1)%Math.max(1,state.cfg.columns);markFilmstrip();drawSheet();});
         ['columns','rows','frameWidth','frameHeight','offsetX','offsetY'].forEach(id=>dom[id].addEventListener('change',()=>{readConfig();state.frame=0;refresh();}));
         dom.layoutPreset.addEventListener('change',()=>{
             const mode=dom.layoutPreset.value;dom.rows.value=mode==='single'?1:mode==='five'?5:8;
@@ -269,7 +311,18 @@
         dom.stageCanvas.addEventListener('pointermove',e=>{if(state.dragging)state.player=stageCoord(e);});
         ['pointerup','pointercancel'].forEach(type=>dom.stageCanvas.addEventListener(type,()=>state.dragging=false));
         dom.exportAtlas.addEventListener('click',exportAtlas);
-        dom.exportManifest.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-8way-manifest.json`,C.normalizedManifest(state.cfg,state.filename,state.image.naturalWidth,state.image.naturalHeight,state.checks.every(c=>c.severity==='pass')));});
+        dom.exportManifest.addEventListener('click',async()=>{
+            if(!state.image)return;
+            if(state.pixelCandidate){
+                try {
+                    const manifestName=state.filename.replace(/\.png$/,'.manifest.json');
+                    const manifest=await fetch('./assets/'+manifestName).then(r=>r.json());
+                    downloadJson(manifestName,manifest);
+                } catch {dom.footerState.textContent='Candidate manifest unavailable; use the saved source manifest.';}
+                return;
+            }
+            downloadJson(`${stem()}-8way-manifest.json`,C.normalizedManifest(state.cfg,state.filename,state.image.naturalWidth,state.image.naturalHeight,state.checks.every(c=>c.severity==='pass')));
+        });
         dom.exportReport.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-qa-report.json`,{
             source:state.filename,createdAt:new Date().toISOString(),checks:state.checks,
             technicalPass:state.checks.every(c=>c.severity==='pass'),ready:false,visualAccepted:false
@@ -279,6 +332,15 @@
             if(e.code==='ArrowRight')dom.stepBtn.click();
         });
     }
-    bind();loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png');
+    bind();
+    if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-attack-8dir-v1')
+        loadImage('./assets/hollow-attack-eight-directions-v1.png','hollow-attack-eight-directions-v1.png');
+    else if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-death-8dir-v1')
+        loadImage('./assets/hollow-death-eight-directions-v1.png','hollow-death-eight-directions-v1.png');
+    else if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-movement-8dir-v1')
+        loadImage('./assets/hollow-movement-eight-directions-v1.png','hollow-movement-eight-directions-v1.png');
+    else if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-local-pixel-v1')
+        loadImage('./assets/hollow-local-3d-pixel-walk-v1.png','hollow-local-3d-pixel-walk-v1.png');
+    else loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png');
     requestAnimationFrame(tick);
 })();

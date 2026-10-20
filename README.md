@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.134 — Animated Hollow in combat
+
+- The accepted Hollow now uses eight real directions for its pixel walk, claw attack and death in ordinary hunts and Enemy Lab.
+- Movement follows travelled distance; contact shows the one-shot claw and recovery while C# retains damage authority. Actual death events play the full collapse, hold the corpse, then fade it.
+- [Integration and validation status](docs/art/hollow-runtime-integration-2026-10-20.md).
+
 ## Prototype 0.0.133 — Canonical six-school pixel icons in the real World Gate
 
 - The actual approved Fire, Frost, **yellow Storm**, Arcane, Necromancy and **bear Summoner** pixel illustrations now power the six World Gate choices. No Unicode placeholder icons, AI redraws or separate HTML mockups.

@@ -1,0 +1,107 @@
+{
+  "loopPositionErrorModelUnits": 0.0,
+  "stanceContactDriftModelUnits": 1.0094335002597266e-07,
+  "allFinite": true,
+  "transparentAlphaIsBinary": true,
+  "frameBounds": [
+    [
+      32,
+      24,
+      61,
+      82
+    ],
+    [
+      31,
+      24,
+      61,
+      81
+    ],
+    [
+      30,
+      25,
+      61,
+      81
+    ],
+    [
+      29,
+      25,
+      61,
+      80
+    ],
+    [
+      29,
+      25,
+      61,
+      80
+    ],
+    [
+      28,
+      24,
+      60,
+      79
+    ],
+    [
+      29,
+      24,
+      60,
+      79
+    ],
+    [
+      29,
+      23,
+      60,
+      78
+    ],
+    [
+      30,
+      24,
+      60,
+      78
+    ],
+    [
+      31,
+      24,
+      60,
+      77
+    ],
+    [
+      32,
+      24,
+      61,
+      77
+    ],
+    [
+      32,
+      24,
+      61,
+      76
+    ],
+    [
+      33,
+      24,
+      60,
+      77
+    ],
+    [
+      33,
+      24,
+      60,
+      78
+    ],
+    [
+      33,
+      24,
+      60,
+      79
+    ],
+    [
+      33,
+      24,
+      61,
+      81
+    ]
+  ],
+  "clipped": false,
+  "technicalPass": true,
+  "visualAcceptance": "requires separate inspection; no owner acceptance inferred"
+}

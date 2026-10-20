@@ -1,0 +1,87 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "direction": "N",
+      "falling": "08 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 1 · original artwork"
+    },
+    {
+      "direction": "NE",
+      "falling": "08 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 2 · original artwork"
+    },
+    {
+      "direction": "E",
+      "falling": "08 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 3 · original artwork"
+    },
+    {
+      "direction": "SE",
+      "falling": "09 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 4 · original artwork"
+    },
+    {
+      "direction": "S",
+      "falling": "09 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 5 · original artwork"
+    },
+    {
+      "direction": "SW",
+      "falling": "08 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 6 · original artwork"
+    },
+    {
+      "direction": "W",
+      "falling": "08 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 7 · original artwork"
+    },
+    {
+      "direction": "NW",
+      "falling": "08 / 24",
+      "held": "24 / 24",
+      "paused": true,
+      "meta": "Row 8 · original artwork"
+    }
+  ],
+  "replayFrame": "03 / 24",
+  "manifest": {
+    "columns": 24,
+    "rows": 8,
+    "frames": 192,
+    "anchor": [
+      64,
+      88
+    ],
+    "playback": {
+      "fps": 12,
+      "loop": false,
+      "holdLastFrame": true
+    },
+    "drawCellWorldSize": 124
+  },
+  "format": "REVIEW",
+  "movementPreset": {
+    "columns": "16",
+    "width": "96"
+  },
+  "deathPreset": {
+    "columns": "24",
+    "width": "128"
+  },
+  "passed": true
+}

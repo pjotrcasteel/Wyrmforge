@@ -1,0 +1,67 @@
+{
+  "base": "http://127.0.0.1:4183",
+  "errors": [],
+  "assets": [
+    "/art/enemies/hollow-rigged/manifest.json",
+    "/art/enemies/hollow-rigged/attack.png",
+    "/art/enemies/hollow-rigged/death.png",
+    "/art/enemies/hollow-rigged/walk.png"
+  ],
+  "walk": {
+    "ready": true,
+    "entities": [
+      {
+        "entityId": 1,
+        "clip": "walk",
+        "frame": 1,
+        "direction": "SE"
+      }
+    ],
+    "corpses": []
+  },
+  "attack": {
+    "ready": true,
+    "entities": [
+      {
+        "entityId": 1,
+        "clip": "attack",
+        "frame": 1,
+        "direction": "S"
+      }
+    ],
+    "corpses": []
+  },
+  "collapse": {
+    "ready": true,
+    "entities": [],
+    "corpses": [
+      {
+        "entityId": 1,
+        "direction": "S",
+        "age": 0.3333999999761581,
+        "frame": 4
+      }
+    ]
+  },
+  "held": {
+    "ready": true,
+    "entities": [],
+    "corpses": [
+      {
+        "entityId": 1,
+        "direction": "S",
+        "age": 2.0000999999642373,
+        "frame": 23
+      }
+    ]
+  },
+  "pauseStable": true,
+  "renderingFailed": false,
+  "performance": {
+    "fps": 239,
+    "simulationHz": 239,
+    "simulationMilliseconds": 0,
+    "bridgeMilliseconds": 0.928491621044095
+  },
+  "passed": true
+}

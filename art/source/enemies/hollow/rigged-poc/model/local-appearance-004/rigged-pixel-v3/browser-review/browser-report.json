@@ -1,0 +1,19 @@
+{
+  "label": "HOLLOW LOCAL 3D PIXEL WALK V1",
+  "frames": "16",
+  "directions": "1",
+  "frameWidth": "96",
+  "frameHeight": "96",
+  "fps": "12",
+  "result": "REVIEW",
+  "checks": "!\nOne walking view\n\nReview this gait first. The remaining seven directions have not been authored.\n\n✓\nWalk cycle frames\n\n16 frames per authored direction.\n\n✓\nGrid bounds\n\nThe 16 × 1 source grid fits within 1536 × 96 pixels.\n\n✓\nTransparent artwork\n\n92% of sampled pixels are fully transparent.\n\n✓\nAll frames contain artwork\n\nEvery required frame has nontransparent pixels.\n\n✓\nNo detected frame clipping\n\nArtwork has clear alpha padding at sampled frame boundaries.\n\n✓\nPivot stability\n\nDetected alpha silhouettes have consistent foot and center alignment.",
+  "strideDisabled": true,
+  "observedFrames": [
+    "05 / 16",
+    "08 / 16",
+    "12 / 16",
+    "15 / 16"
+  ],
+  "errors": [],
+  "passed": true
+}

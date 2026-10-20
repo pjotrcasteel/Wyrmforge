@@ -1,0 +1,28 @@
+{
+  "frames": 192,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "binaryAlpha": true,
+  "noClipping": true,
+  "allVisiblePixelsInSharedPalette": true,
+  "exactCorpseHold": true,
+  "walkToDeathFirstFrameDifferences": {
+    "N": 0,
+    "NE": 0,
+    "E": 1,
+    "SE": 0,
+    "S": 0,
+    "SW": 0,
+    "W": 0,
+    "NW": 0
+  },
+  "passed": true
+}

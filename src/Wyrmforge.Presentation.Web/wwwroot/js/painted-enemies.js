@@ -94,7 +94,8 @@ export function updatePaintedCorpses(state, bursts, motion, seconds) {
         if (seconds-corpse.at >= .8 || seconds < corpse.at) state.corpses.delete(key);
     return state.corpses;
 }
-export function drawPaintedCorpses(ctx, state, seconds) {
+export function drawPaintedCorpses(ctx, state, seconds, skipHollow = false) {
     for (const corpse of state.corpses?.values() ?? [])
+        if(!skipHollow||Number(corpse.kind)!==0)
         drawPaintedEnemy(ctx,{...corpse,opacity:Math.max(0,1-(seconds-corpse.at)/.8)},0,corpse.facing);
 }
