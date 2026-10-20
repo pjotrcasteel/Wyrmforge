@@ -50,6 +50,8 @@ jobs:
         run: |
           node --test tools/sprite-lab/tests/*.test.js
           node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/src/lab-app.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/buildings/src/building-core.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/buildings/src/building-app.js
           node tools/sprite-lab/build-hollow-rig.mjs
           git diff --exit-code -- src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-rig-v2.png src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-rig-v2.manifest.json
 
