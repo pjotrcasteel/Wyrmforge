@@ -1,13 +1,13 @@
-/* Refuge art is a true 3:1 panorama: each of the three scene panels is square.
- * Never stretch its painted architecture to the device's portrait aspect.
- * Native swipe and mouse drag both navigate; center the visible slice. */
+/* Refuge preserves three navigable districts. The center is the World Gate;
+ * four canonical building paintings flank it. Mobile snaps per district,
+ * desktop shows the full composition. Keyboard and native touch remain usable. */
 (() => {
     "use strict";
     let mounted = null, observer = null, slice = 1, drag = null, touch = null;
     const clamp = value => Math.max(0, Math.min(2, value));
 
     function sliceWidth() {
-        return (mounted?.querySelector('.town-panorama')?.clientWidth ?? 0) / 3;
+        return (mounted?.querySelector('.refuge-canonical-track, .town-panorama')?.clientWidth ?? 0) / 3;
     }
     function centeredOffset(index) {
         return sliceWidth() * (clamp(index) + .5) - mounted.clientWidth / 2;
@@ -76,7 +76,7 @@
     }
     function onTouchCancel() { touch = null; }
     function mount() {
-        const next = document.querySelector('.town-panorama-viewport');
+        const next = document.querySelector('.refuge-canonical-viewport, .town-panorama-viewport');
         if (!next?.isConnected || mounted === next) return;
         unmount();
         mounted = next;
