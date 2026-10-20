@@ -1,0 +1,10 @@
+{
+  "vertices": 53233,
+  "faces": 76500,
+  "textureSize": 1024,
+  "visibleTexels": 591172,
+  "observationTexels": 312245,
+  "source": "shared-latent Gaussian observations; vertex-color fallback on unseen texels",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}
