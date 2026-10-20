@@ -1,4 +1,5 @@
 using Wyrmforge.Domain.Progression.Laboratory;
+using Wyrmforge.Domain.Progression.Fireball;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -46,6 +47,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
+    [Parameter] public IReadOnlyList<FireballMutatorId> FireballMutations { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
     [Parameter] public SpellId? PreferredPrimary { get; set; }
@@ -92,7 +94,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, fireballMutations: FireballMutations);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
