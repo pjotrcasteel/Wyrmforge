@@ -94,3 +94,15 @@ test('authoritative props become depth-sorted actors without mutating scenery', 
     assert.equal(sceneWithProps.props[0].healthFraction, 1);
     assert.deepEqual(createDestructibleLayers({ ...scene, props: [] }, 950, 1550), []);
 });
+
+test('woodland tree props use atlas-backed authored tree silhouettes and world feet', () => {
+    const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(source, /prop\.pine\.a/);
+    assert.match(source, /prop\.pine\.snow\.a/);
+    assert.match(source, /prop\.deadtree\.a/);
+    assert.match(source, /treeName && drawArtFrame\(ctx, 'environment', treeName, x, y/);
+    const layers = createDestructibleLayers({ props: [{ id: 7, kind: 'dead-tree', x: .2, y: .44,
+        radius: 12, healthFraction: 1 }] }, 950, 1550);
+    assert.equal(layers[0].depth, .44 * 1550);
+    assert.equal(layers[0].prop.kind, 'dead-tree');
+});

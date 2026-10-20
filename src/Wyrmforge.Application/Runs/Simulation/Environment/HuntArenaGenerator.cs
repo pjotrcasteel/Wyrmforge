@@ -36,13 +36,17 @@ public static class HuntArenaGenerator
             if (props.Any(prop => Math.Pow((prop.X - x) * 950, 2) + Math.Pow((prop.Y - y) * 1550, 2) < 68 * 68)) continue;
 
             var variant = random.NextDouble();
-            var kind = variant < influence * .42 ? (frost ? "frozen-urn" : "ember-urn")
-                : variant < .36 ? "barrel" : variant < .7 ? "crate" : forest ? "stump" : "urn";
+            var standingTree = forest && variant < .28;
+            var kind = standingTree ? frost ? "pine-snow" : influence > .55 ? "dead-tree" : "pine"
+                : variant < .28 + influence * .27 ? (frost ? "frozen-urn" : "ember-urn")
+                : variant < .52 ? "barrel" : variant < .77 ? "crate" : forest ? "stump" : "urn";
             var dropRoll = random.NextDouble();
-            // Loot remains uncommon: ordinary scenery must not overwhelm Hunt combat rewards.
-            var drop = dropRoll < .12 ? "experience" : dropRoll < .18 ? "health" : null;
-            var size = kind is "stump" ? 17 : 13;
-            props.Add(new Prop(props.Count + 1, kind, x, y, size, kind is "stump" ? 32 : 18, drop));
+            // Old trees have rooted physical trunks, while small ruins provide occasional supplies.
+            // Loot remains uncommon: scenery must not overwhelm Hunt combat rewards.
+            var drop = standingTree ? null : dropRoll < .12 ? "experience" : dropRoll < .18 ? "health" : null;
+            var size = standingTree ? 12 : kind is "stump" ? 17 : 13;
+            var health = standingTree ? 75 : kind is "stump" ? 32 : 18;
+            props.Add(new Prop(props.Count + 1, kind, x, y, size, health, drop));
         }
         return props;
     }

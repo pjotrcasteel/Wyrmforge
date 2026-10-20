@@ -316,6 +316,13 @@ export function drawDestructibleProp(ctx, layer) {
     const x = Math.round(prop.x * width);
     const y = Math.round(prop.y * height);
     const size = Math.round(prop.radius);
+    const treeName = prop.kind === 'pine' ? 'prop.pine.a'
+        : prop.kind === 'pine-snow' ? 'prop.pine.snow.a'
+        : prop.kind === 'dead-tree' ? 'prop.deadtree.a' : null;
+    // Anchor the sprite's existing foot offset at the authoritative C# trunk.
+    // The wide canopy is visual; collision belongs to the much smaller trunk radius.
+    if (treeName && drawArtFrame(ctx, 'environment', treeName, x, y,
+        { flipX: prop.id % 2 === 0 })) return true;
     const ember = prop.kind === 'ember-urn';
     const frost = prop.kind === 'frozen-urn';
     const wood = prop.kind === 'crate' || prop.kind === 'barrel' || prop.kind === 'stump';
