@@ -6,17 +6,17 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "second reconstruction passes initial identity review; mesh cleanup and rig pending",
+  "status": "single-view scuttle candidate rendered and technically checked; awaiting visual review",
   "ownerAccepted": false,
-  "rigged": false,
+  "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "mesh identity and topology review",
-    "rig deformation",
-    "single-view scuttle and ground contact",
-    "other directions",
-    "attack and death",
+    "owner review of single-view scuttle",
+    "all eight directions with silhouette checks",
+    "attack and death clips",
     "layer metadata and runtime acceptance"
   ],
-  "modelAttempt": "model/local-appearance-002"
+  "modelAttempt": "model/local-appearance-002",
+  "sourceRig": "model/local-appearance-002/rigged-scuttle-v2/ashling-rigged.blend",
+  "review": "../../../../docs/art/evidence/ashling-scuttle-2026-10-20"
 }
