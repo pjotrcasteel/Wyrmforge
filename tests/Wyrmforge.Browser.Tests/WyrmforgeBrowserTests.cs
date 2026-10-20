@@ -347,10 +347,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "REFUGE", Exact = true })).ToBeVisibleAsync();
-        var nav = Page.Locator("nav.refuge-canonical-track button");
-        await Expect(nav.Filter(new() { HasText = "Arcane Nexus" })).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(nav.Filter(new() { HasText = "Blacksmith" })).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(nav.Filter(new() { HasText = "Codex" })).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(0);
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
@@ -437,15 +435,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','1'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:1, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" })).ToBeVisibleAsync();
-        await Expect(Page.Locator("nav.refuge-canonical-track button").Filter(new() { HasText = "Arcane Nexus" })).ToBeEnabledAsync();
-        await Expect(Page.Locator("nav.refuge-canonical-track button").Filter(new() { HasText = "Codex" })).ToBeEnabledAsync();
-        await Expect(Page.Locator("nav.refuge-canonical-track button").Filter(new() { HasText = "Blacksmith" })).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(Page.Locator(".refuge-canonical-building--build[data-town-state='active'] img")).ToHaveAttributeAsync("src", "art/buildings/ArcaneNexus/active.png?v=131");
-        await Expect(Page.Locator(".refuge-canonical-building--codex[data-town-state='active'] img")).ToHaveAttributeAsync("src", "art/buildings/Codex/active.png?v=131");
-        await Expect(Page.Locator(".refuge-canonical-building--forge[data-town-state='vacant'] img")).ToHaveAttributeAsync("src", "art/buildings/Blacksmith/vacant.png?v=131");
-        await Expect(Page.Locator(".refuge-canonical-building--legends[data-town-state='vacant'] img")).ToHaveAttributeAsync("src", "art/buildings/HallOfFame/vacant.png?v=131");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
+        await OpenPreviewMenuAsync("Arcane Nexus");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
     }
@@ -457,7 +449,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['RimeHeart']));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.Locator("nav.refuge-canonical-track button").Filter(new() { HasText = "Arcane Nexus" }).ClickAsync();
+        await OpenPreviewMenuAsync("Arcane Nexus");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Spellcraft" }).ClickAsync();
 
         await Expect(Page.Locator(".resonance-title h2")).ToHaveTextAsync("Frostfire");
@@ -1478,7 +1470,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.Locator(".refuge-canonical-gate-action").ClickAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
 
         await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "World Gate" })).ToBeVisibleAsync();
         await Expect(Page.Locator(".gate-scene-art")).ToHaveAttributeAsync("src", "art/world-gate.jpg");
@@ -1518,7 +1510,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Page.Locator(".refuge-canonical-gate-action").ClickAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
         await Page.Locator(".gate-action--primary").ClickAsync();
         await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
