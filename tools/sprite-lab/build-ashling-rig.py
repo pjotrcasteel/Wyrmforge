@@ -123,11 +123,17 @@ def ik(hip,ankle,l1,l2):
     pole=Vector((0,-1,0));pole-=direction*pole.dot(direction);pole.normalize()
     assert length<l1+l2,('unreachable ankle',length,l1+l2)
     return hip+direction*along+pole*math.sqrt(max(0,l1*l1-along*along))
-stance=.56;sweep=.24;diagnostics=[]
+stance=.32;sweep=.24;diagnostics=[]
 for frame in range(17):
     phase=frame/16;angle=2*math.pi*phase
-    offset=Vector((.009*math.cos(angle),0,-.025+.012*math.cos(2*angle)))
-    rotation=Quaternion((0,0,1),.065*math.sin(angle))@Quaternion((1,0,0),.035*math.sin(2*angle))
+    # Two short bounds per cycle: compress, push off, tuck, then catch the
+    # landing on the opposite foot. There is deliberately no walking double support.
+    bound=(phase*2)%1;support=stance*2
+    flight=max(0,(bound-support)/(1-support))
+    arc=4*flight*(1-flight)
+    height=(-.035-.065*math.sin(math.pi*bound/support)) if bound<support else -.035+.14*arc
+    offset=Vector((.016*math.cos(angle),0,height))
+    rotation=Quaternion((0,0,1),.10*math.sin(angle))@Quaternion((1,0,0),.10+.075*math.sin(2*angle-.4))
     origin=Vector(bones['pelvis']['head']);point=lambda p:origin+rotation@(Vector(p)-origin)+offset
     segment('root',bones['root']['head'],bones['root']['tail'])
     for n in ['pelvis','spine','chest']:segment(n,point(bones[n]['head']),point(bones[n]['tail']))
@@ -140,7 +146,7 @@ for frame in range(17):
         p=(phase+shift)%1
         if p<stance:travel=-sweep/2+sweep*p/stance;lift=0
         else:
-            t=(p-stance)/(1-stance);travel=sweep/2-sweep*(t*t*(3-2*t));lift=.065*math.sin(math.pi*t)**1.15
+            t=(p-stance)/(1-stance);travel=sweep/2-sweep*(t*t*(3-2*t));lift=.10*math.sin(math.pi*t)**1.15+.12*arc
         hip=Vector(bones['thigh.'+side]['head'])+offset
         ankle=Vector((.07+sign*.205,.25+travel,-.435+lift))
         l1=np.linalg.norm(bones['thigh.'+side]['tail']-bones['thigh.'+side]['head'])
@@ -148,18 +154,18 @@ for frame in range(17):
         knee=ik(hip,ankle,l1,l2);segment('thigh.'+side,hip,knee);segment('shin.'+side,knee,ankle)
         segment('foot.'+side,ankle,ankle+Vector((0,-.16,-.055)))
         shoulder=point(bones['upper_arm.'+side]['head']);segment('clavicle.'+side,point(bones['clavicle.'+side]['head']),shoulder)
-        arm_rotation=Quaternion((1,0,0),.24*math.sin(2*math.pi*(p-.1)))@rotation
+        arm_rotation=Quaternion((0,0,1),sign*.16*arc)@Quaternion((1,0,0),-.10+.42*math.sin(2*math.pi*(p-.1)))@rotation
         elbow=shoulder+arm_rotation@Vector(bones['upper_arm.'+side]['tail']-bones['upper_arm.'+side]['head'])
         wrist=elbow+arm_rotation@Vector(bones['forearm.'+side]['tail']-bones['forearm.'+side]['head'])
         hand=wrist+arm_rotation@Vector(bones['hand.'+side]['tail']-bones['hand.'+side]['head'])
         segment('upper_arm.'+side,shoulder,elbow);segment('forearm.'+side,elbow,wrist);segment('hand.'+side,wrist,hand)
         cloth=bones['cloth.'+side];head=point(cloth['head'])
-        segment('cloth.'+side,head,head+Quaternion((1,0,0),.09*math.sin(2*math.pi*(p-.18)))@Vector(cloth['tail']-cloth['head']))
-        diagnostics.append(dict(frame=frame+1,side=side,stance=p<stance,phase=p,ankle=list(ankle)))
+        segment('cloth.'+side,head,head+Quaternion((1,0,0),.15*math.sin(2*math.pi*(p-.18)))@Vector(cloth['tail']-cloth['head']))
+        diagnostics.append(dict(frame=frame+1,side=side,stance=p<stance,phase=p,flight=bound>=support,bodyHeight=height,ankle=list(ankle)))
     previous=None
     for i in range(len(tail)-1):
         head=point(tail[i]) if previous is None else previous
-        delta=rotation@Vector(tail[i+1]-tail[i]);delta=Quaternion((0,0,1),.12*math.sin(angle-i*.35))@delta
+        delta=rotation@Vector(tail[i+1]-tail[i]);delta=Quaternion((0,0,1),.20*math.sin(angle-i*.35))@Quaternion((1,0,0),.08*math.sin(2*angle-i*.4))@delta
         previous=head+delta;segment(f'tail.{i}',head,previous)
     for pose in rig.pose.bones:
         for property in ['location','rotation_quaternion','scale']:pose.keyframe_insert(property,frame=frame+1,group=pose.name)

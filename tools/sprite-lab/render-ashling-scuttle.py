@@ -44,6 +44,8 @@ bounds=[f.getbbox() for f in frames];clipped=any(b is None or b[0]<2 or b[1]<2 o
 unique=len({hashlib.sha256(np.asarray(f).tobytes()).hexdigest() for f in frames})
 binary=all(set(np.unique(np.asarray(f)[:,:,3]))<={0,255} for f in frames)
 report=dict(loopPositionError=seam,stanceContactDrift=drift,finite=bool(np.isfinite(source['positions']).all()),clipped=clipped,frameBounds=bounds,uniqueFrames=unique,binaryAlpha=binary,cellSizeValid=all(f.size==(96,96) for f in frames),visiblePixels=[int((np.asarray(f)[:,:,3]>0).sum()) for f in frames],technicalPass=seam<1e-4 and drift<1e-4 and not clipped and unique==16 and binary,visualAccepted=False,runtimeIntegrated=False)
+clearance=[min(m['contact'][2]+.5 for m in markers if m['frame']==f) for f in range(1,17)]
+report.update(airborneFrames=sum(c>.01 for c in clearance),maximumBothFeetClearance=max(clearance))
 (dest/'technical-report.json').write_text(json.dumps(report,indent=2)+'\n')
 root=tensor([*profile['groundRoot'],1]);anchor=mvp@root;anchor=[round(float((anchor[0]/anchor[3]+1)*48)),round(float((1-anchor[1]/anchor[3])*48))]
 (dest/'manifest.json').write_text(json.dumps(dict(frames=16,fps=20,cell=96,anchor=anchor,travelModelUnitsPerCycle=stride,sourceRig='../ashling-rigged.blend',yawDegrees=math.degrees(yaw),directions=['single-view review'],visualAccepted=False,runtimeIntegrated=False),indent=2)+'\n')
