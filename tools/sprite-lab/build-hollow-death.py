@@ -66,8 +66,8 @@ def knee_above_floor(hip,knee,ankle,sign,l1,l2):
     c=max(-1,min(1,(-.455-base.z)/(radius*down.z)))
     return base+radius*(down*c+lateral*math.sqrt(max(0,1-c*c)))
 
-def segment(name,head,tail,blend):
-    rotation=(tails[name]-heads[name]).rotation_difference(tail-head).to_matrix() @ rest[name].to_3x3()
+def segment(name,head,tail,blend,orientation=None):
+    rotation=(orientation.to_matrix() if orientation else (tails[name]-heads[name]).rotation_difference(tail-head).to_matrix()) @ rest[name].to_3x3()
     matrix=rotation.to_4x4()
     matrix.translation=head
     # Bone-space translation and quaternion interpolation preserve bone lengths.
@@ -101,12 +101,13 @@ for index in range(24):
         segment('thigh.'+side,hip,knee,blend)
         segment('shin.'+side,knee,ankle,blend)
         foot_rotation=Quaternion((1,0,0),math.radians(track(index,[(0,0),(8,0),(14,-150),(18,-180),(23,-180)])))
-        segment('foot.'+side,ankle,ankle+foot_rotation@(tails['foot.'+side]-heads['foot.'+side]),blend)
+        segment('foot.'+side,ankle,ankle+foot_rotation@(tails['foot.'+side]-heads['foot.'+side]),blend,foot_rotation)
         shoulder=point(heads['upper_arm.'+side])
         segment('clavicle.'+side,point(heads['clavicle.'+side]),shoulder,blend)
-        brace=smooth((index-(5 if side=='L' else 6))/7)
+        brace=smooth((index-(4 if side=='L' else 5))/7)
         hanging=point(heads['forearm.'+side]+(tails['forearm.'+side]-heads['forearm.'+side]))
         wrist=hanging.lerp(Vector((sign*(.30 if side=='L' else .27),-.61 if side=='L' else -.53,-.45)),brace)
+        wrist.z=max(wrist.z,-.40-.05*brace)
         elbow,wrist=ik(shoulder,wrist,lengths['upper_arm.'+side],lengths['forearm.'+side],(sign,.6,.1))
         segment('upper_arm.'+side,shoulder,elbow,blend)
         segment('forearm.'+side,elbow,wrist,blend)
