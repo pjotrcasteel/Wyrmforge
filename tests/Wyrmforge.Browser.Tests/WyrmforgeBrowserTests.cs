@@ -222,7 +222,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(width, height);
         await OpenAsync();
-        await Expect(Page.GetByLabel("Refuge town square")).ToBeVisibleAsync();
+        await Expect(Page.Locator("section.town-square")).ToBeVisibleAsync();
         await Expect(Page.Locator(".refuge-canonical-scene")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".refuge-town-spot")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
@@ -1531,7 +1531,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(320, 568);
         await OpenAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Allocate unspent Arcane points" }).ClickAsync();
+        await OpenPreviewMenuAsync("Arcane Nexus");
         Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
         Assert.IsGreaterThan(40, await Page.Locator(".web-connections line").CountAsync());
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Zoom in", Exact = true })).ToBeVisibleAsync();
