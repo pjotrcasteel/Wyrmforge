@@ -73,14 +73,80 @@ public sealed class TownCrowdTests
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();
-        var west = new TownPoint(570, 528);
-        var east = new TownPoint(1080, 542);
+        var west = map.Destinations.Single(destination => destination.Id == "west").Position;
+        var east = map.Destinations.Single(destination => destination.Id == "east").Position;
 
         Assert.IsFalse(map.IsWalkable(new TownPoint(824, 511)), "The well must have a real solid footprint.");
         Assert.IsFalse(map.IsSegmentWalkable(west, east), "Direct walking through the well must be impossible.");
         Assert.IsTrue(map.TryFindPath(west, east, out var route), "The plaza should have an alternative route.");
         Assert.IsTrue(route.Count > 1);
         CheckRoute(map, west, route);
+    }
+
+    [TestMethod]
+    public void Navigation_ActualPlazaPropsAreSolidNotOnlyTheWell()
+    {
+        var map = Scene();
+        var blocked = new Dictionary<string, TownPoint>
+        {
+            ["well-roof"] = new(826, 410),
+            ["well-sign"] = new(745, 509),
+            ["west-upper-banner"] = new(620, 385),
+            ["east-upper-banner"] = new(1050, 387),
+            ["west-lower-lamp"] = new(615, 635),
+            ["east-lower-lamp"] = new(1030, 635),
+            ["west-garden"] = new(610, 700),
+            ["east-garden"] = new(1090, 700)
+        };
+
+        foreach (var (landmark, point) in blocked)
+            Assert.IsFalse(map.IsWalkable(point), $"Citizen feet must not cross the painted {landmark}.");
+
+        foreach (var destination in map.Destinations)
+            Assert.IsTrue(map.IsWalkable(destination.Position), $"Spawn {destination.Id} overlaps scenery.");
+    }
+
+    [TestMethod]
+    public void Navigation_SafePlazaRoutesRemainConnectedAroundEveryObstacle()
+    {
+        var map = Scene();
+        var origin = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
+        Assert.IsTrue(map.Obstacles.Count >= 7);
+        Assert.IsTrue(map.Clearance >= 10);
+
+        foreach (var destination in map.Destinations)
+        {
+            Assert.IsTrue(map.TryFindPath(origin, destination.Position, out var path),
+                $"Plaza destination {destination.Id} must remain reachable.");
+            CheckRoute(map, origin, path);
+        }
+    }
+
+    [TestMethod]
+    public void Navigation_WellForegroundExtendsAboveTheRoofAndSign()
+    {
+        var map = Scene();
+        var foreground = map.Occluders.Single(part => part.Id == "well-foreground");
+        Assert.IsTrue(foreground.Clip.Min(point => point.Y) < 365);
+        Assert.IsTrue(foreground.DepthY > 580);
+        Assert.IsTrue(foreground.Clip.Any(point => point.X < 670),
+            "Sign and well sides need an occlusion silhouette, not only a roof rectangle.");
+    }
+
+    [TestMethod]
+    public void Navigation_PlazaForegroundMasksHavePaintedDepth()
+    {
+        var map = Scene();
+        var ids = new[] { "west-gate-banner-foreground", "east-gate-banner-foreground",
+            "west-lower-pillar-foreground", "east-lower-pillar-foreground" };
+
+        foreach (var id in ids)
+        {
+            var foreground = map.Occluders.Single(part => part.Id == id);
+            Assert.IsTrue(foreground.Clip.Count >= 5, $"Foreground mask {id} must trace its painted silhouette.");
+            Assert.AreEqual("art/town/night-active.webp?v=140", foreground.Artwork);
+            Assert.IsTrue(foreground.DepthY >= (id.Contains("lower") ? 750 : 450));
+        }
     }
 
     [TestMethod]
