@@ -30,6 +30,7 @@
         readConfig();
     }
     function autoGrid(w, h, mode = 'five') {
+        if(w===1536&&h===768)return {...C.DEFAULT_CONFIG,layout:'eight',rows:8,columns:16,cellWidth:96,cellHeight:96,fps:12};
         if(mode==='single')return {...C.DEFAULT_CONFIG,layout:'single',rows:1,columns:16,cellWidth:w/16,cellHeight:h,fps:12};
         // The annotated image from chat includes a title and compass labels. Detect that known poster size on import.
         if (w === 1536 && h === 1024) return { ...C.DEFAULT_CONFIG, offsetX: 154, offsetY: 151, cellWidth: 166, cellHeight: 159 };
@@ -45,7 +46,7 @@
         const img = new Image();
         img.onload = () => {
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
-            state.pixelCandidate = name==='hollow-local-3d-pixel-walk-v1.png';
+            state.pixelCandidate = ['hollow-local-3d-pixel-walk-v1.png','hollow-movement-eight-directions-v1.png'].includes(name);
             dom.stageCanvas.style.imageRendering=state.pixelCandidate?'pixelated':'auto';
             if(state.pixelCandidate&&!state.mage)loadMageReference();
             const layout = img.naturalWidth===img.naturalHeight*16?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
@@ -55,7 +56,7 @@
             dom.playBtn.textContent = '❚❚'; dom.assetLabel.textContent = name.replace(/\.(png|jpg|jpeg|webp)$/i,'').replaceAll('-',' ').toUpperCase();
             dom.imageDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
             dom.footerState.textContent = `Loaded ${name}`;
-            dom.assetNote.textContent = state.pixelCandidate ? 'Local RTX 5090 proof: one textured, skinned 3D character; 16 crisp pixel frames. Native-size review; one facing only. Art approval and runtime integration remain pending.' : isDemo
+            dom.assetNote.textContent = state.pixelCandidate ? (layout==='eight'?'Local RTX 5090: accepted zombie gait rendered in 8 actual 3D facings, 16 frames each. Select any compass direction. Directional art review and runtime integration remain pending.':'Local RTX 5090 proof: one textured, skinned 3D character; 16 crisp pixel frames. Native-size review; one facing only. Art approval and runtime integration remain pending.') : isDemo
                 ? 'Original concept reference: painted background and five drawn views. This is not a production atlas.'
                 : layout==='single'?'Rigged walk: one painted character, constant limb lengths, alternating planted feet. One view only; review the gait before adding facings.'
                 : 'Earlier generated walk. Compare its changing anatomy and inconsistent foot motion with the rigged version.';
@@ -294,8 +295,9 @@
             if(!state.image)return;
             if(state.pixelCandidate){
                 try {
-                    const manifest=await fetch('./assets/hollow-local-3d-pixel-walk-v1.manifest.json').then(r=>r.json());
-                    downloadJson('hollow-local-3d-pixel-walk-v1.manifest.json',manifest);
+                    const manifestName=state.filename.replace(/\.png$/,'.manifest.json');
+                    const manifest=await fetch('./assets/'+manifestName).then(r=>r.json());
+                    downloadJson(manifestName,manifest);
                 } catch {dom.footerState.textContent='Candidate manifest unavailable; use the saved source manifest.';}
                 return;
             }
@@ -311,7 +313,9 @@
         });
     }
     bind();
-    if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-local-pixel-v1')
+    if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-movement-8dir-v1')
+        loadImage('./assets/hollow-movement-eight-directions-v1.png','hollow-movement-eight-directions-v1.png');
+    else if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-local-pixel-v1')
         loadImage('./assets/hollow-local-3d-pixel-walk-v1.png','hollow-local-3d-pixel-walk-v1.png');
     else loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png');
     requestAnimationFrame(tick);
