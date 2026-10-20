@@ -6,6 +6,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Laboratory;
+using Wyrmforge.Domain.Progression.Fireball;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Application.World;
 using Wyrmforge.Domain.World;
@@ -32,7 +33,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutatorId>? fireballMutations = null)
     {
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
@@ -50,6 +51,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         if (preparedMutation is { } single) prepared.Add(single);
         if (preparedMutations is not null) prepared.AddRange(preparedMutations);
         simulation.PrepareLaboratoryMutations(prepared);
+        simulation.PrepareFireballMutations(fireballMutations ?? []);
         simulation.EnableResearchLead(researchLead);
         // The first hunt teaches one spell; the contextual slot waits for the hunter's first milestone.
         simulation.PrepareContextualSpell(contextualSpell && !firstHunt);
