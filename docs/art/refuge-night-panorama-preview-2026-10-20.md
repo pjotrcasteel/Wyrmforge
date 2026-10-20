@@ -23,7 +23,7 @@
 
 The optimized high-quality `night-active.webp` (1672×941) is always present. Each checkbox-equivalent building tap toggles one separate alpha layer with a **softly feathered, authored artwork vacancy** over the correct footprint. No CSS `filter:brightness`, global opacity overlay, dark rectangles or card swapping. All 16 combinations are possible, and all four can be dark at once. Markers and toggles are temporary and deliberately do not write `localStorage`.
 
-The original eight 1536×1024 individual canonical building concept PNGs remain untouched. The five approved original concept panoramas remain available in the originating artwork session. The runtime game uses a high-quality WebP for the nighttime base and four lossless alpha PNGs for vacancy; the originals should be archived in the repository separately before treating this as the long-term art-production source.
+The original eight 1536×1024 individual canonical building concept PNGs remain untouched. The five approved concept compositions are now archived in `user_handover_files/concepts/town/night/` as high-quality WebP copies (`all-active.webp` and four `vacant-*.webp`) plus `scene-layout.json`. The original generated PNGs remain available in the originating artwork session; runtime uses a high-quality WebP for the nighttime base and four transparent PNGs for independently switched vacancy layers.
 
 ## Runtime assets uploaded
 
