@@ -1,0 +1,21 @@
+{
+  "creatureId": "ashling",
+  "enemyKind": 2,
+  "sourceCard": "user_handover_files\\concepts\\Fire\\02-ashlings.png",
+  "sourceSha256": "37b216d902b965182fe53b106fbecd18b75850f415cc1d949bd90443b865612b",
+  "method": "local editable 3D character rendered to pixel sprites",
+  "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
+  "reference": "references/ashling-front-reference.png",
+  "status": "reference prepared; reconstruction pending",
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "remaining": [
+    "mesh identity and topology review",
+    "rig deformation",
+    "single-view scuttle and ground contact",
+    "other directions",
+    "attack and death",
+    "layer metadata and runtime acceptance"
+  ]
+}
