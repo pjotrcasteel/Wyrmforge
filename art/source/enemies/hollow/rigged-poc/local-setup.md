@@ -22,3 +22,26 @@ No model, rig, gait or new spritesheet exists at this checkpoint.
 
 Official upstream requirements and API:
 https://github.com/microsoft/TRELLIS.2
+
+## Local toolchain progress
+
+- Actual CUDA matrix multiplication passed with PyTorch 2.8.0+cu128 on RTX 5090.
+- CUDA compiler 12.8.93 installed without installing a Linux display driver.
+- Complete official TRELLIS source: `/opt/wyrmforge-src/TRELLIS.2`, revision
+  `75fbf0183001ed9876c8dbb35de6b68552ee08bd`. The supplied Windows directory
+  lacks the inference pipeline, so it remains intact as provided.
+- Isolated Python environment: `/opt/wyrmforge-trellis` (Python 3.12).
+- xFormers 0.0.32.post2 installed; FlexGEMM compiled. Other builds in progress.
+- Public TRELLIS weights downloading; Blender installing. Neither is a completed
+  character proof. Build logs are in `/opt/wyrmforge-src/build-*.log`.
+- Official DINOv3 and RMBG weight URLs returned HTTP 401 without authentication.
+  DINOv3 is required; its model page requires review of access terms and account
+  information sharing with Meta. Owner has no paid subscription; none is needed
+  or being purchased. Free approved model access remains unresolved.
+- Existing alpha input permits avoiding the unused RMBG dependency altogether.
+  The local recipe records this and fails if asked to remove a background.
+
+Sources: https://pytorch.org/get-started/previous-versions/ (pinned CUDA 12.8
+package pair); https://docs.nvidia.com/cuda/wsl-user-guide/index.html (WSL uses
+Windows GPU driver); https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m
+(official access conditions). These are toolchain references, not art approval.

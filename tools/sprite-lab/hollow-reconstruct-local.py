@@ -21,6 +21,8 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('--trellis-root', type=Path, required=True)
     parser.add_argument('--attempt', required=True)
+    parser.add_argument('--dino-model', default='facebook/dinov3-vitl16-pretrain-lvd1689m',
+                        help='Official approved model ID or a licensed local copy')
     parser.add_argument('--pipeline', choices=['512', '1024', '1024_cascade'], default='1024_cascade')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
@@ -49,11 +51,34 @@ def main():
         from PIL import Image
         import o_voxel
         from trellis2.pipelines import Trellis2ImageTo3DPipeline
+        from trellis2.pipelines import rembg
+        from huggingface_hub import hf_hub_download
         assert torch.cuda.is_available(), 'CUDA unavailable'
         record.update(torch=torch.__version__, cuda=torch.version.cuda,
                       gpu=torch.cuda.get_device_name(), python=sys.version)
+        # The input already has real alpha. Avoid loading unused RMBG weights or
+        # accepting their separate terms. Fail explicitly if preprocessing tries
+        # to remove a background, rather than silently using another model.
+        class AlphaInputOnly:
+            def __init__(self):
+                pass
+
+            def __call__(self, image):
+                raise ValueError('Reference must have non-opaque alpha')
+
+        if Image.open(reference).getextrema()[-1] == (255, 255):
+            raise ValueError('Reference has no transparent background')
+        rembg.AlphaInputOnly = AlphaInputOnly
+        config = json.loads(Path(hf_hub_download('microsoft/TRELLIS.2-4B', 'pipeline.json')).read_text())
+        for key, value in config['args']['models'].items():
+            if value.startswith('ckpts/'):
+                config['args']['models'][key] = 'microsoft/TRELLIS.2-4B/' + value
+        config['args']['rembg_model'] = dict(name='AlphaInputOnly', args={})
+        config['args']['image_cond_model']['args']['model_name'] = args.dino_model
+        (output / 'pipeline.json').write_text(json.dumps(config, indent=2) + '\n')
+        record.update(dinoModel=args.dino_model, backgroundRemoval='unused; input alpha required')
         save('loading-model-weights')
-        pipeline = Trellis2ImageTo3DPipeline.from_pretrained('microsoft/TRELLIS.2-4B')
+        pipeline = Trellis2ImageTo3DPipeline.from_pretrained(str(output))
         pipeline.low_vram = True
         pipeline.cuda()
         save('reconstructing')
