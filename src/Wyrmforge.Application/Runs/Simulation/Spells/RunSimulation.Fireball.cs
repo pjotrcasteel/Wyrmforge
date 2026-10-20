@@ -13,7 +13,7 @@ public sealed partial class RunSimulation
         ArgumentNullException.ThrowIfNull(mutations);
         if (build.Spells.IsPrimaryCommitted || elapsed > 0) return;
         // One recipe owns one Fireball. This never creates independent automatically firing spells.
-        preparedFireballMutations = mutations.Where(id => FireballCoreCatalog.Mutations.Any(known => known.Id == id))
+        preparedFireballMutations = mutations.Where(id => FireballCoreCatalog.Mutations.Any(known => known.Id == id && known.Playable))
             .Distinct().Take(5).ToHashSet();
     }
 
