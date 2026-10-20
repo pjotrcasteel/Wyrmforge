@@ -26,6 +26,7 @@ test('night preview uses a single registered 1672x941 world and four alpha layer
     const webp = readFileSync(join(runtime, sceneFile));
     assert.equal(webp.subarray(0, 4).toString('ascii'), 'RIFF');
     assert.equal(webp.subarray(8, 12).toString('ascii'), 'WEBP');
+    assert.equal(webp.readUInt32LE(4) + 8, webp.length, 'WebP RIFF byte length must match the complete file; a valid header is not enough');
     for (const file of ['ArcaneNexus', 'Blacksmith', 'Codex', 'HallOfFame']
             .map(name => `night-vacant-${name}.png`)) {
         assert.ok(existsSync(join(runtime, file)), `Required vacancy layer missing: ${file}`);
