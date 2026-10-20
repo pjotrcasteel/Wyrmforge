@@ -6,7 +6,7 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "first candidate rejected for floor geometry and shortened horns; higher-detail hero reference prepared",
+  "status": "second reconstruction passes initial identity review; mesh cleanup and rig pending",
   "ownerAccepted": false,
   "rigged": false,
   "runtimeIntegrated": false,
@@ -18,5 +18,5 @@
     "attack and death",
     "layer metadata and runtime acceptance"
   ],
-  "modelAttempt": "model/local-appearance-001"
+  "modelAttempt": "model/local-appearance-002"
 }
