@@ -6,11 +6,14 @@ namespace Wyrmforge.Application.Tests.World;
 [TestClass]
 public sealed class TownCrowdTests
 {
+    private static TownNavigationMap Scene() =>
+        TownNavigationMap.FromJson(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "night-navigation.json")));
+
     [TestMethod]
     public void Step_SameSeedAndTicks_ReplaysIdenticalPedestrians()
     {
-        var first = new TownCrowd(451);
-        var replay = new TownCrowd(451);
+        var first = new TownCrowd(Scene(), 451);
+        var replay = new TownCrowd(Scene(), 451);
         var witnessedMovement = false;
 
         for (var tick = 0; tick < 800; tick++)
@@ -21,61 +24,119 @@ public sealed class TownCrowdTests
             {
                 var actual = first.Citizens[i];
                 var expected = replay.Citizens[i];
-                Assert.AreEqual(expected.XPercent, actual.XPercent);
-                Assert.AreEqual(expected.YPercent, actual.YPercent);
+                Assert.AreEqual(expected.Position, actual.Position);
                 Assert.AreEqual(expected.DestinationNode, actual.DestinationNode);
+                Assert.IsTrue(first.Navigation.IsWalkable(actual.Position), "A citizen left the paved pedestrian region.");
                 witnessedMovement |= actual.IsWalking;
             }
         }
 
-        Assert.IsTrue(witnessedMovement, "Citizens must actually walk, not remain frozen at spawn.");
+        Assert.IsTrue(witnessedMovement, "Citizens should roam, not remain frozen at their initial positions.");
     }
 
     [TestMethod]
     public void Step_LongBackgroundDelay_IsLimitedToOneTick()
     {
-        var resumed = new TownCrowd(17);
-        var regular = new TownCrowd(17);
+        var resumed = new TownCrowd(Scene(), 17);
+        var regular = new TownCrowd(Scene(), 17);
 
         resumed.Step(TimeSpan.FromMinutes(3));
         regular.Step(TimeSpan.FromMilliseconds(100));
 
         for (var i = 0; i < resumed.Citizens.Count; i++)
-        {
-            Assert.AreEqual(regular.Citizens[i].XPercent, resumed.Citizens[i].XPercent);
-            Assert.AreEqual(regular.Citizens[i].YPercent, resumed.Citizens[i].YPercent);
-        }
+            Assert.AreEqual(regular.Citizens[i].Position, resumed.Citizens[i].Position);
     }
 
     [TestMethod]
-    public void Step_PedestriansRemainOnSceneAndDoNotTeleport()
+    public void Step_PedestriansNeverJumpAcrossScenery()
     {
-        var town = new TownCrowd(261);
-        for (var tick = 0; tick < 1200; tick++)
+        var town = new TownCrowd(Scene(), 261);
+        for (var tick = 0; tick < 1000; tick++)
         {
-            var before = town.Citizens.Select(c => (c.XPercent, c.YPercent)).ToArray();
+            var before = town.Citizens.Select(c => c.Position).ToArray();
             town.Step(TimeSpan.FromMilliseconds(100));
             for (var i = 0; i < town.Citizens.Count; i++)
             {
                 var person = town.Citizens[i];
-                var travelled = MathF.Sqrt(MathF.Pow((person.XPercent - before[i].XPercent) * 1672f / 941f, 2)
-                    + MathF.Pow(person.YPercent - before[i].YPercent, 2));
-                Assert.IsTrue(travelled <= 1.11f, $"Citizen {person.Id} jumped {travelled} town units.");
-                Assert.IsTrue(person.XPercent is >= 0 and <= 100);
-                Assert.IsTrue(person.YPercent is >= 0 and <= 100);
+                var travel = MathF.Sqrt(MathF.Pow(person.Position.X - before[i].X, 2) +
+                    MathF.Pow(person.Position.Y - before[i].Y, 2));
+                Assert.IsTrue(travel <= 5.2f, $"Citizen {person.Id} jumped {travel} painted pixels.");
+                Assert.IsTrue(town.Navigation.IsWalkable(person.Position));
             }
 
             var destinations = town.Citizens.Where(c => c.IsWalking).Select(c => c.DestinationNode).ToList();
-            Assert.AreEqual(destinations.Count, destinations.Distinct().Count(), "Two citizens reserved the same stop.");
+            Assert.AreEqual(destinations.Count, destinations.Distinct().Count(), "Multiple people claimed one destination.");
         }
     }
 
     [TestMethod]
-    public void TownCrowd_InvalidCount_IsRejectedWithoutChangingGameProgress()
+    public void Navigation_WellForcesPhysicalDetour()
     {
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(citizenCount: -1));
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(citizenCount: 15));
-        Assert.AreEqual(0, new TownCrowd(citizenCount: 0).Citizens.Count);
-        Assert.AreEqual(7, new TownCrowd().Citizens.Count);
+        var map = Scene();
+        var west = new TownPoint(570, 528);
+        var east = new TownPoint(1080, 542);
+
+        Assert.IsFalse(map.IsWalkable(new TownPoint(824, 511)), "The well must have a real solid footprint.");
+        Assert.IsFalse(map.IsSegmentWalkable(west, east), "Direct walking through the well must be impossible.");
+        Assert.IsTrue(map.TryFindPath(west, east, out var route), "The plaza should have an alternative route.");
+        Assert.IsTrue(route.Count > 1);
+        CheckRoute(map, west, route);
+    }
+
+    [TestMethod]
+    public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
+    {
+        var map = Scene();
+        var start = new TownPoint(827, 715);
+        var destination = new TownPoint(824, 866);
+        Assert.IsTrue(map.TryFindPath(start, destination, out var original));
+        Assert.HasCount(1, original, "This street should be unobstructed before placing the cart.");
+
+        map.SetObstacle(new TownFootprint
+        {
+            Id = "vendor-cart",
+            Footprint = [new(775, 764), new(885, 764), new(885, 809), new(775, 809)]
+        });
+        Assert.AreEqual(1, map.Revision);
+        Assert.IsFalse(map.IsSegmentWalkable(start, destination), "The newly placed cart must stop straight-line walking.");
+        Assert.IsTrue(map.TryFindPath(start, destination, out var detour));
+        Assert.IsTrue(detour.Count > 1);
+        CheckRoute(map, start, detour);
+
+        Assert.IsTrue(map.RemoveObstacle("vendor-cart"));
+        Assert.AreEqual(2, map.Revision);
+        Assert.IsTrue(map.TryFindPath(start, destination, out var restored));
+        Assert.HasCount(1, restored, "Removing the cart should restore the original direct road.");
+    }
+
+    [TestMethod]
+    public void Navigation_WellHasArtworkDepthOccluder()
+    {
+        var map = Scene();
+        var well = map.Occluders.Single(o => o.Id == "well-foreground");
+        Assert.AreEqual("art/town/night-active.webp?v=140", well.Artwork);
+        Assert.IsTrue(well.DepthY > 500);
+        Assert.IsTrue(well.Clip.Count >= 6);
+        StringAssert.StartsWith(map.ForegroundClip(well), "polygon(");
+    }
+
+    [TestMethod]
+    public void TownCrowd_InvalidCount_IsRejected()
+    {
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: -1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: 20));
+        Assert.HasCount(0, new TownCrowd(Scene(), citizenCount: 0).Citizens);
+        Assert.HasCount(7, new TownCrowd(Scene()).Citizens);
+    }
+
+    private static void CheckRoute(TownNavigationMap map, TownPoint start, IReadOnlyList<TownPoint> path)
+    {
+        var previous = start;
+        foreach (var next in path)
+        {
+            Assert.IsTrue(map.IsWalkable(next));
+            Assert.IsTrue(map.IsSegmentWalkable(previous, next), "Segment cuts through a collider or outside the paved floor.");
+            previous = next;
+        }
     }
 }
