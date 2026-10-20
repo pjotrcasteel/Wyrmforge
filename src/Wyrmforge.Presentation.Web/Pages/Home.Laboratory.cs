@@ -2,12 +2,16 @@ using System.Text.Json;
 using Microsoft.JSInterop;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Laboratory;
+using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Presentation.Web.Pages;
 
 public partial class Home
 {
     private const string LaboratoryKey = "wyrmforge.laboratory.v1";
+    private const string FireballCoreKey = "wyrmforge.fireballCore.v1";
+    private readonly FireballCoreState fireballCore = new();
+
     private readonly LaboratoryState laboratory = new();
     private IReadOnlyList<LaboratoryMutationId> activeLaboratoryMutations = [];
     private string? laboratoryNotice;
@@ -116,4 +120,48 @@ public partial class Home
         }
         catch (JSException) { }
     }
+
+    private async Task TryLoadFireballCoreAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FireballCoreKey);
+            if (!string.IsNullOrWhiteSpace(stored)) fireballCore.Restore(JsonSerializer.Deserialize<FireballCoreSave>(stored));
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+        if (fireballCore.DiscoverSecured(essenceVault.SecuredEssences)) await TrySetFireballCoreAsync();
+    }
+
+    private async Task TrySetFireballCoreAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, FireballCoreKey,
+                JsonSerializer.Serialize(fireballCore.ToSave()));
+        }
+        catch (JSException) { }
+    }
+
+    private async Task<bool> UpgradeFireballCoreAsync()
+    {
+        if (!fireballCore.Upgrade(essenceVault)) return false;
+        // Match existing research saves: never lose resources if interrupted between writes.
+        await TrySetFireballCoreAsync();
+        await TrySetEssenceVaultAsync();
+        return true;
+    }
+
+    private async Task<bool> EquipFireballCoreAsync(int slot, FireballMutationId? mutation)
+    {
+        if (!fireballCore.Equip(slot, mutation)) return false;
+        await TrySetFireballCoreAsync();
+        return true;
+    }
+
+    private async Task RecordFireballDiscoveriesAsync(IEnumerable<Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceId> secured)
+    {
+        if (fireballCore.DiscoverSecured(secured)) await TrySetFireballCoreAsync();
+    }
+
 }
