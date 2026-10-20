@@ -12,6 +12,52 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task TownLighting_SettingsOverrideChangesSceneWithoutAffectingBuildingStates()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Expect(Page.Locator(".refuge-canonical-scene")).ToBeVisibleAsync();
+        var initialStates = await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
+            "buttons => [...buttons].map(button => button.dataset.townState).join(',')");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        var controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
+        await Expect(controls).ToBeVisibleAsync();
+        await controls.GetByRole(AriaRole.Button, new() { Name = "Day", Exact = true }).ClickAsync();
+        await Expect(controls.GetByRole(AriaRole.Button, new() { Name = "Day", Exact = true }))
+            .ToHaveAttributeAsync("aria-pressed", "true");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            const image = scene?.querySelector('.refuge-town-night-base');
+            if (scene?.dataset.townTime !== 'day' || !image?.src.includes('/day-active.webp')) return false;
+            await image.decode();
+            return image.naturalWidth === 1672 && image.naturalHeight === 941;
+        }");
+        Assert.AreEqual(initialStates, await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
+            "buttons => [...buttons].map(button => button.dataset.townState).join(',')"));
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
+        await controls.GetByRole(AriaRole.Button, new() { Name = "Night", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            return scene?.dataset.townTime === 'night' &&
+                scene.querySelector('.refuge-town-night-base')?.src.includes('/night-active.webp');
+        }");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
+        await controls.GetByRole(AriaRole.Button, new() { Name = "Auto", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            return scene?.dataset.townTime === window.wyrmforgeTownLighting.getState().effective;
+        }");
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_BuildingLab_CanAuthorAndLockIndependentStages_WithoutChangingGame(int width, int height)

@@ -31,6 +31,7 @@ public static class SaveLayout
     {
         ["wyrmforge.firstHunt.v1"] = SaveDomain.Onboarding,
         ["wyrmforge.arcaneBuild.v1"] = SaveDomain.PlayerLegacy,
+        ["wyrmforge.characterSchool.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.arcaneCodex"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.essenceVault"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.forgeProgression"] = SaveDomain.PlayerLegacy,
@@ -38,7 +39,6 @@ public static class SaveLayout
         ["wyrmforge.spellMastery.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.laboratory.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.loadouts.v1"] = SaveDomain.PlayerLegacy,
-        ["wyrmforge.characterSchool.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.bestiary.v1"] = SaveDomain.PlayerLegacy,
         [LegacyGrants] = SaveDomain.PlayerLegacy,
         [World] = SaveDomain.World,
@@ -48,6 +48,7 @@ public static class SaveLayout
         ["wyrmforge.hall-of-fame.local.v1"] = SaveDomain.Endgame,
         ["wyrmforge.hall-of-fame.pending.v1"] = SaveDomain.Endgame,
         ["wyrmforge.preferredPrimary.v1"] = SaveDomain.Preferences,
+        ["wyrmforge.townLighting.v1"] = SaveDomain.Preferences,
         ["wyrmforge.reviewPrompt.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.enabled.v1"] = SaveDomain.Preferences,
         ["wyrmforge.audio.combat.v1"] = SaveDomain.Preferences,
