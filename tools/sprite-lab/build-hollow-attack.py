@@ -62,8 +62,8 @@ for index in range(16):
         shoulder=point(heads['upper_arm.'+side])
         segment('clavicle.'+side,point(heads['clavicle.'+side]),shoulder,blend,rotation)
         if side=='R':
-            wrist=track(index,[(0,heads['hand.R']),(3,Vector((-.26,.02,.16))),(5,Vector((-.29,.025,.35))),
-                (7,Vector((-.09,-.34,.27))),(8,Vector((.11,-.31,.12))),(10,Vector((.22,-.16,-.05))),(15,heads['hand.R'])])
+            wrist=track(index,[(0,heads['hand.R']),(3,Vector((-.26,.02,.19))),(5,Vector((-.29,.025,.46))),
+                (7,Vector((-.09,-.34,.21))),(8,Vector((.11,-.33,.04))),(10,Vector((.22,-.16,-.05))),(15,heads['hand.R'])])
             finger=track(index,[(0,tails['hand.R']-heads['hand.R']),(5,Vector((-.04,-.07,.06))),
                 (7,Vector((0,-.105,-.035))),(8,Vector((.075,-.065,-.025))),(10,Vector((.085,-.03,-.06))),
                 (15,tails['hand.R']-heads['hand.R'])]).normalized()*lengths['hand.R']
