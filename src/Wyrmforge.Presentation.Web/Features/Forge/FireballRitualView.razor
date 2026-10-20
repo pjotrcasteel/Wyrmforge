@@ -67,13 +67,13 @@
             <div class="fireball-mutator-list" aria-label="Researched Fireball mutations">
                 @foreach (var mutation in FireballCoreCatalog.Mutations)
                 {
-                    var learned = Core.Discovered.Contains(mutation.Id);
+                    var learned = mutation.Playable && Core.Discovered.Contains(mutation.Id);
                     var current = Core.Slots[slot] == mutation.Id;
                     var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
                     <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
                         <span class="mutation-symbol" aria-hidden="true">@mutation.Symbol</span>
                         <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
-                        <span class="mutation-state">@(current ? "Equipped" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
+                        <span class="mutation-state">@(current ? "Equipped" : !mutation.Playable ? "Planned" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
                     </button>
                 }
             </div>
@@ -81,7 +81,7 @@
             {
                 <button type="button" class="fireball-remove" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
             }
-            <p class="fireball-help">Find and secure Ashfang materials to discover new Fireball mutations. Other forms are still being developed.</p>
+            <p class="fireball-help">Secure Ashfang materials to discover the playable mutations. Planned mutations cannot be equipped yet.</p>
         }
         @if (!string.IsNullOrWhiteSpace(notice))
         {
