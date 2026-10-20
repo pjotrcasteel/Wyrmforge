@@ -1,0 +1,26 @@
+{
+  "frames": 22,
+  "fps": 24,
+  "loop": false,
+  "attack": "staggered fire-infused claw rakes",
+  "groundRoot": [
+    0.07,
+    0.22,
+    -0.5
+  ],
+  "fireIgnitionFrames": [
+    1,
+    6
+  ],
+  "clawContactFrames": [
+    9,
+    14
+  ],
+  "fireFadeFrames": [
+    16,
+    21
+  ],
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "fireCurveAuthority": "See export fire-effect-source.npz intensities for exact per-frame VFX curve"
+}

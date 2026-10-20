@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "decodedFrames": 128,
+  "allVisiblePixelsAndAlphaMatchAtlas": true,
+  "opaquePixelSamples": 136598,
+  "opaqueColors": 57,
+  "binaryAlpha": true,
+  "noClipping": true,
+  "noMirroredDirectionRows": true,
+  "phaseAndAnchorShared": true,
+  "stanceContactDriftByDirection": {
+    "N": 8.940696716308594e-08,
+    "NE": 8.940696716308594e-08,
+    "E": 8.940696716308594e-08,
+    "SE": 8.940696716308594e-08,
+    "S": 8.940696716308594e-08,
+    "SW": 8.940696716308594e-08,
+    "W": 8.940696716308594e-08,
+    "NW": 8.940696716308594e-08
+  },
+  "loopPositionError": 0.0,
+  "minimumMeshZ": -0.49885624647140503,
+  "atlasSha256": "bfe6a0fb4970ba6776161f4451f1a20ded4833eff969a1f7d7636e8e54786c17",
+  "sourcePoseSha256": "a9bd2ea67e87e9523394e7ead36da3ce0946a5fbf5188dea49a29246a36ba49b",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

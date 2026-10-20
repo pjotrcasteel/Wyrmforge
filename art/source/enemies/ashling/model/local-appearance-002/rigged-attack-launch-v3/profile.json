@@ -1,0 +1,32 @@
+{
+  "frames": 22,
+  "fps": 24,
+  "loop": false,
+  "attack": "short launching fire-infused claw rakes",
+  "groundRoot": [
+    0.07,
+    0.22,
+    -0.5
+  ],
+  "fireIgnitionFrames": [
+    1,
+    6
+  ],
+  "clawContactFrames": [
+    9,
+    14
+  ],
+  "fireFadeFrames": [
+    16,
+    21
+  ],
+  "launchForwardModelUnits": 0.15,
+  "launchHeightModelUnits": 0.095,
+  "landingFrames": [
+    11,
+    12
+  ],
+  "rootMotionPolicy": "authored visual displacement only; simulation damage and movement unchanged",
+  "ownerAccepted": true,
+  "runtimeIntegrated": false
+}

@@ -1,0 +1,16 @@
+{
+  "frames": 16,
+  "fps": 20,
+  "cell": 96,
+  "anchor": [
+    48,
+    70
+  ],
+  "travelModelUnitsPerCycle": 0.4285714285714285,
+  "sourceRig": "../ashling-rigged.blend",
+  "directions": [
+    "three-quarter front"
+  ],
+  "visualAccepted": false,
+  "runtimeIntegrated": false
+}

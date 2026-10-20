@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "clips": {
+    "walk": {
+      "image": "walk.png",
+      "hash": "b81916287a5c",
+      "frames": 16,
+      "cell": 96,
+      "anchor": [
+        48,
+        70
+      ],
+      "worldSize": 81.6,
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\movement-fiery-eyes-v1"
+    },
+    "attack": {
+      "image": "attack.png",
+      "hash": "25eee4842479",
+      "frames": 22,
+      "cell": 128,
+      "anchor": [
+        64,
+        86
+      ],
+      "worldSize": 108.8,
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\attack-fiery-eyes-v1"
+    },
+    "death": {
+      "image": "death.png",
+      "hash": "95a3b3da7bbb",
+      "frames": 28,
+      "cell": 128,
+      "anchor": [
+        64,
+        86
+      ],
+      "worldSize": 108.8,
+      "sourceExport": "art\\source\\enemies\\ashling\\exports\\death-fiery-eyes-v1"
+    }
+  }
+}

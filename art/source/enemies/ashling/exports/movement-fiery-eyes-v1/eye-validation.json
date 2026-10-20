@@ -1,0 +1,780 @@
+{
+  "passed": true,
+  "animation": "movement",
+  "frames": 128,
+  "paletteColors": 62,
+  "alphaAndGeometryUnchanged": true,
+  "onlyVisibleEyeSurfacePixelsChanged": true,
+  "changes": [
+    {
+      "direction": "N",
+      "frame": 0,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 1,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 2,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 3,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 4,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 5,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 6,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 7,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 8,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 9,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 10,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 11,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 12,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 13,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 14,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "N",
+      "frame": 15,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 0,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 1,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 2,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 3,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 4,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 5,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 6,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 7,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 8,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 9,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 10,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 11,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 12,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 13,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 14,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NE",
+      "frame": 15,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 0,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 1,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 2,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 3,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 4,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 5,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 6,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 7,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 8,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 9,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 10,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 11,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 12,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 13,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 14,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "E",
+      "frame": 15,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 0,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 1,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 2,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 3,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 4,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 5,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 6,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 7,
+      "changedPixels": 5,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 8,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 9,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 10,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 11,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 12,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 13,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 14,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SE",
+      "frame": 15,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 0,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 1,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 2,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 3,
+      "changedPixels": 5,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 4,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 5,
+      "changedPixels": 7,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 6,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 7,
+      "changedPixels": 8,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 8,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 9,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 10,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 11,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 12,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 13,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 14,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "S",
+      "frame": 15,
+      "changedPixels": 6,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 0,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 1,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 2,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 3,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 4,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 5,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 6,
+      "changedPixels": 4,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 7,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 8,
+      "changedPixels": 3,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 9,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 10,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 11,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 12,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 13,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 14,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "SW",
+      "frame": 15,
+      "changedPixels": 2,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 0,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 1,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 2,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 3,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 4,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 5,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 6,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 7,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 8,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 9,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 10,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 11,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 12,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 13,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 14,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "W",
+      "frame": 15,
+      "changedPixels": 1,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 0,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 1,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 2,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 3,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 4,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 5,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 6,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 7,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 8,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 9,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 10,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 11,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 12,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 13,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 14,
+      "changedPixels": 0,
+      "intensity": 1
+    },
+    {
+      "direction": "NW",
+      "frame": 15,
+      "changedPixels": 0,
+      "intensity": 1
+    }
+  ],
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

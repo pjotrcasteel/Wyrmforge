@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "animation": "movement",
+  "frames": 128,
+  "paletteColors": 62,
+  "alphaAndFootprintUnchanged": true,
+  "frameRectsAnchorsAndDirectionTransformsUnchanged": true,
+  "atlasVisiblePixelsMatchFrames": true,
+  "maxChangedPixelsPerFrame": 8,
+  "rearViewUnchanged": true,
+  "deathFullyUnchangedAfterEyesExtinguish": false,
+  "changesByDirection": {
+    "N": {
+      "minimum": 0,
+      "maximum": 0,
+      "total": 0
+    },
+    "NE": {
+      "minimum": 0,
+      "maximum": 0,
+      "total": 0
+    },
+    "E": {
+      "minimum": 0,
+      "maximum": 2,
+      "total": 14
+    },
+    "SE": {
+      "minimum": 1,
+      "maximum": 6,
+      "total": 60
+    },
+    "S": {
+      "minimum": 4,
+      "maximum": 8,
+      "total": 84
+    },
+    "SW": {
+      "minimum": 1,
+      "maximum": 4,
+      "total": 38
+    },
+    "W": {
+      "minimum": 0,
+      "maximum": 1,
+      "total": 1
+    },
+    "NW": {
+      "minimum": 0,
+      "maximum": 0,
+      "total": 0
+    }
+  },
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

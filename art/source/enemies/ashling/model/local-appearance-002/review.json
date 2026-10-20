@@ -1,0 +1,16 @@
+{
+  "verdict": "promising editable source candidate; not an accepted sprite",
+  "ownerAccepted": false,
+  "improvements": [
+    "long curved horns and clawed hands recovered",
+    "low crouched body close to hero concept",
+    "broad floor artifact absent in camera views"
+  ],
+  "remaining": [
+    "thin tail not adequately recovered",
+    "rear cloth and hip/leg separation need cleanup",
+    "joint deformation and silhouette not yet tested",
+    "native pixel style and movement not yet authored"
+  ],
+  "review": "front, side and back Gaussian identity views inspected; all eight views preserved"
+}
