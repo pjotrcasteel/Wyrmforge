@@ -1,0 +1,11 @@
+# Shared sprite animation layers — implementation checkpoint
+
+The owner authorized a reusable locomotion/action compositor using existing sprites, after observing the Hollow sliding during a planted-foot attack. No additional color sprites or animation poses are authorized or needed for this slice.
+
+The planned shared controller keeps locomotion phase driven by displacement independently of action time, uses named body regions and attachment points from a creature profile, and preserves full-body actions for body-plan-specific moves. Death overrides active layers; freeze/pause suspend phase. C# remains authoritative for damage and movement. Direction changes carry gait phase.
+
+For the first proof, the Hollow's original Blender rigs provide semantic skin ownership and per-frame pelvis attachments. The existing 96px walk and 128px attack PNGs are sampled into a common 128px compositing space without changing their pixel density. Metadata contains clipping runs and landmarks, not color artwork. A moving attack combines walking support regions with the attacking action region, aligned at the pelvis. Stationary attacks retain the approved complete pose.
+
+Implementation is in progress. Semantic extraction, common controller/compositor, visual seam/occlusion checks in all eight facings, interruption tests and mobile crowd performance must pass before this is described as validated. Other enemies retain their existing presentation until their profiles are proved.
+
+Research principles: [Unity masked animation layers](https://docs.unity3d.com/6000.0/Documentation/Manual/AnimationLayers.html) and [Spine animation tracks](https://esotericsoftware.com/spine-applying-animations) establish independent locomotion/action layering for skeletal data. Our implementation adapts the layering principle to existing sprite pixels rather than claiming skeletal interpolation of PNGs. [Godot discrete carry](https://docs.godotengine.org/en/stable/tutorials/animation/animation_tree.html#blendspace2d-and-blendspace1d) supports retaining playback phase for frame-by-frame art. [Canvas clipping](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/clip) provides the browser compositing mechanism. None of these sources guarantees seam-free composition of arbitrary flattened poses; that is a visual gate for this implementation.
