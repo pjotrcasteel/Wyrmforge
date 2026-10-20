@@ -1,0 +1,82 @@
+{
+  "base": "https://pjotrcasteel.github.io/Wyrmforge",
+  "errors": [],
+  "assets": [
+    "/Wyrmforge/art/enemies/ashling-rigged/animation-profile.json",
+    "/Wyrmforge/art/enemies/ashling-rigged/manifest.json",
+    "/Wyrmforge/art/enemies/ashling-rigged/death.png",
+    "/Wyrmforge/art/enemies/ashling-rigged/walk.png",
+    "/Wyrmforge/art/enemies/ashling-rigged/attack.png"
+  ],
+  "walk": {
+    "ready": true,
+    "entities": [
+      {
+        "entityId": 1,
+        "clip": "walk",
+        "frame": 9,
+        "direction": "S",
+        "baseFrame": 9,
+        "phase": 0.6000682870370391,
+        "layered": false,
+        "drawX": 200.08611312895894,
+        "drawY": 183.50293005168174,
+        "x": 200.08611312895894,
+        "y": 183.50293005168174
+      }
+    ],
+    "corpses": []
+  },
+  "attack": {
+    "ready": true,
+    "entities": [
+      {
+        "entityId": 1,
+        "clip": "attack",
+        "frame": 15,
+        "direction": "S",
+        "baseFrame": 12,
+        "phase": 0.7637465277778039,
+        "layered": false,
+        "drawX": 183.95109636402836,
+        "drawY": 243.99104247815166,
+        "x": 183.9572857135665,
+        "y": 243.9615243895907
+      }
+    ],
+    "corpses": []
+  },
+  "collapse": {
+    "ready": true,
+    "entities": [],
+    "corpses": [
+      {
+        "entityId": 1,
+        "direction": "S",
+        "age": 0.25319999992847464,
+        "frame": 6
+      }
+    ]
+  },
+  "held": {
+    "ready": true,
+    "entities": [],
+    "corpses": [
+      {
+        "entityId": 1,
+        "direction": "S",
+        "age": 2.0032999999523162,
+        "frame": 27
+      }
+    ]
+  },
+  "pauseStable": true,
+  "renderingFailed": false,
+  "performance": {
+    "fps": 239,
+    "simulationHz": 215,
+    "simulationMilliseconds": 0,
+    "bridgeMilliseconds": 2.214906829484501
+  },
+  "passed": true
+}

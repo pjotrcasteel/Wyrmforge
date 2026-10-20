@@ -1,6 +1,6 @@
 # Ashling runtime integration
 
-Approved fiery-eye movement, weighted fire-claw attack and death PNGs are integrated into the production Canvas renderer used by ordinary Hunts and Enemy Lab. This is a task-branch implementation, not a merged or deployed release. Current main was fetched and merged (`f4d6273b`); open concurrent PRs #136, #128 and #118 were inspected and preserved.
+Approved fiery-eye movement, weighted fire-claw attack and death PNGs are integrated into the production Canvas renderer used by ordinary Hunts and Enemy Lab. Release 0.0.141 shipped through PR #168 as `f986ea96bd0ed6d275523f95d363e5f2251d7155`; Pages build/deploy/smoke and direct live checks passed. Current main was fetched and merged (`f4d6273b`) before implementation; open concurrent PRs #136, #128 and #118 were inspected and preserved.
 
 Runtime bundle: `src/Wyrmforge.Presentation.Web/wwwroot/art/enemies/ashling-rigged/`. PNG bytes exactly match approved `movement-fiery-eyes-v1`, `attack-fiery-eyes-v1` and `death-fiery-eyes-v1` source exports. The manifest uses cache hashes and per-clip cells/anchors: 96px walk, 128px attack/death, uniform 0.85 world units per source pixel. The three PNGs total about 1.43 MB compressed. No interpolation filter, mirroring or generated replacement art is used.
 
@@ -21,4 +21,4 @@ Reproduce with Release publish to `artifacts/ashling-runtime`, SPA server on 419
 
 Preserved evidence: `docs/art/evidence/ashling-runtime-2026-10-20/` contains the moving-attack GIF, 390px walk/collapse/held-corpse screenshots, 320px paused view, and full lifecycle/turning JSON reports. Final lifecycle capture records collapse frame 6, held frame 27, stable pause and no errors. The local .NET invocation passed all four selected tests in 28 seconds using Edge. The 231-test JavaScript report is `artifacts/ashling-javascript-tests.txt` (transient local output).
 
-The owner approved the integration and authorized shipping with “continue”. Release version is 0.0.141. PR CI, merge and Pages deployment are being verified; this checkpoint does not yet claim the version is live.
+The owner approved the integration and authorized shipping with “continue”. Version 0.0.141 is live. See `ashling-release-0.0.141-verification.md` for exact release-head CI, merge, deployment and live verification evidence. Physical iPhone Safari remains a separate validation limit.

@@ -1,0 +1,20 @@
+[
+  {
+    "clip": "walk",
+    "sha256": "b81916287a5cf3a58f82f6ecee29975a833b39d67adc4787af210ee12191d770",
+    "bytes": 399701,
+    "matches": true
+  },
+  {
+    "clip": "attack",
+    "sha256": "25eee48424793dad9206495a31726baa8eb66a7ba05fbf2a53a62a07a7b4f2ed",
+    "bytes": 506890,
+    "matches": true
+  },
+  {
+    "clip": "death",
+    "sha256": "95a3b3da7bbb30f1b929dafd98a044ca0c27657d25787b2779c6fa4aaccc06f8",
+    "bytes": 522545,
+    "matches": true
+  }
+]

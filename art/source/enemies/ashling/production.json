@@ -6,13 +6,11 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "approved lifecycle and fiery eyes integrated; local published-game validation passed; task branch not deployed",
+  "status": "released 0.0.141; Pages and live lifecycle turning atlas checks passed",
   "ownerAccepted": true,
   "rigged": true,
   "runtimeIntegrated": true,
   "remaining": [
-    "PR CI and release review",
-    "ship version and deploy when authorized",
     "physical mobile Safari validation"
   ],
   "modelAttempt": "model/local-appearance-002",
@@ -39,5 +37,8 @@
   "deathAcceptance": "Owner awesome reply accepted collapse and requested fiery eyes, 2026-10-20",
   "appearanceOwnerAccepted": true,
   "appearanceDocumentation": "../../../../docs/art/ashling-fiery-eyes-2026-10-20.md",
-  "runtimeDocumentation": "../../../../docs/art/ashling-runtime-integration-2026-10-20.md"
+  "runtimeDocumentation": "../../../../docs/art/ashling-runtime-integration-2026-10-20.md",
+  "releaseVersion": "0.0.141",
+  "releaseCommit": "f986ea96bd0ed6d275523f95d363e5f2251d7155",
+  "releaseVerification": "../../../../docs/art/ashling-release-0.0.141-verification.md"
 }

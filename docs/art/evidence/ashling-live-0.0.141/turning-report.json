@@ -1,0 +1,959 @@
+{
+  "passed": true,
+  "errors": [],
+  "overflow320": false,
+  "pauseStable": true,
+  "directions": [
+    "S",
+    "SE",
+    "E",
+    "NE",
+    "N"
+  ],
+  "frames": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "baseFrames": [
+    0,
+    5,
+    6,
+    8,
+    10,
+    11,
+    13,
+    15,
+    1,
+    3,
+    4,
+    9,
+    2,
+    14,
+    7,
+    12
+  ],
+  "fullBody": true,
+  "samples": [
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 1,
+            "direction": "S",
+            "baseFrame": 0,
+            "phase": 0.01784259259248966,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 188.16347148855974,
+            "y": 223.95779984707627
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 2,
+            "direction": "S",
+            "baseFrame": 5,
+            "phase": 0.3267731481480449,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 189.9267136879893,
+            "y": 228.9837879941873
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 2,
+            "direction": "S",
+            "baseFrame": 6,
+            "phase": 0.4175324074073059,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 190.8448552273533,
+            "y": 230.2526548418658
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 3,
+            "direction": "SE",
+            "baseFrame": 8,
+            "phase": 0.5266180555554545,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 192.20518770810756,
+            "y": 231.55410922021252
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 3,
+            "direction": "SE",
+            "baseFrame": 10,
+            "phase": 0.6357037037036015,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 193.7501443413024,
+            "y": 232.63171350715913
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 4,
+            "direction": "SE",
+            "baseFrame": 11,
+            "phase": 0.7452256944443425,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 195.4166098495085,
+            "y": 233.527087992312
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 5,
+            "direction": "SE",
+            "baseFrame": 13,
+            "phase": 0.8543113425924882,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 197.1479558526346,
+            "y": 234.27142005511806
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 5,
+            "direction": "SE",
+            "baseFrame": 15,
+            "phase": 0.9812870370369318,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 199.2193434540989,
+            "y": 234.99384760943278
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 6,
+            "direction": "SE",
+            "baseFrame": 1,
+            "phase": 0.07204629629619186,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 200.72416944230693,
+            "y": 235.4352791052085
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 7,
+            "direction": "E",
+            "baseFrame": 3,
+            "phase": 0.19945833333322782,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 202.85930399382593,
+            "y": 235.97187262252373
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 7,
+            "direction": "E",
+            "baseFrame": 4,
+            "phase": 0.29065393518507965,
+            "layered": false,
+            "drawX": 188.53740437183066,
+            "drawY": 222.11813885446082,
+            "x": 204.3990312032102,
+            "y": 236.30722807762902
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 8,
+            "direction": "E",
+            "baseFrame": 6,
+            "phase": 0.4176296296295239,
+            "layered": false,
+            "drawX": 193.04156208467754,
+            "drawY": 225.7684653580991,
+            "x": 206.55403522321814,
+            "y": 236.7194448690139
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 8,
+            "direction": "E",
+            "baseFrame": 8,
+            "phase": 0.5083888888887844,
+            "layered": false,
+            "drawX": 193.42812918847372,
+            "drawY": 225.83395955282052,
+            "x": 208.10030363840286,
+            "y": 236.98142164789957
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 9,
+            "direction": "E",
+            "baseFrame": 9,
+            "phase": 0.6174745370369334,
+            "layered": false,
+            "drawX": 199.25052904477806,
+            "drawY": 229.69214844953484,
+            "x": 209.96365371772546,
+            "y": 237.2661580446089
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 10,
+            "direction": "E",
+            "baseFrame": 11,
+            "phase": 0.7448865740739681,
+            "layered": false,
+            "drawX": 206.24320750777977,
+            "drawY": 233.7021487200826,
+            "x": 212.14514188642949,
+            "y": 237.56348534195652
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 10,
+            "direction": "E",
+            "baseFrame": 13,
+            "phase": 0.8360821759258195,
+            "layered": false,
+            "drawX": 207.42108213331719,
+            "drawY": 233.79543094228785,
+            "x": 213.71564138714604,
+            "y": 237.6878616382302
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 11,
+            "direction": "E",
+            "baseFrame": 15,
+            "phase": 0.9447314814813752,
+            "layered": false,
+            "drawX": 215.5920635738464,
+            "drawY": 237.65979578619397,
+            "x": 215.5920635738464,
+            "y": 237.65979578619397
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 11,
+            "direction": "E",
+            "baseFrame": 0,
+            "phase": 0.05425347222211374,
+            "layered": false,
+            "drawX": 217.46978788853818,
+            "drawY": 237.43076040643538,
+            "x": 217.46978788853818,
+            "y": 237.43076040643538
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 12,
+            "direction": "E",
+            "baseFrame": 2,
+            "phase": 0.16290277777766815,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 219.29719620084273,
+            "y": 237.00400055778968
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 12,
+            "direction": "E",
+            "baseFrame": 4,
+            "phase": 0.27198842592581784,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 221.07555763007332,
+            "y": 236.3815789056214
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 13,
+            "direction": "E",
+            "baseFrame": 6,
+            "phase": 0.3815104166665586,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 222.78612727807018,
+            "y": 235.57372957630014
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 14,
+            "direction": "E",
+            "baseFrame": 8,
+            "phase": 0.5084861111110035,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 224.65780207102063,
+            "y": 234.43082429073715
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 14,
+            "direction": "NE",
+            "baseFrame": 9,
+            "phase": 0.5992453703702656,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 225.9154693108005,
+            "y": 233.49442189903587
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 15,
+            "direction": "NE",
+            "baseFrame": 11,
+            "phase": 0.7083310185184142,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 227.33560351331525,
+            "y": 232.25564316044003
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 15,
+            "direction": "NE",
+            "baseFrame": 13,
+            "phase": 0.8178530092591552,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 228.66151330220129,
+            "y": 230.90578511382407
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 16,
+            "direction": "NE",
+            "baseFrame": 14,
+            "phase": 0.9265023148147153,
+            "layered": false,
+            "drawX": 218.08390746071626,
+            "drawY": 237.31044046037377,
+            "x": 229.88139128374968,
+            "y": 229.4790606838395
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 17,
+            "direction": "NE",
+            "baseFrame": 0,
+            "phase": 0.036024305555452996,
+            "layered": false,
+            "drawX": 220.67112272555178,
+            "drawY": 235.44188492637133,
+            "x": 231.01998378489387,
+            "y": 227.9676627903616
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 17,
+            "direction": "NE",
+            "baseFrame": 2,
+            "phase": 0.16343634259249296,
+            "layered": false,
+            "drawX": 220.91472889868416,
+            "drawY": 235.075149641256,
+            "x": 232.2380146505558,
+            "y": 226.13398636478482
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 18,
+            "direction": "NE",
+            "baseFrame": 4,
+            "phase": 0.25419560185175016,
+            "layered": false,
+            "drawX": 224.0577839666954,
+            "drawY": 232.2958900547612,
+            "x": 233.01859872566413,
+            "y": 224.77406444634235
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 18,
+            "direction": "NE",
+            "baseFrame": 5,
+            "phase": 0.3632812499998983,
+            "layered": false,
+            "drawX": 224.37946852901476,
+            "drawY": 231.6142453556785,
+            "x": 233.8228101314625,
+            "y": 223.06995269863555
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 19,
+            "direction": "NE",
+            "baseFrame": 7,
+            "phase": 0.4723668981480471,
+            "layered": false,
+            "drawX": 227.9066714568503,
+            "drawY": 227.70122538389077,
+            "x": 234.4551807876063,
+            "y": 221.2950819995688
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 20,
+            "direction": "NE",
+            "baseFrame": 9,
+            "phase": 0.5814525462961946,
+            "layered": false,
+            "drawX": 231.52636831755373,
+            "drawY": 223.03111625515567,
+            "x": 234.8869835317631,
+            "y": 219.46128520385113
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 20,
+            "direction": "N",
+            "baseFrame": 11,
+            "phase": 0.6905381944443436,
+            "layered": false,
+            "drawX": 231.68933580345345,
+            "drawY": 221.53296221290054,
+            "x": 235.09069288913773,
+            "y": 217.58859265103223
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 21,
+            "direction": "N",
+            "baseFrame": 12,
+            "phase": 0.799623842592492,
+            "layered": false,
+            "drawX": 235.04451225718327,
+            "drawY": 215.70558909461815,
+            "x": 235.04451225718327,
+            "y": 215.70558909461815
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "attack",
+            "frame": 21,
+            "direction": "N",
+            "baseFrame": 14,
+            "phase": 0.9087094907406406,
+            "layered": false,
+            "drawX": 234.73746049051084,
+            "drawY": 213.84730605618992,
+            "x": 234.73746049051084,
+            "y": 213.84730605618992
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "walk",
+            "frame": 0,
+            "direction": "N",
+            "baseFrame": 0,
+            "phase": 0.01735879629619763,
+            "layered": false,
+            "drawX": 234.17584757158747,
+            "drawY": 212.0573476052518,
+            "x": 234.17584757158747,
+            "y": 212.0573476052518
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "walk",
+            "frame": 2,
+            "direction": "N",
+            "baseFrame": 2,
+            "phase": 0.12731712962953123,
+            "layered": false,
+            "drawX": 233.36541792907624,
+            "drawY": 210.34030188921335,
+            "x": 233.36541792907624,
+            "y": 210.34030188921335
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "walk",
+            "frame": 3,
+            "direction": "N",
+            "baseFrame": 3,
+            "phase": 0.2359664351850861,
+            "layered": false,
+            "drawX": 232.35459102531655,
+            "drawY": 208.75953107595362,
+            "x": 232.35459102531655,
+            "y": 208.75953107595362
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "walk",
+            "frame": 5,
+            "direction": "NW",
+            "baseFrame": 5,
+            "phase": 0.3450520833332349,
+            "layered": false,
+            "drawX": 231.16308614636097,
+            "drawY": 207.30004835915256,
+            "x": 231.16308614636097,
+            "y": 207.30004835915256
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "walk",
+            "frame": 7,
+            "direction": "NW",
+            "baseFrame": 7,
+            "phase": 0.4541377314813815,
+            "layered": false,
+            "drawX": 229.82810560354946,
+            "drawY": 205.97023334352758,
+            "x": 229.82810560354946,
+            "y": 205.97023334352758
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    },
+    {
+      "ashling": {
+        "ready": true,
+        "entities": [
+          {
+            "entityId": 1,
+            "clip": "walk",
+            "frame": 9,
+            "direction": "NW",
+            "baseFrame": 9,
+            "phase": 0.5815497685184243,
+            "layered": false,
+            "drawX": 228.12683579720405,
+            "drawY": 204.57401156821555,
+            "x": 228.12683579720405,
+            "y": 204.57401156821555
+          }
+        ],
+        "corpses": []
+      },
+      "renderingFailed": false
+    }
+  ]
+}
