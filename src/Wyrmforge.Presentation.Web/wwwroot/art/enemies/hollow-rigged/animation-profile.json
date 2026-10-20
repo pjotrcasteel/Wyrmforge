@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "maxDeltaSeconds": 0.1,
+  "locomotion": { "clip": "walk", "frames": 16, "stride": 18.387096774193548 },
+  "actions": {
+    "attack": {
+      "clip": "attack", "frames": 16, "fps": 12, "priority": 10,
+      "mode": "regions", "supportRegion": "support", "region": "action",
+      "entryFrame": 0, "exitFrame": 15, "reducedFrame": 7
+    },
+    "death": { "clip": "death", "frames": 24, "fps": 12, "priority": 100, "mode": "fullBody", "hold": true, "reducedFrame": 23 }
+  }
+}
