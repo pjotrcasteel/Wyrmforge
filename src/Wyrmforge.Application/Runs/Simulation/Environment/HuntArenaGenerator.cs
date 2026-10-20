@@ -39,7 +39,8 @@ public static class HuntArenaGenerator
             var kind = variant < influence * .42 ? (frost ? "frozen-urn" : "ember-urn")
                 : variant < .36 ? "barrel" : variant < .7 ? "crate" : forest ? "stump" : "urn";
             var dropRoll = random.NextDouble();
-            var drop = dropRoll < .60 ? "experience" : dropRoll < .78 ? "health" : null;
+            // Loot remains uncommon: ordinary scenery must not overwhelm Hunt combat rewards.
+            var drop = dropRoll < .12 ? "experience" : dropRoll < .18 ? "health" : null;
             var size = kind is "stump" ? 17 : 13;
             props.Add(new Prop(props.Count + 1, kind, x, y, size, kind is "stump" ? 32 : 18, drop));
         }
