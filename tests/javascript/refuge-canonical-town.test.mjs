@@ -36,7 +36,7 @@ test('night game town uses a single registered 1672x941 world and four alpha lay
     }
 
     assert.match(scene, /refuge-canonical-scene/);
-    assert.ok(scene.includes('src="art/town/night-active.webp?v=139"'));
+    assert.ok(scene.includes('src="art/town/night-active.webp?v=140"'));
     assert.match(scene, /class="refuge-town-vacant-layer"/);
     assert.match(css, /aspect-ratio:1672\/941/);
     assert.match(css, /width:177\.6833dvh/);

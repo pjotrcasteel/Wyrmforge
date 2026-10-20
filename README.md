@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Hotfix 0.0.140 — Night-only Refuge, rollback of damaged v0.0.139 images
+
+- Reverted all eight v0.0.139 daytime and nighttime vacancy image changes **byte-for-byte** to the previous v0.0.138 artwork. No new generation, image processing, or redesign.
+- Temporarily removed the Day/Auto/Night preference controls; the town always uses the original night panorama and original nighttime vacancy layers, regardless of local browser clock or saved choice. Daytime assets remain in the repo but cannot load in the live town.
+- Gameplay unlock conditions, hit targets, the World Gate, NPC plans, and the eight approved canonical building source images are unchanged.
+- Further visual repairs require explicitly approved per-building artwork, one at a time. This hotfix intentionally does not claim to improve the old art.
+
+
 ## Prototype 0.0.139 — Repair vacant Refuge artwork
 
 - Replace independently regenerated vacancy patches with pixel-registered corrections of the current day/night panorama. Each locked building retains its exact geometry and working interaction while its powered fixtures are dimmed, chimney plumes are removed, and the Hall entrance is repaired from same-scene wood.
