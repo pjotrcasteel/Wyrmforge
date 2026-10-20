@@ -35,7 +35,7 @@ test('night preview uses a single registered 1672x941 world and four alpha layer
     }
 
     assert.match(scene, /refuge-canonical-scene/);
-    assert.match(scene, /src="art\/town\/night-active\.png\?v=132"/);
+    assert.ok(scene.includes('src="art/town/night-active.webp?v=132"'));
     assert.match(scene, /class="refuge-town-vacant-layer"/);
     assert.match(css, /aspect-ratio:1672\/941/);
     assert.match(css, /width:177\.6833dvh/);
