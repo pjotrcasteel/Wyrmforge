@@ -8,7 +8,7 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class HollowBrowserTests : PageTest
 {
     [TestMethod]
-    public async Task Mobile_MovingAttack_KeepsLocomotionPhase_AndPausesBothLayers()
+    public async Task Mobile_MovingAttack_TurnsWithTarget_KeepsPhase_AndPausesBothLayers()
     {
         var baseUrl = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
         await Page.SetViewportSizeAsync(390, 844);
@@ -16,20 +16,27 @@ public sealed class HollowBrowserTests : PageTest
         await AttachDiagnosticsAsync();
         await Page.WaitForFunctionAsync(@"() => window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hollow.entities.some(e=>e.clip==='attack'&&e.frame<4)");
         await Page.Locator(".enemy-lab canvas").FocusAsync();
-        await Page.Keyboard.DownAsync("ArrowRight");
         // Sample inside the page so browser round trips cannot skip the action.
-        var advanced = await Page.EvaluateAsync<bool>(@"async () => {
-            const base=new Set(),action=new Set();
-            for(let i=0;i<16;i++){
-                await new Promise(resolve=>setTimeout(resolve,50));
+        await Page.EvaluateAsync(@"() => {
+            window.__turnSamples=[];
+            window.__turnTimer=setInterval(()=>{
                 const d=window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
-                if(d.renderingFailed)return false;
-                for(const e of d.hollow.entities)if(e.layered&&e.clip==='attack'){base.add(e.baseFrame);action.add(e.frame);}
-            }
-            return base.size>2&&action.size>2;
+                if(d.renderingFailed)throw new Error('Renderer failed during turn');
+                window.__turnSamples.push(...d.hollow.entities.filter(e=>e.layered&&e.clip==='attack'));
+            },30);
         }");
-        await Page.Keyboard.UpAsync("ArrowRight");
-        Assert.IsTrue(advanced, "Walking support and attack frames must both advance during pursuit.");
+        foreach (var key in new[] { "ArrowRight", "ArrowUp", "ArrowLeft" })
+        {
+            await Page.Keyboard.DownAsync(key);
+            await Page.WaitForTimeoutAsync(260);
+            await Page.Keyboard.UpAsync(key);
+        }
+        var advanced = await Page.EvaluateAsync<bool>(@"() => {
+            clearInterval(window.__turnTimer);
+            const samples=window.__turnSamples;
+            return new Set(samples.map(e=>e.baseFrame)).size>2&&new Set(samples.map(e=>e.frame)).size>2&&new Set(samples.map(e=>e.direction)).size>1;
+        }");
+        Assert.IsTrue(advanced, "Walking and attack phases must advance while facing follows the turning player.");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Pause", Exact = true }).ClickAsync();
         await Page.WaitForTimeoutAsync(150);
         const string read = "() => JSON.stringify(window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas')).hollow.entities)";

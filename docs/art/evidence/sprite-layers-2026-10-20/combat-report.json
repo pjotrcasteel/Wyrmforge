@@ -2,102 +2,64 @@
   "passed": true,
   "errors": [],
   "frames": [
+    6,
+    10,
     14,
     2,
-    6,
-    9,
-    13,
-    1,
-    5,
-    10
+    11,
+    15,
+    3,
+    7,
+    4
   ],
   "actionFrames": [
-    1,
-    2,
     3,
     4,
     5,
     6,
-    7,
     8,
+    9,
     10,
     11,
-    13
+    12,
+    13,
+    14,
+    15
+  ],
+  "directions": [
+    "SE",
+    "E",
+    "NE",
+    "N"
   ],
   "pauseStable": true,
   "cache": {
-    "hits": 312,
-    "misses": 60,
+    "hits": 226,
+    "misses": 78,
     "evictions": 0,
-    "tiles": 60,
-    "allocatedTiles": 60,
-    "estimatedBytes": 3932160
+    "tiles": 78,
+    "allocatedTiles": 78,
+    "estimatedBytes": 5111808
   },
   "samples": [
     {
       "ready": true,
       "layers": {
-        "hits": 13,
-        "misses": 6,
+        "hits": 47,
+        "misses": 17,
         "evictions": 0,
-        "tiles": 6,
-        "allocatedTiles": 6,
-        "estimatedBytes": 393216
-      },
-      "entities": [
-        {
-          "entityId": 1,
-          "clip": "attack",
-          "frame": 1,
-          "direction": "S",
-          "baseFrame": 14,
-          "phase": 0.8772842105263379,
-          "layered": true
-        }
-      ],
-      "corpses": []
-    },
-    {
-      "ready": true,
-      "layers": {
-        "hits": 32,
-        "misses": 10,
-        "evictions": 0,
-        "tiles": 10,
-        "allocatedTiles": 10,
-        "estimatedBytes": 655360
-      },
-      "entities": [
-        {
-          "entityId": 1,
-          "clip": "attack",
-          "frame": 2,
-          "direction": "S",
-          "baseFrame": 2,
-          "phase": 0.1482133333333573,
-          "layered": true
-        }
-      ],
-      "corpses": []
-    },
-    {
-      "ready": true,
-      "layers": {
-        "hits": 49,
-        "misses": 15,
-        "evictions": 0,
-        "tiles": 15,
-        "allocatedTiles": 15,
-        "estimatedBytes": 983040
+        "tiles": 17,
+        "allocatedTiles": 17,
+        "estimatedBytes": 1114112
       },
       "entities": [
         {
           "entityId": 1,
           "clip": "attack",
           "frame": 3,
-          "direction": "S",
+          "direction": "SE",
           "baseFrame": 6,
-          "phase": 0.407547368421076,
+          "phase": 0.41857684210527424,
           "layered": true
         }
       ],
@@ -106,21 +68,21 @@
     {
       "ready": true,
       "layers": {
-        "hits": 63,
-        "misses": 19,
+        "hits": 64,
+        "misses": 22,
         "evictions": 0,
-        "tiles": 19,
-        "allocatedTiles": 19,
-        "estimatedBytes": 1245184
+        "tiles": 22,
+        "allocatedTiles": 22,
+        "estimatedBytes": 1441792
       },
       "entities": [
         {
           "entityId": 1,
           "clip": "attack",
           "frame": 4,
-          "direction": "S",
-          "baseFrame": 9,
-          "phase": 0.6196526315789748,
+          "direction": "SE",
+          "baseFrame": 10,
+          "phase": 0.6779108771929943,
           "layered": true
         }
       ],
@@ -130,29 +92,6 @@
       "ready": true,
       "layers": {
         "hits": 77,
-        "misses": 24,
-        "evictions": 0,
-        "tiles": 24,
-        "allocatedTiles": 24,
-        "estimatedBytes": 1572864
-      },
-      "entities": [
-        {
-          "entityId": 1,
-          "clip": "attack",
-          "frame": 5,
-          "direction": "S",
-          "baseFrame": 13,
-          "phase": 0.8436357894737114,
-          "layered": true
-        }
-      ],
-      "corpses": []
-    },
-    {
-      "ready": true,
-      "layers": {
-        "hits": 95,
         "misses": 28,
         "evictions": 0,
         "tiles": 28,
@@ -163,10 +102,10 @@
         {
           "entityId": 1,
           "clip": "attack",
-          "frame": 6,
-          "direction": "S",
-          "baseFrame": 1,
-          "phase": 0.102969824561429,
+          "frame": 5,
+          "direction": "E",
+          "baseFrame": 14,
+          "phase": 0.9018940350877287,
           "layered": true
         }
       ],
@@ -175,7 +114,7 @@
     {
       "ready": true,
       "layers": {
-        "hits": 113,
+        "hits": 94,
         "misses": 33,
         "evictions": 0,
         "tiles": 33,
@@ -186,10 +125,10 @@
         {
           "entityId": 1,
           "clip": "attack",
-          "frame": 7,
-          "direction": "S",
-          "baseFrame": 5,
-          "phase": 0.3738989473684482,
+          "frame": 6,
+          "direction": "E",
+          "baseFrame": 2,
+          "phase": 0.16122807017544982,
           "layered": true
         }
       ],
@@ -198,7 +137,7 @@
     {
       "ready": true,
       "layers": {
-        "hits": 129,
+        "hits": 111,
         "misses": 39,
         "evictions": 0,
         "tiles": 39,
@@ -210,9 +149,9 @@
           "entityId": 1,
           "clip": "attack",
           "frame": 8,
-          "direction": "S",
-          "baseFrame": 10,
-          "phase": 0.6332329824561702,
+          "direction": "E",
+          "baseFrame": 6,
+          "phase": 0.4321571929824668,
           "layered": true
         }
       ],
@@ -221,21 +160,44 @@
     {
       "ready": true,
       "layers": {
-        "hits": 147,
-        "misses": 44,
+        "hits": 127,
+        "misses": 45,
         "evictions": 0,
-        "tiles": 44,
-        "allocatedTiles": 44,
-        "estimatedBytes": 2883584
+        "tiles": 45,
+        "allocatedTiles": 45,
+        "estimatedBytes": 2949120
+      },
+      "entities": [
+        {
+          "entityId": 1,
+          "clip": "attack",
+          "frame": 9,
+          "direction": "E",
+          "baseFrame": 11,
+          "phase": 0.6917740350877304,
+          "layered": true
+        }
+      ],
+      "corpses": []
+    },
+    {
+      "ready": true,
+      "layers": {
+        "hits": 144,
+        "misses": 50,
+        "evictions": 0,
+        "tiles": 50,
+        "allocatedTiles": 50,
+        "estimatedBytes": 3276800
       },
       "entities": [
         {
           "entityId": 1,
           "clip": "attack",
           "frame": 10,
-          "direction": "S",
-          "baseFrame": 14,
-          "phase": 0.9041621052631847,
+          "direction": "NE",
+          "baseFrame": 15,
+          "phase": 0.9505424561403615,
           "layered": true
         }
       ],
@@ -244,21 +206,21 @@
     {
       "ready": true,
       "layers": {
-        "hits": 161,
-        "misses": 48,
+        "hits": 162,
+        "misses": 55,
         "evictions": 0,
-        "tiles": 48,
-        "allocatedTiles": 48,
-        "estimatedBytes": 3145728
+        "tiles": 55,
+        "allocatedTiles": 55,
+        "estimatedBytes": 3604480
       },
       "entities": [
         {
           "entityId": 1,
           "clip": "attack",
           "frame": 11,
-          "direction": "S",
-          "baseFrame": 1,
-          "phase": 0.11626736842107643,
+          "direction": "NE",
+          "baseFrame": 3,
+          "phase": 0.22175438596492492,
           "layered": true
         }
       ],
@@ -267,21 +229,21 @@
     {
       "ready": true,
       "layers": {
-        "hits": 176,
-        "misses": 52,
+        "hits": 175,
+        "misses": 60,
         "evictions": 0,
-        "tiles": 52,
-        "allocatedTiles": 52,
-        "estimatedBytes": 3407872
+        "tiles": 60,
+        "allocatedTiles": 60,
+        "estimatedBytes": 3932160
       },
       "entities": [
         {
           "entityId": 1,
           "clip": "attack",
-          "frame": 11,
-          "direction": "S",
-          "baseFrame": 5,
-          "phase": 0.3399677192982722,
+          "frame": 12,
+          "direction": "NE",
+          "baseFrame": 7,
+          "phase": 0.4810884210526434,
           "layered": true
         }
       ],
@@ -291,20 +253,66 @@
       "ready": true,
       "layers": {
         "hits": 191,
-        "misses": 59,
+        "misses": 66,
         "evictions": 0,
-        "tiles": 59,
-        "allocatedTiles": 59,
-        "estimatedBytes": 3866624
+        "tiles": 66,
+        "allocatedTiles": 66,
+        "estimatedBytes": 4325376
       },
       "entities": [
         {
           "entityId": 1,
           "clip": "attack",
           "frame": 13,
-          "direction": "S",
-          "baseFrame": 10,
-          "phase": 0.6465305263158154,
+          "direction": "N",
+          "baseFrame": 11,
+          "phase": 0.7404224561403654,
+          "layered": true
+        }
+      ],
+      "corpses": []
+    },
+    {
+      "ready": true,
+      "layers": {
+        "hits": 208,
+        "misses": 71,
+        "evictions": 0,
+        "tiles": 71,
+        "allocatedTiles": 71,
+        "estimatedBytes": 4653056
+      },
+      "entities": [
+        {
+          "entityId": 1,
+          "clip": "attack",
+          "frame": 14,
+          "direction": "N",
+          "baseFrame": 15,
+          "phase": 0.9994736842105376,
+          "layered": true
+        }
+      ],
+      "corpses": []
+    },
+    {
+      "ready": true,
+      "layers": {
+        "hits": 224,
+        "misses": 77,
+        "evictions": 0,
+        "tiles": 77,
+        "allocatedTiles": 77,
+        "estimatedBytes": 5046272
+      },
+      "entities": [
+        {
+          "entityId": 1,
+          "clip": "attack",
+          "frame": 15,
+          "direction": "N",
+          "baseFrame": 4,
+          "phase": 0.2588077192982561,
           "layered": true
         }
       ],
