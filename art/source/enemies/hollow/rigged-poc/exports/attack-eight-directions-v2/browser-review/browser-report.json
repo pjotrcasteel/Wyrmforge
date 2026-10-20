@@ -1,0 +1,84 @@
+{
+  "errors": [],
+  "views": [
+    {
+      "direction": "N",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 1 · original artwork"
+    },
+    {
+      "direction": "NE",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 2 · original artwork"
+    },
+    {
+      "direction": "E",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 3 · original artwork"
+    },
+    {
+      "direction": "SE",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 4 · original artwork"
+    },
+    {
+      "direction": "S",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 5 · original artwork"
+    },
+    {
+      "direction": "SW",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 6 · original artwork"
+    },
+    {
+      "direction": "W",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 7 · original artwork"
+    },
+    {
+      "direction": "NW",
+      "frame": "16 / 16",
+      "paused": true,
+      "meta": "Row 8 · original artwork"
+    }
+  ],
+  "replayFrame": "03 / 16",
+  "manifest": {
+    "source": {
+      "width": 2048,
+      "height": 1024,
+      "columns": 16,
+      "rows": 8,
+      "frameWidth": 128,
+      "frameHeight": 128,
+      "offsetX": 0,
+      "offsetY": 0
+    },
+    "playback": {
+      "fps": 12,
+      "loop": false,
+      "holdLastFrame": false,
+      "onComplete": "walk"
+    },
+    "anchor": [
+      64,
+      88
+    ],
+    "visualContactFrames": [
+      7,
+      8
+    ]
+  },
+  "format": "FORMAT PASS",
+  "walkPreset": true,
+  "attackPreset": true,
+  "passed": true
+}

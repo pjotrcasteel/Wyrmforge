@@ -1,20 +1,20 @@
 {
   "creatureId": "hollow",
-  "revision": "directional-walk-and-death-v1",
+  "revision": "core-walk-attack-death-v1",
   "procedure": "docs/art/card-to-spritesheet-production.md",
   "reference": {
     "path": "user_handover_files/concepts/Fire/01-the-hollow.png",
     "sha256": "ee4497045eea58f8171436a58ed3851a657ffc8cdf04d3fa8d89184159a08178"
   },
   "route": "textured-3d-to-rendered-sprites",
-  "scope": "eight directions: sixteen walk frames and twenty-four non-looping death frames",
+  "scope": "eight directions: 16 walk, 16 attack and 24 death frames per facing",
   "stages": {
     "A": "self-reviewed; neutral modeling reference generated and inspected",
     "B": "Textured source self-reviewed at intended mobile pixel scale; initial coarse mesh remains historical rejected evidence",
     "C": "22-bone weighted source; walk-pose deformation self-reviewed after lower-limb/cloth weight correction; broader attack/death pose tests remain out of scope",
-    "D": "Owner accepted directional movement; 192 death frames rendered from editable skeletal collapse, source/asset/mobile browser checks passed. Runtime integration pending."
+    "D": "448 total frames: accepted walk/death and self-reviewed attack; local source, asset and mobile browser checks passed. Runtime integration pending."
   },
-  "visualStatus": "Owner accepted eight-direction movement. Death is exported and self-reviewed in eight directions; owner death acceptance pending.",
+  "visualStatus": "Owner accepted movement and death. Attack exported and self-reviewed in eight directions; owner attack acceptance pending. Requested three-clip art exports complete; runtime integration separate.",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "notes": [
@@ -59,10 +59,13 @@
     "review": "exports/pixel-walk-poc-v1/README.md",
     "hardwareSettingsChanged": false
   },
-  "currentExport": "exports/death-eight-directions-v4/hollow-death.png",
+  "currentExport": "exports/attack-eight-directions-v2/hollow-attack.png",
   "gaitOwnerAccepted": true,
   "movementOwnerAccepted": true,
-  "deathOwnerAccepted": false,
+  "deathOwnerAccepted": true,
   "deathEditableSource": "model/local-appearance-004/rigged-death-v5/hollow-death.blend",
-  "deathReview": "exports/death-eight-directions-v4/README.md"
+  "deathReview": "exports/death-eight-directions-v4/README.md",
+  "attackOwnerAccepted": false,
+  "attackEditableSource": "model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
+  "attackReview": "exports/attack-eight-directions-v2/README.md"
 }

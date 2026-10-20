@@ -1,4 +1,4 @@
-"""Render the accepted skinned walk in eight actual facings on the local RTX GPU."""
+"""Render Hollow skeletal clips in eight actual facings on the local RTX GPU."""
 from pathlib import Path
 import sys, json, math, hashlib
 import numpy as np

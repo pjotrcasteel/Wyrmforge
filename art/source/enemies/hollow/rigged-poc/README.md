@@ -1,8 +1,8 @@
-> Current exports, 20 October 2026: **8×16 mobile pixel walk frames, plus 8×24 death frames**,
+> Current exports, 20 October 2026: **8×16 walk, 8×16 attack, and 8×24 death frames**,
 > rendered from one UV-textured, weighted 3D rig on the local RTX 5090.
-> [Movement](exports/movement-eight-directions-v1/README.md) · [Death and evidence](exports/death-eight-directions-v4/README.md).
-> Owner accepted the eight-direction movement sheet in chat. Death is exported
-> and self-reviewed; owner artistic acceptance is pending. Runtime hunt art is unchanged.
+> [Movement](exports/movement-eight-directions-v1/README.md) · [Attack and lifecycle preview](exports/attack-eight-directions-v2/README.md) · [Death](exports/death-eight-directions-v4/README.md).
+> Owner accepted movement and death. Attack is exported and self-reviewed;
+> owner attack acceptance is pending. Runtime hunt art is unchanged.
 >
 > The text below records the earlier hosted-service attempt, not current status.
 # The Hollow: rigged-source proof status

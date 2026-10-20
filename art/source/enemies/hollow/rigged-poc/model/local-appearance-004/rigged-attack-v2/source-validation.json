@@ -1,0 +1,10 @@
+{
+  "frames": 16,
+  "maxSourceEvaluationError": 0.0,
+  "maxBoneLengthError": 6.735324859619141e-06,
+  "maxFootMatrixDrift": 2.9802322387695312e-06,
+  "maxFootTranslationDrift": 5.960464477539063e-08,
+  "minimumVertexZ": -0.5002832412719727,
+  "returnPoseError": 0.0,
+  "passed": true
+}

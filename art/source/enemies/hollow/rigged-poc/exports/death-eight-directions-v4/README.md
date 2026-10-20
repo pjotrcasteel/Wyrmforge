@@ -1,6 +1,6 @@
 # The Hollow: directional death animation
 
-20 October 2026. **Complete death export for review: eight real 3D facings × 24 frames, 12 FPS, plays once and holds the corpse.** Local RTX 5090 rasterization of the same textured, weighted character used in the owner-accepted directional walk. Owner acceptance of this death animation is pending; gameplay runtime integration is not part of this delivery.
+20 October 2026. **Complete death export: eight real 3D facings × 24 frames, 12 FPS, plays once and holds the corpse.** Local RTX 5090 rasterization of the same textured, weighted character used in the owner-accepted directional walk. Owner accepted death in chat ("looks good. lets see the attack Is next"); gameplay runtime integration is not part of this delivery.
 
 ## Deliverables
 

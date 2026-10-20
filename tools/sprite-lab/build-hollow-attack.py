@@ -6,7 +6,7 @@ from mathutils import Vector, Quaternion
 
 root=Path(sys.argv[sys.argv.index('--')+1])
 model=root/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004'
-out=model/(sys.argv[sys.argv.index('--')+2] if len(sys.argv)>sys.argv.index('--')+2 else 'rigged-attack-v1')
+out=model/(sys.argv[sys.argv.index('--')+2] if len(sys.argv)>sys.argv.index('--')+2 else 'rigged-attack-v2')
 out.mkdir(exist_ok=False)
 bpy.ops.wm.open_mainfile(filepath=str(model/'rigged-pixel-v3/hollow-rigged.blend'))
 bpy.context.preferences.filepaths.save_version=0
