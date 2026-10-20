@@ -1,0 +1,19 @@
+.town-lighting-settings {
+    display:grid;gap:10px;padding:12px 0 16px;border-bottom:1px solid #9d826150;
+}
+.town-lighting-settings h3{margin:0;color:#f0d4a1;font-family:Georgia,serif;letter-spacing:.08em}
+.town-lighting-settings p{margin:0;color:#c8b9a2;font-size:.86rem;line-height:1.5}
+.town-lighting-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.town-lighting-settings .town-lighting-options button {
+    min-height:44px;justify-content:center;padding:10px 7px;
+    border:1px solid #8f754f;border-radius:3px;background:#17171f;
+    color:#dbc4a0;cursor:pointer;font-weight:600;letter-spacing:.05em
+}
+.town-lighting-settings .town-lighting-options button.selected,
+.town-lighting-settings .town-lighting-options button[aria-pressed="true"] {
+    border-color:#e3bd76;background:#57412d;color:#fff0c6;
+}
+.town-lighting-settings .town-lighting-options button:focus-visible{
+    outline:2px solid #ffd592;outline-offset:2px
+}
+.town-lighting-settings small{color:#aca99f;line-height:1.45}
