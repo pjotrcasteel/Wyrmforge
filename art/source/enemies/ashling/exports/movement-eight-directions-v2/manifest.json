@@ -1761,6 +1761,6 @@
   "sourcePoseSha256": "a1db8e543f460fa95491a9c32d23c4e50951d1d1a8ba827783beab68657c8f07",
   "atlasSha256": "b5ca1a8ab5092cf0182ed6d95c936194d2cb02a4b1b6fb37337029dacd72d4e5",
   "gaitBaseOwnerAccepted": true,
-  "directionalExportOwnerAccepted": false,
+  "directionalExportOwnerAccepted": true,
   "runtimeIntegrated": false
 }

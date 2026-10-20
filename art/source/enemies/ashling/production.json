@@ -6,13 +6,13 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "approved explicit bound v4a exported and validated in eight directions; directional review pending",
+  "status": "movement approved; fire-claw attack candidate rendered and validated in eight directions",
   "ownerAccepted": true,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner review of regenerated eight-direction movement",
-    "attack and death clips",
+    "owner review of fire-infused claw attack",
+    "death clip",
     "layer metadata and runtime acceptance"
   ],
   "modelAttempt": "model/local-appearance-002",
@@ -20,9 +20,14 @@
   "review": "../../../../docs/art/evidence/ashling-eight-directions-2026-10-20",
   "movementBaseOwnerAccepted": true,
   "movementBaseAcceptance": "Owner perfect reply accepted explicit bound v4a preview on 2026-10-20; v3 remains rejected",
-  "directionalExportOwnerAccepted": false,
+  "directionalExportOwnerAccepted": true,
   "movementExport": "exports/movement-eight-directions-v2",
   "movementResearch": "../../../../docs/art/ashling-movement-research-2026-10-20.md",
   "blockingReview": "model/local-appearance-002/rigged-block-v4a/blocking-review",
-  "blockingDocumentation": "../../../../docs/art/ashling-bound-blocking-v4-2026-10-20.md"
+  "blockingDocumentation": "../../../../docs/art/ashling-bound-blocking-v4-2026-10-20.md",
+  "directionalAcceptance": "Owner yes reply to eight-direction movement followed by request for fire-infused claw attack, 2026-10-20",
+  "attackExport": "exports/attack-eight-directions-v3",
+  "attackSourceRig": "model/local-appearance-002/rigged-attack-v1/ashling-attack.blend",
+  "attackOwnerAccepted": false,
+  "attackDocumentation": "../../../../docs/art/ashling-fire-claw-attack-2026-10-20.md"
 }
