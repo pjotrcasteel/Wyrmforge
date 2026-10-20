@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.136 — Character school creation and elemental icon cleanup
+
+- Choose a permanent Divine magic school once during character creation, before entering Refuge. Four schools have working signatures; Necromancer and Summoner remain reserved.
+- Arena uses the character's saved signature automatically, without an additional First Oath after launching each Hunt. Existing preferred-primary saves migrate safely, and loadouts never respec the Divine school.
+- World Gate reuses the approved pixel paintings with hard square cutoffs and baked labels masked away; each tile has just one accessible label.
+- Wyrm lineage and Hunt tier remain independent from the character school. Full respec remains intentionally locked/TBD.
+- [Compatibility and QA](docs/handover/2026-10-20-character-school-and-sigil-fix.md).
+
 ## Prototype 0.0.135 — Moving attacks and directional sprite layers
 
 - Hollow attacks retain their walking support animation while pursuing the player, and turn through existing directional views without restarting either clip.

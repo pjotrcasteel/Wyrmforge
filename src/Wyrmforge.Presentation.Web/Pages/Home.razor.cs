@@ -164,6 +164,8 @@ public partial class Home
 
     private async Task StartRunAsync()
     {
+        // Character creation owns magical affinity; Hunts never prompt for a new primary.
+        if (characterSchool is null || preferredPrimary is null) return;
         await TryPlayAudioAsync("hunt-start");
         hunterGain = null;
         newlyUnlockedLineages = [];
@@ -174,8 +176,8 @@ public partial class Home
         bestiaryDiscoveries = null;
         activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
-        // A primary oath is still a preview. Nothing is charged, recorded or discovered
-        // until the player commits to a starting spell.
+        // The character's signature is committed automatically before combat begins.
+        // No consumables or discoveries are charged until Arena confirms that commitment.
         activeRewardCache = !firstHunt.TutorialRun && quests.Caches > 0;
         activeOffering = selectedOffering is { } offering && forgeProgression.UnlocksOffering(offering) && essenceVault.Count(offering) > 0
             ? offering : null;
