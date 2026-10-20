@@ -14,6 +14,7 @@ using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Fireball;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Contextual;
@@ -30,6 +31,16 @@ public sealed partial class RunSimulation
     private WyrmrealmMapState mapState;
     private readonly List<WyrmrealmMapNode> completedRouteNodes = [];
     private readonly RunBuildState build = new();
+    private IReadOnlySet<FireballMutatorId> preparedFireballMutations = new HashSet<FireballMutatorId>();
+
+    public void PrepareFireballMutations(IEnumerable<FireballMutatorId> mutations)
+    {
+        ArgumentNullException.ThrowIfNull(mutations);
+        var selected = mutations.Distinct().ToArray();
+        if (selected.Length > 5 || selected.Count(id => FireballCoreCatalog.Get(id).ChangesForm) > 1)
+            throw new ArgumentException("Invalid Fireball mutator composition.", nameof(mutations));
+        preparedFireballMutations = new HashSet<FireballMutatorId>(selected);
+    }
     private IReadOnlySet<SpellId> availablePrimarySpells = new HashSet<SpellId>
     {
         SpellId.ArcaneOrb, SpellId.FireBolt, SpellId.FrostShard, SpellId.ChainLightning,
