@@ -31,7 +31,8 @@ public static class HuntArenaGenerator
         {
             var x = .09 + random.NextDouble() * .82;
             var y = .08 + random.NextDouble() * .84;
-            if (x > .32 && x < .68) continue;
+            // Open perpendicular escape lanes make both kiting and enemy approach predictable.
+            if ((x > .32 && x < .68) || (y > .39 && y < .61)) continue;
             if (Math.Abs(y - .315) < .075 || Math.Abs(y - .675) < .075) continue;
             if (props.Any(prop => Math.Pow((prop.X - x) * 950, 2) + Math.Pow((prop.Y - y) * 1550, 2) < 68 * 68)) continue;
 
