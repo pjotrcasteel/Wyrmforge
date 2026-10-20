@@ -5,11 +5,11 @@
     <h3>Town lighting</h3>
     <p>Match your device's local time or choose the lighting yourself.</p>
     <div class="town-lighting-options" role="group" aria-label="Town lighting preference">
-        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "auto")"
+        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "auto" ? "true" : "false")"
                 class="@(mode == "auto" ? "selected" : "")" @onclick='() => ChangeModeAsync("auto")'>Auto</button>
-        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "day")"
+        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "day" ? "true" : "false")"
                 class="@(mode == "day" ? "selected" : "")" @onclick='() => ChangeModeAsync("day")'>Day</button>
-        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "night")"
+        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "night" ? "true" : "false")"
                 class="@(mode == "night" ? "selected" : "")" @onclick='() => ChangeModeAsync("night")'>Night</button>
     </div>
     <small aria-live="polite">@Description</small>
