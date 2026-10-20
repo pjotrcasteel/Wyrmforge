@@ -129,6 +129,11 @@ jobs:
           from urllib.parse import urlsplit
 
           origin = "https://pjotrcasteel.github.io"
+          # Cloudflare rejects Python-urllib's generic agent (1010). Identify
+          # this public health/consent probe while retaining every assertion.
+          opener = urllib.request.build_opener()
+          opener.addheaders = [("User-Agent", "Wyrmforge-Pages-Smoke/1.0 (+https://github.com/pjotrcasteel/Wyrmforge)")]
+          urllib.request.install_opener(opener)
           endpoint_expected = "https://wyrmforge-feedback-collector.pjotr-2.workers.dev/v1/reports"
           config = origin + "/Wyrmforge/playtest-collector-config.json?build=" + os.environ["GITHUB_SHA"]
 
