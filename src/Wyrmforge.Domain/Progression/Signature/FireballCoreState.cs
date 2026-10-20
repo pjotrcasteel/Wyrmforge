@@ -2,9 +2,9 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 
 namespace Wyrmforge.Domain.Progression.Signature;
 
-public enum FireballMutationId { MeteorHeart, Detonation, ScorchedEarth }
+public enum FireballMutationId { MeteorHeart = 1, Detonation = 2, ScorchedEarth = 3, CinderNeedle = 4, PhoenixVolley = 5, PiercingEmber = 6, SeekerEmber = 7, Wildfire = 8, AshHarvest = 9, EmberRecall = 10 }
 
-public sealed record FireballMutationDefinition(FireballMutationId Id, string Name, string Description, DragonEssenceId ResearchSample, string Symbol);
+public sealed record FireballMutationDefinition(FireballMutationId Id, string Name, string Description, DragonEssenceId? ResearchSample, string Symbol, bool Playable = true);
 
 public sealed record FireballUpgradeNeed(DragonEssenceId Material, int Required);
 
@@ -18,6 +18,14 @@ public static class FireballCoreCatalog
         new(FireballMutationId.MeteorHeart, "Meteor Heart", "A larger, slower and harder-hitting molten projectile.", DragonEssenceId.MoltenFang, "◈"),
         new(FireballMutationId.Detonation, "Detonation", "Fireball explodes on impact, damaging nearby enemies.", DragonEssenceId.CinderHeart, "✹"),
         new(FireballMutationId.ScorchedEarth, "Scorched Earth", "Fireball leaves a short-lived patch of burning ground.", DragonEssenceId.AshenWing, "♨"),
+        // Shown as future research only. Never equip or run concepts without implemented combat effects.
+        new(FireballMutationId.CinderNeedle, "Cinder Needle", "Compresses Fireball into a fast ember needle.", null, "➤", false),
+        new(FireballMutationId.PhoenixVolley, "Phoenix Volley", "Splits Fireball into several projectiles.", null, "✧", false),
+        new(FireballMutationId.PiercingEmber, "Piercing Ember", "Fireball passes through enemies.", null, "↗", false),
+        new(FireballMutationId.SeekerEmber, "Seeker Ember", "Curves toward eligible enemies.", null, "⌁", false),
+        new(FireballMutationId.Wildfire, "Wildfire", "Flames spread to nearby targets.", null, "♧", false),
+        new(FireballMutationId.AshHarvest, "Ash Harvest", "Gathers embers when a foe falls.", null, "✦", false),
+        new(FireballMutationId.EmberRecall, "Ember Recall", "Fireball returns after its flight.", null, "↶", false),
     ];
 
     public static FireballMutationDefinition Get(FireballMutationId id) => Mutations.Single(mutation => mutation.Id == id);
@@ -51,7 +59,7 @@ public sealed class FireballCoreState
         var owned = secured.ToHashSet();
         var changed = false;
         foreach (var candidate in FireballCoreCatalog.Mutations)
-            if (owned.Contains(candidate.ResearchSample)) changed |= discovered.Add(candidate.Id);
+            if (candidate is { Playable: true, ResearchSample: { } sample } && owned.Contains(sample)) changed |= discovered.Add(candidate.Id);
         return changed;
     }
 
@@ -60,7 +68,7 @@ public sealed class FireballCoreState
         if (index < 0 || index >= Level) return false;
         if (mutation is { } id)
         {
-            if (!discovered.Contains(id) || !FireballCoreCatalog.Mutations.Any(entry => entry.Id == id)) return false;
+            if (!discovered.Contains(id) || !FireballCoreCatalog.Mutations.Any(entry => entry.Id == id && entry.Playable)) return false;
             if (slots.Where((_, i) => i != index).Any(value => value == id)) return false;
         }
         slots[index] = mutation;
@@ -93,7 +101,7 @@ public sealed class FireballCoreState
         Level = Math.Clamp(state.Level, 1, 5);
         discovered.Clear();
         foreach (var mutation in state.Discovered ?? [])
-            if (FireballCoreCatalog.Mutations.Any(entry => entry.Id == mutation)) discovered.Add(mutation);
+            if (FireballCoreCatalog.Mutations.Any(entry => entry.Id == mutation && entry.Playable)) discovered.Add(mutation);
         Array.Clear(slots, 0, slots.Length);
         var taken = new HashSet<FireballMutationId>();
         var savedSlots = state.Slots ?? [];
