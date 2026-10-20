@@ -1,0 +1,25 @@
+{
+  "creatureId": "hollow",
+  "revision": "rigged-poc-001",
+  "procedure": "docs/art/card-to-spritesheet-production.md",
+  "reference": {
+    "path": "user_handover_files/concepts/Fire/01-the-hollow.png",
+    "sha256": "ee4497045eea58f8171436a58ed3851a657ffc8cdf04d3fa8d89184159a08178"
+  },
+  "route": "textured-3d-to-rendered-sprites",
+  "scope": "one three-quarter walking view",
+  "stages": {
+    "A": "self-reviewed brief; owner acceptance not requested",
+    "B": "pending editable character",
+    "C": "pending rig and deformation",
+    "D": "pending gait"
+  },
+  "visualStatus": "not reviewed",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "notes": [
+    "Existing generated v1 and rigid cutout v2 remain rejected.",
+    "A neutral-pose reference may be generated from the card as modeling input, never as independently generated animation frames.",
+    "No paid service or new subscription is authorized by this record."
+  ]
+}
