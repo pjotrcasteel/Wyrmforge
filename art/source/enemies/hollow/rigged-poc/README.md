@@ -75,4 +75,3 @@ be inspected; GPU generation still needs available service quota.
 
 The next useful artifact is an inspected textured model, not another independently
 generated walking image grid. Runtime integration remains false.
-
