@@ -1,0 +1,770 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "minZ": -0.2507587671279907,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "minZ": -0.2498498260974884,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "minZ": -0.24894970655441284,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "minZ": -0.24846112728118896,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "minZ": -0.24850964546203613,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "minZ": -0.2489049732685089,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "minZ": -0.24921104311943054,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "minZ": -0.2489386796951294,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "minZ": -0.2477620542049408,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "minZ": -0.2456001490354538,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "minZ": -0.24763867259025574,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "minZ": -0.24864904582500458,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "minZ": -0.24888823926448822,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "minZ": -0.24884985387325287,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "minZ": -0.24891802668571472,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "minZ": -0.24929073452949524,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "minZ": -0.249887615442276,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "minZ": -0.25036439299583435,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "minZ": -0.2502453923225403,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "minZ": -0.24913811683654785,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "minZ": -0.2481117844581604,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "minZ": -0.25033530592918396,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "minZ": -0.25110742449760437,
+    "altitude": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "minZ": -0.2507587671279907,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 0,
+    "minZ": -0.2529316544532776,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 1,
+    "minZ": -0.2539398968219757,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 2,
+    "minZ": -0.25664058327674866,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 3,
+    "minZ": -0.2605167329311371,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 4,
+    "minZ": -0.26517724990844727,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 5,
+    "minZ": -0.2700001895427704,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 6,
+    "minZ": -0.27445027232170105,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 7,
+    "minZ": -0.2781534790992737,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 8,
+    "minZ": -0.2808685898780823,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 9,
+    "minZ": -0.2824559807777405,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 10,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 11,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 12,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 13,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 14,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 15,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 16,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 17,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 18,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 19,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 20,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 21,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 22,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 23,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 24,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 25,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 26,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 27,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 28,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 29,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 30,
+    "minZ": -0.28283315896987915,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 31,
+    "minZ": -0.2825404405593872,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 32,
+    "minZ": -0.28076881170272827,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 33,
+    "minZ": -0.27754831314086914,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 34,
+    "minZ": -0.2731001675128937,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 35,
+    "minZ": -0.26782703399658203,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 36,
+    "minZ": -0.2623465061187744,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 37,
+    "minZ": -0.25760382413864136,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 38,
+    "minZ": -0.2542197108268738,
+    "altitude": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 39,
+    "minZ": -0.2529316544532776,
+    "altitude": 0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 0,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 1,
+    "minZ": -0.2554234266281128,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 2,
+    "minZ": -0.2577483057975769,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 3,
+    "minZ": -0.2597493529319763,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 4,
+    "minZ": -0.26130419969558716,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 5,
+    "minZ": -0.2623337507247925,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 6,
+    "minZ": -0.26279741525650024,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 7,
+    "minZ": -0.26268118619918823,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 8,
+    "minZ": -0.26198825240135193,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 9,
+    "minZ": -0.26074182987213135,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 10,
+    "minZ": -0.25899654626846313,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 11,
+    "minZ": -0.2568489909172058,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 12,
+    "minZ": -0.25311851501464844,
+    "altitude": 0.0030589275310277876
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 13,
+    "minZ": -0.2398228645324707,
+    "altitude": 0.01809460275773059
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 14,
+    "minZ": -0.19918587803840637,
+    "altitude": 0.04323641792428306
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 15,
+    "minZ": -0.1261643022298813,
+    "altitude": 0.07574928779662575
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 16,
+    "minZ": -0.09058155119419098,
+    "altitude": 0.11289812714069919
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 17,
+    "minZ": -0.05448940396308899,
+    "altitude": 0.15194785072244396
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 18,
+    "minZ": -0.019464269280433655,
+    "altitude": 0.19016337330780061
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 19,
+    "minZ": 0.012199550867080688,
+    "altitude": 0.22480960966270966
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 20,
+    "minZ": 0.03811672329902649,
+    "altitude": 0.2531514745531117
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 21,
+    "minZ": 0.05576637387275696,
+    "altitude": 0.2724538827449473
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 22,
+    "minZ": 0.0626281350851059,
+    "altitude": 0.2799817490041569
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 23,
+    "minZ": 0.06260906159877777,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 24,
+    "minZ": 0.06257979571819305,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 25,
+    "minZ": 0.062557652592659,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 26,
+    "minZ": 0.06254304945468903,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 27,
+    "minZ": 0.06253667175769806,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 28,
+    "minZ": 0.0625387579202652,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 29,
+    "minZ": 0.06254975497722626,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 30,
+    "minZ": 0.06256987154483795,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 31,
+    "minZ": 0.06259913742542267,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 32,
+    "minZ": 0.06263764202594757,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 33,
+    "minZ": 0.06268511712551117,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 34,
+    "minZ": 0.06274129450321198,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 35,
+    "minZ": 0.0628056675195694,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 36,
+    "minZ": 0.0628776103258133,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 37,
+    "minZ": 0.06295640766620636,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 38,
+    "minZ": 0.0630410760641098,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 39,
+    "minZ": 0.06313054263591766,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 40,
+    "minZ": 0.06322379410266876,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 41,
+    "minZ": 0.06331945955753326,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 42,
+    "minZ": 0.06324559450149536,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 43,
+    "minZ": 0.0631672739982605,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 44,
+    "minZ": 0.06309080123901367,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 45,
+    "minZ": 0.06301659345626831,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 46,
+    "minZ": 0.06294503808021545,
+    "altitude": 0.28
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 47,
+    "minZ": 0.06202802062034607,
+    "altitude": 0.27907783569885025
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 48,
+    "minZ": 0.05229797959327698,
+    "altitude": 0.2685694793082605
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 49,
+    "minZ": 0.033498138189315796,
+    "altitude": 0.24817656146213782
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 50,
+    "minZ": 0.0077693164348602295,
+    "altitude": 0.22020317573986087
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 51,
+    "minZ": -0.022752419114112854,
+    "altitude": 0.1869534157208074
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 52,
+    "minZ": -0.055940479040145874,
+    "altitude": 0.15073137498435624
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 53,
+    "minZ": -0.08971074223518372,
+    "altitude": 0.11384114710988515
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 54,
+    "minZ": -0.122389055788517,
+    "altitude": 0.07858682567677283
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 55,
+    "minZ": -0.19042228162288666,
+    "altitude": 0.04727250426439714
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 56,
+    "minZ": -0.23494645953178406,
+    "altitude": 0.022202276452136797
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 57,
+    "minZ": -0.25022268295288086,
+    "altitude": 0.0056802358193696325
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 58,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 59,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 60,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 61,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 62,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 63,
+    "minZ": -0.2529316544532776,
+    "altitude": 0.0
+  }
+]

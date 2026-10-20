@@ -1,0 +1,46 @@
+{
+  "clips": {
+    "walk": {
+      "frames": 24,
+      "fps": 24,
+      "loop": true,
+      "action": "Ashfang_walk"
+    },
+    "rear-breath": {
+      "frames": 40,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_rear-breath"
+    },
+    "takeoff-flight-land": {
+      "frames": 64,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_takeoff-flight-land"
+    }
+  },
+  "groundRoot": [
+    0,
+    0,
+    -0.197
+  ],
+  "nativeCell": 192,
+  "modelToPixel": 80,
+  "tier": 1,
+  "targetGroundedViewportWidthFraction": [
+    0.15,
+    0.25
+  ],
+  "boneCount": 47,
+  "skinOwnership": {
+    "tail": 5381,
+    "body": 15998,
+    "wing": 7118,
+    "neck": 6239,
+    "fore": 4885,
+    "hind": 7093,
+    "head": 6519
+  },
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}
