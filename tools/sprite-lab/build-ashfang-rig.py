@@ -10,6 +10,11 @@ from ashfang_wings import rebuild_wings,wing_layout
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
+# Original source sculpt: lift and broaden the low reconstructed skull/neck so
+# the face reads in front of folded wings at Tier-I size. UV detail is preserved.
+head_mix=np.clip((-v[:,1]-.21)/.12,0,1);head_mix=head_mix*head_mix*(3-2*head_mix)
+head_mix*=np.clip((v[:,2]+.09)/.055,0,1)
+v[:,0]*=1+.35*head_mix;v[:,1]-=.32*head_mix*np.maximum(0,-v[:,1]-.22);v[:,2]+=.052*head_mix+.15*head_mix*np.maximum(0,v[:,2]-.015)
 v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
@@ -19,7 +24,7 @@ card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.p
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
 def bone(n,a,b,parent=None,deform=True):bones[n]=dict(head=np.array(a,float),tail=np.array(b,float),parent=parent,deform=deform)
-bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.035),'chest');bone('neck.1',(0,-.25,.035),(0,-.32,.045),'neck.0');bone('head',(0,-.32,.045),(0,-.43,.015),'neck.1');bone('jaw',(0,-.32,.012),(0,-.43,-.035),'head');bone('mouth',(0,-.435,-.005),(0,-.49,-.005),'head',False)
+bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.07),'chest');bone('neck.1',(0,-.25,.07),(0,-.35,.10),'neck.0');bone('head',(0,-.35,.10),(0,-.52,.065),'neck.1');bone('jaw',(0,-.35,.045),(0,-.54,.005),'head');bone('mouth',(0,-.57,.045),(0,-.625,.045),'head',False)
 for side,sign in [('L',1),('R',-1)]:
     for limb,points,parent in [('fore',[(sign*.115,-.18,-.005),(sign*.15,-.22,-.075),(sign*.17,-.29,-.165),(sign*.17,-.37,-.185)],'chest'),('hind',[(sign*.105,.17,-.025),(sign*.18,.095,-.075),(sign*.18,.23,-.16),(sign*.18,.13,-.185)],'pelvis')]:
         for i in range(3):bone(f'{limb}.{i}.{side}',points[i],points[i+1],parent if i==0 else f'{limb}.{i-1}.{side}')
@@ -45,8 +50,8 @@ for index,p in enumerate(v):
     if index>=body_count:
         permitted=[n for n in names if n.startswith('wing.') and n.endswith('.'+side)];region='wing'
     elif y>.27 and abs(x)<.075:permitted=[n for n in names if n.startswith('tail.')];region='tail'
-    elif y<-.30 and abs(x)<.105 and z>-.08:
-        permitted=['head','jaw'] if z<.02 else ['head','neck.1'];region='head'
+    elif y<-.30 and abs(x)<.15 and z>-.08:
+        permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.035:
         limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.2.{side}'] if z<-.15 else [f'{limb}.{i}.{side}' for i in range(3)];region=limb
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
@@ -110,7 +115,9 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
         for p in rig.pose.bones:
             p.rotation_mode='QUATERNION'
             for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=frame+1,group=p.name)
-        bpy.context.scene.frame_set(frame+1);bpy.context.view_layer.update();ev=obj.evaluated_get(deps);evaluated=ev.to_mesh();coords=np.array([p.co[:] for p in evaluated.vertices],np.float32);sample.append(coords);floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
+        bpy.context.scene.frame_set(frame+1);bpy.context.view_layer.update();ev=obj.evaluated_get(deps);evaluated=ev.to_mesh();coords=np.array([p.co[:] for p in evaluated.vertices],np.float32);sample.append(coords)
+        lowest=int(coords[:,2].argmin());dominant=max(obj.data.vertices[lowest].groups,key=lambda g:g.weight)
+        floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
     clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
