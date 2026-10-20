@@ -81,7 +81,7 @@ export function createTerritoryStoryPlan(environment, width, height) {
             branches: 2 + Math.floor(random() * 4),
         });
     }
-    return { biome, element, district, corruption, habitat: environment.habitat ?? 'Outskirts', landmarks, patches, wounds,
+    return { biome, element, district, corruption, habitat: environment.habitat ?? null, landmarks, patches, wounds,
         seed: environment.seed, width, height,
         cloister: ['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(environment.habitat)
             ? null : createCloisterPlan(environment, width, height) };
