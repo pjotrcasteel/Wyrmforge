@@ -76,6 +76,8 @@
                                        ForgeUnlocked="@ForgeUnlocked"
                                        CodexUnlocked="@IsUnlocked(ShellSection.Codex)"
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
+                                       FirstHunt="@Progress.TutorialRun"
+                                       NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
                                        OnBuilding="ActivateCanonicalBuildingAsync"
                                        OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)" />
                     @if (townLockNotice is { } notice)
