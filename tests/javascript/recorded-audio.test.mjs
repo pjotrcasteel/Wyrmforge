@@ -119,7 +119,7 @@ test('buildings, first hunt, arena trail and threatening encounter use distinct 
 
 test('gate clicks do not add the generic UI sound on top of the hunt entrance sound', () => {
     const audio = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/audio.js', import.meta.url), 'utf8');
-    assert.match(audio, /button\.matches\('\.town-door--gate, \.enter-realm, \.gate-cta'\)/);
+    assert.ok(audio.includes("button.matches('.town-door--gate, .refuge-canonical-gate-action, .enter-realm, .gate-cta')"));
     assert.match(audio, /button\.getAttribute\('data-sound-cue'\) === 'none'/);
     const home = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/Home.razor.cs', import.meta.url), 'utf8');
     const arena = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Features/Arena/ArenaView.razor.cs', import.meta.url), 'utf8');
@@ -135,7 +135,7 @@ test('built-in browser playback can layer physical departure Foley without chang
     assert.match(audio, /entry\.layers\?\.length/);
     assert.match(audio, /layer\.delaySeconds/);
     assert.match(audio, /play\(cue && design\?\.palette\[cue\] \? cue : 'ui'\)/);
-    assert.match(town, /data-sound-cue="@\\(building\\.State == TownBuildingState\\.Active \\? "building-open" : "none"\\)"/);
+    assert.ok(town.includes('data-sound-cue="@(building.State == TownBuildingState.Active ? "building-open" : "none")"'));
     assert.match(town, /data-sound-cue="none"/);
     assert.ok(manifest.transitionDesign.events['building-open']);
     assert.ok(manifest.transitionDesign.events['hunt-start']);
