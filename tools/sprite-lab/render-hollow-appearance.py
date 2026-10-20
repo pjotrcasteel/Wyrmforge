@@ -12,8 +12,9 @@ data = np.load(folder / 'gaussian-appearance.npz')
 tensor = lambda value: torch.tensor(value, dtype=torch.float32, device='cuda')
 means, quats, scales = [tensor(data[key]) for key in ['means', 'quats', 'scales']]
 opacity = tensor(data['opacities']).flatten()
-colors = (tensor(data['sh'])[:, :, 0] * 0.28209479177387814 + 0.5).clamp_min(0)
-destination = folder / 'appearance-views'
+colors = (tensor(data['sh'])[:, 0, :] * 0.28209479177387814 + 0.5).clamp_min(0)
+assert colors.shape[1] == 3, 'Expected three RGB channels'
+destination = folder / (sys.argv[2] if len(sys.argv) > 2 else 'appearance-views-rgb-v2')
 destination.mkdir(exist_ok=True)
 views, observations, masks, intrinsics = [], [], [], []
 width, height = 512, 640

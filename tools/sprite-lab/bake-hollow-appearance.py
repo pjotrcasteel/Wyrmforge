@@ -17,8 +17,8 @@ from PIL import Image
 
 folder = Path(sys.argv[1])
 source = np.load(folder / 'raw-mesh.npz')
-observations = np.load(folder / 'appearance-views/observations.npz')
-out = folder / 'textured'
+observations = np.load(folder / (sys.argv[2] if len(sys.argv)>2 else 'appearance-views-rgb-v2') / 'observations.npz')
+out = folder / (sys.argv[3] if len(sys.argv)>3 else 'textured-rgb-v2')
 out.mkdir(exist_ok=False)
 tensor = lambda a, dtype=torch.float32: torch.tensor(a, dtype=dtype, device='cuda').contiguous()
 mesh = CuMesh()
