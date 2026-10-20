@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.131 — Canonical Refuge town screen
+
+- Town now renders the owner's **eight approved active/vacant building paintings** for Blacksmith, Arcane Nexus, Codex and Hall of Fame directly in the real game. Each first-party runtime asset is an exact copy of the canonical approved PNG.
+- Desktop shows west buildings, the original central World Gate, and east buildings as a single art-led screen. Phones swipe through three full-height districts and have accessible district navigation. No painted static NPCs or black CSS vacancy overlays.
+- Existing unlock predicates, vacant lock notices, click audio rules, Hall of Fame leaderboards and World Gate's Free Play/Campaign flow are preserved.
+- [Implementation and validation record](docs/art/refuge-canonical-buildings-game-screen-2026-10-20.md). Physical iPhone visual acceptance is still required.
+
+
 ## Prototype 0.0.130 — Unified active and vacant town buildings
 
 - All locked buildings use the same `Active / Vacant` rendering contract driven by their existing progression unlocks. Blacksmith, Nexus, Codex and Hall of Fame switch independently.
