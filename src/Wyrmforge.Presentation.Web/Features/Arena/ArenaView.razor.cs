@@ -56,7 +56,7 @@ public partial class ArenaView : IAsyncDisposable
     private LaboratoryMutationDefinition? PreparedMutationFor(SpellId spell) =>
         PreparedMutations.Select(LaboratoryCatalog.Get).FirstOrDefault(mutation => mutation.Foundation == spell);
     private static string MutationIcon(LaboratoryMutationDefinition mutation) => mutation.SpecimenWyrm == DragonId.Stormcoil ? "storm" : "frost";
-    private IReadOnlyList<SpellDefinition> PrimaryChoices => simulation?.PrimaryChoices ?? Array.Empty<SpellDefinition>();
+
     private IReadOnlyList<LevelChoice> CurrentChoices => simulation?.PendingChoices ?? Array.Empty<LevelChoice>();
     private IReadOnlyList<DragonEssenceDefinition> CurrentEssenceChoices => simulation?.PendingDragonEssenceChoices ?? Array.Empty<DragonEssenceDefinition>();
     private IReadOnlyList<RelicDefinition> CurrentRelicChoices => simulation?.PendingRelicChoices ?? Array.Empty<RelicDefinition>();
@@ -102,6 +102,9 @@ public partial class ArenaView : IAsyncDisposable
         arenaModule = await JavaScript.InvokeAsync<IJSObjectReference>("import", CancellationToken.None, $"./js/arena-performance.js?v={AppBuildInfo.Version}");
         dotNetReference = DotNetObjectReference.Create(this);
         await arenaModule.InvokeVoidAsync("initializeArena", CancellationToken.None, canvas, dotNetReference);
+        // Character creation already chose the Divine school. Commit its signature without a Hunt overlay.
+        if (PreferredPrimary is { } signature && ChoosingPrimary)
+            await ChoosePrimaryAsync(signature);
     }
 
     [JSInvokable]
