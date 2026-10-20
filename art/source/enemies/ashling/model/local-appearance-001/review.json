@@ -1,0 +1,24 @@
+{
+  "verdict": "not suitable for rigging",
+  "ownerAccepted": false,
+  "findings": [
+    "broad unwanted floor connected to feet; geometry extent dominated by ground",
+    "horn silhouette too short compared with concept",
+    "tail absent from front-only conditioning"
+  ],
+  "next": "reconstruct from higher-detail, locally extracted hero reference",
+  "bodyBoundsZ": [
+    -0.183,
+    0.18
+  ],
+  "fullBoundsXY": [
+    [
+      -0.5,
+      -0.5
+    ],
+    [
+      0.5,
+      0.5
+    ]
+  ]
+}
