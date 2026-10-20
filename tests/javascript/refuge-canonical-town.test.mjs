@@ -21,16 +21,18 @@ test('original four canonical building pairs remain unchanged as separate source
 test('night preview uses a single registered 1672x941 world and four alpha layers', () => {
     const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    for (const file of ['night-active.png', ...['ArcaneNexus', 'Blacksmith', 'Codex', 'HallOfFame']
-            .map(name => `night-vacant-${name}.png`)]) {
-        assert.ok(existsSync(join(runtime, file)), `Required nighttime scene asset missing: ${file}`);
+    const sceneFile = 'night-active.webp';
+    assert.ok(existsSync(join(runtime, sceneFile)), 'Required nighttime panorama is missing');
+    const webp = readFileSync(join(runtime, sceneFile));
+    assert.equal(webp.subarray(0, 4).toString('ascii'), 'RIFF');
+    assert.equal(webp.subarray(8, 12).toString('ascii'), 'WEBP');
+    for (const file of ['ArcaneNexus', 'Blacksmith', 'Codex', 'HallOfFame']
+            .map(name => `night-vacant-${name}.png`)) {
+        assert.ok(existsSync(join(runtime, file)), `Required vacancy layer missing: ${file}`);
         const buffer = readFileSync(join(runtime, file));
         assert.equal(buffer.subarray(1, 4).toString('ascii'), 'PNG');
         assert.ok(buffer.readUInt32BE(16) > 100 && buffer.readUInt32BE(20) > 100);
     }
-    const base = readFileSync(join(runtime, 'night-active.png'));
-    assert.equal(base.readUInt32BE(16), 1672);
-    assert.equal(base.readUInt32BE(20), 941);
 
     assert.match(scene, /refuge-canonical-scene/);
     assert.match(scene, /src="art\/town\/night-active\.png\?v=132"/);
