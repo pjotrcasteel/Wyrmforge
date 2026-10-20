@@ -1,0 +1,19 @@
+{
+  "creatureId": "ashfang",
+  "dragonId": "Ashfang",
+  "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
+  "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
+  "status": "front model candidate reconstructed; multi-view anatomy comparison and side candidate underway",
+  "method": "local TRELLIS 1 DINOv2 and editable textured Blender source",
+  "gpu": "RTX 5090; installed offline weights; no hardware changes",
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "remaining": [
+    "anatomy comparison and source refinement",
+    "editable jaw neck tail four-leg and membrane-wing rig",
+    "walk rear sit breath takeoff flight landing motions",
+    "eight-direction native pixel export and motion metadata",
+    "explicit C# aerial encounter integration and actual mobile validation"
+  ]
+}

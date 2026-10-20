@@ -5,6 +5,12 @@
 
 ## Hard identity and acceptance rules
 
+### Ashfang animation direction — owner request, 20 October 2026
+
+Build a persistent, deformable Ashfang from the existing Cinder Wyrm concept card, with extra creative freedom inside its volcanic Gothic identity. Required performance scope: grounded walking, raised/sitting posture, fire breath, takeoff and flight/overflight; landing and coherent transitions connect those states. Preserve recognisable horns, heavy chest, separate wings, four walking limbs and long tail. This is an approved production direction, not evidence that the source model, animations or aerial gameplay are implemented.
+
+Current simulation still owns grounded pursuit, telegraphed cone breath and phase scaling. Aerial encounter integration must explicitly define altitude, ground projection/shadow, dangerous flyover paths, targetability/collision and transitions in C#; do not grant new immunity or damage through a visual-only change. Production research/evidence: `art/source/enemies/ashfang/design-brief.md` (repository root). The owner-approved Ashling release remains unchanged.
+
 - Four elemental creature families are currently established for expansion: **Fire, Frost, Storm/Electric and Arcane**. Build out an existing family rather than inventing arbitrary new elemental taxonomies. Demons, undead and cursed beasts suit the dark Gothic setting; avoid generic aliens, tentacles and disconnected high-fantasy art.
 - Existing game enemies must retain compatible `EnemyKind` identities and saved contracts. Encounter spawning, collision, hit results and reward legitimacy remain C# authority; animation is visual.
 - A rendered monster needs legible silhouette, physical feet/contact, real attack timing, hit reaction and recognizable death. Do not claim the whole roster has animated sprites because the Hollow works. [Sprite proof](../art/hollow-runtime-integration-2026-10-20.md); [layering](../art/shared-sprite-animation-layers-2026-10-20.md).
