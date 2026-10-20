@@ -42,13 +42,18 @@ for index,p in enumerate(v):
     elif y<-.30 and abs(x)<.105:
         permitted=['head','jaw'] if z<.02 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.07:
-        limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.{i}.{side}' for i in range(3)];region=limb
+        limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.2.{side}'] if z<-.15 else [f'{limb}.{i}.{side}' for i in range(3)];region=limb
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
     else:permitted=['pelvis','spine','chest'];region='body'
     scores=np.array([1/max(.008,distance(p,bones[n]['head'],bones[n]['tail']))**4 for n in permitted]);scores/=scores.sum();ownership[region]=ownership.get(region,0)+1
     for n,w in zip(permitted,scores):
         if w>.001:obj.vertex_groups[n].add([index],float(w),'REPLACE')
 rest={n:rig.data.bones[n].matrix_local.copy() for n in bones};lengths={n:rig.data.bones[n].length for n in bones}
+soles={}
+for limb in ['fore','hind']:
+    for side in ['L','R']:
+        n=f'{limb}.2.{side}';g=obj.vertex_groups[n].index
+        soles[n]=np.array([p.co[:]-bones[n]['head'] for p in mesh.vertices if any(w.group==g and w.weight>.95 for w in p.groups)])
 def segment(n,h,t,rotation=None):
     h,t=Vector(h),Vector(t);r=(rotation.to_matrix() if rotation else Vector(bones[n]['tail']-bones[n]['head']).rotation_difference(t-h).to_matrix())@rest[n].to_3x3();matrix=r.to_4x4();matrix.translation=h;rig.pose.bones[n].matrix=matrix;bpy.context.view_layer.update()
 def ik(a,b,l1,l2,pole):
@@ -82,7 +87,10 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                 else:
                     airborne=smooth(altitude/.08);ankle=ankle.lerp(point(ankle)+Vector((0,.045,.065)),airborne)
                     if limb=='fore':ankle=ankle.lerp(point(bones[f'{limb}.2.{side}']['head'])+Vector((0,.055,.065)),rear)
-                knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(f'{limb}.2.{side}',ankle,ankle+rotation@Vector(bones[f'{limb}.2.{side}']['tail']-bones[f'{limb}.2.{side}']['head']))
+                fn=f'{limb}.2.{side}';fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
+                if clip=='walk' or (altitude<.01 and (limb=='hind' or rear<.01)):
+                    ankle.z=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+clearance
+                knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
             wingroot=point(bones['wing.upper.'+side]['head']);wr=rotation@Quaternion((0,1,0),-sign*flap)@Quaternion((0,0,1),-sign*spread)
             wingpoint=lambda p:wingroot+wr@Vector(np.array(p)-bones['wing.upper.'+side]['head'])
             for n in ['wing.upper.'+side,'wing.fore.'+side]:segment(n,wingpoint(bones[n]['head']),wingpoint(bones[n]['tail']),wr)
@@ -92,7 +100,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                     n=f'wing.finger.{finger}.{j}.{side}';r=wr@Quaternion((1,0,0),.10*math.sin(phase*math.pi*8-finger*.3)*spread);tip=previous+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,previous,tip,r);previous=tip
         previous=None
         for i in range(6):
-            n=f'tail.{i}';h=point(bones[n]['head']) if previous is None else previous;r=rotation@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+            n=f'tail.{i}';h=point(bones[n]['head']) if previous is None else previous;r=Quaternion((1,0,0),pitch*.15)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
         for p in rig.pose.bones:
             p.rotation_mode='QUATERNION'
             for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=frame+1,group=p.name)
