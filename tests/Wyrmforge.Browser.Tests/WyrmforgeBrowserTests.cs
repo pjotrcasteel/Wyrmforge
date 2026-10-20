@@ -325,6 +325,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Skill Tree" }).ClickAsync();
 
         var rack = Page.Locator(".nexus-rack-details");
         await Expect(rack).ToBeVisibleAsync();
@@ -352,6 +353,41 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }");
         Assert.IsTrue(webNotOccluded, "The node inspector must sit beneath the Web, not over the skill nodes.");
         await ScreenshotAsync($"nexus-sockets-{width}.png");
+    }
+
+    [TestMethod]
+    public async Task Mobile_FireballNexus_UpgradesWithRealEssenceAndPersistsSlottedMutation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); " +
+            "localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:8,Nodes:[]})); " +
+            "localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart','CinderHeart']));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+
+        await Expect(Page.Locator(".fireball-core")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Strengthen Fireball");
+        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(3);
+        await Page.Locator(".socket-1").ClickAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToContainTextAsync("Choose a mutator");
+
+        var needle = Page.Locator(".fireball-mutation-choice").Filter(new() { HasText = "Cinder Needle" });
+        await needle.GetByRole(AriaRole.Button, new() { Name = "Study" }).ClickAsync();
+        await needle.GetByRole(AriaRole.Button, new() { Name = "Equip" }).ClickAsync();
+        await Expect(Page.Locator(".socket-1")).ToContainTextAsync("Cinder Needle");
+        var saved = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.fireballCore.v1')");
+        StringAssert.Contains(saved, "CinderNeedle");
+        StringAssert.Contains(saved, "\"Level\":2");
+
+        await Page.Locator(".fireball-core").ClickAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Strengthen Fireball");
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator(".socket-1")).ToContainTextAsync("Cinder Needle");
     }
 
     [TestMethod]
@@ -492,6 +528,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(2);
         await Expect(Page.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
         await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Skill Tree" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
     }
@@ -696,6 +733,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
 
             await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Skill Tree" }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
@@ -1623,6 +1661,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.SetViewportSizeAsync(320, 568);
         await OpenAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Skill Tree" }).ClickAsync();
         Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
         Assert.IsGreaterThan(40, await Page.Locator(".web-connections line").CountAsync());
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Zoom in", Exact = true })).ToBeVisibleAsync();
