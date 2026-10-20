@@ -41,8 +41,10 @@ def main():
     lab_v = cv2.cvtColor(nv, cv2.COLOR_RGB2LAB).astype(np.float32)
     base = cv2.GaussianBlur(lab_d - lab_n, (0,0), 21)
     base[:,:,0] = np.clip(base[:,:,0], 14, 109)
-    base[:,:,1] = np.clip(base[:,:,1], -24, 30)
-    base[:,:,2] = np.clip(base[:,:,2], -24, 35)
+    # Don't import the ACTIVE portal's cyan/violet hue into the VACANT
+    # bronze, stone and wooden doors. Change lightness only.
+    base[:,:,1] = 0
+    base[:,:,2] = 0
     vacant_day = cv2.cvtColor(np.clip(lab_v + base, 0,255).astype(np.uint8), cv2.COLOR_LAB2RGB)
 
     # Exact geometry from the night vacant painting: observatory dome,
@@ -54,7 +56,8 @@ def main():
     polygon(mask, [(364,221),(391,197),(449,197),(476,219),(486,273),
                    (484,341),(460,364),(376,364),(360,345),(356,280)])
     for x,y,rx,ry in [(355,300,27,49),(486,300,26,46),(475,335,22,29),
-                       (338,354,28,27),(394,355,19,20)]:
+                       (338,354,28,27),(394,355,19,20),
+                       (233,353,33,30)]:
         oval(mask,x,y,rx,ry)
     # Shut rooms: permanent engraved windows can remain clear but no interior
     # illumination, especially around the tower's luminous amber glass.
