@@ -96,7 +96,7 @@ def main():
     Image.fromarray(result).save(OUT,"WEBP",quality=98,method=6)
     Image.fromarray(result[:475,:575]).save(DETAIL,"WEBP",quality=98,method=6)
     Image.fromarray(mask).save(MASK_OUT,"WEBP",lossless=True)
-    print(f"Day-vacant preview completed, full other-town pixels unchanged. Ambient={ambient:.1f}")
+    print("Day-vacant review rendered, other-town pixels unchanged.")
 
 if __name__=="__main__":
     main()
