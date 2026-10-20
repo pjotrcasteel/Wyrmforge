@@ -72,7 +72,7 @@ test('one panorama, no old district cards and no runtime vacancy blackout', () =
     const index = source('src/Wyrmforge.Presentation.Web/wwwroot/index.html');
     assert.doesNotMatch(markup, /refuge-canonical-building/);
     assert.doesNotMatch(markup, /refuge-canonical-wing/);
-    assert.match(markup, /refuge-canonical-districts/);
+    assert.doesNotMatch(markup, /refuge-canonical-districts/);
     assert.match(css, /\.refuge-town-spot--gate/);
     assert.doesNotMatch(css, /refuge-canonical-districts|refuge-town-toggle-announcement/);
     assert.match(index, /css\/town-canonical\.css/);
