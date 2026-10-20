@@ -13,7 +13,7 @@
     const state = {
         image: null, filename: 'hollow-walk-reference-5dir.png', pixelData: null,
         cfg: { ...C.DEFAULT_CONFIG }, dir: 'S', frame: 0, fps: 8, playing: true, scale: 1,
-        mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 }, pixelCandidate: false,
+        mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 }, pixelCandidate: false, deathCandidate: false,
         started: 0, last: 0, elapsed: 0, checks: [], dragging: false, mage: null,
     };
     function readConfig() {
@@ -30,6 +30,7 @@
         readConfig();
     }
     function autoGrid(w, h, mode = 'five') {
+        if(w===3072&&h===1024)return {...C.DEFAULT_CONFIG,layout:'eight',rows:8,columns:24,cellWidth:128,cellHeight:128,fps:12};
         if(w===1536&&h===768)return {...C.DEFAULT_CONFIG,layout:'eight',rows:8,columns:16,cellWidth:96,cellHeight:96,fps:12};
         if(mode==='single')return {...C.DEFAULT_CONFIG,layout:'single',rows:1,columns:16,cellWidth:w/16,cellHeight:h,fps:12};
         // The annotated image from chat includes a title and compass labels. Detect that known poster size on import.
@@ -46,7 +47,8 @@
         const img = new Image();
         img.onload = () => {
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
-            state.pixelCandidate = ['hollow-local-3d-pixel-walk-v1.png','hollow-movement-eight-directions-v1.png'].includes(name);
+            state.deathCandidate = name==='hollow-death-eight-directions-v1.png';
+            state.pixelCandidate = state.deathCandidate||['hollow-local-3d-pixel-walk-v1.png','hollow-movement-eight-directions-v1.png'].includes(name);
             dom.stageCanvas.style.imageRendering=state.pixelCandidate?'pixelated':'auto';
             if(state.pixelCandidate&&!state.mage)loadMageReference();
             const layout = img.naturalWidth===img.naturalHeight*16?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
@@ -63,6 +65,10 @@
             dom.exportAtlas.textContent=layout==='single'?'Export walk sheet ↗':'Export 8-way atlas ↗';
             dom.chaseBtn.textContent=layout==='single'?'Stride test':'Chase player';
             dom.chaseBtn.disabled=state.pixelCandidate;
+            if(state.deathCandidate){
+                dom.assetNote.textContent='Local RTX 5090: 8 actual facings × 24 death frames. Recoil, buckle, collapse, settle. Plays once and holds the corpse; press Play or a compass direction to replay. Extra transparent padding preserves the walk pixel scale.';
+                dom.statFrames.closest('.stats').querySelector('div strong').textContent='Death · holds corpse';
+            }else dom.statFrames.closest('.stats').querySelector('div strong').textContent='Walk / Chase';
             setMode('manual'); refresh();
         };
         img.onerror = () => { dom.footerState.textContent = `Unable to load ${name}. Use Import to select a local image.`; };
@@ -87,7 +93,7 @@
     }
     function loadImageFromImage(img, name) {
         // Reuse a decoded upload directly: object URLs are revoked safely after decode.
-        state.image=img;state.filename=name;state.pixelData=readPixels(img);state.pixelCandidate=false;dom.chaseBtn.disabled=false;
+        state.image=img;state.filename=name;state.pixelData=readPixels(img);state.pixelCandidate=false;state.deathCandidate=false;dom.chaseBtn.disabled=false;
         const mode = img.naturalWidth===img.naturalHeight*16?'single':(img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
         updateFields(autoGrid(img.naturalWidth,img.naturalHeight,mode));
         state.dir=mode==='single'?'SE':'S';state.frame=0;state.elapsed=0;state.playing=true;
@@ -106,6 +112,7 @@
     }
     function setDir(dir) {
         if (!C.DIRECTIONS.includes(dir)) return;
+        if(state.deathCandidate){state.frame=0;state.playing=true;dom.playBtn.textContent='❚❚';}
         state.dir=dir; state.elapsed=0; updateDirection();buildFilmstrip();drawSheet();
     }
     function updateDirection() {
@@ -142,7 +149,7 @@
         const h=p.height*scale,w=p.width*scale;
         g.save();g.translate(Math.round(x),Math.round(y));if(p.flipX)g.scale(-1,1);
         g.imageSmoothingEnabled=!state.pixelCandidate;
-        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*(state.pixelCandidate?72/96:.85),w,h);
+        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*(state.deathCandidate?88/128:state.pixelCandidate?72/96:.85),w,h);
         g.restore();
     }
     function drawSheet() {
@@ -217,7 +224,9 @@
             state.elapsed+=delta;
             const frameDuration=1/Math.max(1,Number(state.cfg.fps)||8);
             if(state.elapsed>=frameDuration){
-                const advance=Math.floor(state.elapsed/frameDuration);state.frame=(state.frame+advance)%Math.max(1,state.cfg.columns);
+                const advance=Math.floor(state.elapsed/frameDuration);
+                state.frame=state.deathCandidate?Math.min(state.frame+advance,state.cfg.columns-1):(state.frame+advance)%Math.max(1,state.cfg.columns);
+                if(state.deathCandidate&&state.frame===state.cfg.columns-1){state.playing=false;dom.playBtn.textContent='▶';}
                 state.elapsed%=frameDuration;markFilmstrip();drawSheet();
             }
         }
@@ -275,8 +284,8 @@
         dom.compass.querySelectorAll('button[data-dir]').forEach(btn=>btn.addEventListener('click',()=>{if(state.mode==='manual')setDir(btn.dataset.dir);}));
         dom.manualBtn.addEventListener('click',()=>setMode('manual'));
         dom.chaseBtn.addEventListener('click',()=>setMode('chase'));
-        dom.playBtn.addEventListener('click',()=>{state.playing=!state.playing;dom.playBtn.textContent=state.playing?'❚❚':'▶';});
-        dom.stepBtn.addEventListener('click',()=>{state.playing=false;dom.playBtn.textContent='▶';state.frame=(state.frame+1)%Math.max(1,state.cfg.columns);markFilmstrip();drawSheet();});
+        dom.playBtn.addEventListener('click',()=>{if(state.deathCandidate&&state.frame===state.cfg.columns-1){state.frame=0;state.elapsed=0;}state.playing=!state.playing;dom.playBtn.textContent=state.playing?'❚❚':'▶';});
+        dom.stepBtn.addEventListener('click',()=>{state.playing=false;dom.playBtn.textContent='▶';state.frame=state.deathCandidate?Math.min(state.frame+1,state.cfg.columns-1):(state.frame+1)%Math.max(1,state.cfg.columns);markFilmstrip();drawSheet();});
         ['columns','rows','frameWidth','frameHeight','offsetX','offsetY'].forEach(id=>dom[id].addEventListener('change',()=>{readConfig();state.frame=0;refresh();}));
         dom.layoutPreset.addEventListener('change',()=>{
             const mode=dom.layoutPreset.value;dom.rows.value=mode==='single'?1:mode==='five'?5:8;
@@ -313,7 +322,9 @@
         });
     }
     bind();
-    if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-movement-8dir-v1')
+    if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-death-8dir-v1')
+        loadImage('./assets/hollow-death-eight-directions-v1.png','hollow-death-eight-directions-v1.png');
+    else if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-movement-8dir-v1')
         loadImage('./assets/hollow-movement-eight-directions-v1.png','hollow-movement-eight-directions-v1.png');
     else if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-local-pixel-v1')
         loadImage('./assets/hollow-local-3d-pixel-walk-v1.png','hollow-local-3d-pixel-walk-v1.png');

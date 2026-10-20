@@ -26,6 +26,11 @@ rest={b.name:b.matrix_local.copy() for b in rig.data.bones}
 heads={b.name:b.head_local.copy() for b in rig.data.bones}
 tails={b.name:b.tail_local.copy() for b in rig.data.bones}
 lengths={b.name:(b.tail_local-b.head_local).length for b in rig.data.bones}
+foot_surface={}
+for side in ['L','R']:
+    group=character.vertex_groups['foot.'+side].index
+    foot_surface[side]=[v.co-heads['foot.'+side] for v in character.data.vertices
+                        if any(g.group==group and g.weight>.8 for g in v.groups)]
 walk=rig.animation_data.action
 walk.use_fake_user=True
 death=bpy.data.actions.new('Hollow_Death_Collapse')
@@ -95,19 +100,20 @@ for index in range(24):
         hip=point(heads['thigh.'+side])
         ankle=Vector((sign*track(index,[(0,.09),(6,.105),(18,.12),(23,.12)]),
                       track(index,[(0,-.08 if side=='L' else .07),(6,.015),(12,.22),(18,.245),(23,.245)]),-.445))
+        foot_rotation=Quaternion((1,0,0),math.radians(track(index,[(0,0),(8,0),(14,-150),(18,-180),(23,-180)])))
+        ankle.z=max(ankle.z,-.5-min((foot_rotation@v).z for v in foot_surface[side]))
         pole=(Vector((0,-1,0)).lerp(Vector((sign*.2,-.2,-1)),smooth((index-6)/6)))
         knee,ankle=ik(hip,ankle,lengths['thigh.'+side],lengths['shin.'+side],pole)
         knee=knee_above_floor(hip,knee,ankle,sign,lengths['thigh.'+side],lengths['shin.'+side])
         segment('thigh.'+side,hip,knee,blend)
         segment('shin.'+side,knee,ankle,blend)
-        foot_rotation=Quaternion((1,0,0),math.radians(track(index,[(0,0),(8,0),(14,-150),(18,-180),(23,-180)])))
         segment('foot.'+side,ankle,ankle+foot_rotation@(tails['foot.'+side]-heads['foot.'+side]),blend,foot_rotation)
         shoulder=point(heads['upper_arm.'+side])
         segment('clavicle.'+side,point(heads['clavicle.'+side]),shoulder,blend)
         brace=smooth((index-(4 if side=='L' else 5))/7)
         hanging=point(heads['forearm.'+side]+(tails['forearm.'+side]-heads['forearm.'+side]))
         wrist=hanging.lerp(Vector((sign*(.30 if side=='L' else .27),-.61 if side=='L' else -.53,-.45)),brace)
-        wrist.z=max(wrist.z,-.40-.05*brace)
+        wrist.z=max(wrist.z,-.375-.055*brace)
         elbow,wrist=ik(shoulder,wrist,lengths['upper_arm.'+side],lengths['forearm.'+side],(sign,.6,.1))
         segment('upper_arm.'+side,shoulder,elbow,blend)
         segment('forearm.'+side,elbow,wrist,blend)
