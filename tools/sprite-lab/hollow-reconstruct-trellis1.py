@@ -20,6 +20,7 @@ os.environ['SPCONV_ALGO'] = 'native'
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument('--attempt', required=True)
 parser.add_argument('--appearance', action='store_true', help='Preserve the higher-detail Gaussian appearance decoder and shared latent')
+parser.add_argument('--latent', type=Path, help='Resume a preserved latent without resampling')
 args = parser.parse_args()
 if not args.attempt.replace('-', '').isalnum():
     parser.error('attempt must be alphanumeric with optional hyphens')
@@ -65,21 +66,27 @@ try:
     pipeline.cuda()
     save('reconstructing-on-local-rtx5090')
     if args.appearance:
-        prepared = pipeline.preprocess_image(Image.open(reference))
-        conditioning = pipeline.get_cond([prepared])
-        torch.manual_seed(1729)
-        coords = pipeline.sample_sparse_structure(conditioning, 1, {})
-        slat = pipeline.sample_slat(conditioning, coords, {})
+        if args.latent:
+            from trellis.modules.sparse import SparseTensor
+            saved = np.load(args.latent)
+            slat = SparseTensor(feats=torch.tensor(saved['feats'], device='cuda'),
+                                coords=torch.tensor(saved['coords'], device='cuda'))
+        else:
+            prepared = pipeline.preprocess_image(Image.open(reference))
+            conditioning = pipeline.get_cond([prepared])
+            torch.manual_seed(1729)
+            coords = pipeline.sample_sparse_structure(conditioning, 1, {})
+            slat = pipeline.sample_slat(conditioning, coords, {})
         np.savez_compressed(output / 'shared-latent.npz', feats=slat.feats.cpu().numpy(), coords=slat.coords.cpu().numpy())
         decoded = pipeline.decode_slat(slat, ['mesh', 'gaussian'])
         mesh = decoded['mesh'][0]
         gaussian = decoded['gaussian'][0]
         np.savez_compressed(output / 'gaussian-appearance.npz',
-                            means=gaussian.get_xyz.cpu().numpy(),
-                            quats=gaussian.get_rotation.cpu().numpy(),
-                            scales=gaussian.get_scaling.cpu().numpy(),
-                            opacities=gaussian.get_opacity.cpu().numpy(),
-                            sh=gaussian.get_features.cpu().numpy())
+                            means=gaussian.get_xyz.detach().cpu().numpy(),
+                            quats=gaussian.get_rotation.detach().cpu().numpy(),
+                            scales=gaussian.get_scaling.detach().cpu().numpy(),
+                            opacities=gaussian.get_opacity.detach().cpu().numpy(),
+                            sh=gaussian.get_features.detach().cpu().numpy())
     else:
         mesh = pipeline.run(Image.open(reference), seed=1729, formats=['mesh'])["mesh"][0]
     vertices = mesh.vertices.detach().cpu().numpy()
