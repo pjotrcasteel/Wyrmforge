@@ -371,6 +371,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
             "The Arcane Nexus must not overflow a 390px portrait viewport.");
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        Assert.IsTrue(await Page.Locator(".fireball-panel-heading .fireball-school-icon").EvaluateAsync<bool>(@"async icon => {
+            const style = getComputedStyle(icon);
+            if (!style.backgroundImage.includes('divine-lineage-sigils.webp')
+                || !style.backgroundPosition.startsWith('0') || style.imageRendering !== 'pixelated') return false;
+            const image = new Image();
+            image.src = style.backgroundImage.slice(5, -2);
+            try { await image.decode(); } catch { return false; }
+            return image.naturalWidth === 192 && image.naturalHeight === 128;
+        }"), "The upgrade panel must render the same canonical Fire sigil as character creation.");
         await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
 
