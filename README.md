@@ -1,5 +1,7 @@
 # Wyrmforge
 
+**Canonical product documentation:** [docs/canon/](docs/canon/README.md). Intended gameplay, art, audio, UX, modes and engineering rules each have one current topic home. The prototype changelog below is historical delivery evidence, not a second design specification.
+
 ## Prototype 0.0.138 — Fire-first character creation
 
 - Choose your magic: **Fire is the only available new-character school** until its Tier-I signature and mutation gameplay are fully implemented and accepted. Frost, Storm, Arcane, Necromancer and Summoner remain visible and locked.
@@ -45,7 +47,7 @@
 
 - World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
 - Hunt tiers I–V are derived from the existing WyrmTier contract; **only Tier I is playable**. Five future mutation-mastery tiers are a separate domain concept and must not affect currently earned spell ranks.
-- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
+- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/canon/magic-and-combat.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
 - **Not shipped:** new character creation or school-respec flows, Fireball rework, ten playable mutations per school, and higher-tier encounters. [Implementation checkpoint](docs/handover/2026-10-20-divine-magic-foundation-status.md).
 
 ## Prototype 0.0.132 — Unified night Refuge town preview (draft)
@@ -108,9 +110,9 @@
 
 ## Authoritative product design and development continuation
 
-**Single product-design source of truth:** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md).
+**Canonical topic index (single source of truth):** [WyrmForge Unified Authoritative Product & Technical Design — 18 October 2026, v1.2](docs/canon/README.md).
 
-This consolidates the four earlier handovers, resolves their contradictory instructions, and includes the explicit **P0–P9 priorities in §12**. Claude and other development agents should follow this file for intended product behavior, rather than layering older specifications.
+The living canonical documents are now split by topic in `docs/canon/`, including the [priorities](docs/canon/roadmap.md). The former combined handover is [archived](docs/archive/2026-10-20-unified-master-design-v1.3.md). Agents must follow the topic documents, not layer dated handovers.
 
 **Animated character production:** follow the [art-card-to-spritesheet production algorithm](docs/art/card-to-spritesheet-production.md) for source preparation, rigging, walking/attack/hurt/death, transitions, rendering, export, visual acceptance and integration. This is a documented procedure; its new rigged-character pipeline is not yet implemented or proven with an accepted Hollow asset.
 

@@ -1,0 +1,190 @@
+# Magic, spellcraft and combat
+
+> **Canonical WyrmForge specification · updated 20 October 2026.** Current six-school intent and combat authority; changes from 19–20 October supersede older movement-facing and single-equipped-spell proposals.
+> [Canonical index](README.md) · Only explicitly marked **LOCKED/approved** requirements are commitments. Proposed values, old milestones and drafts are not evidence of shipped code. Verify current `main`, PRs and tests.
+
+## 20 October integration boundary
+
+- **Approved target:** Fire is the only selectable character school until its foundation and mutations are complete. The other school icons remain as clearly disabled previews; this is implemented for **new character creation** in main v0.0.138 via [PR #172](https://github.com/pjotrcasteel/Wyrmforge/pull/172); existing non-Fire characters are preserved, while deeper Fire mutations are still future work.
+- The persistent Divine school is selected **once during character creation**, not in the World Gate. Fire/Frost can still denote a **Hunt lineage**, separately from character school and Wyrm tier. Legacy characters and spell IDs require migrations, not resets.
+- The canonical six-school pixel emblem set is **Fire (orange-red), Frost (cyan), Storm (yellow), Arcane (violet), Necromancy (green skull), Summoner (bear)**. The existing 192×128 atlas is derived from accepted owner artwork; do not regenerate unapproved icons. [Implementation evidence](../art/divine-lineage-pixel-icons-2026-10-20.md).
+- Auto-aim is the default. Deliberate independent aiming temporarily overrides it (mouse/touch/right stick) without cancelling auto-cast. **Current implementation details**: [hybrid aim evidence](../playtesting/hybrid-aim-2026-10-19.md); the movement direction must never silently steer shots.
+- Tier I mutation candidates are design targets, not implemented inventory. Higher tiers and incomplete schools must remain disabled; do not unlock content on visual appearance alone.
+
+## 3. Arcane Nexus, spellcraft, progression and sharing
+
+### 3.0 Divine magical archetypes, signatures, mutations and tiers — LOCKED (20 October 2026)
+
+**Six schools, no filler:** The six primary archetypes are **Pyromancer (Fire)**, **Cryomancer (Frost)**, **Stormcaller (Storm)**, **Arcanist (Arcane/Aether)**, **Necromancer (Death)** and **Summoner (Binding/Dominion)**. Every school originates from **its own Divine Wyrm**. Lesser Wyrms belong to that Divine lineage. The four currently established lesser anchors remain **Ashfang, Rimeclaw, Stormcoil and Voidweaver**; Divine identities and the Death/Binding lesser Wyrms have **no approved names yet**. The source of magic is Divine, but this does **not** mean Divine Wyrm encounters or Divine spells are available. Combat fantasy comes first, world/environment interactions are supportive, not substitutes for viable archetype mechanics.
+
+**Character choice, not Hunt choice:** At **character creation** the player chooses one Divine school and receives that school's signature foundation. Fireball is the Pyromancer's signature, **never the mandatory starting spell of the other five schools**. Starting anchors currently in code are Fire Bolt (future Fireball identity), Frost Shard, Chain Lightning and Arcane Orb. Necromancer and Summoner signatures require their own deliberate design; a corpse-based reanimator must not play like a generic ranged projectile or an always-on Summoner. A later **full school respec is supported in principle, with timing, cost and prerequisites explicitly TBD**. Free reallocation of eligible ordinary-Hunt Web/loadout choices is **not** full-school respec. School selection belongs to the character, while World Gate lineage/region and Hunt tier are **encounter choices**, independent of the character's school. A Frost character can enter the Fire region.
+
+**Current release gate — LOCKED (20 October):** Character creation shows all six Divine schools, but **only Pyromancer/Fire is selectable until the Tier-I Fire mutation/spell experience has been fully implemented and accepted**. The other five remain visible and clearly locked, regardless of whether older combat prototypes already contain their spells. This is a gate for **new characters**, not a destructive migration: existing saved non-Fire affinities and their progress are preserved, and Hunt region choices remain independent. The player-facing screen uses direct copy such as **"Choose your magic"**, without abstract or lengthy Divine-affinity explanation. Unlock other schools only after explicit readiness approval; do not automatically unlock them from a code-found signature.
+
+**One mutable signature, not twenty unrelated spells:** Each school has one strong recognizable signature ability; initial design target **ten distinct, meaningful Tier-I mutations per school**, extended by future tier mutations, transformations and compatible hybrid combinations. A mutation changes behavior/role or structure, not simply icon color or a meaningless +X% stat. School-specific grammar is essential: Pyromancer mutates Fireball ignition/explosion/projectiles; Cryomancer freezing/shatter/protection; Stormcaller chaining/tempo; Arcanist echo/manipulation; Necromancer corpse/curse/reanimation economy; Summoner bonded unit behavior, roles and commands. Shared contracts/validation may be reused but **not** a universal Fireball-style projectile template.
+
+**Five separate Wyrm/Hunt tiers are already represented by World Gate Tier 1–5 and WyrmTier {Wyrm, Ascendant, Elder, Primordial, Divine}:** Tier I is currently the **only selectable World Gate tier**; the rest are reserved gameplay. Distinguish at all times:
+1. **Hunt/Wyrm tier** = threat level and availability of the chosen encounter. It cannot automatically unlock magic.
+2. **Magical progression/required tier** = the prerequisites for researching/equipping a mutation (independent from Hunt tier); higher Wyrm encounters may provide prerequisite evidence/materials.
+3. **In-Hunt spell rank** = temporary Rank I/II/III and refinements earned in an attempt, subject to existing level-5/10/15+ rules.
+
+**Five-tier extensibility (LOCKED) does not lock the exact unlock ladder (TUNABLE):** Tier I starts with ten mutation design targets per school as that school becomes available; Tier II specialization, Tier III transformation, Tier IV Wyrmcraft and Tier V Divine-scale magic are **working labels and directions**, not promised gameplay or approved balance. Higher tiers should introduce new mechanics and choices instead of merely multiplying damage. Tier-I recipes remain usable in advanced Hunts. Do not pretend that one Tier-I launch must ship all six schools at once.
+
+**Acquisition ownership:** character creation supplies the signature. Arcane Web owns specialization and mutation access/gates; Forge earns permanent forms, lineage catalysts and components via existing Essences; Spellcraft validates researched combinations, infusion order and blueprint compatibility; Mastery/Wyrm feats unlock rare properties; the Hunt rolls only legal temporary ranks, minor refinements and evolutions. Preserve the already shipped Fire Bolt/Cinder Needle, Frost Shard/Ice Lance, Storm and Arcane gameplay during an incremental migration: Fire Bolt's Fireball rebranding and Cinder Needle becoming a **Fireball form mutation** are product intent, not completed changes. Never silently delete old SpellId data or saves.
+
+**Combination and combat invariants:** Fire+Frost Frostfire, Stormglass and Arcane Conduit are already authored mechanics and must not duplicate effects when translated to signature mutations. Cross-school infusion does not grant the second school's full specialization; the active character retains a primary Divine school. Versioned recipes and compatibility/complexity budgets guard chain depth, explosion propagation, mobile VFX and CPU load. **One reliable signature plus at most three contextual techniques** is the eventual loadout model; contextual actions share the existing cast budget rather than adding independent free DPS, with auto-aim/manual-override precedence unchanged.
+
+**Design reference principles:** Last Epoch: specialize a known spell; Path of Exile: behavior-changing typed support combinations; Noita: fascinating order-dependent chains but enforce strict recursion limits; Mages of Mystralia: visual readable experimentation; Hades: meaningful temporary Hunt upgrades. Transfer the principles only; do not reproduce assets or lore.
+
+**Tier-I Pyromancer candidate set — PROPOSED, not all implemented:** Cinder Needle (rapid form), Phoenix Volley (multicast form), Meteor Heart (heavy form), Piercing Ember, Seeker Ember, Scorched Earth, Wildfire, Detonation, Ash Harvest and Ember Recall (returning projectile). These are **ten Tier-I mutation design candidates**, not ten free simultaneous passives or ten already-shipped mutations. Several names map to existing mechanics; their initial accessibility, access routes, mutual exclusions and balance require validation. **Wyrmfire is deliberately separate from the ten**: it remains a rare Wyrm mastery/awakening, with its existing progression gate unchanged, and may grow into higher tiers later. Do not unlock mastery-based spells just because a user selected a higher Hunt tier. No unshipped spell or variant should appear as playable until implemented, tested and visually reviewed.
+
+**Acceptance/rollout:** Treat code as authority for currently implemented content. Keep legacy saves and old SpellIds compatible via explicit migration; check builds from the existing Forge/Web/Mastery/Spellcraft, all six Divine labels, inaccessible Tiers II–V, seeded playtests and real 320/390px UI. Integrate character-creation visuals only with the parallel character work. Expand one school at a time, Fire then Frost, design cross-school reactions only after each base school is meaningful.
+
+
+### 3.1 One integrated city feature — LOCKED
+
+The **Arcane Nexus** is the ONE coherent player-facing progression/spellcraft experience; internally retain modular domains. It combines:
+
+- **Arcane Web:** large navigable network of disciplines, interconnected branches, the central Wyrmheart, specialization paths, meaningful keystones and compatible mutations.
+- **Contextual research/experiments:** selecting a node exposes what it unlocks, missing secured materials, research hypotheses, immediate impact and a one-step experiment/awaken action without changing to an unrelated UI.
+- **Blueprint inventor/library:** build typed compositions, preview actual effects, save/version researched blueprints and inspect incomplete imported schematics.
+- **Loadout/preparation:** one identifiable primary, up to three contextual prepared spells eventually, visible budget/behavior constraints and saved builds.
+- **Forge, Mastery, Codex, Essence Vault:** reuse current progression and strong in-world Forge rituals as integrated faces/capabilities; **do not delete working services or create duplicate currencies/wallets**.
+
+Node classes: **Specialization** (earned points/role/compatibility), **Research** (knowledge + secured materials; permanent discovery), **Awakening / Wyrmcraft** (rare matching Essence/mastery/deeper mastery). Wyrmheart development tiers and exact node topology/point count are **proposals**. Existing 24-point Web budget is the **audited baseline** to revisit deliberately, not silently inflate.
+
+The long-term ambition is hundreds of mechanically distinct legal builds and a large extensible Web. **“800+ nodes” is an aspiration, not a milestone.** Four initial schools are implemented or partly implemented. Necromancy and Summoning are now **approved fifth/sixth Divine archetypes**, not merely candidate cross-disciplines; secondary practices such as Warding, Spatial, Ritualism, Blood and Metamagic remain unapproved taxonomy. The six-school progression and mutation-tier rule in §3.0 overrides outdated four-school scope examples.
+
+### 3.2 Typed, bounded spell grammar — LOCKED
+
+A blueprint is catalogue-backed **data**, never executable user-provided scripts:
+
+1. **Foundation / elemental discipline** — principal behavior and visual identity.
+2. **Form/delivery** — one primary form such as projectile, pulse, beam or controlled chain.
+3. **Infusion/property** — researched specific Essence/Wyrm/rare monster trait.
+4. **Conditional reaction / trigger** — shatter, propagation, echo, ignition etc., with explicit event limits.
+5. Optional researched catalyst / Wyrm property and socket/node synergy, subject to compatible tags and complexity limits.
+
+Initially implemented foundations: **Fire** (burn/ignition/area denial); **Frost** (chill/control/shatter); **Storm** (conductivity/chain/tempo); **Arcane** (marking/energy/redirect/echo). Divine **Death** and **Binding** schools are committed future archetypes (§3.0), pending authored contracts. Two-element cross-schools form meaningful interactions; element **order matters** to delivery/role. Existing `Frostfire`, `Stormglass`, `Arcane Conduit` logic must be **reused or migrated, never double-applied**.
+
+| Two-school interaction | Meaning (working name, only shipped mechanics are code-truth) |
+|---|---|
+| Fire + Frost | Frostfire: burn/freeze/conditional thermal shatter |
+| Fire + Storm | Flashpoint: charged ignition/limited explosive propagation |
+| Fire + Arcane | Riftbrand: spatially controlled ignition |
+| Frost + Storm | Stormglass: conductive ice/chain-shatter |
+| Frost + Arcane | Glacial Echo: delayed chill/echo/displacement |
+| Storm + Arcane | Arcane Conduit: bounded discharge/echo transfer |
+
+A **third elemental role** can modify the *first* reaction under advanced prerequisites; it is **not** a free third autonomously firing attack stream. Initial grammar forbids unrestricted all-four element super-spells. Later four-element rituals require fresh explicit product approval. Limits apply to complexity, socket availability, reaction depth, target searches, projectile counts, VFX work, cooldowns and statuses. Named hard-invalid combinations must be rejected **before** a Hunt, with a usable reason; full builds (blueprint + Web + temporary rank/relic/evolution) are the balancing unit.
+
+Existing Web hybrid branches, points connectivity, mastery exclusion and generic component tags (`Impact`, `Projectile`, `AppliesChill`, `Chain`, etc.) should be reused. Possible mutation sockets: one midgame, two late-game active; **numbers proposed**. No free all-branch keystone stacking. Free respec between standard Hunts should safely unequip incompatible sockets without erasing recipes. Exact rules for adjusting an *active saved Eternal Hunt* build at town/sanctuary must obey save validity and await tuning.
+
+### 3.3 Intelligent automatic multi-spell combat — LOCKED (supersedes old one-spell-only rule)
+
+The long-term prepared loadout supports **three or four equipped spells MAX**, with **one reliable primary** and up to three contextual active spells, unlocked gradually. **Players move/dodge with auto-aim by default and optionally take over aiming; prepared magic casts intelligently without adding an action bar of manual spell buttons.**
+
+- C# owns deterministic cast eligibility, **automatic acquisition/manual-override aim geometry** and threat perception, target count within legal delivery rules, actual telegraphs, existing status, resource/cooldown budget and shared **cast arbitration**. Fire Burst/defensive Frost/utility Arcane etc. are examples, not prescribed slots. Threat-awareness may decide *when* to cast and *which legal enemy* auto-aim selects; it must never override actively engaged manual aim.
+- Contextual spells execute only when useful/eligible, with sensible defaults; optional Nexus trigger policies can fine-tune behavior without obliging players to program automation.
+- Shared cast/action budget avoids fourfold free DPS, starvation of defensive spells, endless chain procs, fake on-screen damage, overload and unpredictable AI-agent decisions. Inputs, decisions and emitted gameplay events should be reproducible/inspectable.
+- Existing one-primary `SpellBook` is a **valid transitional implementation** to extend by adapter and tested vertical slices. Do not remove it or existing spell evolutions when introducing contextual slots. One fused Fire+Frost spell remains a **single combined cast with bounded reactions**, even while the character can also equip distinct contextual spells.
+- Player/enemy mobility, real input responsiveness, dodge windows and attack visibility outrank theatrical cast animation. Avoid slowdowns and giant particle halos masking hits.
+
+### 3.3a Hybrid auto-aim with manual override — LOCKED user intent, implementation details PROPOSED
+
+**Latest user-approved decision (19 October 2026; supersedes 18 October movement-facing default):** WyrmForge uses **automatic aiming at a valid nearby enemy by default**. The player can **temporarily take full control of aiming** at any time; automatic targeting cannot fight or snap away from that intent. When manual aim ends, **auto-aim resumes**. Auto-casting continues throughout. This is inspired by Enter the Gungeon's **controller auto-aim that can be overridden**, but WyrmForge retains its own automatically casting magic rather than manual gunfire.
+
+**Reference and intended transfer:** [Enter the Gungeon's controller auto-aim options](https://enterthegungeon.wiki.gg/wiki/Asset_strings) include nearest-enemy auto-targeting unless overridden; [its developer explains soft aim assist based on angle, distance and threat](https://steamcommunity.com/app/311690/discussions/0/412446292760718217/). Study the responsive manual-control handoff; do not copy game assets, code, prescribed targeting parameters or mandatory twin-stick gunplay.
+
+**Target authority and priority — LOCKED:**
+
+1. **Manual aim engaged: absolute precedence.** Independently chosen angle or explicitly selected target directs aimed spells, even if a closer enemy is elsewhere. Do not snap projectiles to auto-selected enemies, back-turn to threats, steal movement input or require taps to cast.
+2. **No active manual aim: default auto-target.** C# picks a legal visible/reachable enemy, generally prioritizing nearby meaningful threats; movement direction does **not** determine spell direction. Avoid noisy target switching and consider occlusion, range, spell target rules, target death and attack readability.
+3. **Override released or interrupted: restore auto-target.** Never leave a stuck manual-aim state after lifting a thumb, releasing a right stick, losing capture/focus, changing orientation, pausing or entering UI. Smoothness/debounce is tunable, but stale manual headings and double casts are not acceptable.
+4. **No legal target: respect the spell's no-target behavior.** Do not conjure enemies, shoot through real barriers or guarantee false hits. Per-spell empty-space casting, manual aim forgiveness, auto-target scoring and reacquisition thresholds remain TUNABLE.
+
+**Inputs — mobile-first, not a mandatory twin-stick game:**
+
+- **One thumb:** left touch moves/dodges; the mage auto-aims and auto-casts even while running away, circling, stationary or strafing. Moving does not steer the default shot direction.
+- **Optional second thumb:** press/drag in a responsive right-hand aiming area while continuing left-thumb movement. Manual aim takes effect immediately during engagement; releasing ends the override. Tap-to-aim may be supported as an explicit short-lived override only if its end is clear. Touch IDs never collide; test real iOS Safari cancellation and multi-pointer behavior.
+- **Desktop/gamepad:** active mouse aiming and an actively deflected right stick temporarily override auto-aim while WASD/left stick controls movement. Mouse presence, idle pointer or controller deadzone cannot trap the player in manual mode. Exact gesture/timeout tuning remains PROPOSED.
+- **Visual cue:** an unobtrusive in-world magical trace/target cue consistent with existing Gothic painterly/pixel 2.5D art distinguishes auto-selected and manually intended aim without giant arrows, busy reticles, hidden target hopping or lights obscuring projectiles/hazards. C# cast direction, mage/staff facing and VFX must match; no world/camera rotation to fake direction.
+
+**Spell targeting and ability classification:**
+
+- **Straight projectiles (Fire Bolt, Frost Shard, Arcane Orb):** in auto mode, launch toward a legal target through *actual* projectile geometry; in manual mode launch along the player's deliberately chosen angle/point, allowing genuine misses. Neither mode bypasses walls, projectile travel or collision.
+- **Chain Lightning / acquired target abilities:** auto mode chooses a legal initial target; manual mode chooses an initial target aligned with the deliberate direction (subject to typed legal cone/range) or performs its specified no-target behavior. Subsequent chaining/forking uses its existing legitimate target acquisition; never override the first manually aimed hit.
+- **Cones, area placement, dashes, defense, auras:** directional effects follow effective Auto/Manual aim as appropriate; self-centered or non-directional spells keep their own cast semantics. Contextual scheduling chooses *when/which spell*, manual input chooses direction only when engaged.
+- **Combinations and evolutions:** use typed selection/delivery/line-of-sight/homing/chain/no-target rules. Do not turn fused Fire+Frost into two projectiles or create four independent free auto-cast streams.
+
+**Integration and save authority (recheck live GitHub before editing):**
+
+- The current C# `MovementInput(double X,double Y)` carried movement only, while `ArenaView.razor.cs` and `wwwroot/js/arena-input.js` carried movement gestures. Introduce **optional manual aim intent plus engagement lifecycle** and an effective **Auto / Manual targeting mode** in authoritative C# state/snapshots. Preserve existing movement, dodge, saves and deterministic replay.
+- Existing `RunSimulation.Spells.cs` and `RunSimulation.Targeting.cs` use `NearestTarget` for multiple legitimate acquisition/chain mechanics. **Keep/refine valid auto-targeting**; add manual override precedence at the appropriate cast-acquisition seam, not a wholesale removal of nearest-target helpers.
+- Publish C# effective target/direction for mage pose, VFX, actual projectile launch and verifier input trace. JS reads/captures gestures and renders snapshots; it does not independently choose enemies or damage. Version new inputs for backward-compatible replay.
+
+**Acceptance — LOCKED behavior, TUNABLE sensitivity:**
+
+1. Player moves north or runs away from a nearby west enemy: without manual aim the cast targets that **legal west enemy**, not north. Stationary players also auto-acquire.
+2. Player manually aims east while the nearest legal enemy is west: straight projectiles fly **east**, may miss, and never snap west while the manual override is held.
+3. Two-thumb movement/dodge and optional precision aiming remain simultaneous. On release or interruption the next legal aim returns to auto-target without a stuck angle, stolen touch or doubled cast.
+4. Auto-acquisition excludes dead, blocked and out-of-range enemies, avoids target flicker and obeys true collision. Manual target choice is not silently changed by target scoring.
+5. Chain Lightning initial acquisition respects Auto/Manual mode; valid subsequent chains, homing modifiers, defense, auras and fused combinations retain designed behavior.
+6. Test mouse, keyboard, controller deadzones, 320–390px portrait, real iPhone Safari two touches, touch cancellation, resize, focus loss, camera transforms, 2.5D render, seed/replay and old saves.
+7. Balance threat positioning and dodge windows for **higher default auto-aim uptime** without automatic guaranteed hits or removing positional skill. The responsive override must feel useful rather than mandatory.
+
+**No new cast buttons:** prepared magic still casts automatically; the future 3–4 intelligently scheduled slots and shared cast economy in §3.3 remain unchanged. **Only the default aim/optional override rule changed.**
+
+### 3.4 Hunt upgrades and Fateweave — LOCKED
+
+- Crafted spells enter each ordinary/ranked attempt with their **identity but not their full high-rank strength**. Temporary rank, refinements, evolutions and many relic effects remain earned in that run. For persistent Eternal progression see §7: designed permanent power coexists with active expedition state but cannot bypass ranked equal-start rules.
+- **Minor refinements between major breakthroughs** is intentional: earlier prototypes made heroes godlike after ~2–3 nodes. Existing level **5 Rank II**, **10 Rank III/synergy eligibility**, **15+ evolution eligibility** are code-audit baselines/tunable paths; rank and prerequisites actually govern offerings. More Hunt nodes do **not** automatically mean more major power.
+- **Fateweave (working name):** in a normal 3-card upgrade draft, each displayed card can be rerolled **once individually**, up to three separate card replacements during that round, using a **shared finite reroll charge pool for the entire Hunt**. A new draft resets per-card flags, NOT shared charges. If no legal different replacement exists, prevent waste / explain clear fallback. Replace only selected card; other two stay untouched.
+- **Rare Gilded/Golden opportunity:** one reroll *slot* occasionally has golden property pre-decided in C# seeded progression; **costs the same normal charge** and counts as that slot's once-per-round reroll. It can improve choices **only within the stage's legal rarity/power envelope**, not summon Rank III early. No separate golden currency or guaranteed every round.
+- Potential earned reroll charges, rare pickups and Nexus nodes affect finite availability subject to caps (counts and probabilities **unresolved**). Never refill through UI redraw/save reload. Test no duplicate cards, eligibility, slot state, shared-charge exhaustion, persistence and replay.
+- Balance diagnosis must distinguish **offer rates from player pick rates** (especially under-selected Frost), and measure *actual* control/shatter/survival against resistance, not just presumed numerical weakness. Human feel tests required.
+
+### 3.5 Materials, Forge, Mastery and research — LOCKED
+
+- Existing Wyrm families/material examples: **Ashfang** (`CinderHeart`, `MoltenFang`, `AshenWing`); **Rimeclaw** (`RimeHeart`, `GlacialScale`, `HoarfrostWing`); **Stormcoil** (`StormHeart`, `ChargedScale`, `TempestWing`); **Voidweaver** (`VoidHeart`, `NullScale`, `PhaseWing`). Exact component effects are design propositions unless existing code implements them. Rare non-Wyrm creatures provide alternative samples so experimentation is not exclusively boss-grinding.
+- Rare Essence conveys creature **behavior and magical law**, not abstract interchangeable coins. Specific secured specimens unlock one-time research; never charge the same rare specimen for every cast/Hunt. No duplicate wallet next to Forge.
+- Novel failed experiments **always produce a usable new observation or bounded progress**. No blind random destruction of irreplaceable materials. Viewing first sample should expose research clues rather than consume it; explicitly confirm any precious sample spend. The same item cannot be consumed concurrently by Forge and Nexus research.
+- Known discoveries survive failed Hunts. Unsecured samples obey extraction/risk state; earned permanent progression persists. No real-world research timers, premium accelerators, pay-to-win, arbitrary gear treadmill or unbounded flat-stat inflation in standard progression.
+- Existing Forge Masterworks, Wyrm Essences, Spell Mastery and Codex are enduring systems. Additional awakening/trophies create new options and challenging goals. Higher-tier Wyrms can supply advanced knowledge/materials.
+- **Eternal Hunt exception (explicit latest rule):** Seasonal achievements unlock *meaningful permanent power* (upgradable mutations, components, spells/research branches, rare properties) usable in Eternal Hunt/eligible PvE via Arcane Nexus. This vertical growth is **intended** there, but cannot change official seasonal ranked starting capabilities.
+
+### 3.6 Spell blueprints, community and privacy — LOCKED
+
+- Ownership = personal blueprint copy, revisions and consent choices; not patent exclusivity over shared game-mechanical combinations. Two players can independently invent the same spell.
+- **Private by default**; **Unlisted** unguessable link/code to an immutable published revision; **Published** opt-in searchable Spellwrights' Archive. Editing personal copy does not silently rewrite an already published revision. Withdrawal stops new distribution but not copies already independently imported; eventual account-deletion/moderation policy needs careful definition.
+- Imported blueprint is a **schematic**, not a shortcut unlocking missing ordinary PvE research. Save incomplete designs with pinned missing steps. Optional explicit derivation/provenance for remixes; mechanically identical independent builds require no forced attribution.
+- Versioned catalogue-backed validated import/export; never run arbitrary external code. Filters can include element/form/role/complexity/known components/verified competition history. No paid featured placement, follower power, artificial scarcity, popularity-based power or royalties/trading exclusive spell rights.
+- Moderation, abuse/reporting, anti-spam, privacy/consent, authorization and rate limits are prerequisites before public creator services are official. Public publication must not be forced for competitive participation; §9 details verified private competition.
+
+### 3.7 Illustrative complete spell — Rimebrand Spellwright (NOT shipped canon)
+
+Fire Bolt projectile foundation with Rimeclaw cold infusion and conditional thermal shatter; Fire/Fire–Frost Web specialization, limited compatible thermal/control mutations. Endgame could conditionally add *either* bounded Storm discharge *or* Arcane delayed echo, **not both by default**. Level 1 shows prototype Fire/Frost identity; later legal Rank II, synergy/rank, then evolution; weaker immediate single-target burst/cast tempo offsets clustered control. Visuals: warm central projectile, restrained crystal edges, conditional accent *only on event*. In ranked Conclave approved components are available from the season pool regardless of personal Rimeclaw material wealth. Illustrative research loop: observe sample → form hypothesis → fail forward to useful note → stabilize viable blueprint with informed material spending → specialize in Nexus → test in a real Hunt.
+
+---
+
+---
+
+### 16.2 Arcane Nexus: concrete research, socket and specialization behaviors
+
+- The Nexus is **one discoverable player-facing place** reached through town, with visually understandable sub-activities: research materials → observe/testing → resolve failure/knowledge → mutate a known spell → choose legal Web specializations/sockets → prepare loadout → try it in an actual Hunt. A visually coherent internal navigation system may have specialized panels; it must not become multiple unrelated top-level destinations with duplicated economy.
+- Initial player should discover an understandable real spell mutation before confronting a wall of hundreds of abstract nodes. Planned long-term breadth is not permission to manufacture empty branches: every added node should change legal gameplay/knowledge, unlock a combination, create a meaningful tradeoff or lead to another goal.
+- Spell components need **typed stable catalogue identities** and compatibility rules for element, delivery, applied statuses, conditional triggers, catalysts and complexity. Do not force the same socket behavior onto Fire's burst, Frost control, Storm chain and Arcane delayed/geometry mechanics. Element order and applied effect order can matter, but uncontrolled recursion or stacked all-element effects must be rejected/bounded.
+- Research sample events are recorded once with provenance; nonconsuming observation can reveal conditions and clues. First meaningful failure produces a useful note, precise missing ingredient/condition or bounded progress rather than silently destroying irreplaceable specimens. Explicitly confirm actual consuming operations. Later copy/paste of a blueprint never fakes possession of missing prerequisites or illegally imports unavailable high-tier spells.
+- Showcase accessible **short previews driven by legal resolved simulation behavior** for mutation/evolution/rank changes rather than static icon-only claims or unverified particles. A preview must not emit effects that the equipped configuration would not really produce.
+- Example Nexus specializations from earlier exploration (all PROPOSED, not automatic shipped nodes): *Thermal Fracture* trades burst for conditional shatter, *Conductive Frost* supports bounded lightning-on-chill chains, *Lingering Embers* trades burst for duration, *Stable Conduit* improves complex-spell consistency for meaningful Web point cost. Preserve and honor actual existing tree point limits and mutually exclusive choices. Resetting points cannot discard permanent discovered knowledge.
+- Separate *offer frequency* from *pick rate* when diagnosing Frost or other underused schools. Measure crowd control preventing attacks, safe repositioning, elite resistance, shatter synergy and situational role, not damage alone. Do not force a particular school as mandatory early content or ensure a strong hybrid can only be built by tedious farming.
+
+---
+
+### 16.3 Spell evolution pacing, Fateweave and combat economy details
+
+- Three cards may each have one individually usable **Reroll** action during a draft; a card that has been rerolled is exhausted for that draft even if the player dislikes the replacement. A new round replenishes *card* eligibility but not shared across-Hunt charge count. Reroll only the selected card, not all three; prefer no duplicate offerings across currently visible cards when the legal pool permits.
+- **Gilded Fateweave** is a possible flavorful visual label, but the player's action should still say **Reroll** clearly. A golden opportunity is an uncommon precommitted slot property, not a new banked currency or free infinite upgrade source. It consumes the same charge; cannot offer unmet rank/level/story/element prerequisites; cannot regenerate on re-render/reload. Pickup capacity, cap, odds and Nexus investment are tuning—not copied demonstration figures.
+- A new mutation/combination gives the spell a distinct visible identity at low rank, while **the run still earns its rank, minor refinements and breakthroughs**. Major rank/evolution availability is gated by real milestones/eligibility; longer Elder Hunts need many interesting minor decisions, not high-tier powers three nodes into a run.
+- Up to four contextual spells share a cast economy. Scheduler input/decision traces must reveal whether offensive cooldowns starved defensive utility, whether chain procs grew exponentially, and why a contextual spell fired. Actively engaged manual intent is authoritative on where aimed offensive casts go; without it, legal auto-targeting may aim behind movement direction. Automated threat recognition still determines legal timing and cannot override active manual aiming.
+- Spell blueprint ownership does not give patent rights; export/import remain typed data, never executable scripts; unpublished/unfinished recipes remain private even in ranked sessions. Publishing a revision is a deliberate independent consent operation; withdrawing future availability does not silently delete legitimate previously imported copies.

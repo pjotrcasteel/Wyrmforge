@@ -1,5 +1,8 @@
 # Arena roster v1 — habitats and the first-hunt ecology
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 Status: **Step 1 of 7 shipped** (habitats, renamed roster, safe spawns). Source brief:
 `user_handover_files/WyrmForge_First_Hunt_Encounter_Design.md` (§2 roster, §4 habitats, §5 beats, §6 spawns, §10 order).
 

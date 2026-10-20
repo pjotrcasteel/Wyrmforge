@@ -1,5 +1,8 @@
 # WyrmForge — Recorded Audio Asset Credits
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 First imported playback prototype: **0.0.109**. Enhanced recorded mage spell layers: **0.0.110**.
 
 All audio in `src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/` consists of human-produced music and sound effects obtained from the source distribution pages below. The build records source SHA-256 checksums and the complete processed-cue mapping in `audio/recorded/manifest.json`.

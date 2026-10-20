@@ -1,5 +1,8 @@
 # Art card to animated spritesheet: production algorithm
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 Version 1.0 — 20 October 2026.
 
 **Status: production procedure, not an implemented generator or an accepted character.**

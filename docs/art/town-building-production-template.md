@@ -1,5 +1,8 @@
 # Refuge buildings — shared art and animation production template
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 **Status:** production template / proposed stage content; **not** approval of new artwork or gameplay changes.  
 **Authority:** subordinate to `docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md`, approved in-game art and actual progression code.  
 **Scope:** Wyrmforge, Arcane Nexus, Codex, Hall of Fame, and any future town building.  

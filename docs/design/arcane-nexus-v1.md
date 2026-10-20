@@ -1,5 +1,8 @@
 # Arcane Nexus v1: the Frostfire journey
 
+> **Historical / supporting document (not canonical).** For current rules use [WyrmForge canonical documentation](../canon/README.md). This file preserves dated research, assets, implementation evidence or prior proposals; do not treat its status or plan as present-day product authority.
+
+
 The Design Amendment of 2026-10-17 (§3, §11 step 2) merges the Arcane Web and the Laboratory into one Arcane Nexus. v1 ships one complete journey for an existing legal combination:
 
 > Frostfire: node → material and where to find it → experiments → stabilize → equip → loadout reference
