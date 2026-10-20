@@ -131,6 +131,7 @@ public partial class Home
         await TryLoadWorldAsync();
         await TryLoadChroniclesAsync();
         await TryLoadLaboratoryAsync();
+        await LoadFireballCoreAsync();
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
