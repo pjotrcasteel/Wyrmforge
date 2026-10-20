@@ -141,11 +141,13 @@ button.gate-arch-choice:active { background:#e6a45e1f; }
     width:min(76%,80px);
     aspect-ratio:1;
     flex:0 0 auto;
-    /* Transparent, text-free export of the owner's six canonical paintings. */
-    background-image:url('art/divine-lineage-sigils-clean.webp?v=135');
+    /* Crop the central approved emblem, hiding the old atlas's baked text and square edges. */
+    background-image:url('art/divine-lineage-sigils.webp?v=134');
     background-size:300% 200%;
     background-repeat:no-repeat;
     image-rendering:pixelated;
+    -webkit-mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
+    mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
 }
 .gate-sigil--fire { background-position:0 0; }
 .gate-sigil--frost { background-position:50% 0; }
