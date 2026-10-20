@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1",
-  "name": "The Hollow \u2014 eight-direction attack",
+  "name": "The Hollow — eight-direction attack",
   "animation": "attack",
   "layout": "eight",
   "source": {
@@ -1755,11 +1755,16 @@
   ],
   "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
   "sourcePoseSha256": "9bdde1f0970930e182a261f11435e525dce60b2269774bca28bb14fd919ae895",
-  "visualAccepted": false,
+  "visualAccepted": true,
   "runtimeIntegrated": false,
   "visualContactFrames": [
     7,
     8
   ],
-  "visualTimingOnly": true
+  "visualTimingOnly": true,
+  "acceptance": {
+    "date": "2026-10-20",
+    "scope": "Eight-direction claw attack",
+    "evidence": "Owner: perfect that completes the first full animated enemy; integrate and merge"
+  }
 }

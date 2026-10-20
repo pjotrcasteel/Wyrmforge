@@ -2,10 +2,19 @@
   "schemaVersion": "1.0",
   "creatureId": "hollow",
   "scope": "requested walk, attack and death art exports",
-  "directions": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+  "directions": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
   "totalFrames": 448,
   "fps": 12,
-  "runtimeIntegrated": false,
+  "runtimeIntegrated": true,
   "clips": {
     "walk": {
       "manifest": "movement-eight-directions-v1/hollow-movement.manifest.json",
@@ -17,7 +26,7 @@
       "manifest": "attack-eight-directions-v2/hollow-attack.manifest.json",
       "image": "attack-eight-directions-v2/hollow-attack.png",
       "framesPerDirection": 16,
-      "ownerAccepted": false
+      "ownerAccepted": true
     },
     "death": {
       "manifest": "death-eight-directions-v4/hollow-death.manifest.json",
@@ -29,5 +38,5 @@
   "review": "attack-eight-directions-v2/hollow-lifecycle-review.gif",
   "scaleContract": "Use each clip's drawCellWorldSize and anchor; padded attack/death cells retain the walk pixel density.",
   "eventContract": "Attack contact indices are visual reference only. Canonical combat timing and gameplay remain unchanged.",
-  "remaining": "Owner attack acceptance and separate runtime adapter/integration. No additional animation states are claimed."
+  "remaining": "Runtime adapter and local validation complete; final PR CI and GitHub Pages deployment must pass."
 }

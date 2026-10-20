@@ -14,7 +14,7 @@ public sealed class HollowBrowserTests : PageTest
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(artifacts);
         await Page.SetViewportSizeAsync(390, 844);
-        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false");
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=true&cast=false");
         await AttachDiagnosticsAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const canvas=document.querySelector('.enemy-lab canvas');if(!canvas)return false;
@@ -23,6 +23,8 @@ public sealed class HollowBrowserTests : PageTest
             return d?.hollow.ready&&!d.renderingFailed&&d.hollow.entities.some(e=>e.clip==='walk'&&e.frame>0);
         }");
         await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, "hollow-walk-390.png"), FullPage = true });
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false");
+        await AttachDiagnosticsAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const m=window.__hollowArena;
             const d=m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));

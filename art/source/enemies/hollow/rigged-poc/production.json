@@ -14,9 +14,9 @@
     "C": "22-bone weighted source; walk-pose deformation self-reviewed after lower-limb/cloth weight correction; broader attack/death pose tests remain out of scope",
     "D": "448 total frames: accepted walk/death and self-reviewed attack; local source, asset and mobile browser checks passed. Runtime integration pending."
   },
-  "visualStatus": "Owner accepted movement and death. Attack exported and self-reviewed in eight directions; owner attack acceptance pending. Requested three-clip art exports complete; runtime integration separate.",
-  "ownerAccepted": false,
-  "runtimeIntegrated": false,
+  "visualStatus": "Owner accepted all three directional clips and explicitly authorized runtime integration, merge and Pages deployment.",
+  "ownerAccepted": true,
+  "runtimeIntegrated": true,
   "notes": [
     "Existing generated v1 and rigid cutout v2 remain rejected.",
     "A neutral-pose reference may be generated from the card as modeling input, never as independently generated animation frames.",
@@ -59,13 +59,14 @@
     "review": "exports/pixel-walk-poc-v1/README.md",
     "hardwareSettingsChanged": false
   },
-  "currentExport": "exports/attack-eight-directions-v2/hollow-attack.png",
+  "currentExport": "exports/hollow-core-sprite-set.json",
   "gaitOwnerAccepted": true,
   "movementOwnerAccepted": true,
   "deathOwnerAccepted": true,
   "deathEditableSource": "model/local-appearance-004/rigged-death-v5/hollow-death.blend",
   "deathReview": "exports/death-eight-directions-v4/README.md",
-  "attackOwnerAccepted": false,
+  "attackOwnerAccepted": true,
   "attackEditableSource": "model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
-  "attackReview": "exports/attack-eight-directions-v2/README.md"
+  "attackReview": "exports/attack-eight-directions-v2/README.md",
+  "runtimeReview": "../../../../../../docs/art/hollow-runtime-integration-2026-10-20.md"
 }

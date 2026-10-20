@@ -9,7 +9,7 @@ const fs=require('node:fs');const path=require('node:path');
  const errors=[];const assets=new Set();page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.url().includes('/hollow-rigged/')&&r.ok())assets.add(new URL(r.url()).pathname);});
  const diagnostics=async()=>page.evaluate(async()=>{const m=await import(new URL('js/arena.js',document.baseURI).href);return m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));});
- await page.goto(base+'/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false');
+ await page.goto(base+'/enemy-lab?kind=Hollow&seed=42&autoplay=true&cast=false');
  const attach=async()=>{await page.locator('.enemy-lab canvas').waitFor({state:'visible'});await page.locator('#wyrmforge-ignition').waitFor({state:'hidden'});await page.evaluate(async()=>{window.__hollowArena=await import(new URL('js/arena.js',document.baseURI).href);});};
  await attach();
  const wait=async(clip)=>page.waitForFunction(clip=>{
@@ -18,6 +18,7 @@ const fs=require('node:fs');const path=require('node:path');
   return d?.hollow.ready&&!d.renderingFailed&&d.hollow.entities.some(p=>p.clip===clip&&p.frame>0);
  },clip,{timeout:45000});
  await wait('walk');const walk=await diagnostics();await page.screenshot({path:path.join(output,'hollow-walk-390.png'),fullPage:true});
+ await page.goto(base+'/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false');await attach();
  await wait('attack');const attack=await diagnostics();await page.screenshot({path:path.join(output,'hollow-attack-390.png'),fullPage:true});
  await page.goto(base+'/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=true');
  await attach();
