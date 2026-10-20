@@ -43,10 +43,6 @@
         return new URL(assetBase + path + "?v=" + encodeURIComponent(version), document.baseURI).href;
     }
 
-    function sourceIs(image, name) {
-        return image?.getAttribute("src")?.includes(name) ?? false;
-    }
-
     function setAsset(image, filename, version) {
         const next = assetUrl(filename, version);
         if (image.src !== next) image.src = next;
@@ -65,7 +61,7 @@
 
         for (const patch of scene.querySelectorAll(".refuge-town-vacant-layer")) {
             const from = patch.dataset.townAsset ?? patch.getAttribute("src") ?? "";
-            const name = from.match(/(?:day|night)-vacant-(ArcaneNexus|Blacksmith|Codex|HallOfFame)\.(?:png|webp)/)?.[1];
+            const name = patch.dataset.townAsset || from.match(/(?:day|night)-vacant-(ArcaneNexus|Blacksmith|Codex|HallOfFame)\.(?:png|webp)/)?.[1];
             if (!name) continue;
             patch.dataset.townAsset = name;
             setAsset(patch, next === "day" ? `day-vacant-${name}.webp` : `night-vacant-${name}.png`, version);
