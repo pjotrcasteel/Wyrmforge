@@ -1,6 +1,6 @@
 # Ashling explicit bound blocking v4a
 
-Status: new movement candidate for owner review. No runtime integration or directional replacement. The previous v3 eight-direction export remains rejected and preserved.
+Status: owner approved this explicit bound preview with “perfect” on 2026-10-20. No runtime integration. The previous v3 eight-direction export remains rejected and preserved.
 
 This follows the [movement research](ashling-movement-research-2026-10-20.md). The source ankle controls were also found at incorrect fore/aft depths relative to the actual feet. The new rig corrects both leg chains and rebinds 19,881 lower-body vertices, preserving arm and authored-tail weights.
 
@@ -17,4 +17,12 @@ Review evidence inside that source directory:
 - `blocking-samples.npz`: actual evaluated vertices, UVs, leg landmarks and camera matrices.
 - `blocking-review/report.json`: exact loop closure, finite coordinates, minimum mesh Z -0.5 (floor), support-toe horizontal drift 3.10e-8 model units, 16 unique game frames, no frame clipping. Knee interior-angle ranges: left 40.7–125.3 degrees, right 30.2–149.1 degrees.
 
-Visual inspection of the side and textured contact sheets shows distinct compression, extended trailing support and folded airborne legs. These technical measurements and pose comparisons do not establish owner acceptance. The standalone game GIF omits a shadow; the side review includes a ground reference. Remaining: owner movement review, then directional regeneration and validation, attack/death, runtime metadata and integration. Preserve the earlier renders for comparison.
+Visual inspection of the side and textured contact sheets shows distinct compression, extended trailing support and folded airborne legs. Owner approval applies to this blocking preview; subsequent directional exports remain separately reviewable. The standalone game GIF omits a shadow; the side review includes a ground reference.
+
+## Approved motion exported to eight directions
+
+`art/source/enemies/ashling/exports/movement-eight-directions-v2/` contains the rebuilt 1536×768 atlas, 128 individual 96×96 frames, synchronized eight-direction GIF, pose comparison sheet, manifest and independent validation. All directions use actual rotated geometry, without mirroring. Directional export review is pending; the source movement is approved.
+
+Independent CPU validation decoded all 128 frames, checked 131,428 opaque pixels against atlas placement, verified binary alpha, 57 visible palette colors, clipping margins, unique poses, shared anchors, exact source loop closure and no mirrored rows. Horizontal support-toe drift after compensating travel and rotating each direction is at most 3.42e-8 model units. This measures horizontal toe planting; heel/toe roll is intentionally allowed vertically. Source pose and atlas SHA256 hashes are recorded in the manifest and validation report.
+
+Remaining: directional owner review, attack/death, runtime metadata and integration. Earlier sources and renders remain preserved for comparison.

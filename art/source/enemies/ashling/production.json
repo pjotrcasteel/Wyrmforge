@@ -6,12 +6,12 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "explicit bound v4a approved; eight-direction rebuild underway",
+  "status": "approved explicit bound v4a exported and validated in eight directions; directional review pending",
   "ownerAccepted": true,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "directional movement regeneration and validation",
+    "owner review of regenerated eight-direction movement",
     "attack and death clips",
     "layer metadata and runtime acceptance"
   ],
@@ -21,7 +21,7 @@
   "movementBaseOwnerAccepted": true,
   "movementBaseAcceptance": "Owner perfect reply accepted explicit bound v4a preview on 2026-10-20; v3 remains rejected",
   "directionalExportOwnerAccepted": false,
-  "movementExport": "exports/movement-eight-directions-v1",
+  "movementExport": "exports/movement-eight-directions-v2",
   "movementResearch": "../../../../docs/art/ashling-movement-research-2026-10-20.md",
   "blockingReview": "model/local-appearance-002/rigged-block-v4a/blocking-review",
   "blockingDocumentation": "../../../../docs/art/ashling-bound-blocking-v4-2026-10-20.md"
