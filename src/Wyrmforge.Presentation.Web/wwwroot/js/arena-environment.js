@@ -35,7 +35,7 @@ export function createTerrainPlan(environment, width, height) {
         remains.push({ x: Math.max(9, Math.min(width - 9, width * .5 + side * (trailWidth * .68 + random() * width * .16))),
             y: 20 + random() * Math.max(1, height - 40), size: 7 + random() * 11, rotation: random() * Math.PI });
     }
-    const proximity = Math.max(0, Math.min(1, (environment.stage - 1) / 7));
+    const proximity = Math.max(0, Math.min(1, environment.corruption ?? ((environment.stage - 1) / 7)));
     const element = ['fire', 'frost', 'storm', 'arcane'].includes(environment.element) ? environment.element : 'arcane';
     const scars = [];
     for (let index = 0; index < 3 + Math.floor(proximity * 20); index++) {
@@ -213,7 +213,7 @@ export function habitatTint(habitat) {
 
 function terrainTexture(environment, width, height) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, width, height, artGeneration()].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, width, height, artGeneration()].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
@@ -289,13 +289,75 @@ export function getArenaCloisterElevations(environment, width, height, seconds =
     if (!environment) return [];
     const texture = terrainTexture(environment, width, height);
     const cloister = texture.cloister;
-    if (!cloister) return createTerritoryWallLayers(environment, texture.plan, width, height, seconds);
-    return createCloisterElevationLayers(cloister, environment.barriers, width, height);
+    const masonry = !cloister
+        ? createTerritoryWallLayers(environment, texture.plan, width, height, seconds)
+        : createCloisterElevationLayers(cloister, environment.barriers, width, height);
+    return [...masonry, ...createDestructibleLayers(environment, width, height)];
+}
+
+export function createDestructibleLayers(environment, width, height) {
+    return (environment?.props ?? []).map(prop => ({
+        kind: 'masonry', style: 'destructible', depth: prop.y * height,
+        prop, width, height,
+    }));
 }
 
 export function drawArenaCloisterElevation(ctx, layer) {
+    if (layer.style === 'destructible') return drawDestructibleProp(ctx, layer);
     if (layer.style === 'territory') return drawTerritoryWall(ctx, layer);
     return drawCloisterElevation(ctx, layer.barrier, layer.width, layer.height);
+}
+
+// A temporary deterministic, world-foot-sorted sprite pass. Destruction removes the snapshot
+// entry, so the object and its solid collision vanish in the same C# simulation frame.
+// This is intentionally separate from the cached floor: no stale baked props after a hit.
+export function drawDestructibleProp(ctx, layer) {
+    const { prop, width, height } = layer;
+    const x = Math.round(prop.x * width);
+    const y = Math.round(prop.y * height);
+    const size = Math.round(prop.radius);
+    const ember = prop.kind === 'ember-urn';
+    const frost = prop.kind === 'frozen-urn';
+    const wood = prop.kind === 'crate' || prop.kind === 'barrel' || prop.kind === 'stump';
+    const body = ember ? '#4d332b' : frost ? '#586a71' : wood ? '#4e3629' : '#62594c';
+    const light = ember ? '#a75a31' : frost ? '#b0c8cc' : wood ? '#80634b' : '#8b8172';
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(4,5,7,.48)';
+    ctx.beginPath();
+    ctx.ellipse(x + 3, y + 2, size + 5, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // The shadow's lower edge is the same physical foot position used by collision.
+    const top = y - size * 2;
+    ctx.fillStyle = body;
+    ctx.fillRect(x - size, top + 4, size * 2, size * 2 - 4);
+    ctx.fillStyle = light;
+    ctx.fillRect(x - size + 3, top + 2, size * 2 - 6, 5);
+    if (prop.kind === 'barrel') {
+        ctx.fillStyle = '#292625';
+        ctx.fillRect(x - size, top + 10, size * 2, 3);
+        ctx.fillRect(x - size, y - 5, size * 2, 3);
+    } else if (prop.kind === 'crate') {
+        ctx.fillStyle = '#372820';
+        ctx.fillRect(x - size + 5, top + 9, 3, size * 2 - 14);
+        ctx.fillRect(x + size - 7, top + 9, 3, size * 2 - 14);
+    } else if (prop.kind === 'stump') {
+        ctx.fillStyle = '#2e2723';
+        ctx.fillRect(x - 3, top + 4, 5, size * 2 - 4);
+        ctx.fillRect(x + 4, top + 9, 3, size * 2 - 13);
+    } else {
+        ctx.fillStyle = ember ? '#b85027' : frost ? '#9ccad5' : '#30292a';
+        ctx.fillRect(x - 3, top - 1, 6, 4);
+        if (ember || frost) ctx.fillRect(x + 4, top + 13, 3, 4);
+    }
+    // Visible cracks signal durability without floating health bars.
+    if (prop.healthFraction < .55) {
+        ctx.fillStyle = '#161717';
+        ctx.fillRect(x - 2, top + 10, 3, 9);
+        ctx.fillRect(x + 1, top + 18, 5, 3);
+    }
+    ctx.restore();
+    return true;
 }
 
 export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {

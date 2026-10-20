@@ -157,3 +157,27 @@ Working title **The Living Hunter's Chart**. The screen should look like an orig
 - Interactions such as bridge collapse, rising water and breached walls have **actual simulation phases**: warning → safety evacuation window → altered collision/nav/hazards → new wave routes/exit state. An animation alone cannot change damage or blocking. Every intermediate stage must not trap the player, spawn lethal enemies on top of the player or remove all feasible evasion routes. Provide validated fallbacks for invalid seeds.
 - Threat mixes should use the room, not just its wallpaper. Open courtyards invite coordinated ranged pressure, narrow cloisters invite flanks/chokepoints, flooded roads invite elevated routes, destroyed walls invite new enemy approach angles. Do not repeat just 10 enemy variants endlessly or turn every fight into the same broad empty arena.
 - In Endless Arena, physically walk through the opened passage to a **different generated arena** after milestone waves. The player retains actual active build/health/resources; the mode has **no Hunt Map**. Boss and elite encounters demand new pressure patterns and readable telegraphs, including the new directional cast system; layout mutations have fair audio/visual cause.
+
+
+## Implementation checkpoint — seeded forest arenas and breakable scenery (20 October 2026)
+
+A first **unmerged, unvalidated vertical slice** is being built on
+`feature/seeded-hunt-arena-props-20261020`. This is not evidence that the entire Arena Generator contract
+above is implemented.
+
+- `HuntArenaGenerator` supplies deterministic, separately seeded world-space prop recipes. A clear
+  central combat strip remains available for mobile kiting, physical crossings and trail exits.
+- Habitat-derived elemental influence (Fire/Frost) replaces the previous reward-attunement-derived
+  ground coloring. Corruption increases from early roads to the Wyrm approach. Corrupted breakables
+  appear more frequently as influence grows. Other lineages require authored ecology before enabling.
+- C# owns props, collision, projectile hits, durability, destruction and health/XP drops. Drops
+  use the existing one-time physical pickup mechanism and do not fabricate enemy-kill rewards.
+- Forest and opening roads use wider hand-coded pixel ground treatments. Props render independently
+  of cached floor art and sort by world-foot depth alongside the mage and enemies.
+- Visual scenery is **not** authoritative and must never invent colliders or spawn collectibles.
+  The first prop silhouettes are temporary code-authored pixels, not finalized art assets.
+- Not yet included: persistent destructible state across sessions, all enemy attack/AoE interactions,
+  actual resource/material economy drops, validated no-trap pathfinding through every generated obstacle,
+  infinite chunk streaming or seamless region travel, art acceptance at 320/390px on iPhone.
+- Acceptance before merge: .NET simulation tests, JavaScript tests, browser smoke, real iPhone
+  combat checks including targeting/retreat and stable save/seed replays. Do not bypass this gate.

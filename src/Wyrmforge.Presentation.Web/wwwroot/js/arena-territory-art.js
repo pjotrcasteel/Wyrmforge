@@ -46,7 +46,7 @@ export function createTerritoryStoryPlan(environment, width, height) {
     const biome = territoryBiome(environment.biome);
     const element = schoolPalette[environment.element] ? environment.element : 'arcane';
     const district = ['causeway', 'sanctuary', 'rift'].includes(environment.district) ? environment.district : 'causeway';
-    const corruption = clamp(((environment.stage ?? 1) - 1) / 7, 0, 1);
+    const corruption = clamp(environment.corruption ?? ((environment.stage ?? 1) - 1) / 7, 0, 1);
     const districtShift = district === 'sanctuary' ? .11 : district === 'rift' ? -.095 : 0;
     const landmarks = [
         { kind: landmarkKinds[biome][district === 'rift' ? 2 : 0], x: width * (.31 + districtShift + random() * .035), y: height * .19,
@@ -81,8 +81,8 @@ export function createTerritoryStoryPlan(environment, width, height) {
             branches: 2 + Math.floor(random() * 4),
         });
     }
-    return { biome, element, district, corruption, landmarks, patches, wounds, seed: environment.seed, width, height,
-        cloister: createCloisterPlan(environment, width, height) };
+    return { biome, element, district, corruption, habitat: environment.habitat ?? 'Outskirts', landmarks, patches, wounds,
+        seed: environment.seed, width, height, cloister: createCloisterPlan(environment, width, height) };
 }
 
 function irregularShape(ctx, x, y, rx, ry, rotation, seed) {
@@ -113,10 +113,62 @@ export function drawTerritoryGround(ctx, plan) {
     }
     ctx.globalAlpha = 1;
 
-    // Each district has a different large-scale footprint. There is no one shared road template.
-    drawDistrictFoundation(ctx, plan);
+    // Forests open into real fighting ground on BOTH sides of the road.
+    // Sites outside the forest keep their deliberately different built geography.
+    if (['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(plan.habitat))
+        drawOpenForestRoad(ctx, plan);
+    else drawDistrictFoundation(ctx, plan);
     drawElementalLandform(ctx, plan);
     drawTerritoryWounds(ctx, plan);
+}
+
+function drawOpenForestRoad(ctx, plan) {
+    const { width: w, height: h, seed, biome } = plan;
+    const random = randomStream(seed ^ 0x4e7b01);
+    const palette = groundPalette[biome];
+    const offset = (random() - .5) * w * .15;
+    const phase = random() * Math.PI * 2;
+    const bend = .027 + random() * .044;
+    const center = y => w * .5 + offset + Math.sin(y / h * Math.PI * 2 + phase) * w * bend;
+    const roadWidth = Math.min(185, w * (.12 + random() * .065));
+    ctx.save();
+    ctx.beginPath();
+    for (let i = 0; i <= 32; i++) {
+        const y = i / 32 * h;
+        const x = center(y) - roadWidth / 2;
+        if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    for (let i = 32; i >= 0; i--) {
+        const y = i / 32 * h;
+        ctx.lineTo(center(y) + roadWidth / 2, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = palette.road;
+    ctx.globalAlpha = biome === 'snow' ? .32 : .45;
+    ctx.fill();
+    // Broken, intermittent paving: the road is a landmark, not the only walkable tile.
+    for (let i = 0; i < 240; i++) {
+        const y = random() * h;
+        const x = center(y) + (random() - .5) * roadWidth * 1.25;
+        const distance = Math.abs(x - center(y));
+        if (distance > roadWidth * .51) continue;
+        const size = 2 + Math.round(random() * 6);
+        ctx.fillStyle = random() > .46 ? palette.high : palette.low;
+        ctx.globalAlpha = .16 + random() * .2;
+        ctx.fillRect(Math.round(x), Math.round(y), size * 2, size);
+    }
+    // Wet organic patches flank the route, but do not form impassable painted walls.
+    for (let i = 0; i < 34; i++) {
+        const y = random() * h;
+        const side = random() < .5 ? -1 : 1;
+        const x = center(y) + side * (roadWidth * (.65 + random() * 2.15));
+        ctx.fillStyle = palette.low;
+        ctx.globalAlpha = .16 + random() * .18;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 12 + random() * 30, 5 + random() * 18, random() * 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
 }
 
 // Large-scale composition comes first: the player must recognize a DIFFERENT place when a new node loads.
@@ -227,6 +279,8 @@ function drawDistrictFoundation(ctx, plan) {
 }
 
 function drawElementalLandform(ctx, plan) {
+    // Ordinary forest is real forest first; a Wyrm's geology overtakes it only nearby.
+    if (['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(plan.habitat) && plan.corruption < .65) return;
     // The monastery's masonry and physical history define the scene; no giant
     // glowing ritual geometry laid over its garden and central combat space.
     if (plan.cloister) return;
