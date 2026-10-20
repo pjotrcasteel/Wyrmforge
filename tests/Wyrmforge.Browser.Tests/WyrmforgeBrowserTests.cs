@@ -38,11 +38,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("#quickSlot")).ToHaveValueAsync("roof");
         await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']")).ToBeVisibleAsync();
         await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#slotZoom")).ToBeVisibleAsync();
         var initialRoof = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        var initialDetail = await Page.Locator("#slotZoom").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
         await Page.Locator("#quickChoices button[data-variant='base']").ClickAsync();
         await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToHaveAttributeAsync("aria-pressed", "true");
         var intactRoof = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
         Assert.AreNotEqual(initialRoof, intactRoof, "Switching roof to Intact must actually change visible pixels.");
+        var intactDetail = await Page.Locator("#slotZoom").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        Assert.AreNotEqual(initialDetail, intactDetail, "The enlarged roof preview must also show the chosen variant.");
 
         await Page.Locator("#quickChoices button[data-variant='roof:damaged']").ClickAsync();
         await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']"))
