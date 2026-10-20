@@ -7,6 +7,7 @@ import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './are
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
 import { drawBellWardenGround, drawBellWardenEntrance, drawBellWardenBar } from './arena-bellwarden-vfx.js';
@@ -26,6 +27,7 @@ export function initializeArena(canvas, dotNetReference) {
     // Atlases stream in; until they decode, every layer uses its code-painted fallback.
     loadArt(new URL('../art/', import.meta.url).href);
     preloadPaintedEnemies();
+    preloadHollowSprites();
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -52,6 +54,7 @@ export function readArenaDiagnostics(canvas) {
         exit: state.latestSnapshot?.exit ?? null,
         enemies: state.latestSnapshot?.enemies ?? [],
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
+        hollow: hollowDiagnostics(state.hollow),
         dragon: state.latestSnapshot?.dragon ?? null,
         dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
@@ -80,6 +83,7 @@ function createState(canvas, dotNetReference) {
         mageWalk: { x: null, y: null, lastMove: Number.NEGATIVE_INFINITY },
         enemyMotion: createEnemyMotionState(),
         paintedCorpses: {},
+        hollow: createHollowState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -237,7 +241,9 @@ function draw(state, snapshot, width, height) {
     if (snapshot.wardPulse) drawWardPulse(ctx, snapshot.wardPulse, state.reducedMotion.matches);
     updatePaintedCorpses(state.paintedCorpses, snapshot.deathBursts, state.enemyMotion, visualSeconds);
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
-    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds);
+    updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
+    drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady());
+    drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
     // The Mire Hound now uses authored pixel poses, including a real collapse.
     // Only C# identity-bearing death bursts create these bodies.
     for (const corpse of state.paintedCorpses.corpses?.values() ?? [])
@@ -257,7 +263,7 @@ function draw(state, snapshot, width, height) {
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
             drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
-                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId));
+                enemyPoses.get(enemy.entityId) ?? 0, enemyFacing(state.enemyMotion, enemy.entityId),state.hollow);
             drawEliteCrest(ctx, enemy, visualSeconds, state.reducedMotion.matches);
         } else {
             drawMage(ctx, snapshot.player, snapshot.castMotion, danger.hit, state.reducedMotion.matches,
@@ -785,8 +791,8 @@ function drawPerformanceCounter(state, ctx, snapshot, width, height) {
     ctx.restore();
 }
 
-function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1) {
-    if (!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
+function drawEnemy(ctx, enemy, lighting = null, walkPhase = 0, facing = 1, hollow = null) {
+    if (!(hollow&&drawHollowEnemy(ctx,enemy,hollow))&&!drawPaintedEnemy(ctx, enemy, walkPhase, facing)) drawEnemyPixelArt(ctx, enemy, lighting, walkPhase, facing);
     drawRimeArmor(ctx, enemy);
     if (enemy.frozen || enemy.hitFlash || enemy.healthRatio >= 0.72) return;
     const damage = 1 - enemy.healthRatio;
