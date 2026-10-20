@@ -212,6 +212,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(fits, "Approved portrait scene must fully cover the screen with correctly aligned clickable targets.");
         await ScreenshotAsync($"welcome-exact-art-{width}x{height}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME" }).ClickAsync();
+        await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
+        await ScreenshotAsync($"character-creation-{width}x{height}.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Arcanist" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
     }
 
