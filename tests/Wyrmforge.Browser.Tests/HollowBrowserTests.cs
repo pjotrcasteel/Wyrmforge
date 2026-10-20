@@ -8,6 +8,44 @@ namespace Wyrmforge.Browser.Tests;
 public sealed class HollowBrowserTests : PageTest
 {
     [TestMethod]
+    public async Task Mobile_MovingAttack_TurnsWithTarget_KeepsPhase_AndPausesBothLayers()
+    {
+        var baseUrl = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false");
+        await AttachDiagnosticsAsync();
+        await Page.WaitForFunctionAsync(@"() => window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hollow.entities.some(e=>e.clip==='attack'&&e.frame<4)");
+        await Page.Locator(".enemy-lab canvas").FocusAsync();
+        // Sample inside the page so browser round trips cannot skip the action.
+        await Page.EvaluateAsync(@"() => {
+            window.__turnSamples=[];
+            window.__turnTimer=setInterval(()=>{
+                const d=window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
+                if(d.renderingFailed)throw new Error('Renderer failed during turn');
+                window.__turnSamples.push(...d.hollow.entities.filter(e=>e.layered&&e.clip==='attack'));
+            },30);
+        }");
+        foreach (var key in new[] { "ArrowRight", "ArrowUp", "ArrowLeft" })
+        {
+            await Page.Keyboard.DownAsync(key);
+            await Page.WaitForTimeoutAsync(260);
+            await Page.Keyboard.UpAsync(key);
+        }
+        var advanced = await Page.EvaluateAsync<bool>(@"() => {
+            clearInterval(window.__turnTimer);
+            const samples=window.__turnSamples;
+            return new Set(samples.map(e=>e.baseFrame)).size>2&&new Set(samples.map(e=>e.frame)).size>2&&new Set(samples.map(e=>e.direction)).size>1;
+        }");
+        Assert.IsTrue(advanced, "Walking and attack phases must advance while facing follows the turning player.");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Pause", Exact = true }).ClickAsync();
+        await Page.WaitForTimeoutAsync(150);
+        const string read = "() => JSON.stringify(window.__hollowArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas')).hollow.entities)";
+        var before = await Page.EvaluateAsync<string>(read);
+        await Page.WaitForTimeoutAsync(300);
+        Assert.AreEqual(before, await Page.EvaluateAsync<string>(read));
+    }
+
+    [TestMethod]
     public async Task Mobile_Hollow_UsesApprovedWalkAttackAndHeldDeath_InRealCombat()
     {
         var baseUrl = (Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/").TrimEnd('/');

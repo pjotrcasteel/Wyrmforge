@@ -39,7 +39,7 @@ Five real binary assets are now committed to `src/Wyrmforge.Presentation.Web/www
 
 **Important:** The four derived overlays are image-based masks built from independently generated scene variants; some subtle alignment/lighting differences remain possible at feathered edges. QA is not optional and the hero scene should not be described as final until actual mobile captures are inspected.
 
-## Gameplay integration — 0.0.136 (20 October 2026)
+## Gameplay integration — 0.0.137 (20 October 2026)
 
 This section supersedes the **temporary preview behavior** described above; that description remains only as a historical implementation record. `CanonicalTownView` now reads existing `NexusUnlocked`, `ForgeUnlocked`, `CodexUnlocked`, and `HallUnlocked` gameplay flags passed from `ForgeView`. The four independent authored vacancy layers render only for locked locations. Building clicks invoke the actual Arcane Nexus, Blacksmith, Codex, and Hall of Fame destinations when unlocked; otherwise they retain their existing lock notices without a building-opening sound.
 

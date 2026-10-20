@@ -1,12 +1,25 @@
 # Wyrmforge
 
-## Prototype 0.0.136 — Gameplay-driven night Refuge, swipe-only navigation
+## Prototype 0.0.137 — Gameplay night town and swipe-only navigation
 
-- All four night-town active/vacant visual states follow the player's existing persistent unlock flags. No visual-only test toggles or extra progression state.
-- Unlocked building hotspots open their real destinations; locked buildings display the corresponding in-game requirement. The World Gate is unchanged.
-- The WEST/GATE/EAST test navigation bar and settings-only menu-preview shortcuts are removed. Touch swipes and desktop mouse dragging remain; keyboard arrows support accessibility.
-- Canonical building source paintings, approved night panorama, and author-drawn vacancy layers are untouched. [Integration record](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+- The accepted night panorama now uses the player's persistent building unlocks, opens real destinations, and explains locked buildings without toggling game state.
+- WEST / GATE / EAST preview controls, temporary building switches, and Settings preview shortcuts are removed. Swipe, desktop drag and accessible keyboard navigation remain.
+- World Gate, author-approved images and all Divine school creation behavior from v0.0.136 are preserved. [Night town integration](docs/art/refuge-night-panorama-preview-2026-10-20.md).
 
+
+## Prototype 0.0.136 — Character school creation and elemental icon cleanup
+
+- Choose a permanent Divine magic school once during character creation, before entering Refuge. Four schools have working signatures; Necromancer and Summoner remain reserved.
+- Arena uses the character's saved signature automatically, without an additional First Oath after launching each Hunt. Existing preferred-primary saves migrate safely, and loadouts never respec the Divine school.
+- World Gate reuses the approved pixel paintings with hard square cutoffs and baked labels masked away; each tile has just one accessible label.
+- Wyrm lineage and Hunt tier remain independent from the character school. Full respec remains intentionally locked/TBD.
+- [Compatibility and QA](docs/handover/2026-10-20-character-school-and-sigil-fix.md).
+
+## Prototype 0.0.135 — Moving attacks and directional sprite layers
+
+- Hollow attacks retain their walking support animation while pursuing the player, and turn through existing directional views without restarting either clip.
+- Shared profiles control locomotion stride, action regions, priorities and turning speed; the accepted sprite PNGs remain unchanged. Other enemies retain their current presentation until their anatomy profiles are validated.
+- [Implementation and validation evidence](docs/art/shared-sprite-animation-layers-2026-10-20.md).
 
 ## Prototype 0.0.134 — Animated Hollow in combat
 
