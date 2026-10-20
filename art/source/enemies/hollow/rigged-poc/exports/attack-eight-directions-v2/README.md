@@ -1,6 +1,6 @@
 # The Hollow: eight-direction claw attack
 
-20 October 2026. Attack exported and self-reviewed: **eight actual 3D facings × 16 frames at 12 FPS**, authored on the same textured, weighted rig as the owner-accepted walk and death. Owner attack acceptance is pending. This completes the requested walk/attack/death art exports; it does not claim a finished gameplay adapter or additional unrequested animation states.
+20 October 2026. Owner-accepted attack: **eight actual 3D facings × 16 frames at 12 FPS**, authored on the same textured, weighted rig as the accepted walk and death. The owner approved the completed three-clip art set and explicitly authorized runtime integration, merge and Pages deployment. [Runtime integration and evidence](../../../../../../../docs/art/hollow-runtime-integration-2026-10-20.md) records that subsequent release slice; no additional unrequested animation states are claimed.
 
 ## Files and contract
 

@@ -68,5 +68,5 @@
   "attackOwnerAccepted": true,
   "attackEditableSource": "model/local-appearance-004/rigged-attack-v2/hollow-attack.blend",
   "attackReview": "exports/attack-eight-directions-v2/README.md",
-  "runtimeReview": "../../../../../../docs/art/hollow-runtime-integration-2026-10-20.md"
+  "runtimeReview": "docs/art/hollow-runtime-integration-2026-10-20.md"
 }
