@@ -1,5 +1,6 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JavaScript
+@using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
@@ -59,6 +60,33 @@
                             <button type="button" class="arrival-hitbox arrival-hitbox--settings" aria-label="Settings"
                                     @onclick="() => Navigate(ShellSection.Options)"><span class="arrival-screen-reader-only">Settings</span></button>
                         </div>
+                    </section>
+                }
+                else if (CharacterSchool is null)
+                {
+                    <section class="character-creation" aria-label="Character creation">
+                        <span class="character-creation-eyebrow">THE FIRST OATH</span>
+                        <h1>Create your character</h1>
+                        <p>Choose your Divine Wyrm affinity. Your magic belongs to your character, not to the Hunt you enter.</p>
+                        <button class="character-creation-name" type="button" @onclick="OpenNameEditor" aria-label="Edit your character name">
+                            <span>@PlayerName</span><small>EDIT NAME</small>
+                        </button>
+                        <div class="character-school-grid" aria-label="Choose your primary magic school">
+                            @foreach (var school in DivineArchetypeCatalog.All)
+                            {
+                                var ready = school.ExistingSignature is not null;
+                                <button @key="school.Id" type="button"
+                                        class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
+                                        disabled="@(!ready)"
+                                        aria-label="@(ready ? $"Choose {school.Name}" : $"{school.Name}, not yet available")"
+                                        @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
+                                    <span class="character-school-icon" aria-hidden="true"></span>
+                                    <strong>@school.Name</strong>
+                                    <small>@(ready ? school.Domain : "COMING LATER")</small>
+                                </button>
+                            }
+                        </div>
+                        <small class="character-creation-note">Changing Divine schools later requires a future respec unlock.</small>
                     </section>
                 }
                 else
@@ -162,6 +190,8 @@
 
 @code {
     [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
+    [Parameter] public DivineArchetype? CharacterSchool { get; set; }
+    [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;
     private void EnterTown() => enteredTown = true;
