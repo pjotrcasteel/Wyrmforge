@@ -1,5 +1,20 @@
 # Wyrmforge
 
+## Prototype 0.0.132 — Six-lineage World Gate and Divine magic foundations
+
+- World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
+- Hunt tiers I–V are derived from the existing WyrmTier contract; **only Tier I is playable**. Five future mutation-mastery tiers are a separate domain concept and must not affect currently earned spell ranks.
+- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
+- **Not shipped:** new character creation or school-respec flows, Fireball rework, ten playable mutations per school, and higher-tier encounters. [Implementation checkpoint](docs/handover/2026-10-20-divine-magic-foundation-status.md).
+
+## Prototype 0.0.131 — Canonical Refuge town screen
+
+- Town now renders the owner's **eight approved active/vacant building paintings** for Blacksmith, Arcane Nexus, Codex and Hall of Fame directly in the real game. Each first-party runtime asset is an exact copy of the canonical approved PNG.
+- Desktop shows west buildings, the original central World Gate, and east buildings as a single art-led screen. Phones swipe through three full-height districts and have accessible district navigation. No painted static NPCs or black CSS vacancy overlays.
+- Existing unlock predicates, vacant lock notices, click audio rules, Hall of Fame leaderboards and World Gate's Free Play/Campaign flow are preserved.
+- [Implementation and validation record](docs/art/refuge-canonical-buildings-game-screen-2026-10-20.md). Physical iPhone visual acceptance is still required.
+
+
 ## Prototype 0.0.130 — Unified active and vacant town buildings
 
 - All locked buildings use the same `Active / Vacant` rendering contract driven by their existing progression unlocks. Blacksmith, Nexus, Codex and Hall of Fame switch independently.

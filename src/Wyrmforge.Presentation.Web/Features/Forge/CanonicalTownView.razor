@@ -1,0 +1,107 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+@* Canonical art is copied byte-for-byte from user_handover_files/concepts/buildings.
+   Building activation is delegated to ForgeView's existing authoritative unlock/navigation rules. *@
+<div class="refuge-canonical-viewport" tabindex="0" role="region"
+     aria-label="Refuge town: swipe between the west buildings, World Gate and east buildings">
+    <nav class="refuge-canonical-track" aria-label="Refuge destinations">
+        <section class="refuge-canonical-wing refuge-canonical-wing--west" aria-label="West quarter">
+            @foreach (var building in Buildings.Where(building => building.Key is "build" or "forge"))
+            {
+                <button @key="building.Key" type="button"
+                        class="refuge-canonical-building refuge-canonical-building--@building.Key"
+                        data-town-building="@building.Key" data-town-state="@building.StateName"
+                        data-sound-cue="@(building.State == TownBuildingState.Active ? "building-open" : "none")"
+                        title="@BuildingHint(building)"
+                        aria-label="@BuildingHint(building)"
+                        @onclick="() => OnBuilding.InvokeAsync(building.Key)">
+                    <img src="@($"art/{building.Image}?v={TownBuildingVisuals.AssetVersion}")"
+                         alt="" loading="eager" draggable="false" />
+                    <span class="refuge-canonical-building-name">@BuildingName(building.Key)</span>
+                    @if (building.State == TownBuildingState.Vacant)
+                    {
+                        <span class="refuge-canonical-padlock" aria-hidden="true">◇</span>
+                    }
+                </button>
+            }
+        </section>
+
+        <section class="refuge-canonical-gate" aria-label="World Gate">
+            <div class="refuge-canonical-gate-art" aria-hidden="true"></div>
+            <button type="button" class="refuge-canonical-gate-action"
+                    data-town-state="active" data-sound-cue="none"
+                    aria-label="@GateLabel"
+                    @onclick="() => OnGate.InvokeAsync()">
+                <span class="refuge-canonical-gate-symbol" aria-hidden="true">✧</span>
+                <span>WORLD GATE</span>
+                <small>ENTER THE WYRMREALM</small>
+            </button>
+        </section>
+
+        <section class="refuge-canonical-wing refuge-canonical-wing--east" aria-label="East quarter">
+            @foreach (var building in Buildings.Where(building => building.Key is "codex" or "legends"))
+            {
+                <button @key="building.Key" type="button"
+                        class="refuge-canonical-building refuge-canonical-building--@building.Key"
+                        data-town-building="@building.Key" data-town-state="@building.StateName"
+                        data-sound-cue="@(building.State == TownBuildingState.Active ? "building-open" : "none")"
+                        title="@BuildingHint(building)"
+                        aria-label="@BuildingHint(building)"
+                        @onclick="() => OnBuilding.InvokeAsync(building.Key)">
+                    <img src="@($"art/{building.Image}?v={TownBuildingVisuals.AssetVersion}")"
+                         alt="" loading="eager" draggable="false" />
+                    <span class="refuge-canonical-building-name">@BuildingName(building.Key)</span>
+                    @if (building.State == TownBuildingState.Vacant)
+                    {
+                        <span class="refuge-canonical-padlock" aria-hidden="true">◇</span>
+                    }
+                </button>
+            }
+        </section>
+    </nav>
+</div>
+<nav class="refuge-canonical-districts" aria-label="Explore town districts">
+    <button type="button" data-sound-cue="none" aria-label="Explore Arcane Nexus and Blacksmith" @onclick="() => ShowDistrictAsync(0)">WEST</button>
+    <button type="button" data-sound-cue="none" aria-label="Explore World Gate" @onclick="() => ShowDistrictAsync(1)">GATE</button>
+    <button type="button" data-sound-cue="none" aria-label="Explore Codex and Hall of Fame" @onclick="() => ShowDistrictAsync(2)">EAST</button>
+</nav>
+
+@code {
+    [Parameter] public bool NexusUnlocked { get; set; }
+    [Parameter] public bool ForgeUnlocked { get; set; }
+    [Parameter] public bool CodexUnlocked { get; set; }
+    [Parameter] public bool HallUnlocked { get; set; }
+    [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public bool NexusPointsAvailable { get; set; }
+    [Parameter] public EventCallback<string> OnBuilding { get; set; }
+    [Parameter] public EventCallback OnGate { get; set; }
+
+    private string GateLabel => FirstHunt ? "BEGIN FIRST HUNT" : "BEGIN HUNT";
+
+    private IReadOnlyList<TownBuildingVisual> Buildings =>
+        TownBuildingVisuals.Resolve(NexusUnlocked, ForgeUnlocked, CodexUnlocked, HallUnlocked);
+
+    private static string BuildingName(string key) => key switch
+    {
+        "build" => "ARCANE NEXUS",
+        "forge" => "BLACKSMITH",
+        "codex" => "CODEX",
+        "legends" => "HALL OF FAME",
+        _ => throw new ArgumentOutOfRangeException(nameof(key)),
+    };
+
+    private string BuildingHint(TownBuildingVisual building) =>
+        building.Key == "build" && building.State == TownBuildingState.Active && NexusPointsAvailable ? "Allocate unspent Arcane points" :
+        building.Key == "legends" && building.State == TownBuildingState.Active ? "Open Hall of Fame" :
+        building.State == TownBuildingState.Active ? $"Enter {BuildingName(building.Key)}" :
+        building.Key switch
+        {
+            "forge" => "Blacksmith locked: secure your first Essence",
+            "legends" => "Hall of Fame locked: complete two hunts",
+            _ => $"{BuildingName(building.Key)} locked: complete your first hunt",
+        };
+
+    private Task ShowDistrictAsync(int district) =>
+        JavaScript.InvokeVoidAsync("wyrmforgeTown.show", district).AsTask();
+}
