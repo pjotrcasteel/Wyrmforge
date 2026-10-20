@@ -6,19 +6,20 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "owner accepted low bounding gait; eight-direction movement export in progress",
+  "status": "accepted bounding gait exported in eight real directions; movement sheet review ready",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "eight-direction movement export and review",
+    "owner review of full directional movement sheet",
     "attack and death clips",
     "layer metadata and runtime acceptance"
   ],
   "modelAttempt": "model/local-appearance-002",
   "sourceRig": "model/local-appearance-002/rigged-bound-v3/ashling-rigged.blend",
-  "review": "../../../../docs/art/evidence/ashling-bound-2026-10-20",
+  "review": "../../../../docs/art/evidence/ashling-eight-directions-2026-10-20",
   "movementBaseOwnerAccepted": true,
   "movementBaseAcceptance": "Owner: perfect continue, after reviewing rigged-bound-v3 hopping preview",
-  "directionalExportOwnerAccepted": false
+  "directionalExportOwnerAccepted": false,
+  "movementExport": "exports/movement-eight-directions-v1"
 }

@@ -14,4 +14,4 @@ The proof is still sixteen native 96px frames at 20 fps: two small bounds per .8
 
 Editable source: `art/source/enemies/ashling/model/local-appearance-002/rigged-bound-v3/ashling-rigged.blend`. The source includes thirty deform/control bones and the authored tail. Evaluated geometry, actual foot contacts, all frames and historical candidates remain preserved. Rendering uses the local RTX 5090 and existing appearance texture.
 
-Status: single-view bounding candidate in draft PR #168. Eight-direction movement, attacks, death, shared layer metadata and runtime integration remain incomplete. No live enemy art or gameplay changes are included.
+The owner accepted this single-view bounding gait ("perfect continue"). The [eight-direction movement export](ashling-eight-direction-movement-2026-10-20.md) now extends the same saved poses to every facing. Acceptance of that full directional sheet remains separate. Attacks, death, shared layer metadata and runtime integration remain incomplete. No live enemy art or gameplay changes are included.
