@@ -3,6 +3,7 @@
 @using Wyrmforge.Domain.Chronicles
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.World
+@using Wyrmforge.Domain.Spells
 
 @* One decision per mobile screen. The original painted gateway is preserved; no companion or invented Wyrm artwork is added. *@
 <section class="world-gate" aria-label="World Gate">
@@ -62,17 +63,17 @@
                 <button type="button" class="gate-nav-back" aria-label="Back to Free Play" @onclick="Back">‹</button>
                 <div>
                     <span class="gate-eyebrow">NEW HUNT</span>
-                    <h2>Choose your element</h2>
+                    <h2>Choose a Wyrm lineage</h2>
                 </div>
             </header>
-            <div class="gate-lineage-grid" aria-label="Elemental Wyrm lineages">
+            <div class="gate-lineage-grid" aria-label="Wyrm lineages">
                 @foreach (var lineage in Lineages)
                 {
                     var available = IsAvailable(lineage);
                     <button @key="lineage.Key" type="button"
                             class="gate-lineage @(available ? $"gate-lineage--{lineage.Key}" : "gate-lineage--hidden")"
                             disabled="@(!available)"
-                            aria-label="@(available ? $"{lineage.Name}, choose Wyrm tier" : "Unknown elemental lineage, not yet available")"
+                            aria-label="@(available ? $"{lineage.Name}, choose Wyrm tier" : "Unknown Wyrm lineage, not yet available")"
                             @onclick="() => ChooseLineage(lineage)">
                         <span class="gate-lineage-icon" aria-hidden="true">@lineage.Sigil</span>
                         @if (available)
@@ -89,7 +90,7 @@
     {
         <div class="gate-selection gate-selection--tiers">
             <header class="gate-selection-header">
-                <button type="button" class="gate-nav-back" aria-label="Back to elements" @onclick="Back">‹</button>
+                <button type="button" class="gate-nav-back" aria-label="Back to Wyrm lineages" @onclick="Back">‹</button>
                 <div>
                     <span class="gate-eyebrow">NEW HUNT</span>
                     <h2><span class="gate-heading-sigil gate-heading-sigil--@selected.Key" aria-hidden="true">@selected.Sigil</span> @selected.Name</h2>
@@ -124,19 +125,22 @@
     private LineageChoice? selectedLineage;
     private bool starting;
 
-    private static readonly IReadOnlyList<TierChoice> InitialTiers =
-    [
-        new(1, true), new(2, false), new(3, false), new(4, false), new(5, false),
-    ];
+    // Tier choices are derived from the actual Wyrm hierarchy; only ordinary Wyrm Hunts
+    // have an implemented selection path. Higher tiers need their own encounter contracts.
+    private static readonly IReadOnlyList<TierChoice> InitialTiers = Enum.GetValues<WyrmTier>()
+        .Select(tier => new TierChoice((int)tier + 1, tier == WyrmTier.Wyrm))
+        .ToArray();
 
-    private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "◇", "☼", "❖", "◈", "☾", "♣", "◉", "✧"];
+    private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "☾", "◈"];
 
-    // The roster has twelve visible slots, not twelve invented canon lineages. Add authored data when new regions actually ship.
+    // The roster reserves exactly six Divine lineages, separate from character-school choice.
+    // Only Fire/Frost are currently selectable Hunt regions; unknown silhouettes remain intentionally anonymous.
     private static readonly IReadOnlyList<LineageChoice> Lineages =
     [
         new("fire", "Fire", "♨", RegionCatalog.CinderFrontierId, InitialTiers),
         new("frost", "Frost", "❄", RegionCatalog.FrostRegionId, InitialTiers),
-        .. Enumerable.Range(0, 10).Select(index => new LineageChoice($"unknown-{index}", "", PlaceholderSigils[index], null, [])),
+        .. Enumerable.Range(0, DivineArchetypeCatalog.All.Count - 2).Select(index =>
+            new LineageChoice($"unknown-{index}", "", PlaceholderSigils[index], null, [])),
     ];
 
     private bool IsAvailable(LineageChoice lineage) =>
