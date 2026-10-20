@@ -1499,10 +1499,19 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Page.Locator(".gate-action--primary").ClickAsync();
         await Expect(Page.Locator(".gate-lineage")).ToHaveCountAsync(6);
-        await Expect(Page.Locator(".gate-lineage--hidden")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".gate-lineage--locked")).ToHaveCountAsync(4);
         await Expect(Page.Locator(".gate-lineage--fire")).ToBeEnabledAsync();
         await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
-        foreach (var teaser in await Page.Locator(".gate-lineage--hidden").AllAsync()) await Expect(teaser).ToBeDisabledAsync();
+        foreach (var lineage in new[] { "fire", "frost", "storm", "arcane", "necromancy", "summoner" })
+            await Expect(Page.Locator($".gate-lineage-art--{lineage}")).ToHaveCountAsync(1);
+        foreach (var teaser in await Page.Locator(".gate-lineage--locked").AllAsync())
+        {
+            await Expect(teaser).ToBeDisabledAsync();
+            await Expect(teaser.Locator(".gate-lineage-padlock")).ToHaveCountAsync(1);
+        }
+        var source = await Page.Locator(".gate-lineage-art--fire").EvaluateAsync<string>(
+            "(node) => getComputedStyle(node).backgroundImage");
+        StringAssert.Contains(source, "divine-lineage-sigils.webp");
         await ScreenshotAsync($"world-gate-lineages-{width}.png");
 
         var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
