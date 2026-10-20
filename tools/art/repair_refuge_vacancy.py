@@ -99,10 +99,19 @@ def paint(base, building, night):
                                            solid, radius, cv2.INPAINT_TELEA), cv2.COLOR_BGR2RGB)
         canvas = apply_masked(canvas, repaired, mask_polygon(size, points, softness))
 
+    def replace_from_neighbour(points, *, offset_x, darkness=1.0, softness=3):
+        nonlocal canvas
+        # Copy actual neighbouring texture at full pixel detail rather than
+        # content-aware blurring into an undifferentiated brown/grey patch.
+        donor = np.roll(base, -offset_x, axis=1)
+        if darkness != 1.0:
+            donor = np.clip(donor.astype(np.float32) * darkness, 0, 255).astype(np.uint8)
+        canvas = apply_masked(canvas, donor, mask_polygon(size, points, softness))
+
     if building == "ArcaneNexus":
         # Fixed illustrated steam must vanish while the Nexus is unoccupied.
         # No empty-place smoke, no powered observatory or violet/blue portal.
-        erase([(110, 61), (151, 61), (164, 118), (116, 117)], radius=7, softness=4)
+        replace_from_neighbour([(103, 51), (150, 51), (168, 110), (111, 115)], offset_x=-67, softness=5)
         light(303, 125, 86, 72, magic=True)
         light(432, 301, 44, 67, magic=True)
         for entry in [(359, 295, 17, 27), (490, 286, 17, 27),
@@ -115,10 +124,13 @@ def paint(base, building, night):
     elif building == "Blacksmith":
         # Actual forged embers, not merely the bright halo around them.
         # Repair the chimney plume from the roof behind the vacant workshop.
-        erase([(122, 430), (163, 427), (170, 485), (120, 486)], radius=8, softness=5)
+        replace_from_neighbour([(109, 425), (163, 423), (175, 481), (112, 486)], offset_x=-70, softness=5)
         # The fire is *inside* the forge cavity; retain brick arches and the anvil.
-        erase([(161, 661), (184, 650), (203, 662), (219, 685),
-               (213, 702), (165, 705)], radius=7, softness=3)
+        # Transfer adjacent intact dark workshop masonry; a generic inpaint
+        # blurred the hearth into a brown amorphous hole.
+        replace_from_neighbour([(155, 657), (180, 650), (211, 653),
+                                (229, 689), (217, 707), (155, 710)],
+                               offset_x=-84, darkness=.52 if night else .66, softness=3)
         for entry in [(186, 686, 38, 40), (298, 659, 20, 28),
                       (394, 647, 18, 29), (453, 661, 18, 25),
                       (54, 670, 23, 43), (324, 628, 24, 28)]:
@@ -140,8 +152,16 @@ def paint(base, building, night):
         # The hallucinated black silhouette drawn across the wooden Hall door
         # is repaired from the neighbouring door texture only for the VACANT
         # variant. No human silhouettes should be baked into an empty Hall.
-        erase([(1302, 637), (1321, 634), (1332, 696),
-               (1317, 704), (1300, 686)], radius=5, softness=3)
+        # Mirror the undamaged left-hand wooden door planks across the hinge,
+        # not a smeared inpainting circle or a separately generated doorway.
+        left = canvas[626:708, 1290:1310].copy()
+        mirrored = cv2.resize(np.flip(left, axis=1), (25, 82),
+                              interpolation=cv2.INTER_LINEAR)
+        repaired = canvas.copy()
+        repaired[626:708, 1310:1335] = mirrored
+        canvas = apply_masked(canvas, repaired,
+                              mask_polygon(size, [(1310, 628), (1327, 633),
+                                                  (1330, 697), (1310, 705)], 2))
     else:
         raise ValueError(building)
 
