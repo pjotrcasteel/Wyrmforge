@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.133 — Owner-approved pixel lineage emblems in World Gate
+
+- The actual World Gate now uses the six owner-approved pixel-art sigils (Fire, Frost, golden Storm, Arcane, Necromancy and the bear Summoner), extracted from the selected six-icon canonical art, not Unicode placeholders.
+- All six are shown as named, image-backed tiles in a legible two-column mobile grid; Fire/Frost remain fully playable and the four unimplemented Hunt regions are visibly disabled with individually drawn padlocks.
+- Available, unavailable, focus/selected and tier-heading states share the same image atlas. No new character school creation, additional playable Hunt regions or magical abilities are implied by these visuals.
+- Runtime art: `src/Wyrmforge.Presentation.Web/wwwroot/art/ui/divine-lineage-sigils.webp`, 168×112 atlas (3×2 cells, each 56×56). The original approved full-resolution six-tile sheet remains the source reference. [Icon integration handover](docs/art/divine-lineage-icons-integration-2026-10-20.md).
+
 ## Prototype 0.0.132 — Six-lineage World Gate and Divine magic foundations
 
 - World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
