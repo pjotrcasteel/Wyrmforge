@@ -24,6 +24,7 @@ public sealed partial class RunSimulation
             {
                 // A wall contact is visual feedback only: no enemy hit, damage, status,
                 // chain, splash, experience or reward can be fabricated by this branch.
+                arenaEnvironment.TryDamageProp(contact, width, height, projectile.Radius, projectile.Damage);
                 RegisterElementalImpact(contact, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
                 projectiles.RemoveAt(index);
                 continue;

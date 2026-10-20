@@ -71,6 +71,57 @@ public sealed class ArenaEnvironmentStateTests
         Assert.IsNotNull(terrain.TryCollect(position, 390, 700, 10, true));
     }
 
+
+    [TestMethod]
+    public void Generate_SameHuntAndNode_StablePropsButDifferentSeedChangesArrangement()
+    {
+        var firstMap = new WyrmrealmMapState(seed: 1204);
+        var secondMap = new WyrmrealmMapState(seed: 1205);
+        var first = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0]).Snapshot();
+        var again = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0]).Snapshot();
+        var different = ArenaEnvironmentState.Create(secondMap.Seed, secondMap.AvailableNodes[0]).Snapshot();
+
+        CollectionAssert.AreEqual(first.Props.ToArray(), again.Props.ToArray());
+        Assert.IsGreaterThan(0, first.Props.Count);
+        Assert.IsFalse(first.Props.SequenceEqual(different.Props));
+        Assert.IsTrue(first.Props.All(prop => prop.X < .32 || prop.X > .68));
+    }
+
+    [TestMethod]
+    public void WyrmInfluence_ProgressesTowardLairAndKeepsRewardSchoolIndependent()
+    {
+        Assert.AreEqual(0, HuntArenaGenerator.WyrmInfluence(1, false));
+        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(3, false), HuntArenaGenerator.WyrmInfluence(1, false));
+        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(6, true), HuntArenaGenerator.WyrmInfluence(6, false));
+        Assert.AreEqual(1, HuntArenaGenerator.WyrmInfluence(8, true));
+        var first = new WyrmrealmMapState(seed: 1220);
+        var snapshot = ArenaEnvironmentState.Create(first.Seed, first.AvailableNodes[0]).Snapshot();
+        Assert.AreEqual("fire", snapshot.Element);
+    }
+
+    [TestMethod]
+    public void ProjectileBreaksPhysicalProp_AndLootCanOnlyBeCollectedOnce()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 311);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var prop = environment.Snapshot().Props.First(prop => prop.Kind is "barrel" or "crate" or "stump" or "urn" or "ember-urn");
+        var center = new Vector2D(prop.X * width, prop.Y * height);
+        Assert.IsTrue(environment.IsBlocked(center, width, height, 1));
+        Assert.IsTrue(environment.TryDamageProp(center, width, height, 3, 1000));
+        Assert.IsFalse(environment.IsBlocked(center, width, height, 1));
+        Assert.IsFalse(environment.TryDamageProp(center, width, height, 3, 1000));
+        Assert.IsFalse(environment.Snapshot().Props.Any(item => item.Id == prop.Id));
+
+        var awarded = environment.Snapshot().Supplies.Where(supply => supply.Open).ToArray();
+        Assert.IsLessThanOrEqualTo(1, awarded.Length);
+        if (awarded.Length == 1)
+        {
+            var pickup = new Vector2D(awarded[0].X * width, awarded[0].Y * height);
+            Assert.IsNotNull(environment.TryCollect(pickup, width, height, 10, true));
+            Assert.IsNull(environment.TryCollect(pickup, width, height, 10, true));
+        }
+    }
     [TestMethod]
     public void CompleteTrail_WalkingIntoVisibleExit_RevealsNextMapDecision()
     {
