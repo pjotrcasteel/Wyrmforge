@@ -52,7 +52,7 @@ public partial class Home
 
     private async Task ChooseCharacterSchoolAsync(DivineArchetype school)
     {
-        if (characterSchool is not null) return; // Full school respec unlock is intentionally still TBD.
+        if (characterSchool is not null || !DivineArchetypeCatalog.CanCreateCharacter(school)) return;
         var definition = DivineArchetypeCatalog.Get(school);
         if (definition.ExistingSignature is not { } signature) return;
         characterSchool = school;

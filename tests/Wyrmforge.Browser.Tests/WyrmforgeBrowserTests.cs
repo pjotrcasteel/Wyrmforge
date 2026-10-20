@@ -260,7 +260,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME" }).ClickAsync();
         await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
         await ScreenshotAsync($"character-creation-{width}x{height}.png");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Arcanist" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
     }
 
@@ -1833,7 +1833,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME", Exact = true }).ClickAsync();
         await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
         await Expect(Page.Locator(".character-school")).ToHaveCountAsync(6);
-        await Expect(Page.Locator(".character-school:disabled")).ToHaveCountAsync(2);
+        await Expect(Page.Locator(".character-school:disabled")).ToHaveCountAsync(5);
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose your magic" })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Choose your Divine Wyrm affinity.")).ToHaveCountAsync(0);
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Arcanist, not yet available" })).ToBeDisabledAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
         Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
@@ -1936,7 +1939,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await start.ClickAsync();
         await Expect(Page.Locator(".character-creation, .town-square")).ToBeVisibleAsync();
         if (await Page.Locator(".character-creation").IsVisibleAsync())
-            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Arcanist" }).ClickAsync();
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
     }
 
