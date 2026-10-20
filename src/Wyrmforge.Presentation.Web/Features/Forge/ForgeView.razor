@@ -65,16 +65,14 @@
                 else if (CharacterSchool is null)
                 {
                     <section class="character-creation" aria-label="Character creation">
-                        <span class="character-creation-eyebrow">THE FIRST OATH</span>
-                        <h1>Create your character</h1>
-                        <p>Choose your Divine Wyrm affinity. Your magic belongs to your character, not to the Hunt you enter.</p>
+                        <h1>Choose your magic</h1>
                         <button class="character-creation-name" type="button" @onclick="OpenNameEditor" aria-label="Edit your character name">
                             <span>@PlayerName</span><small>EDIT NAME</small>
                         </button>
                         <div class="character-school-grid" aria-label="Choose your primary magic school">
                             @foreach (var school in DivineArchetypeCatalog.All)
                             {
-                                var ready = school.ExistingSignature is not null;
+                                var ready = DivineArchetypeCatalog.CanCreateCharacter(school.Id) && school.ExistingSignature is not null;
                                 <button @key="school.Id" type="button"
                                         class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
                                         disabled="@(!ready)"
@@ -82,11 +80,10 @@
                                         @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
                                     <span class="character-school-icon" aria-hidden="true"></span>
                                     <strong>@school.Name</strong>
-                                    <small>@(ready ? school.Domain : "COMING LATER")</small>
+                                    <small>@(ready ? "AVAILABLE" : "LOCKED")</small>
                                 </button>
                             }
                         </div>
-                        <small class="character-creation-note">Changing Divine schools later requires a future respec unlock.</small>
                     </section>
                 }
                 else
