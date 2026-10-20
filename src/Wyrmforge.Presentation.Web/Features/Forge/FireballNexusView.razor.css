@@ -1,0 +1,118 @@
+/* Playable Arcane Nexus Fireball core. The one lower panel switches between upgrade and mutation selection.
+   Styled from existing Wyrmforge stonework and low-light pixel-art environment, not a painted UI screenshot. */
+.fireball-nexus {
+    --nexus-gold: #d5ad68;
+    --nexus-ink: #ece0c8;
+    --nexus-muted: #bdb1a3;
+    width: min(540px, 100%);
+    margin: 0 auto;
+    color: var(--nexus-ink);
+    background: #121116;
+    border: 1px solid #483829;
+    box-shadow: inset 0 0 0 3px #100e13, 0 12px 42px #0008;
+}
+.fireball-nexus button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+.fireball-nexus button:focus-visible { outline: 2px solid #f8cc85; outline-offset: 3px; }
+.fireball-nexus button:disabled { cursor: not-allowed; opacity: .5; }
+.fireball-header { text-align: center; position: relative; z-index: 1; padding: 14px 8px 0; }
+.fireball-header > span { color: var(--nexus-gold); font-size: .66rem; letter-spacing: .22em; }
+.fireball-header h2 { font-family: Georgia,serif; font-weight: normal; font-size: 1.5rem; margin: 4px; }
+.fireball-header h2 small { color: #e7a363; font-size: .72em; margin-left: 4px; }
+.fireball-chamber {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    aspect-ratio: 1 / 1.18;
+    max-height: 570px;
+    overflow: hidden;
+    margin-top: -8px;
+    background: linear-gradient(90deg,#08090dbd,#0e0b12a8 50%,#08090dbd),
+        url('art/spellcraft-study.jpg') center center / cover no-repeat;
+}
+.fireball-chamber::before { content: ''; position: absolute; inset: 9% 8% 6%; border: 1px solid #463022; border-radius: 49% 49% 46% 46%; opacity: .4; }
+.fireball-chamber::after { content: ''; position: absolute; z-index: -1; width: 71%; aspect-ratio: 1; border: 1px solid #81532e;
+    box-shadow: inset 0 0 18px #7b331c35,0 0 8px #ce72321f; border-radius: 50%; top: 49%; left: 50%; transform: translate(-50%,-50%); }
+.fireball-altar { position: absolute; width: 58%; height: 12%; border-radius: 50%; left: 21%; top: 81%;
+    background: repeating-radial-gradient(ellipse,#291c1a 0 5px,#513123 5px 7px,#1e1a1b 8px 15px);
+    border: 2px solid #664028; box-shadow: 0 12px 20px #000b; }
+.fireball-core {
+    position: absolute; z-index: 2; top: 48%; left: 50%; transform: translate(-50%,-50%);
+    width: 39%; aspect-ratio: 1; border: 0; background: transparent; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fireball-flames {
+    display: block; position: relative; width: 73%; aspect-ratio: 1; border-radius: 44%;
+    background: radial-gradient(circle at 38% 34%,#ffe6a0 0 5%,#ffb134 10%,#f45b1a 26%,#85251b 47%,#1d1519 61%);
+    box-shadow: 0 0 5px 3px #dc4c20aa, 0 0 25px 8px #b63a1599, 0 0 55px #e8611b4d;
+    animation: nexus-ember 2.6s steps(6,end) infinite;
+    image-rendering: pixelated;
+}
+.fireball-flames i { position: absolute; inset: 18%; border-radius: 38%; transform: rotate(-24deg);
+    border: 5px dotted #ffad33aa; box-shadow: inset 0 0 12px #000a; }
+.fireball-core.meteor .fireball-flames { width: 88%; background: radial-gradient(circle at 37% 30%,#ffd270 2%,#f16021 5%,#2e2427 13%,#f5802b 19%,#36242a 28%,#e74f24 36%,#301b21 54%,#dc5c23 61%,#140f14 72%); }
+.fireball-core.needle .fireball-flames { width: 56%; border-radius: 6% 80% 20% 8%; transform: rotate(30deg); }
+.fireball-core.volley .fireball-flames { width: 49%; box-shadow: -27px 21px 0 -3px #c44a1f,24px -18px 0 -4px #ef7b29,0 0 20px #c54c29; }
+.fireball-core.chosen .fireball-flames { outline: 2px solid #f3b65ba8; outline-offset: 9px; }
+.fireball-core-caption { position: absolute; bottom: -10%; display: block; padding: 4px 10px; background: #0f0b0deb;
+    border: 1px solid #88623d; font-size: .67rem; letter-spacing: .12em; }
+.fireball-socket {
+    position: absolute; z-index: 3; transform: translate(-50%,-50%); width: 21%; aspect-ratio: 1;
+    display: grid; align-items: center; justify-items: center; background: radial-gradient(#241915,#0b0c10 72%);
+    border: 3px ridge #77583d; border-radius: 50%; box-shadow: 0 0 0 2px #100d0e,0 6px 10px #0008;
+}
+.fireball-socket.open { border-color: #b67a37; }
+.fireball-socket.chosen { box-shadow: 0 0 0 2px #100d0e,0 0 0 4px #f4c773,0 0 22px #ffa43a99; }
+.fireball-socket.sealed { filter: grayscale(.7); border-color: #554b47; }
+.fireball-socket-icon { font-size: clamp(19px,5vw,34px); line-height: 1; color: #ffa04d; text-shadow: 0 0 12px #c74620; }
+.fireball-socket.sealed .fireball-socket-icon { color: #6e6971; text-shadow: none; }
+.fireball-socket-caption { position: absolute; top: 99%; left: 50%; transform: translateX(-50%);
+    max-width: 136%; white-space: nowrap; padding: 3px 5px; border: 1px solid #5c4230;
+    background: #140f10f5; font-size: clamp(8px,1.8vw,11px); text-align: center; }
+.socket-0 { left: 50%; top: 15%; }
+.socket-1 { left: 19%; top: 37%; }
+.socket-2 { left: 81%; top: 37%; }
+.socket-3 { left: 24%; top: 73%; }
+.socket-4 { left: 76%; top: 73%; }
+.fireball-context {
+    position: relative; z-index: 4; min-height: 230px; padding: 16px 18px max(20px,env(safe-area-inset-bottom));
+    border-top: 3px ridge #63492e; background: linear-gradient(#17151b,#0e0f13);
+}
+.fireball-context h3 { font-size: 1.2rem; font-family: Georgia,serif; font-weight: normal; color: #ead2a0; margin: 0 0 10px; }
+.fireball-context h4 { color: var(--nexus-gold); font-size: .8rem; font-weight: 500; margin: 16px 0 8px; }
+.fireball-context p { font-size: .86rem; color: var(--nexus-muted); line-height: 1.35; margin: 6px 0 10px; }
+.fireball-reward { color: #f2c380; float: right; }
+.fireball-materials { display: grid; gap: 6px; }
+.fireball-material { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 9px; background: #1b1718;
+    border: 1px solid #403029; padding: 6px 9px; font-size: .83rem; }
+.fireball-material-icon { display: grid; place-items: center; min-height: 34px; background: #32221b; }
+.fireball-material strong { font-size: .85rem; }
+.fireball-material.enough strong { color: #8dcc8d; }
+.fireball-material.missing strong { color: #df8d81; }
+.fireball-primary { display: block; width: 100%; min-height: 48px; margin-top: 14px; background: #532822; border: 1px solid #c07b50;
+    color: #f1dbb2; font-size: 1rem; }
+.fireball-primary:not(:disabled):active { background: #86382c; }
+.fireball-hint { display: block; color: #a79b8e; font-size: .73rem; line-height: 1.5; margin-top: 8px; }
+.fireball-picker-header { display:flex; justify-content:space-between; align-items: center; gap: 8px; }
+.fireball-picker-header button { min-width: 44px; min-height: 44px; background: #302420; border: 1px solid #67503f; }
+.fireball-mutation-scroll { display: grid; gap: 7px; max-height: min(38vh,340px); overflow-y: auto; overscroll-behavior: contain; }
+.fireball-mutation-choice { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 8px; padding: 8px;
+    border: 1px solid #4a3b34; background: #19161a; }
+.fireball-mutation-choice.equipped { border-color: #bb783a; }
+.fireball-mutation-icon { display: grid; place-items: center; width: 42px; height: 42px; font-size: 1.5rem;
+    border: 1px solid #7a452b; color: #ed8742; background: #2b1919; }
+.fireball-mutation-description { display: grid; gap: 4px; }
+.fireball-mutation-description strong { font-size: .88rem; }
+.fireball-mutation-description span { font-size: .73rem; line-height: 1.3; color: #c3b8ad; }
+.fireball-mutation-description small { font-size: .7rem; color: #d3a773; }
+.fireball-small-button,.fireball-remove { min-height: 44px; border: 1px solid #95643f; background: #33221d; padding: 4px 9px; }
+.fireball-equipped { font-size: .7rem; color: #e5bf7a; }
+.fireball-remove { width: 100%; }
+.fireball-message { color: #e4b57e !important; border-top: 1px solid #513d2e; padding-top: 7px; }
+@keyframes nexus-ember { 50% { filter: brightness(1.17); box-shadow: 0 0 12px 7px #c6442499,0 0 28px 10px #a82a1899; } }
+@media (prefers-reduced-motion: reduce) { .fireball-flames { animation: none; } }
+@media (max-width: 370px) {
+    .fireball-context { padding: 12px 10px 18px; }
+    .fireball-mutation-choice { grid-template-columns: 36px 1fr auto; gap: 5px; }
+    .fireball-mutation-icon { width: 36px; height: 36px; }
+    .fireball-small-button { padding: 3px 6px; }
+}
