@@ -12,6 +12,53 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_BuildingLab_CanAuthorAndLockIndependentStages_WithoutChangingGame(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/sprite-lab/buildings/",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Building Lab v0.1" })).ToBeVisibleAsync();
+        await Expect(Page.Locator("#buildingCanvas")).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const c = document.querySelector('#buildingCanvas');
+            if (!c || c.width !== 724 || c.height !== 440) return false;
+            const g = c.getContext('2d');
+            const points = [[30,30],[140,90],[270,160],[450,240],[550,390]];
+            return new Set(points.map(([x,y]) => {
+                const p = g.getImageData(x,y,1,1).data;
+                return [p[0],p[1],p[2]].join(',');
+            })).size >= 4;
+        }");
+
+        await Page.Locator("#slotList button[data-slot='lamp']").ClickAsync();
+        await Page.Locator("#slotVariant").SelectOptionAsync("reference");
+        await Expect(Page.Locator("#slotVariant")).ToHaveValueAsync("reference");
+        await Page.Locator("#lockStage").ClickAsync();
+        await Expect(Page.Locator("#slotVariant")).ToBeDisabledAsync();
+
+        await Page.Locator("#stageList button[data-stage='active']").ClickAsync();
+        await Expect(Page.Locator("#slotVariant")).ToBeEnabledAsync();
+        await Expect(Page.Locator("#slotVariant")).ToHaveValueAsync("reference");
+        var saved = await Page.EvaluateAsync<string>(@"() =>
+            localStorage.getItem('wyrmforge-building-lab-v1:wyrmforge')");
+        Assert.IsNotNull(saved);
+        using var document = JsonDocument.Parse(saved);
+        Assert.IsTrue(document.RootElement.GetProperty("stages").GetProperty("vacant").GetProperty("locked").GetBoolean());
+        Assert.IsFalse(document.RootElement.GetProperty("visualAccepted").GetBoolean());
+
+        await Page.Locator("#buildingSelect").SelectOptionAsync("nexus");
+        await Expect(Page.Locator("#previewTitle")).ToContainTextAsync("Arcane Nexus");
+        await Page.Locator("#buildingSelect").SelectOptionAsync("wyrmforge");
+        await Page.Locator("#stageList button[data-stage='vacant']").ClickAsync();
+        await Expect(Page.Locator("#slotVariant")).ToBeDisabledAsync();
+        Assert.IsFalse(await Page.EvaluateAsync<bool>(@"() =>
+            localStorage.getItem('wyrmforge.firstHunt.v1') !== null"));
+    }
+
+    [TestMethod]
     public async Task Mobile_CombatLab_SelectedMonsterOpensInRealEnemyLab_AndSwitchesImmediately()
     {
         await Page.SetViewportSizeAsync(390, 844);
