@@ -3,7 +3,6 @@
 @using Wyrmforge.Domain.Chronicles
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.World
-@using Wyrmforge.Domain.Spells
 
 @* One decision per mobile screen. The original painted gateway is preserved; no companion or invented Wyrm artwork is added. *@
 <section class="world-gate" aria-label="World Gate">
@@ -71,19 +70,20 @@
                 {
                     var available = IsAvailable(lineage);
                     <button @key="lineage.Key" type="button"
-                            class="gate-lineage @(available ? $"gate-lineage--{lineage.Key}" : "gate-lineage--hidden")"
+                            class="gate-lineage gate-lineage--@lineage.Key @(available ? "gate-lineage--available" : "gate-lineage--hidden")"
                             disabled="@(!available)"
-                            aria-label="@(available ? $"{lineage.Name}, choose Wyrm tier" : "Unknown Wyrm lineage, not yet available")"
+                            aria-label="@(available ? $"{lineage.Name}, choose Wyrm tier" : $"{lineage.Name} Wyrm lineage, not yet available")"
                             @onclick="() => ChooseLineage(lineage)">
-                        <span class="gate-lineage-icon" aria-hidden="true">@lineage.Sigil</span>
-                        @if (available)
+                        <span class="gate-sigil gate-sigil--@lineage.Key" aria-hidden="true"></span>
+                        <span class="gate-lineage-name">@lineage.Name</span>
+                        @if (!available)
                         {
-                            <span class="gate-lineage-name">@lineage.Name</span>
+                            <span class="gate-lineage-lock" aria-hidden="true">◆</span>
                         }
                     </button>
                 }
             </div>
-            <p class="gate-discovery-hint">More lineages await discovery.</p>
+            <p class="gate-discovery-hint">Other Wyrm lineages await their Hunts.</p>
         </div>
     }
     else if (selectedLineage is { } selected)
@@ -93,7 +93,7 @@
                 <button type="button" class="gate-nav-back" aria-label="Back to Wyrm lineages" @onclick="Back">‹</button>
                 <div>
                     <span class="gate-eyebrow">NEW HUNT</span>
-                    <h2><span class="gate-heading-sigil gate-heading-sigil--@selected.Key" aria-hidden="true">@selected.Sigil</span> @selected.Name</h2>
+                    <h2><span class="gate-sigil gate-sigil--@selected.Key gate-heading-sigil" aria-hidden="true"></span> @selected.Name</h2>
                     <p>Choose your Wyrm tier</p>
                 </div>
             </header>
@@ -131,16 +131,17 @@
         .Select(tier => new TierChoice((int)tier + 1, tier == WyrmTier.Wyrm))
         .ToArray();
 
-    private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "☾", "◈"];
-
-    // The roster reserves exactly six Divine lineages, separate from character-school choice.
-    // Only Fire/Frost are currently selectable Hunt regions; unknown silhouettes remain intentionally anonymous.
+    // Region/Wyrm choice is independent of a character's Divine magical affinity.
+    // Every reserved lineage uses its owner's approved canonical pixel-art sigil.
+    // Only Fire and Frost can currently enter Tier-I Hunts.
     private static readonly IReadOnlyList<LineageChoice> Lineages =
     [
-        new("fire", "Fire", "♨", RegionCatalog.CinderFrontierId, InitialTiers),
-        new("frost", "Frost", "❄", RegionCatalog.FrostRegionId, InitialTiers),
-        .. Enumerable.Range(0, DivineArchetypeCatalog.All.Count - 2).Select(index =>
-            new LineageChoice($"unknown-{index}", "", PlaceholderSigils[index], null, [])),
+        new("fire", "Fire", RegionCatalog.CinderFrontierId, InitialTiers),
+        new("frost", "Frost", RegionCatalog.FrostRegionId, InitialTiers),
+        new("storm", "Storm", null, []),
+        new("arcane", "Arcane", null, []),
+        new("necromancy", "Necromancy", null, []),
+        new("summoner", "Summoner", null, []),
     ];
 
     private bool IsAvailable(LineageChoice lineage) =>
@@ -178,5 +179,5 @@
 
     private enum GatePage { Gateway, Modes, Elements, Tiers }
     private sealed record TierChoice(int Number, bool Playable);
-    private sealed record LineageChoice(string Key, string Name, string Sigil, RegionId? Region, IReadOnlyList<TierChoice> Tiers);
+    private sealed record LineageChoice(string Key, string Name, RegionId? Region, IReadOnlyList<TierChoice> Tiers);
 }

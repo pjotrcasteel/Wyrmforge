@@ -1500,6 +1500,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".gate-action--primary").ClickAsync();
         await Expect(Page.Locator(".gate-lineage")).ToHaveCountAsync(6);
         await Expect(Page.Locator(".gate-lineage--hidden")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".gate-sigil")).ToHaveCountAsync(6);
+        foreach (var school in new[] { "fire", "frost", "storm", "arcane", "necromancy", "summoner" })
+            await Expect(Page.Locator($".gate-sigil--{school}")).ToBeVisibleAsync();
+        var atlas = await Page.Locator(".gate-sigil--fire").EvaluateAsync<string>("element => getComputedStyle(element).backgroundImage");
+        StringAssert.Contains(atlas, "divine-lineage-sigils.webp");
+        var atlasLoaded = await Page.EvaluateAsync<bool>(
+            "async () => { const image = new Image(); image.src = new URL('art/divine-lineage-sigils.webp', document.baseURI).href; await image.decode(); return image.naturalWidth === 192 && image.naturalHeight === 128; }");
+        Assert.IsTrue(atlasLoaded, "Six actual pixel sigils must load from the approved runtime atlas.");
         await Expect(Page.Locator(".gate-lineage--fire")).ToBeEnabledAsync();
         await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
         foreach (var teaser in await Page.Locator(".gate-lineage--hidden").AllAsync()) await Expect(teaser).ToBeDisabledAsync();
@@ -1530,7 +1538,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".gate-action--primary").ClickAsync();
         await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
         await Page.Locator(".gate-lineage--frost").ClickAsync();
-        await Expect(Page.Locator(".gate-heading-sigil--frost")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".gate-heading-sigil.gate-sigil--frost")).ToBeVisibleAsync();
         await ScreenshotAsync("world-gate-frost-tiers.png");
 
         await Page.Locator(".gate-tier--ready").ClickAsync();
