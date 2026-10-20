@@ -6,20 +6,23 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "accepted bounding gait exported in eight real directions; movement sheet review ready",
+  "status": "movement rejected for insufficient leg articulation; researched body-mechanics rebuild required",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner review of full directional movement sheet",
+    "side/front pose blocking with clear knee compression, extension, tuck and landing",
+    "weighted mesh deformation and native-pixel leg readability review",
+    "new directional movement export after blocking acceptance",
     "attack and death clips",
     "layer metadata and runtime acceptance"
   ],
   "modelAttempt": "model/local-appearance-002",
   "sourceRig": "model/local-appearance-002/rigged-bound-v3/ashling-rigged.blend",
   "review": "../../../../docs/art/evidence/ashling-eight-directions-2026-10-20",
-  "movementBaseOwnerAccepted": true,
-  "movementBaseAcceptance": "Owner: perfect continue, after reviewing rigged-bound-v3 hopping preview",
+  "movementBaseOwnerAccepted": false,
+  "movementBaseAcceptance": "Earlier perfect continue was provisional; superseded by rejection of leg articulation in directional review",
   "directionalExportOwnerAccepted": false,
-  "movementExport": "exports/movement-eight-directions-v1"
+  "movementExport": "exports/movement-eight-directions-v1",
+  "movementResearch": "../../../../docs/art/ashling-movement-research-2026-10-20.md"
 }

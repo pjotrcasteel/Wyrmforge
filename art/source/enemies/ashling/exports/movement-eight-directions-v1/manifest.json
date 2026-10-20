@@ -1760,7 +1760,8 @@
   "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-bound-v3/ashling-rigged.blend",
   "sourcePoseSha256": "a9bd2ea67e87e9523394e7ead36da3ce0946a5fbf5188dea49a29246a36ba49b",
   "atlasSha256": "bfe6a0fb4970ba6776161f4451f1a20ded4833eff969a1f7d7636e8e54786c17",
-  "gaitBaseOwnerAccepted": true,
+  "gaitBaseOwnerAccepted": false,
   "directionalExportOwnerAccepted": false,
-  "runtimeIntegrated": false
+  "runtimeIntegrated": false,
+  "reviewStatus": "owner rejected insufficient leg articulation; preserved comparison export"
 }

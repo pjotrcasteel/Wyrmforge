@@ -1,5 +1,7 @@
 # Ashling — eight-direction bounding movement
 
+**Latest owner review: movement rework required.** The legs do not articulate enough to communicate the requested low hop. The earlier technical pass and provisional gait acceptance below are historical; this sheet is not currently accepted movement. See the [research and source diagnosis](ashling-movement-research-2026-10-20.md) before further authoring.
+
 The owner accepted the low, feral hopping gait and authorized continuation. This export carries that exact saved sixteen-pose source into N, NE, E, SE, S, SW, W and NW using actual 3D rotations around the fixed ground root. No view is mirrored, and no extra animation poses or model changes were introduced during the directional export.
 
 Source: `art/source/enemies/ashling/model/local-appearance-002/rigged-bound-v3/ashling-rigged.blend`. Export: `art/source/enemies/ashling/exports/movement-eight-directions-v1/`. The transparent PNG is 1536×768: sixteen 96px cells per row, eight compass rows. Playback is 20 fps and loops. Every facing uses anchor `[48,70]`, the same source palette and the same motion phase. The manifest records source/atlas hashes, each frame rectangle and the actual unmirrored rotations.
