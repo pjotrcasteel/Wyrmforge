@@ -42,49 +42,56 @@ def main():
     night_active_lab = cv2.cvtColor(night,cv2.COLOR_RGB2LAB).astype(np.float32)
     day_active_lab = cv2.cvtColor(day,cv2.COLOR_RGB2LAB).astype(np.float32)
 
-    # Match the daylight change measured in static neighbouring *stone and roof*
-    # rather than energy-emitting pixels in the glowing active portal.
-    patch_samples = [
-        (slice(175,213),slice(292,337)),  # dome stone rim
-        (slice(158,202),slice(155,204)),  # unpowered slate roof
-        (slice(342,375),slice(288,341)),  # ordinary courtyard masonry
-        (slice(352,381),slice(479,528)),  # unlit paving by stairs
-    ]
-    delta = np.concatenate([
-        (day_active_lab[y,x,0]-night_active_lab[y,x,0]).ravel()
-        for y,x in patch_samples
-    ])
-    ambient = float(np.clip(np.median(delta),32,82))
-    # Wood and bronze should keep their hue/chroma from the original vacant art.
-    lab = nighttime_lab.copy()
-    lab[:,:,0] = np.clip(lab[:,:,0] + ambient,0,250)
-    daylight_vacant = cv2.cvtColor(lab.astype(np.uint8),cv2.COLOR_LAB2RGB)
+    # Daylight recolouring is not global. Learn the wood correction directly
+    # from the same small, unchanged wooden entry in both registered panoramas.
+    # Likewise, the dome is unpowered metal/glass, never purple light.
+    def daylit(reference_night,reference_day,source):
+        n=reference_night.reshape(-1,3).astype(np.float32)
+        d=reference_day.reshape(-1,3).astype(np.float32)
+        valid=(n[:,0]>20)&(d[:,0]>20)
+        shift=np.median(d[valid]-n[valid],axis=0)
+        return np.clip(source.astype(np.float32)+np.clip(shift,[-35,-30,-30],[85,35,35]),0,255).astype(np.uint8)
+    wood=daylit(
+        nighttime_lab[285:345,150:193],
+        day_active_lab[285:345,150:193],
+        nighttime_lab)
+    glass=daylit(
+        nighttime_lab[110:142,180:212],
+        day_active_lab[110:142,180:212],
+        nighttime_lab)
+    donor_wood=cv2.cvtColor(wood,cv2.COLOR_LAB2RGB)
+    donor_glass=cv2.cvtColor(glass,cv2.COLOR_LAB2RGB)
 
-    # *** GEOMETRY-SPECIFIC MASKS ONLY ***
-    # Inert dome: keep DAYTIME GOLD FRAME, edit ONLY dark inner glass / rings.
-    # Protected exterior slate roofs and background remain original day pixels.
-    mask=np.zeros(day.shape[:2],np.uint8)
-    add_poly(mask,[(229,84),(239,69),(266,56),(320,53),(352,63),
-                   (378,87),(380,131),(369,156),(236,157),(221,137)])
-    # Dormant wooden double doors ONLY inside existing portal's stone arch.
-    add_poly(mask,[(404,227),(426,215),(456,227),(479,253),(483,277),
-                   (483,325),(466,347),(382,347),(375,331),
-                   (377,269),(390,242)])
-    # Inactive magic crystals: limited to the coloured cores, never stone ledges.
-    for ellipse in [(352,292,18,31),(488,287,16,24),(489,333,17,22),
-                    (352,353,15,15),(381,337,13,17),(500,345,14,13)]:
-        add_ellipse(mask,*ellipse)
-
-    # Soft <=2px antialias only. Haze happens when feathered night/day covers
-    # the entire structure; no such blending of a complete building here.
-    soft=cv2.GaussianBlur(mask.astype(np.float32)/255.0,(0,0),1.2)
-    blended=np.clip(np.rint(day*(1-soft[:,:,None])+daylight_vacant*soft[:,:,None]),0,255).astype(np.uint8)
-    result=day.copy()
-    touched=soft>0.002
-    result[touched]=blended[touched]
+    # Intrinsic details only: existing DAY scene owns the outer walls, paving,
+    # banners, roofs, golden metal frame and stone arch. The source night-vacant
+    # owns the inert glass + real closed WOODEN gate.
+    dome=np.zeros(day.shape[:2],np.uint8)
+    add_poly(dome,[(234,88),(253,74),(274,64),(325,62),(347,74),
+                   (365,91),(365,133),(346,149),(244,148),(228,128)])
+    door=np.zeros(day.shape[:2],np.uint8)
+    add_poly(door,[(409,250),(422,240),(439,244),(452,256),
+                   (459,280),(458,317),(441,332),(408,333),
+                   (395,320),(395,281)])
+    crystals=np.zeros(day.shape[:2],np.uint8)
+    for ell in [(350,295,9,16),(486,283,9,16),(487,331,11,13),
+                (354,345,12,11),(380,336,8,10)]:
+        add_ellipse(crystals,*ell)
+    mask=cv2.max(cv2.max(dome,door),crystals)
+    alpha_d=cv2.GaussianBlur(dome.astype(np.float32)/255.0,(0,0),1.35)
+    alpha_w=cv2.GaussianBlur(door.astype(np.float32)/255.0,(0,0),1.45)
+    alpha_c=cv2.GaussianBlur(crystals.astype(np.float32)/255.0,(0,0),1.1)
+    # For crystal surfaces, use inert-night pixels with daytime reference
+    # brightness. Power-state is geometry, not a brightness overlay.
+    result=day.astype(np.float32)
+    for alpha,donor in [(alpha_d,donor_glass),(alpha_w,donor_wood),(alpha_c,donor_glass)]:
+        selection=alpha>0.003
+        result[selection]=(result[selection]*(1-alpha[selection,None])+
+                           donor[selection]*(alpha[selection,None]))
+    result=np.clip(np.rint(result),0,255).astype(np.uint8)
+    touched=(alpha_d+alpha_w+alpha_c)>0.003
     assert np.array_equal(result[~touched],day[~touched])
-    assert np.array_equal(result[:,700:],day[:,700:]),"The other buildings/World Gate changed!"
-    assert np.any(result[:450,:550]!=day[:450,:550]),"Observatory has not changed"
+    assert np.array_equal(result[:,700:],day[:,700:]),"Another town district changed!"
+    assert np.any(result[:450,:550]!=day[:450,:550])
     OUT.parent.mkdir(parents=True,exist_ok=True)
     Image.fromarray(result).save(OUT,"WEBP",quality=98,method=6)
     Image.fromarray(result[:475,:575]).save(DETAIL,"WEBP",quality=98,method=6)
