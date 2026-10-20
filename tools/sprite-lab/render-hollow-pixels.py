@@ -64,7 +64,8 @@ manifest=dict(schemaVersion='1.1',name='The Hollow — local 3D pixel walk proof
               playback=dict(fps=12,loop=True),frames=16,direction='three-quarter front',
               status='visual-candidate',visualAccepted=False,runtimeIntegrated=False,
               rasterizer='local RTX nvdiffrast; nearest texture; fixed 64-color Wyrmforge Hollow ramp',
-              sourceRig='../hollow-rigged.blend',travelPerCycle=.19/.62*60,anchor=anchor)
+              sourceRig='../hollow-rigged.blend',travelPerCycle=.19/.62*60,anchor=anchor,
+              drawCellWorldSize=93,layout='row-major-animation')
 (destination/'hollow-walk.manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 # GIF is a review derivative only; PNGs retain exact RGBA/pixel values.
 background=(22,20,27)

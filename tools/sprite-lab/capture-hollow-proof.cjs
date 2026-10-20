@@ -8,7 +8,7 @@ const path=require('node:path');
   const errors=[];
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
   page.on('pageerror',error=>errors.push(error.message));
-  await page.goto('http://127.0.0.1:8765/sprite-lab/?candidate=hollow-local-pixel-v1');
+  await page.goto('http://127.0.0.1:8766/sprite-lab/?candidate=hollow-local-pixel-v1');
   await page.waitForFunction(()=>document.querySelector('#statFrames')?.textContent==='16');
   await page.locator('#stageCanvas').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'sprite-lab-390.png'),fullPage:true});
@@ -30,7 +30,14 @@ const path=require('node:path');
     strideDisabled:document.querySelector('#chaseBtn').disabled,
   }))
   result.observedFrames=frames;result.errors=errors;
-  result.passed=errors.length===0&&result.frames==='16'&&result.directions==='1'&&new Set(frames).size>1&&result.result!=='NOT READY';
+  const downloadEvent=page.waitForEvent('download');
+  await page.locator('#exportManifest').click();
+  const download=await downloadEvent;
+  const downloadedPath=path.join(output,'manifest-exported.json');
+  await download.saveAs(downloadedPath);
+  const exported=JSON.parse(fs.readFileSync(downloadedPath,'utf8'));
+  result.manifestExport={columns:exported.source.columns,rows:exported.source.rows,anchor:exported.anchor,visualAccepted:exported.visualAccepted};
+  result.passed=errors.length===0&&result.frames==='16'&&result.directions==='1'&&new Set(frames).size>1&&result.result!=='NOT READY'&&exported.source.columns===16&&exported.source.rows===1&&exported.anchor[1]===72&&exported.visualAccepted===false;
   fs.writeFileSync(path.join(output,'browser-report.json'),JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify(result,null,2));
   await browser.close();

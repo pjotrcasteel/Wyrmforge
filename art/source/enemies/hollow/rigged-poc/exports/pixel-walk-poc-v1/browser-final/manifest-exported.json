@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.1",
+  "name": "The Hollow — local 3D pixel walk proof",
+  "animation": "walk",
+  "source": {
+    "width": 1536,
+    "height": 96,
+    "columns": 16,
+    "rows": 1,
+    "frameWidth": 96,
+    "frameHeight": 96,
+    "offsetX": 0,
+    "offsetY": 0
+  },
+  "playback": {
+    "fps": 12,
+    "loop": true
+  },
+  "frames": 16,
+  "direction": "three-quarter front",
+  "status": "visual-candidate",
+  "visualAccepted": false,
+  "runtimeIntegrated": false,
+  "rasterizer": "local RTX nvdiffrast; nearest texture; fixed 64-color Wyrmforge Hollow ramp",
+  "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "travelPerCycle": 18.387096774193548,
+  "anchor": [
+    48,
+    72
+  ],
+  "drawCellWorldSize": 93
+}

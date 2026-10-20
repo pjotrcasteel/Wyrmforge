@@ -26,3 +26,10 @@ Research:
   preserve contact/loading/passing/rise and weight transfer in the authored shamble.
 - https://docs.blender.org/manual/en/5.1/editors/nla/introduction.html : preserve
   editable motion actions; sprite playback is a derived export.
+
+## Result
+
+The local appearance bake and corrected 22-bone rig now produce a real 16-frame
+one-view walking proof. Final delivery is `exports/pixel-walk-poc-v1/README.md`.
+Agent self-review supports it at native mobile pixel scale; owner acceptance and
+the full directional/combat lifecycle remain separate future gates.

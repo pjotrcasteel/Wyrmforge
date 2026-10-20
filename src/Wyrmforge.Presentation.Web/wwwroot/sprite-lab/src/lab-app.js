@@ -14,7 +14,7 @@
         image: null, filename: 'hollow-walk-reference-5dir.png', pixelData: null,
         cfg: { ...C.DEFAULT_CONFIG }, dir: 'S', frame: 0, fps: 8, playing: true, scale: 1,
         mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 }, pixelCandidate: false,
-        started: 0, last: 0, elapsed: 0, checks: [], dragging: false,
+        started: 0, last: 0, elapsed: 0, checks: [], dragging: false, mage: null,
     };
     function readConfig() {
         state.cfg = {
@@ -47,6 +47,7 @@
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
             state.pixelCandidate = name==='hollow-local-3d-pixel-walk-v1.png';
             dom.stageCanvas.style.imageRendering=state.pixelCandidate?'pixelated':'auto';
+            if(state.pixelCandidate&&!state.mage)loadMageReference();
             const layout = img.naturalWidth===img.naturalHeight*16?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
             updateFields(autoGrid(img.naturalWidth, img.naturalHeight, layout));
             state.dir = layout==='single'?'SE':'S'; state.frame = 0; state.elapsed = 0; state.playing = true; state.mode = 'manual';
@@ -73,6 +74,15 @@
         img.onload = () => {URL.revokeObjectURL(url); loadImageFromImage(img,file.name);};
         img.onerror = () => {URL.revokeObjectURL(url);dom.footerState.textContent='Invalid image file.';};
         img.src=url;
+    }
+    async function loadMageReference() {
+        try {
+            const manifest=await fetch('../art/manifest.json').then(r=>r.json());
+            const frame=manifest.atlases.actors.frames['mage.S.idle'];
+            const image=new Image();
+            image.onload=()=>{state.mage={image,frame};};
+            image.src='../art/actors.png';
+        } catch { /* The existing player marker remains if reference art is offline. */ }
     }
     function loadImageFromImage(img, name) {
         // Reuse a decoded upload directly: object URLs are revoked safely after decode.
@@ -176,9 +186,17 @@
         for(let y=0;y<h;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
         // Player marker: orange central rune with a small readable target indicator.
         const player=state.player;
+        if(state.pixelCandidate&&state.mage){
+            const {image,frame:f}=state.mage;
+            const nativeScale=dom.stageCanvas.width/Math.max(1,dom.stageCanvas.getBoundingClientRect().width);
+            ctx.save();ctx.imageSmoothingEnabled=false;
+            ctx.drawImage(image,f.x,f.y,f.w,f.h,player.x-f.w*nativeScale/2,player.y-f.h*nativeScale,f.w*nativeScale,f.h*nativeScale);
+            ctx.restore();
+        } else {
         ctx.strokeStyle='rgba(214,166,110,.46)';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(player.x,player.y,24,0,Math.PI*2);ctx.stroke();
         ctx.fillStyle='rgba(218,171,109,.16)';ctx.beginPath();ctx.arc(player.x,player.y,21,0,Math.PI*2);ctx.fill();
         ctx.fillStyle='#efc68b';ctx.font='bold 19px Georgia,serif';ctx.textAlign='center';ctx.fillText('✦',player.x,player.y+7);
+        }
         ctx.fillStyle='#c7b899';ctx.font='10px system-ui,sans-serif';ctx.fillText('PLAYER',player.x,player.y+42);
         // Locomotion path and footprint (the real game will own the movement physics).
         if(state.mode==='chase'){
@@ -272,7 +290,17 @@
         dom.stageCanvas.addEventListener('pointermove',e=>{if(state.dragging)state.player=stageCoord(e);});
         ['pointerup','pointercancel'].forEach(type=>dom.stageCanvas.addEventListener(type,()=>state.dragging=false));
         dom.exportAtlas.addEventListener('click',exportAtlas);
-        dom.exportManifest.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-8way-manifest.json`,C.normalizedManifest(state.cfg,state.filename,state.image.naturalWidth,state.image.naturalHeight,state.checks.every(c=>c.severity==='pass')));});
+        dom.exportManifest.addEventListener('click',async()=>{
+            if(!state.image)return;
+            if(state.pixelCandidate){
+                try {
+                    const manifest=await fetch('./assets/hollow-local-3d-pixel-walk-v1.manifest.json').then(r=>r.json());
+                    downloadJson('hollow-local-3d-pixel-walk-v1.manifest.json',manifest);
+                } catch {dom.footerState.textContent='Candidate manifest unavailable; use the saved source manifest.';}
+                return;
+            }
+            downloadJson(`${stem()}-8way-manifest.json`,C.normalizedManifest(state.cfg,state.filename,state.image.naturalWidth,state.image.naturalHeight,state.checks.every(c=>c.severity==='pass')));
+        });
         dom.exportReport.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-qa-report.json`,{
             source:state.filename,createdAt:new Date().toISOString(),checks:state.checks,
             technicalPass:state.checks.every(c=>c.severity==='pass'),ready:false,visualAccepted:false

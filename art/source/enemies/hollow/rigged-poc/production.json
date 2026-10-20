@@ -1,6 +1,6 @@
 {
   "creatureId": "hollow",
-  "revision": "rigged-poc-001",
+  "revision": "local-pixel-walk-poc-v1",
   "procedure": "docs/art/card-to-spritesheet-production.md",
   "reference": {
     "path": "user_handover_files/concepts/Fire/01-the-hollow.png",
@@ -10,11 +10,11 @@
   "scope": "one three-quarter walking view",
   "stages": {
     "A": "self-reviewed; neutral modeling reference generated and inspected",
-    "B": "Local TRELLIS 1 colored mesh generated on RTX 5090; first visual review fails card-detail fidelity; refinement required before rigging",
-    "C": "pending rig and deformation",
-    "D": "pending gait"
+    "B": "Textured source self-reviewed at intended mobile pixel scale; initial coarse mesh remains historical rejected evidence",
+    "C": "22-bone weighted source; walk-pose deformation self-reviewed after lower-limb/cloth weight correction; broader attack/death pose tests remain out of scope",
+    "D": "16-frame one-view pixel walking proof exported, contacts/loop checked and actual mobile Sprite Lab playback verified"
   },
-  "visualStatus": "Initial local mesh reviewed; not art accepted; skull/rib/color fidelity insufficient",
+  "visualStatus": "Agent self-review supports a credible one-view mobile pixel walking proof; owner artistic acceptance pending",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "notes": [
@@ -25,7 +25,7 @@
   "referencePreparation": {
     "file": "references/hollow-neutral-reference.png",
     "method": "built-in image generation, approved card as identity reference",
-    "status": "modeling input only; no mesh or animation generated",
+    "status": "Static modeling reference preserved; derived textured mesh, editable rig and one-view pixel walk now exist",
     "visualNotes": [
       "Gaunt rib cage and elongated hands retained.",
       "Neutral separated limbs prepared for reconstruction.",
@@ -37,7 +37,7 @@
     "destination": "https://huggingface.co/spaces/microsoft/TRELLIS.2",
     "asset": "references/hollow-neutral-reference.png",
     "approval": "Owner explicitly approved Microsoft TRELLIS.2 in chat on 20 October 2026.",
-    "execution": "Approved for the prepared Hollow reference and reconstruction."
+    "execution": "Historical approval only. Superseded by owner local-only generation instruction on 20 October 2026; no current hosted generation permitted."
   },
   "localRenderPrerequisite": {
     "python": "3.11.17",
@@ -53,10 +53,11 @@
   "localReconstruction": {
     "method": "TRELLIS 1 + DINOv2; Hugging Face offline",
     "weightsSource": "ModelScope AI-ModelScope/TRELLIS-image-large; Meta direct DINOv2",
-    "candidate": "model/local-trellis1-002/hollow-initial.glb",
-    "editableSource": "model/local-trellis1-002/hollow-initial-review.blend",
-    "peakAllocatedMiB": 9730.057,
-    "review": "model/local-trellis1-002/review/review.md",
+    "candidate": "model/local-appearance-004/textured-rgb-v2/hollow-textured.glb",
+    "editableSource": "model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+    "peakAllocatedMiB": 14969.2470703125,
+    "review": "exports/pixel-walk-poc-v1/README.md",
     "hardwareSettingsChanged": false
-  }
+  },
+  "currentExport": "exports/pixel-walk-poc-v1/hollow-walk.png"
 }

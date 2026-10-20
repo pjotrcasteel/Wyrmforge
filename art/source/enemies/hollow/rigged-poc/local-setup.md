@@ -83,3 +83,21 @@ Local pipeline import/kernel checks pass. Shape reconstruction is proven;
 card-quality texturing/topology, deformation, gait and final sheet are not.
 `production.json` records the current stage; original cloud quota logs remain
 historical evidence. No runtime assets or gameplay changed.
+
+## Mobile pixel walk proof delivered
+
+Current deliverables and precise scope: `exports/pixel-walk-poc-v1/README.md`.
+The richer appearance decoder, real UV texture and 22-bone rig now produce a
+16-frame one-view walk at native mobile pixel size. Lower-limb/cloth skinning
+was corrected before the final `rigged-pixel-v3` source. Actual RTX rasterization,
+source contact/seam measurements, 390px Sprite Lab playback and current-mage
+comparison were completed. Owner artistic acceptance is not inferred.
+
+The Python review server initially listened but timed out on requests. A
+loopback-only Node server now serves the existing Sprite Lab successfully.
+An approval-review usage-limit failure briefly prevented one diagnostic; after
+owner requested continuation, the normal approval retry succeeded. No bypass.
+The task-owned stalled server/helper was stopped after successful validation.
+
+19 existing Sprite Lab tests pass. No full gameplay suite or physical iPhone
+acceptance is claimed because current combat integration was not changed.

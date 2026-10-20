@@ -1,10 +1,10 @@
-> Current update, 20 October 2026: local RTX 5090 reconstruction succeeded using
-> original TRELLIS/DINOv2 with Hugging Face offline. The mesh and editable Blender
-> source are preserved. First visual review fails card-detail fidelity; no rig,
-> walk or finished spritesheet exists. See [current local setup](local-setup.md)
-> and [mesh review](model/local-trellis1-002/review/review.md).
+> Current proof, 20 October 2026: **a 16-frame mobile pixel walking sheet now
+> exists**, rendered from one UV-textured, weighted 3D rig on the local RTX 5090.
+> [Deliverables and evidence](exports/pixel-walk-poc-v1/README.md).
+> Agent self-review supports this one-view proof; owner approval, remaining
+> directions and the combat lifecycle are pending. Runtime hunt art is unchanged.
 >
-> The text below records the earlier hosted-service attempt.
+> The text below records the earlier hosted-service attempt, not current status.
 # The Hollow: rigged-source proof status
 
 20 October 2026. **Blocked at model reconstruction; no mesh, rig or walk exists.**
