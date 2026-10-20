@@ -34,19 +34,19 @@
         <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
                 data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(nexusActive))"
                 data-sound-cue="none" title="@ToggleLabel("Arcane Nexus", nexusActive)"
-                aria-label="@ToggleLabel("Arcane Nexus", nexusActive)" @onclick="() => ToggleBuilding("build")"></button>
+                aria-label="@ToggleLabel("Arcane Nexus", nexusActive)" @onclick='() => ToggleBuilding("build")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--blacksmith"
                 data-town-building="forge" data-town-state="@(TownBuildingVisuals.StateName(blacksmithActive))"
                 data-sound-cue="none" title="@ToggleLabel("Blacksmith", blacksmithActive)"
-                aria-label="@ToggleLabel("Blacksmith", blacksmithActive)" @onclick="() => ToggleBuilding("forge")"></button>
+                aria-label="@ToggleLabel("Blacksmith", blacksmithActive)" @onclick='() => ToggleBuilding("forge")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--codex"
                 data-town-building="codex" data-town-state="@(TownBuildingVisuals.StateName(codexActive))"
                 data-sound-cue="none" title="@ToggleLabel("Codex", codexActive)"
-                aria-label="@ToggleLabel("Codex", codexActive)" @onclick="() => ToggleBuilding("codex")"></button>
+                aria-label="@ToggleLabel("Codex", codexActive)" @onclick='() => ToggleBuilding("codex")'></button>
         <button type="button" class="refuge-town-spot refuge-town-spot--hall"
                 data-town-building="legends" data-town-state="@(TownBuildingVisuals.StateName(hallActive))"
                 data-sound-cue="none" title="@ToggleLabel("Hall of Fame", hallActive)"
-                aria-label="@ToggleLabel("Hall of Fame", hallActive)" @onclick="() => ToggleBuilding("legends")"></button>
+                aria-label="@ToggleLabel("Hall of Fame", hallActive)" @onclick='() => ToggleBuilding("legends")'></button>
 
         <button type="button" class="refuge-town-spot refuge-town-spot--gate"
                 data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
