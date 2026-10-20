@@ -9,16 +9,19 @@ from PIL import Image, ImageDraw
 
 root=Path(__file__).resolve().parents[2]
 death='--death' in sys.argv
-cell=128 if death else 96
+attack='--attack' in sys.argv
+padded=death or attack
+animation='death' if death else 'attack' if attack else 'walk'
+cell=128 if padded else 96
 count=24 if death else 16
-anchor=[64,88] if death else [48,72]
-stem='hollow-death' if death else 'hollow-movement'
+anchor=[64,88] if padded else [48,72]
+stem='hollow-'+(animation if padded else 'movement')
 model=root/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004'
-rig=model/(sys.argv[sys.argv.index('--rig')+1] if '--rig' in sys.argv else ('rigged-death-v5' if death else 'rigged-pixel-v3'))
-revision=sys.argv[sys.argv.index('--revision')+1] if '--revision' in sys.argv else ('death-eight-directions-v4' if death else 'movement-eight-directions-v1')
+rig=model/(sys.argv[sys.argv.index('--rig')+1] if '--rig' in sys.argv else ('rigged-death-v5' if death else 'rigged-attack-v1' if attack else 'rigged-pixel-v3'))
+revision=sys.argv[sys.argv.index('--revision')+1] if '--revision' in sys.argv else ('death-eight-directions-v4' if death else 'attack-eight-directions-v1' if attack else 'movement-eight-directions-v1')
 out=root/'art/source/enemies/hollow/rigged-poc/exports'/revision
 out.mkdir(exist_ok=False)
-sample_path=rig/('sampled-death.npz' if death else 'sampled-walk.npz')
+sample_path=rig/('sampled-'+animation+'.npz')
 source=np.load(sample_path)
 tensor=lambda a,dtype=torch.float32: torch.tensor(a,dtype=dtype,device='cuda').contiguous()
 faces=tensor(source['faces'],torch.int32)
@@ -58,7 +61,7 @@ for row,direction in enumerate(directions):
         raw=Image.fromarray((rgba*255).astype(np.uint8))
         frame=raw.convert('RGB').quantize(palette=palette,dither=Image.Dither.NONE).convert('RGBA')
         frame.putalpha(raw.getchannel('A'))
-        frame.save(folder/f'{"death" if death else "walk"}-{index:02d}.png')
+        frame.save(folder/f'{animation}-{index:02d}.png')
         atlas.alpha_composite(frame,(index*cell,row*cell))
         frames[direction].append(frame)
         bounds=frame.getbbox()
@@ -68,13 +71,17 @@ for row,direction in enumerate(directions):
         rects.append(dict(direction=direction,index=index,x=index*cell,y=row*cell,width=cell,height=cell,anchor=anchor,flipX=False))
     print(direction,'rendered',flush=True)
 atlas.save(out/(stem+'.png'))
-manifest=dict(schemaVersion='1.1',name='The Hollow — eight-direction '+('death' if death else 'movement'),animation='death' if death else 'walk',layout='eight',
+manifest=dict(schemaVersion='1.1',name='The Hollow — eight-direction '+(animation if padded else 'movement'),animation=animation,layout='eight',
     source=dict(width=cell*count,height=cell*8,columns=count,rows=8,frameWidth=cell,frameHeight=cell,offsetX=0,offsetY=0),
-    directions=directions,framesPerDirection=count,frames=count*8,playback=dict(fps=12,loop=not death,holdLastFrame=death),anchor=anchor,
-    drawCellWorldSize=cell*93/96,travelPerCycle=0 if death else .19/.62*60,frameRects=rects,orientations=orientation,
-    sourceRig=str(rig.relative_to(root)/('hollow-death.blend' if death else 'hollow-rigged.blend')).replace('\\','/'),
+    directions=directions,framesPerDirection=count,frames=count*8,playback=dict(fps=12,loop=not padded,holdLastFrame=death),anchor=anchor,
+    drawCellWorldSize=cell*93/96,travelPerCycle=0 if padded else .19/.62*60,frameRects=rects,orientations=orientation,
+    sourceRig=str(rig.relative_to(root)/(stem+'.blend' if padded else 'hollow-rigged.blend')).replace('\\','/'),
     sourcePoseSha256=hashlib.sha256(sample_path.read_bytes()).hexdigest(),
     visualAccepted=False,runtimeIntegrated=False)
+if attack:
+    manifest['playback']['onComplete']='walk'
+    manifest['visualContactFrames']=[7,8]
+    manifest['visualTimingOnly']=True
 (out/(stem+'.manifest.json')).write_text(json.dumps(manifest,indent=2)+'\n')
 review=[]
 for index in range(count):
@@ -86,9 +93,9 @@ for index in range(count):
         draw.line((x,y+anchor[1],x+cell-1,y+anchor[1]),fill=(52,47,51))
         board.alpha_composite(frames[direction][index],(x,y))
     review.append(board.convert('RGB').resize((board.width*2,board.height*2),Image.Resampling.NEAREST))
-review[0].save(out/'all-directions-review.gif',save_all=True,append_images=review[1:],duration=[83]*(count-1)+[1200 if death else 83],loop=0)
-review[12 if death else 4].save(out/'all-directions-preview.png')
-phases=[0,3,7,10,13,23] if death else [0,4,8,12]
+review[0].save(out/'all-directions-review.gif',save_all=True,append_images=review[1:],duration=[83]*(count-1)+[1200 if death else 400 if attack else 83],loop=0)
+review[12 if death else 7 if attack else 4].save(out/'all-directions-preview.png')
+phases=[0,3,7,10,13,23] if death else [0,3,5,7,9,15] if attack else [0,4,8,12]
 sheet=Image.new('RGBA',(len(phases)*cell,8*(cell+16)),(22,20,27,255))
 draw=ImageDraw.Draw(sheet)
 for row,direction in enumerate(directions):
