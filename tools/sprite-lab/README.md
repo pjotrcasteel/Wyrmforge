@@ -2,6 +2,11 @@
 
 A dependency-free, local/offline visual motion inspector. It previews **all eight walking directions** against a static target or in chase mode, shows individual frames, validates an atlas, and exports a normalized 8-direction PNG, manifest, and JSON QA report.
 
+Version 0.3 opens The Hollow's rigged walking **candidate**: 16 frames,
+192px cells, one three-quarter view. **Before** restores the rejected generated
+eight-view animation; **Concept** restores the original reference.
+Format pass never means artistic approval. See [review status](../../docs/art/hollow-walk-production.md).
+
 ## Open it
 
 Open `index.html` in Chrome, Safari or Edge. The included Hollow reference is loaded automatically, including via `file://`. Alternatively, run:
@@ -31,11 +36,15 @@ No `npm install`, account, upload service, build step or network connection need
 
 ## Target contract for future enemies
 
-See [docs/SPRITESHEET_STANDARD.md](docs/SPRITESHEET_STANDARD.md). This side tool deliberately has no runtime integration; the live game currently uses other sprite formats and requires an explicit adapter before these new atlases can replace assets.
+See [the current production contract](../../docs/art/sprite-lab-github-pages.md). This side tool deliberately has no runtime integration; the live game currently uses other sprite formats and requires an explicit adapter before these new atlases can replace assets.
 
 ## Tests
 
-`npm test` (uses only Node's built-in test runner).
+From the repository root: `node --test tools/sprite-lab/tests/*.test.js` (Node only).
+Rebuild the reviewed packing: `node tools/sprite-lab/build-hollow-walk.mjs`.
+Rebuild the corrected rig: `node tools/sprite-lab/build-hollow-rig.mjs`.
+Use **Stride test** to compare planted feet against world travel. Other views
+are intentionally disabled for this asset until the gait has been accepted.
 
 ## Structure
 

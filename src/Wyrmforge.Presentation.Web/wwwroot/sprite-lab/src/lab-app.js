@@ -3,7 +3,7 @@
     'use strict';
     const C = globalThis.SpriteLabCore;
     const $ = id => document.getElementById(id);
-    const dom = Object.fromEntries(['assetLabel','fileInput','dropzone','imageDimensions','loadDemo','layoutPreset',
+    const dom = Object.fromEntries(['assetLabel','assetNote','fileInput','dropzone','imageDimensions','loadDemo','loadWalk','loadBefore','layoutPreset',
         'columns','rows','frameWidth','frameHeight','offsetX','offsetY','fps','fpsValue','scale','scaleValue','resetLayout',
         'stageCanvas','stageHint','sheetCanvas','playBtn','stepBtn','manualBtn','chaseBtn','modeStatus','compass',
         'directionName','directionMeta','frameIndicator','filmstrip','checkList','resultPill','statFrames','statDirections',
@@ -30,6 +30,7 @@
         readConfig();
     }
     function autoGrid(w, h, mode = 'five') {
+        if(mode==='single')return {...C.DEFAULT_CONFIG,layout:'single',rows:1,columns:16,cellWidth:w/16,cellHeight:h,fps:12};
         // The annotated image from chat includes a title and compass labels. Detect that known poster size on import.
         if (w === 1536 && h === 1024) return { ...C.DEFAULT_CONFIG, offsetX: 154, offsetY: 151, cellWidth: 166, cellHeight: 159 };
         const rows = mode === 'eight' ? 8 : 5;
@@ -44,13 +45,19 @@
         const img = new Image();
         img.onload = () => {
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
-            const layout = isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
+            const layout = img.naturalWidth===3072&&img.naturalHeight===192?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
             updateFields(autoGrid(img.naturalWidth, img.naturalHeight, layout));
-            state.dir = 'S'; state.frame = 0; state.elapsed = 0; state.playing = true; state.mode = 'manual';
+            state.dir = layout==='single'?'SE':'S'; state.frame = 0; state.elapsed = 0; state.playing = true; state.mode = 'manual';
             state.actor = { x: 360, y: 240 }; state.player = { x: 530, y: 270 };
             dom.playBtn.textContent = '❚❚'; dom.assetLabel.textContent = name.replace(/\.(png|jpg|jpeg|webp)$/i,'').replaceAll('-',' ').toUpperCase();
             dom.imageDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
             dom.footerState.textContent = `Loaded ${name}`;
+            dom.assetNote.textContent = isDemo
+                ? 'Original concept reference: painted background and five drawn views. This is not a production atlas.'
+                : layout==='single'?'Rigged walk: one painted character, constant limb lengths, alternating planted feet. One view only; review the gait before adding facings.'
+                : 'Earlier generated walk. Compare its changing anatomy and inconsistent foot motion with the rigged version.';
+            dom.exportAtlas.textContent=layout==='single'?'Export walk sheet ↗':'Export 8-way atlas ↗';
+            dom.chaseBtn.textContent=layout==='single'?'Stride test':'Chase player';
             setMode('manual'); refresh();
         };
         img.onerror = () => { dom.footerState.textContent = `Unable to load ${name}. Use Import to select a local image.`; };
@@ -67,18 +74,20 @@
     function loadImageFromImage(img, name) {
         // Reuse a decoded upload directly: object URLs are revoked safely after decode.
         state.image=img;state.filename=name;state.pixelData=readPixels(img);
-        const mode = (img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
+        const mode = img.naturalWidth===3072&&img.naturalHeight===192?'single':(img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
         updateFields(autoGrid(img.naturalWidth,img.naturalHeight,mode));
-        state.dir='S';state.frame=0;state.elapsed=0;state.playing=true;
+        state.dir=mode==='single'?'SE':'S';state.frame=0;state.elapsed=0;state.playing=true;
         dom.playBtn.textContent='❚❚';dom.imageDimensions.textContent=`${img.naturalWidth} × ${img.naturalHeight}`;
         dom.assetLabel.textContent=name.toUpperCase();dom.footerState.textContent=`Loaded ${name}`;
+        dom.assetNote.textContent='Imported artwork. Format checks do not establish motion quality or visual approval.';
         setMode('manual');refresh();
     }
     function setMode(mode) {
         state.mode=mode;dom.manualBtn.classList.toggle('active',mode==='manual');dom.chaseBtn.classList.toggle('active',mode==='chase');
         dom.modeStatus.textContent=mode==='chase'?'CHASE ACTIVE':'MANUAL';
-        dom.stageHint.textContent=mode==='chase'?'Move the target: the Hollow will pursue':'Tap the arena to position the player target';
-        dom.compass.querySelectorAll('button[data-dir]').forEach(b=>b.disabled=b.dataset.dir==='STAY'||mode==='chase');
+        dom.stageHint.textContent=state.cfg.layout==='single'?(mode==='chase'?'Stride test: ground speed follows the walk cycle':'One three-quarter view · inspect planted and passing feet'):mode==='chase'?'Move the target: the Hollow will pursue':'Tap the arena to position the player target';
+        dom.compass.querySelectorAll('button[data-dir]').forEach(b=>b.disabled=b.dataset.dir==='STAY'||mode==='chase'||state.cfg.layout==='single'&&b.dataset.dir!=='SE');
+        if(state.cfg.layout==='single')state.dir='SE';
         updateDirection();
     }
     function setDir(dir) {
@@ -88,7 +97,7 @@
     function updateDirection() {
         const info=C.DIR_INFO[state.dir],p=C.directionFrame(state.cfg,state.dir,state.frame);
         dom.directionName.innerHTML=`${info[0]} <span>${info[1]}</span>`;
-        dom.directionMeta.textContent=`Row ${p.row+1} · ${p.flipX?'mirrored original':'original artwork'}`;
+        dom.directionMeta.textContent=state.cfg.layout==='single'?'One drawn view · 16 rigged frames':`Row ${p.row+1} · ${p.flipX?'mirrored original':'original artwork'}`;
         dom.compass.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.dir===state.dir));
     }
     function refresh() {
@@ -97,7 +106,7 @@
         const fatal=state.checks.some(c=>c.severity==='fail');
         const warnings=state.checks.some(c=>c.severity==='warn');
         dom.resultPill.className=`result-pill ${fatal?'fail':warnings?'warn':'pass'}`;
-        dom.resultPill.textContent=fatal?'NOT READY':warnings?'REVIEW':'PASS';
+        dom.resultPill.textContent=fatal?'NOT READY':warnings?'REVIEW':'FORMAT PASS';
         dom.checkList.replaceChildren(...state.checks.map(item=>{
             const el=document.createElement('div');el.className='check';
             const marker=document.createElement('div');marker.className='check-icon '+item.severity;marker.textContent={pass:'✓',warn:'!',fail:'×'}[item.severity];
@@ -190,7 +199,12 @@
                 state.elapsed%=frameDuration;markFilmstrip();drawSheet();
             }
         }
-        if(state.mode==='chase'&&state.image){
+        if(state.mode==='chase'&&state.image&&state.cfg.layout==='single'&&state.playing){
+            const fit=Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight)*state.scale;
+            const speed=(32/.62)*Number(state.cfg.fps)/state.cfg.columns*fit;
+            state.actor.x+=speed*delta;
+            if(state.actor.x>dom.stageCanvas.width+100)state.actor.x=-100;
+        }else if(state.mode==='chase'&&state.image&&state.cfg.layout!=='single'){
             const dx=state.player.x-state.actor.x,dy=state.player.y-state.actor.y,dist=Math.hypot(dx,dy);
             if(dist>52){const speed=63; const step=Math.min(speed*delta,dist-52);state.actor.x+=dx/dist*step;state.actor.y+=dy/dist*step;}
             const dir=C.directionFromVector(dx,dy);
@@ -210,6 +224,11 @@
     function downloadJson(name,value) {downloadBlob(name,new Blob([JSON.stringify(value,null,2)+'\n'],{type:'application/json'}));}
     function stem() {return state.filename.replace(/\.(png|jpg|jpeg|webp)$/i,'').replace(/[^\w-]+/g,'-');}
     function exportAtlas() {
+        if(state.cfg.layout==='single'){
+            const cv=document.createElement('canvas');cv.width=state.cfg.columns*state.cfg.cellWidth;cv.height=state.cfg.cellHeight;
+            cv.getContext('2d').drawImage(state.image,0,0);
+            cv.toBlob(blob=>{if(blob)downloadBlob(`${stem()}-walk.png`,blob);},'image/png');return;
+        }
         if(!state.image||state.checks.some(c=>c.title==='Frames outside image'||c.title==='Invalid grid configuration'||c.title==='Missing direction rows'))return;
         const fw=state.cfg.cellWidth,fh=state.cfg.cellHeight,cols=state.cfg.columns;
         const cv=document.createElement('canvas');cv.width=cols*fw;cv.height=8*fh;
@@ -224,6 +243,8 @@
         cv.toBlob(blob=>{if(blob)downloadBlob(`${stem()}-8way-export.png`,blob);},'image/png');
     }
     function bind() {
+        dom.loadWalk.addEventListener('click',()=>loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png'));
+        dom.loadBefore.addEventListener('click',()=>loadImage('./assets/hollow-walk-v1.png','hollow-walk-v1.png'));
         dom.loadDemo.addEventListener('click',()=>loadImage('./assets/hollow-walk-reference-5dir.png','hollow-walk-reference-5dir.png',true));
         dom.fileInput.addEventListener('change',e=>loadFile(e.target.files?.[0]));
         dom.dropzone.addEventListener('dragover',e=>{e.preventDefault();dom.dropzone.classList.add('dragging');});
@@ -236,9 +257,10 @@
         dom.stepBtn.addEventListener('click',()=>{state.playing=false;dom.playBtn.textContent='▶';state.frame=(state.frame+1)%Math.max(1,state.cfg.columns);markFilmstrip();drawSheet();});
         ['columns','rows','frameWidth','frameHeight','offsetX','offsetY'].forEach(id=>dom[id].addEventListener('change',()=>{readConfig();state.frame=0;refresh();}));
         dom.layoutPreset.addEventListener('change',()=>{
-            const mode=dom.layoutPreset.value;dom.rows.value=mode==='five'?5:8;
-            if(state.image)dom.frameHeight.value=Math.floor((state.image.naturalHeight-Number(dom.offsetY.value))/Number(dom.rows.value));
-            readConfig();refresh();
+            const mode=dom.layoutPreset.value;dom.rows.value=mode==='single'?1:mode==='five'?5:8;
+            dom.columns.value=mode==='single'?16:8;
+            if(state.image){dom.frameHeight.value=Math.floor((state.image.naturalHeight-Number(dom.offsetY.value))/Number(dom.rows.value));dom.frameWidth.value=Math.floor((state.image.naturalWidth-Number(dom.offsetX.value))/Number(dom.columns.value));}
+            readConfig();setMode('manual');refresh();
         });
         dom.resetLayout.addEventListener('click',()=>{if(state.image){updateFields(autoGrid(state.image.naturalWidth,state.image.naturalHeight,dom.layoutPreset.value));refresh();}});
         dom.fps.addEventListener('input',()=>{state.cfg.fps=Number(dom.fps.value);dom.fpsValue.textContent=`${state.cfg.fps} FPS`;});
@@ -249,13 +271,14 @@
         dom.exportAtlas.addEventListener('click',exportAtlas);
         dom.exportManifest.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-8way-manifest.json`,C.normalizedManifest(state.cfg,state.filename,state.image.naturalWidth,state.image.naturalHeight,state.checks.every(c=>c.severity==='pass')));});
         dom.exportReport.addEventListener('click',()=>{if(state.image)downloadJson(`${stem()}-qa-report.json`,{
-            source:state.filename,createdAt:new Date().toISOString(),checks:state.checks,ready:state.checks.every(c=>c.severity==='pass')
+            source:state.filename,createdAt:new Date().toISOString(),checks:state.checks,
+            technicalPass:state.checks.every(c=>c.severity==='pass'),ready:false,visualAccepted:false
         });});
         window.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;
             if(e.code==='Space'){e.preventDefault();dom.playBtn.click();}
             if(e.code==='ArrowRight')dom.stepBtn.click();
         });
     }
-    bind();loadImage('./assets/hollow-walk-reference-5dir.png','hollow-walk-reference-5dir.png',true);
+    bind();loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png');
     requestAnimationFrame(tick);
 })();

@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'services/playtest-collector/**'
       - 'tools/playtesting/**'
+      - 'tools/sprite-lab/**'
       - 'tests/**'
       - 'Wyrmforge.slnx'
       - 'Directory.Build.props'
@@ -44,6 +45,13 @@ jobs:
           node --check services/playtest-collector/src/index.js
           node --check services/playtest-collector/scripts/configure.mjs
           node --test services/playtest-collector/test/*.test.mjs
+
+      - name: Verify Sprite Lab walking mechanics
+        run: |
+          node --test tools/sprite-lab/tests/*.test.js
+          node --check src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/src/lab-app.js
+          node tools/sprite-lab/build-hollow-rig.mjs
+          git diff --exit-code -- src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-rig-v2.png src/Wyrmforge.Presentation.Web/wwwroot/sprite-lab/assets/hollow-walk-rig-v2.manifest.json
 
       - name: Test playtest report analysis
         run: python3 -m unittest discover -s tools/playtesting -p 'test_*.py'
