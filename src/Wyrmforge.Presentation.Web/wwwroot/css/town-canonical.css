@@ -2,7 +2,7 @@
    One coherent 1672x941 scene. The two independent districts are camera views,
    not stacked art cards. Vacant layers are alpha PNGs, never CSS darkness filters. */
 .game-shell.refuge-home .refuge-canonical-viewport {
-    position:absolute;inset:0;z-index:1;display:flex;align-items:center;
+    position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;
     width:100%;height:100%;overflow:hidden;box-sizing:border-box;
     background:#101824;scrollbar-width:none;-webkit-overflow-scrolling:touch;
     touch-action:pan-x;overscroll-behavior-x:contain;
@@ -12,8 +12,8 @@
     outline:2px solid #dbc099;outline-offset:-3px;
 }
 .game-shell.refuge-home .refuge-canonical-scene {
-    position:relative;flex:none;width:min(100%,177.6833dvh);
-    aspect-ratio:1672/941;margin:auto;overflow:hidden;isolation:isolate;
+    position:relative;flex:none;width:max(100%,177.6833dvh);
+    aspect-ratio:1672/941;margin:0;overflow:hidden;isolation:isolate;
     background:#131926;
 }
 .game-shell.refuge-home .refuge-town-night-base {
@@ -68,7 +68,7 @@
 .game-shell.refuge-home .refuge-canonical-districts {display:none}
 @media (max-width:900px) and (orientation:portrait) {
     .game-shell.refuge-home .refuge-canonical-viewport {
-        align-items:stretch;overflow-x:auto;overflow-y:hidden;
+        align-items:stretch;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;
         scroll-snap-type:x proximity;
     }
     .game-shell.refuge-home .refuge-canonical-scene {
