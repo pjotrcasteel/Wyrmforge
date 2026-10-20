@@ -1503,9 +1503,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         foreach (var school in new[] { "fire", "frost", "storm", "arcane", "necromancy", "summoner" })
             await Expect(Page.Locator($".gate-sigil--{school}")).ToBeVisibleAsync();
         var atlas = await Page.Locator(".gate-sigil--fire").EvaluateAsync<string>("element => getComputedStyle(element).backgroundImage");
-        StringAssert.Contains(atlas, "divine-lineage-sigils-clean.webp");
+        StringAssert.Contains(atlas, "divine-lineage-sigils.webp");
         var atlasLoaded = await Page.EvaluateAsync<bool>(
-            "async () => { const image = new Image(); image.src = new URL('art/divine-lineage-sigils-clean.webp', document.baseURI).href; await image.decode(); return image.naturalWidth === 96 && image.naturalHeight === 64; }");
+            "async () => { const image = new Image(); image.src = new URL('art/divine-lineage-sigils.webp', document.baseURI).href; await image.decode(); return image.naturalWidth === 192 && image.naturalHeight === 128; }");
         Assert.IsTrue(atlasLoaded, "Six actual pixel sigils must load from the approved runtime atlas.");
         await Expect(Page.Locator(".gate-lineage--fire")).ToBeEnabledAsync();
         await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
