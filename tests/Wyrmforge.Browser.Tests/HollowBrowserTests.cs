@@ -15,27 +15,36 @@ public sealed class HollowBrowserTests : PageTest
         Directory.CreateDirectory(artifacts);
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=false");
-        await Page.WaitForFunctionAsync(@"async () => {
+        await AttachDiagnosticsAsync();
+        await Page.WaitForFunctionAsync(@"() => {
             const canvas=document.querySelector('.enemy-lab canvas');if(!canvas)return false;
-            const m=await import(new URL('js/arena.js',document.baseURI).href);
+            const m=window.__hollowArena;
             const d=m.readArenaDiagnostics(canvas);
             return d?.hollow.ready&&!d.renderingFailed&&d.hollow.entities.some(e=>e.clip==='walk'&&e.frame>0);
         }");
         await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, "hollow-walk-390.png"), FullPage = true });
-        await Page.WaitForFunctionAsync(@"async () => {
-            const m=await import(new URL('js/arena.js',document.baseURI).href);
+        await Page.WaitForFunctionAsync(@"() => {
+            const m=window.__hollowArena;
             const d=m.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
             return d?.hollow.entities.some(e=>e.clip==='attack'&&e.frame>=4&&e.frame<=9);
         }");
         await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, "hollow-attack-390.png"), FullPage = true });
         await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Hollow&seed=42&autoplay=false&cast=true");
-        await Page.WaitForFunctionAsync(@"async () => {
+        await AttachDiagnosticsAsync();
+        await Page.WaitForFunctionAsync(@"() => {
             const canvas=document.querySelector('.enemy-lab canvas');if(!canvas)return false;
-            const m=await import(new URL('js/arena.js',document.baseURI).href);
+            const m=window.__hollowArena;
             const d=m.readArenaDiagnostics(canvas);
             return d?.hollow.ready&&!d.renderingFailed&&d.hollow.corpses.some(e=>e.age>2&&e.age<3&&e.frame===23);
         }");
         await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, "hollow-held-corpse-390.png"), FullPage = true });
         Assert.IsFalse(await Page.EvaluateAsync<bool>("() => localStorage.getItem('wyrmforge.firstHunt.v1') !== null"));
+    }
+
+    private async Task AttachDiagnosticsAsync()
+    {
+        await Page.Locator(".enemy-lab canvas").WaitForAsync();
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
+        await Page.EvaluateAsync("async () => { window.__hollowArena=await import(new URL('js/arena.js',document.baseURI).href); }");
     }
 }
