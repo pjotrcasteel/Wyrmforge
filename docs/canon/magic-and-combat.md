@@ -27,6 +27,7 @@
 1. **Hunt/Wyrm tier** = threat level and availability of the chosen encounter. It cannot automatically unlock magic.
 2. **Magical progression/required tier** = the prerequisites for researching/equipping a mutation (independent from Hunt tier); higher Wyrm encounters may provide prerequisite evidence/materials.
 3. **In-Hunt spell rank** = temporary Rank I/II/III and refinements earned in an attempt, subject to existing level-5/10/15+ rules.
+4. **Signature spell level** = the level of the character's persistent base spell (e.g. Fireball Lv.1–5), determining how many earned mutators can be simultaneously slotted. It is not the Hunt level, Wyrm/Hunt tier, magical research tier or temporary In-Hunt Rank.
 
 **Five-tier extensibility (LOCKED) does not lock the exact unlock ladder (TUNABLE):** Tier I starts with ten mutation design targets per school as that school becomes available; Tier II specialization, Tier III transformation, Tier IV Wyrmcraft and Tier V Divine-scale magic are **working labels and directions**, not promised gameplay or approved balance. Higher tiers should introduce new mechanics and choices instead of merely multiplying damage. Tier-I recipes remain usable in advanced Hunts. Do not pretend that one Tier-I launch must ship all six schools at once.
 
@@ -46,7 +47,27 @@
 
 **Owner decision:** Fireball is an **editable signature spell** within the existing **Arcane Nexus**. Choosing a mutation must alter **both actual combat behavior and the spell's visible anatomy**, and compatible mutations must synthesize **one organic, recognizable result**, not disconnected prefab overlays or mere color changes. Fire is the first vertical slice; the editing framework supports **all six** schools without forcing them to use Fireball-style projectiles. These are **design requirements, not claims of implementation**.
 
-#### One editor, five semantic facets — LOCKED
+#### One centerpiece, five earned mutator sockets — LOCKED (20 October 2026)
+
+**The Fireball is the centerpiece:** it is a single persistent signature spell, represented as a large evolving magical core at the center of the **existing Arcane Nexus** spellcraft view. Mutators are separate researched/unlocked catalogue entries that the player deliberately chooses and places into the Fireball's **actual sockets**. Selecting a mutator changes the *same* spell's visual morphology and gameplay behavior. Mutators are not individual castable spells, and the player cannot equip unearned ones.
+
+**Exact capacity rule approved by owner:**
+
+| Fireball signature level | Actual available mutator sockets |
+| --- | --- |
+| **1** | **1** |
+| **2** | **2** |
+| **3** | **3** |
+| **4** | **4** |
+| **5** | **5** |
+
+This is the **number of simultaneously equipped mutators**, not five predefined kinds of mutations. The level's sockets may be empty. At Lv.1, visually show exactly one available socket and four sealed slots; at Lv.5 show five available slots. All five positions belong to one Fireball, not to five separately autofiring spells. The player can inspect all learned mutators in a scrollable, expandable research collection and choose which ones to place into the available sockets, subject to catalogue compatibility. Show unlearned/discovered-but-locked candidates separately, never as equippable.
+
+**Combined appearance:** The central Fireball renders the composite of all currently chosen compatible mutators **as one evolving body**. Previewing a new mutator morphs the already-composed Fireball (not a standalone spell thumbnail) and previews its genuine cast, travel/engage, impact/trigger and aftermath. Socket removal reverts the affected layers while preserving the rest. For example, at **Fireball Lv.3 or above**, the player may slot *Meteor Heart*, *Detonation* and *Scorched Earth* if all three are learned and legal: the compact Fireball grows a cracked molten heart, bursts from its own fragments at impact, and those fragments settle into the actual persistent burning ground. A Lv.1 Fireball can only slot one of those; it cannot run that three-mutator composition.
+
+**Level mechanics:** How persistent Fireball levels 2–5 are earned, whether levels 6+ exist, simultaneous facet/exclusion rules, and the detailed numerical balancing remain TBD. Do not equate Fireball Lv.5 with the **Magic Tier V/Divine** Wyrm tier or with **Rank III** temporary combat strength. A socket never bypasses researching a mutation, compatibility rules, Wyrm mastery or ranked equality. Future signature spells for the other five Divine archetypes should use this same **progressive signature-socket pattern** when authored, with school-native creatures/rituals/chains rather than forced Fireball projectile effects. Distinguish mutator sockets from any future catalyst/essence slots.
+
+#### Five semantic visual facets — NOT the sockets
 
 | Facet | What it edits | Native visual responsibility |
 | --- | --- | --- |
@@ -56,7 +77,7 @@
 | **Persistence** | What remains or continues afterward | Ground hazard, field, status trace, corpse state or living bonded unit |
 | **Mastery** | Rare acquired Wyrm/lineage property | Authored awakened transformation or restrained accent |
 
-These are **ways to inspect a recipe**, NOT five free equipment sockets. The canonical typed spell grammar in §3.2, researched mutations, Web/Forge/Mastery progression, available actual sockets, budgets, explicit exclusions, infusion order and real in-Hunt spell ranks still govern legality. **One dominant Form** establishes the principal visual read; no player is promised one mutation in every facet. Socket count, prerequisites, costs, pairwise compatibility and balancing numbers are **TUNABLE**, not locked by the UI. Wyrmfire is a rare mastery, not an eleventh Tier-I mutation.
+These five facets describe **how visuals behave**, while the **actual five level-earned slots above** determine how many unlocked mutators can be equipped. A player is **not** assigned one Form slot, one Delivery slot, etc.; legal mutators may contribute to multiple visual facets, and certain authored major forms can be mutually exclusive. The canonical typed grammar in §3.2, researched mutations, Web/Forge/Mastery progression, complexity budgets, explicit exclusions, infusion order and In-Hunt ranks still govern legality. **One dominant Form** establishes the principal visual read. The signature-level socket capacity is **LOCKED at 1–5**; level acquisition, prerequisites, costs, pairwise compatibility and balance remain **TUNABLE**. Wyrmfire is rare mastery, not an eleventh Tier-I mutation.
 
 #### Visual-morphology engine — LOCKED invariants
 
@@ -97,8 +118,8 @@ These are **ways to inspect a recipe**, NOT five free equipment sockets. The can
 
 #### Arcane Nexus screen — LOCKED interaction, PROPOSED layout
 
-- **One destination:** Arcane Nexus → Spellcraft → selected signature. A real ritual bench / carved stone casting focus, with a **large single animated hero preview**. Five connected small facet sigils indicate *what can be edited*, not five free active mutation slots. Do not duplicate the Web, Forge, Mastery, Codex or their wallets.
-- **Immediate draft morph:** choose a researched or inspected candidate, compare before/after, and replay **Cast → Travel/Engage → Resolution → Aftermath → Full loop** using the same presentation descriptors; a nonprojectile school gets meaningful phase names. Invalid combinations show which condition prevents them, not just greyed cards.
+- **One destination and centerpiece:** Arcane Nexus → Spellcraft → Fireball. A large **single living Fireball** hovers above the actual ritual focus with **five physical mutator sockets** arranged around it. Available sockets increase from one at Lv.1 to five at Lv.5; filled sockets display the player's equipped mutators, unfilled slots are clearly empty, and level-locked slots are visibly sealed. Branching research runes beyond the core may expand indefinitely as content grows: these are discoveries, **not extra equipped sockets**. Form/Delivery/Resolution/Persistence/Mastery remain *presentation grammar*, not five mandatory socket labels. Do not duplicate the Web, Forge, Mastery, Codex or wallets.
+- **Choose and slot:** tap an available socket and an **unlocked mutation** from the nearby research web; preview the cumulative Fireball change before confirming equip. A locked/unearned mutation cannot be slotted. Allow undo/removal and recomposition. Replay **Cast → Travel/Engage → Resolution → Aftermath → Full loop** from the single combined recipe; nonprojectile schools use native phases. Invalid combinations explain exactly why; no silent replacement of existing mutations.
 - **Mobile-first:** readable portrait hero preview above a contextual **bottom sheet** with concise mutation choice, icon, gameplay difference, short animation, prerequisites and compatibility; wide screens use a side inspector. Prioritize the resulting spell at 320px and 390px; minimum safe touch targets, useful focus/keyboard paths and reduced-motion states.
 - **Real actions:** Reset restores the last saved draft; Save validates socket/recipe/mastery costs and versioning; Test exercises the **actual deterministic gameplay sandbox** with targets/walls, not a fake visual sandbox. Avoid invented stats, fake cooldown values, fixed 3/5 complexity meters or unapproved mastery unlocks in player-facing concept art.
 - **Visual framing:** restrained Gothic pixel/painterly dark-fantasy art, weathered iron and stone, selective firelight; use existing approved character/environment language and immutable six-school pixel emblems. Visual polish must not replace playable tests and device acceptance.
@@ -120,7 +141,7 @@ Necromancer and Summoner signatures are **still TBD**; these are visual-domain b
 
 **Research principles (do not copy source art):** [Last Epoch skill specialization](https://support.lastepoch.com/hc/en-us/articles/46363203944859-Skill-Specialization) demonstrates editing one recognizable signature; [Path of Exile 2 support-gem grammar](https://www.poe2wiki.net/wiki/Support_skill_gem) demonstrates typed support compatibility; [Diablo II: Resurrected UI/accessibility improvements](https://news.blizzard.com/en-gb/article/23695734/technical-alpha-learnings) favor readable, restrained fantasy presentation. [Approved WyrmForge art rules](art-and-animation.md) take precedence.
 
-**Change note — 20 October 2026:** Owner-approved direction for a living, visually composable Fireball editor and one six-school Arcane Nexus; Fire candidate effects, exact constraints, numbers and other reserved signatures remain **PROPOSED / not shipped**.
+**Change note — 20 October 2026:** Owner approved a living central Fireball with **one real mutator socket per persistent Fireball level (Lv.1=1 through Lv.5=5)** and deliberate equipping of unlocked mutators. This replaces the older speculative 1–2-socket model and clarifies that the five visual facets are not the five equip positions. Other Fire candidate effects, their unlocks, compatibility, acquisition/level-up mechanics and reserved signatures remain **PROPOSED / not shipped**.
 
 
 ### 3.1 One integrated city feature — LOCKED
@@ -160,7 +181,7 @@ Initially implemented foundations: **Fire** (burn/ignition/area denial); **Frost
 
 A **third elemental role** can modify the *first* reaction under advanced prerequisites; it is **not** a free third autonomously firing attack stream. Initial grammar forbids unrestricted all-four element super-spells. Later four-element rituals require fresh explicit product approval. Limits apply to complexity, socket availability, reaction depth, target searches, projectile counts, VFX work, cooldowns and statuses. Named hard-invalid combinations must be rejected **before** a Hunt, with a usable reason; full builds (blueprint + Web + temporary rank/relic/evolution) are the balancing unit.
 
-Existing Web hybrid branches, points connectivity, mastery exclusion and generic component tags (`Impact`, `Projectile`, `AppliesChill`, `Chain`, etc.) should be reused. Possible mutation sockets: one midgame, two late-game active; **numbers proposed**. No free all-branch keystone stacking. Free respec between standard Hunts should safely unequip incompatible sockets without erasing recipes. Exact rules for adjusting an *active saved Eternal Hunt* build at town/sanctuary must obey save validity and await tuning.
+Existing Web hybrid branches, points connectivity, mastery exclusion and generic component tags (`Impact`, `Projectile`, `AppliesChill`, `Chain`, etc.) should be reused. **The owner's current slot rule supersedes the obsolete one-midgame/two-late-game proposal: persistent signature levels 1–5 grant exactly 1–5 mutator slots (§3.0a).** No free all-branch keystone stacking. Free respec between standard Hunts should safely unequip incompatible sockets without erasing recipes. Exact rules for adjusting an *active saved Eternal Hunt* build at town/sanctuary must obey save validity and await tuning.
 
 ### 3.3 Intelligent automatic multi-spell combat — LOCKED (supersedes old one-spell-only rule)
 
