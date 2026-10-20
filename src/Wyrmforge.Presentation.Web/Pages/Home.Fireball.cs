@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.JSInterop;
 using Wyrmforge.Domain.Progression.Fireball;
 
@@ -7,6 +8,10 @@ namespace Wyrmforge.Presentation.Web.Pages;
 public partial class Home
 {
     private const string FireballCoreKey = "wyrmforge.fireballCore.v1";
+    private static readonly JsonSerializerOptions FireballSaveJson = new()
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
     private readonly FireballCoreState fireballCore = new();
 
     private async Task LoadFireballCoreAsync()
@@ -14,7 +19,7 @@ public partial class Home
         try
         {
             var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, FireballCoreKey);
-            if (!string.IsNullOrWhiteSpace(stored)) fireballCore.Restore(JsonSerializer.Deserialize<FireballCoreSave>(stored));
+            if (!string.IsNullOrWhiteSpace(stored)) fireballCore.Restore(JsonSerializer.Deserialize<FireballCoreSave>(stored, FireballSaveJson));
         }
         catch (JSException) { }
         catch (JsonException) { }
@@ -25,7 +30,7 @@ public partial class Home
         try
         {
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, FireballCoreKey,
-                JsonSerializer.Serialize(fireballCore.ToSave()));
+                JsonSerializer.Serialize(fireballCore.ToSave(), FireballSaveJson));
         }
         catch (JSException) { }
     }
