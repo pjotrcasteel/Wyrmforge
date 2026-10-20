@@ -128,16 +128,32 @@ public sealed class ArenaEnvironmentStateTests
         const double width = 950, height = 1550;
         var map = new WyrmrealmMapState(seed: 1204);
         var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
-        var prop = terrain.Snapshot().Props.First(p => p.X < .32 || p.X > .68);
-        var center = new Vector2D(prop.X * width, prop.Y * height);
-        var from = center + new Vector2D(-100, 0);
-        var hunter = center + new Vector2D(100, 0);
-        // Don't select a path that crosses a still-sealed gate: the local
-        // obstacle calculation must not override the canonical crossing.
-        var target = terrain.EnemyNavigationTarget(from, hunter, width, height, 9);
-        if (Vector2D.Distance(target, hunter) < .1) return;
-        Assert.IsFalse(terrain.IsBlocked(target, width, height, 9));
-        Assert.IsFalse(terrain.BlocksSegment(from, target, width, height, 9));
+        foreach (var prop in terrain.Snapshot().Props)
+        {
+            var center = new Vector2D(prop.X * width, prop.Y * height);
+            var from = center + new Vector2D(-90, 0);
+            var hunter = center + new Vector2D(90, 0);
+            // Pick a clear approach where it is specifically the prop that blocks
+            // the direct route, not a sealed crossing or another environment feature.
+            if (terrain.IsBlocked(from, width, height, 9) || terrain.IsBlocked(hunter, width, height, 9)) continue;
+            if (!terrain.BlocksSegment(from, hunter, width, height, 9)) continue;
+            var target = terrain.EnemyNavigationTarget(from, hunter, width, height, 9);
+            if (target == hunter) continue;
+            Assert.IsFalse(terrain.IsBlocked(target, width, height, 9));
+            Assert.IsFalse(terrain.BlocksSegment(from, target, width, height, 9));
+
+            var position = from;
+            for (var step = 0; step < 110; step++)
+            {
+                var next = terrain.EnemyNavigationTarget(position, hunter, width, height, 9);
+                var proposed = position + Vector2D.DirectionTo(position, next) * 4;
+                position = terrain.RestrictMovement(position, proposed, width, height, 9);
+                Assert.IsFalse(terrain.IsBlocked(position, width, height, 9));
+            }
+            Assert.IsLessThan(55, Vector2D.Distance(position, hunter), "An enemy must actually reach the hunter around a crate.");
+            return;
+        }
+        Assert.Fail("Expected at least one unobstructed approach to a generated physical prop.");
     }
 
     [TestMethod]
