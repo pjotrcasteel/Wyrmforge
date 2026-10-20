@@ -46,6 +46,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public bool ContextualSpell { get; set; }
     [Parameter] public bool RewardCache { get; set; }
     [Parameter] public IReadOnlyList<LaboratoryMutationId> PreparedMutations { get; set; } = [];
+    [Parameter] public IReadOnlyList<Wyrmforge.Domain.Progression.Signature.FireballMutationId> FireballMutations { get; set; } = [];
     [Parameter] public DragonId? ResearchLead { get; set; }
     [Parameter] public DragonEssenceId? ResearchSpecimen { get; set; }
     [Parameter] public SpellId? PreferredPrimary { get; set; }
@@ -92,7 +93,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
