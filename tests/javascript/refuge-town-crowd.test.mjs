@@ -46,6 +46,13 @@ test('painted well, pillars and garden walls have independent collider ids', () 
         assert.ok(colliders.has(landmark), `Scenery is non-traversable: ${landmark}`);
     }
     assert.ok(map.clearance >= 10, 'Footprints need clearance for NPC body width');
+    for (const id of ['well-foreground', 'west-gate-banner-foreground', 'east-gate-banner-foreground',
+        'west-lower-pillar-foreground', 'east-lower-pillar-foreground']) {
+        const foreground = map.occluders.find(part => part.id === id);
+        assert.ok(foreground?.clip.length >= 5, `Missing foreground depth coverage: ${id}`);
+        assert.equal(foreground.artwork, 'art/town/night-active.webp?v=140');
+    }
+
     assert.ok(map.occluders.find(part => part.id === 'well-foreground').clip.some(point => point.y < 365),
         'The well occluder must cover the roof above the earlier visible floating rectangles');
 
