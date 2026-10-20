@@ -5,28 +5,48 @@ import { test } from 'node:test';
 
 const root = process.cwd();
 const source = path => readFileSync(join(root, path), 'utf8');
+const scene = 'src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor';
+const art = 'src/Wyrmforge.Presentation.Web/wwwroot/art/town';
 
-test('roaming NPCs are attached to the actual nighttime Refuge and do not interfere with town input', () => {
-    const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
+test('real Refuge scene retains the art and renders depth-sorted, larger ambient townspeople', () => {
+    const markup = source(scene);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    assert.match(scene, /<div class="refuge-town-crowd" aria-hidden="true">/);
-    assert.match(scene, /@foreach \(var person in crowd\.Citizens\)/);
-    assert.match(scene, /style="@CitizenStyle\(person\)"/);
+    assert.match(markup, /<div class="refuge-town-crowd" aria-hidden="true">/);
+    assert.match(markup, /@foreach \(var person in crowd\.Citizens\)/);
+    assert.match(markup, /style="@CitizenStyle\(person\)"/);
+    assert.match(markup, /class="refuge-town-foreground"/);
+    assert.match(markup, /@foreach \(var foreground in crowd\.Navigation\.Occluders\)/);
+    assert.match(markup, /art\/town\/night-navigation\.json/);
+    assert.match(markup, /z-index:\{\(int\)citizen\.Position\.Y\}/);
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
+    assert.match(css, /\.refuge-town-foreground\s*\{[^}]*pointer-events:none/s);
+    assert.match(css, /width:clamp\(12px, 1\.65dvh, 20px\);height:clamp\(22px, 3\.2dvh, 38px\)/);
     assert.match(css, /\.refuge-town-spot \{z-index:3\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
-    assert.match(scene, /@implements IDisposable/);
-    assert.match(scene, /crowdStop\.Cancel\(\)/);
-    assert.ok(scene.includes('art/town/night-active.webp?v=140'), 'Do not replace the approved night art');
+    assert.match(markup, /crowdStop\.Cancel\(\)/);
+    assert.ok(markup.includes('art/town/night-active.webp?v=140'), 'Keep approved nighttime artwork unchanged');
 });
 
-test('citizen decisions live in a seeded C# street graph, not random JS movement or image overlays', () => {
+test('navigation is authored to the actual artwork pixel size with a real well collider and occluder', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    assert.equal(map.width, 1672);
+    assert.equal(map.height, 941);
+    assert.equal(map.obstacles.find(x => x.id === 'central-well')?.footprint.length, 8);
+    assert.equal(map.occluders.find(x => x.id === 'well-foreground')?.artwork, 'art/town/night-active.webp?v=140');
+    assert.ok(map.walkable.length > 0);
+    assert.ok(map.destinations.length >= 7);
+});
+
+test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {
     const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
-    assert.match(simulation, /public sealed class TownCrowd/);
-    assert.match(simulation, /private static readonly Waypoint\[\] Streets/);
-    assert.match(simulation, /private void ChooseNextStop\(TownCitizen citizen\)/);
-    assert.match(simulation, /citizen\.DestinationNode = choices\[NextInt\(choices\.Length\)\]/);
-    assert.match(simulation, /Math\.Clamp\(elapsed\.TotalSeconds, 0d, \.1d\)/);
+    const nav = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
+    assert.match(nav, /public void SetObstacle\(TownFootprint footprint\)/);
+    assert.match(nav, /public bool RemoveObstacle\(string id\)/);
+    assert.match(nav, /public bool TryFindPath\(/);
+    assert.match(nav, /PriorityQueue<int, float>/);
+    assert.match(nav, /IsSegmentWalkable/);
+    assert.match(simulation, /citizen\.PathRevision != _navigation\.Revision/);
+    assert.match(simulation, /_navigation\.TryFindPath/);
     assert.doesNotMatch(simulation, /Random\.Shared|DateTime|RandomNumberGenerator/);
 });

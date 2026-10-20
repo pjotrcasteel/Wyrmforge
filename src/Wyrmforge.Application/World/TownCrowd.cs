@@ -1,81 +1,78 @@
 namespace Wyrmforge.Application.World;
 
-/// <summary>A pedestrian's presentation-independent state in the Refuge road network.</summary>
+/// <summary>A Refuge pedestrian; feet use authored scene pixels, never viewport CSS coordinates.</summary>
 public sealed class TownCitizen
 {
-    internal TownCitizen(int id, int startNode, float x, float y, float speed, float idleSeconds)
+    internal TownCitizen(int id, int startNode, TownPoint start, float speed, float idleSeconds)
     {
         Id = id;
         CurrentNode = startNode;
         PreviousNode = -1;
         DestinationNode = -1;
-        XPercent = x;
-        YPercent = y;
+        Position = start;
         Speed = speed;
         IdleSeconds = idleSeconds;
     }
 
     public int Id { get; }
-    public float XPercent { get; internal set; }
-    public float YPercent { get; internal set; }
+    public TownPoint Position { get; internal set; }
+    public float XPercent => Position.X / TownWidth * 100;
+    public float YPercent => Position.Y / TownHeight * 100;
     public bool IsWalking => DestinationNode >= 0;
     public int CurrentNode { get; internal set; }
     public int DestinationNode { get; internal set; }
+
+    internal float TownWidth { get; set; }
+    internal float TownHeight { get; set; }
     internal int PreviousNode { get; set; }
     internal float IdleSeconds { get; set; }
     internal float Speed { get; }
+    internal List<TownPoint> Path { get; set; } = [];
+    internal int PathIndex { get; set; }
+    internal int PathRevision { get; set; }
+    internal float WaitingSeconds { get; set; }
 }
 
 /// <summary>
-/// Seeded, fixed-step-safe ambient pedestrian decisions. Citizens follow authored
-/// connected pavement waypoints; they never choose arbitrary points through buildings.
-/// No player progress, gameplay RNG, saves or browser APIs are involved.
+/// Seeded ambient decision making. The map owns roads and obstacles; a cart or
+/// new solid prop invalidates existing paths and A* reroutes without NPC-specific patches.
 /// </summary>
 public sealed class TownCrowd
 {
-    private const float SceneAspect = 1672f / 941f;
-    private static readonly Waypoint[] Streets =
-    [
-        new(34f, 68f, [1, 12]),
-        new(40f, 76f, [0, 2, 5]),
-        new(49f, 73f, [1, 3, 6]),
-        new(60f, 76f, [2, 7, 13]),
-        new(32f, 86f, [5, 12]),
-        new(41f, 87f, [1, 4, 6, 8]),
-        new(52f, 86f, [2, 5, 7, 9]),
-        new(64f, 87f, [3, 6, 10, 11]),
-        new(42f, 94f, [5, 9]),
-        new(53f, 94f, [6, 8, 10]),
-        new(68f, 94f, [7, 9, 11]),
-        new(73f, 85f, [7, 10, 13]),
-        new(28f, 76f, [0, 4]),
-        new(75f, 73f, [3, 11])
-    ];
-
     private readonly List<TownCitizen> _citizens = [];
+    private readonly TownNavigationMap _navigation;
     private uint _randomState;
 
-    public TownCrowd(int seed = 205, int citizenCount = 7)
+    public TownCrowd(TownNavigationMap navigation, int seed = 205, int citizenCount = 7)
     {
+        ArgumentNullException.ThrowIfNull(navigation);
         ArgumentOutOfRangeException.ThrowIfNegative(citizenCount);
-        if (citizenCount > Streets.Length)
-            throw new ArgumentOutOfRangeException(nameof(citizenCount), "Each citizen needs a free initial waypoint.");
+        if (citizenCount > navigation.Destinations.Count)
+            throw new ArgumentOutOfRangeException(nameof(citizenCount), "Every citizen needs a separate starting place.");
 
+        _navigation = navigation;
         _randomState = seed == 0 ? 0xA341316Cu : unchecked((uint)seed);
-        var spawnNodes = new[] { 4, 1, 2, 3, 6, 10, 11, 0, 5, 7, 8, 9, 12, 13 };
+        var starts = Enumerable.Range(0, navigation.Destinations.Count).ToArray();
         for (var i = 0; i < citizenCount; i++)
         {
-            var node = spawnNodes[i];
-            _citizens.Add(new TownCitizen(i + 1, node, Streets[node].X, Streets[node].Y,
-                7f + NextInt(5), .3f + NextInt(18) / 10f));
+            var start = starts[i];
+            var position = navigation.Destinations[start].Position;
+            if (!navigation.IsWalkable(position))
+                throw new ArgumentException("Citizen spawn must be on walkable ground.", nameof(navigation));
+            _citizens.Add(new TownCitizen(i + 1, start, position, 39f + NextInt(13), .3f + NextInt(18) / 10f)
+            {
+                TownWidth = navigation.Width,
+                TownHeight = navigation.Height
+            });
         }
     }
 
     public IReadOnlyList<TownCitizen> Citizens => _citizens;
+    public TownNavigationMap Navigation => _navigation;
 
     public void Step(TimeSpan elapsed)
     {
-        // Background-tab resumption must not teleport a pedestrian across the town.
+        // A background-tab resumption cannot make an NPC jump through scenery.
         var seconds = (float)Math.Clamp(elapsed.TotalSeconds, 0d, .1d);
         if (seconds <= 0) return;
 
@@ -88,49 +85,99 @@ public sealed class TownCrowd
                 continue;
             }
 
-            var destination = Streets[citizen.DestinationNode];
-            var dx = destination.X - citizen.XPercent;
-            var dy = destination.Y - citizen.YPercent;
-            var distance = MathF.Sqrt(dx * dx * SceneAspect * SceneAspect + dy * dy);
-            var travel = citizen.Speed * seconds;
+            if (citizen.PathRevision != _navigation.Revision ||
+                citizen.PathIndex >= citizen.Path.Count ||
+                !_navigation.IsSegmentWalkable(citizen.Position, citizen.Path[citizen.PathIndex]))
+            {
+                var destination = _navigation.Destinations[citizen.DestinationNode].Position;
+                if (!_navigation.TryFindPath(citizen.Position, destination, out var path))
+                {
+                    citizen.DestinationNode = -1;
+                    citizen.IdleSeconds = .7f;
+                    citizen.Path = [];
+                    continue;
+                }
+                citizen.Path = path;
+                citizen.PathIndex = 0;
+                citizen.PathRevision = _navigation.Revision;
+            }
 
-            if (distance <= travel)
-            {
-                citizen.XPercent = destination.X;
-                citizen.YPercent = destination.Y;
-                citizen.PreviousNode = citizen.CurrentNode;
-                citizen.CurrentNode = citizen.DestinationNode;
-                citizen.DestinationNode = -1;
-                citizen.IdleSeconds = .4f + NextInt(21) / 10f;
-            }
-            else
-            {
-                var fraction = travel / distance;
-                citizen.XPercent += dx * fraction;
-                citizen.YPercent += dy * fraction;
-            }
+            Move(citizen, seconds);
         }
+    }
+
+    private void Move(TownCitizen citizen, float seconds)
+    {
+        var travel = citizen.Speed * seconds;
+        while (travel > 0 && citizen.PathIndex < citizen.Path.Count)
+        {
+            var next = citizen.Path[citizen.PathIndex];
+            var dx = next.X - citizen.Position.X;
+            var dy = next.Y - citizen.Position.Y;
+            var distance = MathF.Sqrt(dx * dx + dy * dy);
+            var step = MathF.Min(travel, distance);
+            var position = distance <= .0001f
+                ? next
+                : new TownPoint(citizen.Position.X + dx * step / distance, citizen.Position.Y + dy * step / distance);
+
+            // Collision uses foot position; never overlap another pedestrian.
+            if (_citizens.Any(other => other != citizen && Distance(other.Position, position) < 13f))
+            {
+                citizen.WaitingSeconds += seconds;
+                if (citizen.WaitingSeconds > 2.5f)
+                {
+                    citizen.DestinationNode = -1;
+                    citizen.IdleSeconds = .5f + NextInt(12) / 10f;
+                    citizen.Path = [];
+                    citizen.WaitingSeconds = 0;
+                }
+                return;
+            }
+
+            citizen.Position = position;
+            citizen.WaitingSeconds = 0;
+            travel -= step;
+            if (distance <= step + .0001f) citizen.PathIndex++;
+            else break;
+        }
+
+        if (citizen.PathIndex < citizen.Path.Count) return;
+        citizen.PreviousNode = citizen.CurrentNode;
+        citizen.CurrentNode = citizen.DestinationNode;
+        citizen.DestinationNode = -1;
+        citizen.Path = [];
+        citizen.IdleSeconds = .5f + NextInt(22) / 10f;
     }
 
     private void ChooseNextStop(TownCitizen citizen)
     {
-        var neighbours = Streets[citizen.CurrentNode].Neighbours;
-        var candidates = neighbours.Where(next =>
-            !_citizens.Any(other => other != citizen &&
-                (other.DestinationNode == next ||
-                 (!other.IsWalking && other.CurrentNode == next) ||
-                 (other.CurrentNode == next && other.DestinationNode == citizen.CurrentNode)))).ToArray();
-        if (candidates.Length == 0)
+        var anchors = Enumerable.Range(0, _navigation.Destinations.Count)
+            .Where(index => index != citizen.CurrentNode &&
+                !_citizens.Any(other => other != citizen &&
+                    (other.DestinationNode == index || (!other.IsWalking && other.CurrentNode == index))))
+            .ToArray();
+        // Prefer a different location rather than oscillating between two stops.
+        var preferred = anchors.Where(index => index != citizen.PreviousNode).ToArray();
+        var candidates = preferred.Length > 0 ? preferred : anchors;
+        var offset = candidates.Length > 0 ? NextInt(candidates.Length) : 0;
+
+        for (var i = 0; i < candidates.Length; i++)
         {
-            citizen.IdleSeconds = .3f;
+            var destinationNode = candidates[(i + offset) % candidates.Length];
+            var target = _navigation.Destinations[destinationNode].Position;
+            if (!_navigation.TryFindPath(citizen.Position, target, out var path)) continue;
+            citizen.DestinationNode = destinationNode;
+            citizen.Path = path;
+            citizen.PathIndex = 0;
+            citizen.PathRevision = _navigation.Revision;
+            citizen.IdleSeconds = 0;
             return;
         }
-
-        var forward = candidates.Where(node => node != citizen.PreviousNode).ToArray();
-        var choices = forward.Length > 0 ? forward : candidates;
-        citizen.DestinationNode = choices[NextInt(choices.Length)];
-        citizen.IdleSeconds = 0;
+        citizen.IdleSeconds = .6f;
     }
+
+    private static float Distance(TownPoint a, TownPoint b) =>
+        MathF.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
 
     private int NextInt(int maximum)
     {
@@ -139,6 +186,4 @@ public sealed class TownCrowd
         _randomState ^= _randomState << 5;
         return (int)(_randomState % (uint)maximum);
     }
-
-    private sealed record Waypoint(float X, float Y, int[] Neighbours);
 }

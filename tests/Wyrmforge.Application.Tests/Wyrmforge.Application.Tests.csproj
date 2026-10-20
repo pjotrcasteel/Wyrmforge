@@ -7,5 +7,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.10.2" />
     <PackageReference Include="MSTest.TestFramework" Version="3.10.2" />
+    <None Include="../../src/Wyrmforge.Presentation.Web/wwwroot/art/town/night-navigation.json"
+          Link="night-navigation.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
