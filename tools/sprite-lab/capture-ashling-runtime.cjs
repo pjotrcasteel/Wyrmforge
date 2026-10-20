@@ -28,6 +28,7 @@ const fs=require('node:fs');const path=require('node:path');
   const d=window.__ashlingArena.readArenaDiagnostics(canvas);
   return d?.ashling.ready&&d.ashling.corpses.some(p=>p.frame<27);
  },null,{timeout:45000});
+ await page.waitForFunction(()=>window.__ashlingArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.ashling.corpses.some(p=>p.frame>=6&&p.frame<=20));
  const collapse=await diagnostics();await page.screenshot({path:path.join(output,'ashling-collapse-390.png'),fullPage:true});
  await page.waitForFunction(()=>{
   const d=window.__ashlingArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));
@@ -43,6 +44,7 @@ const fs=require('node:fs');const path=require('node:path');
  fs.writeFileSync(path.join(output,'browser-report.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
  await browser.close();if(!result.passed)process.exitCode=1;
 })().catch(e=>{console.error(e);process.exitCode=1});
+
 
 
 
