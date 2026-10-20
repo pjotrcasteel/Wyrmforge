@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.135 — Character-school choice and World Gate icon cleanup
+
+- Divine magical affinity is chosen **once at character creation** (after START GAME), independently of the Wyrm region being hunted. Fire/Frost/Storm/Arcane have playable signatures; Necromancer and Summoner remain reserved.
+- Legacy preferred primary spells migrate to the matching Divine school without erasing existing saves. Loadouts do not silently switch the character's school, and full respec rules are still TBD.
+- Arena commits the character's signature automatically instead of showing the redundant in-Hunt **Choose your primary magic** overlay.
+- World Gate now blends the six canonical icon paintings into their cards without the visibly doubled FIRE/FROST labels and square cutoff edges.
+- [Scope, migration, limitations and QA](docs/handover/2026-10-20-character-school-and-sigil-fix.md).
+
 ## Prototype 0.0.134 — Animated Hollow in combat
 
 - The accepted Hollow now uses eight real directions for its pixel walk, claw attack and death in ordinary hunts and Enemy Lab.
