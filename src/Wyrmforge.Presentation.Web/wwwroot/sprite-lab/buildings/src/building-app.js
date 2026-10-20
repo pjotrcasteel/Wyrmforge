@@ -6,7 +6,7 @@
     'buildingSelect','newBuildingName','newBuildingFile','addBuilding','stageList','lockStage','slotList',
     'newSlotName','addSlot','showGuides','buildingCanvas','canvasSize','previewTitle','renderNote',
     'quickStages','quickSlot','quickSlotTitle','quickAvailability','quickChoices','quickHelp','quickLock',
-    'slotTitle','slotVariant','slotFile','rectX','rectY','rectW','rectH','applyRect','baseFile',
+    'slotZoom','slotTitle','slotVariant','slotFile','rectX','rectY','rectW','rectH','applyRect','baseFile',
     'referenceFile','sourceInfo','exportJson','exportPng','importJson','resetProject','status',
   ].map(id => [id, $(id)]));
   const previews = Array.from(document.querySelectorAll('#compareGrid button'));
@@ -306,10 +306,28 @@
       g.restore();
     }
   }
+  function drawSlotZoom() {
+    const canvas=DOM.slotZoom;
+    const g=canvas.getContext('2d');
+    const slot=project.slots.find(s=>s.id===selectedSlot);
+    g.fillStyle='#0b1215';g.fillRect(0,0,canvas.width,canvas.height);
+    if(!slot)return;
+    const [cx,cy,cw,ch]=project.crop,[x,y,w,h]=slot.rect;
+    // Show the part of the slot where damage/lighting is likely to appear.
+    // Other components remain centered on their own authored coordinates.
+    const sw=Math.min(160,w,cw),sh=Math.min(90,h,ch);
+    const focusX=slot.id==='roof'?x+w*.51:x+w*.5;
+    const focusY=slot.id==='roof'?y+h*.35:y+h*.5;
+    const sx=Math.max(0,Math.min(cw-sw,focusX-cx-sw/2));
+    const sy=Math.max(0,Math.min(ch-sh,focusY-cy-sh/2));
+    g.imageSmoothingEnabled=true;
+    g.drawImage(DOM.buildingCanvas,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  }
   function drawAll() {
     if (!project) return;
     draw(DOM.buildingCanvas, stage, DOM.showGuides.checked);
     previews.forEach(btn => draw(btn.querySelector('canvas'), btn.dataset.stage));
+    drawSlotZoom();
   }
   function safeDownload(name, blob) {
     const url = URL.createObjectURL(blob);
