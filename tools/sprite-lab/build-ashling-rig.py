@@ -1,7 +1,6 @@
 """Editable Ashling rig and a contact-driven scuttle; no runtime replacement."""
 import bpy, math, json, sys
 import numpy as np
-from PIL import Image
 from pathlib import Path
 from mathutils import Vector, Quaternion
 
@@ -17,8 +16,11 @@ original_count=len(v)
 tail=np.array([[.07,.30,-.09],[.08,.39,-.11],[.12,.49,-.18],[.15,.58,-.25],
                [.12,.67,-.26],[.04,.73,-.20],[-.04,.74,-.13],[-.09,.70,-.08],[-.10,.65,-.07]])
 tail_vertices=[];tail_uv=[];tail_faces=[];sides=8
-albedo=np.asarray(Image.open(folder/'textured-v1/hollow-albedo.png').convert('RGB'))
-texel=albedo[np.clip(((1-uv[:,1])*1023).astype(int),0,1023),np.clip((uv[:,0]*1023).astype(int),0,1023)]
+color_source=bpy.data.images.load(str(folder/'textured-v1/hollow-albedo.png'))
+color_source.colorspace_settings.name='Non-Color'
+pixels=np.empty(len(color_source.pixels),np.float32);color_source.pixels.foreach_get(pixels)
+albedo=pixels.reshape(color_source.size[1],color_source.size[0],4)[:,:,:3]*255
+texel=albedo[np.clip((uv[:,1]*1023).astype(int),0,1023),np.clip((uv[:,0]*1023).astype(int),0,1023)]
 skin_candidates=np.where((v[:,2]<-.1)&(v[:,2]>-.3)&(v[:,1]<.2)&(texel[:,0]>65)&(texel[:,0]<150))[0]
 skin_index=skin_candidates[np.argmin(np.linalg.norm(texel[skin_candidates].astype(float)-[100,65,49],axis=1))]
 skin_uv=uv[skin_index]
