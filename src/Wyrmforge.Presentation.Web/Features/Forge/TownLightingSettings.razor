@@ -1,0 +1,43 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+<section class="town-lighting-settings" aria-label="Town day and night">
+    <h3>Town lighting</h3>
+    <p>Match your device's local time or choose the lighting yourself.</p>
+    <div class="town-lighting-options" role="group" aria-label="Town lighting preference">
+        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "auto")"
+                class="@(mode == "auto" ? "selected" : "")" @onclick='() => ChangeModeAsync("auto")'>Auto</button>
+        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "day")"
+                class="@(mode == "day" ? "selected" : "")" @onclick='() => ChangeModeAsync("day")'>Day</button>
+        <button type="button" data-sound-cue="none" aria-pressed="@(mode == "night")"
+                class="@(mode == "night" ? "selected" : "")" @onclick='() => ChangeModeAsync("night")'>Night</button>
+    </div>
+    <small aria-live="polite">@Description</small>
+</section>
+
+@code {
+    private string mode = "auto";
+    private bool initialized;
+
+    private string Description => mode switch
+    {
+        "day" => "Always show the daylight town.",
+        "night" => "Always show the nighttime town.",
+        _ => "Auto: day 07:00–18:59, night 19:00–06:59 (device local time)."
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        mode = await JavaScript.InvokeAsync<string>("wyrmforgeTownLighting.getMode");
+        initialized = true;
+        StateHasChanged();
+    }
+
+    private async Task ChangeModeAsync(string next)
+    {
+        if (!initialized) return;
+        await JavaScript.InvokeVoidAsync("wyrmforgeTownLighting.setMode", next);
+        mode = next;
+    }
+}
