@@ -6,7 +6,7 @@ The planned shared controller keeps locomotion phase driven by displacement inde
 
 For the first proof, the Hollow's original Blender rigs provide semantic skin ownership and per-frame pelvis attachments. The existing 96px walk and 128px attack PNGs are sampled into a common 128px compositing space without changing their pixel density. Metadata contains clipping runs and landmarks, not color artwork. A moving attack combines walking support regions with the attacking action region, aligned at the pelvis. Stationary attacks retain the approved complete pose.
 
-The Hollow implementation passes local controller, metadata, native-pixel compositor and actual-combat browser gates. This is an unreleased task branch in [PR #165](https://github.com/pjotrcasteel/Wyrmforge/pull/165). Physical mobile performance and visual profiles for other enemies remain separate validation gates. Other enemies retain their existing presentation until their profiles are proved.
+The Hollow implementation passes local controller, metadata, native-pixel compositor and actual-combat browser gates. The owner accepted the directional follow-up and authorized shipping version 0.0.135 through [PR #165](https://github.com/pjotrcasteel/Wyrmforge/pull/165). Final PR CI and Pages deployment are pending at this release checkpoint. Physical mobile performance and visual profiles for other enemies remain separate validation gates. Other enemies retain their existing presentation until their profiles are proved.
 
 ## Checkpoint: controller and native-pixel compositor
 

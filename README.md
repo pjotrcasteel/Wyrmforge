@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.135 — Moving attacks and directional sprite layers
+
+- Hollow attacks retain their walking support animation while pursuing the player, and turn through existing directional views without restarting either clip.
+- Shared profiles control locomotion stride, action regions, priorities and turning speed; the accepted sprite PNGs remain unchanged. Other enemies retain their current presentation until their anatomy profiles are validated.
+- [Implementation and validation evidence](docs/art/shared-sprite-animation-layers-2026-10-20.md).
+
 ## Prototype 0.0.134 — Animated Hollow in combat
 
 - The accepted Hollow now uses eight real directions for its pixel walk, claw attack and death in ordinary hunts and Enemy Lab.
