@@ -62,9 +62,9 @@
     </nav>
 </div>
 <nav class="refuge-canonical-districts" aria-label="Explore town districts">
-    <button type="button" aria-label="Explore Arcane Nexus and Blacksmith" @onclick="() => ShowDistrictAsync(0)">WEST</button>
-    <button type="button" aria-label="Explore World Gate" @onclick="() => ShowDistrictAsync(1)">GATE</button>
-    <button type="button" aria-label="Explore Codex and Hall of Fame" @onclick="() => ShowDistrictAsync(2)">EAST</button>
+    <button type="button" data-sound-cue="none" aria-label="Explore Arcane Nexus and Blacksmith" @onclick="() => ShowDistrictAsync(0)">WEST</button>
+    <button type="button" data-sound-cue="none" aria-label="Explore World Gate" @onclick="() => ShowDistrictAsync(1)">GATE</button>
+    <button type="button" data-sound-cue="none" aria-label="Explore Codex and Hall of Fame" @onclick="() => ShowDistrictAsync(2)">EAST</button>
 </nav>
 
 @code {
