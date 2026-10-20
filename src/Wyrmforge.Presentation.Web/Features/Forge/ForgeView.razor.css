@@ -77,12 +77,14 @@
 /* Arcane Nexus facets: one place, two questions. Web = where a power lives; Spellcraft = what elements become. */
 /* Secondary Nexus destinations: compact navigation, not three giant webpage tiles. */
 .nexus-facets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:min(480px,100%);margin:0 auto 5px;border:0;background:transparent}
-.nexus-facets button{display:grid;align-content:center;min-height:38px;padding:5px 6px;border:1px solid #5a4236;background:#1b131a;color:#c6af9e;cursor:pointer}
+.nexus-facets button{display:grid;align-content:center;justify-items:center;gap:3px;min-height:52px;padding:7px 4px;border:1px solid #5a4236;background:#1b131a;color:#c6af9e;cursor:pointer;text-align:center}
 .nexus-facets b{font:600 clamp(.76rem,2.9vw,.9rem)/1.2 Georgia,serif}
+.nexus-facets small{font:500 clamp(.62rem,2.45vw,.68rem)/1.15 system-ui,sans-serif;letter-spacing:.02em;color:#b5a29a}
 .nexus-facets button.active{border-color:#b68651;background:#2b1e22;color:#f0d4ac;box-shadow:inset 0 -2px #d5a667}
+.nexus-facets button.active small{color:#e4bd8b}
 .nexus-facets button:focus-visible{outline:2px solid #edc18a;outline-offset:-2px}
 .nexus-facets button:disabled{opacity:.55;cursor:not-allowed}
-@media(max-width:360px){.nexus-facets button{min-height:36px;padding:4px 3px}.nexus-facets b{font-size:.73rem}}
+@media(max-width:360px){.nexus-facets button{min-height:50px;padding:5px 3px}.nexus-facets b{font-size:.73rem}.nexus-facets small{font-size:.6rem}}
 
 /* Game entry and diegetic town navigation. The existing pixel city and mage atlas are game assets,
    not a dashboard backdrop. 44px+ destinations stay tappable on small phones. */
