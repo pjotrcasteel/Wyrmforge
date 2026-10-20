@@ -14,8 +14,15 @@ This is an independent browser-only tool; it does not modify the game simulation
 **The original Hollow concept reference** has an opaque background and only five authored viewpoints. It is deliberately NOT READY. The new default [walking candidate](hollow-walk-production.md) has real alpha and eight authored rows, but remains subject to motion/style review. Export does not invent new poses or remove opaque pixels. A format pass never grants production/visual approval in exported metadata.
 
 ## Production contract
+
+For the complete future authoring/export/review process, follow the
+[card-to-spritesheet production algorithm](card-to-spritesheet-production.md).
+The contract below describes the initial walking target, not a universal frame
+count for every clip. The current lab does not implement attack/hurt/death lifecycle
+or live skeletal blending. Both Hollow animation candidates have been rejected;
+see the [current review status](hollow-walk-production.md).
 - Eight unique rows: N, NE, E, SE, S, SW, W, NW.
-- Eight motion frames per row, consistent contact pivot/scale, real alternating leg movement.
+- Select the motion sample count after source review; eight frames per row was the initial target. Preserve consistent ground pivot/scale and real alternating leg movement.
 - Transparent RGBA PNG, no captions/borders/backgrounds.
 - Review every frame at native/game scale; validate against the mage's existing art style.
 - Treat successful checks as necessary, not sufficient for artistic approval.

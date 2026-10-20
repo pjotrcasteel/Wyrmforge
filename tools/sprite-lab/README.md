@@ -7,6 +7,12 @@ Version 0.3 opens The Hollow's rigged walking **candidate**: 16 frames,
 eight-view animation; **Concept** restores the original reference.
 Format pass never means artistic approval. See [review status](../../docs/art/hollow-walk-production.md).
 
+**20 October correction:** the owner also rejected the rigid v2 walk. Its presence
+in the lab is not acceptance. Future work follows the
+[card-to-spritesheet production algorithm](../../docs/art/card-to-spritesheet-production.md).
+The current inspector handles walking; multi-clip lifecycle playback and transition
+review described in that procedure require a separate implementation.
+
 ## Open it
 
 Open `index.html` in Chrome, Safari or Edge. The included Hollow reference is loaded automatically, including via `file://`. Alternatively, run:

@@ -48,6 +48,12 @@ Generated with OpenAI image generation and iteratively art-directed with Pjotr; 
 
 ## Artwork workflow
 
+For new animated creatures derived from art cards, follow the detailed
+[card-to-spritesheet production algorithm](../docs/art/card-to-spritesheet-production.md).
+It uses a persistent editable character and reviewed motion, with rendered sheets
+as exports. The existing code-authored pipeline below describes legacy/current
+assets; it is not the production method for the new detailed monster animations.
+
 Before every new artwork, research relevant real-world or game references and inspect the approved GitHub artwork. Preserve the mage's established slate-blue cloak, pale collar and staff silhouette. Use reference images directly; do not guess character colours from memory.
 
 ### Mandatory structural review — 15 October 2026
@@ -112,7 +118,8 @@ Preserve the artistic principles and gameplay decisions in the [Battlemage sourc
 
 ## Runtime pixel-art pipeline (code-authored)
 
-Production sprites are authored as deterministic code. They are not image-model output.
+The existing code-authored sprites are deterministic code outputs. This section
+documents that pipeline, not all future character art or the new rigged-source procedure.
 
 - **Source.** Modules live in `tools/art/sprites/*.mjs`: actors, wyrms, tiles, environment and ui. Shared helpers (palette, canvas and PNG encoder) are in `tools/art/lib/`.
 - **Build.** `node tools/art/build-art.mjs` writes the atlases, `manifest.json` and `icons.css` to `src/Wyrmforge.Presentation.Web/wwwroot/art/`, and preview sheets to `docs/art/previews/`.

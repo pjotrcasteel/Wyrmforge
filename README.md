@@ -47,6 +47,8 @@
 
 This consolidates the four earlier handovers, resolves their contradictory instructions, and includes the explicit **P0–P9 priorities in §12**. Claude and other development agents should follow this file for intended product behavior, rather than layering older specifications.
 
+**Animated character production:** follow the [art-card-to-spritesheet production algorithm](docs/art/card-to-spritesheet-production.md) for source preparation, rigging, walking/attack/hurt/death, transitions, rendering, export, visual acceptance and integration. This is a documented procedure; its new rigged-character pipeline is not yet implemented or proven with an accepted Hollow asset.
+
 **Implementation/status evidence, not additional product specifications:** [dated project, art, UX and GitHub handover](docs/handover/2026-10-15-project-art-and-backlog.md), [17 October design reconciliation record](docs/design/design-amendment-2026-10-17-reconciliation.md), the existing [historical gameplay roadmap](docs/roadmap/wyrmforge-gameplay-next-level.md), [approved image references](art/README.md), and current GitHub branches, PRs, CI and code. Verify progress against today's repository; do not restart completed work or interpret old status snapshots as current design decisions.
 
 

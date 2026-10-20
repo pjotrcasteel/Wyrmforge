@@ -1,6 +1,12 @@
 # The Hollow — first walking-sheet review
 
-Status: generated v1 rejected by owner; replaced in the lab by a mechanically rigged, single-view v2. Other views await gait acceptance.
+Status as of 20 October 2026: **both generated v1 and rigid cutout v2 were rejected
+by the owner**. No accepted Hollow walk exists. The lab's current default is not
+evidence of acceptance. The implementation notes below are historical records.
+
+Future production follows the [art-card-to-spritesheet algorithm](card-to-spritesheet-production.md):
+establish an editable character, validate deformation and one convincing walk,
+then extend states/directions. The new rigged-source route is not yet implemented.
 
 Scope: the first monster only, using the existing Sprite Lab. Preserve the original
 concept and game artwork. Build a transparent walking atlas and review it before
@@ -83,6 +89,11 @@ constant limb lengths over 1,000 phases, absence of a flight phase, exact loop
 closure, all 16 distinct populated frames, and every pixel of frame boundaries.
 Single-view exports remain single-view; they never fabricate eight authored rows.
 The GIF is `docs/art/previews/hollow-walk-rig-v2.gif`.
+
+**Subsequent owner review:** the 20 October recording rejected this candidate's
+visual motion. Rigid seams, insufficient torso response and the shuffling cutout
+appearance remain failures despite the passing kinematic/format tests. Do not
+reuse v2 as an accepted base or claim that more facings will repair this gait.
 
 This corrects motion construction; it does not claim all eight facings are done
 or confer artistic approval. Review remaining rigid cutout seams and the actual
