@@ -11,6 +11,13 @@
 - Preserve the eight owner-approved active/vacant source PNGs in `user_handover_files/concepts/buildings/`, and their coherent night town composition. Vacant means empty and unpowered (no lights, fire or static NPC); active artwork genuinely lights up. **Never use a CSS dark wash, filter, blackout rectangle or stretch an image** to fake vacancy or fill a screen. Original artwork is immutable without approval. Approved art source details: [canonical building checkpoint](../art/refuge-canonical-buildings-game-screen-2026-10-20.md).
 - Day/night adaptation is approved: **Auto** uses local browser/device time, with explicit **Day** and **Night** overrides in Settings; avoid hardcoded server time, location permission or unapproved game-clock pressure. The device-local Auto/Day/Night implementation has merged via [PR #173](https://github.com/pjotrcasteel/Wyrmforge/pull/173). **Day is 07:00–18:59 and Night 19:00–06:59** according to browser/device local time; Settings overrides persist, and town lighting does not change any building unlock.
 
+## Ambient townspeople — staged implementation (20 October 2026)
+
+- **First slice (feature branch, not yet a shipped feature):** the existing night panorama draws seven small rectangular citizen placeholders over the road. Their seeded, deterministic C# `TownCrowd` model owns connected street waypoints, idle delays, speeds and destination reservations. Blazor renders positions; no browser-side gameplay RNG and no modified building PNGs.
+- Pedestrians have **no gameplay authority** yet: no resource spending, quests, blocking interactions, or save migration. Town hotspots remain clickable through them. The simulation is only alive while the town component is mounted; reduced-motion users do not see the ambient movement.
+- **Next slice (not implemented here):** building workers with identities and schedules. A worker exists only if its authoritative building unlock is active; a vacant building cannot have a worker at its entrance. Add waypoints for arrival/work/break/return, realistic paths and tests before considering sprite animation.
+- Before approving scene placement, inspect the real town in desktop and iPhone Safari. Waypoints are authored approximations until visually checked against the approved 1672×941 artwork; never pretend an inaccessible street is usable or cover critical gate/building affordances.
+
 ## First-run and gate journey — LOCKED direction
 
 - Character creation chooses a permanent Divine school and signature, separate from World Gate Hunt/Wyrm lineage. The character-creation copy must be short and meaningful; show recognizable pixel emblems with one accessible label each, not repeated overpainted words.

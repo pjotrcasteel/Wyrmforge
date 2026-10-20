@@ -1,3 +1,5 @@
+@using Wyrmforge.Application.World
+@implements IDisposable
 @* Night town vacancy follows actual game progress, not a local preview toggle. *@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
@@ -26,6 +28,16 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
+        @* Only ambient citizens are simulated in this first slice. Building workers come later. *@
+        <div class="refuge-town-crowd" aria-hidden="true">
+            @foreach (var person in crowd.Citizens)
+            {
+                <span @key="person.Id" class="refuge-town-citizen"
+                      data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
+                      style="@CitizenStyle(person)"></span>
+            }
+        </div>
+
         <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
                 data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(NexusUnlocked))"
                 data-sound-cue="@(NexusUnlocked ? "building-open" : "none")" title="@BuildingLabel("Arcane Nexus", NexusUnlocked)"
@@ -50,6 +62,31 @@
 </div>
 
 @code {
+    private readonly TownCrowd crowd = new(seed: 205, citizenCount: 7);
+    private readonly CancellationTokenSource crowdStop = new();
+
+    protected override void OnInitialized() => _ = AnimateCrowdAsync();
+
+    private async Task AnimateCrowdAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(crowdStop.Token))
+                await InvokeAsync(() => { crowd.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
+        }
+        catch (OperationCanceledException) { /* Navigating away cancels ambient movement. */ }
+    }
+
+    private static string CitizenStyle(TownCitizen citizen) =>
+        FormattableString.Invariant($"left:{citizen.XPercent:0.##}%;top:{citizen.YPercent:0.##}%");
+
+    public void Dispose()
+    {
+        crowdStop.Cancel();
+        crowdStop.Dispose();
+    }
+
     [Parameter] public bool NexusUnlocked { get; set; }
     [Parameter] public bool ForgeUnlocked { get; set; }
     [Parameter] public bool CodexUnlocked { get; set; }
