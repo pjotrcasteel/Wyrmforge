@@ -67,6 +67,7 @@
             setAsset(patch, next === "day" ? `day-vacant-${name}.webp` : `night-vacant-${name}.png`, version);
         }
         scene.dataset.townTime = next;
+        scene.setAttribute("aria-label", next === "day" ? "Daytime Refuge town square" : "Nighttime Refuge town square");
         if (effective !== next) {
             effective = next;
             window.dispatchEvent(new CustomEvent("wyrmforge:town-time", {detail: {mode, effective}}));
