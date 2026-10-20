@@ -1,0 +1,151 @@
+/* Canonical Refuge, 2026-10-20. Four independently authored painting pairs.
+   No CSS darkness/opacity filter denotes vacancies; the PNG pixels own that state.
+   The World Gate keeps the real existing painted town panorama. */
+.game-shell.refuge-home .refuge-canonical-viewport {
+  position:absolute;inset:0;z-index:1;box-sizing:border-box;overflow:hidden;
+  width:100%;height:100%;background:#171c25;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x;
+}
+.game-shell.refuge-home .refuge-canonical-viewport::-webkit-scrollbar {display:none}
+.game-shell.refuge-home .refuge-canonical-viewport:focus-visible {outline:2px solid #dbc099;outline-offset:-4px}
+.game-shell.refuge-home .refuge-canonical-track {
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.92fr) minmax(0,1fr);
+  align-items:stretch;width:100%;height:100%;isolation:isolate;
+}
+.game-shell.refuge-home .refuge-canonical-wing {
+  position:relative;display:grid;grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:clamp(0px,1.25vh,12px);min-width:0;min-height:0;overflow:hidden;
+  box-sizing:border-box;padding:clamp(56px,8.5vh,90px) 0 clamp(16px,3.5vh,35px);
+  background:radial-gradient(ellipse at 50% 55%,#27303a 0,#1d232e 52%,#171c25 91%);
+}
+.game-shell.refuge-home .refuge-canonical-building {
+  position:relative;display:grid;place-items:center;min-width:0;min-height:0;
+  width:100%;height:100%;padding:0;border:0;background:transparent;cursor:pointer;
+  touch-action:pan-x;-webkit-tap-highlight-color:transparent;overflow:visible;
+  isolation:isolate;
+}
+.game-shell.refuge-home .refuge-canonical-building img {
+  display:block;max-width:none;width:106%;height:100%;
+  object-fit:contain;object-position:center center;
+  image-rendering:auto;pointer-events:none;-webkit-user-drag:none;
+  /* Only feather the studio backdrop at its outermost edge; do not dim the building. */
+  -webkit-mask-image:radial-gradient(ellipse 73% 74% at 50% 49%,#000 68%,transparent 100%);
+  mask-image:radial-gradient(ellipse 73% 74% at 50% 49%,#000 68%,transparent 100%);
+  transition:transform .18s ease-out;
+}
+.game-shell.refuge-home .refuge-canonical-building[data-town-state="active"]:hover img,
+.game-shell.refuge-home .refuge-canonical-building[data-town-state="active"]:focus-visible img {
+  transform:translateY(-4px) scale(1.018);
+}
+.game-shell.refuge-home .refuge-canonical-building:focus-visible {
+  outline:2px solid #e5bd7d;outline-offset:-5px;border-radius:5px;
+}
+.game-shell.refuge-home .refuge-canonical-building-name {
+  position:absolute;z-index:2;bottom:clamp(0px,1.1vh,10px);left:50%;
+  transform:translateX(-50%);width:max-content;max-width:90%;
+  padding:5px 12px 6px;border-bottom:1px solid #b99a64a8;
+  background:linear-gradient(90deg,transparent,#10141bc7 12%,#10141bc7 88%,transparent);
+  color:#f5ddae;text-shadow:0 2px 5px #000,0 1px 1px #000;
+  letter-spacing:.145em;font:600 clamp(.65rem,.85vw,.88rem)/1.15 Georgia,serif;
+  white-space:nowrap;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-canonical-building[data-town-state="vacant"] .refuge-canonical-building-name {
+  color:#b9b1af;border-bottom-color:#76716f90;
+}
+.game-shell.refuge-home .refuge-canonical-padlock {
+  position:absolute;z-index:2;bottom:clamp(3px,1.3vh,13px);
+  left:calc(50% + clamp(60px,5.4vw,95px));
+  color:#b7aea5;font:16px/1 Georgia,serif;text-shadow:0 2px 4px #000;
+  pointer-events:none;
+}
+.game-shell.refuge-home .refuge-canonical-gate {
+  position:relative;display:grid;place-items:center;overflow:hidden;min-width:0;
+  background:#111720;
+}
+.game-shell.refuge-home .refuge-canonical-gate-art {
+  position:absolute;inset:-1px;pointer-events:none;
+  background-image:linear-gradient(180deg,#10151e28 10%,transparent 35%,#090d15a8 95%),
+    url('../art/refuge-town-panorama.png');
+  background-position:center,center;
+  background-size:100% 100%,auto 100%;
+  background-repeat:no-repeat;
+}
+.game-shell.refuge-home .refuge-canonical-gate::before,
+.game-shell.refuge-home .refuge-canonical-gate::after {
+  content:"";position:absolute;top:0;bottom:0;width:16%;pointer-events:none;z-index:1;
+}
+.game-shell.refuge-home .refuge-canonical-gate::before {
+  left:0;background:linear-gradient(90deg,#171c25,transparent);
+}
+.game-shell.refuge-home .refuge-canonical-gate::after {
+  right:0;background:linear-gradient(270deg,#171c25,transparent);
+}
+.game-shell.refuge-home .refuge-canonical-gate-action {
+  position:absolute;left:50%;bottom:clamp(52px,11vh,124px);z-index:2;
+  transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;
+  min-width:min(86%,270px);min-height:75px;padding:12px 22px;
+  border:1px solid #c9a469c9;border-radius:4px;
+  background:linear-gradient(180deg,#211d21ed,#111319ed);
+  box-shadow:0 6px 18px #000a,inset 0 1px 0 #efcb8e35;
+  color:#f3deaf;text-shadow:0 2px 5px #000;cursor:pointer;
+  font:700 clamp(.85rem,1.3vw,1.15rem)/1.2 Georgia,serif;letter-spacing:.16em;
+}
+.game-shell.refuge-home .refuge-canonical-gate-action:hover {
+  border-color:#efd69f;background:linear-gradient(180deg,#3c2b28f2,#1a161ef2);
+}
+.game-shell.refuge-home .refuge-canonical-gate-action:focus-visible {
+  outline:3px solid #ffe2ae;outline-offset:3px;
+}
+.game-shell.refuge-home .refuge-canonical-gate-action small {
+  font:600 .59rem/1.3 system-ui,sans-serif;letter-spacing:.14em;color:#c0ab91;
+}
+.game-shell.refuge-home .refuge-canonical-gate-symbol {
+  position:absolute;left:12px;top:15px;font:21px/1 Georgia,serif;color:#bba277;
+}
+.game-shell.refuge-home .refuge-canonical-districts {display:none}
+@media(max-width:900px) {
+  .game-shell.refuge-home .refuge-canonical-viewport {
+    overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+    overscroll-behavior-x:contain;
+  }
+  .game-shell.refuge-home .refuge-canonical-track {
+    width:300vw;grid-template-columns:repeat(3,100vw);
+  }
+  .game-shell.refuge-home .refuge-canonical-wing,
+  .game-shell.refuge-home .refuge-canonical-gate {scroll-snap-align:start;scroll-snap-stop:always}
+  .game-shell.refuge-home .refuge-canonical-wing {
+    gap:0;padding:max(70px,env(safe-area-inset-top)) 0 max(62px,env(safe-area-inset-bottom));
+  }
+  .game-shell.refuge-home .refuge-canonical-building img {width:100%;height:100%}
+  .game-shell.refuge-home .refuge-canonical-building-name {bottom:0;font-size:.77rem}
+  .game-shell.refuge-home .refuge-canonical-gate-action {
+    bottom:max(96px,calc(env(safe-area-inset-bottom) + 72px));
+    min-height:74px;
+  }
+  .game-shell.refuge-home .refuge-canonical-districts {
+    position:absolute;z-index:8;bottom:max(30px,env(safe-area-inset-bottom));
+    left:50%;transform:translateX(-50%);display:flex;gap:0;
+    border:1px solid #b09a717d;border-radius:3px;overflow:hidden;
+    background:#11141ddc;
+  }
+  .game-shell.refuge-home .refuge-canonical-districts button {
+    min-width:66px;min-height:36px;padding:7px 9px;border:0;
+    border-right:1px solid #907b5880;background:transparent;
+    color:#dfcda9;letter-spacing:.12em;font:700 .62rem/1 system-ui,sans-serif;
+    cursor:pointer;
+  }
+  .game-shell.refuge-home .refuge-canonical-districts button:last-child {border-right:0}
+  .game-shell.refuge-home .refuge-canonical-districts button:focus-visible {outline:2px solid #f5d18b;outline-offset:-2px}
+}
+@media(orientation:landscape) and (max-height:530px) and (max-width:900px) {
+  .game-shell.refuge-home .refuge-canonical-wing {
+    grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:minmax(0,1fr);
+    padding:38px 0 47px;gap:0;
+  }
+  .game-shell.refuge-home .refuge-canonical-building img {width:115%}
+  .game-shell.refuge-home .refuge-canonical-building-name {font-size:.60rem}
+  .game-shell.refuge-home .refuge-canonical-gate-action {bottom:54px;min-height:58px}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game-shell.refuge-home .refuge-canonical-building img {transition:none}
+}
