@@ -106,6 +106,7 @@
         state.mode=mode;dom.manualBtn.classList.toggle('active',mode==='manual');dom.chaseBtn.classList.toggle('active',mode==='chase');
         dom.modeStatus.textContent=mode==='chase'?'CHASE ACTIVE':'MANUAL';
         dom.stageHint.textContent=state.cfg.layout==='single'?(mode==='chase'?'Stride test: ground speed follows the walk cycle':'One three-quarter view · inspect planted and passing feet'):mode==='chase'?'Move the target: the Hollow will pursue':'Tap the arena to position the player target';
+        if(state.deathCandidate)dom.stageHint.textContent='Death plays once · select a direction or press Play to replay';
         dom.compass.querySelectorAll('button[data-dir]').forEach(b=>b.disabled=b.dataset.dir==='STAY'||mode==='chase'||state.cfg.layout==='single'&&b.dataset.dir!=='SE');
         if(state.cfg.layout==='single')state.dir='SE';
         updateDirection();

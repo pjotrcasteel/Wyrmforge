@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1",
-  "name": "The Hollow \u2014 eight-direction movement",
+  "name": "The Hollow — eight-direction movement",
   "animation": "walk",
   "layout": "eight",
   "source": {
@@ -1753,7 +1753,12 @@
   ],
   "sourceRig": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
   "sourcePoseSha256": "a033ebe51fcd95c7e5d82f42d432c2a86ad4f5afdc2b376a150137c12829f8e9",
-  "visualAccepted": false,
+  "visualAccepted": true,
   "runtimeIntegrated": false,
-  "gaitAcceptance": "Owner accepted original one-view zombie waddle; directional export awaits owner review"
+  "gaitAcceptance": "Owner accepted original one-view zombie waddle; directional export awaits owner review",
+  "acceptance": {
+    "evidence": "Owner: perfect continue with the death animation",
+    "date": "2026-10-20",
+    "scope": "Eight-direction movement sheet"
+  }
 }

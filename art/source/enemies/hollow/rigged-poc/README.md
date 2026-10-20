@@ -1,8 +1,8 @@
-> Current export, 20 October 2026: **8 directions × 16 mobile pixel walk frames**,
+> Current exports, 20 October 2026: **8×16 mobile pixel walk frames, plus 8×24 death frames**,
 > rendered from one UV-textured, weighted 3D rig on the local RTX 5090.
-> [Directional deliverables and evidence](exports/movement-eight-directions-v1/README.md).
-> Owner accepted the original one-view zombie waddle. Directional sheet review
-> and death animation are next. Runtime hunt art is unchanged.
+> [Movement](exports/movement-eight-directions-v1/README.md) · [Death and evidence](exports/death-eight-directions-v4/README.md).
+> Owner accepted the eight-direction movement sheet in chat. Death is exported
+> and self-reviewed; owner artistic acceptance is pending. Runtime hunt art is unchanged.
 >
 > The text below records the earlier hosted-service attempt, not current status.
 # The Hollow: rigged-source proof status

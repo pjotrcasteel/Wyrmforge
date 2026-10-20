@@ -1,6 +1,6 @@
 # The Hollow: directional movement export
 
-20 October 2026. Movement sheet complete for review: **8 actual 3D facings × 16 frames**, rendered locally on the RTX 5090 from the existing accepted zombie gait. Owner accepted the original one-view waddle in chat; acceptance of this directional sheet remains pending. Runtime hunt assets are unchanged. Death animation is next and is not included here.
+20 October 2026. Movement sheet complete: **8 actual 3D facings × 16 frames**, rendered locally on the RTX 5090 from the existing accepted zombie gait. Owner accepted the directional sheet in chat ("perfect continue with the death animation"). Runtime hunt assets are unchanged. [Death export](../death-eight-directions-v4/README.md) is now available separately for review.
 
 - `hollow-movement.png`: transparent 1536×768 PNG, sixteen 96×96 cells per row.
 - Rows, top to bottom: **N, NE, E, SE, S, SW, W, NW**. Columns: frames 0–15, 12 FPS, looping.

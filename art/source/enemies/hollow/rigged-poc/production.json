@@ -1,20 +1,20 @@
 {
   "creatureId": "hollow",
-  "revision": "movement-eight-directions-v1",
+  "revision": "directional-walk-and-death-v1",
   "procedure": "docs/art/card-to-spritesheet-production.md",
   "reference": {
     "path": "user_handover_files/concepts/Fire/01-the-hollow.png",
     "sha256": "ee4497045eea58f8171436a58ed3851a657ffc8cdf04d3fa8d89184159a08178"
   },
   "route": "textured-3d-to-rendered-sprites",
-  "scope": "eight real directions, sixteen walking frames each",
+  "scope": "eight directions: sixteen walk frames and twenty-four non-looping death frames",
   "stages": {
     "A": "self-reviewed; neutral modeling reference generated and inspected",
     "B": "Textured source self-reviewed at intended mobile pixel scale; initial coarse mesh remains historical rejected evidence",
     "C": "22-bone weighted source; walk-pose deformation self-reviewed after lower-limb/cloth weight correction; broader attack/death pose tests remain out of scope",
-    "D": "128 frames exported from unchanged accepted gait; all eight facings verified in mobile Sprite Lab; death animation not yet authored"
+    "D": "Owner accepted directional movement; 192 death frames rendered from editable skeletal collapse, source/asset/mobile browser checks passed. Runtime integration pending."
   },
-  "visualStatus": "Original one-view zombie waddle accepted by owner; eight-direction movement exported and self-reviewed, owner directional acceptance pending; death next",
+  "visualStatus": "Owner accepted eight-direction movement. Death is exported and self-reviewed in eight directions; owner death acceptance pending.",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "notes": [
@@ -59,6 +59,10 @@
     "review": "exports/pixel-walk-poc-v1/README.md",
     "hardwareSettingsChanged": false
   },
-  "currentExport": "exports/movement-eight-directions-v1/hollow-movement.png",
-  "gaitOwnerAccepted": true
+  "currentExport": "exports/death-eight-directions-v4/hollow-death.png",
+  "gaitOwnerAccepted": true,
+  "movementOwnerAccepted": true,
+  "deathOwnerAccepted": false,
+  "deathEditableSource": "model/local-appearance-004/rigged-death-v5/hollow-death.blend",
+  "deathReview": "exports/death-eight-directions-v4/README.md"
 }
