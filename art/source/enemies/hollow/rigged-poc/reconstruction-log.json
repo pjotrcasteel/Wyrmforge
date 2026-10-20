@@ -1,0 +1,9 @@
+{
+  "provider": "microsoft/TRELLIS.2",
+  "seed": 1729,
+  "resolution": "1024",
+  "textureSize": 2048,
+  "decimationTarget": 100000,
+  "status": "blocked",
+  "error": "AppError: You have exceeded your ZeroGPU quota (120s requested vs. 176s left). Try again in 4:51:06. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens"
+}

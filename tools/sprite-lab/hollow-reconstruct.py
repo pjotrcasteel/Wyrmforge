@@ -4,6 +4,7 @@ Uses the official public TRELLIS.2 Space once; never retries quota failures.
 This script is not a spritesheet generator. Run from the repository root.
 """
 import json
+import os
 import shutil
 import time
 from pathlib import Path
@@ -39,6 +40,7 @@ def finish(job, stage):
 
 try:
     client = Client('https://microsoft-trellis-2.hf.space',
+                    token=os.environ.get('HF_TOKEN') or None,
                     download_files=str(OUT / 'downloads'),
                     httpx_kwargs={'timeout': 60}, verbose=False)
     save('preprocessing')
