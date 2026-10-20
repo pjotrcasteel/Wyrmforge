@@ -365,6 +365,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenTownBuildingAsync("Arcane Nexus");
 
         await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-hero-art")).ToBeVisibleAsync();
+        Assert.IsTrue(await Page.Locator(".fireball-hero-art").EvaluateAsync<bool>("img => img.complete && img.naturalWidth > 0"),
+            "The approved Fireball artwork must actually load, rather than silently falling back to CSS.");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
+            "The Arcane Nexus must not overflow a 390px portrait viewport.");
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
         await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);

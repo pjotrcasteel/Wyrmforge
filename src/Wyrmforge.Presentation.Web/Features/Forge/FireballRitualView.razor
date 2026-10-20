@@ -18,12 +18,11 @@
                     aria-label="Fireball core, level @Core.Level. View upgrade requirements"
                     aria-pressed="@(selectedSlot is null)" @onclick="SelectCore">
                 <span class="fireball-body" aria-hidden="true">
-                    <span class="fireball-flame"><i class="px-icon px-fire"></i></span>
-                    <span class="fireball-magma"></span>
-                    <span class="fireball-sparks"></span>
+                    <img class="fireball-hero-art" src="art/fireball-ritual-hero.png" alt="" draggable="false" loading="eager" />
+                    <span class="fireball-impact" aria-hidden="true"></span>
+                    <span class="fireball-ground" aria-hidden="true"></span>
                 </span>
-                <span class="fireball-center-label">Fireball</span>
-                <small>Upgrade core</small>
+                <span class="fireball-center-label">Fireball core</span>
             </button>
             @for (var i = 0; i < 5; i++)
             {
@@ -37,7 +36,7 @@
                     <span class="fireball-socket-art" aria-hidden="true">
                         @if (!unlocked)
                         {
-                            <i class="px-icon px-lg px-lock"></i>
+                            <i class="px-icon px-sm px-lock"></i>
                         }
                         else if (mutation is { } equipped)
                         {
