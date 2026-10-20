@@ -82,7 +82,9 @@ export function createTerritoryStoryPlan(environment, width, height) {
         });
     }
     return { biome, element, district, corruption, habitat: environment.habitat ?? 'Outskirts', landmarks, patches, wounds,
-        seed: environment.seed, width, height, cloister: createCloisterPlan(environment, width, height) };
+        seed: environment.seed, width, height,
+        cloister: ['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(environment.habitat)
+            ? null : createCloisterPlan(environment, width, height) };
 }
 
 function irregularShape(ctx, x, y, rx, ry, rotation, seed) {
