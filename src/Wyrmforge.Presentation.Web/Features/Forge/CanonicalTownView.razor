@@ -1,70 +1,66 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JavaScript
 
-@* Canonical art is copied byte-for-byte from user_handover_files/concepts/buildings.
-   Building activation is delegated to ForgeView's existing authoritative unlock/navigation rules. *@
-<div class="refuge-canonical-viewport" tabindex="0" role="region"
-     aria-label="Refuge town: swipe between the west buildings, World Gate and east buildings">
-    <nav class="refuge-canonical-track" aria-label="Refuge destinations">
-        <section class="refuge-canonical-wing refuge-canonical-wing--west" aria-label="West quarter">
-            @foreach (var building in Buildings.Where(building => building.Key is "build" or "forge"))
-            {
-                <button @key="building.Key" type="button"
-                        class="refuge-canonical-building refuge-canonical-building--@building.Key"
-                        data-town-building="@building.Key" data-town-state="@building.StateName"
-                        data-sound-cue="@(building.State == TownBuildingState.Active ? "building-open" : "none")"
-                        title="@BuildingHint(building)"
-                        aria-label="@BuildingHint(building)"
-                        @onclick="() => OnBuilding.InvokeAsync(building.Key)">
-                    <img src="@($"art/{building.Image}?v={TownBuildingVisuals.AssetVersion}")"
-                         alt="" loading="eager" draggable="false" />
-                    <span class="refuge-canonical-building-name">@BuildingName(building.Key)</span>
-                    @if (building.State == TownBuildingState.Vacant)
-                    {
-                        <span class="refuge-canonical-padlock" aria-hidden="true">◇</span>
-                    }
-                </button>
-            }
-        </section>
+@* A single registered 1672×941 panorama across three horizontally swipeable
+   views. Vacant patches are authored image layers, never CSS dimming filters.
+   Preview states are local to this component and do not change progression. *@
+<div class="refuge-canonical-viewport" role="region" tabindex="0"
+     aria-label="Refuge town: swipe between West, World Gate and East">
+    <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square">
+        <img class="refuge-town-night-base" src="art/town/night-active.png?v=132"
+             alt="" draggable="false" fetchpriority="high" />
 
-        <section class="refuge-canonical-gate" aria-label="World Gate">
-            <div class="refuge-canonical-gate-art" aria-hidden="true"></div>
-            <button type="button" class="refuge-canonical-gate-action"
-                    data-town-state="active" data-sound-cue="none"
-                    aria-label="@GateLabel"
-                    @onclick="() => OnGate.InvokeAsync()">
-                <span class="refuge-canonical-gate-symbol" aria-hidden="true">✧</span>
-                <span>WORLD GATE</span>
-                <small>ENTER THE WYRMREALM</small>
-            </button>
-        </section>
+        @if (!nexusActive)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-ArcaneNexus.png?v=132"
+                 style="left:0%;top:0%;width:36.9617%;height:61.8491%" alt="" draggable="false" />
+        }
+        @if (!blacksmithActive)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Blacksmith.png?v=132"
+                 style="left:0%;top:37.5133%;width:37.8589%;height:62.4867%" alt="" draggable="false" />
+        }
+        @if (!codexActive)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-Codex.png?v=132"
+                 style="left:58.7321%;top:0%;width:41.2679%;height:58.2359%" alt="" draggable="false" />
+        }
+        @if (!hallActive)
+        {
+            <img class="refuge-town-vacant-layer" src="art/town/night-vacant-HallOfFame.png?v=132"
+                 style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
+        }
 
-        <section class="refuge-canonical-wing refuge-canonical-wing--east" aria-label="East quarter">
-            @foreach (var building in Buildings.Where(building => building.Key is "codex" or "legends"))
-            {
-                <button @key="building.Key" type="button"
-                        class="refuge-canonical-building refuge-canonical-building--@building.Key"
-                        data-town-building="@building.Key" data-town-state="@building.StateName"
-                        data-sound-cue="@(building.State == TownBuildingState.Active ? "building-open" : "none")"
-                        title="@BuildingHint(building)"
-                        aria-label="@BuildingHint(building)"
-                        @onclick="() => OnBuilding.InvokeAsync(building.Key)">
-                    <img src="@($"art/{building.Image}?v={TownBuildingVisuals.AssetVersion}")"
-                         alt="" loading="eager" draggable="false" />
-                    <span class="refuge-canonical-building-name">@BuildingName(building.Key)</span>
-                    @if (building.State == TownBuildingState.Vacant)
-                    {
-                        <span class="refuge-canonical-padlock" aria-hidden="true">◇</span>
-                    }
-                </button>
-            }
-        </section>
-    </nav>
+        <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
+                data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(nexusActive))"
+                data-sound-cue="none" title="@ToggleLabel("Arcane Nexus", nexusActive)"
+                aria-label="@ToggleLabel("Arcane Nexus", nexusActive)" @onclick="() => ToggleBuilding("build")"></button>
+        <button type="button" class="refuge-town-spot refuge-town-spot--blacksmith"
+                data-town-building="forge" data-town-state="@(TownBuildingVisuals.StateName(blacksmithActive))"
+                data-sound-cue="none" title="@ToggleLabel("Blacksmith", blacksmithActive)"
+                aria-label="@ToggleLabel("Blacksmith", blacksmithActive)" @onclick="() => ToggleBuilding("forge")"></button>
+        <button type="button" class="refuge-town-spot refuge-town-spot--codex"
+                data-town-building="codex" data-town-state="@(TownBuildingVisuals.StateName(codexActive))"
+                data-sound-cue="none" title="@ToggleLabel("Codex", codexActive)"
+                aria-label="@ToggleLabel("Codex", codexActive)" @onclick="() => ToggleBuilding("codex")"></button>
+        <button type="button" class="refuge-town-spot refuge-town-spot--hall"
+                data-town-building="legends" data-town-state="@(TownBuildingVisuals.StateName(hallActive))"
+                data-sound-cue="none" title="@ToggleLabel("Hall of Fame", hallActive)"
+                aria-label="@ToggleLabel("Hall of Fame", hallActive)" @onclick="() => ToggleBuilding("legends")"></button>
+
+        <button type="button" class="refuge-town-spot refuge-town-spot--gate"
+                data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
+                @onclick="() => OnGate.InvokeAsync()"></button>
+    </div>
 </div>
-<nav class="refuge-canonical-districts" aria-label="Explore town districts">
-    <button type="button" data-sound-cue="none" aria-label="Explore Arcane Nexus and Blacksmith" @onclick="() => ShowDistrictAsync(0)">WEST</button>
-    <button type="button" data-sound-cue="none" aria-label="Explore World Gate" @onclick="() => ShowDistrictAsync(1)">GATE</button>
-    <button type="button" data-sound-cue="none" aria-label="Explore Codex and Hall of Fame" @onclick="() => ShowDistrictAsync(2)">EAST</button>
+<div class="refuge-town-toggle-announcement" role="status" aria-live="polite">@lastToggle</div>
+<nav class="refuge-canonical-districts" aria-label="Explore the town">
+    <button type="button" data-sound-cue="none" aria-label="Show west town with Arcane Nexus and Blacksmith"
+            @onclick="() => ShowDistrictAsync(0)">WEST</button>
+    <button type="button" data-sound-cue="none" aria-label="Show World Gate"
+            @onclick="() => ShowDistrictAsync(1)">GATE</button>
+    <button type="button" data-sound-cue="none" aria-label="Show east town with Codex and Hall of Fame"
+            @onclick="() => ShowDistrictAsync(2)">EAST</button>
 </nav>
 
 @code {
@@ -74,34 +70,43 @@
     [Parameter] public bool HallUnlocked { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
     [Parameter] public bool NexusPointsAvailable { get; set; }
-    [Parameter] public EventCallback<string> OnBuilding { get; set; }
     [Parameter] public EventCallback OnGate { get; set; }
 
+    // Temporary preview mode: every building starts active, regardless of player
+    // unlocks; toggling must never mutate the account or unlock gameplay systems.
+    private bool nexusActive = true;
+    private bool blacksmithActive = true;
+    private bool codexActive = true;
+    private bool hallActive = true;
+    private string lastToggle = string.Empty;
     private string GateLabel => FirstHunt ? "BEGIN FIRST HUNT" : "BEGIN HUNT";
 
-    private IReadOnlyList<TownBuildingVisual> Buildings =>
-        TownBuildingVisuals.Resolve(NexusUnlocked, ForgeUnlocked, CodexUnlocked, HallUnlocked);
-
-    private static string BuildingName(string key) => key switch
+    private void ToggleBuilding(string key)
     {
-        "build" => "ARCANE NEXUS",
-        "forge" => "BLACKSMITH",
-        "codex" => "CODEX",
-        "legends" => "HALL OF FAME",
-        _ => throw new ArgumentOutOfRangeException(nameof(key)),
-    };
-
-    private string BuildingHint(TownBuildingVisual building) =>
-        building.Key == "build" && building.State == TownBuildingState.Active && NexusPointsAvailable ? "Allocate unspent Arcane points" :
-        building.Key == "legends" && building.State == TownBuildingState.Active ? "Open Hall of Fame" :
-        building.State == TownBuildingState.Active ? $"Enter {BuildingName(building.Key)}" :
-        building.Key switch
+        switch (key)
         {
-            "forge" => "Blacksmith locked: secure your first Essence",
-            "legends" => "Hall of Fame locked: complete two hunts",
-            _ => $"{BuildingName(building.Key)} locked: complete your first hunt",
-        };
+            case "build":
+                nexusActive = !nexusActive;
+                lastToggle = $"Arcane Nexus: {(nexusActive ? "active" : "vacant")}";
+                break;
+            case "forge":
+                blacksmithActive = !blacksmithActive;
+                lastToggle = $"Blacksmith: {(blacksmithActive ? "active" : "vacant")}";
+                break;
+            case "codex":
+                codexActive = !codexActive;
+                lastToggle = $"Codex: {(codexActive ? "active" : "vacant")}";
+                break;
+            case "legends":
+                hallActive = !hallActive;
+                lastToggle = $"Hall of Fame: {(hallActive ? "active" : "vacant")}";
+                break;
+        }
+    }
 
-    private Task ShowDistrictAsync(int district) =>
-        JavaScript.InvokeVoidAsync("wyrmforgeTown.show", district).AsTask();
+    private static string ToggleLabel(string name, bool active) =>
+        $"{name} — { (active ? "active" : "vacant") }. Tap to mark {(active ? "vacant" : "active")}.";
+
+    private Task ShowDistrictAsync(int index) =>
+        JavaScript.InvokeVoidAsync("wyrmforgeTown.show", index).AsTask();
 }
