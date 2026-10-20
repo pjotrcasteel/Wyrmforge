@@ -99,14 +99,15 @@
                             <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
                         </button>
                     </header>
-                    @* Night town preview: tapping buildings toggles local state; the World Gate still opens normally. *@
+                    @* Night town buildings use saved gameplay unlocks; active hotspots navigate to their real destinations. *@
                     <CanonicalTownView NexusUnlocked="@IsUnlocked(ShellSection.Build)"
                                        ForgeUnlocked="@ForgeUnlocked"
                                        CodexUnlocked="@IsUnlocked(ShellSection.Codex)"
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
-                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)" />
+                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)"
+                                        OnBuilding="ActivateCanonicalBuildingAsync" />
                     @if (townLockNotice is { } notice)
                     {
                         <div class="town-lock-notice" role="status" aria-live="polite" aria-atomic="true">
@@ -181,19 +182,6 @@
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
                     </section>
-                    @if (!Progress.TutorialRun)
-                    {
-                        <section class="settings-support" aria-label="Temporary menu previews">
-                            <h3>Town preview destinations</h3>
-                            <button @onclick="() => Navigate(ShellSection.Build)">Preview Arcane Nexus menu</button>
-                            <button @onclick="() => Navigate(ShellSection.Forge)">Preview Blacksmith menu</button>
-                            <button @onclick="() => Navigate(ShellSection.Codex)">Preview Codex menu</button>
-                            @if (Progress.LeaderboardUnlocked)
-                            {
-                                <button @onclick="OpenHallOfFameAsync">Preview Hall of Fame menu</button>
-                            }
-                        </section>
-                    }
                 </div>
                 break;
         }

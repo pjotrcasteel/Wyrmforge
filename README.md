@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.137 — Gameplay night town and swipe-only navigation
+
+- The accepted night panorama now uses the player's persistent building unlocks, opens real destinations, and explains locked buildings without toggling game state.
+- WEST / GATE / EAST preview controls, temporary building switches, and Settings preview shortcuts are removed. Swipe, desktop drag and accessible keyboard navigation remain.
+- World Gate, author-approved images and all Divine school creation behavior from v0.0.136 are preserved. [Night town integration](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+
+
 ## Prototype 0.0.136 — Character school creation and elemental icon cleanup
 
 - Choose a permanent Divine magic school once during character creation, before entering Refuge. Four schools have working signatures; Necromancer and Summoner remain reserved.
