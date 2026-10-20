@@ -57,6 +57,9 @@ for f in range(22):
         wrist=track(f,[(0,heads['hand.'+side]),(start,ready),(hit,strike),(hit+2,follow),(18,point(heads['hand.'+side])),(21,heads['hand.'+side])])
         # Carry the slash with the launching torso rather than leaving it behind.
         wrist+=offset*track(f,[(0,0),(4,1),(16,1),(18,0),(21,0)])
+        # The landing compresses the body; lift the finishing rake so long claws
+        # clear the ground instead of cutting through it during absorption.
+        wrist.z+=track(f,[(0,0),(11,0),(13,.07),(14,.10),(16,.04),(18,0),(21,0)])
         elbow,wrist=ik(shoulder,wrist,lengths['upper_arm.'+side],lengths['forearm.'+side],(sign,.15,.1));segment('upper_arm.'+side,shoulder,elbow);segment('forearm.'+side,elbow,wrist)
         finger=track(f,[(0,tails['hand.'+side]-heads['hand.'+side]),(start,Vector((sign*.03,-.05,.09))),(hit,Vector((-sign*.04,-.12,-.04))),(hit+2,Vector((-sign*.09,-.025,-.065))),(21,tails['hand.'+side]-heads['hand.'+side])]).normalized()*lengths['hand.'+side]
         segment('hand.'+side,wrist,wrist+finger)
