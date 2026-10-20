@@ -7,6 +7,12 @@ root=Path(sys.argv[sys.argv.index('--')+1]);out=root/'model/local-appearance-002
 bpy.ops.wm.open_mainfile(filepath=str(root/'model/local-appearance-002/rigged-block-v4a/ashling-rigged.blend'));bpy.context.preferences.filepaths.save_version=0
 scene=bpy.context.scene;scene.frame_set(1);rig=bpy.data.objects['Ashling editable animation rig'];obj=bpy.data.objects['Ashling skinned character']
 initial={p.name:p.matrix.copy() for p in rig.pose.bones};heads={b.name:initial[b.name]@b.matrix_local.inverted()@b.head_local for b in rig.data.bones};tails={b.name:initial[b.name]@b.matrix_local.inverted()@b.tail_local for b in rig.data.bones};lengths={b.name:b.length for b in rig.data.bones}
+for modifier in obj.modifiers:
+    if modifier.type=='ARMATURE':modifier.use_deform_preserve_volume=False
+feet={}
+for side in ['L','R']:
+    n='foot.'+side;group=obj.vertex_groups[n].index;transform=initial[n]@rig.data.bones[n].matrix_local.inverted()
+    feet[side]=np.array([transform@v.co-heads[n] for v in obj.data.vertices if any(g.group==group and g.weight>.95 for g in v.groups)])
 rig.animation_data.action.use_fake_user=True;action=bpy.data.actions.new('Ashling_death_failed_brace_side_collapse');rig.animation_data.action=action
 def track(f,keys):
     for (a,x),(b,y) in zip(keys,keys[1:]):
@@ -22,7 +28,7 @@ for f in range(28):
     f=min(f,23)
     for p in rig.pose.bones:p.matrix=initial[p.name];bpy.context.view_layer.update()
     pitch=track(f,[(0,0),(3,-.12),(6,.15),(9,.40),(12,.66),(14,.57),(18,.62),(23,.62),(27,.62)])
-    roll=track(f,[(0,0),(3,-.08),(7,.12),(12,.82),(16,1.12),(22,1.16),(27,1.16)])
+    roll=track(f,[(0,0),(3,-.08),(7,.08),(12,.20),(16,.27),(22,.28),(27,.28)])
     drop=track(f,[(0,0),(3,.01),(6,-.07),(9,-.12),(12,-.15),(14,-.13),(18,-.15),(22,-.15),(27,-.15)])
     advance=track(f,[(0,0),(3,.035),(8,-.025),(12,-.12),(18,-.14),(27,-.14)])
     rotation=Quaternion((0,1,0),roll)@Quaternion((1,0,0),pitch);center=heads['pelvis'];offset=Vector((0,advance,drop));point=lambda p:center+rotation@(p-center)+offset
@@ -31,8 +37,10 @@ for f in range(28):
     fold=track(f,[(0,0),(4,0),(11,1),(27,1)])
     for side,sign in [('L',1),('R',-1)]:
         hip=point(heads['thigh.'+side]);target=Vector((.07+sign*(.25 if side=='L' else .18),.42 if side=='L' else .30,-.43))
-        ankle=heads['foot.'+side].lerp(target,fold);pole=Vector((sign*.35,-1,0)).lerp(Vector((sign*.8,.4,1)),fold);knee,ankle=ik(hip,ankle,lengths['thigh.'+side],lengths['shin.'+side],pole)
-        segment('thigh.'+side,hip,knee);segment('shin.'+side,knee,ankle);footrotation=Quaternion((0,1,0),sign*fold*.7)@Quaternion((1,0,0),fold*-.4);segment('foot.'+side,ankle,ankle+footrotation@(tails['foot.'+side]-heads['foot.'+side]))
+        ankle=heads['foot.'+side].lerp(target,fold);footrotation=Quaternion((0,1,0),sign*fold*.7)@Quaternion((1,0,0),fold*-.4)
+        ankle.z=-.5-float((feet[side]@np.array(footrotation.to_matrix()).T)[:,2].min())
+        pole=Vector((sign*.35,-1,0)).lerp(Vector((sign*.8,.4,1)),fold);knee,ankle=ik(hip,ankle,lengths['thigh.'+side],lengths['shin.'+side],pole)
+        segment('thigh.'+side,hip,knee);segment('shin.'+side,knee,ankle);segment('foot.'+side,ankle,ankle+footrotation@(tails['foot.'+side]-heads['foot.'+side]),footrotation)
         shoulder=point(heads['upper_arm.'+side]);segment('clavicle.'+side,point(heads['clavicle.'+side]),shoulder)
         brace=track(f,[(0,0),(4,0),(8,1),(27,1)]);spread=track(f,[(0,0),(10,0),(14,1),(27,1)])
         target=Vector((.07+sign*(.27+.07*spread),-.34+(0 if side=='L' else .08),-.395))
