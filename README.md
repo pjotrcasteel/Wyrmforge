@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.133 — Animated Hollow in combat
+
+- The accepted Hollow now uses eight real directions for its pixel walk, claw attack and death in ordinary hunts and Enemy Lab.
+- Movement follows travelled distance; contact shows the one-shot claw and recovery while C# retains damage authority. Actual death events play the full collapse, hold the corpse, then fade it.
+- [Integration and validation status](docs/art/hollow-runtime-integration-2026-10-20.md).
+
 ## Prototype 0.0.132 — Six-lineage World Gate and Divine magic foundations
 
 - World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.

@@ -50,12 +50,13 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(Number(enemy.kind)!==0)continue;
         const id=enemy.entityId;present.add(id);
         let pose=state.entities.get(id);
-        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,attackAt:null,age:0};state.entities.set(id,pose);}
+        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,attackAt:null,age:0,lastMove:-1};state.entities.set(id,pose);}
         const dx=enemy.x-pose.x,dy=enemy.y-pose.y,distance=Math.hypot(dx,dy);
         const advancing=!snapshot.paused&&!snapshot.ended&&!enemy.frozen;
         if(advancing)pose.age+=dt;
         if(advancing&&distance>.001&&distance<64){
             pose.distance+=distance;
+            pose.lastMove=pose.age;
             if(pose.attackAt==null)pose.direction=hollowDirection(dx,dy,pose.direction);
         }
         if(distance>=64){pose.distance=0;pose.attackAt=null;}
@@ -68,7 +69,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         }
         pose.clip=pose.attackAt==null?'walk':'attack';
         pose.frame=pose.clip==='attack'?Math.min(15,Math.floor((pose.age-pose.attackAt)*12)):
-            distance>.001?Math.floor(pose.distance/18.387096774193548*16)%16:0;
+            pose.age-pose.lastMove<.12?Math.floor(pose.distance/18.387096774193548*16)%16:0;
         if(reducedMotion)pose.frame=pose.clip==='attack'?7:0;
         if(enemy.frozen)pose.frame=pose.frozenFrame??pose.frame;
         pose.frozenFrame=enemy.frozen?pose.frame:null;
