@@ -69,7 +69,7 @@ public sealed class AshlingBrowserTests : PageTest
             return d?.ashling.entities.some(e=>e.clip==='attack'&&e.frame>=4&&e.frame<=9);
         }");
         await Page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, "ashling-attack-390.png"), FullPage = true });
-        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Ashling&seed=42&autoplay=false&cast=true");
+        await Page.GotoAsync(baseUrl + "/enemy-lab?kind=Ashling&seed=42&autoplay=true&cast=true");
         await AttachDiagnosticsAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const canvas=document.querySelector('.enemy-lab canvas');if(!canvas)return false;
@@ -88,4 +88,5 @@ public sealed class AshlingBrowserTests : PageTest
         await Page.EvaluateAsync("async () => { window.__ashlingArena=await import(new URL('js/arena.js',document.baseURI).href); }");
     }
 }
+
 
