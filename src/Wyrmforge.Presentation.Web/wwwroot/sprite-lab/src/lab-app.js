@@ -46,6 +46,7 @@
         img.onload = () => {
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
             state.pixelCandidate = name==='hollow-local-3d-pixel-walk-v1.png';
+            dom.stageCanvas.style.imageRendering=state.pixelCandidate?'pixelated':'auto';
             const layout = img.naturalWidth===img.naturalHeight*16?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
             updateFields(autoGrid(img.naturalWidth, img.naturalHeight, layout));
             state.dir = layout==='single'?'SE':'S'; state.frame = 0; state.elapsed = 0; state.playing = true; state.mode = 'manual';
@@ -130,7 +131,7 @@
         const h=p.height*scale,w=p.width*scale;
         g.save();g.translate(Math.round(x),Math.round(y));if(p.flipX)g.scale(-1,1);
         g.imageSmoothingEnabled=!state.pixelCandidate;
-        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*(state.pixelCandidate?83/96:.85),w,h);
+        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*(state.pixelCandidate?72/96:.85),w,h);
         g.restore();
     }
     function drawSheet() {
@@ -185,7 +186,7 @@
             ctx.beginPath();ctx.moveTo(state.actor.x,state.actor.y);ctx.lineTo(player.x,player.y);ctx.stroke();ctx.restore();
         }
         ctx.save();ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(state.actor.x,state.actor.y+8,40,13,0,0,Math.PI*2);ctx.fill();ctx.restore();
-        if(state.image){const fit=(state.pixelCandidate?1:Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight))*state.scale;
+        if(state.image){const fit=(state.pixelCandidate?dom.stageCanvas.width/Math.max(1,dom.stageCanvas.getBoundingClientRect().width):Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight))*state.scale;
             try{renderFrame(ctx,state.image,state.cfg,state.dir,state.frame,state.actor.x,state.actor.y,fit);}catch{/* inspector reports layout errors */}
         }
         ctx.fillStyle='rgba(203,213,206,.75)';ctx.font='12px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('THE HOLLOW',state.actor.x,state.actor.y+29);
