@@ -1,0 +1,10 @@
+{
+  "status": "failed",
+  "seed": 1729,
+  "method": "local TRELLIS 1 / DINOv2",
+  "weightsSource": "ModelScope AI-ModelScope/TRELLIS-image-large",
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "error": "ModuleNotFoundError: No module named 'open3d'"
+}

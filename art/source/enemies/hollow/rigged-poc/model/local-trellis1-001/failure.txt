@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/mnt/c/Wyrmforge/tools/sprite-lab/hollow-reconstruct-trellis1.py", line 51, in <module>
+    from trellis.pipelines import TrellisImageTo3DPipeline
+  File "/opt/wyrmforge-src/TRELLIS/trellis/__init__.py", line 3, in <module>
+    from . import pipelines
+  File "/opt/wyrmforge-src/TRELLIS/trellis/pipelines/__init__.py", line 3, in <module>
+    from .trellis_text_to_3d import TrellisTextTo3DPipeline
+  File "/opt/wyrmforge-src/TRELLIS/trellis/pipelines/trellis_text_to_3d.py", line 6, in <module>
+    import open3d as o3d
+ModuleNotFoundError: No module named 'open3d'
