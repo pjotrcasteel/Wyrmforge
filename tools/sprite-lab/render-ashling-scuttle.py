@@ -44,16 +44,25 @@ bounds=[f.getbbox() for f in frames];clipped=any(b is None or b[0]<2 or b[1]<2 o
 report=dict(loopPositionError=seam,stanceContactDrift=drift,finite=bool(np.isfinite(source['positions']).all()),clipped=clipped,frameBounds=bounds,technicalPass=seam<1e-4 and drift<1e-4 and not clipped,visualAccepted=False,runtimeIntegrated=False)
 (dest/'technical-report.json').write_text(json.dumps(report,indent=2)+'\n')
 root=tensor([*profile['groundRoot'],1]);anchor=mvp@root;anchor=[round(float((anchor[0]/anchor[3]+1)*48)),round(float((1-anchor[1]/anchor[3])*48))]
-(dest/'manifest.json').write_text(json.dumps(dict(frames=16,fps=20,cell=96,anchor=anchor,travelModelUnitsPerCycle=stride,sourceRig='../ashling-rigged.blend',directions=['three-quarter front'],visualAccepted=False,runtimeIntegrated=False),indent=2)+'\n')
+(dest/'manifest.json').write_text(json.dumps(dict(frames=16,fps=20,cell=96,anchor=anchor,travelModelUnitsPerCycle=stride,sourceRig='../ashling-rigged.blend',yawDegrees=math.degrees(yaw),directions=['single-view review'],visualAccepted=False,runtimeIntegrated=False),indent=2)+'\n')
 gif=[];stride_gif=[]
 for i,frame in enumerate(frames):
     board=Image.new('RGBA',(96,96),(22,20,27,255));board.alpha_composite(frame)
     gif.append(board.convert('RGB').resize((384,384),Image.Resampling.NEAREST))
-    # Repeat the ground grid under the fixed-root camera, using projected travel.
+    # Project a real ground plane. Its period divides the authored stride, so
+    # the looping review cannot introduce a false ground jump at the seam.
     ground=Image.new('RGBA',(192,128),(22,20,27,255));draw=ImageDraw.Draw(ground)
-    travel=mvp@tensor([0,-stride*i/16,0,0]);screen=np.array([float(travel[0])*48,float(-travel[1])*48])
-    for y in range(-40,180,12):draw.line((0,y-round(screen[1]),192,y-round(screen[1])),fill=(44,41,48))
-    for x in range(-40,240,12):draw.line((x-round(screen[0]),0,x-round(screen[0]),128),fill=(44,41,48))
+    def project(x,y):
+        p=np.array(profile['groundRoot'])+[x,y+stride*i/16,0]
+        if yaw:
+            origin=np.array(profile['groundRoot']);r=np.array([[math.cos(yaw),-math.sin(yaw),0],[math.sin(yaw),math.cos(yaw),0],[0,0,1]])
+            p=(p-origin)@r.T+origin
+        clip=source['mvp']@np.r_[p,1]
+        return (round((clip[0]/clip[3]+1)*48)+48,round((1-clip[1]/clip[3])*48)+8)
+    for line in range(-35,36):
+        d=line*stride/4
+        draw.line([project(d,-4),project(d,4)],fill=(44,41,48))
+        draw.line([project(-4,d),project(4,d)],fill=(44,41,48))
     ground.alpha_composite(frame,(48,8));stride_gif.append(ground.convert('RGB').resize((576,384),Image.Resampling.NEAREST))
 gif[0].save(dest/'scuttle-review.gif',save_all=True,append_images=gif[1:],duration=50,loop=0)
 stride_gif[0].save(dest/'stride-review.gif',save_all=True,append_images=stride_gif[1:],duration=50,loop=0)
