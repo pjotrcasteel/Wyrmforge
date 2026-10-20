@@ -2,6 +2,8 @@
 
 Owner requested extra creative freedom, research into fire dragons/wyrms and a substantially more capable creature: walking, sitting/rearing upright, fire breath, takeoff and flying overhead. All production remains local on the existing RTX 5090; no hosted generation, subscriptions, downloads or GPU setting changes. This is new source production, not an automatic replacement of the live boss.
 
+**Scale clarification:** this asset is Tier I of five, the smallest. Target roughly 15–25% of the gameplay viewport width in the normal grounded silhouette (about 59–98px at 390px; 48–80px at 320px), excluding empty atlas padding. Tier V is a screen-wide Divine embodiment of Fire; intermediate tiers scale between these endpoints without invented fixed names or exact percentages. The card's colossal promotional composition does not make this Tier-I creature screen-filling. Expanded wings/breath can extend beyond the grounded width. Preserve enough source detail and rig flexibility for later distinct tier forms; do not render Tier V merely as a blurry enlargement of the Tier-I atlas.
+
 Authority: [canonical art](../../../../docs/canon/art-and-animation.md), [creatures](../../../../docs/canon/creatures-and-encounters.md) and original `10-ashfang-the-cinder-wyrm.png` card. The card is the identity anchor: black volcanic plates, separated molten seams, horned predatory skull, a powerful chest, long balancing tail and ragged membrane wings. Four walking legs plus a separate wing pair, as interpreted from the front/side turnaround. No cute proportions, copied cinematic dragon or blanket orange glow.
 
 ## Research and concrete transfer
