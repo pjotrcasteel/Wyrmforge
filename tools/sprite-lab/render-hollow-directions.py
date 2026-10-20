@@ -8,22 +8,30 @@ import nvdiffrast.torch as dr
 from PIL import Image, ImageDraw
 
 root=Path(__file__).resolve().parents[2]
-rig=root/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3'
-out=root/'art/source/enemies/hollow/rigged-poc/exports/movement-eight-directions-v1'
+death='--death' in sys.argv
+cell=128 if death else 96
+count=24 if death else 16
+anchor=[64,88] if death else [48,72]
+stem='hollow-death' if death else 'hollow-movement'
+model=root/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004'
+rig=model/('rigged-death-v2' if death else 'rigged-pixel-v3')
+revision=sys.argv[sys.argv.index('--revision')+1] if '--revision' in sys.argv else ('death-eight-directions-v1' if death else 'movement-eight-directions-v1')
+out=root/'art/source/enemies/hollow/rigged-poc/exports'/revision
 out.mkdir(exist_ok=False)
-source=np.load(rig/'sampled-walk.npz')
+sample_path=rig/('sampled-death.npz' if death else 'sampled-walk.npz')
+source=np.load(sample_path)
 tensor=lambda a,dtype=torch.float32: torch.tensor(a,dtype=dtype,device='cuda').contiguous()
 faces=tensor(source['faces'],torch.int32)
 uv=tensor(source['uv'])
 mvp=tensor(source['mvp'])
 texture=tensor(np.asarray(Image.open(rig.parent/'textured-rgb-v2/hollow-albedo.png').convert('RGB'))/255).flip(0)[None]
 ctx=dr.RasterizeCudaContext()
-palette=Image.open(rig/'walk-pixels-v1/shared-palette.png')
+palette=Image.open(model/'rigged-pixel-v3/walk-pixels-v1/shared-palette.png')
 palette.save(out/'shared-palette.png')
 directions=['N','NE','E','SE','S','SW','W','NW']
 # Camera right and towards-camera ground vectors define screen compass headings.
 front=math.degrees(math.atan2(-3.2,2.2))+90
-atlas=Image.new('RGBA',(1536,768))
+atlas=Image.new('RGBA',(cell*count,cell*8))
 frames={}; rects=[]; measurements=[]; orientation=[]
 for row,direction in enumerate(directions):
     degrees=front+180-row*45
@@ -33,10 +41,10 @@ for row,direction in enumerate(directions):
     frames[direction]=[]
     folder=out/'frames'/direction
     folder.mkdir(parents=True)
-    for index,positions in enumerate(source['positions'][:16]):
+    for index,positions in enumerate(source['positions'][:count]):
         vertices=tensor(positions)@rotation.T
         clip=torch.cat([vertices,torch.ones_like(vertices[:,:1])],dim=1)@mvp.T
-        raster,_=dr.rasterize(ctx,clip[None],faces,[96,96])
+        raster,_=dr.rasterize(ctx,clip[None],faces,[cell,cell])
         texcoords=dr.interpolate(uv[None],raster,faces)[0]
         color=dr.texture(texture,texcoords,filter_mode='nearest')[0]
         triangles=vertices[faces.long()]
@@ -50,44 +58,45 @@ for row,direction in enumerate(directions):
         raw=Image.fromarray((rgba*255).astype(np.uint8))
         frame=raw.convert('RGB').quantize(palette=palette,dither=Image.Dither.NONE).convert('RGBA')
         frame.putalpha(raw.getchannel('A'))
-        frame.save(folder/f'walk-{index:02d}.png')
-        atlas.alpha_composite(frame,(index*96,row*96))
+        frame.save(folder/f'{"death" if death else "walk"}-{index:02d}.png')
+        atlas.alpha_composite(frame,(index*cell,row*cell))
         frames[direction].append(frame)
         bounds=frame.getbbox()
-        assert bounds and bounds[0]>0 and bounds[1]>0 and bounds[2]<96 and bounds[3]<96,(direction,index,bounds)
+        assert bounds and bounds[0]>0 and bounds[1]>0 and bounds[2]<cell and bounds[3]<cell,(direction,index,bounds)
         assert set(np.unique(np.asarray(frame)[:,:,3]))<={0,255}
         measurements.append(dict(direction=direction,frame=index,bounds=bounds,opaquePixels=int((np.asarray(frame)[:,:,3]>0).sum())))
-        rects.append(dict(direction=direction,index=index,x=index*96,y=row*96,width=96,height=96,anchor=[48,72],flipX=False))
+        rects.append(dict(direction=direction,index=index,x=index*cell,y=row*cell,width=cell,height=cell,anchor=anchor,flipX=False))
     print(direction,'rendered',flush=True)
-atlas.save(out/'hollow-movement.png')
-manifest=dict(schemaVersion='1.1',name='The Hollow — eight-direction movement',animation='walk',layout='eight',
-    source=dict(width=1536,height=768,columns=16,rows=8,frameWidth=96,frameHeight=96,offsetX=0,offsetY=0),
-    directions=directions,framesPerDirection=16,frames=128,playback=dict(fps=12,loop=True),anchor=[48,72],
-    drawCellWorldSize=93,travelPerCycle=.19/.62*60,frameRects=rects,orientations=orientation,
-    sourceRig=str(rig.relative_to(root)/'hollow-rigged.blend').replace('\\','/'),
-    sourcePoseSha256=hashlib.sha256((rig/'sampled-walk.npz').read_bytes()).hexdigest(),
-    visualAccepted=False,runtimeIntegrated=False,gaitAcceptance='Owner accepted original one-view zombie waddle; directional export awaits owner review')
-(out/'hollow-movement.manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+atlas.save(out/(stem+'.png'))
+manifest=dict(schemaVersion='1.1',name='The Hollow — eight-direction '+('death' if death else 'movement'),animation='death' if death else 'walk',layout='eight',
+    source=dict(width=cell*count,height=cell*8,columns=count,rows=8,frameWidth=cell,frameHeight=cell,offsetX=0,offsetY=0),
+    directions=directions,framesPerDirection=count,frames=count*8,playback=dict(fps=12,loop=not death,holdLastFrame=death),anchor=anchor,
+    drawCellWorldSize=cell*93/96,travelPerCycle=0 if death else .19/.62*60,frameRects=rects,orientations=orientation,
+    sourceRig=str(rig.relative_to(root)/('hollow-death.blend' if death else 'hollow-rigged.blend')).replace('\\','/'),
+    sourcePoseSha256=hashlib.sha256(sample_path.read_bytes()).hexdigest(),
+    visualAccepted=False,runtimeIntegrated=False)
+(out/(stem+'.manifest.json')).write_text(json.dumps(manifest,indent=2)+'\n')
 review=[]
-for index in range(16):
-    board=Image.new('RGBA',(4*112,2*120),(22,20,27,255))
+for index in range(count):
+    board=Image.new('RGBA',(4*(cell+16),2*(cell+24)),(22,20,27,255))
     draw=ImageDraw.Draw(board)
     for row,direction in enumerate(directions):
-        x=(row%4)*112+8;y=(row//4)*120+20
+        x=(row%4)*(cell+16)+8;y=(row//4)*(cell+24)+20
         draw.text((x,y-16),direction,fill=(205,194,177))
-        draw.line((x,y+72,x+95,y+72),fill=(52,47,51))
+        draw.line((x,y+anchor[1],x+cell-1,y+anchor[1]),fill=(52,47,51))
         board.alpha_composite(frames[direction][index],(x,y))
-    review.append(board.convert('RGB').resize((896,480),Image.Resampling.NEAREST))
-review[0].save(out/'all-directions-review.gif',save_all=True,append_images=review[1:],duration=83,loop=0)
-review[4].save(out/'all-directions-preview.png')
-sheet=Image.new('RGBA',(4*96,8*112),(22,20,27,255))
+    review.append(board.convert('RGB').resize((board.width*2,board.height*2),Image.Resampling.NEAREST))
+review[0].save(out/'all-directions-review.gif',save_all=True,append_images=review[1:],duration=[83]*(count-1)+[1200 if death else 83],loop=0)
+review[12 if death else 4].save(out/'all-directions-preview.png')
+phases=[0,3,7,10,13,23] if death else [0,4,8,12]
+sheet=Image.new('RGBA',(len(phases)*cell,8*(cell+16)),(22,20,27,255))
 draw=ImageDraw.Draw(sheet)
 for row,direction in enumerate(directions):
-    draw.text((4,row*112),direction,fill=(205,194,177))
-    for col,index in enumerate([0,4,8,12]):sheet.alpha_composite(frames[direction][index],(col*96,row*112+16))
-sheet.resize((768,1792),Image.Resampling.NEAREST).save(out/'contact-poses.png')
+    draw.text((4,row*(cell+16)),direction,fill=(205,194,177))
+    for col,index in enumerate(phases):sheet.alpha_composite(frames[direction][index],(col*cell,row*(cell+16)+16))
+sheet.resize((sheet.width*2,sheet.height*2),Image.Resampling.NEAREST).save(out/'contact-poses.png')
 report=dict(gpu=torch.cuda.get_device_name(),frames=len(rects),noClipping=True,binaryAlpha=True,sharedPalette=True,
-    loopMaxVertexError=float(np.abs(source['positions'][0]-source['positions'][16]).max()),measurements=measurements,
+    closingPoseError=float(np.abs(source['positions'][-1]-source['positions'][-2 if death else 0]).max()),measurements=measurements,
     hardwareSettingsChanged=False,method='Rotate the same evaluated skinned poses in 3D; fixed camera and world lighting; no mirrored directions')
 (out/'technical-report.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps({k:v for k,v in report.items() if k!='measurements'}),flush=True)

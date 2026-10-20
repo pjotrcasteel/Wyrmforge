@@ -13,7 +13,7 @@ from mathutils import Vector, Quaternion
 
 root=Path(sys.argv[sys.argv.index('--')+1])
 model=root/'art/source/enemies/hollow/rigged-poc/model/local-appearance-004'
-out=model/'rigged-death-v1'
+out=model/(sys.argv[sys.argv.index('--')+2] if len(sys.argv)>sys.argv.index('--')+2 else 'rigged-death-v1')
 out.mkdir(exist_ok=False)
 bpy.ops.wm.open_mainfile(filepath=str(model/'rigged-pixel-v3/hollow-rigged.blend'))
 bpy.context.preferences.filepaths.save_version=0
@@ -81,11 +81,11 @@ for index in range(24):
         hip=point(heads['thigh.'+side])
         ankle=Vector((sign*track(index,[(0,.09),(6,.105),(18,.12),(23,.12)]),
                       track(index,[(0,-.08 if side=='L' else .07),(6,.015),(12,.22),(18,.245),(23,.245)]),-.445))
-        pole=(0,-1,0) if index<9 else (sign*.2,-.2,-1)
+        pole=(Vector((0,-1,0)).lerp(Vector((sign*.2,-.2,-1)),smooth((index-6)/6)))
         knee,ankle=ik(hip,ankle,lengths['thigh.'+side],lengths['shin.'+side],pole)
         segment('thigh.'+side,hip,knee,blend)
         segment('shin.'+side,knee,ankle,blend)
-        foot_rotation=Quaternion((1,0,0),math.radians(track(index,[(0,0),(8,0),(14,52),(18,60),(23,60)])))
+        foot_rotation=Quaternion((1,0,0),math.radians(track(index,[(0,0),(8,0),(14,-150),(18,-180),(23,-180)])))
         segment('foot.'+side,ankle,ankle+foot_rotation@(tails['foot.'+side]-heads['foot.'+side]),blend)
         shoulder=point(heads['upper_arm.'+side])
         segment('clavicle.'+side,point(heads['clavicle.'+side]),shoulder,blend)
