@@ -18,7 +18,7 @@ test('original four canonical building pairs remain unchanged as separate source
     }
 });
 
-test('night preview uses a single registered 1672x941 world and four alpha layers', () => {
+test('night game town uses a single registered 1672x941 world and four alpha layers', () => {
     const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     const sceneFile = 'night-active.webp';
@@ -43,21 +43,26 @@ test('night preview uses a single registered 1672x941 world and four alpha layer
     assert.doesNotMatch(css, /filter:brightness|filter:grayscale|opacity:\.4/);
 });
 
-test('building clicks are independent preview toggles, never menu or progression navigation', () => {
+test('real unlock flags drive independent building visuals and routes', () => {
     const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
     const host = source('src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor');
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-town.js');
-    for (const key of ['build', 'forge', 'codex', 'legends']) {
-        assert.match(scene, new RegExp('ToggleBuilding\\("' + key + '"\\)'));
+    for (const [key, flag] of [['build', 'NexusUnlocked'], ['forge', 'ForgeUnlocked'],
+        ['codex', 'CodexUnlocked'], ['legends', 'HallUnlocked']]) {
+        assert.ok(scene.includes('TownBuildingVisuals.StateName(' + flag + ')'));
+        assert.ok(scene.includes('OnBuilding.InvokeAsync("' + key + '")'));
+        assert.ok(host.includes('"' + key + '" => '));
     }
-    assert.match(scene, /private bool nexusActive = true/);
-    assert.match(scene, /private bool blacksmithActive = true/);
-    assert.match(scene, /private bool codexActive = true/);
-    assert.match(scene, /private bool hallActive = true/);
-    assert.match(scene, /OnGate\.InvokeAsync\(\)/);
-    assert.doesNotMatch(scene, /OnBuilding\.InvokeAsync/);
-    assert.doesNotMatch(host, /OnBuilding="ActivateCanonicalBuildingAsync"/);
-    assert.match(js, /refuge-canonical-scene/);
+    assert.match(scene, /OnGate.InvokeAsync\(\)/);
+    assert.match(host, /OnBuilding="ActivateCanonicalBuildingAsync"/);
+    assert.match(host, /Complete your first hunt to unlock/);
+    assert.match(host, /Complete two hunts to unlock/);
+    assert.match(host, /Bring home your first secured Essence to unlock/);
+    assert.doesNotMatch(scene, /ToggleBuilding|lastToggle|nexusActive|blacksmithActive/);
+    assert.doesNotMatch(host, /Temporary menu previews|Preview Blacksmith menu/);
+    assert.doesNotMatch(scene, /refuge-canonical-districts|ShowDistrictAsync/);
+    assert.match(js, /onTouchEnd/);
+    assert.match(js, /onPointerMove/);
     assert.match(js, /blockClickUntil/);
 });
 
@@ -67,8 +72,10 @@ test('one panorama, no old district cards and no runtime vacancy blackout', () =
     const index = source('src/Wyrmforge.Presentation.Web/wwwroot/index.html');
     assert.doesNotMatch(markup, /refuge-canonical-building/);
     assert.doesNotMatch(markup, /refuge-canonical-wing/);
-    assert.match(markup, /refuge-canonical-districts/);
+    assert.doesNotMatch(markup, /refuge-canonical-districts/);
     assert.match(css, /\.refuge-town-spot--gate/);
+    assert.doesNotMatch(css, /refuge-canonical-districts|refuge-town-toggle-announcement/);
+    assert.match(css, /@media \(max-width:900px\) and \(orientation:landscape\) \{\s*\.game-shell\.refuge-home \.refuge-canonical-scene \{width:100%;height:auto\}/);
     assert.match(index, /css\/town-canonical\.css/);
     assert.match(index, /js\/refuge-town\.js/);
 });

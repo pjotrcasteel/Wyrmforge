@@ -12,6 +12,52 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task TownLighting_SettingsOverrideChangesSceneWithoutAffectingBuildingStates()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Expect(Page.Locator(".refuge-canonical-scene")).ToBeVisibleAsync();
+        var initialStates = await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
+            "buttons => [...buttons].map(button => button.dataset.townState).join(',')");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        var controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
+        await Expect(controls).ToBeVisibleAsync();
+        await controls.GetByRole(AriaRole.Button, new() { Name = "Day", Exact = true }).ClickAsync();
+        await Expect(controls.GetByRole(AriaRole.Button, new() { Name = "Day", Exact = true }))
+            .ToHaveAttributeAsync("aria-pressed", "true");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            const image = scene?.querySelector('.refuge-town-night-base');
+            if (scene?.dataset.townTime !== 'day' || !image?.src.includes('/day-active.webp')) return false;
+            await image.decode();
+            return image.naturalWidth === 1672 && image.naturalHeight === 941;
+        }");
+        Assert.AreEqual(initialStates, await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
+            "buttons => [...buttons].map(button => button.dataset.townState).join(',')"));
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
+        await controls.GetByRole(AriaRole.Button, new() { Name = "Night", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            return scene?.dataset.townTime === 'night' &&
+                scene.querySelector('.refuge-town-night-base')?.src.includes('/night-active.webp');
+        }");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
+        await controls.GetByRole(AriaRole.Button, new() { Name = "Auto", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            return scene?.dataset.townTime === window.wyrmforgeTownLighting.getState().effective;
+        }");
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_BuildingLab_CanAuthorAndLockIndependentStages_WithoutChangingGame(int width, int height)
@@ -212,53 +258,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(fits, "Approved portrait scene must fully cover the screen with correctly aligned clickable targets.");
         await ScreenshotAsync($"welcome-exact-art-{width}x{height}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME" }).ClickAsync();
+        await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
+        await ScreenshotAsync($"character-creation-{width}x{height}.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Arcanist" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
-    }
-
-    [TestMethod]
-    public async Task TownLighting_SettingsOverrideChangesSceneWithoutAffectingBuildingStates()
-    {
-        await Page.SetViewportSizeAsync(390, 844);
-        await OpenAsync();
-        await Expect(Page.Locator(".refuge-canonical-scene")).ToBeVisibleAsync();
-        var initialStates = await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
-            "buttons => [...buttons].map(button => button.dataset.townState).join(',')");
-
-        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        var controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
-        await Expect(controls).ToBeVisibleAsync();
-        await controls.GetByRole(AriaRole.Button, new() { Name = "Day", Exact = true }).ClickAsync();
-        await Expect(controls.GetByRole(AriaRole.Button, new() { Name = "Day", Exact = true }))
-            .ToHaveAttributeAsync("aria-pressed", "true");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
-            const scene = document.querySelector('.refuge-canonical-scene');
-            const image = scene?.querySelector('.refuge-town-night-base');
-            if (scene?.dataset.townTime !== 'day' || !image?.src.includes('/day-active.webp')) return false;
-            await image.decode();
-            return image.naturalWidth === 1672 && image.naturalHeight === 941;
-        }");
-        Assert.AreEqual(initialStates, await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
-            "buttons => [...buttons].map(button => button.dataset.townState).join(',')"));
-
-        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
-        await controls.GetByRole(AriaRole.Button, new() { Name = "Night", Exact = true }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
-        await Page.WaitForFunctionAsync(@"() => {
-            const scene = document.querySelector('.refuge-canonical-scene');
-            return scene?.dataset.townTime === 'night' &&
-                scene.querySelector('.refuge-town-night-base')?.src.includes('/night-active.webp');
-        }");
-
-        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        controls = Page.GetByRole(AriaRole.Group, new() { Name = "Town lighting preference" });
-        await controls.GetByRole(AriaRole.Button, new() { Name = "Auto", Exact = true }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
-        await Page.WaitForFunctionAsync(@"() => {
-            const scene = document.querySelector('.refuge-canonical-scene');
-            return scene?.dataset.townTime === window.wyrmforgeTownLighting.getState().effective;
-        }");
     }
 
     [TestMethod]
@@ -271,6 +274,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("section.town-square")).ToBeVisibleAsync();
         await Expect(Page.Locator(".refuge-canonical-scene")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".refuge-town-spot")).ToHaveCountAsync(5);
+        await Expect(Page.Locator(".refuge-canonical-districts")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
         await Page.WaitForFunctionAsync(@"() => {
             const img = document.querySelector('.refuge-town-night-base');
@@ -341,7 +345,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await OpenPreviewMenuAsync("Arcane Nexus");
+        await OpenTownBuildingAsync("Arcane Nexus");
 
         var rack = Page.Locator(".nexus-rack-details");
         await Expect(rack).ToBeVisibleAsync();
@@ -417,8 +421,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "REFUGE", Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
-        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(4);
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
@@ -505,9 +509,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','1'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:1, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(2);
+        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(2);
         await Expect(Page.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
-        await OpenPreviewMenuAsync("Arcane Nexus");
+        await OpenTownBuildingAsync("Arcane Nexus");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
     }
@@ -519,7 +524,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['RimeHeart']));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await OpenPreviewMenuAsync("Arcane Nexus");
+        await OpenTownBuildingAsync("Arcane Nexus");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Spellcraft" }).ClickAsync();
 
         await Expect(Page.Locator(".resonance-title h2")).ToHaveTextAsync("Frostfire");
@@ -558,7 +563,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
-        await OpenPreviewMenuAsync("Hall of Fame");
+        await OpenTownBuildingAsync("Hall of Fame");
         await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Hall of Fame high scores" })).ToBeVisibleAsync();
         await Expect(Page.GetByText("LEGEND · DEMO").First).ToBeVisibleAsync();
         await Expect(Page.GetByText("YOU · THIS RUN", new() { Exact = true })).ToBeVisibleAsync();
@@ -596,7 +601,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync("mobile-player-name-320.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
-        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.Locator(".game-screen canvas[aria-hidden='true']")).ToHaveCountAsync(1);
         await Expect(Page.Locator("body > canvas")).ToHaveCountAsync(0);
         await Page.Locator("button.route-node.available").First.ClickAsync();
@@ -656,7 +660,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             await OpenAsync();
 
-            await OpenPreviewMenuAsync("Blacksmith");
+            await OpenTownBuildingAsync("Blacksmith");
             await Expect(Page.GetByRole(AriaRole.Navigation, new() { Name = "Choose a Wyrm lineage" })).ToBeVisibleAsync();
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Rimeclaw") }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Rimeclaw" })).ToBeVisibleAsync();
@@ -673,7 +677,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("PREPARE NEXT HUNT") }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
 
-            await OpenPreviewMenuAsync("Codex");
+            await OpenTownBuildingAsync("Codex");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Lineages", Exact = true }).ClickAsync();
             await Expect(Page.GetByText("WYRMFORGED SPELL LINEAGES", new() { Exact = true })).ToBeVisibleAsync();
             await Page.GetByRole(AriaRole.Button, new() { Name = "Great Hunt", Exact = true }).ClickAsync();
@@ -681,7 +685,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await ScreenshotAsync("mobile-mastery-codex.png");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
 
-            await OpenPreviewMenuAsync("Arcane Nexus");
+            await OpenTownBuildingAsync("Arcane Nexus");
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
 
             var overflow = await Page.EvaluateAsync<double>("() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth");
@@ -713,7 +717,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-home.png");
 
-            await OpenPreviewMenuAsync("Blacksmith");
+            await OpenTownBuildingAsync("Blacksmith");
             await Expect(Page.GetByRole(AriaRole.Navigation, new() { Name = "Choose a Wyrm lineage" })).ToBeVisibleAsync();
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("Stormcoil") }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Stormcoil" })).ToBeVisibleAsync();
@@ -730,14 +734,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("PREPARE NEXT HUNT") }).ClickAsync();
             await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
 
-            await OpenPreviewMenuAsync("Codex");
+            await OpenTownBuildingAsync("Codex");
             await Page.GetByRole(AriaRole.Button, new() { Name = "Lineages", Exact = true }).ClickAsync();
             await Expect(Page.GetByText("WYRMFORGED SPELL LINEAGES", new() { Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-mastery-codex.png");
 
             await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
 
-            await OpenPreviewMenuAsync("Arcane Nexus");
+            await OpenTownBuildingAsync("Arcane Nexus");
             await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
             await ScreenshotAsync("desktop-atlas.png");
         }
@@ -1599,7 +1603,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".gate-tier--ready").ClickAsync();
         var save = await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.world.v1')");
         StringAssert.Contains(save, "glacier-region");
-        await Page.Locator(".primary-frost").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         await Expect(Page.GetByText(new System.Text.RegularExpressions.Regex("Snowbound vale|Rimewall heights|Glacier basin", System.Text.RegularExpressions.RegexOptions.IgnoreCase)).First).ToBeVisibleAsync();
     }
@@ -1609,7 +1612,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         await Page.SetViewportSizeAsync(320, 568);
         await OpenAsync();
-        await OpenPreviewMenuAsync("Arcane Nexus");
+        await OpenTownBuildingAsync("Arcane Nexus");
         Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
         Assert.IsGreaterThan(40, await Page.Locator(".web-connections line").CountAsync());
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Zoom in", Exact = true })).ToBeVisibleAsync();
@@ -1648,7 +1651,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(1, json.RootElement.GetProperty("Quests").GetProperty("Caches").GetInt32());
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await ContinueThroughWorldGateAsync();
-        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose a relic", Exact = true })).ToBeVisibleAsync();
         await ScreenshotAsync("mobile-quest-relic-cache.png");
         var lastChoice = await Page.Locator("button.relic-choice").Last.BoundingBoxAsync();
@@ -1694,7 +1696,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0, new() { Timeout = 30000 });
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await ContinueThroughWorldGateAsync();
-        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
         var wyrm = await Page.Locator("button.route-node.dragon").BoundingBoxAsync();
         Assert.IsNotNull(wyrm);
@@ -1806,58 +1807,48 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         var viewport = Page.Locator(".refuge-canonical-viewport");
-        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='vacant']")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(4);
         await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(0, false)");
-
-        var nexus = Page.Locator(".refuge-town-spot--nexus");
-        var forge = Page.Locator(".refuge-town-spot--blacksmith");
-        await nexus.ClickAsync();
-        await Expect(nexus).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(forge).ToHaveAttributeAsync("data-town-state", "active");
-        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(1);
-        await forge.ClickAsync();
-        await Expect(forge).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(nexus).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(2);
-
+        await Page.Locator(".refuge-town-spot--nexus").ClickAsync();
+        await Expect(Page.Locator(".town-lock-notice")).ToContainTextAsync("Complete your first hunt");
+        await Page.Locator(".refuge-town-spot--blacksmith").ClickAsync();
+        await Expect(Page.Locator(".town-lock-notice")).ToContainTextAsync("first secured Essence");
         await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(2, false)");
         await Page.Locator(".refuge-town-spot--codex").ClickAsync();
+        await Expect(Page.Locator(".town-lock-notice")).ToContainTextAsync("Complete your first hunt");
         await Page.Locator(".refuge-town-spot--hall").ClickAsync();
+        await Expect(Page.Locator(".town-lock-notice")).ToContainTextAsync("Complete two hunts");
         await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(4);
-        await Page.WaitForFunctionAsync(@"() => {
-            const layers = [...document.querySelectorAll('.refuge-town-vacant-layer')];
-            return layers.length === 4 && layers.every(img => img.complete && img.naturalWidth > 0);
-        }");
-        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
-        await ScreenshotAsync("refuge-town-all-four-vacant.png");
-
-        await Page.Locator(".refuge-town-spot--hall").ClickAsync();
-        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(3);
-        await Expect(Page.Locator(".refuge-town-spot--hall")).ToHaveAttributeAsync("data-town-state", "active");
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='vacant']")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.townVisualOverride')"));
+        await ScreenshotAsync("refuge-town-locked-gameplay.png");
     }
     [TestMethod]
-    public async Task Mobile_PrimaryOath_CancelReturnsToTownWithoutConsumingOrUnlocking()
+    public async Task Mobile_CharacterCreation_UsesDivineSchoolBeforeFirstHuntAndPersists()
     {
         await Page.SetViewportSizeAsync(390, 844);
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await EnterTownIfNeededAsync();
-        await Expect(Page.Locator(".refuge-town-spot--gate")).ToBeEnabledAsync();
-        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
-        await Page.Locator(".refuge-town-spot--nexus").ClickAsync();
-        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(1);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
-        await ContinueThroughWorldGateAsync();
-        var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
-        await Expect(oath).ToBeVisibleAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel hunt and return to town" }).ClickAsync();
-        await Expect(oath).ToBeHiddenAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME", Exact = true }).ClickAsync();
+        await Expect(Page.Locator(".character-creation")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".character-school")).ToHaveCountAsync(6);
+        await Expect(Page.Locator(".character-school:disabled")).ToHaveCountAsync(2);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Pyromancer" }).ClickAsync();
         await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
-        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.firstHunt.v1')"));
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        Assert.AreEqual("FireBolt", await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.preferredPrimary.v1')"));
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
-        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToHaveCountAsync(0);
+        await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".combat-vitals-spells .combat-spell-badge")).ToHaveAttributeAsync("aria-label", "Fire Bolt, rank 1");
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(Page.Locator(".character-creation")).ToHaveCountAsync(0);
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
     }
+
     [TestMethod]
     public async Task Mobile_Refuge_UnlocksOccupiedBuildingsWithClickableHotspots()
     {
@@ -1865,27 +1856,36 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await Expect(Page.Locator(".refuge-town-spot[data-town-state='vacant']")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(0);
         await Page.Locator(".refuge-town-spot--nexus").ClickAsync();
-        await Expect(Page.Locator(".refuge-town-spot--nexus")).ToHaveAttributeAsync("data-town-state", "vacant");
-        await Expect(Page.Locator(".refuge-town-spot--blacksmith")).ToHaveAttributeAsync("data-town-state", "active");
-        await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
-        await Page.Locator(".refuge-town-spot--nexus").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.Locator(".refuge-town-spot--blacksmith").ClickAsync();
+        await Expect(Page.Locator(".forge-view")).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.Locator(".refuge-town-spot--codex").ClickAsync();
+        await Expect(Page.Locator(".codex-view")).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Page.Locator(".refuge-town-spot--hall").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Hall of Fame high scores" })).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Close Hall of Fame" }).ClickAsync();
+        await Expect(Page.Locator(".refuge-town-spot[data-town-state='active']")).ToHaveCountAsync(4);
         await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(0);
     }
     [TestMethod]
-    public async Task Mobile_PrimaryOath_RequiresStartingSpellBeforeShowingRouteMap()
+    public async Task Mobile_LegacyPrimary_MigratesCharacterSchoolWithoutPerHuntOath()
     {
         await Page.SetViewportSizeAsync(390, 844);
-        await OpenAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.preferredPrimary.v1','FrostShard');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(Page.Locator(".character-creation")).ToHaveCountAsync(0);
+        Assert.AreEqual("Cryomancer", await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN FIRST HUNT" }).ClickAsync();
         await ContinueThroughWorldGateAsync();
-        var oath = Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" });
-        await Expect(oath).ToBeVisibleAsync();
-        await Expect(oath.Locator("button.primary-choice")).ToHaveCountAsync(4);
-        await oath.Locator("button.primary-fire").ClickAsync();
-        await Expect(oath).ToBeHiddenAsync();
+        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToHaveCountAsync(0);
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.Locator(".combat-vitals-spells .combat-spell-badge")).ToHaveAttributeAsync("aria-label", "Fire Bolt, rank 1");
+        await Expect(Page.Locator(".combat-vitals-spells .combat-spell-badge")).ToHaveAttributeAsync("aria-label", "Frost Shard, rank 1");
     }
 
     private async Task EnterFirstTrailAsync()
@@ -1894,8 +1894,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         if (await back.IsVisibleAsync()) await back.ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true }).ClickAsync();
         await ContinueThroughWorldGateAsync();
-        await Expect(Page.GetByRole(AriaRole.Dialog, new() { Name = "Choose your primary magic" })).ToBeVisibleAsync();
-        await Page.Locator(".primary-arcane").ClickAsync();
         await Expect(Page.GetByText("Choose your trail.", new() { Exact = true })).ToBeVisibleAsync();
 
         var route = Page.Locator("button.route-node.available").First;
@@ -1913,12 +1911,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".gate-tier--ready").ClickAsync();
     }
 
-    private async Task OpenPreviewMenuAsync(string destination)
+    private async Task OpenTownBuildingAsync(string destination)
     {
         var back = Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" });
         if (await back.IsVisibleAsync()) await back.ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = $"Preview {destination} menu" }).ClickAsync();
+        var selector = destination switch
+        {
+            "Arcane Nexus" => ".refuge-town-spot--nexus",
+            "Blacksmith" => ".refuge-town-spot--blacksmith",
+            "Codex" => ".refuge-town-spot--codex",
+            "Hall of Fame" => ".refuge-town-spot--hall",
+            _ => throw new ArgumentOutOfRangeException(nameof(destination), destination, "Unknown town building"),
+        };
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
+        await Page.Locator(selector).ClickAsync();
     }
 
     private async Task EnterTownIfNeededAsync()
@@ -1928,13 +1934,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var start = Page.GetByRole(AriaRole.Button, new() { NameRegex = new System.Text.RegularExpressions.Regex("^START GAME") });
         await start.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 30000 });
         await start.ClickAsync();
+        await Expect(Page.Locator(".character-creation, .town-square")).ToBeVisibleAsync();
+        if (await Page.Locator(".character-creation").IsVisibleAsync())
+            await Page.GetByRole(AriaRole.Button, new() { Name = "Choose Arcanist" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Region, new() { Name = "Town square" })).ToBeVisibleAsync();
     }
 
     private async Task OpenAsync()
     {
         // Existing gameplay tests represent established accounts, not the new First Hunt tutorial.
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart']));");
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart'])); localStorage.setItem('wyrmforge.characterSchool.v1','Arcanist');");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync();

@@ -1,5 +1,6 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JavaScript
+@using Wyrmforge.Domain.Spells
 @using Wyrmforge.Domain.Progression.Codex
 @using Wyrmforge.Domain.Progression.Forge
 @using Wyrmforge.Domain.Progression.SpellMastery
@@ -61,6 +62,33 @@
                         </div>
                     </section>
                 }
+                else if (CharacterSchool is null)
+                {
+                    <section class="character-creation" aria-label="Character creation">
+                        <span class="character-creation-eyebrow">THE FIRST OATH</span>
+                        <h1>Create your character</h1>
+                        <p>Choose your Divine Wyrm affinity. Your magic belongs to your character, not to the Hunt you enter.</p>
+                        <button class="character-creation-name" type="button" @onclick="OpenNameEditor" aria-label="Edit your character name">
+                            <span>@PlayerName</span><small>EDIT NAME</small>
+                        </button>
+                        <div class="character-school-grid" aria-label="Choose your primary magic school">
+                            @foreach (var school in DivineArchetypeCatalog.All)
+                            {
+                                var ready = school.ExistingSignature is not null;
+                                <button @key="school.Id" type="button"
+                                        class="character-school character-school--@school.Id.ToString().ToLowerInvariant()"
+                                        disabled="@(!ready)"
+                                        aria-label="@(ready ? $"Choose {school.Name}" : $"{school.Name}, not yet available")"
+                                        @onclick="() => OnChooseSchool.InvokeAsync(school.Id)">
+                                    <span class="character-school-icon" aria-hidden="true"></span>
+                                    <strong>@school.Name</strong>
+                                    <small>@(ready ? school.Domain : "COMING LATER")</small>
+                                </button>
+                            }
+                        </div>
+                        <small class="character-creation-note">Changing Divine schools later requires a future respec unlock.</small>
+                    </section>
+                }
                 else
                 {
                 <section class="main-menu town-square" aria-label="Refuge town square">
@@ -71,14 +99,15 @@
                             <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
                         </button>
                     </header>
-                    @* Night town preview: tapping buildings toggles local state; the World Gate still opens normally. *@
+                    @* Night town buildings use saved gameplay unlocks; active hotspots navigate to their real destinations. *@
                     <CanonicalTownView NexusUnlocked="@IsUnlocked(ShellSection.Build)"
                                        ForgeUnlocked="@ForgeUnlocked"
                                        CodexUnlocked="@IsUnlocked(ShellSection.Codex)"
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
-                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)" />
+                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)"
+                                        OnBuilding="ActivateCanonicalBuildingAsync" />
                     @if (townLockNotice is { } notice)
                     {
                         <div class="town-lock-notice" role="status" aria-live="polite" aria-atomic="true">
@@ -154,19 +183,6 @@
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
                     </section>
-                    @if (!Progress.TutorialRun)
-                    {
-                        <section class="settings-support" aria-label="Temporary menu previews">
-                            <h3>Town preview destinations</h3>
-                            <button @onclick="() => Navigate(ShellSection.Build)">Preview Arcane Nexus menu</button>
-                            <button @onclick="() => Navigate(ShellSection.Forge)">Preview Blacksmith menu</button>
-                            <button @onclick="() => Navigate(ShellSection.Codex)">Preview Codex menu</button>
-                            @if (Progress.LeaderboardUnlocked)
-                            {
-                                <button @onclick="OpenHallOfFameAsync">Preview Hall of Fame menu</button>
-                            }
-                        </section>
-                    }
                 </div>
                 break;
         }
@@ -175,6 +191,8 @@
 
 @code {
     [Parameter] public string PlayerName { get; set; } = "Wyrm Wanderer";
+    [Parameter] public DivineArchetype? CharacterSchool { get; set; }
+    [Parameter] public EventCallback<DivineArchetype> OnChooseSchool { get; set; }
     [Parameter] public bool SkipTitle { get; set; }
     private bool enteredTown;
     private void EnterTown() => enteredTown = true;
