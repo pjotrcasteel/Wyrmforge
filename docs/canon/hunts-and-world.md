@@ -161,7 +161,7 @@ Working title **The Living Hunter's Chart**. The screen should look like an orig
 
 ## Implementation checkpoint — seeded forest arenas and breakable scenery (20 October 2026)
 
-A first **unmerged, unvalidated vertical slice** is being built on
+A first **unmerged, CI-gated vertical slice** is being built on
 `feature/seeded-hunt-arena-props-20261020`. This is not evidence that the entire Arena Generator contract
 above is implemented.
 
@@ -170,14 +170,17 @@ above is implemented.
 - Habitat-derived elemental influence (Fire/Frost) replaces the previous reward-attunement-derived
   ground coloring. Corruption increases from early roads to the Wyrm approach. Corrupted breakables
   appear more frequently as influence grows. Other lineages require authored ecology before enabling.
-- C# owns props, collision, projectile hits, durability, destruction and health/XP drops. Drops
+- C# owns props, collision, projectile and AoE/splash damage, durability, destruction and health/XP drops. Drops
   use the existing one-time physical pickup mechanism and do not fabricate enemy-kill rewards.
+  The enemy AI now has deterministic local prop detours, with a movement-progress regression test.
 - Forest and opening roads use wider hand-coded pixel ground treatments. Props render independently
   of cached floor art and sort by world-foot depth alongside the mage and enemies.
 - Visual scenery is **not** authoritative and must never invent colliders or spawn collectibles.
   The first prop silhouettes are temporary code-authored pixels, not finalized art assets.
-- Not yet included: persistent destructible state across sessions, all enemy attack/AoE interactions,
-  actual resource/material economy drops, validated no-trap pathfinding through every generated obstacle,
-  infinite chunk streaming or seamless region travel, art acceptance at 320/390px on iPhone.
+- Not yet included: persistent destructible state across sessions, all enemy attack forms (e.g. melee and
+  ongoing ground burns), actual resource/material economy drops, full graph-based pathfinding across obstacles,
+  terrain topology variation beyond road/scenery, infinite chunk streaming or seamless region travel, and
+  visual art acceptance on a real iPhone. Legacy phase crossings still restrict open-world combat movement.
+  This slice is not the final Vampire Survivors-scale open-world generator.
 - Acceptance before merge: .NET simulation tests, JavaScript tests, browser smoke, real iPhone
   combat checks including targeting/retreat and stable save/seed replays. Do not bypass this gate.
