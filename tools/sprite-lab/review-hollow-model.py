@@ -16,6 +16,12 @@ character = bpy.data.objects.new('Hollow initial candidate', data)
 bpy.context.collection.objects.link(character)
 colors = data.color_attributes.new(name='TRELLIS color', type='FLOAT_COLOR', domain='POINT')
 rgba = np.concatenate((raw['colors'][:, :3], np.ones((len(raw['vertices']), 1))), axis=1)
+srgb_review = '--srgb-input' in sys.argv
+if srgb_review:
+    # Diagnostic interpretation: Blender FLOAT_COLOR stores scene-linear RGB;
+    # compare display-RGB reconstruction values with the original linear input.
+    rgb = rgba[:, :3]
+    rgba[:, :3] = np.where(rgb <= 0.04045, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4)
 colors.data.foreach_set('color', rgba.ravel())
 material = bpy.data.materials.new('Unmodified generated vertex color')
 material.use_nodes = True
@@ -70,7 +76,7 @@ camera = bpy.context.object
 scene.camera = camera
 camera.data.type = 'ORTHO'
 camera.data.ortho_scale = height * 1.2
-review = folder / 'review'
+review = folder / ('review-srgb-v2' if srgb_review else 'review')
 review.mkdir(exist_ok=True)
 for name, angle in [('front', 0), ('three-quarter', 45), ('side', 90), ('back', 180)]:
     radians = math.radians(angle)
@@ -78,4 +84,5 @@ for name, angle in [('front', 0), ('three-quarter', 45), ('side', 90), ('back', 
     camera.rotation_euler = (center - camera.location).to_track_quat('-Z', 'Y').to_euler()
     scene.render.filepath = str(review / (name + '.png'))
     bpy.ops.render.render(write_still=True)
-bpy.ops.wm.save_as_mainfile(filepath=str(folder / 'hollow-initial-review.blend'))
+bpy.context.preferences.filepaths.save_version = 0
+bpy.ops.wm.save_as_mainfile(filepath=str(folder / ('hollow-srgb-review-v2.blend' if srgb_review else 'hollow-initial-review.blend')))
