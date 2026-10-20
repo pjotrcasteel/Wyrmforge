@@ -38,11 +38,22 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("#quickSlot")).ToHaveValueAsync("roof");
         await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']")).ToBeVisibleAsync();
         await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToBeVisibleAsync();
+        var initialRoof = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
         await Page.Locator("#quickChoices button[data-variant='base']").ClickAsync();
         await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToHaveAttributeAsync("aria-pressed", "true");
+        var intactRoof = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        Assert.AreNotEqual(initialRoof, intactRoof, "Switching roof to Intact must actually change visible pixels.");
+
         await Page.Locator("#quickChoices button[data-variant='roof:damaged']").ClickAsync();
         await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']")
             .ToHaveAttributeAsync("aria-pressed", "true");
+        var damagedRoofAgain = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        Assert.AreEqual(initialRoof, damagedRoofAgain, "Reapplying damaged roof must restore the same native pixels.");
+        if (width == 390)
+        {
+            Directory.CreateDirectory(ArtifactDirectory);
+            await ScreenshotAsync("building-lab-roof-choices-390.png");
+        }
 
         // Switching a stage must show the immutable original base artwork,
         // not a darker rectangular piece of a different panorama.
