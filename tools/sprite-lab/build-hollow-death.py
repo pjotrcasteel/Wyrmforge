@@ -52,6 +52,20 @@ def ik(a,b,l1,l2,pole):
     joint=a+direction*along+perpendicular*math.sqrt(max(0,l1*l1-along*along))
     return joint,a+direction*distance
 
+def knee_above_floor(hip,knee,ankle,sign,l1,l2):
+    """Keep the knee center above the floor without changing either leg length."""
+    if knee.z>=-.455:return knee
+    direction=(ankle-hip).normalized()
+    distance=(ankle-hip).length
+    along=(l1*l1-l2*l2+distance*distance)/(2*distance)
+    base=hip+direction*along
+    radius=math.sqrt(max(0,l1*l1-along*along))
+    down=Vector((0,0,-1));down=(down-direction*down.dot(direction)).normalized()
+    lateral=direction.cross(down).normalized()
+    if lateral.x*sign<0:lateral=-lateral
+    c=max(-1,min(1,(-.455-base.z)/(radius*down.z)))
+    return base+radius*(down*c+lateral*math.sqrt(max(0,1-c*c)))
+
 def segment(name,head,tail,blend):
     rotation=(tails[name]-heads[name]).rotation_difference(tail-head).to_matrix() @ rest[name].to_3x3()
     matrix=rotation.to_4x4()
@@ -83,6 +97,7 @@ for index in range(24):
                       track(index,[(0,-.08 if side=='L' else .07),(6,.015),(12,.22),(18,.245),(23,.245)]),-.445))
         pole=(Vector((0,-1,0)).lerp(Vector((sign*.2,-.2,-1)),smooth((index-6)/6)))
         knee,ankle=ik(hip,ankle,lengths['thigh.'+side],lengths['shin.'+side],pole)
+        knee=knee_above_floor(hip,knee,ankle,sign,lengths['thigh.'+side],lengths['shin.'+side])
         segment('thigh.'+side,hip,knee,blend)
         segment('shin.'+side,knee,ankle,blend)
         foot_rotation=Quaternion((1,0,0),math.radians(track(index,[(0,0),(8,0),(14,-150),(18,-180),(23,-180)])))
@@ -97,7 +112,7 @@ for index in range(24):
         segment('forearm.'+side,elbow,wrist,blend)
         hand_direction=(rotation@(tails['hand.'+side]-heads['hand.'+side])).lerp(Vector((sign*.045,-.095,-.012)),brace).normalized()*lengths['hand.'+side]
         segment('hand.'+side,wrist,wrist+hand_direction,blend)
-        cloth_pitch=track(index,[(0,10),(3,-5),(6,8),(9,40),(12,85),(15,96),(19,92),(23,92)])
+        cloth_pitch=track(index,[(0,10),(3,-5),(6,45),(9,70),(12,85),(15,96),(19,92),(23,92)])
         cloth_rotation=Quaternion((1,0,0),math.radians(cloth_pitch))
         cloth_head=point(heads['cloth.'+side])
         segment('cloth.'+side,cloth_head,cloth_head+cloth_rotation@(tails['cloth.'+side]-heads['cloth.'+side]),blend)
