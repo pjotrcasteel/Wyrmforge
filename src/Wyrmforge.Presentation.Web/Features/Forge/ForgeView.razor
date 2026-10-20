@@ -124,12 +124,12 @@
             case ShellSection.Build:
                 <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus">
                     <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Fireball)" disabled="@(CharacterSchool != DivineArchetype.Pyromancer)" class="@(facet == NexusFacet.Fireball ? "active" : "")"
-                            @onclick="() => OpenFacet(NexusFacet.Fireball)"><b>Fireball</b></button>
+                            @onclick="() => OpenFacet(NexusFacet.Fireball)"><b>Fireball</b><small aria-hidden="true">Upgrade core</small></button>
                     <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Spellcraft)" disabled="@(!SpellcraftOpen)"
                             class="@(facet == NexusFacet.Spellcraft ? "active" : "")"
-                            @onclick="() => OpenFacet(NexusFacet.Spellcraft)"><b>Research</b></button>
+                            @onclick="() => OpenFacet(NexusFacet.Spellcraft)"><b>Research</b><small aria-hidden="true">Discover</small></button>
                     <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Web)" class="@(facet == NexusFacet.Web ? "active" : "")"
-                            @onclick="() => OpenFacet(NexusFacet.Web)"><b>Arcane Web</b></button>
+                            @onclick="() => OpenFacet(NexusFacet.Web)"><b>Arcane Web</b><small aria-hidden="true">Specialize</small></button>
                 </div>
                 @if (facet == NexusFacet.Fireball)
                 {
