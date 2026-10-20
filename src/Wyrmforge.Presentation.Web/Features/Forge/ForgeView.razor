@@ -123,7 +123,7 @@
                 break;
             case ShellSection.Build:
                 <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus">
-                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Fireball)" class="@(facet == NexusFacet.Fireball ? "active" : "")"
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Fireball)" disabled="@(CharacterSchool != DivineArchetype.Pyromancer)" class="@(facet == NexusFacet.Fireball ? "active" : "")"
                             @onclick="() => OpenFacet(NexusFacet.Fireball)"><b>Fireball</b></button>
                     <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Spellcraft)" disabled="@(!SpellcraftOpen)"
                             class="@(facet == NexusFacet.Spellcraft ? "active" : "")"
@@ -294,7 +294,7 @@
         ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
         _ => "Locked",
     };
-    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = NexusFacet.Fireball; spellcraftFocus = null; }
+    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = CharacterSchool == DivineArchetype.Pyromancer ? NexusFacet.Fireball : NexusFacet.Web; spellcraftFocus = null; }
 
     // Spellcraft is the research facet of the Arcane Nexus: the Web says where a mutation lives, the circle what it becomes.
     private bool SpellcraftOpen => IsUnlocked(ShellSection.Build) && Progress.CodexUnlocked;
