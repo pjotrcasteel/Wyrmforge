@@ -1,0 +1,120 @@
+@using Wyrmforge.Domain.Progression.Signature
+@using Wyrmforge.Domain.Progression.DragonEssences
+
+<section class="fireball-ritual" aria-label="Fireball spellcraft">
+    <header class="fireball-heading">
+        <h2>Fireball <span>Lv @Core.Level</span></h2>
+        <small>@Core.Equipped.Count / @Core.Level mutators equipped</small>
+    </header>
+
+    <div class="fireball-chamber">
+        <div class="fireball-altar" aria-label="Fireball core and mutation sockets">
+            <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "") @(Has(FireballMutationId.MeteorHeart) ? "heavy" : "") @(Has(FireballMutationId.Detonation) ? "explosive" : "") @(Has(FireballMutationId.ScorchedEarth) ? "scorched" : "")"
+                    aria-label="Fireball core, level @Core.Level. View upgrade requirements"
+                    aria-pressed="@(selectedSlot is null)" @onclick="SelectCore">
+                <span class="fireball-body"><span class="fireball-glow"></span></span>
+                <b>Fireball</b>
+                <small>Upgrade core</small>
+            </button>
+            @for (var i = 0; i < 5; i++)
+            {
+                var slot = i;
+                var unlocked = slot < Core.Level;
+                var mutation = Core.Slots[slot];
+                <button type="button" class="fireball-socket fireball-socket--@(slot + 1) @(selectedSlot == slot ? "selected" : "") @(!unlocked ? "sealed" : mutation is null ? "empty" : "filled")"
+                        aria-label="@(unlocked ? mutation is { } held ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(held).Name}" : $"Slot {slot + 1}: empty, choose mutator" : $"Slot {slot + 1}: locked until Fireball level {slot + 1}")"
+                        aria-pressed="@(selectedSlot == slot)"
+                        @onclick="() => SelectSlot(slot)">
+                    <i aria-hidden="true">@(mutation is { } id && unlocked ? FireballCoreCatalog.Get(id).Symbol : unlocked ? "+" : "◆")</i>
+                    <span>@(unlocked ? mutation is { } held ? FireballCoreCatalog.Get(held).Name : "Empty" : $"Lv {slot + 1}")</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <section class="fireball-context" aria-live="polite" aria-label="Fireball actions">
+        @if (selectedSlot is null)
+        {
+            <h3>Upgrade Fireball</h3>
+            @if (Core.Level == 5)
+            {
+                <p>Fireball has reached level 5. All five mutation sockets are available.</p>
+            }
+            else
+            {
+                <p class="fireball-level-up">Lv @Core.Level <span aria-hidden="true">→</span> Lv @(Core.Level + 1)</p>
+                <p>Unlock one more mutator socket.</p>
+                <div class="fireball-materials" aria-label="Required materials">
+                    @foreach (var need in FireballCoreCatalog.UpgradeTo(Core.Level + 1))
+                    {
+                        var material = DragonEssenceCatalog.Get(need.Material);
+                        var owned = Vault.Count(need.Material);
+                        <div class="fireball-material @(owned >= need.Required ? "ready" : "missing")">
+                            <span class="material-symbol" aria-hidden="true">◆</span>
+                            <span><b>@material.Name</b><small>@owned / @need.Required secured</small></span>
+                        </div>
+                    }
+                </div>
+                <button type="button" class="fireball-action" disabled="@(!Core.CanUpgrade(Vault))" @onclick="UpgradeAsync">
+                    @(Core.CanUpgrade(Vault) ? $"Upgrade to Lv {Core.Level + 1}" : "Gather missing materials")
+                </button>
+            }
+        }
+        else
+        {
+            var slot = selectedSlot.Value;
+            <h3>Slot @(slot + 1) <small>Select a mutator</small></h3>
+            <div class="fireball-mutator-list" aria-label="Researched Fireball mutations">
+                @foreach (var mutation in FireballCoreCatalog.Mutations)
+                {
+                    var learned = Core.Discovered.Contains(mutation.Id);
+                    var current = Core.Slots[slot] == mutation.Id;
+                    var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
+                    <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
+                        <span class="mutation-symbol" aria-hidden="true">@mutation.Symbol</span>
+                        <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
+                        <span class="mutation-state">@(current ? "Equipped" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
+                    </button>
+                }
+            </div>
+            @if (Core.Slots[slot] is not null)
+            {
+                <button type="button" class="fireball-remove" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
+            }
+            <p class="fireball-help">Find and secure Ashfang materials to discover new Fireball mutations. Other forms are still being developed.</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(notice))
+        {
+            <p class="fireball-message" role="status">@notice</p>
+        }
+    </section>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public FireballCoreState Core { get; set; } = null!;
+    [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter] public Func<Task<bool>>? OnUpgrade { get; set; }
+    [Parameter] public Func<int, FireballMutationId?, Task<bool>>? OnEquip { get; set; }
+
+    private int? selectedSlot;
+    private string? notice;
+
+    private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+    private void SelectCore() { selectedSlot = null; notice = null; }
+    private void SelectSlot(int slot)
+    {
+        notice = null;
+        if (slot < Core.Level) selectedSlot = slot;
+        else { selectedSlot = null; notice = $"Upgrade Fireball to level {slot + 1} to unlock that socket."; }
+    }
+    private async Task UpgradeAsync()
+    {
+        if (OnUpgrade is null || !await OnUpgrade()) { notice = "Fireball cannot be upgraded yet."; return; }
+        notice = $"Fireball strengthened to level {Core.Level}. A new socket is open.";
+    }
+    private async Task EquipAsync(int slot, FireballMutationId? mutation)
+    {
+        if (OnEquip is null || !await OnEquip(slot, mutation)) { notice = "That mutation cannot be equipped."; return; }
+        notice = mutation is { } id ? $"{FireballCoreCatalog.Get(id).Name} equipped." : "Mutator removed.";
+    }
+}
