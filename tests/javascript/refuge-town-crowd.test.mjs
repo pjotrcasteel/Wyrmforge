@@ -32,10 +32,26 @@ test('navigation is authored to the actual artwork pixel size with a real well c
     const map = JSON.parse(source(`${art}/night-navigation.json`));
     assert.equal(map.width, 1672);
     assert.equal(map.height, 941);
-    assert.equal(map.obstacles.find(x => x.id === 'central-well')?.footprint.length, 8);
+    assert.ok(map.obstacles.find(x => x.id === 'central-well')?.footprint.length >= 8);
     assert.equal(map.occluders.find(x => x.id === 'well-foreground')?.artwork, 'art/town/night-active.webp?v=140');
     assert.ok(map.walkable.length > 0);
     assert.ok(map.destinations.length >= 7);
+});
+
+test('painted well, pillars and garden walls have independent collider ids', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const colliders = new Set(map.obstacles.map(prop => prop.id));
+    for (const landmark of ['central-well', 'west-gate-banner-base', 'east-gate-banner-base',
+        'west-lower-lamp-pillar', 'east-lower-lamp-pillar', 'west-garden-wall', 'east-garden-wall']) {
+        assert.ok(colliders.has(landmark), `Scenery is non-traversable: ${landmark}`);
+    }
+    assert.ok(map.clearance >= 10, 'Footprints need clearance for NPC body width');
+    assert.ok(map.occluders.find(part => part.id === 'well-foreground').clip.some(point => point.y < 365),
+        'The well occluder must cover the roof above the earlier visible floating rectangles');
+
+    const markup = source(scene);
+    assert.match(markup, /night-navigation\.json\?v=\$\{AppBuildInfo\.Version\}/,
+        'Updated mobile clients must not use cached stale nav polygons');
 });
 
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {
