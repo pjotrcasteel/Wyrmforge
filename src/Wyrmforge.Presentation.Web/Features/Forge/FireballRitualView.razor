@@ -4,7 +4,12 @@
 <section class="fireball-ritual" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
         <h2>Fireball <span>Lv @Core.Level</span></h2>
-        <small>@Core.Equipped.Count / @Core.Level mutators equipped</small>
+        <div class="fireball-level-pips" role="img" aria-label="Fireball level @Core.Level of 5">
+            @for (var level = 1; level <= 5; level++)
+            {
+                <span class="@(level <= Core.Level ? "lit" : "dark")" aria-hidden="true"></span>
+            }
+        </div>
     </header>
 
     <div class="fireball-chamber">
@@ -12,8 +17,12 @@
             <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "") @(Has(FireballMutationId.MeteorHeart) ? "heavy" : "") @(Has(FireballMutationId.Detonation) ? "explosive" : "") @(Has(FireballMutationId.ScorchedEarth) ? "scorched" : "")"
                     aria-label="Fireball core, level @Core.Level. View upgrade requirements"
                     aria-pressed="@(selectedSlot is null)" @onclick="SelectCore">
-                <span class="fireball-body"><span class="fireball-glow"></span></span>
-                <b>Fireball</b>
+                <span class="fireball-body" aria-hidden="true">
+                    <span class="fireball-flame"><i class="px-icon px-fire"></i></span>
+                    <span class="fireball-magma"></span>
+                    <span class="fireball-sparks"></span>
+                </span>
+                <span class="fireball-center-label">Fireball</span>
                 <small>Upgrade core</small>
             </button>
             @for (var i = 0; i < 5; i++)
@@ -25,8 +34,21 @@
                         aria-label="@SlotLabel(slot)"
                         aria-pressed="@(selectedSlot == slot)"
                         @onclick="() => SelectSlot(slot)">
-                    <i aria-hidden="true">@(mutation is { } id && unlocked ? FireballCoreCatalog.Get(id).Symbol : unlocked ? "+" : "◆")</i>
-                    <span>@SlotCaption(slot)</span>
+                    <span class="fireball-socket-art" aria-hidden="true">
+                        @if (!unlocked)
+                        {
+                            <i class="px-icon px-lg px-lock"></i>
+                        }
+                        else if (mutation is { } equipped)
+                        {
+                            <i class="px-icon px-lg @MutationIcon(equipped)"></i>
+                        }
+                        else
+                        {
+                            <b>+</b>
+                        }
+                    </span>
+                    <span class="fireball-socket-caption">@SlotCaption(slot)</span>
                 </button>
             }
         </div>
@@ -35,23 +57,31 @@
     <section class="fireball-context" aria-live="polite" aria-label="Fireball actions">
         @if (selectedSlot is null)
         {
-            <h3>Upgrade Fireball</h3>
+            <div class="fireball-panel-heading">
+                <i class="px-icon px-lg px-fire" aria-hidden="true"></i>
+                <div><h3>Fireball Upgrade</h3><p>Strengthen your signature spell.</p></div>
+            </div>
             @if (Core.Level == 5)
             {
                 <p>Fireball has reached level 5. All five mutation sockets are available.</p>
             }
             else
             {
-                <p class="fireball-level-up">Lv @Core.Level <span aria-hidden="true">→</span> Lv @(Core.Level + 1)</p>
-                <p>Unlock one more mutator socket.</p>
+                <div class="fireball-level-comparison" aria-label="Fireball level upgrade">
+                    <div><strong>Lv @Core.Level</strong><span class="fireball-mini-pips">@Pips(Core.Level)</span></div>
+                    <span aria-hidden="true">➜</span>
+                    <div><strong>Lv @(Core.Level + 1)</strong><span class="fireball-mini-pips">@Pips(Core.Level + 1)</span></div>
+                </div>
+                <p class="fireball-unlock"><b>+</b> 1 additional mutator socket</p>
+                <h4>Required Materials</h4>
                 <div class="fireball-materials" aria-label="Required materials">
                     @foreach (var need in FireballCoreCatalog.UpgradeTo(Core.Level + 1))
                     {
                         var material = DragonEssenceCatalog.Get(need.Material);
                         var owned = Vault.Count(need.Material);
                         <div class="fireball-material @(owned >= need.Required ? "ready" : "missing")">
-                            <span class="material-symbol" aria-hidden="true">◆</span>
-                            <span><b>@material.Name</b><small>@owned / @need.Required secured</small></span>
+                            <i class="px-icon px-lg @MaterialIcon(need.Material)" aria-hidden="true"></i>
+                            <span><b>@material.Name</b><small>@owned / @need.Required</small></span>
                         </div>
                     }
                 </div>
@@ -71,7 +101,7 @@
                     var current = Core.Slots[slot] == mutation.Id;
                     var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
                     <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
-                        <span class="mutation-symbol" aria-hidden="true">@mutation.Symbol</span>
+                        <span class="mutation-symbol" aria-hidden="true"><i class="px-icon px-lg @MutationIcon(mutation.Id)"></i></span>
                         <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
                         <span class="mutation-state">@(current ? "Equipped" : !mutation.Playable ? "Planned" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
                     </button>
@@ -100,6 +130,31 @@
     private string? notice;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+
+    private static string Pips(int level) => string.Concat(Enumerable.Range(1, 5).Select(index => index <= level ? "◆" : "◇"));
+
+    private static string MaterialIcon(DragonEssenceId material) => material switch
+    {
+        DragonEssenceId.CinderHeart => "px-heart",
+        DragonEssenceId.MoltenFang => "px-fang",
+        DragonEssenceId.AshenWing => "px-wing",
+        _ => "px-crystal",
+    };
+
+    private static string MutationIcon(FireballMutationId mutation) => mutation switch
+    {
+        FireballMutationId.MeteorHeart => "px-crystal",
+        FireballMutationId.Detonation => "px-star",
+        FireballMutationId.ScorchedEarth => "px-campfire",
+        FireballMutationId.CinderNeedle => "px-arrow",
+        FireballMutationId.PhoenixVolley => "px-wing",
+        FireballMutationId.PiercingEmber => "px-sword",
+        FireballMutationId.SeekerEmber => "px-rune",
+        FireballMutationId.Wildfire => "px-fire",
+        FireballMutationId.AshHarvest => "px-skull",
+        FireballMutationId.EmberRecall => "px-cycle",
+        _ => "px-fire",
+    };
     private string SlotCaption(int slot) => slot >= Core.Level ? $"Lv {slot + 1}"
         : Core.Slots[slot] is { } mutation ? FireballCoreCatalog.Get(mutation).Name : "Empty";
 
