@@ -14,6 +14,7 @@ public sealed partial class RunSimulation
     private int encounterPlanIndex;
     private WyrmrealmHabitat? encounterHabitat;
     private readonly List<HostileProjectileState> hostileProjectiles = [];
+    private readonly EnemyCollisionSolver enemyCollisions = new();
     private double encounterSeconds;
     private double rangedStaggerRemaining;
 
@@ -218,7 +219,6 @@ public sealed partial class RunSimulation
             var crossing = target != player.Position;
             var direction = Vector2D.DirectionTo(enemy.Position, target);
             var speed = enemy.Speed;
-            var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier * EliteImpact(enemy);
             if (packbloodLeaders.Count > 0 && IsPackbloodEmpowered(enemy)) speed *= PackbloodSpeedMultiplier;
             if (IsWardEmpowered(enemy)) speed *= ReliquaryWardSpeedMultiplier;
             if (enemy.Ward is { } fuse)
@@ -313,7 +313,28 @@ public sealed partial class RunSimulation
                     ? arenaEnvironment.RestrictMovement(previous, proposed, arenaWidth, arenaHeight, enemy.Radius)
                     : proposed;
             }
-            if (delta <= 0 || Vector2D.Distance(enemy.Position, player.Position) > enemy.Radius + player.Radius) continue;
+
+        }
+        enemyCollisions.Resolve(enemies, mapState.EncounterActive ? arenaEnvironment : null, arenaWidth, arenaHeight);
+        ResolveEnemyContacts(delta);
+        SinkWraiths();
+        UpdateHostileProjectiles(delta);
+        UpdateReliquaryFields(delta);
+        UpdateGlassReliquaryHazards(delta);
+        UpdateBellShockwaves(delta);
+        UpdateWinterBellHazards(delta);
+        UpdateFrostHazards(delta);
+    }
+
+    private void ResolveEnemyContacts(double delta)
+    {
+        if (delta <= 0) return;
+        foreach (var enemy in enemies)
+        {
+            if (enemy.Health <= 0) continue;
+            var statusTimeScale = enemy.Statuses.TimeScale(false);
+            if (statusTimeScale <= 0 || Vector2D.Distance(enemy.Position, player.Position) > enemy.Radius + player.Radius) continue;
+            var contactDamagePerSecond = 18d * EnemyCatalog.Get(enemy.Kind).ContactDamageMultiplier * EliteImpact(enemy);
             if (enemy.MireHound is { Phase: MireHoundPhase.Pounce } biter)
             {
                 // One committed bite, then the hound is exposed; never a pounce-speed contact grind.
@@ -325,13 +346,6 @@ public sealed partial class RunSimulation
             else if (enemy.Whitefang is { Phase: WhitefangPhase.Feint } || enemy.Reflection is not null || enemy.FalseForm is not null) continue;
             else DamagePlayerContact(contactDamagePerSecond * statusTimeScale);
         }
-        SinkWraiths();
-        UpdateHostileProjectiles(delta);
-        UpdateReliquaryFields(delta);
-        UpdateGlassReliquaryHazards(delta);
-        UpdateBellShockwaves(delta);
-        UpdateWinterBellHazards(delta);
-        UpdateFrostHazards(delta);
     }
 
     private int CommittedThreatCount() => hostileProjectiles.Count + iceLances.Count + (reliquary?.Reliquary?.IsCasting == true || reliquary?.GlassReliquary?.IsCasting == true ? 1 : 0)
