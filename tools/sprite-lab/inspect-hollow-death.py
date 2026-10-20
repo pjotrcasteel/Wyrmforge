@@ -33,4 +33,4 @@ for frame in range(1,25):
     rows.append(dict(frame=frame-1,sourceEvaluationError=error,minimumRawZ=float(raw[index,2]),lowestGroups=group_names,correctedVerticesByGroup=group_count,maxBoneLengthError=max(bone_errors)))
 report=dict(frames=rows,maxSourceEvaluationError=max(r['sourceEvaluationError'] for r in rows),maxBoneLengthError=max(r['maxBoneLengthError'] for r in rows),minimumExportedZ=float(source['positions'][:,:,2].min()),finalHoldError=float(np.abs(source['positions'][20:]-source['positions'][20]).max()))
 (folder/'source-validation.json').write_text(json.dumps(report,indent=2)+'\n')
-print(json.dumps(report),flush=True)
+print(json.dumps({k:v for k,v in report.items() if k!='frames'}),flush=True)

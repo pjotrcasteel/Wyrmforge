@@ -3,7 +3,7 @@
     'use strict';
     const C = globalThis.SpriteLabCore;
     const $ = id => document.getElementById(id);
-    const dom = Object.fromEntries(['assetLabel','assetNote','fileInput','dropzone','imageDimensions','loadDemo','loadWalk','loadBefore','layoutPreset',
+    const dom = Object.fromEntries(['assetLabel','assetNote','fileInput','dropzone','imageDimensions','loadDemo','loadWalk','loadBefore','loadMovement','loadDeath','layoutPreset',
         'columns','rows','frameWidth','frameHeight','offsetX','offsetY','fps','fpsValue','scale','scaleValue','resetLayout',
         'stageCanvas','stageHint','sheetCanvas','playBtn','stepBtn','manualBtn','chaseBtn','modeStatus','compass',
         'directionName','directionMeta','frameIndicator','filmstrip','checkList','resultPill','statFrames','statDirections',
@@ -274,6 +274,8 @@
         cv.toBlob(blob=>{if(blob)downloadBlob(`${stem()}-8way-export.png`,blob);},'image/png');
     }
     function bind() {
+        dom.loadMovement.addEventListener('click',()=>loadImage('./assets/hollow-movement-eight-directions-v1.png','hollow-movement-eight-directions-v1.png'));
+        dom.loadDeath.addEventListener('click',()=>loadImage('./assets/hollow-death-eight-directions-v1.png','hollow-death-eight-directions-v1.png'));
         dom.loadWalk.addEventListener('click',()=>loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png'));
         dom.loadBefore.addEventListener('click',()=>loadImage('./assets/hollow-walk-v1.png','hollow-walk-v1.png'));
         dom.loadDemo.addEventListener('click',()=>loadImage('./assets/hollow-walk-reference-5dir.png','hollow-walk-reference-5dir.png',true));
