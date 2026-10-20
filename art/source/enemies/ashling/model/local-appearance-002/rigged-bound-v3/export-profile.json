@@ -1,0 +1,15 @@
+{
+  "frames": 16,
+  "fps": 20,
+  "stanceFraction": 0.32,
+  "sweepModelUnits": 0.24,
+  "travelModelUnitsPerCycle": 0.75,
+  "groundRoot": [
+    0.07,
+    0.22,
+    -0.5
+  ],
+  "tail": "authored editable curve based on concept; eight deform bones",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}
