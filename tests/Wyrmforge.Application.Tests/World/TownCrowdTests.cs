@@ -73,8 +73,8 @@ public sealed class TownCrowdTests
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();
-        var west = new TownPoint(570, 528);
-        var east = new TownPoint(1080, 542);
+        var west = map.Destinations.Single(destination => destination.Id == "west").Position;
+        var east = map.Destinations.Single(destination => destination.Id == "east").Position;
 
         Assert.IsFalse(map.IsWalkable(new TownPoint(824, 511)), "The well must have a real solid footprint.");
         Assert.IsFalse(map.IsSegmentWalkable(west, east), "Direct walking through the well must be impossible.");
