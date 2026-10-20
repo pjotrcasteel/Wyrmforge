@@ -45,6 +45,10 @@
 
 ### 3.0a Organic mutation synthesis and Arcane Nexus editor — LOCKED design direction (20 October 2026)
 
+**Implementation evidence — PR #183 (20 October 2026, first playable slice):** A new persistent Fireball core model, actual Lv.1–5 socket UI, secured-Essence material spending, learned mutation selection and four gameplay-connected Fire effects (Cinder Needle, Phoenix Volley, Meteor Heart, Detonation) have been added on a task branch. Until PR #183 is **merged and deployed**, this is **not shipped**, and all other Tier-I Fire mutations remain unavailable rather than being decorative fake equip choices. The initial resource recipes and exact four-effect coefficients are balance starting values, **not locked canon**. Current runtime still uses the save-compatible legacy `SpellId.FireBolt` identifier for the signature; player-facing naming/migration must not destroy existing spell progress. The older separate Arcane Web/Laboratory hybrid mutation system remains in place and is not automatically converted into five independent Fireball socket effects.
+
+
+
 **Owner decision:** Fireball is an **editable signature spell** within the existing **Arcane Nexus**. Choosing a mutation must alter **both actual combat behavior and the spell's visible anatomy**, and compatible mutations must synthesize **one organic, recognizable result**, not disconnected prefab overlays or mere color changes. Fire is the first vertical slice; the editing framework supports **all six** schools without forcing them to use Fireball-style projectiles. These are **design requirements, not claims of implementation**.
 
 #### One centerpiece, five earned mutator sockets — LOCKED (20 October 2026)
