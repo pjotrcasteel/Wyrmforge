@@ -201,6 +201,7 @@ public sealed partial class RunSimulation
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
         foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+        arenaEnvironment?.DamagePropsInRadius(position, arenaWidth, arenaHeight, radius, damage);
     }
 
     private void Shatter(Vector2D position, double damage, int ignoreId)

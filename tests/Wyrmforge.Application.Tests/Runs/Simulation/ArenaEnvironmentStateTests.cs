@@ -123,6 +123,40 @@ public sealed class ArenaEnvironmentStateTests
         }
     }
     [TestMethod]
+    public void EnemyNavigationTarget_ApproachesHunterAroundSolidProps()
+    {
+        const double width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var prop = terrain.Snapshot().Props.First(p => p.X < .32 || p.X > .68);
+        var center = new Vector2D(prop.X * width, prop.Y * height);
+        var from = center + new Vector2D(-100, 0);
+        var hunter = center + new Vector2D(100, 0);
+        // Don't select a path that crosses a still-sealed gate: the local
+        // obstacle calculation must not override the canonical crossing.
+        var target = terrain.EnemyNavigationTarget(from, hunter, width, height, 9);
+        if (Vector2D.Distance(target, hunter) < .1) return;
+        Assert.IsFalse(terrain.IsBlocked(target, width, height, 9));
+        Assert.IsFalse(terrain.BlocksSegment(from, target, width, height, 9));
+    }
+
+    [TestMethod]
+    public void DamagePropsInRadius_DestroysOnlyNearbyPropsAndNeverCreatesDuplicateLoot()
+    {
+        const double width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var prop = terrain.Snapshot().Props[0];
+        var center = new Vector2D(prop.X * width, prop.Y * height);
+        var before = terrain.Snapshot().Props.Count;
+        Assert.IsGreaterThan(0, terrain.DamagePropsInRadius(center, width, height, 8, 500));
+        Assert.IsFalse(terrain.Snapshot().Props.Any(p => p.Id == prop.Id));
+        Assert.IsLessThan(before, terrain.Snapshot().Props.Count);
+        Assert.AreEqual(0, terrain.DamagePropsInRadius(center, width, height, 0, 500));
+        Assert.AreEqual(0, terrain.DamagePropsInRadius(center, width, height, 8, 0));
+    }
+
+    [TestMethod]
     public void CompleteTrail_WalkingIntoVisibleExit_RevealsNextMapDecision()
     {
         var simulation = new RunSimulationFactory(new Wyrmforge.Application.Tests.TestDoubles.FirstRandomSource())

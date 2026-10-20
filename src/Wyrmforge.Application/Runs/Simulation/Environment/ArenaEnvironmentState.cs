@@ -278,7 +278,55 @@ public sealed class ArenaEnvironmentState
             var offset = Math.Max(24, gate.Height * height * .5 + radius + 8);
             return new Vector2D(width * .5, crossingY + (hunter.Y < crossingY ? -offset : offset));
         }
-        return hunter;
+        return AvoidDestructible(enemy, hunter, width, height, radius);
+    }
+
+    /// <summary>
+    /// A deterministic local detour around the first solid prop on the path.
+    /// Navigation stays in world space and does not use the combat RNG. Closed
+    /// encounter crossings still have priority over local obstacle steering.
+    /// </summary>
+    private Vector2D AvoidDestructible(Vector2D enemy, Vector2D goal, double width, double height, double radius)
+    {
+        DestructibleProp? obstacle = null;
+        var nearest = double.PositiveInfinity;
+        var travel = goal - enemy;
+        var squaredLength = travel.X * travel.X + travel.Y * travel.Y;
+        if (squaredLength < 1) return goal;
+
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0) continue;
+            var center = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            var offset = center - enemy;
+            var progress = (offset.X * travel.X + offset.Y * travel.Y) / squaredLength;
+            if (progress <= 0 || progress >= 1 || progress >= nearest) continue;
+            var clearance = prop.Spec.Radius + radius + 2;
+            if (SegmentDistanceSquared(center, enemy, goal) >= clearance * clearance) continue;
+            nearest = progress;
+            obstacle = prop;
+        }
+        if (obstacle is null) return goal;
+
+        var position = new Vector2D(obstacle.Spec.X * width, obstacle.Spec.Y * height);
+        var towards = Vector2D.DirectionTo(enemy, goal);
+        var across = new Vector2D(-towards.Y, towards.X);
+        var distance = obstacle.Spec.Radius + radius + 12;
+        // Aim beyond the prop, not at its center. A clear exit tangent is preferable
+        // to a blocked shorter detour. Use stable tie breaking for replay fidelity.
+        var best = goal;
+        var cost = double.PositiveInfinity;
+        foreach (var side in new[] { -1d, 1d })
+        {
+            var waypoint = position + towards * (distance * .55) + across * (side * distance * 1.7);
+            if (waypoint.X < radius || waypoint.Y < radius || waypoint.X > width - radius || waypoint.Y > height - radius) continue;
+            if (IsBlocked(waypoint, width, height, radius) || BlocksSegment(enemy, waypoint, width, height, radius)) continue;
+            var score = Vector2D.Distance(enemy, waypoint) + Vector2D.Distance(waypoint, goal);
+            if (score >= cost) continue;
+            best = waypoint;
+            cost = score;
+        }
+        return best == goal ? goal : best;
     }
 
     public ArenaSupplyRenderSnapshot? TryCollect(Vector2D position, double width, double height, double playerRadius, bool needsHealing)
@@ -310,6 +358,30 @@ public sealed class ArenaEnvironmentState
         }
         return false;
     }
+
+    /// <summary>Apply a real area hit to physical props once per explosion, never through a sealed crossing.</summary>
+    public int DamagePropsInRadius(Vector2D center, double width, double height, double radius, double damage)
+    {
+        if (radius <= 0 || damage <= 0) return 0;
+        var hit = 0;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0) continue;
+            var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            if (Vector2D.Distance(center, position) > radius + prop.Spec.Radius) continue;
+            if (barriers.Any(barrier => !IsOpen(barrier) &&
+                SegmentIntersectsBarrier(center, position, barrier, width, height))) continue;
+            prop.Health -= damage;
+            if (prop.Health <= 0 && prop.Spec.DropKind is { } kind)
+                supplies.Add(new Supply(kind, prop.Spec.X, prop.Spec.Y, EncounterPhase.Pressure));
+            hit++;
+        }
+        return hit;
+    }
+
+    private static bool SegmentIntersectsBarrier(Vector2D start, Vector2D end, Barrier barrier, double width, double height) =>
+        IntersectsRectangle(start, end, barrier.X * width, (barrier.X + barrier.Width) * width,
+            barrier.Y * height, (barrier.Y + barrier.Height) * height);
 
     private void AddCrossing(double y, EncounterPhase unlockPhase)
     {
