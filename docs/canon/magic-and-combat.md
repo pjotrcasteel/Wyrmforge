@@ -41,6 +41,88 @@
 **Acceptance/rollout:** Treat code as authority for currently implemented content. Keep legacy saves and old SpellIds compatible via explicit migration; check builds from the existing Forge/Web/Mastery/Spellcraft, all six Divine labels, inaccessible Tiers II–V, seeded playtests and real 320/390px UI. Integrate character-creation visuals only with the parallel character work. Expand one school at a time, Fire then Frost, design cross-school reactions only after each base school is meaningful.
 
 
+
+### 3.0a Organic mutation synthesis and Arcane Nexus editor — LOCKED design direction (20 October 2026)
+
+**Owner decision:** Fireball is an **editable signature spell** within the existing **Arcane Nexus**. Choosing a mutation must alter **both actual combat behavior and the spell's visible anatomy**, and compatible mutations must synthesize **one organic, recognizable result**, not disconnected prefab overlays or mere color changes. Fire is the first vertical slice; the editing framework supports **all six** schools without forcing them to use Fireball-style projectiles. These are **design requirements, not claims of implementation**.
+
+#### One editor, five semantic facets — LOCKED
+
+| Facet | What it edits | Native visual responsibility |
+| --- | --- | --- |
+| **Form** | Principal manifestation and role | Dominant silhouette, core/anatomy, scale, number of primary bodies |
+| **Delivery** | How the effect reaches/engages the world | Path, tempo, trail, tether, emergence or command |
+| **Resolution** | What happens on collision or a legal trigger | Explosion, branching, shatter, echo, curse or creature action |
+| **Persistence** | What remains or continues afterward | Ground hazard, field, status trace, corpse state or living bonded unit |
+| **Mastery** | Rare acquired Wyrm/lineage property | Authored awakened transformation or restrained accent |
+
+These are **ways to inspect a recipe**, NOT five free equipment sockets. The canonical typed spell grammar in §3.2, researched mutations, Web/Forge/Mastery progression, available actual sockets, budgets, explicit exclusions, infusion order and real in-Hunt spell ranks still govern legality. **One dominant Form** establishes the principal visual read; no player is promised one mutation in every facet. Socket count, prerequisites, costs, pairwise compatibility and balancing numbers are **TUNABLE**, not locked by the UI. Wyrmfire is a rare mastery, not an eleventh Tier-I mutation.
+
+#### Visual-morphology engine — LOCKED invariants
+
+1. **One authoritative recipe:** A validated, versioned C# spell composition owns school, signature, order-sensitive mutation IDs, gameplay effects and event phases. Preview and Hunt consume **the same resolved recipe** and presentation descriptors. Client pixels never invent projectiles, targeting, hit results or damage.
+2. **Composable descriptors:** Each mutation contributes school-specific structured art directions for **cast, travel/engage, resolution, persistence/decay**: core shape, material/shell, trail, optional fragments, events, motion, lighting, residue. Data is catalogue-backed; no untrusted executable scripts or arbitrary player shaders.
+3. **Transformation, not stacking:** Form establishes recognizable structure; Delivery deforms movement/engagement; Resolution remakes the same material into the hit/trigger event; Persistence inherits visible fragments/debris from that event; Mastery may accent or explicitly author a higher-tier transformation. Maintain continuity of shape, emission, direction, energy and timing. A Meteor Heart cracks into Detonation fragments which settle into Scorched Earth; three unrelated particle effects are **not acceptable**.
+4. **Single visual priority:** If two traits contend for a silhouette/phase, use authored adapters, a documented priority, or return a clear validation error. **Never silently ignore an equipped mutation.** Mutually exclusive major forms require explicit catalogue tags; other facets may coexist **only if** research/socket/complexity/trigger constraints permit.
+5. **Real interaction and bounded cost:** Actual trajectory, walls, legitimate targets, chain depth, projectile counts, impact radius, persistent fields, cooldown/rank and resource economy must agree with C# gameplay. Cap dynamic offspring and overdraw for mobile; avoid hiding enemies/telegraphs; support reduced motion and legible 320px/390px presentation.
+6. **Stable identity and saves:** Fireball stays the underlying signature even if a build is displayed as *Falling Star*. Display names may be curated or player-defined; no accidental new SpellId for every combination. Preserve existing Fire Bolt and Cinder Needle SpellIds, recorded Web/Forge/Mastery unlocks and recipe version migrations. Do not unlock another Divine school, bypass mastery or double-apply Frostfire, Stormglass or Arcane Conduit.
+
+**Base Fireball visual vocabulary — PROPOSED art reference:** a compact molten core with a hot white-gold center, red/orange licking flame sheath, sparse ash sparks, short ember wake, modest impact flare and cosmetic scorch. No lingering *damaging* fire without an actual authorized persistent effect. Grounded Gothic pixel-compatible art and controlled light, not glowing sci-fi geometry.
+
+#### Ten Fireball Tier-I mutation candidates — PROPOSED visuals, not implemented inventory
+
+| Mutation | Primary facet | Organic visible change | Required mechanical contract |
+| --- | --- | --- | --- |
+| **Cinder Needle** | Form | Orb compresses to a hot thin ember spine; short cutting sparks | Rapid-form identity, legacy migration |
+| **Phoenix Volley** | Form | One core buds into a few smaller fire bodies with related flame trails | Capped multiple projectiles |
+| **Meteor Heart** | Form | Dense cracked magma body, heavy rotating fragments and turbulent shell | Heavy cast/travel behavior |
+| **Piercing Ember** | Delivery | Front sharpens into a lance; wake stays focused through targets | Genuine piercing collision rules |
+| **Seeker Ember** | Delivery | Fire body leans into turns; actual curved path leaves a readable ribbon | Bounded seeking, preserve manual-aim intent |
+| **Ember Recall** | Delivery | Outbound wake curls into a return arc; the embers visibly reverse | Legal returning geometry and repeat hits |
+| **Detonation** | Resolution | Shell bursts into a single pressure ring and molten debris | Bounded AoE and event depth |
+| **Wildfire** | Resolution | Real impact branches into flame tongues toward eligible ignition points | No unbounded spreading/double procs |
+| **Ash Harvest** | Resolution trigger | On an eligible death, ember material collapses into gathered grave-ash wisps | Real kill attribution and reward accounting |
+| **Scorched Earth** | Persistence | Falling fragments become burning cracks and faint smoke | Rendered zone matches actual hazard and expiry |
+
+**Wyrmfire** remains separate rare Wyrm Mastery. Its awakened visuals must preserve the legibility of Form, Delivery and Resolution; selecting a high Hunt tier cannot grant it.
+
+**Illustrative combined identities — NOT approved unlocks or playable content:**
+
+| Composed Fireball | What one continuous animation should communicate |
+| --- | --- |
+| Cinder Needle + Piercing Ember + Ash Harvest | A narrow cutting ember passes through valid bodies; an actual kill draws ash inward |
+| Meteor Heart + Detonation + Scorched Earth | A cracked molten body impacts, expands into a coherent hot shockwave and settles into burning fractures |
+| Phoenix Volley + Seeker Ember + Wildfire | Split small fire bodies curve on validated tracks, then ignite a *bounded* chain |
+| Fireball + Ember Recall + Detonation | The familiar orb travels out and back, with a precisely defined legal detonation trigger |
+
+#### Arcane Nexus screen — LOCKED interaction, PROPOSED layout
+
+- **One destination:** Arcane Nexus → Spellcraft → selected signature. A real ritual bench / carved stone casting focus, with a **large single animated hero preview**. Five connected small facet sigils indicate *what can be edited*, not five free active mutation slots. Do not duplicate the Web, Forge, Mastery, Codex or their wallets.
+- **Immediate draft morph:** choose a researched or inspected candidate, compare before/after, and replay **Cast → Travel/Engage → Resolution → Aftermath → Full loop** using the same presentation descriptors; a nonprojectile school gets meaningful phase names. Invalid combinations show which condition prevents them, not just greyed cards.
+- **Mobile-first:** readable portrait hero preview above a contextual **bottom sheet** with concise mutation choice, icon, gameplay difference, short animation, prerequisites and compatibility; wide screens use a side inspector. Prioritize the resulting spell at 320px and 390px; minimum safe touch targets, useful focus/keyboard paths and reduced-motion states.
+- **Real actions:** Reset restores the last saved draft; Save validates socket/recipe/mastery costs and versioning; Test exercises the **actual deterministic gameplay sandbox** with targets/walls, not a fake visual sandbox. Avoid invented stats, fake cooldown values, fixed 3/5 complexity meters or unapproved mastery unlocks in player-facing concept art.
+- **Visual framing:** restrained Gothic pixel/painterly dark-fantasy art, weathered iron and stone, selective firelight; use existing approved character/environment language and immutable six-school pixel emblems. Visual polish must not replace playable tests and device acceptance.
+
+#### All-six-school morphological scaling — LOCKED shared editor, individually authored content
+
+| Divine archetype | Native material / body language | How shared facets adapt |
+| --- | --- | --- |
+| **Pyromancer (Fire)** | Molten core, pressured flame, embers, ash and cracked scorched ground | Form = Fireball shape; Delivery = flight; Resolution = ignite/explode; Persistence = burning terrain |
+| **Cryomancer (Frost)** | Crystalline mass, icy fissures, refracted cyan glow, frost dust | Form = shard/spear/cluster; Delivery = shard path/placement; Resolution = freeze or shatter; Persistence = protective ice/terrain |
+| **Stormcaller (Storm)** | Yellow branched filaments, lightning fork rhythm, charge nodes and static residue | Form = bolt/chain seed; Delivery = conductivity and jumps; Resolution = discharge; Persistence = electrified field |
+| **Arcanist (Arcane)** | Violet ordered sigils, spatial folds, controlled echo traces | Form = orb/glyph/mark; Delivery = phase/redirect; Resolution = echo/rupture; Persistence = spatial mark |
+| **Necromancer (Death)** | Bone, decay, corpse/soul traces, grave-ash and reserved death-green accents | Form = curse/corpse construct; Delivery = bind/haunt/reanimate; Resolution = curse/death economy; Persistence = blight or existing undead. **Never simply a green Fireball.** |
+| **Summoner (Binding)** | Real recognizable bonded-creature anatomy, grounded summoning marks and living tethers | Form = bonded unit/role; Delivery = summon/command/pounce; Resolution = unit action; Persistence = companion and orders. **Never a bear-shaped projectile.** |
+
+Necromancer and Summoner signatures are **still TBD**; these are visual-domain boundaries, not invented final spells. Existing Frost Shard, Chain Lightning and Arcane Orb code does not automatically make those schools available in new character creation. Cross-school reactions remain order-sensitive, typed, limited and owned by §3.2.
+
+**Concept-art acceptance for the first Fire prototype:** Present a **portrait-phone Arcane Nexus screen** and, optionally, a desktop adaptation. Show standard Fireball transitioning to **Meteor Heart + Detonation + Scorched Earth** with unmistakable shared physical material, plus small Cinder Needle/Phoenix Volley comparisons. Distinguish locked/researched/equipped without showing unapproved resource totals. Preserve approved icon and WyrmForge art identity; artwork is a **design concept**, not proof of implementation.
+
+**Research principles (do not copy source art):** [Last Epoch skill specialization](https://support.lastepoch.com/hc/en-us/articles/46363203944859-Skill-Specialization) demonstrates editing one recognizable signature; [Path of Exile 2 support-gem grammar](https://www.poe2wiki.net/wiki/Support_skill_gem) demonstrates typed support compatibility; [Diablo II: Resurrected UI/accessibility improvements](https://news.blizzard.com/en-gb/article/23695734/technical-alpha-learnings) favor readable, restrained fantasy presentation. [Approved WyrmForge art rules](art-and-animation.md) take precedence.
+
+**Change note — 20 October 2026:** Owner-approved direction for a living, visually composable Fireball editor and one six-school Arcane Nexus; Fire candidate effects, exact constraints, numbers and other reserved signatures remain **PROPOSED / not shipped**.
+
+
 ### 3.1 One integrated city feature — LOCKED
 
 The **Arcane Nexus** is the ONE coherent player-facing progression/spellcraft experience; internally retain modular domains. It combines:
