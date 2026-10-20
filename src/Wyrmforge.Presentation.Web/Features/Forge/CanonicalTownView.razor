@@ -82,7 +82,7 @@
         try
         {
             using var http = new HttpClient();
-            var json = await http.GetStringAsync(Navigation.ToAbsoluteUri("art/town/night-navigation.json"), crowdStop.Token);
+            var json = await http.GetStringAsync(Navigation.ToAbsoluteUri($"art/town/night-navigation.json?v={AppBuildInfo.Version}"), crowdStop.Token);
             if (crowdStop.IsCancellationRequested) return;
             crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: 7);
             _ = AnimateCrowdAsync();
