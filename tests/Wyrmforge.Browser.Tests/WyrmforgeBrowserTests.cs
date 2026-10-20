@@ -325,6 +325,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
 
         var rack = Page.Locator(".nexus-rack-details");
         await Expect(rack).ToBeVisibleAsync();
@@ -352,6 +353,40 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }");
         Assert.IsTrue(webNotOccluded, "The node inspector must sit beneath the Web, not over the skill nodes.");
         await ScreenshotAsync($"nexus-sockets-{width}.png");
+    }
+
+    [TestMethod]
+    public async Task Mobile_FireballNexus_EquipsUpgradesAndRestoresPersistentSpell()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("if (!localStorage.getItem('fireballTestSeeded')) { localStorage.setItem('fireballTestSeeded','1'); localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart'])); }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+
+        await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
+        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToContainTextAsync("Select a mutator");
+        await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
+        await Page.Locator(".fireball-mutator").Filter(new() { HasText = "Detonation" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Detonation");
+
+        await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
+        await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(3);
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Detonation");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+        Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
     }
 
     [TestMethod]
@@ -493,6 +528,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-night-base")).ToHaveCountAsync(1);
         await OpenTownBuildingAsync("Arcane Nexus");
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arcane Nexus", Exact = true })).ToBeVisibleAsync();
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         await Expect(Page.Locator(".build-points strong")).ToHaveTextAsync("1");
     }
 
@@ -504,7 +540,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
-        await Page.GetByRole(AriaRole.Tab, new() { Name = "Spellcraft" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Research" }).ClickAsync();
 
         await Expect(Page.Locator(".resonance-title h2")).ToHaveTextAsync("Frostfire");
         await Expect(Page.Locator(".grimoire-count b")).ToHaveTextAsync("0");

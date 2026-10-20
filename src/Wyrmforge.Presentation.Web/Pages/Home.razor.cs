@@ -131,6 +131,7 @@ public partial class Home
         await TryLoadWorldAsync();
         await TryLoadChroniclesAsync();
         await TryLoadLaboratoryAsync();
+        await TryLoadFireballCoreAsync();
         await TryLoadLoadoutsAsync();
         laboratoryNotice = laboratory.ReconcileSocket(selection.Selected);
         if (laboratoryNotice is not null) await TrySetLaboratoryAsync();
@@ -280,6 +281,7 @@ public partial class Home
         if (value.EssenceIds.Count > 0)
         {
             foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId);
+            await RecordFireballDiscoveriesAsync(value.EssenceIds);
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
         }
