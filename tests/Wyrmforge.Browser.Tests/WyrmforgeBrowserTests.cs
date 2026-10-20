@@ -646,7 +646,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.RouteAsync("**/_framework/blazor.boot.json*", async route =>
         {
             bootManifestRequests++;
-            await Task.Delay(TimeSpan.FromSeconds(12), TestContext.CancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(12));
             await route.ContinueAsync();
         });
 
