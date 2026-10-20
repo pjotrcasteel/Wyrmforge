@@ -11,9 +11,9 @@
 
 - Use **one 1672×941 authored nighttime plaza panorama**, navigated as three West / Gate / East camera views on portrait phones, instead of stacked isolated building cards.
 - Tap Arcane Nexus, Blacksmith, Codex and Hall of Fame to independently toggle **Active / Vacant** artwork inside the same town; this is a temporary, non-persistent visual preview and **does not open building menus or change progression**. The World Gate still opens its normal flow.
-- The five approved source town overview paintings live separately from the eight immutable original building concept images. Four derived RGBA layers permit all 16 vacancy combinations with no CSS blackout overlays.
-- Old building menus remain accessible for regression through Settings > Town preview destinations. Runtime night assets have now been pushed directly to GitHub; [implementation notes and QA plan](docs/art/refuge-night-panorama-preview-2026-10-20.md).
-- **Status:** still in draft; not yet the live GitHub Pages town until CI and mobile visual acceptance are complete.
+- Five approved night-overview source compositions are archived in `user_handover_files/concepts/town/night/` (high-quality WebP) separately from the eight immutable building concept PNGs. Four derived RGBA layers permit all 16 vacancy combinations with no CSS blackout overlays.
+- Old building menus remain accessible for regression through Settings > Town preview destinations. Runtime and source night assets have been pushed directly to GitHub; [implementation notes and QA plan](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+- **Status:** release candidate awaiting CI and mobile visual acceptance before GitHub Pages deployment.
 
 
 ## Prototype 0.0.131 — Canonical Refuge town screen
