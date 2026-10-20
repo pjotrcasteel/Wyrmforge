@@ -1512,6 +1512,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var source = await Page.Locator(".gate-lineage-art--fire").EvaluateAsync<string>(
             "(node) => getComputedStyle(node).backgroundImage");
         StringAssert.Contains(source, "divine-lineage-sigils.webp");
+        var artworkAvailable = await Page.EvaluateAsync<bool>(
+            "async () => { const result = await fetch('art/ui/divine-lineage-sigils.webp'); return result.ok && (await result.blob()).size > 4000; }");
+        Assert.IsTrue(artworkAvailable, "Canonical pixel icon atlas must load from the actual web server.");
         await ScreenshotAsync($"world-gate-lineages-{width}.png");
 
         var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
