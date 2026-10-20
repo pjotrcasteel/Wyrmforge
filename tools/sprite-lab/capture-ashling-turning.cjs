@@ -5,7 +5,7 @@ const fs=require('node:fs'),path=require('node:path');
  try{
  const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.goto(base+'/enemy-lab?kind=Ashling&seed=42&autoplay=false&cast=false');await p.locator('#wyrmforge-ignition').waitFor({state:'hidden'});await p.locator('.enemy-lab canvas').waitFor();
- await p.evaluate(async()=>window.__ashling=await import('/js/arena.js'));
+ await p.evaluate(async()=>window.__ashling=await import(new URL('js/arena.js',document.baseURI).href));
  await p.waitForFunction(()=>window.__ashling.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.ashling.entities.some(e=>e.clip==='attack'&&e.frame<4));
  await p.locator('.enemy-lab canvas').focus();await p.evaluate(()=>{window.__samples=[];window.__timer=setInterval(()=>{const d=window.__ashling.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'));window.__samples.push({ashling:d.ashling,renderingFailed:d.renderingFailed});},25);});
  let n=0;
@@ -24,3 +24,4 @@ const fs=require('node:fs'),path=require('node:path');
  fs.writeFileSync(path.join(out,'turning-report.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify({...result,samples:undefined}));if(!result.passed)process.exitCode=1;
  }finally{await b.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
