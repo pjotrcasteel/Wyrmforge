@@ -1,0 +1,51 @@
+/* Fireball spellcraft: game-native ritual surface, not the concept image as a static screen. */
+.fireball-ritual{--ember:#f88c3b;--edge:#705542;--paper:#ead5ad;--shade:#100d12;color:var(--paper);width:min(520px,100%);margin:0 auto;display:grid;gap:10px;font-family:Georgia,serif}
+.fireball-heading{text-align:center;padding:10px 0 0}
+.fireball-heading h2{margin:0;font-size:clamp(1.45rem,5vw,1.85rem);font-weight:600;letter-spacing:.025em;text-shadow:0 2px 5px #090506}
+.fireball-heading h2 span{color:#f5a45b;font-size:.77em;margin-left:8px}
+.fireball-heading small{display:block;font:600 .67rem/1.6 system-ui,sans-serif;color:#c1aa99;letter-spacing:.085em;text-transform:uppercase}
+.fireball-chamber{background:linear-gradient(#0e0c13a6,#1510179c),url('art/spellcraft-study.jpg') center top/cover;border:1px solid #584338;position:relative;overflow:hidden}
+.fireball-altar{height:clamp(290px,74vw,400px);position:relative;max-width:480px;margin:auto}
+.fireball-altar::before{content:'';position:absolute;left:13%;top:10%;width:74%;height:78%;border:2px solid #a678435e;border-radius:50%;box-shadow:0 0 12px #a1562529,inset 0 0 12px #9c4b2522;pointer-events:none}
+.fireball-center{position:absolute;left:50%;top:50%;width:43%;height:48%;transform:translate(-50%,-50%);border:0;background:transparent;cursor:pointer;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:4px;color:var(--paper);z-index:1;touch-action:manipulation}
+.fireball-body{width:77%;aspect-ratio:1;position:relative;display:block;transform:rotate(-12deg);background:radial-gradient(circle at 37% 34%,#fff3bb 0 9%,#ffba51 10% 18%,#ee6b27 19% 32%,#642e27 33% 48%,#ef702e 49% 55%,#341925 59% 70%,transparent 71%);filter:drop-shadow(0 0 7px #ef541e) drop-shadow(0 0 16px #b9331f);image-rendering:pixelated;clip-path:polygon(7% 33%,27% 11%,43% 19%,59% 0,68% 20%,91% 9%,85% 35%,100% 45%,88% 73%,68% 83%,59% 100%,39% 83%,14% 87%,20% 65%,0 53%);animation:fireball-pulse 2s ease-in-out infinite alternate}
+.fireball-center.heavy .fireball-body{background:radial-gradient(circle at 42% 40%,#fff0b0 0 5%,#f69a3e 6% 11%,#3d2630 13% 24%,#ff8f30 26% 32%,#38252a 33% 49%,#ff6b20 50% 57%,#241b26 60% 73%,transparent 74%)}
+.fireball-center.explosive .fireball-body{filter:drop-shadow(0 0 13px #f5671f) drop-shadow(0 0 23px #f1a028)}
+.fireball-center.scorched .fireball-body::after{content:'';position:absolute;bottom:3%;left:15%;width:60%;height:12%;background:#f28039;box-shadow:0 4px #672c22,0 7px #b94c28;transform:skewX(-24deg)}
+.fireball-center b{font-size:1.05rem;text-shadow:1px 2px #000}
+.fireball-center small{font:600 .58rem/1 system-ui,sans-serif;color:#c6a88d;text-transform:uppercase}
+.fireball-center.selected b{color:#ffc173}
+.fireball-socket{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;width:25%;min-width:64px;aspect-ratio:1;transform:translate(-50%,-50%);border:0;background:transparent;color:var(--paper);cursor:pointer;padding:2px;touch-action:manipulation}
+.fireball-socket::before{content:'';position:absolute;inset:13% 17% 27%;border:3px solid #886744;background:radial-gradient(circle,#3a211b,#15101a 70%);border-radius:50%;box-shadow:0 3px #050407,inset 0 0 9px #000;pointer-events:none}
+.fireball-socket i{position:relative;display:grid;place-items:center;z-index:1;color:#f89b4a;font-style:normal;font-size:clamp(1.2rem,5vw,1.9rem);width:54%;height:44%;text-shadow:0 0 12px #c34d26}
+.fireball-socket span{position:relative;z-index:2;font-size:clamp(.56rem,2.2vw,.8rem);background:#171017e6;border:1px solid #68513b;max-width:110%;padding:3px 5px;white-space:nowrap}
+.fireball-socket.sealed::before{border-color:#484047;background:#100e15;box-shadow:inset 0 0 12px #000}
+.fireball-socket.sealed i,.fireball-socket.sealed span{color:#8b818b}
+.fireball-socket.selected::before{border-color:#e5b570;box-shadow:0 0 11px #f09b4f,inset 0 0 9px #000}
+.fireball-socket.filled::before{border-color:#a86839}
+.fireball-socket--1{left:50%;top:16%}.fireball-socket--2{left:17%;top:39%}.fireball-socket--3{left:83%;top:39%}.fireball-socket--4{left:28%;top:81%}.fireball-socket--5{left:72%;top:81%}
+.fireball-context{border:2px solid #604434;box-shadow:inset 0 0 0 2px #171018;background:linear-gradient(#20161d,#100e16);padding:14px;min-height:235px;display:grid;align-content:start;gap:8px}
+.fireball-context h3{margin:0;font-size:1.24rem;color:#f4cf9b}.fireball-context h3 small{font-size:.65em;font-weight:400;color:#bcaba3;margin-left:8px}
+.fireball-context p{margin:0;font-size:.88rem;line-height:1.45;color:#ccbcb2}
+.fireball-level-up{font-size:1.1rem!important;color:#ffd091!important}
+.fireball-level-up span{margin:0 10px;color:#d99b53}
+.fireball-materials{display:grid;gap:5px;margin-top:5px}
+.fireball-material{display:flex;align-items:center;gap:11px;border:1px solid #58443c;background:#18131b;padding:8px}
+.material-symbol{display:grid;place-items:center;width:38px;height:38px;background:#40251d;color:#efa259;font-size:1.2rem}
+.fireball-material b,.fireball-material small{display:block}.fireball-material b{font-size:.87rem}.fireball-material small{font:600 .72rem/1.45 system-ui,sans-serif;color:#d9956d}
+.fireball-material.ready small{color:#a8c99a}
+.fireball-action,.fireball-remove{min-height:44px;background:#52291f;color:#ffdfb1;border:1px solid #aa703c;padding:8px 14px;font:700 .9rem/1.25 Georgia,serif;cursor:pointer;margin-top:6px}
+.fireball-action:disabled{background:#241e24;border-color:#53464a;color:#938b8a;cursor:not-allowed}
+.fireball-mutator-list{display:grid;gap:5px;overflow-y:auto;max-height:min(37dvh,310px);scrollbar-color:#b87b44 #211821}
+.fireball-mutator{display:flex;align-items:center;text-align:left;gap:10px;min-height:66px;width:100%;border:1px solid #65503f;background:#211923;padding:7px;color:var(--paper);cursor:pointer}
+.fireball-mutator.equipped{border-color:#e5a65c;background:#392218}
+.fireball-mutator:disabled{opacity:.57;cursor:not-allowed}
+.mutation-symbol{flex:0 0 42px;height:42px;display:grid;place-items:center;border:1px solid #7b4d35;background:#2a171b;font-size:1.35rem;color:#f88b42}
+.mutation-description{flex:1;min-width:0}.mutation-description b,.mutation-description small{display:block}.mutation-description b{font-size:.94rem}.mutation-description small{font:.75rem/1.4 system-ui,sans-serif;color:#c5aea4;margin-top:3px}
+.mutation-state{font:.64rem/1.2 system-ui,sans-serif;color:#d9a76a;text-transform:uppercase;flex:0 0 auto}
+.fireball-remove{background:transparent;border-color:#695348}
+.fireball-context p.fireball-help{font-size:.73rem;color:#aaa0a4}.fireball-context p.fireball-message{color:#e9ba87;font-size:.78rem}
+.fireball-center:focus-visible,.fireball-socket:focus-visible,.fireball-action:focus-visible,.fireball-mutator:focus-visible,.fireball-remove:focus-visible{outline:2px solid #ffd291;outline-offset:3px}
+@keyframes fireball-pulse{to{transform:rotate(-8deg) scale(1.05);filter:drop-shadow(0 0 13px #f86c2a) drop-shadow(0 0 22px #a42e1a)}}
+@media(prefers-reduced-motion:reduce){.fireball-body{animation:none}}
+@media(max-width:360px){.fireball-context{padding:10px}.fireball-altar{height:290px}.fireball-socket{min-width:58px}.fireball-socket span{font-size:.54rem;padding:2px 3px}}
