@@ -1,5 +1,13 @@
 # Wyrmforge
 
+## Prototype 0.0.136 — Gameplay-driven night Refuge, swipe-only navigation
+
+- All four night-town active/vacant visual states follow the player's existing persistent unlock flags. No visual-only test toggles or extra progression state.
+- Unlocked building hotspots open their real destinations; locked buildings display the corresponding in-game requirement. The World Gate is unchanged.
+- The WEST/GATE/EAST test navigation bar and settings-only menu-preview shortcuts are removed. Touch swipes and desktop mouse dragging remain; keyboard arrows support accessibility.
+- Canonical building source paintings, approved night panorama, and author-drawn vacancy layers are untouched. [Integration record](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+
+
 ## Prototype 0.0.134 — Animated Hollow in combat
 
 - The accepted Hollow now uses eight real directions for its pixel walk, claw attack and death in ordinary hunts and Enemy Lab.
