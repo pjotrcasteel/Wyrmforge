@@ -14,15 +14,17 @@ export function updateSpriteAnimation(state,profile,input){
     if(signal&&signal.token!==state.lastToken){
         const spec=profile.actions[signal.name];
         if(spec&&(!state.action||(spec.priority??0)>=(profile.actions[state.action.name].priority??0))){
-            state.action={name:signal.name,token:signal.token,started:state.time};state.lastToken=signal.token;
+            state.action={name:signal.name,token:signal.token,started:state.time,progress:null};state.lastToken=signal.token;
         }
     }
     let actionFrame=null,actionSpec=null;
     if(state.action){
         actionSpec=profile.actions[state.action.name];
+        if(!stopped&&signal?.token===state.action.token&&Number.isFinite(signal.progress))state.action.progress=Math.max(0,Math.min(1,signal.progress));
         const elapsed=state.time-state.action.started;
-        if(elapsed>=actionSpec.frames/actionSpec.fps&&!actionSpec.hold){state.action=null;actionSpec=null;}
-        else actionFrame=Math.min(actionSpec.frames-1,Math.floor(elapsed*actionSpec.fps));
+        const position=state.action.progress==null?elapsed*actionSpec.fps:state.action.progress*actionSpec.frames;
+        if(position>=actionSpec.frames&&!actionSpec.hold){state.action=null;actionSpec=null;}
+        else actionFrame=Math.min(actionSpec.frames-1,Math.floor(position));
     }
     const moving=Boolean(input.moving);
     if(!stopped)state.supportFrame=moving?Math.floor(state.phase*profile.locomotion.frames)%profile.locomotion.frames:0;

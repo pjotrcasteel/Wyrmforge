@@ -4,7 +4,7 @@ export function createSpriteLayerCompositor(metadata,clips,images,options={}){
     const maxTiles=options.maxTiles??96;
     const tiles=new Map(),paths=new WeakMap();
     const makeCanvas=options.makeCanvas??(()=>typeof OffscreenCanvas==='function'?new OffscreenCanvas(size,size):Object.assign(document.createElement('canvas'),{width:size,height:size}));
-    const stats={hits:0,misses:0,evictions:0,tiles:0};
+    const stats={hits:0,misses:0,evictions:0,tiles:0,allocatedTiles:0};
     function regionPath(frame,name){
         let regions=paths.get(frame);if(!regions){regions={};paths.set(frame,regions);}
         if(!regions[name]){
@@ -21,7 +21,10 @@ export function createSpriteLayerCompositor(metadata,clips,images,options={}){
         const key=[sample.direction,sample.baseClip,sample.baseFrame,sample.clip,sample.frame,sample.baseRegion,sample.actionRegion,sample.useBasePose].join(':');
         if(tiles.has(key)){const tile=tiles.get(key);tiles.delete(key);tiles.set(key,tile);stats.hits++;return tile;}
         stats.misses++;
-        const tile=makeCanvas(),ctx=tile.getContext('2d');ctx.imageSmoothingEnabled=false;
+        let tile;
+        if(tiles.size>=maxTiles){const oldest=tiles.keys().next().value;tile=tiles.get(oldest);tiles.delete(oldest);stats.evictions++;}
+        else{tile=makeCanvas();stats.allocatedTiles++;}
+        const ctx=tile.getContext('2d');ctx.clearRect(0,0,size,size);ctx.imageSmoothingEnabled=false;
         if(sample.useBasePose){source(ctx,sample.baseClip,sample.baseFrame,sample.direction);}
         else{
             const base=metadata.clips[sample.baseClip][sample.direction][sample.baseFrame];
@@ -32,7 +35,6 @@ export function createSpriteLayerCompositor(metadata,clips,images,options={}){
             ctx.clip(regionPath(action,sample.actionRegion));source(ctx,sample.clip,sample.frame,sample.direction);ctx.restore();
         }
         tiles.set(key,tile);
-        if(tiles.size>maxTiles){tiles.delete(tiles.keys().next().value);stats.evictions++;}
         stats.tiles=tiles.size;return tile;
     }
     return {compose,stats,clear(){tiles.clear();stats.tiles=0;},estimatedBytes(){return tiles.size*size*size*4;}};

@@ -38,7 +38,7 @@ const fs=require('node:fs');const path=require('node:path');
  const pauseStable=JSON.stringify(pausedBefore.hollow.corpses)===JSON.stringify(pausedAfter.hollow.corpses);
  const result={base,errors,assets:[...assets],walk:walk.hollow,attack:attack.hollow,collapse:collapse.hollow,held:held.hollow,pauseStable,
   renderingFailed:[walk,attack,collapse,held].some(d=>d.renderingFailed),performance:attack.performance};
- result.passed=errors.length===0&&assets.size===4&&pauseStable&&!result.renderingFailed;
+ result.passed=errors.length===0&&['manifest.json','walk.png','attack.png','death.png'].every(name=>[...assets].some(url=>url.endsWith('/'+name)))&&pauseStable&&!result.renderingFailed;
  fs.writeFileSync(path.join(output,'browser-report.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
  await browser.close();if(!result.passed)process.exitCode=1;
 })().catch(e=>{console.error(e);process.exitCode=1});

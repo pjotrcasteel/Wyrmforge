@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
-const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')");
+const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
+const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
+ .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -55,7 +57,7 @@ test('packed runtime assets preserve approved source bytes and cache hashes',()=
 test('nearest-neighbor renderer selects an actual direction row and original pivot',async()=>{
  const m=JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/manifest.json',root)));
  const originalFetch=globalThis.fetch,originalImage=globalThis.Image;
- globalThis.fetch=async()=>({ok:true,json:async()=>m});
+ globalThis.fetch=async url=>({ok:true,json:async()=>String(url).endsWith('layers.json')?JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/layers.json',root))):String(url).endsWith('animation-profile.json')?JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/animation-profile.json',root))):m});
  globalThis.Image=class {set src(url){const c=Object.values(m.clips).find(c=>url.includes(c.image));this.naturalWidth=c.cell*c.frames;this.naturalHeight=c.cell*8;queueMicrotask(()=>this.onload());}};
  try{
   assert.equal(await mod.preloadHollowSprites(),true);
