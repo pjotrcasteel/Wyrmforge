@@ -2979,9 +2979,10 @@
   "fireEffect": "fading residual claw embers",
   "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-death-v3/ashling-death.blend",
   "atlasSha256": "95a3b3da7bbb30f1b929dafd98a044ca0c27657d25787b2779c6fa4aaccc06f8",
-  "ownerAccepted": false,
+  "ownerAccepted": true,
   "runtimeIntegrated": false,
   "appearanceRevision": "surface-bound fiery eyes v1",
   "priorExport": "art/source/enemies/ashling/exports/death-eight-directions-v3",
-  "eyeDeathFadeEndFrame": 13
+  "eyeDeathFadeEndFrame": 13,
+  "appearanceOwnerAccepted": true
 }

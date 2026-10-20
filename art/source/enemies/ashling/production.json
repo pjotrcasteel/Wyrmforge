@@ -6,14 +6,14 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "movement attack and death approved; fiery-eye appearance revision validated across all clips",
+  "status": "approved lifecycle and fiery eyes integrated; local published-game validation passed; task branch not deployed",
   "ownerAccepted": true,
   "rigged": true,
-  "runtimeIntegrated": false,
+  "runtimeIntegrated": true,
   "remaining": [
-    "owner review of small fiery-eye appearance revision",
-    "shared animation-layer metadata",
-    "runtime integration and in-game validation"
+    "PR CI and release review",
+    "ship version and deploy when authorized",
+    "physical mobile Safari validation"
   ],
   "modelAttempt": "model/local-appearance-002",
   "sourceRig": "model/local-appearance-002/rigged-block-v4a/ashling-rigged.blend",
@@ -37,6 +37,7 @@
   "deathOwnerAccepted": true,
   "deathDocumentation": "../../../../docs/art/ashling-death-2026-10-20.md",
   "deathAcceptance": "Owner awesome reply accepted collapse and requested fiery eyes, 2026-10-20",
-  "appearanceOwnerAccepted": false,
-  "appearanceDocumentation": "../../../../docs/art/ashling-fiery-eyes-2026-10-20.md"
+  "appearanceOwnerAccepted": true,
+  "appearanceDocumentation": "../../../../docs/art/ashling-fiery-eyes-2026-10-20.md",
+  "runtimeDocumentation": "../../../../docs/art/ashling-runtime-integration-2026-10-20.md"
 }

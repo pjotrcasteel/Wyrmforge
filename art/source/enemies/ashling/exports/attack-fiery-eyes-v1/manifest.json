@@ -2357,9 +2357,10 @@
   "fireEffect": "hand-bound depth-tested geometric flames, hand heat tint and embers",
   "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-attack-launch-v3/ashling-attack.blend",
   "atlasSha256": "25eee48424793dad9206495a31726baa8eb66a7ba05fbf2a53a62a07a7b4f2ed",
-  "ownerAccepted": false,
+  "ownerAccepted": true,
   "runtimeIntegrated": false,
   "appearanceRevision": "surface-bound fiery eyes v1",
   "priorExport": "art/source/enemies/ashling/exports/attack-launch-eight-directions-v2",
-  "eyeDeathFadeEndFrame": 13
+  "eyeDeathFadeEndFrame": 13,
+  "appearanceOwnerAccepted": true
 }
