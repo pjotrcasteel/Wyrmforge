@@ -138,6 +138,14 @@ def paint(base, building, night):
         replacement = cv2.cvtColor(np.clip(hsv, 0, 255).astype(np.uint8),
                                    cv2.COLOR_HSV2RGB)
         canvas = apply_masked(canvas, replacement, hearth_mask)
+        # White flame tips are low-saturation: exclude those too, retaining the
+        # stone surround outside the cavity as painted in the canonical scene.
+        soot = mask_ellipse(size, 194, 682, 37, 29, 3)
+        charcoal = canvas.astype(np.float32)
+        charcoal[..., 0] *= 1 - soot * .72
+        charcoal[..., 1] *= 1 - soot * .74
+        charcoal[..., 2] *= 1 - soot * .71
+        canvas = np.clip(charcoal, 0, 255).astype(np.uint8)
         for entry in [(186, 686, 38, 40), (298, 659, 20, 28),
                       (394, 647, 18, 29), (453, 661, 18, 25),
                       (54, 670, 23, 43), (324, 628, 24, 28)]:
@@ -162,7 +170,7 @@ def paint(base, building, night):
         # Borrow existing carved door timber from the Hall's own right-hand
         # entrance, instead of hallucinating a blurred replacement. The tall
         # central wooden door remains inside its original masonry arch.
-        timber = cv2.resize(base[652:750, 1520:1558], (37, 77),
+        timber = cv2.resize(base[698:785, 1518:1558], (37, 77),
                             interpolation=cv2.INTER_LINEAR)
         repaired = canvas.copy()
         repaired[631:708, 1297:1334] = timber
