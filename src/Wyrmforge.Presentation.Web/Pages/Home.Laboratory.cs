@@ -11,6 +11,7 @@ public partial class Home
     private const string LaboratoryKey = "wyrmforge.laboratory.v1";
     private const string FireballCoreKey = "wyrmforge.fireballCore.v1";
     private readonly FireballCoreState fireballCore = new();
+    private IReadOnlyList<FireballMutationId> activeFireballMutations = [];
 
     private readonly LaboratoryState laboratory = new();
     private IReadOnlyList<LaboratoryMutationId> activeLaboratoryMutations = [];
@@ -26,6 +27,7 @@ public partial class Home
     private void PrepareLaboratoryRun()
     {
         activeLaboratoryMutations = laboratory.PreparedFor(selection.Selected);
+        activeFireballMutations = fireballCore.Equipped;
         activeResearchLead = laboratory.LeadWyrm(essenceVault);
         activeResearchSpecimen = activeResearchLead is not null && laboratory.Tracked is { } tracked ? LaboratoryCatalog.Get(tracked).Stabilizer : null;
         researchPrompt = null;
