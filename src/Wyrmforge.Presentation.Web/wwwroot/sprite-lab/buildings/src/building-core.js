@@ -54,9 +54,11 @@
   function stageValues(slots, stage) {
     const values = {};
     for (const slot of slots) {
-      const lit = stage === 'active' || stage === 'masterwork'
-        || stage === 'stirring' && ['furnace', 'lamp', 'npc', 'entrance'].includes(slot.id);
-      values[slot.id] = lit ? 'reference' : 'base';
+      // Never mix old light/dark panoramas into rectangular patches: their
+      // lighting differs and caused the rejected dark stains on the roof.
+      // Only authored per-slot changes are allowed. Start all states with the
+      // unchanged original artwork; owners can add intentional variants.
+      values[slot.id] = stage === 'vacant' && slot.id === 'roof' ? 'roof:damaged' : 'base';
     }
     return { locked: false, values };
   }
@@ -66,7 +68,7 @@
     const slots = spec.slots.map(([key, label, rect]) => ({ id: key, label, rect: clone(rect) }));
     return { format: FORMAT, version: VERSION, id: spec.id, name: spec.name,
       sourceSize: clone(SIZE), crop: clone(spec.crop),
-      baseSource: 'refuge-town-vacant.webp', referenceSource: 'refuge-town-panorama.png',
+      baseSource: 'refuge-town-panorama.png', referenceSource: 'refuge-town-panorama.png',
       slots, stages: Object.fromEntries(STAGES.map(s => [s, stageValues(slots, s)])),
       assets: {}, visualAccepted: false };
   }
@@ -119,7 +121,7 @@
         throw new Error('Missing stage or slot values.');
       for (const id of keys) {
         const value = s.values[id];
-        if (value !== 'base' && value !== 'reference' &&
+        if (value !== 'base' && value !== 'reference' && !(id === 'roof' && value === 'roof:damaged') &&
             !(typeof value === 'string' && value.startsWith('upload:') && p.assets[value.slice(7)]))
           throw new Error('Invalid slot option or missing uploaded artwork.');
       }
@@ -131,6 +133,7 @@
     if (!STAGES.includes(stage) || p.stages[stage].locked) throw new Error('Unlock this stage before editing.');
     if (!p.slots.some(s => s.id === slotId)) throw new Error('Unknown slot.');
     if (value !== 'base' && value !== 'reference' &&
+        !(slotId === 'roof' && value === 'roof:damaged') &&
         !(value.startsWith('upload:') && p.assets[value.slice(7)])) throw new Error('Unknown slot asset.');
     p.stages[stage].values[slotId] = value;
     return p;
