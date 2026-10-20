@@ -1,4 +1,8 @@
 @using Wyrmforge.Application.World
+@using System.Net.Http
+@using System.Text.Json
+@inject NavigationManager Navigation
+@inject ILogger<CanonicalTownView> Logger
 @implements IDisposable
 @* Night town vacancy follows actual game progress, not a local preview toggle. *@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
@@ -28,15 +32,23 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
-        @* Only ambient citizens are simulated in this first slice. Building workers come later. *@
-        <div class="refuge-town-crowd" aria-hidden="true">
-            @foreach (var person in crowd.Citizens)
-            {
-                <span @key="person.Id" class="refuge-town-citizen"
-                      data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
-                      style="@CitizenStyle(person)"></span>
-            }
-        </div>
+        @* The scene's own artwork-space navigation map drives feet and well occlusion. *@
+        @if (crowd is not null)
+        {
+            <div class="refuge-town-crowd" aria-hidden="true">
+                @foreach (var person in crowd.Citizens)
+                {
+                    <span @key="person.Id" class="refuge-town-citizen"
+                          data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
+                          style="@CitizenStyle(person)"></span>
+                }
+                @foreach (var foreground in crowd.Navigation.Occluders)
+                {
+                    <img @key="foreground.Id" class="refuge-town-foreground" alt="" draggable="false"
+                         src="@foreground.Artwork" style="@ForegroundStyle(crowd.Navigation, foreground)" />
+                }
+            </div>
+        }
 
         <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
                 data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(NexusUnlocked))"
@@ -62,10 +74,25 @@
 </div>
 
 @code {
-    private readonly TownCrowd crowd = new(seed: 205, citizenCount: 7);
+    private TownCrowd? crowd;
     private readonly CancellationTokenSource crowdStop = new();
 
-    protected override void OnInitialized() => _ = AnimateCrowdAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var http = new HttpClient();
+            var json = await http.GetStringAsync(Navigation.ToAbsoluteUri("art/town/night-navigation.json"), crowdStop.Token);
+            if (crowdStop.IsCancellationRequested) return;
+            crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: 7);
+            _ = AnimateCrowdAsync();
+        }
+        catch (OperationCanceledException) { /* Town was left before navigation loaded. */ }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or ArgumentException)
+        {
+            Logger.LogWarning(exception, "Refuge navigation unavailable. Leave the painted town intact without pedestrians.");
+        }
+    }
 
     private async Task AnimateCrowdAsync()
     {
@@ -73,13 +100,16 @@
         try
         {
             while (await timer.WaitForNextTickAsync(crowdStop.Token))
-                await InvokeAsync(() => { crowd.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
+                await InvokeAsync(() => { crowd?.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
         }
         catch (OperationCanceledException) { /* Navigating away cancels ambient movement. */ }
     }
 
     private static string CitizenStyle(TownCitizen citizen) =>
-        FormattableString.Invariant($"left:{citizen.XPercent:0.##}%;top:{citizen.YPercent:0.##}%");
+        FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{(int)citizen.Position.Y}");
+
+    private static string ForegroundStyle(TownNavigationMap map, TownForeground foreground) =>
+        $"clip-path:{map.ForegroundClip(foreground)};z-index:{(int)foreground.DepthY}";
 
     public void Dispose()
     {
