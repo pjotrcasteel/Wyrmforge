@@ -244,7 +244,7 @@ camera=bpy.context.object
 target=Vector((0,0,-.03))
 camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
 camera.data.type='ORTHO'
-camera.data.ortho_scale=1.35
+camera.data.ortho_scale=1.55
 scene.camera=camera
 (out/'gait-diagnostics.json').write_text(json.dumps(diagnostics,indent=2)+'\n')
 profile=dict(cell=[96,96],frames=samples,fps=12,cycleSeconds=samples/12,

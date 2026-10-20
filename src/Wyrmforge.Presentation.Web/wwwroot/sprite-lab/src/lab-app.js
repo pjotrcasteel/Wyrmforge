@@ -13,7 +13,7 @@
     const state = {
         image: null, filename: 'hollow-walk-reference-5dir.png', pixelData: null,
         cfg: { ...C.DEFAULT_CONFIG }, dir: 'S', frame: 0, fps: 8, playing: true, scale: 1,
-        mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 },
+        mode: 'manual', player: { x: 530, y: 270 }, actor: { x: 360, y: 240 }, pixelCandidate: false,
         started: 0, last: 0, elapsed: 0, checks: [], dragging: false,
     };
     function readConfig() {
@@ -45,19 +45,21 @@
         const img = new Image();
         img.onload = () => {
             state.image = img; state.filename = name; state.pixelData = readPixels(img);
-            const layout = img.naturalWidth===3072&&img.naturalHeight===192?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
+            state.pixelCandidate = name==='hollow-local-3d-pixel-walk-v1.png';
+            const layout = img.naturalWidth===img.naturalHeight*16?'single':isDemo || img.naturalHeight * 5 === img.naturalWidth * 3 ? 'five' : 'eight';
             updateFields(autoGrid(img.naturalWidth, img.naturalHeight, layout));
             state.dir = layout==='single'?'SE':'S'; state.frame = 0; state.elapsed = 0; state.playing = true; state.mode = 'manual';
             state.actor = { x: 360, y: 240 }; state.player = { x: 530, y: 270 };
             dom.playBtn.textContent = '❚❚'; dom.assetLabel.textContent = name.replace(/\.(png|jpg|jpeg|webp)$/i,'').replaceAll('-',' ').toUpperCase();
             dom.imageDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight}`;
             dom.footerState.textContent = `Loaded ${name}`;
-            dom.assetNote.textContent = isDemo
+            dom.assetNote.textContent = state.pixelCandidate ? 'Local RTX 5090 proof: one textured, skinned 3D character; 16 crisp pixel frames. Native-size review; one facing only. Art approval and runtime integration remain pending.' : isDemo
                 ? 'Original concept reference: painted background and five drawn views. This is not a production atlas.'
                 : layout==='single'?'Rigged walk: one painted character, constant limb lengths, alternating planted feet. One view only; review the gait before adding facings.'
                 : 'Earlier generated walk. Compare its changing anatomy and inconsistent foot motion with the rigged version.';
             dom.exportAtlas.textContent=layout==='single'?'Export walk sheet ↗':'Export 8-way atlas ↗';
             dom.chaseBtn.textContent=layout==='single'?'Stride test':'Chase player';
+            dom.chaseBtn.disabled=state.pixelCandidate;
             setMode('manual'); refresh();
         };
         img.onerror = () => { dom.footerState.textContent = `Unable to load ${name}. Use Import to select a local image.`; };
@@ -73,8 +75,8 @@
     }
     function loadImageFromImage(img, name) {
         // Reuse a decoded upload directly: object URLs are revoked safely after decode.
-        state.image=img;state.filename=name;state.pixelData=readPixels(img);
-        const mode = img.naturalWidth===3072&&img.naturalHeight===192?'single':(img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
+        state.image=img;state.filename=name;state.pixelData=readPixels(img);state.pixelCandidate=false;dom.chaseBtn.disabled=false;
+        const mode = img.naturalWidth===img.naturalHeight*16?'single':(img.naturalHeight * 5 === img.naturalWidth * 3 || img.naturalHeight === 800 && img.naturalWidth === 1328) ? 'five' : 'eight';
         updateFields(autoGrid(img.naturalWidth,img.naturalHeight,mode));
         state.dir=mode==='single'?'SE':'S';state.frame=0;state.elapsed=0;state.playing=true;
         dom.playBtn.textContent='❚❚';dom.imageDimensions.textContent=`${img.naturalWidth} × ${img.naturalHeight}`;
@@ -127,8 +129,8 @@
         if (!sourceValid) return;
         const h=p.height*scale,w=p.width*scale;
         g.save();g.translate(Math.round(x),Math.round(y));if(p.flipX)g.scale(-1,1);
-        g.imageSmoothingEnabled=true;
-        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*.85,w,h);
+        g.imageSmoothingEnabled=!state.pixelCandidate;
+        g.drawImage(image,p.x,p.y,p.width,p.height,-w/2,-h*(state.pixelCandidate?83/96:.85),w,h);
         g.restore();
     }
     function drawSheet() {
@@ -183,7 +185,7 @@
             ctx.beginPath();ctx.moveTo(state.actor.x,state.actor.y);ctx.lineTo(player.x,player.y);ctx.stroke();ctx.restore();
         }
         ctx.save();ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(state.actor.x,state.actor.y+8,40,13,0,0,Math.PI*2);ctx.fill();ctx.restore();
-        if(state.image){const fit=Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight)*state.scale;
+        if(state.image){const fit=(state.pixelCandidate?1:Math.min(200/state.cfg.cellWidth,208/state.cfg.cellHeight))*state.scale;
             try{renderFrame(ctx,state.image,state.cfg,state.dir,state.frame,state.actor.x,state.actor.y,fit);}catch{/* inspector reports layout errors */}
         }
         ctx.fillStyle='rgba(203,213,206,.75)';ctx.font='12px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('THE HOLLOW',state.actor.x,state.actor.y+29);
@@ -279,6 +281,9 @@
             if(e.code==='ArrowRight')dom.stepBtn.click();
         });
     }
-    bind();loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png');
+    bind();
+    if(new URLSearchParams(globalThis.location.search).get('candidate')==='hollow-local-pixel-v1')
+        loadImage('./assets/hollow-local-3d-pixel-walk-v1.png','hollow-local-3d-pixel-walk-v1.png');
+    else loadImage('./assets/hollow-walk-rig-v2.png','hollow-walk-rig-v2.png');
     requestAnimationFrame(tick);
 })();

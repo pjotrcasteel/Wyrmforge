@@ -54,12 +54,17 @@ for index,positions in enumerate(source['positions'][:16]):
 atlas=Image.new('RGBA',(96*8,96*2))
 for index,frame in enumerate(frames): atlas.alpha_composite(frame,((index%8)*96,(index//8)*96))
 atlas.save(destination/'hollow-walk.png')
+strip=Image.new('RGBA',(96*16,96))
+for index,frame in enumerate(frames): strip.alpha_composite(frame,(index*96,0))
+strip.save(destination/'hollow-walk-strip.png')
+ground=mvp@tensor([0,0,-.5,1])
+anchor=[round(float((ground[0]/ground[3]+1)*48)),round(float((1-ground[1]/ground[3])*48))]
 manifest=dict(schemaVersion='1.1',name='The Hollow — local 3D pixel walk proof',animation='walk',
               source=dict(width=768,height=192,columns=8,rows=2,frameWidth=96,frameHeight=96,offsetX=0,offsetY=0),
               playback=dict(fps=12,loop=True),frames=16,direction='three-quarter front',
               status='visual-candidate',visualAccepted=False,runtimeIntegrated=False,
               rasterizer='local RTX nvdiffrast; nearest texture; fixed 64-color Wyrmforge Hollow ramp',
-              sourceRig='../hollow-rigged.blend',travelPerCycle=.19/.62*60)
+              sourceRig='../hollow-rigged.blend',travelPerCycle=.19/.62*60,anchor=anchor)
 (destination/'hollow-walk.manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 # GIF is a review derivative only; PNGs retain exact RGBA/pixel values.
 background=(22,20,27)
