@@ -8,15 +8,15 @@ const source = readFileSync('src/Wyrmforge.Presentation.Web/wwwroot/js/town-ligh
 function createHarness(nowHour = 12) {
     const store = new Map();
     const listeners = {};
-    const srcNight = 'art/town/night-active.webp?v=132';
+    const srcNight = 'art/town/night-active.webp?v=139';
     const base = {
         src: new URL(srcNight, 'https://game.test/').href,
         getAttribute: () => srcNight
     };
     const patch = {
-        src: new URL('art/town/night-vacant-Codex.png?v=132', 'https://game.test/').href,
+        src: new URL('art/town/night-vacant-Codex.png?v=139', 'https://game.test/').href,
         dataset: {},
-        getAttribute: () => 'art/town/night-vacant-Codex.png?v=132'
+        getAttribute: () => 'art/town/night-vacant-Codex.png?v=139'
     };
     const scene = {
         dataset: {},
@@ -72,15 +72,15 @@ test('day night auto setting persists and swaps panorama and vacancy assets with
     const sameScene=h.scene;
     time.setMode('day');
     assert.equal(h.store.get('wyrmforge.townLighting.v1'),'day');
-    assert.match(h.base.src,/day-active\.webp\?v=132$/);
-    assert.match(h.patch.src,/day-vacant-Codex\.webp\?v=132$/);
+    assert.match(h.base.src,/day-active\.webp\?v=139$/);
+    assert.match(h.patch.src,/day-vacant-Codex\.webp\?v=139$/);
     assert.equal(h.patch.dataset.townAsset,'Codex');
     assert.equal(h.scene.attributes['aria-label'],'Daytime Refuge town square');
     time.setMode('night');
-    assert.match(h.base.src,/night-active\.webp\?v=132$/);
-    assert.match(h.patch.src,/night-vacant-Codex\.png\?v=132$/);
+    assert.match(h.base.src,/night-active\.webp\?v=139$/);
+    assert.match(h.patch.src,/night-vacant-Codex\.png\?v=139$/);
     time.setMode('day');
-    assert.match(h.patch.src,/day-vacant-Codex\.webp\?v=132$/);
+    assert.match(h.patch.src,/day-vacant-Codex\.webp\?v=139$/);
     assert.equal(h.scene,sameScene);
 });
 
