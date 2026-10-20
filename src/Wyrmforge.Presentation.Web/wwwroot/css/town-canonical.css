@@ -76,3 +76,22 @@
 @media (prefers-reduced-motion:reduce) {
     .game-shell.refuge-home .refuge-canonical-viewport {scroll-behavior:auto}
 }
+
+/* First NPC slice: small, deliberately unpolished rectangles on authored streets.
+   Rendering is disposable; seeded C# town movement owns their actual positions. */
+.game-shell.refuge-home .refuge-town-crowd {
+    position:absolute;inset:0;z-index:2;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-citizen {
+    position:absolute;display:block;box-sizing:border-box;
+    width:clamp(5px, .65dvh, 10px);height:clamp(10px, 1.6dvh, 16px);
+    transform:translate(-50%,-100%);border:1px solid #251e24;
+    background:#cb9975;box-shadow:1px 2px 0 #080a0ba8;
+    pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-citizen:nth-child(3n+2) {background:#8d9eaa}
+.game-shell.refuge-home .refuge-town-citizen:nth-child(3n) {background:#c1b28e}
+.game-shell.refuge-home .refuge-town-spot {z-index:3}
+@media (prefers-reduced-motion:reduce) {
+    .game-shell.refuge-home .refuge-town-crowd {display:none}
+}
