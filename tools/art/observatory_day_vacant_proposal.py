@@ -64,14 +64,15 @@ def main():
     # Inert dome: keep DAYTIME GOLD FRAME, edit ONLY dark inner glass / rings.
     # Protected exterior slate roofs and background remain original day pixels.
     mask=np.zeros(day.shape[:2],np.uint8)
-    add_poly(mask,[(246,91),(260,80),(288,72),(326,72),(352,83),
-                   (365,105),(363,137),(350,151),(258,151),(239,139)])
+    add_poly(mask,[(229,84),(239,69),(266,56),(320,53),(352,63),
+                   (378,87),(380,131),(369,156),(236,157),(221,137)])
     # Dormant wooden double doors ONLY inside existing portal's stone arch.
-    add_poly(mask,[(407,237),(424,232),(442,237),(457,252),(462,275),
-                   (461,316),(447,331),(406,331),(390,312),(391,269)])
+    add_poly(mask,[(404,227),(426,215),(456,227),(479,253),(483,277),
+                   (483,325),(466,347),(382,347),(375,331),
+                   (377,269),(390,242)])
     # Inactive magic crystals: limited to the coloured cores, never stone ledges.
-    for ellipse in [(351,301,10,17),(487,283,9,15),(486,334,8,12),
-                    (354,348,11,11)]:
+    for ellipse in [(352,292,18,31),(488,287,16,24),(489,333,17,22),
+                    (352,353,15,15),(381,337,13,17),(500,345,14,13)]:
         add_ellipse(mask,*ellipse)
 
     # Soft <=2px antialias only. Haze happens when feathered night/day covers
