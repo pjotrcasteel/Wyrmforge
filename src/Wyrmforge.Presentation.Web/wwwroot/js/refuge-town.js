@@ -3,11 +3,11 @@
  * desktop shows the full composition. Keyboard and native touch remain usable. */
 (() => {
     "use strict";
-    let mounted = null, observer = null, slice = 1, drag = null, touch = null;
+    let mounted = null, observer = null, slice = 1, drag = null, touch = null, blockClickUntil = 0;
     const clamp = value => Math.max(0, Math.min(2, value));
 
     function sliceWidth() {
-        return (mounted?.querySelector('.refuge-canonical-track, .town-panorama')?.clientWidth ?? 0) / 3;
+        return (mounted?.querySelector('.refuge-canonical-scene, .town-panorama')?.clientWidth ?? 0) / 3;
     }
     function centeredOffset(index) {
         return sliceWidth() * (clamp(index) + .5) - mounted.clientWidth / 2;
@@ -35,7 +35,7 @@
         }
     }
     function onPointerDown(event) {
-        if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button, a')) return;
+        if (event.pointerType !== 'mouse' || event.button !== 0) return;
         drag = {x: event.clientX, scroll: mounted.scrollLeft, slice, moved: false};
     }
     function onPointerMove(event) {
@@ -48,10 +48,10 @@
         if (!drag) return;
         const moved = drag.moved;
         drag = null;
-        if (moved) show(nearestSlice());
+        if (moved) { blockClickUntil = performance.now() + 500; show(nearestSlice()); }
     }
     function onTouchStart(event) {
-        if (event.touches.length !== 1 || event.target.closest('button, a')) return;
+        if (event.touches.length !== 1) return;
         touch = {x:event.touches[0].clientX, slice};
     }
     function onTouchEnd(event) {
@@ -59,7 +59,16 @@
         const prior = touch;
         touch = null;
         const moved = event.changedTouches[0]?.clientX - prior.x;
-        if (Number.isFinite(moved) && Math.abs(moved) > 38) show(prior.slice + (moved < 0 ? 1 : -1));
+        if (Number.isFinite(moved) && Math.abs(moved) > 38) {
+            blockClickUntil = performance.now() + 500;
+            show(prior.slice + (moved < 0 ? 1 : -1));
+        }
+    }
+    function onClickCapture(event) {
+        if (performance.now() < blockClickUntil && event.target.closest('.refuge-town-spot')) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
     }
     function unmount() {
         if (!mounted) return;
@@ -73,6 +82,7 @@
         mounted.removeEventListener('touchstart', onTouchStart);
         mounted.removeEventListener('touchend', onTouchEnd);
         mounted.removeEventListener('touchcancel', onTouchCancel);
+        mounted.removeEventListener('click', onClickCapture, true);
     }
     function onTouchCancel() { touch = null; }
     function mount() {
@@ -91,6 +101,7 @@
         mounted.addEventListener('touchstart', onTouchStart, {passive:true});
         mounted.addEventListener('touchend', onTouchEnd, {passive:true});
         mounted.addEventListener('touchcancel', onTouchCancel, {passive:true});
+        mounted.addEventListener('click', onClickCapture, true);
         observer = new ResizeObserver(() => show(slice, false));
         observer.observe(mounted);
         requestAnimationFrame(() => show(1, false));

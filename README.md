@@ -20,6 +20,15 @@
 - The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
 - **Not shipped:** new character creation or school-respec flows, Fireball rework, ten playable mutations per school, and higher-tier encounters. [Implementation checkpoint](docs/handover/2026-10-20-divine-magic-foundation-status.md).
 
+## Prototype 0.0.132 — Unified night Refuge town preview (draft)
+
+- Use **one 1672×941 authored nighttime plaza panorama**, navigated as three West / Gate / East camera views on portrait phones, instead of stacked isolated building cards.
+- Tap Arcane Nexus, Blacksmith, Codex and Hall of Fame to independently toggle **Active / Vacant** artwork inside the same town; this is a temporary, non-persistent visual preview and **does not open building menus or change progression**. The World Gate still opens its normal flow.
+- Five approved night-overview source compositions are archived in `user_handover_files/concepts/town/night/` (high-quality WebP) separately from the eight immutable building concept PNGs. Four derived RGBA layers permit all 16 vacancy combinations with no CSS blackout overlays.
+- Old building menus remain accessible for regression through Settings > Town preview destinations. Runtime and source night assets have been pushed directly to GitHub; [implementation notes and QA plan](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+- **Status:** release candidate awaiting CI and mobile visual acceptance before GitHub Pages deployment.
+
+
 ## Prototype 0.0.131 — Canonical Refuge town screen
 
 - Town now renders the owner's **eight approved active/vacant building paintings** for Blacksmith, Arcane Nexus, Codex and Hall of Fame directly in the real game. Each first-party runtime asset is an exact copy of the canonical approved PNG.
