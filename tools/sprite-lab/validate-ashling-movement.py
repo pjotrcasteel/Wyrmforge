@@ -6,7 +6,8 @@ from PIL import Image
 root=Path(__file__).resolve().parents[2]
 out=Path(sys.argv[1]);manifest=json.loads((out/'manifest.json').read_text())
 rig=(root/manifest['sourceRig']).parent;source=np.load(rig/'sampled-walk.npz')
-profile=json.loads((rig/'export-profile.json').read_text());markers=json.loads((rig/'actual-foot-markers.json').read_text())
+profile=json.loads((rig/'export-profile.json').read_text());explicit=(rig/'blocking-review/report.json').exists()
+markers=json.loads((rig/('gait-diagnostics.json' if explicit else 'actual-foot-markers.json')).read_text())
 sheet=np.asarray(Image.open(out/'ashling-movement.png').convert('RGBA'))
 assert sheet.shape==(768,1536,4)
 assert hashlib.sha256((out/'ashling-movement.png').read_bytes()).hexdigest()==manifest['atlasSha256']
@@ -38,10 +39,10 @@ for row,direction in enumerate(manifest['directions']):
     assert len(hashes)==16
     for marker in markers:
         phase=(marker['frame']-1)/16;shifted=phase+(0 if marker['side']=='L' else .5)
-        if shifted%1<profile['stanceFraction']:
-            moving=np.array(marker['contact'])+[0,-stride*phase,0]
+        if marker['support'] if explicit else shifted%1<profile['stanceFraction']:
+            moving=np.array(marker['toe'] if explicit else marker['contact'])+[0,-stride*phase,0]
             world=(moving-origin)@rotation.T+origin
-            groups.setdefault((marker['side'],int(shifted)),[]).append(world)
+            groups.setdefault((marker['side'],marker['interval'] if explicit else int(shifted)),[]).append(world[:2] if explicit else world)
     contacts[direction]=max(float(np.ptp(np.array(points),axis=0).max()) for points in groups.values())
     assert contacts[direction]<1e-4
 assert len(native_colors)<=64,len(native_colors)

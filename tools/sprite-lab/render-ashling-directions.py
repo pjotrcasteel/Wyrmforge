@@ -8,7 +8,7 @@ from PIL import Image,ImageDraw
 
 root=Path(__file__).resolve().parents[2]
 asset=root/'art/source/enemies/ashling'
-rig=asset/'model/local-appearance-002/rigged-bound-v3'
+rig=asset/'model/local-appearance-002'/(sys.argv[2] if len(sys.argv)>2 else 'rigged-bound-v3')
 out=asset/'exports'/sys.argv[1];out.mkdir(parents=True,exist_ok=False)
 sample_path=rig/'sampled-walk.npz';source=np.load(sample_path)
 profile=json.loads((rig/'export-profile.json').read_text())
@@ -18,7 +18,7 @@ origin=tensor(profile['groundRoot'])
 image=Image.open(rig.parent/'textured-v1/hollow-albedo.png').convert('RGB')
 texture=tensor(np.asarray(image)/255).flip(0)[None]
 # Reuse exactly the palette of the owner-reviewed single-view candidate.
-palette=Image.open(rig/'hop-front-v2/palette.png');palette.save(out/'palette.png')
+palette=image.quantize(colors=64) if (rig/'blocking-review/report.json').exists() else Image.open(rig/'hop-front-v2/palette.png');palette.save(out/'palette.png')
 ctx=dr.RasterizeCudaContext();directions=['N','NE','E','SE','S','SW','W','NW']
 cell=96;count=16;fps=20;atlas=Image.new('RGBA',(cell*count,cell*8))
 ground=mvp@tensor([*profile['groundRoot'],1])
@@ -57,7 +57,7 @@ for row,direction in enumerate(directions):
     assert len({hashlib.sha256(np.asarray(f).tobytes()).hexdigest() for f in frames[direction]})==count
     print(direction,'sixteen bounded, unmirrored poses complete',flush=True)
 atlas.save(out/'ashling-movement.png')
-manifest=dict(schemaVersion='1.1',name='Ashling — eight-direction bounding movement',animation='movement',layout='eight',source=dict(width=cell*count,height=cell*8,columns=count,rows=8,frameWidth=cell,frameHeight=cell,offsetX=0,offsetY=0),directions=directions,framesPerDirection=count,frames=count*8,playback=dict(fps=fps,loop=True),anchor=anchor,groundRoot=profile['groundRoot'],drawCellWorldSize=81.6,actorModelHeightWorldUnits=48,travelPerCycle=profile['travelModelUnitsPerCycle']*48,frameRects=rects,orientations=orientations,sourceRig=str((rig/'ashling-rigged.blend').relative_to(root)).replace('\\','/'),sourcePoseSha256=hashlib.sha256(sample_path.read_bytes()).hexdigest(),atlasSha256=hashlib.sha256((out/'ashling-movement.png').read_bytes()).hexdigest(),gaitBaseOwnerAccepted=True,directionalExportOwnerAccepted=False,runtimeIntegrated=False)
+manifest=dict(schemaVersion='1.1',name='Ashling — eight-direction bounding movement',animation='movement',layout='eight',source=dict(width=cell*count,height=cell*8,columns=count,rows=8,frameWidth=cell,frameHeight=cell,offsetX=0,offsetY=0),directions=directions,framesPerDirection=count,frames=count*8,playback=dict(fps=fps,loop=True),anchor=anchor,groundRoot=profile['groundRoot'],drawCellWorldSize=81.6,actorModelHeightWorldUnits=48,travelPerCycle=profile['travelModelUnitsPerCycle']*48,frameRects=rects,orientations=orientations,sourceRig=str((rig/'ashling-rigged.blend').relative_to(root)).replace('\\','/'),sourcePoseSha256=hashlib.sha256(sample_path.read_bytes()).hexdigest(),atlasSha256=hashlib.sha256((out/'ashling-movement.png').read_bytes()).hexdigest(),gaitBaseOwnerAccepted=bool(profile.get('ownerAccepted',False)),directionalExportOwnerAccepted=False,runtimeIntegrated=False)
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 # Review the same synchronized phase in each facing at native and enlarged sizes.
 boards=[]
@@ -72,7 +72,10 @@ for row,direction in enumerate(directions):
     draw.text((4,row*112+3),direction,fill=(205,184,150))
     for col,i in enumerate([0,2,6,14]):sheet.alpha_composite(frames[direction][i],(col*cell,row*112+16))
 sheet.resize((768,1792),Image.Resampling.NEAREST).save(out/'direction-contact-poses.png')
-contact=json.loads((rig/'hop-front-v2/technical-report.json').read_text())
+if (rig/'blocking-review/report.json').exists():
+    blocking=json.loads((rig/'blocking-review/report.json').read_text());markers=json.loads((rig/'gait-diagnostics.json').read_text())
+    contact=dict(loopPositionError=blocking['loopError'],stanceContactDrift=blocking['supportToeHorizontalDrift'],minimumMeshZ=blocking['minimumMeshZ'],airborneFrames=sum(all(not m['support'] for m in markers if m['frame']==f) for f in range(1,17)))
+else:contact=json.loads((rig/'hop-front-v2/technical-report.json').read_text())
 report=dict(technicalPass=True,totalFrames=128,directions=directions,framesPerDirection=16,nativeCell=cell,binaryAlpha=True,noClipping=True,noMirroredDirections=True,phaseSharedAcrossDirections=True,loopPositionError=contact['loopPositionError'],stanceContactDrift=contact['stanceContactDrift'],airborneFramesPerCycle=contact['airborneFrames'],minimumMeshZ=contact['minimumMeshZ'],directionProjectionChecks=direction_checks,measurements=measurements,directionalExportOwnerAccepted=False,runtimeIntegrated=False,gpu=torch.cuda.get_device_name())
 (out/'technical-report.json').write_text(json.dumps(report,indent=2)+'\n')
 print('Saved 128 native-pixel frames, atlas, manifests and synchronized directional review on',torch.cuda.get_device_name(),flush=True)

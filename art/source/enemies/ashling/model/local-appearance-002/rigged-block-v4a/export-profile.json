@@ -8,7 +8,7 @@
     -0.5
   ],
   "gait": "explicit load-drive-tuck-catch blocking",
-  "ownerAccepted": false,
+  "ownerAccepted": true,
   "runtimeIntegrated": false,
   "reboundLegVertices": 19881,
   "keyPoses": [
@@ -194,5 +194,6 @@
       0,
       0
     ]
-  ]
+  ],
+  "ownerAcceptance": "Owner perfect reply to corrected hopping preview, 2026-10-20"
 }
