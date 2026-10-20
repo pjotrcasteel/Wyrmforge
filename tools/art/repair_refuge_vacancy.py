@@ -162,9 +162,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--verify", action="store_true")
     args = parser.parse_args()
+    previews = ROOT / "docs/art/previews"
+    previews.mkdir(parents=True, exist_ok=True)
     for mode in ("day", "night"):
         with Image.open(ART / f"{mode}-active.webp") as opened:
             src = np.array(opened.convert("RGB"))
+        visual = Image.fromarray(src, "RGB").convert("RGBA")
         assert src.shape == (941, 1672, 3)
         for building, (x0, y0, x1, y1) in CROP.items():
             path = ART / (f"day-vacant-{building}.webp" if mode == "day"
@@ -182,6 +185,12 @@ def main():
                 assert alpha.max() == 255 and np.count_nonzero(alpha) > 500, path
                 assert np.count_nonzero(alpha) < .37 * alpha.size, f"Too much of {building} edited"
             print(f"{mode} {building}: registered sparse vacancy plate OK")
+            with Image.open(path) as raw_layer:
+                visual.alpha_composite(raw_layer.convert("RGBA"), dest=(x0, y0))
+        if not args.verify:
+            visual.convert("RGB").save(previews / f"refuge-{mode}-all-vacant.webp",
+                                       format="WEBP", quality=94, method=6)
+
 
 
 if __name__ == "__main__":
