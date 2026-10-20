@@ -11,7 +11,7 @@ import numpy as np
 from mathutils import Vector, Matrix, Quaternion
 
 folder = Path(sys.argv[sys.argv.index('--')+1])
-out = folder / 'rigged-pixel-v1'
+out = folder / (sys.argv[sys.argv.index('--')+2] if len(sys.argv)>sys.argv.index('--')+2 else 'rigged-pixel-v1')
 out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.context.preferences.filepaths.save_version = 0
@@ -101,12 +101,13 @@ for index, p in enumerate(v):
     side='L' if x>=0 else 'R'
     if z>.345:
         permitted=['head','neck','chest']
-    elif abs(x)>.115 and z<.29 and z>-.22:
+    elif abs(x)>.115+max(0,.12-z)*.22 and z<.29 and z>-.22:
         permitted=['clavicle.'+side,'upper_arm.'+side,'forearm.'+side,'hand.'+side]
         if z>.20: permitted+=['chest']
     elif z<-.065:
-        cloth=(y>.035 and z>-.40) or (abs(x)<.048 and z>-.42)
+        cloth=(y>.085 and z>-.38) or (abs(x)<.047 and z>-.41)
         permitted=['cloth.'+side,'pelvis'] if cloth else ['thigh.'+side,'shin.'+side,'foot.'+side]
+        if z<-.45: permitted=['foot.'+side]
     elif z<.04:
         permitted=['pelvis','spine','thigh.'+side,'cloth.'+side]
     else:
@@ -159,8 +160,8 @@ def ik(hip,ankle,l1,l2):
 diagnostics=[]
 def pose_walk(phase, frame):
     angle=2*math.pi*phase
-    offset=Vector((.009*math.cos(angle),0,-.035+.005*math.cos(2*angle)))
-    body_rotation=Quaternion((1,0,0),math.radians(10))
+    offset=Vector((.012*math.cos(angle),0,-.035+.007*math.cos(2*angle)))
+    body_rotation=Quaternion((0,0,1),.055*math.sin(angle)) @ Quaternion((1,0,0),math.radians(10)+.018*math.sin(2*angle))
     pelvis_origin=Vector(bones['pelvis']['head'])
     point=lambda p: transform(p,pelvis_origin,body_rotation,offset)
     set_segment('root',bones['root']['head'],bones['root']['tail'])
