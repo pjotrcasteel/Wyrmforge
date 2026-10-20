@@ -61,3 +61,8 @@ footer{border-top:1px solid var(--line);min-height:48px;padding:12px 20px;displa
 .quick-editor .help{margin:0}
 .quick-editor #quickLock{margin:0}
 @media(max-width:800px){.quick-editor{padding:12px}.quick-stages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.quick-stage{font-size:12px}.quick-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.quick-choice{min-width:0}.quick-choices .upload-choice{grid-column:1/-1}}
+
+/* Read slot pixels at an honest close-up, without darkening the entire panorama. */
+.slot-detail{margin-top:2px;border:1px solid #47534e;padding:10px;background:#101719}
+.slot-detail .quick-head{margin-bottom:8px}.slot-detail .quick-head span:last-child{color:#a5b1a8;font-size:10px}
+#slotZoom{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#080d10;image-rendering:auto}
