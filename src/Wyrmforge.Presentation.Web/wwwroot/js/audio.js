@@ -678,7 +678,7 @@
         if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
         if (button.closest('.wyrmforge-sound-controls') || button.getAttribute('data-sound-cue') === 'none') return;
         // Hunt entry already emits 'hunt-start' from Blazor. Never stack an unrelated menu click on it.
-        if (button.matches('.town-door--gate, .refuge-canonical-gate-action, .enter-realm, .gate-cta')) return;
+        if (button.matches('.town-door--gate, .refuge-town-spot--gate, .refuge-canonical-gate-action, .enter-realm, .gate-cta')) return;
         const cue = button.getAttribute('data-sound-cue');
         play(cue && design?.palette[cue] ? cue : 'ui');
     });
