@@ -134,6 +134,22 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_PlazaForegroundMasksHavePaintedDepth()
+    {
+        var map = Scene();
+        var ids = new[] { "west-gate-banner-foreground", "east-gate-banner-foreground",
+            "west-lower-pillar-foreground", "east-lower-pillar-foreground" };
+
+        foreach (var id in ids)
+        {
+            var foreground = map.Occluders.Single(part => part.Id == id);
+            Assert.IsTrue(foreground.Clip.Count >= 5, $"Foreground mask {id} must trace its painted silhouette.");
+            Assert.AreEqual("art/town/night-active.webp?v=140", foreground.Artwork);
+            Assert.IsTrue(foreground.DepthY >= (id.Contains("lower") ? 750 : 450));
+        }
+    }
+
+    [TestMethod]
     public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
     {
         var map = Scene();
