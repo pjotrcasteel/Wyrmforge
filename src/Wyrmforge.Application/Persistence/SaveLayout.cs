@@ -38,6 +38,7 @@ public static class SaveLayout
         ["wyrmforge.forgeMastery"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.spellMastery.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.laboratory.v1"] = SaveDomain.PlayerLegacy,
+            ["wyrmforge.fireballCore.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.loadouts.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.bestiary.v1"] = SaveDomain.PlayerLegacy,
         [LegacyGrants] = SaveDomain.PlayerLegacy,
