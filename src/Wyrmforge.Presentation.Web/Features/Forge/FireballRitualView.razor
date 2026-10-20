@@ -22,11 +22,11 @@
                 var unlocked = slot < Core.Level;
                 var mutation = Core.Slots[slot];
                 <button type="button" class="fireball-socket fireball-socket--@(slot + 1) @(selectedSlot == slot ? "selected" : "") @(!unlocked ? "sealed" : mutation is null ? "empty" : "filled")"
-                        aria-label="@(unlocked ? mutation is { } held ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(held).Name}" : $"Slot {slot + 1}: empty, choose mutator" : $"Slot {slot + 1}: locked until Fireball level {slot + 1}")"
+                        aria-label="@SlotLabel(slot)"
                         aria-pressed="@(selectedSlot == slot)"
                         @onclick="() => SelectSlot(slot)">
                     <i aria-hidden="true">@(mutation is { } id && unlocked ? FireballCoreCatalog.Get(id).Symbol : unlocked ? "+" : "◆")</i>
-                    <span>@(unlocked ? mutation is { } held ? FireballCoreCatalog.Get(held).Name : "Empty" : $"Lv {slot + 1}")</span>
+                    <span>@SlotCaption(slot)</span>
                 </button>
             }
         </div>
@@ -100,6 +100,13 @@
     private string? notice;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+    private string SlotCaption(int slot) => slot >= Core.Level ? $"Lv {slot + 1}"
+        : Core.Slots[slot] is { } mutation ? FireballCoreCatalog.Get(mutation).Name : "Empty";
+
+    private string SlotLabel(int slot) => slot >= Core.Level ? $"Slot {slot + 1}: locked until Fireball level {slot + 1}"
+        : Core.Slots[slot] is { } mutation ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(mutation).Name}"
+        : $"Slot {slot + 1}: empty, choose mutator";
+
     private void SelectCore() { selectedSlot = null; notice = null; }
     private void SelectSlot(int slot)
     {
