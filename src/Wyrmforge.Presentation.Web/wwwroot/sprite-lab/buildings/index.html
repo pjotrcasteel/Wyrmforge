@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0d1214">
+  <title>WyrmForge Building Lab — Slot Authoring</title>
+  <link rel="stylesheet" href="./src/building-lab.css">
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand"><span class="mark" aria-hidden="true">✧</span>
+      <div><div class="eyebrow">WYRMFORGE · ART TOOLS</div><h1>Building Lab <span>v0.1</span></h1></div>
+    </div>
+    <nav aria-label="Labs"><a href="../">Sprite Lab</a><a href="./" aria-current="page">Buildings</a><a href="../../">Game ↗</a></nav>
+  </header>
+  <main class="workspace">
+    <aside class="panel library" aria-label="Building and stages">
+      <div class="section-head"><span class="eyebrow">01 / BUILDING</span><h2>Workshop</h2></div>
+      <label for="buildingSelect" class="field-label">Building</label>
+      <select id="buildingSelect" aria-label="Building"></select>
+      <p class="help">All buildings use the same art and slot contract. The game is not changed by this editor.</p>
+      <details class="fold">
+        <summary>Add a future building</summary>
+        <label class="field-label" for="newBuildingName">Building name</label>
+        <input id="newBuildingName" placeholder="e.g. Ward House" maxlength="100">
+        <label class="field-label" for="newBuildingFile">Native base image (PNG / WebP / JPG)</label>
+        <input id="newBuildingFile" type="file" accept="image/png,image/webp,image/jpeg">
+        <button id="addBuilding" type="button" class="secondary full">Create from image</button>
+      </details>
+      <div class="section-head spaced"><span class="eyebrow">02 / STAGES</span><h2>Authoring states</h2></div>
+      <div id="stageList" class="stage-list" aria-label="Building stages"></div>
+      <button id="lockStage" type="button" class="primary full">Lock selected state</button>
+      <p class="help">Locked states cannot be edited. Unlock them to make corrections. A lock is <strong>not</strong> approval to put artwork in the game.</p>
+      <div class="section-head spaced"><span class="eyebrow">03 / SLOTS</span><h2>Replaceable details</h2></div>
+      <div id="slotList" class="slot-list" aria-label="Building slots"></div>
+      <details class="fold">
+        <summary>Add a slot</summary>
+        <label class="field-label" for="newSlotName">Slot name</label>
+        <input id="newSlotName" maxlength="100" placeholder="e.g. Crystal cabinet">
+        <button id="addSlot" type="button" class="secondary full">Add slot to all four states</button>
+      </details>
+    </aside>
+    <section class="center" aria-label="Visual preview">
+      <div class="section-head preview-title">
+        <div><span class="eyebrow">LIVE AUTHORING PREVIEW</span><h2 id="previewTitle">Wyrmforge · Vacant</h2></div>
+        <label class="mini-check"><input type="checkbox" id="showGuides" checked> Slot guides</label>
+      </div>
+      <div class="canvas-frame">
+        <canvas id="buildingCanvas" width="724" height="440" aria-label="Building with selectable slot overlays" tabindex="0"></canvas>
+        <div class="canvas-caption"><span>PIXEL-ALIGNED CROP</span><span id="canvasSize">724 × 440</span></div>
+      </div>
+      <p id="renderNote" class="help">Base source: existing game panorama. Reference overlays are only authoring samples, not approved art.</p>
+      <div class="section-head spaced"><span class="eyebrow">SIDE-BY-SIDE</span><h2>Four states, one building</h2></div>
+      <div id="compareGrid" class="compare-grid">
+        <button type="button" data-stage="vacant"><canvas width="360" height="220" aria-label="Vacant comparison"></canvas><span>0 · VACANT</span></button>
+        <button type="button" data-stage="stirring"><canvas width="360" height="220" aria-label="Stirring comparison"></canvas><span>1 · STIRRING</span></button>
+        <button type="button" data-stage="active"><canvas width="360" height="220" aria-label="Active comparison"></canvas><span>2 · ACTIVE</span></button>
+        <button type="button" data-stage="masterwork"><canvas width="360" height="220" aria-label="Masterwork comparison"></canvas><span>3 · MASTERWORK</span></button>
+      </div>
+      <p class="help">Tap a comparison image to edit its state. Only the slots change; the underlying architecture stays fixed.</p>
+    </section>
+    <aside class="panel inspector" aria-label="Slot editor and project exports">
+      <div class="section-head"><span class="eyebrow">04 / SELECTED SLOT</span><h2 id="slotTitle">Choose a slot</h2></div>
+      <div id="inspectorBody">
+        <label class="field-label" for="slotVariant">Visible content in this state</label>
+        <select id="slotVariant">
+          <option value="base">Base painting — no overlay</option>
+          <option value="reference">Original active painting — local reference</option>
+        </select>
+        <label class="field-label" for="slotFile">Or replace this slot with transparent PNG / WebP</label>
+        <input id="slotFile" type="file" accept="image/png,image/webp,image/jpeg">
+        <p class="help">A custom image is composited in the selected slot rectangle. Transparent PNG/WebP works best. Uploads stay in your browser and can be included in the exported JSON.</p>
+        <div class="section-head compact"><span class="eyebrow">SHARED SLOT RECTANGLE</span></div>
+        <div class="geometry">
+          <label>X<input id="rectX" type="number" min="0" step="1"></label>
+          <label>Y<input id="rectY" type="number" min="0" step="1"></label>
+          <label>Width<input id="rectW" type="number" min="1" step="1"></label>
+          <label>Height<input id="rectH" type="number" min="1" step="1"></label>
+        </div>
+        <button id="applyRect" class="secondary full" type="button">Apply position to all four states</button>
+        <p class="help">Geometry is shared. Moving a slot requires all four states to be unlocked.</p>
+      </div>
+      <div class="section-head spaced"><span class="eyebrow">05 / SOURCE ART</span><h2>Base & reference</h2></div>
+      <p id="sourceInfo" class="help">The original WyrmForge town images are used as read-only references.</p>
+      <label class="field-label" for="baseFile">Replace this building's base painting</label>
+      <input id="baseFile" type="file" accept="image/png,image/webp,image/jpeg">
+      <label class="field-label" for="referenceFile">Replace active reference painting</label>
+      <input id="referenceFile" type="file" accept="image/png,image/webp,image/jpeg">
+      <div class="section-head spaced"><span class="eyebrow">06 / HANDOFF</span><h2>Save & share</h2></div>
+      <button id="exportJson" class="primary full" type="button">Export complete project JSON</button>
+      <button id="exportPng" class="secondary full" type="button">Export current stage PNG</button>
+      <label class="field-label" for="importJson">Load previous project JSON</label>
+      <input id="importJson" type="file" accept=".json,application/json">
+      <button id="resetProject" class="text-button" type="button">Reset current building to starter states</button>
+      <div class="notice"><strong>REVIEW ONLY</strong><p>Changing or locking a state here never modifies the live WyrmForge game. Export and share the JSON and preview for approval; only then can approved assets be integrated.</p></div>
+    </aside>
+  </main>
+  <footer><span id="status" role="status" aria-live="polite">Loading building assets…</span><span>Browser-local editor · No uploads to a server</span></footer>
+  <script src="./src/building-core.js"></script>
+  <script src="./src/building-app.js"></script>
+</body>
+</html>
