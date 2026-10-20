@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const root=new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/',import.meta.url);
-const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')");
+const moduleUri=name=>'data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('js/'+name,root),'utf8')).toString('base64');
+const source=readFileSync(new URL('js/hollow-sprites.js',root),'utf8').replace("new URL('../art/enemies/hollow-rigged/', import.meta.url)","new URL('https://example.test/art/enemies/hollow-rigged/')")
+ .replace("'./sprite-animation.js'",JSON.stringify(moduleUri('sprite-animation.js'))).replace("'./sprite-layer-compositor.js'",JSON.stringify(moduleUri('sprite-layer-compositor.js')));
 const mod=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const enemy=(values={})=>({entityId:7,kind:0,x:20,y:20,radius:11,...values});
 const snapshot=(values={})=>({enemies:[enemy()],player:{x:200,y:200,radius:9},deathBursts:[],...values});
@@ -23,13 +25,23 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,0);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
-test('contact only drives presentation; attack locks facing, freezes and recovers',()=>{
+test('contact only drives presentation; attack freezes and recovers',()=>{
  const state=mod.createHollowState();const contact=snapshot({player:{x:38,y:20,radius:9}});
  mod.updateHollowSprites(state,contact,0);assert.equal(state.entities.get(7).clip,'attack');assert.equal(state.entities.get(7).direction,'E');
  advance(state,contact,.05,.5);const frame=state.entities.get(7).frame;assert.ok(frame>=5);
  advance(state,{...contact,enemies:[enemy({frozen:true})]},.55,.9);assert.equal(state.entities.get(7).frame,frame);
  advance(state,snapshot(),.95,2);assert.equal(state.entities.get(7).clip,'walk');
  assert.deepEqual(contact.player,{x:38,y:20,radius:9});assert.equal(contact.enemies[0].x,20);
+});
+
+test('an active attack follows a changed target direction without restarting',()=>{
+ const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot({player:{x:38,y:20,radius:9}}),0);
+ advance(state,snapshot({player:{x:38,y:20,radius:9}}),.05,.3);
+ const pose=state.entities.get(7),token=pose.attackAt,frame=pose.frame;
+ advance(state,snapshot({player:{x:20,y:2,radius:9}}),.35,.6);
+ assert.equal(pose.direction,'N');assert.equal(pose.attackAt,token);assert.ok(pose.frame>frame);
+ const frozen=snapshot({enemies:[enemy({frozen:true})],player:{x:2,y:20,radius:9}});
+ advance(state,frozen,.65,.8);assert.equal(pose.direction,'N');
 });
 test('only authoritative Hollow deaths collapse then hold before fading; paused clock stops',()=>{
  const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);
@@ -55,7 +67,7 @@ test('packed runtime assets preserve approved source bytes and cache hashes',()=
 test('nearest-neighbor renderer selects an actual direction row and original pivot',async()=>{
  const m=JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/manifest.json',root)));
  const originalFetch=globalThis.fetch,originalImage=globalThis.Image;
- globalThis.fetch=async()=>({ok:true,json:async()=>m});
+ globalThis.fetch=async url=>({ok:true,json:async()=>String(url).endsWith('layers.json')?JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/layers.json',root))):String(url).endsWith('animation-profile.json')?JSON.parse(readFileSync(new URL('art/enemies/hollow-rigged/animation-profile.json',root))):m});
  globalThis.Image=class {set src(url){const c=Object.values(m.clips).find(c=>url.includes(c.image));this.naturalWidth=c.cell*c.frames;this.naturalHeight=c.cell*8;queueMicrotask(()=>this.onload());}};
  try{
   assert.equal(await mod.preloadHollowSprites(),true);

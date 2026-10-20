@@ -1,20 +1,24 @@
 // Presentation only: C# remains authoritative for movement, contact damage and death.
+import { createSpriteAnimationState, updateSpriteAnimation } from './sprite-animation.js';
+import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
 const textures = new Map();
-let manifest, loading;
+let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
     return loading ??= fetch(new URL('manifest.json',base)).then(r=>{
         if(!r.ok)throw new Error('Hollow manifest unavailable');return r.json();
     }).then(async data=>{
+        const [metadata,animationProfile]=await Promise.all(['layers.json','animation-profile.json'].map(name=>fetch(new URL(name,base)).then(r=>{if(!r.ok)throw new Error('Hollow layer metadata unavailable');return r.json();})));
+        for(const name of ['walk','attack'])if(metadata.sourceHashes[name].slice(0,12)!==data.clips[name].hash)throw new Error('Hollow metadata/source mismatch');
         const decoded=await Promise.all(Object.entries(data.clips).map(([name,clip])=>new Promise(resolve=>{
             const image=new Image();
             image.onload=()=>{const ready=image.naturalWidth===clip.cell*clip.frames&&image.naturalHeight===clip.cell*8;
                 if(ready)textures.set(name,image);resolve(ready);};
             image.onerror=()=>resolve(false);image.src=new URL(`${clip.image}?v=${clip.hash}`,base).href;
         })));
-        if(decoded.every(Boolean))manifest=data;
+        if(decoded.every(Boolean)){manifest=data;profile=animationProfile;compositor=createSpriteLayerCompositor(metadata,data.clips,textures,{maxTiles:96});}
         return hollowSpritesReady();
     }).catch(()=>false); // Existing painted/native art is the offline fallback.
 }
@@ -50,16 +54,16 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(Number(enemy.kind)!==0)continue;
         const id=enemy.entityId;present.add(id);
         let pose=state.entities.get(id);
-        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,attackAt:null,age:0,lastMove:-1};state.entities.set(id,pose);}
+        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,attackAt:null,age:0,lastMove:-1,animation:createSpriteAnimationState()};state.entities.set(id,pose);}
         const dx=enemy.x-pose.x,dy=enemy.y-pose.y,distance=Math.hypot(dx,dy);
         const advancing=!snapshot.paused&&!snapshot.ended&&!enemy.frozen;
         if(advancing)pose.age+=dt;
         if(advancing&&distance>.001&&distance<64){
             pose.distance+=distance;
             pose.lastMove=pose.age;
-            if(pose.attackAt==null)pose.direction=hollowDirection(dx,dy,pose.direction);
+            pose.direction=hollowDirection(dx,dy,pose.direction);
         }
-        if(distance>=64){pose.distance=0;pose.attackAt=null;}
+        if(distance>=64){pose.distance=0;pose.attackAt=null;pose.animation=createSpriteAnimationState();}
         pose.x=enemy.x;pose.y=enemy.y;
         if(pose.attackAt!=null&&pose.age-pose.attackAt>=16/12)pose.attackAt=null;
         const player=snapshot.player;
@@ -67,12 +71,17 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(advancing&&touching&&pose.attackAt==null){
             pose.attackAt=pose.age;pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         }
-        pose.clip=pose.attackAt==null?'walk':'attack';
-        pose.frame=pose.clip==='attack'?Math.min(15,Math.floor((pose.age-pose.attackAt)*12)):
-            pose.age-pose.lastMove<.12?Math.floor(pose.distance/18.387096774193548*16)%16:0;
-        if(reducedMotion)pose.frame=pose.clip==='attack'?7:0;
-        if(enemy.frozen)pose.frame=pose.frozenFrame??pose.frame;
-        pose.frozenFrame=enemy.frozen?pose.frame:null;
+        // Continue steering the existing action toward its target. Changing
+        // direction never creates a new action token or restarts either clip.
+        if(advancing&&pose.attackAt!=null&&player)pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
+        // Playback uses a common controller; only the contact signal belongs
+        // to this creature adapter. Profile data owns stride, regions and clips.
+        const config=profile??fallbackProfile;
+        const sample=updateSpriteAnimation(pose.animation,config,{deltaSeconds:dt,
+            distance:advancing&&distance<64?distance:0,moving:pose.age-pose.lastMove<.12,
+            paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,direction:pose.direction,
+            action:pose.attackAt==null?null:{name:'attack',token:pose.attackAt}});
+        pose.direction=sample.direction;pose.clip=sample.clip;pose.frame=sample.frame;pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
 }
@@ -90,6 +99,15 @@ export function drawHollowEnemy(ctx,enemy,state){
     if(Number(enemy.kind)!==0)return false;
     const pose=state.entities.get(enemy.entityId);
     if(!pose)return false;
+    const legacyPreview=globalThis.location?.pathname?.includes('/enemy-lab')&&new URLSearchParams(globalThis.location.search).get('blend')==='whole';
+    if(pose.layered&&compositor&&!legacyPreview){
+        const tile=compositor.compose(pose.animation.sample);
+        const scale=Math.max(.65,Math.min(1.8,(Number(enemy.radius)||11)/11));
+        const size=manifest.clips.attack.worldSize*scale;
+        ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,enemy.opacity??1));ctx.imageSmoothingEnabled=false;
+        ctx.filter=enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?'sepia(1) saturate(1.7) hue-rotate(135deg)':'none';
+        ctx.drawImage(tile,enemy.x-size/2,enemy.y-88/128*size,size,size);ctx.restore();return true;
+    }
     return draw(ctx,pose.clip,pose.frame,pose.direction,enemy.x,enemy.y,enemy.radius,enemy.opacity??1,
         enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?'sepia(1) saturate(1.7) hue-rotate(135deg)':'none');
 }
@@ -101,6 +119,8 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),entities:[...state.entities].map(([entityId,p])=>({entityId,clip:p.clip,frame:p.frame,direction:p.direction})),
+    return {ready:hollowSpritesReady(),layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
+// Preserve playback/fallback diagnostics while the asset bundle is loading.
+const fallbackProfile={locomotion:{clip:'walk',frames:16,stride:18.387096774193548},actions:{attack:{clip:'attack',frames:16,fps:12,mode:'fullBody',reducedFrame:7}}};

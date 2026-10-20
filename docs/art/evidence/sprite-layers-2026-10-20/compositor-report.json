@@ -1,0 +1,19 @@
+{
+  "stats": {
+    "hits": 2,
+    "misses": 8814,
+    "evictions": 8718,
+    "tiles": 96,
+    "allocatedTiles": 96
+  },
+  "cacheBytes": 6291456,
+  "supportPixelDifferences": 0,
+  "supportPixelsChecked": 49734,
+  "actionOccludedSupportPixels": 2575,
+  "benchmark": {
+    "actors": 96,
+    "frames": 90,
+    "medianMilliseconds": 1.3000000715255737,
+    "p95Milliseconds": 3.399999976158142
+  }
+}
