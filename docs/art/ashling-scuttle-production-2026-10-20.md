@@ -2,6 +2,8 @@
 
 Status: one-view visual candidate, not an accepted all-direction enemy or runtime replacement. [Draft PR #168](https://github.com/pjotrcasteel/Wyrmforge/pull/168) preserves the sources and progress.
 
+Owner feedback: the grounded scuttle is too walk-like. The requested more feral hopping movement is now explored in the [bounding revision](ashling-bounding-revision-2026-10-20.md); the scuttle below remains comparison evidence, not accepted locomotion.
+
 The reference is the original `02-ashlings.png` Fire card. Two entirely local RTX 5090 reconstructions are preserved. The small front-turnaround attempt is unsuitable because of floor geometry and shortened horns. The high-detail hero attempt supplies the current editable mesh and appearance. It has not been silently substituted into gameplay.
 
 The Ashling now has an authored 30-bone deformation rig. Joint placement follows this mesh's asymmetric crouch, not the Hollow skeleton. The thin tail is an explicitly authored mesh extension guided by the card's silhouette, with eight tail controls and a skin color sampled from the existing Ashling texture. Rear cloth uses separate controls rather than stretching between the walking legs. Head carriage is raised slightly for the elevated camera. No hosted generation, subscriptions or hardware settings were used.
