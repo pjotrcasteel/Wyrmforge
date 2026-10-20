@@ -77,9 +77,11 @@ def main():
     # Soft <=2px antialias only. Haze happens when feathered night/day covers
     # the entire structure; no such blending of a complete building here.
     soft=cv2.GaussianBlur(mask.astype(np.float32)/255.0,(0,0),1.2)
-    result=np.clip(day*(1-soft[:,:,None])+daylight_vacant*soft[:,:,None],0,255).astype(np.uint8)
-    unchanged=(mask==0)
-    assert np.array_equal(result[unchanged & (soft<0.0001)],day[unchanged & (soft<0.0001)])
+    blended=np.clip(np.rint(day*(1-soft[:,:,None])+daylight_vacant*soft[:,:,None]),0,255).astype(np.uint8)
+    result=day.copy()
+    touched=soft>0.002
+    result[touched]=blended[touched]
+    assert np.array_equal(result[~touched],day[~touched])
     assert np.array_equal(result[:,700:],day[:,700:]),"The other buildings/World Gate changed!"
     assert np.any(result[:450,:550]!=day[:450,:550]),"Observatory has not changed"
     OUT.parent.mkdir(parents=True,exist_ok=True)
