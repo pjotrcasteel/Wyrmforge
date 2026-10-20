@@ -1,12 +1,19 @@
 # Wyrmforge
 
+## Prototype 0.0.132 — Six-lineage World Gate and Divine magic foundations
+
+- World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
+- Hunt tiers I–V are derived from the existing WyrmTier contract; **only Tier I is playable**. Five future mutation-mastery tiers are a separate domain concept and must not affect currently earned spell ranks.
+- The six Divine magic schools and their signature/mutation direction are defined in the [single authoritative design](docs/design/WyrmForge_MASTER_DESIGN_FOR_CLAUDE_2026-10-18_v1.2.md#30-divine-magical-archetypes-signatures-mutations-and-tiers--locked-20-october-2026). The existing four spell/lesser-Wyrm pairs remain unchanged; Necromancer and Summoner are reserved.
+- **Not shipped:** new character creation or school-respec flows, Fireball rework, ten playable mutations per school, and higher-tier encounters. [Implementation checkpoint](docs/handover/2026-10-20-divine-magic-foundation-status.md).
+
 ## Prototype 0.0.132 — Unified night Refuge town preview (draft)
 
 - Use **one 1672×941 authored nighttime plaza panorama**, navigated as three West / Gate / East camera views on portrait phones, instead of stacked isolated building cards.
 - Tap Arcane Nexus, Blacksmith, Codex and Hall of Fame to independently toggle **Active / Vacant** artwork inside the same town; this is a temporary, non-persistent visual preview and **does not open building menus or change progression**. The World Gate still opens its normal flow.
 - The five approved source town overview paintings live separately from the eight immutable original building concept images. Four derived RGBA layers permit all 16 vacancy combinations with no CSS blackout overlays.
-- Old building menus remain accessible for regression through Settings > Town preview destinations. The runtime night artwork must be imported to this branch before merging; [implementation notes and QA plan](docs/art/refuge-night-panorama-preview-2026-10-20.md).
-- **Status:** still in draft; not yet the live GitHub Pages town until PNGs, CI and mobile visual acceptance are complete.
+- Old building menus remain accessible for regression through Settings > Town preview destinations. Runtime night assets have now been pushed directly to GitHub; [implementation notes and QA plan](docs/art/refuge-night-panorama-preview-2026-10-20.md).
+- **Status:** still in draft; not yet the live GitHub Pages town until CI and mobile visual acceptance are complete.
 
 
 ## Prototype 0.0.131 — Canonical Refuge town screen
