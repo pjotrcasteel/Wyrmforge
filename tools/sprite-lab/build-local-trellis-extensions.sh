@@ -5,6 +5,7 @@ export PATH=/opt/wyrmforge-trellis/bin:/usr/local/cuda-12.8/bin:/usr/bin:/bin
 export CUDA_HOME=/usr/local/cuda-12.8
 export TORCH_CUDA_ARCH_LIST=12.0
 export MAX_JOBS=4
+export LIBRARY_PATH=/usr/lib/wsl/lib:/usr/local/cuda-12.8/lib64
 for project in FlexGEMM CuMesh nvdiffrast nvdiffrec TRELLIS.2/o-voxel; do
     log="/opt/wyrmforge-src/build-${project//\//-}.log"
     echo "Building $project (log: $log)"

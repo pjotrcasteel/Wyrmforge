@@ -45,3 +45,29 @@ Sources: https://pytorch.org/get-started/previous-versions/ (pinned CUDA 12.8
 package pair); https://docs.nvidia.com/cuda/wsl-user-guide/index.html (WSL uses
 Windows GPU driver); https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m
 (official access conditions). These are toolchain references, not art approval.
+
+## Completed local prerequisite checks / new owner direction
+
+All checks in `local-toolchain-report.json` now pass: GPU matrix multiplication,
+fp16 attention, every required CUDA extension import, real TRELLIS pipeline class,
+and Blender 4.0.2. Blender CPU Cycles also rendered a 64x64 RGBA smoke image with
+alpha range 0–255; denoising is disabled because Ubuntu's build lacks OIDN.
+This diagnostic sphere is not a delivered art asset.
+
+xFormers' default Hopper FA3 dispatch failed on RTX 5090. Disabling FA3 made the
+actual attention operation pass; the saved local recipe applies that fix.
+WSL's `/usr/lib/wsl/lib` must be in LIBRARY_PATH to link nvdiffrec's CUDA library.
+Public TRELLIS.2 weights (20 requested files, approximately 16 GB cache) and the
+sparse decoder downloaded successfully. Required DINOv3 approval remains pending.
+
+The owner now explicitly requires local RTX 5090 generation and an alternative
+to waiting for Hugging Face approval/services. No hosted inference is permitted.
+No clocks, voltage, power limits, firmware or Windows GPU driver were changed.
+A read-only check after installation reported 30 C and 58 W at idle.
+
+Alternative under investigation: original MIT-licensed TRELLIS with DINOv2,
+using downloadable ModelScope files and Meta's direct DINOv2 distribution.
+This avoids DINOv3's approval gate; actual source/file access and RTX 5090
+inference must still be proven. It is not yet a working replacement.
+Do not silently substitute DINOv2 into TRELLIS.2; those conditioning models are
+not interchangeable without a compatible trained generation model.

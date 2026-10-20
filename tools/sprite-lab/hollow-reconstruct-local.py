@@ -14,7 +14,8 @@ import traceback
 
 
 def sha256(path):
-    return hashlib.file_digest(path.open('rb'), 'sha256').hexdigest()
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
 def main():
@@ -48,14 +49,21 @@ def main():
         os.environ.setdefault('OPENCV_IO_ENABLE_OPENEXR', '1')
         os.environ.setdefault('PYTORCH_CUDA_ALLOC_CONF', 'expandable_segments:True')
         import torch
+        os.environ.setdefault('ATTN_BACKEND', 'xformers')
+        from xformers.ops.fmha.dispatch import _set_use_fa3
+        _set_use_fa3(False)  # Hopper-only FA3 kernel fails on this RTX 5090.
         from PIL import Image
         import o_voxel
         from trellis2.pipelines import Trellis2ImageTo3DPipeline
         from trellis2.pipelines import rembg
-        from huggingface_hub import hf_hub_download
+        from huggingface_hub import hf_hub_download, get_hf_file_metadata, hf_hub_url
         assert torch.cuda.is_available(), 'CUDA unavailable'
         record.update(torch=torch.__version__, cuda=torch.version.cuda,
                       gpu=torch.cuda.get_device_name(), python=sys.version)
+        save('checking-required-dinov3-access', dinoModel=args.dino_model)
+        if not Path(args.dino_model).is_dir():
+            metadata = get_hf_file_metadata(hf_hub_url(args.dino_model, 'model.safetensors'))
+            record['dinoRevision'] = metadata.commit_hash
         # The input already has real alpha. Avoid loading unused RMBG weights or
         # accepting their separate terms. Fail explicitly if preprocessing tries
         # to remove a background, rather than silently using another model.
@@ -66,8 +74,9 @@ def main():
             def __call__(self, image):
                 raise ValueError('Reference must have non-opaque alpha')
 
-        if Image.open(reference).getextrema()[-1] == (255, 255):
-            raise ValueError('Reference has no transparent background')
+        with Image.open(reference) as input_image:
+            if input_image.mode != 'RGBA' or input_image.getextrema()[-1] == (255, 255):
+                raise ValueError('Reference must have non-opaque RGBA alpha')
         rembg.AlphaInputOnly = AlphaInputOnly
         config = json.loads(Path(hf_hub_download('microsoft/TRELLIS.2-4B', 'pipeline.json')).read_text())
         for key, value in config['args']['models'].items():

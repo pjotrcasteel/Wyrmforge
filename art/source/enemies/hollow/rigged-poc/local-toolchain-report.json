@@ -1,0 +1,49 @@
+{
+  "python": "3.12.3",
+  "checks": {
+    "gpu-matmul": {
+      "passed": true,
+      "result": {
+        "torch": "2.8.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5090",
+        "capability": [
+          12,
+          0
+        ]
+      }
+    },
+    "gpu-attention": {
+      "passed": true,
+      "result": "finite fp16 CUDA attention output"
+    },
+    "flex_gemm": {
+      "passed": true,
+      "result": "/opt/wyrmforge-trellis/lib/python3.12/site-packages/flex_gemm/__init__.py"
+    },
+    "cumesh": {
+      "passed": true,
+      "result": "/opt/wyrmforge-trellis/lib/python3.12/site-packages/cumesh/__init__.py"
+    },
+    "nvdiffrast.torch": {
+      "passed": true,
+      "result": "/opt/wyrmforge-trellis/lib/python3.12/site-packages/nvdiffrast/torch/__init__.py"
+    },
+    "nvdiffrec_render.renderutils": {
+      "passed": true,
+      "result": "/opt/wyrmforge-trellis/lib/python3.12/site-packages/nvdiffrec_render/renderutils/__init__.py"
+    },
+    "o_voxel": {
+      "passed": true,
+      "result": "/opt/wyrmforge-trellis/lib/python3.12/site-packages/o_voxel/__init__.py"
+    },
+    "trellis-pipeline-class": {
+      "passed": true,
+      "result": "<class 'trellis2.pipelines.trellis2_image_to_3d.Trellis2ImageTo3DPipeline'>"
+    },
+    "blender": {
+      "passed": true,
+      "result": "Blender 4.0.2"
+    }
+  }
+}
