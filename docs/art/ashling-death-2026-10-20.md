@@ -1,0 +1,15 @@
+# Ashling death candidate
+
+Current review: `art/source/enemies/ashling/exports/death-eight-directions-v3/`. Owner acceptance pending; no runtime integration or deployment. The owner has approved the preceding weighted fire-claw attack.
+
+The non-looping 28-frame clip at 24 fps has an initial recoil, failed hand brace, low forward collapse, a small asymmetric roll and impact rebound, then folded limbs and tail settling behind a prone corpse. Residual claw heat and embers extinguish by frame 9. Frames 23–27 hold an identical settled mesh and identical pixels. Review GIFs repeat only to aid inspection; playback metadata is non-looping.
+
+Source: `art/source/enemies/ashling/model/local-appearance-002/rigged-death-v3/ashling-death.blend`, `death-samples.npz`, `pose-diagnostics.json`, `floor-audit.json` and `profile.json`. Authoring: `tools/sprite-lab/build-ashling-death.py`. GPU rendering reuses `render-ashling-attack.py`, which selects attack/death from the source profile; all computation remains local on RTX 5090. Source fire geometry and intensity curves are preserved beside the exported atlas.
+
+The 3584×1024 transparent atlas contains eight real rotations, 28 cells per row, each 128×128. It shares attack pixel density and anchor. Individual frames, `death-review.gif`, synchronized eight-direction normal/slow GIFs, key-pose and corpse inspection images, manifests and independent validation are preserved.
+
+Earlier candidates remain explicitly unsuitable: v1 pitched the already crouched head/chest into the floor and used excessive vertex flattening. V2 preserved the intact mesh but its large side roll and skin deformation left an overly tall corpse. V3 reduces roll, uses linear skinning for this folded clip, calculates sole placement from actual foot geometry, and translates intact poses onto the floor rather than flattening vertices. Whole-pose floor offsets peak around 0.07 model units and settle around 0.043; these offsets are keyed on the rig object in the editable Blender source and included in the sampled geometry. No runtime corpse correction is required to reproduce the source.
+
+Independent CPU validation (`tools/sprite-lab/validate-ashling-death.py`) passes 224 decoded frames and 235,298 opaque samples against atlas packing, binary alpha, 57 palette colors, clipped-frame margins, shared per-clip anchors and unmirrored corpse rows. Minimum geometry Z is exactly the -0.5 floor. Corpse height is 0.4431 versus standing height 0.8461 model units. The final hold has zero position error and identical pixels. Each row has 23 distinct images, followed by the intentionally repeated settle/hold. All embers are absent from frame 9 onward. These technical results do not establish visual owner acceptance.
+
+Remaining: owner death review, shared animation-layer metadata and runtime integration/validation. The full-body launch and collapse must retain authored leg support, while ordinary locomotion keeps its independent gait phase. Existing simulation damage, motion and death authority remain unchanged at this source-art stage.

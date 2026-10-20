@@ -35,4 +35,4 @@ All 176 corrected directional frames pass independent validation: 182,627 opaque
 
 `weighted-launch-review.gif` adds a static projected ground grid and a simple grounding shadow to W/SW views, using the exported sprites without modifying their pixels. `launch-contact-review.png` preserves sampled review poses. The shadow and grid are review aids, not baked into the runtime atlas. Script: `tools/sprite-lab/review-ashling-launch.py`. The ordinary fire-claw and eight-direction previews are also included.
 
-This is a full-body launch candidate: future generic animation-layer integration must respect its authored leg support/flight rather than blindly replacing the legs with a walk cycle. Simulation authority and runtime integration remain separate pending work. Owner visual acceptance of the launch is pending.
+The owner subsequently approved the weighted launch with “perfect”. Future generic animation-layer integration must respect its authored leg support/flight rather than blindly replacing the legs with a walk cycle. Simulation authority and runtime integration remain separate pending work. The death candidate is tracked in `ashling-death-2026-10-20.md`.

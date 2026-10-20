@@ -6,14 +6,14 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "approved movement; short launching fire-claw attack candidate validated in eight directions",
+  "status": "movement and weighted fire-claw attack approved; death candidate validated in eight directions",
   "ownerAccepted": true,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner review of fire-infused claw attack",
-    "death clip",
-    "layer metadata and runtime acceptance"
+    "owner review of death collapse",
+    "shared animation-layer metadata",
+    "runtime integration and in-game validation"
   ],
   "modelAttempt": "model/local-appearance-002",
   "sourceRig": "model/local-appearance-002/rigged-block-v4a/ashling-rigged.blend",
@@ -28,7 +28,12 @@
   "directionalAcceptance": "Owner yes reply to eight-direction movement followed by request for fire-infused claw attack, 2026-10-20",
   "attackExport": "exports/attack-launch-eight-directions-v2",
   "attackSourceRig": "model/local-appearance-002/rigged-attack-launch-v3/ashling-attack.blend",
-  "attackOwnerAccepted": false,
+  "attackOwnerAccepted": true,
   "attackDocumentation": "../../../../docs/art/ashling-fire-claw-attack-2026-10-20.md",
-  "attackRevisionRequest": "Owner liked fire claws and requested a short weighted launch; revised launch awaits review"
+  "attackRevisionRequest": "Owner liked fire claws and requested a short weighted launch; revised launch awaits review",
+  "attackAcceptance": "Owner perfect reply to weighted launch preview, 2026-10-20",
+  "deathSourceRig": "model/local-appearance-002/rigged-death-v3/ashling-death.blend",
+  "deathExport": "exports/death-eight-directions-v3",
+  "deathOwnerAccepted": false,
+  "deathDocumentation": "../../../../docs/art/ashling-death-2026-10-20.md"
 }

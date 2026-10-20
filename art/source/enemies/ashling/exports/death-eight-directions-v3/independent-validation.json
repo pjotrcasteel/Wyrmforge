@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "frames": 224,
+  "opaquePixelSamples": 235298,
+  "paletteColors": 57,
+  "uniqueFramesByDirection": {
+    "N": 23,
+    "NE": 23,
+    "E": 23,
+    "SE": 23,
+    "S": 23,
+    "SW": 23,
+    "W": 23,
+    "NW": 23
+  },
+  "visibleAtlasPixelsAndAlphaMatch": true,
+  "binaryAlpha": true,
+  "noClipping": true,
+  "noMirroredCorpseRows": true,
+  "minimumMeshZ": -0.5,
+  "corpseHeight": 0.4430912733078003,
+  "standingHeight": 0.8461064100265503,
+  "corpseHoldPositionError": 0.0,
+  "corpseHoldPixelsIdentical": true,
+  "fireExtinguishedByFrame": 9,
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

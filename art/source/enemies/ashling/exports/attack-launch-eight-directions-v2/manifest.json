@@ -2357,6 +2357,6 @@
   "fireEffect": "hand-bound depth-tested geometric flames, hand heat tint and embers",
   "sourceRig": "art/source/enemies/ashling/model/local-appearance-002/rigged-attack-launch-v3/ashling-attack.blend",
   "atlasSha256": "172b70af21fe09b7273c2388240216f31bf3b9a5eded6d314cfc222312a68c03",
-  "ownerAccepted": false,
+  "ownerAccepted": true,
   "runtimeIntegrated": false
 }

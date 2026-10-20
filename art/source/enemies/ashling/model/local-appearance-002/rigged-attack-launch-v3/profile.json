@@ -27,6 +27,6 @@
     12
   ],
   "rootMotionPolicy": "authored visual displacement only; simulation damage and movement unchanged",
-  "ownerAccepted": false,
+  "ownerAccepted": true,
   "runtimeIntegrated": false
 }
