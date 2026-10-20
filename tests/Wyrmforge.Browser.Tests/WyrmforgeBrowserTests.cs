@@ -359,7 +359,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_FireballNexus_EquipsUpgradesAndRestoresPersistentSpell()
     {
         await Page.SetViewportSizeAsync(390, 844);
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart']));");
+        await Page.AddInitScriptAsync("if (!localStorage.getItem('fireballTestSeeded')) { localStorage.setItem('fireballTestSeeded','1'); localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:8, Nodes:[] })); localStorage.setItem('wyrmforge.essenceVault', JSON.stringify(['CinderHeart'])); }");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
