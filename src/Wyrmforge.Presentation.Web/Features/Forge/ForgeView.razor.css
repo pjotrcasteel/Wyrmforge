@@ -800,9 +800,13 @@
 .character-school:disabled { cursor:not-allowed; border-color:#332e38; color:#807782; }
 .character-school-icon {
   display:block; width:76px; height:76px;
-  background-image:url('art/divine-lineage-sigils-clean.webp?v=135');
+  background-image:url('art/divine-lineage-sigils.webp?v=134');
   background-size:300% 200%; background-repeat:no-repeat;
   image-rendering:pixelated;
+  /* Hide the baked lettering and hard square edges of the source crop;
+     only the approved central painting remains visible. */
+  -webkit-mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
+  mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);
 }
 .character-school--pyromancer .character-school-icon { background-position:0 0; }
 .character-school--cryomancer .character-school-icon { background-position:50% 0; }
