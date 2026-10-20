@@ -22,7 +22,7 @@ public sealed class DivineArchetypeCatalogTests
     {
         var available = DivineArchetypeCatalog.All.Where(definition =>
             DivineArchetypeCatalog.CanCreateCharacter(definition.Id)).ToArray();
-        Assert.HasCount(1, available);
+        Assert.AreEqual(1, available.Length);
         Assert.AreEqual(DivineArchetype.Pyromancer, available[0].Id);
     }
 
