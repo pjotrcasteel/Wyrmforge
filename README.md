@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.138 — Fire-first character creation
+
+- Choose your magic: **Fire is the only available new-character school** until its Tier-I signature and mutation gameplay are fully implemented and accepted. Frost, Storm, Arcane, Necromancer and Summoner remain visible and locked.
+- Character creation removes the long lore explanation and speculative respec instructions. Only the direct choice and character name remain.
+- Existing non-Fire characters remain intact; the gate is for **new** characters only. The World Gate still independently chooses Hunt region.
+- Six-school mutation canon is documented in the authoritative design §3.0.
+
 ## Prototype 0.0.137 — Gameplay night town and swipe-only navigation
 
 - The accepted night panorama now uses the player's persistent building unlocks, opens real destinations, and explains locked buildings without toggling game state.
