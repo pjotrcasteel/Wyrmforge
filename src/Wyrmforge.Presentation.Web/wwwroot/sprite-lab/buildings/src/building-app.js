@@ -239,29 +239,27 @@
   function drawRoofDamage(g, x, y, w, h) {
     if (w < 60 || h < 45) return;
     g.save();
-    g.translate(x + w * .49, y + h * .31);
-    const scale = Math.min(w / 455, h / 165) * 1.65;
+    // Use a few missing slate tiles rather than a broad dark stain.
+    // Their footprint follows the unchanged original roof plane.
+    g.translate(x + w * .51, y + h * .35);
+    const scale = Math.min(w / 455, h / 165) * 1.0;
     g.scale(scale, scale);
-    function poly(points, fill, stroke, lineWidth = 1) {
+    function face(points, color) {
       g.beginPath();g.moveTo(points[0][0],points[0][1]);
       for(let i=1;i<points.length;i++)g.lineTo(points[i][0],points[i][1]);
-      g.closePath();g.fillStyle=fill;g.fill();
-      if(stroke){g.strokeStyle=stroke;g.lineWidth=lineWidth;g.stroke();}
+      g.closePath();g.fillStyle=color;g.fill();
     }
-    poly([[0,8],[14,2],[26,5],[31,0],[47,4],[56,12],[50,19],[42,26],
-      [29,24],[18,29],[6,21],[-2,17]],'#111719','#344049',1.5);
-    poly([[8,9],[22,5],[32,10],[41,7],[50,12],[41,18],[35,21],
-      [21,21],[13,24],[4,18]],'#17191a',null);
-    g.strokeStyle='#59463b';g.lineWidth=3;
-    g.beginPath();g.moveTo(14,8);g.lineTo(43,23);g.stroke();
-    g.strokeStyle='#382b24';g.lineWidth=1.2;
-    g.beginPath();g.moveTo(19,6);g.lineTo(45,20);g.stroke();
-    // A few damaged roof slates still overlap the hole; avoid uniform tile grids.
-    for(const [tx,ty,length] of [[-8,12,13],[4,4,11],[45,0,13],[39,26,9],[9,26,8]]) {
-      g.strokeStyle='#4a5158';g.lineWidth=2.4;g.beginPath();
-      g.moveTo(tx,ty);g.lineTo(tx+length,ty+3);g.stroke();
-      g.strokeStyle='#181f25';g.lineWidth=1;
-      g.beginPath();g.moveTo(tx,ty+2);g.lineTo(tx+length,ty+5);g.stroke();
+    // Uneven broken edges along three adjacent slate courses.
+    face([[0,7],[8,5],[16,7],[22,4],[31,6],[36,10],
+      [34,16],[27,18],[21,16],[16,21],[7,19],[1,16]], '#0f1317');
+    face([[6,10],[15,8],[22,11],[29,9],[31,15],[24,16],[17,16],[11,18]], '#181d20');
+    // A rafter glimpsed below the roofing, not an unsupported beam.
+    g.strokeStyle='#322b25';g.lineWidth=2;g.beginPath();
+    g.moveTo(9,10);g.lineTo(27,17);g.stroke();
+    // Chipped slate pieces, shaded just below the neighboring rows.
+    for (const [tx,ty,ex,ey] of [[-3,8,7,10],[24,3,33,5],[29,19,37,21],[7,20,14,22]]) {
+      g.strokeStyle='#292f35';g.lineWidth=1.5;g.beginPath();g.moveTo(tx,ty);g.lineTo(ex,ey);g.stroke();
+      g.strokeStyle='#11181c';g.lineWidth=1;g.beginPath();g.moveTo(tx,ty+2);g.lineTo(ex,ey+2);g.stroke();
     }
     g.restore();
   }
