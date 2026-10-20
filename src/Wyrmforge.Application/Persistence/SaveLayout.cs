@@ -31,6 +31,7 @@ public static class SaveLayout
     {
         ["wyrmforge.firstHunt.v1"] = SaveDomain.Onboarding,
         ["wyrmforge.arcaneBuild.v1"] = SaveDomain.PlayerLegacy,
+        ["wyrmforge.characterSchool.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.arcaneCodex"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.essenceVault"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.forgeProgression"] = SaveDomain.PlayerLegacy,
