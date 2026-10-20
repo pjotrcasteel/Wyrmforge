@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.133 — Canonical six-school pixel icons in the real World Gate
+
+- The actual approved Fire, Frost, **yellow Storm**, Arcane, Necromancy and **bear Summoner** pixel illustrations now power the six World Gate choices. No Unicode placeholder icons, AI redraws or separate HTML mockups.
+- Runtime uses a real **192×128 WebP atlas** (6×64×64 icons), nearest-neighbour rendering and readable HTML labels. Fire and Frost launch existing Tier-I Hunts; the four remaining lineages show their icon/name in a dark disabled state without pretending their regions are playable.
+- The selected Fire/Frost artwork also appears in the Wyrm-tier header. Real gameplay, saves, Wyrm encounters and the character-school-selection roadmap are unchanged.
+- Mobile regression tests verify six glyphs, the atlas's actual decoded size, disabled states, navigation and 320/390px views. [Asset provenance and validation status](docs/art/divine-lineage-pixel-icons-2026-10-20.md). Real iPhone Safari visual acceptance is still separate from Chromium CI.
+
 ## Prototype 0.0.132 — Six-lineage World Gate and Divine magic foundations
 
 - World Gate presents **six** Wyrm lineage choices (Fire/Frost enabled, four anonymous disabled) in two rows of three, rather than twelve empty lineages. This is a **Hunt lineage/region** choice, not the character's permanent school affinity.
