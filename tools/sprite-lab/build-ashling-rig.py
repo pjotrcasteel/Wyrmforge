@@ -1,6 +1,7 @@
 """Editable Ashling rig and a contact-driven scuttle; no runtime replacement."""
 import bpy, math, json, sys
 import numpy as np
+from PIL import Image
 from pathlib import Path
 from mathutils import Vector, Quaternion
 
@@ -16,7 +17,11 @@ original_count=len(v)
 tail=np.array([[.07,.30,-.09],[.08,.39,-.11],[.12,.49,-.18],[.15,.58,-.25],
                [.12,.67,-.26],[.04,.73,-.20],[-.04,.74,-.13],[-.09,.70,-.08],[-.10,.65,-.07]])
 tail_vertices=[];tail_uv=[];tail_faces=[];sides=8
-skin_uv=uv[np.argmin(np.linalg.norm(v-np.array([.24,.12,-.20]),axis=1))]
+albedo=np.asarray(Image.open(folder/'textured-v1/hollow-albedo.png').convert('RGB'))
+texel=albedo[np.clip(((1-uv[:,1])*1023).astype(int),0,1023),np.clip((uv[:,0]*1023).astype(int),0,1023)]
+skin_candidates=np.where((v[:,2]<-.1)&(v[:,2]>-.3)&(v[:,1]<.2)&(texel[:,0]>65)&(texel[:,0]<150))[0]
+skin_index=skin_candidates[np.argmin(np.linalg.norm(texel[skin_candidates].astype(float)-[100,65,49],axis=1))]
+skin_uv=uv[skin_index]
 for ring,point in enumerate(tail):
     tangent=tail[min(ring+1,len(tail)-1)]-tail[max(0,ring-1)]
     tangent/=np.linalg.norm(tangent)
@@ -123,7 +128,12 @@ for frame in range(17):
     rotation=Quaternion((0,0,1),.065*math.sin(angle))@Quaternion((1,0,0),.035*math.sin(2*angle))
     origin=Vector(bones['pelvis']['head']);point=lambda p:origin+rotation@(Vector(p)-origin)+offset
     segment('root',bones['root']['head'],bones['root']['tail'])
-    for n in ['pelvis','spine','chest','neck','head']:segment(n,point(bones[n]['head']),point(bones[n]['tail']))
+    for n in ['pelvis','spine','chest']:segment(n,point(bones[n]['head']),point(bones[n]['tail']))
+    # Raise the gaze from the hero's downward snarl so the face and horns read
+    # from the elevated gameplay camera, without changing its anatomy.
+    neck_origin=point(bones['neck']['head']);gaze=Quaternion((1,0,0),math.radians(-20))
+    head_point=lambda p:neck_origin+gaze@(point(p)-neck_origin)
+    for n in ['neck','head']:segment(n,head_point(bones[n]['head']),head_point(bones[n]['tail']))
     for side,sign,shift in [('L',1,0),('R',-1,.5)]:
         p=(phase+shift)%1
         if p<stance:travel=-sweep/2+sweep*p/stance;lift=0
