@@ -50,7 +50,7 @@ test('painted well, pillars and garden walls have independent collider ids', () 
         'The well occluder must cover the roof above the earlier visible floating rectangles');
 
     const markup = source(scene);
-    assert.match(markup, /night-navigation\.json\?v=\$\{AppBuildInfo\.Version\}/,
+    assert.match(markup, /night-navigation\.json\?v=\{AppBuildInfo\.Version\}/,
         'Updated mobile clients must not use cached stale nav polygons');
 });
 
