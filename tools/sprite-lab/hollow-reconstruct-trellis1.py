@@ -19,6 +19,7 @@ os.environ['SPCONV_ALGO'] = 'native'
 
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument('--attempt', required=True)
+parser.add_argument('--appearance', action='store_true', help='Preserve the higher-detail Gaussian appearance decoder and shared latent')
 args = parser.parse_args()
 if not args.attempt.replace('-', '').isalnum():
     parser.error('attempt must be alphanumeric with optional hyphens')
@@ -57,13 +58,30 @@ try:
     config = json.loads((weights / 'pipeline.json').read_text())
     config['args']['models'] = {
         key: str(weights / value) for key, value in config['args']['models'].items()
-        if key not in ['slat_decoder_gs', 'slat_decoder_rf']}
+        if key != 'slat_decoder_rf' and (args.appearance or key != 'slat_decoder_gs')}
     (output / 'pipeline.json').write_text(json.dumps(config, indent=2) + '\n')
     save('loading-local-model-and-meta-dinov2')
     pipeline = TrellisImageTo3DPipeline.from_pretrained(str(output))
     pipeline.cuda()
     save('reconstructing-on-local-rtx5090')
-    mesh = pipeline.run(Image.open(reference), seed=1729, formats=['mesh'])["mesh"][0]
+    if args.appearance:
+        prepared = pipeline.preprocess_image(Image.open(reference))
+        conditioning = pipeline.get_cond([prepared])
+        torch.manual_seed(1729)
+        coords = pipeline.sample_sparse_structure(conditioning, 1, {})
+        slat = pipeline.sample_slat(conditioning, coords, {})
+        np.savez_compressed(output / 'shared-latent.npz', feats=slat.feats.cpu().numpy(), coords=slat.coords.cpu().numpy())
+        decoded = pipeline.decode_slat(slat, ['mesh', 'gaussian'])
+        mesh = decoded['mesh'][0]
+        gaussian = decoded['gaussian'][0]
+        np.savez_compressed(output / 'gaussian-appearance.npz',
+                            means=gaussian.get_xyz.cpu().numpy(),
+                            quats=gaussian.get_rotation.cpu().numpy(),
+                            scales=gaussian.get_scaling.cpu().numpy(),
+                            opacities=gaussian.get_opacity.cpu().numpy(),
+                            sh=gaussian.get_features.cpu().numpy())
+    else:
+        mesh = pipeline.run(Image.open(reference), seed=1729, formats=['mesh'])["mesh"][0]
     vertices = mesh.vertices.detach().cpu().numpy()
     faces = mesh.faces.detach().cpu().numpy()
     colors = mesh.vertex_attrs.detach().cpu().numpy() if mesh.vertex_attrs is not None else None
