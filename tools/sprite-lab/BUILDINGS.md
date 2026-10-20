@@ -6,10 +6,11 @@ This is an **art-authoring tool**, not another gameplay scene and not automatic 
 
 ## First run
 
-Open **Buildings** from the Sprite Lab header. Select **Wyrmforge** and leave **Vacant** selected. The main canvas shows the lower-left crop of the **existing 2172×724 game panorama**. The dashed slot areas are editable; click a slot on the painting or from the list below the stage selector.
+Open **Buildings** from the Sprite Lab header. Select **Wyrmforge** and leave **Vacant** selected. The main canvas shows the lower-left crop of the **existing 2172×724 original, fully lit town panorama**. Immediately below the canvas you can select a stage, select **Roof and damage**, and tap **Intact** or **Beschadigd**. The roof visibly changes in that one stage; other stages remain untouched. The roof damage is an explicitly hand-authored preview overlay, not a finished game asset. You can also choose a slot by tapping its guide rectangle in the preview.
 
-- **Base painting:** leave that part of the underlying panorama unchanged.
-- **Active source:** locally composite the corresponding region from the original fully active game panorama. These are *sample reference patches*, **not approved isolated artwork**. They can have visible seams or inconsistent lighting; do not confuse them with finished slots.
+- **Intact / Beschadigd (roof):** a real visible roof damage proof layer is added/removed. Shared geometry never changes. This is an early review asset; don't publish it in the actual town before sign-off.
+- **Base / Origineel:** leave that part of the original fully lit painting unchanged.
+- **Other slots:** the editor does **not** fabricate fake On/Off art by laying dark rectangles over buildings. Until a real source-aligned transparent art alternative is uploaded, those controls offer only Original + Upload. That's intentional; it avoids the first lab's ugly lighting seams.
 - **Upload slot:** choose a transparent PNG/WebP with the content for that region. The browser draws it into the chosen native source rectangle. Transparent surroundings preserve the base painting; JPG works for comparison only.
 - **Position:** X/Y/width/height are measured in **absolute native panorama pixels**. Updating geometry changes that slot for all four stages, not just one. Moving source geometry requires **all stages to be unlocked**.
 
@@ -28,7 +29,7 @@ For canonical town scenes, use matching native pixel coordinates and keep the ba
 ## Current limitations / acceptance gate
 
 - The Lab is a **static stage editor** in this first slice; actual flickering lamps, smoke particles, portal swirl and animated NPC walk/work loops will be authored and validated separately. Nothing on the screen claims to produce those motions today.
-- Starter slots are **approximate authoring rectangles**, not visually verified production masks. The original reference patches use small feathered edges so beginners can explore states; a final art export needs *approved source-aligned assets* before game integration. A line or lighting seam means reject the asset rather than hide it under a dark global CSS wash.
+- Starter slots are **approximate authoring rectangles**, not visually verified production masks. The original dark/light rectangular patches from v0.1 are **removed**; old locally stored built-in projects are automatically migrated to the clean original painting, preserving locks and uploaded art. The roof damage example is a deliberately small native-canvas authored overlay; a final art export needs owner-approved source-aligned assets. A line or lighting seam means reject the asset rather than hide it under a dark global CSS wash.
 - No arbitrary external image URL loading; JSON accepts only known bundled art or embedded data URLs to make the project portable and keep third-party network dependencies out.
 - A newly imported native building image can have a different size, but images replacing that building's **full source** must match its saved pixel dimensions. Slot PNG/WebP can be smaller and will be drawn into their recorded rectangle.
 - Existing Blazor Forge, Arcane Nexus, World Gate, Codex and Hall interactions and their actual progression gates remain unchanged. Future runtime integration must derive state from the authoritative progression and use only approved artwork.
@@ -51,3 +52,7 @@ These tests are wired into the existing Validate Wyrmforge workflow. Browser Pla
 **This delivery is deliberately limited to the tool and its reusable data contract.** It does not replace the current town artwork or build a new progression system. After the owner exports and approves the four states for one building, add the approved masks and animations as a separate tested game vertical slice. Use the shared production rules in [town-building-production-template.md](../../docs/art/town-building-production-template.md) and the authoritative master design. Preserve the current mobile UI, town scroll/swipe hotspots and Sprite Lab animation viewer.
 
 Workflow artifact creation, painting in a professional art tool and sprite-sheet authoring remain separate; this Lab helps inspect and combine those controlled inputs without asking an image generator to invent a complete town each time.
+
+## v0.2 — usability correction
+
+The editor now puts stage selection, slot selection, and the meaningful **Intact / Beschadigd** roof choices directly under the preview, including mobile. Selecting the roof works without scrolling to a separate distant inspector. Every starter state uses the same original painting as its foundation instead of mixing mismatched dark/bright panoramas. Vacant previews are **not yet an actual empty or unlit town**: the starting original has lights and people. Those require individually approved slot artwork before they can honestly be switched off. Don't infer production readiness from the starter scene.

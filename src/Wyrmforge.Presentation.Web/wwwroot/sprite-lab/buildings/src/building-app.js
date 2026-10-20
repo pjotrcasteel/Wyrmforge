@@ -5,12 +5,36 @@
   const DOM = Object.fromEntries([
     'buildingSelect','newBuildingName','newBuildingFile','addBuilding','stageList','lockStage','slotList',
     'newSlotName','addSlot','showGuides','buildingCanvas','canvasSize','previewTitle','renderNote',
-    'slotTitle','slotVariant','slotFile','rectX','rectY','rectW','rectH','applyRect','baseFile',
+    'quickStages','quickSlot','quickSlotTitle','quickAvailability','quickChoices','quickHelp','quickLock',
+    'slotZoom','slotTitle','slotVariant','slotFile','rectX','rectY','rectW','rectH','applyRect','baseFile',
     'referenceFile','sourceInfo','exportJson','exportPng','importJson','resetProject','status',
   ].map(id => [id, $(id)]));
   const previews = Array.from(document.querySelectorAll('#compareGrid button'));
   const storagePrefix = 'wyrmforge-building-lab-v1:';
   const projects = new Map(), imageCache = new Map(), overlayCache = new Map();
+  // Existing live town art is immutable. Stage differences may only be
+  // introduced through explicit slot art, never whole-panorama dark patches.
+  const starterVariants = slot => slot.id === 'roof'
+    ? [['base', 'Intact'], ['roof:damaged', 'Beschadigd']]
+    : [['base', 'Origineel']];
+  function migrateOldPainting(project) {
+    // The first editor saved a dark 'vacant' panorama and composited rectangular
+    // chunks from a brighter reference, which produced the rejected dark blocks.
+    // Keep uploaded artwork and actual locks; replace only built-in bad presets.
+    if (!C.BUILDINGS.some(b => b.id === project.id)) return project;
+    if (project.baseSource === 'refuge-town-vacant.webp') {
+      project.baseSource = 'refuge-town-panorama.png';
+      if (project.referenceSource === 'refuge-town-panorama.png') {
+        for (const stage of C.STAGES) {
+          for (const slot of project.slots) {
+            if (project.stages[stage].values[slot.id] === 'reference')
+              project.stages[stage].values[slot.id] = 'base';
+          }
+        }
+      }
+    }
+    return project;
+  }
   let project = null, stage = 'vacant', selectedSlot = null;
   const sourceUrl = src => src.startsWith('data:') ? src : `../../art/${src}`;
   const anyLocked = () => C.STAGES.some(s => project.stages[s].locked);
@@ -38,7 +62,7 @@
     try {
       const saved = localStorage.getItem(projectKey(id));
       if (saved) {
-        const loaded = C.validateProject(JSON.parse(saved));
+        const loaded = C.validateProject(migrateOldPainting(JSON.parse(saved)));
         loaded.visualAccepted = false;
         projects.set(id, loaded);
         return loaded;
@@ -111,6 +135,7 @@
       btn.append(name, mark); return btn;
     }));
     updateInspector();
+    updateQuickEditor();
     previews.forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.stage === stage);
       btn.querySelector('span').textContent = `${C.STAGES.indexOf(btn.dataset.stage)} · ${C.LABELS[btn.dataset.stage].toUpperCase()}${project.stages[btn.dataset.stage].locked ? ' · LOCKED' : ''}`;
@@ -133,15 +158,57 @@
     [DOM.rectX.value, DOM.rectY.value, DOM.rectW.value, DOM.rectH.value] = slot.rect;
     const previous = project.stages[stage].values[slot.id];
     const options = [
-      ['base', 'Base painting — no overlay'],
-      ['reference', 'Active painting — candidate patch'],
-      ...Object.keys(project.assets).map(id => [`upload:${id}`, `Uploaded · ${id}`]),
+      ...starterVariants(slot),
+      ...Object.keys(project.assets).map(id => [`upload:${id}`, `Eigen artwork · ${id}`]),
     ];
+    // Legacy JSON can contain 'reference'. Show it as a removable legacy
+    // value, not an invented valid architectural roof/light variant.
+    if (previous === 'reference') options.push(['reference', 'Oude referentie (niet gebruiken)']);
     DOM.slotVariant.replaceChildren(...options.map(([value, label]) => {
       const node = document.createElement('option');
       node.value = value; node.textContent = label; return node;
     }));
     DOM.slotVariant.value = previous;
+  }
+  function updateQuickEditor() {
+    DOM.quickStages.replaceChildren(...C.STAGES.map((s, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';btn.dataset.stage=s;
+      btn.textContent = `${i} · ${C.LABELS[s]}${project.stages[s].locked ? ' 🔒' : ''}`;
+      btn.className = 'quick-stage' + (stage===s ? ' selected' : '');
+      btn.setAttribute('aria-pressed', String(stage === s));return btn;
+    }));
+    DOM.quickSlot.replaceChildren(...project.slots.map(slot => {
+      const opt=document.createElement('option');opt.value=slot.id;opt.textContent=slot.label;return opt;
+    }));
+    if (selectedSlot) DOM.quickSlot.value = selectedSlot;
+    const slot=project.slots.find(s=>s.id===selectedSlot);
+    DOM.quickSlotTitle.textContent=slot?.label || 'Geen slots';
+    const locked=project.stages[stage].locked;
+    DOM.quickAvailability.textContent=locked ? 'Vergrendeld' : 'Bewerkbaar';
+    DOM.quickLock.textContent=locked ? 'Ontgrendel deze fase' : 'Vergrendel deze fase';
+    DOM.quickChoices.replaceChildren();
+    if (!slot) {DOM.quickHelp.textContent='Voeg een slot toe om te beginnen.';return;}
+    const variants=[
+      ...starterVariants(slot),
+      ...Object.keys(project.assets).map(id=>[`upload:${id}`, 'Eigen artwork · '+id])
+    ];
+    const current=project.stages[stage].values[slot.id];
+    for (const [value,label] of variants) {
+      const btn=document.createElement('button');
+      btn.type='button';btn.dataset.variant=value;btn.textContent=label;
+      btn.className='quick-choice'+(current===value?' selected':'');
+      btn.setAttribute('aria-pressed',String(current===value));
+      btn.disabled=locked;DOM.quickChoices.append(btn);
+    }
+    if (!locked) {
+      const add=document.createElement('button');
+      add.type='button';add.dataset.upload='true';add.className='quick-choice upload-choice';
+      add.textContent='+ Eigen slotafbeelding uploaden';DOM.quickChoices.append(add);
+    }
+    DOM.quickHelp.textContent = slot.id==='roof'
+      ? 'Dak intact of beschadigd: dit verandert de dakpannen zichtbaar. Dit is nog een proeflaag. Andere fasen blijven onafhankelijk.'
+      : 'Voor dit onderdeel is nog geen goedgekeurde tweede tekening. Upload een transparante PNG/WebP in plaats van een donkere voorbeeldfilter.';
   }
   function featheredReference(source, rect) {
     const key = source.src + ':' + rect.join(',');
@@ -165,6 +232,37 @@
     if (overlayCache.size > 100) overlayCache.clear();
     return layer;
   }
+  // Hand-authored exploratory missing slate tiles. Exactly the same geometry
+  // in every state, no global opacity/black layer and no AI image synthesis.
+  // On future buildings, replace this proof-of-concept with an approved alpha
+  // image in the same shared slot. It is deliberately modest.
+  function drawRoofDamage(g, x, y, w, h) {
+    if (w < 60 || h < 45) return;
+    g.save();
+    // Use a few missing slate tiles rather than a broad dark stain.
+    // Their footprint follows the unchanged original roof plane.
+    g.translate(x + w * .51, y + h * .35);
+    const scale = Math.min(w / 455, h / 165) * 1.0;
+    g.scale(scale, scale);
+    function face(points, color) {
+      g.beginPath();g.moveTo(points[0][0],points[0][1]);
+      for(let i=1;i<points.length;i++)g.lineTo(points[i][0],points[i][1]);
+      g.closePath();g.fillStyle=color;g.fill();
+    }
+    // Uneven broken edges along three adjacent slate courses.
+    face([[0,7],[8,5],[16,7],[22,4],[31,6],[36,10],
+      [34,16],[27,18],[21,16],[16,21],[7,19],[1,16]], '#0f1317');
+    face([[6,10],[15,8],[22,11],[29,9],[31,15],[24,16],[17,16],[11,18]], '#181d20');
+    // A rafter glimpsed below the roofing, not an unsupported beam.
+    g.strokeStyle='#322b25';g.lineWidth=2;g.beginPath();
+    g.moveTo(9,10);g.lineTo(27,17);g.stroke();
+    // Chipped slate pieces, shaded just below the neighboring rows.
+    for (const [tx,ty,ex,ey] of [[-3,8,7,10],[24,3,33,5],[29,19,37,21],[7,20,14,22]]) {
+      g.strokeStyle='#292f35';g.lineWidth=1.5;g.beginPath();g.moveTo(tx,ty);g.lineTo(ex,ey);g.stroke();
+      g.strokeStyle='#11181c';g.lineWidth=1;g.beginPath();g.moveTo(tx,ty+2);g.lineTo(ex,ey+2);g.stroke();
+    }
+    g.restore();
+  }
   function draw(canvas, selectedStage, guides = false) {
     const [cx, cy, cw, ch] = project.crop;
     if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; }
@@ -178,12 +276,11 @@
     }
     for (const slot of project.slots) {
       const value = project.stages[selectedStage].values[slot.id];
-      if (value === 'base') continue;
+      if (value === 'base' || value === 'reference') continue;
       const rect = slot.rect, [x,y,w,h] = rect, dx = x - cx, dy = y - cy;
       if (dx + w <= 0 || dy + h <= 0 || dx >= cw || dy >= ch) continue;
-      if (value === 'reference') {
-        const ref = image(project.referenceSource);
-        if (ref) g.drawImage(featheredReference(ref, rect), dx, dy);
+      if (slot.id === 'roof' && value === 'roof:damaged') {
+        drawRoofDamage(g, dx, dy, w, h);
       } else if (value.startsWith('upload:')) {
         const uploaded = image(project.assets[value.slice(7)]);
         if (uploaded) g.drawImage(uploaded, dx, dy, w, h);
@@ -209,10 +306,28 @@
       g.restore();
     }
   }
+  function drawSlotZoom() {
+    const canvas=DOM.slotZoom;
+    const g=canvas.getContext('2d');
+    const slot=project.slots.find(s=>s.id===selectedSlot);
+    g.fillStyle='#0b1215';g.fillRect(0,0,canvas.width,canvas.height);
+    if(!slot)return;
+    const [cx,cy,cw,ch]=project.crop,[x,y,w,h]=slot.rect;
+    // Show the part of the slot where damage/lighting is likely to appear.
+    // Other components remain centered on their own authored coordinates.
+    const sw=Math.min(160,w,cw),sh=Math.min(90,h,ch);
+    const focusX=slot.id==='roof'?x+w*.51:x+w*.5;
+    const focusY=slot.id==='roof'?y+h*.35:y+h*.5;
+    const sx=Math.max(0,Math.min(cw-sw,focusX-cx-sw/2));
+    const sy=Math.max(0,Math.min(ch-sh,focusY-cy-sh/2));
+    g.imageSmoothingEnabled=true;
+    g.drawImage(DOM.buildingCanvas,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  }
   function drawAll() {
     if (!project) return;
     draw(DOM.buildingCanvas, stage, DOM.showGuides.checked);
     previews.forEach(btn => draw(btn.querySelector('canvas'), btn.dataset.stage));
+    drawSlotZoom();
   }
   function safeDownload(name, blob) {
     const url = URL.createObjectURL(blob);
@@ -266,6 +381,22 @@
     } catch (error) { message(error.message, true); }
   }
   DOM.buildingSelect.addEventListener('change', () => selectBuilding(DOM.buildingSelect.value));
+  DOM.quickStages.addEventListener('click', event => {
+    const btn=event.target.closest('button[data-stage]');
+    if (btn) {stage=btn.dataset.stage;updateUI();}
+  });
+  DOM.quickSlot.addEventListener('change', () => {
+    selectedSlot=DOM.quickSlot.value;updateUI();
+  });
+  DOM.quickChoices.addEventListener('click', event => {
+    const btn=event.target.closest('button');
+    if (!btn || btn.disabled) return;
+    if (btn.dataset.upload) {DOM.slotFile.click();return;}
+    if(btn.dataset.variant) edit(()=>C.updateSlot(project,stage,selectedSlot,btn.dataset.variant));
+  });
+  DOM.quickLock.addEventListener('click',()=>edit(()=>{
+    project.stages[stage].locked=!project.stages[stage].locked;
+  }));
   DOM.stageList.addEventListener('click', event => {
     const btn = event.target.closest('button[data-stage]');
     if (btn) { stage = btn.dataset.stage; updateUI(); }
@@ -348,7 +479,7 @@
     const file = DOM.importJson.files[0]; DOM.importJson.value = '';
     try {
       if (!file || file.size > 28000000) throw new Error('Project JSON must be smaller than 28 MB.');
-      const imported = C.validateProject(JSON.parse(await file.text()));
+      const imported = C.validateProject(migrateOldPainting(JSON.parse(await file.text())));
       imported.visualAccepted = false; projects.set(imported.id, imported);
       if (!C.BUILDINGS.some(b => b.id === imported.id)) {
         try {

@@ -20,7 +20,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/sprite-lab/buildings/",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Building Lab v0.1" })).ToBeVisibleAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Building Lab v0.2" })).ToBeVisibleAsync();
         await Expect(Page.Locator("#buildingCanvas")).ToBeVisibleAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const c = document.querySelector('#buildingCanvas');
@@ -33,15 +33,44 @@ public sealed class WyrmforgeBrowserTests : PageTest
             })).size >= 4;
         }");
 
-        await Page.Locator("#slotList button[data-slot='lamp']").ClickAsync();
-        await Page.Locator("#slotVariant").SelectOptionAsync("reference");
-        await Expect(Page.Locator("#slotVariant")).ToHaveValueAsync("reference");
-        await Page.Locator("#lockStage").ClickAsync();
-        await Expect(Page.Locator("#slotVariant")).ToBeDisabledAsync();
+        // The user edits actual roof variants beside the preview on mobile;
+        // the first release hid Base/Reference in a distant inspector panel.
+        await Expect(Page.Locator("#quickSlot")).ToHaveValueAsync("roof");
+        await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToBeVisibleAsync();
+        await Expect(Page.Locator("#slotZoom")).ToBeVisibleAsync();
+        var initialRoof = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        var initialDetail = await Page.Locator("#slotZoom").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        await Page.Locator("#quickChoices button[data-variant='base']").ClickAsync();
+        await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToHaveAttributeAsync("aria-pressed", "true");
+        var intactRoof = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        Assert.AreNotEqual(initialRoof, intactRoof, "Switching roof to Intact must actually change visible pixels.");
+        var intactDetail = await Page.Locator("#slotZoom").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        Assert.AreNotEqual(initialDetail, intactDetail, "The enlarged roof preview must also show the chosen variant.");
 
-        await Page.Locator("#stageList button[data-stage='active']").ClickAsync();
-        await Expect(Page.Locator("#slotVariant")).ToBeEnabledAsync();
-        await Expect(Page.Locator("#slotVariant")).ToHaveValueAsync("reference");
+        await Page.Locator("#quickChoices button[data-variant='roof:damaged']").ClickAsync();
+        await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']"))
+            .ToHaveAttributeAsync("aria-pressed", "true");
+        var damagedRoofAgain = await Page.Locator("#buildingCanvas").EvaluateAsync<string>("canvas => canvas.toDataURL('image/png')");
+        Assert.AreEqual(initialRoof, damagedRoofAgain, "Reapplying damaged roof must restore the same native pixels.");
+        if (width == 390)
+        {
+            Directory.CreateDirectory(ArtifactDirectory);
+            await ScreenshotAsync("building-lab-roof-choices-390.png");
+        }
+
+        // Switching a stage must show the immutable original base artwork,
+        // not a darker rectangular piece of a different panorama.
+        await Page.Locator("#quickStages button[data-stage='active']").ClickAsync();
+        await Expect(Page.Locator("#quickChoices button[data-variant='base']"))
+            .ToHaveAttributeAsync("aria-pressed", "true");
+        await Page.Locator("#quickStages button[data-stage='vacant']").ClickAsync();
+        await Page.Locator("#quickLock").ClickAsync();
+        await Expect(Page.Locator("#quickChoices button[data-variant='roof:damaged']")).ToBeDisabledAsync();
+
+        await Page.Locator("#quickStages button[data-stage='active']").ClickAsync();
+        await Expect(Page.Locator("#quickChoices button[data-variant='base']")).ToBeEnabledAsync();
+        await Expect(Page.Locator("#slotVariant")).ToHaveValueAsync("base");
         var saved = await Page.EvaluateAsync<string>(@"() =>
             localStorage.getItem('wyrmforge-building-lab-v1:wyrmforge')");
         Assert.IsNotNull(saved);

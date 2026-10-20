@@ -13,17 +13,18 @@ test('all four town buildings start with the same stable four-stage contract', (
     assert.equal(project.stages.vacant.locked, false);
     assert(project.slots.length >= 5);
     assert(project.slots.every(s => C.validRect(s.rect, project.sourceSize)));
-    assert(project.slots.every(s => project.stages.vacant.values[s.id] === 'base'));
-    assert(project.slots.every(s => project.stages.active.values[s.id] === 'reference'));
+    assert(project.slots.every(s => project.stages.vacant.values[s.id] === (s.id === 'roof' ? 'roof:damaged' : 'base')));
+    assert(project.slots.every(s => project.stages.active.values[s.id] === 'base'));
+    assert.equal(project.baseSource, 'refuge-town-panorama.png');
     assert.equal(project.visualAccepted, false);
   }
 });
 
 test('each stage has independent values and independent authoring locks', () => {
   const project = C.createProject('wyrmforge');
-  C.updateSlot(project, 'stirring', 'roof', 'reference');
-  assert.equal(project.stages.stirring.values.roof, 'reference');
-  assert.equal(project.stages.vacant.values.roof, 'base');
+  C.updateSlot(project, 'stirring', 'roof', 'roof:damaged');
+  assert.equal(project.stages.stirring.values.roof, 'roof:damaged');
+  assert.equal(project.stages.vacant.values.roof, 'roof:damaged');
   project.stages.stirring.locked = true;
   assert.throws(() => C.updateSlot(project, 'stirring', 'roof', 'base'), /Unlock/);
   C.updateSlot(project, 'active', 'roof', 'base');
@@ -82,4 +83,16 @@ test('a locked state cannot be treated as approved production artwork', () => {
   const p = C.createProject('codex');
   p.stages.masterwork.locked = true;
   assert.equal(C.validateProject(p).visualAccepted, false);
+});
+
+test('roof can switch intact / damaged without affecting other slots or stages', () => {
+  const p = C.createProject('wyrmforge');
+  C.updateSlot(p, 'vacant', 'roof', 'base');
+  assert.equal(p.stages.vacant.values.roof, 'base');
+  assert.equal(p.stages.active.values.roof, 'base');
+  C.updateSlot(p, 'vacant', 'roof', 'roof:damaged');
+  assert.equal(p.stages.vacant.values.roof, 'roof:damaged');
+  assert.equal(p.stages.stirring.values.roof, 'base');
+  assert.throws(() => C.updateSlot(p, 'active', 'lamp', 'roof:damaged'), /Unknown/);
+  assert.equal(C.validateProject(p), p);
 });
