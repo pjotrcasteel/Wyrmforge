@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "frames": 176,
+  "opaquePixelSamples": 182627,
+  "paletteColors": 58,
+  "uniqueFramesByDirection": {
+    "N": 21,
+    "NE": 21,
+    "E": 21,
+    "SE": 21,
+    "S": 21,
+    "SW": 21,
+    "W": 21,
+    "NW": 21
+  },
+  "visiblePixelsAndAlphaMatchAtlas": true,
+  "noClipping": true,
+  "noMirroredRows": true,
+  "fireAbsentAtRestAndRecovery": true,
+  "visibleFireInEveryDirection": true,
+  "recoveryPositionError": 0.0,
+  "minimumMeshZ": -0.5,
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "airborneFrames": [
+    8,
+    9,
+    10,
+    19
+  ],
+  "landingAnkleDrift": {
+    "L": 1.1175870895385742e-08,
+    "R": 2.9802322387695312e-08
+  },
+  "maximumForwardOffset": 0.15,
+  "maximumPelvisLift": 0.095
+}

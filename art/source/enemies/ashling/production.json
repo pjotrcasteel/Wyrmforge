@@ -6,7 +6,7 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-hero-reference.png",
-  "status": "movement approved; fire-claw attack candidate rendered and validated in eight directions",
+  "status": "approved movement; short launching fire-claw attack candidate validated in eight directions",
   "ownerAccepted": true,
   "rigged": true,
   "runtimeIntegrated": false,
@@ -26,8 +26,9 @@
   "blockingReview": "model/local-appearance-002/rigged-block-v4a/blocking-review",
   "blockingDocumentation": "../../../../docs/art/ashling-bound-blocking-v4-2026-10-20.md",
   "directionalAcceptance": "Owner yes reply to eight-direction movement followed by request for fire-infused claw attack, 2026-10-20",
-  "attackExport": "exports/attack-eight-directions-v3",
-  "attackSourceRig": "model/local-appearance-002/rigged-attack-v1/ashling-attack.blend",
+  "attackExport": "exports/attack-launch-eight-directions-v2",
+  "attackSourceRig": "model/local-appearance-002/rigged-attack-launch-v3/ashling-attack.blend",
   "attackOwnerAccepted": false,
-  "attackDocumentation": "../../../../docs/art/ashling-fire-claw-attack-2026-10-20.md"
+  "attackDocumentation": "../../../../docs/art/ashling-fire-claw-attack-2026-10-20.md",
+  "attackRevisionRequest": "Owner liked fire claws and requested a short weighted launch; revised launch awaits review"
 }

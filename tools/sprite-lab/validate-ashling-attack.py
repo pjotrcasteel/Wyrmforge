@@ -25,4 +25,13 @@ source=np.load((root/m['sourceRig']).parent/'attack-samples.npz');assert np.isfi
 seam=float(abs(source['positions'][0]-source['positions'][-1]).max());minimum=float(source['positions'][:,:,2].min());assert seam<1e-4 and minimum>=-.501
 fire=np.load(out/'fire-effect-source.npz');assert np.isfinite(fire['positions']).all();assert fire['intensities'][0]==0 and fire['intensities'][-1]==0
 report=dict(passed=True,frames=count*8,opaquePixelSamples=opaque,paletteColors=len(colors),uniqueFramesByDirection=unique,visiblePixelsAndAlphaMatchAtlas=True,noClipping=True,noMirroredRows=True,fireAbsentAtRestAndRecovery=True,visibleFireInEveryDirection=True,recoveryPositionError=seam,minimumMeshZ=minimum,ownerAccepted=False,runtimeIntegrated=False)
+diagnostic=(root/m['sourceRig']).parent/'launch-diagnostics.json'
+if diagnostic.exists():
+    data=json.loads(diagnostic.read_text());air=[f for f in range(count) if all(v['clearance']>.01 for v in data if v['frame']==f)]
+    planted={}
+    for side,start,end in [('L',11,18),('R',12,16)]:
+        points=[v['ankle'] for v in data if v['side']==side and start<=v['frame']<=end]
+        planted[side]=float(np.ptp(points,axis=0).max());assert planted[side]<1e-5
+    assert len(air)>=2 and max(v['pelvisLift'] for v in data)>.05
+    report.update(airborneFrames=air,landingAnkleDrift=planted,maximumForwardOffset=max(-v['forwardOffset'] for v in data),maximumPelvisLift=max(v['pelvisLift'] for v in data))
 (out/'independent-validation.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
