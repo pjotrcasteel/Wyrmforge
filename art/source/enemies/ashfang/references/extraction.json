@@ -1,0 +1,28 @@
+{
+  "source": "user_handover_files\\concepts\\Fire\\10-ashfang-the-cinder-wyrm.png",
+  "sha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
+  "views": [
+    {
+      "name": "front",
+      "crop": [
+        17,
+        885,
+        245,
+        1078
+      ],
+      "reference": "ashfang-front-reference.png",
+      "method": "original card pixels and authored silhouette alpha; no redraw or resampling"
+    },
+    {
+      "name": "side",
+      "crop": [
+        247,
+        886,
+        533,
+        1078
+      ],
+      "reference": "ashfang-side-reference.png",
+      "method": "original card pixels and authored silhouette alpha; no redraw or resampling"
+    }
+  ]
+}
