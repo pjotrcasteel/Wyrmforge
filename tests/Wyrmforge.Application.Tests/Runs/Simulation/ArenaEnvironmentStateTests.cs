@@ -91,8 +91,8 @@ public sealed class ArenaEnvironmentStateTests
     public void WyrmInfluence_ProgressesTowardLairAndKeepsRewardSchoolIndependent()
     {
         Assert.AreEqual(0, HuntArenaGenerator.WyrmInfluence(1, false));
-        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(3, false), HuntArenaGenerator.WyrmInfluence(1, false));
-        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(6, true), HuntArenaGenerator.WyrmInfluence(6, false));
+        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(1, false), HuntArenaGenerator.WyrmInfluence(3, false));
+        Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(6, false), HuntArenaGenerator.WyrmInfluence(6, true));
         Assert.AreEqual(1, HuntArenaGenerator.WyrmInfluence(8, true));
         var first = new WyrmrealmMapState(seed: 1220);
         var snapshot = ArenaEnvironmentState.Create(first.Seed, first.AvailableNodes[0]).Snapshot();
