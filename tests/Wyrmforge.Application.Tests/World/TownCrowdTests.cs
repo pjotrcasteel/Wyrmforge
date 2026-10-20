@@ -84,6 +84,56 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_ActualPlazaPropsAreSolidNotOnlyTheWell()
+    {
+        var map = Scene();
+        var blocked = new Dictionary<string, TownPoint>
+        {
+            ["well-roof"] = new(826, 410),
+            ["well-sign"] = new(745, 509),
+            ["west-upper-banner"] = new(620, 385),
+            ["east-upper-banner"] = new(1050, 387),
+            ["west-lower-lamp"] = new(615, 635),
+            ["east-lower-lamp"] = new(1030, 635),
+            ["west-garden"] = new(610, 700),
+            ["east-garden"] = new(1090, 700)
+        };
+
+        foreach (var (landmark, point) in blocked)
+            Assert.IsFalse(map.IsWalkable(point), $"Citizen feet must not cross the painted {landmark}.");
+
+        foreach (var destination in map.Destinations)
+            Assert.IsTrue(map.IsWalkable(destination.Position), $"Spawn {destination.Id} overlaps scenery.");
+    }
+
+    [TestMethod]
+    public void Navigation_SafePlazaRoutesRemainConnectedAroundEveryObstacle()
+    {
+        var map = Scene();
+        var origin = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
+        Assert.IsGreaterThanOrEqualTo(7, map.Obstacles.Count);
+        Assert.IsGreaterThanOrEqualTo(10, map.Clearance);
+
+        foreach (var destination in map.Destinations)
+        {
+            Assert.IsTrue(map.TryFindPath(origin, destination.Position, out var path),
+                $"Plaza destination {destination.Id} must remain reachable.");
+            CheckRoute(map, origin, path);
+        }
+    }
+
+    [TestMethod]
+    public void Navigation_WellForegroundExtendsAboveTheRoofAndSign()
+    {
+        var map = Scene();
+        var foreground = map.Occluders.Single(part => part.Id == "well-foreground");
+        Assert.IsLessThan(365, foreground.Clip.Min(point => point.Y));
+        Assert.IsGreaterThan(580, foreground.DepthY);
+        Assert.IsTrue(foreground.Clip.Any(point => point.X < 670),
+            "Sign and well sides need an occlusion silhouette, not only a roof rectangle.");
+    }
+
+    [TestMethod]
     public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
     {
         var map = Scene();
