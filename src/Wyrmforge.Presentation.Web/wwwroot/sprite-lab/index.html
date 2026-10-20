@@ -9,7 +9,7 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="crest">✧</span><div><div class="eyebrow">WYRMFORGE // TOOLS</div><h1>Sprite Lab<span class="version">v0.2</span></h1></div></div>
+    <div class="brand"><span class="crest">✧</span><div><div class="eyebrow">WYRMFORGE // TOOLS</div><h1>Sprite Lab<span class="version">v0.3</span></h1></div></div>
     <div class="top-meta"><span class="live-dot"></span> LOCAL · OFFLINE <span class="top-sep"></span> <span id="assetLabel">THE HOLLOW / WALK</span></div>
   </header>
   <main class="workspace">
@@ -17,11 +17,11 @@
       <div class="section-heading"><div><div class="eyebrow">01 / ASSET</div><h2>Source sheet</h2></div><span id="imageDimensions" class="dim-label">—</span></div>
       <label for="fileInput" id="dropzone" class="dropzone"><span class="upload-icon">⇧</span><strong>Drop a sprite PNG here</strong><small>or tap to choose a PNG, WebP or JPG</small><span class="upload-link">Load artwork <span aria-hidden="true">↗</span></span></label>
       <input id="fileInput" type="file" accept="image/png,image/webp,image/jpeg" hidden>
-      <div class="preset-row"><button id="loadWalk" type="button" class="ghost small">Hollow · walk v1</button><button id="loadDemo" type="button" class="ghost small">Original concept</button></div>
+      <div class="preset-row"><button id="loadWalk" type="button" class="ghost small">Hollow · rigged walk</button><button id="loadBefore" type="button" class="ghost small">Before</button><button id="loadDemo" type="button" class="ghost small">Concept</button></div>
       <div class="source-canvas-wrap"><canvas id="sheetCanvas" width="420" height="290" aria-label="Spritesheet preview with highlighted frame"></canvas></div>
       <div class="subheading"><span>FRAME LAYOUT</span><button id="resetLayout" type="button" class="text-btn">Reset</button></div>
       <label class="form-label" for="layoutPreset">Direction mapping</label>
-      <select id="layoutPreset"><option value="five">5 drawn views · mirrored to 8</option><option value="eight">8 unique views · production</option></select>
+      <select id="layoutPreset"><option value="single">One drawn view · motion review</option><option value="five">5 drawn views · mirrored to 8</option><option value="eight">8 drawn views</option></select>
       <div class="field-grid">
         <label>Columns<input id="columns" type="number" min="1" max="32" value="8"></label>
         <label>Rows<input id="rows" type="number" min="1" max="32" value="5"></label>
@@ -30,7 +30,7 @@
         <label>Offset X<input id="offsetX" type="number" min="0" max="4096" value="0"></label>
         <label>Offset Y<input id="offsetY" type="number" min="0" max="4096" value="0"></label>
       </div>
-      <p id="assetNote" class="note">The Hollow · first walking candidate. Inspect all eight directions and the loop before approving it.</p>
+      <p id="assetNote" class="note">The Hollow · rigged walk. One painted character, 16 frames. Review the motion before adding other views.</p>
     </aside>
     <section class="center-panel">
       <div class="stage-header"><div><div class="eyebrow">02 / ANIMATION</div><h2>Motion preview <span class="stage-caption">· in-engine approximation</span></h2></div><span id="modeStatus" class="state-tag">MANUAL</span></div>

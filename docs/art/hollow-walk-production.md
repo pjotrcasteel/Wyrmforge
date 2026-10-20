@@ -1,6 +1,6 @@
 # The Hollow — first walking-sheet review
 
-Status: first registered walking candidate for review; no production or visual acceptance claimed.
+Status: generated v1 rejected by owner; replaced in the lab by a mechanically rigged, single-view v2. Other views await gait acceptance.
 
 Scope: the first monster only, using the existing Sprite Lab. Preserve the original
 concept and game artwork. Build a transparent walking atlas and review it before
@@ -57,3 +57,35 @@ outstanding. Do not begin the next monster until this one's walk is accepted.
 Validation: `node --test tools/sprite-lab/tests/*.test.js`, JavaScript syntax check,
 full per-pixel cell-edge check, and deterministic rebuild. Live/browser and CI
 results are recorded below when available.
+
+## Correction — 20 October: coherent painted rig
+
+The owner rejected v1's animation. Equal-cell registration did not repair its
+changing anatomy or incoherent gait. Do not reuse that generation approach for
+the next monsters.
+
+The default is now `hollow-walk-rig-v2.png`: one three-quarter view, 16 frames at
+12fps. Its immutable material layers all come from frame 0 of the existing
+`art/enemies/hollow.png`. The skull and torso are never redrawn per frame. Two-bone
+IK preserves thigh/shin lengths; stance occupies 62% of a cycle with opposite
+legs offset by half a cycle, giving double support rather than a running flight.
+The swinging ankle rises 9 source pixels and returns continuously. Restrained
+arm counter-motion also preserves bone lengths. The original painted material
+and its rigid source masks remain reproducible in `build-hollow-rig.mjs`.
+
+During support the foot sweeps 32 source pixels backwards over .62 of a cycle.
+The Stride test therefore translates by `32 / .62` source pixels per full cycle,
+scaled with display size and FPS. This replaces the unrelated fixed 63px/s speed.
+The Before button preserves the rejected generated atlas for direct comparison.
+
+Eleven Node tests pass, including world-space foot planting over two cycles,
+constant limb lengths over 1,000 phases, absence of a flight phase, exact loop
+closure, all 16 distinct populated frames, and every pixel of frame boundaries.
+Single-view exports remain single-view; they never fabricate eight authored rows.
+The GIF is `docs/art/previews/hollow-walk-rig-v2.gif`.
+
+This corrects motion construction; it does not claim all eight facings are done
+or confer artistic approval. Review remaining rigid cutout seams and the actual
+moving silhouette at gameplay size before authoring the other views. The remote
+browser could not reach localhost (connection refused); local interactive visual
+verification was unavailable. Runtime gameplay artwork is unchanged.

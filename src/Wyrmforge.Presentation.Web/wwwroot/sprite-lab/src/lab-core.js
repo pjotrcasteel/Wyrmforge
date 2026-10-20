@@ -25,7 +25,7 @@
         return ANGLE_DIRECTIONS[Math.round(angle / 45) % 8];
     }
     function directionFrame(config, direction, frame) {
-        const mapped = (config.layout === 'eight' ? EIGHT_ROW_MAP : FIVE_ROW_MAP)[direction];
+        const mapped = config.layout === 'single' ? { row: 0, flipX: false } : (config.layout === 'eight' ? EIGHT_ROW_MAP : FIVE_ROW_MAP)[direction];
         if (!mapped) throw new Error(`Invalid direction: ${direction}`);
         const columns = Number(config.columns);
         const index = ((Math.floor(Number(frame)) % columns) + columns) % columns;
@@ -37,6 +37,7 @@
         };
     }
     function describeLayout(config) {
+        if (config.layout === 'single') return { authoredDirections: 1, playableDirections: 1, framesPerDirection: config.columns };
         return { authoredDirections: config.layout === 'eight' ? 8 : 5, playableDirections: 8, framesPerDirection: config.columns };
     }
     function inspectAlpha(data) {
@@ -80,11 +81,12 @@
             add('fail', 'Invalid grid configuration', 'Columns, rows and frame sizes must be positive integers; offsets must be non-negative integers.');
             return checks;
         }
-        if (!['five', 'eight'].includes(config.layout)) {
+        if (!['single', 'five', 'eight'].includes(config.layout)) {
             add('fail', 'Unknown direction mapping', 'Select the five-view or eight-view layout.'); return checks;
         }
-        const minimumRows = config.layout === 'eight' ? 8 : 5;
+        const minimumRows = config.layout === 'single' ? 1 : config.layout === 'eight' ? 8 : 5;
         if (Number(config.rows) < minimumRows) add('fail', 'Missing direction rows', `This preset requires ${minimumRows} authored rows; found ${config.rows}.`);
+        else if (config.layout === 'single') add('warn', 'One walking view', 'Review this gait first. The remaining seven directions have not been authored.');
         else add('pass', 'Eight-way navigation', config.layout === 'eight' ? 'All eight facing directions have their own art rows.' : 'Five authored directions, plus three mirrored views for complete eight-way facing.');
         if (Number(config.columns) < 8) add('warn', 'Short walk cycle', 'Use at least eight frames per direction to establish our animation baseline.');
         else add('pass', 'Walk cycle frames', `${config.columns} frames per authored direction.`);
@@ -94,7 +96,7 @@
         if (!within) add('fail', 'Frames outside image', `Atlas ${imageWidth}×${imageHeight}, grid reaches ${endX}×${endY}. Adjust frame dimensions or offsets.`);
         else add('pass', 'Grid bounds', `The ${config.columns} × ${config.rows} source grid fits within ${imageWidth} × ${imageHeight} pixels.`);
         if (config.layout === 'five') add('warn', 'Three mirrored directions', 'NW, W and SW are flipped right-facing views; for the final art standard, draw all eight directions.');
-        else add('pass', 'Unique 8-way art', 'No mirrored direction is required.');
+        else if (config.layout === 'eight') add('pass', 'Unique 8-way art', 'No mirrored direction is required.');
         if (!within) return checks;
         const alpha = inspectAlpha(data);
         if (alpha) {
@@ -129,17 +131,19 @@
         return checks;
     }
     function manifest(config, file, imageWidth, imageHeight) {
-        const mappings = config.layout === 'eight' ? EIGHT_ROW_MAP : FIVE_ROW_MAP;
+        const mappings = config.layout === 'single' ? { SE: { row: 0, flipX: false } } : config.layout === 'eight' ? EIGHT_ROW_MAP : FIVE_ROW_MAP;
         return {
             schemaVersion: '1.0', name: file || 'unnamed-creature', animation: 'walk',
             source: { width: imageWidth, height: imageHeight, columns: Number(config.columns), rows: Number(config.rows),
                 frameWidth: Number(config.cellWidth), frameHeight: Number(config.cellHeight), offsetX: Number(config.offsetX), offsetY: Number(config.offsetY) },
             playback: { fps: Number(config.fps), loop: true },
-            coordinateSystem: 'screen-x-right-y-down', directions: Object.fromEntries(DIRECTIONS.map(key => [key, { ...mappings[key] }])),
-            notes: config.layout === 'five' ? 'NW, W and SW are derived by horizontal mirroring; this is not native eight-direction art.' : 'All eight directions have unique source rows.',
+            coordinateSystem: 'screen-x-right-y-down', directions: Object.fromEntries(Object.keys(mappings).map(key => [key, { ...mappings[key] }])),
+            notes: config.layout === 'single' ? 'One three-quarter walking view only; remaining facings are not authored.' : config.layout === 'five' ? 'NW, W and SW are derived by horizontal mirroring; this is not native eight-direction art.' : 'All eight directions have unique source rows.',
         };
     }
     function normalizedManifest(config, file, originalWidth, originalHeight, ready = false) {
+        if (config.layout === 'single') return { ...manifest(config, file, originalWidth, originalHeight),
+            origin: { technicalValidated: ready, productionValidated: false, visualAccepted: false } };
         const cw = Number(config.cellWidth), ch = Number(config.cellHeight), columns = Number(config.columns);
         const normalized = manifest({ ...config, layout: 'eight', rows: 8, offsetX: 0, offsetY: 0 },
             (file || 'unnamed-creature').replace(/\.(png|jpe?g|webp)$/i, '') + '-8way-export.png', columns * cw, 8 * ch);
