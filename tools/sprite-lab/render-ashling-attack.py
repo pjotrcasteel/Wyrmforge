@@ -7,13 +7,14 @@ import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
 root=Path(__file__).resolve().parents[2];asset=root/'art/source/enemies/ashling';rig=asset/'model/local-appearance-002'/sys.argv[1]
 out=asset/'exports'/sys.argv[2];out.mkdir(exist_ok=False,parents=True)
-s=np.load(rig/'attack-samples.npz');profile=json.loads((rig/'profile.json').read_text());count=profile['frames'];cell=128
+profile=json.loads((rig/'profile.json').read_text());animation=profile.get('animation','attack');death=animation=='death'
+s=np.load(rig/(animation+'-samples.npz'));count=profile['frames'];cell=128
 t=lambda a,dtype=torch.float32:torch.tensor(a,dtype=dtype,device='cuda').contiguous()
 ctx=dr.RasterizeCudaContext();faces=t(s['faces'],torch.int32);uv=t(s['uv']);mvp=t(s['mvp']);mvp[:2]*=96/128;origin=t(profile['groundRoot'])
 teximage=Image.open(rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(teximage)/255).flip(0)[None]
 base=teximage.quantize(colors=56);pal=base.getpalette()[:168]+[82,15,12,145,30,10,214,55,9,255,100,12,255,153,25,255,204,58,255,237,130,255,251,211]
 palette=Image.new('P',(1,1));palette.putpalette(pal);palette.save(out/'palette.png')
-intensities=np.interp(np.arange(count),[0,1,4,6,15,18,21],[0,0,.55,1,1,.45,0]);effect_positions=[];effect_colors=[];effect_faces=[]
+intensities=np.interp(np.arange(count),[0,2,5,9,count-1],[.35,.28,.12,0,0]) if death else np.interp(np.arange(count),[0,1,4,6,15,18,21],[0,0,.55,1,1,.45,0]);effect_positions=[];effect_colors=[];effect_faces=[]
 def flame_mesh(frame):
     vertices=[];colors=[];triangles=[];strength=float(intensities[frame])
     def cone(center,radius,height,phase,inner=False):
@@ -58,11 +59,11 @@ for row,direction in enumerate(directions):
         raw=Image.fromarray((torch.cat([rgb,alpha[:,:,None]],-1).flip(0).cpu().numpy().clip(0,1)*255).astype('uint8'))
         frame=raw.convert('RGB').quantize(palette=palette,dither=Image.Dither.NONE).convert('RGBA');frame.putalpha(raw.getchannel('A'));bounds=frame.getbbox()
         assert bounds and min(bounds[:2])>=2 and max(bounds[2:])<=126,(direction,f,bounds)
-        frame.save(folder/f'attack-{f:02d}.png');frames[direction].append(frame);atlas.alpha_composite(frame,(f*128,row*128))
+        frame.save(folder/f'{animation}-{f:02d}.png');frames[direction].append(frame);atlas.alpha_composite(frame,(f*128,row*128))
         measurements.append(dict(direction=direction,frame=f,bounds=bounds,visibleFirePixels=int(visible.sum().item())))
         rects.append(dict(direction=direction,index=f,x=f*128,y=row*128,width=128,height=128,anchor=anchor,flipX=False))
     print(direction,'fire-claw attack rendered',flush=True)
-atlas.save(out/'ashling-attack.png');boards=[]
+atlas.save(out/f'ashling-{animation}.png');boards=[]
 for f in range(count):
     board=Image.new('RGB',(512,288),(22,20,27));draw=ImageDraw.Draw(board)
     for row,d in enumerate(directions):
@@ -74,14 +75,14 @@ single=[]
 for f in range(count):
     b=Image.new('RGB',(256,144),(22,20,27));draw=ImageDraw.Draw(b)
     for n,d in enumerate(['S','SW']):b.paste(frames[d][f],(n*128,0),frames[d][f])
-    draw.text((4,130),'FIRE-INFUSED CLAW RAKE',fill=(245,189,100));single.append(b.resize((1024,576),Image.Resampling.NEAREST))
-seq=single+[single[-1]]*8;seq[0].save(out/'fire-claw-review.gif',save_all=True,append_images=seq[1:],duration=55,loop=0)
+    draw.text((4,130),'COLLAPSE / EMBERS FADE' if death else 'FIRE-INFUSED CLAW RAKE',fill=(245,189,100));single.append(b.resize((1024,576),Image.Resampling.NEAREST))
+seq=single+[single[-1]]*(20 if death else 8);seq[0].save(out/('death-review.gif' if death else 'fire-claw-review.gif'),save_all=True,append_images=seq[1:],duration=55,loop=0)
 sheet=Image.new('RGB',(128*6,144*2),(22,20,27));draw=ImageDraw.Draw(sheet)
 for row,d in enumerate(['S','SW']):
-    for col,(f,label) in enumerate([(0,'REST'),(5,'INFUSE'),(9,'RAKE R'),(14,'RAKE L'),(17,'FADE'),(21,'RECOVER')]):
+    for col,(f,label) in enumerate([(0,'ALIVE'),(3,'RECOIL'),(8,'FALL'),(12,'IMPACT'),(17,'SETTLE'),(27,'CORPSE')] if death else [(0,'REST'),(5,'INFUSE'),(9,'RAKE R'),(14,'RAKE L'),(17,'FADE'),(21,'RECOVER')]):
         sheet.paste(frames[d][f],(col*128,row*144),frames[d][f]);draw.text((col*128+3,row*144+130),label,fill=(245,189,100))
-sheet.resize((1536,576),Image.Resampling.NEAREST).save(out/'attack-key-poses.png')
-manifest=dict(animation='attack',framesPerDirection=count,fps=24,loop=False,directions=directions,cell=128,anchor=anchor,frameRects=rects,orientations=orientations,clawContactFrames=profile['clawContactFrames'],fireEffect='hand-bound depth-tested geometric flames, hand heat tint and embers',sourceRig=str((rig/'ashling-attack.blend').relative_to(root)),atlasSha256=hashlib.sha256((out/'ashling-attack.png').read_bytes()).hexdigest(),ownerAccepted=False,runtimeIntegrated=False)
+sheet.resize((1536,576),Image.Resampling.NEAREST).save(out/f'{animation}-key-poses.png')
+manifest=dict(animation=animation,framesPerDirection=count,fps=24,loop=False,directions=directions,cell=128,anchor=anchor,frameRects=rects,orientations=orientations,clawContactFrames=profile.get('clawContactFrames',[]),corpseHoldStartFrame=profile.get('corpseHoldStartFrame'),fireEffect='fading residual claw embers' if death else 'hand-bound depth-tested geometric flames, hand heat tint and embers',sourceRig=str((rig/f'ashling-{animation}.blend').relative_to(root)),atlasSha256=hashlib.sha256((out/f'ashling-{animation}.png').read_bytes()).hexdigest(),ownerAccepted=False,runtimeIntegrated=False)
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 report=dict(gpu=torch.cuda.get_device_name(),frames=count*8,minimumMeshZ=float(s['positions'][:,:,2].min()),recoveryPositionError=float(abs(s['positions'][0]-s['positions'][-1]).max()),measurements=measurements,ownerAccepted=False,runtimeIntegrated=False)
 (out/'render-report.json').write_text(json.dumps(report,indent=2)+'\n');print('Saved attack and fire source, directional atlas and previews',flush=True)
