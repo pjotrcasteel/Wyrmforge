@@ -1,3 +1,10 @@
+> Current update, 20 October 2026: local RTX 5090 reconstruction succeeded using
+> original TRELLIS/DINOv2 with Hugging Face offline. The mesh and editable Blender
+> source are preserved. First visual review fails card-detail fidelity; no rig,
+> walk or finished spritesheet exists. See [current local setup](local-setup.md)
+> and [mesh review](model/local-trellis1-002/review/review.md).
+>
+> The text below records the earlier hosted-service attempt.
 # The Hollow: rigged-source proof status
 
 20 October 2026. **Blocked at model reconstruction; no mesh, rig or walk exists.**
@@ -68,3 +75,4 @@ be inspected; GPU generation still needs available service quota.
 
 The next useful artifact is an inspected textured model, not another independently
 generated walking image grid. Runtime integration remains false.
+
