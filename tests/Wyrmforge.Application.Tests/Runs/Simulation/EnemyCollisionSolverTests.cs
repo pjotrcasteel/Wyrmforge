@@ -90,8 +90,8 @@ public sealed class EnemyCollisionSolverTests
         enemies.Add(new EnemyState(8002, new Vector2D(530, 300), 12, 10000, 35));
 
         var snapshot = simulation.Tick(0, default, 800, 600);
-        var left = snapshot.Enemies.Single(enemy => enemy.Id == 8001);
-        var right = snapshot.Enemies.Single(enemy => enemy.Id == 8002);
+        var left = snapshot.Enemies.Single(enemy => enemy.EntityId == 8001);
+        var right = snapshot.Enemies.Single(enemy => enemy.EntityId == 8002);
         var distance = Math.Sqrt(Math.Pow(left.X - right.X, 2) + Math.Pow(left.Y - right.Y, 2));
 
         Assert.IsGreaterThanOrEqualTo(left.Radius + right.Radius - 0.0001, distance);
