@@ -639,6 +639,37 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_ColdStartBeyondNineSeconds_CompletesWithoutAutomaticReload()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        var delayedFrameworkResource = false;
+        await Page.RouteAsync("**/_framework/*", async route =>
+        {
+            if (delayedFrameworkResource || !route.Request.Url.Contains(".wasm", StringComparison.OrdinalIgnoreCase))
+            {
+                await route.ContinueAsync();
+                return;
+            }
+
+            delayedFrameworkResource = true;
+            await Task.Delay(TimeSpan.FromSeconds(12));
+            await route.ContinueAsync();
+        });
+
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+        await Expect(Page.Locator("#ignition-status")).ToHaveTextAsync("FIRST LAUNCH MAY TAKE A MOMENT",
+            new() { Timeout = 20000 });
+        Assert.IsFalse(Page.Url.Contains("boot=", StringComparison.Ordinal),
+            "A slow but healthy startup must not discard its in-flight downloads by navigating again.");
+
+        await Expect(Page.Locator("main.game-shell")).ToBeVisibleAsync(new() { Timeout = 40000 });
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0, new() { Timeout = 40000 });
+        Assert.IsTrue(delayedFrameworkResource, "The test must delay a real .NET WebAssembly resource.");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(
+            "() => performance.getEntriesByName('wyrmforge:boot', 'measure').length === 1"));
+    }
+
+    [TestMethod]
     public async Task Desktop_BootstrapFailure_ShowsRetryInsteadOfHanging()
     {
         await Page.SetViewportSizeAsync(1440, 900);

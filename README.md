@@ -2,6 +2,19 @@
 
 **Canonical product documentation:** [docs/canon/](docs/canon/README.md). Intended gameplay, art, audio, UX, modes and engineering rules each have one current topic home. The prototype changelog below is historical delivery evidence, not a second design specification.
 
+## Prototype 0.0.139 — Faster first launch and stable cache reuse
+
+- Slow first launches no longer trigger a forced reload after 9 seconds. The initial WASM download continues normally, with a clear slow-start notice; a manual **Try Again** remains for actual failures.
+- Blazor boot resources use their .NET-provided SHA-256 integrity hash as a stable URL cache key, so unchanged DLL/WASM assets can be reused across releases. Unhashed resources remain deployment-versioned.
+- Record the startup duration as a browser performance measure `wyrmforge:boot`. JS regression tests check the boot-resource and retry contracts.
+
+## Prototype 0.0.138 — Refuge Day / Night / Auto lighting
+
+- Settings now provides **Auto / Day / Night**. Auto follows the browser/device local time (day 07:00–18:59); the override persists and does not change gameplay progress or building vacancy rules.
+- Uses the approved matching daylight panorama and authored daylight vacancy layers; preserves the canonical nighttime art.
+- Implemented and tested in [the town lighting record](docs/art/town-day-night-device-clock-2026-10-20.md).
+
+
 ## Prototype 0.0.138 — Fire-first character creation
 
 - Choose your magic: **Fire is the only available new-character school** until its Tier-I signature and mutation gameplay are fully implemented and accepted. Frost, Storm, Arcane, Necromancer and Summoner remain visible and locked.
