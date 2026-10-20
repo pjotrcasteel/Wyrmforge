@@ -1,0 +1,45 @@
+{
+  "canvas": {
+    "width": 1672,
+    "height": 941
+  },
+  "base": "night-active.webp",
+  "overlays": {
+    "ArcaneNexus": {
+      "file": "night-vacant-ArcaneNexus.png",
+      "rect": [
+        0,
+        0,
+        618,
+        582
+      ]
+    },
+    "Blacksmith": {
+      "file": "night-vacant-Blacksmith.png",
+      "rect": [
+        0,
+        353,
+        633,
+        941
+      ]
+    },
+    "Codex": {
+      "file": "night-vacant-Codex.png",
+      "rect": [
+        982,
+        0,
+        1672,
+        548
+      ]
+    },
+    "HallOfFame": {
+      "file": "night-vacant-HallOfFame.png",
+      "rect": [
+        866,
+        333,
+        1672,
+        941
+      ]
+    }
+  }
+}
