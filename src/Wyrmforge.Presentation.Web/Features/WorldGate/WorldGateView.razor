@@ -125,10 +125,11 @@
     private LineageChoice? selectedLineage;
     private bool starting;
 
-    private static readonly IReadOnlyList<TierChoice> InitialTiers =
-    [
-        new(1, true), new(2, false), new(3, false), new(4, false), new(5, false),
-    ];
+    // Tier choices are derived from the actual Wyrm hierarchy; only ordinary Wyrm Hunts
+    // have an implemented selection path. Higher tiers need their own encounter contracts.
+    private static readonly IReadOnlyList<TierChoice> InitialTiers = Enum.GetValues<WyrmTier>()
+        .Select(tier => new TierChoice((int)tier + 1, tier == WyrmTier.Wyrm))
+        .ToArray();
 
     private static readonly string[] PlaceholderSigils = ["ϟ", "✦", "☾", "◈"];
 
