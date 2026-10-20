@@ -6,6 +6,7 @@ import torch
 import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
 out=Path(sys.argv[1]);dest=out/sys.argv[2];dest.mkdir(exist_ok=False)
+yaw=math.radians(float(sys.argv[3])) if len(sys.argv)>3 else 0
 source=np.load(out/'sampled-walk.npz');profile=json.loads((out/'export-profile.json').read_text())
 tensor=lambda a,dtype=torch.float32:torch.tensor(a,dtype=dtype,device='cuda').contiguous()
 faces=tensor(source['faces'],torch.int32);uv=tensor(source['uv']);mvp=tensor(source['mvp'])
@@ -14,7 +15,11 @@ texture=tensor(np.asarray(texture_image)/255).flip(0)[None]
 palette=texture_image.quantize(colors=64,method=Image.Quantize.MEDIANCUT);palette.save(dest/'palette.png')
 ctx=dr.RasterizeCudaContext();frames=[]
 for index,positions in enumerate(source['positions'][:16]):
-    vertices=tensor(positions);projected=torch.cat([vertices,torch.ones_like(vertices[:,:1])],dim=1)@mvp.T
+    vertices=tensor(positions)
+    if yaw:
+        origin=tensor(profile['groundRoot']);rotation=tensor([[math.cos(yaw),-math.sin(yaw),0],[math.sin(yaw),math.cos(yaw),0],[0,0,1]])
+        vertices=(vertices-origin)@rotation.T+origin
+    projected=torch.cat([vertices,torch.ones_like(vertices[:,:1])],dim=1)@mvp.T
     raster,_=dr.rasterize(ctx,projected[None],faces,[96,96]);coords=dr.interpolate(uv[None],raster,faces)[0]
     color=dr.texture(texture,coords,filter_mode='nearest')[0]
     # Preserve the card-derived baked lighting, with opaque native pixels.
