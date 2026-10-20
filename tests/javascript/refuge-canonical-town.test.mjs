@@ -75,6 +75,7 @@ test('one panorama, no old district cards and no runtime vacancy blackout', () =
     assert.doesNotMatch(markup, /refuge-canonical-districts/);
     assert.match(css, /\.refuge-town-spot--gate/);
     assert.doesNotMatch(css, /refuge-canonical-districts|refuge-town-toggle-announcement/);
+    assert.match(css, /@media \(max-width:900px\) and \(orientation:landscape\) \{\s*\.game-shell\.refuge-home \.refuge-canonical-scene \{width:100%;height:auto\}/);
     assert.match(index, /css\/town-canonical\.css/);
     assert.match(index, /js\/refuge-town\.js/);
 });
