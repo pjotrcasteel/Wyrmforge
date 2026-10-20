@@ -1479,7 +1479,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_WorldGate_FollowsFreePlayElementAndTierSteps(int width, int height)
+    public async Task Mobile_WorldGate_FollowsFreePlayLineageAndTierSteps(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','2'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:2, Nodes:[] }));");
@@ -1498,15 +1498,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync($"world-gate-modes-{width}.png");
 
         await Page.Locator(".gate-action--primary").ClickAsync();
-        await Expect(Page.Locator(".gate-lineage")).ToHaveCountAsync(12);
-        await Expect(Page.Locator(".gate-lineage--hidden")).ToHaveCountAsync(10);
+        await Expect(Page.Locator(".gate-lineage")).ToHaveCountAsync(6);
+        await Expect(Page.Locator(".gate-lineage--hidden")).ToHaveCountAsync(4);
         await Expect(Page.Locator(".gate-lineage--fire")).ToBeEnabledAsync();
         await Expect(Page.Locator(".gate-lineage--frost")).ToBeEnabledAsync();
         foreach (var teaser in await Page.Locator(".gate-lineage--hidden").AllAsync()) await Expect(teaser).ToBeDisabledAsync();
         await ScreenshotAsync($"world-gate-lineages-{width}.png");
 
         var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
-        Assert.IsLessThanOrEqualTo(1, horizontal, "The 12-slot element grid must not overflow mobile screens.");
+        Assert.IsLessThanOrEqualTo(1, horizontal, "The six-lineage Hunt grid must not overflow mobile screens.");
         await Page.Locator(".gate-lineage--fire").ClickAsync();
         await Expect(Page.Locator(".gate-tier")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(1);
