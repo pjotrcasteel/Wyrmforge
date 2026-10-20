@@ -31,7 +31,7 @@
             <div class="refuge-canonical-gate-art" aria-hidden="true"></div>
             <button type="button" class="refuge-canonical-gate-action"
                     data-town-state="active" data-sound-cue="none"
-                    aria-label="World Gate: begin or continue a hunt"
+                    aria-label="@GateLabel"
                     @onclick="() => OnGate.InvokeAsync()">
                 <span class="refuge-canonical-gate-symbol" aria-hidden="true">✧</span>
                 <span>WORLD GATE</span>
@@ -72,8 +72,12 @@
     [Parameter] public bool ForgeUnlocked { get; set; }
     [Parameter] public bool CodexUnlocked { get; set; }
     [Parameter] public bool HallUnlocked { get; set; }
+    [Parameter] public bool FirstHunt { get; set; }
+    [Parameter] public bool NexusPointsAvailable { get; set; }
     [Parameter] public EventCallback<string> OnBuilding { get; set; }
     [Parameter] public EventCallback OnGate { get; set; }
+
+    private string GateLabel => FirstHunt ? "BEGIN FIRST HUNT" : "BEGIN HUNT";
 
     private IReadOnlyList<TownBuildingVisual> Buildings =>
         TownBuildingVisuals.Resolve(NexusUnlocked, ForgeUnlocked, CodexUnlocked, HallUnlocked);
@@ -87,7 +91,9 @@
         _ => throw new ArgumentOutOfRangeException(nameof(key)),
     };
 
-    private static string BuildingHint(TownBuildingVisual building) =>
+    private string BuildingHint(TownBuildingVisual building) =>
+        building.Key == "build" && building.State == TownBuildingState.Active && NexusPointsAvailable ? "Allocate unspent Arcane points" :
+        building.Key == "legends" && building.State == TownBuildingState.Active ? "Open Hall of Fame" :
         building.State == TownBuildingState.Active ? $"Enter {BuildingName(building.Key)}" :
         building.Key switch
         {
