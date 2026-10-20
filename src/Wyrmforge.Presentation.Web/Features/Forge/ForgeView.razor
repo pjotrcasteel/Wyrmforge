@@ -71,42 +71,13 @@
                             <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
                         </button>
                     </header>
-                    <div class="town-viewport town-panorama-viewport" tabindex="0" role="region" aria-label="Refuge town. Swipe left or right to explore. World Gate in the central square.">
-                        <div class="town-panorama">
-                            <img class="town-panorama-art" src="art/refuge-town-vacant.webp?v=120" alt="" draggable="false" />
-                            @* All four locations use the same unlock-to-visual-state contract.
-                               Each vacant plate is genuine edited artwork, not a black CSS veil.
-                               The base painting already contains a vacant blacksmith. *@
-                            @foreach (var layer in TownBuildingVisuals.Resolve(IsUnlocked(ShellSection.Build),
-                                ForgeUnlocked, IsUnlocked(ShellSection.Codex), Progress.LeaderboardUnlocked))
-                            {
-                                @if (layer.Image is not null)
-                                {
-                                    <img @key="layer.Key" class="town-building-layer @(layer.State == TownBuildingState.Vacant ? "town-dormant-art" : "") @layer.CssClass"
-                                         data-town-building="@layer.Key" data-building-state="@layer.StateName"
-                                         src="@($"art/{layer.Image}?v={TownBuildingVisuals.AssetVersion}")"
-                                         alt="" aria-hidden="true" draggable="false" />
-                                }
-                            }
-                            <div class="town-snap" aria-hidden="true"></div>
-                            <div class="town-snap" aria-hidden="true"></div>
-                            <div class="town-snap" aria-hidden="true"></div>
-                            <nav class="menu-actions town-hotspots" aria-label="Town buildings">
-                                @foreach (var item in Navigation.Where(item => item.Section is not ShellSection.Run))
-                                {
-                                    var unlocked = item.Section == ShellSection.Gate || IsUnlocked(item.Section);
-                                    <button data-sound-cue="@(unlocked && item.Section != ShellSection.Gate ? "building-open" : "none")" class="menu-destination town-door town-door--@item.Section.ToString().ToLowerInvariant() town-hotspot town-hotspot--@item.Section.ToString().ToLowerInvariant()"
-                                            type="button" data-town-state="@TownBuildingVisuals.StateName(unlocked)"
-                                            title="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "Begin first hunt" : "Begin hunt") : !unlocked ? UnlockHint(item.Section) : item.Label)"
-                                            aria-label="@(item.Section == ShellSection.Gate ? (Progress.TutorialRun ? "BEGIN FIRST HUNT" : "BEGIN HUNT") : item.Section == ShellSection.Build && unlocked && Selection.PointBudget > Selection.SpentPoints ? "Allocate unspent Arcane points" : !unlocked ? $"{item.Label}: {UnlockHint(item.Section)}" : item.Label)"
-                                            @onclick="() => ActivateTownLocationAsync(item.Section)"><span class="town-location-label">@item.Label</span></button>
-                                }
-                                <button data-sound-cue="@(Progress.LeaderboardUnlocked ? "building-open" : "none")" class="menu-destination town-door town-door--legends town-hotspot town-hotspot--legends" type="button"
-                                        data-town-state="@TownBuildingVisuals.StateName(Progress.LeaderboardUnlocked)" title="@(Progress.LeaderboardUnlocked ? "Hall of Fame" : "Complete two hunts to unlock")"
-                                        aria-label="@(Progress.LeaderboardUnlocked ? "Open Hall of Fame" : "Hall of Fame locked: complete two hunts")" @onclick="OpenHallOfFameAsync"><span class="town-location-label">Hall of Fame</span></button>
-                            </nav>
-                        </div>
-                    </div>
+                    @* Native canonical PNGs, not masks over the old panorama.  All interactions remain in ForgeView. *@
+                    <CanonicalTownView NexusUnlocked="@IsUnlocked(ShellSection.Build)"
+                                       ForgeUnlocked="@ForgeUnlocked"
+                                       CodexUnlocked="@IsUnlocked(ShellSection.Codex)"
+                                       HallUnlocked="@Progress.LeaderboardUnlocked"
+                                       OnBuilding="ActivateCanonicalBuildingAsync"
+                                       OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)" />
                     @if (townLockNotice is { } notice)
                     {
                         <div class="town-lock-notice" role="status" aria-live="polite" aria-atomic="true">
@@ -319,6 +290,15 @@
         Navigate(destination);
         return Task.CompletedTask;
     }
+
+    private Task ActivateCanonicalBuildingAsync(string key) => key switch
+    {
+        "build" => ActivateTownLocationAsync(ShellSection.Build),
+        "forge" => ActivateTownLocationAsync(ShellSection.Forge),
+        "codex" => ActivateTownLocationAsync(ShellSection.Codex),
+        "legends" => OpenHallOfFameAsync(),
+        _ => Task.CompletedTask,
+    };
 
     private Task OpenHallOfFameAsync()
     {
