@@ -71,14 +71,13 @@
                             <span>@(Hunter.AtCap ? "Atlas complete" : $"{Hunter.ExperienceInLevel} / {Hunter.ExperienceToNext} XP")</span>
                         </button>
                     </header>
-                    @* Native canonical PNGs, not masks over the old panorama.  All interactions remain in ForgeView. *@
+                    @* Night town preview: tapping buildings toggles local state; the World Gate still opens normally. *@
                     <CanonicalTownView NexusUnlocked="@IsUnlocked(ShellSection.Build)"
                                        ForgeUnlocked="@ForgeUnlocked"
                                        CodexUnlocked="@IsUnlocked(ShellSection.Codex)"
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
-                                       OnBuilding="ActivateCanonicalBuildingAsync"
                                        OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)" />
                     @if (townLockNotice is { } notice)
                     {
