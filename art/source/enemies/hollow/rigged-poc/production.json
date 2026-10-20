@@ -9,8 +9,8 @@
   "route": "textured-3d-to-rendered-sprites",
   "scope": "one three-quarter walking view",
   "stages": {
-    "A": "self-reviewed brief; owner acceptance not requested",
-    "B": "pending editable character",
+    "A": "self-reviewed; neutral modeling reference generated and inspected",
+    "B": "initial reconstruction in progress; geometry not reviewed",
     "C": "pending rig and deformation",
     "D": "pending gait"
   },
@@ -21,5 +21,21 @@
     "Existing generated v1 and rigid cutout v2 remain rejected.",
     "A neutral-pose reference may be generated from the card as modeling input, never as independently generated animation frames.",
     "No paid service or new subscription is authorized by this record."
-  ]
+  ],
+  "referencePreparation": {
+    "file": "references/hollow-neutral-reference.png",
+    "method": "built-in image generation, approved card as identity reference",
+    "status": "modeling input only; no mesh or animation generated",
+    "visualNotes": [
+      "Gaunt rib cage and elongated hands retained.",
+      "Neutral separated limbs prepared for reconstruction.",
+      "Hidden geometry remains inferred, not verified."
+    ]
+  },
+  "externalProcessing": {
+    "destination": "https://huggingface.co/spaces/microsoft/TRELLIS.2",
+    "asset": "references/hollow-neutral-reference.png",
+    "approval": "Owner explicitly approved Microsoft TRELLIS.2 in chat on 20 October 2026.",
+    "execution": "Approved for the prepared Hollow reference and reconstruction."
+  }
 }
