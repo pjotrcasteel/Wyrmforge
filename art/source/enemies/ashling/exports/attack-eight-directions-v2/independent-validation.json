@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "frames": 176,
+  "opaquePixelSamples": 186215,
+  "paletteColors": 57,
+  "uniqueFramesByDirection": {
+    "N": 21,
+    "NE": 21,
+    "E": 21,
+    "SE": 21,
+    "S": 21,
+    "SW": 21,
+    "W": 21,
+    "NW": 21
+  },
+  "visiblePixelsAndAlphaMatchAtlas": true,
+  "noClipping": true,
+  "noMirroredRows": true,
+  "fireAbsentAtRestAndRecovery": true,
+  "visibleFireInEveryDirection": true,
+  "recoveryPositionError": 0.0,
+  "minimumMeshZ": -0.5000000596046448,
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

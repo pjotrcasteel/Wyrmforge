@@ -13,14 +13,14 @@ ctx=dr.RasterizeCudaContext();faces=t(s['faces'],torch.int32);uv=t(s['uv']);mvp=
 teximage=Image.open(rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(teximage)/255).flip(0)[None]
 base=teximage.quantize(colors=56);pal=base.getpalette()[:168]+[82,15,12,145,30,10,214,55,9,255,100,12,255,153,25,255,204,58,255,237,130,255,251,211]
 palette=Image.new('P',(1,1));palette.putpalette(pal);palette.save(out/'palette.png')
-intensities=np.interp(np.arange(count),[0,2,5,7,15,18,21],[0,0,.4,1,1,.45,0]);effect_positions=[];effect_colors=[];effect_faces=[]
+intensities=np.interp(np.arange(count),[0,1,4,6,15,18,21],[0,0,.55,1,1,.45,0]);effect_positions=[];effect_colors=[];effect_faces=[]
 def flame_mesh(frame):
     vertices=[];colors=[];triangles=[];strength=float(intensities[frame])
     def cone(center,radius,height,phase,inner=False):
         start=len(vertices);center=np.array(center);bend=np.array([math.sin(phase)*.018,math.cos(phase)*.012,0])*strength
         for j in range(4):
-            a=j*math.pi/2;vertices.append(center+np.array([math.cos(a)*radius,math.sin(a)*radius,0]));colors.append([1,.89,.36] if inner else [1,.40,.035])
-        vertices.append(center+bend+[0,0,height]);colors.append([1,.98,.78] if inner else [1,.19,.025])
+            a=j*math.pi/2;vertices.append(center+np.array([math.cos(a)*radius,math.sin(a)*radius,0]));colors.append([1,.98,.78] if inner else [1,.82,.20])
+        vertices.append(center+bend+[0,0,height]);colors.append([1,.89,.36] if inner else [1,.26,.025])
         for j in range(4):triangles.append([start+j,start+(j+1)%4,start+4])
         triangles.extend([[start,start+2,start+1],[start,start+3,start+2]])
     for side in range(2):
@@ -29,9 +29,9 @@ def flame_mesh(frame):
             phase=frame*1.7+side*2+finger*2.1
             center=wrist+direction*(.55+.16*(finger%2))+right*((finger-1)*.027)
             center[2]+=.012
-            height=(.055+.025*(.5+.5*math.sin(phase)))*strength
-            cone(center,.018*strength,height,phase)
-            cone(center+[0,0,.002],.009*strength,height*.70,phase,True)
+            height=(.075+.035*(.5+.5*math.sin(phase)))*strength
+            cone(center,.025*strength,height,phase)
+            cone(center+[0,0,.004],.014*strength,height*.82,phase,True)
         # Short, detached embers follow the claw, without masking the whole arm.
         for particle in range(2):
             life=((frame+particle*3+side*2)%7)/7
@@ -50,7 +50,7 @@ for row,direction in enumerate(directions):
         v=(t(s['positions'][f])-origin)@rotation.T+origin;clip=torch.cat([v,torch.ones_like(v[:,:1])],1)@mvp.T
         raster,_=dr.rasterize(ctx,clip[None],faces,[128,128]);coords=dr.interpolate(uv[None],raster,faces)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1)
         glow=dr.interpolate(mask[None,:,None],raster,faces)[0][0].clamp(0,1)*float(intensities[f])
-        rgb=rgb*(1-glow*.55)+t([1,.24,.025])*glow*.55
+        rgb=rgb*(1-glow*.75)+t([1,.39,.035])*glow*.75
         fv=(t(effect_positions[f])-origin)@rotation.T+origin;fc=torch.cat([fv,torch.ones_like(fv[:,:1])],1)@mvp.T
         fr,_=dr.rasterize(ctx,fc[None],firefaces,[128,128]);firecolor=dr.interpolate(t(effect_colors[f])[None],fr,firefaces)[0][0]
         visible=(fr[0,:,:,3]>0)&((raster[0,:,:,3]==0)|(fr[0,:,:,2]<=raster[0,:,:,2]+1e-5))
