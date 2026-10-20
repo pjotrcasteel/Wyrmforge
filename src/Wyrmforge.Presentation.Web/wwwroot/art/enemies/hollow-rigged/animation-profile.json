@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "maxDeltaSeconds": 0.1,
+  "facing": { "directions": ["E", "SE", "S", "SW", "W", "NW", "N", "NE"], "degreesPerSecond": 720, "hysteresisDegrees": 3 },
   "locomotion": { "clip": "walk", "frames": 16, "stride": 18.387096774193548 },
   "actions": {
     "attack": {

@@ -13,13 +13,17 @@ const fs=require('node:fs'),path=require('node:path');
  await page.waitForFunction(()=>window.__layerArena.readArenaDiagnostics(document.querySelector('.enemy-lab canvas'))?.hollow.entities.some(e=>e.clip==='attack'&&e.frame<4));
  await page.locator('.enemy-lab canvas').focus();await page.keyboard.down('ArrowRight');
  const samples=[];
- for(let i=0;i<12;i++){await page.waitForTimeout(60);const d=await read();samples.push(d.hollow);await page.screenshot({path:path.join(out,`combat-${String(i).padStart(2,'0')}.png`)});}
- await page.keyboard.up('ArrowRight');
+ let key='ArrowRight';
+ for(let i=0;i<12;i++){
+  if(i===4||i===8){await page.keyboard.up(key);key=i===4?'ArrowUp':'ArrowLeft';await page.keyboard.down(key);}
+  await page.waitForTimeout(60);const d=await read();samples.push(d.hollow);await page.screenshot({path:path.join(out,`combat-${String(i).padStart(2,'0')}.png`)});
+ }
+ await page.keyboard.up(key);
  const layered=samples.flatMap(d=>d.entities).filter(e=>e.layered&&e.clip==='attack');
- const frames=[...new Set(layered.map(e=>e.baseFrame))],actionFrames=[...new Set(layered.map(e=>e.frame))];
+ const frames=[...new Set(layered.map(e=>e.baseFrame))],actionFrames=[...new Set(layered.map(e=>e.frame))],directions=[...new Set(layered.map(e=>e.direction))];
  await page.getByRole('button',{name:'Pause',exact:true}).click();await page.waitForTimeout(150);const before=await read();await page.waitForTimeout(300);const after=await read();
  const pauseStable=JSON.stringify(before.hollow.entities)===JSON.stringify(after.hollow.entities);
- const report={passed:errors.length===0&&frames.length>2&&actionFrames.length>2&&pauseStable&&!after.renderingFailed,errors,frames,actionFrames,pauseStable,cache:after.hollow.layers,samples};
+ const report={passed:errors.length===0&&frames.length>2&&actionFrames.length>2&&directions.length>1&&pauseStable&&!after.renderingFailed,errors,frames,actionFrames,directions,pauseStable,cache:after.hollow.layers,samples};
  fs.writeFileSync(path.join(out,'combat-report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({...report,samples:undefined}));
  await browser.close();if(!report.passed)process.exitCode=1;
 })().catch(e=>{console.error(e);process.exitCode=1});

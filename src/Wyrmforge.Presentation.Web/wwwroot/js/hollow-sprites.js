@@ -61,7 +61,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(advancing&&distance>.001&&distance<64){
             pose.distance+=distance;
             pose.lastMove=pose.age;
-            if(pose.attackAt==null)pose.direction=hollowDirection(dx,dy,pose.direction);
+            pose.direction=hollowDirection(dx,dy,pose.direction);
         }
         if(distance>=64){pose.distance=0;pose.attackAt=null;pose.animation=createSpriteAnimationState();}
         pose.x=enemy.x;pose.y=enemy.y;
@@ -71,6 +71,9 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(advancing&&touching&&pose.attackAt==null){
             pose.attackAt=pose.age;pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         }
+        // Continue steering the existing action toward its target. Changing
+        // direction never creates a new action token or restarts either clip.
+        if(advancing&&pose.attackAt!=null&&player)pose.direction=hollowDirection(player.x-enemy.x,player.y-enemy.y,pose.direction);
         // Playback uses a common controller; only the contact signal belongs
         // to this creature adapter. Profile data owns stride, regions and clips.
         const config=profile??fallbackProfile;
@@ -78,7 +81,7 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
             distance:advancing&&distance<64?distance:0,moving:pose.age-pose.lastMove<.12,
             paused:snapshot.paused||snapshot.ended,frozen:enemy.frozen,reducedMotion,direction:pose.direction,
             action:pose.attackAt==null?null:{name:'attack',token:pose.attackAt}});
-        pose.clip=sample.clip;pose.frame=sample.frame;pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
+        pose.direction=sample.direction;pose.clip=sample.clip;pose.frame=sample.frame;pose.baseFrame=sample.baseFrame;pose.layered=sample.layered;
     }
     for(const id of state.entities.keys())if(!present.has(id))state.entities.delete(id);
 }

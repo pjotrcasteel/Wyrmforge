@@ -8,6 +8,18 @@ const profile={locomotion:{clip:'stride',frames:8,stride:20},actions:{
  pounce:{clip:'leap',frames:6,fps:6,mode:'fullBody',priority:20},
  death:{clip:'collapse',frames:10,fps:10,mode:'fullBody',priority:100,hold:true}}};
 const input=extra=>({deltaSeconds:.1,distance:1,moving:true,direction:'SE',...extra});
+
+test('profile facing turns through neighboring rows while both clips retain phase',()=>{
+ const turning={...profile,facing:{directions:['E','SE','S','SW','W','NW','N','NE'],degreesPerSecond:360}};
+ const state=createSpriteAnimationState();
+ updateSpriteAnimation(state,turning,input({direction:'E',action:{name:'swipe',token:1}}));
+ const directions=[];
+ for(let i=0;i<5;i++)directions.push(updateSpriteAnimation(state,turning,input({direction:'W',action:{name:'swipe',token:1}})).direction);
+ assert.deepEqual(directions,['NE','N','N','NW','W']);
+ assert.equal(state.action.token,1);assert.ok(state.sample.frame>=5);assert.ok(state.phase>.29);
+ const angle=state.facingAngle;
+ updateSpriteAnimation(state,turning,input({direction:'S',frozen:true}));assert.equal(state.facingAngle,angle);assert.equal(state.sample.direction,'W');
+});
 test('locomotion keeps advancing under an independent moving action and returns without restart',()=>{
  const state=createSpriteAnimationState();
  let sample=updateSpriteAnimation(state,profile,input({action:{name:'swipe',token:1}}));

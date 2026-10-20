@@ -25,13 +25,23 @@ test('walk follows travelled distance and survives duplicate render snapshots',(
  advance(state,moved,.1,.3);assert.equal(state.entities.get(7).frame,0);
  mod.updateHollowSprites(state,snapshot({enemies:[]}),.35);assert.equal(state.entities.size,0);assert.equal(state.corpses.size,0);
 });
-test('contact only drives presentation; attack locks facing, freezes and recovers',()=>{
+test('contact only drives presentation; attack freezes and recovers',()=>{
  const state=mod.createHollowState();const contact=snapshot({player:{x:38,y:20,radius:9}});
  mod.updateHollowSprites(state,contact,0);assert.equal(state.entities.get(7).clip,'attack');assert.equal(state.entities.get(7).direction,'E');
  advance(state,contact,.05,.5);const frame=state.entities.get(7).frame;assert.ok(frame>=5);
  advance(state,{...contact,enemies:[enemy({frozen:true})]},.55,.9);assert.equal(state.entities.get(7).frame,frame);
  advance(state,snapshot(),.95,2);assert.equal(state.entities.get(7).clip,'walk');
  assert.deepEqual(contact.player,{x:38,y:20,radius:9});assert.equal(contact.enemies[0].x,20);
+});
+
+test('an active attack follows a changed target direction without restarting',()=>{
+ const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot({player:{x:38,y:20,radius:9}}),0);
+ advance(state,snapshot({player:{x:38,y:20,radius:9}}),.05,.3);
+ const pose=state.entities.get(7),token=pose.attackAt,frame=pose.frame;
+ advance(state,snapshot({player:{x:20,y:2,radius:9}}),.35,.6);
+ assert.equal(pose.direction,'N');assert.equal(pose.attackAt,token);assert.ok(pose.frame>frame);
+ const frozen=snapshot({enemies:[enemy({frozen:true})],player:{x:2,y:20,radius:9}});
+ advance(state,frozen,.65,.8);assert.equal(pose.direction,'N');
 });
 test('only authoritative Hollow deaths collapse then hold before fading; paused clock stops',()=>{
  const state=mod.createHollowState();mod.updateHollowSprites(state,snapshot(),0);
