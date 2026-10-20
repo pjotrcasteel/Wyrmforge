@@ -325,6 +325,18 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
+        // Each facet advertises its actual purpose without changing accessible tab names.
+        await Expect(Page.GetByRole(AriaRole.Tab, new() { Name = "Fireball" }).Locator("small")).ToHaveTextAsync("Upgrade core");
+        await Expect(Page.GetByRole(AriaRole.Tab, new() { Name = "Research" }).Locator("small")).ToHaveTextAsync("Discover");
+        await Expect(Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).Locator("small")).ToHaveTextAsync("Specialize");
+        Assert.IsTrue(await Page.Locator(".nexus-facets").EvaluateAsync<bool>(@"tabs => {
+            const area = tabs.getBoundingClientRect();
+            return area.width <= window.innerWidth + 2
+                && [...tabs.querySelectorAll('button')].every(button => {
+                    const rect = button.getBoundingClientRect();
+                    return rect.height >= 44 && rect.left >= area.left - 1 && rect.right <= area.right + 1;
+                });
+        }"), "Nexus purposes must remain readable, tappable, and contained at 320px and 390px.");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
 
         var rack = Page.Locator(".nexus-rack-details");
