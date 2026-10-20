@@ -6,7 +6,7 @@
   "method": "local editable 3D character rendered to pixel sprites",
   "inference": "offline installed TRELLIS 1 / DINOv2 on RTX 5090",
   "reference": "references/ashling-front-reference.png",
-  "status": "reference prepared; reconstruction pending",
+  "status": "first local mesh preserved; identity and topology review pending",
   "ownerAccepted": false,
   "rigged": false,
   "runtimeIntegrated": false,
@@ -17,5 +17,6 @@
     "other directions",
     "attack and death",
     "layer metadata and runtime acceptance"
-  ]
+  ],
+  "modelAttempt": "model/local-appearance-001"
 }
