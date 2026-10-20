@@ -230,6 +230,29 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const img = document.querySelector('.refuge-town-night-base');
             return img?.complete && img.naturalWidth === 1672 && img.naturalHeight === 941;
         }");
+        // A truncated WebP still reports a natural size before the decoder fails;
+        // require decoded pixels instead of accepting a blank nighttime town.
+        await Page.EvaluateAsync(@"async () => {
+            const img = document.querySelector('.refuge-town-night-base');
+            await img.decode();
+            const canvas = document.createElement('canvas');
+            canvas.width = 16;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 16, 16);
+            const pixels = ctx.getImageData(0, 0, 16, 16).data;
+            const min = [255, 255, 255];
+            const max = [0, 0, 0];
+            for (let i = 0; i < pixels.length; i += 4) {
+                for (let channel = 0; channel < 3; channel++) {
+                    min[channel] = Math.min(min[channel], pixels[i + channel]);
+                    max[channel] = Math.max(max[channel], pixels[i + channel]);
+                }
+            }
+            if (max.every((value, i) => value - min[i] < 18))
+                throw new Error('Night town panorama decoded without meaningful image detail');
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        }");
         var viewport = Page.Locator(".refuge-canonical-viewport");
         Assert.IsTrue(await viewport.EvaluateAsync<bool>(
             "element => element.scrollWidth >= element.clientWidth * 3"),
