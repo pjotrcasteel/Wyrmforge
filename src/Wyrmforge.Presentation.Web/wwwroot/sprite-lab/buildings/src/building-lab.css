@@ -43,3 +43,21 @@ footer{border-top:1px solid var(--line);min-height:48px;padding:12px 20px;displa
 @media(max-width:800px){.masthead{padding:13px 16px}.brand h1{font-size:23px}.masthead nav{justify-content:flex-end;gap:3px}.masthead nav a{padding:8px;font-size:11px}.workspace{display:flex;flex-direction:column}.center{order:0;padding:20px 13px 26px}.library{order:1;border-right:0;border-top:1px solid var(--line);padding:22px 16px}.inspector{order:2;display:block;padding:22px 16px}.slot-list{max-height:none;grid-template-columns:1fr 1fr}.panel>.section-head.spaced{margin-top:24px}.section-head h2{font-size:21px}.mini-check{font-size:10px}footer{flex-direction:column;align-items:flex-start}}
 @media(max-width:400px){.masthead nav a{font-size:10px;padding:7px 5px}.mark{width:37px;height:37px}.brand{gap:7px}.brand h1{font-size:20px}.brand .eyebrow{font-size:8px}.slot-list{grid-template-columns:1fr}.compare-grid{gap:6px}.compare-grid button span{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+/* Actual stage authoring belongs next to the image, not buried below the sidebar on mobile. */
+.quick-editor{margin-top:13px;border:1px solid #61523d;background:#171d1d;padding:15px;display:grid;gap:10px}
+.quick-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.quick-head strong{font-size:13px;color:#e8dac0}
+.quick-head span:not(.eyebrow){font-size:11px;color:#a7b4ac}
+.quick-editor>.field-label{margin:4px 0 0;font-weight:600;color:#d9d4c9}
+.quick-stages,.quick-choices{display:flex;gap:7px;flex-wrap:wrap}
+.quick-stage,.quick-choice{border:1px solid #50605a;color:#e3ddd0;background:#27302e;padding:10px 14px;min-height:46px;border-radius:3px;white-space:normal}
+.quick-choice{min-width:125px;font-weight:600}
+.quick-stage.selected,.quick-choice.selected{background:#544029;color:#ffe2a5;border-color:#ddad71;box-shadow:inset 0 0 0 1px #aa8150}
+.quick-stage:hover:not(:disabled),.quick-choice:hover:not(:disabled){border-color:#ddb47c}
+.quick-choices .upload-choice{border-style:dashed;color:#cfbea5}
+.quick-editor #quickSlot{margin:0}
+.quick-editor .slot-choices-heading{margin-top:4px}
+.quick-editor .help{margin:0}
+.quick-editor #quickLock{margin:0}
+@media(max-width:800px){.quick-editor{padding:12px}.quick-stages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.quick-stage{font-size:12px}.quick-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.quick-choice{min-width:0}.quick-choices .upload-choice{grid-column:1/-1}}
