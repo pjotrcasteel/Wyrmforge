@@ -21,4 +21,4 @@ Reproduce with Release publish to `artifacts/ashling-runtime`, SPA server on 419
 
 Preserved evidence: `docs/art/evidence/ashling-runtime-2026-10-20/` contains the moving-attack GIF, 390px walk/collapse/held-corpse screenshots, 320px paused view, and full lifecycle/turning JSON reports. Final lifecycle capture records collapse frame 6, held frame 27, stable pause and no errors. The local .NET invocation passed all four selected tests in 28 seconds using Edge. The 231-test JavaScript report is `artifacts/ashling-javascript-tests.txt` (transient local output).
 
-Remaining before shipping: check PR CI and follow release/version/deployment workflow when shipping is authorized. This document does not claim the task branch is live on GitHub Pages.
+The owner approved the integration and authorized shipping with “continue”. Release version is 0.0.141. PR CI, merge and Pages deployment are being verified; this checkpoint does not yet claim the version is live.

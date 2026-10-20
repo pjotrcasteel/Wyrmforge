@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.141 — Animated Ashling
+
+- Ashling now hops in eight directions, launches into fire-infused claw attacks, and collapses into a held corpse. Small fiery eyes fade during death.
+- Shared full-body motion windows preserve planted attack poses while facing and gait phase continue. Simulation movement, damage and death authority remain unchanged.
+- [Integration and validation evidence](docs/art/ashling-runtime-integration-2026-10-20.md).
+
 ## Hotfix 0.0.140 — Night-only Refuge, rollback of damaged v0.0.139 images
 
 - Reverted all eight v0.0.139 daytime and nighttime vacancy image changes **byte-for-byte** to the previous v0.0.138 artwork. No new generation, image processing, or redesign.
