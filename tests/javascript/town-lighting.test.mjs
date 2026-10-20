@@ -20,6 +20,8 @@ function createHarness(nowHour = 12) {
     };
     const scene = {
         dataset: {},
+        attributes: {},
+        setAttribute(name, value) {this.attributes[name] = value;},
         querySelector: () => base,
         querySelectorAll: () => [patch]
     };
@@ -66,12 +68,14 @@ test('day night auto setting persists and swaps panorama and vacancy assets with
     const time = h.window.wyrmforgeTownLighting;
     assert.equal(time.getMode(),'auto');
     assert.equal(h.scene.dataset.townTime,'night');
+    assert.equal(h.scene.attributes['aria-label'],'Nighttime Refuge town square');
     const sameScene=h.scene;
     time.setMode('day');
     assert.equal(h.store.get('wyrmforge.townLighting.v1'),'day');
     assert.match(h.base.src,/day-active\.webp\?v=132$/);
     assert.match(h.patch.src,/day-vacant-Codex\.webp\?v=132$/);
     assert.equal(h.patch.dataset.townAsset,'Codex');
+    assert.equal(h.scene.attributes['aria-label'],'Daytime Refuge town square');
     time.setMode('night');
     assert.match(h.base.src,/night-active\.webp\?v=132$/);
     assert.match(h.patch.src,/night-vacant-Codex\.png\?v=132$/);
