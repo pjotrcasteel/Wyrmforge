@@ -79,16 +79,9 @@ def main():
     # the entire structure; no such blending of a complete building here.
     soft=cv2.GaussianBlur(mask.astype(np.float32)/255.0,(0,0),1.2)
     blended=np.clip(np.rint(day*(1-soft[:,:,None])+daylight_vacant*soft[:,:,None]),0,255).astype(np.uint8)
-    # Poisson gradient-domain blending matches the adjacent *daytime stone*
-    # rather than carrying any patch-level night haze into daylight.
-    clone=cv2.seamlessClone(
-        cv2.cvtColor(daylight_vacant,cv2.COLOR_RGB2BGR),
-        cv2.cvtColor(day,cv2.COLOR_RGB2BGR),
-        mask, (day.shape[1]//2, day.shape[0]//2), cv2.NORMAL_CLONE)
-    poisson=cv2.cvtColor(clone,cv2.COLOR_BGR2RGB)
     result=day.copy()
     touched=soft>0.002
-    result[touched]=poisson[touched]
+    result[touched]=blended[touched]
     assert np.array_equal(result[~touched],day[~touched])
     assert np.array_equal(result[:,700:],day[:,700:]),"The other buildings/World Gate changed!"
     assert np.any(result[:450,:550]!=day[:450,:550]),"Observatory has not changed"
