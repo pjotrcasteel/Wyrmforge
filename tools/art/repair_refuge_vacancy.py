@@ -73,7 +73,10 @@ def mute_luminescence(rgb, region, *, night, magic=False):
         glow = warm.astype(np.float32) * region
         hsv[..., 1] *= 1 - glow * .45
         hsv[..., 2] *= 1 - glow * (.72 if night else .52)
-    return cv2.cvtColor(np.clip(hsv, 0, 255).astype(np.uint8), cv2.COLOR_HSV2RGB)
+    modified = cv2.cvtColor(np.clip(hsv, 0, 255).astype(np.uint8), cv2.COLOR_HSV2RGB)
+    # HSV roundtrips change unrelated pixels by 1-3 levels; never include those
+    # in an alpha patch. Only the explicit painted fixture mask may change.
+    return apply_masked(rgb, modified, region)
 
 
 def paint(base, building, night):
@@ -146,10 +149,10 @@ def paint(base, building, night):
     # base. No panorama stitching, external source backgrounds, night rectangles,
     # black CSS overlays or shifting entrances.
     changed = np.max(np.abs(canvas.astype(np.int16) - base.astype(np.int16)), axis=2)
-    alpha = np.clip((changed.astype(np.float32) - 1) * 25, 0, 255).astype(np.uint8)
+    alpha = np.clip((changed.astype(np.float32) - 2) * 38, 0, 255).astype(np.uint8)
     # Avoid one-pixel holes while retaining unchanged backdrop as transparent.
     alpha = cv2.GaussianBlur(alpha, (3, 3), .7)
-    alpha[changed == 0] = 0
+    alpha[changed < 3] = 0
     x0, y0, x1, y1 = CROP[building]
     patch = np.dstack([canvas[y0:y1, x0:x1], alpha[y0:y1, x0:x1]])
     return Image.fromarray(patch, "RGBA")
