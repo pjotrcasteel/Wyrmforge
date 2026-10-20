@@ -136,10 +136,11 @@ public sealed class EliteEncounterTests
     public void Packblood_HastesNearbyAshlings_AndShieldsThemFromTheRout()
     {
         var (simulation, player, enemies) = Encounter();
-        var leader = new EnemyState(700, player.Position + new Vector2D(300, 0), 8, 1000, 80, EnemyKind.Ashling) { Elite = EliteAffix.Packblood };
-        var near = new EnemyState(701, player.Position + new Vector2D(300, 60), 8, 1000, 80, EnemyKind.Ashling);
-        var far = new EnemyState(702, player.Position + new Vector2D(-300, 0), 8, 1000, 80, EnemyKind.Ashling);
-        var priest = new EnemyState(703, player.Position + new Vector2D(250, 0), 12, 1, 0, EnemyKind.AshPriest);
+        // Measure Packblood haste inside the clear central fighting lane, not through a seeded breakable.
+        var leader = new EnemyState(700, player.Position + new Vector2D(140, 0), 8, 1000, 80, EnemyKind.Ashling) { Elite = EliteAffix.Packblood };
+        var near = new EnemyState(701, player.Position + new Vector2D(140, 60), 8, 1000, 80, EnemyKind.Ashling);
+        var far = new EnemyState(702, player.Position + new Vector2D(-140, 0), 8, 1000, 80, EnemyKind.Ashling);
+        var priest = new EnemyState(703, player.Position + new Vector2D(120, 0), 12, 1, 0, EnemyKind.AshPriest);
         enemies.AddRange([leader, near, far, priest]);
         var nearStart = Vector2D.Distance(near.Position, player.Position);
         var farStart = Vector2D.Distance(far.Position, player.Position);
