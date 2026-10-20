@@ -10,11 +10,11 @@
   "scope": "one three-quarter walking view",
   "stages": {
     "A": "self-reviewed; neutral modeling reference generated and inspected",
-    "B": "blocked: approved API upload/preprocessing succeeded; GPU quota refusal; authenticated browser login blocked by CloudFront 403",
+    "B": "Local TRELLIS 1 colored mesh generated on RTX 5090; first visual review fails card-detail fidelity; refinement required before rigging",
     "C": "pending rig and deformation",
     "D": "pending gait"
   },
-  "visualStatus": "neutral modeling reference self-reviewed only; mesh and motion unavailable",
+  "visualStatus": "Initial local mesh reviewed; not art accepted; skull/rib/color fidelity insufficient",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "notes": [
@@ -49,5 +49,14 @@
   "authentication": {
     "secureBrowserAttempt": "submission returned CloudFront 403 Request blocked; fresh homepage remains signed out",
     "configuredApiCredential": false
+  },
+  "localReconstruction": {
+    "method": "TRELLIS 1 + DINOv2; Hugging Face offline",
+    "weightsSource": "ModelScope AI-ModelScope/TRELLIS-image-large; Meta direct DINOv2",
+    "candidate": "model/local-trellis1-002/hollow-initial.glb",
+    "editableSource": "model/local-trellis1-002/hollow-initial-review.blend",
+    "peakAllocatedMiB": 9730.057,
+    "review": "model/local-trellis1-002/review/review.md",
+    "hardwareSettingsChanged": false
   }
 }

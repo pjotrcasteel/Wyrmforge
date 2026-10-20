@@ -71,3 +71,15 @@ This avoids DINOv3's approval gate; actual source/file access and RTX 5090
 inference must still be proven. It is not yet a working replacement.
 Do not silently substitute DINOv2 into TRELLIS.2; those conditioning models are
 not interchangeable without a compatible trained generation model.
+
+## Local alternative executed successfully
+
+Original TRELLIS + DINOv2 produced a real colored Hollow mesh on the RTX 5090.
+Public weights were downloaded from ModelScope, DINOv2 from Meta's direct CDN;
+Hugging Face networking was disabled during inference. See the candidate's
+`review/review.md` for the first visual rejection and remaining work.
+
+Local pipeline import/kernel checks pass. Shape reconstruction is proven;
+card-quality texturing/topology, deformation, gait and final sheet are not.
+`production.json` records the current stage; original cloud quota logs remain
+historical evidence. No runtime assets or gameplay changed.
