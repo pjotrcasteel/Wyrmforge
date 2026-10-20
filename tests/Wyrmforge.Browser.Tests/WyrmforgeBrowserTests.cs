@@ -240,6 +240,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const scene = document.querySelector('.refuge-canonical-scene');
             return Math.abs(view.scrollLeft - (scene.clientWidth / 2 - view.clientWidth / 2)) < 4;
         }");
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
         await ScreenshotAsync($"refuge-town-center-{width}.png");
 
         await viewport.EvaluateAsync("element => window.wyrmforgeTown.show(0, false)");
@@ -1746,6 +1747,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".refuge-town-spot--codex").ClickAsync();
         await Page.Locator(".refuge-town-spot--hall").ClickAsync();
         await Expect(Page.Locator(".refuge-town-vacant-layer")).ToHaveCountAsync(4);
+        await Page.WaitForFunctionAsync(@"() => {
+            const layers = [...document.querySelectorAll('.refuge-town-vacant-layer')];
+            return layers.length === 4 && layers.every(img => img.complete && img.naturalWidth > 0);
+        }");
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToBeHiddenAsync();
         await ScreenshotAsync("refuge-town-all-four-vacant.png");
 
         await Page.Locator(".refuge-town-spot--hall").ClickAsync();
