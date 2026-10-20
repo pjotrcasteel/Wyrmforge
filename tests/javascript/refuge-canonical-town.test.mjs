@@ -1,53 +1,74 @@
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
 const root = process.cwd();
-const web = join(root, 'src/Wyrmforge.Presentation.Web');
 const source = path => readFileSync(join(root, path), 'utf8');
+const runtime = join(root, 'src/Wyrmforge.Presentation.Web/wwwroot/art/town');
 
-test('all four active/vacant paintings are first-party byte-identical canonical assets', () => {
+test('original four canonical building pairs remain unchanged as separate source art', () => {
     for (const folder of ['ArcaneNexus', 'Blacksmith', 'Codex', 'HallOfFame']) {
         for (const state of ['active', 'vacant']) {
             const relative = `buildings/${folder}/${state}.png`;
             const approved = readFileSync(join(root, 'user_handover_files/concepts', relative));
-            const shipped = readFileSync(join(web, 'wwwroot/art', relative));
-            assert.deepEqual(shipped, approved, `${folder} ${state} must not be regenerated or tinted`);
-            assert.equal(shipped.subarray(1, 4).toString('ascii'), 'PNG');
-            assert.equal(shipped.readUInt32BE(16), 1536);
-            assert.equal(shipped.readUInt32BE(20), 1024);
+            const shipped = readFileSync(join(root, 'src/Wyrmforge.Presentation.Web/wwwroot/art', relative));
+            assert.deepEqual(shipped, approved, `Do not overwrite existing ${folder} ${state} canonical art`);
         }
     }
 });
 
-test('canonical town binds the four PNG pairs to independent C# unlock flags', () => {
-    const visuals = source('src/Wyrmforge.Presentation.Web/Features/Forge/TownBuildingVisuals.cs');
-    const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
-    const host = source('src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor');
-    assert.match(visuals, /Building\("build", "ArcaneNexus", nexusUnlocked\)/);
-    assert.match(visuals, /Building\("forge", "Blacksmith", forgeUnlocked\)/);
-    assert.match(visuals, /Building\("codex", "Codex", codexUnlocked\)/);
-    assert.match(visuals, /Building\("legends", "HallOfFame", hallUnlocked\)/);
-    assert.match(visuals, /"buildings\/\{folder\}\/\{StateName\(unlocked\)\}\.png"/);
-    assert.match(scene, /data-town-state="@building.StateName"/);
-    assert.match(scene, /OnBuilding.InvokeAsync\(building.Key\)/);
-    assert.match(host, /ForgeUnlocked="@ForgeUnlocked"/);
-    assert.match(host, /HallUnlocked="@Progress.LeaderboardUnlocked"/);
-    assert.match(host, /OnGate="\(\) => ActivateTownLocationAsync\(ShellSection.Gate\)"/);
-    assert.match(host, /"legends" => OpenHallOfFameAsync\(\)/);
-});
-
-test('three-district town has no painted NPCs or dark vacancy overlays', () => {
+test('night preview uses a single registered 1672x941 world and four alpha layers', () => {
     const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    const shell = source('src/Wyrmforge.Presentation.Web/wwwroot/index.html');
-    assert.match(scene, /refuge-canonical-viewport/);
-    assert.match(scene, /refuge-canonical-gate/);
-    assert.match(scene, /refuge-canonical-wing--west/);
-    assert.match(scene, /refuge-canonical-wing--east/);
-    assert.match(css, /grid-template-columns:repeat\(3,100vw\)/);
-    assert.doesNotMatch(css, /backdrop-filter|filter:brightness|filter:grayscale|opacity:\.4/);
-    assert.match(shell, /css\/town-canonical\.css/);
-    assert.match(shell, /js\/refuge-town\.js/);
+    const sceneFile = 'night-active.webp';
+    assert.ok(existsSync(join(runtime, sceneFile)), 'Required nighttime panorama is missing');
+    const webp = readFileSync(join(runtime, sceneFile));
+    assert.equal(webp.subarray(0, 4).toString('ascii'), 'RIFF');
+    assert.equal(webp.subarray(8, 12).toString('ascii'), 'WEBP');
+    assert.equal(webp.readUInt32LE(4) + 8, webp.length, 'WebP RIFF byte length must match the complete file; a valid header is not enough');
+    for (const file of ['ArcaneNexus', 'Blacksmith', 'Codex', 'HallOfFame']
+            .map(name => `night-vacant-${name}.png`)) {
+        assert.ok(existsSync(join(runtime, file)), `Required vacancy layer missing: ${file}`);
+        const buffer = readFileSync(join(runtime, file));
+        assert.equal(buffer.subarray(1, 4).toString('ascii'), 'PNG');
+        assert.ok(buffer.readUInt32BE(16) > 100 && buffer.readUInt32BE(20) > 100);
+    }
+
+    assert.match(scene, /refuge-canonical-scene/);
+    assert.ok(scene.includes('src="art/town/night-active.webp?v=132"'));
+    assert.match(scene, /class="refuge-town-vacant-layer"/);
+    assert.match(css, /aspect-ratio:1672\/941/);
+    assert.match(css, /width:177\.6833dvh/);
+    assert.doesNotMatch(css, /filter:brightness|filter:grayscale|opacity:\.4/);
+});
+
+test('building clicks are independent preview toggles, never menu or progression navigation', () => {
+    const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
+    const host = source('src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor');
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-town.js');
+    for (const key of ['build', 'forge', 'codex', 'legends']) {
+        assert.match(scene, new RegExp('ToggleBuilding\\("' + key + '"\\)'));
+    }
+    assert.match(scene, /private bool nexusActive = true/);
+    assert.match(scene, /private bool blacksmithActive = true/);
+    assert.match(scene, /private bool codexActive = true/);
+    assert.match(scene, /private bool hallActive = true/);
+    assert.match(scene, /OnGate\.InvokeAsync\(\)/);
+    assert.doesNotMatch(scene, /OnBuilding\.InvokeAsync/);
+    assert.doesNotMatch(host, /OnBuilding="ActivateCanonicalBuildingAsync"/);
+    assert.match(js, /refuge-canonical-scene/);
+    assert.match(js, /blockClickUntil/);
+});
+
+test('one panorama, no old district cards and no runtime vacancy blackout', () => {
+    const markup = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    const index = source('src/Wyrmforge.Presentation.Web/wwwroot/index.html');
+    assert.doesNotMatch(markup, /refuge-canonical-building/);
+    assert.doesNotMatch(markup, /refuge-canonical-wing/);
+    assert.match(markup, /refuge-canonical-districts/);
+    assert.match(css, /\.refuge-town-spot--gate/);
+    assert.match(index, /css\/town-canonical\.css/);
+    assert.match(index, /js\/refuge-town\.js/);
 });
