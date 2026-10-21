@@ -225,3 +225,15 @@ References:
 **Do not revive the old cross-shaped safe lanes or mandatory wave-gated fences** as a Wet
 Forest requirement. Keep navigation testing, region discovery, and authored landmarks
 independent of any specific encounter arena shape.
+
+
+### Wet Forest presentation integration, October 21, 2026
+
+The procedural Wet Forest grammar and absence of forced geometric bands remain canonical.
+World-anchored dirt/litter/ground roots and character contact marks are visual only and read
+from the same forest world-space seed and C# prop coordinates. Approved monster silhouettes
+are not repainted; motion is distance-driven rather than a clock-driven treadmill. Keep the
+forest and its residents within one muted material/value system without burying the player,
+attack telegraphs or drops. The Arena Lab tests **Hollow (kind 0)** and **Ashling (kind 2)**,
+not the unrelated Mire Hound kind 1. Production roster ecology remains C# owned.
+See [art and animation](art-and-animation.md) for source references and QA gates.
