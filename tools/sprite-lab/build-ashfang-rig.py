@@ -30,7 +30,10 @@ for sign in [1,-1]:
 # giant paw. Sculpt it upward in the source; keep actual paw rows unchanged.
 midbody=np.exp(-((v[:,1]+.01)/.095)**4)
 low=np.clip((-.10-v[:,2])/.06,0,1);inner=np.clip((.20-abs(v[:,0]))/.10,0,1)
-v[:,2]+=.085*midbody*low*inner
+fore_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]+.285)/.135)**2
+hind_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]-.19)/.14)**2
+clear_of_paws=np.clip((np.minimum(fore_paw,hind_paw)-1.2)/.4,0,1)
+v[:,2]+=.085*midbody*low*inner*clear_of_paws
 v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
