@@ -206,7 +206,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             "element => getComputedStyle(element).pointerEvents === 'none'"));
         Assert.IsTrue(await debug.Locator(".refuge-town-geometry-solid").First.EvaluateAsync<bool>(
             "element => getComputedStyle(element).fill.includes('235, 36, 40')"), "Solid geometry should be red.");
-        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(10);
+        // Nexus paved forecourt is a distinct walkable region, without widening the solid buildings.
+        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(11);
         await Expect(debug.Locator(".refuge-town-geometry-visual[data-town-foreground='world-gate-arch-roof']"))
             .ToHaveCountAsync(1);
         await Expect(debug.Locator(".refuge-town-geometry-label")).ToHaveCountAsync(0);
