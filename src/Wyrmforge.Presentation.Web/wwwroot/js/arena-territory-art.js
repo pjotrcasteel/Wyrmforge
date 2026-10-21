@@ -52,6 +52,9 @@ export function createTerritoryStoryPlan(environment, width, height) {
     if (generatorPreview && environment.habitat === 'WetForest' && environment.wetForest) {
         return { biome, element, district, corruption, generatorPreview, habitat: 'WetForest',
             seed: environment.seed, width, height, wetForest: environment.wetForest,
+            // Real render-snapshot feet, passed to the baked floor so fire ash
+            // matches destructible trees rather than random scene decoration.
+            forestProps: environment.props ?? [],
             landmarks: [], patches: [], wounds: [], cloister: null };
     }
     const districtShift = district === 'sanctuary' ? .11 : district === 'rift' ? -.095 : 0;

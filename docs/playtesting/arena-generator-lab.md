@@ -218,3 +218,49 @@ Switch to Frozen Road to check zero fire effects. Hit a charred/burning
 tree and verify its sprite and collider disappear together. Inspect the
 moving Hollow/Ashling silhouettes and mobile FPS at 320/390px. Check
 the resulting Art and Playwright captures before merging.
+
+## Wet Forest ground fidelity, ruined-world readability (21 October)
+
+This iteration changes the **real Web renderer** for the physical C# Wet Forest
+Arena Lab, not a picture, a CSS darkening filter, or another isolated demo.
+The existing connected fighting glades from the horde-playability change
+remain completely unchanged: no C# path edits, new blockers or combat hazards.
+
+- **Wet soil**: small seed-stable striations, crushed leaf tips, softened road
+  wear, dim moss and interrupted reed reflections in dark puddles. Different
+  material families get different *microgeometry*, not a single random
+  noise brush. The same real C# winding trail gets broken eroded ruts; physical
+  200px+ combat glades get dispersed crushed leaf/soil around their margins,
+  **not** around an invisible collision circle. Built into the static floor
+  texture, not the game loop.
+- **Fire ecology**: scorches are anchored solely to actual C# tree IDs whose
+  seeded art has already become charred/burning at the chosen route percentage.
+  Baked ash remains harmless, as do a few restrained hot embers beside actively
+  burning tree roots. At 78%+ influence, a minority of burning roots split the
+  soil with short glowing seams; these are purely visual, **not** hazards or
+  telegraphs. Other elemental habitats get **zero** fire ash.
+- **History**: shattered stone, split timber and old soot lie on the ground
+  around the physical grave, waystone, abandoned camp, wagon and fallen-log
+  prop positions. No scenery duplicates or invisible walls.
+- **Horde contract**: the center and travelling clearings remain walkable
+  despite visual texture. Enemy collision, navigation, destructible props,
+  automatic spell targeting and existing Hollow/Ashling art do not change.
+- **Performance**: all material details and ruin litter are baked once into
+  the existing bounded scene texture cache. There is no per-frame surface
+  regeneration and no new atlas, sprite-download or canvas-image dependency.
+
+### Test before accepting
+
+Compare identical seed 1441 at node 1/14, 8/14 and 14/14 at real
+iPhone widths 320 and 390. Check microdetails stay legible, never
+checkerboard. Walk an entire glade while enemies approach from multiple
+directions; rooted ash should only appear under corresponding burning trees.
+Toggle collision outlines and hit a cart/tree to verify actual C# footprint
+and destruction. Verify the minimum target of 30 FPS on mobile with large
+enemy packs *before* enabling this world in ordinary Hunts. The present
+two non-attacking Lab agents are not a substitute for a genuine swarm test.
+
+This is an incremental procedural pixel-material improvement. It is not
+claimed to match the town's fully illustrated art fidelity yet; that
+requires reviewed, original, atlas-ready wilderness assets integrated
+at the game's camera scale.
