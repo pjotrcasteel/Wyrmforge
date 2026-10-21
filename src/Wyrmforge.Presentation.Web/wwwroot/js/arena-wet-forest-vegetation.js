@@ -133,10 +133,12 @@ export function drawWetForestTreeAccents(ctx, kind, id, seed, x, y) {
 // approved shared art atlas. The world-lab renderer uses these larger authored pixel shapes
 // only for physical C# pine/dead-tree props; other regions keep their original frames.
 const treeArtCache = new Map();
+// Ancient, wet, partially dying woodland: broken branch geometry and subdued
+// needles rather than rounded luminous green crowns. No post-process tint.
 const treeInk = {
-    black: '#0b1412', shadow: '#10211b', deep: '#193027', leaf: '#294538',
-    lit: '#3b5a48', edge: '#546a51', bark: '#342b25', barkLight: '#5b5142',
-    rot: '#211e1b', ash: '#4a463d',
+    black: '#09110f', shadow: '#101b16', deep: '#18271f', leaf: '#27382d',
+    lit: '#344737', edge: '#465343', bark: '#2c251f', barkLight: '#4e4437',
+    rot: '#1b1b18', ash: '#413f38',
 };
 
 /** Deterministic drawing instructions, relative to the physical trunk's foot. */
@@ -161,10 +163,11 @@ export function createWetForestTreeArtPlan(kind, id, seed) {
             block(cx - 3, y, 8, 12, treeInk.black);
             block(cx - 1, y + 2, 3, 7, treeInk.barkLight);
         }
-        // These are staggered, unequal crowns, never a row of matching triangular tiers.
+        // Ragged, narrow bough masses with visible empty space between them.
+        // The old wide oval lobes read as soft cartoon broccoli at phone scale.
         const lobes = [
-            [-14, -34, 15, 13], [13, -43, 22, 17], [-18, -53, 16, 15],
-            [8, -66, 19, 18], [-4, -79, 14, 15], [5, -95, 9, 10],
+            [-17, -31, 16, 8], [13, -41, 18, 9], [-20, -55, 14, 10],
+            [9, -65, 17, 10], [-11, -79, 13, 8], [7, -94, 9, 7],
         ];
         for (let i = 0; i < lobes.length; i++) {
             const [dx, dy, rx, ry] = lobes[i];
@@ -173,13 +176,17 @@ export function createWetForestTreeArtPlan(kind, id, seed) {
             for (let sy = -ry; sy <= ry; sy += 4) {
                 const spread = Math.sqrt(Math.max(0, 1 - sy * sy / (ry * ry))) * rx;
                 const width = Math.max(4, Math.floor(spread / 2) * 2);
-                const ragged = variation(i * 53 + sy + 43, 7) - 3;
+                const ragged = (variation(i * 53 + sy + 43, 7) - 3) * 2;
                 const low = sy > 0;
-                block(centerX - width + ragged, centerY + sy, width * 2, 4,
+                const missingTip = variation(i * 41 + sy + 87, 5) === 0;
+                // Chipped ends, asymmetric horizontal splits, dark undersides.
+                block(centerX - width + ragged, centerY + sy, Math.max(4, width * 2 - (missingTip ? 8 : 0)), 4,
                     low ? treeInk.shadow : (i % 2 ? treeInk.deep : treeInk.leaf));
-                // A few deliberately displaced lit leaf planes, not high-frequency sparkle.
-                if (!low && (sy + i * 2) % 8 === 0)
-                    block(centerX - Math.floor(width * .5), centerY + sy, Math.max(4, width), 2,
+                if (width > 10 && variation(i * 29 + sy + 69, 6) === 0)
+                    block(centerX + variation(i * 31 + sy + 91, 7) - 6, centerY + sy, 4, 4, treeInk.black);
+                // Very few upper planes catch cold diffuse light; never a bright outline.
+                if (!low && variation(i * 47 + sy + 117, 4) === 0)
+                    block(centerX - Math.floor(width * .5), centerY + sy, Math.max(4, width - 4), 2,
                         i % 3 ? treeInk.lit : treeInk.edge);
             }
         }
