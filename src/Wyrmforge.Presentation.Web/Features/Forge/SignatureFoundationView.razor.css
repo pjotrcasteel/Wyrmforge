@@ -1,0 +1,16 @@
+/* Actual school identity, not the Fireball sprite or its material economy. */
+.signature-foundation{--signature-light:#a9a4be;display:grid;gap:8px;width:min(480px,100%);margin:0 auto;color:#f0dbc2;font-family:Georgia,"Times New Roman",serif}
+.signature-frost{--signature-light:#91ddec}
+.signature-storm{--signature-light:#ecc779}
+.signature-arcane{--signature-light:#c4a6e6}
+.signature-unassigned{--signature-light:#bcb6c7}
+.signature-stage{min-height:320px;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:14px;padding:26px 15px 24px;border:3px solid #815f47;background:linear-gradient(180deg,#10101ad9,#12101a65 40%,#0a0a11a8),url('art/arcane-nexus/ritual-chamber.svg') center/100% 100% no-repeat,#17151d;box-shadow:inset 0 0 0 3px #20161d;color:#f3dfc4;text-align:center}
+.signature-stage h2{font:600 clamp(1.55rem,6.1vw,2rem)/1.15 Georgia,serif;margin:0;text-shadow:1px 2px 2px #09080e}
+.signature-emblem{align-self:center;display:grid;place-items:center;width:112px;height:112px;border:4px solid #79635c;border-radius:50%;background:radial-gradient(circle,#2c2434,#111018 70%);box-shadow:inset 0 0 0 4px #17121b,0 0 15px color-mix(in srgb,var(--signature-light) 34%,transparent)}
+.signature-emblem .px-icon{transform:scale(1.35);transform-origin:center;image-rendering:pixelated;filter:drop-shadow(0 0 6px var(--signature-light))}
+.signature-school{padding:4px 12px;border:1px solid #886049;background:#110c13ee;color:var(--signature-light);font-size:.85rem}
+.signature-description{display:grid;gap:10px;padding:15px;border:3px solid #765644;background:linear-gradient(180deg,#21171e,#121017);box-shadow:inset 0 0 0 2px #23151c}
+.signature-description h3{margin:0;color:#f0d3ae;font:600 1.25rem Georgia,serif}
+.signature-description p{margin:0;color:#d7c2b6;font:.85rem/1.45 system-ui,sans-serif}
+.signature-description .signature-unavailable{padding-top:9px;border-top:1px solid #51403b;color:#b6a8a7;font-size:.76rem}
+@media(max-width:360px){.signature-stage{min-height:285px;padding:22px 10px}.signature-emblem{width:96px;height:96px}}
