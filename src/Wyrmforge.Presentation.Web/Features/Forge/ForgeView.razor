@@ -123,7 +123,7 @@
                 break;
             case ShellSection.Build:
                 <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus">
-                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Fireball)" disabled="@(CharacterSchool != DivineArchetype.Pyromancer)" class="@(facet == NexusFacet.Fireball ? "active" : "")"
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Fireball)" class="@(facet == NexusFacet.Fireball ? "active" : "")"
                             @onclick="() => OpenFacet(NexusFacet.Fireball)"><b>Fireball</b><small aria-hidden="true">Upgrade core</small></button>
                     <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Spellcraft)" disabled="@(!SpellcraftOpen)"
                             class="@(facet == NexusFacet.Spellcraft ? "active" : "")"
@@ -133,7 +133,7 @@
                 </div>
                 @if (facet == NexusFacet.Fireball)
                 {
-                    <FireballRitualView Core="FireballCore" Vault="Vault" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" />
+                    <FireballRitualView Core="FireballCore" Vault="Vault" ReadOnly="@(CharacterSchool != DivineArchetype.Pyromancer)" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" />
                 }
                 else if (facet == NexusFacet.Spellcraft && SpellcraftOpen)
                 {

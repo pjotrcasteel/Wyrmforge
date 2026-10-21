@@ -368,6 +368,30 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_NonPyromancer_CanInspectFireballWithoutSpendingMaterials()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]})); localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart'])); localStorage.setItem('wyrmforge.characterSchool.v1','Arcanist');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+
+        var fireball = Page.GetByRole(AriaRole.Tab, new() { Name = "Fireball" });
+        await Expect(fireball).ToBeEnabledAsync();
+        await fireball.ClickAsync();
+        await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-school-note")).ToContainTextAsync("Fireball belongs to Pyromancers");
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" })).ToBeDisabledAsync();
+
+        await Page.Locator(".fireball-socket--2").ClickAsync();
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 2");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+        await Expect(Page.Locator(".fireball-mutator").Filter(new() { HasText = "Detonation" })).ToBeDisabledAsync();
+        Assert.AreEqual("Arcanist", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        Assert.AreEqual(1, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.essenceVault')).length"));
+    }
+
+    [TestMethod]
     public async Task Mobile_FireballNexus_EquipsUpgradesAndRestoresPersistentSpell()
     {
         await Page.SetViewportSizeAsync(390, 844);
@@ -397,6 +421,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "The upgrade panel must render the same canonical Fire sigil as character creation.");
         await Expect(Page.Locator(".fireball-socket")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(4);
+        await Page.Locator(".fireball-socket--3").ClickAsync();
+        await Expect(Page.Locator(".fireball-context")).ToBeFocusedAsync();
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Socket 3 is sealed");
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 3");
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("equip a researched mutator");
+        await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToHaveCountAsync(0);
         await ScreenshotAsync("arcane-nexus-fireball-390.png");
 
         await Page.Locator(".fireball-socket--1").ClickAsync();

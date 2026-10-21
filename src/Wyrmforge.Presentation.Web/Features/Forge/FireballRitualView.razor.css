@@ -141,3 +141,10 @@
 
 /* The same approved Fire school emblem used by character creation. */
 .fireball-panel-heading>.fireball-school-icon{display:block;flex:0 0 48px;width:48px;height:48px;background-image:url('art/divine-lineage-sigils.webp?v=134');background-size:300% 200%;background-position:0 0;background-repeat:no-repeat;image-rendering:pixelated;-webkit-mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%);mask-image:radial-gradient(ellipse 48% 44% at 50% 40%,#000 52%,transparent 95%)}
+
+/* Locked slots explain their next action in the existing context panel, not an extra screen. */
+.fireball-context .fireball-locked-explainer{display:grid;gap:3px;padding:9px 11px;border:1px solid #a16a42;background:#352019}
+.fireball-locked-explainer strong{font:600 .92rem/1.15 Georgia,serif;color:#f2c392}
+.fireball-locked-explainer span{font:.77rem/1.35 system-ui,sans-serif;color:#d9c0af}
+.fireball-socket.sealed.inspected::before{filter:grayscale(.55) brightness(.93);box-shadow:0 0 0 2px #b88a64,0 0 8px #ef955650}
+.fireball-context .fireball-school-note{padding:8px 10px;border-left:3px solid #c28b5b;background:#2c2022;color:#d9c8b7;font:.77rem/1.4 system-ui,sans-serif}
