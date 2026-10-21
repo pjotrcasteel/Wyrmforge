@@ -147,6 +147,7 @@ public partial class Home
 
     private async Task<bool> UpgradeFireballCoreAsync()
     {
+        if (characterSchool != Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer) return false;
         if (!fireballCore.Upgrade(essenceVault)) return false;
         // Match existing research saves: never lose resources if interrupted between writes.
         await TrySetFireballCoreAsync();
@@ -156,6 +157,7 @@ public partial class Home
 
     private async Task<bool> EquipFireballCoreAsync(int slot, FireballMutationId? mutation)
     {
+        if (characterSchool != Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer) return false;
         if (!fireballCore.Equip(slot, mutation)) return false;
         await TrySetFireballCoreAsync();
         return true;
