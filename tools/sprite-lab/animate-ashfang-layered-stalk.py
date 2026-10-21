@@ -3,7 +3,7 @@ from pathlib import Path
 import json,math
 import numpy as np,cv2,torch
 from PIL import Image,ImageDraw
-base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-006';out.mkdir(exist_ok=False);(out/'frames').mkdir()
+base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-007';out.mkdir(exist_ok=False);(out/'frames').mkdir()
 spec=json.loads((source/'source.json').read_text());device='cuda'
 W,H=231,115;cw,ch=320,192;offset=(48,40)
 body=Image.open(source/'hidden-overlap-001/torso-with-overlap.png').convert('RGBA')
@@ -56,6 +56,10 @@ def body_displacement(points,phase):
  chest=g(110,66,35,35);pelvis=g(77,77,25,28);head=g(155,65,23,24);near=g(42,29,45,27);far=g(176,33,36,23);tail=g(29,86,35,17)
  dx=.4*math.sin(p)*chest-.3*math.sin(p)*pelvis+.6*math.sin(p-.7)*tail+.5*math.sin(p-.4)*near
  dy=-.65*math.sin(2*p)*chest+.45*math.sin(2*p)*pelvis+.25*math.sin(p-.3)*head+1.5*math.sin(p-.5)*near+.8*math.sin(p-.85)*far+.8*math.sin(p-.8)*tail
+ # Lower the centre of mass and extend the gaze in the deliberate stalking pose.
+ # The paws remain world-planted through IK instead of following this body shift.
+ dx+=1.6*head+.45*chest
+ dy+=2.1*chest+1.1*pelvis+2.2*head+.65*near+.45*far
  return np.column_stack([dx,dy])
 def min_area_ratio(rest,posed,triangles):
  a=rest[triangles];b=posed[triangles]
@@ -87,11 +91,11 @@ for f in range(N):
    r,t=bone_transform(chain[index],chain[index+1],p[index],p[index+1]);posed+=(vertices@r.T+t)*layer['weights'][:,index,None]
   minimum_area=min(minimum_area,min_area_ratio(vertices,posed,layer['tri']))
   posed_layers.append(render(layer,posed));joints_record.append(dict(name=layer['name'],chain=p.tolist(),paw=p[-1].tolist(),target=c.tolist(),stance=q<stance,phase=q))
- # Far legs behind torso, near legs in front. Hidden attachment paint bridges cuts.
- for im in posed_layers[:2]:composed.alpha_composite(im)
+ # Original visible limb pixels must sit over their hidden attachment paint.
+ # Drawing that paint over the far limbs replaced visible armour even at rest.
  bodyposed=vertices+body_displacement(vertices,phase);minimum_area=min(minimum_area,min_area_ratio(vertices,bodyposed,bodylayer['tri']));bodyshifted=render(bodylayer,bodyposed)
  composed.alpha_composite(bodyshifted)
- for im in posed_layers[2:]:composed.alpha_composite(im)
+ for im in posed_layers:composed.alpha_composite(im)
  frame=Image.new('RGBA',(cw,ch));frame.paste(composed,offset);frame.save(out/'frames'/f'stalk-{f:03}.png');frames.append(frame);records.append(joints_record)
  if f%12==0:print('Stalk frame',f,flush=True)
 atlas=Image.new('RGBA',(cw*8,ch*8))

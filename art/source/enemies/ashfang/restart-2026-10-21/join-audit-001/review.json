@@ -1,0 +1,6 @@
+{
+  "previousVisibleRestPixelErrors": 491,
+  "correctedVisibleRestPixelErrors": 0,
+  "correction": "Draw all original visible limb layers over their hidden attachment paint. Preserve near-over-far ordering.",
+  "ownerAccepted": false
+}
