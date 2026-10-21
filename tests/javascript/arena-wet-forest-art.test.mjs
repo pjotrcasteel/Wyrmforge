@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createWetForestTilePlan, createWetForestMaterialEdges, createWetForestSurfaceDetails,
     createWetForestTrailImprints, createWetForestGladeMargins,
-    createWetForestScorchPlan, drawWetForestGround, wetForestTrailAt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js';
+    createWetForestScorchPlan, createWetForestOldPaving, drawWetForestGround, wetForestTrailAt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js';
 import { wetForestTreeFireState } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-vegetation.js';
 
 const recipe = {
@@ -180,4 +180,25 @@ test('winding physical C# trail keeps intermittent seeded hoof and wagon traces'
             m.x >= 0 && m.y >= 0 && m.x + m.width <= size.width;
     }));
     assert.deepEqual(createWetForestTrailImprints(null, 1204, size.width, size.height), []);
+});
+
+test('ancient flagstone fragments follow only the existing walkable site offshoot', () => {
+    const base = { ...recipe, site: 'abandoned-camp', siteX: .68, siteY: .47 };
+    const first = createWetForestOldPaving(base, 1441, size.width, size.height);
+    assert.ok(first.length > 40 && first.length < 400, 'A sparse but visible old footpath');
+    assert.deepEqual(first, createWetForestOldPaving(base, 1441, size.width, size.height));
+    assert.notDeepEqual(first, createWetForestOldPaving(base, 1442, size.width, size.height));
+    const startX = wetForestTrailAt(base.trail, base.siteY).x * size.width;
+    const minX = Math.min(startX, base.siteX * size.width) - 20;
+    const maxX = Math.max(startX, base.siteX * size.width) + 20;
+    assert.ok(first.every(mark => mark.x >= minX && mark.x <= maxX &&
+        Math.abs(mark.y - base.siteY * size.height) < 41 &&
+        mark.x >= 0 && mark.y >= 0 &&
+        mark.x + mark.width <= size.width && mark.y + mark.height <= size.height &&
+        mark.width <= 20 && mark.height <= 8 && mark.alpha <= 1));
+    assert.ok(first.some(mark => mark.color === '#626458' || mark.color === '#50564b'));
+    assert.deepEqual(createWetForestOldPaving({ ...base, siteX: startX / size.width },
+        1441, size.width, size.height), [], 'No invented side trail when the source has none');
+    assert.deepEqual(createWetForestOldPaving(null, 1441, size.width, size.height), []);
+    assert.deepEqual(createWetForestOldPaving(base, 1441, 0, size.height), []);
 });
