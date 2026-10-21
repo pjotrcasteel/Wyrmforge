@@ -90,7 +90,7 @@ public sealed class ArenaEnvironmentStateTests
         var firstMap = new WyrmrealmMapState(seed: 1204);
         var secondMap = new WyrmrealmMapState(seed: 1205);
         var first = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0], generatorPreview: true).Snapshot();
-        var again = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0]).Snapshot();
+        var again = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0], generatorPreview: true).Snapshot();
         var different = ArenaEnvironmentState.Create(secondMap.Seed, secondMap.AvailableNodes[0], generatorPreview: true).Snapshot();
 
         CollectionAssert.AreEqual(first.Props.ToArray(), again.Props.ToArray());
@@ -107,7 +107,7 @@ public sealed class ArenaEnvironmentStateTests
         Assert.IsGreaterThan(HuntArenaGenerator.WyrmInfluence(6, false), HuntArenaGenerator.WyrmInfluence(6, true));
         Assert.AreEqual(1, HuntArenaGenerator.WyrmInfluence(8, true));
         var first = new WyrmrealmMapState(seed: 1220);
-        var snapshot = ArenaEnvironmentState.Create(first.Seed, first.AvailableNodes[0]).Snapshot();
+        var snapshot = ArenaEnvironmentState.Create(first.Seed, first.AvailableNodes[0], generatorPreview: true).Snapshot();
         Assert.AreEqual("fire", snapshot.Element);
     }
 
