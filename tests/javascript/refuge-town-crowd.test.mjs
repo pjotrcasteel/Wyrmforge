@@ -64,6 +64,23 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.doesNotMatch(actor, /IsBehindWell|IsBehindNoticeboard/);
 });
 
+test('well rear walkers are rendered and a debug-only footpath scan exposes the real navigation model', () => {
+    const actor = source(actors);
+    const town = source(scene);
+    const model = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(actor, /@if \(person\.IsPresent\)/);
+    assert.doesNotMatch(actor, /PlaceholderDepth|depth >= 0/);
+    assert.match(model, /public string DebugWalkabilityScanPath\(/);
+    assert.match(model, /if \(!IsWalkable\(new TownPoint\(x, y\)\)\) continue/);
+    assert.match(town, /townWalkScan=1/);
+    assert.match(town, /walkScanPath = crowd\.Navigation\.DebugWalkabilityScanPath\(\)/);
+    assert.match(town, /data-town-walk-scan="true"/);
+    assert.match(css, /\.refuge-town-walk-scan\s*\{[^}]*pointer-events:none/s);
+    assert.doesNotMatch(actor, /DebugWalkabilityScanPath/,
+        'Computing the static diagnostic scan during NPC motion would destroy iPhone performance.');
+});
+
 test('opt-in FPS and AI profiling is separate from geometry and has no normal gameplay overhead', () => {
     const markup = source(scene);
     const actorsMarkup = source(actors);
