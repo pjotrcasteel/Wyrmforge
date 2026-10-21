@@ -5,13 +5,13 @@ import numpy as np,torch
 import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
-rig=Path(sys.argv[1]);out=rig/'head-review-v1';out.mkdir(exist_ok=False)
+rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'head-review-v1');out.mkdir(exist_ok=False)
 s=np.load(rig/'walk-samples.npz');labels=s['semanticLabels'];head=np.isin(labels,[2,6,9,10,11,12,21,22]);faces=s['faces'][np.all(head[s['faces']],axis=1)]
 def t(x,dtype=torch.float32):return torch.tensor(np.asarray(x),device='cuda',dtype=dtype).contiguous()
 ctx=dr.RasterizeCudaContext();v=t(s['positions'][0]);hom=torch.cat([v,torch.ones_like(v[:,:1])],1);f=t(faces,torch.int32);uv=t(s['uv']);albedo=Image.open(rig/'ashfang-albedo.png').convert('RGB');texture=t(np.asarray(albedo)/255).flip(0)[None];palette=palette_for(albedo)
 cell=256;board=Image.new('RGB',(cell*3,cell*2+64),(38,39,43));draw=ImageDraw.Draw(board);audits=[]
 for col,(name,eye) in enumerate([('Front',(0,-3,.3)),('Profile',(3,0,.3)),('Game angle',(2,-3,2.2))]):
- forward=-np.array(eye)/np.linalg.norm(eye);right=np.cross(forward,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(right,forward);target=np.array([0,-.39,.14]);m=np.eye(4,dtype=np.float32)
+ forward=-np.array(eye)/np.linalg.norm(eye);right=np.cross(forward,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(right,forward);target=np.array([0,-.35,.16]);m=np.eye(4,dtype=np.float32)
  m[0,:3]=right*500/(cell/2);m[1,:3]=up*500/(cell/2);m[0,3]=-np.dot(right,target)*500/(cell/2);m[1,3]=-np.dot(up,target)*500/(cell/2);m[2,:3]=forward*.2
  raster,_=dr.rasterize(ctx,(hom@t(m).T)[None],f,[cell,cell]);alpha=raster[0,:,:,3]>0;tex=dr.interpolate(uv[None],raster,f)[0];rgb=dr.texture(texture,tex,filter_mode='nearest')[0]
  for row,color in enumerate([shade(torch.ones_like(rgb)*.48,v,f,raster),shade(rgb,v,f,raster)]):

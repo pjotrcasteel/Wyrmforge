@@ -1,0 +1,20 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "inspectionOnly": true,
+  "modelToPixel": 500,
+  "views": [
+    {
+      "view": "Front",
+      "clipped": false
+    },
+    {
+      "view": "Profile",
+      "clipped": true
+    },
+    {
+      "view": "Game angle",
+      "clipped": false
+    }
+  ],
+  "ownerAccepted": false
+}
