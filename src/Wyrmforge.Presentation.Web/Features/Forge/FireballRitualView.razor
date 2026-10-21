@@ -133,13 +133,15 @@
                 </div>
             }
             <div class="fireball-mutator-list" aria-label="Researched Fireball mutations">
-                @foreach (var mutation in FireballCoreCatalog.Mutations.OrderByDescending(mutation => learnedMutators.Contains(mutation.Id)))
+                @foreach (var mutation in FireballCoreCatalog.Mutations.OrderByDescending(mutation => (int)MutationStatusFor(mutation)))
                 {
-                    var learned = mutation.Playable && learnedMutators.Contains(mutation.Id);
+                    var status = MutationStatusFor(mutation);
+                    var learned = status is MutationStatus.Owned or MutationStatus.Equipped;
                     var current = Core.Slots[slot] == mutation.Id;
                     var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
-                    <div class="fireball-mutator-entry @(current ? "equipped" : "")">
-                        <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
+                    var statusClass = status.ToString().ToLowerInvariant();
+                    <div class="fireball-mutator-entry @statusClass">
+                        <button type="button" class="fireball-mutator @statusClass" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
                             <span class="mutation-symbol" aria-hidden="true">
                                 @if (MutationArtwork(mutation.Id) is { } artwork)
                                 {
@@ -149,9 +151,13 @@
                                 {
                                     <i class="px-icon px-lg @MutationIcon(mutation.Id)"></i>
                                 }
+                                @if (status == MutationStatus.Unknown)
+                                {
+                                    <span class="mutation-unknown-mark">?</span>
+                                }
                             </span>
                             <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
-                            <span class="mutation-state">@(current ? "Equipped" : !mutation.Playable ? "Planned" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
+                            <span class="mutation-state" aria-label="@MutationStatusAccessibleLabel(status, inAnotherSlot)">@MutationStatusLabel(status)</span>
                         </button>
                         @if (mutation is { Playable: true, ResearchSample: { } sample })
                         {
@@ -227,6 +233,35 @@
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+
+    private enum MutationStatus { Planned, Unknown, Uncrafted, Craftable, Owned, Equipped }
+
+    private MutationStatus MutationStatusFor(FireballMutationDefinition mutation)
+    {
+        if (!mutation.Playable) return MutationStatus.Planned;
+        if (Core.Equipped.Contains(mutation.Id)) return MutationStatus.Equipped;
+        if (Core.Discovered.Contains(mutation.Id)) return MutationStatus.Owned;
+        if (mutation.Id != FireballMutationId.CinderNeedle) return MutationStatus.Unknown;
+        return Core.CanCraftCinderNeedle(Materials) ? MutationStatus.Craftable : MutationStatus.Uncrafted;
+    }
+
+    private static string MutationStatusLabel(MutationStatus status) => status switch
+    {
+        MutationStatus.Uncrafted => "Uncrafted",
+        MutationStatus.Craftable => "Craftable now",
+        _ => status.ToString(),
+    };
+
+    private static string MutationStatusAccessibleLabel(MutationStatus status, bool equippedElsewhere) => status switch
+    {
+        MutationStatus.Uncrafted => "Known, not yet crafted",
+        MutationStatus.Unknown => "Unknown, not yet discovered",
+        MutationStatus.Craftable => "Craftable now, open recipe below to craft",
+        MutationStatus.Owned => "Owned, available to equip",
+        MutationStatus.Equipped when equippedElsewhere => "Equipped in another socket",
+        MutationStatus.Equipped => "Equipped in this socket",
+        _ => "Planned, not available in the game yet",
+    };
 
     private static string MaterialIcon(DragonEssenceId material) => material switch
     {
