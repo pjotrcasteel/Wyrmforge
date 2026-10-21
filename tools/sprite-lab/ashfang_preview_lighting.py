@@ -13,7 +13,8 @@ def palette_for(image):
              47,46,48, 60,58,59, 75,70,69, 91,83,78]
     fire = [82,15,12, 145,30,10, 214,55,9, 255,100,12,
             255,153,25, 255,204,58, 255,237,130, 255,251,211]
-    palette.putpalette(palette.getpalette()[:144]+stone+fire)
+    soot = [17,16,15, 23,21,19, 31,27,23, 43,33,25, 55,39,27]
+    palette.putpalette(palette.getpalette()[:144]+stone+fire+soot)
     return palette
 
 
