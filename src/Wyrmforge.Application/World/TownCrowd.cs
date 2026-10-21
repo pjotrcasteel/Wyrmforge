@@ -233,6 +233,13 @@ public sealed class TownCrowd
         for (var i = 0; i < candidates.Length; i++)
         {
             var destinationNode = candidates[(i + offset) % candidates.Length];
+            // Recheck reservations at commit time, including forced first exits
+            // and citizens that are currently hidden while returning.
+            if (_citizens.Any(other => other != citizen &&
+                (other.DestinationNode == destinationNode ||
+                 (other.IsPresent && !other.IsWalking && other.CurrentNode == destinationNode))))
+                continue;
+
             var target = _navigation.Destinations[destinationNode].Position;
             if (!_navigation.TryFindPath(citizen.Position, target, out var path)) continue;
 
