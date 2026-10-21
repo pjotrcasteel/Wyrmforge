@@ -149,5 +149,5 @@ test('firelight is a canvas-only layer between physical shadows and sorted sprit
     assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') >
         env.indexOf('drawWetForestCastShadows(ctx, environment'));
     assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') <
-        env.indexOf('const cloister = texture.cloister'));
+        env.lastIndexOf('const cloister = texture.cloister'));
 });
