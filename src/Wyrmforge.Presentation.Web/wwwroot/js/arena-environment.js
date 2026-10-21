@@ -494,18 +494,19 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     if (supply.kind?.startsWith('material:')) {
         // World pickups stay independent of the environment atlas and its supply caches.
         // These are small, collected-on-contact pixel fragments, not fake Wyrm Essences.
-        // Rare pickups (Emberglass) add a cool rarity rim so they read apart from common salvage.
+        // Rare (Emberglass) and Epic (Wyrmcinder) pickups add a rarity rim so they read apart from common salvage.
         const palette = {
             'material:EmberResidue': ['#b8472c', '#f8a34f', '#ffe1a0'],
             'material:Emberglass': ['#7a1f3c', '#ff7a4a', '#ffd8b0'],
+            'material:Wyrmcinder': ['#3a1238', '#c04a8a', '#ffc6e4'],
         }[supply.kind] ?? ['#866c56', '#d6b895', '#eee0c8'];
-        const rare = supply.kind === 'material:Emberglass';
+        const rim = { 'material:Emberglass': '#6fa8dc', 'material:Wyrmcinder': '#a575d2' }[supply.kind];
         const bob = Math.round(Math.sin(elapsed * 3 + x * .01) * 2);
         ctx.save();
         ctx.fillStyle = '#0c0a10a0';
         ctx.fillRect(Math.round(x) - 9, Math.round(y) - 2, 18, 5);
-        if (rare) {
-            ctx.fillStyle = '#6fa8dc';
+        if (rim) {
+            ctx.fillStyle = rim;
             ctx.fillRect(Math.round(x) - 8, Math.round(y) - 14 + bob, 16, 14);
         }
         ctx.fillStyle = palette[0];

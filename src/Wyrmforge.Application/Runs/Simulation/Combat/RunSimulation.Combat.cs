@@ -188,6 +188,9 @@ public sealed partial class RunSimulation
                 // Elites carry Rare salvage only where the Hunt tier allows Rare drops (Fire Tier 2 and up).
                 if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Rare))
                     arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "Emberglass");
+                // From Fire Tier 3 an elite also carries Epic Wyrmcinder; the watchtower shows which roads hide one.
+                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Epic))
+                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position + new Vector2D(14, 6), arenaWidth, arenaHeight, "Wyrmcinder");
                 experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();

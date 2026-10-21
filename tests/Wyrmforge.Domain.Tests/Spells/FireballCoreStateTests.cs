@@ -138,7 +138,18 @@ public sealed class FireballCoreStateTests
         Assert.AreEqual(4, core.Level);
         Assert.AreEqual(0, satchel.Count(HuntMaterialId.Emberglass));
         Assert.AreEqual(0, vault.Count(DragonEssenceId.CinderHeart));
-        Assert.AreEqual(2, FireballCoreCatalog.UpgradeMaterialsTo(5).Single().Required);
+        CollectionAssert.AreEqual(new[] { new HuntMaterialNeed(HuntMaterialId.Emberglass, 1), new HuntMaterialNeed(HuntMaterialId.Wyrmcinder, 1) },
+            FireballCoreCatalog.UpgradeMaterialsTo(5).ToArray(), "The last core level needs Epic Tier-III Wyrmcinder.");
         Assert.AreEqual(0, FireballCoreCatalog.UpgradeMaterialsTo(3).Count, "Early levels stay Common-only.");
+
+        vault.Store(DragonEssenceId.CinderHeart);
+        vault.Store(DragonEssenceId.MoltenFang);
+        vault.Store(DragonEssenceId.AshenWing);
+        satchel.Store(HuntMaterialId.Emberglass);
+        Assert.IsFalse(core.Upgrade(vault, satchel), "Rare Emberglass alone no longer reaches the last core level.");
+        satchel.Store(HuntMaterialId.Wyrmcinder);
+        Assert.IsTrue(core.Upgrade(vault, satchel));
+        Assert.AreEqual(5, core.Level);
+        Assert.AreEqual(0, satchel.Count(HuntMaterialId.Wyrmcinder));
     }
 }

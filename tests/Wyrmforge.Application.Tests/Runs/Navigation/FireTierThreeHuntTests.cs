@@ -7,6 +7,10 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Combat.Enemies;
+using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Progression.Loot;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
@@ -144,6 +148,26 @@ public sealed class FireTierThreeHuntTests
         Assert.AreEqual(0, faller.ScoutReports.Count, "The rewind undoes the tower, so its report is gone.");
         WalkTo(faller, node => node.Watchtower);
         Assert.IsTrue(faller.ScoutReports.Count > 0, "The tower can be held again.");
+    }
+
+    [TestMethod]
+    public void TierThreeElites_AlsoCarryEpicWyrmcinder_TierTwoElitesDoNot()
+    {
+        CollectionAssert.AreEqual(new[] { "material:Emberglass" }, EliteDrops(HuntSelection.FireTierTwo));
+        CollectionAssert.AreEqual(new[] { "material:Emberglass", "material:Wyrmcinder" }, EliteDrops(HuntSelection.FireTierThree));
+        Assert.AreEqual(LootRarity.Epic, HuntMaterialCatalog.Rarity(HuntMaterialId.Wyrmcinder));
+    }
+
+    private static string[] EliteDrops(HuntSelection hunt)
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 9, hunt: hunt);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        Assert.IsTrue(simulation.ChooseMapNode(Map(simulation).AvailableNodes[0].Id));
+        var elite = new EnemyState(900, new Vector2D(200, 300), 11, 40, 0, EnemyKind.Hollow) { Elite = EliteAffix.Gravebound };
+        Invoke(simulation, "DamageTarget", elite, 1000d, null!, null!);
+        return Field<ArenaEnvironmentState>(simulation, "arenaEnvironment").Snapshot().Supplies
+            .Select(supply => supply.Kind).Where(kind => kind.StartsWith("material:") && kind != "material:CharredScrap").ToArray();
     }
 
     private static RunSimulation Create(int seed)

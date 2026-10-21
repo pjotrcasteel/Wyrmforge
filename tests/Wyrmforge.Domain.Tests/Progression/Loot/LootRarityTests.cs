@@ -37,6 +37,7 @@ public sealed class LootRarityTests
         Assert.AreEqual(LootRarity.Common, HuntMaterialCatalog.Rarity(HuntMaterialId.EmberResidue));
         Assert.AreEqual(LootRarity.Common, HuntMaterialCatalog.Rarity(HuntMaterialId.CharredScrap));
         Assert.AreEqual(LootRarity.Rare, HuntMaterialCatalog.Rarity(HuntMaterialId.Emberglass));
+        Assert.AreEqual(LootRarity.Epic, HuntMaterialCatalog.Rarity(HuntMaterialId.Wyrmcinder));
         Assert.AreEqual(Enum.GetValues<HuntMaterialId>().Length, HuntMaterialCatalog.All.Count);
     }
 

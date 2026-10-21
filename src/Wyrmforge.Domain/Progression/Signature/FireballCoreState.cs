@@ -40,11 +40,11 @@ public static class FireballCoreCatalog
         _ => [],
     };
 
-    // Rare Tier-II salvage gates the two highest core levels; the Essence costs above are unchanged.
+    // Rare Tier-II salvage gates the two highest core levels and Epic Tier-III salvage the last; the Essence costs above are unchanged.
     public static IReadOnlyList<HuntMaterialNeed> UpgradeMaterialsTo(int nextLevel) => nextLevel switch
     {
         4 => [new(HuntMaterialId.Emberglass, 1)],
-        5 => [new(HuntMaterialId.Emberglass, 2)],
+        5 => [new(HuntMaterialId.Emberglass, 1), new(HuntMaterialId.Wyrmcinder, 1)],
         _ => [],
     };
 }
