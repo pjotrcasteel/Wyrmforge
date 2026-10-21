@@ -8,7 +8,7 @@ from mathutils import Vector,Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
 from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
-from ashfang_motion import flight_state,cruise_state,connected_flight_state,CONNECTED_FLIGHT_FRAMES,CONNECTED_FLIGHT_EVENTS,FLIGHT_EVENTS,high_launch_state,fire_pass_state,arena_flyover_state,ARENA_FLYOVER_FRAMES
+from ashfang_motion import flight_state,cruise_state,connected_flight_state,CONNECTED_FLIGHT_FRAMES,CONNECTED_FLIGHT_EVENTS,FLIGHT_EVENTS,high_launch_state,fire_pass_state,arena_flyover_state,hunt_fitted_arena_state,ARENA_FLYOVER_FRAMES
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
@@ -131,7 +131,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
     def state_at(t):
         if clip=='high-launch':return high_launch_state(t*(count-1))
         if clip=='fire-flyover':return fire_pass_state(t*(count-1))
-        if clip=='arena-flyovers':return arena_flyover_state(t*(count-1))
+        if clip=='arena-flyovers':return hunt_fitted_arena_state(t*(count-1))
         if clip=='flight-sequence':return connected_flight_state(t*(count-1))
         if clip=='flight-loop':return cruise_state(t)
         source_phase=.64+.36*t if clip=='landing' else t

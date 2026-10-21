@@ -127,7 +127,7 @@ def connected_flight_state(frame):
 
 
 ARENA_FLYOVER_FRAMES=279
-OFFSCREEN_ALTITUDE=10.5
+OFFSCREEN_ALTITUDE=17.0
 
 def high_launch_state(frame):
     state=connected_flight_state(max(0,frame))
@@ -190,4 +190,14 @@ def arena_flyover_state(frame):
         tailCos=math.cos(phase*math.pi*2))
     state['altitude']+=(OFFSCREEN_ALTITUDE-.34)*(1-smooth((frame-235)/25))
     state['label']='descending into arena' if frame<260 else state['label']
+    return state
+
+
+def hunt_fitted_arena_state(frame):
+    state=arena_flyover_state(frame)
+    weight=smooth((frame-54)/25)*(1-smooth((frame-210)/25))
+    # Retarget the ground track to the unchanged player's portrait-screen row.
+    # Camera basis and 56px/unit fit are recorded in current-hunt-fit.json.
+    state['actorX']=state.get('actorX',0)+3.613255210741538*weight
+    state['actorY']=state.get('actorY',0)+-5.419882816112307*weight
     return state

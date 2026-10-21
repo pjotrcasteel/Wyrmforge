@@ -522,3 +522,9 @@ Ground fire and warnings remain preview art, not implemented C# hazard or
 balance. Owner visual review pending; current grounded runtime unchanged.
 Final source-to-spritesheet export, remaining action/direction library, mobile
 Hunt validation and aerial encounter integration remain outstanding.
+
+## V34 current Hunt portrait fit — owner screen reference
+Owner requires current-game viewport fit and unchanged player size even when its model changes. Native screenshot canvas crop [40,4,480,959] is 440x955. Current arena-camera.js translates without zoom; arena.js uses DPR only for backing resolution. Current mage.N.idle atlas visible body is 39px high. Fit settings are in references/current-hunt-fit.json. The user screenshot and derived fit composites stay LOCAL ONLY and are Git-ignored: automatic approval review rejected public publication without explicit permission. No screenshot pixels are included in this checkpoint.
+
+Native density56 px/model unit, fixed camera, launch row300, HUD protection152px and bottom24px. Fire/shadow tracks retarget190px down toward player row. Object-level world offsets are keyed in V34. High/overhead altitude increases to17 source units for the taller camera. Six earlier ordinary actions are vertex-identical; all nine actions finite and above floor. Fit preview preserves native reference/player/HUD pixels without resizing and will be a local composite, not a capture of implemented gameplay. GPU fit and visible-body audits pending. Canonical unchanged-player-size constraint updated.
+
