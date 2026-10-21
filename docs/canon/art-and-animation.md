@@ -779,3 +779,22 @@ Independent reference principles, without copying art:
 - [Dead Cells generation analysis by its designer](https://deepnight.net/tutorial/the-level-design-of-dead-cells-a-hybrid-approach/):
   coherent authored biome vocabulary combined with seeded placement, not arbitrary independent props.
   Wet Forest uses a shared material palette and retains four authored historical site identities.
+
+### Wet Forest C#-anchored vegetation — 21 October 2026
+
+This **Arena Lab candidate** extends the pixel-material pass without changing canonical physical
+geometry. The painter selects among **three existing authored pine frames** and **two authored
+dead-tree frames** according to stable seed + physical prop ID; the original atlases are not
+recolored or regenerated. Shallow step-pixel roots and moss are baked **under** the world-space
+trunks from the same C# prop positions. Sparse lichen/branch-edge and bark marks draw with their
+depth-sorted prop silhouettes, not as unrelated fake trees.
+
+The roots, litter, understory and the small overhanging foliage are visual only; C# continues to
+own collision, destruction and loot. Destruction removes the raised tree and its physical trunk
+together; residual dark soil and root traces are allowed floor archaeology. Ordinary Hunts, Frost
+trees, character animation and saved games are unchanged.
+
+**This does not approve final Gothic forest artwork:** the existing triangular pine frames still
+need a dedicated silhouette/canopy illustration pass and iPhone-scale visual inspection. Maintain
+the restrained loam/moss/timber palette, actual single source of physical truth and honest art
+status; no giant uncollidable background trees or global color washes.
