@@ -64,7 +64,7 @@ def rebuild_anatomy(v,faces,uv):
     # Angular upper skull replaces the broad fused cap; lower jaw is retained.
     points=np.array([(0,-.315,.115),(0,-.365,.126),(0,-.415,.112),(0,-.445,.092),(0,-.515,.084),(0,-.565,.077)])
     headref=(source[:,1]<-.29)&(source[:,2]>.015)
-    loft(points,[.065,.089,.082,.064,.055,.035],[.040,.050,.043,.030,.027,.017],2,headref,steps=3,sides=12,ridges=.04)
+    loft(points,[.070,.100,.090,.070,.058,.037],[.043,.055,.046,.032,.028,.018],2,headref,steps=3,sides=12,ridges=.04)
     jaw=np.array([(0,-.35,.055),(0,-.405,.042),(0,-.47,.035),(0,-.535,.038),(0,-.565,.052)])
     loft(jaw,[.066,.072,.057,.048,.029],[.024,.025,.019,.015,.009],9,headref,steps=3,ridges=.02)
     for sign in [1,-1]:

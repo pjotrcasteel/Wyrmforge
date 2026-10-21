@@ -5,7 +5,7 @@ import numpy as np
 def wing_layout(sign):
     # Author the extended skeleton; folding is articulated in shoulder, elbow,
     # wrist and digits rather than scaling or rotating a single wing slab.
-    root=np.array((sign*.075,-.11,.055));elbow=np.array((sign*.26,-.10,.14));wrist=np.array((sign*.57,-.20,.21))
+    root=np.array((sign*.075,-.11,.12));elbow=np.array((sign*.26,-.10,.14));wrist=np.array((sign*.57,-.20,.21))
     tips=[np.array((sign*x,y,z)) for x,y,z in [(1.12,-.12,.18),(1.02,.20,.10),(.77,.44,.06),(.34,.48,.025)]]
     middles=[wrist*.42+tip*.58 for tip in tips]
     return root,elbow,wrist,middles,tips

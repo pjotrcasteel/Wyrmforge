@@ -47,6 +47,23 @@ v,faces,uv,source_labels,anatomy_changes=rebuild_anatomy(v,faces,uv)
 chest_mass=np.exp(-((v[:,1]+.13)/.15)**2)*np.clip((v[:,2]+.075)/.07,0,1)*(source_labels==0)
 v[:,0]*=1+.15*chest_mass;v[:,2]+=.018*chest_mass
 v,faces,uv,body_count,removed_wing_vertices,wing_camber,source_labels=rebuild_wings(v,faces,uv,source_labels)
+# Continuous card projection replaces discontinuous nearest-triangle UVs on
+# the authored surfaces. The latter scattered unrelated atlas texels into noise.
+for index in range(body_count):
+    x,y,z=v[index];label=source_labels[index]
+    if label==1:
+        px=np.interp(y,[.23,1.005],[150,277]);py=np.interp(y,[.23,1.005],[144,168])+np.clip(-z*28,-8,8)
+    elif label in (2,9):
+        px=np.interp(y,[-.565,-.315],[12,51]);py=np.interp(z,[.02,.17],[112,74])
+    elif label==6:
+        px=np.interp(y,[-.39,-.17],[39,86]);py=np.interp(z,[-.02,.19],[143,91])
+    elif label in (3,4):
+        px=np.interp(y,[.045,.23],[125,166]);py=np.interp(z,[-.197,.04],[178,139])
+    elif label in (7,8):
+        px=np.interp(y,[-.405,-.18],[41,88]);py=np.interp(z,[-.197,.07],[178,133])
+    else:
+        px=np.interp(y,[-.23,.285],[83,161]);py=np.interp(z,[-.11,.18],[155,115])
+    uv[index]=[np.clip(px,2,283)/286*.5,1-np.clip(py,2,189)/192]
 (out/'anatomy-rebuild.json').write_text(json.dumps(anatomy_changes,indent=2)+'\n')
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
@@ -56,6 +73,9 @@ for index,amount in enumerate(wing_camber):membrane.data[index].co.z+=float(amou
 
 material=bpy.data.materials.new('Ashfang original card-derived appearance');material.use_nodes=True;texture=material.node_tree.nodes.new('ShaderNodeTexImage')
 base=bpy.data.images.load(str(folder/'textured-v1/hollow-albedo.png'));raw=np.empty(len(base.pixels),np.float32);base.pixels.foreach_get(raw);raw=raw.reshape(1024,1024,4)
+side_card=bpy.data.images.load(str(folder.parent.parent/'references/side-card-crop.png'))
+side_pixels=np.empty(len(side_card.pixels),np.float32);side_card.pixels.foreach_get(side_pixels);side_pixels=side_pixels.reshape(side_card.size[1],side_card.size[0],4)
+raw=side_pixels[(np.arange(1024)*side_card.size[1]//1024)[:,None],(np.arange(1024)*side_card.size[0]//1024)[None,:]].copy()
 # Remove a baked white flame hotspot from the throat region; retain warm
 # molten colour instead of painting over the entire dragon or brightening wings.
 throat=(v[:body_count,1]<-.14)&(v[:body_count,1]>-.40)&(abs(v[:body_count,0])<.13)&(v[:body_count,2]>-.09)
@@ -242,7 +262,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
             # and the wrist/digits trail through the membrane recovery.
             shoulder=wing_rotation@Quaternion((0,0,1),sign*.75*fold)@Quaternion((0,1,0),sign*(.25*fold+flap))
             upper='wing.upper.'+side;fore='wing.fore.'+side
-            closed_upper=Vector(bones[upper]['tail']-bones[upper]['head']).rotation_difference(Vector((sign*.095,.17,.065)))
+            closed_upper=Vector(bones[upper]['tail']-bones[upper]['head']).rotation_difference(Vector((sign*.035,.17,.025)))
             shoulder=shoulder.slerp(wing_rotation@closed_upper,fold)
 
             elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
@@ -271,7 +291,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                     rest_direction=Vector(bones[n]['tail']-bones[n]['head'])
                     # Fold back at BOTH wrist and finger knuckle. Aligning all
                     # segments tailward made a sail longer than the torso.
-                    folded_direction=Vector((sign*(.035+finger*.008),.8 if j==0 else -.8,-.08+rear*.24)).normalized()
+                    folded_direction=Vector((sign*(-.02+finger*.006),.8 if j==0 else -.8,-.02+rear*.24)).normalized()
                     folded_rotation=rest_direction.rotation_difference(folded_direction)
                     r=r.slerp(wing_rotation@folded_rotation,fold)
                     tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
