@@ -194,7 +194,8 @@ public sealed partial class RunSimulation
         ClearSupportState();
         projectiles.Clear();
         lightning.Clear();
-        ascendantActive = AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
+        ascendantActive = SelectedHunt is not null ? SelectedAscendantHunt(definition.Id)
+            : AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
         if (ascendantActive) ascendantHuntConsumed = true;
         var hunt = ascendantActive ? DragonHuntCatalog.GetAscendant(definition.Id) : DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);
@@ -297,7 +298,8 @@ public sealed partial class RunSimulation
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
-        if (ascendantActive) ascendantVictories.Add(definition.Id);
+        // Only the Great Hunt Ascendant Rite earns the Crown; a selected Tier-II Hunt against the same Ascendant does not.
+        if (ascendantActive && SelectedHunt is null) ascendantVictories.Add(definition.Id);
         if (GreatHuntDuelQualification.Qualifies(definition, depthState.Depth, build.Spells, build.Evolutions)) deepEvolvedWyrmDuels.Add(definition.Id);
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;

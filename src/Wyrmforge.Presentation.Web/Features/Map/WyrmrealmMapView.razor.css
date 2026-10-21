@@ -173,3 +173,6 @@
 .territory-elemental-scar.school-frost .scar-rift { opacity:.9;transform:rotate(140deg) scale(.72); }
 .territory-elemental-scar.school-storm .scar-fault { transform:rotate(-25deg) scaleX(.46); }
 .territory-elemental-scar.school-arcane .scar-splinter { opacity:.85;transform:translate(25%,-20%) rotate(104deg) scale(.5); }
+.map-refuge-return { position:relative;z-index:6;flex-shrink:0;margin:4px 12px;padding:6px 10px;border:1px solid #8a6a3f;border-radius:6px;background:rgba(40,24,14,.86);color:#f0d4a2;font-size:.72rem; }
+.route-node .node-refuge { color:#9fd0c0; }
+.sheet-refuge { display:block;color:#b9dccd;font-size:.68rem;line-height:1.3; }

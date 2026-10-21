@@ -9,9 +9,15 @@ public sealed record HuntSelection([property: JsonIgnore] RegionId Region, WyrmT
 {
     public const int CurrentVersion = 1;
     public static HuntSelection FireTierOne { get; } = new(RegionCatalog.CinderFrontierId, WyrmTier.Wyrm);
+    public static HuntSelection FireTierTwo { get; } = new(RegionCatalog.CinderFrontierId, WyrmTier.Ascendant);
     public string RegionKey => Region.Value;
     [JsonIgnore]
     public DragonId Target => RegionCatalog.Get(Region).HomeLineage;
+    [JsonIgnore]
+    public int TierNumber => HuntLadder.Number(Tier);
+    /// <summary>From Tier II an optional, harder refuge can be reclaimed; a fall after that returns the hunter there.</summary>
+    [JsonIgnore]
+    public bool HasRefuge => Tier >= WyrmTier.Ascendant;
 
     [JsonConstructor]
     public HuntSelection(string regionKey, WyrmTier tier, int version = CurrentVersion)
@@ -19,7 +25,7 @@ public sealed record HuntSelection([property: JsonIgnore] RegionId Region, WyrmT
 
     public void Validate()
     {
-        if (Version != CurrentVersion || Region != RegionCatalog.CinderFrontierId || Tier != WyrmTier.Wyrm)
-            throw new ArgumentException("Only the current Fire Tier-I Hunt is authored for tiered progression.");
+        if (Version != CurrentVersion || !HuntLadder.IsAuthored(Region, Tier))
+            throw new ArgumentException("Only the Fire Tier-I and Tier-II Hunts are authored for tiered progression.");
     }
 }

@@ -198,6 +198,7 @@ public sealed partial class RunSimulation
         if (player.Health <= 0)
         {
             if (extractionState.IsActive) DeathsDuringExtraction++;
+            if (TryReturnToRefuge()) return CreateSnapshot();
             essenceCargoState.LosePending();
             materialCargoState.LosePending();
             extractionState.Cancel();
@@ -302,6 +303,7 @@ public sealed partial class RunSimulation
         build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
         Hunt = SelectedHunt,
+        RefugeReturns = RefugeReturns,
         SynergyIds = build.Synergies.Snapshot().ToArray(),
         ExperienceEarned = experienceEarned,
         PreparedMutation = activeLaboratoryMutation,

@@ -136,6 +136,7 @@ public partial class ArenaView : IAsyncDisposable
         var previousBellCracks = current.BellWardenCracks;
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
+        var previousRefugeReturns = current.RefugeReturns;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
@@ -150,7 +151,8 @@ public partial class ArenaView : IAsyncDisposable
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
-        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended)
+        // A fall caught by the refuge reopens the map without a "trail cleared" beat.
+        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended && current.RefugeReturns == previousRefugeReturns)
         {
             ShowTrailTransition();
             await TryPlayAudioAsync("trail-clear");

@@ -98,17 +98,17 @@
                     <p>Choose your Wyrm tier</p>
                     @if (selected.Region == RegionCatalog.CinderFrontierId)
                     {
-                        <p>@(FireTierOneCompleted ? "Tier 1 cleared. Tier 2 is in development." : "3-4 trails, one fork, then Ashfang. Extract to secure your Essence.")</p>
+                        <p>@FireLadderText</p>
                     }
                 </div>
             </header>
             <div class="gate-tier-list" aria-label="@selected.Name Wyrm tiers">
-                @foreach (var tier in selected.Tiers)
+                @foreach (var tier in TiersFor(selected))
                 {
                     <button @key="tier.Number" type="button" class="gate-tier @(tier.Playable ? $"gate-tier--ready gate-tier--{selected.Key}" : "gate-tier--locked")"
                             disabled="@(!tier.Playable || starting)" @onclick="() => BeginHuntAsync(tier)">
                         <span class="gate-tier-number">Tier @tier.Number</span>
-                        <span class="gate-tier-label">@(tier.Playable ? "Begin Hunt" : "Not yet available")</span>
+                        <span class="gate-tier-label">@tier.Label</span>
                         <span class="gate-tier-chevron" aria-hidden="true">@(tier.Playable ? "›" : "◆")</span>
                     </button>
                 }
@@ -126,29 +126,41 @@
     [Parameter] public EventCallback<RegionId> OnRegionChanged { get; set; }
     [Parameter] public EventCallback OnExplore { get; set; }
     [Parameter] public EventCallback<HuntSelection> OnStartHunt { get; set; }
-    [Parameter] public bool FireTierOneCompleted { get; set; }
+    /// <summary>Highest Fire tier cleared with an extraction; each lineage keeps its own ladder.</summary>
+    [Parameter] public int FireClearedTier { get; set; }
 
     private GatePage page = GatePage.Gateway;
     private LineageChoice? selectedLineage;
     private bool starting;
 
-    // Tier choices are derived from the actual Wyrm hierarchy; only ordinary Wyrm Hunts
-    // have an implemented selection path. Higher tiers need their own encounter contracts.
-    private static readonly IReadOnlyList<TierChoice> InitialTiers = Enum.GetValues<WyrmTier>()
-        .Select(tier => new TierChoice((int)tier + 1, tier == WyrmTier.Wyrm))
+    private string FireLadderText => FireClearedTier switch
+    {
+        0 => "Tier 1: 3-4 trails, one fork, then Ashfang. Extract to secure your Essence.",
+        1 => "Tier 2 open: 6-8 trails, two forks and an optional refuge, then Ascendant Ashfang.",
+        _ => "Tier 2 cleared. Tier 3 is in development.",
+    };
+
+    // Fire follows the authored ladder (a tier opens once the previous Fire tier is cleared).
+    // Frost keeps its original, untiered Tier-1 exploration path.
+    private IReadOnlyList<TierChoice> TiersFor(LineageChoice lineage) => Enum.GetValues<WyrmTier>()
+        .Select(tier => lineage.Region == RegionCatalog.CinderFrontierId
+            ? new TierChoice(HuntLadder.Number(tier), tier, HuntLadder.IsUnlocked(lineage.Region.Value, tier, FireClearedTier),
+                HuntLadder.IsUnlocked(lineage.Region.Value, tier, FireClearedTier) ? HuntLadder.Number(tier) <= FireClearedTier ? "Hunt again" : "Begin Hunt"
+                    : HuntLadder.IsAuthored(lineage.Region.Value, tier) ? $"Clear Tier {HuntLadder.Number(tier) - 1} first" : "Not yet available")
+            : new TierChoice(HuntLadder.Number(tier), tier, tier == WyrmTier.Wyrm, tier == WyrmTier.Wyrm ? "Begin Hunt" : "Not yet available"))
         .ToArray();
 
     // Region/Wyrm choice is independent of a character's Divine magical affinity.
     // Every reserved lineage uses its owner's approved canonical pixel-art sigil.
-    // Only Fire and Frost can currently enter Tier-I Hunts.
+    // Only Fire and Frost can currently enter Hunts.
     private static readonly IReadOnlyList<LineageChoice> Lineages =
     [
-        new("fire", "Fire", RegionCatalog.CinderFrontierId, InitialTiers),
-        new("frost", "Frost", RegionCatalog.FrostRegionId, InitialTiers),
-        new("storm", "Storm", null, []),
-        new("arcane", "Arcane", null, []),
-        new("necromancy", "Necromancy", null, []),
-        new("summoner", "Summoner", null, []),
+        new("fire", "Fire", RegionCatalog.CinderFrontierId),
+        new("frost", "Frost", RegionCatalog.FrostRegionId),
+        new("storm", "Storm", null),
+        new("arcane", "Arcane", null),
+        new("necromancy", "Necromancy", null),
+        new("summoner", "Summoner", null),
     ];
 
     private bool IsAvailable(LineageChoice lineage) =>
@@ -168,7 +180,7 @@
         try
         {
             if (region == RegionCatalog.CinderFrontierId)
-                await OnStartHunt.InvokeAsync(HuntSelection.FireTierOne);
+                await OnStartHunt.InvokeAsync(new HuntSelection(region, tier.Tier));
             else
             {
                 await OnRegionChanged.InvokeAsync(region);
@@ -190,6 +202,6 @@
     };
 
     private enum GatePage { Gateway, Modes, Elements, Tiers }
-    private sealed record TierChoice(int Number, bool Playable);
-    private sealed record LineageChoice(string Key, string Name, RegionId? Region, IReadOnlyList<TierChoice> Tiers);
+    private sealed record TierChoice(int Number, WyrmTier Tier, bool Playable, string Label);
+    private sealed record LineageChoice(string Key, string Name, RegionId? Region);
 }
