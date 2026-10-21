@@ -41,7 +41,11 @@ public sealed class TownNavigationMap
     public int Width { get; set; }
     public int Height { get; set; }
     public int CellSize { get; set; } = 16;
+
+    /// <summary>World-space radius of the pedestrian's feet contact disc, NOT sprite height or body width.</summary>
     public float Clearance { get; set; } = 8;
+
+    public float FootRadius => Clearance;
     public List<TownPolygon> Walkable { get; set; } = [];
     public List<TownFootprint> Obstacles { get; set; } = [];
     public List<TownDestination> Destinations { get; set; } = [];
@@ -79,17 +83,43 @@ public sealed class TownNavigationMap
         return true;
     }
 
-    public bool IsWalkable(TownPoint position)
+    /// <summary>Only the feet disc collides. A sprite's head can overlap a roof, cart or well visually.</summary>
+    public bool IsWalkable(TownPoint feet)
     {
-        if (!InsideFloor(position)) return false;
-        if (Clearance <= 0) return true;
+        if (!InsideFloor(feet)) return false;
+        if (FootRadius <= 0) return true;
+
+        var radiusSquared = FootRadius * FootRadius;
+        if (Obstacles.Any(obstacle => DistanceToEdgesSquared(obstacle.Footprint, feet) < radiusSquared))
+            return false;
+
         for (var i = 0; i < 8; i++)
         {
             var angle = i * MathF.PI / 4f;
-            if (!InsideFloor(new(position.X + MathF.Cos(angle) * Clearance, position.Y + MathF.Sin(angle) * Clearance)))
+            if (!InsideFloor(new(feet.X + MathF.Cos(angle) * FootRadius, feet.Y + MathF.Sin(angle) * FootRadius)))
                 return false;
         }
         return true;
+    }
+
+    private static float DistanceToEdgesSquared(IReadOnlyList<TownPoint> polygon, TownPoint point)
+    {
+        var shortest = float.PositiveInfinity;
+        for (var i = 0; i < polygon.Count; i++)
+        {
+            var a = polygon[i];
+            var b = polygon[(i + 1) % polygon.Count];
+            var dx = b.X - a.X;
+            var dy = b.Y - a.Y;
+            var lengthSquared = dx * dx + dy * dy;
+            var projected = lengthSquared > 0
+                ? Math.Clamp(((point.X - a.X) * dx + (point.Y - a.Y) * dy) / lengthSquared, 0f, 1f)
+                : 0f;
+            var deltaX = point.X - a.X - dx * projected;
+            var deltaY = point.Y - a.Y - dy * projected;
+            shortest = MathF.Min(shortest, deltaX * deltaX + deltaY * deltaY);
+        }
+        return shortest;
     }
 
     public bool IsSegmentWalkable(TownPoint a, TownPoint b)

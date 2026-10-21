@@ -13,12 +13,12 @@ test('real Refuge scene retains the art and renders depth-sorted, larger ambient
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<div class="refuge-town-crowd" aria-hidden="true">/);
     assert.match(markup, /@foreach \(var person in crowd\.Citizens\)/);
-    assert.match(markup, /style="@CitizenStyle\(person, occluded\)"/);
-    assert.match(markup, /crowd\.Navigation\.IsBodyOccluded\(person\.Position\)/);
-    assert.match(markup, /data-town-citizen-occluded/);
+    assert.match(markup, /style="@CitizenStyle\(person\)"/);
+    assert.doesNotMatch(markup, /crowd\.Navigation\.IsBodyOccluded\(person\.Position\)/);
+    assert.doesNotMatch(markup, /data-town-citizen-occluded/);
     assert.doesNotMatch(markup, /refuge-town-foreground/, 'Do not paint a polygon over half a citizen');
     assert.match(markup, /art\/town\/night-navigation\.json/);
-    assert.match(markup, /visibility:\{\(occluded \? "hidden" : "visible"\)\}/);
+    assert.doesNotMatch(markup, /visibility:\{\(occluded/, 'Rectangles must not disappear near art');
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
     assert.doesNotMatch(css, /\.refuge-town-foreground\s*\{/);
@@ -46,7 +46,7 @@ test('painted well, pillars and garden walls have independent collider ids', () 
         'west-lower-lamp-pillar', 'east-lower-lamp-pillar', 'west-garden-wall', 'east-garden-wall']) {
         assert.ok(colliders.has(landmark), `Scenery is non-traversable: ${landmark}`);
     }
-    assert.ok(map.clearance >= 10, 'Footprints need clearance for NPC body width');
+    assert.equal(map.clearance, 10, 'Collision radius is the NPC feet, not its visible body width');
     for (const id of ['well-foreground', 'west-gate-banner-foreground', 'east-gate-banner-foreground',
         'west-lower-pillar-foreground', 'east-lower-pillar-foreground']) {
         const foreground = map.occluders.find(part => part.id === id);
@@ -66,7 +66,7 @@ test('new right-hand planter extends across the screenshot-reported collision ed
     const map = JSON.parse(source(`${art}/night-navigation.json`));
     const planter = map.obstacles.find(obstacle => obstacle.id === 'east-lower-planter-inset');
     assert.ok(planter?.footprint.length >= 4);
-    assert.ok(planter.footprint.some(point => point.x < 900 && point.y >= 680));
+    assert.ok(planter.footprint.every(point => point.x >= 970), 'Do not block the open paving beside the planter');
     assert.match(source('src/Wyrmforge.Application/World/TownNavigationMap.cs'),
         /public bool IsBodyOccluded\(/);
 });
@@ -76,7 +76,7 @@ test('debug geometry displays actual solid town buildings in red only after URL 
     const markup = source(scene);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     for (const id of ['arcane-nexus-building', 'blacksmith-building', 'codex-building',
-        'hall-of-fame-building', 'world-gate-west-tower', 'world-gate-east-tower', 'world-gate-arch-roof']) {
+        'hall-of-fame-building', 'world-gate-west-tower', 'world-gate-east-tower']) {
         assert.ok(map.obstacles.find(obstacle => obstacle.id === id)?.footprint.length >= 4,
             `Missing solid building geometry: ${id}`);
     }
@@ -88,6 +88,13 @@ test('debug geometry displays actual solid town buildings in red only after URL 
         'Debug areas must come from the actual NPC collision model');
     assert.match(markup, /class="refuge-town-geometry-solid"/);
     assert.match(markup, /class="refuge-town-geometry-walkable"/);
+    assert.ok(map.occluders.find(part => part.id === 'world-gate-arch-roof'),
+        'Roof is a visual object, not solid ground');
+    assert.ok(!map.obstacles.some(obstacle => obstacle.id === 'world-gate-arch-roof'));
+    assert.match(markup, /class="refuge-town-geometry-visual"/);
+    assert.match(markup, /data-town-feet="@person.Id"/);
+    assert.match(markup, /r="@crowd.Navigation.FootRadius"/);
+
     assert.match(css, /\.refuge-town-geometry-debug\s*\{[^}]*pointer-events:none/s,
         'Debug artwork must not intercept swipes or building taps');
     assert.match(css, /fill:rgba\(235,36,40,\.32\)/, 'Solid shapes must be translucent red');

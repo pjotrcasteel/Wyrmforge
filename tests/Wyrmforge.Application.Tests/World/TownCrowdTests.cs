@@ -92,23 +92,24 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_ActualPlazaPropsAreSolidNotOnlyTheWell()
+    public void Navigation_OnlyGroundContactBlocksPedestrianFeet()
     {
         var map = Scene();
-        var blocked = new Dictionary<string, TownPoint>
-        {
-            ["well-roof"] = new(826, 410),
-            ["well-sign"] = new(745, 509),
-            ["west-upper-banner"] = new(620, 385),
-            ["east-upper-banner"] = new(1050, 387),
-            ["west-lower-lamp"] = new(615, 635),
-            ["east-lower-lamp"] = new(1030, 635),
-            ["west-garden"] = new(610, 700),
-            ["east-garden"] = new(1090, 700)
-        };
 
-        foreach (var (landmark, point) in blocked)
-            Assert.IsFalse(map.IsWalkable(point), $"Citizen feet must not cross the painted {landmark}.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(825, 535)),
+            "The stone well base blocks the feet, including their collision radius.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 478)),
+            "Behind the well roof is still paved ground, not a roof-sized collider.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 584)),
+            "An NPC in front of the well can overlap its image without colliding.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(935, 730)),
+            "Cobblestones beside the east flowerbed must be walkable.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(1036, 738)),
+            "The planter's ground footprint remains solid.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(624, 444)),
+            "Gate banners still have solid plinths at ground level.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(620, 728)),
+            "Lower lantern pillars still have ground-contact footprints.");
 
         foreach (var destination in map.Destinations)
             Assert.IsTrue(map.IsWalkable(destination.Position), $"Spawn {destination.Id} overlaps scenery.");
@@ -158,15 +159,15 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_ScreenshotGardenEdge_IsNotWalkable()
+    public void Navigation_GroundCollisionAndVisualOcclusionAreIndependent()
     {
         var map = Scene();
-
-        // In the 1672x941 panorama this was a clearly visible NPC standing
-        // among flowers beside the east-hand lower banner pillar.
-        Assert.IsFalse(map.IsWalkable(new TownPoint(935, 730)));
-        Assert.IsFalse(map.IsWalkable(new TownPoint(955, 756)));
-        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 710)), "The central paved approach must remain open.");
+        Assert.IsTrue(map.Occluders.Any(part => part.Id == "world-gate-arch-roof"),
+            "An elevated arch is visual geometry, not a solid ground footprint.");
+        Assert.IsFalse(map.Obstacles.Any(obstacle => obstacle.Id == "world-gate-arch-roof"));
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 478)));
+        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(825, 478)),
+            "A visible body may intersect the painted well, but its feet remain walkable.");
     }
 
     [TestMethod]
@@ -184,30 +185,24 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_AllPaintedTownBuildingsHaveSolidSceneGeometry()
+    public void Navigation_AllFourBuildingsAndGateTowersHaveGroundFootprints()
     {
         var map = Scene();
-        var buildings = new Dictionary<string, TownPoint>
-        {
-            ["arcane-nexus-building"] = new(265, 230),
-            ["blacksmith-building"] = new(260, 615),
-            ["codex-building"] = new(1395, 245),
-            ["hall-of-fame-building"] = new(1350, 615),
-            ["world-gate-west-tower"] = new(685, 175),
-            ["world-gate-east-tower"] = new(1013, 180),
-            ["world-gate-arch-roof"] = new(832, 91)
-        };
+        var buildings = new[] { "arcane-nexus-building", "blacksmith-building",
+            "codex-building", "hall-of-fame-building", "world-gate-west-tower",
+            "world-gate-east-tower" };
 
-        foreach (var (buildingId, interior) in buildings)
+        foreach (var id in buildings)
         {
-            var building = map.Obstacles.Single(obstacle => obstacle.Id == buildingId);
-            Assert.IsTrue(building.Footprint.Count >= 4, $"Building {buildingId} must have its own authored polygon.");
-            Assert.IsFalse(map.IsWalkable(interior), $"NPCs cannot navigate through building {buildingId}.");
+            var building = map.Obstacles.Single(obstacle => obstacle.Id == id);
+            Assert.IsTrue(building.Footprint.Count >= 4, $"Missing building ground footprint for {id}.");
         }
 
-        // Geometry is a live, shared part of navigation, not merely a decorative debug layer.
+        var raisedArch = map.Occluders.Single(part => part.Id == "world-gate-arch-roof");
+        Assert.IsTrue(raisedArch.Clip.Count >= 4);
+        Assert.IsFalse(map.Obstacles.Any(obstacle => obstacle.Id == raisedArch.Id));
+
         Assert.IsTrue(map.RemoveObstacle("arcane-nexus-building"));
-        Assert.IsFalse(map.Obstacles.Any(obstacle => obstacle.Id == "arcane-nexus-building"));
         Assert.AreEqual(1, map.Revision);
     }
 
