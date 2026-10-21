@@ -472,3 +472,34 @@ References revisited before the materially new aerial attack: Framestore https:/
 
 V32 first arena render confirms full offscreen departure and two grounded fire passes, but uniform tube shading reads as a solid beam and sparse fire stamps as separated spots. Preserve arena-review-v1 as first evidence. Renderer revision adds moving world-space heat/turbulence and pixel breakup plus dense ground-fire stamps; second render pending. Source model/rig/path unchanged.
 
+
+### V32 arena review v2 result
+
+Fixed-camera native 390x520 RTX 5090 render is preserved at
+V32/arena-review-v2/aerial-fire-attack.gif, with every native frame PNG and
+review.json. All 279 source frames finite; minimum whole-character world Z
+-0.195522904 (floor -0.197). Geometry is fully outside the visible arena for
+116 frames across high departure and offscreen approaches/turns. This is
+intentional framing, not a clipped sprite export. There are two separate fire
+lanes, with 74 rendered breath frames; every calculated strike ends exactly on
+ground Z -0.197. Head aims down before ignition (worst firing direction Z for
+strength >0.1 is -0.6295). Model scale is fixed; no image shrinking to fake height.
+All six earlier motion samples remain exactly unchanged from V29.
+
+V2 fire uses world-space moving heat/turbulence and native pixel breakup;
+continuous ground stamps linger for a proposed 60-frame preview lifetime.
+This remains an art/VFX study, not approved final fire or gameplay balance.
+The GIF includes a 600ms end pause to separate preview replays; source action
+has no added hold. Earlier uniform-cone render remains in arena-review-v1.
+
+Source includes independent high-launch and fire-flyover actions plus the
+complete arena choreography. Object path/yaw/bank and rig/membrane actions
+are editable, baked at 24fps with linear key interpolation. Runtime sprite
+exports must use local/followed cameras and carry world movement metadata;
+never pack the empty/offscreen arena frames as missing character sprites.
+
+Owner review is pending. Current game still uses grounded Ashfang behavior;
+there is no C# altitude state, flyover damage/hazard lifetime, aerial immunity,
+targetability or collision change. Lane telegraphs are visual proposals.
+Remaining complete actions/directions, mobile Hunt validation and final fire
+remain open. Canonical addition records the new requested scope, not shipment.
