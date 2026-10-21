@@ -393,3 +393,13 @@ test('reviewed well and bush footprints are real obstacles in both All and Walk 
     assert.match(sceneMarkup, /<g mask="url\(#refuge-town-unblocked-mask\)">/,
         'All debug mode must not paint turquoise walkable paving through blocked bushes.');
 });
+
+test('west bush polygon sits over actual painted hedge left of the banner, not on the plaza paving', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const bush = map.obstacles.find(x => x.id === 'west-plaza-bushes-ground');
+    assert.ok(bush);
+    assert.ok(Math.min(...bush.footprint.map(p => p.x)) <= 530);
+    assert.ok(Math.max(...bush.footprint.map(p => p.x)) >= 590);
+    assert.ok(Math.max(...bush.footprint.map(p => p.y)) >= 765);
+    assert.ok(map.walkable.some(x => x.id === 'forge-lower-street-paved-link'));
+});
