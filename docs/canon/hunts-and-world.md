@@ -184,3 +184,15 @@ above is implemented.
   This slice is not the final Vampire Survivors-scale open-world generator.
 - Acceptance before merge: .NET simulation tests, JavaScript tests, browser smoke, real iPhone
   combat checks including targeting/retreat and stable save/seed replays. Do not bypass this gate.
+
+### Arena Generator Lab — sandbox acceptance (21 October 2026)
+
+The developer-only `/arena-lab` route (in draft [PR #192](https://github.com/pjotrcasteel/Wyrmforge/pull/192)) allows manual testing of the actual `ArenaEnvironmentState` C# contract before publishing a new arena design to players. It is accessible from Enemy Lab, Hunt Lab and Sprite Lab in PR preview builds.
+
+- Seed, habitat and Wyrm-proximity stage select a deterministic Hunt node and create a new environment from the real C# generator; the selected seed is represented in the shareable URL.
+- Move the mage using WASD/arrows or touch-drag, with collision applied through `RestrictMovement`. Toggle collision overlays for exact prop and wall footprints.
+- Hit individual props or use area blasts; both call the C# destruction methods and expose genuine one-time supply drops for collection. Toggle two lightweight pathing probes that use `EnemyNavigationTarget`—not full AI encounters.
+- Reuse the actual Web pixel-art terrain, tree, mage and enemy art modules, camera and depth sorting. The lab never edits account progression or player saves.
+- QA targets 320px and 390px portrait layouts, different seeds, early/late Wyrm influence, prop destruction, one-time pickups and collision-aligned depth rendering. This lab is **not** final production art acceptance: full dynamic combat/loot and pathfinding remain the authoritative-game acceptance gates.
+
+**Do not silently merge PR #192 merely to publish the lab.** Its downloadable preview artifact is the staging build; the public GitHub Pages build follows production `main` and should change only after the owner accepts the slice.
