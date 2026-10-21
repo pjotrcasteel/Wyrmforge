@@ -68,7 +68,7 @@
                     {
                         <circle @key="person.Id" class="refuge-town-geometry-feet"
                                 data-town-feet="@person.Id" cx="@person.Position.X"
-                                cy="@person.Position.Y" r="@crowd.Navigation.Clearance" />
+                                cy="@person.Position.Y" r="@crowd.Navigation.FootRadius" />
                     }
                 </svg>
                 @foreach (var obstacle in crowd.Navigation.Obstacles)
