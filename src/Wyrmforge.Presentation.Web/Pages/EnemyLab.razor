@@ -38,7 +38,7 @@
         <label>Seed<input type="number" @bind="seed" @bind:after="Restart" /></label>
         <label><input type="checkbox" @bind="autoplay" /> Movement agent</label>
         <label><input type="checkbox" @bind="casting" @bind:after="Restart" /> Autocast</label>
-        <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a>
+        <button @onclick="Restart">Reload monster</button><button @onclick="TogglePause">@(paused ? "Resume" : "Pause")</button><a href="combat-lab">Combat lab</a><a href="hunt-lab">Wyrm lab</a><a href="arena-lab">Arena lab</a>
     </section>
     <section class="enemy-lab-surface"><canvas @ref="canvas" aria-label="Live enemy encounter"></canvas>
         <div class="status">@kind • @(paused ? "PAUSED" : autoplay ? "AGENT" : "MANUAL") • @(kind == EnemyKind.MireHound && mireStyle == "pixel" ? "PIXEL ART PREVIEW" : "PUBLISHED ART") • INVULNERABLE • NO PROGRESS</div>

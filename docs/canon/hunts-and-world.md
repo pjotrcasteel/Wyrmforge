@@ -157,3 +157,42 @@ Working title **The Living Hunter's Chart**. The screen should look like an orig
 - Interactions such as bridge collapse, rising water and breached walls have **actual simulation phases**: warning → safety evacuation window → altered collision/nav/hazards → new wave routes/exit state. An animation alone cannot change damage or blocking. Every intermediate stage must not trap the player, spawn lethal enemies on top of the player or remove all feasible evasion routes. Provide validated fallbacks for invalid seeds.
 - Threat mixes should use the room, not just its wallpaper. Open courtyards invite coordinated ranged pressure, narrow cloisters invite flanks/chokepoints, flooded roads invite elevated routes, destroyed walls invite new enemy approach angles. Do not repeat just 10 enemy variants endlessly or turn every fight into the same broad empty arena.
 - In Endless Arena, physically walk through the opened passage to a **different generated arena** after milestone waves. The player retains actual active build/health/resources; the mode has **no Hunt Map**. Boss and elite encounters demand new pressure patterns and readable telegraphs, including the new directional cast system; layout mutations have fair audio/visual cause.
+
+
+## Implementation checkpoint — seeded forest arenas and breakable scenery (20 October 2026)
+
+A first **unmerged, CI-gated vertical slice** is being built on
+`feature/seeded-hunt-arena-props-20261020`. This is not evidence that the entire Arena Generator contract
+above is implemented.
+
+- `HuntArenaGenerator` supplies deterministic, separately seeded world-space prop recipes. A clear
+  central combat strip remains available for mobile kiting, physical crossings and trail exits.
+- Habitat-derived elemental influence (Fire/Frost) replaces the previous reward-attunement-derived
+  ground coloring. Corruption increases from early roads to the Wyrm approach. Corrupted breakables
+  appear more frequently as influence grows. Other lineages require authored ecology before enabling.
+- C# owns props, collision, projectile and AoE/splash damage, durability, destruction and health/XP drops. Drops
+  use the existing one-time physical pickup mechanism and do not fabricate enemy-kill rewards.
+  The enemy AI now has deterministic local prop detours, with a movement-progress regression test.
+- Forest and opening roads use wider hand-coded pixel ground treatments. Props render independently
+  of cached floor art and sort by world-foot depth alongside the mage and enemies.
+- Visual scenery is **not** authoritative and must never invent colliders or spawn collectibles.
+  The first prop silhouettes are temporary code-authored pixels, not finalized art assets.
+- Not yet included: persistent destructible state across sessions, all enemy attack forms (e.g. melee and
+  ongoing ground burns), actual resource/material economy drops, full graph-based pathfinding across obstacles,
+  terrain topology variation beyond road/scenery, infinite chunk streaming or seamless region travel, and
+  visual art acceptance on a real iPhone. Legacy phase crossings still restrict open-world combat movement.
+  This slice is not the final Vampire Survivors-scale open-world generator.
+- Acceptance before merge: .NET simulation tests, JavaScript tests, browser smoke, real iPhone
+  combat checks including targeting/retreat and stable save/seed replays. Do not bypass this gate.
+
+### Arena Generator Lab — sandbox acceptance (21 October 2026)
+
+The developer-only `/arena-lab` route (in draft [PR #192](https://github.com/pjotrcasteel/Wyrmforge/pull/192)) allows manual testing of the actual `ArenaEnvironmentState` C# contract before publishing a new arena design to players. It is accessible from Enemy Lab, Hunt Lab and Sprite Lab in PR preview builds.
+
+- Seed, habitat and Wyrm-proximity stage select a deterministic Hunt node and create a new environment from the real C# generator; the selected seed is represented in the shareable URL.
+- Move the mage using WASD/arrows or touch-drag, with collision applied through `RestrictMovement`. Toggle collision overlays for exact prop and wall footprints.
+- Hit individual props or use area blasts; both call the C# destruction methods and expose genuine one-time supply drops for collection. Toggle two lightweight pathing probes that use `EnemyNavigationTarget`—not full AI encounters.
+- Reuse the actual Web pixel-art terrain, tree, mage and enemy art modules, camera and depth sorting. The lab never edits account progression or player saves.
+- QA targets 320px and 390px portrait layouts, different seeds, early/late Wyrm influence, prop destruction, one-time pickups and collision-aligned depth rendering. This lab is **not** final production art acceptance: full dynamic combat/loot and pathfinding remain the authoritative-game acceptance gates.
+
+**Do not silently merge PR #192 merely to publish the lab.** Its downloadable preview artifact is the staging build; the public GitHub Pages build follows production `main` and should change only after the owner accepts the slice.

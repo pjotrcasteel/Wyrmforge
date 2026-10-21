@@ -24,6 +24,7 @@ public sealed partial class RunSimulation
             {
                 // A wall contact is visual feedback only: no enemy hit, damage, status,
                 // chain, splash, experience or reward can be fabricated by this branch.
+                arenaEnvironment.TryDamageProp(contact, width, height, projectile.Radius, projectile.Damage);
                 RegisterElementalImpact(contact, projectile.Spell, projectile.Rank, projectile.Combination, projectile.Surge);
                 projectiles.RemoveAt(index);
                 continue;
@@ -200,6 +201,7 @@ public sealed partial class RunSimulation
         RegisterSplashPulse(position, radius);
         combatSpatialIndex.CollectWithinRadius(position, radius, ignoreId, spatialQueryBuffer);
         foreach (var target in spatialQueryBuffer) DamageTarget(target, damage * ShieldMultiplier(target, position, damage));
+        arenaEnvironment?.DamagePropsInRadius(position, arenaWidth, arenaHeight, radius, damage);
     }
 
     private void Shatter(Vector2D position, double damage, int ignoreId)

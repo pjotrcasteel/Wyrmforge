@@ -11,6 +11,7 @@ public sealed class ArenaEnvironmentState
     public const double MinimumSpawnDistance = 150;
     private readonly List<Supply> supplies = [];
     private readonly List<Barrier> barriers = [];
+    private readonly List<DestructibleProp> destructibles = [];
     private readonly int seed;
     private readonly string biome;
     private readonly string element;
@@ -18,6 +19,8 @@ public sealed class ArenaEnvironmentState
     private readonly string landmark;
     private readonly string district;
     private readonly string habitat;
+    private readonly bool preLair;
+    private readonly bool generatorPreview;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -31,9 +34,17 @@ public sealed class ArenaEnvironmentState
 
     private sealed record Barrier(double X, double Y, double Width, double Height, EncounterPhase? UnlockPhase, string Kind);
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat)
+    private sealed class DestructibleProp(HuntArenaGenerator.Prop spec)
+    {
+        public HuntArenaGenerator.Prop Spec { get; } = spec;
+        public double Health { get; set; } = spec.Health;
+    }
+
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview)
     {
         this.habitat = habitat;
+        this.preLair = preLair;
+        this.generatorPreview = generatorPreview;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -42,22 +53,25 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
         // Environment geometry consumes a private seeded stream, never the combat RNG.
-        var seed = unchecked(mapSeed * 486187739 + stage * 73856093 + node.Lane * 19349663);
+        var seed = unchecked(mapSeed * 486187739 + stage * 73856093 + node.Lane * 19349663 +
+            (generatorPreview ? (node.Site?.RoadIndex ?? 0) * 83492791 : 0));
         var random = new Random(seed);
         var biome = node.Territory?.Name ?? "River valley";
         var landmark = WyrmrealmHabitatCatalog.DisplayName(node.Habitat);
-        var element = node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
+        // Region/Wyrm ecology owns environmental magic; reward attunement must never repaint the land.
+        var element = generatorPreview ? WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant()
+            : node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
         // Each node belongs to a different local district even when its overarching biome is unchanged.
         // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var habitat = node.Habitat.ToString();
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat);
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The hunter begins in the central courtyard. Both crossings have a permanent narrow throat.
@@ -67,6 +81,12 @@ public sealed class ArenaEnvironmentState
         environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
         environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
         environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
+        foreach (var prop in generatorPreview ? HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair) : [])
+        {
+            var center = new Vector2D(prop.X * 950, prop.Y * 1550);
+            if (environment.IsBlocked(center, 950, 1550, prop.Radius + 4)) continue;
+            environment.destructibles.Add(new DestructibleProp(prop));
+        }
         return environment;
     }
 
@@ -81,7 +101,14 @@ public sealed class ArenaEnvironmentState
             .Select(supply => new ArenaSupplyRenderSnapshot(supply.Kind, supply.X, supply.Y, IsOpen(supply)))
             .ToArray(),
         barriers.Select(barrier => new ArenaBarrierRenderSnapshot(barrier.X, barrier.Y, barrier.Width, barrier.Height,
-            IsOpen(barrier), barrier.Kind)).ToArray(), district, habitat);
+            IsOpen(barrier), barrier.Kind)).ToArray(), district, habitat)
+    {
+        Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
+        GeneratorPreview = generatorPreview,
+        Props = destructibles.Where(prop => prop.Health > 0)
+            .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
+                prop.Health / prop.Spec.Health)).ToArray(),
+    };
 
     public Vector2D RestrictMovement(Vector2D previous, Vector2D proposed, double width, double height, double radius = 0)
     {
@@ -117,6 +144,13 @@ public sealed class ArenaEnvironmentState
                  SegmentDistanceSquared(new Vector2D(minX, maxY), from, to) <= radius * radius ||
                  SegmentDistanceSquared(new Vector2D(maxX, minY), from, to) <= radius * radius ||
                  SegmentDistanceSquared(new Vector2D(maxX, maxY), from, to) <= radius * radius)) return true;
+        }
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0) continue;
+            var footprint = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            var combinedRadius = prop.Spec.Radius + radius;
+            if (SegmentDistanceSquared(footprint, from, to) <= combinedRadius * combinedRadius) return true;
         }
         foreach (var supply in supplies)
         {
@@ -193,6 +227,9 @@ public sealed class ArenaEnvironmentState
             if (supply.Collected || IsOpen(supply)) continue;
             if (Vector2D.Distance(position, new Vector2D(supply.X * width, supply.Y * height)) < radius + CacheRadius) return true;
         }
+        foreach (var prop in destructibles)
+            if (prop.Health > 0 && Vector2D.Distance(position, new Vector2D(prop.Spec.X * width, prop.Spec.Y * height)) <
+                radius + prop.Spec.Radius) return true;
         return false;
     }
 
@@ -246,7 +283,55 @@ public sealed class ArenaEnvironmentState
             var offset = Math.Max(24, gate.Height * height * .5 + radius + 8);
             return new Vector2D(width * .5, crossingY + (hunter.Y < crossingY ? -offset : offset));
         }
-        return hunter;
+        return AvoidDestructible(enemy, hunter, width, height, radius);
+    }
+
+    /// <summary>
+    /// A deterministic local detour around the first solid prop on the path.
+    /// Navigation stays in world space and does not use the combat RNG. Closed
+    /// encounter crossings still have priority over local obstacle steering.
+    /// </summary>
+    private Vector2D AvoidDestructible(Vector2D enemy, Vector2D goal, double width, double height, double radius)
+    {
+        DestructibleProp? obstacle = null;
+        var nearest = double.PositiveInfinity;
+        var travel = goal - enemy;
+        var squaredLength = travel.X * travel.X + travel.Y * travel.Y;
+        if (squaredLength < 1) return goal;
+
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0) continue;
+            var center = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            var offset = center - enemy;
+            var progress = (offset.X * travel.X + offset.Y * travel.Y) / squaredLength;
+            if (progress <= 0 || progress >= 1 || progress >= nearest) continue;
+            var clearance = prop.Spec.Radius + radius + 2;
+            if (SegmentDistanceSquared(center, enemy, goal) >= clearance * clearance) continue;
+            nearest = progress;
+            obstacle = prop;
+        }
+        if (obstacle is null) return goal;
+
+        var position = new Vector2D(obstacle.Spec.X * width, obstacle.Spec.Y * height);
+        var towards = Vector2D.DirectionTo(enemy, goal);
+        var across = new Vector2D(-towards.Y, towards.X);
+        var distance = obstacle.Spec.Radius + radius + 12;
+        // Aim beyond the prop, not at its center. A clear exit tangent is preferable
+        // to a blocked shorter detour. Use stable tie breaking for replay fidelity.
+        var best = goal;
+        var cost = double.PositiveInfinity;
+        foreach (var side in new[] { -1d, 1d })
+        {
+            var waypoint = position + towards * (distance * .55) + across * (side * distance * 1.7);
+            if (waypoint.X < radius || waypoint.Y < radius || waypoint.X > width - radius || waypoint.Y > height - radius) continue;
+            if (IsBlocked(waypoint, width, height, radius) || BlocksSegment(enemy, waypoint, width, height, radius)) continue;
+            var score = Vector2D.Distance(enemy, waypoint) + Vector2D.Distance(waypoint, goal);
+            if (score >= cost) continue;
+            best = waypoint;
+            cost = score;
+        }
+        return best == goal ? goal : best;
     }
 
     public ArenaSupplyRenderSnapshot? TryCollect(Vector2D position, double width, double height, double playerRadius, bool needsHealing)
@@ -261,6 +346,47 @@ public sealed class ArenaEnvironmentState
         }
         return null;
     }
+
+    /// <summary>A real projectile impact breaks a physical prop, revealing an existing pickup type at its location.</summary>
+    public bool TryDamageProp(Vector2D contact, double width, double height, double projectileRadius, double damage)
+    {
+        if (damage <= 0) return false;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0) continue;
+            var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            if (Vector2D.Distance(contact, position) > prop.Spec.Radius + projectileRadius + 2) continue;
+            prop.Health -= damage;
+            if (prop.Health <= 0 && prop.Spec.DropKind is { } kind)
+                supplies.Add(new Supply(kind, prop.Spec.X, prop.Spec.Y, EncounterPhase.Pressure));
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Apply a real area hit to physical props once per explosion, never through a sealed crossing.</summary>
+    public int DamagePropsInRadius(Vector2D center, double width, double height, double radius, double damage)
+    {
+        if (radius <= 0 || damage <= 0) return 0;
+        var hit = 0;
+        foreach (var prop in destructibles)
+        {
+            if (prop.Health <= 0) continue;
+            var position = new Vector2D(prop.Spec.X * width, prop.Spec.Y * height);
+            if (Vector2D.Distance(center, position) > radius + prop.Spec.Radius) continue;
+            if (barriers.Any(barrier => !IsOpen(barrier) &&
+                SegmentIntersectsBarrier(center, position, barrier, width, height))) continue;
+            prop.Health -= damage;
+            if (prop.Health <= 0 && prop.Spec.DropKind is { } kind)
+                supplies.Add(new Supply(kind, prop.Spec.X, prop.Spec.Y, EncounterPhase.Pressure));
+            hit++;
+        }
+        return hit;
+    }
+
+    private static bool SegmentIntersectsBarrier(Vector2D start, Vector2D end, Barrier barrier, double width, double height) =>
+        IntersectsRectangle(start, end, barrier.X * width, (barrier.X + barrier.Width) * width,
+            barrier.Y * height, (barrier.Y + barrier.Height) * height);
 
     private void AddCrossing(double y, EncounterPhase unlockPhase)
     {

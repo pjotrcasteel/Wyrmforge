@@ -1,0 +1,262 @@
+@page "/arena-lab"
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using Wyrmforge.Application.Runs.Navigation
+@using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Application.Runs.Simulation.Snapshots
+@using Wyrmforge.Domain.Combat.Geometry
+@using Wyrmforge.Domain.Spells
+
+<main class="arena-lab">
+    <header>
+        <div class="heading">
+            <span>WYRMFORGE / DEVELOPMENT LAB</span>
+            <h1>Arena Generator Lab</h1>
+            <p>Explore actual C# terrain collision, generated props and Wyrm influence using the game’s pixel-art renderer. No account progress or rewards are saved.</p>
+        </div>
+        <nav aria-label="Other development labs">
+            <a href="enemy-lab">Enemy Lab</a>
+            <a href="hunt-lab">Hunt Lab</a>
+            <a href="sprite-lab/">Sprite Lab</a>
+        </nav>
+    </header>
+
+    <section class="arena-controls" aria-label="Arena generation controls">
+        <label>Habitat
+            <select aria-label="Arena habitat" @bind="habitat">
+                <option value="@WyrmrealmHabitat.Outskirts">Abandoned Road</option>
+                <option value="@WyrmrealmHabitat.WetForest">Wet Forest</option>
+                <option value="@WyrmrealmHabitat.OpenField">Open Field</option>
+                <option value="@WyrmrealmHabitat.ScorchedApproach">Scorched Approach</option>
+                <option value="@WyrmrealmHabitat.FrozenRoad">Frozen Road</option>
+                <option value="@WyrmrealmHabitat.SnowboundPines">Snowbound Pines</option>
+                <option value="@WyrmrealmHabitat.GlacierApproach">Glacier Approach</option>
+            </select>
+        </label>
+        <label>Wyrm proximity · stage @stage
+            <input aria-label="Wyrm proximity stage" type="range" min="1" max="8" step="1" @bind="stage" @bind:event="onchange" />
+        </label>
+        <label>World seed
+            <input aria-label="World seed" type="number" @bind="seed" />
+        </label>
+        <button type="button" @onclick="Regenerate">Generate map</button>
+        <button type="button" class="secondary" @onclick="NextSeed">Different seed ↻</button>
+    </section>
+
+    <section class="arena-tools" aria-label="Arena testing actions">
+        <span>TEST</span>
+        <button class="@(tool == "walk" ? "selected" : "")" aria-pressed="@(tool == "walk" ? "true" : "false")" @onclick='() => ChangeTool("walk")'>Walk / pan</button>
+        <button class="@(tool == "hit" ? "selected" : "")" aria-pressed="@(tool == "hit" ? "true" : "false")" @onclick='() => ChangeTool("hit")'>Hit prop</button>
+        <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast" ? "true" : "false")" @onclick='() => ChangeTool("blast")'>Blast area</button>
+        <label class="toggle"><input type="checkbox" @bind="showCollision" @bind:after="SyncOptions" /> Collision outlines</label>
+        <label class="toggle"><input type="checkbox" @bind="showMobs" @bind:after="SyncOptions" /> Pathing mobs</label>
+        <label class="toggle"><input type="checkbox" @bind="openCrossings" @bind:after="Regenerate" /> Open crossings</label>
+        <button class="secondary" @onclick="ResetScene">Reset scene</button>
+    </section>
+
+    <div class="arena-layout">
+        <section class="arena-stage">
+            <canvas @ref="canvas" aria-label="Playable generated arena map" tabindex="0"></canvas>
+            <div class="arena-tip">@(tool == "walk" ? "Move: WASD / arrows / drag left side" : tool == "hit" ? "Tap a prop to strike it" : "Tap to send an area attack")</div>
+            <div class="arena-readout" aria-live="polite">@status</div>
+            <div class="arena-badge">REAL C# COLLISION · TEST ONLY</div>
+        </section>
+        <aside class="arena-inspector">
+            <h2>World inspector</h2>
+            <dl>
+                <dt>Habitat</dt><dd>@WyrmrealmHabitatCatalog.DisplayName(habitat)</dd>
+                <dt>Region</dt><dd>@WyrmrealmHabitatCatalog.School(habitat)</dd>
+                <dt>Wyrm influence</dt><dd>@(Math.Round(HuntArenaGenerator.WyrmInfluence(stage, stage >= 7) * 100))%</dd>
+                <dt>Props remaining</dt><dd>@remainingProps</dd>
+                <dt>Destroyed</dt><dd>@destroyedProps</dd>
+                <dt>Picked up</dt><dd>@collectedSupplies</dd>
+                <dt>World</dt><dd>950 × 1550</dd>
+            </dl>
+            <h3>Quick tests</h3>
+            <p>Try different seeds at the same stage. Move around the forest, strike barrels or trees, and observe collision and loot drops. Show pathing mobs to inspect obstacle avoidance.</p>
+            <p>The environment is authoritative C#; rendering uses production terrain and sprite modules. No real Hunt saves, enemy combat, or permanent currency changes occur in this lab.</p>
+            <button class="secondary" @onclick="CopyLink">Copy seed link</button>
+        </aside>
+    </div>
+</main>
+
+@code {
+    private const double WorldWidth = 950;
+    private const double WorldHeight = 1550;
+    [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "stage")] public int? StageQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "habitat")] public string? HabitatQuery { get; set; }
+
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<ArenaLab>? reference;
+    private ArenaEnvironmentState? environment;
+    private Vector2D player = new(WorldWidth * .5, WorldHeight * .5);
+    private readonly List<LabMob> mobs = [];
+    private WyrmrealmHabitat habitat = WyrmrealmHabitat.WetForest;
+    private int seed = 1204;
+    private int stage = 1;
+    private int remainingProps;
+    private int destroyedProps;
+    private int collectedSupplies;
+    private bool showCollision;
+    private bool showMobs = true;
+    private bool openCrossings = true;
+    private string tool = "walk";
+    private string status = "Choose a seed and explore.";
+
+    public sealed record LabMob(int Id, int Kind, double X, double Y);
+    public sealed record LabFrame(double X, double Y, ArenaEnvironmentRenderSnapshot Environment,
+        IReadOnlyList<LabMob> Mobs, double WorldWidth, double WorldHeight, int Seed, int Stage);
+
+    protected override void OnParametersSet()
+    {
+        if (SeedQuery is { } requestedSeed) seed = requestedSeed;
+        if (StageQuery is { } requestedStage) stage = Math.Clamp(requestedStage, 1, 8);
+        if (Enum.TryParse<WyrmrealmHabitat>(HabitatQuery, true, out var parsed) && Enum.IsDefined(parsed))
+            habitat = parsed;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena-lab.js");
+        reference = DotNetObjectReference.Create(this);
+        await module.InvokeVoidAsync("initializeArenaLab", canvas, reference);
+        await SyncOptions();
+    }
+
+    [JSInvokable]
+    public LabFrame Frame(double delta, double x, double y)
+    {
+        EnsureScene();
+        var direction = new Vector2D(Math.Clamp(x, -1, 1), Math.Clamp(y, -1, 1));
+        var length = Math.Sqrt(direction.X * direction.X + direction.Y * direction.Y);
+        if (length > 1) direction *= 1 / length;
+        var candidate = player + direction * (Math.Clamp(delta, 0, .05) * 175);
+        candidate = new Vector2D(Math.Clamp(candidate.X, 18, WorldWidth - 18), Math.Clamp(candidate.Y, 18, WorldHeight - 18));
+        player = environment!.RestrictMovement(player, candidate, WorldWidth, WorldHeight, 12);
+        if (environment.TryCollect(player, WorldWidth, WorldHeight, 12, true) is not null)
+        {
+            collectedSupplies++;
+            if (collectedSupplies % 2 == 1) _ = InvokeAsync(StateHasChanged);
+        }
+        if (showMobs) AdvanceMobs(Math.Clamp(delta, 0, .05));
+        return new LabFrame(player.X, player.Y, environment.Snapshot(),
+            showMobs ? mobs.ToArray() : [], WorldWidth, WorldHeight, seed, stage);
+    }
+
+    [JSInvokable]
+    public LabFrame Strike(double x, double y, bool blast)
+    {
+        EnsureScene();
+        var point = new Vector2D(Math.Clamp(x, 0, WorldWidth), Math.Clamp(y, 0, WorldHeight));
+        var before = environment!.Snapshot().Props.Count;
+        if (blast) environment.DamagePropsInRadius(point, WorldWidth, WorldHeight, 85, 100);
+        else environment.TryDamageProp(point, WorldWidth, WorldHeight, 22, 100);
+        var difference = before - environment.Snapshot().Props.Count;
+        if (difference > 0)
+        {
+            destroyedProps += difference;
+            remainingProps = environment.Snapshot().Props.Count;
+            status = $"{destroyedProps} objects destroyed · loot is collectible on approach";
+            _ = InvokeAsync(StateHasChanged);
+        }
+        return new LabFrame(player.X, player.Y, environment.Snapshot(),
+            showMobs ? mobs.ToArray() : [], WorldWidth, WorldHeight, seed, stage);
+    }
+
+    private void AdvanceMobs(double delta)
+    {
+        for (var i = 0; i < mobs.Count; i++)
+        {
+            var mob = mobs[i];
+            var position = new Vector2D(mob.X, mob.Y);
+            var waypoint = environment!.EnemyNavigationTarget(position, player, WorldWidth, WorldHeight, 10);
+            var velocity = Vector2D.DirectionTo(position, waypoint) * ((mob.Kind == 0 ? 55 : 85) * delta);
+            var moved = environment.RestrictMovement(position, position + velocity, WorldWidth, WorldHeight, 10);
+            mobs[i] = mob with { X = moved.X, Y = moved.Y };
+        }
+    }
+
+    private void EnsureScene()
+    {
+        if (environment is not null) return;
+        var region = WyrmrealmHabitatCatalog.School(habitat);
+        var map = new WyrmrealmMapState(seed: seed, region: region);
+        var node = map.AvailableNodes.First(candidate => candidate.Type == WyrmrealmNodeType.Combat) with
+        {
+            Habitat = habitat,
+            Position = new WyrmrealmNodePosition(stage, 0),
+            PreLair = stage >= 7,
+        };
+        environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
+        if (openCrossings) environment.SetPhase(EncounterPhase.Surge);
+        player = new Vector2D(WorldWidth * .5, WorldHeight * .5);
+        if (environment.IsBlocked(player, WorldWidth, WorldHeight, 12))
+            player = new Vector2D(WorldWidth * .5, WorldHeight * .55);
+        mobs.Clear();
+        mobs.Add(new LabMob(1, 0, WorldWidth * .20, WorldHeight * .5));
+        mobs.Add(new LabMob(2, 1, WorldWidth * .80, WorldHeight * .5));
+        remainingProps = environment.Snapshot().Props.Count;
+        destroyedProps = 0;
+        collectedSupplies = 0;
+        status = $"Seed {seed} · {WyrmrealmHabitatCatalog.DisplayName(habitat)} · stage {stage}";
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void Regenerate()
+    {
+        environment = null;
+        UpdateShareableQuery();
+    }
+
+    private void NextSeed()
+    {
+        seed = unchecked(seed + 1);
+        Regenerate();
+    }
+
+    private void ResetScene() => Regenerate();
+
+    private async Task ChangeTool(string selected)
+    {
+        tool = selected;
+        await SyncOptions();
+    }
+
+    private async Task SyncOptions()
+    {
+        if (module is not null)
+            await module.InvokeVoidAsync("configureArenaLab", canvas, tool, showCollision, showMobs);
+    }
+
+    private void UpdateShareableQuery() =>
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameters(new Dictionary<string, object?>
+        {
+            ["seed"] = seed,
+            ["stage"] = stage,
+            ["habitat"] = habitat.ToString(),
+        }), replace: true);
+
+    private async Task CopyLink()
+    {
+        UpdateShareableQuery();
+        await JavaScript.InvokeVoidAsync("navigator.clipboard.writeText", Navigation.Uri);
+        status = "Seed link copied.";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            try { await module.InvokeVoidAsync("disposeArenaLab", canvas); }
+            catch (JSDisconnectedException) { }
+            await module.DisposeAsync();
+        }
+        reference?.Dispose();
+    }
+}
