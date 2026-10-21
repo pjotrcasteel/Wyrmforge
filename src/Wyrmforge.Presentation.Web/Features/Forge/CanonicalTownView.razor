@@ -47,6 +47,30 @@
             </div>
         }
 
+        @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
+        @if (showTownGeometry && crowd is not null)
+        {
+            <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" aria-hidden="true">
+                <svg viewBox="0 0 1672 941" preserveAspectRatio="none" class="refuge-town-geometry-map">
+                    @foreach (var floor in crowd.Navigation.Walkable)
+                    {
+                        <polygon class="refuge-town-geometry-walkable" points="@GeometryPoints(floor.Points)" />
+                    }
+                    @foreach (var obstacle in crowd.Navigation.Obstacles)
+                    {
+                        <polygon @key="obstacle.Id" class="refuge-town-geometry-solid"
+                                 data-town-obstacle="@obstacle.Id" points="@GeometryPoints(obstacle.Footprint)" />
+                    }
+                </svg>
+                @foreach (var obstacle in crowd.Navigation.Obstacles)
+                {
+                    <span @key="obstacle.Id" class="refuge-town-geometry-label"
+                          style="@GeometryLabelStyle(crowd.Navigation, obstacle)">@obstacle.Id.Replace('-', ' ')</span>
+                }
+                <span class="refuge-town-geometry-legend">RED = SOLID · CYAN = WALKABLE</span>
+            </div>
+        }
+
         <button type="button" class="refuge-town-spot refuge-town-spot--nexus"
                 data-town-building="build" data-town-state="@(TownBuildingVisuals.StateName(NexusUnlocked))"
                 data-sound-cue="@(NexusUnlocked ? "building-open" : "none")" title="@BuildingLabel("Arcane Nexus", NexusUnlocked)"
@@ -74,8 +98,14 @@
     private TownCrowd? crowd;
     private readonly CancellationTokenSource crowdStop = new();
 
+    private bool showTownGeometry;
+
     protected override async Task OnInitializedAsync()
     {
+        showTownGeometry = new Uri(Navigation.Uri).Query.TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Any(parameter => string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
+
         try
         {
             using var http = new HttpClient();
@@ -105,6 +135,14 @@
     private static string CitizenStyle(TownCitizen citizen, bool occluded) =>
         FormattableString.Invariant(
             $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;visibility:{(occluded ? "hidden" : "visible")}");
+
+    private static string GeometryPoints(IReadOnlyList<TownPoint> points) =>
+        string.Join(" ", points.Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
+
+    private static string GeometryLabelStyle(TownNavigationMap map, TownFootprint obstacle) =>
+        FormattableString.Invariant(
+            $"left:{obstacle.Footprint.Average(point => point.X) / map.Width * 100:0.##}%;" +
+            $"top:{obstacle.Footprint.Average(point => point.Y) / map.Height * 100:0.##}%");
 
     public void Dispose()
     {
