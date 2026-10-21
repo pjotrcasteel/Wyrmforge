@@ -195,11 +195,51 @@ public sealed class WyrmforgeBrowserTests : PageTest
         {
             var png = Page.Locator($".refuge-town-png-cutout[data-town-cutout='{id}']");
             await Expect(png).ToBeVisibleAsync();
-            Assert.IsTrue(await png.EvaluateAsync<bool>(@"img =>
-                getComputedStyle(img).pointerEvents === 'none' &&
-                img.naturalWidth <= 252 && img.naturalHeight <= 100"),
-                "Well and board cutouts must remain small transparent PNGs, not rectangular town paintings.");
+            Assert.IsTrue(await png.EvaluateAsync<bool>(@"img => {
+                if (getComputedStyle(img).pointerEvents !== 'none' ||
+                    img.naturalWidth > 252 || img.naturalHeight > 100) return false;
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const context = canvas.getContext('2d');
+                if (!context) return false;
+                context.drawImage(img, 0, 0);
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                let transparent = 0, painted = 0;
+                for (let i = 3; i < pixels.length; i += 4) {
+                    if (pixels[i] < 16) transparent++;
+                    if (pixels[i] > 239) painted++;
+                }
+                const total = canvas.width * canvas.height;
+                return transparent > total * 0.05 && painted > total * 0.02;
+            }"), $"Foreground {id} must contain both actual opaque artwork and transparent surroundings.");
         }
+
+        // A real in-browser click must choose a moving NPC. Do not just assert
+        // that the click handler's source text or an inert debug button exists.
+        await Page.Locator("[data-town-layer-select='Route']").ClickAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelectorAll('.refuge-town-citizen[data-town-citizen-state=walking]').length > 0");
+        var selected = await Page.EvaluateAsync<bool>(@"() => {
+            const scene = document.querySelector('.refuge-canonical-scene');
+            const walking = [...scene.querySelectorAll(
+                '.refuge-town-citizen[data-town-citizen-state=walking]')];
+            const person = walking[0];
+            if (!person) return false;
+            const rect = person.getBoundingClientRect();
+            scene.dispatchEvent(new MouseEvent('click', {
+                bubbles: true, cancelable: true,
+                clientX: rect.left + rect.width / 2, clientY: rect.bottom
+            }));
+            return (document.querySelector('[data-town-geometry-selection]')?.textContent ?? '')
+                .includes('ROUTE · NPC ' + person.dataset.townCitizenId);
+        }");
+        Assert.IsTrue(selected, "Clicking a real moving NPC must update the route selection.");
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelector('[data-town-route]') !== null");
+        await Page.Locator("[data-town-layer-select='Walkable']").ClickAsync();
+        await Expect(Page.Locator("[data-town-route]")).ToHaveCountAsync(0);
+        await Page.Locator("[data-town-layer-select='All']").ClickAsync();
         await Expect(Page.Locator(".refuge-town-crowd")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".refuge-town-crowd--behind, .refuge-town-crowd--front")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"() =>
