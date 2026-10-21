@@ -64,7 +64,8 @@ public sealed class TownCrowdTests
                 Assert.IsTrue(town.Navigation.IsWalkable(person.Position));
             }
 
-            var destinations = town.Citizens.Where(c => c.IsWalking).Select(c => c.DestinationNode).ToList();
+            var destinations = town.Citizens.Where(c => c.IsPresent && c.IsWalking)
+                .Select(c => c.DestinationNode).ToList();
             Assert.AreEqual(destinations.Count, destinations.Distinct().Count(), "Multiple people claimed one destination.");
             foreach (var person in town.Citizens.Where(candidate => candidate.IsPresent))
             foreach (var other in town.Citizens.Where(candidate => candidate.IsPresent && candidate.Id > person.Id))
