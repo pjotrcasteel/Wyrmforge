@@ -1,5 +1,7 @@
 // Wet Forest visual-only layers. These never invent blockers, loot, collision or attack effects.
 // Baked ground texture is deterministic; actor contact is drawn only for visible moving entities.
+import { createWetForestRootVeins, createWetForestUnderstory, drawWetForestRootVeins } from './arena-wet-forest-vegetation.js';
+
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 function randomStream(seed) {
     let s = (seed | 0) ^ 0x6da91c23;
@@ -30,7 +32,8 @@ export function createWetForestDressingPlan(seed, props = [], width = 950, heigh
     const roots = props.filter(p => ['pine', 'dead-tree', 'stump', 'moss-rock', 'fallen-log'].includes(p.kind))
         .map(p => ({ x: pixel(p.x * width), y: pixel(p.y * height), radius: p.radius,
             kind: p.kind, id: p.id }));
-    return { litter, roots };
+    return { litter, roots, rootVeins: createWetForestRootVeins(seed, roots),
+        understory: createWetForestUnderstory(seed, roots) };
 }
 
 export function drawWetForestDressing(ctx, scene, props, width, height) {
@@ -57,6 +60,8 @@ export function drawWetForestDressing(ctx, scene, props, width, height) {
             }
         }
     }
+    // Roots and low moss are baked from the SAME C# prop feet, and remain only ground material.
+    drawWetForestRootVeins(ctx, plan.rootVeins, plan.understory);
     // Three earthy material families repeat in restrained clusters; every mark is pixel-aligned.
     for (const mark of plan.litter) {
         if (mark.x < 0 || mark.y < 0 || mark.x >= width || mark.y >= height) continue;
