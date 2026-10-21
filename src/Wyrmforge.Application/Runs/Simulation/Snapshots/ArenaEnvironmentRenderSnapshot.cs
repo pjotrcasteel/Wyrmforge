@@ -18,5 +18,6 @@ public sealed record ArenaEnvironmentRenderSnapshot(
     string Habitat = "Outskirts")
 {
     public double Corruption { get; init; }
+    public bool GeneratorPreview { get; init; }
     public IReadOnlyList<ArenaPropRenderSnapshot> Props { get; init; } = [];
 }

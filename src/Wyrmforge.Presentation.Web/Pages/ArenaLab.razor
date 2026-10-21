@@ -191,7 +191,7 @@
             Position = new WyrmrealmNodePosition(stage, 0),
             PreLair = stage >= 7,
         };
-        environment = ArenaEnvironmentState.Create(seed, node);
+        environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
         player = new Vector2D(WorldWidth * .5, WorldHeight * .5);
         if (environment.IsBlocked(player, WorldWidth, WorldHeight, 12))
             player = new Vector2D(WorldWidth * .5, WorldHeight * .55);

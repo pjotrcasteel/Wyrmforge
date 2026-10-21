@@ -73,13 +73,25 @@ public sealed class ArenaEnvironmentStateTests
 
 
     [TestMethod]
+    public void Create_NormalHunt_DoesNotEnableExperimentalArenaPropsOrArt()
+    {
+        var map = new WyrmrealmMapState(seed: 1204);
+        var normal = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]).Snapshot();
+        var lab = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true).Snapshot();
+        Assert.IsFalse(normal.GeneratorPreview);
+        Assert.IsEmpty(normal.Props);
+        Assert.IsTrue(lab.GeneratorPreview);
+        Assert.IsGreaterThan(0, lab.Props.Count);
+    }
+
+    [TestMethod]
     public void Generate_SameHuntAndNode_StablePropsButDifferentSeedChangesArrangement()
     {
         var firstMap = new WyrmrealmMapState(seed: 1204);
         var secondMap = new WyrmrealmMapState(seed: 1205);
-        var first = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0]).Snapshot();
+        var first = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0], generatorPreview: true).Snapshot();
         var again = ArenaEnvironmentState.Create(firstMap.Seed, firstMap.AvailableNodes[0]).Snapshot();
-        var different = ArenaEnvironmentState.Create(secondMap.Seed, secondMap.AvailableNodes[0]).Snapshot();
+        var different = ArenaEnvironmentState.Create(secondMap.Seed, secondMap.AvailableNodes[0], generatorPreview: true).Snapshot();
 
         CollectionAssert.AreEqual(first.Props.ToArray(), again.Props.ToArray());
         Assert.IsGreaterThan(0, first.Props.Count);
@@ -104,7 +116,7 @@ public sealed class ArenaEnvironmentStateTests
     {
         const int width = 950, height = 1550;
         var map = new WyrmrealmMapState(seed: 311);
-        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true);
         var prop = environment.Snapshot().Props.First(prop => prop.Kind is "barrel" or "crate" or "stump" or "urn" or "ember-urn");
         var center = new Vector2D(prop.X * width, prop.Y * height);
         Assert.IsTrue(environment.IsBlocked(center, width, height, 1));
@@ -127,7 +139,7 @@ public sealed class ArenaEnvironmentStateTests
     {
         const double width = 950, height = 1550;
         var map = new WyrmrealmMapState(seed: 1204);
-        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true);
         foreach (var prop in terrain.Snapshot().Props)
         {
             var center = new Vector2D(prop.X * width, prop.Y * height);
@@ -161,7 +173,7 @@ public sealed class ArenaEnvironmentStateTests
     {
         const double width = 950, height = 1550;
         var map = new WyrmrealmMapState(seed: 1204);
-        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var terrain = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true);
         var prop = terrain.Snapshot().Props[0];
         var center = new Vector2D(prop.X * width, prop.Y * height);
         var before = terrain.Snapshot().Props.Count;

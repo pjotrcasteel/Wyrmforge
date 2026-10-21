@@ -20,6 +20,7 @@ public sealed class ArenaEnvironmentState
     private readonly string district;
     private readonly string habitat;
     private readonly bool preLair;
+    private readonly bool generatorPreview;
     private EncounterPhase phase = EncounterPhase.Pressure;
 
     private sealed class Supply(string kind, double x, double y, EncounterPhase unlockPhase)
@@ -39,10 +40,11 @@ public sealed class ArenaEnvironmentState
         public double Health { get; set; } = spec.Health;
     }
 
-    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair)
+    private ArenaEnvironmentState(int seed, string biome, string element, int stage, string landmark, string district, string habitat, bool preLair, bool generatorPreview)
     {
         this.habitat = habitat;
         this.preLair = preLair;
+        this.generatorPreview = generatorPreview;
         this.seed = seed;
         this.biome = biome;
         this.element = element;
@@ -51,23 +53,25 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
         // Environment geometry consumes a private seeded stream, never the combat RNG.
-        var seed = unchecked(mapSeed * 486187739 + stage * 73856093 + node.Lane * 19349663 + (node.Site?.RoadIndex ?? 0) * 83492791);
+        var seed = unchecked(mapSeed * 486187739 + stage * 73856093 + node.Lane * 19349663 +
+            (generatorPreview ? (node.Site?.RoadIndex ?? 0) * 83492791 : 0));
         var random = new Random(seed);
         var biome = node.Territory?.Name ?? "River valley";
         var landmark = WyrmrealmHabitatCatalog.DisplayName(node.Habitat);
         // Region/Wyrm ecology owns environmental magic; reward attunement must never repaint the land.
-        var element = WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant();
+        var element = generatorPreview ? WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant()
+            : node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
         // Each node belongs to a different local district even when its overarching biome is unchanged.
         // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;
         var district = new[] { "causeway", "sanctuary", "rift" }[districtIndex];
         var habitat = node.Habitat.ToString();
-        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair);
+        var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
         // The hunter begins in the central courtyard. Both crossings have a permanent narrow throat.
@@ -77,7 +81,7 @@ public sealed class ArenaEnvironmentState
         environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
         environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
         environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
-        foreach (var prop in HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair))
+        foreach (var prop in generatorPreview ? HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair) : [])
         {
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
             if (environment.IsBlocked(center, 950, 1550, prop.Radius + 4)) continue;
@@ -99,7 +103,8 @@ public sealed class ArenaEnvironmentState
         barriers.Select(barrier => new ArenaBarrierRenderSnapshot(barrier.X, barrier.Y, barrier.Width, barrier.Height,
             IsOpen(barrier), barrier.Kind)).ToArray(), district, habitat)
     {
-        Corruption = HuntArenaGenerator.WyrmInfluence(stage, preLair),
+        Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
+        GeneratorPreview = generatorPreview,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),

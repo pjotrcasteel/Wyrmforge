@@ -47,6 +47,7 @@ export function createTerritoryStoryPlan(environment, width, height) {
     const element = schoolPalette[environment.element] ? environment.element : 'arcane';
     const district = ['causeway', 'sanctuary', 'rift'].includes(environment.district) ? environment.district : 'causeway';
     const corruption = clamp(environment.corruption ?? ((environment.stage ?? 1) - 1) / 7, 0, 1);
+    const generatorPreview = environment.generatorPreview === true;
     const districtShift = district === 'sanctuary' ? .11 : district === 'rift' ? -.095 : 0;
     const landmarks = [
         { kind: landmarkKinds[biome][district === 'rift' ? 2 : 0], x: width * (.31 + districtShift + random() * .035), y: height * .19,
@@ -81,9 +82,9 @@ export function createTerritoryStoryPlan(environment, width, height) {
             branches: 2 + Math.floor(random() * 4),
         });
     }
-    return { biome, element, district, corruption, habitat: environment.habitat ?? null, landmarks, patches, wounds,
+    return { biome, element, district, corruption, generatorPreview, habitat: environment.habitat ?? null, landmarks, patches, wounds,
         seed: environment.seed, width, height,
-        cloister: ['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(environment.habitat)
+        cloister: generatorPreview && ['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(environment.habitat)
             ? null : createCloisterPlan(environment, width, height) };
 }
 
@@ -117,7 +118,7 @@ export function drawTerritoryGround(ctx, plan) {
 
     // Forests open into real fighting ground on BOTH sides of the road.
     // Sites outside the forest keep their deliberately different built geography.
-    if (['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(plan.habitat))
+    if (plan.generatorPreview && ['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(plan.habitat))
         drawOpenForestRoad(ctx, plan);
     else drawDistrictFoundation(ctx, plan);
     drawElementalLandform(ctx, plan);
@@ -282,7 +283,7 @@ function drawDistrictFoundation(ctx, plan) {
 
 function drawElementalLandform(ctx, plan) {
     // Ordinary forest is real forest first; a Wyrm's geology overtakes it only nearby.
-    if (['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(plan.habitat) && plan.corruption < .65) return;
+    if (plan.generatorPreview && ['Outskirts', 'WetForest', 'FrozenRoad', 'SnowboundPines'].includes(plan.habitat) && plan.corruption < .65) return;
     // The monastery's masonry and physical history define the scene; no giant
     // glowing ritual geometry laid over its garden and central combat space.
     if (plan.cloister) return;
