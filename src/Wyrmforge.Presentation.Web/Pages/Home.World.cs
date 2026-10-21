@@ -15,11 +15,15 @@ public partial class Home
     private RegionId? activeRegion;
     private bool activeRegionOpening;
     private HuntSelection? activeHunt;
-    private readonly HashSet<string> completedTierOneHunts = new(StringComparer.Ordinal);
+    // Highest tier cleared per lineage (region key). Ladders are separate: Fire progress never opens Frost tiers.
+    private readonly Dictionary<string, int> clearedHuntTiers = new(StringComparer.Ordinal);
+
+    private int ClearedHuntTier(RegionId region) => clearedHuntTiers.GetValueOrDefault(region.Value);
 
     private async Task StartSelectedHuntAsync(HuntSelection hunt)
     {
         hunt.Validate();
+        if (!HuntLadder.IsUnlocked(hunt.Region, hunt.Tier, ClearedHuntTier(hunt.Region))) return;
         await SelectRegionAsync(hunt.Region);
         await BeginRunAsync(hunt);
     }
@@ -61,8 +65,9 @@ public partial class Home
                 world.Restore(save.Discovered);
                 selectedRegion = RegionCatalog.All.FirstOrDefault(region => region.Id.Value == save.Selected)?.Id;
                 foreach (var id in save.CompletedTierOneHunts ?? [])
-                    if (RegionCatalog.All.Any(region => region.Id.Value == id && region.Status == RegionStatus.Playable))
-                        completedTierOneHunts.Add(id);
+                    if (IsPlayableRegion(id)) clearedHuntTiers[id] = Math.Max(1, clearedHuntTiers.GetValueOrDefault(id));
+                foreach (var (id, tier) in save.ClearedHuntTiers ?? new Dictionary<string, int>())
+                    if (IsPlayableRegion(id) && tier is >= 1 and <= 5) clearedHuntTiers[id] = Math.Max(tier, clearedHuntTiers.GetValueOrDefault(id));
             }
         }
         catch (JSException) { }
@@ -82,11 +87,25 @@ public partial class Home
         try
         {
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, SaveLayout.World,
-                JsonSerializer.Serialize(new WorldSave(world.Save(), selectedRegion?.Value, completedTierOneHunts.Order().ToArray())));
+                JsonSerializer.Serialize(new WorldSave(world.Save(), selectedRegion?.Value, clearedHuntTiers.Keys.Order().ToArray(),
+                    new SortedDictionary<string, int>(clearedHuntTiers, StringComparer.Ordinal))));
         }
         catch (JSException) { }
     }
 
+    private static bool IsPlayableRegion(string id) =>
+        RegionCatalog.All.Any(region => region.Id.Value == id && region.Status == RegionStatus.Playable);
+
+    private async Task RecordHuntClearedAsync(Wyrmforge.Application.Runs.EndRun.RunSummary value)
+    {
+        if (value.Hunt is not { } hunt || value.Outcome != Wyrmforge.Application.Runs.EndRun.RunOutcome.Extracted
+            || !value.DragonIds.Contains(hunt.Target) || ClearedHuntTier(hunt.Region) >= hunt.TierNumber) return;
+        clearedHuntTiers[hunt.Region.Value] = hunt.TierNumber;
+        await TrySetWorldAsync();
+    }
+
     // Selected was added with the second playable region; older saves simply have none and start in the starting region.
-    private sealed record WorldSave(string[]? Discovered, string? Selected = null, string[]? CompletedTierOneHunts = null);
+    // CompletedTierOneHunts (any cleared tier) stays written so the earlier Tier-I build still reads its unlocks.
+    private sealed record WorldSave(string[]? Discovered, string? Selected = null, string[]? CompletedTierOneHunts = null,
+        IDictionary<string, int>? ClearedHuntTiers = null);
 }

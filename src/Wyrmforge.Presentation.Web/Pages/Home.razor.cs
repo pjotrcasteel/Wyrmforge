@@ -226,9 +226,7 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
-        if (value.Hunt is { } completedHunt && value.Outcome == RunOutcome.Extracted
-            && value.DragonIds.Contains(completedHunt.Target) && completedTierOneHunts.Add(completedHunt.Region.Value))
-            await TrySetWorldAsync();
+        await RecordHuntClearedAsync(value);
         if (value.Outcome is RunOutcome.Defeated or RunOutcome.Extracted) await TryPlayAudioAsync(value.Outcome == RunOutcome.Extracted ? "victory" : "death");
         var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();

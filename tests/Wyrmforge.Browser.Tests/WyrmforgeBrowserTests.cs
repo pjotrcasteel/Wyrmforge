@@ -1871,7 +1871,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".gate-tier")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(4);
-        await Expect(Page.GetByText("3-4 trails, one fork, then Ashfang. Extract to secure your Essence.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Tier 1: 3-4 trails, one fork, then Ashfang. Extract to secure your Essence.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".gate-tier--locked").First).ToContainTextAsync("Clear Tier 1 first");
         await ScreenshotAsync($"world-gate-fire-tiers-{width}.png");
 
         await Page.Locator(".gate-tier--ready").ClickAsync();
@@ -1884,8 +1885,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    public async Task FireTierOne_CompletionPersistsWithoutUnlockingFrostOrHigherTiers()
+    public async Task FireTierOne_CompletionOpensFireTierTwoWithoutUnlockingFrostOrHigherTiers()
     {
+        const string tierTwoOpen = "Tier 2 open: 6-8 trails, two forks and an optional refuge, then Ascendant Ashfang.";
         await Page.SetViewportSizeAsync(390, 844);
         await Page.AddInitScriptAsync(@"if (!localStorage.getItem('fireTierTestSeeded')) {
             localStorage.setItem('fireTierTestSeeded','1');
@@ -1901,22 +1903,60 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
         await Page.Locator(".gate-action--primary").ClickAsync();
         await Page.Locator(".gate-lineage--fire").ClickAsync();
-        await Expect(Page.GetByText("Tier 1 cleared. Tier 2 is in development.", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(4);
+        await Expect(Page.GetByText(tierTwoOpen, new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(2);
+        await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(3);
+        await Expect(Page.Locator(".gate-tier--locked").First).ToContainTextAsync("Not yet available");
+        await ScreenshotAsync("world-gate-fire-tier-two-open.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to Wyrm lineages" }).ClickAsync();
         await Page.Locator(".gate-lineage--frost").ClickAsync();
-        await Expect(Page.GetByText("Tier 1 cleared. Tier 2 is in development.", new() { Exact = true })).ToHaveCountAsync(0);
+        await Expect(Page.GetByText(tierTwoOpen, new() { Exact = true })).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(1);
         await Page.Locator(".gate-tier--ready").ClickAsync();
         var save = await Page.EvaluateAsync<JsonElement>("() => JSON.parse(localStorage.getItem('wyrmforge.world.v1'))");
         Assert.AreEqual("glacier-region", save.GetProperty("Selected").GetString());
         CollectionAssert.AreEqual(new[] { "cinder-frontier" }, save.GetProperty("CompletedTierOneHunts").EnumerateArray().Select(v => v.GetString()).ToArray());
+        Assert.AreEqual(1, save.GetProperty("ClearedHuntTiers").GetProperty("cinder-frontier").GetInt32());
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await Page.Locator(".refuge-town-spot--gate").ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
         await Page.Locator(".gate-action--primary").ClickAsync();
         await Page.Locator(".gate-lineage--fire").ClickAsync();
-        await Expect(Page.GetByText("Tier 1 cleared. Tier 2 is in development.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByText(tierTwoOpen, new() { Exact = true })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_FireTierTwo_ShowsAscendantTargetAndOptionalRefuge(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('fireTierTwoSeeded')) {
+            localStorage.setItem('fireTierTwoSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','2');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:2,Nodes:[]}));
+            localStorage.setItem('wyrmforge.world.v1',JSON.stringify({
+                Discovered:['cinder-frontier'], Selected:'cinder-frontier', ClearedHuntTiers:{'cinder-frontier':1}
+            }));
+        }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Page.Locator(".gate-tier--ready").Nth(1).ClickAsync();
+        await Expect(Page.GetByText("FIRE · TIER 2", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".map-attention summary b")).ToHaveTextAsync("Ascendant Ashfang");
+        await Expect(Page.Locator("button.route-node .node-refuge")).ToHaveCountAsync(1);
+        await Expect(Page.Locator("button.route-node .node-refuge")).ToHaveTextAsync("⛨ OPTIONAL");
+        await ScreenshotAsync($"fire-tier-two-map-{width}.png");
+        await Page.Locator("button.route-node", new() { Has = Page.Locator(".node-refuge") }).ClickAsync(new() { Force = true });
+        await Expect(Page.GetByText("Reclaim it and a later fall returns you here. Finds made after it are lost.", new() { Exact = true })).ToBeVisibleAsync();
+        await ScreenshotAsync($"fire-tier-two-refuge-sheet-{width}.png");
+        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
+        Assert.IsLessThanOrEqualTo(1, horizontal, "The Tier 2 map must not overflow mobile screens.");
     }
 
     [TestMethod]

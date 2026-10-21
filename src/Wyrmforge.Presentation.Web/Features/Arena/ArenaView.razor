@@ -148,6 +148,6 @@
     else if (PendingMapChoice && !trailTransition)
     {
         <WyrmrealmMapView Depth="CurrentDepth" Hunt="Hunt" Nodes="MapNodes" AvailableNodes="AvailableMapNodes" CompletedNodes="CompletedMapNodes" Resonance="CurrentResonance"
-            Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" />
+            Signs="CurrentDragonSigns" OnChoose="ChooseMapNodeAsync" RefugeReturns="simulation?.RefugeReturns ?? 0" LastRefugeLoss="simulation?.LastRefugeLoss ?? 0" />
     }
 </main>
