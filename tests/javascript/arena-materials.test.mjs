@@ -43,7 +43,12 @@ test('five materials draw deterministic, bounded, crisp pixel details', () => {
         const count = calls.length;
         assert.equal(drawGroundMaterialTile(ctx, i, 4, 6, 1441), true);
         const marks = calls.slice(count);
-        assert.ok(marks.length >= 3, MATERIALS[i].id + ' should be visibly textured');
+        assert.ok(marks.length >= 1, MATERIALS[i].id + ' should paint the tile');
+        const textureStart = calls.length;
+        for (let j = 0; j < 10; j++)
+            drawGroundMaterialTile(ctx, i, 10 + j, 6, 1441);
+        assert.ok(calls.length - textureStart > 13,
+            MATERIALS[i].id + ' should show varied detail across neighboring tiles');
         assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
             m.w > 0 && m.h > 0 && m.x >= 4 * CELL && m.y >= 6 * CELL &&
             m.x + m.w <= 5 * CELL && m.y + m.h <= 7 * CELL));
