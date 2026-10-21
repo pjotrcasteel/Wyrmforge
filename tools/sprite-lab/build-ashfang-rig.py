@@ -246,7 +246,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
             recovery=max(0,min(1,(earlier-flap)*5))*opening
             elbow_lag=(delayed-flap)*.65*opening
             fore_rotation=shoulder@Quaternion((0,0,1),sign*(.65*fold+.65*recovery))@Quaternion((0,1,0),sign*(.10*fold+elbow_lag))@Quaternion((1,0,0),.30*recovery)
-            closed_fore=Vector(bones[fore]['tail']-bones[fore]['head']).rotation_difference(Vector((sign*-.04,.32,-.08)))
+            closed_fore=Vector(bones[fore]['tail']-bones[fore]['head']).rotation_difference(Vector((sign*-.04,.32,-.08+.14*rear)))
             fore_rotation=fore_rotation.slerp(wing_rotation@closed_fore,fold)
             wrist=elbow+fore_rotation@Vector(bones[fore]['tail']-bones[fore]['head']);segment(fore,elbow,wrist,fore_rotation)
             for finger in range(4):
