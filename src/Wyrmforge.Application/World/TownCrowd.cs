@@ -134,10 +134,14 @@ public sealed class TownCrowd
     /// Debug-only read of a real active A* route. Never finds paths, changes citizens,
     /// or allocates unless the inspector explicitly requests a visible route.
     /// </summary>
-    public TownRoutePreview? InspectActiveRoute()
+    public TownRoutePreview? InspectActiveRoute() => InspectActiveRoute(null);
+
+    /// <summary>Inspect one selected citizen, or the first walking citizen when none is selected.</summary>
+    public TownRoutePreview? InspectActiveRoute(int? citizenId)
     {
         foreach (var citizen in _citizens)
         {
+            if (citizenId is not null && citizen.Id != citizenId.Value) continue;
             if (!citizen.IsPresent || !citizen.IsWalking || citizen.PathIndex >= citizen.Path.Count)
                 continue;
 
@@ -146,6 +150,23 @@ public sealed class TownCrowd
         }
 
         return null;
+    }
+
+    /// <summary>Cycle deterministically across moving citizens; read-only and allocation-free.</summary>
+    public int? InspectNextWalkingCitizenId(int? afterCitizenId)
+    {
+        int? first = null;
+        foreach (var citizen in _citizens)
+        {
+            if (!citizen.IsPresent || !citizen.IsWalking || citizen.PathIndex >= citizen.Path.Count)
+                continue;
+
+            first ??= citizen.Id;
+            if (afterCitizenId is not null && citizen.Id > afterCitizenId.Value)
+                return citizen.Id;
+        }
+
+        return first;
     }
 
     public void SetOpenBuildings(IEnumerable<string> buildingIds)

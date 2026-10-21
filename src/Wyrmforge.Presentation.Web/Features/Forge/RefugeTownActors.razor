@@ -35,7 +35,7 @@
     </svg>
 }
 
-@if (ShowRoutes && Crowd.InspectActiveRoute() is { } route)
+@if (ShowRoutes && Crowd.InspectActiveRoute(RouteCitizenId) is { } route)
 {
     <svg class="refuge-town-route-debug" viewBox="0 0 1672 941"
          preserveAspectRatio="none" aria-hidden="true"
@@ -51,6 +51,7 @@
     [Parameter, EditorRequired] public TownCrowd Crowd { get; set; } = null!;
     [Parameter] public bool ShowGeometry { get; set; }
     [Parameter] public bool ShowRoutes { get; set; }
+    [Parameter] public int? RouteCitizenId { get; set; }
     [Parameter] public bool ShowMetrics { get; set; }
     [Parameter] public EventCallback GeometryChanged { get; set; }
 

@@ -411,9 +411,22 @@ test('Phase 2 route inspector displays the real active NPC path only when explic
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(sceneMarkup, /data-town-layer-select="Route"/);
     assert.match(sceneMarkup, /ShowRoutes="@\(showTownGeometry && geometryLayer == TownGeometryLayer.Route\)"/);
-    assert.match(actorMarkup, /ShowRoutes && Crowd\.InspectActiveRoute\(\)/);
+    assert.match(actorMarkup, /ShowRoutes && Crowd\.InspectActiveRoute\(RouteCitizenId\)/);
     assert.match(actorMarkup, /data-town-route-citizen="@route.CitizenId"/);
     assert.match(actorMarkup, /class="refuge-town-route-line" points="@RoutePoints\(route\)"/);
     assert.match(crowd, /citizen\.Path\.Skip\(citizen\.PathIndex\)\.ToArray\(\)/);
     assert.match(css, /\.refuge-town-route-debug\s*\{[^}]*pointer-events:none/s);
+});
+
+test('route inspector Next control cycles a chosen moving citizen without changing navigation', () => {
+    const sceneMarkup = source(scene);
+    const actorMarkup = source(actors);
+    const crowd = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    assert.match(sceneMarkup, /data-town-route-next="true"/);
+    assert.match(sceneMarkup, /@onclick="SelectNextRoute"/);
+    assert.match(sceneMarkup, /geometryLayer == TownGeometryLayer.Route\)\s*\{\s*<button[^>]*data-town-route-next/s);
+    assert.match(sceneMarkup, /RouteCitizenId="selectedRouteCitizenId"/);
+    assert.match(actorMarkup, /Crowd\.InspectActiveRoute\(RouteCitizenId\)/);
+    assert.match(crowd, /public int\? InspectNextWalkingCitizenId\(int\? afterCitizenId\)/);
+    assert.match(crowd, /return first;/);
 });
