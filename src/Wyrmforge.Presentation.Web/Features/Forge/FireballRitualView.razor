@@ -112,27 +112,44 @@
                     var learned = mutation.Playable && Core.Discovered.Contains(mutation.Id);
                     var current = Core.Slots[slot] == mutation.Id;
                     var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
-                    <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
-                        <span class="mutation-symbol" aria-hidden="true">
-                            @if (MutationArtwork(mutation.Id) is { } artwork)
-                            {
-                                <img class="fireball-mutation-art" src="@artwork" alt="" draggable="false" loading="lazy" />
-                            }
-                            else
-                            {
-                                <i class="px-icon px-lg @MutationIcon(mutation.Id)"></i>
-                            }
-                        </span>
-                        <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
-                        <span class="mutation-state">@(current ? "Equipped" : !mutation.Playable ? "Planned" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
-                    </button>
+                    <div class="fireball-mutator-entry @(current ? "equipped" : "")">
+                        <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
+                            <span class="mutation-symbol" aria-hidden="true">
+                                @if (MutationArtwork(mutation.Id) is { } artwork)
+                                {
+                                    <img class="fireball-mutation-art" src="@artwork" alt="" draggable="false" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <i class="px-icon px-lg @MutationIcon(mutation.Id)"></i>
+                                }
+                            </span>
+                            <span class="mutation-description"><b>@mutation.Name</b><small>@mutation.Description</small></span>
+                            <span class="mutation-state">@(current ? "Equipped" : !mutation.Playable ? "Planned" : inAnotherSlot ? "In use" : learned ? "Equip" : "Locked")</span>
+                        </button>
+                        @if (mutation is { Playable: true, ResearchSample: { } sample })
+                        {
+                            var essence = DragonEssenceCatalog.Get(sample);
+                            <details class="fireball-source-details">
+                                <summary>Find: @essence.Source · @essence.Name</summary>
+                                <div class="fireball-source-description">
+                                    <p>Secure @essence.Name from an @essence.Source Hunt to unlock this mutator permanently.</p>
+                                    <p>No crafting required. Secured in vault: @Vault.Count(sample). @(learned ? "Already unlocked." : "Not yet unlocked.")</p>
+                                </div>
+                            </details>
+                        }
+                        else
+                        {
+                            <span class="fireball-source-unavailable">Source not available yet</span>
+                        }
+                    </div>
                 }
             </div>
             @if (Core.Slots[slot] is not null)
             {
                 <button type="button" class="fireball-remove" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
             }
-            <p class="fireball-help">Only researched mutations can be equipped.</p>
+            <p class="fireball-help">Only unlocked mutators can be equipped. Your first secured Ashfang sample unlocks each playable mutator permanently.</p>
         }
         @if (!string.IsNullOrWhiteSpace(notice))
         {

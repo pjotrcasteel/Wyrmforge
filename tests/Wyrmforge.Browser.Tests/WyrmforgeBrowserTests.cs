@@ -487,6 +487,45 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_FireballMutationSources_ExplainRealAshfangUnlocksWithoutInventedCrafting(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]})); localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart']));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
+        await Expect(Page.Locator(".fireball-source-details")).ToHaveCountAsync(3);
+        await Expect(Page.Locator(".fireball-source-unavailable")).ToHaveCountAsync(7);
+
+        var meteor = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Meteor Heart" });
+        await Expect(meteor.Locator("summary")).ToContainTextAsync("Ashfang");
+        await Expect(meteor.Locator("summary")).ToContainTextAsync("Molten Fang");
+        await Expect(meteor.Locator(".fireball-mutator")).ToBeDisabledAsync();
+        await meteor.Locator("summary").ClickAsync();
+        await Expect(meteor.Locator(".fireball-source-description")).ToContainTextAsync("Secure Molten Fang from an Ashfang Hunt");
+        await Expect(meteor.Locator(".fireball-source-description")).ToContainTextAsync("No crafting required");
+        await Expect(meteor.Locator(".fireball-source-description")).ToContainTextAsync("Not yet unlocked");
+        Assert.IsTrue(await meteor.Locator("summary").EvaluateAsync<bool>("element => element.getBoundingClientRect().height >= 44"));
+
+        var detonation = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Detonation" });
+        await Expect(detonation.Locator("summary")).ToContainTextAsync("Cinder Heart");
+        await detonation.Locator("summary").ClickAsync();
+        await Expect(detonation.Locator(".fireball-source-description")).ToContainTextAsync("Already unlocked");
+        await Expect(detonation.Locator(".fireball-source-description")).ToContainTextAsync("Secured in vault: 1");
+
+        var planned = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Phoenix Volley" });
+        await Expect(planned.Locator(".fireball-source-unavailable")).ToHaveTextAsync("Source not available yet");
+        await Expect(planned.Locator("details")).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
+            "Source disclosures must not cause horizontal overflow on mobile.");
+    }
+
+    [TestMethod]
     public async Task Mobile_FireballNexus_EquipsUpgradesAndRestoresPersistentSpell()
     {
         await Page.SetViewportSizeAsync(390, 844);

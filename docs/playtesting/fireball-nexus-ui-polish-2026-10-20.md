@@ -39,3 +39,15 @@ Base: `main` at `3dcd012` when started.
 - Browser regression covers 390px sealed Lv.3 guidance and the correct signature for legacy Cryomancer, Stormcaller and Arcanist saves, with no Fireball controls or secured-resource spending. Run `Validate Wyrmforge` and `Browser smoke` before merging.
 
 This is a status checkpoint, not a replacement for the canonical gameplay design in `docs/canon/magic-and-combat.md`.
+
+## Step 3: Fireball mutator acquisition clarity (2026-10-21)
+
+Implementation on `feature/fireball-mutator-sources-20261021` (PR pending validation). No additional currency, crafting station, loot table or mutator unlock was introduced.
+
+- Source information is available directly in the existing mutator selection list, including when the Equip action is locked; the separate disclosure is a 44px touch target.
+- All three playable mutators use their actual `FireballCoreCatalog.ResearchSample` and `DragonEssenceCatalog.Source/Name`, not invented materials or enemy drops: **Meteor Heart ← Ashfang / Molten Fang**, **Detonation ← Ashfang / Cinder Heart**, **Scorched Earth ← Ashfang / Ashen Wing**.
+- The current implementation **automatically and permanently discovers** a playable Fireball mutator the first time that source essence is secured (`FireballCoreState.DiscoverSecured`). No separate crafting or Research-tab action is currently required. The disclosure says this explicitly, displays the actual secured-vault count separately from discovery state, and makes no claim that spending a sample unlearns it.
+- The seven planned, non-playable Fireball mutations explicitly have **no acquisition source yet**; they remain disabled, with no fake recipe.
+- The existing equip semantics, locked sockets, saved progress, economy and other steps in the six-point UX series remain unchanged.
+- Added 320×568 and 390×844 browser coverage for real source names, unlocked/locked state, no fictional crafting, touch target height and viewport overflow; inspect CI before merging.
+- Canonical rules: [Magic & combat](../canon/magic-and-combat.md) §3.0a. This is a tested in-game source presentation, not the full unimplemented research/crafting progression.
