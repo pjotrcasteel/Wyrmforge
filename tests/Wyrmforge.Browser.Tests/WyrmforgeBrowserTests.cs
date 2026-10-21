@@ -12,6 +12,31 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_RefugeMetrics_DebugUrlShowsLiveFPSAndSimulationCosts()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Expect(Page.Locator("#refuge-town-performance")).ToHaveCountAsync(0);
+
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townMetrics=1",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var overlay = Page.Locator("#refuge-town-performance");
+        await Expect(overlay).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const text = document.querySelector('#refuge-town-performance')?.textContent ?? '';
+            return /FPS \d+/.test(text) && text.includes('frame p95') &&
+                text.includes('AI ') && text.includes('Paths ');
+        }");
+        Assert.IsTrue(await overlay.EvaluateAsync<bool>(
+            "node => getComputedStyle(node).pointerEvents === 'none'"));
+        await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls(int width, int height)
@@ -136,7 +161,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(await Page.EvaluateAsync<bool>(@"() => {
             const feet = document.querySelectorAll('.refuge-town-geometry-feet').length;
             const citizens = document.querySelectorAll('.refuge-town-citizen').length;
-            return feet === citizens && citizens > 0 && citizens <= 7;
+            return feet === citizens && citizens > 0 && citizens <= 11;
         }"), "Only currently present citizens should have debug contact discs.");
         await Expect(Page.Locator(".refuge-town-citizen[style*='visibility:hidden']")).ToHaveCountAsync(0);
 

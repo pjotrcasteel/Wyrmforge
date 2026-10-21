@@ -20,7 +20,7 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(actorMarkup, /@if \(person\.IsPresent && IsBehindWell\(person\)\)/);
     assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
-    assert.match(actorMarkup, /crowdStop\.Cancel\(\)/);
+    assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
     assert.doesNotMatch(markup, /PeriodicTimer/,
         'The whole painted town must not own an NPC animation timer');
     assert.match(markup, /GeometryChanged="OnGeometryChanged"/);
@@ -60,12 +60,46 @@ test('well foreground respects feet depth, and building activity reuses seven ac
         'Keep one 100ms NPC timer, not a per-building update loop');
 
     const works = map.destinations.filter(destination => destination.buildingId);
-    assert.deepEqual(works.map(d => d.buildingId).sort(), ['build', 'codex', 'forge', 'legends']);
+    assert.deepEqual(works.map(d => d.buildingId).sort(),
+        ['build', 'build', 'codex', 'codex', 'forge', 'forge', 'legends', 'legends']);
     for (const work of works) assert.ok(work.activity);
     assert.match(markup, /openBuildings: OpenBuildings\(\)/);
     assert.match(model, /_openBuildings\.Contains\(building\)/);
     assert.match(model, /public bool IsWorking/);
     assert.match(model, /citizen\.IdleSeconds = 4f \+ NextInt\(60\)/);
+});
+
+test('opt-in FPS and AI profiling is separate from geometry and has no normal gameplay overhead', () => {
+    const markup = source(scene);
+    const actorsMarkup = source(actors);
+    const script = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-performance.js');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(markup, /townMetrics=1/);
+    assert.match(markup, /@if \(showTownMetrics\)/);
+    assert.match(markup, /id="refuge-town-performance"/);
+    assert.match(markup, /ShowMetrics="showTownMetrics"/);
+    assert.match(actorsMarkup, /if \(!firstRender \|\| !ShowMetrics\) return/);
+    assert.match(actorsMarkup, /"import", "\.\/js\/refuge-performance\.js"/);
+    assert.match(actorsMarkup, /Stopwatch\.GetElapsedTime\(began\)/);
+    assert.match(actorsMarkup, /measuredTicks >= 10/);
+    assert.match(script, /requestAnimationFrame\(frame\)/);
+    assert.match(script, /Math\.ceil\(frameTimes\.length \* 0\.95\)/);
+    assert.match(script, /cancelAnimationFrame\(frameHandle\)/);
+    assert.match(css, /refuge-town-performance\s*\{[^}]*pointer-events:none/s);
+});
+
+test('two work anchors per unlocked building reuse one 100ms simulation with three roaming residents', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const grouped = Object.groupBy(map.destinations.filter(d => d.buildingId), d => d.buildingId);
+    for (const building of ['build', 'forge', 'codex', 'legends']) {
+        assert.equal(grouped[building]?.length, 2, `Two workstations expected at ${building}`);
+        assert.ok(grouped[building].every(d => typeof d.x === 'number' && !!d.activity));
+    }
+    assert.match(simulation, /Math\.Max\(citizenCount, workerStops \+ 3\)/);
+    assert.match(simulation, /public int AssignedWorkers/);
+    assert.match(simulation, /private void EnsureWorkerCoverage/);
+    assert.match(source(actors), /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
 });
 
 test('blue marked left stair planter is part of real blocking map', () => {

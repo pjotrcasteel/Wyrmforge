@@ -34,7 +34,8 @@
 
         @if (crowd is not null)
         {
-            <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry" GeometryChanged="OnGeometryChanged" />
+            <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"
+                              ShowMetrics="showTownMetrics" GeometryChanged="OnGeometryChanged" />
         }
 
         @* Foreground pixels come from the approved painting itself. Tight silhouettes
@@ -100,6 +101,11 @@
                 data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
                 @onclick="() => OnGate.InvokeAsync()"></button>
     </div>
+    @if (showTownMetrics)
+    {
+        <output id="refuge-town-performance" class="refuge-town-performance"
+                data-town-performance="true" aria-label="Refuge performance measurements"></output>
+    }
 </div>
 
 @code {
@@ -107,12 +113,16 @@
     private readonly CancellationTokenSource loadingStop = new();
 
     private bool showTownGeometry;
+    private bool showTownMetrics;
 
     protected override async Task OnInitializedAsync()
     {
-        showTownGeometry = new Uri(Navigation.Uri).Query.TrimStart('?')
-            .Split('&', StringSplitOptions.RemoveEmptyEntries)
-            .Any(parameter => string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
+        var query = new Uri(Navigation.Uri).Query.TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries);
+        showTownGeometry = query.Any(parameter =>
+            string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
+        showTownMetrics = query.Any(parameter =>
+            string.Equals(parameter, "townMetrics=1", StringComparison.OrdinalIgnoreCase));
 
         try
         {

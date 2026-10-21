@@ -136,7 +136,7 @@ public sealed class TownCrowdTests
         var origin = map.Destinations.Single(node => node.Id == "lower-square").Position;
         var work = map.Destinations.Where(node => node.BuildingId is not null).ToArray();
 
-        Assert.HasCount(4, work);
+        Assert.HasCount(8, work);
         foreach (var destination in work)
         {
             Assert.IsFalse(destination.IsExit);
@@ -151,7 +151,7 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void TownCrowd_OnlyUnlockedBuildingsReceiveWorkers_WithoutIncreasingPopulation()
+    public void TownCrowd_TwoWorkersPerUnlockedBuilding_AndThreeFreeRoamers()
     {
         var map = Scene();
         var vacant = new TownCrowd(map, seed: 205);
@@ -160,10 +160,16 @@ public sealed class TownCrowdTests
 
         var unlocked = new[] { "build", "forge", "codex", "legends" };
         var populated = new TownCrowd(Scene(), seed: 205, openBuildings: unlocked);
-        Assert.HasCount(7, populated.Citizens);
+        Assert.HasCount(11, populated.Citizens);
+        Assert.AreEqual(8, populated.AssignedWorkers);
+        Assert.AreEqual(8, populated.ActiveWorkers);
+        foreach (var building in unlocked)
+            Assert.AreEqual(2, populated.Citizens.Count(citizen => citizen.WorkBuildingId == building),
+                $"Exactly two workers should initially serve {building}.");
+        Assert.AreEqual(3, populated.Citizens.Count(citizen => citizen.AssignedBuildingId is null));
         CollectionAssert.AreEquivalent(unlocked,
             populated.Citizens.Where(citizen => citizen.IsWorking)
-                .Select(citizen => citizen.WorkBuildingId!).ToArray());
+                .Select(citizen => citizen.WorkBuildingId!).Distinct().ToArray());
         Assert.IsTrue(populated.Citizens.Where(citizen => citizen.IsWorking)
             .All(citizen => citizen.CurrentActivity is not null));
 
@@ -171,6 +177,58 @@ public sealed class TownCrowdTests
         Assert.IsFalse(populated.Citizens.Any(citizen => citizen.IsWorking),
             "Workers must stop when an active building becomes vacant.");
         Assert.IsTrue(populated.Citizens.All(citizen => citizen.WorkBuildingId is null));
+        Assert.AreEqual(0, populated.AssignedWorkers);
+    }
+
+    [TestMethod]
+    public void TownCrowd_UnlocksWhileRunning_AssignsTwoWorkersPerBuilding()
+    {
+        var town = new TownCrowd(Scene(), seed: 205);
+        Assert.HasCount(7, town.Citizens);
+        town.SetOpenBuildings(["forge"]);
+        Assert.AreEqual(2, town.AssignedWorkers);
+        Assert.AreEqual(7, town.Citizens.Count);
+        // Unlock while residents are already travelling: do not accidentally
+        // spawn above the bounded workforce just because everyone is busy.
+        for (var tick = 0; tick < 30; tick++) town.Step(TimeSpan.FromMilliseconds(100));
+        town.SetOpenBuildings(["build", "forge", "codex", "legends"]);
+        Assert.AreEqual(8, town.AssignedWorkers);
+        Assert.HasCount(11, town.Citizens);
+        Assert.AreEqual(3, town.Citizens.Count(c => c.AssignedBuildingId is null));
+        foreach (var building in new[] { "build", "forge", "codex", "legends" })
+            Assert.AreEqual(2, town.Citizens.Count(c => c.AssignedBuildingId == building));
+
+        for (var tick = 0; tick < 300; tick++)
+        {
+            town.Step(TimeSpan.FromMilliseconds(100));
+            foreach (var citizen in town.Citizens)
+                Assert.IsTrue(town.Navigation.IsWalkable(citizen.Position));
+        }
+        Assert.IsTrue(town.PathfindCount > 0);
+        Assert.IsTrue(town.PathfindTotalMilliseconds >= 0);
+
+        town.SetOpenBuildings([]);
+        Assert.AreEqual(0, town.AssignedWorkers);
+        Assert.IsFalse(town.Citizens.Any(c => c.IsWorking));
+    }
+
+    [TestMethod]
+    public void TownCrowd_DoubleWorkers_ReplayMatchesSeed()
+    {
+        var open = new[] { "build", "forge", "codex", "legends" };
+        var left = new TownCrowd(Scene(), seed: 991, openBuildings: open);
+        var right = new TownCrowd(Scene(), seed: 991, openBuildings: open);
+        for (var tick = 0; tick < 250; tick++)
+        {
+            left.Step(TimeSpan.FromMilliseconds(100));
+            right.Step(TimeSpan.FromMilliseconds(100));
+            for (var i = 0; i < left.Citizens.Count; i++)
+            {
+                Assert.AreEqual(right.Citizens[i].Position, left.Citizens[i].Position);
+                Assert.AreEqual(right.Citizens[i].DestinationNode, left.Citizens[i].DestinationNode);
+                Assert.AreEqual(right.Citizens[i].AssignedBuildingId, left.Citizens[i].AssignedBuildingId);
+            }
+        }
     }
 
     [TestMethod]
