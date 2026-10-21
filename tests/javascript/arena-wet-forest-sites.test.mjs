@@ -51,3 +51,22 @@ test('world-foot draw uses only pixel rects for the supplied prop and returns fa
     assert.match(renderer, /if \(layer\.wetForest && drawWetForestStoryArt\(/);
     assert.doesNotMatch(code, /Math\.random|DamagePropsInRadius|RestrictMovement|SetPhase|requestAnimationFrame/);
 });
+
+test('abandoned camp has a legible ruined shelter silhouette tied to its real single prop', () => {
+    const camp = { id: 1, kind: 'camp-remains', x: .65, y: .46, radius: 19, healthFraction: 1 };
+    const first = createWetForestStoryArtPlan(camp, 1441);
+    const repeated = createWetForestStoryArtPlan(camp, 1441);
+    assert.deepEqual(first, repeated);
+    assert.ok(first.marks.length >= 90, 'Collapsed shelter must read as a landmark, not four loose planks');
+    assert.ok(first.marks.some(m => m.y <= -60), 'Pointed shelter roof above the dark entry');
+    assert.ok(first.marks.some(m => m.y <= -40 && m.x < -25));
+    assert.ok(first.marks.some(m => m.y <= -40 && m.x > 20));
+    assert.ok(first.marks.some(m => m.h >= 30 && m.y < -35), 'Vertical physical-foot anchored timber');
+    assert.ok(first.marks.some(m => m.y >= -12), 'Hearth and fallen rubble connect shelter to soil');
+    assert.ok(first.marks.every(m => m.x >= -50 && m.x + m.w <= 60 &&
+        m.y >= -64 && m.y + m.h <= 12 && m.w % 2 === 0 && m.h % 2 === 0),
+        'Visual silhouette stays bounded near existing C# prop, not across combat floor');
+    assert.deepEqual(camp, { id: 1, kind: 'camp-remains', x: .65, y: .46, radius: 19, healthFraction: 1 });
+    const broken = createWetForestStoryArtPlan({ ...camp, healthFraction: .3 }, 1441);
+    assert.notDeepEqual(first, broken);
+});
