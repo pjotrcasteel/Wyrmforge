@@ -55,11 +55,16 @@ public static class HuntArenaGenerator
         {
             var y = fraction == .50 ? .50 : Math.Clamp(fraction + (rng.NextDouble() - .5) * .032, .10, .90);
             var x = fraction == .50 ? .50 : Math.Clamp(TrailXAt(trail, y) + (rng.NextDouble() - .5) * .13, .23, .77);
-            const double minimumSiteDistance = 185;
-            if (Math.Sqrt(Math.Pow((x - siteX) * 950, 2) + Math.Pow((y - siteY) * 1550, 2)) < minimumSiteDistance)
-                x = Math.Clamp(x + (x <= siteX ? -.23 : .23), .18, .82);
-            if (Math.Sqrt(Math.Pow((x - siteX) * 950, 2) + Math.Pow((y - siteY) * 1550, 2)) < minimumSiteDistance)
-                y = Math.Clamp(y + (y <= siteY ? -.09 : .09), .10, .90);
+            // The central spawn stays open around the actual mage. Other glades
+            // move away from authored camps/graves plus their nearby physical props,
+            // so decorative ruins do not secretly consume an enemy-combat orbit.
+            const double minimumSiteDistance = 275;
+            if (fraction != .50 && Math.Sqrt(Math.Pow((x - siteX) * 950, 2) +
+                    Math.Pow((y - siteY) * 1550, 2)) < minimumSiteDistance)
+                x = Math.Clamp(x + (x <= siteX ? -.30 : .30), .17, .83);
+            if (fraction != .50 && Math.Sqrt(Math.Pow((x - siteX) * 950, 2) +
+                    Math.Pow((y - siteY) * 1550, 2)) < minimumSiteDistance)
+                y = Math.Clamp(y + (y <= siteY ? -.14 : .14), .10, .90);
             ground.Add(new GroundPatch("clearing", x, y, .17, .105));
         }
         return new WetForestRecipe(site, siteX, siteY, trail, ground);
