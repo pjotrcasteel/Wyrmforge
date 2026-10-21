@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
     wetForestTreeFrame, createWetForestRootVeins, createWetForestUnderstory,
     drawWetForestRootVeins, drawWetForestTreeAccents,
-    createWetForestTreeArtPlan, drawWetForestTreeArt,
+    createWetForestTreeArtPlan, drawWetForestTreeArt, wetForestTreeFireState,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-vegetation.js';
 import { createDestructibleLayers } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
@@ -133,4 +133,61 @@ test('Wet Forest Lab woodland silhouettes remain physically grounded and use res
     }
     assert.equal(pine.id, 1);
     assert.equal(pine.kind, 'pine');
+});
+
+test('fire trees evolve monotonically from chosen-route percentage, never by arbitrary stage count', () => {
+    const ranks = { healthy: 0, charred: 1, burning: 2, 'split-glowing': 3 };
+    const stages = new Set();
+    for (let id = 1; id <= 80; id++) {
+        let previous = 0;
+        for (const progress of [0, .10, .25, .4, .55, .7, .85, 1]) {
+            const state = wetForestTreeFireState('pine', id, 1204, progress, 'fire');
+            assert.ok(ranks[state] >= previous, 'Fire must never reverse the same tree\'s damage');
+            previous = ranks[state];
+            stages.add(state);
+            assert.equal(state, wetForestTreeFireState('pine', id, 1204, progress, 'fire'));
+        }
+        assert.equal(wetForestTreeFireState('pine', id, 1204, 1, 'frost'), 'healthy');
+        assert.equal(wetForestTreeFireState('pine', id, 1204, 1, 'arcane'), 'healthy');
+    }
+    assert.deepEqual(stages, new Set(['healthy', 'charred', 'burning', 'split-glowing']));
+    assert.equal(wetForestTreeFireState('crate', 2, 1204, 1, 'fire'), 'healthy');
+});
+
+test('fire variants are different physical silhouettes with local embers, never global scene tint', () => {
+    for (const state of ['charred', 'burning', 'split-glowing']) {
+        let chosen = null;
+        for (let id = 1; id < 90 && !chosen; id++)
+            if (wetForestTreeFireState('pine', id, 1204, 1, 'fire') === state) chosen = id;
+        assert.ok(chosen !== null, 'Expected reproducible ' + state + ' tree');
+        const base = createWetForestTreeArtPlan('pine', chosen, 1204, 0, 'fire');
+        const damaged = createWetForestTreeArtPlan('pine', chosen, 1204, 1, 'fire');
+        assert.equal(base.fireState, 'healthy');
+        assert.equal(damaged.fireState, state);
+        assert.notDeepEqual(damaged.shapes, base.shapes);
+        assert.ok(damaged.shapes.every(shape => shape.x >= -56 && shape.x + shape.w <= 56 &&
+            shape.y >= -118 && shape.y + shape.h <= 10), 'All charred and hot pixels fit the cached physical tree sprite');
+    }
+});
+
+test('burning tree ember flicker stays near its own C# foot and does not affect pathfinding', () => {
+    let id = 1;
+    while (wetForestTreeFireState('pine', id, 1204, 1, 'fire') !== 'burning') id++;
+    const rects = [];
+    const ctx = { save() {}, restore() {}, set fillStyle(_value) {}, imageSmoothingEnabled: true,
+        fillRect(...args) { rects.push(args); } };
+    assert.equal(drawWetForestTreeArt(ctx, 'pine', id, 1204, 400, 600, 1, 'fire', 2), true);
+    const first = rects.slice(-4);
+    rects.length = 0;
+    drawWetForestTreeArt(ctx, 'pine', id, 1204, 400, 600, 1, 'fire', 4);
+    const second = rects.slice(-4);
+    assert.notDeepEqual(first, second, 'Only tiny ember motes animate; cached bark/canopy stay fixed');
+    assert.ok(first.every(([x, y, w, h]) => x >= 388 && x <= 412 && y >= 502 && y <= 577 && w === 2 && h === 2));
+    const forest = { seed: 1204, generatorPreview: true, habitat: 'WetForest',
+        element: 'fire', corruption: .91, props };
+    const layers = createDestructibleLayers(forest, 950, 1550, 4);
+    assert.ok(layers.every(layer => layer.fireInfluence === .91 && layer.seconds === 4));
+    assert.deepEqual(layers.map(layer => layer.prop.id), props.map(prop => prop.id));
+    assert.ok(createDestructibleLayers({ ...forest, generatorPreview: false }, 950, 1550)
+        .every(layer => !layer.wetForest), 'Normal Hunt sprite atlas and collision must remain unchanged');
 });
