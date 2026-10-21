@@ -15,11 +15,18 @@ def composite_fire(rig,clip,index,ctx,matrix,raster,rgb,alpha):
     source=load_fire(path)
     def t(a,dtype=torch.float32):return torch.tensor(np.asarray(a),device=rgb.device,dtype=dtype).contiguous()
     v=t(source['positions'][index]);f=t(source['faces'],torch.int32);colors=t(source['colors'][index])
+    smoke_path=rig/f'body-smoke-{clip}-samples.npz'
+    if smoke_path.exists():
+        body=load_fire(rig/f'{clip}-samples.npz')
+        world=dr.interpolate(t(body['positions'][index])[None],raster,t(body['faces'],torch.int32))[0][0]
+        distance=torch.cdist(world.reshape(-1,3),v[::49]).min(1).values.reshape(rgb.shape[:2])
+        bounce=.14*torch.exp(-distance/.10)*(raster[0,:,:,3]>0)
+        stone=(rgb[:,:,0]<.45)|(rgb[:,:,0]<rgb[:,:,1]*1.5)
+        rgb=rgb+bounce[:,:,None]*t([1,.29,.045])*stone[:,:,None]
     projected=torch.cat([v,torch.ones_like(v[:,:1])],1)@matrix.T
     fire,_=dr.rasterize(ctx,projected[None],f,list(raster.shape[1:3]));color=dr.interpolate(colors[None],fire,f)[0][0]
     visible=(fire[0,:,:,3]>0)&((raster[0,:,:,3]==0)|(fire[0,:,:,2]<=raster[0,:,:,2]))
     rgb=torch.where(visible[:,:,None],color,rgb);alpha=torch.maximum(alpha,visible.float())
-    smoke_path=rig/f'body-smoke-{clip}-samples.npz'
     if smoke_path.exists():
         smoke=load_fire(smoke_path);centers=t(smoke['centers'][index]);radii=t(smoke['radii'][index]);densities=t(smoke['densities'][index])
         h,w=rgb.shape[:2];gy,gx=torch.meshgrid((torch.arange(h,device=rgb.device)+.5)*2/h-1,(torch.arange(w,device=rgb.device)+.5)*2/w-1,indexing='ij')

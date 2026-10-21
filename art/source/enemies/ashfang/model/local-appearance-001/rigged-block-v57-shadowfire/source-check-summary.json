@@ -1,0 +1,56 @@
+{
+  "arena-flyovers-samples": {
+    "frames": 279,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "loopError": null
+  },
+  "fire-flyover-samples": {
+    "frames": 56,
+    "finite": true,
+    "minZ": 16.575172424316406,
+    "loopError": null
+  },
+  "flight-loop-samples": {
+    "frames": 33,
+    "finite": true,
+    "minZ": -0.01654684543609619,
+    "loopError": 0.0
+  },
+  "flight-sequence-samples": {
+    "frames": 148,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "loopError": null
+  },
+  "high-launch-samples": {
+    "frames": 55,
+    "finite": true,
+    "minZ": -0.19580680131912231,
+    "loopError": null
+  },
+  "landing-samples": {
+    "frames": 31,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "loopError": null
+  },
+  "rear-breath-samples": {
+    "frames": 73,
+    "finite": true,
+    "minZ": -0.19580674171447754,
+    "loopError": null
+  },
+  "takeoff-flight-land-samples": {
+    "frames": 84,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "loopError": null
+  },
+  "walk-samples": {
+    "frames": 49,
+    "finite": true,
+    "minZ": -0.19581694900989532,
+    "loopError": 0.0
+  }
+}
