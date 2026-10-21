@@ -65,3 +65,25 @@ called accepted art. They are not automatically riggable meshes or animations.
 The standalone raster master stage preserves the exact source pose and colour
 reference; it does not authorize a new photorealistic style. Existing rejected
 sources remain as evidence. No successful new art candidate claimed yet.
+
+
+## Current 2.5D art review
+
+The card Pixel Art Concept idle pose remains the exact target. References-v5
+traces its silhouette without repainting original RGB. Art-master-002 preserves
+three actual 1024x576 local offline SDXL studies. Seed 2801 changes the card least
+and is selected only for comparison, not accepted as final art. It still loses
+face, armour and molten chest detail; the fidelity gate remains open.
+
+card-review-v1/card-fidelity-review.png compares the original pixels and study,
+including 96x54 native checks. The folder preserves transparent masters, editable
+OpenRaster files (candidate plus hidden immutable reference), and 256x144
+card-palette exports. These are raster studies, not rigs or animation assets.
+The isolated runtime used RTX 5090 with 9036 MiB peak allocated VRAM; provenance
+records offline inference, seeds, prompts and reference hash. No hosted inference
+or GPU driver/settings changes.
+
+Next work must preserve the original card detail rather than treating silhouette
+overlap as art acceptance. No further animation, runtime integration or merge is
+validated by this review. Earlier reconstruction next-step notes above are
+historical and superseded by the documented method stop.

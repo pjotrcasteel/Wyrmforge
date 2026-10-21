@@ -1,0 +1,35 @@
+{
+  "stage": "2.5D raster art master; not an animated source or accepted design",
+  "masterResolution": [
+    1024,
+    576
+  ],
+  "nativeReviewResolution": [
+    96,
+    54
+  ],
+  "candidates": [
+    {
+      "source": "card-art-2801.png",
+      "referenceSilhouetteIoU": 0.9538580306909632,
+      "ownerAccepted": false,
+      "styleAccepted": false,
+      "rigged": false
+    },
+    {
+      "source": "card-art-2802.png",
+      "referenceSilhouetteIoU": 0.943334273063465,
+      "ownerAccepted": false,
+      "styleAccepted": false,
+      "rigged": false
+    },
+    {
+      "source": "card-art-2803.png",
+      "referenceSilhouetteIoU": 0.9285036054757655,
+      "ownerAccepted": false,
+      "styleAccepted": false,
+      "rigged": false
+    }
+  ],
+  "automatedArtAcceptance": false
+}
