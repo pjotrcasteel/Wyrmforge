@@ -119,13 +119,24 @@
             using var http = new HttpClient();
             var json = await http.GetStringAsync(Navigation.ToAbsoluteUri($"art/town/night-navigation.json?v={AppBuildInfo.Version}"), loadingStop.Token);
             if (loadingStop.IsCancellationRequested) return;
-            crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: 7);
+            crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: 7,
+                openBuildings: OpenBuildings());
         }
         catch (OperationCanceledException) { /* Town was left before navigation loaded. */ }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or ArgumentException)
         {
             Logger.LogWarning(exception, "Refuge navigation unavailable. Leave the painted town intact without pedestrians.");
         }
+    }
+
+    protected override void OnParametersSet() => crowd?.SetOpenBuildings(OpenBuildings());
+
+    private IEnumerable<string> OpenBuildings()
+    {
+        if (NexusUnlocked) yield return "build";
+        if (ForgeUnlocked) yield return "forge";
+        if (CodexUnlocked) yield return "codex";
+        if (HallUnlocked) yield return "legends";
     }
 
     private void OnGeometryChanged() => StateHasChanged();
