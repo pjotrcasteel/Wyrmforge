@@ -168,7 +168,9 @@ public sealed class TownNavigationMap
         var dx = b.X - a.X;
         var dy = b.Y - a.Y;
         var length = MathF.Sqrt(dx * dx + dy * dy);
-        var samples = Math.Max(1, (int)MathF.Ceiling(length / (CellSize / 3f)));
+        // Two-pixel steps close the narrow gaps that coarser five-pixel
+        // sampling could miss around planter corners and sign supports.
+        var samples = Math.Max(1, (int)MathF.Ceiling(length / MathF.Min(2f, CellSize / 8f)));
         for (var i = 0; i <= samples; i++)
         {
             var t = (float)i / samples;
