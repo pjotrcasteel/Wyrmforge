@@ -324,36 +324,27 @@ export function createWetForestOldPaving(recipe, seed, width, height) {
             const w = 8 + Math.floor(hash(seed ^ 0x347291, row, lane + 7) * 6) * 2;
             const h = roll > .78 ? 8 : 6;
             if (x < 2 || py < 2 || x + w + 2 > width || py + h + 2 > height) continue;
-            // Each sunk slab has a tiny top-left bevel and a two-pixel downhill
-            // contact shadow. It has visual relief, NOT a raised physical tile.
-            // Chipped shoulders, varied stone heights and mossy joints keep the
-            // surface from reading as a repeated rectangular checkerboard.
-            const palette = roll > .72
-                ? { face: '#65665b', light: '#8b8a75', shade: '#444b41' }
-                : roll > .43
-                    ? { face: '#555a4d', light: '#797b69', shade: '#383f38' }
-                    : { face: '#454e43', light: '#687362', shade: '#303930' };
+            // Restrained stone relief: dark wet paving should read as an old
+            // footpath, not a pile of outlined Lego bricks. Most stones have a
+            // single muted face; occasional small bevels suggest height.
+            const face = roll > .72 ? '#5c6054' : roll > .43 ? '#50564b' : '#444c42';
             const mark = (dx, dy, mw, mh, color, alpha, kind) => {
                 marks.push({ x: x + dx, y: py + dy, width: mw, height: mh,
                     color, alpha, kind });
             };
-            // A compact earth-colored occlusion pocket only beneath this stone.
-            mark(2, 2, w, h, '#171f1c', .59, 'stone-shadow');
-            mark(0, 2, w, h - 2, '#252e27', .84, 'stone-joint');
-            mark(2, 0, w - 4, h - 2, palette.face, .94, 'stone-face');
-            mark(0, 2, w - 2, h - 4, palette.face, .87, 'stone-face');
-            // Light is consistent from upper-left; the right/bottom bevel darkens.
-            mark(2, 0, w - 6, 2, palette.light, .67, 'stone-highlight');
-            mark(w - 4, 2, 2, h - 4, palette.shade, .84, 'stone-bevel');
-            mark(2, h - 2, w - 4, 2, palette.shade, .83, 'stone-bevel');
-            // Chip at the far corners rather than drawing identical rounded blocks.
-            if (roll < .32) mark(w - 4, 0, 2, 2, '#28332b', .91, 'stone-chip');
-            if (roll > .82) mark(0, h - 2, 4, 2, '#28342b', .81, 'stone-chip');
+            mark(0, 0, w, h, face, .79, 'stone-face');
             const weather = hash(seed ^ 0x4129d0, row + 19, lane + 9);
-            if (weather < .21) mark(Math.min(w - 6, 4), 2, 2, 2,
-                '#303e34', .77, 'stone-crack');
-            if (weather > .78) mark(w - 4, h - 2, 4, 2,
-                '#3d513d', .73, 'stone-moss');
+            // Local and low-contrast only: no continuous black outlines.
+            if (weather < .34)
+                mark(2, h, w - 4, 2, '#1e2722', .24, 'stone-shadow');
+            if (weather > .76)
+                mark(2, 0, w - 6, 2, '#797b6b', .29, 'stone-highlight');
+            if (weather > .56 && weather < .76)
+                mark(w - 2, 2, 2, h - 2, '#303b32', .32, 'stone-bevel');
+            if (weather < .07)
+                mark(w - 4, 0, 2, 2, '#303b32', .45, 'stone-chip');
+            if (weather > .93)
+                mark(w - 4, h - 2, 4, 2, '#435842', .40, 'stone-moss');
         }
     }
     return marks;
