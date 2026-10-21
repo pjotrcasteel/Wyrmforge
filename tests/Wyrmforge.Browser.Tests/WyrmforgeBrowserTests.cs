@@ -36,6 +36,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
         }");
         Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
+        if (width == 390)
+        {
+            Directory.CreateDirectory(ArtifactDirectory);
+            await ScreenshotAsync("arena-lab-wetforest-390.png");
+        }
         await Page.GetByRole(AriaRole.Checkbox, new() { Name = "Collision outlines" }).CheckAsync();
         await Page.WaitForFunctionAsync(@"async () => {
             const m = await import('./js/arena-lab.js');
