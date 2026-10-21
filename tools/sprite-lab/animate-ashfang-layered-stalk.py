@@ -3,7 +3,7 @@ from pathlib import Path
 import json,math
 import numpy as np,cv2,torch
 from PIL import Image,ImageDraw
-base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-005';out.mkdir(exist_ok=False);(out/'frames').mkdir()
+base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-006';out.mkdir(exist_ok=False);(out/'frames').mkdir()
 spec=json.loads((source/'source.json').read_text());device='cuda'
 W,H=231,115;cw,ch=320,192;offset=(48,40)
 body=Image.open(source/'hidden-overlap-001/torso-with-overlap.png').convert('RGBA')
@@ -40,6 +40,10 @@ for name in names:
  weights=np.zeros((len(vertices),len(lengths)))
  for index in range(len(lengths)):
   samples=np.zeros(len(lengths));samples[index]=1;weights[:,index]=np.interp(arc,centers,samples)
+ for index in range(len(lengths)):
+  weights[:,index]=cv2.GaussianBlur(weights[:,index].reshape(len(ys),len(xs)),(0,0),2).reshape(-1)
+ pawlock=np.exp(-np.sum((vertices-chain[-1])**2,axis=1)/49)
+ weights*=1-pawlock[:,None];weights[:,-1]+=pawlock;weights/=weights.sum(axis=1,keepdims=True)
  layers.append(dict(name=name,texture=torch.from_numpy(rgba).permute(2,0,1)[None].to(device),tri=np.array(kept),chain=chain,weights=weights))
 bodyrgba=np.array(body).astype(np.float32)/255;bodytri=[]
 for t in tri:
