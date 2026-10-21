@@ -96,7 +96,36 @@ public sealed class ArenaEnvironmentStateTests
         CollectionAssert.AreEqual(first.Props.ToArray(), again.Props.ToArray());
         Assert.IsGreaterThan(0, first.Props.Count);
         Assert.IsFalse(first.Props.SequenceEqual(different.Props));
-        Assert.IsTrue(first.Props.All(prop => prop.X < .32 || prop.X > .68));
+        Assert.IsTrue(first.Props.All(prop => Vector2D.Distance(
+            new Vector2D(prop.X * 950, prop.Y * 1550), new Vector2D(475, 775)) > prop.Radius + 85));
+    }
+
+    [TestMethod]
+    public void WetForest_GeneratesNaturalReachableSitesWithoutForcedCrossings()
+    {
+        var sites = new HashSet<string>();
+        var trailCenters = new HashSet<double>();
+        var allProps = new List<ArenaPropRenderSnapshot>();
+        for (var seed = 1204; seed < 1212; seed++)
+        {
+            var map = new WyrmrealmMapState(seed: seed);
+            var node = map.AvailableNodes[0] with { Habitat = WyrmrealmHabitat.WetForest };
+            var scene = ArenaEnvironmentState.Create(seed, node, generatorPreview: true).Snapshot();
+            Assert.IsEmpty(scene.Barriers, "The lab must not impose horizontal walls or gated combat crossings.");
+            Assert.IsNotNull(scene.WetForest);
+            Assert.AreEqual(HuntArenaGenerator.GenerateWetForest(scene.Seed), scene.WetForest);
+            Assert.HasCount(9, scene.WetForest.Trail);
+            Assert.IsGreaterThanOrEqualTo(22, scene.Props.Count);
+            sites.Add(scene.WetForest.Site);
+            trailCenters.Add(scene.WetForest.Trail[4].X);
+            allProps.AddRange(scene.Props);
+        }
+        Assert.IsGreaterThan(1, sites.Count);
+        Assert.IsGreaterThan(1, trailCenters.Count);
+        Assert.IsTrue(allProps.Any(p => p.X > .32 && p.X < .68),
+            "The former forced vertical gap must not constrain prop placement.");
+        Assert.IsTrue(allProps.Any(p => p.Y > .39 && p.Y < .61),
+            "The former forced horizontal gap must not constrain prop placement.");
     }
 
     [TestMethod]
