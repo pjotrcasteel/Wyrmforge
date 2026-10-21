@@ -37,3 +37,25 @@ The page does not unlock abilities, save player data or spawn real combat reward
   pickup readability. No mandatory crossing walls or glow circles have been reintroduced.
 - Acceptance is visual: the current environment atlas is still a basic proxy and needs
   a later focused Gothic tree/canopy art pass. Do not describe this as final artwork.
+
+## Pixel material-pass acceptance — 21 October 2026
+
+Candidate branch `feature/wet-forest-pixel-ground-20261021` (not shipped unless merged).
+
+- Open `/arena-lab?seed=1204&stage=1&habitat=WetForest`, then repeat with seeds 1205 and
+  3312. Compare the trail, puddles, root dressing and named site. The forest should have
+  recognisable ground material clusters rather than smooth islands over a gradient.
+- Walk across the entire trail and approach the offshoot and visible story site from both sides.
+  The route must remain navigable and the drawn ground must not imply new solid boundaries.
+- Try all four site identities via **Different seed**, checking disturbed graves, charred camp
+  floor, broken flat waystone paving and cart ruts. Physical objects are still the C# props.
+- Hit a tree/barrel and verify that its collision and sprite disappear together, while baked soil
+  and footprints remain a floor detail. Turn Collision outlines on/off for comparison.
+- Test 320×568 and 390×844 portrait Safari, with Hollow and Ashling following, plus a desktop
+  wide scene. Check legibility at actual device scale, no noisy gridlines, correct feet contact
+  and acceptable FPS. A successful automated test is **not** owner/device visual approval.
+- Stage 1 versus stage 8 should differ via local soot spots only, not a global Fire color wash.
+
+Pure JS regression: `tests/javascript/arena-wet-forest-art.test.mjs`. No changes to C#
+world generation, enemy AI, saves or normal Hunt staging. Final Gothic forest atlas remains
+outstanding; this checkpoint is a consistent material base for those assets, not the final art.
