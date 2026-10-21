@@ -145,3 +145,37 @@ ordinary Hunts remain unchanged.
 - Check the existing 30+ FPS mobile target. This is a **visual candidate**, not
   accepted final artwork, not a replacement for approved concept art, and not
   permission to enable generated arenas in normal Hunts.
+
+## Gothic material boundaries and historically grounded prop sprites — continuation
+
+The second Lab-only candidate adds **seeded 2px local material-edge stitches** to
+soften hard grid cell changes at roads, puddles and leaf/mud margins. Its
+`createWetForestTilePlan` and the original C# trail, patches, traversal and
+encounter identities are unchanged. Material edges are drawn once in the cached
+ground texture. They neither create world colliders nor add new terrain paths.
+
+The three physical tree anatomies now grow lateral timber from a continuous trunk
+and leave sparse negative space between broken boughs. Fallen logs, grave markers,
+waystones, the charred camp and the broken wagon use original *code-authored pixel
+studies* from `arena-wet-forest-sites.js`, replacing the cruder generic silhouettes
+only for their existing Wet Forest Lab prop IDs. These are **candidate sprite studies**,
+not externally approved PNG/atlas sprites and not a claim of finished quality.
+They remain drawn in the same world-foot-sorted prop pass, and disappear when the
+authoritative C# prop disappears. No new objects, loot, collision, damage or
+navigation is introduced.
+
+### Test / acceptance additions
+
+- Generate seeds 1204, 1205, 3312 and compare trail bends, muddy banks,
+  grave/camp/waystone/cart identities, and differences among old pines.
+- Zoom at both 320 and 390 phone widths: check that material seams are not
+  visible as square grids; graves read as worn human monuments; cart/wagon parts
+  remain human-scale; trunks do not appear to float.
+- Switch collision outlines on; check accurate physical feet and occlusion
+  while real Hollow/Ashling rigs circle site props and trees.
+- Hit a physical site prop, log and tree. Rendering must disappear with its
+  collider, while only truly flat floor traces persist.
+- Test stage 1 versus 8: no overall darkening/colour wash, no occult neon
+  effects from ancient unpowered stones, and mage/enemy silhouettes stay readable.
+- Review before/after local screenshots, mobile FPS/memory and CI; **passing
+  tests are not visual acceptance**, and normal Hunts must stay untouched.
