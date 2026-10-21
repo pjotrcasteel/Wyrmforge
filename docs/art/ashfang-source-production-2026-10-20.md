@@ -328,3 +328,32 @@ V20 holds the wing up until phase 0.265, exposing the leg push, then powers the
 wing through its first downstroke by 0.365. Body/leg kinematics stay unchanged;
 review labels now distinguish hind extension from departure/first downstroke.
 This is an authored readability choice, not a measured tiger/dragon timing.
+
+### V20 completed hind-drive review — 21 October
+
+Current source: rigged-block-v20. Motion review and actual-bone overlay are
+preserved, together with `before-after-hind-push.gif` comparing V15/V20 at
+identical side camera/density/24fps, and `peak-push-comparison.png`. V19 eight
+camera stills remain valid for the same neutral source anatomy; V20 only
+changes flight wing timing. No final directional animation atlas is claimed.
+
+The incorrect backward/above-hip neutral rear knee is corrected. Paw skin no
+longer spans underbelly/trailing tail. Existing source haunches are fuller,
+inter-leg underside is arched, rear plants narrower, crouch held/deepened, and
+toe drive extends the hip-to-hock chain to ~0.952 of its total length before
+delayed tuck. The first wing stroke is delayed so it does not hide the push.
+This extension metric describes rig geometry, not a measured physical force.
+
+Checks: every study finite and unclipped; exact walk loop closure; all surface
+minima within 0.001 of floor -0.197. Max walking goal error 0.000277 units
+(~0.023 native px), rear/breath and flight below 1e-7. Rear knees remain below
+hips; forward bend in the loaded crouch transitions to a trailing nearly
+extended leg at departure. Numerical receipts are in source-check-summary.json.
+
+The renderer now exposes rear extension before wing takeover, but source
+quality is still a motion study: detailed leg/foot/torso shapes and pixel
+separation require artistic refinement and owner review. Fire remains a
+geometric mouth-alignment jet. Full actions/directions, sustained flight and
+overflight, viewport fitting and real C# aerial/mobile Hunt validation remain
+outstanding. Nothing here replaces the live boss or marks the creature done.
+Previous failed source attempts and diagnostics remain preserved.

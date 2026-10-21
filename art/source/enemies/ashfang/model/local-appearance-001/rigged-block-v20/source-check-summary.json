@@ -1,0 +1,40 @@
+{
+  "floorZ": -0.197,
+  "penetrationTolerance": 0.001,
+  "nativePixelsPerModelUnit": 80,
+  "clips": {
+    "walk": {
+      "finite": true,
+      "clipped": false,
+      "minSurfaceZ": -0.19747771322727203,
+      "withinFloorTolerance": true,
+      "maxIKGoalErrorModelUnits": 0.0002766981724094171,
+      "maxIKGoalErrorNativePixels": 0.02213585379275337,
+      "loopEndpointError": 0.0,
+      "rearKneesBelowHip": true
+    },
+    "rear-breath": {
+      "finite": true,
+      "clipped": false,
+      "minSurfaceZ": -0.19748292863368988,
+      "withinFloorTolerance": true,
+      "maxIKGoalErrorModelUnits": 4.712160915387242e-08,
+      "maxIKGoalErrorNativePixels": 3.769728732309794e-06,
+      "loopEndpointError": null,
+      "rearKneesBelowHip": true
+    },
+    "takeoff-flight-land": {
+      "finite": true,
+      "clipped": false,
+      "minSurfaceZ": -0.1974179446697235,
+      "withinFloorTolerance": true,
+      "maxIKGoalErrorModelUnits": 7.450580596923828e-08,
+      "maxIKGoalErrorNativePixels": 5.9604644775390625e-06,
+      "loopEndpointError": null,
+      "rearKneesBelowHip": true
+    }
+  },
+  "peakLaunchHipToHockExtensionRatio": 0.9516769925271878,
+  "visualAccepted": false,
+  "actualHuntValidated": false
+}
