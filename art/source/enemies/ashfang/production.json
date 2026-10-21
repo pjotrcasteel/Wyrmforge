@@ -3,15 +3,15 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "v27 first downstroke advanced to join the jump; V26 anatomy approved by owner, timing revision reviewed locally",
+  "status": "v28 sustained flight loop and separate landing reviewed locally; approved V27 takeoff and V26 anatomy retained",
   "method": "local TRELLIS 1 DINOv2 torso with card-textured local anatomy retopology and editable Blender rig",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner review of the earlier first wingbeat; preserve approved V26 anatomy",
-    "complete and visually validate action library, including final fire, sustained flight and overflight",
+    "owner review of sustained flight and landing; author and validate flight entry/exit transitions",
+    "complete final fire breath, remaining action library and overflight",
     "eight-direction animation export and motion metadata; only still turnarounds currently reviewed",
     "native 320/390px viewport fitting and actual in-game mobile validation",
     "explicit C# aerial encounter integration"
@@ -24,8 +24,8 @@
   ],
   "divineTier": 5,
   "divineTargetViewportWidthFraction": 1.0,
-  "sourceRig": "model/local-appearance-001/rigged-block-v27/ashfang-rigged.blend",
-  "review": "model/local-appearance-001/rigged-block-v27/motion-review-v1",
+  "sourceRig": "model/local-appearance-001/rigged-block-v28/ashfang-rigged.blend",
+  "review": "model/local-appearance-001/rigged-block-v28/motion-review-v1",
   "productionDocumentation": "../../../../docs/art/ashfang-source-production-2026-10-20.md",
   "contactReview": {
     "floorZ": -0.197,
@@ -39,7 +39,7 @@
     ]
   },
   "turnaroundReview": "model/local-appearance-001/rigged-block-v26/turnaround-review-v1",
-  "sourceChecks": "model/local-appearance-001/rigged-block-v27/source-check-summary.json",
+  "sourceChecks": "model/local-appearance-001/rigged-block-v28/source-check-summary.json",
   "bodyReview": "model/local-appearance-001/rigged-block-v26/body-review-v1",
   "jumpResearch": "jump-reference-study.md",
   "anatomyComparison": "model/local-appearance-001/rigged-block-v26/anatomy-review-v1/before-after-defects.png",
@@ -48,5 +48,16 @@
     "ownerApproved": true,
     "date": "2026-10-21",
     "followUp": "bring first downstroke forward to connect with jump"
+  },
+  "takeoffApproval": {
+    "version": "rigged-block-v27",
+    "ownerApproved": true,
+    "date": "2026-10-21"
+  },
+  "flightLoop": {
+    "uniqueFrames": 16,
+    "closingSampleIncluded": true,
+    "fps": 24,
+    "exactClosure": true
   }
 }

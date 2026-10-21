@@ -432,3 +432,14 @@ No runtime changes or completed full animation-library claim.
 ## V28 sustained flight and separate landing
 Owner approved V27 takeoff timing ('perfect') and requested continuation. V28 adds a 16-frame unique sustained-flight cycle plus closing sample, with periodic torso/tail follow-through, tucked paws and the approved articulated wing anatomy. Landing is separately authored/sampled over phase 0.64–1 of the approved sequence, including flare, forepaw catch, rear catch and settle. All three prior clip vertex samples are byte-identical to V27. New flight cycle closes exactly, both new actions finite and above floor; GPU visual review pending. Loop GIF playback excludes the redundant closing sample to prevent a duplicate-frame pause. Sources retain that endpoint for closure auditing. Separate actions do not yet establish seamless flight-loop entry/exit transitions or C# flight gameplay.
 
+
+V28 RTX 5090 visual review completed: all five actions finite and unclipped;
+no floor penetration, exact flight/walk endpoint closure. New-action keyposes
+are in V28/new-actions-keyposes.png; full-speed previews are
+motion-review-v1/flight-loop.gif and landing.gif. Source closure sample is
+excluded from looping GIF playback. Continuous surfaces retain approved V26
+anatomy; approved V27 source takeoff remains vertex-identical. Landing visibly
+flares wings, catches forepaws then hindpaws, and folds into standing. Flight
+loop/landing owner review pending. Entry/exit blends, final fire, remaining
+full directional library, viewport/mobile validation and gameplay integration
+are still outstanding; these actions alone are not a finished flight system.
