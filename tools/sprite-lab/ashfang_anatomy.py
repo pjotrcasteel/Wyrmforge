@@ -18,7 +18,8 @@ def rebuild_anatomy(v,faces,uv):
     retained=faces[~np.any(remove[faces],axis=1)];used=np.unique(retained)
     mapping=np.full(len(v),-1);mapping[used]=np.arange(len(used))
     vertices=v[used].tolist();coords=uv[used].tolist();triangles=mapping[retained].tolist();labels=[0]*len(vertices)
-    def loft(points,widths,heights,label,reference,steps=4,sides=12,ridges=.0):
+    def loft(points,widths,heights,label,reference,steps=4,sides=12,ridges=.0,profile=None):
+        if profile is not None:sides=len(profile)
         start=len(vertices);rings=[];pool=np.flatnonzero(reference)
         if not len(pool):raise ValueError('Missing texture reference region')
         for segment in range(len(points)-1):
@@ -30,7 +31,8 @@ def rebuild_anatomy(v,faces,uv):
                 ring=[]
                 for j in range(sides):
                     angle=j*2*np.pi/sides;crag=1+ridges*np.cos(j*np.pi+step*np.pi/2)
-                    point=center+right*np.cos(angle)*width*crag+up*np.sin(angle)*height*crag
+                    px,py=(np.cos(angle),np.sin(angle)) if profile is None else profile[j]
+                    point=center+right*px*width*crag+up*py*height*crag
                     # Transfer UVs from the corresponding original anatomical
                     # area. No textures or models from films or services.
                     query=point.copy()
@@ -62,17 +64,26 @@ def rebuild_anatomy(v,faces,uv):
         fore=np.array([(sign*.115,-.18,.015),(sign*.145,-.195,-.035),(sign*.15,-.22,-.075),(sign*.16,-.255,-.115),(sign*.17,-.29,-.163),(sign*.17,-.325,-.181),(sign*.17,-.37,-.183),(sign*.17,-.405,-.18)])
         loft(fore,[.065,.060,.046,.034,.025,.036,.041,.023],[.062,.053,.042,.032,.023,.015,.012,.008],7 if sign>0 else 8,(source[:,1]<-.08)&(source[:,2]<-.055)&(source[:,0]*sign>0),steps=4,ridges=.04)
     # Angular upper skull replaces the broad fused cap; lower jaw is retained.
-    points=np.array([(0,-.315,.115),(0,-.365,.126),(0,-.415,.112),(0,-.445,.092),(0,-.515,.084),(0,-.565,.077)])
+    points=np.array([(0,-.315,.135),(0,-.365,.151),(0,-.415,.137),(0,-.445,.114),(0,-.515,.105),(0,-.565,.098)])
     headref=(source[:,1]<-.29)&(source[:,2]>.015)
-    loft(points,[.070,.100,.090,.070,.058,.037],[.043,.055,.046,.032,.028,.018],2,headref,steps=3,sides=12,ridges=.04)
+    skull_profile=[(1,.15),(.78,.80),(.30,1),(-.30,1),(-.78,.80),(-1,.15),(-.78,-.65),(-.35,-1),(.35,-1),(.78,-.65)]
+    loft(points,[.078,.116,.104,.079,.064,.040],[.047,.060,.050,.035,.030,.020],2,headref,steps=3,ridges=.02,profile=skull_profile)
     jaw=np.array([(0,-.35,.055),(0,-.405,.042),(0,-.47,.035),(0,-.535,.038),(0,-.565,.052)])
     loft(jaw,[.066,.072,.057,.048,.029],[.024,.025,.019,.015,.009],9,headref,steps=3,ridges=.02)
     for sign in [1,-1]:
-        brow=np.array([(sign*.058,-.43,.139),(sign*.085,-.408,.150),(sign*.095,-.38,.141)])
-        loft(brow,[.013,.018,.010],[.011,.014,.007],2,headref,steps=2,sides=6)
-        eye=np.array([(sign*.086,-.430,.127),(sign*.088,-.421,.130),(sign*.086,-.413,.129)])
+        brow=np.array([(sign*.060,-.45,.153),(sign*.093,-.416,.177),(sign*.114,-.38,.167)])
+        loft(brow,[.016,.023,.015],[.014,.019,.011],2,headref,steps=2,sides=6)
+        eye=np.array([(sign*.094,-.430,.149),(sign*.097,-.421,.152),(sign*.095,-.413,.151)])
         loft(eye,[.003,.006,.003],[.003,.006,.003],10,headref,steps=2,sides=6)
     for sign in [1,-1]:
-        horn=np.array([(sign*.059,-.345,.132),(sign*.073,-.316,.166),(sign*.081,-.280,.198),(sign*.078,-.246,.218)])
-        loft(horn,[.015,.012,.007,.0008],[.015,.012,.007,.0008],2,headref,steps=3,sides=8)
+        horn=np.array([(sign*.075,-.345,.173),(sign*.100,-.305,.220),(sign*.115,-.245,.264),(sign*.105,-.185,.290)])
+        loft(horn,[.026,.020,.012,.0008],[.024,.019,.010,.0008],2,headref,steps=3,sides=8)
+        cheek=np.array([(sign*.080,-.37,.105),(sign*.124,-.325,.132),(sign*.153,-.265,.155)])
+        loft(cheek,[.026,.018,.001],[.020,.014,.001],2,headref,steps=2,sides=6)
+        for y,x in [(-.48,.055),(-.535,.043)]:
+            fang=np.array([(sign*x,y,.087),(sign*x,y-.004,.060),(sign*(x-.004),y+.004,.038)])
+            loft(fang,[.009,.007,.0005],[.008,.006,.0005],11,headref,steps=2,sides=6)
+        for y,z in [(-.14,.11),(-.035,.115),(.085,.095)]:
+            plate=np.array([(sign*.11,y,z),(sign*.157,y+.018,z+.036),(sign*.18,y+.054,z+.065)])
+            loft(plate,[.040,.031,.001],[.026,.024,.001],5,headref,steps=2,sides=6)
     return np.array(vertices),np.array(triangles,np.int32),np.array(coords),np.array(labels),dict(removedVertices=int(remove.sum()),replacement='Full volumetric trunk, neck, four limbs, skull/jaw and tail; original UV appearance transfer',silhouetteGateOnly=True)
