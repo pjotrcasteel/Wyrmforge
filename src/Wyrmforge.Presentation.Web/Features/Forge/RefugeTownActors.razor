@@ -33,10 +33,16 @@
 @code {
     [Parameter, EditorRequired] public TownCrowd Crowd { get; set; } = null!;
     [Parameter] public bool ShowGeometry { get; set; }
+    [Parameter] public EventCallback GeometryChanged { get; set; }
 
     private readonly CancellationTokenSource crowdStop = new();
+    private int lastGeometryRevision;
 
-    protected override void OnInitialized() => _ = AnimateCrowdAsync();
+    protected override void OnInitialized()
+    {
+        lastGeometryRevision = Crowd.Navigation.Revision;
+        _ = AnimateCrowdAsync();
+    }
 
     private async Task AnimateCrowdAsync()
     {
@@ -44,7 +50,15 @@
         try
         {
             while (await timer.WaitForNextTickAsync(crowdStop.Token))
+            {
                 await InvokeAsync(() => { Crowd.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
+                if (!ShowGeometry || lastGeometryRevision == Crowd.Navigation.Revision) continue;
+
+                // Dynamic props can change the map. Repaint the static collision
+                // layer only for that revision, never for ordinary actor ticks.
+                lastGeometryRevision = Crowd.Navigation.Revision;
+                await GeometryChanged.InvokeAsync();
+            }
         }
         catch (OperationCanceledException) { /* The town actor layer was disposed. */ }
     }
