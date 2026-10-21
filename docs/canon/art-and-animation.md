@@ -812,3 +812,22 @@ This is a visual acceptance experiment: compare the new 320/390px browser captur
 previous triangular atlas trees. Reject it if dense crowns obscure the player/attack telegraphs,
 cause a runtime frame-rate loss, or read as stacked artificial rectangles rather than decaying
 Gothic woodland. Even a passing visual check does not approve a production forest atlas.
+
+### Wet Forest character rendering correction — 21 October 2026
+
+**Important:** The previous Wet Forest screenshots were not evidence of the actual Hollow and
+Ashling appearance. The Lab had been displaying fallback `arena-enemy-art` atlas actors,
+while live Hunts already prioritize the independently authored **8-direction rigged** Hollow
+and Ashling sources. The Lab now reuses the existing Hunt sprite controllers, original
+runtime PNGs and C# motion, selecting compact fallback only while source imagery loads.
+
+These approved and tracked animated sources must remain the **canonical character identity**,
+not be repainted as blocky procedural ground decorations. If real rigged sprites still fail
+actual 320px/390px game-view quality, fix the **source/rig/frames and validation** in a
+separate staged character-art pass; never hide mismatches with larger contact shadows,
+blurred upscaling, fake effects, or an unrelated generated screenshot. An art preview must
+prove eight facings, walking contact, recognisable anatomy and animation transitions.
+
+Lab pathing probes have no simulated combat, so playback is strictly movement/idle; attack
+and death clips remain the regular-Hunt authoritative render path. Existing source bytes and
+enemy mechanics are unchanged, preserving continuity with earlier accepted work.
