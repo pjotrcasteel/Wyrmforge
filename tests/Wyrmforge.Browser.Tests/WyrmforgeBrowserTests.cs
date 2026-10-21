@@ -180,9 +180,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
         var layers = Page.Locator(".refuge-town-scenery-foreground");
-        await Expect(layers).ToHaveCountAsync(7);
+        await Expect(layers).ToHaveCountAsync(8);
         var well = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='well-foreground']");
         var board = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='noticeboard-foreground']");
+        var hallFoliage = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='hall-terrace-foliage-foreground']");
+        await Expect(hallFoliage).ToHaveCountAsync(1);
         await Expect(well).ToBeVisibleAsync();
         await Expect(well.Locator("clipPath path")).ToHaveCountAsync(3);
         await Expect(board.Locator("clipPath path")).ToHaveCountAsync(1);
