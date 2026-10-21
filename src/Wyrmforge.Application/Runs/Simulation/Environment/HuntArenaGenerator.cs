@@ -111,8 +111,8 @@ public static class HuntArenaGenerator
         {
             var radius = kind switch
             {
-                "fallen-log" or "broken-cart" => 23, "moss-rock" or "waystone" => 17,
-                "stump" => 16, _ => 12,
+                "broken-cart" => 53, "camp-remains" => 42, "fallen-log" => 39,
+                "moss-rock" or "waystone" => 17, "stump" => 16, _ => 12,
             };
             var hp = kind is "pine" or "pine-snow" or "dead-tree" ? 75
                 : kind is "moss-rock" or "waystone" ? 125 : kind == "fallen-log" ? 45 : 25;
