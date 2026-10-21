@@ -1,0 +1,65 @@
+{
+  "arena-flyovers-samples": {
+    "frames": 279,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "fire-flyover-samples": {
+    "frames": 56,
+    "finite": true,
+    "minZ": 16.592041015625,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "flight-loop-samples": {
+    "frames": 17,
+    "finite": true,
+    "minZ": 0.08206906914710999,
+    "coreBodyMaxChange": 0.0,
+    "loopError": 0.0
+  },
+  "flight-sequence-samples": {
+    "frames": 148,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "high-launch-samples": {
+    "frames": 55,
+    "finite": true,
+    "minZ": -0.19580680131912231,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "landing-samples": {
+    "frames": 31,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "rear-breath-samples": {
+    "frames": 40,
+    "finite": true,
+    "minZ": -0.19580675661563873,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "takeoff-flight-land-samples": {
+    "frames": 84,
+    "finite": true,
+    "minZ": -0.19581590592861176,
+    "coreBodyMaxChange": 0.0,
+    "loopError": null
+  },
+  "walk-samples": {
+    "frames": 24,
+    "finite": true,
+    "minZ": -0.1958167999982834,
+    "coreBodyMaxChange": 0.0,
+    "loopError": 0.0
+  }
+}
