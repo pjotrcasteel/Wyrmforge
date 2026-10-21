@@ -752,3 +752,30 @@ References: [Diablo II: Resurrected art/visibility trade-offs](https://www.plays
 **Implementation checkpoint:** the Arena Lab uses baked seeded mud/litter/root dressing and
 distance-driven motion with actual kind 0 Hollow and kind 2 Ashling. Those are code/art
 integration improvements, **not** a claim that final Gothic environment assets are finished.
+
+### Wet Forest pixel-material grammar — 21 October 2026
+
+**Arena Lab candidate, not final artwork approval.** The existing Wet Forest floor previously mixed
+anti-aliased ovals and broad smoothed roads with pixel-scaled creatures and physical sprites. The
+preview now composes wet loam, moss, mud, leaf litter, shallow pools, rutted trail and site soil as
+seeded **12-world-unit material cells**, with finer 2px/4px grain. The cell resolution is an art
+construction rule: **never draw visible grid lines**. Neighboring cells are correlated in broad
+material fields instead of independently colored visual noise.
+
+The C# WetForestRecipe is still the only authority for the main trail, physical story-site position
+and waterlogged patches; the cell painter does not create blockers, alternate routes, loot or
+creatures. Each of the four historical sites has its own flat material trace, beneath the actual
+C# physical artifacts. No raised, non-collidable forest decoration is introduced.
+
+This revision keeps original tree atlas frames, approved Hollow/Ashling/mage animation and the
+ground-contact dressing introduced in #206. It does **not** finish the needed Gothic canopy,
+bark, root and ruined-site asset pass; those require real 320/390px captures and owner approval.
+Normal Hunts still use their previously accepted arenas, not this generator preview.
+
+Independent reference principles, without copying art:
+- [Diablo 1 level-generation breakdown](https://www.boristhebrave.com/2019/07/14/dungeon-generation-in-diablo-1/):
+  separate walkability from visual tile pieces; use equivalent tile variants without breaking
+  connectivity and make landmarks distinct. Wet Forest preserves this separation at C#/JS boundary.
+- [Dead Cells generation analysis by its designer](https://deepnight.net/tutorial/the-level-design-of-dead-cells-a-hybrid-approach/):
+  coherent authored biome vocabulary combined with seeded placement, not arbitrary independent props.
+  Wet Forest uses a shared material palette and retains four authored historical site identities.
