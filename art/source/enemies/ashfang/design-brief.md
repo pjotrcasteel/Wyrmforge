@@ -28,4 +28,11 @@ Current `DragonCatalog.Ashfang` uses grounded pursuit (radius 60), two-phase sca
 
 ## First gate
 
+**21 October correction:** owner rejected V37 as a very large cricket. Apply
+the [game dragon reference study](game-dragon-reference-study.md): rebuild the
+deficient torso/neck and muscular limb attachments, then review folded-wing
+side/front/gameplay silhouettes at native mobile size before another full bake.
+Global scaling and wing-fold tweaks have not resolved the appearance. Existing
+motion/contact passes remain technical evidence only.
+
 Inspect original front/side cutouts, reconstruct an offline model candidate and compare actual views for four usable legs, separate wings/membranes, complete tail, jaw and skull. Reject scenery, fused limbs or unreadable silhouettes. Reconstruction is a starting surface, not a finished rig or proof of animation. Preserve failed candidates, source latent/appearance and remote checkpoints before long GPU work.
