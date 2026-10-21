@@ -354,3 +354,32 @@ test('Phase 1 geometry inspector switches real town layers without editing geome
     assert.match(css, /refuge-town-geometry-toolbar button\[aria-pressed="true"\]/);
     assert.match(css, /refuge-town-geometry-debug\[data-town-geometry-layer="Walkable"\]/);
 });
+
+test('screenshot-reviewed Refuge geometry separates walkable pavement from marked solid scenery', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const contains = (points, p) => {
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const a = points[i], b = points[j];
+            if ((a.y > p.y) !== (b.y > p.y) &&
+                p.x < ((b.x - a.x) * (p.y - a.y) / (b.y - a.y)) + a.x) inside = !inside;
+        }
+        return inside;
+    };
+    const isOpen = p => map.walkable.some(x => contains(x.points, p)) &&
+        !map.obstacles.some(x => contains(x.footprint, p));
+    for (const p of [
+        { x: 66, y: 419 }, { x: 145, y: 424 }, { x: 755, y: 386 },
+        { x: 905, y: 384 }, { x: 600, y: 844 },
+        { x: 1250, y: 901 }, { x: 1450, y: 909 }
+    ]) assert.ok(isOpen(p), `Blue paving at (${p.x},${p.y}) must remain walkable`);
+    for (const p of [
+        { x: 506, y: 613 }, { x: 523, y: 570 },
+        { x: 1250, y: 463 }, { x: 1090, y: 604 },
+        { x: 1365, y: 824 }, { x: 1610, y: 846 }
+    ]) assert.ok(!isOpen(p), `Red scenery at (${p.x},${p.y}) must block walking`);
+    assert.ok(map.walkable.some(x => x.id === 'hall-southern-paved-road'));
+    assert.ok(map.obstacles.some(x => x.id === 'forge-hanging-sign-ground'));
+    assert.match(source(scene), /id="refuge-town-unblocked-mask"/,
+        'Walk layer must not paint cyan over the solid footprints');
+});
