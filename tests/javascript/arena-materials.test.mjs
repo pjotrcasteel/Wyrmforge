@@ -77,7 +77,7 @@ test('subtle variation keeps each approved surface recognizable and wraps withou
 });
 
 test('quilt is baked once into six independent material panels', () => {
-    const calls = { sourceReads: 0, outputDraws: 0, masks: 0 };
+    const calls = { sourceReads: 0, outputDraws: 0, masks: 0, gradients: 0 };
     let next = 0;
     const factory = () => {
         const isOutput = next++ === 0;
@@ -89,7 +89,7 @@ test('quilt is baked once into six independent material panels', () => {
             save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
             clearRect() {}, translate() {}, scale() {}, fillRect() { calls.masks++; },
             createLinearGradient() { return { addColorStop() {} }; },
-            createRadialGradient() { return { addColorStop() {} }; },
+            createRadialGradient() { calls.gradients++; return { addColorStop() {} }; },
             drawImage() { if (isOutput) calls.outputDraws++; else calls.sourceReads++; },
         };
         return { width: 0, height: 0, getContext() { return ctx; } };
@@ -100,8 +100,8 @@ test('quilt is baked once into six independent material panels', () => {
     assert.equal(quilt.height, GROUND_TILE_SIZE);
     assert.equal(calls.sourceReads, 1176);
     assert.ok(calls.outputDraws > 1176, 'Periodic edges must be carried into the next large tile');
-    assert.equal(calls.masks, 2352, 'Both patch directions receive a soft overlap mask');
-    assert.ok(calls.masks > 2352, 'Tonal variation is rendered into the quilt only at build time');
+    assert.ok(calls.masks > 2352, 'Feathered patches plus baked tonal variation are drawn once');
+    assert.equal(calls.gradients, 14 * MATERIALS.length, 'Each material gets 14 subtle tonal patches');
     assert.equal(buildGroundQuiltAtlas({ width: 320, height: 64 }, 1441, factory), null);
 });
 
