@@ -13,7 +13,7 @@ public static class HuntLadder
     public static int Number(WyrmTier tier) => (int)tier + 1;
 
     public static bool IsAuthored(RegionId region, WyrmTier tier) =>
-        region == RegionCatalog.CinderFrontierId && tier is WyrmTier.Wyrm or WyrmTier.Ascendant;
+        region == RegionCatalog.CinderFrontierId && tier is WyrmTier.Wyrm or WyrmTier.Ascendant or WyrmTier.Elder;
 
     public static bool IsUnlocked(RegionId region, WyrmTier tier, int highestClearedTier) =>
         IsAuthored(region, tier) && Number(tier) <= highestClearedTier + 1;
@@ -23,6 +23,7 @@ public static class HuntLadder
     {
         WyrmTier.Wyrm => (3, 4),
         WyrmTier.Ascendant => (6, 8),
-        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, "Only Tier I and Tier II routes are authored."),
+        WyrmTier.Elder => (10, 13),
+        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, "Only Tier I–III routes are authored."),
     };
 }

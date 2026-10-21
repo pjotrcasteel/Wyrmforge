@@ -14,23 +14,32 @@ public static class WyrmrealmMapGenerator
 
     public static IReadOnlyList<WyrmrealmMapNode> GenerateFireTierOne(int seed) => GenerateFireHunt(seed, WyrmTier.Wyrm);
 
-    /// <summary>Authored Fire ladder routes: Tier I teaches one fork; Tier II adds a second fork and an optional, harder refuge.</summary>
+    /// <summary>
+    /// Authored Fire ladder routes: Tier I teaches one fork; Tier II adds a second fork and an optional, harder refuge;
+    /// Tier III adds a third fork and an optional watchtower that scouts it.
+    /// </summary>
     public static IReadOnlyList<WyrmrealmMapNode> GenerateFireHunt(int seed, WyrmTier tier) => tier switch
     {
         WyrmTier.Wyrm => GenerateCore(1, seed, SpellSchool.Fire, HuntShape.FireTierOne),
         WyrmTier.Ascendant => GenerateCore(1, seed, SpellSchool.Fire, HuntShape.FireTierTwo),
-        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, "Only Fire Tier I and Tier II routes are authored."),
+        WyrmTier.Elder => GenerateCore(1, seed, SpellSchool.Fire, HuntShape.FireTierThree),
+        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, "Only Fire Tier I–III routes are authored."),
     };
 
     public const string RefugeName = "Emberwatch Refuge";
+    public const string WatchtowerName = "Ashen Watchtower";
 
-    private enum HuntShape { Legacy, FireTierOne, FireTierTwo }
+    private enum HuntShape { Legacy, FireTierOne, FireTierTwo, FireTierThree }
+
+    // Tier III's later forks carry longer roads (two or three fights) and may offer a third road.
+    private static readonly WyrmrealmHuntLengthProfile TierThreeLatePacing = new(1, 2, 2, 3, 3);
 
     private static IReadOnlyList<WyrmrealmMapNode> GenerateCore(int depth, int seed, SpellSchool region, HuntShape shape)
     {
         var introductoryFire = shape != HuntShape.Legacy;
         var tierTwo = shape == HuntShape.FireTierTwo;
-        var pacing = introductoryFire ? new WyrmrealmHuntLengthProfile(1, 1, 1, 2, 2) : WyrmrealmHuntLengthCatalog.Get(depth);
+        var tierThree = shape == HuntShape.FireTierThree;
+        var huntPacing = introductoryFire ? new WyrmrealmHuntLengthProfile(1, 1, 1, 2, 2) : WyrmrealmHuntLengthCatalog.Get(depth);
         var random = new Random(unchecked(seed * 397 ^ depth * 7919));
         var biome = random.Next(3);
         var river = Enumerable.Range(0, 21).Select(i => new HuntPoint(16 + Math.Sin(i * .48 + seed % 13) * 4, i * 5d)).ToArray();
@@ -47,10 +56,34 @@ public static class WyrmrealmMapGenerator
         // Habitat forks are derived from the seed, never drawn from the layout stream, so existing layouts stay identical.
         var habitatBits = HabitatBits(seed, depth);
         Add("opening-1", 1, 0, [], opening, bridge, habitat: WyrmrealmHabitat.Outskirts);
-        if (introductoryFire && !tierTwo)
+        if (shape == HuntShape.FireTierOne)
         {
             var ends = AddRoads(0, opening, approach, 2, drafts[^1].Id);
             Add("approach", 4, 0, ends, approach, [], habitat: WyrmrealmHabitat.ScorchedApproach);
+        }
+        else if (tierThree)
+        {
+            // Three committed forks. The refuge sits beside the hamlet after the first; the watchtower beside the crossroads
+            // after the second, where a climb confirms what waits on the third.
+            var hamlet = clearing with { Y = 64 };
+            var crossroads = new HuntPoint(40 + random.NextDouble() * 20, 39);
+            Add("opening-2", 2, 0, [drafts[^1].Id], fork, [opening, fork], habitat: WyrmrealmHabitat.WetForest);
+            var firstEnds = AddRoads(0, fork, hamlet, 3, drafts[^1].Id);
+            Add("clearing", 5, 0, firstEnds, hamlet, [], habitat: WyrmrealmHabitat.DesertedVillage);
+            var hamletId = drafts[^1].Id;
+            var refuge = Beside(hamlet, 2.5);
+            Add("refuge", 5, 3, [hamletId], refuge, [hamlet, refuge], habitat: WyrmrealmHabitat.DesertedVillage, refuge: true);
+            var refugeId = drafts[^1].Id;
+            var secondEnds = AddRoads(1, hamlet, crossroads, 5, hamletId, TierThreeLatePacing);
+            Rejoin(refugeId, 1);
+            Add("crossroads", 6, 0, secondEnds, crossroads, [], habitat: WyrmrealmHabitat.MonasteryGrounds);
+            var crossroadsId = drafts[^1].Id;
+            var tower = Beside(crossroads, 2.5);
+            Add("watchtower", 6, 3, [crossroadsId], tower, [crossroads, tower], habitat: WyrmrealmHabitat.OpenField, watchtower: true);
+            var towerId = drafts[^1].Id;
+            var thirdEnds = AddRoads(2, crossroads, approach, 6, crossroadsId, TierThreeLatePacing);
+            Rejoin(towerId, 2);
+            Add("approach", 8, 0, thirdEnds, approach, [], habitat: WyrmrealmHabitat.ScorchedApproach);
         }
         else
         {
@@ -67,14 +100,7 @@ public static class WyrmrealmMapGenerator
                 refugeId = drafts[^1].Id;
             }
             var secondEnds = AddRoads(1, clearing, approach, 6, clearingId);
-            if (refugeId is not null)
-            {
-                for (var index = 0; index < drafts.Count; index++)
-                {
-                    if (drafts[index].Site.RoadId?.StartsWith("road-1-") == true && drafts[index].Site.RoadIndex == 0)
-                        drafts[index] = drafts[index] with { PreviousNodeIds = [.. drafts[index].PreviousNodeIds, refugeId] };
-                }
-            }
+            if (refugeId is not null) Rejoin(refugeId, 1);
             Add("approach", 8, 0, secondEnds, approach, [], habitat: WyrmrealmHabitat.ScorchedApproach);
         }
         Add("wyrm", 9, 0, [drafts[^1].Id], lair, [approach, lair], habitat: WyrmrealmHabitat.Lair);
@@ -111,7 +137,7 @@ public static class WyrmrealmMapGenerator
         territory = territory with { Camp = Flip(camp), River = river.Select(Flip).ToArray(),
             Roads = roads.Select(r => r with { Points = r.Points.Select(Flip).ToArray() }).ToArray(),
             Features = features.Select(f => f with { Center = Flip(f.Center) }).ToArray() };
-        var created = WyrmrealmRouteGenerator.CreateNodes(tierTwo ? 2 : depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729))).ToArray();
+        var created = WyrmrealmRouteGenerator.CreateNodes(tierThree ? 3 : tierTwo ? 2 : depth, drafts, new Random(unchecked(seed * 733 ^ depth * 104729))).ToArray();
         var lairRoads = created.Where(node => node.Type == WyrmrealmNodeType.Dragon).SelectMany(node => node.PreviousNodeIds).ToHashSet(StringComparer.Ordinal);
         return created
             .Select(node =>
@@ -119,22 +145,36 @@ public static class WyrmrealmMapGenerator
                 var draft = drafts.Single(d => d.Id == node.Id);
                 var site = draft.Site;
                 var name = introductoryFire && node.Type == WyrmrealmNodeType.Dragon ? DragonCatalog.Get(DragonId.Ashfang).Name
-                    : draft.Refuge ? RefugeName : node.Name;
-                return node with { Name = name, Refuge = draft.Refuge,
+                    : draft.Refuge ? RefugeName : draft.Watchtower ? WatchtowerName : node.Name;
+                return node with { Name = name, Refuge = draft.Refuge, Watchtower = draft.Watchtower,
                     Site = site with { Point = Flip(site.Point), IncomingTrail = site.IncomingTrail.Select(Flip).ToArray() },
                     Territory = territory, Habitat = WyrmrealmHabitatCatalog.ForSchool(draft.Habitat, region), PreLair = node.Type == WyrmrealmNodeType.Combat && lairRoads.Contains(node.Id) };
             }).ToArray();
 
         void Add(string suffix, int stage, int lane, IReadOnlyList<string> previous, HuntPoint point, IReadOnlyList<HuntPoint> trail,
             string? roadId = null, int index = 0, bool bonus = false, SpellSchool? school = null, WyrmrealmHabitat habitat = WyrmrealmHabitat.Outskirts,
-            bool refuge = false)
+            bool refuge = false, bool watchtower = false)
         {
             drafts.Add(new($"depth-{depth}-{suffix}", stage, lane, previous, refuge ? WyrmrealmNodeRarity.Rare : WyrmrealmNodeRarity.Common,
-                new(point, roadId, index, bonus, trail), introductoryFire ? SpellSchool.Fire : school, habitat, refuge));
+                new(point, roadId, index, bonus, trail), introductoryFire ? SpellSchool.Fire : school, habitat, refuge, watchtower));
         }
 
-        string[] AddRoads(int sector, HuntPoint start, HuntPoint end, int stage, string previousId)
+        // An optional side site beside a hub, on the open side away from the river.
+        static HuntPoint Beside(HuntPoint hub, double rise) => new(hub.X < 50 ? hub.X + 24 : hub.X - 24, hub.Y - rise);
+
+        // A side site rejoins the first stop of every road in the next fork, so taking it never closes a road.
+        void Rejoin(string sideId, int sector)
         {
+            for (var index = 0; index < drafts.Count; index++)
+            {
+                if (drafts[index].Site.RoadId?.StartsWith($"road-{sector}-") == true && drafts[index].Site.RoadIndex == 0)
+                    drafts[index] = drafts[index] with { PreviousNodeIds = [.. drafts[index].PreviousNodeIds, sideId] };
+            }
+        }
+
+        string[] AddRoads(int sector, HuntPoint start, HuntPoint end, int stage, string previousId, WyrmrealmHuntLengthProfile? roadPacing = null)
+        {
+            var pacing = roadPacing ?? huntPacing;
             var count = random.Next(2, pacing.MaximumRoadChoices + 1);
             var schools = Enum.GetValues<SpellSchool>().OrderBy(_ => random.Next()).ToArray();
             var lengths = new List<int> { pacing.ShortRoadEncounters };
@@ -222,7 +262,7 @@ public static class WyrmrealmMapGenerator
 
     // A long late road climbs out of the cloisters into the burnt country before the lair.
     private static WyrmrealmHabitat StopHabitat(int sector, int stopIndex, WyrmrealmHabitat road)
-        => sector == 1 && stopIndex >= 3 ? WyrmrealmHabitat.ScorchedApproach : road;
+        => sector == 1 && stopIndex >= 3 || sector == 2 && stopIndex >= 1 ? WyrmrealmHabitat.ScorchedApproach : road;
 
     public static double RiverX(IReadOnlyList<HuntPoint> river, double y)
     {
@@ -246,4 +286,5 @@ public static class WyrmrealmMapGenerator
 }
 
 internal sealed record WyrmrealmNodeLayout(string Id, int Stage, int Lane, IReadOnlyList<string> PreviousNodeIds,
-    WyrmrealmNodeRarity Rarity, HuntSite Site, SpellSchool? School, WyrmrealmHabitat Habitat = WyrmrealmHabitat.Outskirts, bool Refuge = false);
+    WyrmrealmNodeRarity Rarity, HuntSite Site, SpellSchool? School, WyrmrealmHabitat Habitat = WyrmrealmHabitat.Outskirts, bool Refuge = false,
+    bool Watchtower = false);

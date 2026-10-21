@@ -1,0 +1,103 @@
+using System.Reflection;
+using System.Text.Json;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Wyrmforge.Application.Runs.Hunts;
+using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Tests.TestDoubles;
+using Wyrmforge.Domain.Combat.Dragons;
+using Wyrmforge.Domain.Spells;
+
+namespace Wyrmforge.Application.Tests.Runs.Navigation;
+
+[TestClass]
+public sealed class FireTierThreeHuntTests
+{
+    [TestMethod]
+    public void ThousandSeeds_OfferThreeForksTenToThirteenFightsARefugeAndAWatchtower()
+    {
+        for (var seed = 0; seed < 1000; seed++)
+        {
+            var nodes = WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder);
+            Assert.AreEqual(JsonSerializer.Serialize(nodes), JsonSerializer.Serialize(WyrmrealmMapGenerator.GenerateFireHunt(seed, WyrmTier.Elder)));
+            Assert.AreEqual(nodes.Count, nodes.Select(n => n.Id).Distinct().Count());
+            Assert.AreEqual(1, nodes.Count(n => n.PreviousNodeIds.Count == 0));
+            var land = nodes[0].Territory!;
+            Assert.AreEqual(2, land.Roads.Count(r => r.Id.StartsWith("road-0-")));
+            Assert.IsTrue(land.Roads.Count(r => r.Id.StartsWith("road-1-")) is 2 or 3);
+            Assert.IsTrue(land.Roads.Count(r => r.Id.StartsWith("road-2-")) is 2 or 3);
+            var boss = nodes.Single(n => n.Type == WyrmrealmNodeType.Dragon);
+            Assert.AreEqual(DragonCatalog.Get(DragonId.Ashfang).Name, boss.Name);
+
+            var refuge = nodes.Single(n => n.Refuge);
+            Assert.AreEqual("depth-1-clearing", refuge.PreviousNodeIds.Single());
+            AssertRejoinsEveryRoad(nodes, refuge, "road-1-");
+            var tower = nodes.Single(n => n.Watchtower);
+            Assert.AreEqual(WyrmrealmMapGenerator.WatchtowerName, tower.Name);
+            Assert.AreEqual("Take the watchtower", tower.EncounterName);
+            Assert.AreEqual(WyrmrealmNodeRarity.Common, tower.Rarity, "The lookout costs a fight, not a harder hold.");
+            Assert.AreEqual("depth-1-crossroads", tower.PreviousNodeIds.Single());
+            AssertRejoinsEveryRoad(nodes, tower, "road-2-");
+            Assert.AreEqual(1, nodes.Count(n => n.Rarity == WyrmrealmNodeRarity.Rare), "The refuge stays the only rare site.");
+
+            var counts = new Dictionary<string, (int Min, int Max)>();
+            var withoutSides = new Dictionary<string, int>();
+            foreach (var node in nodes.OrderByDescending(n => n.Site!.Point.Y))
+            {
+                var previous = node.PreviousNodeIds.Select(id => nodes.Single(n => n.Id == id)).ToArray();
+                Assert.IsTrue(previous.All(p => p.Site!.Point.Y > node.Site!.Point.Y), $"seed {seed}: every edge leads forward");
+                Assert.IsTrue(node == boss || nodes.Any(next => next.PreviousNodeIds.Contains(node.Id)));
+                if (node.Route is not null) Assert.AreEqual(SpellSchool.Fire, node.AttunementSchool);
+                var cost = node.Type == WyrmrealmNodeType.Combat ? 1 : 0;
+                counts[node.Id] = previous.Length == 0 ? (cost, cost)
+                    : (cost + previous.Min(p => counts[p.Id].Min), cost + previous.Max(p => counts[p.Id].Max));
+                var lawful = previous.Where(p => !p.Refuge && !p.Watchtower).ToArray();
+                withoutSides[node.Id] = node.Refuge || node.Watchtower ? 0 : cost + (lawful.Length == 0 ? 0 : lawful.Max(p => withoutSides[p.Id]));
+                foreach (var parent in previous)
+                {
+                    if (parent.Site!.RoadId is not null && node.Site!.RoadId is not null)
+                        Assert.AreEqual(parent.Site.RoadId, node.Site.RoadId, "A committed fork cannot collect the other road's reward.");
+                    AssertDryEdge(parent.Site.Point, node.Site!.Point, land, seed);
+                }
+            }
+            Assert.AreEqual(HuntLadder.TrailFights(WyrmTier.Elder), (counts[boss.Id].Min, withoutSides[boss.Id]));
+            Assert.AreEqual(withoutSides[boss.Id] + 2, counts[boss.Id].Max, "The refuge and the watchtower each cost exactly one extra fight.");
+        }
+    }
+
+    [TestMethod]
+    public void TierThree_OpensOnlyAfterTierTwoAndIsAuthoredForFireOnly()
+    {
+        var fire = Wyrmforge.Application.World.RegionCatalog.CinderFrontierId;
+        Assert.IsTrue(HuntLadder.IsAuthored(fire, WyrmTier.Elder));
+        Assert.IsFalse(HuntLadder.IsUnlocked(fire, WyrmTier.Elder, 1));
+        Assert.IsTrue(HuntLadder.IsUnlocked(fire, WyrmTier.Elder, 2));
+        Assert.IsFalse(HuntLadder.IsAuthored(fire, WyrmTier.Primordial));
+        Assert.IsFalse(HuntLadder.IsAuthored(Wyrmforge.Application.World.RegionCatalog.FrostRegionId, WyrmTier.Elder));
+        Assert.IsTrue(HuntSelection.FireTierThree.HasRefuge);
+        Assert.IsTrue(HuntSelection.FireTierThree.HasWatchtower);
+        Assert.IsFalse(HuntSelection.FireTierTwo.HasWatchtower);
+        Assert.IsFalse(WyrmrealmMapGenerator.GenerateFireHunt(7, WyrmTier.Ascendant).Any(n => n.Watchtower));
+    }
+
+    private static void AssertRejoinsEveryRoad(IReadOnlyList<WyrmrealmMapNode> nodes, WyrmrealmMapNode side, string roadPrefix)
+    {
+        var hub = side.PreviousNodeIds.Single();
+        var entrances = nodes.Where(n => n.Site!.RoadId?.StartsWith(roadPrefix) == true && n.Site.RoadIndex == 0).ToArray();
+        foreach (var entrance in entrances) CollectionAssert.AreEquivalent(new[] { hub, side.Id }, entrance.PreviousNodeIds.ToArray());
+        CollectionAssert.AreEquivalent(entrances.Select(n => n.Id).ToArray(),
+            nodes.Where(n => n.PreviousNodeIds.Contains(side.Id)).Select(n => n.Id).ToArray(), "Every road beyond a side site stays open.");
+    }
+
+    private static void AssertDryEdge(HuntPoint start, HuntPoint end, WyrmrealmTerritory land, int seed)
+    {
+        for (var step = 0; step <= 40; step++)
+        {
+            var point = WyrmrealmMapGenerator.TrailPoint(start, end, step / 40d);
+            Assert.IsTrue(Math.Abs(point.X - WyrmrealmMapGenerator.RiverX(land.River, point.Y)) > 3, $"seed {seed}: road crosses water");
+            foreach (var hill in land.Features.Where(f => f.Kind is "mountain" or "forest" or "rocks"))
+                Assert.IsTrue(Math.Pow((point.X - hill.Center.X) / hill.RadiusX, 2) + Math.Pow((point.Y - hill.Center.Y) / hill.RadiusY, 2) > 1,
+                    $"seed {seed}: scenery blocks a graph edge");
+        }
+    }
+}

@@ -190,7 +190,8 @@ public sealed class FireTierTwoHuntTests
         Assert.IsTrue(HuntLadder.IsUnlocked(fire, WyrmTier.Wyrm, 0));
         Assert.IsFalse(HuntLadder.IsUnlocked(fire, WyrmTier.Ascendant, 0));
         Assert.IsTrue(HuntLadder.IsUnlocked(fire, WyrmTier.Ascendant, 1));
-        Assert.IsFalse(HuntLadder.IsUnlocked(fire, WyrmTier.Elder, 2), "Tier III is not authored yet.");
+        Assert.IsFalse(HuntLadder.IsUnlocked(fire, WyrmTier.Elder, 1), "Tier III opens only after a Tier-II clear.");
+        Assert.IsFalse(HuntLadder.IsUnlocked(fire, WyrmTier.Primordial, 3), "Tier IV is not authored yet.");
         Assert.IsFalse(HuntLadder.IsUnlocked(RegionCatalog.FrostRegionId, WyrmTier.Wyrm, 5), "Fire progress never opens Frost tiers.");
         Assert.AreEqual(2, HuntSelection.FireTierTwo.TierNumber);
         Assert.IsTrue(HuntSelection.FireTierTwo.HasRefuge);
@@ -200,7 +201,7 @@ public sealed class FireTierTwoHuntTests
         Assert.AreEqual(DragonId.Ashfang, simulation.HuntTarget);
         Assert.IsFalse(simulation.CanPushDeeper);
         Assert.IsTrue(simulation.MapNodes.Any(n => n.Refuge));
-        Assert.Throws<ArgumentException>(() => new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), hunt: new(fire, WyrmTier.Elder)));
+        Assert.Throws<ArgumentException>(() => new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), hunt: new(fire, WyrmTier.Primordial)));
     }
 
     [TestMethod]

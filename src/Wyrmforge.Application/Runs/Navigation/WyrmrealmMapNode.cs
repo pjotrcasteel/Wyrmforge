@@ -17,6 +17,8 @@ public sealed record WyrmrealmMapNode(
     public bool PreLair { get; init; }
     /// <summary>An optional, harder hold. Once reclaimed, a fall later in the Hunt returns the hunter here instead of ending it.</summary>
     public bool Refuge { get; init; }
+    /// <summary>An optional lookout detour. Clearing it confirms what really waits on the next fork's roads (earned scouting).</summary>
+    public bool Watchtower { get; init; }
     public int EncounterCueStage => Stage == WyrmrealmMapState.CombatStages ? 8 : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => 3,
@@ -24,7 +26,7 @@ public sealed record WyrmrealmMapNode(
         _ => 1,
     };
     // Each region's lair road has its own set piece: the Bell Warden in the Cinder Frontier, the Bell of Winter on the glacier.
-    public string EncounterName => Refuge ? "Reclaim the refuge" : PreLair ? WyrmrealmHabitatCatalog.School(Habitat) switch
+    public string EncounterName => Refuge ? "Reclaim the refuge" : Watchtower ? "Take the watchtower" : PreLair ? WyrmrealmHabitatCatalog.School(Habitat) switch
         {
             SpellSchool.Fire => "Bell Warden",
             SpellSchool.Frost => "Bell of Winter",
