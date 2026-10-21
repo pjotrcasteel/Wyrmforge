@@ -113,7 +113,10 @@ public sealed class ArenaEnvironmentStateTests
             var scene = ArenaEnvironmentState.Create(seed, node, generatorPreview: true).Snapshot();
             Assert.IsEmpty(scene.Barriers, "The lab must not impose horizontal walls or gated combat crossings.");
             Assert.IsNotNull(scene.WetForest);
-            Assert.AreEqual(HuntArenaGenerator.GenerateWetForest(scene.Seed), scene.WetForest);
+            var repeated = HuntArenaGenerator.GenerateWetForest(scene.Seed);
+            Assert.AreEqual(repeated.Site, scene.WetForest.Site);
+            CollectionAssert.AreEqual(repeated.Trail.ToArray(), scene.WetForest.Trail.ToArray());
+            CollectionAssert.AreEqual(repeated.Ground.ToArray(), scene.WetForest.Ground.ToArray());
             Assert.HasCount(9, scene.WetForest.Trail);
             Assert.IsGreaterThanOrEqualTo(22, scene.Props.Count);
             sites.Add(scene.WetForest.Site);
