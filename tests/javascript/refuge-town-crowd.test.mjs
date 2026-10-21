@@ -41,7 +41,7 @@ test('every painted foreground draws between citizens using actual feet depth', 
     const actor = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     const map = JSON.parse(source(art + '/night-navigation.json'));
-    assert.equal(map.occluders.length, 9);
+    assert.equal(map.occluders.length, 11);
     assert.equal(map.occluders.find(part => part.id === 'well-foreground').depthY, 572);
     assert.equal(map.occluders.find(part => part.id === 'noticeboard-foreground').depthY, 522);
     assert.equal(map.occluders.find(part => part.id === 'hall-terrace-foliage-foreground').depthY, 830);
@@ -435,7 +435,7 @@ test('approved town well is cropped to separate transparent PNG layers rather th
     const markup = source(scene);
     const cutouts = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    for (const id of ['noticeboard-panel', 'noticeboard-supports', 'well-roof', 'well-supports', 'well-front-rim', 'nexus-terrace-parapet'])
+    for (const id of ['noticeboard-panel', 'noticeboard-supports', 'well-roof', 'well-supports', 'well-front-rim', 'nexus-terrace-parapet', 'nexus-terrace-bushes', 'nexus-stairs-shrubs'])
         assert.ok(cutouts.includes('id: "' + id + '"'), id + ' needs its own silhouette');
     assert.match(cutouts, /canvas\.toDataURL\("image\/png"\)/);
     assert.match(cutouts, /context\.globalCompositeOperation = "destination-in"/);
@@ -482,4 +482,18 @@ test('Nexus parapet occlusion follows physical stonework, not the paved terrace'
     assert.match(cutouts, /id: "nexus-terrace-parapet"/);
     assert.match(cutouts, /Only the raised parapet, not the entire walkable Nexus terrace/);
     assert.match(source(scene), /"nexus-low-terrace-railing-foreground"\) continue;/);
+});
+
+test('Nexus stair planting is a foot collider while the foreground draws only its leaves', () => {
+    const n = JSON.parse(source(`${art}/night-navigation.json`));
+    const blockers = ['nexus-terrace-front-bushes-ground', 'nexus-stairs-planter-ground'];
+    const covers = ['nexus-terrace-bushes-foreground', 'nexus-stairs-shrubs-foreground'];
+    for (const id of blockers) assert.ok(n.obstacles.some(x => x.id === id), id);
+    for (const id of covers) assert.ok(n.occluders.some(x => x.id === id), id);
+    for (const id of covers) assert.ok(!n.obstacles.some(x => x.id === id), 'Cover cannot be used as foot collision');
+    const code = source(scene);
+    const cutouts = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
+    for (const id of ['nexus-terrace-bushes', 'nexus-stairs-shrubs'])
+        assert.ok(cutouts.includes('id: "' + id + '"'), id + ' must be an alpha silhouette');
+    assert.match(code, /"nexus-terrace-bushes-foreground" or "nexus-stairs-shrubs-foreground"/);
 });
