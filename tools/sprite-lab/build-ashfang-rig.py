@@ -15,11 +15,24 @@ s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.st
 head_mix=np.clip((-v[:,1]-.21)/.12,0,1);head_mix=head_mix*head_mix*(3-2*head_mix)
 head_mix*=np.clip((v[:,2]+.09)/.055,0,1)
 v[:,0]*=1+.35*head_mix;v[:,1]-=.32*head_mix*np.maximum(0,-v[:,1]-.22);v[:,2]+=.052*head_mix+.15*head_mix*np.maximum(0,v[:,2]-.015)
+# Extend the existing balancing tail surface and its skeleton together.
+v[:,1]+=.65*np.maximum(0,v[:,1]-.23)*np.clip((.09-abs(v[:,0]))/.025,0,1)
 v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
 material=bpy.data.materials.new('Ashfang original card-derived appearance');material.use_nodes=True;texture=material.node_tree.nodes.new('ShaderNodeTexImage')
 base=bpy.data.images.load(str(folder/'textured-v1/hollow-albedo.png'));raw=np.empty(len(base.pixels),np.float32);base.pixels.foreach_get(raw);raw=raw.reshape(1024,1024,4)
+# Remove a baked white flame hotspot from the throat region; retain warm
+# molten colour instead of painting over the entire dragon or brightening wings.
+throat=(v[:body_count,1]<-.14)&(v[:body_count,1]>-.40)&(abs(v[:body_count,0])<.13)&(v[:body_count,2]>-.09)
+texels=uv[:body_count][throat]*[2,1]
+mask=np.zeros((1024,1024),bool)
+for u,w in texels:
+    x=int(np.clip(u*1023,0,1023));y=int(np.clip(w*1023,0,1023));mask[max(0,y-3):min(1024,y+4),max(0,x-3):min(1024,x+4)]=True
+hot=mask&(raw[:,:,0]>.55)&(raw[:,:,1]>.42)&(raw[:,:,2]>.20)
+raw[hot,1]*=.50;raw[hot,2]*=.20
+# Small value lift on source dark stone makes plate shapes survive quantization.
+raw[:,:,:3]=np.clip(raw[:,:,:3]*1.12,0,1)
 card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.png'));cp=np.empty(len(card.pixels),np.float32);card.pixels.foreach_get(cp);cp=cp.reshape(card.size[1],card.size[0],4);rows=(np.arange(1024)*card.size[1]//1024);cols=(np.arange(1024)*card.size[0]//1024);atlas=np.concatenate([raw,cp[rows[:,None],cols[None,:]]],axis=1)
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
@@ -34,6 +47,7 @@ for side,sign in [('L',1),('R',-1)]:
         middle=middles[finger];tip=tips[finger]
         bone(f'wing.finger.{finger}.0.{side}',points[2],middle,'wing.fore.'+side);bone(f'wing.finger.{finger}.1.{side}',middle,tip,f'wing.finger.{finger}.0.{side}')
 tail=[(0,.23,-.025),(0,.28,-.04),(0,.33,-.055),(-.01,.38,-.065),(-.025,.43,-.08),(-.035,.47,-.10),(-.04,.495,-.12)]
+tail=[(x,y+.65*max(0,y-.23),z) for x,y,z in tail]
 for i in range(6):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
 arm=bpy.data.armatures.new('Ashfang articulated anatomy');rig=bpy.data.objects.new('Ashfang editable animation rig',arm);bpy.context.collection.objects.link(rig);bpy.context.view_layer.objects.active=rig;rig.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
 for n,b in bones.items():
@@ -101,7 +115,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                     if limb=='fore':ankle=ankle.lerp(point(bones[f'{limb}.2.{side}']['head'])+Vector((0,.055,.065)),rear)
                 fn=f'{limb}.2.{side}';fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
                 if clip=='walk' or (altitude<.01 and (limb=='hind' or rear<.01)):
-                    ankle.z=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+clearance
+                    ankle.z=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+clearance+.0015
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
             wingroot=point(bones['wing.upper.'+side]['head'])
             opening=min(1,max(0,spread));fold=1-opening

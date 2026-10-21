@@ -42,3 +42,12 @@ Shoulder, elbow, wrist and digits now fold independently at preserved bone
 lengths. Delayed finger recovery follows the shoulder power stroke. The small
 takeoff crouch is reduced and the low paw weighting boundary adjusted; contact
 and mobile silhouette must be revalidated from the regenerated source.
+
+### V6 review / V7 appearance pass — in progress
+V6 preserves broader articulated wings and a clearly changing span in flight.
+Walk minimum -0.197438 and takeoff -0.197380 are inside the 0.001 contact
+tolerance; rear/breath still reaches -0.198218 on the forepaw during transition.
+V7 extends the existing tail surface and matching bone chain together, corrects
+the baked pale throat hotspot to molten amber in its local UV region, and makes
+a small source value adjustment for native pixel readability. Original texture
+and previous sources remain preserved. These changes await visual review.
