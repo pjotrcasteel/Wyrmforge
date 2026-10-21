@@ -148,7 +148,7 @@ test('NPC routing avoids expensive polygon resampling on every animation tick', 
         'A path is only invalidated by geometry revision or exhausted waypoints');
     assert.match(navigation, /_cachedGridCells/);
     assert.match(navigation, /_cachedGridEdges/);
-    assert.match(navigation, /_cachedRevision != Revision/);
+    assert.match(navigation, /if \(_cachedRevision == Revision\) return/);
 });
 
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {
