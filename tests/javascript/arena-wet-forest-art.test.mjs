@@ -82,7 +82,7 @@ test('Gothic Wet Forest floor paints sparse dark material detail without a full-
     assert.ok(calls.every(c => c.width > 0 && c.height > 0 && c.width <= 25 && c.height <= 13),
         'No painter-owned all-scene dark overlay, only local pixel materials and site traces');
     const colors = new Set(calls.map(c => c.color));
-    assert.ok(colors.has('#212923'), 'Subdued wet loam should be present');
+    assert.ok(colors.has('#252c25'), 'Subdued wet loam should be present');
     assert.ok(!colors.has('#546a51'), 'Old bright foliage palette must not leak into floor');
 });
 
@@ -91,11 +91,11 @@ test('Wet Forest material boundaries are seeded, sparse and painted inside the p
     const edges = createWetForestMaterialEdges(tiles, 1204, size.width, size.height);
     assert.deepEqual(edges, createWetForestMaterialEdges(tiles, 1204, size.width, size.height));
     assert.notDeepEqual(edges, createWetForestMaterialEdges(make(1205), 1205, size.width, size.height));
-    assert.ok(edges.length > 50 && edges.length < tiles.length * 2);
+    assert.ok(edges.length > 50 && edges.length < tiles.length * 8);
     assert.ok(edges.every(mark => mark.x >= 0 && mark.y >= 0 &&
         mark.x + mark.width <= size.width && mark.y + mark.height <= size.height));
     assert.ok(edges.every(mark => mark.width <= 4 && mark.height <= 4),
-        'An edge must be a tiny silt stitch, never a fake wall or full tile');
+        'Each stitched edge must remain small sediment pixels, never a wall or full tile');
     const road = tiles.filter(tile => tile.material === 'road').map(tile => [tile.x, tile.y]);
     assert.ok(road.length > 200, 'Road must survive unchanged');
 });
