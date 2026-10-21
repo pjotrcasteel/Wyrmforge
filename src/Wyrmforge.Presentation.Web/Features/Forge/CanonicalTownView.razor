@@ -50,11 +50,14 @@
                 var maxY = foreground.Clip.Max(point => point.Y) + 1;
                 var bounds = FormattableString.Invariant(
                     $"{minX:0.##} {minY:0.##} {maxX - minX:0.##} {maxY - minY:0.##}");
-                var foregroundStyle = FormattableString.Invariant(
-                    $"left:{minX / crowd.Navigation.Width * 100:0.###}%;top:{minY / crowd.Navigation.Height * 100:0.###}%;" +
-                    $"width:{(maxX - minX) / crowd.Navigation.Width * 100:0.###}%;" +
-                    $"height:{(maxY - minY) / crowd.Navigation.Height * 100:0.###}%;" +
-                    $"z-index:{(int)MathF.Floor(foreground.DepthY * 10f)}");
+                var foregroundStyle =
+                    FormattableString.Invariant(
+                        $"left:{minX / crowd.Navigation.Width * 100:0.###}%;top:{minY / crowd.Navigation.Height * 100:0.###}%;") +
+                    FormattableString.Invariant(
+                        $"width:{(maxX - minX) / crowd.Navigation.Width * 100:0.###}%;") +
+                    FormattableString.Invariant(
+                        $"height:{(maxY - minY) / crowd.Navigation.Height * 100:0.###}%;") +
+                    FormattableString.Invariant($"z-index:{(int)MathF.Floor(foreground.DepthY * 10f)}");
                 var maskId = $"refuge-foreground-{foreground.Id}";
                 <svg @key="foreground.Id" class="refuge-town-scenery-foreground"
                      data-town-foreground-layer="@foreground.Id"
