@@ -107,9 +107,9 @@ public sealed class TownCrowd
                 continue;
             }
 
-            if (citizen.PathRevision != _navigation.Revision ||
-                citizen.PathIndex >= citizen.Path.Count ||
-                !_navigation.IsSegmentWalkable(citizen.Position, citizen.Path[citizen.PathIndex]))
+            // A validated route stays clear until SetObstacle/RemoveObstacle changes the map.
+            // Rechecking every remaining segment on every 100 ms tick caused visible iPhone stalls.
+            if (citizen.PathRevision != _navigation.Revision || citizen.PathIndex >= citizen.Path.Count)
             {
                 var destination = _navigation.Destinations[citizen.DestinationNode].Position;
                 if (!_navigation.TryFindPath(citizen.Position, destination, out var path))
