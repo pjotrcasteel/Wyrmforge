@@ -142,8 +142,9 @@ public sealed class TownCrowd
                 ? next
                 : new TownPoint(citizen.Position.X + dx * step / distance, citizen.Position.Y + dy * step / distance);
 
-            // Collision uses foot position; never overlap another pedestrian.
-            if (citizen.IsPresent && _citizens.Any(other =>
+            // A returning citizen must reserve a clear foot circle before becoming visible.
+            var willAppear = citizen.IsReturning && Distance(position, citizen.EntryOrigin) >= 52f;
+            if ((citizen.IsPresent || willAppear) && _citizens.Any(other =>
                 other != citizen && other.IsPresent && Distance(other.Position, position) < 20f))
             {
                 citizen.WaitingSeconds += seconds;
