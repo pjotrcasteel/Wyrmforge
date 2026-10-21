@@ -33,33 +33,30 @@ test('brush stamps arbitrary material spots on a plain ground canvas without geo
     assert.notDeepEqual(board, reference);
 });
 
-test('five materials draw deterministic, bounded, crisp pixel details', () => {
-    const calls = [];
+test('real reference-image materials paint the same ground board, with no synthetic detail', () => {
+    const rects = [];
     const ctx = {
         set fillStyle(value) { this.color = value; },
-        fillRect(x, y, w, h) { calls.push({ x, y, w, h, color: this.color }); },
+        fillRect(...values) { rects.push({ values, pattern: this.color }); },
     };
-    for (let i = 0; i < MATERIALS.length; i++) {
-        const count = calls.length;
-        assert.equal(drawGroundMaterialTile(ctx, i, 4, 6, 1441), true);
-        const marks = calls.slice(count);
-        assert.ok(marks.length >= 1, MATERIALS[i].id + ' should paint the tile');
-        const textureStart = calls.length;
-        for (let j = 0; j < 10; j++)
-            drawGroundMaterialTile(ctx, i, 10 + j, 6, 1441);
-        assert.ok(calls.length - textureStart > 13,
-            MATERIALS[i].id + ' should show varied detail across neighboring tiles');
-        assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
-            m.w > 0 && m.h > 0 && m.x >= 4 * CELL && m.y >= 6 * CELL &&
-            m.x + m.w <= 5 * CELL && m.y + m.h <= 7 * CELL));
-    }
-    assert.equal(drawGroundMaterialTile(ctx, -1, 4, 6, 1441), false);
+    const patterns = MATERIALS.map((m, i) => ({ material: m.id, sourceIndex: i }));
+    assert.equal(drawGroundMaterialTile(ctx, 2, 4, 6, patterns), true);
+    assert.deepEqual(rects[0], { values: [4 * CELL, 6 * CELL, CELL, CELL], pattern: patterns[2] });
+    assert.equal(drawGroundMaterialTile(ctx, -1, 4, 6, patterns), false);
+    assert.equal(drawGroundMaterialTile(ctx, 1, 4, 6, []), false);
+    assert.equal(drawMaterialBoard(ctx, materialSampleBoard(), patterns), true);
+    assert.equal(rects.length, COLS * ROWS + 1);
+    assert.deepEqual(rects.at(-1).pattern, patterns[4]);
     assert.equal(materialNoise(1441, 2, 3), materialNoise(1441, 2, 3));
-    assert.notEqual(materialNoise(1441, 2, 3), materialNoise(1442, 2, 3));
-    const many = [];
-    drawMaterialBoard({ set fillStyle(_v) {}, fillRect(...args) { many.push(args); } },
-        materialSampleBoard(), 1441);
-    assert.ok(many.length > COLS * ROWS * 2);
+
+    const asset = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/environment/reference-ground-atlas.webp', import.meta.url));
+    assert.equal(asset.toString('ascii', 0, 4), 'RIFF');
+    assert.equal(asset.toString('ascii', 8, 12), 'WEBP');
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(js, /reference-ground-atlas\\.webp/);
+    assert.match(js, /new Image\\(\\)/);
+    assert.match(js, /createPattern\\(surface, 'repeat'\\)/);
+    assert.doesNotMatch(js, /const palettes|stone-bevel|scorch-noise|drawArenaEnvironment/);
 });
 
 test('iPhone touch drags are owned by the new painter and remain separate from live arena', () => {
