@@ -193,7 +193,9 @@ nodes do **not** inflate the chosen route's denominator.
 **Scope and status:** This step adds three illustrative route-length presets
 (4, 8, 14) and a selected-node slider to the actual generator Lab. It feeds
 the normalized value as `ArenaEnvironmentRenderSnapshot.Corruption` for **Lab
-rendering only**. The C# `WyrmrealmMapState.CombatStages` pressure stages and
+rendering only**. The physical Wet Forest seed and prop IDs stay fixed while the
+node slider advances, so changes are actual damage to the *same* trees rather
+than rerolling a different woodland. The C# `WyrmrealmMapState.CombatStages` pressure stages and
 existing regular-Hunt path logic remain separate. The full game should later
 supply its genuine committed route length and ordinal from its traversal state;
 the Lab does **not** pretend to know a future player branch in advance.
