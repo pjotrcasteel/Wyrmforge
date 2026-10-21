@@ -194,7 +194,8 @@ public sealed partial class RunSimulation
         ClearSupportState();
         projectiles.Clear();
         lightning.Clear();
-        ascendantActive = AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
+        ascendantActive = SelectedHunt is not null ? SelectedAscendantHunt(definition.Id)
+            : AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
         if (ascendantActive) ascendantHuntConsumed = true;
         var hunt = ascendantActive ? DragonHuntCatalog.GetAscendant(definition.Id) : DragonHuntCatalog.Get(definition.Id);
         dragonHuntState.Start(hunt);

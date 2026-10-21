@@ -15,6 +15,8 @@ public sealed record WyrmrealmMapNode(
     public WyrmrealmHabitat Habitat { get; init; } = WyrmrealmHabitat.Outskirts;
     /// <summary>A combat road that leads straight into a Wyrm's lair (route-graph semantics, not a stage number): the Bell Warden's road.</summary>
     public bool PreLair { get; init; }
+    /// <summary>An optional, harder hold. Once reclaimed, a fall later in the Hunt returns the hunter here instead of ending it.</summary>
+    public bool Refuge { get; init; }
     public int EncounterCueStage => Stage == WyrmrealmMapState.CombatStages ? 8 : EncounterKind switch
     {
         WyrmrealmEncounterKind.Swarm => 3,
@@ -22,7 +24,7 @@ public sealed record WyrmrealmMapNode(
         _ => 1,
     };
     // Each region's lair road has its own set piece: the Bell Warden in the Cinder Frontier, the Bell of Winter on the glacier.
-    public string EncounterName => PreLair ? WyrmrealmHabitatCatalog.School(Habitat) switch
+    public string EncounterName => Refuge ? "Reclaim the refuge" : PreLair ? WyrmrealmHabitatCatalog.School(Habitat) switch
         {
             SpellSchool.Fire => "Bell Warden",
             SpellSchool.Frost => "Bell of Winter",

@@ -95,7 +95,9 @@ public sealed partial class RunSimulation
         WithdrawReliquary();
         trailExitPending = true;
         RefreshBuildModifiers(true);
-        ApplyRouteReward(completedNode.Route?.Reward);
+        // A trail walked again after a return to the refuge pays its route reward only once.
+        if (rewardedRouteNodeIds.Add(completedNode.Id)) ApplyRouteReward(completedNode.Route?.Reward);
+        TrySecureRefuge(completedNode);
         if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;
     }

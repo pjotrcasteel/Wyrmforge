@@ -25,6 +25,8 @@ public sealed record RunSummary(
     RunOutcome Outcome)
 {
     public HuntSelection? Hunt { get; init; }
+    /// <summary>Falls caught by a reclaimed refuge during this Hunt.</summary>
+    public int RefugeReturns { get; init; }
     public IReadOnlyList<HuntMaterialId> SecuredMaterials { get; init; } = [];
     public int Seed { get; init; }
     public int ExperienceEarned { get; init; }

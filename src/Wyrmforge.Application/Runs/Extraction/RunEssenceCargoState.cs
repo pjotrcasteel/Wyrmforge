@@ -25,4 +25,12 @@ public sealed class RunEssenceCargoState
     }
 
     public void LosePending() => pending.Clear();
+
+    /// <summary>Keeps the first <paramref name="kept"/> provisional Essences and loses the rest.</summary>
+    public int LosePendingAfter(int kept)
+    {
+        var lost = Math.Max(0, pending.Count - Math.Max(0, kept));
+        pending.RemoveRange(pending.Count - lost, lost);
+        return lost;
+    }
 }
