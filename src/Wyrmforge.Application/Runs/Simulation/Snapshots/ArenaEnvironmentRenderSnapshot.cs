@@ -1,3 +1,5 @@
+using Wyrmforge.Application.Runs.Simulation;
+
 namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 
 public sealed record ArenaSupplyRenderSnapshot(string Kind, double X, double Y, bool Open);
@@ -19,5 +21,6 @@ public sealed record ArenaEnvironmentRenderSnapshot(
 {
     public double Corruption { get; init; }
     public bool GeneratorPreview { get; init; }
+    public HuntArenaGenerator.WetForestRecipe? WetForest { get; init; }
     public IReadOnlyList<ArenaPropRenderSnapshot> Props { get; init; } = [];
 }
