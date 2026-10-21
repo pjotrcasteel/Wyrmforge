@@ -179,3 +179,40 @@ navigation is introduced.
   effects from ancient unpowered stones, and mage/enemy silhouettes stay readable.
 - Review before/after local screenshots, mobile FPS/memory and CI; **passing
   tests are not visual acceptance**, and normal Hunts must stay untouched.
+
+## Fire-influenced trees — step 1 (route-normalized Lab review)
+
+The fire Wyrm should visibly damage forests on the **chosen route**, not after a
+fixed number of global combat-pressure stages. The first implementation uses
+`WyrmrealmHuntProgress.Fraction(routeNode, routeNodeCount)` where **routeNode**
+is 1-based and **routeNodeCount** includes the eventual Wyrm. For example,
+node 2/4 is 33% but node 2/14 is only 7.7%. The player cannot burn through a
+long Hunt as quickly as through a short one. Alternative/unselected/optional
+nodes do **not** inflate the chosen route's denominator.
+
+**Scope and status:** This step adds three illustrative route-length presets
+(4, 8, 14) and a selected-node slider to the actual generator Lab. It feeds
+the normalized value as `ArenaEnvironmentRenderSnapshot.Corruption` for **Lab
+rendering only**. The C# `WyrmrealmMapState.CombatStages` pressure stages and
+existing regular-Hunt path logic remain separate. The full game should later
+supply its genuine committed route length and ordinal from its traversal state;
+the Lab does **not** pretend to know a future player branch in advance.
+
+For fire-ecology Wet Forest and **existing physical tree prop IDs only**, seeded
+per-tree thresholds progress monotonically from intact/healthy to **charred**,
+then some to **burning**, and a rarer subset to **split-glowing**. Trees that are
+already dead or naturally fire-resistant can remain charred without every
+trunk turning into a flame. Broken boughs, near-black bark and needle loss are
+baked as tiny pixel shapes into the existing 112×128 cached tree artwork.
+Bright orange pixels are restricted to actual burning wood or split cracks.
+A handful of 2px motes flicker at frame time without rebuilding the bitmap.
+No new trees, floor scorches, fissures, magical wash, collision, loot, navigation
+or damage is added in step 1. Frost/other regions and normal Hunts still use
+their own approved art.
+
+**Review:** Test the same seed with Short node 1/4, 2/4, 3/4 and 4/4,
+then Long node 1/14, 2/14, 8/14 and 14/14; compare percentages and tree identities.
+Switch to Frozen Road to check zero fire effects. Hit a charred/burning
+tree and verify its sprite and collider disappear together. Inspect the
+moving Hollow/Ashling silhouettes and mobile FPS at 320/390px. Check
+the resulting Art and Playwright captures before merging.
