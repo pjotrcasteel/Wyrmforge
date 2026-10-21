@@ -307,7 +307,7 @@
         ShellSection.Forge => "Forge locked until you bring back your first secured Essence",
         _ => "Locked",
     };
-    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = NexusFacet.Signature; spellcraftFocus = null; }
+    private void Navigate(ShellSection value) { if (!IsUnlocked(value)) return; section = value; nexusFocus = null; facet = CharacterSchool == DivineArchetype.Pyromancer ? NexusFacet.Signature : NexusFacet.Web; spellcraftFocus = null; }
 
     // Spellcraft is the research facet of the Arcane Nexus: the Web says where a mutation lives, the circle what it becomes.
     private bool SpellcraftOpen => IsUnlocked(ShellSection.Build) && Progress.CodexUnlocked;
