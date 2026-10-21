@@ -37,16 +37,16 @@ test('generated material atlas is a compact six-panel ground-only WebP', () => {
     assert.equal(art.toString('ascii', 8, 12), 'WEBP');
     assert.ok(art.length > 7000 && art.length < 25000);
     assert.equal(GROUND_SOURCE_TILE_SIZE, 112);
-    assert.equal(GROUND_TILE_SIZE, 640);
-    assert.equal(GROUND_PATCH_SIZE, 96);
-    assert.equal(GROUND_PATCH_STEP, 64);
+    assert.equal(GROUND_TILE_SIZE, 672);
+    assert.equal(GROUND_PATCH_SIZE, 72);
+    assert.equal(GROUND_PATCH_STEP, 48);
     assert.match(GROUND_ATLAS_URL, /wet-forest-materials-painted\.webp$/);
 });
 
 test('quilt patch placement is deterministic and avoids the 112px repeating grid', () => {
     for (let index = 0; index < MATERIALS.length; index++) {
         const patches = groundQuiltPatchPlan(index, 1441);
-        assert.equal(patches.length, 100);
+        assert.equal(patches.length, 196);
         assert.deepEqual(patches, groundQuiltPatchPlan(index, 1441));
         assert.notDeepEqual(patches, groundQuiltPatchPlan(index, 1442));
         assert.ok(patches.every(p =>
@@ -82,9 +82,9 @@ test('quilt is baked once into six independent 640px material panels', () => {
     const quilt = buildGroundQuiltAtlas(raw, 1441, factory);
     assert.equal(quilt.width, GROUND_TILE_SIZE * 6);
     assert.equal(quilt.height, GROUND_TILE_SIZE);
-    assert.equal(calls.sourceReads, 600);
-    assert.ok(calls.outputDraws > 600, 'Periodic edges must be carried into the next large tile');
-    assert.equal(calls.masks, 1200, 'Both patch directions receive a soft overlap mask');
+    assert.equal(calls.sourceReads, 1176);
+    assert.ok(calls.outputDraws > 1176, 'Periodic edges must be carried into the next large tile');
+    assert.equal(calls.masks, 2352, 'Both patch directions receive a soft overlap mask');
     assert.equal(buildGroundQuiltAtlas({ width: 320, height: 64 }, 1441, factory), null);
 });
 
