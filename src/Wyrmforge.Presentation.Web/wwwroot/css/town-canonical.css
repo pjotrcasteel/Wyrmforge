@@ -194,3 +194,13 @@
 .game-shell.refuge-home .refuge-town-route-end {
     fill:#f4d365;stroke:#1b3340;stroke-width:2;vector-effect:non-scaling-stroke;
 }
+
+/* Pixel-accurate alpha cutouts are generated once from the canonical town painting.
+   Individual support/roof/rim depths ensure pavement walkers stay visible. */
+.game-shell.refuge-home .refuge-town-png-cutout {
+    visibility:hidden;object-fit:fill;max-width:none;image-rendering:auto;
+    pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-png-cutout[data-town-png-ready="true"] {
+    visibility:visible;
+}

@@ -55,8 +55,8 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.match(markup, /class="refuge-town-scenery-foreground"/);
     assert.match(markup, /data-town-foreground-layer="@foreground\.Id"/);
     assert.match(markup, /clipPath id="@maskId" clipPathUnits="userSpaceOnUse"/);
-    assert.match(markup, /foreground\.Id == "well-foreground"/);
-    assert.match(markup, /foreground\.Id == "noticeboard-foreground"/);
+    assert.match(markup, /foreground\.Id is "well-foreground" or "noticeboard-foreground"/);
+    assert.match(markup, /data-town-cutout="@cutout.Id"/);
     assert.match(markup, /foreground\.DepthY \* 10f/);
     assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
     assert.match(actor, /CitizenStyle\(person\)/);
@@ -429,4 +429,30 @@ test('route inspector Next control cycles a chosen moving citizen without changi
     assert.match(actorMarkup, /Crowd\.InspectActiveRoute\(RouteCitizenId\)/);
     assert.match(crowd, /public int\? InspectNextWalkingCitizenId\(int\? afterCitizenId\)/);
     assert.match(crowd, /return first;/);
+});
+
+test('approved town well is cropped to separate transparent PNG layers rather than a giant covering SVG', () => {
+    const markup = source(scene);
+    const cutouts = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    for (const id of ['noticeboard-panel', 'noticeboard-supports', 'well-roof', 'well-supports', 'well-front-rim'])
+        assert.ok(cutouts.includes('id: "' + id + '"'), id + ' needs its own silhouette');
+    assert.match(cutouts, /canvas\.toDataURL\("image\/png"\)/);
+    assert.match(cutouts, /context\.globalCompositeOperation = "destination-in"/);
+    assert.match(cutouts, /context\.fill\(new Path2D\(cutout\.path\)\)/);
+    assert.match(markup, /foreground\.Id is "well-foreground" or "noticeboard-foreground"\) continue;/);
+    assert.match(markup, /data-town-cutout="@cutout.Id"/);
+    assert.match(css, /refuge-town-png-cutout\s*\{[^}]*visibility:hidden/s);
+});
+
+test('Route-mode taps select the nearest currently moving citizen without blocking ordinary town hotspots', () => {
+    const markup = source(scene);
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
+    assert.match(markup, /public Task SelectTownRouteCitizen\(int id\)/);
+    assert.match(markup, /\[JSInvokable\]/);
+    assert.match(js, /data-town-layer-select="Route"\]\[aria-pressed="true"/);
+    assert.match(js, /data-town-citizen-state="walking"/);
+    assert.match(js, /e\.stopImmediatePropagation\(\)/);
+    assert.match(js, /dotnet\.invokeMethodAsync\("SelectTownRouteCitizen", chosen\)/);
+    assert.match(js, /scene\.addEventListener\("pointermove", move, \{ passive: true \}\)/);
 });
