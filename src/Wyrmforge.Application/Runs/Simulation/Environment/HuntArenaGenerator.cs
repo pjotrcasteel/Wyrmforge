@@ -47,6 +47,26 @@ public static class HuntArenaGenerator
                 .045 + rng.NextDouble() * .91, .03 + rng.NextDouble() * .94,
                 .012 + rng.NextDouble() * .044, .008 + rng.NextDouble() * .026));
         }
+        // Five overlapping-feeling but geographically distinct fighting glades.
+        // These are ordinary walkable forest floor, not walled arenas or safe zones.
+        // They sit near a single believable winding trail; unchosen exploration
+        // around them remains fully open for Vampire Survivors-style horde kiting.
+        foreach (var fraction in new[] { .13, .32, .50, .70, .87 })
+        {
+            var gladeY = fraction == .50 ? .50 : Math.Clamp(fraction + (rng.NextDouble() - .5) * .032, .10, .90);
+            var gladeX = fraction == .50 ? .50 : Math.Clamp(TrailXAt(trail, gladeY) + (rng.NextDouble() - .5) * .13, .23, .77);
+            // The central spawn stays open around the actual mage. Other glades
+            // move away from authored camps/graves plus their nearby physical props,
+            // so decorative ruins do not secretly consume an enemy-combat orbit.
+            const double minimumSiteDistance = 275;
+            if (fraction != .50 && Math.Sqrt(Math.Pow((gladeX - siteX) * 950, 2) +
+                    Math.Pow((gladeY - siteY) * 1550, 2)) < minimumSiteDistance)
+                gladeX = Math.Clamp(gladeX + (gladeX <= siteX ? -.30 : .30), .17, .83);
+            if (fraction != .50 && Math.Sqrt(Math.Pow((gladeX - siteX) * 950, 2) +
+                    Math.Pow((gladeY - siteY) * 1550, 2)) < minimumSiteDistance)
+                gladeY = Math.Clamp(gladeY + (gladeY <= siteY ? -.14 : .14), .10, .90);
+            ground.Add(new GroundPatch("clearing", gladeX, gladeY, .17, .105));
+        }
         return new WetForestRecipe(site, siteX, siteY, trail, ground);
     }
 
@@ -88,9 +108,9 @@ public static class HuntArenaGenerator
             var y = .04 + rng.NextDouble() * .92;
             if (recipe is not null)
             {
-                // A winding worn trail is usually clear, but there are no straight mandatory combat lanes.
-                var nearest = recipe.Trail.Min(point => Math.Abs(point.X - x) + Math.Abs(point.Y - y) * .55);
-                if (nearest < .072 && rng.NextDouble() < .72) continue;
+                // A broad, curved connector stays free for enemy packs and continuous
+                // kiting, not just a one-character corridor with occasional blockers.
+                if (Math.Abs((TrailXAt(recipe.Trail, y) - x) * 950) < 67) continue;
                 // Canopy comes in thickets with natural pockets, never a uniform 16-prop rectangle.
                 if (Math.Sin(x * 31 + seed * .0007) * Math.Cos(y * 23 - seed * .0013) < -.42 &&
                     rng.NextDouble() < .66) continue;
@@ -103,7 +123,9 @@ public static class HuntArenaGenerator
                 : otherForest && roll < .28 ? frost ? "pine-snow" : "pine"
                     : roll < .28 + influence * .27 ? frost ? "frozen-urn" : "ember-urn"
                     : roll < .52 ? "barrel" : roll < .77 ? "crate" : otherForest ? "stump" : "urn";
-            Add(Build(kind, x, y));
+            var candidate = Build(kind, x, y);
+            if (recipe is not null && IsInCombatGlade(recipe, candidate)) continue;
+            Add(candidate);
         }
         return props;
 
@@ -136,6 +158,25 @@ public static class HuntArenaGenerator
             if (wetForest && !OpenToAllEdges(props)) props.RemoveAt(props.Count - 1);
         }
     }
+
+    private static double TrailXAt(IReadOnlyList<TrailPoint> trail, double y)
+    {
+        var index = 0;
+        while (index + 1 < trail.Count - 1 && trail[index + 1].Y < y) index++;
+        var first = trail[index];
+        var second = trail[index + 1];
+        var t = Math.Clamp((y - first.Y) / (second.Y - first.Y), 0, 1);
+        return first.X + (second.X - first.X) * t;
+    }
+
+    // Reserve a genuine unblocked 110px combat orbit around every glade centre.
+    // The buffer includes the actual obstacle and enemy body radii; the map
+    // itself stays open and no invulnerable or inaccessible play space is created.
+    private static bool IsInCombatGlade(WetForestRecipe recipe, Prop prop) =>
+        recipe.Ground.Where(patch => patch.Kind == "clearing" && patch.RadiusX >= .15)
+            .Any(patch => Math.Pow((patch.X - prop.X) * 950, 2) +
+                Math.Pow((patch.Y - prop.Y) * 1550, 2) <
+                Math.Pow(122 + prop.Radius, 2));
 
     // Validate movement in a grid against the same solid circles used at runtime.
     // No prescribed clear bands: reject individual props that disconnect reachable woodland.
