@@ -43,5 +43,26 @@ else:
         if material and material.use_nodes:
             for node in material.node_tree.nodes:
                 if node.type=='TEX_IMAGE': node.image=image
+    # Keep the authored fire editable in Blender, not only in preview exports.
+    # Each action has a separate, named collection; walk is initially visible.
+    fire_material=bpy.data.materials.new('Ashfang living fire');fire_material.use_nodes=True
+    nodes=fire_material.node_tree.nodes;nodes.clear();attribute=nodes.new('ShaderNodeVertexColor');attribute.layer_name='FireColor'
+    emission=nodes.new('ShaderNodeEmission');emission.inputs['Strength'].default_value=1
+    output=nodes.new('ShaderNodeOutputMaterial');fire_material.node_tree.links.new(attribute.outputs['Color'],emission.inputs['Color']);fire_material.node_tree.links.new(emission.outputs[0],output.inputs['Surface'])
+    for path in target.glob('body-fire-*-samples.npz'):
+        clip=path.name[len('body-fire-'):-len('-samples.npz')];data=np.load(path);points=data['positions'];tri=data['faces']
+        collection=bpy.data.collections.new('Body fire source / '+clip);bpy.context.scene.collection.children.link(collection);collection.hide_render=clip!='walk';collection.hide_viewport=clip!='walk'
+        mesh=bpy.data.meshes.new('Fire volumes / '+clip);mesh.from_pydata(points[0].tolist(),[],tri.tolist());mesh.update();fire=bpy.data.objects.new('Animated fire / '+clip,mesh);collection.objects.link(fire);mesh.materials.append(fire_material)
+        color=mesh.vertex_colors.new(name='FireColor')
+        for loop in mesh.loops: color.data[loop.index].color=(*data['colors'][0,loop.vertex_index],1)
+        fire.shape_key_add(name='Basis')
+        for frame in range(1,len(points)):
+            key=fire.shape_key_add(name=f'{clip} {frame:03d}');key.data.foreach_set('co',points[frame].ravel());key.value=0;key.keyframe_insert('value',frame=frame);key.value=1;key.keyframe_insert('value',frame=frame+1);key.value=0;key.keyframe_insert('value',frame=frame+2)
+        if mesh.shape_keys.animation_data:
+            mesh.shape_keys.animation_data.action.name='Body fire / '+clip
+            for curve in mesh.shape_keys.animation_data.action.fcurves:
+                for keyframe in curve.keyframe_points:keyframe.interpolation='LINEAR'
+        fire['source_clip']=clip;fire['presentation_only']=True
+    bpy.context.scene.frame_set(1)
     bpy.ops.wm.save_as_mainfile(filepath=str(target/'ashfang-rigged.blend'),compress=True)
 print(mode, str(target),flush=True)
