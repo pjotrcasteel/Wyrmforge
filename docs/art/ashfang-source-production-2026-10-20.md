@@ -503,3 +503,7 @@ there is no C# altitude state, flyover damage/hazard lifetime, aerial immunity,
 targetability or collision change. Lane telegraphs are visual proposals.
 Remaining complete actions/directions, mobile Hunt validation and final fire
 remain open. Canonical addition records the new requested scope, not shipment.
+
+## V33 correction: overhead shadow attack and exponential nose-up climb
+Owner clarified that body must stay above screen during flyovers: only ground indication, moving shadow and arena fire should be visible. High launch now pitches nose-up to about 74.5 degrees with trailing tail pitch and uses normalized expm1 height after push-off. Visible climb height steps increase strictly (first 0.06222, last 1.12273 source units, 18.04x ratio) instead of easing out before leaving. Pass altitude remains 10.5 source units; head aims nearly vertically down before ignition. Existing six grounded/ordinary-flight actions remain vertex-identical to V32. All nine actions finite and above floor. Renderer casts actual posed geometry onto the ground for a winged shadow, instead of a small oval; warning path follows calculated strike positions. Canonical direction updated. GPU fixed-camera visual and zero-visible-body pass audit pending.
+

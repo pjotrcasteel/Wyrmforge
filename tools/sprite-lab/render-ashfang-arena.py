@@ -22,18 +22,32 @@ def raster(vertices,triangles):
 tile=Image.open('src/Wyrmforge.Presentation.Web/wwwroot/art/tiles.png').convert('RGB').crop((0,0,64,64));background=Image.new('RGB',(W,H))
 for y in range(0,H,64):
     for x in range(0,W,64):background.paste(tile,(x,y))
+warning_paths=[]
+for start,end in [(79,134),(155,210)]:
+    path=[]
+    for i in range(start,end+1):
+        origin,direction=mouth[i]
+        if signals[i]>.1 and direction[2]<-.1:
+            path.append(origin+direction*((-.197-origin[2])/direction[2]))
+    warning_paths.append(path)
 frames=[];embers=[];audit=[];phases=json.loads((rig/'paw-contact-audit.json').read_text());labels={x['frame']:x['phaseLabel'] for x in phases if x['clip']=='arena-flyovers'}
 for frame,points in enumerate(vtx):
     board=background.copy();draw=ImageDraw.Draw(board)
     # Cast shadow remains on the actual root's ground projection, never under
     # the airborne sprite's screen position. High climb fades it naturally.
     ground=roots[frame].copy();ground[2]=-.197;sx,sy=project(ground);height=max(0,roots[frame,2]);radius=max(5,round(22/(1+height*.3)));dark=round(10+10*min(1,height/9))
-    draw.ellipse((sx-radius,sy-radius//3,sx+radius,sy+radius//3),fill=(dark,dark-1,dark))
+    # The silhouette is a true vertical projection of the current 3D pose.
+    # Its wings keep flapping while the actual body remains above the camera.
+    shadow_points=points.copy();shadow_points[:,2]=-.197
+    sr,_,_=raster(shadow_points,faces)
+    shadow_alpha=((sr[0,:,:,3]>0).flip(0).cpu().numpy()*145).astype('uint8')
+    shadow_layer=Image.new('RGBA',(W,H),(3,3,5,0));shadow_layer.putalpha(Image.fromarray(shadow_alpha))
+    board.paste(shadow_layer,(0,0),shadow_layer);draw=ImageDraw.Draw(board)
     # These lead-in lanes are an art proposal, not shipped damage telegraphs.
-    lane=1.15 if 55<=frame<=85 else -1.25 if 135<=frame<=158 else None
-    if lane is not None:
-        for x in np.arange(-5.8,5.8,.25):
-            px,py=project((x,lane,-.197));draw.line((px-2,py,px+2,py),fill=(152,73,28),width=1)
+    lane_index=0 if 55<=frame<=85 else 1 if 135<=frame<=158 else None
+    if lane_index is not None:
+        for target in warning_paths[lane_index]:
+            px,py=project(target);draw.ellipse((px-3,py-1,px+3,py+1),fill=(152,73,28))
     for born,target in embers:
         age=frame-born
         if age>=60:continue
@@ -42,7 +56,7 @@ for frame,points in enumerate(vtx):
         for j in range(4):
             dx=round(6*math.sin(born*1.7+j*2.1));h=round((7+5*math.sin(frame*.8+j))*life)
             draw.line((x+dx,y,x+dx-1,y-h),fill=(int(235*life),int(104*life),int(20*life)),width=1)
-    r,V,_=raster(points,faces);coords=dr.interpolate(UV[None],r,F)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,V,F,r);alpha=(r[0,:,:,3]>0).float()
+    r,V,_=raster(points,faces);body_visible=int((r[0,:,:,3]>0).flip(0)[42:H-22].sum().item());coords=dr.interpolate(UV[None],r,F)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,V,F,r);alpha=(r[0,:,:,3]>0).float()
     origin,direction=mouth[frame];direction=direction/np.linalg.norm(direction);strength=float(signals[frame]);target=None
     if strength>.03 and direction[2]<-.10:
         distance=(-.197-origin[2])/direction[2]
@@ -79,9 +93,9 @@ for frame,points in enumerate(vtx):
     xs=W/2+q[:,0]*density;ys=330-q[:,1]*density
     bounds=[float(xs.min()),float(ys.min()),float(xs.max()),float(ys.max())]
     fully_out=bounds[2]<0 or bounds[0]>=W or bounds[3]<42 or bounds[1]>=H-22
-    audit.append(dict(frame=frame,label=labels[frame],bounds=bounds,fullyOutside=bool(fully_out),fireStrength=strength,groundTarget=target.tolist() if target is not None else None))
+    audit.append(dict(frame=frame,label=labels[frame],bounds=bounds,fullyOutside=bool(fully_out),bodyVisiblePixels=body_visible,fireStrength=strength,groundTarget=target.tolist() if target is not None else None))
     if frame%60==0:print('Arena source frame',frame,flush=True)
 durations=[(round((i+1)*100/24)-round(i*100/24))*10 for i in range(len(frames))];durations[-1]+=600
 frames[0].save(out/'aerial-fire-attack.gif',save_all=True,append_images=frames[1:],duration=durations,loop=0)
-report=dict(gpu=torch.cuda.get_device_name(),viewport=[W,H],pixelsPerModelUnit=density,frames=len(frames),finite=bool(np.isfinite(vtx).all()),minZ=float(vtx[:,:,2].min()),fullyOutsideFrames=[x['frame'] for x in audit if x['fullyOutside']],fireFrames=sum(x['groundTarget'] is not None for x in audit),runtimeIntegrated=False,groundFireLifetimePreviewFrames=60,frameAudit=audit)
+report=dict(gpu=torch.cuda.get_device_name(),viewport=[W,H],pixelsPerModelUnit=density,frames=len(frames),finite=bool(np.isfinite(vtx).all()),minZ=float(vtx[:,:,2].min()),fullyOutsideFrames=[x['frame'] for x in audit if x['bodyVisiblePixels']==0],passBodyVisiblePixels=sum(x['bodyVisiblePixels'] for x in audit if 79<=x['frame']<=210),fireFrames=sum(x['groundTarget'] is not None for x in audit),runtimeIntegrated=False,groundFireLifetimePreviewFrames=60,frameAudit=audit)
 (out/'review.json').write_text(json.dumps(report,indent=2)+'\n');print('Saved fixed-camera arena art study',flush=True)

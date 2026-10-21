@@ -1,0 +1,51 @@
+{
+  "walk": {
+    "finite": true,
+    "minZ": -0.19554036855697632,
+    "deltaFromPrior": 0.0
+  },
+  "rear-breath": {
+    "finite": true,
+    "minZ": -0.1955132633447647,
+    "deltaFromPrior": 0.0
+  },
+  "takeoff-flight-land": {
+    "finite": true,
+    "minZ": -0.19552290439605713,
+    "deltaFromPrior": 0.0
+  },
+  "flight-loop": {
+    "finite": true,
+    "minZ": 0.07677140831947327,
+    "deltaFromPrior": 0.0
+  },
+  "landing": {
+    "finite": true,
+    "minZ": -0.1955132633447647,
+    "deltaFromPrior": 0.0
+  },
+  "flight-sequence": {
+    "finite": true,
+    "minZ": -0.19552290439605713,
+    "deltaFromPrior": 0.0
+  },
+  "high-launch": {
+    "finite": true,
+    "minZ": -0.19552290439605713
+  },
+  "fire-flyover": {
+    "finite": true,
+    "minZ": 10.113358497619629
+  },
+  "arena-flyovers": {
+    "finite": true,
+    "minZ": -0.19552290439605713
+  },
+  "climb": {
+    "minPitchDegrees": -74.48451336700701,
+    "firstStep": 0.06221879936846646,
+    "lastStep": 1.1227253285353775,
+    "strictlyIncreasingStep": true,
+    "exponentialStepRatio": 18.044792569629585
+  }
+}

@@ -127,12 +127,16 @@ def connected_flight_state(frame):
 
 
 ARENA_FLYOVER_FRAMES=279
+OFFSCREEN_ALTITUDE=10.5
 
 def high_launch_state(frame):
     state=connected_flight_state(max(0,frame))
-    boost=smooth((frame-20)/34)
-    state['altitude']+=8.66*boost
-    state['pitch']-=.20*smooth((frame-18)/18)
+    t=max(0,min(1,(frame-18)/28))
+    # Increasing exponential speed throughout the visible climb. Do not ease
+    # out at the top: any speed change happens after the whole body has left.
+    if frame>=18:state['altitude']=OFFSCREEN_ALTITUDE*math.expm1(3*t)/math.expm1(3)
+    state['pitch']-=1.18*smooth((frame-17)/15)
+    state['tailPitch']=state['pitch']*.72
     state['label']='high push-off' if frame<32 else 'climb out of view'
     return state
 
@@ -141,13 +145,13 @@ def fire_pass_state(frame,reverse=False):
     state=cruise_state(frame/16)
     fire=smooth((t-.14)/.12)*(1-smooth((t-.72)/.12))
     aim=smooth(t/.12)*(1-smooth((t-.88)/.12))
-    state.update(altitude=1.75+.035*math.sin(frame*math.pi/8),
+    state.update(altitude=OFFSCREEN_ALTITUDE+.035*math.sin(frame*math.pi/8),
         actorX=(7-14*t) if reverse else (-7+14*t),
         actorY=-1.25 if reverse else 1.15,
         actorYaw=-math.pi/2 if reverse else math.pi/2,
         actorBank=.10*math.sin(t*math.pi*2),
         pitch=-.035,neckBase=.18*aim,neckTip=.36*aim,
-        headCounter=.72*aim,jaw=.48*aim,fireStrength=fire,
+        headCounter=1.48*aim,jaw=.48*aim,fireStrength=fire,
         label='return fire pass' if reverse else 'first fire pass')
     return state
 
@@ -157,14 +161,14 @@ def arena_flyover_state(frame):
     if frame<=54:return high_launch_state(frame)
     if frame<79:
         t=(frame-54)/25;state=cruise_state((frame-40)/16)
-        state.update(altitude=9-7.25*smooth((t-.52)/.48),
+        state.update(altitude=OFFSCREEN_ALTITUDE,
             actorX=-7*smooth(t/.50),actorY=1.15*smooth(t/.50),
             actorYaw=math.pi/2*smooth(t/.50),label='offscreen / approach')
         return state
     if frame<=134:return fire_pass_state(frame-79)
     if frame<155:
         t=(frame-134)/21;state=cruise_state(frame/16)
-        state.update(altitude=1.75+.9*math.sin(t*math.pi)**2,
+        state.update(altitude=OFFSCREEN_ALTITUDE+.3*math.sin(t*math.pi)**2,
             actorX=7+1.2*math.sin(t*math.pi),actorY=1.15-2.4*smooth(t),
             actorYaw=math.pi/2-math.pi*smooth(t),
             label='offscreen bank / return approach')
@@ -172,7 +176,7 @@ def arena_flyover_state(frame):
     if frame<=210:return fire_pass_state(frame-155,True)
     if frame<235:
         t=(frame-210)/25;state=cruise_state(frame/16)
-        state.update(altitude=1.75+7.25*smooth(t/.48),
+        state.update(altitude=OFFSCREEN_ALTITUDE,
             actorX=-7*(1-smooth((t-.5)/.5)),
             actorY=-1.25*(1-smooth((t-.5)/.5)),
             actorYaw=-math.pi/2*(1-smooth((t-.5)/.5)),label='climb / return to arena')
@@ -184,6 +188,6 @@ def arena_flyover_state(frame):
     phase=min(1,source_frame/83)
     state.update(sourcePhase=phase,tailSin=math.sin(phase*math.pi*2),
         tailCos=math.cos(phase*math.pi*2))
-    state['altitude']+=8.66*(1-smooth((frame-235)/25))
+    state['altitude']+=(OFFSCREEN_ALTITUDE-.34)*(1-smooth((frame-235)/25))
     state['label']='descending into arena' if frame<260 else state['label']
     return state

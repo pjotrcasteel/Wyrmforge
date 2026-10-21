@@ -263,7 +263,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
         for contact_iteration in range(45):
             previous=None
             for i in range(len(tail)-1):
-                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=state_at(phase-(.018+i*.012)*delay_scale) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),(.12*(flight.get('tailSin',math.sin(pose_phase*math.pi*2))*math.cos(i*.35)-flight.get('tailCos',math.cos(pose_phase*math.pi*2))*math.sin(i*.35)) if flight else .12*math.sin(pose_phase*math.pi*2-i*.35)));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=state_at(phase-(.018+i*.012)*delay_scale) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),(flight.get('tailPitch',pitch*.15) if flight else pitch*.15)+tail_response+tail_correction)@Quaternion((0,0,1),(.12*(flight.get('tailSin',math.sin(pose_phase*math.pi*2))*math.cos(i*.35)-flight.get('tailCos',math.cos(pose_phase*math.pi*2))*math.sin(i*.35)) if flight else .12*math.sin(pose_phase*math.pi*2-i*.35)));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
             ev=obj.evaluated_get(deps);contact_mesh=ev.to_mesh()
             tail_min=min(contact_mesh.vertices[index].co.z for index in tail_indices)
             ev.to_mesh_clear()
