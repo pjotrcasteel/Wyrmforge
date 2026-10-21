@@ -104,6 +104,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
+        var wellForeground = Page.Locator(".refuge-town-well-foreground");
+        await Expect(wellForeground).ToBeVisibleAsync();
+        await Expect(wellForeground.Locator("#refuge-well-silhouette path")).ToHaveCountAsync(4);
+        Assert.IsTrue(await wellForeground.EvaluateAsync<bool>(@"svg => {
+            const artwork = svg.querySelector('image');
+            return getComputedStyle(svg).pointerEvents === 'none' &&
+                svg.getAttribute('viewBox') === '695 382 256 189' &&
+                artwork?.getAttribute('href') === 'art/town/night-active.webp?v=140';
+        }"), "Only approved well artwork should be duplicated in a small, noninteractive foreground.");
+        await Expect(Page.Locator(".refuge-town-crowd--behind")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".refuge-town-crowd--front")).ToHaveCountAsync(1);
         await Page.WaitForFunctionAsync(@"() =>
             document.querySelectorAll('.refuge-town-geometry-solid').length >= 14");
         foreach (var id in new[] { "arcane-nexus-building", "blacksmith-building", "codex-building",
@@ -115,7 +126,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             "element => getComputedStyle(element).pointerEvents === 'none'"));
         Assert.IsTrue(await debug.Locator(".refuge-town-geometry-solid").First.EvaluateAsync<bool>(
             "element => getComputedStyle(element).fill.includes('235, 36, 40')"), "Solid geometry should be red.");
-        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(5);
+        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(10);
         await Expect(debug.Locator(".refuge-town-geometry-visual[data-town-foreground='world-gate-arch-roof']"))
             .ToHaveCountAsync(1);
         await Expect(debug.Locator(".refuge-town-geometry-label")).ToHaveCountAsync(0);
