@@ -279,8 +279,9 @@ test('clear paved segments use geometric boundary visibility before dense 2px sa
 test('NPC routing avoids expensive polygon resampling on every animation tick', () => {
     const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
     const navigation = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
-    assert.doesNotMatch(simulation, /!_navigation\.IsSegmentWalkable\(citizen\.Position/,
-        'A path is only invalidated by geometry revision or exhausted waypoints');
+    const forwardMovement = simulation.split('private void Move(')[1].split('private bool HasNeighbourAt(')[0];
+    assert.doesNotMatch(forwardMovement, /!_navigation\.IsSegmentWalkable\(citizen\.Position/,
+        'Normal walking must not resample full segments; short sidesteps are checked separately');
     assert.match(navigation, /_cachedGridCells/);
     assert.match(navigation, /_cachedGridEdges/);
     assert.match(navigation, /if \(_cachedRevision == Revision\) return/);
