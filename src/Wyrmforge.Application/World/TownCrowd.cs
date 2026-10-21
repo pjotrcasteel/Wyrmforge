@@ -107,9 +107,9 @@ public sealed class TownCrowd
                 continue;
             }
 
-            if (citizen.PathRevision != _navigation.Revision ||
-                citizen.PathIndex >= citizen.Path.Count ||
-                !_navigation.IsSegmentWalkable(citizen.Position, citizen.Path[citizen.PathIndex]))
+            // A validated route stays clear until SetObstacle/RemoveObstacle changes the map.
+            // Rechecking every remaining segment on every 100 ms tick caused visible iPhone stalls.
+            if (citizen.PathRevision != _navigation.Revision || citizen.PathIndex >= citizen.Path.Count)
             {
                 var destination = _navigation.Destinations[citizen.DestinationNode].Position;
                 if (!_navigation.TryFindPath(citizen.Position, destination, out var path))
@@ -141,6 +141,22 @@ public sealed class TownCrowd
             var position = distance <= .0001f
                 ? next
                 : new TownPoint(citizen.Position.X + dx * step / distance, citizen.Position.Y + dy * step / distance);
+
+            // Recheck only the next foot position, not the whole route. A path
+            // sampled earlier can still skim a polygon edge between grid samples.
+            if (!_navigation.IsWalkable(position))
+            {
+                citizen.WaitingSeconds += seconds;
+                citizen.PathRevision = -1;
+                if (citizen.WaitingSeconds > 2.5f)
+                {
+                    citizen.DestinationNode = -1;
+                    citizen.IdleSeconds = .5f + NextInt(12) / 10f;
+                    citizen.Path = [];
+                    citizen.WaitingSeconds = 0;
+                }
+                return;
+            }
 
             // A returning citizen must reserve a clear foot circle before becoming visible.
             var willAppear = citizen.IsReturning && Distance(position, citizen.EntryOrigin) >= 52f;
@@ -233,6 +249,13 @@ public sealed class TownCrowd
         for (var i = 0; i < candidates.Length; i++)
         {
             var destinationNode = candidates[(i + offset) % candidates.Length];
+            // Recheck reservations at commit time, including forced first exits
+            // and citizens that are currently hidden while returning.
+            if (_citizens.Any(other => other != citizen &&
+                (other.DestinationNode == destinationNode ||
+                 (other.IsPresent && !other.IsWalking && other.CurrentNode == destinationNode))))
+                continue;
+
             var target = _navigation.Destinations[destinationNode].Position;
             if (!_navigation.TryFindPath(citizen.Position, target, out var path)) continue;
 

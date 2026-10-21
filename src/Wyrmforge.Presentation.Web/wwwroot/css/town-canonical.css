@@ -104,6 +104,10 @@
 .game-shell.refuge-home .refuge-town-geometry-map {
     display:block;width:100%;height:100%;pointer-events:none;
 }
+.game-shell.refuge-home .refuge-town-geometry-feet-layer {
+    position:absolute;inset:0;z-index:5;display:block;width:100%;height:100%;
+    pointer-events:none;user-select:none;
+}
 .game-shell.refuge-home .refuge-town-geometry-solid {
     fill:rgba(235,36,40,.32);stroke:#ff5252;stroke-width:2;
     vector-effect:non-scaling-stroke;pointer-events:none;
