@@ -205,7 +205,7 @@
             : new Vector2D(forest.SiteX * WorldWidth + 75, forest.SiteY * WorldHeight + 85);
         var hollow = environment.AdjustSpawnPosition(fromSite, player, WorldWidth, WorldHeight, 12);
         var ashling = environment.AdjustSpawnPosition(
-            new Vector2D(WorldWidth * .80, WorldHeight * .76), player, WorldWidth, WorldHeight, 12);
+            new Vector2D(WorldWidth * .66, WorldHeight * .42), player, WorldWidth, WorldHeight, 12);
         if (hollow is { } hollowStart) mobs.Add(new LabMob(1, 0, hollowStart.X, hollowStart.Y));
         if (ashling is { } ashlingStart) mobs.Add(new LabMob(2, 2, ashlingStart.X, ashlingStart.Y));
         siteName = forest?.Site.Replace('-', ' ') ?? "—";
