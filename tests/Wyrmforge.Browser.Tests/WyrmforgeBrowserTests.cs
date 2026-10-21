@@ -529,11 +529,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_Fireball_CraftMinorMutationFromSecuredOrdinaryLoot()
     {
         await Page.SetViewportSizeAsync(390, 844);
-        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('cinderCraftTestSeeded')) {
+            localStorage.setItem('cinderCraftTestSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
             localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
             localStorage.setItem('wyrmforge.huntMaterials.v1',JSON.stringify([
                 'EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
-            localStorage.removeItem('wyrmforge.fireballCore.v1');");
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+        }");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
