@@ -2,7 +2,8 @@
 // are authoritative C# data. This module only handles viewport/input/drawing.
 import { drawArenaEnvironment, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
-import { drawEnemyPixelArt } from './arena-enemy-art.js';
+import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
+import { drawWetForestActorContact } from './arena-wet-forest-dressing.js';
 import { loadArt } from './art-atlas.js';
 import { resolveArenaCamera } from './arena-camera.js';
 
@@ -22,7 +23,8 @@ export async function initializeArenaLab(canvas, dotnet) {
     const state = {
         canvas, dotnet, active: true, options: { tool: 'walk', collision: false, mobs: true },
         frame: null, keys: new Set(), pointer: null, keyboard: { x: 0, y: 0 }, clock: 0,
-        busy: false, last: performance.now(), walk: { facing: 'S' }, raf: 0,
+        busy: false, last: performance.now(), walk: { facing: 'S' }, enemyMotion: createEnemyMotionState(),
+        lastPlayer: null, raf: 0,
         width: 0, height: 0, dpr: 1, events: [],
     };
     labs.set(canvas, state);
@@ -149,6 +151,13 @@ function draw(state) {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
     drawArenaEnvironment(ctx, frame.environment, ww, wh, state.clock);
+    // The same atlas and distance-driven gait as live Hunts: actors no longer walk on a timer.
+    const forest = frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest';
+    const enemyPoses = updateEnemyMotions(state.enemyMotion, frame.mobs.map(mob => ({
+        entityId: mob.id, kind: mob.kind, x: mob.x, y: mob.y,
+    })), state.clock);
+    const moved = state.lastPlayer ? Math.hypot(frame.x - state.lastPlayer.x, frame.y - state.lastPlayer.y) > .1 : false;
+    state.lastPlayer = { x: frame.x, y: frame.y };
     const layers = [
         ...getArenaCloisterElevations(frame.environment, ww, wh, state.clock),
         ...frame.mobs.map(mob => ({ kind: 'mob', depth: mob.y + 10, mob })),
@@ -157,10 +166,14 @@ function draw(state) {
     for (const layer of layers) {
         if (layer.kind === 'masonry') drawArenaCloisterElevation(ctx, layer);
         else if (layer.kind === 'mob') {
-            drawEnemyPixelArt(ctx, { kind: layer.mob.kind, x: layer.mob.x, y: layer.mob.y, radius: 10, healthFraction: 1 },
-                null, Math.floor(state.clock * 6) % 4, 1);
+            const mob = layer.mob;
+            const phase = enemyPoses.get(mob.id) ?? 0;
+            if (forest) drawWetForestActorContact(ctx, mob.x, mob.y, 12, phase > 0, phase);
+            drawEnemyPixelArt(ctx, { kind: mob.kind, x: mob.x, y: mob.y, radius: 12, healthFraction: 1 },
+                null, phase, enemyFacing(state.enemyMotion, mob.id));
         } else {
             const player = { x: frame.x, y: frame.y, radius: 12 };
+            if (forest) drawWetForestActorContact(ctx, player.x, player.y, 12, moved);
             const walk = updateMageWalk(state.walk, player, state.clock);
             drawMage(ctx, player, null, false, false, null, walk, state.walk.facing);
         }
