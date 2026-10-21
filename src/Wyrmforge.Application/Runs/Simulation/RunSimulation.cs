@@ -15,6 +15,7 @@ using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Statuses;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Experience;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Contextual;
 using Wyrmforge.Domain.Spells.Evolutions;
@@ -38,6 +39,7 @@ public sealed partial class RunSimulation
     private readonly RunDepthTrialState depthTrialState = new();
     private readonly RunExtractionState extractionState = new();
     private readonly RunEssenceCargoState essenceCargoState = new();
+    private readonly RunMaterialCargoState materialCargoState = new();
     private readonly RunCheckpointState checkpointState = new();
     private readonly ExperienceShardField experienceShards = new();
     private readonly PlayerState player = new();
@@ -197,6 +199,7 @@ public sealed partial class RunSimulation
         {
             if (extractionState.IsActive) DeathsDuringExtraction++;
             essenceCargoState.LosePending();
+            materialCargoState.LosePending();
             extractionState.Cancel();
             outcome = RunOutcome.Defeated;
             IsEnded = true;
@@ -205,6 +208,7 @@ public sealed partial class RunSimulation
         {
             ExtractionRitualsCompleted++;
             essenceCargoState.SecurePending();
+            materialCargoState.SecurePending();
             ClearMapEncounterField();
             checkpointState.Enter();
         }
@@ -280,6 +284,7 @@ public sealed partial class RunSimulation
     public RunSummary AbandonRun()
     {
         essenceCargoState.LosePending();
+        materialCargoState.LosePending();
         extractionState.Cancel();
         outcome = RunOutcome.Abandoned;
         IsEnded = true;
@@ -301,6 +306,7 @@ public sealed partial class RunSimulation
         Draft = DraftTelemetry,
         Control = ControlTelemetry,
         ContextualCasts = ContextualCasts,
+        SecuredMaterials = materialCargoState.Secured,
     };
 
     public RunRenderSnapshot CreateSnapshot()

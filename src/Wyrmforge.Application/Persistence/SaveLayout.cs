@@ -34,6 +34,7 @@ public static class SaveLayout
         ["wyrmforge.characterSchool.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.arcaneCodex"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.essenceVault"] = SaveDomain.PlayerLegacy,
+        ["wyrmforge.huntMaterials.v1"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.forgeProgression"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.forgeMastery"] = SaveDomain.PlayerLegacy,
         ["wyrmforge.spellMastery.v1"] = SaveDomain.PlayerLegacy,

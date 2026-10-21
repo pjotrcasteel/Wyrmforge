@@ -51,3 +51,12 @@ Implementation on `feature/fireball-mutator-sources-20261021` (PR pending valida
 - The existing equip semantics, locked sockets, saved progress, economy and other steps in the six-point UX series remain unchanged.
 - Added 320×568 and 390×844 browser coverage for real source names, unlocked/locked state, no fictional crafting, touch target height and viewport overflow; inspect CI before merging.
 - Canonical rules: [Magic & combat](../canon/magic-and-combat.md) §3.0a. This is a tested in-game source presentation, not the full unimplemented research/crafting progression.
+
+## Minor Fireball mutation crafting — ordinary Hunt salvage (21 Oct)
+
+- First vertical slice only: **Cinder Needle**, a smaller/faster/weaker version of the existing Fireball projectile, is craftable from 2 Ember Residue + 2 Charred Scrap (initial tuning).
+- Ember Residue: physical pickup after qualifying non-revived Ashling or Ash Slinger defeat. Charred Scrap: destructible barrels and crates in actual Hunts (not only the separate Arena Lab). Both use the same C# world-coordinate collision, lifetime, one-time pickup and depth-sorted environmental rendering.
+- Pickup is **pending** during combat; the established extraction checkpoint secures it. Death/abandon discard pending loot. Only secured materials enter the persisted `wyrmforge.huntMaterials.v1` satchel, distinct from canonical Dragon Essences.
+- The existing Fireball socket menu displays required quantities, common enemy/scenery sources, and crafts the permanently learned Cinder Needle once. Existing Wyrm unlocks, signature level, unlocked socket count and rare resource recipes stay unchanged.
+- Regression gates: `FireballCoreStateTests` (atomic spend/restore), `RunMaterialCargoStateTests` (extraction/loss), `ArenaEnvironmentStateTests` (deterministic normal barrels / loot pickup), mobile browser test (craft/persistence), existing Ashfang source UI coverage. Validate actual enemy drop rates and art readability on phone before treating this as final balance.
+- Existing full Wet Forest environmental generation remains a lab-only preview; only a few breakable salvage props are enabled in normal Hunts to avoid shipping unfinished habitat layout/terrain.

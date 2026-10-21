@@ -83,7 +83,17 @@ public sealed class ArenaEnvironmentState
             environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
             environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
         }
-        foreach (var prop in generatorPreview ? HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair) : [])
+        var generated = HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair);
+        // Keep the experimental forest ecology in the lab. Only small, visible, breakable
+        // salvage props enter ordinary Hunts, without changing existing crossing geometry.
+        var props = generatorPreview ? generated : generated
+            .Where(prop => prop.Kind is "barrel" or "crate")
+            .Take(6)
+            .Select(prop => prop with { DropKind = "material:CharredScrap" })
+            .ToArray();
+        if (!generatorPreview && props.Count == 0)
+            props = [new HuntArenaGenerator.Prop(-1, "barrel", .20, .52, 12, 25, "material:CharredScrap")];
+        foreach (var prop in props)
         {
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
             if (environment.IsBlocked(center, 950, 1550, prop.Radius + 4)) continue;
@@ -336,6 +346,14 @@ public sealed class ArenaEnvironmentState
             cost = score;
         }
         return best == goal ? goal : best;
+    }
+
+    /// <summary>Earned enemy loot exists in the world until collected; no combat RNG is consumed.</summary>
+    public void SpawnMaterialPickup(Vector2D position, double width, double height, string material)
+    {
+        if (width <= 0 || height <= 0 || material is not ("EmberResidue" or "CharredScrap")) return;
+        supplies.Add(new Supply($"material:{material}", Math.Clamp(position.X / width, .015, .985),
+            Math.Clamp(position.Y / height, .015, .985), EncounterPhase.Pressure));
     }
 
     public ArenaSupplyRenderSnapshot? TryCollect(Vector2D position, double width, double height, double playerRadius, bool needsHealing)

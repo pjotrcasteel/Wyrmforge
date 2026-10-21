@@ -145,6 +145,17 @@ public partial class Home
         catch (JSException) { }
     }
 
+    private async Task<bool> CraftCinderNeedleAsync()
+    {
+        if (characterSchool != Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer ||
+            !fireballCore.CraftCinderNeedle(huntMaterials)) return false;
+        // Save the permanent discovery before the materials, so interrupted writes
+        // never consume the recipe without granting the mutator.
+        await TrySetFireballCoreAsync();
+        await TrySetHuntMaterialsAsync();
+        return true;
+    }
+
     private async Task<bool> UpgradeFireballCoreAsync()
     {
         if (characterSchool != Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer) return false;

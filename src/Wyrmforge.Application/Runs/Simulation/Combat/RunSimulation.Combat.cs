@@ -180,6 +180,11 @@ public sealed partial class RunSimulation
                 score += (int)(baseScore * depthState.ScoreMultiplier);
                 // A raised Ashling already paid out and counted toward the node; its second death is worth nothing extra.
                 if (defeatedEnemy.Revived) break;
+                // Normal Fire-region foes occasionally leave physical minor crafting loot.
+                // The enemy id is stable: this does not perturb the combat spawn/random stream.
+                if (mapState.EncounterActive && defeatedEnemy.Kind is EnemyKind.Ashling or EnemyKind.AshSlinger &&
+                    defeatedEnemy.Id % 3 == 0)
+                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "EmberResidue");
                 experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();
