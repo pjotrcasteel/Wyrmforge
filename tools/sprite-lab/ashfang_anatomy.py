@@ -3,6 +3,7 @@ The reconstructed texture remains the appearance reference. Anatomical sections 
 faceted lofts with real volume, not planar cutouts or frame-specific repairs.
 """
 import numpy as np
+from ashfang_digits import digit_points,digit_label
 
 TAIL_POINTS=np.array([(0,.23,-.025),(.005,.32,-.005),(.015,.42,.025),(.012,.53,.050),(-.008,.64,.075),(-.045,.75,.105),(-.09,.85,.145),(-.13,.94,.195),(-.15,1.005,.25)])
 
@@ -59,29 +60,32 @@ def rebuild_anatomy(v,faces,uv):
     for sign,label in [(1,3),(-1,4)]:
         # Heavy thigh, visible narrow hock, forward toe fan. Continuous rings
         # span the joints so there is no old belly-to-foot sheet to stretch.
-        points=np.array([(sign*.105,.17,-.010),(sign*.15,.13,-.035),(sign*.18,.095,-.072),(sign*.18,.155,-.112),(sign*.18,.23,-.157),(sign*.18,.17,-.178),(sign*.18,.09,-.182),(sign*.18,.045,-.180)])
+        points=np.array([(sign*.105,.17,-.010),(sign*.15,.13,-.035),(sign*.18,.095,-.072),(sign*.18,.155,-.112),(sign*.18,.23,-.157),(sign*.18,.17,-.178),(sign*.18,.09,-.182),(sign*.18,.075,-.180)])
         loft(points,[.078,.070,.046,.032,.023,.029,.042,.024],[.068,.059,.038,.030,.022,.016,.013,.009],label,hind&(source[:,0]*sign>0),steps=4,ridges=.04)
-        fore=np.array([(sign*.115,-.18,.015),(sign*.145,-.195,-.035),(sign*.15,-.22,-.075),(sign*.16,-.255,-.115),(sign*.17,-.29,-.163),(sign*.17,-.325,-.181),(sign*.17,-.37,-.183),(sign*.17,-.405,-.18)])
+        fore=np.array([(sign*.115,-.18,.015),(sign*.145,-.195,-.035),(sign*.15,-.22,-.075),(sign*.16,-.255,-.115),(sign*.17,-.29,-.163),(sign*.17,-.325,-.181),(sign*.17,-.35,-.183),(sign*.17,-.365,-.18)])
         loft(fore,[.065,.060,.046,.034,.025,.036,.041,.023],[.062,.053,.042,.032,.023,.015,.012,.008],7 if sign>0 else 8,(source[:,1]<-.08)&(source[:,2]<-.055)&(source[:,0]*sign>0),steps=4,ridges=.04)
+        side='L' if sign>0 else 'R'
+        for limb in ['fore','hind']:
+            for digit in range(3):loft(digit_points(limb,side,digit),[.011,.009,.001],[.009,.007,.001],digit_label(limb,side,digit),source[:,2]<-.10,steps=4,sides=8)
     # Angular upper skull replaces the broad fused cap; lower jaw is retained.
-    points=np.array([(0,-.315,.135),(0,-.365,.151),(0,-.415,.137),(0,-.445,.114),(0,-.515,.105),(0,-.565,.098)])
+    points=np.array([(0,-.315,.145),(0,-.36,.163),(0,-.415,.143),(0,-.46,.123),(0,-.525,.110),(0,-.590,.095)])
     headref=(source[:,1]<-.29)&(source[:,2]>.015)
     skull_profile=[(1,.15),(.78,.80),(.30,1),(-.30,1),(-.78,.80),(-1,.15),(-.78,-.65),(-.35,-1),(.35,-1),(.78,-.65)]
-    loft(points,[.078,.116,.104,.079,.064,.040],[.047,.060,.050,.035,.030,.020],2,headref,steps=3,ridges=.02,profile=skull_profile)
-    jaw=np.array([(0,-.35,.055),(0,-.405,.042),(0,-.47,.035),(0,-.535,.038),(0,-.565,.052)])
-    loft(jaw,[.066,.072,.057,.048,.029],[.024,.025,.019,.015,.009],9,headref,steps=3,ridges=.02)
+    loft(points,[.069,.100,.079,.061,.046,.024],[.050,.064,.047,.034,.027,.022],2,headref,steps=3,ridges=.015,profile=skull_profile)
+    jaw=np.array([(0,-.35,.079),(0,-.405,.072),(0,-.47,.070),(0,-.54,.067),(0,-.587,.069)])
+    loft(jaw,[.060,.066,.052,.039,.021],[.017,.019,.017,.013,.006],9,headref,steps=3,ridges=.015)
     for sign in [1,-1]:
-        brow=np.array([(sign*.060,-.45,.153),(sign*.093,-.416,.177),(sign*.114,-.38,.167)])
-        loft(brow,[.016,.023,.015],[.014,.019,.011],2,headref,steps=2,sides=6)
-        eye=np.array([(sign*.094,-.430,.149),(sign*.097,-.421,.152),(sign*.095,-.413,.151)])
-        loft(eye,[.003,.006,.003],[.003,.006,.003],10,headref,steps=2,sides=6)
+        brow=np.array([(sign*.049,-.452,.160),(sign*.074,-.421,.183),(sign*.095,-.38,.186)])
+        loft(brow,[.013,.019,.013],[.012,.016,.010],2,headref,steps=2,sides=6)
+        eye=np.array([(sign*.071,-.444,.162),(sign*.078,-.431,.166),(sign*.081,-.418,.168)])
+        loft(eye,[.002,.004,.002],[.002,.004,.002],10,headref,steps=2,sides=6)
     for sign in [1,-1]:
         horn=np.array([(sign*.075,-.345,.173),(sign*.100,-.305,.220),(sign*.115,-.245,.264),(sign*.105,-.185,.290)])
         loft(horn,[.026,.020,.012,.0008],[.024,.019,.010,.0008],2,headref,steps=3,sides=8)
         cheek=np.array([(sign*.080,-.37,.105),(sign*.124,-.325,.132),(sign*.153,-.265,.155)])
         loft(cheek,[.026,.018,.001],[.020,.014,.001],2,headref,steps=2,sides=6)
         for y,x in [(-.48,.055),(-.535,.043)]:
-            fang=np.array([(sign*x,y,.087),(sign*x,y-.004,.060),(sign*(x-.004),y+.004,.038)])
+            fang=np.array([(sign*x,y,.092),(sign*x,y-.004,.078),(sign*(x-.004),y+.004,.064)])
             loft(fang,[.009,.007,.0005],[.008,.006,.0005],11,headref,steps=2,sides=6)
         for y,z in [(-.14,.11),(-.035,.115),(.085,.095)]:
             plate=np.array([(sign*.11,y,z),(sign*.157,y+.018,z+.036),(sign*.18,y+.054,z+.065)])

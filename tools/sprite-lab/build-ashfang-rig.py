@@ -9,6 +9,7 @@ sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
 from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
 from ashfang_material import stone_separation
+from ashfang_digits import digit_points,digit_identity,carried_limb
 from ashfang_motion import flight_state,cruise_state,connected_flight_state,CONNECTED_FLIGHT_FRAMES,CONNECTED_FLIGHT_EVENTS,FLIGHT_EVENTS,high_launch_state,fire_pass_state,arena_flyover_state,hunt_fitted_arena_state,ARENA_FLYOVER_FRAMES
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 stance_only='--stance-only' in sys.argv
@@ -112,7 +113,7 @@ for loop in mesh.loops:
 tile_y,tile_x=np.mgrid[0:128,0:128];tone=.145+.045*(1-tile_y/127)+.012*np.sin(tile_x*.11)*np.sin(tile_y*.08)
 raw[896:1024,0:128,:3]=tone[:,:,None]*np.array([.94,.96,1.0]);raw[896:1024,0:128,3]=1
 for index in range(body_count):
-    if source_labels[index] in (20,21,22,23):
+    if source_labels[index] in (2,9,20,21,22,23):
         x,y,z=v[index];u=(x*4+.5)%1;w=(y*4+.5)%1
         uv[index]=[(8+u*110)/2048,(904+w*110)/1024]
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
@@ -121,10 +122,13 @@ card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.p
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
 def bone(n,a,b,parent=None,deform=True):bones[n]=dict(head=np.array(a,float),tail=np.array(b,float),parent=parent,deform=deform)
-bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.07),'chest');bone('neck.1',(0,-.25,.07),(0,-.35,.10),'neck.0');bone('head',(0,-.35,.10),(0,-.52,.065),'neck.1');bone('jaw',(0,-.35,.045),(0,-.54,.005),'head');bone('mouth',(0,-.57,.045),(0,-.625,.045),'head',False)
+bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.07),'chest');bone('neck.1',(0,-.25,.07),(0,-.35,.10),'neck.0');bone('head',(0,-.35,.10),(0,-.52,.065),'neck.1');bone('jaw',(0,-.36,.085),(0,-.565,.075),'head');bone('mouth',(0,-.595,.080),(0,-.65,.080),'head',False)
 for side,sign in [('L',1),('R',-1)]:
     for limb,points,parent in [('fore',[(sign*.115,-.18,-.005),(sign*.15,-.22,-.075),(sign*.17,-.29,-.165),(sign*.17,-.37,-.185)],'chest'),('hind',[(sign*.105,.17,-.025),(sign*.18,.095,-.075),(sign*.18,.23,-.16),(sign*.18,.075,-.185)],'pelvis')]:
         for i in range(3):bone(f'{limb}.{i}.{side}',points[i],points[i+1],parent if i==0 else f'{limb}.{i-1}.{side}')
+        for digit in range(3):
+            points_digit=digit_points(limb,side,digit)
+            for joint in range(2):bone(f'toe.{limb}.{digit}.{joint}.{side}',points_digit[joint],points_digit[joint+1],f'{limb}.2.{side}' if joint==0 else f'toe.{limb}.{digit}.0.{side}')
     wr,we,ww,middles,tips=wing_layout(sign);points=[wr,we,ww]
     bone('wing.upper.'+side,points[0],points[1],'chest');bone('wing.fore.'+side,points[1],points[2],'wing.upper.'+side)
     for finger in range(4):
@@ -160,6 +164,8 @@ for index,p in enumerate(v):
         for name,weight in anchors:
             if weight>0:obj.vertex_groups[name].add([index],weight,'REPLACE')
         continue
+    elif 30<=source_labels[index]<=41:
+        limb,side,digit=digit_identity(int(source_labels[index]));permitted=[f'toe.{limb}.{digit}.{joint}.{side}' for joint in range(2)];region='digit'
     elif source_labels[index] in (1,23) or (source_labels[index]==0 and ((y>.27 and abs(x)<.13) or y>=.34)):permitted=[n for n in names if n.startswith('tail.')];region='tail'
     elif source_labels[index] in (2,10,11,22):
         permitted=['head'];region='head'
@@ -190,16 +196,17 @@ for limb in ['fore','hind']:
     for side in ['L','R']:
         n=f'{limb}.2.{side}';g=obj.vertex_groups[n].index
         foot_indices[n]=[p.index for p in mesh.vertices if any(w.group==g and w.weight>.95 for w in p.groups)]
-        soles[n]=np.array([mesh.vertices[index].co[:]-bones[n]['head'] for index in foot_indices[n]])
+        sole_indices=foot_indices[n]+[index for index,label in enumerate(source_labels) if 30<=label<=41 and digit_identity(int(label))[:2]==(limb,side)]
+        soles[n]=np.array([mesh.vertices[index].co[:]-bones[n]['head'] for index in sole_indices])
 def segment(n,h,t,rotation=None):
     h,t=Vector(h),Vector(t);r=(rotation.to_matrix() if rotation else Vector(bones[n]['tail']-bones[n]['head']).rotation_difference(t-h).to_matrix())@rest[n].to_3x3();matrix=r.to_4x4();matrix.translation=h;rig.pose.bones[n].matrix=matrix;bpy.context.view_layer.update()
 def ik(a,b,l1,l2,pole):
     d=b-a;distance=max(abs(l1-l2)+.0001,min(d.length,l1+l2-.0001));d.normalize();b=a+d*distance;along=(l1*l1-l2*l2+distance*distance)/(2*distance);p=Vector(pole);p=(p-d*p.dot(d)).normalized();return a+d*along+p*math.sqrt(max(0,l1*l1-along*along)),b
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
-clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
+clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];air_limb_audit=[];deps=bpy.context.evaluated_depsgraph_get()
 for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('flight-loop',17),('landing',31),('flight-sequence',CONNECTED_FLIGHT_FRAMES),('high-launch',55),('fire-flyover',56),('arena-flyovers',ARENA_FLYOVER_FRAMES)]:
     if (stance_only or wing_gate) and clip!='walk':continue
-    if motion_gate and clip not in ('walk','rear-breath','takeoff-flight-land'):continue
+    if motion_gate and clip not in ('walk','rear-breath','takeoff-flight-land','flight-loop','flight-sequence'):continue
     arena_clip=clip in ('high-launch','fire-flyover','arena-flyovers')
     def state_at(t):
         if clip=='high-launch':return high_launch_state(t*(count-1))
@@ -265,7 +272,13 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                 if limb=='fore':ankle.y+=.07
                 else:ankle.x=sign*.16
                 rest_goal=ankle.copy();fn=f'{limb}.2.{side}'
+                carried_controls=None
                 fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
+                if flight:
+                    lag=(.008 if side=='L' else .013)+(.012 if limb=='hind' else 0)
+                    carried_controls=carried_limb(flight,state_at(phase-lag*delay_scale),state_at(phase-(lag+.012)*delay_scale),limb)
+                    air_limb_audit.append(dict(clip=clip,frame=frame,limb=limb,side=side,controls=carried_controls))
+                    fr=fr.slerp(posed[parent][1]@Quaternion((1,0,0),carried_controls['wrist']),carried_controls['amount'])
                 if flight and limb=='hind':fr=Quaternion((1,0,0),flight['toeRoll'])@fr
                 sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
                 if clip=='walk':
@@ -282,7 +295,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                         foot_vector=Vector(bones[fn]['tail']-bones[fn]['head'])
                         ground_goal=ground_goal+foot_vector-fr@foot_vector
                     ground_goal.z=sole_height
-                    carried=attached(parent,rest_goal)+Vector((0,.045*tuck,.065*tuck))
+                    carried=attached(parent,rest_goal)+posed[parent][1]@Vector((0,carried_controls['carryY'],carried_controls['carryZ']))
                     if limb=='hind':carried.y+=.035*flight['kickTrail']
                     release=1 if clip=='flight-loop' else smooth((pose_phase-(.17 if limb=='fore' else .26))/(.06 if limb=='fore' else .04))
                     ankle=ground_goal.lerp(carried,release)
@@ -298,6 +311,15 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                 pole=posed[parent][1]@Vector((sign*.30,-1,0)) if limb=='hind' else Vector((sign*.6,-1,0))
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],pole)
                 segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
+                for digit in range(3):
+                    proximal=f'toe.{limb}.{digit}.0.{side}';distal=f'toe.{limb}.{digit}.1.{side}'
+                    base=ankle+fr@(Vector(bones[proximal]['head'])-Vector(bones[fn]['head']))
+                    curl=carried_controls['proximal'] if carried_controls else 0
+                    curl_tip=carried_controls['distal'] if carried_controls else 0
+                    pr=fr@Quaternion((1,0,0),curl*(1-.07*abs(digit-1)))
+                    middle=base+pr@Vector(bones[proximal]['tail']-bones[proximal]['head']);segment(proximal,base,middle,pr)
+                    dr=pr@Quaternion((1,0,0),curl_tip*(1-.08*abs(digit-1)))
+                    segment(distal,middle,middle+dr@Vector(bones[distal]['tail']-bones[distal]['head']),dr)
                 if limb=='hind':
                     local_knee=posed[parent][1].inverted()@(knee-hip)
                     hind_audit.append(dict(clip=clip,frame=frame,side=side,kneeOffsetPelvisLocal=list(local_knee),extensionRatio=float((ankle-hip).length/(lengths[n]+lengths[f'{limb}.1.{side}'])),toeRoll=flight['toeRoll'] if flight else 0))
@@ -385,7 +407,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
     clips[clip]=dict(frames=count,fps=24,loop=clip in ('walk','flight-loop'),action=action.name,events=(CONNECTED_FLIGHT_EVENTS if clip=='flight-sequence' else [dict(phase=(e['phase']-.64)/.36,name=e['name']) for e in FLIGHT_EVENTS if e['phase']>=.64] if clip=='landing' else FLIGHT_EVENTS if clip=='takeoff-flight-land' else []),strideDistanceModelUnits=.10/.72 if clip=='walk' else None,reviewRenderer='arena' if arena_clip else 'block');positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     if stance_only:clips[clip].update(frames=1,loop=False,silhouetteGateOnly=True)
     if wing_gate:clips[clip].update(frames=33 if fold_sweep else 4,loop=False,poseGateOnly=True,poses='33-step diagnostic fold sweep' if fold_sweep else ['folded','partial','raised-open','level-open'])
-    np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots),attackSignals=np.array(attack_signals))
+    np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,semanticLabels=source_labels,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots),attackSignals=np.array(attack_signals))
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];obj.data.shape_keys.animation_data.action=bpy.data.actions['Ashfang_membrane_walk'];path_root.animation_data.action=bpy.data.actions['Ashfang_path_walk'];scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and '+('one stance sample' if stance_only else 'nine motion studies'),flush=True)
 
@@ -394,3 +416,4 @@ bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'prof
 (out/'body-motion-audit.json').write_text(json.dumps(body_audit,indent=2)+'\n')
 
 (out/'hind-leg-audit.json').write_text(json.dumps(hind_audit,indent=2)+'\n')
+(out/'air-limb-audit.json').write_text(json.dumps(air_limb_audit,indent=2)+'\n')
