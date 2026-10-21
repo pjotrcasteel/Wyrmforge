@@ -256,20 +256,24 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_PlaceholderDepth_PreservesOpenPavementAndConcealsPaintedOverlaps()
+    public void Navigation_ScreenshotWellRearAndRaisedMasonry_RemainSeparateFromWalkablePavement()
     {
         var map = Scene();
         var behindWell = new TownPoint(825, 478);
-        Assert.IsTrue(map.IsWalkable(behindWell), "Rear paving remains walkable even when the body is hidden by a roof.");
-        Assert.AreEqual(-1, map.PlaceholderDepth(behindWell), "Do not show a disembodied rectangle above the well.");
-        Assert.IsTrue(map.PlaceholderDepth(new TownPoint(665, 535)) >= 0,
-            "The cobblestones beside the noticeboard must not become a broad hiding area.");
-        Assert.IsTrue(map.PlaceholderDepth(new TownPoint(825, 660)) >= 0,
-            "The entire rectangular placeholder remains visible in front of the well.");
+        Assert.IsTrue(map.IsWalkable(behindWell),
+            "The paved rear well passage is walkable even if part of a sprite overlaps the roof.");
+        Assert.IsTrue(map.IsBodyOccluded(behindWell),
+            "Only the actual painted well roof/posts may conceal the overlapping body pixels.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(665, 535)),
+            "Pavement next to the noticeboard remains open.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 660)),
+            "An NPC walking in front of the well remains physically present.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(825, 535)),
+            "The well's actual stone rim and basin stay solid to NPC feet.");
         Assert.IsFalse(map.IsWalkable(new TownPoint(1060, 870)),
-            "The right foreground flowers are solid at their actual ground footprint.");
+            "The right foreground flowerbed stays solid at foot level.");
         Assert.IsTrue(map.IsWalkable(new TownPoint(940, 830)),
-            "The middle paved street remains walkable beside the flowerbed.");
+            "The main paved street stays open beside the flowerbed.");
     }
 
     [TestMethod]
