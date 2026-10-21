@@ -5,7 +5,8 @@ import {
     CELL, COLS, ROWS, MATERIALS, GROUND_SOURCE_TILE_SIZE, GROUND_TILE_SIZE,
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
     materialSampleBoard, paintGroundCells, drawReferenceGroundBoard,
-    groundQuiltPatchPlan, groundMaterialVariationPlan, buildGroundQuiltAtlas,
+    groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
+    groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
 test('material studio starts with six standalone ground types, not an arena layout', () => {
@@ -69,11 +70,70 @@ test('subtle variation keeps each approved surface recognizable and wraps withou
         assert.notDeepEqual(spots, groundMaterialVariationPlan(index, 1442));
         assert.ok(spots.every(s => Number.isInteger(s.x) && s.x >= 0 && s.x < GROUND_TILE_SIZE &&
             Number.isInteger(s.y) && s.y >= 0 && s.y < GROUND_TILE_SIZE &&
-            s.radius >= 65 && s.radius <= 135 && s.opacity >= .055 && s.opacity <= .1));
+            s.radius >= 85 && s.radius <= 175 && s.opacity >= .16 && s.opacity <= .28));
         assert.equal(new Set(spots.map(s => s.tone)).size, 2);
     }
     assert.deepEqual(groundMaterialVariationPlan(-1), []);
     assert.deepEqual(groundMaterialVariationPlan(99), []);
+});
+
+test('actual macro variation comes from related ground artwork, not barely visible tint', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const patches = groundMaterialAccentPlan(index, 1441);
+        assert.equal(patches.length, 7);
+        assert.deepEqual(patches, groundMaterialAccentPlan(index, 1441));
+        assert.notDeepEqual(patches, groundMaterialAccentPlan(index, 1442));
+        assert.ok(patches.every(p =>
+            p.radius >= 64 && p.radius <= 112 &&
+            p.opacity >= .23 && p.opacity <= .38 &&
+            p.x >= 0 && p.x < GROUND_TILE_SIZE &&
+            p.y >= 0 && p.y < GROUND_TILE_SIZE));
+        assert.equal(new Set(patches.map(p => p.source)).size, 2);
+        assert.ok(patches.every(p => p.source < MATERIALS.length && p.source !== index),
+            'Accent blends must come from a different approved ground painting');
+    }
+    assert.deepEqual(groundMaterialAccentPlan(99), []);
+});
+
+test('mixed paint has seeded irregular material boundaries but uniform grass has none', () => {
+    const grass = new Uint8Array(COLS * ROWS);
+    assert.deepEqual(groundMaterialBoundaryPlan(grass), []);
+    const board = grass.slice();
+    paintGroundCells(board, COLS, ROWS, 13 * CELL + 4, 20 * CELL + 4, 3, 3);
+    const a = groundMaterialBoundaryPlan(board);
+    const b = groundMaterialBoundaryPlan(board, COLS, ROWS, 1442);
+    assert.ok(a.length > 12 && a.length < 120);
+    assert.deepEqual(a, groundMaterialBoundaryPlan(board));
+    assert.notDeepEqual(a, b);
+    assert.ok(a.some(e => e.vertical) && a.some(e => !e.vertical));
+    assert.ok(a.every(e => e.a !== e.b &&
+        e.a < MATERIALS.length && e.b < MATERIALS.length &&
+        Number.isInteger(e.x) && Number.isInteger(e.y) &&
+        e.x >= -2 && e.y >= -2 && e.x < COLS * CELL + 2 && e.y < ROWS * CELL + 2));
+});
+
+test('material transition painting blends both sides using world-aligned neighbor art', () => {
+    const board = new Uint8Array(4);
+    board.set([0, 1, 0, 1]);
+    const atlas = { width: GROUND_TILE_SIZE * MATERIALS.length, height: GROUND_TILE_SIZE };
+    const calls = [];
+    const ctx = {
+        globalAlpha: 1, save() {}, restore() {},
+        drawImage(...args) { calls.push({ args, alpha: this.globalAlpha }); },
+    };
+    assert.equal(drawGroundMaterialTransitions(ctx, board, atlas, 2, 2), true);
+    assert.ok(calls.length >= 32, 'Cross-material edges draw real overlaid texture strips');
+    assert.ok(calls.some(c => c.args[1] < GROUND_TILE_SIZE) &&
+        calls.some(c => c.args[1] >= GROUND_TILE_SIZE));
+    assert.ok(calls.some(c => c.alpha >= .49) && calls.some(c => c.alpha <= .1));
+    assert.equal(drawGroundMaterialTransitions(ctx, new Uint8Array(4), atlas, 2, 2), true);
+    const all = calls.length;
+    assert.equal(drawGroundMaterialTransitions(ctx, new Uint8Array(4), atlas, 2, 2), true);
+    assert.equal(calls.length, all, 'Identical neighboring material has no seam to soften');
+    assert.equal(drawGroundMaterialTransitions(ctx, board, null, 2, 2), false);
+    assert.equal(drawGroundMaterialTransitions(ctx, board, { width: 112, height: 112 }, 2, 2), false);
+    const edge = groundMaterialBoundaryPlan(board, 2, 2);
+    assert.ok(edge.length >= 4, 'Both horizontal and vertical boundaries must be feathered');
 });
 
 test('quilt is baked once into six independent material panels', () => {
@@ -98,10 +158,11 @@ test('quilt is baked once into six independent material panels', () => {
     const quilt = buildGroundQuiltAtlas(raw, 1441, factory);
     assert.equal(quilt.width, GROUND_TILE_SIZE * 6);
     assert.equal(quilt.height, GROUND_TILE_SIZE);
-    assert.equal(calls.sourceReads, 1176);
+    assert.equal(calls.sourceReads, 1176 + 7 * MATERIALS.length, 'Accents sample the original painted material atlas');
     assert.ok(calls.outputDraws > 1176, 'Periodic edges must be carried into the next large tile');
     assert.ok(calls.masks > 2352, 'Feathered patches plus baked tonal variation are drawn once');
-    assert.equal(calls.gradients, 14 * MATERIALS.length, 'Each material gets 14 subtle tonal patches');
+    assert.equal(calls.gradients, (14 + 7) * MATERIALS.length,
+        'Each material gets broad shading and real related-material accent patches');
     assert.equal(buildGroundQuiltAtlas({ width: 320, height: 64 }, 1441, factory), null);
 });
 

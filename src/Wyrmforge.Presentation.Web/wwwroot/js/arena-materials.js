@@ -93,7 +93,7 @@ function groundPatchMask(ctx, horizontal) {
     ctx.fillRect(0, 0, size, size);
 }
 
-// Very restrained, broad tonal variation. These overlays are baked over the
+// Readable broad tonal variation. These overlays are baked over the
 // existing approved artwork; they never create extra props, decals or tiles.
 // Positions wrap at the edges so the finished quilt remains seamless.
 const GROUND_TONES = Object.freeze([
@@ -117,9 +117,9 @@ export function groundMaterialVariationPlan(index, seed = 1441) {
     return Array.from({ length: 14 }, (_, spot) => ({
         x: Math.floor(hash(spot, 0) * GROUND_TILE_SIZE),
         y: Math.floor(hash(spot, 1) * GROUND_TILE_SIZE),
-        radius: 65 + Math.floor(hash(spot, 2) * 71),
+        radius: 85 + Math.floor(hash(spot, 2) * 91),
         tone: GROUND_TONES[index][spot % 2],
-        opacity: .055 + hash(spot, 3) * .045,
+        opacity: .16 + hash(spot, 3) * .12,
     }));
 }
 
@@ -143,6 +143,67 @@ function drawGroundMaterialVariation(ctx, index, seed) {
                 ctx.restore();
             }
     }
+}
+
+// Distinct natural wear within a single material: sparse patches of a related
+// *approved* painted material, softly feathered into the base texture. This is
+// baked once, so mobile brush strokes only sample the final ground atlas.
+const GROUND_ACCENTS = Object.freeze([
+    [3, 5], // grass: trampled earth and damp moss
+    [3, 5], // mud: drier earth and wet seams
+    [3, 0], // paving: dirt in joints and moss
+    [1, 0], // dirt: wet soil and scarce ground cover
+    [3, 1], // scorched: exposed soil and charcoal-dark mud
+    [1, 0], // marsh: wet soil and sparse vegetation
+]);
+
+export function groundMaterialAccentPlan(index, seed = 1441) {
+    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
+    const random = (spot, channel) => {
+        let n = (seed | 0) ^ Math.imul(index + 11, 0x9e3779b1) ^
+            Math.imul(spot + 29, 0x85ebca6b) ^ Math.imul(channel + 4, 0xc2b2ae35);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+    };
+    return Array.from({ length: 7 }, (_, spot) => ({
+        x: Math.floor(random(spot, 0) * GROUND_TILE_SIZE),
+        y: Math.floor(random(spot, 1) * GROUND_TILE_SIZE),
+        radius: 64 + Math.floor(random(spot, 2) * 49),
+        opacity: .23 + random(spot, 3) * .15,
+        source: GROUND_ACCENTS[index][spot % 2],
+    }));
+}
+
+function drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed) {
+    for (const spot of groundMaterialAccentPlan(index, seed)) {
+        const size = spot.radius * 2;
+        scratch.width = scratch.height = size;
+        sc.globalCompositeOperation = 'source-over';
+        sc.clearRect(0, 0, size, size);
+        sc.imageSmoothingEnabled = true;
+        sc.drawImage(source, spot.source * GROUND_SOURCE_TILE_SIZE, 0,
+            GROUND_SOURCE_TILE_SIZE, GROUND_SOURCE_TILE_SIZE, 0, 0, size, size);
+        const mask = sc.createRadialGradient(spot.radius, spot.radius, 0,
+            spot.radius, spot.radius, spot.radius);
+        mask.addColorStop(0, 'rgba(255,255,255,1)');
+        mask.addColorStop(.48, 'rgba(255,255,255,.85)');
+        mask.addColorStop(.83, 'rgba(255,255,255,.26)');
+        mask.addColorStop(1, 'rgba(255,255,255,0)');
+        sc.globalCompositeOperation = 'destination-in';
+        sc.fillStyle = mask;
+        sc.fillRect(0, 0, size, size);
+        sc.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = spot.opacity;
+        for (const offsetY of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
+            for (const offsetX of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
+                const x = spot.x - spot.radius + offsetX;
+                const y = spot.y - spot.radius + offsetY;
+                if (x + size <= 0 || y + size <= 0 || x >= GROUND_TILE_SIZE || y >= GROUND_TILE_SIZE) continue;
+                ctx.drawImage(scratch, index * GROUND_TILE_SIZE + x, y);
+            }
+    }
+    ctx.globalAlpha = 1;
 }
 
 /** Build once on atlas load, not during walking or every brush stroke. */
@@ -188,6 +249,7 @@ export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
                 }
         }
         drawGroundMaterialVariation(ctx, index, seed);
+        drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed);
         ctx.restore();
     }
     return canvas;
@@ -216,13 +278,91 @@ export function drawReferenceGroundBoard(ctx, board, atlas, columns = COLS, rows
     return true;
 }
 
+// Material boundaries must transition naturally, not form 16px stair steps.
+// Small opposing swatches are mixed over both sides of each painted boundary;
+// the terrain remains 100% visual, with no new gameplay geometry.
+export function groundMaterialBoundaryPlan(board, columns = COLS, rows = ROWS, seed = 1441) {
+    if (!board || board.length !== columns * rows) return [];
+    const boundaries = [];
+    const jitter = (col, row, axis, slice) => {
+        let n = (seed | 0) ^ Math.imul(col + 1, 0x9e3779b1) ^
+            Math.imul(row + 1, 0x85ebca6b) ^ Math.imul(axis * 3 + slice + 1, 0xc2b2ae35);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        return ((n ^ (n >>> 15)) >>> 0) % 5 - 2;
+    };
+    for (let row = 0; row < rows; row++)
+        for (let col = 0; col < columns; col++) {
+            const a = board[row * columns + col];
+            if (col + 1 < columns) {
+                const b = board[row * columns + col + 1];
+                if (a !== b)
+                    for (let slice = 0; slice < 2; slice++)
+                        boundaries.push({ vertical: true, x: (col + 1) * CELL + jitter(col, row, 0, slice),
+                            y: row * CELL + slice * 8, a, b });
+            }
+            if (row + 1 < rows) {
+                const b = board[(row + 1) * columns + col];
+                if (a !== b)
+                    for (let slice = 0; slice < 2; slice++)
+                        boundaries.push({ vertical: false, x: col * CELL + slice * 8,
+                            y: (row + 1) * CELL + jitter(col, row, 1, slice), a, b });
+            }
+        }
+    return boundaries;
+}
+
+function drawGroundSourceRegion(ctx, atlas, index, x, y, width, height, seed) {
+    const phase = Math.abs(seed | 0) % 7 * CELL;
+    const startX = x, startY = y;
+    const endX = x + width, endY = y + height;
+    for (let py = startY; py < endY;) {
+        const sy = ((py + phase) % GROUND_TILE_SIZE + GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
+        const h = Math.min(endY - py, GROUND_TILE_SIZE - sy);
+        for (let px = startX; px < endX;) {
+            const sx = ((px + phase) % GROUND_TILE_SIZE + GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
+            const w = Math.min(endX - px, GROUND_TILE_SIZE - sx);
+            ctx.drawImage(atlas, index * GROUND_TILE_SIZE + sx, sy, w, h, px, py, w, h);
+            px += w;
+        }
+        py += h;
+    }
+}
+
+export function drawGroundMaterialTransitions(ctx, board, atlas, columns = COLS, rows = ROWS, seed = 1441) {
+    if (!ctx || !atlas || atlas.width !== GROUND_TILE_SIZE * MATERIALS.length ||
+        atlas.height !== GROUND_TILE_SIZE || !board || board.length !== columns * rows) return false;
+    const weights = [.10, .24, .38, .49];
+    ctx.save();
+    for (const edge of groundMaterialBoundaryPlan(board, columns, rows, seed)) {
+        if (edge.a >= MATERIALS.length || edge.b >= MATERIALS.length) continue;
+        for (let step = 0; step < weights.length; step++) {
+            const far = step * 2;
+            const alpha = weights[step];
+            ctx.globalAlpha = alpha;
+            if (edge.vertical) {
+                // This half is still A, mixed with a little B as it approaches the seam.
+                drawGroundSourceRegion(ctx, atlas, edge.b, edge.x - 8 + far, edge.y, 2, 8, seed);
+                // Reverse mixture on the B side, so the color never snaps at x=edge.x.
+                drawGroundSourceRegion(ctx, atlas, edge.a, edge.x + 6 - far, edge.y, 2, 8, seed);
+            } else {
+                drawGroundSourceRegion(ctx, atlas, edge.b, edge.x, edge.y - 8 + far, 8, 2, seed);
+                drawGroundSourceRegion(ctx, atlas, edge.a, edge.x, edge.y + 6 - far, 8, 2, seed);
+            }
+        }
+    }
+    ctx.restore();
+    return true;
+}
+
 function render(state) {
     state.pending = false;
     if (state.disposed) return;
     const ctx = state.canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    if (!drawReferenceGroundBoard(ctx, state.cells, state.atlas, COLS, ROWS, state.seed)) {
+    if (drawReferenceGroundBoard(ctx, state.cells, state.atlas, COLS, ROWS, state.seed))
+        drawGroundMaterialTransitions(ctx, state.cells, state.atlas, COLS, ROWS, state.seed);
+    else {
         ctx.fillStyle = '#171a16';
         ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
     }
