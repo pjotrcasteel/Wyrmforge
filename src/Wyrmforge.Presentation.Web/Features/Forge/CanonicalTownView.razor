@@ -37,6 +37,25 @@
             <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry" GeometryChanged="OnGeometryChanged" />
         }
 
+        @* Foreground pixels come from the approved painting itself. Tight silhouettes
+           restore well roof/sign depth without duplicating paving or cutting arbitrary triangles. *@
+        <svg class="refuge-town-well-foreground" viewBox="0 0 1672 941"
+             preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <clipPath id="refuge-well-silhouette" clipPathUnits="userSpaceOnUse">
+                    <path d="M722 446 L737 433 L798 416 L807 418 L809 485 L793 488 L793 536
+                             L785 539 L782 490 L746 497 L747 544 L732 544 L729 499 L722 501 Z" />
+                    <path d="M812 432 L826 412 L839 401 L840 389 L851 393 L857 401 L878 402
+                             L901 413 L919 429 L931 444 L925 467 L904 468 L819 465 Z" />
+                    <path d="M825 458 L837 458 L836 523 L824 523 Z M900 457 L913 459 L914 519 L900 519 Z" />
+                    <path d="M710 512 L740 500 L785 494 L889 495 L926 506 L942 520 L944 541
+                             L924 555 L889 563 L762 566 L724 559 L704 544 L702 528 Z" />
+                </clipPath>
+            </defs>
+            <image x="0" y="0" width="1672" height="941" preserveAspectRatio="none"
+                   href="art/town/night-active.webp?v=140" clip-path="url(#refuge-well-silhouette)" />
+        </svg>
+
         @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
         @if (showTownGeometry && crowd is not null)
         {
