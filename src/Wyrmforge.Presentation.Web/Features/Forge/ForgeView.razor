@@ -135,7 +135,7 @@
                 {
                     @if (CharacterSchool == DivineArchetype.Pyromancer)
                     {
-                        <FireballRitualView Core="FireballCore" Vault="Vault" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" />
+                        <FireballRitualView Core="FireballCore" Vault="Vault" Materials="HuntMaterials" OnCraftCinderNeedle="CraftCinderNeedle" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" />
                     }
                     else
                     {
@@ -236,6 +236,8 @@
     [Parameter] public EventCallback<Wyrmforge.Domain.World.RegionId> OnRegionChanged { get; set; }
     [Parameter] public Wyrmforge.Application.Chronicles.AdvancementProgress Advancement { get; set; } = new(Wyrmforge.Application.Chronicles.AdvancementRoute.None, 1, 0, 0);
     [Parameter, EditorRequired] public FireballCoreState FireballCore { get; set; } = null!;
+    [Parameter] public HuntMaterialSatchel HuntMaterials { get; set; } = new();
+    [Parameter] public Func<Task<bool>> CraftCinderNeedle { get; set; } = () => Task.FromResult(false);
     [Parameter] public Func<Task<bool>> UpgradeFireball { get; set; } = () => Task.FromResult(false);
     [Parameter] public Func<int, FireballMutationId?, Task<bool>> EquipFireball { get; set; } = (_, _) => Task.FromResult(false);
     [Parameter] public LaboratoryState Laboratory { get; set; } = new();
