@@ -1,0 +1,47 @@
+{
+  "arena-flyovers-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "fire-flyover-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "flight-loop-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "flight-sequence-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "high-launch-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "landing-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "rear-breath-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "takeoff-flight-land-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  },
+  "walk-samples": {
+    "wingVertexCount": 1548,
+    "wingMaxChange": 0.0,
+    "bodyArmorMaxChange": 0.0
+  }
+}
