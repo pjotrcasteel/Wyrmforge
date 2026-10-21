@@ -51,6 +51,7 @@
         <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast")" @onclick='() => ChangeTool("blast")'>Blast area</button>
         <label class="toggle"><input type="checkbox" @bind="showCollision" @bind:after="SyncOptions" /> Collision outlines</label>
         <label class="toggle"><input type="checkbox" @bind="showMobs" @bind:after="SyncOptions" /> Pathing mobs</label>
+        <label class="toggle"><input type="checkbox" @bind="openCrossings" @bind:after="Regenerate" /> Open crossings</label>
         <button class="secondary" @onclick="ResetScene">Reset scene</button>
     </section>
 
@@ -103,6 +104,7 @@
     private int collectedSupplies;
     private bool showCollision;
     private bool showMobs = true;
+    private bool openCrossings = true;
     private string tool = "walk";
     private string status = "Choose a seed and explore.";
 
@@ -192,6 +194,7 @@
             PreLair = stage >= 7,
         };
         environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
+        if (openCrossings) environment.SetPhase(EncounterPhase.Surge);
         player = new Vector2D(WorldWidth * .5, WorldHeight * .5);
         if (environment.IsBlocked(player, WorldWidth, WorldHeight, 12))
             player = new Vector2D(WorldWidth * .5, WorldHeight * .55);
