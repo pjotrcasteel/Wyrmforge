@@ -9,14 +9,13 @@
 <div class="refuge-town-crowd" aria-hidden="true">
     @foreach (var person in Crowd.Citizens)
     {
-        var depth = person.IsPresent ? Crowd.Navigation.PlaceholderDepth(person.Position) : -1;
-        @if (depth >= 0)
+        @if (person.IsPresent)
         {
             <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
                   data-town-feet-y="@person.Position.Y"
                   data-town-citizen-state="@CitizenState(person)"
                   data-town-work-building="@person.WorkBuildingId"
-                  style="@CitizenStyle(person, depth)"></span>
+                  style="@CitizenStyle(person)"></span>
         }
     }
 </div>
@@ -134,10 +133,12 @@
     private static string CitizenState(TownCitizen citizen) =>
         citizen.IsWorking ? "working" : citizen.IsWalking ? "walking" : "idling";
 
-    // Preserve the original painted-object sort while keeping temporary rectangles whole.
-    private static string CitizenStyle(TownCitizen citizen, int depth) =>
+    // Every present citizen stays visible; only the painted foreground geometry
+    // can cover the parts of its body behind a real wall, well roof or stone rim.
+    // Never promote or conceal the entire actor based on approximate body coverage.
+    private static string CitizenStyle(TownCitizen citizen) =>
         FormattableString.Invariant(
-            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{depth}");
+            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{(int)MathF.Floor(citizen.Position.Y * 10f) + 1}");
 
     public async ValueTask DisposeAsync()
     {
