@@ -56,6 +56,17 @@ public sealed class TownCrowd
     private readonly TownNavigationMap _navigation;
     private readonly HashSet<string> _openBuildings;
     private uint _randomState;
+    public int PathfindCount { get; private set; }
+    public double PathfindTotalMilliseconds { get; private set; }
+
+    private bool TryPath(TownPoint start, TownPoint target, out List<TownPoint> path)
+    {
+        var startTick = System.Diagnostics.Stopwatch.GetTimestamp();
+        var found = _navigation.TryFindPath(start, target, out path);
+        PathfindTotalMilliseconds += System.Diagnostics.Stopwatch.GetElapsedTime(startTick).TotalMilliseconds;
+        PathfindCount++;
+        return found;
+    }
 
     public TownCrowd(TownNavigationMap navigation, int seed = 205, int citizenCount = 7,
         IEnumerable<string>? openBuildings = null)
@@ -158,7 +169,7 @@ public sealed class TownCrowd
             // Keep at least three free-roaming residents. Prefer reassigning an
             // existing citizen; a new worker is only spawned when the pool is full.
             var citizen = available > 3
-                ? _citizens.First(c => c.AssignedWorkNode < 0 && c.IsPresent && !c.IsWalking)
+                ? _citizens.FirstOrDefault(c => c.AssignedWorkNode < 0 && c.IsPresent && !c.IsWalking)
                 : null;
             if (citizen is null)
             {
@@ -229,7 +240,7 @@ public sealed class TownCrowd
             if (citizen.PathRevision != _navigation.Revision || citizen.PathIndex >= citizen.Path.Count)
             {
                 var destination = _navigation.Destinations[citizen.DestinationNode].Position;
-                if (!_navigation.TryFindPath(citizen.Position, destination, out var path))
+                if (!TryPath(citizen.Position, destination, out var path))
                 {
                     citizen.DestinationNode = -1;
                     citizen.IdleSeconds = .7f;
@@ -392,7 +403,7 @@ public sealed class TownCrowd
                 continue;
 
             var target = _navigation.Destinations[destinationNode].Position;
-            if (!_navigation.TryFindPath(citizen.Position, target, out var path)) continue;
+            if (!TryPath(citizen.Position, target, out var path)) continue;
 
             citizen.WorkBuildingId = null;
             citizen.CurrentActivity = null;
