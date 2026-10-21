@@ -1,7 +1,10 @@
 // Arena Materials Lab 01: only ground. No layout, heightmap, props or gameplay.
 // Material samples deliberately use simple horizontal strips, not a proposed arena.
 // The material atlas is cut from the six standalone Gothic ground paintings the player approved.
-export const GROUND_TILE_SIZE = 112;
+export const GROUND_SOURCE_TILE_SIZE = 112;
+export const GROUND_TILE_SIZE = 640;
+export const GROUND_PATCH_SIZE = 96;
+export const GROUND_PATCH_STEP = 64;
 export const GROUND_ATLAS_URL = new URL('../art/environment/wet-forest-materials-painted.webp', import.meta.url).href;
 export const CELL = 16;
 export const COLS = 30;
@@ -43,6 +46,98 @@ export function paintGroundCells(cells, columns, rows, x, y, index, radius = 2) 
         }
     }
     return changed;
+}
+
+// The six approved material paintings are just 112px wide. Repeating those
+// directly produces obvious checkerboard motifs. Quilt each one once into a
+// 640px toroidal texture with deterministic, overlapping 96px source patches.
+// Edges are softly crossfaded, not mirrored into rigid repeated symmetry.
+export function groundQuiltPatchPlan(index, seed = 1441) {
+    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
+    const patches = [];
+    const count = GROUND_TILE_SIZE / GROUND_PATCH_STEP;
+    const inset = (GROUND_PATCH_SIZE - GROUND_PATCH_STEP) / 2;
+    for (let row = 0; row < count; row++)
+        for (let col = 0; col < count; col++) {
+            const random = channel => {
+                let v = (seed | 0) ^ Math.imul(index + 13, 0x9e3779b1) ^
+                    Math.imul(col + 31, 0x85ebca6b) ^ Math.imul(row + 47, 0xc2b2ae35) ^
+                    Math.imul(channel + 7, 0x27d4eb2d);
+                v = Math.imul(v ^ (v >>> 16), 0x7feb352d);
+                v = Math.imul(v ^ (v >>> 15), 0x846ca68b);
+                return ((v ^ (v >>> 16)) >>> 0) / 4294967296;
+            };
+            const travel = GROUND_SOURCE_TILE_SIZE - GROUND_PATCH_SIZE;
+            patches.push({
+                x: col * GROUND_PATCH_STEP - inset,
+                y: row * GROUND_PATCH_STEP - inset,
+                sourceX: index * GROUND_SOURCE_TILE_SIZE + Math.floor(random(0) * (travel + 1)),
+                sourceY: Math.floor(random(1) * (travel + 1)),
+                flipX: random(2) > .5,
+                flipY: random(3) > .5,
+            });
+        }
+    return patches;
+}
+
+function groundPatchMask(ctx, horizontal) {
+    const size = GROUND_PATCH_SIZE;
+    const fade = 16;
+    const gradient = ctx.createLinearGradient(0, 0,
+        horizontal ? size : 0, horizontal ? 0 : size);
+    gradient.addColorStop(0, 'rgba(255,255,255,0)');
+    gradient.addColorStop(fade / size, 'rgba(255,255,255,1)');
+    gradient.addColorStop(1 - fade / size, 'rgba(255,255,255,1)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+}
+
+/** Build once on atlas load, not during walking or every brush stroke. */
+export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
+    if (!source || source.width !== GROUND_SOURCE_TILE_SIZE * MATERIALS.length ||
+        source.height !== GROUND_SOURCE_TILE_SIZE) return null;
+    const create = canvasFactory ?? (() => document.createElement('canvas'));
+    const canvas = create();
+    canvas.width = GROUND_TILE_SIZE * MATERIALS.length;
+    canvas.height = GROUND_TILE_SIZE;
+    const ctx = canvas.getContext('2d');
+    const scratch = create();
+    scratch.width = scratch.height = GROUND_PATCH_SIZE;
+    const sc = scratch.getContext('2d');
+    if (!ctx || !sc) return null;
+    ctx.imageSmoothingEnabled = false;
+    sc.imageSmoothingEnabled = false;
+    const size = GROUND_PATCH_SIZE;
+    for (let index = 0; index < MATERIALS.length; index++) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(index * GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE, GROUND_TILE_SIZE);
+        ctx.clip();
+        for (const p of groundQuiltPatchPlan(index, seed)) {
+            sc.globalCompositeOperation = 'source-over';
+            sc.clearRect(0, 0, size, size);
+            sc.save();
+            sc.translate(p.flipX ? size : 0, p.flipY ? size : 0);
+            sc.scale(p.flipX ? -1 : 1, p.flipY ? -1 : 1);
+            sc.drawImage(source, p.sourceX, p.sourceY, size, size, 0, 0, size, size);
+            sc.restore();
+            sc.globalCompositeOperation = 'destination-in';
+            groundPatchMask(sc, true);
+            groundPatchMask(sc, false);
+            sc.globalCompositeOperation = 'source-over';
+            // Wrap only within THIS material panel; the atlas panels never bleed.
+            for (const wy of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
+                for (const wx of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
+                    const dx = p.x + wx, dy = p.y + wy;
+                    if (dx + size <= 0 || dy + size <= 0 ||
+                        dx >= GROUND_TILE_SIZE || dy >= GROUND_TILE_SIZE) continue;
+                    ctx.drawImage(scratch, index * GROUND_TILE_SIZE + dx, dy);
+                }
+        }
+        ctx.restore();
+    }
+    return canvas;
 }
 
 // Paint the GENERATED standalone material illustrations, not crops containing
@@ -107,7 +202,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
     const state = {
         canvas, seed: seed | 0, selected: 0, radius: 2,
         cells: materialSampleBoard(), history: [], pointer: null,
-        listeners: [], pending: false, frameId: 0, disposed: false, atlas: null,
+        listeners: [], pending: false, frameId: 0, disposed: false, atlas: null, sourceAtlas: null,
     };
     const bind = (target, name, handler, options) => {
         target.addEventListener(name, handler, options);
@@ -139,9 +234,10 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (!state.disposed) console.error('WyrmForge material artwork failed to load.', GROUND_ATLAS_URL);
     };
     atlas.onload = () => {
-        if (!state.disposed && atlas.width === GROUND_TILE_SIZE * MATERIALS.length &&
-            atlas.height === GROUND_TILE_SIZE) {
-            state.atlas = atlas;
+        if (!state.disposed && atlas.width === GROUND_SOURCE_TILE_SIZE * MATERIALS.length &&
+            atlas.height === GROUND_SOURCE_TILE_SIZE) {
+            state.sourceAtlas = atlas;
+            state.atlas = buildGroundQuiltAtlas(atlas, state.seed);
             redraw(state);
         }
     };
@@ -180,6 +276,7 @@ export function changeMaterialSeed(canvas, seed) {
     const s = contexts.get(canvas);
     if (!s) return;
     s.seed = seed | 0;
+    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed);
     redraw(s);
 }
 export function disposeMaterialsLab(canvas) {
