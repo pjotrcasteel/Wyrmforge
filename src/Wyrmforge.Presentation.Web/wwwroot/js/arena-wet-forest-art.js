@@ -298,7 +298,7 @@ export function createWetForestScorchPlan(props, seed, width, height, influence,
     return marks;
 }
 
-// Worn stone is embedded in the *existing* C# woodland trail, not a short
+// Pixel-relief cobbles follow the *existing* C# woodland trail, not a short
 // side-to-side wall. The path winds the full world height with locally broken
 // paving, mud gaps and soft edges; it never adds any solid gameplay geometry.
 export function createWetForestOldPaving(recipe, seed, width, height) {
@@ -324,13 +324,36 @@ export function createWetForestOldPaving(recipe, seed, width, height) {
             const w = 8 + Math.floor(hash(seed ^ 0x347291, row, lane + 7) * 6) * 2;
             const h = roll > .78 ? 8 : 6;
             if (x < 2 || py < 2 || x + w + 2 > width || py + h + 2 > height) continue;
-            // No dark drop shadow or continuous stone lip: these are flat, rain-worn slabs.
-            const face = roll > .72 ? '#626458' : roll > .43 ? '#53574c' : '#42493f';
-            marks.push({ x, y: py, width: w, height: h, color: face, alpha: .76 });
-            if (roll > .63) marks.push({ x: x + 2, y: py, width: Math.min(w - 2, 8),
-                height: 2, color: '#797b6b', alpha: .35 });
-            if (roll < .23) marks.push({ x: x + w - 4, y: py + h - 2, width: 4,
-                height: 2, color: '#354337', alpha: .78 });
+            // Each sunk slab has a tiny top-left bevel and a two-pixel downhill
+            // contact shadow. It has visual relief, NOT a raised physical tile.
+            // Chipped shoulders, varied stone heights and mossy joints keep the
+            // surface from reading as a repeated rectangular checkerboard.
+            const palette = roll > .72
+                ? { face: '#65665b', light: '#8b8a75', shade: '#444b41' }
+                : roll > .43
+                    ? { face: '#555a4d', light: '#797b69', shade: '#383f38' }
+                    : { face: '#454e43', light: '#687362', shade: '#303930' };
+            const mark = (dx, dy, mw, mh, color, alpha, kind) => {
+                marks.push({ x: x + dx, y: py + dy, width: mw, height: mh,
+                    color, alpha, kind });
+            };
+            // A compact earth-colored occlusion pocket only beneath this stone.
+            mark(2, 2, w, h, '#171f1c', .59, 'stone-shadow');
+            mark(0, 2, w, h - 2, '#252e27', .84, 'stone-joint');
+            mark(2, 0, w - 4, h - 2, palette.face, .94, 'stone-face');
+            mark(0, 2, w - 2, h - 4, palette.face, .87, 'stone-face');
+            // Light is consistent from upper-left; the right/bottom bevel darkens.
+            mark(2, 0, w - 6, 2, palette.light, .67, 'stone-highlight');
+            mark(w - 4, 2, 2, h - 4, palette.shade, .84, 'stone-bevel');
+            mark(2, h - 2, w - 4, 2, palette.shade, .83, 'stone-bevel');
+            // Chip at the far corners rather than drawing identical rounded blocks.
+            if (roll < .32) mark(w - 4, 0, 2, 2, '#28332b', .91, 'stone-chip');
+            if (roll > .82) mark(0, h - 2, 4, 2, '#28342b', .81, 'stone-chip');
+            const weather = hash(seed ^ 0x4129d0, row + 19, lane + 9);
+            if (weather < .21) mark(Math.min(w - 6, 4), 2, 2, 2,
+                '#303e34', .77, 'stone-crack');
+            if (weather > .78) mark(w - 4, h - 2, 4, 2,
+                '#3d513d', .73, 'stone-moss');
         }
     }
     return marks;
