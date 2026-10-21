@@ -117,3 +117,31 @@ Browser screenshot gates for **both 320px and 390px** now wait until
 all eight headings, idle planted feet and passing in front of/behind grounded physical tree
 colliders. If either bundle fails to load, flag the screenshot as **not a valid art review**.
 No animation asset bytes, identity, damage or combat logic have been modified in this step.
+
+## Gothic material and silhouette candidate — 21 October 2026
+
+Review branch `art/wet-forest-gothic-materials-20261021` before accepting its art.
+The lab-only terrain painter now uses a narrower, low-saturation wet-loam/mud/moss
+range and sparse seed-stable soil grain, not a broad dark overlay. Lab-only pine
+crowns use narrower, broken bough masses with cold highlights and more exposed
+black timber rather than wide rounded blobs. Existing tree feet, authoritative C#
+colliders, site history, routes, drops, depth sorting, Hollow/Ashling rigging, and
+ordinary Hunts remain unchanged.
+
+### Owner visual acceptance
+
+- Compare identical seeds `1204`, `1205`, and `3312` at 320px and 390px.
+  The floor should read as loam, mud and old wet paths **without checkerboarding**
+  or flat single-colour expanses.
+- Trees should read as old, heavy and damaged, with irregular needles and open
+  spaces; reject any new simple triangular silhouettes, rounded clumps, or high
+  saturation green.
+- Keep physical C# tree feet and real actor front/behind ordering. The full tree
+  remains visible until its actual physical prop is destroyed.
+- Inspect the four seeded human-history sites and 1/4/8 Wyrm proximity levels.
+  Don't fix atmosphere by uniformly darkening the canvas or hiding visibility.
+- Compare moving real Hollow/Ashling and the player in the scene at true iPhone
+  size, including combat-readability expectations.
+- Check the existing 30+ FPS mobile target. This is a **visual candidate**, not
+  accepted final artwork, not a replacement for approved concept art, and not
+  permission to enable generated arenas in normal Hunts.
