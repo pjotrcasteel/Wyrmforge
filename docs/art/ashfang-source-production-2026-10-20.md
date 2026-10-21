@@ -68,3 +68,13 @@ were reviewed. The arm folds improved but the digit fan still stayed too broad
 when grounded. V9 gathers individual finger chains toward the trailing body
 line with quaternion rotations and preserved lengths, reopening them for
 flight; no vertex scaling or mirrored sprites. Awaiting regenerated review.
+
+### V9 review / V10 raised wing correction — in progress
+V9 broader flight reads better than V5 and the white throat hotspot is removed.
+All three clips are finite and unclipped; walk endpoint error is zero. Actual
+camera widths range 60–104px at 80 pixels/model-unit, so final viewport scaling
+still needs fitting across 320/390px game widths. A regression in rear/breath
+places a distal wing finger at -0.201694: rotating the trailing fold direction
+with the raised torso points it down. V10 keeps that folded direction in world
+space and adds slight tip clearance in the raised pose. This must be audited
+again; V9 is not a passed contact source.

@@ -138,7 +138,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                     # folded. Quaternion interpolation retains segment lengths
                     # and opens the fan without scaling its vertices.
                     rest_direction=Vector(bones[n]['tail']-bones[n]['head'])
-                    folded_direction=rotation@Vector((sign*(-.25+finger*.04),1,-.18-j*.08)).normalized()
+                    folded_direction=Vector((sign*(-.25+finger*.04),1,-.10-j*.04+rear*.24)).normalized()
                     folded_rotation=rest_direction.rotation_difference(folded_direction)
                     r=r.slerp(folded_rotation,fold)
                     tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
