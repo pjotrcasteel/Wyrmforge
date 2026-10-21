@@ -101,9 +101,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
         await Page.WaitForFunctionAsync(@"() =>
-            document.querySelectorAll('.refuge-town-geometry-solid').length >= 15");
+            document.querySelectorAll('.refuge-town-geometry-solid').length >= 14");
         foreach (var id in new[] { "arcane-nexus-building", "blacksmith-building", "codex-building",
-            "hall-of-fame-building", "world-gate-west-tower", "world-gate-east-tower", "world-gate-arch-roof" })
+            "hall-of-fame-building", "world-gate-west-tower", "world-gate-east-tower" })
         {
             await Expect(debug.Locator($".refuge-town-geometry-solid[data-town-obstacle='{id}']")).ToHaveCountAsync(1);
         }
@@ -112,6 +112,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(await debug.Locator(".refuge-town-geometry-solid").First.EvaluateAsync<bool>(
             "element => getComputedStyle(element).fill.includes('235, 36, 40')"), "Solid geometry should be red.");
         await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(2);
+        await Expect(debug.Locator(".refuge-town-geometry-visual[data-town-foreground='world-gate-arch-roof']"))
+            .ToHaveCountAsync(1);
+        await Expect(debug.Locator(".refuge-town-geometry-feet")).ToHaveCountAsync(7);
+        await Expect(Page.Locator(".refuge-town-citizen[style*='visibility:hidden']")).ToHaveCountAsync(0);
+
         Assert.AreEqual(before, await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
             "buttons => [...buttons].map(button => button.dataset.townState).join(',')"));
 
