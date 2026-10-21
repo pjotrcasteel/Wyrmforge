@@ -46,6 +46,10 @@ export function drawWetForestDressing(ctx, scene, props, width, height) {
         ctx.fillStyle = '#302b25'; ctx.globalAlpha = .27;
         ctx.beginPath(); ctx.ellipse(root.x, root.y, root.radius + 7, 5, 0, 0, 2 * Math.PI); ctx.fill();
         if (root.kind === 'pine' || root.kind === 'dead-tree') {
+            // The 70px-tall approved tree now casts a broad, low-contrast canopy shadow
+            // across the actual ground. It never reads as an impassable raised wall.
+            ctx.fillStyle = '#071413'; ctx.globalAlpha = .17;
+            ctx.beginPath(); ctx.ellipse(root.x + 22, root.y + 13, 34, 10, -.23, 0, 2 * Math.PI); ctx.fill();
             ctx.fillStyle = '#314339'; ctx.globalAlpha = .28;
             for (const side of [-1, 1]) {
                 ctx.fillRect(root.x + side * (root.radius + 12), root.y - 3, 8, 3);
@@ -92,6 +96,30 @@ export function drawWetForestActorContact(ctx, x, y, radius, moving = false, pha
         const stagger = phase % 2 === 0 ? -1 : 1;
         ctx.fillRect(px - 6, py + 3 + stagger, 5, 2);
         ctx.fillRect(px + 3, py + 2 - stagger, 5, 2);
+    }
+    ctx.restore();
+}
+
+/** Bounded, presentation-only footprint stamps from real authoritative movement. */
+export function appendWetForestFootprint(tracks, entityId, x, y, seconds, variant = 0) {
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(seconds)) return tracks;
+    const existing = tracks.findLast(track => track.id === entityId);
+    if (!existing || Math.hypot(existing.x - x, existing.y - y) >= 17)
+        tracks.push({ id: entityId, x: pixel(x), y: pixel(y), time: seconds, variant });
+    // Constant upper bound even during long-running mobile playtests.
+    while (tracks.length > 64 || (tracks.length && seconds - tracks[0].time > 3.2)) tracks.shift();
+    return tracks;
+}
+
+export function drawWetForestFootprints(ctx, tracks, seconds) {
+    ctx.save();
+    for (const track of tracks) {
+        const fade = clamp(1 - (seconds - track.time) / 3.2, 0, 1);
+        if (!fade) continue;
+        ctx.globalAlpha = .16 * fade;
+        ctx.fillStyle = track.variant === 2 ? '#332720' : '#182421';
+        ctx.fillRect(track.x - 4, track.y + 1, 4, 2);
+        ctx.fillRect(track.x + 2, track.y - 1, 4, 2);
     }
     ctx.restore();
 }

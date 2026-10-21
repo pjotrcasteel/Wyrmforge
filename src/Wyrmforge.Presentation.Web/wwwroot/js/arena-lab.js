@@ -3,7 +3,7 @@
 import { drawArenaEnvironment, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
-import { drawWetForestActorContact } from './arena-wet-forest-dressing.js';
+import { drawWetForestActorContact, appendWetForestFootprint, drawWetForestFootprints } from './arena-wet-forest-dressing.js';
 import { loadArt } from './art-atlas.js';
 import { resolveArenaCamera } from './arena-camera.js';
 
@@ -24,7 +24,7 @@ export async function initializeArenaLab(canvas, dotnet) {
         canvas, dotnet, active: true, options: { tool: 'walk', collision: false, mobs: true },
         frame: null, keys: new Set(), pointer: null, keyboard: { x: 0, y: 0 }, clock: 0,
         busy: false, last: performance.now(), walk: { facing: 'S' }, enemyMotion: createEnemyMotionState(),
-        lastPlayer: null, raf: 0,
+        lastPlayer: null, tracks: [], previousActors: new Map(), previousSeed: null, raf: 0,
         width: 0, height: 0, dpr: 1, events: [],
     };
     labs.set(canvas, state);
@@ -152,8 +152,24 @@ function draw(state) {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
     drawArenaEnvironment(ctx, frame.environment, ww, wh, state.clock);
+    if (frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest')
+        drawWetForestFootprints(ctx, state.tracks, state.clock);
     // The same atlas and distance-driven gait as live Hunts: actors no longer walk on a timer.
     const forest = frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest';
+    if (state.previousSeed !== frame.seed) {
+        state.tracks.length = 0;
+        state.previousActors.clear();
+        state.previousSeed = frame.seed;
+    }
+    if (forest) {
+        for (const actor of [...frame.mobs.map(mob => ({ id: mob.id, x: mob.x, y: mob.y, kind: mob.kind })),
+            { id: 0, x: frame.x, y: frame.y, kind: -1 }]) {
+            const previous = state.previousActors.get(actor.id);
+            if (previous && Math.hypot(actor.x - previous.x, actor.y - previous.y) >= 1.2)
+                appendWetForestFootprint(state.tracks, actor.id, actor.x, actor.y, state.clock, actor.kind);
+            state.previousActors.set(actor.id, { x: actor.x, y: actor.y });
+        }
+    }
     const enemyPoses = updateEnemyMotions(state.enemyMotion, frame.mobs.map(mob => ({
         entityId: mob.id, kind: mob.kind, x: mob.x, y: mob.y,
     })), state.clock);
