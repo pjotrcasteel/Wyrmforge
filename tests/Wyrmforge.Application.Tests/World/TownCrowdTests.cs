@@ -259,6 +259,55 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_MemoizedGridChecksReuseResultsAndStillRespondToCartChanges()
+    {
+        var map = Scene();
+        var west = map.Destinations.Single(destination => destination.Id == "west").Position;
+        var east = map.Destinations.Single(destination => destination.Id == "east").Position;
+        Assert.IsTrue(map.TryFindPath(west, east, out var first));
+        CheckRoute(map, west, first);
+        Assert.IsTrue(map.CachedGridCellCount > 0);
+        Assert.IsTrue(map.CachedGridEdgeCount > 0);
+
+        var cellChecks = map.CachedGridCellCount;
+        var edgeChecks = map.CachedGridEdgeCount;
+        Assert.IsTrue(map.TryFindPath(west, east, out var second));
+        CollectionAssert.AreEqual(first, second);
+        Assert.AreEqual(cellChecks, map.CachedGridCellCount,
+            "Repeating an identical path must reuse all geometry cell checks.");
+        Assert.AreEqual(edgeChecks, map.CachedGridEdgeCount,
+            "Repeating an identical path must reuse all geometry edge checks.");
+
+        map.SetObstacle(new TownFootprint
+        {
+            Id = "temporary-crossing-cart",
+            Footprint = [new(774, 765), new(876, 765), new(876, 808), new(774, 808)]
+        });
+        Assert.IsFalse(map.IsSegmentWalkable(new TownPoint(825, 715), new TownPoint(824, 866)));
+        Assert.IsTrue(map.TryFindPath(west, east, out var aroundCart));
+        CheckRoute(map, west, aroundCart);
+        Assert.IsTrue(map.RemoveObstacle("temporary-crossing-cart"));
+        Assert.IsTrue(map.TryFindPath(west, east, out var restored));
+        CollectionAssert.AreEqual(first, restored);
+    }
+
+    [TestMethod]
+    public void Navigation_ScreenshotMarksAreGroundContactObstaclesOnly()
+    {
+        var map = Scene();
+        Assert.IsTrue(map.Obstacles.Any(footprint => footprint.Id == "well-noticeboard-post"));
+        Assert.IsTrue(map.Obstacles.Any(footprint => footprint.Id == "east-stair-railing-planter"));
+        Assert.IsFalse(map.IsWalkable(new TownPoint(765, 493)),
+            "Feet cannot stand inside the noticeboard support pictured beside the well.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(911, 751)),
+            "The east stair railing/flowers must have a real collision footprint.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(824, 478)),
+            "The well roof must remain visual-only on the open ground behind the well.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(836, 889)),
+            "The southern road remains open after adding the foreground garden.");
+    }
+
+    [TestMethod]
     public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
     {
         var map = Scene();
