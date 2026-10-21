@@ -5,7 +5,7 @@ import {
     CELL, COLS, ROWS, MATERIALS, GROUND_SOURCE_TILE_SIZE, GROUND_TILE_SIZE,
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
     materialSampleBoard, paintGroundCells, drawReferenceGroundBoard,
-    groundQuiltPatchPlan, buildGroundQuiltAtlas,
+    groundQuiltPatchPlan, groundMaterialVariationPlan, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
 test('material studio starts with six standalone ground types, not an arena layout', () => {
@@ -61,7 +61,22 @@ test('quilt patch placement is deterministic and avoids the 112px repeating grid
     assert.deepEqual(groundQuiltPatchPlan(99), []);
 });
 
-test('quilt is baked once into six independent 640px material panels', () => {
+test('subtle variation keeps each approved surface recognizable and wraps without seams', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const spots = groundMaterialVariationPlan(index, 1441);
+        assert.equal(spots.length, 14);
+        assert.deepEqual(spots, groundMaterialVariationPlan(index, 1441));
+        assert.notDeepEqual(spots, groundMaterialVariationPlan(index, 1442));
+        assert.ok(spots.every(s => Number.isInteger(s.x) && s.x >= 0 && s.x < GROUND_TILE_SIZE &&
+            Number.isInteger(s.y) && s.y >= 0 && s.y < GROUND_TILE_SIZE &&
+            s.radius >= 65 && s.radius <= 135 && s.opacity >= .055 && s.opacity <= .1));
+        assert.equal(new Set(spots.map(s => s.tone)).size, 2);
+    }
+    assert.deepEqual(groundMaterialVariationPlan(-1), []);
+    assert.deepEqual(groundMaterialVariationPlan(99), []);
+});
+
+test('quilt is baked once into six independent material panels', () => {
     const calls = { sourceReads: 0, outputDraws: 0, masks: 0 };
     let next = 0;
     const factory = () => {
@@ -74,6 +89,7 @@ test('quilt is baked once into six independent 640px material panels', () => {
             save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
             clearRect() {}, translate() {}, scale() {}, fillRect() { calls.masks++; },
             createLinearGradient() { return { addColorStop() {} }; },
+            createRadialGradient() { return { addColorStop() {} }; },
             drawImage() { if (isOutput) calls.outputDraws++; else calls.sourceReads++; },
         };
         return { width: 0, height: 0, getContext() { return ctx; } };
@@ -85,6 +101,7 @@ test('quilt is baked once into six independent 640px material panels', () => {
     assert.equal(calls.sourceReads, 1176);
     assert.ok(calls.outputDraws > 1176, 'Periodic edges must be carried into the next large tile');
     assert.equal(calls.masks, 2352, 'Both patch directions receive a soft overlap mask');
+    assert.ok(calls.masks > 2352, 'Tonal variation is rendered into the quilt only at build time');
     assert.equal(buildGroundQuiltAtlas({ width: 320, height: 64 }, 1441, factory), null);
 });
 
