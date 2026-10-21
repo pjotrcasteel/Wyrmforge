@@ -93,7 +93,7 @@ test('debug geometry displays actual solid town buildings in red only after URL 
     assert.ok(!map.obstacles.some(obstacle => obstacle.id === 'world-gate-arch-roof'));
     assert.match(markup, /class="refuge-town-geometry-visual"/);
     assert.match(markup, /data-town-feet="@person.Id"/);
-    assert.match(markup, /r="@crowd.Navigation.Clearance"/);
+    assert.match(markup, /r="@crowd.Navigation.FootRadius"/);
 
     assert.match(css, /\.refuge-town-geometry-debug\s*\{[^}]*pointer-events:none/s,
         'Debug artwork must not intercept swipes or building taps');
