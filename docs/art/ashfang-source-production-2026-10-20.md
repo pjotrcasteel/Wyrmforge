@@ -367,3 +367,17 @@ V21 GPU reviews pass finite/clipping/floor checks for all three studies with exa
 
 V22 reviews remain finite, unclipped and floor-safe with exact walking closure. The extended foot silhouette still has a low apron, so V23 additionally tapers the actual textured foot surface around the hock-to-toe axis, preserving a wider toe fan. This is a source geometry correction, not a knee-pole or image transform. V23 build completed; render pending. Head refinement remains incomplete.
 
+
+V23 review complete on NVIDIA RTX 5090: all studies finite and unclipped,
+walking loop closes exactly, and minimum surface Z remains within 0.001 of
+floor -0.197. Machine-readable values: V23/source-check-summary.json. Longer
+source tail, narrower terminal muzzle and revised leg taper are visible; wing
+recovery now flexes at elbow/wrist with delayed digits and keyed membrane
+pressure. No hosted generation or hardware settings changes.
+
+Visual limits: head still lacks the concept card's sharp horned skull profile;
+the rear leg remains too wedge-like in the departure silhouette despite the
+surface taper. Do not mark these owner criticisms resolved. Full action/direction
+library, final fire, mobile footprint fitting and gameplay integration remain
+open. V21/V22 sources, renders and diagnostics are preserved. V23 is the current
+review candidate, not accepted final art or a runtime replacement.

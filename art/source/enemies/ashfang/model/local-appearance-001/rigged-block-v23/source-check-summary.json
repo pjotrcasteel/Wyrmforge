@@ -1,0 +1,20 @@
+{
+  "walk": {
+    "finite": true,
+    "minZ": -0.19735679030418396,
+    "clipped": false,
+    "loopPositionError": 0.0
+  },
+  "rear-breath": {
+    "finite": true,
+    "minZ": -0.1974402368068695,
+    "clipped": false,
+    "loopPositionError": null
+  },
+  "takeoff-flight-land": {
+    "finite": true,
+    "minZ": -0.19748717546463013,
+    "clipped": false,
+    "loopPositionError": null
+  }
+}
