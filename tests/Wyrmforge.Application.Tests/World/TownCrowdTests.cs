@@ -523,6 +523,60 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Step_TwoOncomingCitizens_SidestepOnPavementWithoutReplanning()
+    {
+        var map = new TownNavigationMap
+        {
+            Width = 240,
+            Height = 200,
+            Walkable =
+            [
+                new TownPolygon
+                {
+                    Id = "paved-square",
+                    Points = [new(0, 0), new(240, 0), new(240, 200), new(0, 200)]
+                }
+            ],
+            Destinations =
+            [
+                new TownDestination { Id = "west", X = 130, Y = 100 },
+                new TownDestination { Id = "east", X = 151, Y = 100 },
+                new TownDestination { Id = "south", X = 40, Y = 160 }
+            ]
+        };
+        var crowd = new TownCrowd(map, seed: 205, citizenCount: 3);
+        var left = crowd.Citizens[0];
+        var right = crowd.Citizens[1];
+        crowd.Citizens[2].IdleSeconds = 100f;
+
+        left.DestinationNode = 1;
+        left.Path = [new(175, 100)];
+        left.PathRevision = map.Revision;
+        right.DestinationNode = 0;
+        right.Path = [new(105, 100)];
+        right.PathRevision = map.Revision;
+
+        crowd.Step(TimeSpan.FromMilliseconds(100));
+        Assert.IsTrue(left.Position.Y > 100, "Eastbound resident should pass on their own right.");
+        Assert.IsTrue(right.Position.Y < 100, "Westbound resident should pass on their own right.");
+        Assert.AreEqual(0, crowd.PathfindCount, "Meeting another citizen must not trigger A*.");
+
+        for (var tick = 0; tick < 18; tick++)
+        {
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            Assert.IsTrue(map.IsWalkable(left.Position));
+            Assert.IsTrue(map.IsWalkable(right.Position));
+            var dx = left.Position.X - right.Position.X;
+            var dy = left.Position.Y - right.Position.Y;
+            Assert.IsTrue(dx * dx + dy * dy >= 19f * 19f,
+                "Passing citizens must not overlap while sidestepping.");
+        }
+
+        Assert.IsTrue(left.Position.X > 151 && right.Position.X < 130,
+            "Both pedestrians should get past each other without abandoning their routes.");
+    }
+
+    [TestMethod]
     public void TownCrowd_InvalidCount_IsRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: -1));
