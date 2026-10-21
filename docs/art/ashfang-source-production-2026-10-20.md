@@ -16,3 +16,22 @@ Remaining: refine source silhouette/anatomy and contacts; validate one readable 
 
 ### 21 October contact and unfolding revision (in progress)
 V4 rendered evidence is preserved. Next source revision corrects tail contact by evaluating the skinned surface and rotating the attached tail chain, opens wings about their longitudinal hinge, and counter-rotates the raised head toward a near-horizontal breath aim. These are source changes awaiting regenerated motion and visual review; no runtime or acceptance claim. Checked current main and open PRs; concurrent Wet Forest work remains separate.
+
+### V5 evidence and remaining gate — 21 October
+
+Source: `art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v5/`.
+Local RTX 5090 render completed for walk, rear/breath and takeoff/flight/landing;
+all source and review files are preserved. Tail contact now clears the floor
+within the 0.001 model-unit contact tolerance, using bone rotations about its
+attached base. The whole surface does **not** pass: the takeoff crouch reaches
+-0.202158 against floor -0.197, with the lowest vertex weighted to hind.1.R.
+Walk minimum is -0.198327 and rear/breath -0.198218. These residuals remain
+visible in the audit rather than hidden by flattening or whole-body offsets.
+
+Visual review: raised breath now aims nearly horizontally; the current geometric
+jet only measures mouth alignment and is not final fire artwork. The flight
+wings still tuck too close to the body and need independent elbow/wrist folding
+and a larger exposed membrane silhouette. Dark torso/leg separation, a pale
+baked hotspot below the muzzle, and walk readability remain open. No owner
+acceptance, eight-direction export, aerial gameplay integration or release is
+claimed. Current main checked at 4f4c0635; open Wet Forest PR #199 is separate.
