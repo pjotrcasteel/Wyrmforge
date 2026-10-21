@@ -277,6 +277,18 @@ test('marked well noticeboard and east stair planting physically block only NPC 
         'The front garden ground footprint must reach its marked west edge.');
 });
 
+test('clear paved segments use geometric boundary visibility before dense 2px sampling', () => {
+    const nav = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
+    assert.match(nav, /CanSeeAcrossUnchangedFloor\(a, b\)/);
+    assert.match(nav, /if \(CanSeeAcrossUnchangedFloor\(a, b\)\) return true;/);
+    assert.match(nav, /CrossesFloorBoundary/);
+    assert.match(nav, /DistanceToSegmentSquared/);
+    assert.match(nav, /_cachedObstacles\.Any/);
+    assert.match(nav, /_geometryRevision == Revision/);
+    assert.match(nav, /MathF\.Min\(2f, CellSize \/ 8f\)/,
+        'Near an obstacle, keep the original two-pixel collision sampling');
+});
+
 test('NPC routing avoids expensive polygon resampling on every animation tick', () => {
     const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
     const navigation = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
