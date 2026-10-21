@@ -1,0 +1,794 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 0,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 24,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 24,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 25,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 25,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 26,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 26,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 27,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 27,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 28,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 28,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 29,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 29,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 30,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 30,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 31,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 31,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 32,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 32,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  }
+]
