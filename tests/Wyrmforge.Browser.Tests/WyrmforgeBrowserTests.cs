@@ -590,6 +590,40 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    public async Task Mobile_FireballUpgrade_ContextualProgressionGuidance_OnlyAppearsWithCorePanel(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+
+        var helper = Page.Locator(".fireball-context .fireball-progression-help");
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        await Expect(helper).ToHaveTextAsync("Mutators are discovered in Research and equipped into unlocked sockets.");
+        await Expect(helper).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-chamber")).ToBeVisibleAsync();
+
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+        await Expect(helper).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".fireball-mutator-list")).ToBeVisibleAsync();
+        await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(helper).ToBeVisibleAsync();
+
+        await Page.Locator(".fireball-socket--3").ClickAsync();
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Socket 3 is sealed");
+        await Expect(helper).ToBeVisibleAsync();
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"),
+            "Progression guidance must stay below the altar and fit narrow mobile viewports.");
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
     public async Task Mobile_EmptyFireballSocket_WithNoMutators_ShowsAcquisitionAndOpensWorldGate(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
