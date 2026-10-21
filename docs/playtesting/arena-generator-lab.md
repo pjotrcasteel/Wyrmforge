@@ -97,3 +97,23 @@ Browser snapshots now include `arena-lab-wetforest-320.png` **and**
 
 A passing test/browser screenshot is *evidence for owner review*, not automatic art approval.
 If it fails visually, adjust/revert the Lab-only silhouette experiment before release.
+
+## Actual Hollow and Ashling rig parity — 21 October 2026
+
+The Wet Forest Lab previously used `drawEnemyPixelArt` for **both** navigation probes. That path
+is the tiny generic atlas fallback, **not** the character art Regular Hunts prioritize. It made
+both monsters look like sprites pasted onto the scenery even after the ground and tree updates.
+
+The Lab now loads and drives the **same existing directional authored source** as Hunts:
+`hollow-sprites.js` for `EnemyKind.Hollow=0` and `ashling-sprites.js` /
+`rigged-sprites.js` for `EnemyKind.Ashling=2`, with genuine 8-facing source clips.
+Their position, IDs, foot depth and movement remain supplied by the C# Arena Lab. Both probes
+are **nonattacking**, so Lab adapter passes `player: null` to animation playback and cannot
+manufacture contact attacks/deaths. The original compact atlas remains a bounded loading/offline
+fallback, never an acceptable source for final sprite screenshots.
+
+Browser screenshot gates for **both 320px and 390px** now wait until
+`readArenaLabDiagnostics(canvas).enemyArt.hollow && .ashling`. Compare movement in
+all eight headings, idle planted feet and passing in front of/behind grounded physical tree
+colliders. If either bundle fails to load, flag the screenshot as **not a valid art review**.
+No animation asset bytes, identity, damage or combat logic have been modified in this step.
