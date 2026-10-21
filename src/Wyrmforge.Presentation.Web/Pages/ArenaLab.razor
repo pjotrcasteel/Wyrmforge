@@ -86,8 +86,10 @@
     private const double WorldHeight = 1550;
     [Inject] private IJSRuntime JavaScript { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
-    [Parameter, SupplyParameterFromQuery(Name = "seed")] public int? SeedQuery { get; set; }
-    [Parameter, SupplyParameterFromQuery(Name = "stage")] public int? StageQuery { get; set; }
+    // Query input is untrusted; nullable int binding can throw before the component renders
+    // when a mobile chat/browser encodes the '&' separators into the seed value.
+    [Parameter, SupplyParameterFromQuery(Name = "seed")] public string? SeedQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "stage")] public string? StageQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "habitat")] public string? HabitatQuery { get; set; }
 
     private ElementReference canvas;
@@ -114,8 +116,12 @@
 
     protected override void OnParametersSet()
     {
-        if (SeedQuery is { } requestedSeed) seed = requestedSeed;
-        if (StageQuery is { } requestedStage) stage = Math.Clamp(requestedStage, 1, 8);
+        if (int.TryParse(SeedQuery, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out var requestedSeed))
+            seed = requestedSeed;
+        if (int.TryParse(StageQuery, System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out var requestedStage))
+            stage = Math.Clamp(requestedStage, 1, 8);
         if (Enum.TryParse<WyrmrealmHabitat>(HabitatQuery, true, out var parsed) && Enum.IsDefined(parsed))
             habitat = parsed;
     }
