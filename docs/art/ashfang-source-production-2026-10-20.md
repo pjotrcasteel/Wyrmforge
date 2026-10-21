@@ -150,3 +150,10 @@ stroke, departure, approach and staggered catches at the same pixel density.
 The silhouette still has broad paddle-like wing edges, so the next source
 refinement is a concave membrane edge between articulated supporting fingers.
 This visual shortcoming remains distinct from the passed source contact gate.
+
+### V13 membrane topology refinement — in progress
+The authored fan surface now retreats toward its root between supporting
+finger tips, producing smooth concave trailing bays. The fingers retain full
+length/span; this changes the skinned 3D geometry rather than masking a render
+or warping an image. Existing source-card UV appearance remains attached.
+Regenerate and inspect the open/folded silhouette plus contact audit.

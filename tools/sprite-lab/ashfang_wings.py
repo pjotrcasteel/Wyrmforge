@@ -18,7 +18,12 @@ def rebuild_wings(v,faces,uv):
         start=len(vertices);steps=10;indices={}
         for i in range(steps+1):
             for j in range(steps+1-i):
-                a=i/steps;b=j/steps;c=1-a-b;point=points[0]*c+points[1]*a+points[2]*b;point=point.copy();point[2]-=.035*a*b*c*12
+                a=i/steps;b=j/steps;c=1-a-b;point=points[0]*c+points[1]*a+points[2]*b;point=point.copy()
+                # Concave trailing bays remain attached to the four fingers.
+                # The boundary retreats toward the root between spar tips,
+                # retaining full span at each tip rather than a broad paddle.
+                point+=(points[0]-point)*(.32*4*a*b*(a+b)**2)
+                point[2]-=.035*a*b*c*12
                 indices[i,j]=len(vertices);vertices.append(point.tolist());coords.append(card_uv(np.array(texcoords[0])*c+np.array(texcoords[1])*a+np.array(texcoords[2])*b))
         for i in range(steps):
             for j in range(steps-i):
