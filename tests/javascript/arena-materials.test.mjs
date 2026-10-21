@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-    CELL, COLS, ROWS, MATERIALS, GROUND_TILE_SIZE, GROUND_ATLAS_URL,
+    CELL, COLS, ROWS, MATERIALS, GROUND_SOURCE_TILE_SIZE, GROUND_TILE_SIZE,
+    GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
     materialSampleBoard, paintGroundCells, drawReferenceGroundBoard,
+    groundQuiltPatchPlan, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
 test('material studio starts with six standalone ground types, not an arena layout', () => {
@@ -34,8 +36,56 @@ test('generated material atlas is a compact six-panel ground-only WebP', () => {
     assert.equal(art.toString('ascii', 0, 4), 'RIFF');
     assert.equal(art.toString('ascii', 8, 12), 'WEBP');
     assert.ok(art.length > 7000 && art.length < 25000);
-    assert.equal(GROUND_TILE_SIZE, 112);
+    assert.equal(GROUND_SOURCE_TILE_SIZE, 112);
+    assert.equal(GROUND_TILE_SIZE, 640);
+    assert.equal(GROUND_PATCH_SIZE, 96);
+    assert.equal(GROUND_PATCH_STEP, 64);
     assert.match(GROUND_ATLAS_URL, /wet-forest-materials-painted\.webp$/);
+});
+
+test('quilt patch placement is deterministic and avoids the 112px repeating grid', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const patches = groundQuiltPatchPlan(index, 1441);
+        assert.equal(patches.length, 100);
+        assert.deepEqual(patches, groundQuiltPatchPlan(index, 1441));
+        assert.notDeepEqual(patches, groundQuiltPatchPlan(index, 1442));
+        assert.ok(patches.every(p =>
+            p.sourceX >= index * GROUND_SOURCE_TILE_SIZE &&
+            p.sourceX + GROUND_PATCH_SIZE <= (index + 1) * GROUND_SOURCE_TILE_SIZE &&
+            p.sourceY >= 0 && p.sourceY + GROUND_PATCH_SIZE <= GROUND_SOURCE_TILE_SIZE));
+        assert.ok(new Set(patches.map(p => p.sourceX + ':' + p.sourceY)).size >= 20,
+            'Each painted swatch should use many different parts of the approved art');
+        assert.ok(patches.some(p => p.flipX) && patches.some(p => !p.flipX) &&
+            patches.some(p => p.flipY) && patches.some(p => !p.flipY));
+    }
+    assert.deepEqual(groundQuiltPatchPlan(99), []);
+});
+
+test('quilt is baked once into six independent 640px material panels', () => {
+    const calls = { sourceReads: 0, outputDraws: 0, masks: 0 };
+    let next = 0;
+    const factory = () => {
+        const isOutput = next++ === 0;
+        const ctx = {
+            get fillStyle() { return this.color; },
+            set fillStyle(v) { this.color = v; },
+            globalCompositeOperation: 'source-over',
+            imageSmoothingEnabled: false,
+            save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
+            clearRect() {}, translate() {}, scale() {}, fillRect() { calls.masks++; },
+            createLinearGradient() { return { addColorStop() {} }; },
+            drawImage() { if (isOutput) calls.outputDraws++; else calls.sourceReads++; },
+        };
+        return { width: 0, height: 0, getContext() { return ctx; } };
+    };
+    const raw = { width: GROUND_SOURCE_TILE_SIZE * 6, height: GROUND_SOURCE_TILE_SIZE };
+    const quilt = buildGroundQuiltAtlas(raw, 1441, factory);
+    assert.equal(quilt.width, GROUND_TILE_SIZE * 6);
+    assert.equal(quilt.height, GROUND_TILE_SIZE);
+    assert.equal(calls.sourceReads, 600);
+    assert.ok(calls.outputDraws > 600, 'Periodic edges must be carried into the next large tile');
+    assert.equal(calls.masks, 1200, 'Both patch directions receive a soft overlap mask');
+    assert.equal(buildGroundQuiltAtlas({ width: 320, height: 64 }, 1441, factory), null);
 });
 
 test('painter samples a continuous world-aligned texture, never screenshot blocks', () => {
@@ -71,4 +121,5 @@ test('iPhone touch drags work and previous procedural tile generators are not us
     assert.match(js, /setPointerCapture/);
     assert.match(css, /touch-action:none/);
     assert.doesNotMatch(js, /MATERIAL_REFERENCE_ATLAS|const palettes|function materialNoise|function drawGroundMaterialTile|drawMaterialBoard|drawArenaEnvironment/);
+    assert.match(js, /buildGroundQuiltAtlas\\(atlas, state\\.seed\\)/);
 });
