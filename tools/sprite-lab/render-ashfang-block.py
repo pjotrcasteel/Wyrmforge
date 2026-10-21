@@ -4,6 +4,7 @@ import sys,json,math
 import numpy as np,torch
 import nvdiffrast.torch as dr
 from ashfang_surface_uv import uv_triangles
+from ashfang_body_fire import composite_fire
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade as shade_surface,palette_for,LIGHTING
 rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'motion-review-v1');out.mkdir(exist_ok=False);profile=json.loads((rig/'profile.json').read_text());cell=192
@@ -32,6 +33,7 @@ for clip,spec in profile['clips'].items():
                         if ring:
                             a=(ring-1)*8+j;b=(ring-1)*8+(j+1)%8;c=ring*8+j;d=ring*8+(j+1)%8;triangles.extend([[a,b,c],[b,d,c]])
                 fv=t(vertices);ff=t(triangles,torch.int32);fc=torch.cat([fv,torch.ones_like(fv[:,:1])],1)@mvp.T;fr,_=dr.rasterize(ctx,fc[None],ff,[cell,cell]);color=dr.interpolate(t(colors)[None],fr,ff)[0][0];visible=(fr[0,:,:,3]>0)&((r[0,:,:,3]==0)|(fr[0,:,:,2]<=r[0,:,:,2]));rgb=torch.where(visible[:,:,None],color,rgb);alpha=torch.maximum(alpha,visible.float())
+            rgb,alpha=composite_fire(rig,clip,index,ctx,mvp,r,rgb,alpha)
             rgba=(torch.cat([rgb,alpha[:,:,None]],-1).flip(0).cpu().numpy()*255).clip(0,255).astype('uint8');raw=Image.fromarray(rgba);pixel=raw.convert('RGB').quantize(palette=palette,dither=Image.Dither.NONE).convert('RGBA');pixel.putalpha(raw.getchannel('A'));pixel.save(folder/f'view-{view}-frame-{index:02d}.png');bounds.append(pixel.getbbox());panels.append(pixel)
         board=Image.new('RGB',(384,228),(24,22,27));draw=ImageDraw.Draw(board)
         for view,panel in enumerate(panels):

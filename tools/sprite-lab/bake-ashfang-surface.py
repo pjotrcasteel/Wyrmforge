@@ -42,6 +42,19 @@ for start in range(0,len(points),262144):
     hard=((kind==2)&(sizes<110))|((kind==0)&(sizes<25))
     keratin=(.17+.045*(.5+.5*torch.sin(x[:,2]*115+x[:,1]*25)))[:,None]*t([1,.94,.88])
     rgb=torch.where(hard[:,None],keratin,rgb)
+    if '--fire' in sys.argv:
+        # Wide hot breaks under dark plates; deliberately readable at 80px/unit.
+        body=torch.isin(kind,t([1,5,6,20,21,23],torch.long))
+        spine=(abs(x[:,0])<.045)&(x[:,2]>.07)
+        chest=(x[:,1]<-.11)&(x[:,1]>-.32)&(x[:,2]<.07)
+        vent=(torch.sin(x[:,1]*66+x[:,2]*24+abs(x[:,0])*16)>.68)
+        fissure=body&(((groove>.38)&(x[:,2]>.025))|(vent&chest)|(spine&vent))
+        rgb=torch.where(fissure[:,None],t([1,.36,.025]),rgb)
+        core=fissure&((groove>.83)|(chest&vent))
+        rgb=torch.where(core[:,None],t([1,.68,.12]),rgb)
+        leather=wing&~hard
+        veins=(torch.sin(radius*43+torch.atan2(x[:,1]+.2,abs(x[:,0])-.57)*3)>.91)
+        rgb=torch.where((leather&veins)[:,None],t([.68,.16,.025]),rgb)
     digits=kind>=30;tip=digits&(x[:,2]<-.12);rgb=torch.where(tip[:,None],rgb*.7,rgb)
     rgb=torch.where((kind==10)[:,None],t([1,.42,.035]),rgb)
     rgb=torch.where((kind==11)[:,None],t([.65,.56,.40]),rgb)
@@ -58,4 +71,4 @@ for step in range(3):
         result[available]=torch.roll(result,shift,axis)[available]
         filled|=available
 raw=(result.flip(0).clamp(0,1).cpu().numpy()*255).astype('uint8');Image.fromarray(raw).save(folder/'ashfang-albedo.png')
-(folder/'surface-material.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(),atlasSize=size,method='rest-space irregular stone scales, sparse heat fissures, ventral bands and leather membranes',externalAssets=False,textureFinal=False),indent=2)+'\n');print('Baked',size,'on',torch.cuda.get_device_name(),flush=True)
+(folder/'surface-material.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(),atlasSize=size,method='rest-space stone scales and leather; molten plate breaks' if '--fire' in sys.argv else 'rest-space irregular stone scales, sparse heat fissures, ventral bands and leather membranes',externalAssets=False,textureFinal=False),indent=2)+'\n');print('Baked',size,'on',torch.cuda.get_device_name(),flush=True)
