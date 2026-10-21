@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import nvdiffrast.torch as dr
+from ashfang_surface_uv import uv_triangles
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
 rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'fold-sweep-review-v1');out.mkdir(exist_ok=False)
@@ -25,7 +26,7 @@ matrix=tensor(matrix);frames=[];clipped=[]
 for index,p in enumerate(positions):
     v=tensor(p);hom=torch.cat([v,torch.ones_like(v[:,:1])],1);raster,_=dr.rasterize(ctx,(hom@matrix.T)[None],faces,[cell,cell])
     alpha=raster[0,:,:,3]>0;clipped.append(bool(alpha[0].any() or alpha[-1].any() or alpha[:,0].any() or alpha[:,-1].any()))
-    tex=dr.interpolate(uv[None],raster,faces)[0];color=dr.texture(texture,tex,filter_mode='nearest')[0]
+    tex=dr.interpolate(uv[None],raster,uv_triangles(s,faces))[0];color=dr.texture(texture,tex,filter_mode='nearest')[0]
     board=Image.new('RGB',(cell*2,cell+36),(38,39,43));draw=ImageDraw.Draw(board)
     for col,rgb in enumerate([shade(torch.ones_like(color)*.48,v,faces,raster),shade(color,v,faces,raster)]):
         rgba=(torch.cat([rgb,alpha[:,:,None]],-1).flip(0).clamp(0,1).cpu().numpy()*255).astype('uint8');image=Image.fromarray(rgba)

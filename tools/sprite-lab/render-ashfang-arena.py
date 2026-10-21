@@ -3,6 +3,7 @@ from pathlib import Path
 import sys,json,math
 import numpy as np,torch
 import nvdiffrast.torch as dr
+from ashfang_surface_uv import uv_triangles
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
 rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'arena-review-v1');out.mkdir(exist_ok=False)
@@ -61,7 +62,7 @@ for frame,points in enumerate(vtx):
         for j in range(4):
             dx=round(6*math.sin(born*1.7+j*2.1));h=round((7+5*math.sin(frame*.8+j))*life)
             draw.line((x+dx,y,x+dx-1,y-h),fill=(int(235*life),int(104*life),int(20*life)),width=1)
-    r,V,_=raster(points,faces);body_visible=int((r[0,:,:,3]>0).flip(0)[hud_top:H-footer].sum().item());coords=dr.interpolate(UV[None],r,F)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,V,F,r);alpha=(r[0,:,:,3]>0).float()
+    r,V,_=raster(points,faces);body_visible=int((r[0,:,:,3]>0).flip(0)[hud_top:H-footer].sum().item());coords=dr.interpolate(UV[None],r,uv_triangles(s,F))[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,V,F,r);alpha=(r[0,:,:,3]>0).float()
     origin,direction=mouth[frame];direction=direction/np.linalg.norm(direction);strength=float(signals[frame]);target=None
     if strength>.03 and direction[2]<-.10:
         distance=(-.197-origin[2])/direction[2]

@@ -3,6 +3,7 @@ from pathlib import Path
 import sys,json
 import numpy as np,torch
 import nvdiffrast.torch as dr
+from ashfang_surface_uv import uv_triangles
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
 rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'head-review-v1');out.mkdir(exist_ok=False)
@@ -13,7 +14,7 @@ cell=256;board=Image.new('RGB',(cell*3,cell*2+64),(38,39,43));draw=ImageDraw.Dra
 for col,(name,eye) in enumerate([('Front',(0,-3,.3)),('Profile',(3,0,.3)),('Game angle',(2,-3,2.2))]):
  forward=-np.array(eye)/np.linalg.norm(eye);right=np.cross(forward,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(right,forward);target=np.array([0,-.35,.16]);m=np.eye(4,dtype=np.float32)
  m[0,:3]=right*500/(cell/2);m[1,:3]=up*500/(cell/2);m[0,3]=-np.dot(right,target)*500/(cell/2);m[1,3]=-np.dot(up,target)*500/(cell/2);m[2,:3]=forward*.2
- raster,_=dr.rasterize(ctx,(hom@t(m).T)[None],f,[cell,cell]);alpha=raster[0,:,:,3]>0;tex=dr.interpolate(uv[None],raster,f)[0];rgb=dr.texture(texture,tex,filter_mode='nearest')[0]
+ raster,_=dr.rasterize(ctx,(hom@t(m).T)[None],f,[cell,cell]);alpha=raster[0,:,:,3]>0;tex=dr.interpolate(uv[None],raster,uv_triangles(s,f))[0];rgb=dr.texture(texture,tex,filter_mode='nearest')[0]
  for row,color in enumerate([shade(torch.ones_like(rgb)*.48,v,f,raster),shade(rgb,v,f,raster)]):
   raw=(torch.cat([color,alpha[:,:,None]],-1).flip(0).clamp(0,1).cpu().numpy()*255).astype('uint8');im=Image.fromarray(raw)
   if row:

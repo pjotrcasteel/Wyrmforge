@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import nvdiffrast.torch as dr
+from ashfang_surface_uv import uv_triangles
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
 
@@ -21,7 +22,7 @@ for col,(name,eye) in enumerate([('Front',(0,-3,.12)),('Side',(3,0,.12)),('Game'
     matrix=np.eye(4,dtype=np.float32);matrix[0,:3]=right*density/(cell/2);matrix[1,:3]=up*density/(cell/2);matrix[2,:3]=forward*.2
     matrix[1,3]=-.1
     rast,_=dr.rasterize(ctx,(hom@tensor(matrix).T)[None],faces,[cell,cell]);alpha=rast[0,:,:,3]>0
-    tex=dr.interpolate(uv[None],rast,faces)[0];rgb=dr.texture(texture,tex,filter_mode='nearest')[0]
+    tex=dr.interpolate(uv[None],rast,uv_triangles(s,faces))[0];rgb=dr.texture(texture,tex,filter_mode='nearest')[0]
     clay=shade(torch.ones_like(rgb)*.48,v,faces,rast)
     modes=[torch.ones_like(rgb)*.06,clay,shade(rgb,v,faces,rast)]
     bounds=None

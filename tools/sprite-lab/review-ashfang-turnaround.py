@@ -4,6 +4,7 @@ import json, math, sys
 import numpy as np
 import torch
 import nvdiffrast.torch as dr
+from ashfang_surface_uv import uv_triangles
 from PIL import Image, ImageDraw
 from ashfang_preview_lighting import shade, palette_for, LIGHTING
 
@@ -38,7 +39,7 @@ for view in range(8):
     matrix[2, :3] = forward * .2
     matrix[1, 3] = -.1
     raster, _ = dr.rasterize(ctx, (vertices @ tensor(matrix).T)[None], faces, [cell, cell])
-    texcoords = dr.interpolate(uv[None], raster, faces)[0]
+    texcoords = dr.interpolate(uv[None], raster, uv_triangles(source,faces))[0]
     color = dr.texture(texture, texcoords, filter_mode='nearest')[0].clamp(0, 1)
     color = shade(color, vertices[:, :3], faces, raster)
     alpha = (raster[0, :, :, 3] > 0).float()
