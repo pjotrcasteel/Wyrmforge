@@ -53,9 +53,9 @@ test('real reference-image materials paint the same ground board, with no synthe
     assert.equal(asset.toString('ascii', 0, 4), 'RIFF');
     assert.equal(asset.toString('ascii', 8, 12), 'WEBP');
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
-    assert.match(js, /reference-ground-atlas\\.webp/);
-    assert.match(js, /new Image\\(\\)/);
-    assert.match(js, /createPattern\\(surface, 'repeat'\\)/);
+    assert.match(js, /reference-ground-atlas\.webp/);
+    assert.match(js, /new Image\(\)/);
+    assert.match(js, /createPattern\(surface, 'repeat'\)/);
     assert.doesNotMatch(js, /const palettes|stone-bevel|scorch-noise|drawArenaEnvironment/);
 });
 
