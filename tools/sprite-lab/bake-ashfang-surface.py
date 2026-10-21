@@ -47,5 +47,15 @@ for start in range(0,len(points),262144):
     rgb=torch.where((kind==11)[:,None],t([.65,.56,.40]),rgb)
     rgb=torch.where((kind==12)[:,None],t([.018,.013,.012]),rgb)
     colors.append(rgb)
-result[valid]=torch.cat(colors);raw=(result.flip(0).clamp(0,1).cpu().numpy()*255).astype('uint8');Image.fromarray(raw).save(folder/'ashfang-albedo.png')
+result[valid]=torch.cat(colors)
+# Nearest sampling at triangle boundaries needs coloured gutters, otherwise
+# uncovered atlas texels appear as black pinholes during animation.
+filled=valid.clone()
+for step in range(3):
+    previous=filled.clone()
+    for axis,shift in ((0,1),(0,-1),(1,1),(1,-1)):
+        available=torch.roll(previous,shift,axis)&~filled
+        result[available]=torch.roll(result,shift,axis)[available]
+        filled|=available
+raw=(result.flip(0).clamp(0,1).cpu().numpy()*255).astype('uint8');Image.fromarray(raw).save(folder/'ashfang-albedo.png')
 (folder/'surface-material.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(),atlasSize=size,method='rest-space irregular stone scales, sparse heat fissures, ventral bands and leather membranes',externalAssets=False,textureFinal=False),indent=2)+'\n');print('Baked',size,'on',torch.cuda.get_device_name(),flush=True)
