@@ -53,6 +53,25 @@ function road(ctx,recipe,w,h,random) {
         ctx.globalAlpha=.12+random()*.24;
         ctx.fillRect(Math.round(x),Math.round(y),2+Math.floor(random()*9),1+Math.floor(random()*4));
     }
+    // A branch worn by actual travelers connects the main route to the local story site.
+    // Its course bends toward the clearing; it is not a forced corridor or solid boundary.
+    const junction = wetForestTrailAt(points, recipe.siteY);
+    const sx = junction.x * w, sy = recipe.siteY * h;
+    const tx = recipe.siteX * w, ty = recipe.siteY * h;
+    if (Math.abs(tx - sx) > 42) {
+        ctx.globalAlpha = .62;
+        ctx.strokeStyle = '#413c31';
+        ctx.lineWidth = 22;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.bezierCurveTo(mix(sx,tx,.22),sy-28,mix(sx,tx,.75),ty+21,tx,ty);
+        ctx.stroke();
+        ctx.strokeStyle = '#685d48';
+        ctx.globalAlpha = .19;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+    }
     ctx.restore();
 }
 
