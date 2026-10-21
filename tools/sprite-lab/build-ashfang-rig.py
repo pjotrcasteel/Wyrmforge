@@ -28,12 +28,14 @@ for sign in [1,-1]:
     v+=radial*(.40*influence[:,None])
 # Reconstructed low inter-leg webbing belongs to an arched underside, not a
 # giant paw. Sculpt it upward in the source; keep actual paw rows unchanged.
-midbody=np.exp(-((v[:,1]+.01)/.095)**4)
-low=np.clip((-.10-v[:,2])/.06,0,1);inner=np.clip((.20-abs(v[:,0]))/.10,0,1)
+belly_front=np.clip((v[:,1]+.14)/.085,0,1);belly_front=belly_front**2*(3-2*belly_front)
+belly_back=np.clip((v[:,1]-.075)/.065,0,1);belly_back=1-belly_back**2*(3-2*belly_back)
+low=np.clip((-.10-v[:,2])/.06,0,1)
 fore_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]+.285)/.135)**2
 hind_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]-.19)/.14)**2
 clear_of_paws=np.clip((np.minimum(fore_paw,hind_paw)-1.2)/.4,0,1)
-v[:,2]+=.085*midbody*low*inner*clear_of_paws
+belly_surface=-.10+.02*np.maximum(0,1-abs(v[:,0])/.25)**2
+v[:,2]+=np.maximum(0,belly_surface-v[:,2])*belly_front*belly_back*low*clear_of_paws
 v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
@@ -83,13 +85,13 @@ for index,p in enumerate(v):
     elif y>.31 and (abs(x)<.13 or y>.35):permitted=[n for n in names if n.startswith('tail.')];region='tail'
     elif y<-.30 and abs(x)<.15 and z>-.08:
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
-    elif z<-.055 and abs(x)>.06 and (y<-.12 or .075<y<.34):
-        limb='fore' if y<-.12 else 'hind'
-        paw_y,paw_radius=(-.285,.135) if limb=='fore' else (.19,.14)
-        in_paw=((abs(x)-.17)/.085)**2+((y-paw_y)/paw_radius)**2<1.2
-        if z<-.135:permitted=[f'{limb}.2.{side}'] if in_paw else [f'{limb}.0.{side}',f'{limb}.1.{side}']
-        else:permitted=[f'{limb}.{i}.{side}' for i in range(3)]
-        region=limb
+    elif z<-.055 and abs(x)>.035 and y<-.055:
+        permitted=['fore.2.'+side] if z<-.135 else [f'fore.{i}.{side}' for i in range(3)];region='fore'
+    elif z<-.055 and abs(x)>.06 and .075<y<.34:
+        in_paw=((abs(x)-.17)/.085)**2+((y-.19)/.14)**2<1.2
+        if z<-.135:permitted=['hind.2.'+side] if in_paw else ['hind.0.'+side,'hind.1.'+side]
+        else:permitted=[f'hind.{i}.{side}' for i in range(3)]
+        region='hind'
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
     else:permitted=['pelvis','spine','chest'];region='body'
     scores=np.array([1/max(.008,distance(p,bones[n]['head'],bones[n]['tail']))**4 for n in permitted]);scores/=scores.sum();ownership[region]=ownership.get(region,0)+1

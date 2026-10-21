@@ -287,3 +287,13 @@ of paws, and sculpts the low inter-leg webbing into an arched underside before
 skinning. Actual paw rows and original source remain preserved. No faces are
 deleted or render pixels masked. Revalidate knee plane, contact, toe roll and
 push extension; do not infer quality from V16 floor pass alone.
+
+### V17 failed source gate / V18 underside correction
+V17 rear push reaches 0.923 extension ratio (versus 0.752 in V16), but the
+source floor gate fails: changing forepaw ownership unnecessarily put low
+front geometry on the shin (-0.25638 walk), and unlifted peripheral inter-leg
+webbing followed the torso through the floor (-0.24092 crouch). Preserve as
+failed source. V18 restores the prior low forepaw ownership, keeps rear-paw
+isolation, and sculpts the full unprotected inter-leg underside to a curved
+belly contour rather than leaving low peripheral webbing. Paw footprint masks
+protect the actual soles; no rendered floor clamping or deleted faces.
