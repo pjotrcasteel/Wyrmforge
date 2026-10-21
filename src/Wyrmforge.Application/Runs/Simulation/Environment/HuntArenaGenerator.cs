@@ -29,6 +29,9 @@ public static class HuntArenaGenerator
         var site = sites[rng.Next(sites.Length)];
         var siteX = .32 + rng.NextDouble() * .36;
         var siteY = .38 + rng.NextDouble() * .24;
+        // A site must have a physical footprint; don't put its solid artifact under the mage spawn.
+        var distance = Math.Sqrt(Math.Pow((siteX - .5) * 950, 2) + Math.Pow((siteY - .5) * 1550, 2));
+        if (distance < 145) siteX = siteX < .5 ? .31 : .69;
         var trail = new List<TrailPoint>();
         var x = .31 + rng.NextDouble() * .38;
         for (var i = 0; i <= 8; i++)
@@ -126,7 +129,7 @@ public static class HuntArenaGenerator
             var x = prop.X * width;
             var y = prop.Y * height;
             // Spawn safety is a radius around the mage, not an imposed cross-shaped map division.
-            if (Math.Hypot(x - width * .5, y - height * .5) < prop.Radius + 88) return;
+            if (Math.Sqrt(Math.Pow(x - width * .5, 2) + Math.Pow(y - height * .5, 2)) < prop.Radius + 88) return;
             if (props.Any(existing => Math.Pow((existing.X - prop.X) * width, 2) +
                 Math.Pow((existing.Y - prop.Y) * height, 2) < Math.Pow(existing.Radius + prop.Radius + 15, 2))) return;
             props.Add(prop);
