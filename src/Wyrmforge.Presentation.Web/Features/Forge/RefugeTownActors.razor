@@ -1,0 +1,60 @@
+@using Wyrmforge.Application.World
+@implements IDisposable
+
+@* Keep the constantly moving citizens in their own render subtree. The approved
+   panorama, vacant layers, hotspots and static geometry no longer rerender at 10 Hz. *@
+<div class="refuge-town-crowd" aria-hidden="true">
+    @foreach (var person in Crowd.Citizens)
+    {
+        @if (person.IsPresent)
+        {
+            <span @key="person.Id" class="refuge-town-citizen"
+                  data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
+                  style="@CitizenStyle(person)"></span>
+        }
+    }
+</div>
+@if (ShowGeometry)
+{
+    <svg class="refuge-town-geometry-feet-layer" viewBox="0 0 1672 941"
+         preserveAspectRatio="none" aria-hidden="true">
+        @foreach (var person in Crowd.Citizens)
+        {
+            @if (person.IsPresent)
+            {
+                <circle @key="person.Id" class="refuge-town-geometry-feet"
+                        data-town-feet="@person.Id" cx="@person.Position.X"
+                        cy="@person.Position.Y" r="@Crowd.Navigation.FootRadius" />
+            }
+        }
+    </svg>
+}
+
+@code {
+    [Parameter, EditorRequired] public TownCrowd Crowd { get; set; } = null!;
+    [Parameter] public bool ShowGeometry { get; set; }
+
+    private readonly CancellationTokenSource crowdStop = new();
+
+    protected override void OnInitialized() => _ = AnimateCrowdAsync();
+
+    private async Task AnimateCrowdAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(crowdStop.Token))
+                await InvokeAsync(() => { Crowd.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
+        }
+        catch (OperationCanceledException) { /* The town actor layer was disposed. */ }
+    }
+
+    private static string CitizenStyle(TownCitizen citizen) =>
+        FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%");
+
+    public void Dispose()
+    {
+        crowdStop.Cancel();
+        crowdStop.Dispose();
+    }
+}
