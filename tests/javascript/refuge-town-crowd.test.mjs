@@ -188,8 +188,14 @@ test('painted well, pillars and garden walls have independent collider ids', () 
         assert.equal(foreground.artwork, 'art/town/night-active.webp?v=140');
     }
 
-    assert.ok(map.occluders.find(part => part.id === 'well-foreground').clip.some(point => point.y < 365),
-        'The well occluder must cover the roof above the earlier visible floating rectangles');
+    const canopy = map.occluders.find(part => part.id === 'well-foreground');
+    const noticeboard = map.occluders.find(part => part.id === 'noticeboard-foreground');
+    assert.ok(canopy.clip.some(point => point.y <= 389 && point.x > 810),
+        'The well canopy must be masked at the actual painted roof, not over the paving');
+    assert.ok(noticeboard.clip.some(point => point.y <= 414 && point.x < 800),
+        'The noticeboard must have a separate compact silhouette');
+    assert.ok(noticeboard.clip.every(point => point.x >= 700 && point.x < 815),
+        'The noticeboard foreground cannot hide actors on the exposed paved ring');
 
     const markup = source(scene);
     assert.match(markup, /night-navigation\.json\?v=\{AppBuildInfo\.Version\}/,
