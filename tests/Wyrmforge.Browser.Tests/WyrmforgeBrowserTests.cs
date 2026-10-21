@@ -570,6 +570,73 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_EmptyFireballSocket_WithNoMutators_ShowsAcquisitionAndOpensWorldGate(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator(".fireball-first-mutator")).ToHaveCountAsync(0);
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var guide = Page.Locator(".fireball-first-mutator");
+        await Expect(guide).ToBeVisibleAsync();
+        await Expect(guide).ToContainTextAsync("No mutators unlocked yet");
+        await Expect(guide).ToContainTextAsync("Ashlings");
+        await Expect(guide).ToContainTextAsync("Ash Slingers");
+        await Expect(guide).ToContainTextAsync("barrels and crates");
+        await Expect(guide).ToContainTextAsync("Extract to keep");
+        await Expect(guide).ToContainTextAsync("Ember Residue");
+        await Expect(guide).ToContainTextAsync("Charred Scrap");
+        await Expect(guide).ToContainTextAsync("0 / 2");
+        await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
+        await Expect(guide.GetByRole(AriaRole.Button, new() { Name = "Craft Cinder Needle" })).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"),
+            "The first-mutator guide must fit a narrow phone viewport.");
+
+        await guide.GetByRole(AriaRole.Button, new() { Name = "Open World Gate" }).ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_EmptyFireballSocket_WithSecuredMaterials_CraftsFirstMutatorInPlace()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.setItem('wyrmforge.huntMaterials.v1',
+                JSON.stringify(['EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var guide = Page.Locator(".fireball-first-mutator");
+        await Expect(guide).ToContainTextAsync("Ember Residue");
+        await Expect(guide).ToContainTextAsync("2 / 2");
+        await Expect(guide.GetByRole(AriaRole.Button, new() { Name = "Open World Gate" })).ToHaveCountAsync(0);
+        await guide.GetByRole(AriaRole.Button, new() { Name = "Craft Cinder Needle" }).ClickAsync();
+        await Expect(guide).ToHaveCountAsync(0);
+
+        var firstMutation = Page.Locator(".fireball-mutator").First;
+        await Expect(firstMutation).ToContainTextAsync("Cinder Needle");
+        await Expect(firstMutation).ToBeEnabledAsync();
+        await firstMutation.ClickAsync();
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Cinder Needle");
+        Assert.AreEqual(0, await Page.EvaluateAsync<int>(
+            "() => JSON.parse(localStorage.getItem('wyrmforge.huntMaterials.v1')).length"));
+    }
+
+    [TestMethod]
     public async Task Mobile_Fireball_CraftMinorMutationFromSecuredOrdinaryLoot()
     {
         await Page.SetViewportSizeAsync(390, 844);
