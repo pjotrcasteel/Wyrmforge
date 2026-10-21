@@ -61,6 +61,7 @@ export function readArenaLabDiagnostics(canvas) {
         site: frame?.environment?.wetForest?.site ?? null, biome: frame?.environment?.biome ?? null,
         player: frame ? { x: frame.x, y: frame.y } : null,
         world: frame ? { width: frame.worldWidth, height: frame.worldHeight } : null,
+        enemyKinds: frame?.mobs?.map(mob => mob.kind) ?? [],
         collisionVisible: state.options.collision, tool: state.options.tool };
 }
 export function disposeArenaLab(canvas) {
