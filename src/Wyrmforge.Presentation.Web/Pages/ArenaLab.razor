@@ -46,9 +46,9 @@
 
     <section class="arena-tools" aria-label="Arena testing actions">
         <span>TEST</span>
-        <button class="@(tool == "walk" ? "selected" : "")" aria-pressed="@(tool == "walk")" @onclick='() => ChangeTool("walk")'>Walk / pan</button>
-        <button class="@(tool == "hit" ? "selected" : "")" aria-pressed="@(tool == "hit")" @onclick='() => ChangeTool("hit")'>Hit prop</button>
-        <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast")" @onclick='() => ChangeTool("blast")'>Blast area</button>
+        <button class="@(tool == "walk" ? "selected" : "")" aria-pressed="@(tool == "walk" ? "true" : "false")" @onclick='() => ChangeTool("walk")'>Walk / pan</button>
+        <button class="@(tool == "hit" ? "selected" : "")" aria-pressed="@(tool == "hit" ? "true" : "false")" @onclick='() => ChangeTool("hit")'>Hit prop</button>
+        <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast" ? "true" : "false")" @onclick='() => ChangeTool("blast")'>Blast area</button>
         <label class="toggle"><input type="checkbox" @bind="showCollision" @bind:after="SyncOptions" /> Collision outlines</label>
         <label class="toggle"><input type="checkbox" @bind="showMobs" @bind:after="SyncOptions" /> Pathing mobs</label>
         <label class="toggle"><input type="checkbox" @bind="openCrossings" @bind:after="Regenerate" /> Open crossings</label>
