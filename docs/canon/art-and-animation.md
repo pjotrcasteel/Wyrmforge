@@ -752,3 +752,82 @@ References: [Diablo II: Resurrected art/visibility trade-offs](https://www.plays
 **Implementation checkpoint:** the Arena Lab uses baked seeded mud/litter/root dressing and
 distance-driven motion with actual kind 0 Hollow and kind 2 Ashling. Those are code/art
 integration improvements, **not** a claim that final Gothic environment assets are finished.
+
+### Wet Forest pixel-material grammar — 21 October 2026
+
+**Arena Lab candidate, not final artwork approval.** The existing Wet Forest floor previously mixed
+anti-aliased ovals and broad smoothed roads with pixel-scaled creatures and physical sprites. The
+preview now composes wet loam, moss, mud, leaf litter, shallow pools, rutted trail and site soil as
+seeded **12-world-unit material cells**, with finer 2px/4px grain. The cell resolution is an art
+construction rule: **never draw visible grid lines**. Neighboring cells are correlated in broad
+material fields instead of independently colored visual noise.
+
+The C# WetForestRecipe is still the only authority for the main trail, physical story-site position
+and waterlogged patches; the cell painter does not create blockers, alternate routes, loot or
+creatures. Each of the four historical sites has its own flat material trace, beneath the actual
+C# physical artifacts. No raised, non-collidable forest decoration is introduced.
+
+This revision keeps original tree atlas frames, approved Hollow/Ashling/mage animation and the
+ground-contact dressing introduced in #206. It does **not** finish the needed Gothic canopy,
+bark, root and ruined-site asset pass; those require real 320/390px captures and owner approval.
+Normal Hunts still use their previously accepted arenas, not this generator preview.
+
+Independent reference principles, without copying art:
+- [Diablo 1 level-generation breakdown](https://www.boristhebrave.com/2019/07/14/dungeon-generation-in-diablo-1/):
+  separate walkability from visual tile pieces; use equivalent tile variants without breaking
+  connectivity and make landmarks distinct. Wet Forest preserves this separation at C#/JS boundary.
+- [Dead Cells generation analysis by its designer](https://deepnight.net/tutorial/the-level-design-of-dead-cells-a-hybrid-approach/):
+  coherent authored biome vocabulary combined with seeded placement, not arbitrary independent props.
+  Wet Forest uses a shared material palette and retains four authored historical site identities.
+
+### Wet Forest C#-anchored vegetation — 21 October 2026
+
+This **Arena Lab candidate** extends the pixel-material pass without changing canonical physical
+geometry. The painter selects among **three existing authored pine frames** and **two authored
+dead-tree frames** according to stable seed + physical prop ID; the original atlases are not
+recolored or regenerated. Shallow step-pixel roots and moss are baked **under** the world-space
+trunks from the same C# prop positions. Sparse lichen/branch-edge and bark marks draw with their
+depth-sorted prop silhouettes, not as unrelated fake trees.
+
+The roots, litter, understory and the small overhanging foliage are visual only; C# continues to
+own collision, destruction and loot. Destruction removes the raised tree and its physical trunk
+together; residual dark soil and root traces are allowed floor archaeology. Ordinary Hunts, Frost
+trees, character animation and saved games are unchanged.
+
+**This does not approve final Gothic forest artwork:** the existing triangular pine frames still
+need a dedicated silhouette/canopy illustration pass and iPhone-scale visual inspection. Maintain
+the restrained loam/moss/timber palette, actual single source of physical truth and honest art
+status; no giant uncollidable background trees or global color washes.
+
+### Wet Forest silhouette experiment — 21 October 2026 (unapproved)
+
+**Not final art.** The previous 36px-wide triangular pine frames still read too regular on the
+390px browser capture. A second Lab-only candidate draws larger asymmetrical, broken-edged pine
+crowns and bare skeletal deadwood from authored two-pixel-aligned shapes; the frames are cached
+per C# physical tree, never baked as permanent fake background structures. Original atlas PNG,
+manifest and other biome rendering stay byte-identical and provide a fallback. Tree destruction,
+foot-depth and collisions remain sourced exclusively from C#.
+
+This is a visual acceptance experiment: compare the new 320/390px browser captures with the
+previous triangular atlas trees. Reject it if dense crowns obscure the player/attack telegraphs,
+cause a runtime frame-rate loss, or read as stacked artificial rectangles rather than decaying
+Gothic woodland. Even a passing visual check does not approve a production forest atlas.
+
+### Wet Forest character rendering correction — 21 October 2026
+
+**Important:** The previous Wet Forest screenshots were not evidence of the actual Hollow and
+Ashling appearance. The Lab had been displaying fallback `arena-enemy-art` atlas actors,
+while live Hunts already prioritize the independently authored **8-direction rigged** Hollow
+and Ashling sources. The Lab now reuses the existing Hunt sprite controllers, original
+runtime PNGs and C# motion, selecting compact fallback only while source imagery loads.
+
+These approved and tracked animated sources must remain the **canonical character identity**,
+not be repainted as blocky procedural ground decorations. If real rigged sprites still fail
+actual 320px/390px game-view quality, fix the **source/rig/frames and validation** in a
+separate staged character-art pass; never hide mismatches with larger contact shadows,
+blurred upscaling, fake effects, or an unrelated generated screenshot. An art preview must
+prove eight facings, walking contact, recognisable anatomy and animation transitions.
+
+Lab pathing probes have no simulated combat, so playback is strictly movement/idle; attack
+and death clips remain the regular-Hunt authoritative render path. Existing source bytes and
+enemy mechanics are unchanged, preserving continuity with earlier accepted work.

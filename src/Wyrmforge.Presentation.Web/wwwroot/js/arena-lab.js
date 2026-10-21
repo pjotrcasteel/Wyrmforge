@@ -5,6 +5,8 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { drawWetForestActorContact, appendWetForestFootprint, drawWetForestFootprints } from './arena-wet-forest-dressing.js';
 import { loadArt } from './art-atlas.js';
+import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy } from './hollow-sprites.js';
+import { ashlingSprites } from './ashling-sprites.js';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const labs = new WeakMap();
@@ -24,6 +26,7 @@ export async function initializeArenaLab(canvas, dotnet) {
         canvas, dotnet, active: true, options: { tool: 'walk', collision: false, mobs: true },
         frame: null, keys: new Set(), pointer: null, keyboard: { x: 0, y: 0 }, clock: 0,
         busy: false, last: performance.now(), walk: { facing: 'S' }, enemyMotion: createEnemyMotionState(),
+        hollow: createHollowState(), ashling: ashlingSprites.createState(),
         lastPlayer: null, tracks: [], previousActors: new Map(), previousSeed: null, raf: 0,
         width: 0, height: 0, dpr: 1, events: [],
     };
@@ -38,7 +41,12 @@ export async function initializeArenaLab(canvas, dotnet) {
     state.events.push(bind(document, 'visibilitychange', () => {
         state.last = performance.now(); if (document.hidden) state.keys.clear();
     }));
-    await loadArt('art/');
+    // The real Hunt uses these eight-direction rigs. The Lab previously showed tiny atlas
+    // placeholders, making its Hollow and Ashling unrepresentative of the actual game.
+    // Do not stall the first frame on the large animation sheets: retain atlas fallbacks.
+    loadArt('art/');
+    preloadHollowSprites();
+    ashlingSprites.preload();
     state.raf = requestAnimationFrame(now => tick(state, now));
 }
 
@@ -62,6 +70,9 @@ export function readArenaLabDiagnostics(canvas) {
         player: frame ? { x: frame.x, y: frame.y } : null,
         world: frame ? { width: frame.worldWidth, height: frame.worldHeight } : null,
         enemyKinds: frame?.mobs?.map(mob => mob.kind) ?? [],
+        enemyArt: { hollow: hollowSpritesReady(), ashling: ashlingSprites.ready() },
+        enemyAnimation: { hollow: [...state.hollow.entities.values()].map(p => ({ clip: p.clip, frame: p.frame, direction: p.direction })),
+            ashling: ashlingSprites.diagnostics(state.ashling).entities.map(p => ({ clip: p.clip, frame: p.frame, direction: p.direction })) },
         collisionVisible: state.options.collision, tool: state.options.tool };
 }
 export function disposeArenaLab(canvas) {
@@ -160,6 +171,9 @@ function draw(state) {
     if (state.previousSeed !== sceneKey) {
         state.tracks.length = 0;
         state.previousActors.clear();
+        state.enemyMotion = createEnemyMotionState();
+        state.hollow = createHollowState();
+        state.ashling = ashlingSprites.createState();
         state.previousSeed = sceneKey;
     }
     if (forest) {
@@ -174,6 +188,14 @@ function draw(state) {
     const enemyPoses = updateEnemyMotions(state.enemyMotion, frame.mobs.map(mob => ({
         entityId: mob.id, kind: mob.kind, x: mob.x, y: mob.y,
     })), state.clock);
+    // Only C# supplies world positions. These two are non-attacking navigation probes,
+    // so no synthetic hit/contact, death or attack is fed to the gameplay animation rigs.
+    // Their walk gait and all eight facings follow the actual C# displacement.
+    const labEnemies = frame.mobs.map(mob => ({ entityId: mob.id, kind: mob.kind, x: mob.x, y: mob.y,
+        radius: mob.kind === 0 ? 11 : 8 }));
+    const animationSnapshot = { enemies: labEnemies, player: null, deathBursts: [], paused: false, ended: false };
+    updateHollowSprites(state.hollow, animationSnapshot, state.clock);
+    ashlingSprites.update(state.ashling, animationSnapshot, state.clock);
     const moved = state.lastPlayer ? Math.hypot(frame.x - state.lastPlayer.x, frame.y - state.lastPlayer.y) > .1 : false;
     state.lastPlayer = { x: frame.x, y: frame.y };
     const layers = [
@@ -186,8 +208,13 @@ function draw(state) {
         else if (layer.kind === 'mob') {
             const mob = layer.mob;
             const phase = enemyPoses.get(mob.id) ?? 0;
-            if (forest) drawWetForestActorContact(ctx, mob.x, mob.y, 12, phase > 0, phase);
-            drawEnemyPixelArt(ctx, { kind: mob.kind, x: mob.x, y: mob.y, radius: 12, healthFraction: 1 },
+            const actor = labEnemies.find(enemy => enemy.entityId === mob.id);
+            if (forest) drawWetForestActorContact(ctx, mob.x, mob.y, actor.radius, phase > 0, phase);
+            // Identical approved source frames and animation controllers to actual Hunts.
+            // Native atlas remains a safe fallback while one or both rigged bundles load.
+            const actual = mob.kind === 0 ? drawHollowEnemy(ctx, actor, state.hollow) :
+                mob.kind === 2 ? ashlingSprites.drawEnemy(ctx, actor, state.ashling) : false;
+            if (!actual) drawEnemyPixelArt(ctx, { ...actor, radius: actor.radius, healthFraction: 1 },
                 null, phase, enemyFacing(state.enemyMotion, mob.id));
         } else {
             const player = { x: frame.x, y: frame.y, radius: 12 };
