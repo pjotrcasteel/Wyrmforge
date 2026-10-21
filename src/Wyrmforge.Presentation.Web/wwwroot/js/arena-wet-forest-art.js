@@ -366,11 +366,24 @@ function groundSite(ctx, site, x, y, seed) {
             rect(ctx, px + 5, py + 9, 15, 2, '#626052');
         }
     } else if (site === 'abandoned-camp') {
-        // Charred ground and embedded splinters; the physical C# camp prop stays independent.
-        for (let i = -3; i <= 3; i++)
-            rect(ctx, ox + i * 9, oy - 12 + ((i * i) % 3) * 4, 8, 6, '#222722');
-        for (let i = 0; i < 5; i++)
-            rect(ctx, ox - 56 + i * 20, oy + 22 + i % 2 * 4, 14, 3, '#65513c');
+        // The same refuge has a compact trampled floor and long-abandoned
+        // firepit. As flat paint it remains after the real ruin is destroyed;
+        // no extra barriers, tents or unearned crates appear on walkable ground.
+        for (let i = -5; i <= 5; i++) {
+            const roll = hash(seed ^ 0x35f12, i + 8, 39);
+            rect(ctx, ox + i * 12, oy - 16 + Math.round(roll * 5) * 2,
+                12, 4, i % 3 === 0 ? '#20251f' : '#2b2923');
+            if (i % 2 === 0)
+                rect(ctx, ox + i * 11, oy + 20 + (i % 3) * 4,
+                    12, 2, '#594536');
+        }
+        // Footprints approach the camp via the already walkable soil.
+        for (let i = 0; i < 7; i++) {
+            const x = ox - 38 + i * 13;
+            const y = oy + 32 + (i % 3) * 6;
+            rect(ctx, x, y, 6, 2, '#20251e');
+            rect(ctx, x + 5, y + 2, 4, 2, '#262b23');
+        }
     } else if (site === 'ruined-waystone') {
         // Worn flagstone imprints, never an implied inaccessible stone wall.
         for (let row = -2; row <= 2; row++)

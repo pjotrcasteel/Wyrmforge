@@ -58,19 +58,57 @@ export function createWetForestStoryArtPlan(prop, seed) {
         r(-12, -12, 6, 6, ink.lichen);
         r(6, -8, 4, 4, ink.lichen);
     } else if (kind === 'camp-remains') {
-        // An extinguished fire bed: collapsed shelter supports, soot, unlit stones.
+        // A distinct, half-collapsed medieval forest refuge. Inspired by the
+        // coherent world-building of D2's wilderness: roof -> beams -> ash bed,
+        // rather than scattered, unrelated rectangles. This remains ONE real
+        // destructible C# prop, with its visual body rising behind the foot.
+        const roof = ['#191d19', '#282920', '#333127', '#494134'];
+        // Ground contact and an old soot-blackened hearth below the entrance.
+        r(-32, -4, 64, 6, ink.contact);
         r(-24, -12, 48, 12, ink.wood);
-        r(-18, -14, 36, 8, ink.soot);
-        for (const [x, y] of [[-20,-12],[-14,-18],[4,-18],[16,-12],[18,-4],[-18,-4]]) {
+        r(-18, -10, 38, 6, ink.soot);
+        for (const [x, y] of [[-20, -10], [-14, -16], [8, -16], [16, -10]]) {
             r(x, y, 8, 4, ink.stone);
             r(x + 2, y, 4, 2, ink.rim);
         }
-        r(-42, -29, 6, 30, ink.wood);
-        r(-40, -31, 32, 4, ink.plank);
-        r(-8, -31, 5, 8, ink.split);
-        r(27, -22, 4, 24, ink.wood);
-        r(24, -20, 12, 4, ink.split);
-        for (const x of [-10, -2, 8]) r(x, -9, 8, 2, ink.cut);
+        for (const x of [-10, -2, 6]) r(x, -7, 8, 2, ink.cut);
+        // The interior stays dark and visibly OPEN beneath the collapsed roof.
+        r(-31, -38, 61, 5, ink.cut);
+        r(-27, -35, 53, 6, '#1a201c');
+        r(-33, -43, 6, 41, ink.wood);
+        r(-31, -43, 2, 35, ink.plank);
+        r(26, -41, 6, 37, ink.wood);
+        r(28, -37, 2, 26, ink.split);
+        // Strong Gothic gable silhouette; the broken pitch is read at phone size.
+        r(-16, -62, 25, 6, roof[0]);
+        for (let i = 0; i < 9; i++) {
+            const dy = i * 3;
+            const leftX = -18 - i * 3;
+            const rightX = 4 + i * 3;
+            r(leftX, -60 + dy, 12, 4, roof[i % 3]);
+            if (i < 6 || (variant >>> (i + 1)) % 3 !== 0)
+                r(rightX, -60 + dy, 12, 4, roof[(i + 1) % 4]);
+        }
+        // Ragged wet shingles and exposed framing, never a clean triangular tent.
+        for (let i = 0; i < 9; i++) {
+            const x = -36 + i * 8;
+            if ((variant >>> (i % 12)) & 1) continue;
+            r(x, -43 + (i % 3) * 2, 6, 2, '#554638');
+            r(x + 2, -41 + (i % 3) * 2, 4, 2, ink.soot);
+        }
+        r(-43, -34, 19, 5, ink.split);
+        r(23, -34, 14, 5, ink.split);
+        // Supports and fallen timber all lead back to the same collapsed hut.
+        r(-39, -33, 4, 28, ink.wood);
+        r(-40, -28, 2, 20, ink.plank);
+        r(22, -31, 4, 16, ink.cut);
+        r(28, -19, 14, 4, ink.wood);
+        r(36, -15, 8, 6, ink.split);
+        r(-47, -16, 19, 4, ink.wood);
+        r(-45, -12, 12, 3, ink.split);
+        // Minimal burnt grit: no orange glow pretending to be a live brazier.
+        for (const x of [-30, -20, 22, 30])
+            r(x, -3, 6, 2, '#3e3830');
     } else if (kind === 'broken-cart') {
         // Rotten axle and *two damaged wheel remnants*, not two intact circles.
         r(-34, -29, 68, 26, ink.wood);
