@@ -499,8 +499,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".fireball-socket--1").ClickAsync();
 
         await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
-        await Expect(Page.Locator(".fireball-source-details")).ToHaveCountAsync(3);
-        await Expect(Page.Locator(".fireball-source-unavailable")).ToHaveCountAsync(7);
+        await Expect(Page.Locator(".fireball-source-details")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".fireball-source-unavailable")).ToHaveCountAsync(6);
 
         var meteor = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Meteor Heart" });
         await Expect(meteor.Locator("summary")).ToContainTextAsync("Ashfang");
