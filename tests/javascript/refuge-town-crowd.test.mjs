@@ -450,9 +450,24 @@ test('Route-mode taps select the nearest currently moving citizen without blocki
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
     assert.match(markup, /public Task SelectTownRouteCitizen\(int id\)/);
     assert.match(markup, /\[JSInvokable\]/);
-    assert.match(js, /data-town-layer-select="Route"\]\[aria-pressed="true"/);
+    assert.match(js, /data-town-layer-select\]\[aria-pressed='true'/);
     assert.match(js, /data-town-citizen-state="walking"/);
     assert.match(js, /e\.stopImmediatePropagation\(\)/);
     assert.match(js, /dotnet\.invokeMethodAsync\("SelectTownRouteCitizen", chosen\)/);
     assert.match(js, /scene\.addEventListener\("pointermove", move, \{ passive: true \}\)/);
+});
+
+test('All, Walk, Block and Cover are tap-to-inspect, without affecting gameplay clicks', () => {
+    const markup = source(scene);
+    const cutouts = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(markup, /data-town-geometry-selection="true"/);
+    assert.match(cutouts, /const polygonContains = \(polygon, point\) =>/);
+    assert.match(cutouts, /mode === "Walkable"/);
+    assert.match(cutouts, /mode === "Blocked"/);
+    assert.match(cutouts, /mode === "Occlusion"/);
+    assert.match(cutouts, /e\.target\.closest\("\.refuge-town-spot"\)/);
+    assert.match(cutouts, /selected\.dataset\.townSelected = "true"/);
+    assert.match(cutouts, /output\.textContent = type \+ " · " \+ id/);
+    assert.match(css, /refuge-town-geometry-selection\s*\{[^}]*pointer-events:none/s);
 });

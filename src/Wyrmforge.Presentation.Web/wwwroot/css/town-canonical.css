@@ -204,3 +204,15 @@
 .game-shell.refuge-home .refuge-town-png-cutout[data-town-png-ready="true"] {
     visibility:visible;
 }
+
+/* Tap-to-inspect stays compact and read-only; it never traps touch pan. */
+.game-shell.refuge-home .refuge-town-geometry-selection {
+    position:fixed;right:10px;bottom:calc(131px + env(safe-area-inset-bottom, 0px));
+    z-index:12049;max-width:min(78vw,330px);overflow:hidden;text-overflow:ellipsis;
+    padding:5px 8px;border-radius:5px;border:1px solid #d7c29d70;
+    background:#101824df;color:#f2dfb7;font:600 11px/1.3 ui-monospace,monospace;
+    pointer-events:none;white-space:nowrap;
+}
+.game-shell.refuge-home .refuge-town-geometry-map polygon[data-town-selected="true"] {
+    stroke:#fff;stroke-width:3.5;vector-effect:non-scaling-stroke;
+}

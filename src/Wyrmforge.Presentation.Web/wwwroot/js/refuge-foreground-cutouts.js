@@ -32,8 +32,8 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
     const base = scene.querySelector(".refuge-town-night-base");
     if (!base) return;
 
-    // All tap and swipe handling stays inside the existing panorama; the Route
-    // tool captures taps only in debug mode. Outside Route mode, gameplay remains clickable.
+    // Debug taps inspect polygons in All/Walk/Block/Cover and choose a route in
+    // Route mode. Normal gameplay, building hotspots and panning remain untouched.
     let press = null;
     const down = e => { press = { x: e.clientX, y: e.clientY, dragged: false }; };
     const move = e => {
@@ -41,29 +41,74 @@ export async function mountTownCutoutsAndRouteSelection(dotnet) {
             press.dragged = true;
     };
     const clear = () => { press = null; };
+    const polygonContains = (polygon, point) => {
+        const vertices = polygon.points;
+        let inside = false;
+        for (let i = 0, j = vertices.numberOfItems - 1; i < vertices.numberOfItems; j = i++) {
+            const a = vertices.getItem(i), b = vertices.getItem(j);
+            if ((a.y > point.y) !== (b.y > point.y) &&
+                point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)
+                inside = !inside;
+        }
+        return inside;
+    };
     const pick = e => {
-        if (!document.querySelector('[data-town-layer-select="Route"][aria-pressed="true"]')) return;
+        const active = document.querySelector(".refuge-town-geometry-toolbar [data-town-layer-select][aria-pressed='true']");
+        if (!active) return;
         if (press?.dragged) { press = null; return; }
         press = null;
-
-        const moving = [...scene.querySelectorAll(
-            '.refuge-town-citizen[data-town-citizen-state="walking"]'
-        )];
-        if (!moving.length) return;
-        let chosen = null, minimum = Infinity;
-        for (const person of moving) {
-            const box = person.getBoundingClientRect();
-            const distance = (box.left + box.width / 2 - e.clientX) ** 2 +
-                (box.bottom - e.clientY) ** 2;
-            if (distance < minimum) {
-                minimum = distance;
-                chosen = Number(person.dataset.townCitizenId);
+        const mode = active.dataset.townLayerSelect;
+        const output = document.querySelector("[data-town-geometry-selection]");
+        if (mode === "Route") {
+            const moving = [...scene.querySelectorAll(
+                '.refuge-town-citizen[data-town-citizen-state="walking"]'
+            )];
+            if (!moving.length) return;
+            let chosen = null, minimum = Infinity;
+            for (const person of moving) {
+                const box = person.getBoundingClientRect();
+                const distance = (box.left + box.width / 2 - e.clientX) ** 2 +
+                    (box.bottom - e.clientY) ** 2;
+                if (distance < minimum) {
+                    minimum = distance;
+                    chosen = Number(person.dataset.townCitizenId);
+                }
             }
+            if (!Number.isInteger(chosen)) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if (output) output.textContent = "ROUTE · NPC " + chosen;
+            dotnet.invokeMethodAsync("SelectTownRouteCitizen", chosen).catch(() => {});
+            return;
         }
-        if (!Number.isInteger(chosen)) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        dotnet.invokeMethodAsync("SelectTownRouteCitizen", chosen).catch(() => {});
+
+        // Building hotspots still open normally, including in the debug overlay.
+        if (e.target.closest(".refuge-town-spot")) return;
+        const rect = scene.getBoundingClientRect();
+        const point = {
+            x: (e.clientX - rect.left) / rect.width * 1672,
+            y: (e.clientY - rect.top) / rect.height * 941
+        };
+        const selector = mode === "Walkable" ? "[data-town-floor]" :
+            mode === "Blocked" ? "[data-town-obstacle]" :
+            mode === "Occlusion" ? "[data-town-foreground]" :
+            "[data-town-obstacle], [data-town-floor], [data-town-foreground]";
+        const shapes = [...scene.querySelectorAll(".refuge-town-geometry-map polygon" + selector)];
+        // All mode prioritizes solid feet collisions above overlapping floor regions.
+        shapes.sort((a, b) => Number(b.hasAttribute("data-town-obstacle")) -
+            Number(a.hasAttribute("data-town-obstacle")));
+        const selected = shapes.find(shape => polygonContains(shape, point));
+        scene.querySelectorAll("[data-town-selected]").forEach(shape =>
+            shape.removeAttribute("data-town-selected"));
+        if (selected) selected.dataset.townSelected = "true";
+        if (output) {
+            const type = selected?.hasAttribute("data-town-obstacle") ? "BLOCK" :
+                selected?.hasAttribute("data-town-floor") ? "WALK" :
+                selected?.hasAttribute("data-town-foreground") ? "COVER" : "UNMAPPED";
+            const id = selected?.dataset.townObstacle ?? selected?.dataset.townFloor ??
+                selected?.dataset.townForeground ?? `${Math.round(point.x)}, ${Math.round(point.y)}`;
+            output.textContent = type + " · " + id;
+        }
     };
 
     scene.addEventListener("pointerdown", down, { passive: true });
