@@ -37,3 +37,184 @@ The page does not unlock abilities, save player data or spawn real combat reward
   pickup readability. No mandatory crossing walls or glow circles have been reintroduced.
 - Acceptance is visual: the current environment atlas is still a basic proxy and needs
   a later focused Gothic tree/canopy art pass. Do not describe this as final artwork.
+
+## Pixel material-pass acceptance — 21 October 2026
+
+Candidate branch `feature/wet-forest-pixel-ground-20261021` (not shipped unless merged).
+
+- Open `/arena-lab?seed=1204&stage=1&habitat=WetForest`, then repeat with seeds 1205 and
+  3312. Compare the trail, puddles, root dressing and named site. The forest should have
+  recognisable ground material clusters rather than smooth islands over a gradient.
+- Walk across the entire trail and approach the offshoot and visible story site from both sides.
+  The route must remain navigable and the drawn ground must not imply new solid boundaries.
+- Try all four site identities via **Different seed**, checking disturbed graves, charred camp
+  floor, broken flat waystone paving and cart ruts. Physical objects are still the C# props.
+- Hit a tree/barrel and verify that its collision and sprite disappear together, while baked soil
+  and footprints remain a floor detail. Turn Collision outlines on/off for comparison.
+- Test 320×568 and 390×844 portrait Safari, with Hollow and Ashling following, plus a desktop
+  wide scene. Check legibility at actual device scale, no noisy gridlines, correct feet contact
+  and acceptable FPS. A successful automated test is **not** owner/device visual approval.
+- Stage 1 versus stage 8 should differ via local soot spots only, not a global Fire color wash.
+
+Pure JS regression: `tests/javascript/arena-wet-forest-art.test.mjs`. No changes to C#
+world generation, enemy AI, saves or normal Hunt staging. Final Gothic forest atlas remains
+outstanding; this checkpoint is a consistent material base for those assets, not the final art.
+
+## Prop-grounded tree and understory pass — 21 October 2026
+
+The same `feature/wet-forest-pixel-ground-20261021` draft PR now adds varied existing tree
+atlas frames and local roots/lichen/sedge. Verify all with the same **physical C#** objects:
+
+- Compare seeds 1204, 1205 and 1441, particularly groups of pines at the edge of the
+  wandering trail. Pines should vary in height; no generic Christmas-tree repeat pattern
+  should dominate a single phone viewport.
+- Toggle Collision outlines: only the existing trunk/collidable prop circles appear, **not**
+  extra canopy, decorative roots or grass blockers. Player and Hollow/Ashling can still walk
+  around props; enemies must pass visually behind a tree when their world feet are farther back.
+- Destroy a pine: both raised sprite and collider go away in the same simulation frame; baked
+  roots/ground soil remain but must read as flat debris, not a standing tree. Check stale
+  foliage does not cover the player after destruction.
+- Compare ordinary Hunts and Frost in the lab: neither inherits Wet Forest-only frame
+  selection or attached lichen. View at 320/390px and compare stable 30+ FPS mobile play.
+- CI: `tests/javascript/arena-wet-forest-vegetation.test.mjs` covers frame identities,
+  seed repeatability, C# footprint mapping, preview-only scope, static detail bounds,
+  and absence of physical-state mutations.
+
+No merge or final-art claims before visual acceptance. All actual Gothic tree/canopy sprite
+replacement work remains outstanding.
+
+## Experimental canopy acceptance — 21 October 2026
+
+Browser snapshots now include `arena-lab-wetforest-320.png` **and**
+`arena-lab-wetforest-390.png`, after the start-up overlay disappears. Both must show:
+- Different irregular pine masses, skeletal dead trees and shallow ground roots around their
+  actual C# footprints; no glowing plants, unexplained collidable decorations or flat tree tint.
+- Physically correct back/front depth when Hollow, Ashling and mage cross each C# tree foot.
+- Readable player and enemies at actual 320px width despite larger tree overhang. Movement,
+  spells and destructible prop hits must still be apparent.
+- Similar or better browser FPS than the earlier triangular-atlas pass. The pixel bitmap is
+  drawn **once per prop** and reused, with a capped cache to protect long mobile runs.
+
+A passing test/browser screenshot is *evidence for owner review*, not automatic art approval.
+If it fails visually, adjust/revert the Lab-only silhouette experiment before release.
+
+## Actual Hollow and Ashling rig parity — 21 October 2026
+
+The Wet Forest Lab previously used `drawEnemyPixelArt` for **both** navigation probes. That path
+is the tiny generic atlas fallback, **not** the character art Regular Hunts prioritize. It made
+both monsters look like sprites pasted onto the scenery even after the ground and tree updates.
+
+The Lab now loads and drives the **same existing directional authored source** as Hunts:
+`hollow-sprites.js` for `EnemyKind.Hollow=0` and `ashling-sprites.js` /
+`rigged-sprites.js` for `EnemyKind.Ashling=2`, with genuine 8-facing source clips.
+Their position, IDs, foot depth and movement remain supplied by the C# Arena Lab. Both probes
+are **nonattacking**, so Lab adapter passes `player: null` to animation playback and cannot
+manufacture contact attacks/deaths. The original compact atlas remains a bounded loading/offline
+fallback, never an acceptable source for final sprite screenshots.
+
+Browser screenshot gates for **both 320px and 390px** now wait until
+`readArenaLabDiagnostics(canvas).enemyArt.hollow && .ashling`. Compare movement in
+all eight headings, idle planted feet and passing in front of/behind grounded physical tree
+colliders. If either bundle fails to load, flag the screenshot as **not a valid art review**.
+No animation asset bytes, identity, damage or combat logic have been modified in this step.
+
+## Gothic material and silhouette candidate — 21 October 2026
+
+Review branch `art/wet-forest-gothic-materials-20261021` before accepting its art.
+The lab-only terrain painter now uses a narrower, low-saturation wet-loam/mud/moss
+range and sparse seed-stable soil grain, not a broad dark overlay. Lab-only pine
+crowns use narrower, broken bough masses with cold highlights and more exposed
+black timber rather than wide rounded blobs. Existing tree feet, authoritative C#
+colliders, site history, routes, drops, depth sorting, Hollow/Ashling rigging, and
+ordinary Hunts remain unchanged.
+
+### Owner visual acceptance
+
+- Compare identical seeds `1204`, `1205`, and `3312` at 320px and 390px.
+  The floor should read as loam, mud and old wet paths **without checkerboarding**
+  or flat single-colour expanses.
+- Trees should read as old, heavy and damaged, with irregular needles and open
+  spaces; reject any new simple triangular silhouettes, rounded clumps, or high
+  saturation green.
+- Keep physical C# tree feet and real actor front/behind ordering. The full tree
+  remains visible until its actual physical prop is destroyed.
+- Inspect the four seeded human-history sites and 1/4/8 Wyrm proximity levels.
+  Don't fix atmosphere by uniformly darkening the canvas or hiding visibility.
+- Compare moving real Hollow/Ashling and the player in the scene at true iPhone
+  size, including combat-readability expectations.
+- Check the existing 30+ FPS mobile target. This is a **visual candidate**, not
+  accepted final artwork, not a replacement for approved concept art, and not
+  permission to enable generated arenas in normal Hunts.
+
+## Gothic material boundaries and historically grounded prop sprites — continuation
+
+The second Lab-only candidate adds **seeded 2px local material-edge stitches** to
+soften hard grid cell changes at roads, puddles and leaf/mud margins. Its
+`createWetForestTilePlan` and the original C# trail, patches, traversal and
+encounter identities are unchanged. Material edges are drawn once in the cached
+ground texture. They neither create world colliders nor add new terrain paths.
+
+The three physical tree anatomies now grow lateral timber from a continuous trunk
+and leave sparse negative space between broken boughs. Fallen logs, grave markers,
+waystones, the charred camp and the broken wagon use original *code-authored pixel
+studies* from `arena-wet-forest-sites.js`, replacing the cruder generic silhouettes
+only for their existing Wet Forest Lab prop IDs. These are **candidate sprite studies**,
+not externally approved PNG/atlas sprites and not a claim of finished quality.
+They remain drawn in the same world-foot-sorted prop pass, and disappear when the
+authoritative C# prop disappears. No new objects, loot, collision, damage or
+navigation is introduced.
+
+### Test / acceptance additions
+
+- Generate seeds 1204, 1205, 3312 and compare trail bends, muddy banks,
+  grave/camp/waystone/cart identities, and differences among old pines.
+- Zoom at both 320 and 390 phone widths: check that material seams are not
+  visible as square grids; graves read as worn human monuments; cart/wagon parts
+  remain human-scale; trunks do not appear to float.
+- Switch collision outlines on; check accurate physical feet and occlusion
+  while real Hollow/Ashling rigs circle site props and trees.
+- Hit a physical site prop, log and tree. Rendering must disappear with its
+  collider, while only truly flat floor traces persist.
+- Test stage 1 versus 8: no overall darkening/colour wash, no occult neon
+  effects from ancient unpowered stones, and mage/enemy silhouettes stay readable.
+- Review before/after local screenshots, mobile FPS/memory and CI; **passing
+  tests are not visual acceptance**, and normal Hunts must stay untouched.
+
+## Fire-influenced trees — step 1 (route-normalized Lab review)
+
+The fire Wyrm should visibly damage forests on the **chosen route**, not after a
+fixed number of global combat-pressure stages. The first implementation uses
+`WyrmrealmHuntProgress.Fraction(routeNode, routeNodeCount)` where **routeNode**
+is 1-based and **routeNodeCount** includes the eventual Wyrm. For example,
+node 2/4 is 33% but node 2/14 is only 7.7%. The player cannot burn through a
+long Hunt as quickly as through a short one. Alternative/unselected/optional
+nodes do **not** inflate the chosen route's denominator.
+
+**Scope and status:** This step adds three illustrative route-length presets
+(4, 8, 14) and a selected-node slider to the actual generator Lab. It feeds
+the normalized value as `ArenaEnvironmentRenderSnapshot.Corruption` for **Lab
+rendering only**. The physical Wet Forest seed and prop IDs stay fixed while the
+node slider advances, so changes are actual damage to the *same* trees rather
+than rerolling a different woodland. The C# `WyrmrealmMapState.CombatStages` pressure stages and
+existing regular-Hunt path logic remain separate. The full game should later
+supply its genuine committed route length and ordinal from its traversal state;
+the Lab does **not** pretend to know a future player branch in advance.
+
+For fire-ecology Wet Forest and **existing physical tree prop IDs only**, seeded
+per-tree thresholds progress monotonically from intact/healthy to **charred**,
+then some to **burning**, and a rarer subset to **split-glowing**. Trees that are
+already dead or naturally fire-resistant can remain charred without every
+trunk turning into a flame. Broken boughs, near-black bark and needle loss are
+baked as tiny pixel shapes into the existing 112×128 cached tree artwork.
+Bright orange pixels are restricted to actual burning wood or split cracks.
+A handful of 2px motes flicker at frame time without rebuilding the bitmap.
+No new trees, floor scorches, fissures, magical wash, collision, loot, navigation
+or damage is added in step 1. Frost/other regions and normal Hunts still use
+their own approved art.
+
+**Review:** Test the same seed with Short node 1/4, 2/4, 3/4 and 4/4,
+then Long node 1/14, 2/14, 8/14 and 14/14; compare percentages and tree identities.
+Switch to Frozen Road to check zero fire effects. Hit a charred/burning
+tree and verify its sprite and collider disappear together. Inspect the
+moving Hollow/Ashling silhouettes and mobile FPS at 320/390px. Check
+the resulting Art and Playwright captures before merging.

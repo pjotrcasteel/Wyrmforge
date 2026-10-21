@@ -256,6 +256,23 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_PlaceholderDepth_PreservesOpenPavementAndConcealsPaintedOverlaps()
+    {
+        var map = Scene();
+        var behindWell = new TownPoint(825, 478);
+        Assert.IsTrue(map.IsWalkable(behindWell), "Rear paving remains walkable even when the body is hidden by a roof.");
+        Assert.AreEqual(-1, map.PlaceholderDepth(behindWell), "Do not show a disembodied rectangle above the well.");
+        Assert.IsTrue(map.PlaceholderDepth(new TownPoint(665, 535)) >= 0,
+            "The cobblestones beside the noticeboard must not become a broad hiding area.");
+        Assert.IsTrue(map.PlaceholderDepth(new TownPoint(825, 660)) >= 0,
+            "The entire rectangular placeholder remains visible in front of the well.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(1060, 870)),
+            "The right foreground flowers are solid at their actual ground footprint.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(940, 830)),
+            "The middle paved street remains walkable beside the flowerbed.");
+    }
+
+    [TestMethod]
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();

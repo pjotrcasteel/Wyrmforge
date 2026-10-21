@@ -61,6 +61,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" })).ToBeVisibleAsync();
+        // Native select controls must not overlap the adjacent stage slider on narrow phones.
+        var controlsOverlap = await Page.EvaluateAsync<bool>(@"() => {
+            const habitat = document.querySelector('.arena-controls select').getBoundingClientRect();
+            const slider = document.querySelector('.arena-controls input[type=range]').getBoundingClientRect();
+            return habitat.left < slider.right && slider.left < habitat.right &&
+                habitat.top < slider.bottom && slider.top < habitat.bottom;
+        }");
+        Assert.IsFalse(controlsOverlap, "Habitat and Wyrm-proximity controls must not overlap.");
         // Canvas has no ARIA role in every browser; retain a direct locator for the render check.
         var stage = Page.Locator(".arena-stage canvas");
         await Expect(stage).ToBeVisibleAsync();
@@ -79,14 +87,18 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
         var kinds = first.GetProperty("enemyKinds").EnumerateArray().Select(kind => kind.GetInt32()).ToArray();
         CollectionAssert.AreEqual(new[] { 0, 2 }, kinds, "The lab should contain the actual Hollow and Ashling.");
-        if (width == 390)
-        {
-            // A full-page screenshot taken while the fixed ignition splash covers the viewport
-            // looks like a black horizontal terrain seam; wait until the real artwork is visible.
-            await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
-            Directory.CreateDirectory(ArtifactDirectory);
-            await ScreenshotAsync("arena-lab-wetforest-390.png");
-        }
+        // These screenshots are only useful after BOTH authentic directional rigs are decoded.
+        // Do not mistake the tiny generic loading fallback for the approved Hollow/Ashling.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const mod = await import('./js/arena-lab.js');
+            const scene = mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
+            return scene?.enemyArt?.hollow === true && scene?.enemyArt?.ashling === true &&
+                scene?.enemyAnimation?.hollow?.length === 1 && scene?.enemyAnimation?.ashling?.length === 1;
+        }", null, new() { Timeout = 45000 });
+        // Capture both narrow portrait sizes after the real scene appears, never the ignition mask.
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
+        Directory.CreateDirectory(ArtifactDirectory);
+        await ScreenshotAsync($"arena-lab-wetforest-{width}.png");
         await Page.GetByRole(AriaRole.Checkbox, new() { Name = "Collision outlines" }).CheckAsync();
         await Page.WaitForFunctionAsync(@"async () => {
             const m = await import('./js/arena-lab.js');
@@ -104,6 +116,27 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }");
         await Expect(Page.GetByRole(AriaRole.Spinbutton, new() { Name = "World seed" })).ToHaveValueAsync("1442");
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.arenaLabProgress')"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_ArenaLab_MalformedDeepLink_RecoversInsteadOfShowingBlackScreen()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        // Regression for the mistakenly encoded link: '&stage=...' became part of seed.
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') +
+            "/arena-lab?seed=1441%26stage%3D5%26habitat%3DWetForest",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" }))
+            .ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const mod = await import('./js/arena-lab.js');
+            const stage = document.querySelector('.arena-stage canvas');
+            const scene = stage && mod.readArenaLabDiagnostics(stage);
+            return scene?.active && scene?.seed === 1204 && scene?.stage === 1 &&
+                scene.world?.width === 950 && stage.width > 0;
+        }");
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
     }
 
     [TestMethod]

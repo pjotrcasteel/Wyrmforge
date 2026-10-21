@@ -30,3 +30,7 @@
 .arena-inspector dt{color:#a7a39e}.arena-inspector dd{margin:0;color:#edd5b4;text-align:right;font-variant-numeric:tabular-nums}
 .arena-inspector button{width:100%;margin-top:8px}
 @media(max-width:760px){.arena-lab{padding:9px}.arena-lab header{align-items:flex-start;display:grid;gap:8px}.arena-lab nav{gap:5px}.arena-controls,.arena-tools{gap:7px}.arena-controls label{flex:1 1 41%;min-width:0}.arena-controls button{flex:1 1 42%}.arena-layout{grid-template-columns:1fr}.arena-stage{height:59dvh;min-height:390px}.arena-inspector{display:block}.arena-tip{max-width:calc(100% - 20px)}.arena-badge{bottom:40px;right:10px}}
+
+/* Small-screen controls must not paint a wide native select over the neighboring slider. */
+.arena-controls select,.arena-controls input[type=range]{box-sizing:border-box;width:100%;min-width:0}
+@media(max-width:380px){.arena-controls label{flex-basis:100%}.arena-controls input[type=number]{max-width:none}}
