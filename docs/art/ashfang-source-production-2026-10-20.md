@@ -257,3 +257,15 @@ stills remain the V13 anatomy reference, not a completed V15 directional
 animation library. Sustained flight/overflight, all actions/directions, viewport
 fitting and actual C# aerial gameplay/mobile Hunt validation remain outstanding.
 Keep draft and do not present this as finished or owner-approved artwork.
+
+### V16 hind-limb correction and push — in progress
+Owner reports weird/weak rear legs. V15 actual bones confirm the rear knee
+bends backward and above the hip: neutral left hip Y/Z 0.170/-0.025, knee
+0.272/-0.007, although the rest knee is forward/down. The rear IK pole was
+incorrectly +Y. V16 uses a pelvis-local forward/down bend plane with less
+lateral splay, narrower paw plants and a bounded radial haunch sculpt on the
+existing textured source. The crouch holds longer/deeper, then uncoils over a
+shorter interval. Hind drive rolls around a toe anchor, retains rear-leg
+extension through departure and delays tuck. A hind-leg audit records local
+knee offsets and extension ratios. These changes await contact/visual gates.
+Current main checked at 3dd57e18; concurrent Fire Hunt PR #205 remains separate.

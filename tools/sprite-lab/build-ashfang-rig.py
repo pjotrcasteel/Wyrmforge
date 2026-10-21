@@ -18,6 +18,14 @@ head_mix*=np.clip((v[:,2]+.09)/.055,0,1)
 v[:,0]*=1+.35*head_mix;v[:,1]-=.32*head_mix*np.maximum(0,-v[:,1]-.22);v[:,2]+=.052*head_mix+.15*head_mix*np.maximum(0,v[:,2]-.015)
 # Extend the existing balancing tail surface and its skeleton together.
 v[:,1]+=.65*np.maximum(0,v[:,1]-.23)*np.clip((.09-abs(v[:,0]))/.025,0,1)
+# Build haunch volume on the existing surface, preserving its texture/skin.
+# Restrict the radial sculpt to the upper rear limb, clear of tail and soles.
+for sign in [1,-1]:
+    a=np.array((sign*.105,.17,-.025));b=np.array((sign*.18,.095,-.075));d=b-a
+    t=np.clip(((v-a)@d)/(d@d),0,1);radial=v-(a+t[:,None]*d)
+    region=(v[:,1]>.025)&(v[:,1]<.255)&(v[:,2]>-.125)&(v[:,2]<.015)&(v[:,0]*sign>.065)
+    influence=np.exp(-np.sum(radial*radial,axis=1)/(.065**2))*region
+    v+=radial*(.40*influence[:,None])
 v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
@@ -87,7 +95,7 @@ def segment(n,h,t,rotation=None):
 def ik(a,b,l1,l2,pole):
     d=b-a;distance=max(abs(l1-l2)+.0001,min(d.length,l1+l2-.0001));d.normalize();b=a+d*distance;along=(l1*l1-l2*l2+distance*distance)/(2*distance);p=Vector(pole);p=(p-d*p.dot(d)).normalized();return a+d*along+p*math.sqrt(max(0,l1*l1-along*along)),b
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
-clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];deps=bpy.context.evaluated_depsgraph_get()
+clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
 for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
     action=bpy.data.actions.new('Ashfang_'+clip);action.use_fake_user=True;rig.animation_data_create();rig.animation_data.action=action;sample=[];emitters=[];skeleton=[];roots=[]
     for frame in range(count):
@@ -119,33 +127,47 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         mh=h+headrotation@Vector(bones['mouth']['head']-bones['head']['head']);segment('mouth',mh,mh+headrotation@Vector((0,-.055,0)),headrotation)
         for side,sign in [('L',1),('R',-1)]:
             for limb,shift in [('fore',0 if side=='L' else .5),('hind',.25 if side=='L' else .75)]:
-                n=f'{limb}.0.{side}';hip=attached('chest' if limb=='fore' else 'pelvis',bones[n]['head']);ankle=Vector(bones[f'{limb}.2.{side}']['head']);clearance=0
+                n=f'{limb}.0.{side}';parent='chest' if limb=='fore' else 'pelvis'
+                hip=attached(parent,bones[n]['head']);ankle=Vector(bones[f'{limb}.2.{side}']['head']);clearance=0
                 if limb=='fore':ankle.y+=.05
-                rest_goal=ankle.copy()
+                else:ankle.x=sign*.16
+                rest_goal=ankle.copy();fn=f'{limb}.2.{side}'
+                fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
+                if flight and limb=='hind':fr=Quaternion((1,0,0),flight['toeRoll'])@fr
+                sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
                 if clip=='walk':
                     t=(phase+shift)%1
                     if t<.72:ankle.y+=.11*(t/.72-.5)
                     else:
                         t=(t-.72)/.28;ankle.y+=.055-.11*t;clearance=.045*math.sin(t*math.pi)
-                    ankle.z+=clearance
+                    ankle.z=sole_height+clearance
+                elif flight:
+                    tuck=flight[limb+'Tuck']
+                    ground_goal=rest_goal+Vector((0,advance if phase>=.30 else 0,0))
+                    if limb=='hind':
+                        # Rotate the hock about a fixed toe anchor during drive.
+                        foot_vector=Vector(bones[fn]['tail']-bones[fn]['head'])
+                        ground_goal=ground_goal+foot_vector-fr@foot_vector
+                    ground_goal.z=sole_height
+                    carried=attached(parent,rest_goal)+Vector((0,.045*tuck,.065*tuck))
+                    if limb=='hind':carried.y+=.035*flight['kickTrail']
+                    release=smooth((phase-(.17 if limb=='fore' else .26))/(.06 if limb=='fore' else .04))
+                    ankle=ground_goal.lerp(carried,release)
+                    if limb=='fore':ankle.y-=.020*flight['landingReach']
                 else:
-                    if flight:
-                        tuck=flight[limb+'Tuck']
-                        ground_goal=rest_goal+Vector((0,advance if phase>=.22 else 0,0))
-                        carried=attached('chest' if limb=='fore' else 'pelvis',rest_goal)+Vector((0,.045*tuck,.065*tuck))
-                        release=smooth((phase-(.17 if limb=='fore' else .22))/.06)
-                        ankle=ground_goal.lerp(carried,release)
-                        if limb=='fore':ankle.y-=.020*flight['landingReach']
-                    else:
-                        if limb=='fore':ankle=ankle.lerp(point(rest_goal)+Vector((0,.055,.065)),rear)
-                fn=f'{limb}.2.{side}';fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
-                sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
-                if clip=='walk':ankle.z=sole_height+clearance
-                elif altitude<.01:
+                    if limb=='fore':ankle=ankle.lerp(point(rest_goal)+Vector((0,.055,.065)),rear)
+                if clip!='walk' and altitude<.01:
                     catch_clearance=.025*(1-smooth((phase-.81)/.035)) if flight and limb=='hind' and phase>.76 and phase<.845 else 0
                     ankle.z=max(ankle.z,sole_height+catch_clearance)
                 foot_goals[fn]=ankle.copy()
-                knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
+                # Rear knee goes forward/down, hock back, toe forward. The old
+                # +Y pole inverted this bend and placed knees above the hips.
+                pole=posed[parent][1]@Vector((sign*.30,-1,0)) if limb=='hind' else Vector((sign*.6,-1,0))
+                knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],pole)
+                segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
+                if limb=='hind':
+                    local_knee=posed[parent][1].inverted()@(knee-hip)
+                    hind_audit.append(dict(clip=clip,frame=frame,side=side,kneeOffsetPelvisLocal=list(local_knee),extensionRatio=float((ankle-hip).length/(lengths[n]+lengths[f'{limb}.1.{side}'])),toeRoll=flight['toeRoll'] if flight else 0))
             wingroot=attached('chest',bones['wing.upper.'+side]['head']);wing_rotation=posed['chest'][1]
             opening=min(1,max(0,spread));fold=1-opening
             # Each transform moves its joint from the previous joint, retaining
@@ -206,3 +228,5 @@ bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'prof
 (out/'paw-contact-audit.json').write_text(json.dumps(contacts,indent=2)+'\n')
 
 (out/'body-motion-audit.json').write_text(json.dumps(body_audit,indent=2)+'\n')
+
+(out/'hind-leg-audit.json').write_text(json.dumps(hind_audit,indent=2)+'\n')

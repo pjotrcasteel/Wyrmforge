@@ -8,7 +8,7 @@ def smooth(value):
 
 
 def flight_state(phase):
-    crouch = smooth(phase/.10)*(1-smooth((phase-.12)/.10))
+    crouch = smooth(phase/.10)*(1-smooth((phase-.16)/.06))
     launch_time = max(0, min(1, (phase-.22)/.18))
     rise = 2*launch_time-launch_time*launch_time
     descent = smooth((phase-.64)/.17)
@@ -30,12 +30,12 @@ def flight_state(phase):
              (.64, 'approach / extend paws'), (.76, 'flare'),
              (.81, 'forepaw catch'), (.845, 'hindpaw catch'), (.88, 'recover')]
     label = next(name for start, name in reversed(names) if phase >= start)
-    drive = smooth((phase-.12)/.10)*(1-smooth((phase-.26)/.10))
+    drive = smooth((phase-.16)/.06)*(1-smooth((phase-.26)/.10))
     settle_time = max(0, phase-.845)
     settle = .07*math.sin(settle_time*math.pi*18)*math.exp(-settle_time*20)*smooth(settle_time/.02)*(1-smooth((phase-.97)/.03))
     return dict(
         altitude=altitude,
-        bob=-.032*crouch-.022*impact,
+        bob=-.050*crouch-.022*impact,
         advance=.025*crouch-.24*smooth((phase-.18)/.32),
         pelvisTilt=.18*crouch-.22*drive-.10*impact,
         spineBend=-.25*crouch+.10*drive+.26*impact,
@@ -48,7 +48,9 @@ def flight_state(phase):
         spread=.08+.92*smooth((phase-.03)/.13)*(1-smooth((phase-.88)/.12)),
         flap=flap,
         foreTuck=smooth((phase-.17)/.10)*(1-smooth((phase-.64)/.14)),
-        hindTuck=smooth((phase-.24)/.09)*(1-smooth((phase-.68)/.16)),
+        hindTuck=smooth((phase-.31)/.08)*(1-smooth((phase-.68)/.16)),
+        toeRoll=.42*smooth((phase-.19)/.075)*(1-smooth((phase-.28)/.04)),
+        kickTrail=smooth((phase-.24)/.045)*(1-smooth((phase-.34)/.10)),
         landingReach=smooth((phase-.64)/.14)*(1-smooth((phase-.88)/.12)),
         label=label,
     )
