@@ -165,6 +165,38 @@ public sealed class ArenaEnvironmentStateTests
     }
 
     [TestMethod]
+    public void WetForest_GenerateWideHordeGlades_LeavesFourOrMoreRealFightingOrbits()
+    {
+        const double width = 950, height = 1550;
+        for (var seed = 1204; seed < 1220; seed++)
+        {
+            var recipe = HuntArenaGenerator.GenerateWetForest(seed);
+            var repeated = HuntArenaGenerator.GenerateWetForest(seed);
+            var clearings = recipe.Ground.Where(patch => patch.Kind == "clearing" && patch.RadiusX >= .15).ToArray();
+            Assert.HasCount(5, clearings);
+            CollectionAssert.AreEqual(recipe.Ground.ToArray(), repeated.Ground.ToArray());
+            var props = HuntArenaGenerator.Generate(seed, WyrmrealmHabitat.WetForest, 1, false);
+            Assert.IsGreaterThanOrEqualTo(40, props.Count, "Forest detail must not disappear to buy playability.");
+            var playable = clearings.Count(clearing => props.All(prop =>
+                Math.Pow((prop.X - clearing.X) * width, 2) +
+                Math.Pow((prop.Y - clearing.Y) * height, 2) >= Math.Pow(100 + prop.Radius, 2)));
+            Assert.IsGreaterThanOrEqualTo(4, playable,
+                $"Seed {seed} must have at least four sizeable, unblocked 200px-diameter fighting orbits.");
+            Assert.IsTrue(props.Any(p => p.Kind is "pine" or "dead-tree"),
+                "Do not replace wilderness with a featureless empty combat rectangle.");
+            var map = new WyrmrealmMapState(seed: seed);
+            var node = map.AvailableNodes.First(candidate => candidate.Type == WyrmrealmNodeType.Combat) with
+            {
+                Habitat = WyrmrealmHabitat.WetForest,
+            };
+            var environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
+            var snapshot = environment.Snapshot();
+            Assert.IsEmpty(snapshot.Barriers);
+            Assert.IsTrue(snapshot.Props.Count >= 40);
+        }
+    }
+
+    [TestMethod]
     public void WyrmInfluence_ProgressesTowardLairAndKeepsRewardSchoolIndependent()
     {
         Assert.AreEqual(0, HuntArenaGenerator.WyrmInfluence(1, false));
