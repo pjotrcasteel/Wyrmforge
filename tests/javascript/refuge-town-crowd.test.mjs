@@ -52,7 +52,9 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.match(markup, /foreground\.Id == "noticeboard-foreground"/);
     assert.match(markup, /foreground\.DepthY \* 10f/);
     assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
-    assert.match(actor, /citizen\.Position\.Y \* 10f/);
+    assert.match(actor, /PlaceholderDepth\(person\.Position\)/);
+    assert.match(actor, /CitizenStyle\(person, depth\)/);
+    assert.match(source('src/Wyrmforge.Application/World/TownNavigationMap.cs'), /public int PlaceholderDepth\(/);
     assert.match(actor, /data-town-feet-y="@person\.Position\.Y"/);
     assert.match(actor, /@if \(person\.IsPresent\)/);
     assert.match(actor, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
@@ -247,6 +249,7 @@ test('debug geometry stays label-free and residents have authored four connected
     assert.ok(map.walkable.some(surface => surface.id === 'east-market-approach'));
     assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-terrace-inner-planter'));
     assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-foreground-parapet-garden'));
+    assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-foreground-flowerbed-edge'));
 });
 
 test('marked well noticeboard and east stair planting physically block only NPC feet', () => {
