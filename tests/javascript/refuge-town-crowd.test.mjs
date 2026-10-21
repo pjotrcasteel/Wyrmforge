@@ -71,6 +71,29 @@ test('new right-hand planter extends across the screenshot-reported collision ed
         /public bool IsBodyOccluded\(/);
 });
 
+test('debug geometry displays actual solid town buildings in red only after URL opt-in', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const markup = source(scene);
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    for (const id of ['arcane-nexus-building', 'blacksmith-building', 'codex-building',
+        'hall-of-fame-building', 'world-gate-west-tower', 'world-gate-east-tower', 'world-gate-arch-roof']) {
+        assert.ok(map.obstacles.find(obstacle => obstacle.id === id)?.footprint.length >= 4,
+            `Missing solid building geometry: ${id}`);
+    }
+    assert.match(markup, /showTownGeometry && crowd is not null/,
+        'Normal players should never receive a visible geometry overlay');
+    assert.match(markup, /townGeometry=1/,
+        'The debug view should be reachable through an explicit URL parameter');
+    assert.match(markup, /@foreach \(var obstacle in crowd\.Navigation\.Obstacles\)/,
+        'Debug areas must come from the actual NPC collision model');
+    assert.match(markup, /class="refuge-town-geometry-solid"/);
+    assert.match(markup, /class="refuge-town-geometry-walkable"/);
+    assert.match(css, /\.refuge-town-geometry-debug\s*\{[^}]*pointer-events:none/s,
+        'Debug artwork must not intercept swipes or building taps');
+    assert.match(css, /fill:rgba\(235,36,40,\.32\)/, 'Solid shapes must be translucent red');
+    assert.match(css, /refuge-town-geometry-walkable/, 'Show paved routing area for comparison');
+});
+
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {
     const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
     const nav = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');

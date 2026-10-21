@@ -184,6 +184,34 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_AllPaintedTownBuildingsHaveSolidSceneGeometry()
+    {
+        var map = Scene();
+        var buildings = new Dictionary<string, TownPoint>
+        {
+            ["arcane-nexus-building"] = new(265, 230),
+            ["blacksmith-building"] = new(260, 615),
+            ["codex-building"] = new(1395, 245),
+            ["hall-of-fame-building"] = new(1350, 615),
+            ["world-gate-west-tower"] = new(685, 175),
+            ["world-gate-east-tower"] = new(1013, 180),
+            ["world-gate-arch-roof"] = new(832, 91)
+        };
+
+        foreach (var (buildingId, interior) in buildings)
+        {
+            var building = map.Obstacles.Single(obstacle => obstacle.Id == buildingId);
+            Assert.IsTrue(building.Footprint.Count >= 4, $"Building {buildingId} must have its own authored polygon.");
+            Assert.IsFalse(map.IsWalkable(interior), $"NPCs cannot navigate through building {buildingId}.");
+        }
+
+        // Geometry is a live, shared part of navigation, not merely a decorative debug layer.
+        Assert.IsTrue(map.RemoveObstacle("arcane-nexus-building"));
+        Assert.IsFalse(map.Obstacles.Any(obstacle => obstacle.Id == "arcane-nexus-building"));
+        Assert.AreEqual(1, map.Revision);
+    }
+
+    [TestMethod]
     public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
     {
         var map = Scene();

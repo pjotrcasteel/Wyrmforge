@@ -96,3 +96,30 @@
     .game-shell.refuge-home .refuge-town-crowd {display:none}
 }
 
+/* Developer-only overlay (?townGeometry=1). These are real nav colliders,
+   not a CSS filter over the game artwork or a new building-unlock preview. */
+.game-shell.refuge-home .refuge-town-geometry-debug {
+    position:absolute;inset:0;z-index:4;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-map {
+    display:block;width:100%;height:100%;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-solid {
+    fill:rgba(235,36,40,.32);stroke:#ff5252;stroke-width:2;
+    vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-walkable {
+    fill:rgba(0,200,191,.05);stroke:rgba(54,236,225,.92);stroke-width:2;
+    stroke-dasharray:8 5;vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-label {
+    position:absolute;transform:translate(-50%,-50%);z-index:1;max-width:14%;
+    padding:2px 5px;border-radius:3px;background:rgba(35,4,10,.86);
+    color:#fff;font-size:clamp(9px,1.25dvh,13px);font-weight:700;
+    text-align:center;line-height:1.2;overflow-wrap:anywhere;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-geometry-legend {
+    position:absolute;left:38%;top:39%;padding:4px 8px;
+    background:#180c12dc;color:#fff;border:1px solid #ff5252a8;
+    font-size:clamp(10px,1.6dvh,16px);font-weight:700;pointer-events:none;
+}
