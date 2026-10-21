@@ -82,3 +82,18 @@ atlas frames and local roots/lichen/sedge. Verify all with the same **physical C
 
 No merge or final-art claims before visual acceptance. All actual Gothic tree/canopy sprite
 replacement work remains outstanding.
+
+## Experimental canopy acceptance — 21 October 2026
+
+Browser snapshots now include `arena-lab-wetforest-320.png` **and**
+`arena-lab-wetforest-390.png`, after the start-up overlay disappears. Both must show:
+- Different irregular pine masses, skeletal dead trees and shallow ground roots around their
+  actual C# footprints; no glowing plants, unexplained collidable decorations or flat tree tint.
+- Physically correct back/front depth when Hollow, Ashling and mage cross each C# tree foot.
+- Readable player and enemies at actual 320px width despite larger tree overhang. Movement,
+  spells and destructible prop hits must still be apparent.
+- Similar or better browser FPS than the earlier triangular-atlas pass. The pixel bitmap is
+  drawn **once per prop** and reused, with a capped cache to protect long mobile runs.
+
+A passing test/browser screenshot is *evidence for owner review*, not automatic art approval.
+If it fails visually, adjust/revert the Lab-only silhouette experiment before release.
