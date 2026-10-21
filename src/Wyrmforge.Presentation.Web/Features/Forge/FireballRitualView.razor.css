@@ -161,3 +161,12 @@
 .fireball-locked-explainer span{font:.77rem/1.35 system-ui,sans-serif;color:#d9c0af}
 .fireball-socket.sealed.inspected::before{filter:grayscale(.55) brightness(.93);box-shadow:0 0 0 2px #b88a64,0 0 8px #ef955650}
 .fireball-context .fireball-school-note{padding:8px 10px;border-left:3px solid #c28b5b;background:#2c2022;color:#d9c8b7;font:.77rem/1.4 system-ui,sans-serif}
+
+/* Common material crafting: information belongs inside the real socket selector. */
+.fireball-common-recipe{display:grid;gap:5px}
+.fireball-common-recipe span{padding:5px 7px;border:1px solid #655047;background:#211a1d;color:#e6c5a2;font:600 .72rem/1.3 system-ui,sans-serif}
+.fireball-common-recipe span.ready{border-color:#66835e;color:#acd59c}
+.fireball-common-recipe span.missing{border-color:#684d49;color:#dfa895}
+.fireball-craft-action{min-height:44px;width:100%;padding:9px;border:2px solid #bb8851;background:#59301e;color:#f4d4ad;font:600 .9rem Georgia,serif;cursor:pointer}
+.fireball-craft-action:disabled{border-color:#60545a;background:#302831;color:#a79ba0;cursor:not-allowed}
+.fireball-crafted{color:#aed394;font:.77rem system-ui,sans-serif}
