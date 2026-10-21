@@ -156,47 +156,71 @@ export function createWetForestTreeArtPlan(kind, id, seed) {
     block(-10, -6, 20, 6, treeInk.shadow);
     block(-7, -10, 14, 6, treeInk.bark);
     if (kind === 'pine') {
-        // Winding central timber and lateral boughs are visible between irregular foliage masses.
-        let cx = variation(7, 5) - 2;
-        for (let y = -94; y < -8; y += 8) {
-            cx += (variation(y + 107, 3) - 1);
-            block(cx - 3, y, 8, 12, treeInk.black);
-            block(cx - 1, y + 2, 3, 7, treeInk.barkLight);
+        // Three related woodland anatomies, not identical decorated triangles:
+        // old spruce, wind-leaning fir and a storm-torn sparse veteran.
+        const anatomy = variation(13, 3);
+        const wind = variation(27, 2) ? 1 : -1;
+        const lean = anatomy === 1 ? wind * 5 : anatomy === 2 ? wind * 3 : 0;
+        const trunkAt = y => snap(lean * (Math.abs(y) / 100) + Math.sin(y * .055 + stamp) * 2);
+        const limb = (x0, y0, x1, y1, thickness, ink) => {
+            const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) / 2));
+            for (let step = 0; step <= steps; step++) {
+                const t = step / steps;
+                block(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t,
+                    thickness * (1 - t * .55), Math.max(2, thickness - t * 2), ink);
+            }
+        };
+        // Continuous rooted timber is visible through the foliage; the trunk
+        // thickens towards its real collider foot rather than ending at a leaf blob.
+        for (let y = -104; y <= -10; y += 6) {
+            const x = trunkAt(y);
+            const thickness = y < -76 ? 4 : y < -48 ? 6 : y < -22 ? 8 : 10;
+            block(x - thickness / 2, y, thickness, 8, treeInk.black);
+            if (y >= -91 && variation(y + 131, 4) !== 0)
+                block(x + 1, y + 2, 2, 4, y < -43 ? treeInk.bark : treeInk.barkLight);
         }
-        // Ragged, narrow bough masses with visible empty space between them.
-        // The old wide oval lobes read as soft cartoon broccoli at phone scale.
-        const lobes = [
-            [-17, -31, 16, 8], [13, -41, 18, 9], [-20, -55, 14, 10],
-            [9, -65, 17, 10], [-11, -79, 13, 8], [7, -94, 9, 7],
-        ];
-        for (let i = 0; i < lobes.length; i++) {
-            const [dx, dy, rx, ry] = lobes[i];
-            const centerX = dx + variation(i + 8, 11) - 5;
-            const centerY = dy + variation(i + 24, 7) - 3;
-            for (let sy = -ry; sy <= ry; sy += 4) {
-                const spread = Math.sqrt(Math.max(0, 1 - sy * sy / (ry * ry))) * rx;
-                const width = Math.max(4, Math.floor(spread / 2) * 2);
-                const ragged = (variation(i * 53 + sy + 43, 7) - 3) * 2;
-                const low = sy > 0;
-                const missingTip = variation(i * 41 + sy + 87, 5) === 0;
-                // Chipped ends, asymmetric horizontal splits, dark undersides.
-                block(centerX - width + ragged, centerY + sy, Math.max(4, width * 2 - (missingTip ? 8 : 0)), 4,
-                    low ? treeInk.shadow : (i % 2 ? treeInk.deep : treeInk.leaf));
-                if (width > 10 && variation(i * 29 + sy + 69, 6) === 0)
-                    block(centerX + variation(i * 31 + sy + 91, 7) - 6, centerY + sy, 4, 4, treeInk.black);
-                // Very few upper planes catch cold diffuse light; never a bright outline.
-                if (!low && variation(i * 47 + sy + 117, 4) === 0)
-                    block(centerX - Math.floor(width * .5), centerY + sy, Math.max(4, width - 4), 2,
-                        i % 3 ? treeInk.lit : treeInk.edge);
+        // Main branches grow out of the SAME trunk: crooked timber, broken tips,
+        // sparse hanging needles. No independent floating green canopy ovals.
+        for (let level = 0; level < 8; level++) {
+            const y = -25 - level * 10;
+            const baseX = trunkAt(y);
+            for (const side of [-1, 1]) {
+                // Missing limbs are an identifiable tree injury rather than noise.
+                const broken = (anatomy === 2 && (level + (side > 0 ? 1 : 0)) % 3 === 0) ||
+                    (anatomy === 1 && side !== wind && level % 3 === 1);
+                const length = Math.min(40, 33 - level * 3 + variation(49 + level * 3 + side, 11));
+                const rise = 6 + variation(75 + level * 7 + side, 9);
+                const tipX = baseX + side * (broken ? length * .37 : length);
+                const tipY = y - rise;
+                limb(baseX, y, tipX, tipY, level < 3 ? 5 : 4, treeInk.bark);
+                // Dark needles hang from structural timber, never filling every gap.
+                if (broken || (anatomy === 2 && level % 4 === 1)) {
+                    block(tipX + side * 2, tipY, 4, 2, treeInk.rot);
+                    continue;
+                }
+                const clusters = anatomy === 1 ? 4 : 5;
+                for (let sprig = 1; sprig <= clusters; sprig++) {
+                    const t = sprig / (clusters + 1);
+                    const bx = baseX + (tipX - baseX) * t;
+                    const by = y + (tipY - y) * t;
+                    const sparse = variation(100 + level * 31 + sprig * 7 + side, 6) === 0;
+                    if (sparse) continue;
+                    const needles = 5 + variation(137 + level * 11 + sprig + side, 7);
+                    const dark = sprig % 3 === 0;
+                    block(bx - 2, by - needles * .55, 4, needles,
+                        dark ? treeInk.deep : treeInk.leaf);
+                    // Tiny cold-lit branch facet with no glowing crown outline.
+                    if (level < 5 && variation(185 + level * 23 + sprig + side, 4) === 0)
+                        block(bx - 2, by - needles * .6, 2, 2, treeInk.lit);
+                }
+                // Exposed snapped twig silhouette extends beyond sparse needles.
+                if (level % 2 === 0)
+                    limb(tipX - side * 2, tipY, tipX + side * 4, tipY - 3, 2, treeInk.shadow);
             }
         }
-        // Ragged branch tips break the outer crown, with dark underside and occasional moss.
-        for (const [i, side] of [-1, 1, -1, 1].entries()) {
-            const y = -31 - i * 13;
-            const reach = 24 - i * 3;
-            block(side * reach - (side < 0 ? 6 : 0), y, 8, 3, treeInk.shadow);
-            block(side * (reach - 7), y - 2, 5, 2, treeInk.lit);
-        }
+        // Old split upper leader; its negative space is visible at phone scale.
+        if (anatomy === 2)
+            limb(trunkAt(-83), -83, trunkAt(-99) - wind * 7, -109, 3, treeInk.rot);
     } else {
         // Skeletal deadwood: tapered, broken, forked trunk with true negative space.
         let cx = variation(4, 9) - 4;
