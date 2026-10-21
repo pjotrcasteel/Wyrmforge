@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createWetForestTilePlan, createWetForestMaterialEdges, createWetForestSurfaceDetails,
+    createWetForestTrailImprints, createWetForestGladeMargins,
     createWetForestScorchPlan, drawWetForestGround, wetForestTrailAt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js';
 import { wetForestTreeFireState } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-vegetation.js';
 
@@ -148,4 +149,35 @@ test('the new floor uses real physical props from the Lab snapshot, never indepe
     assert.match(territory, /forestProps: environment\.props \?\? \[\]/);
     assert.match(floor, /plan\.forestProps, seed, width, height/);
     assert.doesNotMatch(floor, /IsBlocked|TryProjectileCollision|DamagePropsInRadius|Math\.random|requestAnimationFrame/);
+});
+
+test('wide, open glades have seeded organic soil margins, not invisible round walls', () => {
+    const scene = { ...recipe, ground: [
+        ...recipe.ground,
+        { kind: 'clearing', x: .52, y: .5, radiusX: .17, radiusY: .105 },
+    ] };
+    const marks = createWetForestGladeMargins(scene, 1204, size.width, size.height);
+    const same = createWetForestGladeMargins(scene, 1204, size.width, size.height);
+    assert.deepEqual(marks, same);
+    assert.notDeepEqual(marks, createWetForestGladeMargins(scene, 1205, size.width, size.height));
+    assert.ok(marks.length > 40 && marks.length < 100);
+    assert.ok(marks.every(m => m.width <= 8 && m.height === 2 && m.x >= 0 &&
+        m.y >= 0 && m.x + m.width <= size.width && m.y + m.height <= size.height));
+    assert.deepEqual(scene.ground, [
+        ...recipe.ground,
+        { kind: 'clearing', x: .52, y: .5, radiusX: .17, radiusY: .105 },
+    ], 'No new combat geometry, hidden walls or smaller fighting spaces');
+});
+
+test('winding physical C# trail keeps intermittent seeded hoof and wagon traces', () => {
+    const marks = createWetForestTrailImprints(recipe, 1204, size.width, size.height);
+    assert.ok(marks.length > 80 && marks.length < 340);
+    assert.deepEqual(marks, createWetForestTrailImprints(recipe, 1204, size.width, size.height));
+    assert.notDeepEqual(marks, createWetForestTrailImprints(recipe, 1205, size.width, size.height));
+    assert.ok(marks.every(m => {
+        const centre = wetForestTrailAt(recipe.trail, m.y / size.height).x * size.width;
+        return Math.abs(m.x - centre) < 50 && m.width <= 8 && m.height === 2 &&
+            m.x >= 0 && m.y >= 0 && m.x + m.width <= size.width;
+    }));
+    assert.deepEqual(createWetForestTrailImprints(null, 1204, size.width, size.height), []);
 });
