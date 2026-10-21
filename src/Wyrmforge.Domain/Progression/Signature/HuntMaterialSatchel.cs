@@ -17,7 +17,7 @@ public static class HuntMaterialCatalog
     public static string Source(HuntMaterialId id) => id switch
     {
         HuntMaterialId.EmberResidue => "Ashlings and Ash Slingers",
-        HuntMaterialId.CharredScrap => "Break barrels and crates in Fire-region Hunts",
+        HuntMaterialId.CharredScrap => "Break barrels and crates in Hunts",
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 
