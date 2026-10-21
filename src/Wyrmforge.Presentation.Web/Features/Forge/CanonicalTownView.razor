@@ -32,20 +32,17 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
-        @* The scene's own artwork-space navigation map drives feet and well occlusion. *@
+        @* Navigation owns pedestrian feet. Whole-body occlusion avoids slicing rectangles with painted scenery masks. *@
         @if (crowd is not null)
         {
             <div class="refuge-town-crowd" aria-hidden="true">
                 @foreach (var person in crowd.Citizens)
                 {
+                    var occluded = crowd.Navigation.IsBodyOccluded(person.Position);
                     <span @key="person.Id" class="refuge-town-citizen"
                           data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
-                          style="@CitizenStyle(person)"></span>
-                }
-                @foreach (var foreground in crowd.Navigation.Occluders)
-                {
-                    <img @key="foreground.Id" class="refuge-town-foreground" alt="" draggable="false"
-                         src="@foreground.Artwork" style="@ForegroundStyle(crowd.Navigation, foreground)" />
+                          data-town-citizen-occluded="@(occluded ? "true" : "false")"
+                          style="@CitizenStyle(person, occluded)"></span>
                 }
             </div>
         }
@@ -105,11 +102,9 @@
         catch (OperationCanceledException) { /* Navigating away cancels ambient movement. */ }
     }
 
-    private static string CitizenStyle(TownCitizen citizen) =>
-        FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{(int)citizen.Position.Y}");
-
-    private static string ForegroundStyle(TownNavigationMap map, TownForeground foreground) =>
-        $"clip-path:{map.ForegroundClip(foreground)};z-index:{(int)foreground.DepthY}";
+    private static string CitizenStyle(TownCitizen citizen, bool occluded) =>
+        FormattableString.Invariant(
+            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;visibility:{(occluded ? "hidden" : "visible")}");
 
     public void Dispose()
     {

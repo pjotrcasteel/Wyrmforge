@@ -13,15 +13,16 @@ test('real Refuge scene retains the art and renders depth-sorted, larger ambient
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<div class="refuge-town-crowd" aria-hidden="true">/);
     assert.match(markup, /@foreach \(var person in crowd\.Citizens\)/);
-    assert.match(markup, /style="@CitizenStyle\(person\)"/);
-    assert.match(markup, /class="refuge-town-foreground"/);
-    assert.match(markup, /@foreach \(var foreground in crowd\.Navigation\.Occluders\)/);
+    assert.match(markup, /style="@CitizenStyle\(person, occluded\)"/);
+    assert.match(markup, /crowd\.Navigation\.IsBodyOccluded\(person\.Position\)/);
+    assert.match(markup, /data-town-citizen-occluded/);
+    assert.doesNotMatch(markup, /refuge-town-foreground/, 'Do not paint a polygon over half a citizen');
     assert.match(markup, /art\/town\/night-navigation\.json/);
-    assert.match(markup, /z-index:\{\(int\)citizen\.Position\.Y\}/);
+    assert.match(markup, /visibility:\{\(occluded \? "hidden" : "visible"\)\}/);
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
-    assert.match(css, /\.refuge-town-foreground\s*\{[^}]*pointer-events:none/s);
-    assert.match(css, /width:clamp\(12px, 1\.65dvh, 20px\);height:clamp\(22px, 3\.2dvh, 38px\)/);
+    assert.doesNotMatch(css, /\.refuge-town-foreground\s*\{/);
+    assert.match(css, /width:0\.957%;height:3\.188%/);
     assert.match(css, /\.refuge-town-spot \{z-index:3\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
     assert.match(markup, /crowdStop\.Cancel\(\)/);
@@ -59,6 +60,15 @@ test('painted well, pillars and garden walls have independent collider ids', () 
     const markup = source(scene);
     assert.match(markup, /night-navigation\.json\?v=\{AppBuildInfo\.Version\}/,
         'Updated mobile clients must not use cached stale nav polygons');
+});
+
+test('new right-hand planter extends across the screenshot-reported collision edge', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const planter = map.obstacles.find(obstacle => obstacle.id === 'east-lower-planter-inset');
+    assert.ok(planter?.footprint.length >= 4);
+    assert.ok(planter.footprint.some(point => point.x < 900 && point.y >= 680));
+    assert.match(source('src/Wyrmforge.Application/World/TownNavigationMap.cs'),
+        /public bool IsBodyOccluded\(/);
 });
 
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {

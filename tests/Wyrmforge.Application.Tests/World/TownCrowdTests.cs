@@ -66,6 +66,14 @@ public sealed class TownCrowdTests
 
             var destinations = town.Citizens.Where(c => c.IsWalking).Select(c => c.DestinationNode).ToList();
             Assert.AreEqual(destinations.Count, destinations.Distinct().Count(), "Multiple people claimed one destination.");
+            foreach (var person in town.Citizens)
+            foreach (var other in town.Citizens.Where(candidate => candidate.Id > person.Id))
+            {
+                var dx = person.Position.X - other.Position.X;
+                var dy = person.Position.Y - other.Position.Y;
+                Assert.IsTrue(dx * dx + dy * dy >= 19f * 19f,
+                    $"Citizens {person.Id} and {other.Id} overlap on the painted ground.");
+            }
         }
     }
 
@@ -147,6 +155,32 @@ public sealed class TownCrowdTests
             Assert.AreEqual("art/town/night-active.webp?v=140", foreground.Artwork);
             Assert.IsTrue(foreground.DepthY >= (id.Contains("lower") ? 750 : 450));
         }
+    }
+
+    [TestMethod]
+    public void Navigation_ScreenshotGardenEdge_IsNotWalkable()
+    {
+        var map = Scene();
+
+        // In the 1672x941 panorama this was a clearly visible NPC standing
+        // among flowers beside the east-hand lower banner pillar.
+        Assert.IsFalse(map.IsWalkable(new TownPoint(935, 730)));
+        Assert.IsFalse(map.IsWalkable(new TownPoint(955, 756)));
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 710)), "The central paved approach must remain open.");
+    }
+
+    [TestMethod]
+    public void Navigation_CitizenOcclusion_HidesWholeBodiesInsteadOfCuttingThemWithForegroundArt()
+    {
+        var map = Scene();
+
+        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(825, 500)), "The well must conceal a citizen behind it.");
+        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(665, 535)),
+            "The left boundary of the painted well must not slice a visible rectangle.");
+        Assert.IsFalse(map.IsBodyOccluded(new TownPoint(825, 660)),
+            "Citizens in the open plaza in front of the well remain visible.");
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            map.IsBodyOccluded(new TownPoint(825, 500), bodyWidth: 0f));
     }
 
     [TestMethod]
