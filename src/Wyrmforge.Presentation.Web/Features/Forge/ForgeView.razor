@@ -135,7 +135,7 @@
                 {
                     @if (CharacterSchool == DivineArchetype.Pyromancer)
                     {
-                        <FireballRitualView Core="FireballCore" Vault="Vault" Materials="HuntMaterials" OnCraftCinderNeedle="CraftCinderNeedle" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" />
+                        <FireballRitualView Core="FireballCore" Vault="Vault" Materials="HuntMaterials" OnCraftCinderNeedle="CraftCinderNeedle" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" OnOpenWorldGate="() => Navigate(ShellSection.Gate)" />
                     }
                     else
                     {

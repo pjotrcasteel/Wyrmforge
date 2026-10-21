@@ -136,7 +136,7 @@ public sealed class TownCrowdTests
         var origin = map.Destinations.Single(node => node.Id == "lower-square").Position;
         var work = map.Destinations.Where(node => node.BuildingId is not null).ToArray();
 
-        Assert.HasCount(4, work);
+        Assert.HasCount(8, work);
         foreach (var destination in work)
         {
             Assert.IsFalse(destination.IsExit);
@@ -151,7 +151,7 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void TownCrowd_OnlyUnlockedBuildingsReceiveWorkers_WithoutIncreasingPopulation()
+    public void TownCrowd_TwoWorkersPerUnlockedBuilding_AndThreeFreeRoamers()
     {
         var map = Scene();
         var vacant = new TownCrowd(map, seed: 205);
@@ -160,10 +160,16 @@ public sealed class TownCrowdTests
 
         var unlocked = new[] { "build", "forge", "codex", "legends" };
         var populated = new TownCrowd(Scene(), seed: 205, openBuildings: unlocked);
-        Assert.HasCount(7, populated.Citizens);
+        Assert.HasCount(11, populated.Citizens);
+        Assert.AreEqual(8, populated.AssignedWorkers);
+        Assert.AreEqual(8, populated.ActiveWorkers);
+        foreach (var building in unlocked)
+            Assert.AreEqual(2, populated.Citizens.Count(citizen => citizen.WorkBuildingId == building),
+                $"Exactly two workers should initially serve {building}.");
+        Assert.AreEqual(3, populated.Citizens.Count(citizen => citizen.AssignedBuildingId is null));
         CollectionAssert.AreEquivalent(unlocked,
             populated.Citizens.Where(citizen => citizen.IsWorking)
-                .Select(citizen => citizen.WorkBuildingId!).ToArray());
+                .Select(citizen => citizen.WorkBuildingId!).Distinct().ToArray());
         Assert.IsTrue(populated.Citizens.Where(citizen => citizen.IsWorking)
             .All(citizen => citizen.CurrentActivity is not null));
 
@@ -171,6 +177,82 @@ public sealed class TownCrowdTests
         Assert.IsFalse(populated.Citizens.Any(citizen => citizen.IsWorking),
             "Workers must stop when an active building becomes vacant.");
         Assert.IsTrue(populated.Citizens.All(citizen => citizen.WorkBuildingId is null));
+        Assert.AreEqual(0, populated.AssignedWorkers);
+    }
+
+    [TestMethod]
+    public void TownCrowd_UnlocksWhileRunning_AssignsTwoWorkersPerBuilding()
+    {
+        var town = new TownCrowd(Scene(), seed: 205);
+        Assert.HasCount(7, town.Citizens);
+        town.SetOpenBuildings(["forge"]);
+        Assert.AreEqual(2, town.AssignedWorkers);
+        Assert.AreEqual(7, town.Citizens.Count);
+        // Unlock while residents are already travelling: do not accidentally
+        // spawn above the bounded workforce just because everyone is busy.
+        for (var tick = 0; tick < 30; tick++) town.Step(TimeSpan.FromMilliseconds(100));
+        town.SetOpenBuildings(["build", "forge", "codex", "legends"]);
+        Assert.AreEqual(8, town.AssignedWorkers);
+        Assert.HasCount(11, town.Citizens);
+        Assert.AreEqual(3, town.Citizens.Count(c => c.AssignedBuildingId is null));
+        foreach (var building in new[] { "build", "forge", "codex", "legends" })
+            Assert.AreEqual(2, town.Citizens.Count(c => c.AssignedBuildingId == building));
+
+        for (var tick = 0; tick < 300; tick++)
+        {
+            town.Step(TimeSpan.FromMilliseconds(100));
+            foreach (var citizen in town.Citizens)
+                Assert.IsTrue(town.Navigation.IsWalkable(citizen.Position));
+        }
+        Assert.IsTrue(town.PathfindCount > 0);
+        Assert.IsTrue(town.PathfindTotalMilliseconds >= 0);
+
+        town.SetOpenBuildings([]);
+        Assert.AreEqual(0, town.AssignedWorkers);
+        Assert.IsFalse(town.Citizens.Any(c => c.IsWorking));
+    }
+
+    [TestMethod]
+    public void TownCrowd_DoubleWorkers_ReplayMatchesSeed()
+    {
+        var open = new[] { "build", "forge", "codex", "legends" };
+        var left = new TownCrowd(Scene(), seed: 991, openBuildings: open);
+        var right = new TownCrowd(Scene(), seed: 991, openBuildings: open);
+        for (var tick = 0; tick < 250; tick++)
+        {
+            left.Step(TimeSpan.FromMilliseconds(100));
+            right.Step(TimeSpan.FromMilliseconds(100));
+            for (var i = 0; i < left.Citizens.Count; i++)
+            {
+                Assert.AreEqual(right.Citizens[i].Position, left.Citizens[i].Position);
+                Assert.AreEqual(right.Citizens[i].DestinationNode, left.Citizens[i].DestinationNode);
+                Assert.AreEqual(right.Citizens[i].AssignedBuildingId, left.Citizens[i].AssignedBuildingId);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void Navigation_VisibilityAccelerationPreservesClearRoutesAndSolidFootprints()
+    {
+        var map = Scene();
+        var south = map.Destinations.Single(destination => destination.Id == "south").Position;
+        var lower = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
+        Assert.IsTrue(map.IsSegmentWalkable(south, lower),
+            "The open central paving between ordinary stops should remain a direct path.");
+        Assert.IsFalse(map.IsSegmentWalkable(new TownPoint(570, 529), new TownPoint(1040, 525)),
+            "The well remains solid even if the segment crosses its footprint.");
+        Assert.IsFalse(map.IsSegmentWalkable(new TownPoint(625, 486), new TownPoint(1014, 484)),
+            "The shallow route behind the well must not cut the painted noticeboard.");
+
+        map.SetObstacle(new TownFootprint
+        {
+            Id = "navigation-visibility-test-cart",
+            Footprint = [new(817, 677), new(830, 677), new(830, 690), new(817, 690)]
+        });
+        Assert.IsFalse(map.IsSegmentWalkable(south, lower),
+            "Changing obstacle revision must invalidate formerly clear direct routes.");
+        Assert.IsTrue(map.RemoveObstacle("navigation-visibility-test-cart"));
+        Assert.IsTrue(map.IsSegmentWalkable(south, lower));
     }
 
     [TestMethod]
@@ -230,14 +312,20 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_WellForegroundExtendsAboveTheRoofAndSign()
+    public void Navigation_WellAndNoticeboardUseIndependentPhysicalDepth()
     {
         var map = Scene();
-        var foreground = map.Occluders.Single(part => part.Id == "well-foreground");
-        Assert.IsTrue(foreground.Clip.Min(point => point.Y) < 365);
-        Assert.AreEqual(572f, foreground.DepthY, "People behind the well are sorted using their feet, not sprite tops.");
-        Assert.IsTrue(foreground.Clip.Any(point => point.X < 670),
-            "Sign and well sides need an occlusion silhouette, not only a roof rectangle.");
+        var well = map.Occluders.Single(part => part.Id == "well-foreground");
+        var board = map.Occluders.Single(part => part.Id == "noticeboard-foreground");
+        Assert.AreEqual(572f, well.DepthY);
+        Assert.AreEqual(522f, board.DepthY);
+        Assert.AreEqual(well.Artwork, board.Artwork);
+        Assert.IsTrue(board.Clip.All(point => point.X < 815), "The board must not cover the well's open bays.");
+        Assert.IsTrue(well.Clip.Any(point => point.X > 920), "The canopy silhouette remains physically bounded.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 478)),
+            "Rear paving behind the actual structure must remain traversable.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 584)),
+            "Front paving must not become a fake collider for visual depth.");
     }
 
     [TestMethod]
@@ -269,13 +357,13 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_CitizenOcclusion_HidesWholeBodiesInsteadOfCuttingThemWithForegroundArt()
+    public void Navigation_CitizenOcclusion_OnlyAppliesToPaintedStructures()
     {
         var map = Scene();
 
         Assert.IsTrue(map.IsBodyOccluded(new TownPoint(825, 500)), "The well must conceal a citizen behind it.");
-        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(665, 535)),
-            "The left boundary of the painted well must not slice a visible rectangle.");
+        Assert.IsFalse(map.IsBodyOccluded(new TownPoint(665, 535)),
+            "NPCs on the exposed paved ring must never disappear under a broad well polygon.");
         Assert.IsFalse(map.IsBodyOccluded(new TownPoint(825, 660)),
             "Citizens in the open plaza in front of the well remain visible.");
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
@@ -388,6 +476,33 @@ public sealed class TownCrowdTests
         Assert.IsTrue(well.DepthY > 500);
         Assert.IsTrue(well.Clip.Count >= 6);
         StringAssert.StartsWith(map.ForegroundClip(well), "polygon(");
+    }
+
+    [TestMethod]
+    public void TownCrowd_FourteenCitizenStressRun_PreservesWorkersAndGroundSeparation()
+    {
+        var open = new[] { "build", "forge", "codex", "legends" };
+        var crowded = new TownCrowd(Scene(), seed: 205, citizenCount: 14, openBuildings: open);
+        Assert.HasCount(14, crowded.Citizens);
+        Assert.AreEqual(8, crowded.AssignedWorkers);
+        Assert.AreEqual(6, crowded.Citizens.Count(citizen => citizen.AssignedBuildingId is null));
+        Assert.HasCount(14, new TownCrowd(Scene(), citizenCount: 14).Citizens);
+
+        for (var tick = 0; tick < 300; tick++)
+        {
+            crowded.Step(TimeSpan.FromMilliseconds(100));
+            foreach (var person in crowded.Citizens.Where(citizen => citizen.IsPresent))
+            {
+                Assert.IsTrue(crowded.Navigation.IsWalkable(person.Position));
+                foreach (var other in crowded.Citizens.Where(citizen => citizen.IsPresent && citizen.Id > person.Id))
+                {
+                    var dx = person.Position.X - other.Position.X;
+                    var dy = person.Position.Y - other.Position.Y;
+                    Assert.IsTrue(dx * dx + dy * dy >= 19f * 19f,
+                        $"Citizens {person.Id} and {other.Id} overlap under 14-NPC load.");
+                }
+            }
+        }
     }
 
     [TestMethod]

@@ -12,6 +12,46 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_RefugeMetrics_DebugUrlShowsLiveFPSAndSimulationCosts()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Expect(Page.Locator("#refuge-town-performance")).ToHaveCountAsync(0);
+
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townMetrics=1",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var overlay = Page.Locator("#refuge-town-performance");
+        await Expect(overlay).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const text = document.querySelector('#refuge-town-performance')?.textContent ?? '';
+            return /FPS \d+/.test(text) && text.includes('frame p95') &&
+                text.includes('AI ') && text.includes('Paths ');
+        }");
+        Assert.IsTrue(await overlay.EvaluateAsync<bool>(
+            "node => getComputedStyle(node).pointerEvents === 'none'"));
+        await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_RefugeMetrics_FourteenNpcStressOverrideShowsActualPopulation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townMetrics=1&townNpcCount=14",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            /NPC \d+\/14/.test(document.querySelector('#refuge-town-performance')?.textContent ?? '')");
+        Assert.IsTrue(await Page.Locator(".refuge-town-citizen").CountAsync() <= 14);
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls(int width, int height)
@@ -106,17 +146,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
-        var wellForeground = Page.Locator(".refuge-town-well-foreground");
-        await Expect(wellForeground).ToBeVisibleAsync();
-        await Expect(wellForeground.Locator("#refuge-well-silhouette path")).ToHaveCountAsync(4);
-        Assert.IsTrue(await wellForeground.EvaluateAsync<bool>(@"svg => {
+        var layers = Page.Locator(".refuge-town-scenery-foreground");
+        await Expect(layers).ToHaveCountAsync(7);
+        var well = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='well-foreground']");
+        var board = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='noticeboard-foreground']");
+        await Expect(well).ToBeVisibleAsync();
+        await Expect(well.Locator("clipPath path")).ToHaveCountAsync(3);
+        await Expect(board.Locator("clipPath path")).ToHaveCountAsync(1);
+        Assert.IsTrue(await well.EvaluateAsync<bool>(@"svg => {
             const artwork = svg.querySelector('image');
             return getComputedStyle(svg).pointerEvents === 'none' &&
-                svg.getAttribute('viewBox') === '695 382 256 189' &&
                 artwork?.getAttribute('href') === 'art/town/night-active.webp?v=140';
-        }"), "Only approved well artwork should be duplicated in a small, noninteractive foreground.");
-        await Expect(Page.Locator(".refuge-town-crowd--behind")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".refuge-town-crowd--front")).ToHaveCountAsync(1);
+        }"), "The approved town image must be clipped per painted structure.");
+        await Expect(Page.Locator(".refuge-town-crowd")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".refuge-town-crowd--behind, .refuge-town-crowd--front")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"() =>
             document.querySelectorAll('.refuge-town-geometry-solid').length >= 14");
         foreach (var id in new[] { "arcane-nexus-building", "blacksmith-building", "codex-building",
@@ -136,7 +179,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(await Page.EvaluateAsync<bool>(@"() => {
             const feet = document.querySelectorAll('.refuge-town-geometry-feet').length;
             const citizens = document.querySelectorAll('.refuge-town-citizen').length;
-            return feet === citizens && citizens > 0 && citizens <= 7;
+            return feet === citizens && citizens > 0 && citizens <= 11;
         }"), "Only currently present citizens should have debug contact discs.");
         await Expect(Page.Locator(".refuge-town-citizen[style*='visibility:hidden']")).ToHaveCountAsync(0);
 
@@ -542,6 +585,201 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(planned.Locator("details")).ToHaveCountAsync(0);
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
             "Source disclosures must not cause horizontal overflow on mobile.");
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_FireballUpgrade_ContextualProgressionGuidance_OnlyAppearsWithCorePanel(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+
+        var helper = Page.Locator(".fireball-context .fireball-progression-help");
+        await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
+        await Expect(helper).ToHaveTextAsync("Mutators are discovered in Research and equipped into unlocked sockets.");
+        await Expect(helper).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-chamber")).ToBeVisibleAsync();
+
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+        await Expect(helper).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".fireball-mutator-list")).ToBeVisibleAsync();
+        await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(helper).ToBeVisibleAsync();
+
+        await Page.Locator(".fireball-socket--3").ClickAsync();
+        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Socket 3 is sealed");
+        await Expect(helper).ToBeVisibleAsync();
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"),
+            "Progression guidance must stay below the altar and fit narrow mobile viewports.");
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_EmptyFireballSocket_WithNoMutators_ShowsAcquisitionAndOpensWorldGate(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator(".fireball-first-mutator")).ToHaveCountAsync(0);
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var guide = Page.Locator(".fireball-first-mutator");
+        await Expect(guide).ToBeVisibleAsync();
+        await Expect(guide).ToContainTextAsync("No mutators unlocked yet");
+        await Expect(guide).ToContainTextAsync("Ashlings");
+        await Expect(guide).ToContainTextAsync("Ash Slingers");
+        await Expect(guide).ToContainTextAsync("barrels and crates");
+        await Expect(guide).ToContainTextAsync("Extract to keep");
+        await Expect(guide).ToContainTextAsync("Ember Residue");
+        await Expect(guide).ToContainTextAsync("Charred Scrap");
+        await Expect(guide).ToContainTextAsync("0 / 2");
+        await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
+        await Expect(guide.GetByRole(AriaRole.Button, new() { Name = "Craft Cinder Needle" })).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"),
+            "The first-mutator guide must fit a narrow phone viewport.");
+
+        await guide.GetByRole(AriaRole.Button, new() { Name = "Open World Gate" }).ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_EmptyFireballSocket_WithSecuredMaterials_CraftsFirstMutatorInPlace()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.setItem('wyrmforge.huntMaterials.v1',
+                JSON.stringify(['EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var guide = Page.Locator(".fireball-first-mutator");
+        await Expect(guide).ToContainTextAsync("Ember Residue");
+        await Expect(guide).ToContainTextAsync("2 / 2");
+        await Expect(guide.GetByRole(AriaRole.Button, new() { Name = "Open World Gate" })).ToHaveCountAsync(0);
+        await guide.GetByRole(AriaRole.Button, new() { Name = "Craft Cinder Needle" }).ClickAsync();
+        await Expect(guide).ToHaveCountAsync(0);
+
+        var firstMutation = Page.Locator(".fireball-mutator").First;
+        await Expect(firstMutation).ToContainTextAsync("Cinder Needle");
+        await Expect(firstMutation).ToBeEnabledAsync();
+        await firstMutation.ClickAsync();
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Cinder Needle");
+        Assert.AreEqual(0, await Page.EvaluateAsync<int>(
+            "() => JSON.parse(localStorage.getItem('wyrmforge.huntMaterials.v1')).length"));
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_FireballMutators_WithNoIngredients_DistinguishUnknownUncraftedAndPlanned(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var unknown = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Meteor Heart" });
+        await Expect(unknown).ToHaveClassAsync(new System.Text.RegularExpressions.Regex(@"\bunknown\b"));
+        await Expect(unknown.Locator(".mutation-state")).ToHaveTextAsync("Unknown");
+        await Expect(unknown.Locator(".mutation-unknown-mark")).ToHaveTextAsync("?");
+        await Expect(unknown.Locator(".fireball-mutator")).ToBeDisabledAsync();
+        await unknown.Locator("summary").ClickAsync();
+        await Expect(unknown.Locator(".fireball-source-description")).ToContainTextAsync("Molten Fang");
+
+        var cinder = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Cinder Needle" });
+        await Expect(cinder).ToHaveClassAsync(new System.Text.RegularExpressions.Regex(@"\buncrafted\b"));
+        await Expect(cinder.Locator(".mutation-state")).ToHaveTextAsync("Uncrafted");
+        await Expect(cinder.Locator(".fireball-mutator")).ToBeDisabledAsync();
+
+        var future = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Phoenix Volley" });
+        await Expect(future).ToHaveClassAsync(new System.Text.RegularExpressions.Regex(@"\bplanned\b"));
+        await Expect(future.Locator(".mutation-state")).ToHaveTextAsync("Planned");
+        await Expect(future.Locator(".fireball-mutator")).ToBeDisabledAsync();
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_FireballMutators_AfterSecuringMaterials_TransitionCraftableOwnedEquipped()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart']));
+            localStorage.setItem('wyrmforge.huntMaterials.v1',
+                JSON.stringify(['EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var owned = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Detonation" });
+        await Expect(owned.Locator(".mutation-state")).ToHaveTextAsync("Owned");
+        await Expect(owned.Locator(".fireball-mutator")).ToBeEnabledAsync();
+
+        var cinder = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Cinder Needle" });
+        await Expect(cinder).ToHaveClassAsync(new System.Text.RegularExpressions.Regex(@"\bcraftable\b"));
+        await Expect(cinder.Locator(".mutation-state")).ToHaveTextAsync("Craftable now");
+        await Expect(cinder.Locator(".fireball-mutator")).ToBeDisabledAsync();
+        await cinder.Locator("summary").ClickAsync();
+        await cinder.GetByRole(AriaRole.Button, new() { Name = "Craft Cinder Needle" }).ClickAsync();
+        await Expect(cinder.Locator(".mutation-state")).ToHaveTextAsync("Owned");
+        await Expect(cinder.Locator(".fireball-mutator")).ToBeEnabledAsync();
+
+        await cinder.Locator(".fireball-mutator").ClickAsync();
+        await Expect(cinder.Locator(".mutation-state")).ToHaveTextAsync("Equipped");
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Cinder Needle");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Remove mutator" }).ClickAsync();
+        await Expect(cinder.Locator(".mutation-state")).ToHaveTextAsync("Owned");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_FireballMutators_WhenEquippedInAnotherSocket_ShowEquippedButPreventDuplication()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.setItem('wyrmforge.fireballCore.v1',
+                JSON.stringify({Level:2,Discovered:[2],Slots:[2,null,null,null,null]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--2").ClickAsync();
+
+        var detonation = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Detonation" });
+        await Expect(detonation.Locator(".mutation-state")).ToHaveTextAsync("Equipped");
+        await Expect(detonation.Locator(".mutation-state")).ToHaveAttributeAsync("aria-label", "Equipped in another socket");
+        await Expect(detonation.Locator(".fireball-mutator")).ToBeDisabledAsync();
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Detonation");
+        await Expect(Page.Locator(".fireball-socket--2")).ToContainTextAsync("Empty");
     }
 
     [TestMethod]
