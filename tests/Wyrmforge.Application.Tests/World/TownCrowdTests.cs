@@ -150,6 +150,32 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_ScreenshotGardenEdge_IsNotWalkable()
+    {
+        var map = Scene();
+
+        // In the 1672x941 panorama this was a clearly visible NPC standing
+        // among flowers beside the east-hand lower banner pillar.
+        Assert.IsFalse(map.IsWalkable(new TownPoint(935, 730)));
+        Assert.IsFalse(map.IsWalkable(new TownPoint(955, 756)));
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 710)), "The central paved approach must remain open.");
+    }
+
+    [TestMethod]
+    public void Navigation_CitizenOcclusion_HidesWholeBodiesInsteadOfCuttingThemWithForegroundArt()
+    {
+        var map = Scene();
+
+        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(825, 500)), "The well must conceal a citizen behind it.");
+        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(665, 535)),
+            "The left boundary of the painted well must not slice a visible rectangle.");
+        Assert.IsFalse(map.IsBodyOccluded(new TownPoint(825, 660)),
+            "Citizens in the open plaza in front of the well remain visible.");
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            map.IsBodyOccluded(new TownPoint(825, 500), bodyWidth: 0f));
+    }
+
+    [TestMethod]
     public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
     {
         var map = Scene();
