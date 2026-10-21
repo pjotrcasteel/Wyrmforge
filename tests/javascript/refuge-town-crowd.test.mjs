@@ -56,7 +56,8 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.match(actor, /CitizenStyle\(person, depth\)/);
     assert.match(source('src/Wyrmforge.Application/World/TownNavigationMap.cs'), /public int PlaceholderDepth\(/);
     assert.match(actor, /data-town-feet-y="@person\.Position\.Y"/);
-    assert.match(actor, /@if \(person\.IsPresent\)/);
+    assert.match(actor, /person\.IsPresent \? Crowd\.Navigation\.PlaceholderDepth/);
+    assert.match(actor, /@if \(depth >= 0\)/);
     assert.match(actor, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*z-index:auto/s);
     assert.match(css, /refuge-town-scenery-foreground\s*\{[^}]*pointer-events:none/s);
