@@ -8,7 +8,7 @@
         <div>
             <span class="eyebrow">WYRMFORGE · ARENA FOUNDATION</span>
             <h1>Ground materials</h1>
-            <p>Just the surface. Five materials to compare and paint. No roads, props, arena layout or lighting.</p>
+            <p>Real ground samples cropped from your Gothic arena reference. Compare and paint them. No arena layout or props.</p>
         </div>
         <a class="other-lab" href="arena-lab">Previous arena lab</a>
     </header>
@@ -35,7 +35,6 @@
         <button class="secondary" @onclick="Undo">Undo</button>
         <button class="secondary" @onclick="Reset">Reset samples</button>
         <button class="secondary" @onclick="Clear">All grass</button>
-        <button class="secondary" @onclick="NextSeed">New variation</button>
     </section>
 
     <section class="material-workspace" aria-label="Editable pixel ground material samples">
@@ -46,8 +45,8 @@
         <aside>
             <h2>Material samples</h2>
             <p>Top to bottom: grass, wet mud, old paving, dirt, scorched ground.</p>
-            <p>Tap a material above, then drag directly on the ground to compare surfaces next to each other.</p>
-            <p class="detail">Seed @seed · 2D terrain materials only · No gameplay collision</p>
+            <p>Paint any surface beside another. These are actual image samples for visual direction—not invented placeholder textures or finished seamless tiles.</p>
+            <p class="detail">Reference image material study · No gameplay collision</p>
         </aside>
     </section>
 </main>
@@ -92,12 +91,6 @@
     private async Task Clear()
     {
         if (module is not null) await module.InvokeVoidAsync("clearMaterialSamples", canvas);
-    }
-
-    private async Task NextSeed()
-    {
-        seed++;
-        if (module is not null) await module.InvokeVoidAsync("changeMaterialSeed", canvas, seed);
     }
 
     public async ValueTask DisposeAsync()
