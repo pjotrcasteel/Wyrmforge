@@ -22,9 +22,20 @@ Base: `main` at `3dcd012` when started.
 - The approved central Fireball sprite and canonical Fire-school emblem remain unchanged. The art is restrained: one architectural arch, worn stone, two banners, sparse candlelight and one altar. It does not copy the previously generated flattened UI image.
 - Art-direction references consulted: [GDC Diablo II: Resurrected art-direction session](https://www.gdcvault.com/play/1027883/-Diablo-2-Resurrected-The) for preserving identity/materials without excessive ornament, and [Godot pixel/viewport scaling guidance](https://docs.godotengine.org/en/4.6/tutorials/rendering/multiple_resolutions.html) for mobile legibility and pixel-sampling. No external art assets were copied.
 - Confirm the focused inspector on iOS Safari and examine a true mobile capture before visual acceptance; Chromium Playwright alone is insufficient.
-- Keep this PR draft until CI and visual acceptance. Do not describe it as a finished art replacement.
+- The functional art layer shipped in PR #188; further visual work remains independent of gameplay controls.
 
 ## Validation
 
 - Initial `Validate Wyrmforge` run at commit `c9a4cf6b` passed.
 - Browser smoke captures `arcane-nexus-fireball-390.png` as evidence and asserts the room background path, all three mutation assets, and real Fireball upgrading. Latest CI is re-running for the new art; inspect the PR checks before merging.
+
+## Follow-up: locked socket clarity and saved-school access (2026-10-21)
+
+[PR #196](https://github.com/pjotrcasteel/Wyrmforge/pull/196) implements **only step 2** of the follow-up UX series plus the reported disabled-tab repair.
+
+- A sealed socket remains locked, but now moves focus to the existing core-upgrade panel and shows **"Socket N is sealed — Unlocks at Fireball Lv N"** and the need to research the mutation separately. Clicking the core clears that hint.
+- The Fireball tab is **inspectable** for existing non-Pyromancer saves. It explicitly identifies the Pyromancer restriction and disables upgrade/equip actions; application callbacks also reject changes to another school's Fireball data. Do not automatically change any saved school.
+- Gameplay costs, level thresholds, save schema, artwork and the other UX ideas (steps 3–6) are unchanged.
+- Browser regression covers 390px sealed Lv.3 guidance and a legacy Arcanist save that can inspect without upgrading, equipping or consuming secured materials. Run `Validate Wyrmforge` and `Browser smoke` on the PR before merging.
+
+This is a status checkpoint, not a replacement for the canonical gameplay design in `docs/canon/magic-and-combat.md`.
