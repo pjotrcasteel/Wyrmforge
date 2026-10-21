@@ -156,10 +156,11 @@ function draw(state) {
         drawWetForestFootprints(ctx, state.tracks, state.clock);
     // The same atlas and distance-driven gait as live Hunts: actors no longer walk on a timer.
     const forest = frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest';
-    if (state.previousSeed !== frame.seed) {
+    const sceneKey = [frame.seed, frame.stage, frame.environment?.habitat].join(':');
+    if (state.previousSeed !== sceneKey) {
         state.tracks.length = 0;
         state.previousActors.clear();
-        state.previousSeed = frame.seed;
+        state.previousSeed = sceneKey;
     }
     if (forest) {
         for (const actor of [...frame.mobs.map(mob => ({ id: mob.id, x: mob.x, y: mob.y, kind: mob.kind })),
