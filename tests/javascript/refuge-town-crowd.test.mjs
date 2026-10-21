@@ -16,7 +16,7 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
     assert.match(actorMarkup, /class="refuge-town-crowd"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /style="@CitizenStyle\(person, depth\)"/);
+    assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
     assert.doesNotMatch(markup, /PeriodicTimer/,
@@ -52,12 +52,12 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.match(markup, /foreground\.Id == "noticeboard-foreground"/);
     assert.match(markup, /foreground\.DepthY \* 10f/);
     assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
-    assert.match(actor, /PlaceholderDepth\(person\.Position\)/);
-    assert.match(actor, /CitizenStyle\(person, depth\)/);
-    assert.match(source('src/Wyrmforge.Application/World/TownNavigationMap.cs'), /public int PlaceholderDepth\(/);
+    assert.match(actor, /CitizenStyle\(person\)/);
+    assert.match(actor, /citizen\.Position\.Y \* 10f/);
+    assert.doesNotMatch(actor, /PlaceholderDepth/,
+        'An NPC behind the well must not vanish or jump in front of painted masonry.');
     assert.match(actor, /data-town-feet-y="@person\.Position\.Y"/);
-    assert.match(actor, /person\.IsPresent \? Crowd\.Navigation\.PlaceholderDepth/);
-    assert.match(actor, /@if \(depth >= 0\)/);
+    assert.match(actor, /@if \(person\.IsPresent\)/);
     assert.match(actor, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*z-index:auto/s);
     assert.match(css, /refuge-town-scenery-foreground\s*\{[^}]*pointer-events:none/s);
