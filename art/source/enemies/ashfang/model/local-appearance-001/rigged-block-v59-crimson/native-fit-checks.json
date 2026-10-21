@@ -1,0 +1,14 @@
+{
+  "localPrivateScreenshotComposite": true,
+  "liveGameplay": false,
+  "runtimeIntegrated": false,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "nativePixelsPerUnit": 110,
+  "viewport": [
+    440,
+    955
+  ],
+  "playerRegionUnchangedInSourceFrames": true,
+  "frames": 48,
+  "screenshotPublished": false
+}

@@ -1,0 +1,210 @@
+{
+  "clips": {
+    "walk": {
+      "frames": 49,
+      "fps": 24,
+      "loop": true,
+      "action": "Ashfang_walk",
+      "events": [],
+      "strideDistanceModelUnits": 0.1388888888888889,
+      "reviewRenderer": "block"
+    },
+    "rear-breath": {
+      "frames": 73,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_rear-breath",
+      "events": [],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "block"
+    },
+    "takeoff-flight-land": {
+      "frames": 84,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_takeoff-flight-land",
+      "events": [
+        {
+          "phase": 0.12,
+          "name": "leg-drive"
+        },
+        {
+          "phase": 0.22,
+          "name": "hind-leg-extension"
+        },
+        {
+          "phase": 0.205,
+          "name": "first-downstroke"
+        },
+        {
+          "phase": 0.265,
+          "name": "departure"
+        },
+        {
+          "phase": 0.4,
+          "name": "cruise"
+        },
+        {
+          "phase": 0.64,
+          "name": "approach"
+        },
+        {
+          "phase": 0.76,
+          "name": "flare"
+        },
+        {
+          "phase": 0.81,
+          "name": "forepaw-catch-target"
+        },
+        {
+          "phase": 0.845,
+          "name": "hindpaw-catch-target"
+        },
+        {
+          "phase": 0.88,
+          "name": "recovery"
+        }
+      ],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "block"
+    },
+    "flight-loop": {
+      "frames": 33,
+      "fps": 24,
+      "loop": true,
+      "action": "Ashfang_flight-loop",
+      "events": [],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "block"
+    },
+    "landing": {
+      "frames": 31,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_landing",
+      "events": [
+        {
+          "phase": 0.0,
+          "name": "approach"
+        },
+        {
+          "phase": 0.3333333333333333,
+          "name": "flare"
+        },
+        {
+          "phase": 0.4722222222222224,
+          "name": "forepaw-catch-target"
+        },
+        {
+          "phase": 0.5694444444444443,
+          "name": "hindpaw-catch-target"
+        },
+        {
+          "phase": 0.6666666666666666,
+          "name": "recovery"
+        }
+      ],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "block"
+    },
+    "flight-sequence": {
+      "frames": 148,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_flight-sequence",
+      "events": [
+        {
+          "phase": 0.1157482993197279,
+          "name": "first-downstroke"
+        },
+        {
+          "phase": 0.14962585034013606,
+          "name": "departure"
+        },
+        {
+          "phase": 0.23129251700680273,
+          "name": "enter-flight-blend"
+        },
+        {
+          "phase": 0.3129251700680272,
+          "name": "sustained-flight"
+        },
+        {
+          "phase": 0.7074829931972789,
+          "name": "landing-blend"
+        },
+        {
+          "phase": 0.7891156462585034,
+          "name": "approach-and-flare"
+        },
+        {
+          "phase": 0.8927210884353742,
+          "name": "forepaw-catch"
+        },
+        {
+          "phase": 0.9124829931972789,
+          "name": "hindpaw-catch"
+        },
+        {
+          "phase": 1,
+          "name": "settled"
+        }
+      ],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "block"
+    },
+    "high-launch": {
+      "frames": 55,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_high-launch",
+      "events": [],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "arena"
+    },
+    "fire-flyover": {
+      "frames": 56,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_fire-flyover",
+      "events": [],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "arena"
+    },
+    "arena-flyovers": {
+      "frames": 279,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_arena-flyovers",
+      "events": [],
+      "strideDistanceModelUnits": null,
+      "reviewRenderer": "arena"
+    }
+  },
+  "groundRoot": [
+    0,
+    0,
+    -0.197
+  ],
+  "nativeCell": 192,
+  "modelToPixel": 80,
+  "tier": 1,
+  "targetGroundedViewportWidthFraction": [
+    0.15,
+    0.25
+  ],
+  "boneCount": 95,
+  "skinOwnership": {
+    "body": 806,
+    "neck": 320,
+    "tail": 433,
+    "hind": 700,
+    "fore": 700,
+    "digit": 888,
+    "head": 717,
+    "jaw": 158
+  },
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "bodyFireProfile": "crimson-inferno"
+}

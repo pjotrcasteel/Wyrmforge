@@ -1,0 +1,14 @@
+{
+  "source": "V57 motion-clay-review-v1",
+  "bodyMotionFilesExactlyEqual": {
+    "arena-flyovers-samples.npz": "bf536a592f9396bdc10298fec6ad14a9625afb58538d5ff4d075af1562b402a1",
+    "fire-flyover-samples.npz": "48b8079d3af9f5053c0f4f012e841494015c8612b5278c048d7e630aafc07f67",
+    "flight-loop-samples.npz": "9d23b284054ae711d0f852a950ca7b095944506aa5920f4f76fb76c3dc77b059",
+    "flight-sequence-samples.npz": "1278f62e058c3777a2c88c8486a879740d5c529ba5765718d901f4ed70f7b652",
+    "high-launch-samples.npz": "955576645c8428b3dc281b93004acfc883469f6f41b01668f21987ac377be639",
+    "landing-samples.npz": "e7e09fe9db615fb833bc6a0303e3cd58d59bf397da106228b3804ebf4fcb0e91",
+    "rear-breath-samples.npz": "a883e074011267339ba0d8c664ed6b701e93725c4320a3ea0de16892219fc2b7",
+    "takeoff-flight-land-samples.npz": "df4cb6b250c7466259909f17038a92037004162042e21433f59cf1937c6dcdd5",
+    "walk-samples.npz": "fe001373c1d2a5140a33f0a1e26b95ea526b919c0511d82e7567e313e550f87b"
+  }
+}
