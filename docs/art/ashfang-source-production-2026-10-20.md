@@ -419,3 +419,12 @@ revalidate mobile readability rather than stretching or cropping frames.
 ## V27 first wingbeat timing — owner follow-up
 Owner responded 'yes perfect' to the V26 anatomy/larger-wing correction and requested removal of the short jump-before-flap pause. Preserve that anatomy approval separately from completion of the full creature/action library. V27 advances the first power-stroke start from phase 0.265 to 0.205 (about five source frames / 0.21 seconds at 24fps), immediately before altitude starts rising at 0.22. The following cruise beat follows the advanced stroke continuously. Paw release, jump trajectory and anatomy stay as V26. Source built; visual/contact revalidation pending.
 
+
+V27 local RTX 5090 review completed. All 148 samples finite/unclipped,
+walking loop closes exactly, whole source clears floor -0.197. Jump root
+trajectory is byte-identical to V26; maximum non-wing bone delta is zero.
+Launch stills at timing-review-v1/launch-sequence.png show the wings already
+entering the downstroke as the rear legs extend and body rises. Full-speed
+motion review saved at motion-review-v1/takeoff-flight-land.gif. Approved
+V26 anatomy is unchanged; owner review of this timing adjustment is pending.
+No runtime changes or completed full animation-library claim.
