@@ -557,3 +557,6 @@ V35 nine source actions built; native fit/stance visual review pending. Source s
 
 V35 local first render is larger but still wing-heavy: resting forearms remain too wide. V36 closes shoulder and wrist toward an attached back-fold pose with preserved segment lengths, narrowing the resting membrane fan; full-spread flight retains the original open pose. V35 source/review kept. V36 screenshot composites remain local-only. Code checkpoint before source generation; visual result pending.
 
+
+V36 nine source actions built with compact back-fold wing carriage. Actual source floor audit remains within tolerance; finite/deformation review receipts in source-check-summary.json. Source checkpoint before the native screenshot-fit review. No screenshot pixels are included in Git.
+
