@@ -22,7 +22,6 @@ def rebuild_wings(v,faces,uv,source_labels):
                 # Concave trailing bays remain attached to the four fingers.
                 # The boundary retreats toward the root between spar tips,
                 # retaining full span at each tip rather than a broad paddle.
-                point+=(points[0]-point)*(.16*4*a*b*(a+b)**2)
                 point[2]-=.035*a*b*c*12
                 cache_key=(sign,tuple(np.round(point,9)))
                 if cache_key in seam_cache:
@@ -42,7 +41,7 @@ def rebuild_wings(v,faces,uv,source_labels):
         for bay in range(3):
             grid={};steps=12
             for row in range(steps+1):
-                radial=row/steps
+                radial=(row/7*.58) if row<=7 else .58+(row-7)/5*.42
                 for col in range(steps+1):
                     u=col/steps;t=radial-.12*4*u*(1-u)*radial**4
                     if t<=.58:
@@ -64,6 +63,7 @@ def rebuild_wings(v,faces,uv,source_labels):
                     if len({a,b,c})==3:triangles.append([a,b,c])
                     if len({b,d,c})==3:triangles.append([b,d,c])
         texture_mid=texture_wrist*.42+texture_tips[3]*.58
+        append_tri([root,elbow,wrist],[(150,101),(160,69),texture_wrist],sign,['root','elbow','wrist'])
         append_tri([root,wrist,middles[3]],[(150,101),texture_wrist,texture_mid],sign,['root','wrist','mid.3'])
         append_tri([root,middles[3],tips[3]],[(150,101),texture_mid,texture_tips[3]],sign,['root','mid.3','tip.3'])
         side='L' if sign>0 else 'R'
