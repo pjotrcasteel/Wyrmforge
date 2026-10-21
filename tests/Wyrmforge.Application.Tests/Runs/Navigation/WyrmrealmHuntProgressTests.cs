@@ -5,7 +5,7 @@ namespace Wyrmforge.Application.Tests.Runs.Navigation;
 [TestClass]
 public sealed class WyrmrealmHuntProgressTests
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(1, 4, 0d)]
     [DataRow(2, 4, 1d / 3)]
     [DataRow(3, 4, 2d / 3)]
