@@ -129,6 +129,8 @@ public sealed class FireTierTwoHuntTests
         Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
         Assert.AreEqual(WyrmTier.Ascendant, Field<DragonState>(simulation, "dragon").Tier, "Tier II hunts the Ascendant Ashfang.");
         Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
+        Assert.AreEqual(0, simulation.CreateEvaluationSummary().AscendantDragonIds.Count,
+            "A Tier-II win is not the Great Hunt Ascendant Rite and never grants the Crown of Embers.");
         Assert.IsTrue(simulation.ApplyDragonEssence(simulation.PendingDragonEssenceChoices[0].Id));
         Resolve(simulation);
         Assert.IsTrue(simulation.EvacuationActive);
@@ -236,6 +238,19 @@ public sealed class FireTierTwoHuntTests
 
     private static bool Drops(RunSimulation simulation, LootRarity rarity) =>
         (bool)typeof(RunSimulation).GetMethod("HuntDrops", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, [rarity])!;
+
+    [TestMethod]
+    public void AscendantRite_StillRecordsTheCrownVictory()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42, ascendantWyrm: DragonId.Ashfang);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        SetField(simulation, "ascendantActive", true);
+        Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
+        CollectionAssert.AreEqual(new[] { DragonId.Ashfang }, simulation.CreateEvaluationSummary().AscendantDragonIds.ToArray());
+    }
+
     private static RunSimulation Create(HuntSelection hunt)
     {
         var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42, hunt: hunt);
