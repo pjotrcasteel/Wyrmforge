@@ -13,6 +13,7 @@ playtest-reports/
 tools/sprite-lab/__pycache__/
 
 # Local owner screenshots and fitted screenshot composites are not public assets.
+/art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v*/hunt-fit-review*/
 /art/source/enemies/ashfang/references/current-hunt-viewport-2026-10-21.png
 /art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v34/hunt-fit-review*/
 

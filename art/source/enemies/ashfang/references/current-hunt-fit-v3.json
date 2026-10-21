@@ -1,0 +1,32 @@
+{
+  "referenceImage": "art/source/enemies/ashfang/references/current-hunt-viewport-2026-10-21.png",
+  "crop": [
+    40,
+    4,
+    480,
+    959
+  ],
+  "viewport": [
+    440,
+    955
+  ],
+  "pixelsPerModelUnit": 110,
+  "originY": 300,
+  "hudTop": 152,
+  "footerBottom": 24,
+  "playerReferenceBounds": [
+    200,
+    436,
+    243,
+    502
+  ],
+  "playerNativeBodyHeightFromAtlas": 39,
+  "nativePlayerScaleChanged": false,
+  "passFocusScreenDown": 222.3404255319149,
+  "passWorldOffset": [
+    2.152577572356661,
+    -3.2288663585349915
+  ],
+  "referenceOnly": true,
+  "note": "110px/unit anatomy review density; existing world attack track retained; private screenshot composite only"
+}
