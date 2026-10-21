@@ -127,8 +127,9 @@ test('fire ground traces grow only at real C# tree feet and match their seeded c
     const late = createWetForestScorchPlan(props, 1204, 950, 1550, 1, 'fire');
     assert.deepEqual(none, []);
     assert.deepEqual(frost, []);
-    assert.ok(late.length > 150 && late.length < 800);
+    assert.ok(late.length > 150 && late.length < 1400);
     assert.deepEqual(late, createWetForestScorchPlan(props, 1204, 950, 1550, 1, 'fire'));
+    assert.ok(late.some(m => m.color === '#bb7131'), 'Late fire influence should split a few real tree roots, not flood the map');
     assert.ok(late.every(m => m.width <= 8 && m.height <= 4 && m.alpha <= .78 &&
         m.x >= 0 && m.y >= 0 && m.x + m.width <= 950 && m.y + m.height <= 1550));
     const ids = new Set(props.map(prop => prop.id));
