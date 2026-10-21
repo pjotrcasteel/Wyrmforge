@@ -357,3 +357,7 @@ geometric mouth-alignment jet. Full actions/directions, sustained flight and
 overflight, viewport fitting and real C# aerial/mobile Hunt validation remain
 outstanding. Nothing here replaces the live boss or marks the creature done.
 Previous failed source attempts and diagnostics remain preserved.
+
+## V21 anatomy and wing articulation candidate
+Owner rejected V20 rear-foot wedge, short tail, head shape and rigid wing stroke. V21 tapers the reconstructed heel and muzzle, extends the complete trailing tail surface rather than only its center, and gives the elbow recovery flexion with wrist/digit delays sampled from the actual shoulder stroke. Source build completed; visual GPU review pending. Art remains unaccepted and runtime unchanged.
+

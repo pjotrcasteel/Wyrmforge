@@ -17,7 +17,21 @@ head_mix=np.clip((-v[:,1]-.21)/.12,0,1);head_mix=head_mix*head_mix*(3-2*head_mix
 head_mix*=np.clip((v[:,2]+.09)/.055,0,1)
 v[:,0]*=1+.35*head_mix;v[:,1]-=.32*head_mix*np.maximum(0,-v[:,1]-.22);v[:,2]+=.052*head_mix+.15*head_mix*np.maximum(0,v[:,2]-.015)
 # Extend the existing balancing tail surface and its skeleton together.
-v[:,1]+=.65*np.maximum(0,v[:,1]-.23)*np.clip((.09-abs(v[:,0]))/.025,0,1)
+# Extend the whole trailing surface, including its outer plates, into a taper.
+tail_t=np.clip((v[:,1]-.29)/.205,0,1)
+v[:,0]*=1-.58*tail_t
+v[:,1]+=1.40*np.maximum(0,v[:,1]-.29)
+v[:,2]+=.035*tail_t**2
+# Narrow the terminal muzzle rather than broadening it into a rounded block.
+muzzle=np.clip((-v[:,1]-.38)/.18,0,1)
+v[:,0]*=1-.30*muzzle
+v[:,2]+=.018*muzzle
+# The reconstructed rear sole spans a wide triangular apron. Taper its heel
+# into the hock, keeping the forward toe fan and contact height intact.
+heel=np.clip((v[:,1]-.17)/.13,0,1)*np.clip((-.11-v[:,2])/.04,0,1)
+heel*=((v[:,1]>.04)&(v[:,1]<.34)&(abs(v[:,0])>.045))
+v[:,0]+=(np.sign(v[:,0])*.17-v[:,0])*.60*heel
+v[:,1]-=.055*heel
 # Build haunch volume on the existing surface, preserving its texture/skin.
 # Restrict the radial sculpt to the upper rear limb, clear of tail and soles.
 for sign in [1,-1]:
@@ -68,7 +82,7 @@ for side,sign in [('L',1),('R',-1)]:
         middle=middles[finger];tip=tips[finger]
         bone(f'wing.finger.{finger}.0.{side}',points[2],middle,'wing.fore.'+side);bone(f'wing.finger.{finger}.1.{side}',middle,tip,f'wing.finger.{finger}.0.{side}')
 tail=[(0,.23,-.025),(0,.28,-.04),(0,.33,-.055),(-.01,.38,-.065),(-.025,.43,-.08),(-.035,.47,-.10),(-.04,.495,-.12)]
-tail=[(x,y+.65*max(0,y-.23),z) for x,y,z in tail]
+tail=[(x,y+1.40*max(0,y-.29),z+.035*max(0,min(1,(y-.29)/.205))**2) for x,y,z in tail]
 for i in range(6):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
 arm=bpy.data.armatures.new('Ashfang articulated anatomy');rig=bpy.data.objects.new('Ashfang editable animation rig',arm);bpy.context.collection.objects.link(rig);bpy.context.view_layer.objects.active=rig;rig.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
 for n,b in bones.items():
@@ -192,14 +206,23 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
             shoulder=wing_rotation@Quaternion((0,0,1),sign*.75*fold)@Quaternion((0,1,0),sign*(-.05*fold+flap))
             upper='wing.upper.'+side;fore='wing.fore.'+side
             elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
-            fore_rotation=shoulder@Quaternion((0,0,1),sign*.65*fold)@Quaternion((0,1,0),sign*.10*fold)
+            # Sample the SAME shoulder stroke at successive delays. Recovery bends
+            # the elbow and feathers the wrist; the powered stroke extends it.
+            delayed=flight_state(max(0,phase-.018))['flap'] if flight else flap
+            earlier=flight_state(max(0,phase-.006))['flap'] if flight else flap
+            recovery=max(0,min(1,(earlier-flap)*5))*opening
+            elbow_lag=(delayed-flap)*.65*opening
+            fore_rotation=shoulder@Quaternion((0,0,1),sign*(.65*fold+.65*recovery))@Quaternion((0,1,0),sign*(.10*fold+elbow_lag))@Quaternion((1,0,0),.30*recovery)
             wrist=elbow+fore_rotation@Vector(bones[fore]['tail']-bones[fore]['head']);segment(fore,elbow,wrist,fore_rotation)
             for finger in range(4):
                 previous=wrist
                 for j in range(2):
                     n=f'wing.finger.{finger}.{j}.{side}'
-                    lag=.12*math.sin((phase-.18)*math.pi*8-finger*.18-j*.22)*opening
-                    r=fore_rotation@Quaternion((0,0,1),sign*(.10+.10*finger)*fold)@Quaternion((0,1,0),sign*(.20*fold+lag))
+                    digit_delay=.026+finger*.004+j*.009
+                    delayed_digit=flight_state(max(0,phase-digit_delay))['flap'] if flight else flap
+                    lag=(delayed_digit-delayed)*.80*opening
+                    lag+=.12*recovery*(finger/3+j*.4)
+                    r=fore_rotation@Quaternion((0,0,1),sign*((.10+.10*finger)*fold+recovery*(.08+.10*finger)))@Quaternion((0,1,0),sign*(.20*fold+lag))
                     # Gather each digit toward the trailing body line when
                     # folded. Quaternion interpolation retains segment lengths
                     # and opens the fan without scaling its vertices.
