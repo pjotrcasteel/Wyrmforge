@@ -35,7 +35,7 @@ jobs:
       # Full solution tests run in the pull-request validation workflow.
       # Keep Pages releases responsive to incremental lab playtesting.
       - name: Check Arena Lab JavaScript
-        run: node --test tests/javascript/arena-lab.test.mjs tests/javascript/arena-wet-forest-art.test.mjs
+        run: node --test tests/javascript/arena-lab.test.mjs tests/javascript/arena-wet-forest-art.test.mjs tests/javascript/arena-materials.test.mjs
 
       - name: Publish web
         run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release --no-restore -o ./artifacts/web -p:SourceRevisionId=${GITHUB_SHA}
