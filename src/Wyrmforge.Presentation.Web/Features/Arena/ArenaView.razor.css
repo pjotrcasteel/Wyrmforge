@@ -398,3 +398,12 @@
 .primary-choice.preferred {box-shadow:0 0 0 2px rgba(255,214,140,.75),0 0 18px rgba(255,190,90,.25)}
 .primary-preferred-badge {display:inline-block;margin-top:4px;padding:2px 6px;border-radius:999px;background:rgba(255,200,110,.18);color:#ffe2a8;font:850 .58rem/1 system-ui;letter-spacing:.08em}
 @media(max-height:600px){.primary-choice-panel{padding:12px}.primary-choice{min-height:80px;padding:7px}.primary-choice-grid{gap:6px}}
+
+/* Earned rewards are itemized; unextracted material never masquerades as saved loot. */
+.trail-gathered{display:grid;gap:8px;width:min(340px,calc(100vw - 40px));padding:13px 15px;border:1px solid #725d52;background:#17121bcf;box-shadow:inset 0 0 0 2px #241b22}
+.trail-clear-transition .trail-gathered-title{font:700 .68rem/1.2 system-ui,sans-serif;letter-spacing:.13em;color:#ccb392}
+.trail-gathered-items{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.trail-clear-transition .trail-gathered-item,.trail-clear-transition .trail-gathered-xp{padding:7px 10px;border:1px solid #625044;background:#28202a;color:#e7d3b7;font:600 .78rem/1.25 system-ui,sans-serif;letter-spacing:0;overflow-wrap:anywhere}
+.trail-clear-transition .trail-gathered-xp{border-color:#947247;color:#f2ce96}
+.trail-gathered small{color:#bdada5;font:.7rem/1.35 system-ui,sans-serif}
+.trail-clear-transition{max-height:100dvh;overflow-y:auto}

@@ -1,10 +1,12 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.LevelUp;
+using Wyrmforge.Application.Runs.Extraction;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Application.Tests.Runs.Simulation;
 
@@ -224,6 +226,36 @@ public sealed class RunSimulationTests
         Assert.AreEqual(3, simulation.Level);
         Assert.AreEqual(19, simulation.CreateSnapshot().Hud.Experience);
         Assert.AreEqual(35, simulation.CreateEvaluationSummary().ExperienceEarned);
+    }
+
+    [TestMethod]
+    public void TrailGathering_OnlyReportsExperienceAndMaterialsPickedUpOnCurrentRoute()
+    {
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 1204);
+        var gainExperience = typeof(RunSimulation).GetMethod("GainExperience", flags)!;
+        var cargo = (RunMaterialCargoState)typeof(RunSimulation).GetField("materialCargoState", flags)!.GetValue(simulation)!;
+        gainExperience.Invoke(simulation, [9]);
+        cargo.Collect(HuntMaterialId.EmberResidue);
+
+        StartFirstMapEncounter(simulation);
+        Assert.AreEqual(0, simulation.TrailExperienceEarned);
+        Assert.IsEmpty(simulation.TrailGatheredMaterials);
+        Assert.HasCount(1, cargo.Pending, "Entering a new trail must not delete previously carried loot.");
+
+        gainExperience.Invoke(simulation, [14]);
+        cargo.Collect(HuntMaterialId.CharredScrap);
+        cargo.Collect(HuntMaterialId.CharredScrap);
+        Assert.AreEqual(14, simulation.TrailExperienceEarned);
+        CollectionAssert.AreEqual(new[] { HuntMaterialId.CharredScrap, HuntMaterialId.CharredScrap },
+            simulation.TrailGatheredMaterials.ToArray());
+        Assert.HasCount(3, cargo.Pending);
+
+        cargo.SecurePending();
+        Assert.AreEqual(14, simulation.TrailExperienceEarned);
+        Assert.HasCount(2, simulation.TrailGatheredMaterials);
+        Assert.IsEmpty(cargo.Pending);
+        Assert.HasCount(3, cargo.Secured);
     }
 
     [TestMethod]

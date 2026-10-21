@@ -22,6 +22,10 @@ public sealed class TownDestination
     public float X { get; set; }
     public float Y { get; set; }
 
+    /// <summary>Optional unlocked-building requirement for a civic activity stop.</summary>
+    public string? BuildingId { get; set; }
+    public string? Activity { get; set; }
+
     /// <summary>A connected world boundary or doorway. Citizens leave here and may later return.</summary>
     public bool IsExit { get; set; }
 

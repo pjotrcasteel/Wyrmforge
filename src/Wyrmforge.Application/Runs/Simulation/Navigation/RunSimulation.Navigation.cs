@@ -11,6 +11,9 @@ public sealed partial class RunSimulation
     private ArenaEnvironmentState? arenaEnvironment;
     private WyrmrealmEncounterModifierSet encounterModifiers = WyrmrealmEncounterModifierSet.Empty;
     private bool mapEncounterCleanupPending;
+    private int trailExperienceAtEntry;
+    public int TrailExperienceEarned => Math.Max(0, experienceEarned - trailExperienceAtEntry);
+    public IReadOnlyList<Wyrmforge.Domain.Progression.Signature.HuntMaterialId> TrailGatheredMaterials => materialCargoState.TrailCollected;
     private double entryGraceRemaining;
     public double EntryGraceRemaining => entryGraceRemaining;
 
@@ -49,6 +52,8 @@ public sealed partial class RunSimulation
         var node = mapState.Choose(id);
         if (node is null) return false;
         ClearMapEncounterField();
+        trailExperienceAtEntry = experienceEarned;
+        materialCargoState.BeginTrail();
         playerPositionInitialized = false;
         arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, node);
         PrepareBellWardenNode(node);

@@ -7,6 +7,7 @@ using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Presentation.Web.Features.LevelUp;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Relics;
+using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Presentation.Web.Features.Arena;
 
@@ -16,6 +17,8 @@ public partial class ArenaView
     private long runMomentVersion;
     private bool disposed;
     private bool trailTransition;
+    private int trailGatheredExperience;
+    private IReadOnlyList<HuntMaterialId> trailGatheredMaterials = [];
 
     // Compact and low on screen: an elite is named without covering the fight (brief §7, no big boss bar).
     private void ShowEliteSighted(EliteAffixDefinition elite) =>
@@ -73,7 +76,12 @@ public partial class ArenaView
         await InvokeAsync(StateHasChanged);
     }
 
-    private void ShowTrailTransition() => trailTransition = true;
+    private void ShowTrailTransition()
+    {
+        trailGatheredExperience = simulation?.TrailExperienceEarned ?? 0;
+        trailGatheredMaterials = simulation?.TrailGatheredMaterials ?? [];
+        trailTransition = true;
+    }
 
     private void ContinueAfterTrail() => trailTransition = false;
 
