@@ -217,3 +217,11 @@ stronger compression exhausted the former 0.45-radian tail correction search
 failure receipt are preserved. V15 extends the bounded tail bracing search to
 0.675 radians and adds partial contact receipts on any future failure. This
 rotates the attached tail bones; it does not flatten skin or lift the whole body.
+
+V15 regenerated source completes. Flight max IK goal error remains below 1e-7
+units and whole-surface minimum -0.197356 stays within floor tolerance. Fore
+soles rise near frames 15–18 while hind support remains near floor; at frame 18
+fore soles are about -0.104 versus hind -0.194. Landing fore soles catch at
+frame 68 and hind at 71. Other motions remain unchanged within float precision
+(walk max coordinate delta versus V13 1.79e-7 units). A side-view bone overlay
+will expose actual spine/pelvis/neck articulation during the rendered review.
