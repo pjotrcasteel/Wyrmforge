@@ -109,3 +109,13 @@ Next source work: refine anatomy and native silhouette, then launch/landing
 performance; only after that gate export the full directional action set and
 implement/validate C# aerial encounter behavior. All previous candidates and
 source meshes, latents, textures, Blender rigs and review evidence remain intact.
+
+### V11 launch and catch timing — in progress
+A separate authored source timeline replaces the continuous lift sine study:
+crouch, leg extension, first downstroke, departure, cruise, approach/flare,
+forepaw/hindpaw catch targets and recovery. The flight study expands to 84
+frames at 24fps. Fore/hind paws now extend at different times; metadata labels
+are review targets, not claims of measured contact. A per-paw skin/IK audit
+records actual sole height and goal error so floor minima alone cannot hide
+early liftoff or unreachable foot goals. Current main checked at 2740d7f5;
+Refuge PR #202 and other concurrent work remain untouched.

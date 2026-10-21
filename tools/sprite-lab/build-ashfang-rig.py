@@ -7,6 +7,7 @@ from pathlib import Path
 from mathutils import Vector,Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
+from ashfang_motion import flight_state,FLIGHT_EVENTS
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
@@ -75,26 +76,27 @@ for index,p in enumerate(v):
         if w>.001:obj.vertex_groups[n].add([index],float(w),'REPLACE')
 tail_indices=[p.index for p in mesh.vertices if any(obj.vertex_groups[g.group].name.startswith('tail.') for g in p.groups)]
 rest={n:rig.data.bones[n].matrix_local.copy() for n in bones};lengths={n:rig.data.bones[n].length for n in bones}
-soles={}
+soles={};foot_indices={}
 for limb in ['fore','hind']:
     for side in ['L','R']:
         n=f'{limb}.2.{side}';g=obj.vertex_groups[n].index
-        soles[n]=np.array([p.co[:]-bones[n]['head'] for p in mesh.vertices if any(w.group==g and w.weight>.95 for w in p.groups)])
+        foot_indices[n]=[p.index for p in mesh.vertices if any(w.group==g and w.weight>.95 for w in p.groups)]
+        soles[n]=np.array([mesh.vertices[index].co[:]-bones[n]['head'] for index in foot_indices[n]])
 def segment(n,h,t,rotation=None):
     h,t=Vector(h),Vector(t);r=(rotation.to_matrix() if rotation else Vector(bones[n]['tail']-bones[n]['head']).rotation_difference(t-h).to_matrix())@rest[n].to_3x3();matrix=r.to_4x4();matrix.translation=h;rig.pose.bones[n].matrix=matrix;bpy.context.view_layer.update()
 def ik(a,b,l1,l2,pole):
     d=b-a;distance=max(abs(l1-l2)+.0001,min(d.length,l1+l2-.0001));d.normalize();b=a+d*distance;along=(l1*l1-l2*l2+distance*distance)/(2*distance);p=Vector(pole);p=(p-d*p.dot(d)).normalized();return a+d*along+p*math.sqrt(max(0,l1*l1-along*along)),b
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
-clips={};positions={};mouths={};floor=[];deps=bpy.context.evaluated_depsgraph_get()
-for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
+clips={};positions={};mouths={};floor=[];contacts=[];deps=bpy.context.evaluated_depsgraph_get()
+for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
     action=bpy.data.actions.new('Ashfang_'+clip);action.use_fake_user=True;rig.animation_data_create();rig.animation_data.action=action;sample=[];emitters=[]
     for frame in range(count):
-        phase=frame/(count-1);altitude=0;rear=0;spread=.08;flap=0;pitch=0;advance=0;jaw=0
+        phase=frame/(count-1);altitude=0;rear=0;spread=.08;flap=0;pitch=0;advance=0;jaw=0;flight=None;foot_goals={}
         if clip=='walk':bob=.008*math.sin(phase*math.pi*4);pitch=.025*math.sin(phase*math.pi*2)
         elif clip=='rear-breath':
             rear=smooth(phase/.25)*(1-smooth((phase-.78)/.22));bob=.025*rear;pitch=-.62*rear;spread=.14+.18*rear;jaw=.48*smooth((phase-.22)/.12)*(1-smooth((phase-.68)/.12))
         else:
-            lift=smooth((phase-.18)/.17);land=smooth((phase-.74)/.18);altitude=.28*lift*(1-land);spread=1.0*smooth((phase-.07)/.18)*(1-smooth((phase-.87)/.13));flap=-.65*math.cos((phase-.18)*math.pi*8)*smooth((phase-.18)/.12)*(1-smooth((phase-.82)/.10));bob=-.012*math.sin(min(1,phase/.20)*math.pi)*(1-lift);pitch=-.12*lift*(1-land)
+            flight=flight_state(phase);altitude=flight['altitude'];bob=flight['bob'];pitch=flight['pitch'];spread=flight['spread'];flap=flight['flap']
         rotation=Quaternion((1,0,0),pitch);origin=Vector(bones['pelvis']['head']);offset=Vector((0,advance,altitude+bob));point=lambda p:origin+rotation@(Vector(p)-origin)+offset
         segment('root',bones['root']['head'],bones['root']['tail'])
         for n in ['pelvis','spine','chest','neck.0','neck.1']:segment(n,point(bones[n]['head']),point(bones[n]['tail']),rotation)
@@ -111,12 +113,16 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                         t=(t-.72)/.28;ankle.y+=.08-.16*t;clearance=.045*math.sin(t*math.pi)
                     ankle.z+=clearance
                 else:
-                    airborne=smooth(altitude/.08);ankle=ankle.lerp(point(ankle)+Vector((0,.045,.065)),airborne)
+                    airborne=flight[limb+'Tuck'] if flight else smooth(altitude/.08)
+                    ground=ankle.copy()
+                    if flight and limb=='fore':ground.y-=.035*flight['landingReach']
+                    ankle=ground.lerp(point(ankle)+Vector((0,.045,.065)),airborne)
                     if limb=='fore':ankle=ankle.lerp(point(bones[f'{limb}.2.{side}']['head'])+Vector((0,.055,.065)),rear)
                 fn=f'{limb}.2.{side}';fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
                 sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
                 if clip=='walk':ankle.z=sole_height+clearance
                 elif altitude<.01:ankle.z=max(ankle.z,sole_height)
+                foot_goals[fn]=ankle.copy()
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
             wingroot=point(bones['wing.upper.'+side]['head'])
             opening=min(1,max(0,spread));fold=1-opening
@@ -159,11 +165,14 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
             p.rotation_mode='QUATERNION'
             for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=frame+1,group=p.name)
         bpy.context.scene.frame_set(frame+1);bpy.context.view_layer.update();ev=obj.evaluated_get(deps);evaluated=ev.to_mesh();coords=np.array([p.co[:] for p in evaluated.vertices],np.float32);sample.append(coords)
+        contacts.append(dict(clip=clip,frame=frame,phaseLabel=flight['label'] if flight else clip,paws={n:dict(minZ=float(coords[indices,2].min()),ikGoalError=float((rig.pose.bones[n].head-foot_goals[n]).length)) for n,indices in foot_indices.items()}))
         lowest=int(coords[:,2].argmin());dominant=max(obj.data.vertices[lowest].groups,key=lambda g:g.weight)
         floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,tailCorrectionRadians=tail_correction,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
+    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else []);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip])
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and three anatomy/motion blocking sequences',flush=True)
+
+(out/'paw-contact-audit.json').write_text(json.dumps(contacts,indent=2)+'\n')
