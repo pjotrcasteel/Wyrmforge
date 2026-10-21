@@ -59,6 +59,7 @@ public sealed partial class RunSimulation
         foreach (var essence in build.DragonEssences.Selected.Where(id => !mark.Essences.Contains(id))) build.DragonEssences.Remove(essence);
         pendingDragonEssenceChoices = [];
         completedRouteNodes.RemoveRange(mark.CompletedRouteNodes, completedRouteNodes.Count - mark.CompletedRouteNodes);
+        ForgetLostScouting();
         dragonsSlain = mark.DragonsSlain;
         defeatedDragonIds.Clear();
         defeatedDragonIds.UnionWith(mark.DefeatedDragons);

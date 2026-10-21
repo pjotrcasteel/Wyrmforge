@@ -68,6 +68,7 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<WyrmrealmMapNode> MapNodes => simulation?.MapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
+    private IReadOnlyDictionary<string, TrailScoutReport> ScoutReports => simulation?.ScoutReports ?? new Dictionary<string, TrailScoutReport>();
     private IReadOnlyList<RunResonanceEntry> CurrentResonance => simulation?.Resonance ?? Array.Empty<RunResonanceEntry>();
     private IReadOnlyList<DragonSign> CurrentDragonSigns => simulation?.DragonSigns ?? Array.Empty<DragonSign>();
     private IReadOnlyList<RealmInfluenceCue> CurrentRealmInfluences => simulation?.RealmInfluences ?? Array.Empty<RealmInfluenceCue>();

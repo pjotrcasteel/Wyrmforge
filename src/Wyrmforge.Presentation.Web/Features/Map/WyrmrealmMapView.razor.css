@@ -176,3 +176,9 @@
 .map-refuge-return { position:relative;z-index:6;flex-shrink:0;margin:4px 12px;padding:6px 10px;border:1px solid #8a6a3f;border-radius:6px;background:rgba(40,24,14,.86);color:#f0d4a2;font-size:.72rem; }
 .route-node .node-refuge { color:#9fd0c0; }
 .sheet-refuge { display:block;color:#b9dccd;font-size:.68rem;line-height:1.3; }
+
+/* Fire Tier III: a third fork and the watchtower need more height between stages. */
+.realm-route.realm-route--long { height:calc(var(--hunt-step) * 12.5); }
+@media(max-width:360px) { .realm-route.realm-route--long { height:calc(var(--hunt-step) * 15); } }
+.route-node .node-tower { color:#e2c48c; }.route-node .node-scouted { color:#b8c4cf; }.route-node .node-scouted.elite { color:#ef9a7c; }
+.sheet-tower { display:block;color:#e8d3a6;font-size:.68rem;line-height:1.3; }.sheet-scouted { display:block;color:#cbd6df;font-size:.68rem;line-height:1.3; }

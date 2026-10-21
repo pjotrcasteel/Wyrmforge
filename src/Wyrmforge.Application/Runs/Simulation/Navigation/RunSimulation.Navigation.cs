@@ -1,4 +1,4 @@
-﻿using Wyrmforge.Application.Runs.Navigation;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Spells;
 
@@ -103,6 +103,7 @@ public sealed partial class RunSimulation
         // A trail walked again after a return to the refuge pays its route reward only once.
         if (rewardedRouteNodeIds.Add(completedNode.Id)) ApplyRouteReward(completedNode.Route?.Reward);
         TrySecureRefuge(completedNode);
+        TryScoutFromWatchtower(completedNode);
         if (completedNode.Stage == WyrmrealmMapState.CombatStages) ResolveDragonAttraction();
         mapEncounterCleanupPending = true;
     }

@@ -97,6 +97,91 @@ public sealed class FireTierThreeHuntTests
         Assert.AreEqual(0, simulation.CreateEvaluationSummary().AscendantDragonIds.Count, "The Crown of Embers is earned only through the rite.");
     }
 
+    [TestMethod]
+    public void Watchtower_ReportsExactlyTheElitesTheNextForkWillRoll()
+    {
+        int elites = 0, quiet = 0;
+        for (var seed = 1; seed <= 80; seed++)
+        {
+            var scout = Create(seed);
+            WalkTo(scout, node => node.Watchtower);
+            var reports = scout.ScoutReports;
+            var roads = reports.Keys.Select(id => Map(scout).Nodes.Single(n => n.Id == id).Site!.RoadId!).Distinct().ToArray();
+            Assert.IsTrue(roads.Length is 2 or 3, $"seed {seed}: the tower scouts every road of the last fork");
+            foreach (var road in roads)
+            {
+                var walker = Create(seed);
+                WalkTo(walker, node => node.Watchtower);
+                foreach (var trail in Map(walker).Nodes.Where(n => n.Site?.RoadId == road).OrderBy(n => n.Site!.RoadIndex))
+                {
+                    var report = reports[trail.Id];
+                    Assert.IsTrue(walker.ChooseMapNode(trail.Id));
+                    var spawnIndex = Field<int>(walker, "eliteSpawnIndex");
+                    Assert.AreEqual(report.Elite, spawnIndex > 0, $"seed {seed} {trail.Id}: elite report");
+                    if (report.Elite) Assert.AreEqual(RunSimulation.EliteEarliestSpawn, spawnIndex, "A confirmed elite arrives early.");
+                    if (spawnIndex > 0) SetField(walker, "elitesThisMap", Field<int>(walker, "elitesThisMap") + 1);
+                    Finish(walker, trail);
+                    elites += report.Elite ? 1 : 0;
+                    quiet += report.Elite ? 0 : 1;
+                }
+            }
+        }
+        Assert.IsTrue(elites > 0 && quiet > 0, $"elites {elites}, quiet {quiet}");
+    }
+
+    [TestMethod]
+    public void WithoutTheWatchtower_NothingIsRevealed_AndARefugeReturnForgetsIt()
+    {
+        var skipper = Create(9);
+        WalkTo(skipper, node => node.Type == WyrmrealmNodeType.Dragon, avoidTower: true);
+        Assert.AreEqual(0, skipper.ScoutReports.Count);
+
+        var faller = Create(9);
+        WalkTo(faller, node => node.Refuge);
+        WalkTo(faller, node => node.Watchtower);
+        Assert.IsTrue(faller.ScoutReports.Count > 0);
+        Invoke(faller, "TryReturnToRefuge");
+        Assert.AreEqual(0, faller.ScoutReports.Count, "The rewind undoes the tower, so its report is gone.");
+        WalkTo(faller, node => node.Watchtower);
+        Assert.IsTrue(faller.ScoutReports.Count > 0, "The tower can be held again.");
+    }
+
+    private static RunSimulation Create(int seed)
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: seed, hunt: HuntSelection.FireTierThree);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        return simulation;
+    }
+
+    private static WyrmrealmMapState Map(RunSimulation simulation) => Field<WyrmrealmMapState>(simulation, "mapState");
+
+    /// <summary>Clears trails until the target is complete, taking side sites and the first road otherwise.</summary>
+    private static void WalkTo(RunSimulation simulation, Func<WyrmrealmMapNode, bool> target, bool avoidTower = false)
+    {
+        while (true)
+        {
+            var available = Map(simulation).AvailableNodes;
+            var next = available.FirstOrDefault(target) ?? available.Where(n => !n.Refuge && !(avoidTower && n.Watchtower)).First();
+            if (next.Type == WyrmrealmNodeType.Dragon) return;
+            Assert.IsTrue(simulation.ChooseMapNode(next.Id));
+            Finish(simulation, next);
+            if (target(next)) return;
+        }
+    }
+
+    private static void Finish(RunSimulation simulation, WyrmrealmMapNode node)
+    {
+        var map = Map(simulation);
+        for (var kill = 0; kill < map.CurrentNodeKillsRequired; kill++) map.RegisterKill(false);
+        Assert.IsTrue(map.TryCompleteEncounter());
+        Invoke(simulation, "CompleteTrail", node);
+        SetField(simulation, "trailExitPending", false);
+    }
+
+    private static void SetField(RunSimulation simulation, string name, object value) =>
+        typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(simulation, value);
+
     private static T Field<T>(RunSimulation simulation, string name) =>
         (T)typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(simulation)!;
 

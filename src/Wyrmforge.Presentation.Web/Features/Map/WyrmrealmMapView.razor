@@ -28,7 +28,7 @@
         </details>
         <div class="hunt-chart">
         <div class="hunt-viewport" @ref="viewport" tabindex="0" aria-label="Scrollable hunt territory">
-            <div class="realm-route" aria-label="Generated Wyrmrealm route map">
+            <div class="realm-route @(Hunt?.HasWatchtower == true ? "realm-route--long" : "")" aria-label="Generated Wyrmrealm route map">
                 <svg class="hunt-terrain" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     @if (Territory is { } land)
                     {
@@ -124,9 +124,11 @@
                             @if (IsCompleted(node) || selectedNode?.Id == node.Id) { <span class="node-check">✓</span> }
                             @if (node.Rarity == WyrmrealmNodeRarity.Rare) { <span class="node-rare" aria-label="Rare trail">✦</span> }
                         </span>
-                        <span class="node-name" title="@node.EncounterName">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : node.Refuge ? "REFUGE" : WyrmrealmHabitatCatalog.ShortName(node.Habitat))</span>
+                        <span class="node-name" title="@node.EncounterName">@(node.Type == WyrmrealmNodeType.Dragon ? "THE LAIR" : node.Refuge ? "REFUGE" : node.Watchtower ? "TOWER" : WyrmrealmHabitatCatalog.ShortName(node.Habitat))</span>
                         @if (node.Site?.BonusRelic == true) { <small class="node-bonus">◆ BONUS RELIC</small> }
                         @if (node.Refuge) { <small class="node-bonus node-refuge">@(IsCompleted(node) ? "⛨ HELD" : "⛨ OPTIONAL")</small> }
+                        @if (node.Watchtower) { <small class="node-bonus node-tower">@(IsCompleted(node) ? "◉ SCOUTED" : "◉ OPTIONAL")</small> }
+                        @if (Scouted(node) is { } scout) { <small class="node-bonus node-scouted @(scout.Elite ? "elite" : "")">@(scout.Elite ? "☠ ELITE SIGHTED" : "◉ NO ELITE")</small> }
                         <span class="node-badges">
                             @foreach (var badge in NodeBadges(node)) { <span class="node-badge @badge.ClassName" title="@badge.Label" aria-label="@badge.Label">@badge.Icon</span> }
                         </span>
@@ -157,6 +159,16 @@
                             <span class="sheet-refuge">Reclaim it and a later fall returns you here. Finds made after it are lost.</span>
                         }
                         <span class="sheet-guarantee"><i class="px-icon px-sm px-@route.Reward.AttunementSchool.ToString().ToLowerInvariant()" aria-hidden="true"></i> @route.Reward.AttunementSchool upgrade · guaranteed</span>
+                        @if (selected.Watchtower)
+                        {
+                            <span class="sheet-tower">◉ Optional detour · scouts the last fork</span>
+                            <span class="sheet-tower">Hold it to see which roads hide an elite and how hard each road runs.</span>
+                        }
+                        @if (Scouted(selected) is { } report)
+                        {
+                            <span class="sheet-scouted">@(report.Elite ? "☠ Scouted: an elite walks this road early" : "◉ Scouted: no elite on this trail")</span>
+                            @foreach (var trait in DetailTraits(route)) { <span class="sheet-scouted">@trait</span> }
+                        }
                         @if (route.Reward.RecoveryFraction > 0) { <span>♥ @($"{route.Reward.RecoveryFraction * 100:0}%") recovery</span> }
                         @if (route.Reward.Relic is not null) { <span>◆ Relic cache</span> }
                         @if (selected.Rarity == WyrmrealmNodeRarity.Rare) { <span class="rare-trait">✦ Rare · stronger enemies</span> }
@@ -164,7 +176,7 @@
                     }
                     else { <span>@(Hunt is not null ? $"{HuntTargetLabel} duel · Harvest an Essence, then extract" : "Wyrm duel · Refuge beyond")</span> }
                 </div>
-                <button class="enter-trail" disabled="@(!IsAvailable(selected))" @onclick="ConfirmSelectedAsync">@(IsAvailable(selected) ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : selected.Refuge ? "Reclaim the refuge" : selected.Rarity == WyrmrealmNodeRarity.Rare ? "Enter rare trail" : "Enter trail" : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")</button>
+                <button class="enter-trail" disabled="@(!IsAvailable(selected))" @onclick="ConfirmSelectedAsync">@(IsAvailable(selected) ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : selected.Refuge ? "Reclaim the refuge" : selected.Watchtower ? "Take the watchtower" : selected.Rarity == WyrmrealmNodeRarity.Rare ? "Enter rare trail" : "Enter trail" : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")</button>
             }
             else
             {
@@ -186,6 +198,10 @@
     [Parameter] public EventCallback<string> OnChoose { get; set; }
     [Parameter] public int RefugeReturns { get; set; }
     [Parameter] public int LastRefugeLoss { get; set; }
+    /// <summary>What a held watchtower confirmed about the next fork, by trail id. Empty without the detour.</summary>
+    [Parameter] public IReadOnlyDictionary<string, Wyrmforge.Application.Runs.Simulation.TrailScoutReport> ScoutReports { get; set; } = new Dictionary<string, Wyrmforge.Application.Runs.Simulation.TrailScoutReport>();
+
+    private Wyrmforge.Application.Runs.Simulation.TrailScoutReport? Scouted(WyrmrealmMapNode node) => ScoutReports.TryGetValue(node.Id, out var report) ? report : null;
 
     private string HuntTargetLabel => Hunt?.TargetName ?? "Ashfang";
 
