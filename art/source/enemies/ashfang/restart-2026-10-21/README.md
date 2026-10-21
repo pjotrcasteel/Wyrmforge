@@ -87,3 +87,36 @@ Next work must preserve the original card detail rather than treating silhouette
 overlap as art acceptance. No further animation, runtime integration or merge is
 validated by this review. Earlier reconstruction next-step notes above are
 historical and superseded by the documented method stop.
+
+
+## Current animation checkpoint after owner joint guide
+
+Owner rejected the first motion appearance and supplied a green-line skeleton
+plus idle, stalk, breath and collapse panels. owner-guide-001 registers that
+guide to the original card using 502 affine inliers. The original screenshot
+is not copied into the repository; only derived coordinates and the original
+card overlay are saved. Follow the full hip/knee/hock/paw chains.
+
+Actual exports now exist:
+- card-mesh-idle-001: 64-frame breathing study, original visible rest pixels exact.
+- layered-stalk-006: 64-frame owner-guided gait; smoothed skin weights, planted
+  joint stance and chest/wing/tail response. Minimum triangle area ratio 0.465;
+  no flips. This does not by itself pass artistic review. Layer joins and stalk
+  posture still need improvement. Earlier 002/004/005 are superseded or rejected.
+- card-breath-attack-001: 96-frame original-card breath pose, charge/recoil, timed
+  emission and recovery. First/last visible rest pixels match. No idle transition
+  or jaw articulation yet. Existing gameplay damage rules are not changed.
+
+All run on the local RTX 5090. Editable limb layers, hidden-paint provenance,
+source scripts, joint poses and atlases are preserved. The live local review is
+http://127.0.0.1:4189/motion-review.html (loopback server must be running).
+Browser idle/stalk/breath selectors were opened and the running frame counters
+observed. PNG counts, RGBA dimensions and edge bounds pass. GIF timing is
+approximate; the HTML player uses the actual FPS.
+
+The owner wants independent work through a ready beast, not intermediate
+approval stops. Continue self-review without asking routine questions. Do not
+call these studies a finished enemy. Outstanding: layer/pose polish, connected
+transitions, jaw, collapse, flight/landing, additional directions and native
+game integration. Keep PR186 draft. The earlier static-only next steps above
+are historical and superseded by this actual motion checkpoint.

@@ -1,0 +1,38 @@
+{
+  "card-mesh-idle-001": {
+    "frames": 64,
+    "cell": [
+      320,
+      192
+    ],
+    "rgba": true,
+    "edgeClipping": false
+  },
+  "layered-stalk-006": {
+    "frames": 64,
+    "cell": [
+      320,
+      192
+    ],
+    "rgba": true,
+    "edgeClipping": false
+  },
+  "card-breath-attack-001": {
+    "frames": 96,
+    "cell": [
+      416,
+      192
+    ],
+    "rgba": true,
+    "edgeClipping": false
+  },
+  "attackRestClosureVisiblePixelsExact": true,
+  "browserReview": {
+    "url": "http://127.0.0.1:4189/motion-review.html",
+    "idleLoaded": true,
+    "stalkLoadedAndFrameCounterAdvanced": true,
+    "breathLoaded": true,
+    "ownerAccepted": false,
+    "remaining": "Pose transitions, lower stalk posture, jaw, flight, collapse and other directions remain unfinished."
+  }
+}
