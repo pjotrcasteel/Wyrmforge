@@ -268,7 +268,10 @@ test('debug geometry stays label-free and residents have authored four connected
     assert.match(simulation, /citizen\.AwaySeconds/);
     assert.match(simulation, /citizen\.IsReturning/);
     assert.match(simulation, /citizen\.DepartureCount\+\+/);
-    assert.match(simulation, /_navigation\.Destinations\[citizen\.CurrentNode\]\.IsExit/);
+    assert.match(simulation, /if \(reached\.IsExit\)/);
+    assert.match(simulation, /citizen\.DepartingSouth = true/);
+    assert.match(simulation, /citizen\.IsPresent = false/);
+    assert.match(simulation, /reached\.Id == "world-gate-exit"/);
     assert.ok(map.walkable.some(surface => surface.id === 'world-gate-stairs'));
     assert.ok(map.walkable.some(surface => surface.id === 'west-market-approach'));
     assert.ok(map.walkable.some(surface => surface.id === 'east-market-approach'));
