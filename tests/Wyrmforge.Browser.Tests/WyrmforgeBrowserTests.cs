@@ -37,6 +37,41 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_RefugeGeometryDebug_ShowsTrueBuildingCollidersOnlyOnOptIn()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
+        var before = await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
+            "buttons => [...buttons].map(button => button.dataset.townState).join(',')");
+
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townGeometry=1",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var debug = Page.Locator(".refuge-town-geometry-debug");
+        await Expect(debug).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelectorAll('.refuge-town-geometry-solid').length >= 15");
+        foreach (var id in new[] { "arcane-nexus-building", "blacksmith-building", "codex-building",
+            "hall-of-fame-building", "world-gate-west-tower", "world-gate-east-tower", "world-gate-arch-roof" })
+        {
+            await Expect(debug.Locator($".refuge-town-geometry-solid[data-town-obstacle='{id}']")).ToHaveCountAsync(1);
+        }
+        Assert.IsTrue(await debug.EvaluateAsync<bool>(
+            "element => getComputedStyle(element).pointerEvents === 'none'"));
+        Assert.IsTrue(await debug.Locator(".refuge-town-geometry-solid").First.EvaluateAsync<bool>(
+            "element => getComputedStyle(element).fill.includes('235, 36, 40')"), "Solid geometry should be red.");
+        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(2);
+        Assert.AreEqual(before, await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
+            "buttons => [...buttons].map(button => button.dataset.townState).join(',')"));
+
+        await ScreenshotAsync("refuge-town-geometry-debug-mobile.png");
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_BuildingLab_CanAuthorAndLockIndependentStages_WithoutChangingGame(int width, int height)
