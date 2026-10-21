@@ -528,3 +528,22 @@ Owner requires current-game viewport fit and unchanged player size even when its
 
 Native density56 px/model unit, fixed camera, launch row300, HUD protection152px and bottom24px. Fire/shadow tracks retarget190px down toward player row. Object-level world offsets are keyed in V34. High/overhead altitude increases to17 source units for the taller camera. Six earlier ordinary actions are vertex-identical; all nine actions finite and above floor. Fit preview preserves native reference/player/HUD pixels without resizing and will be a local composite, not a capture of implemented gameplay. GPU fit and visible-body audits pending. Canonical unchanged-player-size constraint updated.
 
+
+V34 local Hunt-fit render completed on RTX 5090. Local-only review path:
+V34/hunt-fit-review-v1/aerial-fire-attack.gif; all 279 native PNGs and
+fit-audit.json remain local. The output uses the supplied canvas crop at
+440x955, no resampling. Player reference ROI is pixel-identical at the start;
+HUD region is pixel-identical in every PNG. Mage atlas body remains 39px high.
+Ashfang grounded bounds are 64.712px wide (~14.71%, approximately the Tier-I
+15% lower target); no per-frame scaling. All nine actions finite/floor-safe;
+six previous ordinary actions unchanged. Actual raster audit confirms zero
+visible body pixels during overhead passes. Fire/shadow tracks now cross
+near the player's unchanged portrait-screen row.
+
+This is a screenshot composite for art/scale review, not implemented gameplay
+or a live Hunt capture. Screenshot and derived composites are deliberately
+Git-ignored following automatic privacy review; they have NOT been published.
+The source rig, path metadata, numeric fit settings and implementation receipts
+are checkpointed publicly without screenshot pixels. Actual responsive HUD,
+C# aerial integration, final VFX/actions/directions and mobile runtime validation
+remain outstanding. Do not treat local screenshot compositing as live validation.
