@@ -6,7 +6,7 @@ import numpy as np,cv2
 from PIL import Image,ImageDraw
 
 folder=Path(sys.argv[1]);out=folder/'card-review-v1';out.mkdir(exist_ok=False)
-reference=Image.open(folder.parent/'references-v4/pixel-idle-reference.png').convert('RGBA');canvas=Image.new('RGBA',(1024,576));canvas.paste(reference.resize((924,460),Image.Resampling.NEAREST),(50,58))
+settings=json.loads((folder/'provenance.json').read_text());reference=Image.open(folder.parent/settings.get('referenceDirectory','references-v4')/'pixel-idle-reference.png').convert('RGBA');canvas=Image.new('RGBA',(1024,576));canvas.paste(reference.resize((924,460),Image.Resampling.NEAREST),(50,58))
 reference_mask=np.asarray(canvas.getchannel('A'))>127
 colours=np.asarray(reference)[:,:,:3][np.asarray(reference)[:,:,3]>127];palette=Image.fromarray(colours[None]).quantize(colors=64)
 board=Image.new('RGB',(1280,1040),(43,42,45));draw=ImageDraw.Draw(board);reports=[]
