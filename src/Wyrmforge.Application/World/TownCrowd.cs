@@ -192,6 +192,21 @@ public sealed class TownCrowd
 
     private void ChooseNextStop(TownCitizen citizen)
     {
+        // An initial seeded departure makes every public exit observable in playtests.
+        // Subsequent trips use the same autonomous weighted decision logic for everyone.
+        if (!citizen.IsReturning && citizen.DepartureCount == 0 && citizen.Id <= 4)
+        {
+            var firstExit = citizen.Id switch
+            {
+                1 => "world-gate-exit",
+                2 => "west-street-exit",
+                3 => "east-street-exit",
+                _ => "south-street-exit"
+            };
+            var exitNode = _navigation.Destinations.FindIndex(destination => destination.Id == firstExit);
+            if (exitNode >= 0 && TryChoose(citizen, [exitNode])) return;
+        }
+
         var anchors = Enumerable.Range(0, _navigation.Destinations.Count)
             .Where(index => index != citizen.CurrentNode &&
                 (!citizen.IsReturning || !_navigation.Destinations[index].IsExit) &&
