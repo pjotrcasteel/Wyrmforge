@@ -232,6 +232,30 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_VisibilityAccelerationPreservesClearRoutesAndSolidFootprints()
+    {
+        var map = Scene();
+        var south = map.Destinations.Single(destination => destination.Id == "south").Position;
+        var lower = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
+        Assert.IsTrue(map.IsSegmentWalkable(south, lower),
+            "The open central paving between ordinary stops should remain a direct path.");
+        Assert.IsFalse(map.IsSegmentWalkable(new TownPoint(570, 529), new TownPoint(1040, 525)),
+            "The well remains solid even if the segment crosses its footprint.");
+        Assert.IsFalse(map.IsSegmentWalkable(new TownPoint(625, 486), new TownPoint(1014, 484)),
+            "The shallow route behind the well must not cut the painted noticeboard.");
+
+        map.SetObstacle(new TownFootprint
+        {
+            Id = "navigation-visibility-test-cart",
+            Footprint = [new(817, 677), new(830, 677), new(830, 690), new(817, 690)]
+        });
+        Assert.IsFalse(map.IsSegmentWalkable(south, lower),
+            "Changing obstacle revision must invalidate formerly clear direct routes.");
+        Assert.IsTrue(map.RemoveObstacle("navigation-visibility-test-cart"));
+        Assert.IsTrue(map.IsSegmentWalkable(south, lower));
+    }
+
+    [TestMethod]
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();
