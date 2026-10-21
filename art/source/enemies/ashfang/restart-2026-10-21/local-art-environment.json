@@ -1,0 +1,11 @@
+{
+  "python": "/opt/wyrmforge-card-art/bin/python",
+  "torch": "2.8.0+cu128",
+  "diffusers": "0.35.1",
+  "accelerate": "1.10.1",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "trellisRuntimeModified": false,
+  "torchUpgraded": false,
+  "gpuDriversChanged": false,
+  "hostedInference": false
+}
