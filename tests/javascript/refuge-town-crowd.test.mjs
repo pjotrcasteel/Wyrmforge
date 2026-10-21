@@ -403,3 +403,17 @@ test('west bush polygon sits over actual painted hedge left of the banner, not o
     assert.ok(Math.max(...bush.footprint.map(p => p.y)) >= 765);
     assert.ok(map.walkable.some(x => x.id === 'forge-lower-street-paved-link'));
 });
+
+test('Phase 2 route inspector displays the real active NPC path only when explicitly selected', () => {
+    const sceneMarkup = source(scene);
+    const actorMarkup = source(actors);
+    const crowd = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(sceneMarkup, /data-town-layer-select="Route"/);
+    assert.match(sceneMarkup, /ShowRoutes="@\(showTownGeometry && geometryLayer == TownGeometryLayer.Route\)"/);
+    assert.match(actorMarkup, /ShowRoutes && Crowd\.InspectActiveRoute\(\)/);
+    assert.match(actorMarkup, /data-town-route-citizen="@route.CitizenId"/);
+    assert.match(actorMarkup, /class="refuge-town-route-line" points="@RoutePoints\(route\)"/);
+    assert.match(crowd, /citizen\.Path\.Skip\(citizen\.PathIndex\)\.ToArray\(\)/);
+    assert.match(css, /\.refuge-town-route-debug\s*\{[^}]*pointer-events:none/s);
+});

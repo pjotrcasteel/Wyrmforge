@@ -53,6 +53,9 @@ public sealed class TownCitizen
 /// Seeded ambient decision making. The map owns roads and obstacles; a cart or
 /// new solid prop invalidates existing paths and A* reroutes without NPC-specific patches.
 /// </summary>
+/// <summary>One NPC's current, unconsumed path, copied for the opt-in route inspector.</summary>
+public sealed record TownRoutePreview(int CitizenId, TownPoint Feet, IReadOnlyList<TownPoint> Waypoints);
+
 public sealed class TownCrowd
 {
     private readonly List<TownCitizen> _citizens = [];
@@ -126,6 +129,24 @@ public sealed class TownCrowd
     public int PresentCitizens => _citizens.Count(citizen => citizen.IsPresent);
     public int AwayCitizens => _citizens.Count - PresentCitizens;
     public TownNavigationMap Navigation => _navigation;
+
+    /// <summary>
+    /// Debug-only read of a real active A* route. Never finds paths, changes citizens,
+    /// or allocates unless the inspector explicitly requests a visible route.
+    /// </summary>
+    public TownRoutePreview? InspectActiveRoute()
+    {
+        foreach (var citizen in _citizens)
+        {
+            if (!citizen.IsPresent || !citizen.IsWalking || citizen.PathIndex >= citizen.Path.Count)
+                continue;
+
+            return new TownRoutePreview(citizen.Id, citizen.Position,
+                citizen.Path.Skip(citizen.PathIndex).ToArray());
+        }
+
+        return null;
+    }
 
     public void SetOpenBuildings(IEnumerable<string> buildingIds)
     {

@@ -177,3 +177,20 @@
 .game-shell.refuge-home .refuge-town-geometry-debug[data-town-geometry-layer="Occlusion"] .refuge-town-geometry-visual {
     fill:rgba(255,165,0,.22);
 }
+
+/* Developer Route view: one real NPC's remaining A* waypoints.
+   Passive SVG sits over the same panorama coordinates and never captures swipes. */
+.game-shell.refuge-home .refuge-town-route-debug {
+    position:absolute;inset:0;z-index:11001;width:100%;height:100%;
+    pointer-events:none;user-select:none;overflow:visible;
+}
+.game-shell.refuge-home .refuge-town-route-line {
+    fill:none;stroke:#f4d365;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-route-start {
+    fill:#1b3340;stroke:#f4d365;stroke-width:2;vector-effect:non-scaling-stroke;
+}
+.game-shell.refuge-home .refuge-town-route-end {
+    fill:#f4d365;stroke:#1b3340;stroke-width:2;vector-effect:non-scaling-stroke;
+}

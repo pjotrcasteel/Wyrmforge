@@ -752,6 +752,32 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void InspectActiveRoute_DuringRoaming_ReturnsRealRemainingWaypointsWithoutChangingTheSimulation()
+    {
+        var crowd = new TownCrowd(Scene(), seed: 205, citizenCount: 14);
+        TownRoutePreview? preview = null;
+        for (var step = 0; step < 100 && preview is null; step++)
+        {
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            preview = crowd.InspectActiveRoute();
+        }
+
+        Assert.IsNotNull(preview, "A walking citizen should expose its current path in the debug mode.");
+        Assert.IsTrue(preview.Waypoints.Count > 0);
+        Assert.IsTrue(crowd.Citizens.Any(c => c.Id == preview.CitizenId && c.Position == preview.Feet));
+        Assert.IsTrue(crowd.Navigation.IsWalkable(preview.Feet));
+        foreach (var point in preview.Waypoints)
+            Assert.IsTrue(crowd.Navigation.IsWalkable(point), "The preview must use the actual validated route.");
+
+        var before = crowd.PathfindCount;
+        var again = crowd.InspectActiveRoute();
+        Assert.IsNotNull(again);
+        Assert.AreEqual(preview.CitizenId, again.CitizenId);
+        CollectionAssert.AreEqual(preview.Waypoints.ToArray(), again.Waypoints.ToArray());
+        Assert.AreEqual(before, crowd.PathfindCount, "Showing a route must not trigger pathfinding.");
+    }
+
+    [TestMethod]
     public void TownCrowd_InvalidCount_IsRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: -1));
