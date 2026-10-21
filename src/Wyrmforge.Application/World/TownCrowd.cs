@@ -41,6 +41,7 @@ public sealed class TownCitizen
     internal int PathIndex { get; set; }
     internal int PathRevision { get; set; }
     internal float WaitingSeconds { get; set; }
+    internal int AvoidanceSide { get; set; } = 1;
     internal float AwaySeconds { get; set; }
     internal bool IsReturning { get; set; }
     internal TownPoint EntryOrigin { get; set; }
@@ -288,9 +289,11 @@ public sealed class TownCrowd
 
             // A returning citizen must reserve a clear foot circle before becoming visible.
             var willAppear = citizen.IsReturning && Distance(position, citizen.EntryOrigin) >= 52f;
-            if ((citizen.IsPresent || willAppear) && _citizens.Any(other =>
-                other != citizen && other.IsPresent && Distance(other.Position, position) < 20f))
+            if ((citizen.IsPresent || willAppear) && HasNeighbourAt(citizen, position))
             {
+                // A short, deterministic paved sidestep breaks head-on standoffs
+                // without adding a dynamic obstacle to the cached A* navigation.
+                if (TrySidestep(citizen, dx, dy, distance, step)) return;
                 citizen.WaitingSeconds += seconds;
                 if (citizen.WaitingSeconds > 2.5f)
                 {
@@ -343,6 +346,50 @@ public sealed class TownCrowd
         citizen.WorkBuildingId = null;
         citizen.CurrentActivity = null;
         citizen.IdleSeconds = .5f + NextInt(22) / 10f;
+    }
+
+    private bool HasNeighbourAt(TownCitizen citizen, TownPoint point)
+    {
+        foreach (var other in _citizens)
+        {
+            if (other == citizen || !other.IsPresent) continue;
+            var dx = other.Position.X - point.X;
+            var dy = other.Position.Y - point.Y;
+            if (dx * dx + dy * dy < 20f * 20f) return true;
+        }
+        return false;
+    }
+
+    private bool TrySidestep(TownCitizen citizen, float dx, float dy, float distance, float step)
+    {
+        if (distance <= .0001f || step <= 0f) return false;
+
+        // Opposing walkers each move to their own right, naturally creating two lanes.
+        // Keep the chosen side for this encounter so narrow paving does not cause jitter.
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var side = attempt == 0 ? citizen.AvoidanceSide : -citizen.AvoidanceSide;
+            var candidate = new TownPoint(
+                citizen.Position.X - dy / distance * step * side,
+                citizen.Position.Y + dx / distance * step * side);
+            if (!_navigation.IsWalkable(candidate) ||
+                !_navigation.IsSegmentWalkable(citizen.Position, candidate) ||
+                HasNeighbourAt(citizen, candidate))
+                continue;
+
+            citizen.Position = candidate;
+            citizen.AvoidanceSide = side;
+            citizen.WaitingSeconds = 0;
+            if (citizen.IsReturning && Distance(candidate, citizen.EntryOrigin) >= 52f)
+            {
+                citizen.IsReturning = false;
+                citizen.IsPresent = true;
+            }
+            // Preserve the original destination and cached path: next tick the actor
+            // resumes forward progress instead of replanning for another pedestrian.
+            return true;
+        }
+        return false;
     }
 
     private void ChooseNextStop(TownCitizen citizen)
