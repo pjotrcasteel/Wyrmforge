@@ -53,6 +53,11 @@ export async function initializeArenaLab(canvas, dotnet) {
     state.events.push(bind(canvas, 'pointermove', event => handlePointerMove(state, event)));
     state.events.push(bind(canvas, 'pointerup', event => handlePointerUp(state, event)));
     state.events.push(bind(canvas, 'pointercancel', event => handlePointerUp(state, event)));
+    // iOS Safari and embedded iPhone webviews may scroll the document before
+    // pointer capture takes effect. Own touch gestures only inside the canvas.
+    const blockPageScroll = event => { if (event.cancelable) event.preventDefault(); };
+    state.events.push(bind(canvas, 'touchstart', blockPageScroll, { passive: false }));
+    state.events.push(bind(canvas, 'touchmove', blockPageScroll, { passive: false }));
     state.events.push(bind(window, 'keydown', event => key(state, event, true)));
     state.events.push(bind(window, 'keyup', event => key(state, event, false)));
     state.events.push(bind(window, 'blur', () => { state.keys.clear(); state.pointer = null; }));
@@ -68,9 +73,9 @@ export async function initializeArenaLab(canvas, dotnet) {
     state.raf = requestAnimationFrame(now => tick(state, now));
 }
 
-function bind(target, name, listener) {
-    target.addEventListener(name, listener);
-    return () => target.removeEventListener(name, listener);
+function bind(target, name, listener, options) {
+    target.addEventListener(name, listener, options);
+    return () => target.removeEventListener(name, listener, options);
 }
 export function configureArenaLab(canvas, tool, collision, mobs) {
     const state = labs.get(canvas);
@@ -119,7 +124,9 @@ function keyboardMotion(state) {
 function handlePointerDown(state, event) {
     if (!state.frame) return;
     event.preventDefault();
-    state.canvas.focus();
+    // Focusing a canvas on touch causes Safari to scroll it into view.
+    // Keep keyboard focus for desktop without ever moving the document.
+    if (event.pointerType !== 'touch') state.canvas.focus({ preventScroll: true });
     if (state.options.tool === 'hit' || state.options.tool === 'blast') {
         strike(state, event.clientX, event.clientY, state.options.tool === 'blast');
         return;
@@ -138,6 +145,7 @@ function handlePointerDown(state, event) {
 }
 function handlePointerMove(state, event) {
     if (!state.pointer || event.pointerId !== state.pointer.id) return;
+    if (event.cancelable) event.preventDefault();
     const pointer = state.pointer;
     if (pointer.mode === 'pan') {
         const rect = state.canvas.getBoundingClientRect();
