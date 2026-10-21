@@ -10,6 +10,7 @@ from ashfang_wings import rebuild_wings,wing_layout
 from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
 from ashfang_motion import flight_state,cruise_state,connected_flight_state,CONNECTED_FLIGHT_FRAMES,CONNECTED_FLIGHT_EVENTS,FLIGHT_EVENTS,high_launch_state,fire_pass_state,arena_flyover_state,hunt_fitted_arena_state,ARENA_FLYOVER_FRAMES
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
+stance_only='--stance-only' in sys.argv
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
 # Original source sculpt: lift and broaden the low reconstructed skull/neck so
@@ -103,6 +104,11 @@ for index,p in enumerate(v):
         permitted=['head'];region='head'
     elif source_labels[index] in (3,4):
         side='L' if source_labels[index]==3 else 'R';permitted=[f'hind.{i}.{side}' for i in range(3)];region='hind'
+    elif source_labels[index]==5:permitted=['pelvis','spine','chest'];region='body'
+    elif source_labels[index]==6:permitted=['chest','neck.0','neck.1'];region='neck'
+    elif source_labels[index] in (7,8):
+        side='L' if source_labels[index]==7 else 'R';permitted=[f'fore.{i}.{side}' for i in range(3)];region='fore'
+    elif source_labels[index]==9:permitted=['jaw'];region='jaw'
     elif y<-.30 and abs(x)<.15 and z>-.08:
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.035 and y<-.055:
@@ -131,6 +137,7 @@ def ik(a,b,l1,l2,pole):
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
 clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
 for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('flight-loop',17),('landing',31),('flight-sequence',CONNECTED_FLIGHT_FRAMES),('high-launch',55),('fire-flyover',56),('arena-flyovers',ARENA_FLYOVER_FRAMES)]:
+    if stance_only and clip!='walk':continue
     arena_clip=clip in ('high-launch','fire-flyover','arena-flyovers')
     def state_at(t):
         if clip=='high-launch':return high_launch_state(t*(count-1))
@@ -145,7 +152,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
     flex_action=bpy.data.actions.new('Ashfang_membrane_'+clip);flex_action.use_fake_user=True;obj.data.shape_keys.animation_data_create();obj.data.shape_keys.animation_data.action=flex_action
     path_action=bpy.data.actions.new('Ashfang_path_'+clip);path_action.use_fake_user=True;path_root.animation_data_create();path_root.animation_data.action=path_action
     action=bpy.data.actions.new('Ashfang_'+clip);action.use_fake_user=True;rig.animation_data_create();rig.animation_data.action=action;sample=[];emitters=[];skeleton=[];roots=[];attack_signals=[]
-    for frame in range(count):
+    for frame in range(1 if stance_only else count):
         phase=frame/(count-1);altitude=0;rear=0;spread=.08;flap=0;pitch=0;advance=0;jaw=0;flight=None;foot_goals={}
         if clip=='walk':bob=.008*math.sin(phase*math.pi*4);pitch=.025*math.sin(phase*math.pi*2)
         elif clip=='rear-breath':
@@ -295,6 +302,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
     for curve in list(action.fcurves)+list(path_action.fcurves)+list(flex_action.fcurves):
         for key in curve.keyframe_points:key.interpolation='LINEAR'
     clips[clip]=dict(frames=count,fps=24,loop=clip in ('walk','flight-loop'),action=action.name,events=(CONNECTED_FLIGHT_EVENTS if clip=='flight-sequence' else [dict(phase=(e['phase']-.64)/.36,name=e['name']) for e in FLIGHT_EVENTS if e['phase']>=.64] if clip=='landing' else FLIGHT_EVENTS if clip=='takeoff-flight-land' else []),strideDistanceModelUnits=.10/.72 if clip=='walk' else None,reviewRenderer='arena' if arena_clip else 'block');positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
+    if stance_only:clips[clip].update(frames=1,loop=False,silhouetteGateOnly=True)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots),attackSignals=np.array(attack_signals))
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];obj.data.shape_keys.animation_data.action=bpy.data.actions['Ashfang_membrane_walk'];path_root.animation_data.action=bpy.data.actions['Ashfang_path_walk'];scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and nine motion studies',flush=True)
