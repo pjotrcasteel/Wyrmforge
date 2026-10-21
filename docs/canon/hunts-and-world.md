@@ -21,6 +21,8 @@ The first slice teaches combat, one committed fork, the selected Wyrm and securi
 
 **Hunt length curve (TUNABLE starting values):** combat trails grow by roughly ×1.7 per tier — I 3–4, II 6–8, III ≈10–13, IV ≈17–21, V ≈28–34, then the lineage's Endless frontier. Only Tiers I–II are authored.
 
+**21 October owner decision — ladder Ascendants are not the Ascendant Rite (LOCKED):** Defeating Ascendant Ashfang as the Fire Tier-II target clears the tier but does **not** count as the Great Hunt Ascendant Rite victory; the **Crown of Embers** (and every future rite trophy) is earned only through the invoked rite after the oath is sealed.
+
 **Delivery boundary:** Arena Lab is solely for arena design/testing. Keep it independent of real Hunt-route progression and do not enable lab generation in ordinary Hunts as part of this change. Preserve existing Frost/Ascendant paths while Fire is delivered. Seasons come later.
 
 Introductory hunts **shorter**, increasingly formidable Wyrms have longer, richer expeditions (more acts, hazards and meaningful branch decisions). Illustrative shortest-path **combat fights before boss**, not locked balance constants:
