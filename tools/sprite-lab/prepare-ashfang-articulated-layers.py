@@ -8,18 +8,19 @@ import numpy as np
 from PIL import Image,ImageDraw
 
 base=Path('art/source/enemies/ashfang/restart-2026-10-21')
-out=base/'articulated-layers-001';out.mkdir(exist_ok=False)
+out=base/'articulated-layers-002';out.mkdir(exist_ok=False)
 original=Image.open(base/'references-v5/pixel-idle-reference.png').convert('RGBA')
 regions={
- 'near_foreleg':[(104,75),(115,76),(120,83),(121,91),(130,100),(138,102),(137,108),(130,112),(123,108),(119,109),(113,103),(110,98),(105,94),(100,87)],
- 'far_foreleg':[(133,78),(145,77),(150,84),(150,90),(155,95),(163,99),(166,107),(159,110),(150,108),(143,102),(138,96),(132,91)],
- 'near_hindleg':[(61,78),(75,78),(79,84),(74,91),(70,96),(69,101),(75,103),(74,108),(65,108),(58,104),(53,105),(50,100),(52,92),(56,85)],
- 'far_hindleg':[(81,82),(91,81),(96,88),(92,96),(92,100),(97,103),(95,109),(87,110),(81,106),(78,99),(80,92)]}
+ 'near_foreleg':[(110,61),(119,64),(120,71),(111,79),(108,83),(115,91),(126,99),(137,102),(139,107),(130,112),(122,107),(116,108),(110,100),(104,94),(98,89),(93,82),(96,75),(103,68)],
+ 'far_foreleg':[(134,64),(145,65),(149,72),(140,80),(137,84),(145,93),(157,99),(165,104),(164,109),(153,110),(144,103),(138,96),(131,88),(125,81),(128,74)],
+ 'near_hindleg':[(71,70),(82,72),(85,79),(81,89),(73,95),(72,100),(77,103),(75,109),(63,109),(57,105),(55,99),(57,91),(65,85),(65,78)],
+ 'far_hindleg':[(85,73),(94,76),(97,84),(95,90),(87,96),(91,100),(97,105),(95,110),(86,109),(79,102),(76,97),(78,91),(84,86)]}
 bones={
- 'near_foreleg':{'shoulder':[109,79],'elbow':[111,94],'paw':[129,106]},
- 'far_foreleg':{'shoulder':[139,81],'elbow':[145,95],'paw':[158,105]},
- 'near_hindleg':{'hip':[70,82],'knee':[60,91],'hock':[58,99],'paw':[66,104]},
- 'far_hindleg':{'hip':[87,84],'knee':[87,94],'paw':[89,105]}}
+ 'near_foreleg':{},'far_foreleg':{},'near_hindleg':{},'far_hindleg':{}}
+guide=json.loads((base/'owner-guide-001/skeleton.json').read_text())['joints']
+for name in bones:
+ keys=['shoulder','elbow','paw'] if 'fore' in name else ['hip','knee','hock','paw']
+ bones[name]=dict(zip(keys,guide[name]))
 layers=[];claimed=Image.new('L',original.size)
 for name,poly in regions.items():
  mask=Image.new('L',original.size);ImageDraw.Draw(mask).polygon(poly,fill=255)

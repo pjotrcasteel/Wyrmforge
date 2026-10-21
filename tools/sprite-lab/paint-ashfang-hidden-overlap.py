@@ -7,14 +7,15 @@ import numpy as np,torch
 from PIL import Image,ImageDraw
 from diffusers import StableDiffusionXLInpaintPipeline
 base=Path('art/source/enemies/ashfang/restart-2026-10-21')
-folder=base/'articulated-layers-001';out=folder/'hidden-overlap-001';out.mkdir(exist_ok=False)
+folder=base/'articulated-layers-002';out=folder/'hidden-overlap-001';out.mkdir(exist_ok=False)
 ref=Image.open(base/'references-v5/pixel-idle-reference.png').convert('RGBA')
 canvas=Image.new('RGB',(1024,576),(45,44,47));canvas.paste(ref.resize((924,460),Image.Resampling.NEAREST),(50,58),ref.resize((924,460),Image.Resampling.NEAREST))
 mask=Image.new('L',ref.size);draw=ImageDraw.Draw(mask)
 # These patches are occluded by original limbs at rest. Only proximal attachment
 # regions receive paint; gaps below the body must remain transparent.
-polys=[[(101,75),(116,75),(121,84),(117,91),(106,91),(100,86)],[(132,77),(144,77),(149,85),(144,91),(133,89)],[(61,78),(75,78),(79,85),(72,94),(57,94),(55,87)],[(81,81),(92,81),(96,88),(91,96),(81,95),(77,89)]]
+polys=[[(103,61),(120,61),(121,76),(109,86),(96,86),(93,79)],[(131,63),(146,63),(150,76),(140,84),(126,83)],[(67,70),(83,70),(85,84),(76,94),(59,94),(58,85)],[(83,73),(97,74),(98,86),(90,94),(79,94),(78,85)]]
 for p in polys:draw.polygon(p,fill=255)
+mask=Image.fromarray(np.minimum(np.asarray(mask),np.asarray(ref.getchannel('A'))))
 bigmask=Image.new('L',(1024,576));bigmask.paste(mask.resize((924,460),Image.Resampling.NEAREST),(50,58));bigmask.save(out/'paint-mask.png');canvas.save(out/'input.png')
 pipe=StableDiffusionXLInpaintPipeline.from_pretrained('/opt/wyrmforge-models/SDXL-card-art',torch_dtype=torch.float16,variant='fp16',use_safetensors=True,local_files_only=True,add_watermarker=False).to('cuda')
 prompt='isometric pixel art, black obsidian dragon body, overlapping jagged charcoal armor plates, warm red orange molten cracks, muscular shoulder and hip attachments, same crouching dragon, detailed game sprite'

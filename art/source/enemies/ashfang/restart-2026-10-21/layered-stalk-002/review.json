@@ -1,0 +1,16 @@
+{
+  "status": "Rejected: owner guide supersedes joint placement; 0.848px unreachable paw target; torso too rigid",
+  "ownerAccepted": false,
+  "frames": 48,
+  "fps": 16,
+  "travelPerCycleSourcePixels": 8.0,
+  "stanceFraction": 0.7,
+  "maxReachBeyondBoneLength": 0.8476909430145589,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "limitations": [
+    "One view only",
+    "Small stride; source layer cuts/hidden overlap require review",
+    "Body and wing secondary articulation not yet added to this gait"
+  ],
+  "accepted": false
+}
