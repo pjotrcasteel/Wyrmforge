@@ -27,6 +27,18 @@ v[:,2]+=.035*tail_t**2
 muzzle=np.clip((-v[:,1]-.38)/.18,0,1)
 v[:,0]*=1-.30*muzzle
 v[:,2]+=.018*muzzle
+# Reconstructed low inter-leg webbing belongs to an arched underside, not a
+# giant paw. Sculpt it upward in the source; keep actual paw rows unchanged.
+belly_front=np.clip((v[:,1]+.14)/.085,0,1);belly_front=belly_front**2*(3-2*belly_front)
+belly_back=np.clip((v[:,1]-.075)/.065,0,1);belly_back=1-belly_back**2*(3-2*belly_back)
+low=np.clip((-.10-v[:,2])/.06,0,1)
+fore_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]+.285)/.135)**2
+hind_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]-.19)/.14)**2
+fore_paw=np.where(v[:,1]<-.055,fore_paw,2.0)
+hind_paw=np.where((v[:,1]>.04)&(v[:,1]<.34),hind_paw,2.0)
+clear_of_paws=np.clip((np.minimum(fore_paw,hind_paw)-1.2)/.4,0,1)
+belly_surface=-.10+.02*np.maximum(0,1-abs(v[:,0])/.25)**2
+v[:,2]+=np.maximum(0,belly_surface-v[:,2])*belly_front*belly_back*low*clear_of_paws
 # Replace the failed local reconstruction rather than repeatedly squeezing it.
 v,faces,uv,source_labels,anatomy_changes=rebuild_anatomy(v,faces,uv)
 v,faces,uv,body_count,removed_wing_vertices,wing_camber,source_labels=rebuild_wings(v,faces,uv,source_labels)

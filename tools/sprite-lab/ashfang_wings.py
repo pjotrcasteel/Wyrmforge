@@ -10,7 +10,7 @@ def wing_layout(sign):
     middles=[wrist*.42+tip*.58 for tip in tips]
     return root,elbow,wrist,middles,tips
 def rebuild_wings(v,faces,uv,source_labels):
-    old=(v[:,2]>.055)&(v[:,1]>-.22)&(abs(v[:,0])>.065)
+    old=(source_labels==0)&(v[:,2]>.055)&(v[:,1]>-.22)&(abs(v[:,0])>.065)
     retained=faces[~np.any(old[faces],axis=1)];used=np.unique(retained);mapping=np.full(len(v),-1);mapping[used]=np.arange(len(used));retained=mapping[retained]
     vertices=v[used].tolist();coords=(uv[used]*[.5,1]).tolist();triangles=retained.tolist();body_count=len(vertices);camber=[0.0]*body_count;labels=source_labels[used].tolist()
     def card_uv(p):return [.5+p[0]/228*.5,1-p[1]/193]

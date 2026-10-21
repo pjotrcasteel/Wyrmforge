@@ -26,7 +26,7 @@ def flight_state(phase):
     # Near-ground downstrokes must not drive the extended membrane through
     # the floor. Leg drive supplies the initial clearance before full amplitude.
     altitude = .34*rise*(1-descent)
-    flap = min(flap, .12+1.5*altitude)
+    flap = min(flap, .10+1.05*altitude)
     names = [(0, 'settle'), (.03, 'open / crouch'), (.12, 'leg drive'),
              (.16, 'rear preload / leg drive'), (.22, 'hind-leg extension'), (.265, 'departure / first downstroke'), (.40, 'flight'),
              (.64, 'approach / extend paws'), (.76, 'flare'),
