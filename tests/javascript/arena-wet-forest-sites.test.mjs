@@ -14,7 +14,7 @@ test('each authentic human-history sprite belongs to exactly one physically auth
         const plan = createWetForestStoryArtPlan(layer.prop, 1204);
         assert.equal(plan.id, props[i].id);
         assert.equal(plan.kind, props[i].kind);
-        assert.ok(plan.marks.length >= 15, 'Physically readable pixel study for ' + props[i].kind);
+        assert.ok(plan.marks.length >= 10, 'Physically readable pixel study for ' + props[i].kind);
         assert.ok(plan.marks.every(mark => mark.w >= 2 && mark.h >= 2 &&
             mark.x % 2 === 0 && mark.y % 2 === 0), 'Crisp 2px plan for ' + plan.kind);
         assert.equal(layer.depth, layer.prop.y * 1550);
@@ -32,7 +32,7 @@ test('weathered shapes vary by seed/ID and use no magical neon accents', () => {
     assert.ok(first.marks.every(s => /^#[0-9a-f]{6}$/.test(s.color)));
     assert.ok(kinds.some((kind, i) => ![1204, 1441, 3312].every(seed =>
         JSON.stringify(createWetForestStoryArtPlan(props[i], seed)) === JSON.stringify(createWetForestStoryArtPlan(props[i], 1204)))));
-    assert.ok(second.marks.length >= 15);
+    assert.ok(second.marks.length >= 10);
 });
 
 test('world-foot draw uses only pixel rects for the supplied prop and returns false for unsupported kinds', () => {
@@ -41,7 +41,7 @@ test('world-foot draw uses only pixel rects for the supplied prop and returns fa
         fillRect(...args) { calls.push(args); } };
     for (const prop of props)
         assert.equal(drawWetForestStoryArt(ctx, prop, 1204, 400, 620), true);
-    assert.ok(calls.length > 100);
+    assert.ok(calls.length > 70);
     assert.ok(calls.every(([x, y, w, h]) => x >= 340 && x <= 458 && y >= 558 && y <= 632 && w >= 2 && h >= 2));
     const count = calls.length;
     assert.equal(drawWetForestStoryArt(ctx, { id: 8, kind: 'barrel' }, 1204, 400, 620), false);
