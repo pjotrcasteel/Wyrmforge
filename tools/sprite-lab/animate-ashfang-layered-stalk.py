@@ -1,9 +1,10 @@
 """One-view articulated gait study with IK and explicit stance trajectories."""
 from pathlib import Path
-import json,math
+import json,math,argparse
 import numpy as np,cv2,torch
 from PIL import Image,ImageDraw
-base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-007';out.mkdir(exist_ok=False);(out/'frames').mkdir()
+parser=argparse.ArgumentParser();parser.add_argument('--clip',choices=['idle','stalk'],default='stalk');parser.add_argument('--output',default='layered-stalk-008');args=parser.parse_args()
+base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/args.output;out.mkdir(exist_ok=False);(out/'frames').mkdir()
 spec=json.loads((source/'source.json').read_text());device='cuda'
 W,H=231,115;cw,ch=320,192;offset=(48,40)
 body=Image.open(source/'hidden-overlap-001/torso-with-overlap.png').convert('RGBA')
@@ -58,8 +59,11 @@ def body_displacement(points,phase):
  dy=-.65*math.sin(2*p)*chest+.45*math.sin(2*p)*pelvis+.25*math.sin(p-.3)*head+1.5*math.sin(p-.5)*near+.8*math.sin(p-.85)*far+.8*math.sin(p-.8)*tail
  # Lower the centre of mass and extend the gaze in the deliberate stalking pose.
  # The paws remain world-planted through IK instead of following this body shift.
- dx+=1.6*head+.45*chest
- dy+=2.1*chest+1.1*pelvis+2.2*head+.65*near+.45*far
+ if args.clip=='stalk':
+  dx+=1.6*head+.45*chest
+  dy+=2.1*chest+1.1*pelvis+2.2*head+.65*near+.45*far
+ else:
+  dy=-.85*math.sin(p)*chest+.2*math.sin(p)*pelvis+.25*math.sin(p-.3)*head+1.1*math.sin(p-.5)*near+.7*math.sin(p-.85)*far+.7*math.sin(p-.8)*tail
  return np.column_stack([dx,dy])
 def min_area_ratio(rest,posed,triangles):
  a=rest[triangles];b=posed[triangles]
@@ -76,13 +80,14 @@ def render(layer,posed):
  grid=torch.from_numpy(np.stack([mx/(W-1)*2-1,my/(H-1)*2-1],-1))[None].to(device)
  with torch.inference_mode():sample=torch.nn.functional.grid_sample(layer['texture'],grid,mode='nearest',align_corners=True)
  return Image.fromarray((sample[0].permute(1,2,0).cpu().numpy()*255).round().astype('uint8'))
-N=64;fps=24;travel=12.;stance=.7;frames=[];records=[];worst_reach=0;worst_foot_error=0;minimum_area=1
+N=64;fps=16 if args.clip=='idle' else 24;travel=0. if args.clip=='idle' else 12.;stance=.7;frames=[];records=[];worst_reach=0;worst_foot_error=0;minimum_area=1
 for f in range(N):
  phase=f/N;body_shift=np.array([.35*math.sin(2*math.pi*phase),-.65*math.sin(4*math.pi*phase)])
  composed=Image.new('RGBA',(W,H));posed_layers=[];joints_record=[]
  for layer,start in zip(layers,phase_offsets):
   q=(phase+start)%1
-  if q<stance:dx=travel*stance/2-travel*q;lift=0
+  if args.clip=='idle':q=0;dx=0;lift=0
+  elif q<stance:dx=travel*stance/2-travel*q;lift=0
   else:
    swing=(q-stance)/(1-stance);s=swing;d=-travel*(1-stance);dx=(2*s**3-3*s*s+1)*(-travel*stance/2)+(s**3-2*s*s+s)*d+(-2*s**3+3*s*s)*(travel*stance/2)+(s**3-s*s)*d;lift=-5*math.sin(math.pi*swing)**2
   chain=layer['chain'];a=chain[0]+body_displacement(chain[:1],phase)[0];c=chain[-1]+[dx,lift];p=ik(chain,a,c);worst_reach=max(worst_reach,float(np.linalg.norm(c-a)-np.linalg.norm(np.diff(chain,axis=0),axis=1).sum()));worst_foot_error=max(worst_foot_error,float(np.linalg.norm(p[-1]-c)))
@@ -96,25 +101,26 @@ for f in range(N):
  bodyposed=vertices+body_displacement(vertices,phase);minimum_area=min(minimum_area,min_area_ratio(vertices,bodyposed,bodylayer['tri']));bodyshifted=render(bodylayer,bodyposed)
  composed.alpha_composite(bodyshifted)
  for im in posed_layers:composed.alpha_composite(im)
- frame=Image.new('RGBA',(cw,ch));frame.paste(composed,offset);frame.save(out/'frames'/f'stalk-{f:03}.png');frames.append(frame);records.append(joints_record)
+ frame=Image.new('RGBA',(cw,ch));frame.paste(composed,offset);frame.save(out/'frames'/f'{args.clip}-{f:03}.png');frames.append(frame);records.append(joints_record)
  if f%12==0:print('Stalk frame',f,flush=True)
 atlas=Image.new('RGBA',(cw*8,ch*8))
 for i,im in enumerate(frames):atlas.paste(im,(i%8*cw,i//8*ch))
-atlas.save(out/'stalk-atlas.png');preview=[]
+atlas.save(out/(args.clip+'-atlas.png'));preview=[]
 for f,im in enumerate(frames):
  board=Image.new('RGB',(960,576),(34,33,37));draw=ImageDraw.Draw(board)
  for x in range(-40,1000,36):
   xx=x-int(f/N*travel*3);draw.line((xx,454,xx+18,454),fill=(95,78,63),width=2)
- large=im.resize((960,576),Image.Resampling.NEAREST);board.paste(large,(0,0),large);draw.text((16,16),'ASHFANG / ARTICULATED STALK STUDY / NOT ACCEPTED',fill=(232,207,178));preview.append(board)
-preview[0].save(out/'stalk-preview.gif',save_all=True,append_images=preview[1:],duration=1000/fps,loop=0,optimize=False)
+ large=im.resize((960,576),Image.Resampling.NEAREST);board.paste(large,(0,0),large);draw.text((16,16),'ASHFANG / ARTICULATED '+args.clip.upper()+' STUDY / NOT ACCEPTED',fill=(232,207,178));preview.append(board)
+preview[0].save(out/(args.clip+'-preview.gif'),save_all=True,append_images=preview[1:],duration=1000/fps,loop=0,optimize=False)
 sheet=Image.new('RGB',(cw*3,ch*3),(34,33,37))
 for i,f in enumerate(range(0,N,8)):sheet.paste(frames[f],(i%3*cw,i//3*ch),frames[f])
 sheet.save(out/'contact-sheet.png')
 (out/'joint-poses.json').write_text(json.dumps(records,separators=(',',':')))
+(out/'skin-source.json').write_text(json.dumps(dict(vertices=vertices.tolist(),layers=[dict(name=l['name'],triangles=l['tri'].tolist(),restChain=l['chain'].tolist(),weights=l['weights'].tolist()) for l in layers],bodyTriangles=bodylayer['tri'].tolist(),sourceArt='../articulated-layers-002',clip=args.clip),separators=(',',':')))
 stance_slip=[]
 for f in range(N-1):
  for a,b in zip(records[f],records[f+1]):
-  if a['stance'] and b['stance'] and b['phase']>a['phase']:
+  if a['stance'] and b['stance'] and (args.clip=='idle' or b['phase']>a['phase']):
    stance_slip.append(float(np.linalg.norm(np.array(b['paw'])-a['paw']+[travel/N,0])))
-(out/'review.json').write_text(json.dumps(dict(status='Owner-guide articulated stalk with body/wing/tail response; visual review pending',ownerAccepted=False,frames=N,fps=fps,travelPerCycleSourcePixels=travel,stanceFraction=stance,maxReachBeyondBoneLength=worst_reach,maxPawTargetError=worst_foot_error,minTriangleAreaRatio=minimum_area,maxStanceJointWorldDrift=max(stance_slip),gpu=torch.cuda.get_device_name(),limitations=['One view only','Layer cuts/hidden overlap require review','Foot contact metric uses joints; raster appearance still needs inspection']),indent=2)+'\n')
+(out/'review.json').write_text(json.dumps(dict(status='Owner-guide articulated '+args.clip+' with body/wing/tail response; visual review pending',ownerAccepted=False,frames=N,fps=fps,travelPerCycleSourcePixels=travel,stanceFraction=stance,maxReachBeyondBoneLength=worst_reach,maxPawTargetError=worst_foot_error,minTriangleAreaRatio=minimum_area,maxStanceJointWorldDrift=max(stance_slip),gpu=torch.cuda.get_device_name(),limitations=['One view only','Layer cuts/hidden overlap require review','Foot contact metric uses joints; raster appearance still needs inspection']),indent=2)+'\n')
 print('Stalk study saved. Review before acceptance.')
