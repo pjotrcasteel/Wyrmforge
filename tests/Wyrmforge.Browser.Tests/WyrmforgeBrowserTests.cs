@@ -580,6 +580,46 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_FireballLevelFour_NeedsRareEmberglassAndSpendsGradedEssence()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('emberglassTestSeeded')) {
+            localStorage.setItem('emberglassTestSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.setItem('wyrmforge.fireballCore.v1',JSON.stringify({Level:3,Discovered:[],Slots:[]}));
+            localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart','AshenWing']));
+            localStorage.setItem('wyrmforge.essenceGrades.v1',JSON.stringify({CinderHeart:{Epic:1}}));
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');
+        }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+
+        var emberglass = Page.Locator(".fireball-material.loot-rarity-rare");
+        await Expect(emberglass).ToContainTextAsync("Emberglass");
+        await Expect(emberglass).ToContainTextAsync("Rare · 0 / 1");
+        await Expect(emberglass).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("missing"));
+        await Expect(Page.Locator(".fireball-material").Filter(new() { HasText = "Cinder Heart" })).ToContainTextAsync("Epic ×1");
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 4" })).ToBeDisabledAsync();
+        Assert.AreEqual("rgb(111, 168, 220)", await emberglass.Locator(".loot-rarity-label").EvaluateAsync<string>("label => getComputedStyle(label).color"));
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"));
+        await ScreenshotAsync("fireball-emberglass-gate-390.png");
+
+        await Page.EvaluateAsync("() => localStorage.setItem('wyrmforge.huntMaterials.v1', JSON.stringify(['Emberglass']))");
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator(".fireball-material.loot-rarity-rare")).ToContainTextAsync("Rare · 1 / 1");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 4" }).ClickAsync();
+        await Expect(Page.Locator(".fireball-heading h2 span")).ToHaveTextAsync("Lv 4");
+        Assert.AreEqual("[]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.huntMaterials.v1')"));
+        Assert.AreEqual("[]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceVault')"));
+        Assert.AreEqual("{}", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceGrades.v1')"));
+        await Expect(Page.Locator(".fireball-material.loot-rarity-rare")).ToContainTextAsync("Rare · 0 / 2");
+    }
+
+    [TestMethod]
     public async Task Mobile_FireballNexus_EquipsUpgradesAndRestoresPersistentSpell()
     {
         await Page.SetViewportSizeAsync(390, 844);

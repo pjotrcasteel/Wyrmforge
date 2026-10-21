@@ -231,3 +231,4 @@ body:has(.fireball-ritual) [data-game-version] { visibility: hidden; }
 li[class*="loot-rarity-"] b, li[class*="loot-rarity-"] strong { color: var(--loot-color); }.trail-gathered-item[class*="loot-rarity-"]:not(.loot-rarity-common) { border-color: var(--loot-color); color: var(--loot-color); }
 .run-report-chips b[class*="loot-rarity-"] { border-color: var(--loot-color); }
 .run-report-chips .loot-rarity-label { font-size: .68em; font-style: normal; margin-left: 4px; }
+.fireball-ritual .fireball-materials .fireball-material small.fireball-material-source { color: #9a8f80; font-size: .62rem; line-height: 1.2; }
