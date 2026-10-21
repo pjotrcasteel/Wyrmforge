@@ -60,3 +60,11 @@ Implementation on `feature/fireball-mutator-sources-20261021` (PR pending valida
 - The existing Fireball socket menu displays required quantities, common enemy/scenery sources, and crafts the permanently learned Cinder Needle once. Existing Wyrm unlocks, signature level, unlocked socket count and rare resource recipes stay unchanged.
 - Regression gates: `FireballCoreStateTests` (atomic spend/restore), `RunMaterialCargoStateTests` (extraction/loss), `ArenaEnvironmentStateTests` (deterministic normal barrels / loot pickup), mobile browser test (craft/persistence), existing Ashfang source UI coverage. Validate actual enemy drop rates and art readability on phone before treating this as final balance.
 - Existing full Wet Forest environmental generation remains a lab-only preview; only a few breakable salvage props are enabled in normal Hunts to avoid shipping unfinished habitat layout/terrain.
+
+## Step 4 — empty socket acquisition guidance (21 Oct)
+
+- If a player opens an empty, unlocked Fireball socket and has no **available** researched/crafted mutator for that socket, a compact hint explains the real two paths: Ashfang specimens or ordinary Hunt materials for Cinder Needle.
+- The `View Cinder Needle recipe` action opens the actual Cinder Needle source disclosure and focuses its summary, scrolling the *nested* mutator list rather than navigating away or introducing a fake Research crafting flow.
+- If Cinder Needle is already crafted but occupied in a different slot, the hint instead directs players to Ashfang sources or freeing an occupied slot, with a `View Ashfang drop source` action.
+- The hint is absent when a usable mutation is available and disappears on returning to Fireball core. No changes to economy, drop rates, socket eligibility or progression.
+- Browser smoke covers initial empty state, disclosure focus/scroll and 320px/390px overflow. PR checks remain the release gate.
