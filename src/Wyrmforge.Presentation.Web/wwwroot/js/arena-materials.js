@@ -49,78 +49,54 @@ export function materialNoise(seed, x, y, channel = 0) {
     return ((v ^ (v >>> 16)) >>> 0) / 4294967296;
 }
 
-const palettes = [
-    ['#273329', '#2a352a', '#2c372c', '#303a2d'],
-    ['#302d27', '#352f29', '#38322b', '#33302a'],
-    ['#34342e', '#39392f', '#3a3a33', '#35352e'],
-    ['#373128', '#3b332b', '#40372e', '#383129'],
-    ['#232523', '#282623', '#2c2925', '#262525'],
-];
-export function drawGroundMaterialTile(ctx, index, col, row, seed = 1441) {
-    if (!ctx || !palettes[index]) return false;
-    const x = col * CELL, y = row * CELL;
-    const n = materialNoise(seed, col, row);
-    const v = materialNoise(seed, col, row, 3);
-    const p = palettes[index];
-    ctx.fillStyle = p[Math.floor(n * p.length)];
-    ctx.fillRect(x, y, CELL, CELL);
-    const pixel = (dx, dy, w, h, color) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(x + dx, y + dy, w, h);
-    };
+// The five samples are extracted directly from the user's approved arena concept.
+// Each region is a 64x64 crop in one small WebP atlas, in MATERIALS order.
+// This is an exploratory MATERIAL board, not a procedurally generated arena.
+export const REFERENCE_TILE_SIZE = 64;
+export const REFERENCE_ATLAS_URL = '../art/environment/reference-ground-atlas.webp';
 
-    if (index === 0) { // damp forest grass, clumped rather than noise sprayed everywhere
-        if (n > .19) {
-            const gx = 2 + Math.floor(v * 5) * 2, gy = 4 + Math.floor(n * 3) * 2;
-            pixel(gx, gy, 2, 6, '#3a4933');
-            pixel(gx + 2, gy - 2, 2, 6, '#46523a');
-            if (v > .42) pixel(gx + 4, gy + 2, 2, 4, '#36462f');
-        }
-        if (v > .54) pixel(2, 12, 8, 2, '#202f28');
-        if (n < .30) pixel(10, 4, 4, 2, '#45513c');
-    } else if (index === 1) { // wet muddy ground: compressed ruts and restrained reflected wet glints
-        if (n > .20) {
-            pixel(2, 4 + Math.floor(v * 3) * 2, 10, 4, '#282924');
-            pixel(4, 6 + Math.floor(v * 3) * 2, 7, 2, '#404138');
-        }
-        if (v > .55) pixel(0, 12, 8, 2, '#242823');
-        if (n > .67) pixel(9, 3, 5, 2, '#575144');
-        if (v < .16) pixel(4, 2, 4, 2, '#4a483c');
-    } else if (index === 2) { // sunken Gothic road: short broken stones, subtle bevels
-        pixel(0, 0, 16, 2, '#272c28');
-        const shift = row % 2 ? 5 : 0;
-        for (let k = -1; k <= 2; k++) {
-            const left = k * 11 + shift;
-            const px = Math.max(0, left);
-            const right = Math.min(16, left + 10);
-            if (right <= px) continue;
-            const shade = materialNoise(seed, col * 4 + k, row, 7);
-            pixel(px, 3, right - px, 5, shade > .66 ? '#57574c' : shade > .29 ? '#4b4d43' : '#42483f');
-            if (shade > .51) pixel(px + 2 < right ? px + 2 : px, 3,
-                Math.max(1, Math.min(4, right - px - 2)), 1, '#777564');
-            pixel(px, 9, right - px, 4, shade > .6 ? '#3a4038' : '#41453c');
-            if (shade < .15 && right - px > 5) pixel(px + 3, 6, 2, 2, '#303a31');
-        }
-        if (n > .68) pixel(2, 14, 7, 2, '#334032');
-        if (v < .15) pixel(12, 10, 2, 4, '#273529');
-    } else if (index === 3) { // compacted forest earth; warm neutral grit, no checkerboard
-        if (n > .24) pixel(2 + Math.floor(v * 4) * 2, 8, 8, 2, '#554636');
-        if (v > .49) pixel(2, 4, 4, 2, '#292d26');
-        if (n < .42) pixel(10, 10, 4, 4, '#484034');
-        if (v < .29) pixel(0, 14, 8, 2, '#2d3027');
-    } else { // blackened earth with soot and scarce embers; no painted flames
-        if (n > .26) pixel(2, 5 + Math.floor(v * 3) * 2, 10, 2, '#171d1b');
-        if (v > .46) pixel(5, 10, 7, 2, '#3d332b');
-        if (n > .88) pixel(11, 4, 2, 2, '#805036');
-        if (v < .22) pixel(1, 13, 4, 2, '#40382f');
+export function makeReferenceMaterialPatterns(ctx, atlas, seed = 1441) {
+    if (!atlas || atlas.width !== REFERENCE_TILE_SIZE * MATERIALS.length ||
+        atlas.height !== REFERENCE_TILE_SIZE || typeof document === 'undefined')
+        return [];
+    const patterns = [];
+    const size = REFERENCE_TILE_SIZE;
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const surface = document.createElement('canvas');
+        surface.width = surface.height = size * 2;
+        const tile = surface.getContext('2d');
+        if (!tile) return [];
+        tile.imageSmoothingEnabled = false;
+        const reverse = (seed & 1) === 0;
+        for (let iy = 0; iy < 2; iy++)
+            for (let ix = 0; ix < 2; ix++) {
+                const mirrorX = (ix === 1) !== reverse;
+                const mirrorY = iy === 1;
+                tile.save();
+                tile.translate(ix * size + (mirrorX ? size : 0),
+                    iy * size + (mirrorY ? size : 0));
+                tile.scale(mirrorX ? -1 : 1, mirrorY ? -1 : 1);
+                tile.drawImage(atlas, index * size, 0, size, size, 0, 0, size, size);
+                tile.restore();
+            }
+        patterns.push(ctx.createPattern(surface, 'repeat'));
     }
+    return patterns;
+}
+
+export function drawGroundMaterialTile(ctx, index, col, row, patterns) {
+    if (!ctx || index < 0 || index >= MATERIALS.length || !patterns?.[index]) return false;
+    ctx.fillStyle = patterns[index];
+    ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
     return true;
 }
 
-export function drawMaterialBoard(ctx, board, seed, columns = COLS, rows = ROWS) {
+export function drawMaterialBoard(ctx, board, patterns, columns = COLS, rows = ROWS) {
+    if (!patterns?.length) return false;
     for (let row = 0; row < rows; row++)
         for (let col = 0; col < columns; col++)
-            drawGroundMaterialTile(ctx, board[row * columns + col], col, row, seed);
+            drawGroundMaterialTile(ctx, board[row * columns + col], col, row, patterns);
+    return true;
 }
 
 function render(state) {
@@ -129,7 +105,7 @@ function render(state) {
     const ctx = state.canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    drawMaterialBoard(ctx, state.cells, state.seed);
+    drawMaterialBoard(ctx, state.cells, state.patterns);
 }
 function redraw(state) {
     if (!state.pending && !state.disposed) {
@@ -158,7 +134,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
     if (contexts.has(canvas)) return;
     const state = {
         canvas, seed: seed | 0, selected: 0, radius: 2,
-        cells: materialSampleBoard(), history: [], pointer: null,
+        cells: materialSampleBoard(), history: [], pointer: null, patterns: [], atlas: null,
         listeners: [], pending: false, frameId: 0, disposed: false,
     };
     const bind = (target, name, handler, options) => {
@@ -185,7 +161,20 @@ export function initMaterialsLab(canvas, seed = 1441) {
     bind(canvas, 'touchstart', preventScroll, { passive: false });
     bind(canvas, 'touchmove', preventScroll, { passive: false });
     contexts.set(canvas, state);
-    render(state);
+    // Never display invented placeholder textures while the approved samples load.
+    const atlas = new Image();
+    atlas.decoding = 'async';
+    atlas.onload = () => {
+        if (state.disposed) return;
+        state.atlas = atlas;
+        state.patterns = makeReferenceMaterialPatterns(canvas.getContext('2d'), atlas, state.seed);
+        redraw(state);
+    };
+    atlas.onerror = () => {
+        if (state.disposed) return;
+        console.warn('Arena material reference atlas could not be loaded.');
+    };
+    atlas.src = new URL(REFERENCE_ATLAS_URL, import.meta.url).href;
 }
 export function selectGroundMaterial(canvas, index) {
     const s = contexts.get(canvas);
@@ -220,6 +209,7 @@ export function changeMaterialSeed(canvas, seed) {
     const s = contexts.get(canvas);
     if (!s) return;
     s.seed = seed | 0;
+    if (s.atlas) s.patterns = makeReferenceMaterialPatterns(s.canvas.getContext('2d'), s.atlas, s.seed);
     redraw(s);
 }
 export function disposeMaterialsLab(canvas) {
