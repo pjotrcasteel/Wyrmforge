@@ -10,6 +10,8 @@ using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Application.World;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Player;
+using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Loot;
 using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 
@@ -139,7 +141,8 @@ public sealed class FireTierTwoHuntTests
         Assert.IsFalse(simulation.IsEnded);
         Assert.AreEqual(1, simulation.RefugeReturns);
         Assert.AreEqual(2, simulation.LastRefugeLoss, "The Essence and the salvage found after the refuge are lost.");
-        CollectionAssert.AreEqual(new[] { HuntMaterialId.EmberResidue }, cargo.Pending.ToArray());
+        CollectionAssert.AreEqual(new[] { HuntMaterialId.EmberResidue, HuntMaterialId.Emberglass }, cargo.Pending.ToArray(),
+            "The Rare Emberglass from reclaiming the refuge is banked before the mark and survives the fall.");
         Assert.AreEqual(0, simulation.SelectedDragonEssences.Count);
         Assert.IsFalse(simulation.EvacuationActive);
         Assert.AreEqual(simulation.MaxHealth, simulation.Health);
@@ -199,6 +202,42 @@ public sealed class FireTierTwoHuntTests
         Assert.IsTrue(simulation.MapNodes.Any(n => n.Refuge));
         Assert.Throws<ArgumentException>(() => new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), hunt: new(fire, WyrmTier.Elder)));
     }
+
+    [TestMethod]
+    public void LootRarity_FollowsTheSelectedTierAndLegacyRunsStayCommon()
+    {
+        var tierOne = Create(HuntSelection.FireTierOne);
+        var tierTwo = Create(HuntSelection.FireTierTwo);
+        var legacy = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42);
+
+        Assert.IsFalse(Drops(tierOne, LootRarity.Rare), "Tier I elites never carry Emberglass.");
+        Assert.IsTrue(Drops(tierOne, LootRarity.Common));
+        Assert.IsTrue(Drops(tierTwo, LootRarity.Rare));
+        Assert.IsFalse(Drops(tierTwo, LootRarity.Epic));
+        Assert.IsFalse(Drops(legacy, LootRarity.Rare));
+
+        Assert.AreEqual(LootRarity.Rare, tierOne.EssenceRarity);
+        Assert.AreEqual(LootRarity.Epic, tierTwo.EssenceRarity);
+        Assert.AreEqual(LootRarity.Epic, tierTwo.CreateEvaluationSummary().EssenceRarity);
+        Assert.AreEqual(DragonEssenceVault.UngradedRarity, legacy.EssenceRarity);
+    }
+
+    [TestMethod]
+    public void ReclaimingTheRefuge_PaysOneEmberglassOnlyOnce()
+    {
+        var simulation = Create(HuntSelection.FireTierTwo);
+        var map = Field<WyrmrealmMapState>(simulation, "mapState");
+        var cargo = Field<RunMaterialCargoState>(simulation, "materialCargoState");
+        WalkToRefuge(map);
+        var refuge = map.AvailableNodes.Single(n => n.Refuge);
+        Complete(map, refuge);
+        Invoke(simulation, "CompleteTrail", refuge);
+        Invoke(simulation, "TrySecureRefuge", refuge);
+        Assert.AreEqual(1, cargo.Pending.Count(id => id == HuntMaterialId.Emberglass));
+    }
+
+    private static bool Drops(RunSimulation simulation, LootRarity rarity) =>
+        (bool)typeof(RunSimulation).GetMethod("HuntDrops", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, [rarity])!;
 
     [TestMethod]
     public void AscendantRite_StillRecordsTheCrownVictory()

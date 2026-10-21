@@ -14,13 +14,11 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     const actorMarkup = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
-    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--behind"/);
-    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--front"/);
+    assert.match(actorMarkup, /class="refuge-town-crowd"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /@if \(person\.IsPresent && IsBehindWell\(person\)\)/);
     assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
-    assert.match(actorMarkup, /crowdStop\.Cancel\(\)/);
+    assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
     assert.doesNotMatch(markup, /PeriodicTimer/,
         'The whole painted town must not own an NPC animation timer');
     assert.match(markup, /GeometryChanged="OnGeometryChanged"/);
@@ -32,40 +30,111 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-geometry-feet-layer\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /width:0\.957%;height:3\.188%/);
-    assert.match(css, /\.refuge-town-spot \{z-index:7\}/);
+    assert.match(css, /\.refuge-town-spot \{z-index:11002\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
     assert.match(markup, /loadingStop\.Cancel\(\)/);
     assert.ok(markup.includes('art/town/night-active.webp?v=140'));
 });
 
-test('well foreground respects feet depth, and building activity reuses seven actor rectangles', () => {
+test('every painted foreground draws between citizens using actual feet depth', () => {
     const markup = source(scene);
     const actor = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    const model = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const map = JSON.parse(source(art + '/night-navigation.json'));
+    assert.equal(map.occluders.length, 7);
+    assert.equal(map.occluders.find(part => part.id === 'well-foreground').depthY, 572);
+    assert.equal(map.occluders.find(part => part.id === 'noticeboard-foreground').depthY, 522);
+    assert.match(markup, /@foreach \(var foreground in crowd\.Navigation\.Occluders\)/);
+    assert.match(markup, /class="refuge-town-scenery-foreground"/);
+    assert.match(markup, /data-town-foreground-layer="@foreground\.Id"/);
+    assert.match(markup, /clipPath id="@maskId" clipPathUnits="userSpaceOnUse"/);
+    assert.match(markup, /foreground\.Id == "well-foreground"/);
+    assert.match(markup, /foreground\.Id == "noticeboard-foreground"/);
+    assert.match(markup, /foreground\.DepthY \* 10f/);
+    assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
+    assert.match(actor, /citizen\.Position\.Y \* 10f/);
+    assert.match(actor, /data-town-feet-y="@person\.Position\.Y"/);
+    assert.match(actor, /@if \(person\.IsPresent\)/);
+    assert.match(actor, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
+    assert.match(css, /\.refuge-town-crowd\s*\{[^}]*z-index:auto/s);
+    assert.match(css, /refuge-town-scenery-foreground\s*\{[^}]*pointer-events:none/s);
+    assert.doesNotMatch(actor, /IsBehindWell|IsBehindNoticeboard/);
+});
+
+test('opt-in FPS and AI profiling is separate from geometry and has no normal gameplay overhead', () => {
+    const markup = source(scene);
+    const actorsMarkup = source(actors);
+    const script = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-performance.js');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(markup, /townMetrics=1/);
+    assert.match(markup, /@if \(showTownMetrics\)/);
+    assert.match(markup, /id="refuge-town-performance"/);
+    assert.match(markup, /ShowMetrics="showTownMetrics"/);
+    assert.match(actorsMarkup, /if \(!firstRender \|\| !ShowMetrics\) return/);
+    assert.match(actorsMarkup, /"import", "\.\/js\/refuge-performance\.js"/);
+    assert.match(actorsMarkup, /Stopwatch\.GetElapsedTime\(began\)/);
+    assert.match(actorsMarkup, /measuredTicks >= 10/);
+    assert.match(script, /requestAnimationFrame\(frame\)/);
+    assert.match(script, /Math\.ceil\(frameTimes\.length \* 0\.95\)/);
+    assert.match(script, /cancelAnimationFrame\(frameHandle\)/);
+    assert.match(css, /refuge-town-performance\s*\{[^}]*pointer-events:none/s);
+});
+
+test('two work anchors per unlocked building reuse one 100ms simulation with three roaming residents', () => {
     const map = JSON.parse(source(`${art}/night-navigation.json`));
-    const well = map.occluders.find(layer => layer.id === 'well-foreground');
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const grouped = Object.groupBy(map.destinations.filter(d => d.buildingId), d => d.buildingId);
+    for (const building of ['build', 'forge', 'codex', 'legends']) {
+        assert.equal(grouped[building]?.length, 2, `Two workstations expected at ${building}`);
+        assert.ok(grouped[building].every(d => typeof d.x === 'number' && !!d.activity));
+    }
+    assert.match(simulation, /Math\.Max\(citizenCount, workerStops \+ 3\)/);
+    assert.match(simulation, /public int AssignedWorkers/);
+    assert.match(simulation, /private void EnsureWorkerCoverage/);
+    assert.match(source(actors), /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
+});
 
-    assert.equal(well.depthY, 572);
-    assert.match(markup, /viewBox="695 382 256 189"/);
-    assert.match(markup, /id="refuge-well-silhouette"/);
-    assert.match(markup, /clip-path="url\(#refuge-well-silhouette\)"/);
-    assert.match(markup, /href="art\/town\/night-active\.webp\?v=140"/);
-    assert.match(css, /refuge-town-well-foreground\s*\{[^}]*pointer-events:none/s);
-    assert.match(actor, /person\.Position\.Y < well\.DepthY/);
-    assert.match(actor, /data-town-depth="behind-well"/);
-    assert.match(actor, /data-town-depth="in-front"/);
-    assert.match(actor, /citizen\.IsWorking \? "working"/);
-    assert.equal((actor.match(/new PeriodicTimer/g) ?? []).length, 1,
-        'Keep one 100ms NPC timer, not a per-building update loop');
+test('Refuge session max never decreases in subsequent faster intervals', async () => {
+    const script = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-performance.js');
+    const { startRefugePerformance } = await import('data:text/javascript;base64,' + Buffer.from(script).toString('base64'));
+    const previousDocument = globalThis.document;
+    const previousRaf = globalThis.requestAnimationFrame;
+    const previousCancel = globalThis.cancelAnimationFrame;
+    const output = { textContent: '' };
+    let callback;
+    let cancelled = false;
+    globalThis.document = { querySelector: () => output };
+    globalThis.requestAnimationFrame = frame => { callback = frame; return 1; };
+    globalThis.cancelAnimationFrame = () => { cancelled = true; };
+    try {
+        const monitor = startRefugePerformance('#refuge-town-performance');
+        monitor.update({ total: 14, present: 14, workers: 8, away: 0, stepMax: 32 });
+        for (let ms = 100; ms <= 1100; ms += 100) callback(ms);
+        assert.match(output.textContent, /NPC 14\/14/);
+        assert.match(output.textContent, /max 100\.0ms/);
+        assert.match(output.textContent, /32\.0ms max/);
+        for (let ms = 1120; ms <= 2120; ms += 20) callback(ms);
+        assert.match(output.textContent, /max 100\.0ms/,
+            'Subsequent shorter frame windows must not lower the recorded maximum');
+        monitor.dispose();
+        assert.equal(output.textContent, '');
+        assert.equal(cancelled, true);
+    } finally {
+        globalThis.document = previousDocument;
+        globalThis.requestAnimationFrame = previousRaf;
+        globalThis.cancelAnimationFrame = previousCancel;
+    }
+    const actors = source('src/Wyrmforge.Presentation.Web/Features/Forge/RefugeTownActors.razor');
+    assert.match(actors, /measuredMaxMilliseconds = Math\.Max\(measuredMaxMilliseconds, spent\)/);
+    assert.doesNotMatch(actors, /measuredMaxMilliseconds = 0;/);
+});
 
-    const works = map.destinations.filter(destination => destination.buildingId);
-    assert.deepEqual(works.map(d => d.buildingId).sort(), ['build', 'codex', 'forge', 'legends']);
-    for (const work of works) assert.ok(work.activity);
-    assert.match(markup, /openBuildings: OpenBuildings\(\)/);
-    assert.match(model, /_openBuildings\.Contains\(building\)/);
-    assert.match(model, /public bool IsWorking/);
-    assert.match(model, /citizen\.IdleSeconds = 4f \+ NextInt\(60\)/);
+test('NPC stress override is bounded at fourteen residents and optional', () => {
+    const markup = source(scene);
+    assert.match(markup, /townNpcCount=/);
+    assert.match(markup, /requestedCount is >= 7 and <= 14/);
+    assert.match(markup, /requestedCount : 7/);
+    assert.match(markup, /citizenCount: citizenCount/);
 });
 
 test('blue marked left stair planter is part of real blocking map', () => {
@@ -104,8 +173,14 @@ test('painted well, pillars and garden walls have independent collider ids', () 
         assert.equal(foreground.artwork, 'art/town/night-active.webp?v=140');
     }
 
-    assert.ok(map.occluders.find(part => part.id === 'well-foreground').clip.some(point => point.y < 365),
-        'The well occluder must cover the roof above the earlier visible floating rectangles');
+    const canopy = map.occluders.find(part => part.id === 'well-foreground');
+    const noticeboard = map.occluders.find(part => part.id === 'noticeboard-foreground');
+    assert.ok(canopy.clip.some(point => point.y <= 389 && point.x > 810),
+        'The well canopy must be masked at the actual painted roof, not over the paving');
+    assert.ok(noticeboard.clip.some(point => point.y <= 414 && point.x < 800),
+        'The noticeboard must have a separate compact silhouette');
+    assert.ok(noticeboard.clip.every(point => point.x >= 700 && point.x < 815),
+        'The noticeboard foreground cannot hide actors on the exposed paved ring');
 
     const markup = source(scene);
     assert.match(markup, /night-navigation\.json\?v=\{AppBuildInfo\.Version\}/,
@@ -161,7 +236,6 @@ test('debug geometry stays label-free and residents have authored four connected
     ]);
     assert.ok(exits.find(exit => exit.id === 'world-gate-exit').y < 300,
         'Gate exit must be inside the arch, not beside the stairs');
-    assert.match(source(actors), /@if \(person\.IsPresent && !IsBehindWell\(person\)\)/);
     assert.doesNotMatch(markup, /refuge-town-geometry-legend|refuge-town-geometry-label/,
         'No explanatory overlay should block the town scenery');
     assert.match(simulation, /citizen\.AwaySeconds/);
@@ -184,6 +258,18 @@ test('marked well noticeboard and east stair planting physically block only NPC 
     const front = map.obstacles.find(obstacle => obstacle.id === 'east-foreground-parapet-garden');
     assert.ok(front.footprint.some(point => point.x < 900),
         'The front garden ground footprint must reach its marked west edge.');
+});
+
+test('clear paved segments use geometric boundary visibility before dense 2px sampling', () => {
+    const nav = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
+    assert.match(nav, /CanSeeAcrossUnchangedFloor\(a, b\)/);
+    assert.match(nav, /if \(CanSeeAcrossUnchangedFloor\(a, b\)\) return true;/);
+    assert.match(nav, /CrossesFloorBoundary/);
+    assert.match(nav, /DistanceToSegmentSquared/);
+    assert.match(nav, /_cachedObstacles\.Any/);
+    assert.match(nav, /_geometryRevision == Revision/);
+    assert.match(nav, /MathF\.Min\(2f, CellSize \/ 8f\)/,
+        'Near an obstacle, keep the original two-pixel collision sampling');
 });
 
 test('NPC routing avoids expensive polygon resampling on every animation tick', () => {

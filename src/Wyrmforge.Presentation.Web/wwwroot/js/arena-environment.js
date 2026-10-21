@@ -472,16 +472,25 @@ function drawSupply(ctx, supply, width, height, elapsed) {
     if (supply.kind?.startsWith('material:')) {
         // World pickups stay independent of the environment atlas and its supply caches.
         // These are small, collected-on-contact pixel fragments, not fake Wyrm Essences.
-        const ember = supply.kind === 'material:EmberResidue';
+        // Rare pickups (Emberglass) add a cool rarity rim so they read apart from common salvage.
+        const palette = {
+            'material:EmberResidue': ['#b8472c', '#f8a34f', '#ffe1a0'],
+            'material:Emberglass': ['#7a1f3c', '#ff7a4a', '#ffd8b0'],
+        }[supply.kind] ?? ['#866c56', '#d6b895', '#eee0c8'];
+        const rare = supply.kind === 'material:Emberglass';
         const bob = Math.round(Math.sin(elapsed * 3 + x * .01) * 2);
         ctx.save();
         ctx.fillStyle = '#0c0a10a0';
         ctx.fillRect(Math.round(x) - 9, Math.round(y) - 2, 18, 5);
-        ctx.fillStyle = ember ? '#b8472c' : '#866c56';
+        if (rare) {
+            ctx.fillStyle = '#6fa8dc';
+            ctx.fillRect(Math.round(x) - 8, Math.round(y) - 14 + bob, 16, 14);
+        }
+        ctx.fillStyle = palette[0];
         ctx.fillRect(Math.round(x) - 6, Math.round(y) - 12 + bob, 12, 10);
-        ctx.fillStyle = ember ? '#f8a34f' : '#d6b895';
+        ctx.fillStyle = palette[1];
         ctx.fillRect(Math.round(x) - 3, Math.round(y) - 11 + bob, 6, 5);
-        ctx.fillStyle = ember ? '#ffe1a0' : '#eee0c8';
+        ctx.fillStyle = palette[2];
         ctx.fillRect(Math.round(x) - 1, Math.round(y) - 9 + bob, 3, 2);
         ctx.restore();
         return;

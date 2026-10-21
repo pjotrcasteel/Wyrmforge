@@ -66,6 +66,36 @@ public sealed class TownNavigationMap
     private readonly Dictionary<int, bool> _cachedGridCells = [];
     private readonly Dictionary<long, bool> _cachedGridEdges = [];
     private int _cachedRevision = -1;
+    private int _geometryRevision = -1;
+    private (TownPolygon Polygon, PolygonBounds Bounds)[] _cachedFloors = [];
+    private (TownFootprint Obstacle, PolygonBounds Bounds)[] _cachedObstacles = [];
+
+    private readonly record struct PolygonBounds(float MinX, float MinY, float MaxX, float MaxY)
+    {
+        public bool Contains(TownPoint p, float margin = 0f) =>
+            p.X >= MinX - margin && p.X <= MaxX + margin &&
+            p.Y >= MinY - margin && p.Y <= MaxY + margin;
+
+        public bool Intersects(PolygonBounds other) =>
+            MinX <= other.MaxX && MaxX >= other.MinX &&
+            MinY <= other.MaxY && MaxY >= other.MinY;
+
+        public static PolygonBounds From(IReadOnlyList<TownPoint> points) =>
+            new(points.Min(p => p.X), points.Min(p => p.Y),
+                points.Max(p => p.X), points.Max(p => p.Y));
+
+        public static PolygonBounds Around(TownPoint a, TownPoint b, float radius = 0f) =>
+            new(MathF.Min(a.X, b.X) - radius, MathF.Min(a.Y, b.Y) - radius,
+                MathF.Max(a.X, b.X) + radius, MathF.Max(a.Y, b.Y) + radius);
+    }
+
+    private void RefreshGeometryCache()
+    {
+        if (_geometryRevision == Revision) return;
+        _cachedFloors = Walkable.Select(p => (p, PolygonBounds.From(p.Points))).ToArray();
+        _cachedObstacles = Obstacles.Select(p => (p, PolygonBounds.From(p.Footprint))).ToArray();
+        _geometryRevision = Revision;
+    }
 
     public int CachedGridCellCount => _cachedGridCells.Count;
     public int CachedGridEdgeCount => _cachedGridEdges.Count;
@@ -135,7 +165,9 @@ public sealed class TownNavigationMap
         if (FootRadius <= 0) return true;
 
         var radiusSquared = FootRadius * FootRadius;
-        if (Obstacles.Any(obstacle => DistanceToEdgesSquared(obstacle.Footprint, feet) < radiusSquared))
+        if (_cachedObstacles.Any(entry =>
+            entry.Bounds.Contains(feet, FootRadius) &&
+            DistanceToEdgesSquared(entry.Obstacle.Footprint, feet) < radiusSquared))
             return false;
 
         for (var i = 0; i < 8; i++)
@@ -169,18 +201,90 @@ public sealed class TownNavigationMap
 
     public bool IsSegmentWalkable(TownPoint a, TownPoint b)
     {
+        if (!IsWalkable(a) || !IsWalkable(b)) return false;
+        if (CanSeeAcrossUnchangedFloor(a, b)) return true;
+
+        // Preserve two-pixel collision checks around geometry boundaries and narrow
+        // corners. Most ordinary paving routes now avoid hundreds of polygon scans.
         var dx = b.X - a.X;
         var dy = b.Y - a.Y;
         var length = MathF.Sqrt(dx * dx + dy * dy);
-        // Two-pixel steps close the narrow gaps that coarser five-pixel
-        // sampling could miss around planter corners and sign supports.
         var samples = Math.Max(1, (int)MathF.Ceiling(length / MathF.Min(2f, CellSize / 8f)));
-        for (var i = 0; i <= samples; i++)
+        for (var i = 1; i < samples; i++)
         {
             var t = (float)i / samples;
             if (!IsWalkable(new(a.X + dx * t, a.Y + dy * t))) return false;
         }
         return true;
+    }
+
+    private bool CanSeeAcrossUnchangedFloor(TownPoint a, TownPoint b)
+    {
+        RefreshGeometryCache();
+        var corridor = PolygonBounds.Around(a, b, FootRadius);
+
+        // A near collision with *any* obstacle edge must use the exact feet
+        // sampling fallback, even if the segment does not intersect the polygon.
+        foreach (var obstacle in _cachedObstacles)
+        {
+            if (!corridor.Intersects(obstacle.Bounds)) continue;
+            var points = obstacle.Obstacle.Footprint;
+            for (var i = 0; i < points.Count; i++)
+            {
+                var edgeA = points[i];
+                var edgeB = points[(i + 1) % points.Count];
+                if (SegmentsIntersect(a, b, edgeA, edgeB) ||
+                    DistanceToSegmentSquared(a, edgeA, edgeB) < FootRadius * FootRadius ||
+                    DistanceToSegmentSquared(b, edgeA, edgeB) < FootRadius * FootRadius ||
+                    DistanceToSegmentSquared(edgeA, a, b) < FootRadius * FootRadius ||
+                    DistanceToSegmentSquared(edgeB, a, b) < FootRadius * FootRadius)
+                    return false;
+            }
+        }
+
+        // The nine swept trajectories (feet centre + eight clearance probes)
+        // cannot change floor membership without crossing a polygon boundary.
+        // Their endpoints were validated by IsWalkable above. No crossing means
+        // every intermediate position is safe, without 2px interval resampling.
+        if (CrossesFloorBoundary(a, b)) return false;
+        for (var i = 0; i < 8; i++)
+        {
+            var angle = i * MathF.PI / 4f;
+            var x = MathF.Cos(angle) * FootRadius;
+            var y = MathF.Sin(angle) * FootRadius;
+            if (CrossesFloorBoundary(new(a.X + x, a.Y + y), new(b.X + x, b.Y + y)))
+                return false;
+        }
+        return true;
+    }
+
+    private bool CrossesFloorBoundary(TownPoint a, TownPoint b)
+    {
+        var area = PolygonBounds.Around(a, b);
+        foreach (var floor in _cachedFloors)
+        {
+            if (!area.Intersects(floor.Bounds)) continue;
+            var points = floor.Polygon.Points;
+            for (var i = 0; i < points.Count; i++)
+            {
+                if (SegmentsIntersect(a, b, points[i], points[(i + 1) % points.Count]))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static float DistanceToSegmentSquared(TownPoint p, TownPoint a, TownPoint b)
+    {
+        var x = b.X - a.X;
+        var y = b.Y - a.Y;
+        var lengthSquared = x * x + y * y;
+        var t = lengthSquared > 0f
+            ? Math.Clamp(((p.X - a.X) * x + (p.Y - a.Y) * y) / lengthSquared, 0f, 1f)
+            : 0f;
+        var dx = p.X - a.X - t * x;
+        var dy = p.Y - a.Y - t * y;
+        return dx * dx + dy * dy;
     }
 
     /// <summary>A* over the walkable surface, corner-cut prevention, then safe line-of-sight smoothing.</summary>
@@ -354,9 +458,14 @@ public sealed class TownNavigationMap
     private TownPoint Centre(int index, int columns) =>
         new((index % columns + .5f) * CellSize, (index / columns + .5f) * CellSize);
 
-    private bool InsideFloor(TownPoint position) =>
-        Walkable.Any(p => Contains(p.Points, position)) &&
-        !Obstacles.Any(p => Contains(p.Footprint, position));
+    private bool InsideFloor(TownPoint position)
+    {
+        RefreshGeometryCache();
+        return _cachedFloors.Any(entry =>
+            entry.Bounds.Contains(position) && Contains(entry.Polygon.Points, position)) &&
+            !_cachedObstacles.Any(entry =>
+                entry.Bounds.Contains(position) && Contains(entry.Obstacle.Footprint, position));
+    }
 
     private static float Distance(TownPoint a, TownPoint b) =>
         MathF.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));

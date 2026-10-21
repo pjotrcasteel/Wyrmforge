@@ -1,3 +1,4 @@
+@using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.Progression.DragonEssences
 @using Wyrmforge.Domain.Progression.Forge
@@ -254,10 +255,24 @@
                         @foreach (var essenceId in Summary.EssenceIds)
                         {
                             var essence = DragonEssenceCatalog.Get(essenceId);
-                            <b><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name</b>
+                            <b class="@LootRarityPresentation.Class(Summary.EssenceRarity)"><GameIcon Glyph="@(essence.Icon)" Size="sm" /> @essence.Name <em class="loot-rarity-label">@LootRarityPresentation.Label(Summary.EssenceRarity)</em></b>
                         }
                     </div>
                 }
+            </div>
+        }
+
+        @if (Summary.SecuredMaterials.Count > 0)
+        {
+            <div class="run-report-section">
+                <span>SALVAGE SECURED</span>
+                <div class="run-report-chips">
+                    @foreach (var stack in Summary.SecuredMaterials.GroupBy(material => material).OrderBy(group => group.Key))
+                    {
+                        var rarity = HuntMaterialCatalog.Rarity(stack.Key);
+                        <b class="@LootRarityPresentation.Class(rarity)">@HuntMaterialCatalog.Name(stack.Key) ×@stack.Count() <em class="loot-rarity-label">@LootRarityPresentation.Label(rarity)</em></b>
+                    }
+                </div>
             </div>
         }
 
