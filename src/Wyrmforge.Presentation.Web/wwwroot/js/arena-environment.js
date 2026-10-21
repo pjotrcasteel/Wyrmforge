@@ -1,5 +1,6 @@
 import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
 import { drawWetForestDressing } from './arena-wet-forest-dressing.js';
+import { wetForestTreeFrame, drawWetForestTreeAccents } from './arena-wet-forest-vegetation.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
@@ -303,6 +304,8 @@ export function createDestructibleLayers(environment, width, height) {
     return (environment?.props ?? []).map(prop => ({
         kind: 'masonry', style: 'destructible', depth: prop.y * height,
         prop, width, height,
+        wetForest: environment.generatorPreview === true && environment.habitat === 'WetForest',
+        forestSeed: environment.seed,
     }));
 }
 
@@ -320,13 +323,17 @@ export function drawDestructibleProp(ctx, layer) {
     const x = Math.round(prop.x * width);
     const y = Math.round(prop.y * height);
     const size = Math.round(prop.radius);
-    const treeName = prop.kind === 'pine' ? 'prop.pine.a'
-        : prop.kind === 'pine-snow' ? 'prop.pine.snow.a'
-        : prop.kind === 'dead-tree' ? 'prop.deadtree.a' : null;
+    const treeName = layer.wetForest ? wetForestTreeFrame(prop.kind, prop.id, layer.forestSeed)
+        : prop.kind === 'pine' ? 'prop.pine.a'
+            : prop.kind === 'pine-snow' ? 'prop.pine.snow.a'
+                : prop.kind === 'dead-tree' ? 'prop.deadtree.a' : null;
     // Anchor the sprite's existing foot offset at the authoritative C# trunk.
     // The wide canopy is visual; collision belongs to the much smaller trunk radius.
     if (treeName && drawArtFrame(ctx, 'environment', treeName, x, y,
-        { flipX: prop.id % 2 === 0 })) return true;
+        { flipX: prop.id % 2 === 0 })) {
+        if (layer.wetForest) drawWetForestTreeAccents(ctx, prop.kind, prop.id, layer.forestSeed, x, y);
+        return true;
+    }
     if (drawWetForestProp(ctx, prop, x, y, size)) return true;
     const ember = prop.kind === 'ember-urn';
     const frost = prop.kind === 'frozen-urn';
