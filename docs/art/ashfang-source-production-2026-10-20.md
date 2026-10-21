@@ -142,3 +142,11 @@ not just event labels. Render review now follows source 24fps timing (GIF
 40/50ms frame durations), adds phase/frame labels and a fixed ground guide with
 altitude-responsive shadow. Prior GIFs used 55ms frames and extra endpoint holds.
 No runtime controller behavior changes are included.
+
+### V12 rendered review
+Local GPU renders completed: three timed GIFs, per-frame game/side PNGs and
+eight actual-camera stills. `launch-landing-contacts.png` shows crouch, first
+stroke, departure, approach and staggered catches at the same pixel density.
+The silhouette still has broad paddle-like wing edges, so the next source
+refinement is a concave membrane edge between articulated supporting fingers.
+This visual shortcoming remains distinct from the passed source contact gate.
