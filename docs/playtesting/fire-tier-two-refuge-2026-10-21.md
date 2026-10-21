@@ -4,7 +4,7 @@ Design authority: [Hunts and world](../canon/hunts-and-world.md) (Tier II refuge
 
 ## Scope and implementation
 
-- Branch: `feature/fire-tier-two-refuge-20261021`, stacked on the Fire Tier-I branch (draft PR #205). Merge #205 first.
+- Branch: `feature/fire-tier-two-refuge-20261021`, stacked on the Fire Tier-I branch (draft PR #205). This work is draft PR [#209](https://github.com/pjotrcasteel/Wyrmforge/pull/209); merge #205 first.
 - `HuntLadder` is the single rule for authored/unlocked tiers: Fire Tiers I–II are authored; tier N opens after an extracted clear of tier N−1 **of the same lineage**. Frost keeps its single legacy Tier 1.
 - `HuntSelection.FireTierTwo` (Cinder Frontier, `WyrmTier.Ascendant`) generates two committed forks, 6–8 combat trails and an Ascendant Ashfang lair. The trail budget follows the tunable ×1.7 curve recorded in canon.
 - One optional rare **Emberwatch Refuge** sits beyond the first fork. Both second-fork entrances connect to it, so skipping it is a real choice. It uses rare difficulty (a harder hold) and replaces the random rare for that map.
