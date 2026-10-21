@@ -52,9 +52,24 @@ hind_paw=np.where((v[:,1]>.04)&(v[:,1]<.34),hind_paw,2.0)
 clear_of_paws=np.clip((np.minimum(fore_paw,hind_paw)-1.2)/.4,0,1)
 belly_surface=-.10+.02*np.maximum(0,1-abs(v[:,0])/.25)**2
 v[:,2]+=np.maximum(0,belly_surface-v[:,2])*belly_front*belly_back*low*clear_of_paws
-v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
+# Constrain the broad reconstructed lower rear limb to its anatomical axis.
+# Preserve its existing textured surface, but remove the sail-like side apron.
+for sign in [1,-1]:
+    a=np.array((sign*.18,.095,-.075));b=np.array((sign*.18,.23,-.16));d=b-a
+    t=np.clip(((v-a)@d)/(d@d),0,1);axis=a+t[:,None]*d;radial=v-axis
+    radius=np.linalg.norm(radial,axis=1)
+    region=(v[:,1]>.045)&(v[:,1]<.32)&(v[:,0]*sign>.045)&(v[:,2]<-.085)&(v[:,2]>-.145)
+    limit=.034-.012*t
+    strength=np.clip((-.085-v[:,2])/.025,0,1)*region
+    factor=1-strength*np.maximum(0,1-limit/np.maximum(radius,.0001))
+    v=axis+radial*factor[:,None]
+v,faces,uv,body_count,removed_wing_vertices,wing_camber=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
+obj.shape_key_add(name='Basis')
+membrane=obj.shape_key_add(name='Membrane pressure and recovery');membrane.slider_min=-1;membrane.slider_max=1
+for index,amount in enumerate(wing_camber):membrane.data[index].co.z+=float(amount)
+
 material=bpy.data.materials.new('Ashfang original card-derived appearance');material.use_nodes=True;texture=material.node_tree.nodes.new('ShaderNodeTexImage')
 base=bpy.data.images.load(str(folder/'textured-v1/hollow-albedo.png'));raw=np.empty(len(base.pixels),np.float32);base.pixels.foreach_get(raw);raw=raw.reshape(1024,1024,4)
 # Remove a baked white flame hotspot from the throat region; retain warm
@@ -127,6 +142,7 @@ def ik(a,b,l1,l2,pole):
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
 clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
 for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
+    flex_action=bpy.data.actions.new('Ashfang_membrane_'+clip);flex_action.use_fake_user=True;obj.data.shape_keys.animation_data_create();obj.data.shape_keys.animation_data.action=flex_action
     action=bpy.data.actions.new('Ashfang_'+clip);action.use_fake_user=True;rig.animation_data_create();rig.animation_data.action=action;sample=[];emitters=[];skeleton=[];roots=[]
     for frame in range(count):
         phase=frame/(count-1);altitude=0;rear=0;spread=.08;flap=0;pitch=0;advance=0;jaw=0;flight=None;foot_goals={}
@@ -135,6 +151,13 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
             rear=smooth(phase/.25)*(1-smooth((phase-.78)/.22));bob=.025*rear;pitch=-.62*rear;spread=.14+.18*rear;jaw=.48*smooth((phase-.22)/.12)*(1-smooth((phase-.68)/.12))
         else:
             flight=flight_state(phase);altitude=flight['altitude'];bob=flight['bob'];pitch=flight['pitch'];spread=flight['spread'];flap=flight['flap'];advance=flight['advance']
+        # Pressure inflates the bays under power, then reverses gently during
+        # recovery. Zero displacement at each spar keeps attachment continuous.
+        if flight:
+            velocity=(flap-flight_state(max(0,phase-.008))['flap'])/.008
+            membrane.value=max(-.65,min(1,velocity*.065))*spread
+        else:membrane.value=0
+        membrane.keyframe_insert('value',frame=frame+1)
         rotation=Quaternion((1,0,0),pitch);origin=Vector(bones['pelvis']['head']);offset=Vector((0,advance,altitude+bob));point=lambda p:origin+rotation@(Vector(p)-origin)+offset
         segment('root',bones['root']['head'],bones['root']['tail'])
         posed={}
@@ -261,7 +284,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
     clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else [],strideDistanceModelUnits=.10/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots))
-scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];scene.frame_set(1)
+scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];obj.data.shape_keys.animation_data.action=bpy.data.actions['Ashfang_membrane_walk'];scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and three anatomy/motion blocking sequences',flush=True)
 
 (out/'paw-contact-audit.json').write_text(json.dumps(contacts,indent=2)+'\n')

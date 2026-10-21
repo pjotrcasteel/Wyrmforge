@@ -361,3 +361,6 @@ Previous failed source attempts and diagnostics remain preserved.
 ## V21 anatomy and wing articulation candidate
 Owner rejected V20 rear-foot wedge, short tail, head shape and rigid wing stroke. V21 tapers the reconstructed heel and muzzle, extends the complete trailing tail surface rather than only its center, and gives the elbow recovery flexion with wrist/digit delays sampled from the actual shoulder stroke. Source build completed; visual GPU review pending. Art remains unaccepted and runtime unchanged.
 
+
+V21 GPU reviews pass finite/clipping/floor checks for all three studies with exact walk closure. Visual inspection still found an apron around the extended rear shin. V22 constrains that source surface toward the lower-limb axis and adds an editable membrane pressure/recovery shape key, keyed separately per action. This deforms the 3D bays between spars; no image warping. V22 visual review pending.
+

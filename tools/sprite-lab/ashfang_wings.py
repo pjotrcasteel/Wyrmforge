@@ -12,7 +12,7 @@ def wing_layout(sign):
 def rebuild_wings(v,faces,uv):
     old=(v[:,2]>.055)&(v[:,1]>-.22)&(abs(v[:,0])>.065)
     retained=faces[~np.any(old[faces],axis=1)];used=np.unique(retained);mapping=np.full(len(v),-1);mapping[used]=np.arange(len(used));retained=mapping[retained]
-    vertices=v[used].tolist();coords=(uv[used]*[.5,1]).tolist();triangles=retained.tolist();body_count=len(vertices)
+    vertices=v[used].tolist();coords=(uv[used]*[.5,1]).tolist();triangles=retained.tolist();body_count=len(vertices);camber=[0.0]*body_count
     def card_uv(p):return [.5+p[0]/228*.5,1-p[1]/193]
     def append_tri(points,texcoords):
         start=len(vertices);steps=10;indices={}
@@ -24,6 +24,7 @@ def rebuild_wings(v,faces,uv):
                 # retaining full span at each tip rather than a broad paddle.
                 point+=(points[0]-point)*(.32*4*a*b*(a+b)**2)
                 point[2]-=.035*a*b*c*12
+                camber.append(.055*27*a*b*c)
                 indices[i,j]=len(vertices);vertices.append(point.tolist());coords.append(card_uv(np.array(texcoords[0])*c+np.array(texcoords[1])*a+np.array(texcoords[2])*b))
         for i in range(steps):
             for j in range(steps-i):
@@ -36,7 +37,7 @@ def rebuild_wings(v,faces,uv):
             direction=b-a;direction/=np.linalg.norm(direction);right=np.cross(direction,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(direction,right);start=len(vertices)
             for ring in [0,1]:
                 for j in range(8):
-                    angle=j*np.pi/4;vertices.append(((a if ring==0 else b)+radius*(right*np.cos(angle)+up*np.sin(angle))).tolist());coords.append(card_uv((170,38)))
+                    camber.append(0.0);angle=j*np.pi/4;vertices.append(((a if ring==0 else b)+radius*(right*np.cos(angle)+up*np.sin(angle))).tolist());coords.append(card_uv((170,38)))
             for j in range(8):
                 k=(j+1)%8;triangles.extend([[start+j,start+k,start+8+j],[start+k,start+8+k,start+8+j]])
-    return np.array(vertices),np.array(triangles,np.int32),np.array(coords),body_count,int(old.sum())
+    return np.array(vertices),np.array(triangles,np.int32),np.array(coords),body_count,int(old.sum()),np.array(camber)
