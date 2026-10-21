@@ -65,6 +65,7 @@
             <h2>World inspector</h2>
             <dl>
                 <dt>Habitat</dt><dd>@WyrmrealmHabitatCatalog.DisplayName(habitat)</dd>
+                <dt>Discovery</dt><dd>@siteName</dd>
                 <dt>Region</dt><dd>@WyrmrealmHabitatCatalog.School(habitat)</dd>
                 <dt>Wyrm influence</dt><dd>@(Math.Round(HuntArenaGenerator.WyrmInfluence(stage, stage >= 7) * 100))%</dd>
                 <dt>Props remaining</dt><dd>@remainingProps</dd>
@@ -98,6 +99,7 @@
     private WyrmrealmHabitat habitat = WyrmrealmHabitat.WetForest;
     private int seed = 1204;
     private int stage = 1;
+    private string siteName = "—";
     private int remainingProps;
     private int destroyedProps;
     private int collectedSupplies;
@@ -159,7 +161,8 @@
         if (difference > 0)
         {
             destroyedProps += difference;
-            remainingProps = environment.Snapshot().Props.Count;
+            siteName = environment.Snapshot().WetForest?.Site.Replace('-', ' ') ?? "—";
+        remainingProps = environment.Snapshot().Props.Count;
             status = $"{destroyedProps} objects destroyed · loot is collectible on approach";
             _ = InvokeAsync(StateHasChanged);
         }
