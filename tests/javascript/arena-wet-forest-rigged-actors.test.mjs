@@ -37,7 +37,7 @@ test('real character rigs follow C# travel without pretending the navigation pro
 
     const h = hollow.entities.get(1), a = ashling.entities.get(2);
     assert.equal(h.direction, 'E');
-    assert.equal(a.direction, 'N');
+    assert.equal(a.direction, 'SE', 'The Ashling turns through authored intermediate facings, not a snap.');
     assert.equal(h.clip, 'walk');
     assert.equal(a.clip, 'walk');
     assert.equal(h.attackAt, null);
@@ -45,9 +45,17 @@ test('real character rigs follow C# travel without pretending the navigation pro
     assert.ok(h.frame > 0);
     assert.ok(a.frame > 0);
 
-    // Resting on the same physical world foot position must not advance animation.
-    updateHollowSprites(hollow, moving, 1.5);
-    ashlingSprites.update(ashling, moving, 1.5);
+    // Continue moving north to allow the 720-degree/second eight-facing turn to finish.
+    let latest = moving;
+    for (let step = 1; step <= 6; step++) {
+        latest = movementOnly(enemies(126, 215 - step * 3));
+        updateHollowSprites(hollow, latest, 1.08 + step * .06);
+        ashlingSprites.update(ashling, latest, 1.08 + step * .06);
+    }
+    assert.equal(a.direction, 'N');
+    // Resting on the same physical world foot position must not invent any attack.
+    updateHollowSprites(hollow, latest, 1.6);
+    ashlingSprites.update(ashling, latest, 1.6);
     assert.equal(h.clip, 'walk');
     assert.equal(a.clip, 'walk');
     assert.equal(h.attackAt, null);
