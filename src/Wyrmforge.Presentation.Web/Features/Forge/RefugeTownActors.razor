@@ -1,5 +1,8 @@
 @using Wyrmforge.Application.World
-@implements IDisposable
+@using Microsoft.JSInterop
+@using System.Diagnostics
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 @* Keep the constantly moving citizens in their own render subtree. The approved
    panorama, vacant layers, hotspots and static geometry no longer rerender at 10 Hz. *@
@@ -48,15 +51,37 @@
 @code {
     [Parameter, EditorRequired] public TownCrowd Crowd { get; set; } = null!;
     [Parameter] public bool ShowGeometry { get; set; }
+    [Parameter] public bool ShowMetrics { get; set; }
     [Parameter] public EventCallback GeometryChanged { get; set; }
 
     private readonly CancellationTokenSource crowdStop = new();
+    private IJSObjectReference? performanceModule;
+    private IJSObjectReference? performanceMonitor;
+    private Task? animationTask;
     private int lastGeometryRevision;
+    private int measuredTicks;
+    private double measuredTotalMilliseconds;
+    private double measuredMaxMilliseconds;
+    private int lastPathCount;
+    private double lastPathMilliseconds;
 
     protected override void OnInitialized()
     {
         lastGeometryRevision = Crowd.Navigation.Revision;
-        _ = AnimateCrowdAsync();
+        animationTask = AnimateCrowdAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !ShowMetrics) return;
+        try
+        {
+            performanceModule = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/refuge-performance.js");
+            performanceMonitor = await performanceModule.InvokeAsync<IJSObjectReference>(
+                "startRefugePerformance", "#refuge-town-performance");
+        }
+        catch (JSException) { /* Debug monitor is optional: town must continue normally. */ }
     }
 
     private async Task AnimateCrowdAsync()
@@ -66,16 +91,56 @@
         {
             while (await timer.WaitForNextTickAsync(crowdStop.Token))
             {
-                await InvokeAsync(() => { Crowd.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
-                if (!ShowGeometry || lastGeometryRevision == Crowd.Navigation.Revision) continue;
+                await InvokeAsync(() =>
+                {
+                    var began = ShowMetrics ? Stopwatch.GetTimestamp() : 0L;
+                    Crowd.Step(TimeSpan.FromMilliseconds(100));
+                    if (ShowMetrics)
+                    {
+                        var spent = Stopwatch.GetElapsedTime(began).TotalMilliseconds;
+                        measuredTicks++;
+                        measuredTotalMilliseconds += spent;
+                        measuredMaxMilliseconds = Math.Max(measuredMaxMilliseconds, spent);
+                    }
+                    StateHasChanged();
+                });
+                if (ShowMetrics && measuredTicks >= 10 && performanceMonitor is not null)
+                    await PublishMetricsAsync();
 
-                // Dynamic props can change the map. Repaint the static collision
-                // layer only for that revision, never for ordinary actor ticks.
+                if (!ShowGeometry || lastGeometryRevision == Crowd.Navigation.Revision) continue;
                 lastGeometryRevision = Crowd.Navigation.Revision;
                 await GeometryChanged.InvokeAsync();
             }
         }
         catch (OperationCanceledException) { /* The town actor layer was disposed. */ }
+        catch (JSDisconnectedException) { /* Navigating away interrupts the optional debug monitor. */ }
+    }
+
+    private async Task PublishMetricsAsync()
+    {
+        var ticks = measuredTicks;
+        var paths = Crowd.PathfindCount;
+        var milliseconds = Crowd.PathfindTotalMilliseconds;
+        var data = new
+        {
+            total = Crowd.Citizens.Count,
+            present = Crowd.PresentCitizens,
+            away = Crowd.AwayCitizens,
+            workers = Crowd.AssignedWorkers,
+            working = Crowd.ActiveWorkers,
+            stepAvg = measuredTotalMilliseconds / ticks,
+            stepMax = measuredMaxMilliseconds,
+            updates = ticks,
+            pathCount = paths - lastPathCount,
+            pathMs = milliseconds - lastPathMilliseconds
+        };
+        measuredTicks = 0;
+        measuredTotalMilliseconds = 0;
+        measuredMaxMilliseconds = 0;
+        lastPathCount = paths;
+        lastPathMilliseconds = milliseconds;
+        try { await performanceMonitor!.InvokeVoidAsync("update", data); }
+        catch (JSException) { /* The optional debug overlay must not stop citizens. */ }
     }
 
     private static string CitizenState(TownCitizen citizen) =>
@@ -91,9 +156,28 @@
     private static string CitizenStyle(TownCitizen citizen) =>
         FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%");
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        crowdStop.Cancel();
+        await crowdStop.CancelAsync();
+        if (animationTask is not null)
+        {
+            try { await animationTask; }
+            catch (OperationCanceledException) { /* Expected during navigation. */ }
+        }
+        if (performanceMonitor is not null)
+        {
+            try
+            {
+                await performanceMonitor.InvokeVoidAsync("dispose");
+                await performanceMonitor.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { /* The page has already changed. */ }
+        }
+        if (performanceModule is not null)
+        {
+            try { await performanceModule.DisposeAsync(); }
+            catch (JSDisconnectedException) { /* The page has already changed. */ }
+        }
         crowdStop.Dispose();
     }
 }
