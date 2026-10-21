@@ -115,7 +115,7 @@ jobs:
         env:
           WYRMFORGE_BASE_URL: https://pjotrcasteel.github.io/Wyrmforge/
           WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/pages-smoke
-        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "Desktop_HomeAndAtlas_RenderAtWideViewport"
+        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter "Desktop_HomeAndAtlas_RenderAtWideViewport|Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls"
 
       - name: Verify live playtest collector connection
         env:
