@@ -9,6 +9,43 @@ function randomStream(seed) {
 }
 const pixel = value => Math.round(value / 2) * 2;
 
+// Small ground-level histories tied to EXISTING destructible C# ruins. Broken
+// stone chips, blackened timber and churned loam are never upright fake blockers.
+export function createWetForestRuinTraces(seed, props = [], width = 950, height = 1550) {
+    const marks = [];
+    const ruins = new Set(['camp-remains', 'grave-marker', 'waystone', 'broken-cart', 'fallen-log']);
+    const colors = {
+        'camp-remains': ['#261e1b', '#594332', '#3e332a'],
+        'grave-marker': ['#333830', '#5a5b4d', '#3c413a'],
+        waystone: ['#363a35', '#545747', '#383e37'],
+        'broken-cart': ['#33251e', '#614a35', '#47352a'],
+        'fallen-log': ['#292520', '#504031', '#364031'],
+    };
+    for (const prop of props) {
+        if (!ruins.has(prop.kind)) continue;
+        const centerX = pixel(prop.x * width), centerY = pixel(prop.y * height);
+        const palette = colors[prop.kind];
+        const count = prop.kind === 'broken-cart' || prop.kind === 'camp-remains' ? 18 : 10;
+        const radius = prop.kind === 'broken-cart' ? 67 : prop.kind === 'fallen-log' ? 52 : 41;
+        for (let i = 0; i < count; i++) {
+            const a = (i * 2.39996 + prop.id * .41);
+            const r = radius * (.42 + .58 * randomHash(seed, prop.id, i));
+            const x = pixel(centerX + Math.cos(a) * r);
+            const y = pixel(centerY + Math.sin(a) * r * .41);
+            const w = i % 4 === 0 ? 10 : i % 3 === 0 ? 6 : 4;
+            if (x < 0 || y < 0 || x + w > width || y + 2 > height) continue;
+            marks.push({ id: prop.id, x, y, width: w, color: palette[i % palette.length] });
+        }
+    }
+    return marks;
+}
+
+function randomHash(seed, id, index) {
+    let value = (seed | 0) ^ Math.imul(id | 0, 0x9e3779b1) ^ Math.imul(index | 0, 0x85ebca6b);
+    value = Math.imul(value ^ (value >>> 16), 0x7feb352d);
+    return ((value ^ (value >>> 15)) >>> 0) / 4294967296;
+}
+
 export function createWetForestDressingPlan(seed, props = [], width = 950, height = 1550) {
     const next = randomStream(seed);
     const litter = [];
@@ -32,7 +69,8 @@ export function createWetForestDressingPlan(seed, props = [], width = 950, heigh
     const roots = props.filter(p => ['pine', 'dead-tree', 'stump', 'moss-rock', 'fallen-log'].includes(p.kind))
         .map(p => ({ x: pixel(p.x * width), y: pixel(p.y * height), radius: p.radius,
             kind: p.kind, id: p.id }));
-    return { litter, roots, rootVeins: createWetForestRootVeins(seed, roots),
+    return { litter, roots, ruinTraces: createWetForestRuinTraces(seed, props, width, height),
+        rootVeins: createWetForestRootVeins(seed, roots),
         understory: createWetForestUnderstory(seed, roots) };
 }
 
@@ -60,6 +98,14 @@ export function drawWetForestDressing(ctx, scene, props, width, height) {
             }
         }
     }
+    // Debris belongs to real physical graves, camps, carts and fallen timber.
+    // Flat mineral/wood traces never imply collision beyond those real objects.
+    ctx.globalAlpha = .64;
+    for (const mark of plan.ruinTraces) {
+        ctx.fillStyle = mark.color;
+        ctx.fillRect(mark.x, mark.y, mark.width, 2);
+    }
+    ctx.globalAlpha = 1;
     // Roots and low moss are baked from the SAME C# prop feet, and remain only ground material.
     drawWetForestRootVeins(ctx, plan.rootVeins, plan.understory);
     // Three earthy material families repeat in restrained clusters; every mark is pixel-aligned.
