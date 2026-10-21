@@ -3,14 +3,14 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "V54 fire-identity candidate: molten plate breaks, burning spine/shoulder/tail volumes, emissive wing veins; six native motion reviews and eight directions; owner visual acceptance and final fire polish pending",
+  "status": "V58 near-black fire/smoke performance candidate: slower articulated walk and breath, asymmetric flight stroke, historical buoyant soot and local heat light; clay/full six-action reviews pass at native density; owner acceptance and runtime integration pending",
   "method": "Locally authored volumetric Blender source with independent per-loop UV atlas baked in rest space on RTX 5090; preserved TRELLIS and concept references",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner review of V54 elemental identity; refine flame shapes, local surface light and complete texture polish at actual mobile size",
+    "owner review of near-black fire/smoke and organic performance; continued flame/smoke and motion polish at actual phone size",
     "owner review of revised head and carried-claw performance; all-facing native scale; final fire effects and complete hit/death/direction library",
     "finalize fire VFX and remaining action/direction library; validate encounter rules in C#",
     "eight-direction animation export and motion metadata; only still turnarounds currently reviewed",
@@ -25,11 +25,11 @@
   ],
   "divineTier": 5,
   "divineTargetViewportWidthFraction": 1.0,
-  "sourceRig": "model/local-appearance-001/rigged-block-v54-fire/ashfang-rigged.blend",
-  "review": "model/local-appearance-001/rigged-block-v54-fire/motion-review-v1",
+  "sourceRig": "model/local-appearance-001/rigged-block-v58-shadowfire/ashfang-rigged.blend",
+  "review": "model/local-appearance-001/rigged-block-v58-shadowfire/motion-review-v2",
   "productionDocumentation": "../../../../docs/art/ashfang-source-production-2026-10-20.md",
-  "turnaroundReview": "model/local-appearance-001/rigged-block-v54-fire/turnaround-review-v1",
-  "sourceChecks": "model/local-appearance-001/rigged-block-v37/source-check-summary.json",
+  "turnaroundReview": "model/local-appearance-001/rigged-block-v58-shadowfire/turnaround-review-v1",
+  "sourceChecks": "model/local-appearance-001/rigged-block-v58-shadowfire/source-check-summary.json",
   "bodyReview": "model/local-appearance-001/rigged-block-v26/body-review-v1",
   "jumpResearch": "jump-reference-study.md",
   "anatomyComparison": "model/local-appearance-001/rigged-block-v26/anatomy-review-v1/before-after-defects.png",
@@ -45,7 +45,7 @@
     "date": "2026-10-21"
   },
   "flightLoop": {
-    "uniqueFrames": 16,
+    "uniqueFrames": 32,
     "closingSampleIncluded": true,
     "fps": 24,
     "exactClosure": true
@@ -124,5 +124,7 @@
   "headReview": "model/local-appearance-001/rigged-block-v50-head-limbs/head-review-v2",
   "limbReview": "model/local-appearance-001/rigged-block-v50-head-limbs/limb-review-v2",
   "textureFinal": false,
-  "bodyFireSource": "model/local-appearance-001/rigged-block-v54-fire/body-fire-source.json"
+  "bodyFireSource": "model/local-appearance-001/rigged-block-v58-shadowfire/body-fire-source.json",
+  "performanceResearch": "performance-shadowfire-study.md",
+  "clayReview": "model/local-appearance-001/rigged-block-v58-shadowfire/motion-clay-review-v2"
 }

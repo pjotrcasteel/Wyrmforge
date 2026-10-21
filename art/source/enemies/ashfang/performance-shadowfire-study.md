@@ -28,3 +28,49 @@ readability remain review gates. No damage/aura mechanics added.
 Checkpoint only: code and research saved before generation. Remaining: generate
 and inspect, resolve floor/contact/loop errors, preserve charcoal/fire source,
 render native motion with/without effects, owner review. PR #186 remains draft.
+
+
+## V55–V58 result
+
+V55 darkens the non-emissive material to near-black charcoal while retaining
+molten texels, eyes, fangs and all V54 motion. Source and reviews are preserved.
+V56 intentionally revises performance while retaining rest anatomy. Walk now
+has 48 unique frames plus closure, breath 73 samples, cruise 32 unique frames
+plus closure. Pelvis/chest counter-rotation, support shift, toe release and
+lagging tail accompany a stable head. Breath articulation anticipates and
+recoils. Cruise uses distinct loaded/recovery/power poses rather than a uniform
+cosine stroke. These are authored animation choices, not measured biomechanics
+or new gameplay speed/balance values.
+
+V57 assembles that motion with V55's exact rest-surface/chart/charcoal texture,
+28 surface-bound flame tongues and the first 42-puff smoke source. The first
+smoke pass was too quiet. V58 uses 70 overlapping density lobes, billowed volume
+boundaries, warm light near fresh soot fading to dark aged smoke, and bounded
+local fire-light on the body. Smoke follows historical surface positions and
+is integrated only in front of visible body/fire depth. This is an analytic
+volume approximation for pixel-art source review, not a film combustion solve.
+
+Current source: model/local-appearance-001/rigged-block-v58-shadowfire.
+The packed Blender source contains all nine editable body/fire actions and
+49-frame opening walk timeline. Smoke remains separate reproducible analytic
+NPZ source and code; it is not a Blender fluid cache. editable-source-checks.json
+verifies packed textures, unchanged rest geometry and flame shape counts.
+All nine body sources are finite/floor-safe (minimum about -0.195817 versus
+floor -0.197); walk and flight loops close exactly. Fire and smoke loops close.
+
+The original 192px motion canvas clipped the higher recovery stroke in two
+clay clips and portions of smoke; failed v1 evidence is retained. The v2 canvas
+is 224px at the SAME 80px/unit, not a smaller creature. All six regular actions
+are now finite/unclipped in both motion-clay-review-v2 and motion-review-v2.
+Eight actual directional views are in turnaround-review-v1. walk-weight-study.png
+shows actual clay samples. Source preservation/equivalence reports remain.
+
+A local-only Hunt screenshot composite uses the existing 110px/unit fit, 440x955
+viewport and unchanged player region in all 48 source frames. Pixel checks are
+recorded in native-fit-checks.json; screenshot/derived media are ignored and
+were NOT published. This is an art composite, not live gameplay or phone QA.
+
+Remaining: owner acceptance and further boss-performance/effect polish, actual
+phone/Hunt validation, completed action/direction sheets, final breath/ground
+fire, hit/death and explicit C# aerial integration. Geometry/fire previews do
+not create combat hazards or establish a finished boss. PR #186 stays draft.
