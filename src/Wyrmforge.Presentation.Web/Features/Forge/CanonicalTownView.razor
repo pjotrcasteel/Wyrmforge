@@ -32,20 +32,9 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
-        @* Prototype pedestrians stay visible. Feet, not their full rectangular bodies, collide with the ground. *@
         @if (crowd is not null)
         {
-            <div class="refuge-town-crowd" aria-hidden="true">
-                @foreach (var person in crowd.Citizens)
-                {
-                    @if (person.IsPresent)
-                    {
-                        <span @key="person.Id" class="refuge-town-citizen"
-                              data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
-                              style="@CitizenStyle(person)"></span>
-                    }
-                }
-            </div>
+            <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry" />
         }
 
         @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
@@ -66,15 +55,6 @@
                     {
                         <polygon @key="foreground.Id" class="refuge-town-geometry-visual"
                                  data-town-foreground="@foreground.Id" points="@GeometryPoints(foreground.Clip)" />
-                    }
-                    @foreach (var person in crowd.Citizens)
-                    {
-                        @if (person.IsPresent)
-                        {
-                            <circle @key="person.Id" class="refuge-town-geometry-feet"
-                                    data-town-feet="@person.Id" cx="@person.Position.X"
-                                    cy="@person.Position.Y" r="@crowd.Navigation.FootRadius" />
-                        }
                     }
                 </svg>
             </div>
@@ -105,7 +85,7 @@
 
 @code {
     private TownCrowd? crowd;
-    private readonly CancellationTokenSource crowdStop = new();
+    private readonly CancellationTokenSource loadingStop = new();
 
     private bool showTownGeometry;
 
@@ -118,10 +98,9 @@
         try
         {
             using var http = new HttpClient();
-            var json = await http.GetStringAsync(Navigation.ToAbsoluteUri($"art/town/night-navigation.json?v={AppBuildInfo.Version}"), crowdStop.Token);
-            if (crowdStop.IsCancellationRequested) return;
+            var json = await http.GetStringAsync(Navigation.ToAbsoluteUri($"art/town/night-navigation.json?v={AppBuildInfo.Version}"), loadingStop.Token);
+            if (loadingStop.IsCancellationRequested) return;
             crowd = new TownCrowd(TownNavigationMap.FromJson(json), seed: 205, citizenCount: 7);
-            _ = AnimateCrowdAsync();
         }
         catch (OperationCanceledException) { /* Town was left before navigation loaded. */ }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or ArgumentException)
@@ -130,27 +109,13 @@
         }
     }
 
-    private async Task AnimateCrowdAsync()
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
-        try
-        {
-            while (await timer.WaitForNextTickAsync(crowdStop.Token))
-                await InvokeAsync(() => { crowd?.Step(TimeSpan.FromMilliseconds(100)); StateHasChanged(); });
-        }
-        catch (OperationCanceledException) { /* Navigating away cancels ambient movement. */ }
-    }
-
-    private static string CitizenStyle(TownCitizen citizen) =>
-        FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%");
-
     private static string GeometryPoints(IReadOnlyList<TownPoint> points) =>
         string.Join(" ", points.Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
 
     public void Dispose()
     {
-        crowdStop.Cancel();
-        crowdStop.Dispose();
+        loadingStop.Cancel();
+        loadingStop.Dispose();
     }
 
     [Parameter] public bool NexusUnlocked { get; set; }
