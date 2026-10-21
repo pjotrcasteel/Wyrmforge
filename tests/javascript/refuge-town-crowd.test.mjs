@@ -336,3 +336,21 @@ test('dynamic props invalidate C# routes and navigation prevents shortcutting th
     assert.match(simulation, /_navigation\.TryFindPath/);
     assert.doesNotMatch(simulation, /Random\.Shared|DateTime|RandomNumberGenerator/);
 });
+
+test('Phase 1 geometry inspector switches real town layers without editing geometry or crowd AI', () => {
+    const view = source(scene);
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(view, /@if \(showTownGeometry\)\s*\{\s*<div class="refuge-town-geometry-toolbar"/);
+    assert.match(view, /data-town-geometry-layer="@geometryLayer"/);
+    for (const layer of ['All', 'Walkable', 'Blocked', 'Occlusion']) {
+        assert.ok(view.includes('data-town-layer-select="' + layer + '"'), layer + ' switch missing');
+        assert.ok(view.includes('ShowLayer(TownGeometryLayer.' + layer + ')'), layer + ' control inactive');
+    }
+    for (const layer of ['Walkable', 'Blocked', 'Occlusion']) {
+        assert.ok(view.includes('geometryLayer is TownGeometryLayer.All or TownGeometryLayer.' + layer),
+            layer + ' should render only its selected authored polygons');
+    }
+    assert.match(css, /refuge-town-geometry-toolbar\s*\{[^}]*position:fixed/s);
+    assert.match(css, /refuge-town-geometry-toolbar button\[aria-pressed="true"\]/);
+    assert.match(css, /refuge-town-geometry-debug\[data-town-geometry-layer="Walkable"\]/);
+});

@@ -104,21 +104,31 @@
         @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
         @if (showTownGeometry && crowd is not null)
         {
-            <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" aria-hidden="true">
+            <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" data-town-geometry-layer="@geometryLayer" aria-hidden="true">
                 <svg viewBox="0 0 1672 941" preserveAspectRatio="none" class="refuge-town-geometry-map">
-                    @foreach (var floor in crowd.Navigation.Walkable)
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable)
                     {
-                        <polygon class="refuge-town-geometry-walkable" points="@GeometryPoints(floor.Points)" />
+                        @foreach (var floor in crowd.Navigation.Walkable)
+                        {
+                            <polygon class="refuge-town-geometry-walkable" data-town-floor="@floor.Id"
+                                     points="@GeometryPoints(floor.Points)" />
+                        }
                     }
-                    @foreach (var obstacle in crowd.Navigation.Obstacles)
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Blocked)
                     {
-                        <polygon @key="obstacle.Id" class="refuge-town-geometry-solid"
-                                 data-town-obstacle="@obstacle.Id" points="@GeometryPoints(obstacle.Footprint)" />
+                        @foreach (var obstacle in crowd.Navigation.Obstacles)
+                        {
+                            <polygon @key="obstacle.Id" class="refuge-town-geometry-solid"
+                                     data-town-obstacle="@obstacle.Id" points="@GeometryPoints(obstacle.Footprint)" />
+                        }
                     }
-                    @foreach (var foreground in crowd.Navigation.Occluders)
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Occlusion)
                     {
-                        <polygon @key="foreground.Id" class="refuge-town-geometry-visual"
-                                 data-town-foreground="@foreground.Id" points="@GeometryPoints(foreground.Clip)" />
+                        @foreach (var foreground in crowd.Navigation.Occluders)
+                        {
+                            <polygon @key="foreground.Id" class="refuge-town-geometry-visual"
+                                     data-town-foreground="@foreground.Id" points="@GeometryPoints(foreground.Clip)" />
+                        }
                     }
                 </svg>
             </div>
@@ -150,6 +160,19 @@
         <output id="refuge-town-performance" class="refuge-town-performance"
                 data-town-performance="true" aria-label="Refuge performance measurements"></output>
     }
+    @if (showTownGeometry)
+    {
+        <div class="refuge-town-geometry-toolbar" role="group" aria-label="Town debug geometry layers">
+            <button type="button" data-town-layer-select="All" aria-pressed="@(geometryLayer == TownGeometryLayer.All ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.All)">All</button>
+            <button type="button" data-town-layer-select="Walkable" aria-pressed="@(geometryLayer == TownGeometryLayer.Walkable ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Walkable)">Walk</button>
+            <button type="button" data-town-layer-select="Blocked" aria-pressed="@(geometryLayer == TownGeometryLayer.Blocked ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Blocked)">Block</button>
+            <button type="button" data-town-layer-select="Occlusion" aria-pressed="@(geometryLayer == TownGeometryLayer.Occlusion ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Occlusion)">Cover</button>
+        </div>
+    }
 </div>
 
 @code {
@@ -160,6 +183,11 @@
     private bool showTownMetrics;
     private bool showTownWalkScan;
     private string? walkScanPath;
+    private TownGeometryLayer geometryLayer = TownGeometryLayer.All;
+
+    private enum TownGeometryLayer { All, Walkable, Blocked, Occlusion }
+
+    private void ShowLayer(TownGeometryLayer layer) => geometryLayer = layer;
 
     protected override async Task OnInitializedAsync()
     {
