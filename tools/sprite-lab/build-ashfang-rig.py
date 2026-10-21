@@ -8,7 +8,7 @@ from mathutils import Vector,Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
 from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
-from ashfang_motion import flight_state,cruise_state,FLIGHT_EVENTS
+from ashfang_motion import flight_state,cruise_state,connected_flight_state,CONNECTED_FLIGHT_FRAMES,CONNECTED_FLIGHT_EVENTS,FLIGHT_EVENTS
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
@@ -123,8 +123,9 @@ def ik(a,b,l1,l2,pole):
     d=b-a;distance=max(abs(l1-l2)+.0001,min(d.length,l1+l2-.0001));d.normalize();b=a+d*distance;along=(l1*l1-l2*l2+distance*distance)/(2*distance);p=Vector(pole);p=(p-d*p.dot(d)).normalized();return a+d*along+p*math.sqrt(max(0,l1*l1-along*along)),b
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
 clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
-for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('flight-loop',17),('landing',31)]:
+for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('flight-loop',17),('landing',31),('flight-sequence',CONNECTED_FLIGHT_FRAMES)]:
     def state_at(t):
+        if clip=='flight-sequence':return connected_flight_state(t*(count-1))
         if clip=='flight-loop':return cruise_state(t)
         source_phase=.64+.36*t if clip=='landing' else t
         state=flight_state(max(0,source_phase));state['sourcePhase']=source_phase
@@ -249,7 +250,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
         for contact_iteration in range(45):
             previous=None
             for i in range(len(tail)-1):
-                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=state_at(phase-(.018+i*.012)*delay_scale) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),.12*math.sin(pose_phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=state_at(phase-(.018+i*.012)*delay_scale) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),(.12*(flight.get('tailSin',math.sin(pose_phase*math.pi*2))*math.cos(i*.35)-flight.get('tailCos',math.cos(pose_phase*math.pi*2))*math.sin(i*.35)) if flight else .12*math.sin(pose_phase*math.pi*2-i*.35)));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
             ev=obj.evaluated_get(deps);contact_mesh=ev.to_mesh()
             tail_min=min(contact_mesh.vertices[index].co.z for index in tail_indices)
             ev.to_mesh_clear()
@@ -271,10 +272,10 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
         floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,rootAdvance=advance,tailCorrectionRadians=tail_correction,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    clips[clip]=dict(frames=count,fps=24,loop=clip in ('walk','flight-loop'),action=action.name,events=([dict(phase=(e['phase']-.64)/.36,name=e['name']) for e in FLIGHT_EVENTS if e['phase']>=.64] if clip=='landing' else FLIGHT_EVENTS if clip=='takeoff-flight-land' else []),strideDistanceModelUnits=.10/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
+    clips[clip]=dict(frames=count,fps=24,loop=clip in ('walk','flight-loop'),action=action.name,events=(CONNECTED_FLIGHT_EVENTS if clip=='flight-sequence' else [dict(phase=(e['phase']-.64)/.36,name=e['name']) for e in FLIGHT_EVENTS if e['phase']>=.64] if clip=='landing' else FLIGHT_EVENTS if clip=='takeoff-flight-land' else []),strideDistanceModelUnits=.10/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots))
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];obj.data.shape_keys.animation_data.action=bpy.data.actions['Ashfang_membrane_walk'];scene.frame_set(1)
-bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and five motion studies',flush=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and six motion studies',flush=True)
 
 (out/'paw-contact-audit.json').write_text(json.dumps(contacts,indent=2)+'\n')
 

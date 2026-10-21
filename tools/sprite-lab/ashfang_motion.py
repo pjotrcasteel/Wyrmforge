@@ -79,5 +79,48 @@ def cruise_state(phase):
         chestLift=.025*math.sin(angle-.6),neckBase=-.015*math.sin(angle-.8),
         neckTip=-.012*math.sin(angle-1.0),headCounter=-.018*math.sin(angle-.5),
         tailKick=.04*math.sin(angle-.7),foreTuck=1,hindTuck=1,
-        toeRoll=0,kickTrail=0,landingReach=0,label='sustained flight')
+        toeRoll=0,kickTrail=0,landingReach=0,sourcePhase=.485,
+        tailSin=math.sin(angle),tailCos=math.cos(angle),label='sustained flight')
     return state
+
+
+CONNECTED_FLIGHT_FRAMES=148
+CONNECTED_FLIGHT_EVENTS=[
+    dict(phase=.205*83/147,name='first-downstroke'),
+    dict(phase=.265*83/147,name='departure'),
+    dict(phase=34/147,name='enter-flight-blend'),
+    dict(phase=46/147,name='sustained-flight'),
+    dict(phase=104/147,name='landing-blend'),
+    dict(phase=116/147,name='approach-and-flare'),
+    dict(phase=(64+.81*83)/147,name='forepaw-catch'),
+    dict(phase=(64+.845*83)/147,name='hindpaw-catch'),
+    dict(phase=1,name='settled'),
+]
+
+def connected_flight_state(frame):
+    """Continuous controls evaluated BEFORE FK/IK and skin deformation.
+
+    Twelve source-frame overlap windows preserve shoulder/digit history. The
+    approved takeoff through frame 34 and landing from source frame 52 remain
+    the source motions; no rendered images or mesh snapshots are crossfaded.
+    """
+    def original(source_frame):
+        phase=max(0,source_frame/83)
+        state=flight_state(phase)
+        state.update(sourcePhase=phase,tailSin=math.sin(phase*math.pi*2),
+                     tailCos=math.cos(phase*math.pi*2))
+        return state
+    def blend(a,b,weight,label):
+        state={key:a[key]*(1-weight)+b[key]*weight
+               for key in a if isinstance(a[key],(int,float))}
+        state['label']=label
+        return state
+    if frame<=34:return original(frame)
+    cruise=cruise_state((frame-40)/16)
+    if frame<46:
+        return blend(original(frame),cruise,smooth((frame-34)/12),'takeoff into flight')
+    if frame<=104:return cruise
+    landing=original(frame-64)
+    if frame<116:
+        return blend(cruise,landing,smooth((frame-104)/12),'flight into landing')
+    return landing

@@ -1,0 +1,34 @@
+{
+  "takeoffPrefixMaxDelta": 0.0,
+  "minZ": -0.19552290439605713,
+  "finite": true,
+  "boundaryControls": {
+    "34": {
+      "maxDifferenceAcross0_00002Frames": 3.0568590456692135e-06
+    },
+    "46": {
+      "maxDifferenceAcross0_00002Frames": 5.553603184105249e-06
+    },
+    "104": {
+      "maxDifferenceAcross0_00002Frames": 7.85398187174686e-06
+    },
+    "116": {
+      "maxDifferenceAcross0_00002Frames": 5.326911570013859e-06
+    }
+  },
+  "wingbeatDuringOverlaps": {
+    "34": {
+      "minAngle": -0.566972072785426,
+      "maxAngle": 0.4585
+    },
+    "104": {
+      "minAngle": -0.5975241976270302,
+      "maxAngle": 0.46
+    }
+  },
+  "walkPriorDelta": 0.0,
+  "rear-breathPriorDelta": 0.0,
+  "takeoff-flight-landPriorDelta": 0.0,
+  "flight-loopPriorDelta": 0.0,
+  "landingPriorDelta": 0.0
+}

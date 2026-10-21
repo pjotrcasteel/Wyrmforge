@@ -443,3 +443,7 @@ flares wings, catches forepaws then hindpaws, and folds into standing. Flight
 loop/landing owner review pending. Entry/exit blends, final fire, remaining
 full directional library, viewport/mobile validation and gameplay integration
 are still outstanding; these actions alone are not a finished flight system.
+
+## V29 continuous flight lifecycle
+Owner requested continuation after V28 flight/landing previews. V29 adds a 148-frame connected sequence at 24fps: approved takeoff, 12-frame source-control overlap into cruise, several sustained wingbeats, 12-frame overlap into landing, then flare/catch/settle. Blends are evaluated before FK/IK and skinning. Delayed shoulder/wrist/digit/membrane/tail controls sample the same continuous timeline, including across boundaries. Tail sway mixes sine/cosine components rather than interpolating wrapped phase numbers. Prior five clips remain vertex-identical to V28; connected takeoff through frame 34 is also exact. Transition controls are continuous at frames 34/46/104/116, finite whole sequence and floor-safe. Receipts: V29/transition-audit.json. GPU visual review pending. This is an editable source motion demonstration, not a C# aerial state machine or final spritesheet.
+
