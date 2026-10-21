@@ -26,7 +26,7 @@ public sealed class TownCrowdTests
                 var expected = replay.Citizens[i];
                 Assert.AreEqual(expected.Position, actual.Position);
                 Assert.AreEqual(expected.DestinationNode, actual.DestinationNode);
-                Assert.IsTrue(first.Navigation.IsWalkable(actual.Position), "A citizen left the paved pedestrian region.");
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(first, actual), "A citizen left the paved pedestrian region.");
                 witnessedMovement |= actual.IsWalking;
             }
         }
@@ -61,7 +61,7 @@ public sealed class TownCrowdTests
                 var travel = MathF.Sqrt(MathF.Pow(person.Position.X - before[i].X, 2) +
                     MathF.Pow(person.Position.Y - before[i].Y, 2));
                 Assert.IsTrue(travel <= 5.2f, $"Citizen {person.Id} jumped {travel} painted pixels.");
-                Assert.IsTrue(town.Navigation.IsWalkable(person.Position));
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(town, person));
             }
 
             var destinations = town.Citizens.Where(c => c.IsPresent && c.IsWalking)
@@ -127,6 +127,88 @@ public sealed class TownCrowdTests
             "east-street-exit", "south-street-exit" })
             Assert.IsTrue(departed.Contains(exit), $"At least one resident must traverse {exit}.");
         Assert.IsTrue(observedReturn, "Residents can come back through an entrance after time away.");
+    }
+
+    [TestMethod]
+    public void Step_VisibleStreetWaypoints_DoNotMakeResidentsDisappear()
+    {
+        var crowd = new TownCrowd(Scene(), seed: 205);
+        var citizen = crowd.Citizens[0];
+        foreach (var exitId in new[] { "west-street-exit", "east-street-exit" })
+        {
+            var node = crowd.Navigation.Destinations.FindIndex(d => d.Id == exitId);
+            citizen.Position = crowd.Navigation.Destinations[node].Position;
+            citizen.DestinationNode = node;
+            citizen.Path = [citizen.Position];
+            citizen.PathIndex = 0;
+            citizen.PathRevision = crowd.Navigation.Revision;
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+
+            Assert.IsTrue(citizen.IsPresent,
+                $"A citizen at {exitId} is still visibly inside the town.");
+            Assert.AreEqual(0f, citizen.AwaySeconds);
+            Assert.IsFalse(citizen.DepartingSouth);
+        }
+    }
+
+    [TestMethod]
+    public void Step_SouthExit_OnlyDisappearsWhenEntireBodyIsOffscreen()
+    {
+        var crowd = new TownCrowd(Scene(), seed: 205);
+        var citizen = crowd.Citizens[0];
+        var node = crowd.Navigation.Destinations.FindIndex(d => d.Id == "south-street-exit");
+        citizen.Position = crowd.Navigation.Destinations[node].Position;
+        citizen.DestinationNode = node;
+        citizen.Path = [citizen.Position];
+        citizen.PathRevision = crowd.Navigation.Revision;
+        crowd.Step(TimeSpan.FromMilliseconds(100));
+
+        Assert.IsTrue(citizen.IsPresent, "Reaching the south street waypoint must not despawn.");
+        Assert.IsTrue(citizen.DepartingSouth);
+
+        for (var tick = 0; tick < 200 && citizen.IsPresent; tick++)
+        {
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            if (citizen.Position.Y - 30f < crowd.Navigation.Height)
+                Assert.IsTrue(citizen.IsPresent, "Partially visible NPCs must keep rendering.");
+        }
+
+        Assert.IsFalse(citizen.IsPresent, "The resident eventually exits beyond the scene.");
+        Assert.IsTrue(citizen.Position.Y - 30f >= crowd.Navigation.Height);
+
+        var returned = false;
+        for (var tick = 0; tick < 500; tick++)
+        {
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            if (!citizen.IsPresent) continue;
+            Assert.IsTrue(citizen.Position.Y - 30f <= crowd.Navigation.Height);
+            returned = true;
+            break;
+        }
+        Assert.IsTrue(returned, "An offscreen resident must re-enter naturally from the south.");
+    }
+
+    [TestMethod]
+    public void Navigation_NexusTerraceAndForgeYard_RespectPaintedGroundNotRoofSilhouettes()
+    {
+        var map = Scene();
+
+        foreach (var point in new[] { new TownPoint(105, 419), new TownPoint(165, 418),
+            new TownPoint(235, 426), new TownPoint(275, 430), new TownPoint(345, 752) })
+            Assert.IsTrue(map.IsWalkable(point), $"Paving at {point} must remain accessible.");
+
+        foreach (var point in new[] { new TownPoint(150, 365), new TownPoint(255, 675),
+            new TownPoint(230, 744), new TownPoint(825, 535) })
+            Assert.IsFalse(map.IsWalkable(point), $"Solid structure at {point} must block feet.");
+
+        Assert.IsFalse(map.Obstacles.Any(x => x.Id == "nexus-low-terrace-railing-foreground"));
+        Assert.IsTrue(map.Occluders.Any(x => x.Id == "nexus-low-terrace-railing-foreground"));
+
+        var origin = map.Destinations.Single(x => x.Id == "west").Position;
+        var pathTarget = new TownPoint(165, 418);
+        Assert.IsTrue(map.TryFindPath(origin, pathTarget, out var route),
+            "New terrace paving must connect to the surrounding authored streets.");
+        CheckRoute(map, origin, route);
     }
 
     [TestMethod]
@@ -202,7 +284,7 @@ public sealed class TownCrowdTests
         {
             town.Step(TimeSpan.FromMilliseconds(100));
             foreach (var citizen in town.Citizens)
-                Assert.IsTrue(town.Navigation.IsWalkable(citizen.Position));
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(town, citizen));
         }
         Assert.IsTrue(town.PathfindCount > 0);
         Assert.IsTrue(town.PathfindTotalMilliseconds >= 0);
@@ -256,20 +338,65 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_PlaceholderDepth_PreservesOpenPavementAndConcealsPaintedOverlaps()
+    public void Navigation_ScreenshotWellRearAndRaisedMasonry_RemainSeparateFromWalkablePavement()
     {
         var map = Scene();
         var behindWell = new TownPoint(825, 478);
-        Assert.IsTrue(map.IsWalkable(behindWell), "Rear paving remains walkable even when the body is hidden by a roof.");
-        Assert.AreEqual(-1, map.PlaceholderDepth(behindWell), "Do not show a disembodied rectangle above the well.");
-        Assert.IsTrue(map.PlaceholderDepth(new TownPoint(665, 535)) >= 0,
-            "The cobblestones beside the noticeboard must not become a broad hiding area.");
-        Assert.IsTrue(map.PlaceholderDepth(new TownPoint(825, 660)) >= 0,
-            "The entire rectangular placeholder remains visible in front of the well.");
+        Assert.IsTrue(map.IsWalkable(behindWell),
+            "The paved rear well passage is walkable even if part of a sprite overlaps the roof.");
+        Assert.IsTrue(map.IsBodyOccluded(behindWell),
+            "Only the actual painted well roof/posts may conceal the overlapping body pixels.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(665, 535)),
+            "Pavement next to the noticeboard remains open.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 660)),
+            "An NPC walking in front of the well remains physically present.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(825, 535)),
+            "The well's actual stone rim and basin stay solid to NPC feet.");
         Assert.IsFalse(map.IsWalkable(new TownPoint(1060, 870)),
-            "The right foreground flowers are solid at their actual ground footprint.");
+            "The right foreground flowerbed stays solid at foot level.");
         Assert.IsTrue(map.IsWalkable(new TownPoint(940, 830)),
-            "The middle paved street remains walkable beside the flowerbed.");
+            "The main paved street stays open beside the flowerbed.");
+    }
+
+    [TestMethod]
+    public void Navigation_OptInFootprintScan_MarksPavingButNotTheWellBasin()
+    {
+        var map = Scene();
+        var scan = map.DebugWalkabilityScanPath();
+
+        StringAssert.Contains(scan, "M822 646h4v4h-4z",
+            "A scanned NPC feet-disc centre on the southern paving should be green.");
+        Assert.IsFalse(scan.Contains("M822 534h4v4h-4z", StringComparison.Ordinal),
+            "The centre of the well's stone basin is solid, never a green walkable pixel.");
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => map.DebugWalkabilityScanPath(4));
+    }
+
+    [TestMethod]
+    public void Navigation_HallRoofAndTrees_DoNotBlockGroundedPavement()
+    {
+        var map = Scene();
+        foreach (var position in new[]
+        {
+            new TownPoint(1080, 810),
+            new TownPoint(1110, 812),
+            new TownPoint(1130, 813),
+            new TownPoint(1140, 811)
+        })
+            Assert.IsTrue(map.IsWalkable(position),
+                $"Actual paved feet position {position} remains open under an overhanging roof or foliage.");
+
+        Assert.IsFalse(map.IsWalkable(new TownPoint(1050, 783)),
+            "The raised garden's actual solid ground-contact remains forbidden.");
+
+        var foliage = map.Occluders.Single(x => x.Id == "hall-terrace-foliage-foreground");
+        Assert.IsTrue(foliage.DepthY > 815f, "Foreground foliage paints over people walking behind it.");
+        Assert.IsFalse(map.Obstacles.Any(x => x.Id == foliage.Id),
+            "Foliage is visual occlusion, never a new feet-level collider.");
+
+        var origin = map.Destinations.Single(x => x.Id == "lower-square").Position;
+        var destination = map.Destinations.Single(x => x.Id == "hall-of-fame-steps").Position;
+        Assert.IsTrue(map.TryFindPath(origin, destination, out var path));
+        CheckRoute(map, origin, path);
     }
 
     [TestMethod]
@@ -510,7 +637,7 @@ public sealed class TownCrowdTests
             crowded.Step(TimeSpan.FromMilliseconds(100));
             foreach (var person in crowded.Citizens.Where(citizen => citizen.IsPresent))
             {
-                Assert.IsTrue(crowded.Navigation.IsWalkable(person.Position));
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(crowded, person));
                 foreach (var other in crowded.Citizens.Where(citizen => citizen.IsPresent && citizen.Id > person.Id))
                 {
                     var dx = person.Position.X - other.Position.X;
@@ -523,12 +650,81 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Step_TwoOncomingCitizens_SidestepOnPavementWithoutReplanning()
+    {
+        var map = new TownNavigationMap
+        {
+            Width = 240,
+            Height = 200,
+            Walkable =
+            [
+                new TownPolygon
+                {
+                    Id = "paved-square",
+                    Points = [new(0, 0), new(240, 0), new(240, 200), new(0, 200)]
+                }
+            ],
+            Destinations =
+            [
+                new TownDestination { Id = "west", X = 130, Y = 100 },
+                new TownDestination { Id = "east", X = 151, Y = 100 },
+                new TownDestination { Id = "south", X = 40, Y = 160 }
+            ]
+        };
+        var crowd = new TownCrowd(map, seed: 205, citizenCount: 3);
+        var left = crowd.Citizens[0];
+        var right = crowd.Citizens[1];
+        crowd.Citizens[2].IdleSeconds = 100f;
+
+        left.DestinationNode = 1;
+        left.Path = [new(175, 100)];
+        left.PathRevision = map.Revision;
+        right.DestinationNode = 0;
+        right.Path = [new(105, 100)];
+        right.PathRevision = map.Revision;
+
+        crowd.Step(TimeSpan.FromMilliseconds(100));
+        Assert.IsTrue(left.Position.Y > 100, "Eastbound resident should pass on their own right.");
+        Assert.IsTrue(right.Position.Y < 100, "Westbound resident should pass on their own right.");
+        Assert.AreEqual(0, crowd.PathfindCount, "Meeting another citizen must not trigger A*.");
+
+        for (var tick = 0; tick < 18; tick++)
+        {
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            Assert.IsTrue(map.IsWalkable(left.Position));
+            Assert.IsTrue(map.IsWalkable(right.Position));
+            var dx = left.Position.X - right.Position.X;
+            var dy = left.Position.Y - right.Position.Y;
+            Assert.IsTrue(dx * dx + dy * dy >= 19f * 19f,
+                "Passing citizens must not overlap while sidestepping.");
+        }
+
+        Assert.IsTrue(left.Position.X > 151 && right.Position.X < 130,
+            "Both pedestrians should get past each other without abandoning their routes.");
+    }
+
+    [TestMethod]
     public void TownCrowd_InvalidCount_IsRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: -1));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: 20));
         Assert.HasCount(0, new TownCrowd(Scene(), citizenCount: 0).Citizens);
         Assert.HasCount(7, new TownCrowd(Scene()).Citizens);
+    }
+
+    private static bool OnWalkableGroundOrValidSouthPassage(TownCrowd crowd, TownCitizen citizen)
+    {
+        if (crowd.Navigation.IsWalkable(citizen.Position)) return true;
+
+        // The deliberately offscreen south corridor is the only exception to
+        // grounded paving. Everyone else must remain inside physical walkability.
+        if (citizen.LastExitId != "south-street-exit" ||
+            !(citizen.DepartingSouth || citizen.ReturningSouth || !citizen.IsPresent))
+            return false;
+
+        var threshold = crowd.Navigation.Destinations.Single(d => d.Id == "south-street-exit");
+        return MathF.Abs(citizen.Position.X - threshold.X) < .01f &&
+            citizen.Position.Y >= threshold.Y;
     }
 
     private static void CheckRoute(TownNavigationMap map, TownPoint start, IReadOnlyList<TownPoint> path)

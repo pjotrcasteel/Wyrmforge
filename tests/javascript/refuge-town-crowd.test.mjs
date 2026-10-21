@@ -16,7 +16,7 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
     assert.match(actorMarkup, /class="refuge-town-crowd"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /style="@CitizenStyle\(person, depth\)"/);
+    assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
     assert.doesNotMatch(markup, /PeriodicTimer/,
@@ -41,9 +41,16 @@ test('every painted foreground draws between citizens using actual feet depth', 
     const actor = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     const map = JSON.parse(source(art + '/night-navigation.json'));
-    assert.equal(map.occluders.length, 7);
+    assert.equal(map.occluders.length, 9);
     assert.equal(map.occluders.find(part => part.id === 'well-foreground').depthY, 572);
     assert.equal(map.occluders.find(part => part.id === 'noticeboard-foreground').depthY, 522);
+    assert.equal(map.occluders.find(part => part.id === 'hall-terrace-foliage-foreground').depthY, 830);
+    assert.equal(map.occluders.find(part => part.id === 'nexus-low-terrace-railing-foreground').depthY, 458);
+    assert.ok(!map.obstacles.some(part => part.id === 'nexus-low-terrace-railing-foreground'));
+    assert.ok(map.walkable.some(part => part.id === 'nexus-front-paved-terrace'));
+    assert.ok(map.obstacles.some(part => part.id === 'blacksmith-anvil-and-crates-ground'));
+    assert.ok(!map.obstacles.some(part => part.id === 'hall-terrace-foliage-foreground'),
+        'Painted overhanging trees must never become solid collisions.');
     assert.match(markup, /@foreach \(var foreground in crowd\.Navigation\.Occluders\)/);
     assert.match(markup, /class="refuge-town-scenery-foreground"/);
     assert.match(markup, /data-town-foreground-layer="@foreground\.Id"/);
@@ -52,15 +59,33 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.match(markup, /foreground\.Id == "noticeboard-foreground"/);
     assert.match(markup, /foreground\.DepthY \* 10f/);
     assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
-    assert.match(actor, /PlaceholderDepth\(person\.Position\)/);
-    assert.match(actor, /CitizenStyle\(person, depth\)/);
-    assert.match(source('src/Wyrmforge.Application/World/TownNavigationMap.cs'), /public int PlaceholderDepth\(/);
+    assert.match(actor, /CitizenStyle\(person\)/);
+    assert.match(actor, /citizen\.Position\.Y \* 10f/);
+    assert.doesNotMatch(actor, /PlaceholderDepth/,
+        'An NPC behind the well must not vanish or jump in front of painted masonry.');
     assert.match(actor, /data-town-feet-y="@person\.Position\.Y"/);
     assert.match(actor, /@if \(person\.IsPresent\)/);
     assert.match(actor, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*z-index:auto/s);
     assert.match(css, /refuge-town-scenery-foreground\s*\{[^}]*pointer-events:none/s);
     assert.doesNotMatch(actor, /IsBehindWell|IsBehindNoticeboard/);
+});
+
+test('well rear walkers are rendered and a debug-only footpath scan exposes the real navigation model', () => {
+    const actor = source(actors);
+    const town = source(scene);
+    const model = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    assert.match(actor, /@if \(person\.IsPresent\)/);
+    assert.doesNotMatch(actor, /PlaceholderDepth|depth >= 0/);
+    assert.match(model, /public string DebugWalkabilityScanPath\(/);
+    assert.match(model, /if \(!IsWalkable\(new TownPoint\(x, y\)\)\) continue/);
+    assert.match(town, /townWalkScan=1/);
+    assert.match(town, /walkScanPath = crowd\.Navigation\.DebugWalkabilityScanPath\(\)/);
+    assert.match(town, /data-town-walk-scan="true"/);
+    assert.match(css, /\.refuge-town-walk-scan\s*\{[^}]*pointer-events:none/s);
+    assert.doesNotMatch(actor, /DebugWalkabilityScanPath/,
+        'Computing the static diagnostic scan during NPC motion would destroy iPhone performance.');
 });
 
 test('opt-in FPS and AI profiling is separate from geometry and has no normal gameplay overhead', () => {
@@ -243,7 +268,10 @@ test('debug geometry stays label-free and residents have authored four connected
     assert.match(simulation, /citizen\.AwaySeconds/);
     assert.match(simulation, /citizen\.IsReturning/);
     assert.match(simulation, /citizen\.DepartureCount\+\+/);
-    assert.match(simulation, /_navigation\.Destinations\[citizen\.CurrentNode\]\.IsExit/);
+    assert.match(simulation, /if \(reached\.IsExit\)/);
+    assert.match(simulation, /citizen\.DepartingSouth = true/);
+    assert.match(simulation, /citizen\.IsPresent = false/);
+    assert.match(simulation, /reached\.Id == "world-gate-exit"/);
     assert.ok(map.walkable.some(surface => surface.id === 'world-gate-stairs'));
     assert.ok(map.walkable.some(surface => surface.id === 'west-market-approach'));
     assert.ok(map.walkable.some(surface => surface.id === 'east-market-approach'));
@@ -278,11 +306,22 @@ test('clear paved segments use geometric boundary visibility before dense 2px sa
 test('NPC routing avoids expensive polygon resampling on every animation tick', () => {
     const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
     const navigation = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
-    assert.doesNotMatch(simulation, /!_navigation\.IsSegmentWalkable\(citizen\.Position/,
-        'A path is only invalidated by geometry revision or exhausted waypoints');
+    const forwardMovement = simulation.split('private void Move(')[1].split('private bool HasNeighbourAt(')[0];
+    assert.doesNotMatch(forwardMovement, /!_navigation\.IsSegmentWalkable\(citizen\.Position/,
+        'Normal walking must not resample full segments; short sidesteps are checked separately');
     assert.match(navigation, /_cachedGridCells/);
     assert.match(navigation, /_cachedGridEdges/);
     assert.match(navigation, /if \(_cachedRevision == Revision\) return/);
+});
+
+test('crowded pedestrians can sidestep without a new A* route', () => {
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    assert.match(simulation, /TrySidestep\(citizen, dx, dy, distance, step\)/);
+    assert.match(simulation, /_navigation\.IsSegmentWalkable\(citizen\.Position, candidate\)/);
+    assert.match(simulation, /HasNeighbourAt\(citizen, candidate\)/);
+    const passing = simulation.split('private bool TrySidestep(')[1].split('private void ChooseNextStop(')[0];
+    assert.doesNotMatch(passing, /TryPath\(|TryFindPath\(/,
+        'Steering around a citizen must not trigger A* or invalidate the cached destination');
 });
 
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {

@@ -99,6 +99,16 @@
     .game-shell.refuge-home .refuge-town-crowd {display:none}
 }
 
+/* Optional (?townWalkScan=1): sampled centres where an NPC foot disc can stand.
+   Single SVG path is computed once per geometry revision, not on NPC ticks. */
+.game-shell.refuge-home .refuge-town-walk-scan {
+    position:absolute;inset:0;width:100%;height:100%;z-index:10999;
+    pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-walk-scan path {
+    fill:rgba(30,236,167,.36);stroke:none;pointer-events:none;
+}
+
 /* Developer-only overlay (?townGeometry=1). These are real nav colliders,
    not a CSS filter over the game artwork or a new building-unlock preview. */
 .game-shell.refuge-home .refuge-town-geometry-debug {

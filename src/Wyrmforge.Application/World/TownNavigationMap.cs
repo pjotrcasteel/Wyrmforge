@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 namespace Wyrmforge.Application.World;
@@ -141,6 +142,27 @@ public sealed class TownNavigationMap
         if (result.Destinations.Any(d => !result.IsWalkable(d.Position)))
             throw new JsonException("Town destination is outside the navigable ground.");
         return result;
+    }
+
+    /// <summary>
+    /// Debug-only raster probe of the real feet-disc collision model. A single SVG
+    /// path avoids thousands of DOM elements and is rebuilt only on geometry changes.
+    /// The samples describe navigability, not inferred color or brightness of artwork.
+    /// </summary>
+    public string DebugWalkabilityScanPath(int step = 16)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(step, 8);
+        var pixels = new StringBuilder();
+        var inset = Math.Max(1, step / 8);
+        for (var y = step / 2; y < Height; y += step)
+        for (var x = step / 2; x < Width; x += step)
+        {
+            if (!IsWalkable(new TownPoint(x, y))) continue;
+            pixels.Append('M').Append(x - inset).Append(' ').Append(y - inset)
+                .Append('h').Append(inset * 2).Append('v').Append(inset * 2)
+                .Append('h').Append(-inset * 2).Append('z');
+        }
+        return pixels.ToString();
     }
 
     /// <summary>Place or move a prop such as a cart; existing pedestrian routes replan on the next tick.</summary>
@@ -411,44 +433,6 @@ public sealed class TownNavigationMap
         return Occluders.Any(foreground =>
             feet.Y < foreground.DepthY &&
             PolygonIntersectsBody(foreground.Clip, left, top, right, feet.Y));
-    }
-
-    /// <summary>
-    /// Temporary rectangle placeholders cannot be partially clipped like real animated sprites:
-    /// either show the whole rectangle or conceal it behind painted foreground masonry.
-    /// Never alter actual foot position, routes, or the underlying walkable pavement.
-    /// The result is -1 for concealed sprites, otherwise a safe stacking depth.
-    /// </summary>
-    public int PlaceholderDepth(TownPoint feet, float width = 16f, float height = 30f)
-    {
-        RefreshGeometryCache();
-        var stackingDepth = (int)MathF.Floor(feet.Y * 10f) + 1;
-        var bounds = PolygonBounds.Around(new(feet.X - width / 2, feet.Y - height), new(feet.X + width / 2, feet.Y));
-
-        foreach (var entry in _cachedOccluders)
-        {
-            var foreground = entry.Foreground;
-            if (feet.Y >= foreground.DepthY || !entry.Bounds.Intersects(bounds)) continue;
-
-            var covered = 0;
-            for (var row = 0; row < 4; row++)
-            for (var column = 0; column < 4; column++)
-            {
-                var point = new TownPoint(
-                    feet.X + (column - 1.5f) * width / 4f,
-                    feet.Y - height + (row + .5f) * height / 4f);
-                if (Contains(foreground.Clip, point)) covered++;
-            }
-
-            // A substantial painted-object overlap should conceal the entire test
-            // rectangle. Smaller edge contacts draw in front rather than leave
-            // floating heads or triangular body fragments on otherwise open paving.
-            if (covered >= 11) return -1;
-            if (covered > 0)
-                stackingDepth = Math.Max(stackingDepth, (int)MathF.Floor(foreground.DepthY * 10f) + 1);
-        }
-
-        return stackingDepth;
     }
 
     private static bool PolygonIntersectsBody(IReadOnlyList<TownPoint> polygon, float left, float top, float right, float bottom)
