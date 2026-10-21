@@ -171,3 +171,27 @@ V13 initial render stopped because a shadow-tone integer shadowed the lighting
 function name. The import is now explicitly `shade_surface`; partial frames and
 a failure receipt remain in motion-review-v1, and retry uses motion-review-v2.
 No successful render or visual acceptance is claimed for the partial folder.
+
+### V13 completed local review — 21 October
+
+Successful review is **motion-review-v2**; motion-review-v1 is preserved partial
+output from the corrected name collision. Three GIFs, game/side frame PNGs,
+`motion-contact-review.png` and eight actual-camera stills are preserved.
+`source-check-summary.json` records finite/unclipped samples, floor tolerance,
+loop closure and measured IK errors. Whole-surface floor tolerance passes for
+all three clips. Walk max IK goal error 0.004076 model units (0.326 native px);
+rear/breath and flight/landing errors below 1e-7. Walk closure is exactly zero.
+
+Concave membrane bays make the digit support more visible and the new source
+timeline distinguishes crouch/drive, first downstroke, departure, approach,
+forepaw catch and hind catch. Review playback now follows nominal 24fps rather
+than the earlier slower GIF playback. Static guide/shadow, labels and actual
+per-paw audits aid evaluation; no simulation events are implemented by these
+labels. The same world-space light is used across views, preserving molten
+albedo while lifting quiet stone planes. No original card pixels are replaced.
+
+The reconstructed neck/torso, fine membrane shapes and native limb separation
+remain visually rough. Final fire is still absent (geometric origin/aim jet
+only); continuous flight/overflight, full action library, directional animation
+exports and actual mobile Hunt validation remain outstanding. Numerical source
+checks are not acceptance of the artwork. This is still a draft production PR.
