@@ -3,15 +3,15 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "Owner green-line guide calibrated; original-card idle, articulated one-view stalk and timed breath attack studies rendered locally. Incomplete; not owner-accepted or runtime-integrated.",
+  "status": "Original-card 2D motion studies: corrected limb draw order and lower stalk; shared-rig breathing idle; timed breath with hinged jaw. Still incomplete and not owner-accepted.",
   "method": "Original-card layered 2D mesh deformation; owner-guided limb chains; local SDXL hidden-attachment paint only; CUDA export.",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
   "rigged": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Improve visible layer joins and lower stalk posture against the original stalk panel.",
-    "Connect idle, stalk and breath replacement poses; articulate jaw.",
+    "Connect idle, stalk and breath replacement poses while preserving foot contact.",
+    "Further visual refinement of joint overlaps and jaw at native size.",
     "Author collapse, takeoff, flight, landing and remaining directions with hidden anatomy.",
     "Validate native mobile gameplay fit and integrate approved source with C# behavior."
   ],
@@ -128,8 +128,8 @@
   "sourceArtMaster": "restart-2026-10-21/articulated-layers-002/ashfang-limb-preparation.ora",
   "legacySourceChecks": "model/local-appearance-001/rigged-block-v59-crimson/crimson-source-checks.json",
   "legacyTurnaroundReview": "model/local-appearance-001/rigged-block-v59-crimson/turnaround-review-v1",
-  "sourceChecks": "restart-2026-10-21/motion-review-validation.json",
+  "sourceChecks": "restart-2026-10-21/motion-review-validation-002.json",
   "historicalEvidenceNotice": "All model/, prior approval, motion, contact and viewport evidence below predates the rejected V59/restart; it does not validate the current raster study.",
-  "partialRig": "restart-2026-10-21/articulated-layers-002/source.json",
+  "partialRig": "restart-2026-10-21/skeletal-idle-002/skin-source.json",
   "ownerJointGuide": "restart-2026-10-21/owner-guide-001/skeleton.json"
 }

@@ -120,3 +120,28 @@ call these studies a finished enemy. Outstanding: layer/pose polish, connected
 transitions, jaw, collapse, flight/landing, additional directions and native
 game integration. Keep PR186 draft. The earlier static-only next steps above
 are historical and superseded by this actual motion checkpoint.
+
+
+## Overnight refinement: limb layering and shared rig
+
+Found a concrete draw-order defect: hidden attachment paint covered 491 original
+visible rest pixels on far limbs. Drawing the original limb surfaces above that
+paint restores all reference pixels in the neutral composition. Evidence is in
+join-audit-001 (original-pixel audit and motion comparison).
+
+Current gallery selections supersede the first motion checkpoint:
+- skeletal-idle-002: 64 frames at 16 fps using the same corrected limb rig as
+  stalk; mesh vertices, triangles and skin weights are explicitly preserved in
+  skin-source.json. Min triangle area ratio 0.958, planted paw joints.
+- layered-stalk-007: 64 frames at 24 fps, corrected draw order, lowered chest and
+  extended gaze. Min area ratio 0.291, no flipped triangles or unreachable paws.
+- card-breath-attack-002: 96 frames at 24 fps with original lower-jaw pixels
+  rotating about an authored hinge. Mouth cavity is a small authored dark fill.
+  First/last visible rest pixels match; idle entry transition is still absent.
+
+All 224 exported frames pass RGBA, dimensions, nonempty-alpha and edge checks.
+These checks are not artistic acceptance. The large/native review still needs
+further joint/jaw polish and connected state changes. Collapse, flight/landing
+and additional directions are not built. Next useful slice is a shared-rig
+idle-to-stalk transition with foot-contact preservation, then breath-pose entry.
+No routine approval wait is required by the owner.
