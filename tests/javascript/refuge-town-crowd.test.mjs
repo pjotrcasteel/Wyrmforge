@@ -383,3 +383,13 @@ test('screenshot-reviewed Refuge geometry separates walkable pavement from marke
     assert.match(source(scene), /id="refuge-town-unblocked-mask"/,
         'Walk layer must not paint cyan over the solid footprints');
 });
+
+test('reviewed well and bush footprints are real obstacles in both All and Walk debug views', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const ids = ['west-plaza-bushes-ground', 'well-rear-east-shelter-ground'];
+    for (const id of ids) assert.ok(map.obstacles.some(o => o.id === id), id + ' missing');
+    const sceneMarkup = source(scene);
+    assert.match(sceneMarkup, /geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable/);
+    assert.match(sceneMarkup, /<g mask="url\(#refuge-town-unblocked-mask\)">/,
+        'All debug mode must not paint turquoise walkable paving through blocked bushes.');
+});

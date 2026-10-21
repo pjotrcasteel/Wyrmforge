@@ -586,6 +586,27 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_ReviewedWestBushesAndWellEastShelter_ExcludeNpcFeetWithoutBreakingTown()
+    {
+        var map = Scene();
+
+        Assert.IsFalse(map.IsWalkable(new TownPoint(620, 686)),
+            "The marked bushes beside the west lower stairs are not paved ground.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(915, 452)),
+            "A resident must not stand inside the east-hand well shelter/roof projection.");
+
+        Assert.IsTrue(map.IsWalkable(new TownPoint(550, 710)),
+            "Keep the narrow paved route to the blacksmith open.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 478)),
+            "The real paved rear passage behind the well stays walkable.");
+
+        var origin = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
+        foreach (var destination in map.Destinations)
+            Assert.IsTrue(map.TryFindPath(origin, destination.Position, out _),
+                $"The two corrected obstructions may not isolate {destination.Id}.");
+    }
+
+    [TestMethod]
     public void Navigation_NewCartBlocksDirectRoadAndTriggersReplanning()
     {
         var map = Scene();
