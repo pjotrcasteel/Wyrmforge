@@ -26,6 +26,9 @@ public sealed class TownCitizen
     public bool IsPresent { get; internal set; } = true;
     public int DepartureCount { get; internal set; }
     public string? LastExitId { get; internal set; }
+    public string? WorkBuildingId { get; internal set; }
+    public string? CurrentActivity { get; internal set; }
+    public bool IsWorking => IsPresent && !IsWalking && WorkBuildingId is not null;
 
     internal float TownWidth { get; set; }
     internal float TownHeight { get; set; }
@@ -49,9 +52,11 @@ public sealed class TownCrowd
 {
     private readonly List<TownCitizen> _citizens = [];
     private readonly TownNavigationMap _navigation;
+    private readonly HashSet<string> _openBuildings;
     private uint _randomState;
 
-    public TownCrowd(TownNavigationMap navigation, int seed = 205, int citizenCount = 7)
+    public TownCrowd(TownNavigationMap navigation, int seed = 205, int citizenCount = 7,
+        IEnumerable<string>? openBuildings = null)
     {
         ArgumentNullException.ThrowIfNull(navigation);
         ArgumentOutOfRangeException.ThrowIfNegative(citizenCount);
@@ -59,25 +64,63 @@ public sealed class TownCrowd
             throw new ArgumentOutOfRangeException(nameof(citizenCount), "Every citizen needs a separate starting place.");
 
         _navigation = navigation;
+        _openBuildings = new HashSet<string>(openBuildings ?? [], StringComparer.Ordinal);
         _randomState = seed == 0 ? 0xA341316Cu : unchecked((uint)seed);
+        // Reuse the existing seven actors: opening a building relocates an initial
+        // worker to its forecourt rather than adding more NPCs or a second timer.
         var starts = Enumerable.Range(0, navigation.Destinations.Count)
-            .Where(index => !navigation.Destinations[index].IsExit).ToArray();
+            .Where(index => !navigation.Destinations[index].IsExit &&
+                            navigation.Destinations[index].BuildingId is { } building &&
+                            _openBuildings.Contains(building))
+            .Concat(Enumerable.Range(0, navigation.Destinations.Count)
+                .Where(index => !navigation.Destinations[index].IsExit &&
+                                navigation.Destinations[index].BuildingId is null))
+            .ToArray();
         for (var i = 0; i < citizenCount; i++)
         {
             var start = starts[i];
             var position = navigation.Destinations[start].Position;
             if (!navigation.IsWalkable(position))
                 throw new ArgumentException("Citizen spawn must be on walkable ground.", nameof(navigation));
-            _citizens.Add(new TownCitizen(i + 1, start, position, 39f + NextInt(13), .3f + NextInt(18) / 10f)
+            var destination = navigation.Destinations[start];
+            _citizens.Add(new TownCitizen(i + 1, start, position, 39f + NextInt(13),
+                destination.BuildingId is null ? .3f + NextInt(18) / 10f : 4f + NextInt(40) / 10f)
             {
                 TownWidth = navigation.Width,
-                TownHeight = navigation.Height
+                TownHeight = navigation.Height,
+                WorkBuildingId = destination.BuildingId,
+                CurrentActivity = destination.Activity
             });
         }
     }
 
     public IReadOnlyList<TownCitizen> Citizens => _citizens;
     public TownNavigationMap Navigation => _navigation;
+
+    public void SetOpenBuildings(IEnumerable<string> buildingIds)
+    {
+        ArgumentNullException.ThrowIfNull(buildingIds);
+        var updated = new HashSet<string>(buildingIds, StringComparer.Ordinal);
+        if (_openBuildings.SetEquals(updated)) return;
+
+        _openBuildings.Clear();
+        _openBuildings.UnionWith(updated);
+        foreach (var person in _citizens)
+        {
+            if (person.WorkBuildingId is { } work && !_openBuildings.Contains(work))
+            {
+                person.WorkBuildingId = null;
+                person.CurrentActivity = null;
+                person.IdleSeconds = .5f;
+            }
+            if (person.DestinationNode < 0) continue;
+            var destination = _navigation.Destinations[person.DestinationNode];
+            if (destination.BuildingId is not { } building || _openBuildings.Contains(building)) continue;
+            person.DestinationNode = -1;
+            person.Path = [];
+            person.IdleSeconds = .5f;
+        }
+    }
 
     public void Step(TimeSpan elapsed)
     {
@@ -192,6 +235,15 @@ public sealed class TownCrowd
         citizen.DestinationNode = -1;
         citizen.Path = [];
 
+        var reached = _navigation.Destinations[citizen.CurrentNode];
+        if (reached.BuildingId is { } building && _openBuildings.Contains(building))
+        {
+            citizen.WorkBuildingId = building;
+            citizen.CurrentActivity = reached.Activity;
+            citizen.IdleSeconds = 4f + NextInt(60) / 10f;
+            return;
+        }
+
         if (_navigation.Destinations[citizen.CurrentNode].IsExit)
         {
             // A physical departure through the gate/road, not random despawning in the plaza.
@@ -203,6 +255,8 @@ public sealed class TownCrowd
             return;
         }
 
+        citizen.WorkBuildingId = null;
+        citizen.CurrentActivity = null;
         citizen.IdleSeconds = .5f + NextInt(22) / 10f;
     }
 
@@ -225,6 +279,8 @@ public sealed class TownCrowd
 
         var anchors = Enumerable.Range(0, _navigation.Destinations.Count)
             .Where(index => index != citizen.CurrentNode &&
+                (_navigation.Destinations[index].BuildingId is not { } building ||
+                 _openBuildings.Contains(building)) &&
                 (!citizen.IsReturning || !_navigation.Destinations[index].IsExit) &&
                 !_citizens.Any(other => other != citizen &&
                     (other.DestinationNode == index ||
@@ -236,8 +292,12 @@ public sealed class TownCrowd
         // A minority of decisions take an authored street/gate exit.
         // Returning citizens always head back into the town instead.
         var useExit = !citizen.IsReturning && NextInt(4) == 0;
-        var primary = candidates.Where(index => _navigation.Destinations[index].IsExit == useExit).ToArray();
-        var secondary = candidates.Where(index => _navigation.Destinations[index].IsExit != useExit).ToArray();
+        var useWork = !useExit && !citizen.IsReturning && _openBuildings.Count > 0 && NextInt(3) == 0;
+        var primary = candidates.Where(index => useWork
+            ? _navigation.Destinations[index].BuildingId is not null
+            : _navigation.Destinations[index].IsExit == useExit &&
+              _navigation.Destinations[index].BuildingId is null).ToArray();
+        var secondary = candidates.Except(primary).ToArray();
         if (TryChoose(citizen, primary) || TryChoose(citizen, secondary)) return;
         citizen.IdleSeconds = .6f;
     }
@@ -259,6 +319,8 @@ public sealed class TownCrowd
             var target = _navigation.Destinations[destinationNode].Position;
             if (!_navigation.TryFindPath(citizen.Position, target, out var path)) continue;
 
+            citizen.WorkBuildingId = null;
+            citizen.CurrentActivity = null;
             citizen.DestinationNode = destinationNode;
             citizen.Path = path;
             citizen.PathIndex = 0;

@@ -14,9 +14,10 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     const actorMarkup = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
-    assert.match(actorMarkup, /<div class="refuge-town-crowd" aria-hidden="true">/);
+    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--behind"/);
+    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--front"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /@if \(person\.IsPresent\)/);
+    assert.match(actorMarkup, /@if \(person\.IsPresent && IsBehindWell\(person\)\)/);
     assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.Cancel\(\)/);
@@ -31,10 +32,51 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-geometry-feet-layer\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /width:0\.957%;height:3\.188%/);
-    assert.match(css, /\.refuge-town-spot \{z-index:3\}/);
+    assert.match(css, /\.refuge-town-spot \{z-index:7\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
     assert.match(markup, /loadingStop\.Cancel\(\)/);
     assert.ok(markup.includes('art/town/night-active.webp?v=140'));
+});
+
+test('well foreground respects feet depth, and building activity reuses seven actor rectangles', () => {
+    const markup = source(scene);
+    const actor = source(actors);
+    const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
+    const model = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const well = map.occluders.find(layer => layer.id === 'well-foreground');
+
+    assert.equal(well.depthY, 572);
+    assert.match(markup, /viewBox="695 382 256 189"/);
+    assert.match(markup, /id="refuge-well-silhouette"/);
+    assert.match(markup, /clip-path="url\(#refuge-well-silhouette\)"/);
+    assert.match(markup, /href="art\/town\/night-active\.webp\?v=140"/);
+    assert.match(css, /refuge-town-well-foreground\s*\{[^}]*pointer-events:none/s);
+    assert.match(actor, /person\.Position\.Y < well\.DepthY/);
+    assert.match(actor, /data-town-depth="behind-well"/);
+    assert.match(actor, /data-town-depth="in-front"/);
+    assert.match(actor, /citizen\.IsWorking \? "working"/);
+    assert.equal((actor.match(/new PeriodicTimer/g) ?? []).length, 1,
+        'Keep one 100ms NPC timer, not a per-building update loop');
+
+    const works = map.destinations.filter(destination => destination.buildingId);
+    assert.deepEqual(works.map(d => d.buildingId).sort(), ['build', 'codex', 'forge', 'legends']);
+    for (const work of works) assert.ok(work.activity);
+    assert.match(markup, /openBuildings: OpenBuildings\(\)/);
+    assert.match(model, /_openBuildings\.Contains\(building\)/);
+    assert.match(model, /public bool IsWorking/);
+    assert.match(model, /citizen\.IdleSeconds = 4f \+ NextInt\(60\)/);
+});
+
+test('blue marked left stair planter is part of real blocking map', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const left = map.obstacles.find(area => area.id === 'west-stair-railing-planter');
+    assert.ok(left?.footprint.length >= 6);
+    assert.ok(left.footprint.some(point => point.x >= 700 && point.y >= 730));
+    for (const name of ['nexus-forecourt', 'blacksmith-forecourt',
+        'blacksmith-terrace-stairs', 'codex-forecourt', 'hall-forecourt']) {
+        assert.ok(map.walkable.some(area => area.id === name), `Missing side-route ${name}`);
+    }
 });
 
 test('navigation is authored to the actual artwork pixel size with a real well collider and occluder', () => {
@@ -119,7 +161,7 @@ test('debug geometry stays label-free and residents have authored four connected
     ]);
     assert.ok(exits.find(exit => exit.id === 'world-gate-exit').y < 300,
         'Gate exit must be inside the arch, not beside the stairs');
-    assert.match(source(actors), /@if \(person\.IsPresent\)/);
+    assert.match(source(actors), /@if \(person\.IsPresent && !IsBehindWell\(person\)\)/);
     assert.doesNotMatch(markup, /refuge-town-geometry-legend|refuge-town-geometry-label/,
         'No explanatory overlay should block the town scenery');
     assert.match(simulation, /citizen\.AwaySeconds/);
