@@ -43,6 +43,8 @@ public sealed class TownCitizen
     internal float WaitingSeconds { get; set; }
     internal int AvoidanceSide { get; set; } = 1;
     internal float AwaySeconds { get; set; }
+    internal bool DepartingSouth { get; set; }
+    internal bool ReturningSouth { get; set; }
     internal bool IsReturning { get; set; }
     internal TownPoint EntryOrigin { get; set; }
 }
@@ -216,15 +218,57 @@ public sealed class TownCrowd
 
         foreach (var citizen in _citizens)
         {
+            // South departures continue past the viewport boundary. Never despawn
+            // an entire sprite at the still-visible road waypoint.
+            if (citizen.DepartingSouth)
+            {
+                citizen.Position = new(citizen.Position.X, citizen.Position.Y + citizen.Speed * seconds);
+                if (citizen.Position.Y - 30f >= _navigation.Height)
+                {
+                    citizen.DepartingSouth = false;
+                    citizen.IsPresent = false;
+                    citizen.AwaySeconds = 4f + NextInt(101) / 10f;
+                }
+                continue;
+            }
+
+            // Return along the exact reverse offscreen passage so a resident
+            // enters the lower edge progressively, never pops into the plaza.
+            if (citizen.ReturningSouth)
+            {
+                citizen.Position = new(citizen.Position.X, citizen.Position.Y - citizen.Speed * seconds);
+                citizen.IsPresent = citizen.Position.Y - 30f <= _navigation.Height;
+                var threshold = _navigation.Destinations.Find(destination =>
+                    destination.Id == "south-street-exit");
+                if (threshold is not null && citizen.Position.Y <= threshold.Y)
+                {
+                    citizen.Position = threshold.Position;
+                    citizen.ReturningSouth = false;
+                    citizen.IsPresent = true;
+                    citizen.IsReturning = true;
+                    citizen.EntryOrigin = citizen.Position;
+                    ChooseNextStop(citizen);
+                }
+                continue;
+            }
+
             if (citizen.AwaySeconds > 0)
             {
                 citizen.AwaySeconds = MathF.Max(0, citizen.AwaySeconds - seconds);
                 if (citizen.AwaySeconds == 0)
                 {
-                    // Return from the same hidden passage; no visible teleport or newly invented street.
-                    citizen.IsReturning = true;
-                    citizen.EntryOrigin = citizen.Position;
-                    ChooseNextStop(citizen);
+                    // Offscreen south travellers come back along the same road;
+                    // gate travellers resume from their actual building doorway.
+                    if (citizen.LastExitId == "south-street-exit")
+                    {
+                        citizen.ReturningSouth = true;
+                    }
+                    else
+                    {
+                        citizen.IsReturning = true;
+                        citizen.EntryOrigin = citizen.Position;
+                        ChooseNextStop(citizen);
+                    }
                 }
                 continue;
             }
@@ -332,14 +376,32 @@ public sealed class TownCrowd
             return;
         }
 
-        if (_navigation.Destinations[citizen.CurrentNode].IsExit)
+        if (reached.IsExit)
         {
-            // A physical departure through the gate/road, not random despawning in the plaza.
-            citizen.LastExitId = _navigation.Destinations[citizen.CurrentNode].Id;
+            citizen.LastExitId = reached.Id;
             citizen.DepartureCount++;
-            citizen.IsPresent = false;
             citizen.IsReturning = false;
-            citizen.AwaySeconds = 4f + NextInt(101) / 10f;
+
+            if (reached.Id == "south-street-exit")
+            {
+                // Continue moving naturally until the *entire* body has passed
+                // below the artwork. The viewport itself performs the clipping.
+                citizen.DepartingSouth = true;
+                return;
+            }
+
+            if (reached.Id == "world-gate-exit")
+            {
+                // This stop is behind the actual gateway doorway, not a plaza
+                // waypoint. Entering a building is an intentional departure.
+                citizen.IsPresent = false;
+                citizen.AwaySeconds = 4f + NextInt(101) / 10f;
+                return;
+            }
+
+            // East and west street waypoints remain visibly inside the town.
+            // Visiting one is a turn-around, never a despawn event.
+            citizen.IdleSeconds = .5f + NextInt(22) / 10f;
             return;
         }
 
