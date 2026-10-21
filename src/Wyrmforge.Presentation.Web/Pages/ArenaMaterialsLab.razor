@@ -25,6 +25,8 @@
                 @onclick="() => Pick(3)"><i class="sample dirt"></i>Dirt</button>
         <button class="@(selected == 4 ? "selected" : "")" aria-pressed="@(selected == 4)"
                 @onclick="() => Pick(4)"><i class="sample scorched"></i>Scorched</button>
+        <button class="@(selected == 5 ? "selected" : "")" aria-pressed="@(selected == 5)"
+                @onclick="() => Pick(5)"><i class="sample marsh"></i>Marsh</button>
     </section>
 
     <section aria-label="Painting controls" class="brush-tools">
@@ -40,11 +42,11 @@
     <section class="material-workspace" aria-label="Editable pixel ground material samples">
         <div class="canvas-wrap">
             <canvas @ref="canvas" width="480" height="640"
-                    aria-label="Editable ground comparison board. Starting with rows of grass, mud, paving, dirt and scorched soil. Drag to paint with the selected material."></canvas>
+                    aria-label="Editable ground comparison board. Starting with rows of grass, mud, paving, dirt, scorched soil and marsh. Drag to paint with the selected material."></canvas>
         </div>
         <aside>
             <h2>Material samples</h2>
-            <p>Top to bottom: grass, wet mud, old paving, dirt, scorched ground.</p>
+            <p>Top to bottom: grass, wet mud, old paving, dirt, scorched ground, marsh.</p>
             <p>Paint any surface beside another. These are actual image samples for visual direction—not invented placeholder textures or finished seamless tiles.</p>
             <p class="detail">Reference image material study · No gameplay collision</p>
         </aside>
