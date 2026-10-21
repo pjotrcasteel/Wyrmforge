@@ -12,7 +12,7 @@ export function startRefugePerformance(selector) {
     let longFrames = 0;
     let fps = 0;
     let p95 = 0;
-    let frameMax = 0;
+    let frameMax = 0; // Session high-water mark, not an interval maximum.
     let snapshot = {};
     const frameTimes = [];
 
@@ -33,7 +33,6 @@ export function startRefugePerformance(selector) {
             frameCount = 0;
             frameTimes.length = 0;
             longFrames = 0;
-            frameMax = 0;
         }
         const delta = now - previousFrame;
         previousFrame = now;
@@ -55,7 +54,6 @@ export function startRefugePerformance(selector) {
             windowStart = now;
             frameCount = 0;
             frameTimes.length = 0;
-            frameMax = 0;
             longFrames = 0;
         }
         frameHandle = requestAnimationFrame(frame);
