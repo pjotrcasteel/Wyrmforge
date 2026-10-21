@@ -34,8 +34,8 @@ Base: `main` at `3dcd012` when started.
 [PR #196](https://github.com/pjotrcasteel/Wyrmforge/pull/196) implements **only step 2** of the follow-up UX series plus the reported disabled-tab repair.
 
 - A sealed socket remains locked, but now moves focus to the existing core-upgrade panel and shows **"Socket N is sealed — Unlocks at Fireball Lv N"** and the need to research the mutation separately. Clicking the core clears that hint.
-- The Fireball tab is **inspectable** for existing non-Pyromancer saves. It explicitly identifies the Pyromancer restriction and disables upgrade/equip actions; application callbacks also reject changes to another school's Fireball data. Do not automatically change any saved school.
+- The first Nexus tab now shows the character's **own signature spell**, not a disabled Fireball tab or a Fireball preview. Fireball/Pyromancer retains its functional upgrade screen; existing saved Cryomancers get Frost Shard, Stormcallers Chain Lightning and Arcanists Arcane Orb, using the canonical DivineArchetypeCatalog/SpellCatalog spell names and icons. Unshipped school mutation progression is clearly not yet available and does not spend secured materials. Application callbacks still reject other schools spending on or equipping Fireball. Saved school selection is never changed.
 - Gameplay costs, level thresholds, save schema, artwork and the other UX ideas (steps 3–6) are unchanged.
-- Browser regression covers 390px sealed Lv.3 guidance and a legacy Arcanist save that can inspect without upgrading, equipping or consuming secured materials. Run `Validate Wyrmforge` and `Browser smoke` on the PR before merging.
+- Browser regression covers 390px sealed Lv.3 guidance and the correct signature for legacy Cryomancer, Stormcaller and Arcanist saves, with no Fireball controls or secured-resource spending. Run `Validate Wyrmforge` and `Browser smoke` before merging.
 
 This is a status checkpoint, not a replacement for the canonical gameplay design in `docs/canon/magic-and-combat.md`.

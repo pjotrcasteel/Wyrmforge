@@ -452,26 +452,28 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
-    public async Task Mobile_NonPyromancer_CanInspectFireballWithoutSpendingMaterials()
+    [DataRow("Cryomancer", "Frost Shard", "px-frost")]
+    [DataRow("Stormcaller", "Chain Lightning", "px-storm")]
+    [DataRow("Arcanist", "Arcane Orb", "px-rune")]
+    public async Task Mobile_SavedSchool_OpensItsOwnSignatureWithoutUsingFireball(string school, string signature, string icon)
     {
         await Page.SetViewportSizeAsync(390, 844);
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]})); localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart'])); localStorage.setItem('wyrmforge.characterSchool.v1','Arcanist');");
+        await Page.AddInitScriptAsync($"localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({{Budget:8,Nodes:[]}})); localStorage.setItem('wyrmforge.essenceVault',JSON.stringify(['CinderHeart'])); localStorage.setItem('wyrmforge.characterSchool.v1','{school}');");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
 
-        var fireball = Page.GetByRole(AriaRole.Tab, new() { Name = "Fireball" });
-        await Expect(fireball).ToBeEnabledAsync();
-        await fireball.ClickAsync();
-        await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".fireball-school-note")).ToContainTextAsync("Fireball belongs to Pyromancers");
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" })).ToBeDisabledAsync();
-
-        await Page.Locator(".fireball-socket--2").ClickAsync();
-        await Expect(Page.Locator(".fireball-locked-explainer")).ToContainTextAsync("Unlocks at Fireball Lv 2");
-        await Page.Locator(".fireball-socket--1").ClickAsync();
-        await Expect(Page.Locator(".fireball-mutator").Filter(new() { HasText = "Detonation" })).ToBeDisabledAsync();
-        Assert.AreEqual("Arcanist", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        var signatureTab = Page.GetByRole(AriaRole.Tab, new() { Name = signature });
+        await Expect(signatureTab).ToBeEnabledAsync();
+        await Expect(signatureTab.Locator("small")).ToHaveTextAsync("Signature spell");
+        await signatureTab.ClickAsync();
+        await Expect(Page.Locator(".signature-foundation h2")).ToHaveTextAsync(signature);
+        await Expect(Page.Locator($".signature-emblem .{icon}")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".signature-unavailable")).ToContainTextAsync("not available for this school yet");
+        await Expect(Page.Locator(".fireball-ritual")).ToHaveCountAsync(0);
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" })).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"));
+        Assert.AreEqual(school, await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
         Assert.AreEqual(1, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.essenceVault')).length"));
     }
 

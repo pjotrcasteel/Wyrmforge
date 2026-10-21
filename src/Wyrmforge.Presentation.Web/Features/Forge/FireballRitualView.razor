@@ -1,7 +1,7 @@
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.DragonEssences
 
-<section class="fireball-ritual @(ReadOnly ? "view-only" : "")" aria-label="Fireball spellcraft">
+<section class="fireball-ritual" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
         <h2>Fireball <span>Lv @Core.Level</span></h2>
         <div class="fireball-level-pips" role="img" aria-label="Fireball level @Core.Level of 5">
@@ -61,10 +61,6 @@
     </div>
 
     <section class="fireball-context" aria-live="polite" aria-label="Fireball actions" tabindex="-1" @ref="contextElement">
-        @if (ReadOnly)
-        {
-            <p class="fireball-school-note">Fireball belongs to Pyromancers. You can inspect it here, but only a Pyromancer can upgrade or equip it.</p>
-        }
         @if (selectedSlot is null)
         {
             <div class="fireball-panel-heading">
@@ -101,7 +97,7 @@
                         </div>
                     }
                 </div>
-                <button type="button" class="fireball-action" disabled="@(ReadOnly || !Core.CanUpgrade(Vault))" @onclick="UpgradeAsync">
+                <button type="button" class="fireball-action" disabled="@(!Core.CanUpgrade(Vault))" @onclick="UpgradeAsync">
                     Upgrade to Lv @(Core.Level + 1)
                 </button>
             }
@@ -116,7 +112,7 @@
                     var learned = mutation.Playable && Core.Discovered.Contains(mutation.Id);
                     var current = Core.Slots[slot] == mutation.Id;
                     var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
-                    <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(ReadOnly || !learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
+                    <button type="button" class="fireball-mutator @(current ? "equipped" : "")" disabled="@(!learned || inAnotherSlot)" @onclick="() => EquipAsync(slot, mutation.Id)">
                         <span class="mutation-symbol" aria-hidden="true">
                             @if (MutationArtwork(mutation.Id) is { } artwork)
                             {
@@ -134,7 +130,7 @@
             </div>
             @if (Core.Slots[slot] is not null)
             {
-                <button type="button" class="fireball-remove" disabled="@ReadOnly" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
+                <button type="button" class="fireball-remove" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
             }
             <p class="fireball-help">Only researched mutations can be equipped.</p>
         }
@@ -148,7 +144,6 @@
 @code {
     [Parameter, EditorRequired] public FireballCoreState Core { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
-    [Parameter] public bool ReadOnly { get; set; }
     [Parameter] public Func<Task<bool>>? OnUpgrade { get; set; }
     [Parameter] public Func<int, FireballMutationId?, Task<bool>>? OnEquip { get; set; }
 
@@ -214,13 +209,11 @@
 
     private async Task UpgradeAsync()
     {
-        if (ReadOnly) return;
         if (OnUpgrade is null || !await OnUpgrade()) { notice = "Fireball cannot be upgraded yet."; return; }
         notice = $"Fireball strengthened to level {Core.Level}. A new socket is open.";
     }
     private async Task EquipAsync(int slot, FireballMutationId? mutation)
     {
-        if (ReadOnly) return;
         if (OnEquip is null || !await OnEquip(slot, mutation)) { notice = "That mutation cannot be equipped."; return; }
         notice = mutation is { } id ? $"{FireballCoreCatalog.Get(id).Name} equipped." : "Mutator removed.";
     }
