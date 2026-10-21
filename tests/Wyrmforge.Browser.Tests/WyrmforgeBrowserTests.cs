@@ -148,7 +148,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(debug).ToBeVisibleAsync();
         var wellForeground = Page.Locator(".refuge-town-well-foreground");
         await Expect(wellForeground).ToBeVisibleAsync();
-        await Expect(wellForeground.Locator("#refuge-well-silhouette path")).ToHaveCountAsync(4);
+        await Expect(wellForeground.Locator("#refuge-well-silhouette path")).ToHaveCountAsync(3);
+        var noticeboardForeground = Page.Locator(".refuge-town-noticeboard-foreground");
+        await Expect(noticeboardForeground).ToBeVisibleAsync();
+        await Expect(noticeboardForeground.Locator("#refuge-noticeboard-silhouette path")).ToHaveCountAsync(1);
         Assert.IsTrue(await wellForeground.EvaluateAsync<bool>(@"svg => {
             const artwork = svg.querySelector('image');
             return getComputedStyle(svg).pointerEvents === 'none' &&
@@ -156,6 +159,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 artwork?.getAttribute('href') === 'art/town/night-active.webp?v=140';
         }"), "Only approved well artwork should be duplicated in a small, noninteractive foreground.");
         await Expect(Page.Locator(".refuge-town-crowd--behind")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".refuge-town-crowd--between")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".refuge-town-crowd--front")).ToHaveCountAsync(1);
         await Page.WaitForFunctionAsync(@"() =>
             document.querySelectorAll('.refuge-town-geometry-solid').length >= 14");

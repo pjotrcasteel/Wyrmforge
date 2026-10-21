@@ -9,10 +9,23 @@
 <div class="refuge-town-crowd refuge-town-crowd--behind" aria-hidden="true">
     @foreach (var person in Crowd.Citizens)
     {
-        @if (person.IsPresent && IsBehindWell(person))
+        @if (person.IsPresent && IsBehindNoticeboard(person))
         {
             <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
-                  data-town-depth="behind-well"
+                  data-town-depth="behind-noticeboard"
+                  data-town-citizen-state="@CitizenState(person)"
+                  data-town-work-building="@person.WorkBuildingId"
+                  style="@CitizenStyle(person)"></span>
+        }
+    }
+</div>
+<div class="refuge-town-crowd refuge-town-crowd--between" aria-hidden="true">
+    @foreach (var person in Crowd.Citizens)
+    {
+        @if (person.IsPresent && !IsBehindNoticeboard(person) && IsBehindWell(person))
+        {
+            <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
+                  data-town-depth="between-noticeboard-and-well"
                   data-town-citizen-state="@CitizenState(person)"
                   data-town-work-building="@person.WorkBuildingId"
                   style="@CitizenStyle(person)"></span>
@@ -145,6 +158,14 @@
 
     private static string CitizenState(TownCitizen citizen) =>
         citizen.IsWorking ? "working" : citizen.IsWalking ? "walking" : "idling";
+
+    private bool IsBehindNoticeboard(TownCitizen person)
+    {
+        // The noticeboard stands in front of the open rear paving but behind
+        // pedestrians whose feet have passed its stone support.
+        var board = Crowd.Navigation.Occluders.FirstOrDefault(layer => layer.Id == "noticeboard-foreground");
+        return board is not null && person.Position.Y < board.DepthY;
+    }
 
     private bool IsBehindWell(TownCitizen person)
     {
