@@ -1,0 +1,111 @@
+@page "/arena-materials"
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components
+
+<main class="materials-lab">
+    <header>
+        <div>
+            <span class="eyebrow">WYRMFORGE · ARENA FOUNDATION</span>
+            <h1>Ground materials</h1>
+            <p>Just the surface. Five materials to compare and paint. No roads, props, arena layout or lighting.</p>
+        </div>
+        <a class="other-lab" href="arena-lab">Previous arena lab</a>
+    </header>
+
+    <section aria-label="Paint material" class="materials-tools">
+        <span class="section-title">PAINT</span>
+        <button class="@(selected == 0 ? "selected" : "")" aria-pressed="@(selected == 0)"
+                @onclick="() => Pick(0)"><i class="sample grass"></i>Grass</button>
+        <button class="@(selected == 1 ? "selected" : "")" aria-pressed="@(selected == 1)"
+                @onclick="() => Pick(1)"><i class="sample mud"></i>Wet mud</button>
+        <button class="@(selected == 2 ? "selected" : "")" aria-pressed="@(selected == 2)"
+                @onclick="() => Pick(2)"><i class="sample paving"></i>Old paving</button>
+        <button class="@(selected == 3 ? "selected" : "")" aria-pressed="@(selected == 3)"
+                @onclick="() => Pick(3)"><i class="sample dirt"></i>Dirt</button>
+        <button class="@(selected == 4 ? "selected" : "")" aria-pressed="@(selected == 4)"
+                @onclick="() => Pick(4)"><i class="sample scorched"></i>Scorched</button>
+    </section>
+
+    <section aria-label="Painting controls" class="brush-tools">
+        <span>Brush</span>
+        <button class="@(brush == 1 ? "selected" : "")" @onclick="() => Size(1)">Small</button>
+        <button class="@(brush == 2 ? "selected" : "")" @onclick="() => Size(2)">Medium</button>
+        <button class="@(brush == 5 ? "selected" : "")" @onclick="() => Size(5)">Large</button>
+        <button class="secondary" @onclick="Undo">Undo</button>
+        <button class="secondary" @onclick="Reset">Reset samples</button>
+        <button class="secondary" @onclick="Clear">All grass</button>
+        <button class="secondary" @onclick="NextSeed">New variation</button>
+    </section>
+
+    <section class="material-workspace" aria-label="Editable pixel ground material samples">
+        <div class="canvas-wrap">
+            <canvas @ref="canvas" width="480" height="640"
+                    aria-label="Editable ground comparison board. Starting with rows of grass, mud, paving, dirt and scorched soil. Drag to paint with the selected material."></canvas>
+        </div>
+        <aside>
+            <h2>Material samples</h2>
+            <p>Top to bottom: grass, wet mud, old paving, dirt, scorched ground.</p>
+            <p>Tap a material above, then drag directly on the ground to compare surfaces next to each other.</p>
+            <p class="detail">Seed @seed · 2D terrain materials only · No gameplay collision</p>
+        </aside>
+    </section>
+</main>
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private int selected;
+    private int brush = 2;
+    private int seed = 1441;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/arena-materials.js");
+        await module.InvokeVoidAsync("initMaterialsLab", canvas, seed);
+    }
+
+    private async Task Pick(int next)
+    {
+        selected = next;
+        if (module is not null) await module.InvokeVoidAsync("selectGroundMaterial", canvas, next);
+    }
+
+    private async Task Size(int next)
+    {
+        brush = next;
+        if (module is not null) await module.InvokeVoidAsync("selectGroundBrush", canvas, next);
+    }
+
+    private async Task Undo()
+    {
+        if (module is not null) await module.InvokeVoidAsync("undoMaterialStroke", canvas);
+    }
+
+    private async Task Reset()
+    {
+        if (module is not null) await module.InvokeVoidAsync("resetMaterialSamples", canvas);
+    }
+
+    private async Task Clear()
+    {
+        if (module is not null) await module.InvokeVoidAsync("clearMaterialSamples", canvas);
+    }
+
+    private async Task NextSeed()
+    {
+        seed++;
+        if (module is not null) await module.InvokeVoidAsync("changeMaterialSeed", canvas, seed);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeMaterialsLab", canvas); }
+        catch (JSDisconnectedException) { }
+        try { await module.DisposeAsync(); }
+        catch (JSDisconnectedException) { }
+    }
+}
