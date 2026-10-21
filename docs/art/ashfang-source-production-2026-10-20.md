@@ -210,3 +210,10 @@ and explicit root motion; body audit records the changed line of action. Shadow
 follows the ground projection of that travel. All changes await contact and
 visual checks; no simulation movement is implied. Main checked at 3add7360,
 concurrent Refuge PR #204 remains untouched.
+
+V14 source generation stopped on landing frame 71: the articulated pelvis and
+stronger compression exhausted the former 0.45-radian tail correction search
+(-0.201990 minimum). The failed candidate, completed walk/rear samples and
+failure receipt are preserved. V15 extends the bounded tail bracing search to
+0.675 radians and adds partial contact receipts on any future failure. This
+rotates the attached tail bones; it does not flatten skin or lift the whole body.

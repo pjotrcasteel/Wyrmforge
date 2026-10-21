@@ -173,7 +173,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         # Rotate the articulated chain about its attached base until its actual
         # skinned surface clears the floor. No vertex flattening or body lift.
         tail_correction=0
-        for contact_iteration in range(30):
+        for contact_iteration in range(45):
             previous=None
             for i in range(6):
                 n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=flight_state(max(0,phase-.018-i*.012)) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/8)) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
@@ -182,7 +182,11 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
             ev.to_mesh_clear()
             if tail_min>=-.1975:break
             tail_correction+=.015
-        if tail_min<-.198:raise RuntimeError(f'Tail contact unresolved: {clip} {frame} {tail_min}')
+        if tail_min<-.198:
+            (out/'contact-failure.json').write_text(json.dumps(dict(clip=clip,frame=frame,tailMinZ=tail_min,tailCorrectionRadians=tail_correction,completeRigSaved=False),indent=2)+'\n')
+            (out/'floor-audit.partial.json').write_text(json.dumps(floor,indent=2)+'\n')
+            (out/'paw-contact-audit.partial.json').write_text(json.dumps(contacts,indent=2)+'\n')
+            raise RuntimeError(f'Tail contact unresolved: {clip} {frame} {tail_min}')
         for p in rig.pose.bones:
             p.rotation_mode='QUATERNION'
             for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=frame+1,group=p.name)
