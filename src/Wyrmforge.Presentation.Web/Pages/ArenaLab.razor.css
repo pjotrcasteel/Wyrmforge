@@ -22,6 +22,8 @@
 .arena-layout{display:grid;grid-template-columns:minmax(0,1fr) 238px;align-items:start;gap:12px}
 .arena-stage{position:relative;height:min(70dvh,790px);min-height:420px;border:1px solid #514739;border-radius:11px;overflow:hidden;background:#0e1313}
 .arena-stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.arena-stage,.arena-stage canvas{overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.arena-stage{touch-action:none}
 .arena-tip,.arena-readout,.arena-badge{position:absolute;pointer-events:none;font-size:11px;line-height:1.3;padding:7px 10px;background:#0d0f12d9;border:1px solid #49403a;border-radius:6px;color:#e5d0b6}
 .arena-tip{top:10px;left:10px}.arena-readout{bottom:10px;left:10px}.arena-badge{bottom:10px;right:10px;font-size:9px;color:#b3a28b}
 .arena-inspector{border:1px solid #514739;border-radius:9px;background:#18191b;padding:13px}
