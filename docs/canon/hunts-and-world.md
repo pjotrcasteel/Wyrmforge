@@ -205,3 +205,23 @@ new Wet Forest generation. Its only remaining presence is historical/current pro
 not canonical future world geometry. Maintain validated paths and safe spawn distance without
 forcing a map silhouette. Inspiration: Diablo I's layout/set-piece separation and tile detail,
 Diablo II's Act I roads, woods and side landmarks, plus unrestricted roaming where appropriate.
+
+### Research continuation — recognisable procedural places (Wet Forest)
+
+Useful comparative evidence: Diablo I lays out traversable space, then tile details and
+site-specific setpieces, with connectivity checks; Diablo II Act I wilderness gives
+orientation through human roads, but its off-road terrain has readable independent
+features (graves, camps, ruins, forests), not mandatory geometric divider fences.
+*Death Must Die* publicly described its earlier infinite flat map with sparse objects
+as lacking exploration and moved toward larger authored-feeling spaces, winding routes
+and procedural generation tools (November 2025 roadmap). WyrmForge should avoid the same trap
+without losing Vampire Survivors-style kiting space.
+
+References:
+- https://www.boristhebrave.com/2019/07/14/dungeon-generation-in-diablo-1/
+- https://classic.battle.net/diablo2exp/maps/
+- https://steamcommunity.com/app/2334730/announcements/
+
+**Do not revive the old cross-shaped safe lanes or mandatory wave-gated fences** as a Wet
+Forest requirement. Keep navigation testing, region discovery, and authored landmarks
+independent of any specific encounter arena shape.

@@ -55,7 +55,8 @@ export function readArenaLabDiagnostics(canvas) {
     if (!state) return null;
     const frame = state.frame;
     return { active: state.active, seed: frame?.seed ?? null, stage: frame?.stage ?? null,
-        props: frame?.environment?.props?.length ?? 0, biome: frame?.environment?.biome ?? null,
+        props: frame?.environment?.props?.length ?? 0, barriers: frame?.environment?.barriers?.length ?? 0,
+        site: frame?.environment?.wetForest?.site ?? null, biome: frame?.environment?.biome ?? null,
         player: frame ? { x: frame.x, y: frame.y } : null,
         world: frame ? { width: frame.worldWidth, height: frame.worldHeight } : null,
         collisionVisible: state.options.collision, tool: state.options.tool };
