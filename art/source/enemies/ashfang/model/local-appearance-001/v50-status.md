@@ -18,7 +18,8 @@ into a carried pose; hocks move in the chest/pelvis coordinate system rather
 than global coordinates. Lift-gated curl follows the existing tuck controls,
 with separate delayed proximal/distal reactions to the wing signal and small
 fore/hind/left/right timing differences. Toes open with the existing landing
-reach before contact. No arbitrary random motion, new sprites or gameplay rule.
+reach before contact. Performance is authored in the persistent source; no
+gameplay rule changed.
 
 Actual cruise controls: wrist 0.6772–0.9437rad across fore/hind responses,
 proximal toe curl 0.5172–0.5828rad and distal curl 0.8286–0.8714rad. The exact
