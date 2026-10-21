@@ -10,6 +10,8 @@ mvps=[]
 for eye in [(2,-3,2.2),(3,0,.7)]:
     f=-np.array(eye,float);f/=np.linalg.norm(f);right=np.cross(f,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(right,f);m=np.eye(4,dtype=np.float32);m[0,:3]=right/1.2;m[1,:3]=up/1.2;m[2,:3]=f*.2;m[1,3]=-.10;mvps.append(m)
 reports={};all_frames={}
+floor_audit=json.loads((rig/'floor-audit.json').read_text())
+paw_audit=json.loads((rig/'paw-contact-audit.json').read_text()) if (rig/'paw-contact-audit.json').exists() else []
 for clip,spec in profile['clips'].items():
     source=np.load(rig/(clip+'-samples.npz'));faces=t(source['faces'],torch.int32);uv=t(source['uv']);frames=[];bounds=[];folder=out/clip;folder.mkdir()
     for index,position in enumerate(source['positions']):
@@ -28,11 +30,13 @@ for clip,spec in profile['clips'].items():
                             a=(ring-1)*8+j;b=(ring-1)*8+(j+1)%8;c=ring*8+j;d=ring*8+(j+1)%8;triangles.extend([[a,b,c],[b,d,c]])
                 fv=t(vertices);ff=t(triangles,torch.int32);fc=torch.cat([fv,torch.ones_like(fv[:,:1])],1)@mvp.T;fr,_=dr.rasterize(ctx,fc[None],ff,[cell,cell]);color=dr.interpolate(t(colors)[None],fr,ff)[0][0];visible=(fr[0,:,:,3]>0)&((r[0,:,:,3]==0)|(fr[0,:,:,2]<=r[0,:,:,2]));rgb=torch.where(visible[:,:,None],color,rgb);alpha=torch.maximum(alpha,visible.float())
             rgba=(torch.cat([rgb,alpha[:,:,None]],-1).flip(0).cpu().numpy()*255).clip(0,255).astype('uint8');raw=Image.fromarray(rgba);pixel=raw.convert('RGB').quantize(palette=palette,dither=Image.Dither.NONE).convert('RGBA');pixel.putalpha(raw.getchannel('A'));pixel.save(folder/f'view-{view}-frame-{index:02d}.png');bounds.append(pixel.getbbox());panels.append(pixel)
-        board=Image.new('RGB',(384,208),(24,22,27));draw=ImageDraw.Draw(board)
+        board=Image.new('RGB',(384,228),(24,22,27));draw=ImageDraw.Draw(board)
         for view,panel in enumerate(panels):
-            m=mvps[view];p=m@np.array([0,0,-.197,1]);x=round((p[0]+1)*96)+view*192;y=round((1-p[1])*96);draw.ellipse((x-18,y-5,x+18,y+5),fill=(14,13,17));board.paste(panel,(view*192,0),panel);draw.text((view*192+5,195),'GAME' if view==0 else 'SIDE',fill=(220,190,145))
-        frames.append(board.resize((768,416),Image.Resampling.NEAREST))
-    seq=frames if spec['loop'] else [frames[0]]*6+frames+[frames[-1]]*12;seq[0].save(out/(clip+'.gif'),save_all=True,append_images=seq[1:],duration=55,loop=0);all_frames[clip]=frames
+            m=mvps[view];p=m@np.array([0,0,-.197,1]);x=round((p[0]+1)*96)+view*192;y=round((1-p[1])*96);alt=next(q['altitude'] for q in floor_audit if q['clip']==clip and q['frame']==index);shadow_radius=round(18-8*min(1,alt/.34));shade=round(14+5*min(1,alt/.34));draw.ellipse((x-shadow_radius,y-4,x+shadow_radius,y+4),fill=(shade,shade-1,shade+2));draw.line((view*192+35,y+5,view*192+157,y+5),fill=(52,47,45));board.paste(panel,(view*192,0),panel);draw.text((view*192+5,195),'GAME' if view==0 else 'SIDE',fill=(220,190,145))
+        label=next((q['phaseLabel'] for q in paw_audit if q['clip']==clip and q['frame']==index),clip)
+        draw.text((5,211),f'{index+1}/{spec["frames"]} | {label} | source {spec["fps"]} fps',fill=(190,174,150))
+        frames.append(board.resize((768,456),Image.Resampling.NEAREST))
+    seq=frames;durations=[(round((i+1)*100/spec['fps'])-round(i*100/spec['fps']))*10 for i in range(len(seq))];seq[0].save(out/(clip+'.gif'),save_all=True,append_images=seq[1:],duration=durations,loop=0);all_frames[clip]=frames
     position=source['positions'];reports[clip]=dict(frames=spec['frames'],finite=bool(np.isfinite(position).all()),minZ=float(position[:,:,2].min()),loopPositionError=float(abs(position[0]-position[-1]).max()) if spec['loop'] else None,clipped=any(b is None or min(b[:2])<2 or max(b[2:])>190 for b in bounds),bounds=bounds)
     print(clip,'native-pixel review rendered',flush=True)
 # Native Tier-I footprint reference: no UI or runtime claim.

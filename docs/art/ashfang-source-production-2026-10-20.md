@@ -131,3 +131,14 @@ body instead of interpolating toward unreachable floor goals while still high.
 Hind catch retains clearance briefly after the forepaw catch. A source shoulder
 stroke limit near ground prevents the new first downstroke penetrating the
 floor (V11 worst -0.26543). V11 is preserved as failed source, not approved art.
+
+### V12 measured timing result — before GPU review
+The unreachable landing/rear targets are removed: max IK error is under 1e-7
+model units for both. Walk max is 0.004076 (0.326 native pixels at 80px/unit),
+down from 0.050077 (~4px). Whole-surface minima remain inside the 0.001 floor
+tolerance. Forepaws catch near frame 68 while hind soles remain about 0.022
+units higher; hindpaws catch at frame 71. These are measured source contacts,
+not just event labels. Render review now follows source 24fps timing (GIF
+40/50ms frame durations), adds phase/frame labels and a fixed ground guide with
+altitude-responsive shadow. Prior GIFs used 55ms frames and extra endpoint holds.
+No runtime controller behavior changes are included.
