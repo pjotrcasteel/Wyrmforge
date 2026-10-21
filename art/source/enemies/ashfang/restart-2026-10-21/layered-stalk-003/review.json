@@ -1,0 +1,16 @@
+{
+  "status": "Owner-guide articulated stalk study; visual and contact review pending",
+  "ownerAccepted": false,
+  "frames": 64,
+  "fps": 24,
+  "travelPerCycleSourcePixels": 12.0,
+  "stanceFraction": 0.7,
+  "maxReachBeyondBoneLength": 0,
+  "maxPawTargetError": 2.0097183471152322e-14,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "limitations": [
+    "One view only",
+    "Layer cuts/hidden overlap require review",
+    "Body and wing secondary articulation not yet added to this gait"
+  ]
+}
