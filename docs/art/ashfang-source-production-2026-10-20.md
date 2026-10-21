@@ -415,3 +415,7 @@ outstanding. Native grounded source widths at 80 px/model unit range 62–127px
 in the eight actual camera views; this is NOT yet the final 320/390px viewport
 fit. Preserve source proportions when selecting final export density, and
 revalidate mobile readability rather than stretching or cropping frames.
+
+## V27 first wingbeat timing â€” owner follow-up
+Owner responded 'yes perfect' to the V26 anatomy/larger-wing correction and requested removal of the short jump-before-flap pause. Preserve that anatomy approval separately from completion of the full creature/action library. V27 advances the first power-stroke start from phase 0.265 to 0.205 (about five source frames / 0.21 seconds at 24fps), immediately before altitude starts rising at 0.22. The following cruise beat follows the advanced stroke continuously. Paw release, jump trajectory and anatomy stay as V26. Source built; visual/contact revalidation pending.
+

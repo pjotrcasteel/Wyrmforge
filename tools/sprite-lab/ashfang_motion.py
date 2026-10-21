@@ -13,14 +13,16 @@ def flight_state(phase):
     rise = 2*launch_time-launch_time*launch_time
     descent = smooth((phase-.64)/.17)
     impact = smooth((phase-.81)/.035)*(1-smooth((phase-.86)/.12))
+    # Begin the power stroke during the final leg drive, before altitude rises.
+    # The prior .265 start left a visible jump-then-hover beat.
     if phase < .16:
         flap = -.85*smooth((phase-.06)/.10)
-    elif phase < .265:
+    elif phase < .205:
         flap = -.85
-    elif phase < .365:
-        flap = -.85+1.50*smooth((phase-.265)/.10)
+    elif phase < .305:
+        flap = -.85+1.50*smooth((phase-.205)/.10)
     else:
-        cruise = .65*math.cos((phase-.365)*math.pi*2/.18)
+        cruise = .65*math.cos((phase-.305)*math.pi*2/.18)
         flare = smooth((phase-.64)/.12)
         flap = (cruise*(1-flare)-.80*flare)*(1-smooth((phase-.85)/.13))
     # Near-ground downstrokes must not drive the extended membrane through
@@ -28,7 +30,7 @@ def flight_state(phase):
     altitude = .34*rise*(1-descent)
     flap = min(flap, .10+1.05*altitude)
     names = [(0, 'settle'), (.03, 'open / crouch'), (.12, 'leg drive'),
-             (.16, 'rear preload / leg drive'), (.22, 'hind-leg extension'), (.265, 'departure / first downstroke'), (.40, 'flight'),
+             (.16, 'rear preload / leg drive'), (.205, 'first downstroke / leg drive'), (.22, 'hind-leg extension'), (.265, 'departure'), (.40, 'flight'),
              (.64, 'approach / extend paws'), (.76, 'flare'),
              (.81, 'forepaw catch'), (.845, 'hindpaw catch'), (.88, 'recover')]
     label = next(name for start, name in reversed(names) if phase >= start)
@@ -60,7 +62,7 @@ def flight_state(phase):
 
 FLIGHT_EVENTS = [
     dict(phase=.12, name='leg-drive'), dict(phase=.22, name='hind-leg-extension'),
-    dict(phase=.265, name='departure-first-downstroke'), dict(phase=.40, name='cruise'),
+    dict(phase=.205, name='first-downstroke'), dict(phase=.265, name='departure'), dict(phase=.40, name='cruise'),
     dict(phase=.64, name='approach'), dict(phase=.76, name='flare'),
     dict(phase=.81, name='forepaw-catch-target'),
     dict(phase=.845, name='hindpaw-catch-target'), dict(phase=.88, name='recovery'),
