@@ -1,4 +1,5 @@
 // Wet Forest floor painter: semantic, seeded 12px material tiles, not smoothed overlay blobs.
+import { wetForestTreeFireState } from './arena-wet-forest-vegetation.js';
 // The C# recipe owns roads, human sites and shallow ground patches. No tile creates a collider.
 const CELL = 12;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -136,6 +137,93 @@ export function createWetForestMaterialEdges(tiles, seed, width, height = Infini
     return marks;
 }
 
+
+// A second, sparse authored-pixel vocabulary breaks up the flat fill on each
+// *walkable* material. The marks never define colliders, flames or tall props.
+// Their direction, count and colors reflect wet soil, eroded stone and leaf litter.
+const FLOOR_DETAIL = Object.freeze({
+    loam: ['#343b30', '#1d2620', '#4b4535'],
+    moss: ['#3b4838', '#1b2b23', '#4b513d'],
+    mud: ['#423d32', '#252822', '#4c493c'],
+    leafbed: ['#594734', '#2b2b25', '#6c5036'],
+    puddle: ['#31413d', '#101b1c', '#47534a'],
+    road: ['#52493b', '#282a26', '#675642'],
+    clearing: ['#474336', '#232923', '#625643'],
+});
+const snap2 = value => Math.round(value / 2) * 2;
+
+/** Tiny sediment facets and ruts, never independent upright artwork. */
+export function createWetForestSurfaceDetails(tiles, seed, width, height) {
+    const marks = [];
+    for (const tile of tiles ?? []) {
+        const gx = tile.x / CELL, gy = tile.y / CELL;
+        const chance = hash(seed ^ 0x32ac0187, gx, gy);
+        if (chance > .33) continue;
+        const palette = FLOOR_DETAIL[tile.material] || FLOOR_DETAIL.loam;
+        const dx = 2 + 2 * Math.floor(hash(seed ^ 0x1038a3e, gx, gy) * 4);
+        const dy = 2 + 2 * Math.floor(hash(seed ^ 0x351211e, gx, gy) * 4);
+        const x = tile.x + dx, y = tile.y + dy;
+        const put = (px, py, w, h, color, alpha = 1) => {
+            if (px >= 0 && py >= 0 && px + w <= width && py + h <= height)
+                marks.push({ x: px, y: py, width: w, height: h, color, alpha, material: tile.material });
+        };
+        const type = tile.material;
+        if (type === 'puddle') {
+            // Three interrupted reflected reeds on black water, not glowing pools.
+            put(x, y, 6, 2, palette[0], .67);
+            if (chance < .12) put(tile.x + 2, tile.y + 8, 4, 2, palette[2], .43);
+        } else if (type === 'road' || type === 'clearing') {
+            // Broken worn paving and wheel-compressed dirt—flat enough to kite on.
+            put(x, y, 6, 2, palette[0], .64);
+            if (chance < .17) put(tile.x + 2, tile.y + 8, 4, 2, palette[1], .88);
+            if (chance < .09) put(tile.x + 8, tile.y + 2, 2, 2, palette[2], .70);
+        } else if (type === 'leafbed') {
+            put(x, y, 4, 2, palette[0], .78);
+            put(x - 2, y + 2, 2, 2, palette[2], .56);
+        } else if (type === 'moss') {
+            put(x, y, 4, 2, palette[0], .56);
+            if (chance < .15) put(x + 2, y - 2, 2, 4, palette[2], .49);
+        } else {
+            // Silt striation and embedded grains are deliberately discontinuous.
+            put(x, y, 4, 2, palette[0], .62);
+            if (chance < .13) put(x - 2, y + 2, 2, 2, palette[1], .77);
+        }
+    }
+    return marks;
+}
+
+/**
+ * Fire scars grow out from the feet of ACTUAL C# trees, following their same
+ * seed-stable char/burning state. They are baked as harmless flat ash, not new
+ * obstacles, damage zones, or independent glowing landmarks.
+ */
+export function createWetForestScorchPlan(props, seed, width, height, influence, element) {
+    if (element !== 'fire' || influence <= 0) return [];
+    const marks = [];
+    for (const prop of props ?? []) {
+        if (prop.kind !== 'pine' && prop.kind !== 'dead-tree') continue;
+        const state = wetForestTreeFireState(prop.kind, prop.id, seed, influence, element);
+        if (state === 'healthy') continue;
+        const px = snap2(prop.x * width), py = snap2(prop.y * height);
+        const burning = state === 'burning' || state === 'split-glowing';
+        const count = burning ? 13 : 9;
+        for (let i = 0; i < count; i++) {
+            const jitter = hash(seed ^ (prop.id * 971), i, 73);
+            const angle = i * 2.399963 + hash(seed, prop.id, 13) * .9;
+            const distance = 8 + jitter * (burning ? 30 : 23);
+            const x = snap2(px + Math.cos(angle) * distance);
+            const y = snap2(py + Math.sin(angle) * distance * .51);
+            const widthPx = i % 3 === 0 ? 8 : 4, heightPx = i % 4 === 0 ? 4 : 2;
+            if (x < 0 || y < 0 || x + widthPx > width || y + heightPx > height) continue;
+            const ember = burning && i % 5 === 1 && influence > .63;
+            marks.push({ x, y, width: widthPx, height: heightPx,
+                color: ember ? '#a45f2c' : i % 3 === 0 ? '#1c211d' : '#322721',
+                alpha: ember ? .60 : .78, treeId: prop.id });
+        }
+    }
+    return marks;
+}
+
 function rect(ctx, x, y, w, h, color) {
     ctx.fillStyle = color;
     ctx.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, w, h);
@@ -211,14 +299,19 @@ export function drawWetForestGround(ctx, plan) {
         rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
     }
     ctx.globalAlpha = 1;
+    // Baked micro-material detail: broken soil facets, not a flat color wash.
+    for (const mark of createWetForestSurfaceDetails(tiles, seed, width, height)) {
+        ctx.globalAlpha = mark.alpha;
+        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+    }
+    ctx.globalAlpha = 1;
     // Distinct ground-only history around one physical C# story landmark.
     groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
-    const influence = clamp(plan.corruption || 0, 0, 1);
-    for (let i = 0; i < Math.round(influence * 24); i++) {
-        const x = 36 + hash(seed ^ 0x2a1f87, i, 7) * (width - 72);
-        const y = 42 + hash(seed ^ 0x4b2219, i, 11) * (height - 84);
-        rect(ctx, x, y, 12 + (i % 4) * 4, 4 + (i % 3) * 2, '#342723');
-        rect(ctx, x + 4, y, 4, 2, '#654337');
+    for (const mark of createWetForestScorchPlan(
+        plan.forestProps, seed, width, height, clamp(plan.corruption || 0, 0, 1), plan.element)) {
+        ctx.globalAlpha = mark.alpha;
+        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
     }
+    ctx.globalAlpha = 1;
     ctx.restore();
 }
