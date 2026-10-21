@@ -233,7 +233,9 @@ remain completely unchanged: no C# path edits, new blockers or combat hazards.
 - **Fire ecology**: scorches are anchored solely to actual C# tree IDs whose
   seeded art has already become charred/burning at the chosen route percentage.
   Baked ash remains harmless, as do a few restrained hot embers beside actively
-  burning tree roots. Other elemental habitats get **zero** fire ash.
+  burning tree roots. At 78%+ influence, a minority of burning roots split the
+  soil with short glowing seams; these are purely visual, **not** hazards or
+  telegraphs. Other elemental habitats get **zero** fire ash.
 - **History**: shattered stone, split timber and old soot lie on the ground
   around the physical grave, waystone, abandoned camp, wagon and fallen-log
   prop positions. No scenery duplicates or invisible walls.
