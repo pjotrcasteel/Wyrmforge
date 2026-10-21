@@ -195,3 +195,18 @@ remain visually rough. Final fire is still absent (geometric origin/aim jet
 only); continuous flight/overflight, full action library, directional animation
 exports and actual mobile Hunt validation remain outstanding. Numerical source
 checks are not acceptance of the artwork. This is still a draft production PR.
+
+### V14 research-led body mechanics — in progress
+Owner rejected the static jump and requested tiger/dinosaur and dragon-media
+research. See `art/source/enemies/ashfang/jump-reference-study.md` for primary
+references, limitations and concrete transfer. The source cause is confirmed:
+V13 used one rotation for pelvis/spine/chest/neck and a zero-velocity lift curve.
+V14 introduces connected but independently rotating trunk/neck joints, weight
+gathering over hind support, chest-led fore release before hind departure, an
+upward-velocity launch trajectory with explicit forward root travel, delayed
+tail response and a restrained landing/head settle. Limb/wing sockets attach
+to the actual posed chest/pelvis. Source NPZs now preserve bone points/names
+and explicit root motion; body audit records the changed line of action. Shadow
+follows the ground projection of that travel. All changes await contact and
+visual checks; no simulation movement is implied. Main checked at 3add7360,
+concurrent Refuge PR #204 remains untouched.
