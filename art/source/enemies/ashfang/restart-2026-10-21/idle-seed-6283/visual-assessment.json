@@ -1,0 +1,11 @@
+{
+  "accepted": false,
+  "riggingApproved": false,
+  "reason": "Idle-only reconstruction is a thin image relief with fused limb/tail topology; appearance fidelity does not supply a usable creature.",
+  "axisSpans": [
+    0.999882698059082,
+    0.09477512538433075,
+    0.2656528651714325
+  ],
+  "next": "Idle-weighted multi-reference reconstruction using actual front/side card turnarounds"
+}
