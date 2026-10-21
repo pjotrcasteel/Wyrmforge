@@ -8,7 +8,7 @@ from mathutils import Vector,Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
 from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
-from ashfang_motion import flight_state,FLIGHT_EVENTS
+from ashfang_motion import flight_state,cruise_state,FLIGHT_EVENTS
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
@@ -123,7 +123,13 @@ def ik(a,b,l1,l2,pole):
     d=b-a;distance=max(abs(l1-l2)+.0001,min(d.length,l1+l2-.0001));d.normalize();b=a+d*distance;along=(l1*l1-l2*l2+distance*distance)/(2*distance);p=Vector(pole);p=(p-d*p.dot(d)).normalized();return a+d*along+p*math.sqrt(max(0,l1*l1-along*along)),b
 def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
 clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
-for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
+for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('flight-loop',17),('landing',31)]:
+    def state_at(t):
+        if clip=='flight-loop':return cruise_state(t)
+        source_phase=.64+.36*t if clip=='landing' else t
+        state=flight_state(max(0,source_phase));state['sourcePhase']=source_phase
+        return state
+    delay_scale=83/(count-1)
     flex_action=bpy.data.actions.new('Ashfang_membrane_'+clip);flex_action.use_fake_user=True;obj.data.shape_keys.animation_data_create();obj.data.shape_keys.animation_data.action=flex_action
     action=bpy.data.actions.new('Ashfang_'+clip);action.use_fake_user=True;rig.animation_data_create();rig.animation_data.action=action;sample=[];emitters=[];skeleton=[];roots=[]
     for frame in range(count):
@@ -132,11 +138,12 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         elif clip=='rear-breath':
             rear=smooth(phase/.25)*(1-smooth((phase-.78)/.22));bob=.025*rear;pitch=-.62*rear;spread=.14+.18*rear;jaw=.48*smooth((phase-.22)/.12)*(1-smooth((phase-.68)/.12))
         else:
-            flight=flight_state(phase);altitude=flight['altitude'];bob=flight['bob'];pitch=flight['pitch'];spread=flight['spread'];flap=flight['flap'];advance=flight['advance']
+            flight=state_at(phase);altitude=flight['altitude'];bob=flight['bob'];pitch=flight['pitch'];spread=flight['spread'];flap=flight['flap'];advance=flight['advance']
+        pose_phase=flight.get('sourcePhase',phase) if flight else phase
         # Pressure inflates the bays under power, then reverses gently during
         # recovery. Zero displacement at each spar keeps attachment continuous.
         if flight:
-            velocity=(flap-flight_state(max(0,phase-.008))['flap'])/.008
+            velocity=(flap-state_at(phase-.008*delay_scale)['flap'])/.008
             membrane.value=max(-.65,min(1,velocity*.065))*spread
         else:membrane.value=0
         membrane.keyframe_insert('value',frame=frame+1)
@@ -178,7 +185,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
                     ankle.z=sole_height+clearance
                 elif flight:
                     tuck=flight[limb+'Tuck']
-                    ground_goal=rest_goal+Vector((0,advance if phase>=.30 else 0,0))
+                    ground_goal=rest_goal+Vector((0,advance if pose_phase>=.30 else 0,0))
                     if limb=='hind':
                         # Rotate the hock about a fixed toe anchor during drive.
                         foot_vector=Vector(bones[fn]['tail']-bones[fn]['head'])
@@ -186,13 +193,13 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
                     ground_goal.z=sole_height
                     carried=attached(parent,rest_goal)+Vector((0,.045*tuck,.065*tuck))
                     if limb=='hind':carried.y+=.035*flight['kickTrail']
-                    release=smooth((phase-(.17 if limb=='fore' else .26))/(.06 if limb=='fore' else .04))
+                    release=1 if clip=='flight-loop' else smooth((pose_phase-(.17 if limb=='fore' else .26))/(.06 if limb=='fore' else .04))
                     ankle=ground_goal.lerp(carried,release)
                     if limb=='fore':ankle.y-=.020*flight['landingReach']
                 else:
                     if limb=='fore':ankle=ankle.lerp(point(rest_goal)+Vector((0,.055,.065)),rear)
                 if clip!='walk' and altitude<.01:
-                    catch_clearance=.025*(1-smooth((phase-.81)/.035)) if flight and limb=='hind' and phase>.76 and phase<.845 else 0
+                    catch_clearance=.025*(1-smooth((pose_phase-.81)/.035)) if flight and limb=='hind' and pose_phase>.76 and pose_phase<.845 else 0
                     ankle.z=max(ankle.z,sole_height+catch_clearance)
                 foot_goals[fn]=ankle.copy()
                 # Rear knee goes forward/down, hock back, toe forward. The old
@@ -213,8 +220,8 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
             elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
             # Sample the SAME shoulder stroke at successive delays. Recovery bends
             # the elbow and feathers the wrist; the powered stroke extends it.
-            delayed=flight_state(max(0,phase-.018))['flap'] if flight else flap
-            earlier=flight_state(max(0,phase-.006))['flap'] if flight else flap
+            delayed=state_at(phase-.018*delay_scale)['flap'] if flight else flap
+            earlier=state_at(phase-.006*delay_scale)['flap'] if flight else flap
             recovery=max(0,min(1,(earlier-flap)*5))*opening
             elbow_lag=(delayed-flap)*.65*opening
             fore_rotation=shoulder@Quaternion((0,0,1),sign*(.65*fold+.65*recovery))@Quaternion((0,1,0),sign*(.10*fold+elbow_lag))@Quaternion((1,0,0),.30*recovery)
@@ -224,7 +231,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
                 for j in range(2):
                     n=f'wing.finger.{finger}.{j}.{side}'
                     digit_delay=.026+finger*.004+j*.009
-                    delayed_digit=flight_state(max(0,phase-digit_delay))['flap'] if flight else flap
+                    delayed_digit=state_at(phase-digit_delay*delay_scale)['flap'] if flight else flap
                     lag=(delayed_digit-delayed)*.80*opening
                     lag+=.12*recovery*(finger/3+j*.4)
                     r=fore_rotation@Quaternion((0,0,1),sign*((.10+.10*finger)*fold+recovery*(.08+.10*finger)))@Quaternion((0,1,0),sign*(.20*fold+lag))
@@ -242,7 +249,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         for contact_iteration in range(45):
             previous=None
             for i in range(len(tail)-1):
-                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=flight_state(max(0,phase-.018-i*.012)) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=state_at(phase-(.018+i*.012)*delay_scale) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),.12*math.sin(pose_phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
             ev=obj.evaluated_get(deps);contact_mesh=ev.to_mesh()
             tail_min=min(contact_mesh.vertices[index].co.z for index in tail_indices)
             ev.to_mesh_clear()
@@ -264,10 +271,10 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,rootAdvance=advance,tailCorrectionRadians=tail_correction,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else [],strideDistanceModelUnits=.10/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
+    clips[clip]=dict(frames=count,fps=24,loop=clip in ('walk','flight-loop'),action=action.name,events=([dict(phase=(e['phase']-.64)/.36,name=e['name']) for e in FLIGHT_EVENTS if e['phase']>=.64] if clip=='landing' else FLIGHT_EVENTS if clip=='takeoff-flight-land' else []),strideDistanceModelUnits=.10/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots))
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];obj.data.shape_keys.animation_data.action=bpy.data.actions['Ashfang_membrane_walk'];scene.frame_set(1)
-bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and three anatomy/motion blocking sequences',flush=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and five motion studies',flush=True)
 
 (out/'paw-contact-audit.json').write_text(json.dumps(contacts,indent=2)+'\n')
 

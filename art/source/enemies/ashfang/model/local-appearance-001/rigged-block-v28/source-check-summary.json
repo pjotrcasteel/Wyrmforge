@@ -1,0 +1,32 @@
+{
+  "walk": {
+    "frames": 24,
+    "finite": true,
+    "minZ": -0.19554036855697632,
+    "loopError": 0.0,
+    "deltaFromApproved": 0.0
+  },
+  "rear-breath": {
+    "frames": 40,
+    "finite": true,
+    "minZ": -0.1955132633447647,
+    "deltaFromApproved": 0.0
+  },
+  "takeoff-flight-land": {
+    "frames": 84,
+    "finite": true,
+    "minZ": -0.19552290439605713,
+    "deltaFromApproved": 0.0
+  },
+  "flight-loop": {
+    "frames": 17,
+    "finite": true,
+    "minZ": 0.07677140831947327,
+    "loopError": 0.0
+  },
+  "landing": {
+    "frames": 31,
+    "finite": true,
+    "minZ": -0.1955132633447647
+  }
+}

@@ -67,3 +67,17 @@ FLIGHT_EVENTS = [
     dict(phase=.81, name='forepaw-catch-target'),
     dict(phase=.845, name='hindpaw-catch-target'), dict(phase=.88, name='recovery'),
 ]
+
+
+def cruise_state(phase):
+    """Periodic authored airborne beat; no gameplay displacement or immunity."""
+    angle=phase*math.pi*2
+    state=flight_state(.485)
+    state.update(altitude=.34,bob=.010*math.sin(angle),advance=-.24,
+        flap=.46*math.cos(angle),spread=1,
+        pelvisTilt=.022*math.sin(angle),spineBend=.018*math.sin(angle-.3),
+        chestLift=.025*math.sin(angle-.6),neckBase=-.015*math.sin(angle-.8),
+        neckTip=-.012*math.sin(angle-1.0),headCounter=-.018*math.sin(angle-.5),
+        tailKick=.04*math.sin(angle-.7),foreTuck=1,hindTuck=1,
+        toeRoll=0,kickTrail=0,landingReach=0,label='sustained flight')
+    return state

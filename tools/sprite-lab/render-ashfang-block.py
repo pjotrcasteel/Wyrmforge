@@ -37,7 +37,7 @@ for clip,spec in profile['clips'].items():
         label=next((q['phaseLabel'] for q in paw_audit if q['clip']==clip and q['frame']==index),clip)
         draw.text((5,211),f'{index+1}/{spec["frames"]} | {label} | source {spec["fps"]} fps',fill=(190,174,150))
         frames.append(board.resize((768,456),Image.Resampling.NEAREST))
-    seq=frames;durations=[(round((i+1)*100/spec['fps'])-round(i*100/spec['fps']))*10 for i in range(len(seq))];seq[0].save(out/(clip+'.gif'),save_all=True,append_images=seq[1:],duration=durations,loop=0);all_frames[clip]=frames
+    seq=frames[:-1] if spec['loop'] else frames;durations=[(round((i+1)*100/spec['fps'])-round(i*100/spec['fps']))*10 for i in range(len(seq))];seq[0].save(out/(clip+'.gif'),save_all=True,append_images=seq[1:],duration=durations,loop=0);all_frames[clip]=frames
     position=source['positions'];reports[clip]=dict(frames=spec['frames'],finite=bool(np.isfinite(position).all()),minZ=float(position[:,:,2].min()),loopPositionError=float(abs(position[0]-position[-1]).max()) if spec['loop'] else None,clipped=any(b is None or min(b[:2])<2 or max(b[2:])>190 for b in bounds),bounds=bounds)
     print(clip,'native-pixel review rendered',flush=True)
 # Native Tier-I footprint reference: no UI or runtime claim.
