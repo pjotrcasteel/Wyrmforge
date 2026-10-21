@@ -2,6 +2,8 @@ using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Loot;
+using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -33,9 +35,17 @@ public sealed partial class RunSimulation
     private void TrySecureRefuge(WyrmrealmMapNode node)
     {
         if (!node.Refuge || SelectedHunt is not { HasRefuge: true } || refuge is not null) return;
+        // The harder hold pays one Rare find up front; it is taken before the mark, so later falls never cost it.
+        if (HuntDrops(LootRarity.Rare)) materialCargoState.Collect(HuntMaterialId.Emberglass);
         refuge = new(node.Id, completedRouteNodes.Count, materialCargoState.Pending.Count, essenceCargoState.Pending.Count,
             build.DragonEssences.Selected, dragonsSlain, defeatedDragonIds.ToHashSet(), ascendantVictories.ToHashSet());
     }
+
+    /// <summary>Whether the selected Hunt's tier may drop loot of this rarity. Unselected (legacy) runs drop Common only.</summary>
+    private bool HuntDrops(LootRarity rarity) => SelectedHunt is { } hunt ? LootRarityRules.CanDrop(rarity, hunt.Tier) : rarity == LootRarity.Common;
+
+    /// <summary>Rarity of an Essence harvested in this run: one step above the Hunt tier's drop cap.</summary>
+    public LootRarity EssenceRarity => SelectedHunt is { } hunt ? LootRarityRules.Essence(hunt.Tier) : DragonEssenceVault.UngradedRarity;
 
     /// <summary>
     /// A fall after the refuge is reclaimed rewinds the Hunt to it. Essences and salvage gathered since are lost; levels,

@@ -27,6 +27,8 @@ public sealed record RunSummary(
     public HuntSelection? Hunt { get; init; }
     /// <summary>Falls caught by a reclaimed refuge during this Hunt.</summary>
     public int RefugeReturns { get; init; }
+    /// <summary>Grade of every Essence secured this run, set by the selected Hunt tier.</summary>
+    public Wyrmforge.Domain.Progression.Loot.LootRarity EssenceRarity { get; init; } = Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceVault.UngradedRarity;
     public IReadOnlyList<HuntMaterialId> SecuredMaterials { get; init; } = [];
     public int Seed { get; init; }
     public int ExperienceEarned { get; init; }

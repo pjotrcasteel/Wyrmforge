@@ -93,11 +93,20 @@
                         var owned = Vault.Count(need.Material);
                         <div class="fireball-material @(owned >= need.Required ? "ready" : "missing")">
                             <i class="px-icon px-lg @MaterialIcon(need.Material)" aria-hidden="true"></i>
-                            <span><b>@material.Name</b><small>@owned / @need.Required</small></span>
+                            <span><b>@material.Name</b><small>@owned / @need.Required · @EssenceGradeText(need.Material)</small></span>
+                        </div>
+                    }
+                    @foreach (var need in FireballCoreCatalog.UpgradeMaterialsTo(Core.Level + 1))
+                    {
+                        var owned = Materials.Count(need.Material);
+                        var rarity = HuntMaterialCatalog.Rarity(need.Material);
+                        <div class="fireball-material @(owned >= need.Required ? "ready" : "missing") @LootRarityPresentation.Class(rarity)">
+                            <i class="px-icon px-lg px-crystal" aria-hidden="true"></i>
+                            <span><b>@HuntMaterialCatalog.Name(need.Material)</b><small><span class="loot-rarity-label">@LootRarityPresentation.Label(rarity)</span> · @owned / @need.Required</small><small>@HuntMaterialCatalog.Source(need.Material)</small></span>
                         </div>
                     }
                 </div>
-                <button type="button" class="fireball-action" disabled="@(!Core.CanUpgrade(Vault))" @onclick="UpgradeAsync">
+                <button type="button" class="fireball-action" disabled="@(!Core.CanUpgrade(Vault, Materials))" @onclick="UpgradeAsync">
                     Upgrade to Lv @(Core.Level + 1)
                 </button>
             }
@@ -200,6 +209,14 @@
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+
+    // e.g. "Rare ×2, Epic ×1"; the lowest grade is spent first.
+    private string EssenceGradeText(DragonEssenceId id)
+    {
+        var grades = Enum.GetValues<LootRarity>().Where(rarity => Vault.Count(id, rarity) > 0)
+            .Select(rarity => $"{LootRarityPresentation.Label(rarity)} ×{Vault.Count(id, rarity)}").ToArray();
+        return grades.Length == 0 ? "none secured" : string.Join(", ", grades);
+    }
 
     private static string MaterialIcon(DragonEssenceId material) => material switch
     {

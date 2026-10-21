@@ -185,6 +185,9 @@ public sealed partial class RunSimulation
                 if (mapState.EncounterActive && defeatedEnemy.Kind is EnemyKind.Ashling or EnemyKind.AshSlinger &&
                     defeatedEnemy.Id % 3 == 0)
                     arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "EmberResidue");
+                // Elites carry Rare salvage only where the Hunt tier allows Rare drops (Fire Tier 2 and up).
+                if (mapState.EncounterActive && defeatedEnemy.IsElite && HuntDrops(Wyrmforge.Domain.Progression.Loot.LootRarity.Rare))
+                    arenaEnvironment?.SpawnMaterialPickup(defeatedEnemy.Position, arenaWidth, arenaHeight, "Emberglass");
                 experienceShards.Drop(defeatedEnemy.Position, ResolveEliteDefeat(defeatedEnemy, EnemyCatalog.Get(defeatedEnemy.Kind).ThreatCost));
                 RegisterMapEncounterKill();
                 RegisterDepthTrialKill();

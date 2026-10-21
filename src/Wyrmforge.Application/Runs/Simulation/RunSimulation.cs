@@ -303,6 +303,7 @@ public sealed partial class RunSimulation
         build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
         Hunt = SelectedHunt,
+        EssenceRarity = EssenceRarity,
         RefugeReturns = RefugeReturns,
         SynergyIds = build.Synergies.Snapshot().ToArray(),
         ExperienceEarned = experienceEarned,

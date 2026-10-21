@@ -351,7 +351,8 @@ public sealed class ArenaEnvironmentState
     /// <summary>Earned enemy loot exists in the world until collected; no combat RNG is consumed.</summary>
     public void SpawnMaterialPickup(Vector2D position, double width, double height, string material)
     {
-        if (width <= 0 || height <= 0 || material is not ("EmberResidue" or "CharredScrap")) return;
+        if (width <= 0 || height <= 0 || !Enum.TryParse<Wyrmforge.Domain.Progression.Signature.HuntMaterialId>(material, out var id)
+            || !Enum.IsDefined(id) || id.ToString() != material) return;
         supplies.Add(new Supply($"material:{material}", Math.Clamp(position.X / width, .015, .985),
             Math.Clamp(position.Y / height, .015, .985), EncounterPhase.Pressure));
     }

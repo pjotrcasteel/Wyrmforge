@@ -219,3 +219,15 @@ body:has(.spellcraft) .wyrmforge-sound-controls { display:none; }
 
 /* The build stamp must not obscure the Fireball upgrade preview on mobile. */
 body:has(.fireball-ritual) [data-game-version] { visibility: hidden; }
+
+/* Persistent-loot rarity scale (Common, Rare, Epic, Legendary). */
+:root { --loot-common: #cfc6b8; --loot-rare: #6fa8dc; --loot-epic: #a575d2; --loot-legendary: #e2b664; }
+.loot-rarity-common { --loot-color: var(--loot-common); }
+.loot-rarity-rare { --loot-color: var(--loot-rare); }
+.loot-rarity-epic { --loot-color: var(--loot-epic); }
+.loot-rarity-legendary { --loot-color: var(--loot-legendary); }
+.loot-rarity-label { color: var(--loot-color, var(--loot-common)); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.fireball-material[class*="loot-rarity-"] { border-color: var(--loot-color); }
+li[class*="loot-rarity-"] b, li[class*="loot-rarity-"] strong { color: var(--loot-color); }.trail-gathered-item[class*="loot-rarity-"]:not(.loot-rarity-common) { border-color: var(--loot-color); color: var(--loot-color); }
+.run-report-chips b[class*="loot-rarity-"] { border-color: var(--loot-color); }
+.run-report-chips .loot-rarity-label { font-size: .68em; font-style: normal; margin-left: 4px; }

@@ -23,7 +23,8 @@
                     <span class="trail-gathered-xp">+@trailGatheredExperience XP</span>
                     @foreach (var stack in trailGatheredMaterials.GroupBy(material => material).OrderBy(group => group.Key))
                     {
-                        <span class="trail-gathered-item">@HuntMaterialCatalog.Name(stack.Key) ×@stack.Count()</span>
+                        var rarity = HuntMaterialCatalog.Rarity(stack.Key);
+                        <span class="trail-gathered-item @LootRarityPresentation.Class(rarity)" title="@LootRarityPresentation.Label(rarity)">@HuntMaterialCatalog.Name(stack.Key) ×@stack.Count()@if (rarity > LootRarity.Common) {<em class="loot-rarity-label"> · @LootRarityPresentation.Label(rarity)</em>}</span>
                     }
                 </div>
                 @if (trailGatheredMaterials.Count > 0)
