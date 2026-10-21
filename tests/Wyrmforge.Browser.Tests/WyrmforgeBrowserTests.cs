@@ -887,7 +887,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual("[]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.huntMaterials.v1')"));
         Assert.AreEqual("[]", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceVault')"));
         Assert.AreEqual("{}", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.essenceGrades.v1')"));
-        await Expect(Page.Locator(".fireball-material.loot-rarity-rare")).ToContainTextAsync("Rare · 0 / 2");
+        await Expect(Page.Locator(".fireball-material.loot-rarity-rare")).ToContainTextAsync("Rare · 0 / 1");
+        var wyrmcinder = Page.Locator(".fireball-material.loot-rarity-epic");
+        await Expect(wyrmcinder).ToContainTextAsync("Wyrmcinder Core");
+        await Expect(wyrmcinder).ToContainTextAsync("Epic · 0 / 1");
     }
 
     [TestMethod]
@@ -2230,7 +2233,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.GetByText(tierTwoOpen, new() { Exact = true })).ToBeVisibleAsync();
         await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(2);
         await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(3);
-        await Expect(Page.Locator(".gate-tier--locked").First).ToContainTextAsync("Not yet available");
+        await Expect(Page.Locator(".gate-tier--locked").First).ToContainTextAsync("Clear Tier 2 first");
+        await Expect(Page.Locator(".gate-tier--locked").Nth(1)).ToContainTextAsync("Not yet available");
         await ScreenshotAsync("world-gate-fire-tier-two-open.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to Wyrm lineages" }).ClickAsync();
         await Page.Locator(".gate-lineage--frost").ClickAsync();
@@ -2281,6 +2285,48 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync($"fire-tier-two-refuge-sheet-{width}.png");
         var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
         Assert.IsLessThanOrEqualTo(1, horizontal, "The Tier 2 map must not overflow mobile screens.");
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_FireTierThree_ShowsElderTargetRefugeAndOptionalWatchtower(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('fireTierThreeSeeded')) {
+            localStorage.setItem('fireTierThreeSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','2');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:2,Nodes:[]}));
+            localStorage.setItem('wyrmforge.world.v1',JSON.stringify({
+                Discovered:['cinder-frontier'], Selected:'cinder-frontier', ClearedHuntTiers:{'cinder-frontier':2}
+            }));
+        }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Expect(Page.GetByText("Tier 3 open: 10-13 trails, three forks, a refuge and a watchtower that scouts the last fork, then Elder Ashfang.",
+            new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(3);
+        await ScreenshotAsync($"world-gate-fire-tier-three-open-{width}.png");
+        await Page.Locator(".gate-tier--ready").Nth(2).ClickAsync();
+        await Expect(Page.GetByText("FIRE · TIER 3", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".map-attention summary b")).ToHaveTextAsync("Elder Ashfang");
+        await Expect(Page.Locator(".realm-route--long")).ToHaveCountAsync(1);
+        await Expect(Page.Locator("button.route-node .node-refuge")).ToHaveCountAsync(1);
+        await Expect(Page.Locator("button.route-node .node-tower")).ToHaveTextAsync("◉ OPTIONAL");
+        await Expect(Page.Locator("button.route-node .node-scouted")).ToHaveCountAsync(0);
+        await ScreenshotAsync($"fire-tier-three-map-{width}.png");
+        var tower = Page.Locator("button.route-node", new() { Has = Page.Locator(".node-tower") });
+        await tower.ScrollIntoViewIfNeededAsync();
+        await ScreenshotAsync($"fire-tier-three-watchtower-{width}.png");
+        await tower.ClickAsync(new() { Force = true });
+        await Expect(Page.GetByText("◉ Optional detour · scouts the last fork", new() { Exact = true })).ToBeVisibleAsync();
+        await ScreenshotAsync($"fire-tier-three-watchtower-sheet-{width}.png");
+        var horizontal = await Page.EvaluateAsync<double>("() => document.documentElement.scrollWidth - window.innerWidth");
+        Assert.IsLessThanOrEqualTo(1, horizontal, "The Tier 3 map must not overflow mobile screens.");
     }
 
     [TestMethod]
