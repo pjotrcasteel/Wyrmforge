@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createWetForestTilePlan, createWetForestMaterialEdges, drawWetForestGround, wetForestTrailAt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js';
+import { createWetForestTilePlan, createWetForestMaterialEdges, createWetForestSurfaceDetails,
+    createWetForestScorchPlan, drawWetForestGround, wetForestTrailAt } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js';
+import { wetForestTreeFireState } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-vegetation.js';
 
 const recipe = {
     site: 'forgotten-graves', siteX: .68, siteY: .47,
@@ -98,4 +100,51 @@ test('Wet Forest material boundaries are seeded, sparse and painted inside the p
         'Each stitched edge must remain small sediment pixels, never a wall or full tile');
     const road = tiles.filter(tile => tile.material === 'road').map(tile => [tile.x, tile.y]);
     assert.ok(road.length > 200, 'Road must survive unchanged');
+});
+
+test('semantic terrain has bounded 2px mud striation and wet reflections without extra collision', () => {
+    const tiles = make(1204);
+    const details = createWetForestSurfaceDetails(tiles, 1204, size.width, size.height);
+    assert.deepEqual(details, createWetForestSurfaceDetails(tiles, 1204, size.width, size.height));
+    assert.notDeepEqual(details, createWetForestSurfaceDetails(tiles, 3312, size.width, size.height));
+    assert.ok(details.length > 1000 && details.length < tiles.length,
+        'A few detail strokes per patch, not millions of per-frame pixel operations');
+    assert.ok(details.every(m => m.width >= 2 && m.width <= 6 && m.height >= 2 &&
+        m.height <= 4 && m.x >= 0 && m.y >= 0 &&
+        m.x + m.width <= size.width && m.y + m.height <= size.height &&
+        m.alpha > 0 && m.alpha <= 1));
+    for (const material of ['puddle', 'road', 'clearing', 'moss', 'leafbed'])
+        assert.ok(details.some(m => m.material === material), 'Missing own terrain vocabulary: ' + material);
+});
+
+test('fire ground traces grow only at real C# tree feet and match their seeded char state', () => {
+    const props = Array.from({ length: 60 }, (_, i) => ({
+        id: i + 1, kind: i % 2 ? 'pine' : 'dead-tree',
+        x: .15 + i % 10 * .07, y: .12 + Math.floor(i / 10) * .14, radius: 12,
+    }));
+    const none = createWetForestScorchPlan(props, 1204, 950, 1550, 0, 'fire');
+    const frost = createWetForestScorchPlan(props, 1204, 950, 1550, 1, 'frost');
+    const late = createWetForestScorchPlan(props, 1204, 950, 1550, 1, 'fire');
+    assert.deepEqual(none, []);
+    assert.deepEqual(frost, []);
+    assert.ok(late.length > 150 && late.length < 800);
+    assert.deepEqual(late, createWetForestScorchPlan(props, 1204, 950, 1550, 1, 'fire'));
+    assert.ok(late.every(m => m.width <= 8 && m.height <= 4 && m.alpha <= .78 &&
+        m.x >= 0 && m.y >= 0 && m.x + m.width <= 950 && m.y + m.height <= 1550));
+    const ids = new Set(props.map(prop => prop.id));
+    assert.ok(late.every(m => ids.has(m.treeId)));
+    assert.ok(late.every(m => {
+        const tree = props.find(prop => prop.id === m.treeId);
+        return wetForestTreeFireState(tree.kind, tree.id, 1204, 1, 'fire') !== 'healthy' &&
+            Math.abs(m.x - tree.x * 950) <= 40 && Math.abs(m.y - tree.y * 1550) <= 25;
+    }), 'Do not spread random orange blobs or invented hazards through the combat glades');
+    assert.deepEqual(createWetForestScorchPlan([], 1204, 950, 1550, 1, 'fire'), []);
+});
+
+test('the new floor uses real physical props from the Lab snapshot, never independent obstacles', () => {
+    const territory = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js', import.meta.url), 'utf8');
+    const floor = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
+    assert.match(territory, /forestProps: environment\.props \?\? \[\]/);
+    assert.match(floor, /plan\.forestProps, seed, width, height/);
+    assert.doesNotMatch(floor, /IsBlocked|TryProjectileCollision|DamagePropsInRadius|Math\.random|requestAnimationFrame/);
 });
