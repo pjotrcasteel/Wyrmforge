@@ -118,7 +118,8 @@ public sealed class ArenaEnvironmentStateTests
             CollectionAssert.AreEqual(repeated.Trail.ToArray(), scene.WetForest.Trail.ToArray());
             CollectionAssert.AreEqual(repeated.Ground.ToArray(), scene.WetForest.Ground.ToArray());
             Assert.HasCount(9, scene.WetForest.Trail);
-            Assert.IsGreaterThanOrEqualTo(22, scene.Props.Count);
+            Assert.IsGreaterThanOrEqualTo(40, scene.Props.Count,
+                "A natural forest needs visible thickets without turning the map into a corridor.");
             sites.Add(scene.WetForest.Site);
             trailCenters.Add(scene.WetForest.Trail[4].X);
             allProps.AddRange(scene.Props);
