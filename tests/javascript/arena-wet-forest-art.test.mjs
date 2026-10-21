@@ -182,23 +182,25 @@ test('winding physical C# trail keeps intermittent seeded hoof and wagon traces'
     assert.deepEqual(createWetForestTrailImprints(null, 1204, size.width, size.height), []);
 });
 
-test('ancient flagstone fragments follow only the existing walkable site offshoot', () => {
-    const base = { ...recipe, site: 'abandoned-camp', siteX: .68, siteY: .47 };
-    const first = createWetForestOldPaving(base, 1441, size.width, size.height);
-    assert.ok(first.length > 40 && first.length < 400, 'A sparse but visible old footpath');
-    assert.deepEqual(first, createWetForestOldPaving(base, 1441, size.width, size.height));
-    assert.notDeepEqual(first, createWetForestOldPaving(base, 1442, size.width, size.height));
-    const startX = wetForestTrailAt(base.trail, base.siteY).x * size.width;
-    const minX = Math.min(startX, base.siteX * size.width) - 20;
-    const maxX = Math.max(startX, base.siteX * size.width) + 20;
-    assert.ok(first.every(mark => mark.x >= minX && mark.x <= maxX &&
-        Math.abs(mark.y - base.siteY * size.height) < 41 &&
-        mark.x >= 0 && mark.y >= 0 &&
-        mark.x + mark.width <= size.width && mark.y + mark.height <= size.height &&
-        mark.width <= 20 && mark.height <= 8 && mark.alpha <= 1));
-    assert.ok(first.some(mark => mark.color === '#626458' || mark.color === '#50564b'));
-    assert.deepEqual(createWetForestOldPaving({ ...base, siteX: startX / size.width },
-        1441, size.width, size.height), [], 'No invented side trail when the source has none');
+test('worn flagstone paving winds the full Wet Forest world without creating walls', () => {
+    const old = { ...recipe, site: 'abandoned-camp', siteX: .68, siteY: .47 };
+    const marks = createWetForestOldPaving(old, 1441, size.width, size.height);
+    assert.ok(marks.length > 500 && marks.length < 3000, 'Full route should have irregular stone patches');
+    assert.deepEqual(marks, createWetForestOldPaving(old, 1441, size.width, size.height));
+    assert.notDeepEqual(marks, createWetForestOldPaving(old, 1442, size.width, size.height));
+    const quarters = new Set(marks.map(m => Math.min(3, Math.floor(m.y / (size.height / 4)))));
+    assert.deepEqual([...quarters].sort(), [0, 1, 2, 3], 'Old paving must extend through all four quarters');
+    assert.ok(marks.every(m => {
+        const trail = wetForestTrailAt(old.trail, m.y / size.height);
+        const halfWidth = Math.min(70, Math.max(44, trail.width * size.width * .53));
+        return Math.abs(m.x - trail.x * size.width) <= halfWidth + 12 &&
+            m.x >= 0 && m.y >= 0 && m.x + m.width <= size.width &&
+            m.y + m.height <= size.height && m.width <= 20 && m.height <= 8 &&
+            m.alpha <= .78 && m.alpha > 0;
+    }), 'Flat stones are bounded and follow the real C# winding road, not a fake transverse barrier');
+    assert.ok(marks.some(m => m.color === '#626458' || m.color === '#53574c'));
+    // The original world, collision, loot and route recipe do not change with visual paving.
+    assert.deepEqual(old, { ...recipe, site: 'abandoned-camp', siteX: .68, siteY: .47 });
     assert.deepEqual(createWetForestOldPaving(null, 1441, size.width, size.height), []);
-    assert.deepEqual(createWetForestOldPaving(base, 1441, 0, size.height), []);
+    assert.deepEqual(createWetForestOldPaving(old, 1441, 0, size.height), []);
 });
