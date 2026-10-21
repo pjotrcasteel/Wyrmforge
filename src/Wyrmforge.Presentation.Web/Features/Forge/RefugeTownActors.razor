@@ -6,39 +6,13 @@
 
 @* Keep the constantly moving citizens in their own render subtree. The approved
    panorama, vacant layers, hotspots and static geometry no longer rerender at 10 Hz. *@
-<div class="refuge-town-crowd refuge-town-crowd--behind" aria-hidden="true">
+<div class="refuge-town-crowd" aria-hidden="true">
     @foreach (var person in Crowd.Citizens)
     {
-        @if (person.IsPresent && IsBehindNoticeboard(person))
+        @if (person.IsPresent)
         {
             <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
-                  data-town-depth="behind-noticeboard"
-                  data-town-citizen-state="@CitizenState(person)"
-                  data-town-work-building="@person.WorkBuildingId"
-                  style="@CitizenStyle(person)"></span>
-        }
-    }
-</div>
-<div class="refuge-town-crowd refuge-town-crowd--between" aria-hidden="true">
-    @foreach (var person in Crowd.Citizens)
-    {
-        @if (person.IsPresent && !IsBehindNoticeboard(person) && IsBehindWell(person))
-        {
-            <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
-                  data-town-depth="between-noticeboard-and-well"
-                  data-town-citizen-state="@CitizenState(person)"
-                  data-town-work-building="@person.WorkBuildingId"
-                  style="@CitizenStyle(person)"></span>
-        }
-    }
-</div>
-<div class="refuge-town-crowd refuge-town-crowd--front" aria-hidden="true">
-    @foreach (var person in Crowd.Citizens)
-    {
-        @if (person.IsPresent && !IsBehindWell(person))
-        {
-            <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
-                  data-town-depth="in-front"
+                  data-town-feet-y="@person.Position.Y"
                   data-town-citizen-state="@CitizenState(person)"
                   data-town-work-building="@person.WorkBuildingId"
                   style="@CitizenStyle(person)"></span>
@@ -159,23 +133,10 @@
     private static string CitizenState(TownCitizen citizen) =>
         citizen.IsWorking ? "working" : citizen.IsWalking ? "walking" : "idling";
 
-    private bool IsBehindNoticeboard(TownCitizen person)
-    {
-        // The noticeboard stands in front of the open rear paving but behind
-        // pedestrians whose feet have passed its stone support.
-        var board = Crowd.Navigation.Occluders.FirstOrDefault(layer => layer.Id == "noticeboard-foreground");
-        return board is not null && person.Position.Y < board.DepthY;
-    }
-
-    private bool IsBehindWell(TownCitizen person)
-    {
-        var well = Crowd.Navigation.Occluders.FirstOrDefault(layer => layer.Id == "well-foreground");
-        // Sort by the contact point, not whether the sprite rectangle touches a roof.
-        return well is not null && person.Position.Y < well.DepthY;
-    }
-
+    // Render order follows contact feet Y, not which painted building the NPC overlaps.
     private static string CitizenStyle(TownCitizen citizen) =>
-        FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%");
+        FormattableString.Invariant(
+            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{(int)MathF.Floor(citizen.Position.Y * 10f) + 1}");
 
     public async ValueTask DisposeAsync()
     {

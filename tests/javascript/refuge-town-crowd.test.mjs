@@ -14,11 +14,8 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     const actorMarkup = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
-    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--behind"/);
-    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--between"/);
-    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--front"/);
+    assert.match(actorMarkup, /class="refuge-town-crowd"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /@if \(person\.IsPresent && IsBehindNoticeboard\(person\)\)/);
     assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
@@ -33,47 +30,35 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-geometry-feet-layer\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /width:0\.957%;height:3\.188%/);
-    assert.match(css, /\.refuge-town-spot \{z-index:9\}/);
+    assert.match(css, /\.refuge-town-spot \{z-index:11002\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
     assert.match(markup, /loadingStop\.Cancel\(\)/);
     assert.ok(markup.includes('art/town/night-active.webp?v=140'));
 });
 
-test('well foreground respects feet depth, and building activity reuses seven actor rectangles', () => {
+test('every painted foreground draws between citizens using actual feet depth', () => {
     const markup = source(scene);
     const actor = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    const model = source('src/Wyrmforge.Application/World/TownCrowd.cs');
-    const map = JSON.parse(source(`${art}/night-navigation.json`));
-    const well = map.occluders.find(layer => layer.id === 'well-foreground');
-
-    assert.equal(well.depthY, 572);
-    assert.equal(map.occluders.find(layer => layer.id === 'noticeboard-foreground').depthY, 522);
-    assert.match(markup, /viewBox="695 382 256 189"/);
-    assert.match(markup, /id="refuge-well-silhouette"/);
-    assert.match(markup, /id="refuge-noticeboard-silhouette"/);
-    assert.match(markup, /refuge-town-noticeboard-foreground/);
-    assert.match(markup, /clip-path="url\(#refuge-well-silhouette\)"/);
-    assert.match(markup, /href="art\/town\/night-active\.webp\?v=140"/);
-    assert.match(css, /refuge-town-noticeboard-foreground/);
-    assert.match(css, /refuge-town-well-foreground\s*\{[^}]*pointer-events:none/s);
-    assert.match(actor, /person\.Position\.Y < well\.DepthY/);
-    assert.match(actor, /person\.Position\.Y < board\.DepthY/);
-    assert.match(actor, /data-town-depth="behind-noticeboard"/);
-    assert.match(actor, /data-town-depth="between-noticeboard-and-well"/);
-    assert.match(actor, /data-town-depth="in-front"/);
-    assert.match(actor, /citizen\.IsWorking \? "working"/);
-    assert.equal((actor.match(/new PeriodicTimer/g) ?? []).length, 1,
-        'Keep one 100ms NPC timer, not a per-building update loop');
-
-    const works = map.destinations.filter(destination => destination.buildingId);
-    assert.deepEqual(works.map(d => d.buildingId).sort(),
-        ['build', 'build', 'codex', 'codex', 'forge', 'forge', 'legends', 'legends']);
-    for (const work of works) assert.ok(work.activity);
-    assert.match(markup, /openBuildings: OpenBuildings\(\)/);
-    assert.match(model, /_openBuildings\.Contains\(building\)/);
-    assert.match(model, /public bool IsWorking/);
-    assert.match(model, /citizen\.IdleSeconds = 4f \+ NextInt\(60\)/);
+    const map = JSON.parse(source(art + '/night-navigation.json'));
+    assert.equal(map.occluders.length, 7);
+    assert.equal(map.occluders.find(part => part.id === 'well-foreground').depthY, 572);
+    assert.equal(map.occluders.find(part => part.id === 'noticeboard-foreground').depthY, 522);
+    assert.match(markup, /@foreach \(var foreground in crowd\.Navigation\.Occluders\)/);
+    assert.match(markup, /class="refuge-town-scenery-foreground"/);
+    assert.match(markup, /data-town-foreground-layer="@foreground\.Id"/);
+    assert.match(markup, /clipPath id="@maskId" clipPathUnits="userSpaceOnUse"/);
+    assert.match(markup, /foreground\.Id == "well-foreground"/);
+    assert.match(markup, /foreground\.Id == "noticeboard-foreground"/);
+    assert.match(markup, /foreground\.DepthY \* 10f/);
+    assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
+    assert.match(actor, /citizen\.Position\.Y \* 10f/);
+    assert.match(actor, /data-town-feet-y="@person\.Position\.Y"/);
+    assert.match(actor, /@if \(person\.IsPresent\)/);
+    assert.match(actor, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
+    assert.match(css, /\.refuge-town-crowd\s*\{[^}]*z-index:auto/s);
+    assert.match(css, /refuge-town-scenery-foreground\s*\{[^}]*pointer-events:none/s);
+    assert.doesNotMatch(actor, /IsBehindWell|IsBehindNoticeboard/);
 });
 
 test('opt-in FPS and AI profiling is separate from geometry and has no normal gameplay overhead', () => {
@@ -251,8 +236,6 @@ test('debug geometry stays label-free and residents have authored four connected
     ]);
     assert.ok(exits.find(exit => exit.id === 'world-gate-exit').y < 300,
         'Gate exit must be inside the arch, not beside the stairs');
-    assert.match(source(actors), /@if \(person\.IsPresent && !IsBehindWell\(person\)\)/);
-    assert.match(source(actors), /person\.IsPresent && !IsBehindNoticeboard\(person\) && IsBehindWell\(person\)/);
     assert.doesNotMatch(markup, /refuge-town-geometry-legend|refuge-town-geometry-label/,
         'No explanatory overlay should block the town scenery');
     assert.match(simulation, /citizen\.AwaySeconds/);

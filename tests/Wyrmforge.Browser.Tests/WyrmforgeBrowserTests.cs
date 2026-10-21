@@ -146,21 +146,20 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
-        var wellForeground = Page.Locator(".refuge-town-well-foreground");
-        await Expect(wellForeground).ToBeVisibleAsync();
-        await Expect(wellForeground.Locator("#refuge-well-silhouette path")).ToHaveCountAsync(3);
-        var noticeboardForeground = Page.Locator(".refuge-town-noticeboard-foreground");
-        await Expect(noticeboardForeground).ToBeVisibleAsync();
-        await Expect(noticeboardForeground.Locator("#refuge-noticeboard-silhouette path")).ToHaveCountAsync(1);
-        Assert.IsTrue(await wellForeground.EvaluateAsync<bool>(@"svg => {
+        var layers = Page.Locator(".refuge-town-scenery-foreground");
+        await Expect(layers).ToHaveCountAsync(7);
+        var well = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='well-foreground']");
+        var board = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='noticeboard-foreground']");
+        await Expect(well).ToBeVisibleAsync();
+        await Expect(well.Locator("clipPath path")).ToHaveCountAsync(3);
+        await Expect(board.Locator("clipPath path")).ToHaveCountAsync(1);
+        Assert.IsTrue(await well.EvaluateAsync<bool>(@"svg => {
             const artwork = svg.querySelector('image');
             return getComputedStyle(svg).pointerEvents === 'none' &&
-                svg.getAttribute('viewBox') === '695 382 256 189' &&
                 artwork?.getAttribute('href') === 'art/town/night-active.webp?v=140';
-        }"), "Only approved well artwork should be duplicated in a small, noninteractive foreground.");
-        await Expect(Page.Locator(".refuge-town-crowd--behind")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".refuge-town-crowd--between")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".refuge-town-crowd--front")).ToHaveCountAsync(1);
+        }"), "The approved town image must be clipped per painted structure.");
+        await Expect(Page.Locator(".refuge-town-crowd")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".refuge-town-crowd--behind, .refuge-town-crowd--front")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"() =>
             document.querySelectorAll('.refuge-town-geometry-solid').length >= 14");
         foreach (var id in new[] { "arcane-nexus-building", "blacksmith-building", "codex-building",
