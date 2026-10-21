@@ -39,6 +39,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
         if (width == 390)
         {
+            // A full-page screenshot taken while the fixed ignition splash covers the viewport
+            // looks like a black horizontal terrain seam; wait until the real artwork is visible.
+            await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
             Directory.CreateDirectory(ArtifactDirectory);
             await ScreenshotAsync("arena-lab-wetforest-390.png");
         }
