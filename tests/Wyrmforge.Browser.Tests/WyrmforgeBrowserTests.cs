@@ -12,6 +12,50 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/arena-lab?seed=1441&stage=5&habitat=WetForest",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" })).ToBeVisibleAsync();
+        // Canvas has no ARIA role in every browser; retain a direct locator for the render check.
+        var stage = Page.Locator(".arena-stage canvas");
+        await Expect(stage).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const mod = await import('./js/arena-lab.js');
+            const canvas = document.querySelector('.arena-stage canvas');
+            const scene = mod.readArenaLabDiagnostics(canvas);
+            return scene?.active && scene?.seed === 1441 && scene?.stage === 5 &&
+                scene.props > 0 && scene.world?.width === 950 && canvas.width > 0;
+        }");
+        var first = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const mod = await import('./js/arena-lab.js');
+            return mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
+        }");
+        Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
+        await Page.GetByRole(AriaRole.Checkbox, new() { Name = "Collision outlines" }).CheckAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const m = await import('./js/arena-lab.js');
+            return m.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'))?.collisionVisible === true;
+        }");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Blast area" }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Blast area" }))
+            .ToHaveAttributeAsync("aria-pressed", "true");
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Different seed ↻" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const m = await import('./js/arena-lab.js');
+            const scene = m.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
+            return scene?.seed === 1442 && scene.props > 0;
+        }");
+        await Expect(Page.GetByRole(AriaRole.Spinbutton, new() { Name = "World seed" })).ToHaveValueAsync("1442");
+        Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.arenaLabProgress')"));
+    }
+
+    [TestMethod]
     public async Task Refuge_NightOnly_IgnoresPriorDayPreferenceAndPreservesBuildingStates()
     {
         await Page.SetViewportSizeAsync(390, 844);
