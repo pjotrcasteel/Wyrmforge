@@ -3,13 +3,14 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "V59 blackened-crimson inferno candidate: more red across armour and membranes, scarlet molten breaks, 55% taller/40% wider flame tongues; preserved V58 performance; six native motion reviews and eight directions pass; owner acceptance and runtime integration pending",
+  "status": "V59 rejected by owner; base-art restart authorized. Exact target is original card Pixel Art Concept (Isometric / 2.5D Style) strip. Large pose and native-size approval gates precede further animation/effects.",
   "method": "Locally authored volumetric Blender source with independent per-loop UV atlas baked in rest space on RTX 5090; preserved TRELLIS and concept references",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
-  "rigged": true,
+  "rigged": false,
   "runtimeIntegrated": false,
   "remaining": [
+    "rebuild card-faithful base art; inspect one pose at 1024px and native mobile scale before animation",
     "owner review of V59 crimson/inferno presence; further boss silhouette, surface and effect polish at actual phone size",
     "owner review of revised head and carried-claw performance; all-facing native scale; final fire effects and complete hit/death/direction library",
     "finalize fire VFX and remaining action/direction library; validate encounter rules in C#",
@@ -126,5 +127,7 @@
   "textureFinal": false,
   "bodyFireSource": "model/local-appearance-001/rigged-block-v59-crimson/body-fire-source.json",
   "performanceResearch": "performance-shadowfire-study.md",
-  "clayReview": "model/local-appearance-001/rigged-block-v58-shadowfire/motion-clay-review-v2"
+  "clayReview": "model/local-appearance-001/rigged-block-v58-shadowfire/motion-clay-review-v2",
+  "legacyRejectedSourceRig": "model/local-appearance-001/rigged-block-v59-crimson/ashfang-rigged.blend",
+  "activeRestart": "restart-2026-10-21/README.md"
 }
