@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import nvdiffrast.torch as dr
 from ashfang_surface_uv import uv_triangles
+from ashfang_body_fire import composite_fire
 from PIL import Image, ImageDraw
 from ashfang_preview_lighting import shade, palette_for, LIGHTING
 
@@ -43,6 +44,7 @@ for view in range(8):
     color = dr.texture(texture, texcoords, filter_mode='nearest')[0].clamp(0, 1)
     color = shade(color, vertices[:, :3], faces, raster)
     alpha = (raster[0, :, :, 3] > 0).float()
+    color,alpha=composite_fire(rig,'walk',0,ctx,tensor(matrix),raster,color,alpha)
     rgba = (torch.cat([color, alpha[:, :, None]], -1).flip(0).cpu().numpy()*255).astype('uint8')
     original = Image.fromarray(rgba)
     image = original.convert('RGB').quantize(palette=palette, dither=Image.Dither.NONE).convert('RGBA')
