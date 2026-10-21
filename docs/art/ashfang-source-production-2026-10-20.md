@@ -507,3 +507,18 @@ remain open. Canonical addition records the new requested scope, not shipment.
 ## V33 correction: overhead shadow attack and exponential nose-up climb
 Owner clarified that body must stay above screen during flyovers: only ground indication, moving shadow and arena fire should be visible. High launch now pitches nose-up to about 74.5 degrees with trailing tail pitch and uses normalized expm1 height after push-off. Visible climb height steps increase strictly (first 0.06222, last 1.12273 source units, 18.04x ratio) instead of easing out before leaving. Pass altitude remains 10.5 source units; head aims nearly vertically down before ignition. Existing six grounded/ordinary-flight actions remain vertex-identical to V32. All nine actions finite and above floor. Renderer casts actual posed geometry onto the ground for a winged shadow, instead of a small oval; warning path follows calculated strike positions. Canonical direction updated. GPU fixed-camera visual and zero-visible-body pass audit pending.
 
+
+V33 fixed-camera RTX 5090 render completed: arena-review-v1/aerial-fire-attack.gif.
+All 279 frames finite and above floor. Actual raster audit reports ZERO body
+pixels in the visible arena during every frame 79–210 (both passes and turn).
+The body is physically above the camera, not suppressed by a renderer toggle.
+A vertical projection of the posed geometry casts a readable dragon-shaped
+shadow with moving wings. Lane warnings use predicted actual mouth-ray ground
+strikes. Source density remains 52px/unit, no actor scale trick. Rising launch
+pitches to ~74.5 degrees and height steps increase exponentially until out of
+view. The six earlier reviewed animations remain vertex-identical.
+
+Ground fire and warnings remain preview art, not implemented C# hazard or
+balance. Owner visual review pending; current grounded runtime unchanged.
+Final source-to-spritesheet export, remaining action/direction library, mobile
+Hunt validation and aerial encounter integration remain outstanding.
