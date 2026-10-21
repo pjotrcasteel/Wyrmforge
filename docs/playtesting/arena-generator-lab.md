@@ -59,3 +59,26 @@ Candidate branch `feature/wet-forest-pixel-ground-20261021` (not shipped unless 
 Pure JS regression: `tests/javascript/arena-wet-forest-art.test.mjs`. No changes to C#
 world generation, enemy AI, saves or normal Hunt staging. Final Gothic forest atlas remains
 outstanding; this checkpoint is a consistent material base for those assets, not the final art.
+
+## Prop-grounded tree and understory pass — 21 October 2026
+
+The same `feature/wet-forest-pixel-ground-20261021` draft PR now adds varied existing tree
+atlas frames and local roots/lichen/sedge. Verify all with the same **physical C#** objects:
+
+- Compare seeds 1204, 1205 and 1441, particularly groups of pines at the edge of the
+  wandering trail. Pines should vary in height; no generic Christmas-tree repeat pattern
+  should dominate a single phone viewport.
+- Toggle Collision outlines: only the existing trunk/collidable prop circles appear, **not**
+  extra canopy, decorative roots or grass blockers. Player and Hollow/Ashling can still walk
+  around props; enemies must pass visually behind a tree when their world feet are farther back.
+- Destroy a pine: both raised sprite and collider go away in the same simulation frame; baked
+  roots/ground soil remain but must read as flat debris, not a standing tree. Check stale
+  foliage does not cover the player after destruction.
+- Compare ordinary Hunts and Frost in the lab: neither inherits Wet Forest-only frame
+  selection or attached lichen. View at 320/390px and compare stable 30+ FPS mobile play.
+- CI: `tests/javascript/arena-wet-forest-vegetation.test.mjs` covers frame identities,
+  seed repeatability, C# footprint mapping, preview-only scope, static detail bounds,
+  and absence of physical-state mutations.
+
+No merge or final-art claims before visual acceptance. All actual Gothic tree/canopy sprite
+replacement work remains outstanding.
