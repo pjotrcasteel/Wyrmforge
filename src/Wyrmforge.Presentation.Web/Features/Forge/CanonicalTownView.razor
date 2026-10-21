@@ -71,12 +71,6 @@
                                 cy="@person.Position.Y" r="@crowd.Navigation.FootRadius" />
                     }
                 </svg>
-                @foreach (var obstacle in crowd.Navigation.Obstacles)
-                {
-                    <span @key="obstacle.Id" class="refuge-town-geometry-label"
-                          style="@GeometryLabelStyle(crowd.Navigation, obstacle)">@obstacle.Id.Replace('-', ' ')</span>
-                }
-                <span class="refuge-town-geometry-legend">RED = FEET BLOCKED · AMBER = VISUAL · CYAN = PATH · WHITE = NPC FEET</span>
             </div>
         }
 
@@ -146,10 +140,6 @@
 
     private static string GeometryPoints(IReadOnlyList<TownPoint> points) =>
         string.Join(" ", points.Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
-
-    private static string GeometryLabelStyle(TownNavigationMap map, TownFootprint obstacle) =>
-        FormattableString.Invariant(
-            $"left:{obstacle.Footprint.Average(point => point.X) / map.Width * 100:0.##}%;top:{obstacle.Footprint.Average(point => point.Y) / map.Height * 100:0.##}%");
 
     public void Dispose()
     {
