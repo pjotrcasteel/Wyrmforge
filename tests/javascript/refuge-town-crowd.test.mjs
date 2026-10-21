@@ -13,7 +13,7 @@ test('real Refuge scene retains the art and renders depth-sorted, larger ambient
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<div class="refuge-town-crowd" aria-hidden="true">/);
     assert.match(markup, /@foreach \(var person in crowd\.Citizens\)/);
-    assert.match(markup, /style="@CitizenStyle\(person\)"/);
+    assert.match(markup, /style="@CitizenStyle\(person, occluded\)"/);
     assert.match(markup, /crowd\.Navigation\.IsBodyOccluded\(person\.Position\)/);
     assert.match(markup, /data-town-citizen-occluded/);
     assert.doesNotMatch(markup, /refuge-town-foreground/, 'Do not paint a polygon over half a citizen');
