@@ -46,7 +46,7 @@ v,faces,uv,source_labels,anatomy_changes=rebuild_anatomy(v,faces,uv)
 # limb joints, tail topology or the separately authored wing membrane.
 chest_mass=np.exp(-((v[:,1]+.13)/.15)**2)*np.clip((v[:,2]+.075)/.07,0,1)*(source_labels==0)
 v[:,0]*=1+.15*chest_mass;v[:,2]+=.018*chest_mass
-v,faces,uv,body_count,removed_wing_vertices,wing_camber,source_labels=rebuild_wings(v,faces,uv,source_labels)
+v,faces,uv,body_count,removed_wing_vertices,wing_camber,source_labels,membrane_bind=rebuild_wings(v,faces,uv,source_labels)
 # Continuous card projection replaces discontinuous nearest-triangle UVs on
 # the authored surfaces. The latter scattered unrelated atlas texels into noise.
 for index in range(body_count):
@@ -68,6 +68,7 @@ for index in range(body_count):
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
 obj.shape_key_add(name='Basis')
+folded_membrane=obj.shape_key_add(name='Folded membrane compliance');fold_correction_ready=False
 membrane=obj.shape_key_add(name='Membrane pressure and recovery');membrane.slider_min=-1;membrane.slider_max=1
 for index,amount in enumerate(wing_camber):membrane.data[index].co.z+=float(amount)
 
@@ -87,6 +88,18 @@ hot=mask&(raw[:,:,0]>.55)&(raw[:,:,1]>.42)&(raw[:,:,2]>.20)
 raw[hot,1]*=.50;raw[hot,2]*=.20
 # Small value lift on source dark stone makes plate shapes survive quantization.
 raw[:,:,:3]=np.clip(raw[:,:,:3]*1.12,0,1)
+# Keep incandescent seams as narrow boundaries in the card-derived material;
+# broad painted fire regions become warm charcoal rather than an orange body.
+warm=(raw[:,:,0]>.30)&(raw[:,:,0]>raw[:,:,1]*1.6)
+near_dark=np.zeros(warm.shape,bool)
+for axis in (0,1):
+    for delta in (-2,-1,1,2):near_dark|=np.roll(raw[:,:,0],delta,axis)<.14
+charcoal=warm&~near_dark
+raw[charcoal,:3]*=np.array([.30,.38,.48])
+eye_score=np.where((raw[:,:,1]>.15)&(raw[:,:,0]>raw[:,:,1]*1.5),raw[:,:,0]-.3*raw[:,:,1],-1)
+eye_y,eye_x=np.unravel_index(eye_score.argmax(),eye_score.shape)
+for loop in mesh.loops:
+    if source_labels[loop.vertex_index]==10:layer.data[loop.index].uv=((eye_x+.5)/2048,(eye_y+.5)/1024)
 card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.png'));cp=np.empty(len(card.pixels),np.float32);card.pixels.foreach_get(cp);cp=cp.reshape(card.size[1],card.size[0],4);rows=(np.arange(1024)*card.size[1]//1024);cols=(np.arange(1024)*card.size[0]//1024);atlas=np.concatenate([raw,cp[rows[:,None],cols[None,:]]],axis=1)
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
@@ -120,7 +133,7 @@ for index,p in enumerate(v):
     if index>=body_count:
         permitted=[n for n in names if n.startswith('wing.') and n.endswith('.'+side)];region='wing'
     elif source_labels[index]==1 or (source_labels[index]==0 and ((y>.27 and abs(x)<.13) or y>=.34)):permitted=[n for n in names if n.startswith('tail.')];region='tail'
-    elif source_labels[index]==2:
+    elif source_labels[index] in (2,10):
         permitted=['head'];region='head'
     elif source_labels[index] in (3,4):
         side='L' if source_labels[index]==3 else 'R';permitted=[f'hind.{i}.{side}' for i in range(3)];region='hind'
@@ -295,6 +308,24 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                     folded_rotation=rest_direction.rotation_difference(folded_direction)
                     r=r.slerp(wing_rotation@folded_rotation,fold)
                     tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
+        # Fold corrective is authored into the persistent source, not an image
+        # edit. The membrane interpolates its actual root/wrist/finger anchors;
+        # inverse LBS stores that pleat as an editable rest-space shape key.
+        if not fold_correction_ready:
+            matrices={n:np.array(rig.pose.bones[n].matrix@rest[n].inverted()) for n in names}
+            for bind in membrane_bind:
+                index=bind['index'];side=bind['side'];bay=bind['bay'];a=bind['a'];b=bind['b'];c=bind['c']
+                anchor=np.array(rig.pose.bones['wing.upper.'+side].head)
+                rim=[np.array(rig.pose.bones['wing.fore.'+side].tail)]+[np.array(rig.pose.bones[f'wing.finger.{f}.1.{side}'].tail) for f in range(4)]
+                desired=anchor*c+rim[bay]*a+rim[bay+1]*b
+                desired+=(anchor-desired)*(.16*4*a*b*(a+b)**2)
+                desired[2]-=.006*27*a*b*c
+                groups=mesh.vertices[index].groups;total=sum(g.weight for g in groups)
+                blend=sum(matrices[obj.vertex_groups[g.group].name]*(g.weight/total) for g in groups)
+                folded_membrane.data[index].co=np.linalg.solve(blend,np.append(desired,1))[:3]
+            fold_correction_ready=True
+        folded_membrane.value=min(1,max(0,(1-spread)/.92))
+        folded_membrane.keyframe_insert('value',frame=frame+1)
         # Rotate the articulated chain about its attached base until its actual
         # skinned surface clears the floor. No vertex flattening or body lift.
         tail_correction=0

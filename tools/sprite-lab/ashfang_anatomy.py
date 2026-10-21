@@ -68,6 +68,11 @@ def rebuild_anatomy(v,faces,uv):
     jaw=np.array([(0,-.35,.055),(0,-.405,.042),(0,-.47,.035),(0,-.535,.038),(0,-.565,.052)])
     loft(jaw,[.066,.072,.057,.048,.029],[.024,.025,.019,.015,.009],9,headref,steps=3,ridges=.02)
     for sign in [1,-1]:
+        brow=np.array([(sign*.058,-.43,.139),(sign*.085,-.408,.150),(sign*.095,-.38,.141)])
+        loft(brow,[.013,.018,.010],[.011,.014,.007],2,headref,steps=2,sides=6)
+        eye=np.array([(sign*.086,-.430,.127),(sign*.088,-.421,.130),(sign*.086,-.413,.129)])
+        loft(eye,[.003,.006,.003],[.003,.006,.003],10,headref,steps=2,sides=6)
+    for sign in [1,-1]:
         horn=np.array([(sign*.059,-.345,.132),(sign*.073,-.316,.166),(sign*.081,-.280,.198),(sign*.078,-.246,.218)])
         loft(horn,[.015,.012,.007,.0008],[.015,.012,.007,.0008],2,headref,steps=3,sides=8)
     return np.array(vertices),np.array(triangles,np.int32),np.array(coords),np.array(labels),dict(removedVertices=int(remove.sum()),replacement='Full volumetric trunk, neck, four limbs, skull/jaw and tail; original UV appearance transfer',silhouetteGateOnly=True)
