@@ -4,7 +4,7 @@ Design authority: [Magic and combat](../canon/magic-and-combat.md) (persistent-l
 
 ## Scope and implementation
 
-- Branch: `feature/fire-loot-rarity-20261021`, stacked on the Fire Tier-II branch (draft PR #209, itself on #205). Merge #205 → #209 → this PR in order.
+- Branch: `feature/fire-loot-rarity-20261021`, stacked on the Fire Tier-II branch (draft PR #209, itself on #205). This work is draft PR [#218](https://github.com/pjotrcasteel/Wyrmforge/pull/218). Merge #205 → #209 → this PR in order.
 - Builds on the basic Common salvage merged on main (Ember Residue, Charred Scrap, Cinder Needle).
 - `LootRarity` (Domain `Progression/Loot`) is the one persistent-loot scale for Hunt materials, relics and Wyrm Essences. The old `RelicRarity` was folded into it. The in-run level-up `RewardRarity` scale is unchanged.
 - `LootRarityRules`: the Hunt tier caps ordinary drops (I Common, II Rare, III Epic, IV–V Legendary), and the tier's Essence is graded one step above (I Rare, II Epic, III+ Legendary). Runs without a selected Hunt drop Common only and grade Essences Rare.
@@ -34,7 +34,7 @@ Design authority: [Magic and combat](../canon/magic-and-combat.md) (persistent-l
   - The Rare label renders blue.
   - The upgrade is blocked without Emberglass.
   - The upgrade spends the Epic Cinder Heart, the Ashen Wing and the Emberglass, and saves all three keys.
-  - Full-suite result: see the PR.
+  - Full browser suite: 88/88 passed against a Release publish at `fe3297be` + this test. After the muted-source CSS change, only the Fireball browser tests (8/8) were rerun.
 
 Chromium viewport capture (not a physical-device photo): [Fireball Lv 4 Emberglass gate, 390](evidence/fire-loot-rarity-2026-10-21/fireball-emberglass-gate-390.png).
 
