@@ -3,14 +3,14 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "V46 repaired wing/anatomy motion gate: walk, rear/breath and takeoff finite/floor-safe/unclipped; owner visual acceptance and full library pending",
+  "status": "V48 charcoal-armoured source; all nine existing motions finite/floor-safe; six action previews unclipped and private native aerial fit reviewed; owner visual acceptance pending",
   "method": "Locally authored volumetric anatomy and articulated Blender rig with original concept-card UV appearance; preserved TRELLIS source reference",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner visual review; plate/material refinement and all-facing scale; revalidate remaining motion library for repaired source",
+    "owner visual review and all-facing native scale; final material/detail and fire VFX; hit/death and direction export",
     "finalize fire VFX and remaining action/direction library; validate encounter rules in C#",
     "eight-direction animation export and motion metadata; only still turnarounds currently reviewed",
     "native 320/390px viewport fitting and actual in-game mobile validation",
@@ -24,8 +24,8 @@
   ],
   "divineTier": 5,
   "divineTargetViewportWidthFraction": 1.0,
-  "sourceRig": "model/local-appearance-001/rigged-block-v46-motion-gate/ashfang-rigged.blend",
-  "review": "model/local-appearance-001/rigged-block-v46-motion-gate/motion-review-v1",
+  "sourceRig": "model/local-appearance-001/rigged-block-v48/ashfang-rigged.blend",
+  "review": "model/local-appearance-001/rigged-block-v48/motion-review-v1",
   "productionDocumentation": "../../../../docs/art/ashfang-source-production-2026-10-20.md",
   "turnaroundReview": "model/local-appearance-001/rigged-block-v26/turnaround-review-v1",
   "sourceChecks": "model/local-appearance-001/rigged-block-v37/source-check-summary.json",
@@ -113,14 +113,9 @@
     ]
   },
   "contactReview": {
-    "scope": "three source motion studies, not full library",
-    "audit": "model/local-appearance-001/rigged-block-v46-motion-gate/floor-audit.json",
+    "scope": "all nine existing source motions; not final complete animation library",
+    "audit": "model/local-appearance-001/rigged-block-v48/floor-audit.json",
     "wholeSurfacePass": true,
-    "clips": [
-      "walk",
-      "rear-breath",
-      "takeoff-flight-land"
-    ],
     "worstSurfaceZ": -0.19563458859920502
   },
   "foldDiagnostic": "model/local-appearance-001/rigged-block-v45-sweep/fold-sweep-review-v2/fold-unfold.gif"

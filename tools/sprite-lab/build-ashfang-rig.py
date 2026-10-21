@@ -100,7 +100,6 @@ for axis in (0,1):
     for delta in (-2,-1,1,2):near_dark|=np.roll(raw[:,:,0],delta,axis)<.14
 charcoal=warm&~near_dark
 raw[charcoal,:3]*=np.array([.30,.38,.48])
-raw=stone_separation(raw)
 eye_score=np.where((raw[:,:,1]>.15)&(raw[:,:,0]>raw[:,:,1]*1.5),raw[:,:,0]-.3*raw[:,:,1],-1)
 eye_y,eye_x=np.unravel_index(eye_score.argmax(),eye_score.shape)
 for loop in mesh.loops:
@@ -117,6 +116,7 @@ for index in range(body_count):
         x,y,z=v[index];u=(x*4+.5)%1;w=(y*4+.5)%1
         uv[index]=[(8+u*110)/2048,(904+w*110)/1024]
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
+raw=stone_separation(raw)
 card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.png'));cp=np.empty(len(card.pixels),np.float32);card.pixels.foreach_get(cp);cp=cp.reshape(card.size[1],card.size[0],4);rows=(np.arange(1024)*card.size[1]//1024);cols=(np.arange(1024)*card.size[0]//1024);atlas=np.concatenate([raw,cp[rows[:,None],cols[None,:]]],axis=1)
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
