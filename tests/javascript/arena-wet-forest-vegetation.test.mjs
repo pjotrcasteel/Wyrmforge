@@ -119,3 +119,18 @@ test('tree art fallback draws C#-anchored opaque pixel rectangles, without any a
     const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
     assert.match(source, /if \(layer\.wetForest && drawWetForestTreeArt\(/);
 });
+
+test('Wet Forest Lab woodland silhouettes remain physically grounded and use restrained Gothic values', () => {
+    const pine = createWetForestTreeArtPlan('pine', 1, 1204);
+    const oldPine = createWetForestTreeArtPlan('pine', 2, 1204);
+    assert.notDeepEqual(pine.shapes, oldPine.shapes, 'Canopies should be seed-and-prop-specific');
+    const canopy = pine.shapes.filter(s => s.y < -25);
+    assert.ok(canopy.length > 25, 'Do not replace the physical tree with abstract fog or a filter');
+    for (const shape of canopy) {
+        assert.match(shape.color, /^#[0-9a-f]{6}$/);
+        const channels = [1, 3, 5].map(i => parseInt(shape.color.slice(i, i + 2), 16));
+        assert.ok(Math.max(...channels) <= 90, 'No luminous toy-green crown highlights');
+    }
+    assert.equal(pine.id, 1);
+    assert.equal(pine.kind, 'pine');
+});
