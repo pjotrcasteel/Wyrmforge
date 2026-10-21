@@ -331,8 +331,8 @@ export function drawDestructibleProp(ctx, layer) {
     const ember = prop.kind === 'ember-urn';
     const frost = prop.kind === 'frozen-urn';
     const wood = prop.kind === 'crate' || prop.kind === 'barrel' || prop.kind === 'stump';
-    const body = ember ? '#4d332b' : frost ? '#586a71' : wood ? '#4e3629' : '#62594c';
-    const light = ember ? '#a75a31' : frost ? '#b0c8cc' : wood ? '#80634b' : '#8b8172';
+    const body = ember ? '#4d332b' : frost ? '#586a71' : wood ? '#39352f' : '#62594c';
+    const light = ember ? '#a75a31' : frost ? '#b0c8cc' : wood ? '#675a48' : '#8b8172';
 
     ctx.save();
     ctx.fillStyle = 'rgba(4,5,7,.48)';
@@ -361,6 +361,21 @@ export function drawDestructibleProp(ctx, layer) {
         ctx.fillStyle = ember ? '#b85027' : frost ? '#9ccad5' : '#30292a';
         ctx.fillRect(x - 3, top - 1, 6, 4);
         if (ember || frost) ctx.fillRect(x + 4, top + 13, 3, 4);
+    }
+    if (wood) {
+        // Rot, lichen and grain ground the small destructibles in the same wet palette
+        // as the forest. Deterministic per-prop marks, not a saturated uniform brown box.
+        ctx.fillStyle = '#293d33';
+        ctx.globalAlpha = .75;
+        ctx.fillRect(x - size + 2, y - 6, Math.min(10, size), 3);
+        ctx.fillRect(x + size - 8, y - 11, 6, 2);
+        ctx.fillStyle = '#8b7e65';
+        ctx.globalAlpha = .23;
+        for (let i = 0; i < 4; i++) {
+            const dx = (prop.id * 7 + i * 11) % Math.max(1, size * 2 - 7);
+            ctx.fillRect(x - size + dx, top + 10 + (i * 9) % Math.max(1, size * 2 - 14), 3, 2);
+        }
+        ctx.globalAlpha = 1;
     }
     // Visible cracks signal durability without floating health bars.
     if (prop.healthFraction < .55) {
