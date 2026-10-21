@@ -35,6 +35,7 @@
         @if (crowd is not null)
         {
             <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"
+                              ShowRoutes="@(showTownGeometry && geometryLayer == TownGeometryLayer.Route)"
                               ShowMetrics="showTownMetrics" GeometryChanged="OnGeometryChanged" />
         }
 
@@ -187,6 +188,8 @@
                     @onclick="() => ShowLayer(TownGeometryLayer.Blocked)">Block</button>
             <button type="button" data-town-layer-select="Occlusion" aria-pressed="@(geometryLayer == TownGeometryLayer.Occlusion ? "true" : "false")"
                     @onclick="() => ShowLayer(TownGeometryLayer.Occlusion)">Cover</button>
+            <button type="button" data-town-layer-select="Route" aria-pressed="@(geometryLayer == TownGeometryLayer.Route ? "true" : "false")"
+                    @onclick="() => ShowLayer(TownGeometryLayer.Route)">Route</button>
         </div>
     }
 </div>
@@ -201,7 +204,7 @@
     private string? walkScanPath;
     private TownGeometryLayer geometryLayer = TownGeometryLayer.All;
 
-    private enum TownGeometryLayer { All, Walkable, Blocked, Occlusion }
+    private enum TownGeometryLayer { All, Walkable, Blocked, Occlusion, Route }
 
     private void ShowLayer(TownGeometryLayer layer) => geometryLayer = layer;
 

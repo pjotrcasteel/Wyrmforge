@@ -35,9 +35,22 @@
     </svg>
 }
 
+@if (ShowRoutes && Crowd.InspectActiveRoute() is { } route)
+{
+    <svg class="refuge-town-route-debug" viewBox="0 0 1672 941"
+         preserveAspectRatio="none" aria-hidden="true"
+         data-town-route="true" data-town-route-citizen="@route.CitizenId">
+        <polyline class="refuge-town-route-line" points="@RoutePoints(route)" />
+        <circle class="refuge-town-route-start" cx="@route.Feet.X" cy="@route.Feet.Y" r="8" />
+        <circle class="refuge-town-route-end" cx="@route.Waypoints[^1].X"
+                cy="@route.Waypoints[^1].Y" r="7" />
+    </svg>
+}
+
 @code {
     [Parameter, EditorRequired] public TownCrowd Crowd { get; set; } = null!;
     [Parameter] public bool ShowGeometry { get; set; }
+    [Parameter] public bool ShowRoutes { get; set; }
     [Parameter] public bool ShowMetrics { get; set; }
     [Parameter] public EventCallback GeometryChanged { get; set; }
 
@@ -129,6 +142,10 @@
         try { await performanceMonitor!.InvokeVoidAsync("update", data); }
         catch (JSException) { /* The optional debug overlay must not stop citizens. */ }
     }
+
+    private static string RoutePoints(TownRoutePreview route) =>
+        string.Join(" ", new[] { route.Feet }.Concat(route.Waypoints)
+            .Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
 
     private static string CitizenState(TownCitizen citizen) =>
         citizen.IsWorking ? "working" : citizen.IsWalking ? "walking" : "idling";
