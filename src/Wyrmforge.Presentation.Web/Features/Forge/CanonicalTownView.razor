@@ -34,7 +34,7 @@
 
         @if (crowd is not null)
         {
-            <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry" />
+            <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry" GeometryChanged="OnGeometryChanged" />
         }
 
         @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
@@ -108,6 +108,8 @@
             Logger.LogWarning(exception, "Refuge navigation unavailable. Leave the painted town intact without pedestrians.");
         }
     }
+
+    private void OnGeometryChanged() => StateHasChanged();
 
     private static string GeometryPoints(IReadOnlyList<TownPoint> points) =>
         string.Join(" ", points.Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
