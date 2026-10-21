@@ -185,7 +185,7 @@ test('winding physical C# trail keeps intermittent seeded hoof and wagon traces'
 test('worn flagstone paving winds the full Wet Forest world without creating walls', () => {
     const old = { ...recipe, site: 'abandoned-camp', siteX: .68, siteY: .47 };
     const marks = createWetForestOldPaving(old, 1441, size.width, size.height);
-    assert.ok(marks.length > 2500 && marks.length < 10000, 'Full route should have faceted, irregular stones');
+    assert.ok(marks.length > 550 && marks.length < 2200, 'Full route should use restrained detail');
     assert.deepEqual(marks, createWetForestOldPaving(old, 1441, size.width, size.height));
     assert.notDeepEqual(marks, createWetForestOldPaving(old, 1442, size.width, size.height));
     const quarters = new Set(marks.map(m => Math.min(3, Math.floor(m.y / (size.height / 4)))));
@@ -198,27 +198,28 @@ test('worn flagstone paving winds the full Wet Forest world without creating wal
             m.y + m.height <= size.height && m.width <= 20 && m.height <= 8 &&
             m.alpha <= 1 && m.alpha > 0;
     }), 'Relief stones are bounded and follow the real C# winding road, not a fake transverse barrier');
-    assert.ok(marks.some(m => m.kind === 'stone-face' && m.color === '#65665b'));
+    assert.ok(marks.some(m => m.kind === 'stone-face' && m.color === '#5c6054'));
     // The original world, collision, loot and route recipe do not change with visual paving.
     assert.deepEqual(old, { ...recipe, site: 'abandoned-camp', siteX: .68, siteY: .47 });
     assert.deepEqual(createWetForestOldPaving(null, 1441, size.width, size.height), []);
     assert.deepEqual(createWetForestOldPaving(old, 1441, 0, size.height), []);
 });
 
-test('Gothic cobbles have coherent pixel-height relief without creating any raised hitboxes', () => {
+test('Wet Forest cobbles have subtle occasional relief instead of bold outlines', () => {
     const marks = createWetForestOldPaving(recipe, 1441, size.width, size.height);
-    const types = new Set(marks.map(m => m.kind));
-    for (const kind of ['stone-shadow', 'stone-joint', 'stone-face',
-        'stone-highlight', 'stone-bevel', 'stone-chip', 'stone-crack', 'stone-moss'])
-        assert.ok(types.has(kind), 'Missing weathered stone layer: ' + kind);
-    const shadows = marks.filter(m => m.kind === 'stone-shadow');
     const faces = marks.filter(m => m.kind === 'stone-face');
+    const shadows = marks.filter(m => m.kind === 'stone-shadow');
     const highlights = marks.filter(m => m.kind === 'stone-highlight');
-    assert.ok(shadows.length > 250, 'Every stone needs local contact depth');
-    assert.equal(faces.length, shadows.length * 2, 'Each stone has two chipped face planes');
-    assert.equal(highlights.length, shadows.length, 'Consistent top-left light per cobble');
-    assert.ok(shadows.every(s => faces.some(f =>
-        f.x === s.x && f.y === s.y - 2)), 'Depth must sit exactly under each stone');
+    const bevels = marks.filter(m => m.kind === 'stone-bevel');
+    assert.ok(faces.length > 250, 'The winding road remains visible');
+    assert.ok(shadows.length > 0 && shadows.length < faces.length * .45,
+        'Less than half the stones get a faint contact shadow');
+    assert.ok(highlights.length > 0 && highlights.length < faces.length * .35,
+        'Only occasional stones get a soft highlight');
+    assert.ok(bevels.length > 0 && bevels.length < faces.length * .3,
+        'No full beveled outline around every stone');
+    assert.ok(shadows.every(m => m.alpha <= .25));
+    assert.ok(highlights.every(m => m.alpha <= .3));
     assert.ok(marks.every(m => m.width <= 20 && m.height <= 8 &&
         m.x >= 0 && m.y >= 0 && m.x + m.width <= size.width &&
         m.y + m.height <= size.height), 'Relief is a bounded floor-only texture');
