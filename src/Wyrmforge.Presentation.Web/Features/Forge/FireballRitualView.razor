@@ -106,6 +106,18 @@
         {
             var slot = selectedSlot.Value;
             <h3>Slot @(slot + 1) <small>Select a mutator</small></h3>
+            @if (Core.Slots[slot] is null && !HasAvailableMutation)
+            {
+                <div class="fireball-empty-guide" role="status">
+                    <strong>No mutators ready for this socket</strong>
+                    <p>@(CinderNeedleUncrafted
+                        ? "Hunt Ashfang for rare Essences, or craft Cinder Needle from ordinary monster and scenery drops."
+                        : "Your learned mutations are already in use. Find another in an Ashfang Hunt or free an occupied socket.")</p>
+                    <button type="button" @onclick="RevealAcquisitionSource">
+                        @(CinderNeedleUncrafted ? "View Cinder Needle recipe" : "View Ashfang drop source")
+                    </button>
+                </div>
+            }
             <div class="fireball-mutator-list" aria-label="Researched Fireball mutations">
                 @foreach (var mutation in FireballCoreCatalog.Mutations)
                 {
@@ -130,8 +142,15 @@
                         @if (mutation is { Playable: true, ResearchSample: { } sample })
                         {
                             var essence = DragonEssenceCatalog.Get(sample);
-                            <details class="fireball-source-details">
-                                <summary>Find: @essence.Source · @essence.Name</summary>
+                            <details class="fireball-source-details" open="@(revealedSource == mutation.Id)">
+                                @if (mutation.Id == FireballMutationId.MeteorHeart)
+                                {
+                                    <summary @ref="meteorSourceSummary">Find: @essence.Source · @essence.Name</summary>
+                                }
+                                else
+                                {
+                                    <summary>Find: @essence.Source · @essence.Name</summary>
+                                }
                                 <div class="fireball-source-description">
                                     <p>Secure @essence.Name from an @essence.Source Hunt to unlock this mutator permanently.</p>
                                     <p>No crafting required. Secured in vault: @Vault.Count(sample). @(learned ? "Already unlocked." : "Not yet unlocked.")</p>
@@ -140,8 +159,8 @@
                         }
                         else if (mutation.Id == FireballMutationId.CinderNeedle)
                         {
-                            <details class="fireball-source-details fireball-common-source">
-                                <summary>Craft: common Hunt materials</summary>
+                            <details class="fireball-source-details fireball-common-source" open="@(revealedSource == FireballMutationId.CinderNeedle)">
+                                <summary @ref="cinderSourceSummary">Craft: common Hunt materials</summary>
                                 <div class="fireball-source-description">
                                     <p>Find Ember Residue on Ashlings or Ash Slingers. Break barrels and crates for Charred Scrap.</p>
                                     <div class="fireball-common-recipe" aria-label="Cinder Needle crafting ingredients">
@@ -197,9 +216,16 @@
     private int? inspectedLockedSlot;
     private string? notice;
     private ElementReference contextElement;
+    private ElementReference cinderSourceSummary;
+    private ElementReference meteorSourceSummary;
     private bool focusContext;
+    private bool focusAcquisitionSource;
+    private FireballMutationId? revealedSource;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
+    private bool CinderNeedleUncrafted => !Core.Discovered.Contains(FireballMutationId.CinderNeedle);
+    private bool HasAvailableMutation => FireballCoreCatalog.Mutations.Any(mutation =>
+        mutation.Playable && Core.Discovered.Contains(mutation.Id) && !Core.Equipped.Contains(mutation.Id));
 
     private static string MaterialIcon(DragonEssenceId material) => material switch
     {
@@ -238,19 +264,39 @@
         : Core.Slots[slot] is { } mutation ? $"Slot {slot + 1}: {FireballCoreCatalog.Get(mutation).Name}"
         : $"Slot {slot + 1}: empty, choose mutator";
 
-    private void SelectCore() { selectedSlot = null; inspectedLockedSlot = null; notice = null; focusContext = true; }
+    private void SelectCore()
+    {
+        selectedSlot = null;
+        inspectedLockedSlot = null;
+        revealedSource = null;
+        notice = null;
+        focusContext = true;
+    }
     private void SelectSlot(int slot)
     {
         notice = null;
+        revealedSource = null;
         focusContext = true;
         if (slot < Core.Level) { selectedSlot = slot; inspectedLockedSlot = null; }
         else { selectedSlot = null; inspectedLockedSlot = slot; }
     }
+    private void RevealAcquisitionSource()
+    {
+        revealedSource = CinderNeedleUncrafted ? FireballMutationId.CinderNeedle : FireballMutationId.MeteorHeart;
+        focusAcquisitionSource = true;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!focusContext) return;
-        focusContext = false;
-        await contextElement.FocusAsync();
+        if (focusContext)
+        {
+            focusContext = false;
+            await contextElement.FocusAsync();
+        }
+        if (!focusAcquisitionSource) return;
+        focusAcquisitionSource = false;
+        if (revealedSource == FireballMutationId.CinderNeedle) await cinderSourceSummary.FocusAsync();
+        else if (revealedSource == FireballMutationId.MeteorHeart) await meteorSourceSummary.FocusAsync();
     }
 
     private async Task UpgradeAsync()
