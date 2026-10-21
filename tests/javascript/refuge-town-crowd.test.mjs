@@ -285,6 +285,16 @@ test('NPC routing avoids expensive polygon resampling on every animation tick', 
     assert.match(navigation, /if \(_cachedRevision == Revision\) return/);
 });
 
+test('crowded pedestrians can sidestep without a new A* route', () => {
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    assert.match(simulation, /TrySidestep\(citizen, dx, dy, distance, step\)/);
+    assert.match(simulation, /_navigation\.IsSegmentWalkable\(citizen\.Position, candidate\)/);
+    assert.match(simulation, /HasNeighbourAt\(citizen, candidate\)/);
+    const passing = simulation.split('private bool TrySidestep(')[1].split('private void ChooseNextStop(')[0];
+    assert.doesNotMatch(passing, /TryPath\(|TryFindPath\(/,
+        'Steering around a citizen must not trigger A* or invalidate the cached destination');
+});
+
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {
     const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
     const nav = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
