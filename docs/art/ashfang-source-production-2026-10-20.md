@@ -562,3 +562,6 @@ V36 nine source actions built with compact back-fold wing carriage. Correction: 
 
 
 V37 lifts the closed forearm direction during rearing only, retaining the compact grounded and airborne poses. Source validation pending. V36 arena preview can still inspect its separate floor-safe attack, but no overall V36 acceptance is claimed.
+
+V37 all nine actions pass finite/floor gates, including repaired rear-breath minimum -0.195513. Arena positions/faces/UV/mouth/signals/root motion and texture pixels are exactly equal to rendered V36, so the existing local arena render is reused with an explicit cache-provenance receipt. Grounded silhouette is100.627px (~22.87% of440px viewport), versus64.712px (~14.71%) in rejected V34. The player stays at native size, and overhead pass body visibility stays zero. Local comparison shows compact back-fold wings and a clearer larger body/head. V36 remains a failed overall intermediate because of its separate rear-breath contact fault; V37 is current. Owner review pending, no runtime replacement. Screenshot-derived comparison/full animation remain private and ignored.
+
