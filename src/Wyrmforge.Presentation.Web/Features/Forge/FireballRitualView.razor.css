@@ -170,3 +170,10 @@
 .fireball-craft-action{min-height:44px;width:100%;padding:9px;border:2px solid #bb8851;background:#59301e;color:#f4d4ad;font:600 .9rem Georgia,serif;cursor:pointer}
 .fireball-craft-action:disabled{border-color:#60545a;background:#302831;color:#a79ba0;cursor:not-allowed}
 .fireball-crafted{color:#aed394;font:.77rem system-ui,sans-serif}
+
+/* A single actionable hint only when an empty socket has nothing available to equip. */
+.fireball-empty-guide{display:grid;gap:7px;padding:10px 11px;border:1px solid #866043;background:#291c1b;color:#e7d4c0}
+.fireball-empty-guide strong{font:600 .95rem/1.2 Georgia,serif;color:#f2cca1}
+.fireball-context .fireball-empty-guide p{font:.75rem/1.4 system-ui,sans-serif;color:#d2c0b6}
+.fireball-empty-guide button{min-height:44px;padding:8px 12px;border:1px solid #be8b58;background:#42281f;color:#f6d4ad;font:600 .86rem Georgia,serif;cursor:pointer}
+.fireball-empty-guide button:focus-visible{outline:2px solid #ffe0a1;outline-offset:2px}
