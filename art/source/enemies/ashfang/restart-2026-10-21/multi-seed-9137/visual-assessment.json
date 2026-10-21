@@ -1,0 +1,7 @@
+{
+  "accepted": false,
+  "riggingApproved": false,
+  "volumeImproved": true,
+  "reason": "Real volume, but looped/fused claws, wing-root artefacts and subdued brown appearance remain below exact card target. Coarse input masks clip wing membrane and include background.",
+  "next": "Restore original wing RGB under refined masks, exclude floor and resample."
+}

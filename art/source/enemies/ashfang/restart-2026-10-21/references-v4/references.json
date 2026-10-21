@@ -1,0 +1,26 @@
+{
+  "method": "Local GrabCut inside authored silhouette; no downloads, no new RGB pixels",
+  "images": [
+    {
+      "name": "pixel-idle-reference.png",
+      "originalRgbSha256": "5c846bb87381ce8d56562ecddce13f9b41e9d4c6de930e9d076920ee22872eaa",
+      "coarsePixels": 12331,
+      "selectedPixels": 12878,
+      "rgbUnchanged": true
+    },
+    {
+      "name": "ashfang-front-reference.png",
+      "originalRgbSha256": "803affd12dc0a709ecfe3d03b410f77d8d0895479a47a9dc63f4f21014db0d2b",
+      "coarsePixels": 25121,
+      "selectedPixels": 27544,
+      "rgbUnchanged": true
+    },
+    {
+      "name": "ashfang-side-reference.png",
+      "originalRgbSha256": "222eedfb8dd6832d932c229e330ef7384890124579425aac81835e925f08199c",
+      "coarsePixels": 31872,
+      "selectedPixels": 29976,
+      "rgbUnchanged": true
+    }
+  ]
+}

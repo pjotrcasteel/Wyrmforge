@@ -3,7 +3,7 @@ import os
 os.environ.update(HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',ATTN_BACKEND='xformers',SPCONV_ALGO='native')
 from pathlib import Path
 import sys,json,hashlib,traceback,argparse
-parser=argparse.ArgumentParser();parser.add_argument('--seed',type=int,required=True);parser.add_argument('--mode',choices=['idle','multi'],required=True);args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--seed',type=int,required=True);parser.add_argument('--mode',choices=['idle','multi'],required=True);parser.add_argument('--references',default='references');args=parser.parse_args()
 root=Path(__file__).resolve().parents[2];base=root/'art/source/enemies/ashfang/restart-2026-10-21';out=base/f'{args.mode}-seed-{args.seed}';out.mkdir(exist_ok=False)
 record=dict(status='starting',method='Existing offline TRELLIS 1 / DINOv2; card-pixel conditioning; no procedural anatomy replacement',seed=args.seed,mode=args.mode,ownerAccepted=False,rigged=False,runtimeIntegrated=False)
 def save(status,**fields):
@@ -22,7 +22,7 @@ try:
  names=['pixel-idle-reference.png'] if args.mode=='idle' else ['pixel-idle-reference.png','pixel-idle-reference.png','ashfang-front-reference.png','ashfang-side-reference.png']
  images=[];hashes=[]
  for i,name in enumerate(names):
-  path=base/'references'/name;image=Image.open(path);assert image.mode=='RGBA' and image.getchannel('A').getextrema()[0]<255,'No online background-removal fallback permitted'
+  path=base/args.references/name;image=Image.open(path);assert image.mode=='RGBA' and image.getchannel('A').getextrema()[0]<255,'No online background-removal fallback permitted'
   prepared=pipeline.preprocess_image(image);prepared.save(out/f'conditioning-{i}.png');images.append(prepared);hashes.append(hashlib.sha256(path.read_bytes()).hexdigest())
  cond=pipeline.get_cond(images);cond['neg_cond']=cond['neg_cond'][:1];torch.manual_seed(args.seed);params=dict(steps=40)
  save('sampling-card-conditioned-shape',references=names,referenceHashes=hashes,samplingSteps=40)

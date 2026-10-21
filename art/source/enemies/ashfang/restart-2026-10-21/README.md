@@ -30,3 +30,14 @@ work. Main 1c3101c8 and open PRs checked. PR #186 stays draft; no runtime change
 Remaining: sample local candidates, inspect silhouette and coloured source from
 real cameras against the card at large/native scale, reject weak sources before
 rigging or effects, and record results honestly. No finished restart art yet.
+
+
+## Input/source review so far
+
+Idle-only seed 6283 is rejected: thin relief, fused feet/tail. Multi seed 9137
+has real volume but looped claws and fused wing regions; not rig-approved or
+style-approved. Actual 1024px clay/appearance and 96px views are preserved.
+Reference v2 exposed clipping from inherited coarse masks. V3 restores the
+original wing pixels; v4 additionally excludes warm floor regions below paws.
+All RGB is original card data. Mask boards are input evidence, never new art.
+Next: sample against references-v4 and inspect before rigging or effects.
