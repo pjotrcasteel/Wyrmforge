@@ -288,14 +288,20 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_WellForegroundExtendsAboveTheRoofAndSign()
+    public void Navigation_WellAndNoticeboardUseIndependentPhysicalDepth()
     {
         var map = Scene();
-        var foreground = map.Occluders.Single(part => part.Id == "well-foreground");
-        Assert.IsTrue(foreground.Clip.Min(point => point.Y) < 365);
-        Assert.AreEqual(572f, foreground.DepthY, "People behind the well are sorted using their feet, not sprite tops.");
-        Assert.IsTrue(foreground.Clip.Any(point => point.X < 670),
-            "Sign and well sides need an occlusion silhouette, not only a roof rectangle.");
+        var well = map.Occluders.Single(part => part.Id == "well-foreground");
+        var board = map.Occluders.Single(part => part.Id == "noticeboard-foreground");
+        Assert.AreEqual(572f, well.DepthY);
+        Assert.AreEqual(522f, board.DepthY);
+        Assert.AreEqual(well.Artwork, board.Artwork);
+        Assert.IsTrue(board.Clip.All(point => point.X < 815), "The board must not cover the well's open bays.");
+        Assert.IsTrue(well.Clip.Any(point => point.X > 920), "The canopy silhouette remains physically bounded.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 478)),
+            "Rear paving behind the actual structure must remain traversable.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(825, 584)),
+            "Front paving must not become a fake collider for visual depth.");
     }
 
     [TestMethod]
@@ -327,13 +333,13 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
-    public void Navigation_CitizenOcclusion_HidesWholeBodiesInsteadOfCuttingThemWithForegroundArt()
+    public void Navigation_CitizenOcclusion_OnlyAppliesToPaintedStructures()
     {
         var map = Scene();
 
         Assert.IsTrue(map.IsBodyOccluded(new TownPoint(825, 500)), "The well must conceal a citizen behind it.");
-        Assert.IsTrue(map.IsBodyOccluded(new TownPoint(665, 535)),
-            "The left boundary of the painted well must not slice a visible rectangle.");
+        Assert.IsFalse(map.IsBodyOccluded(new TownPoint(665, 535)),
+            "NPCs on the exposed paved ring must never disappear under a broad well polygon.");
         Assert.IsFalse(map.IsBodyOccluded(new TownPoint(825, 660)),
             "Citizens in the open plaza in front of the well remain visible.");
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>

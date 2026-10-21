@@ -15,9 +15,10 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
     assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--behind"/);
+    assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--between"/);
     assert.match(actorMarkup, /class="refuge-town-crowd refuge-town-crowd--front"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /@if \(person\.IsPresent && IsBehindWell\(person\)\)/);
+    assert.match(actorMarkup, /@if \(person\.IsPresent && IsBehindNoticeboard\(person\)\)/);
     assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
@@ -32,7 +33,7 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-geometry-feet-layer\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /width:0\.957%;height:3\.188%/);
-    assert.match(css, /\.refuge-town-spot \{z-index:7\}/);
+    assert.match(css, /\.refuge-town-spot \{z-index:9\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
     assert.match(markup, /loadingStop\.Cancel\(\)/);
     assert.ok(markup.includes('art/town/night-active.webp?v=140'));
@@ -47,13 +48,19 @@ test('well foreground respects feet depth, and building activity reuses seven ac
     const well = map.occluders.find(layer => layer.id === 'well-foreground');
 
     assert.equal(well.depthY, 572);
+    assert.equal(map.occluders.find(layer => layer.id === 'noticeboard-foreground').depthY, 522);
     assert.match(markup, /viewBox="695 382 256 189"/);
     assert.match(markup, /id="refuge-well-silhouette"/);
+    assert.match(markup, /id="refuge-noticeboard-silhouette"/);
+    assert.match(markup, /refuge-town-noticeboard-foreground/);
     assert.match(markup, /clip-path="url\(#refuge-well-silhouette\)"/);
     assert.match(markup, /href="art\/town\/night-active\.webp\?v=140"/);
+    assert.match(css, /refuge-town-noticeboard-foreground/);
     assert.match(css, /refuge-town-well-foreground\s*\{[^}]*pointer-events:none/s);
     assert.match(actor, /person\.Position\.Y < well\.DepthY/);
-    assert.match(actor, /data-town-depth="behind-well"/);
+    assert.match(actor, /person\.Position\.Y < board\.DepthY/);
+    assert.match(actor, /data-town-depth="behind-noticeboard"/);
+    assert.match(actor, /data-town-depth="between-noticeboard-and-well"/);
     assert.match(actor, /data-town-depth="in-front"/);
     assert.match(actor, /citizen\.IsWorking \? "working"/);
     assert.equal((actor.match(/new PeriodicTimer/g) ?? []).length, 1,
@@ -181,8 +188,14 @@ test('painted well, pillars and garden walls have independent collider ids', () 
         assert.equal(foreground.artwork, 'art/town/night-active.webp?v=140');
     }
 
-    assert.ok(map.occluders.find(part => part.id === 'well-foreground').clip.some(point => point.y < 365),
-        'The well occluder must cover the roof above the earlier visible floating rectangles');
+    const canopy = map.occluders.find(part => part.id === 'well-foreground');
+    const noticeboard = map.occluders.find(part => part.id === 'noticeboard-foreground');
+    assert.ok(canopy.clip.some(point => point.y <= 389 && point.x > 810),
+        'The well canopy must be masked at the actual painted roof, not over the paving');
+    assert.ok(noticeboard.clip.some(point => point.y <= 414 && point.x < 800),
+        'The noticeboard must have a separate compact silhouette');
+    assert.ok(noticeboard.clip.every(point => point.x >= 700 && point.x < 815),
+        'The noticeboard foreground cannot hide actors on the exposed paved ring');
 
     const markup = source(scene);
     assert.match(markup, /night-navigation\.json\?v=\{AppBuildInfo\.Version\}/,
@@ -239,6 +252,7 @@ test('debug geometry stays label-free and residents have authored four connected
     assert.ok(exits.find(exit => exit.id === 'world-gate-exit').y < 300,
         'Gate exit must be inside the arch, not beside the stairs');
     assert.match(source(actors), /@if \(person\.IsPresent && !IsBehindWell\(person\)\)/);
+    assert.match(source(actors), /person\.IsPresent && !IsBehindNoticeboard\(person\) && IsBehindWell\(person\)/);
     assert.doesNotMatch(markup, /refuge-town-geometry-legend|refuge-town-geometry-label/,
         'No explanatory overlay should block the town scenery');
     assert.match(simulation, /citizen\.AwaySeconds/);
