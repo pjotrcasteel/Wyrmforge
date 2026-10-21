@@ -265,6 +265,15 @@ public sealed class TownCrowd
                     }
                     else
                     {
+                        // The gateway itself is a real doorway. A returner becomes
+                        // visible there, never 52 pixels out on the open stairs.
+                        // Wait inside if the door is currently occupied.
+                        if (HasNeighbourAt(citizen, citizen.Position))
+                        {
+                            citizen.AwaySeconds = .5f;
+                            continue;
+                        }
+                        citizen.IsPresent = true;
                         citizen.IsReturning = true;
                         citizen.EntryOrigin = citizen.Position;
                         ChooseNextStop(citizen);
