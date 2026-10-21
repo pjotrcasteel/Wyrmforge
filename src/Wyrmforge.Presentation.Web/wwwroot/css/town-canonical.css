@@ -82,6 +82,12 @@
 .game-shell.refuge-home .refuge-town-crowd {
     position:absolute;inset:0;z-index:2;pointer-events:none;user-select:none;
 }
+.game-shell.refuge-home .refuge-town-crowd--behind {z-index:2}
+.game-shell.refuge-home .refuge-town-well-foreground {
+    position:absolute;inset:0;z-index:3;display:block;width:100%;height:100%;
+    pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-town-crowd--front {z-index:4}
 .game-shell.refuge-home .refuge-town-citizen {
     position:absolute;display:block;box-sizing:border-box;
     width:0.957%;height:3.188%;
@@ -91,7 +97,7 @@
 }
 .game-shell.refuge-home .refuge-town-citizen:nth-child(3n+2) {background:#8d9eaa}
 .game-shell.refuge-home .refuge-town-citizen:nth-child(3n) {background:#c1b28e}
-.game-shell.refuge-home .refuge-town-spot {z-index:3}
+.game-shell.refuge-home .refuge-town-spot {z-index:7}
 @media (prefers-reduced-motion:reduce) {
     .game-shell.refuge-home .refuge-town-crowd {display:none}
 }
@@ -99,13 +105,13 @@
 /* Developer-only overlay (?townGeometry=1). These are real nav colliders,
    not a CSS filter over the game artwork or a new building-unlock preview. */
 .game-shell.refuge-home .refuge-town-geometry-debug {
-    position:absolute;inset:0;z-index:4;pointer-events:none;user-select:none;
+    position:absolute;inset:0;z-index:5;pointer-events:none;user-select:none;
 }
 .game-shell.refuge-home .refuge-town-geometry-map {
     display:block;width:100%;height:100%;pointer-events:none;
 }
 .game-shell.refuge-home .refuge-town-geometry-feet-layer {
-    position:absolute;inset:0;z-index:5;display:block;width:100%;height:100%;
+    position:absolute;inset:0;z-index:6;display:block;width:100%;height:100%;
     pointer-events:none;user-select:none;
 }
 .game-shell.refuge-home .refuge-town-geometry-solid {
