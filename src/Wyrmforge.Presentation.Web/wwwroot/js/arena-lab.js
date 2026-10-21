@@ -20,11 +20,29 @@ export function arenaLabInput(x, y) {
     return magnitude > 1 ? { x: x / magnitude, y: y / magnitude } : { x, y };
 }
 
+// Dragging the world in Inspect/Pan mode never changes the C# player position.
+export function panArenaLabCamera(camera, deltaX, deltaY, viewWidth, viewHeight) {
+    return {
+        x: limit(camera.x - deltaX, 0, Math.max(0, camera.width - viewWidth)),
+        y: limit(camera.y - deltaY, 0, Math.max(0, camera.height - viewHeight)),
+        width: camera.width, height: camera.height,
+    };
+}
+
+function cameraForState(state, width, height) {
+    const frame = state.frame;
+    const follow = resolveArenaCamera({ width: frame.worldWidth, height: frame.worldHeight },
+        { x: frame.x, y: frame.y }, width, height);
+    if (!state.freeCamera) return follow;
+    return { ...follow, x: limit(state.freeCamera.x, 0, Math.max(0, frame.worldWidth - width)),
+        y: limit(state.freeCamera.y, 0, Math.max(0, frame.worldHeight - height)) };
+}
+
 export async function initializeArenaLab(canvas, dotnet) {
     if (labs.has(canvas)) return;
     const state = {
         canvas, dotnet, active: true, options: { tool: 'walk', collision: false, mobs: true },
-        frame: null, keys: new Set(), pointer: null, keyboard: { x: 0, y: 0 }, clock: 0,
+        frame: null, keys: new Set(), pointer: null, freeCamera: null, keyboard: { x: 0, y: 0 }, clock: 0,
         busy: false, last: performance.now(), walk: { facing: 'S' }, enemyMotion: createEnemyMotionState(),
         hollow: createHollowState(), ashling: ashlingSprites.createState(),
         lastPlayer: null, tracks: [], previousActors: new Map(), previousSeed: null, raf: 0,
@@ -57,8 +75,10 @@ function bind(target, name, listener) {
 export function configureArenaLab(canvas, tool, collision, mobs) {
     const state = labs.get(canvas);
     if (!state) return;
+    const oldTool = state.options.tool;
     state.options = { tool, collision: Boolean(collision), mobs: Boolean(mobs) };
     state.pointer = null;
+    if (tool === 'walk' && oldTool !== 'walk') state.freeCamera = null;
 }
 export function readArenaLabDiagnostics(canvas) {
     const state = labs.get(canvas);
@@ -100,16 +120,31 @@ function handlePointerDown(state, event) {
     if (!state.frame) return;
     event.preventDefault();
     state.canvas.focus();
-    if (state.options.tool !== 'walk') {
+    if (state.options.tool === 'hit' || state.options.tool === 'blast') {
         strike(state, event.clientX, event.clientY, state.options.tool === 'blast');
         return;
     }
-    state.pointer = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: 0, y: 0 };
+    if (state.pointer) return;
+    const pointer = { id: event.pointerId, startX: event.clientX, startY: event.clientY,
+        mode: state.options.tool, x: 0, y: 0 };
+    if (state.options.tool === 'pan') {
+        const rect = state.canvas.getBoundingClientRect();
+        const camera = cameraForState(state, rect.width, rect.height);
+        pointer.cameraStart = camera;
+        state.freeCamera = { x: camera.x, y: camera.y };
+    }
+    state.pointer = pointer;
     state.canvas.setPointerCapture?.(event.pointerId);
 }
 function handlePointerMove(state, event) {
     if (!state.pointer || event.pointerId !== state.pointer.id) return;
     const pointer = state.pointer;
+    if (pointer.mode === 'pan') {
+        const rect = state.canvas.getBoundingClientRect();
+        state.freeCamera = panArenaLabCamera(pointer.cameraStart,
+            event.clientX - pointer.startX, event.clientY - pointer.startY, rect.width, rect.height);
+        return;
+    }
     const result = arenaLabInput((event.clientX - pointer.startX) / 55, (event.clientY - pointer.startY) / 55);
     pointer.x = result.x; pointer.y = result.y;
 }
@@ -120,8 +155,7 @@ async function strike(state, clientX, clientY, blast) {
     if (state.busy || !state.frame || !state.active) return;
     const rect = state.canvas.getBoundingClientRect();
     const frame = state.frame;
-    const camera = resolveArenaCamera({ width: frame.worldWidth, height: frame.worldHeight },
-        { x: frame.x, y: frame.y }, rect.width, rect.height);
+    const camera = cameraForState(state, rect.width, rect.height);
     const hit = worldClickPoint(clientX - rect.left, clientY - rect.top, camera);
     state.busy = true;
     try { state.frame = await state.dotnet.invokeMethodAsync('Strike', hit.x, hit.y, blast); }
@@ -134,7 +168,8 @@ async function tick(state, now) {
     state.clock += delta;
     if (!state.busy) {
         state.busy = true;
-        const movement = state.pointer ? arenaLabInput(state.pointer.x, state.pointer.y) : keyboardMotion(state);
+        const movement = state.options.tool !== 'walk' ? { x: 0, y: 0 } :
+            state.pointer?.mode === 'walk' ? arenaLabInput(state.pointer.x, state.pointer.y) : keyboardMotion(state);
         try { state.frame = await state.dotnet.invokeMethodAsync('Frame', delta, movement.x, movement.y); }
         catch (error) { console.error('Arena Lab simulation failed', error); state.active = false; }
         finally { state.busy = false; }
@@ -159,7 +194,9 @@ function draw(state) {
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, width, height);
     const ww = frame.worldWidth, wh = frame.worldHeight;
-    const camera = resolveArenaCamera({ width: ww, height: wh }, { x: frame.x, y: frame.y }, width, height);
+    const sceneKey = [frame.seed, frame.stage, frame.environment?.habitat].join(':');
+    if (state.previousSeed !== sceneKey) state.freeCamera = null;
+    const camera = cameraForState(state, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
     drawArenaEnvironment(ctx, frame.environment, ww, wh, state.clock);
@@ -167,7 +204,6 @@ function draw(state) {
         drawWetForestFootprints(ctx, state.tracks, state.clock);
     // The same atlas and distance-driven gait as live Hunts: actors no longer walk on a timer.
     const forest = frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest';
-    const sceneKey = [frame.seed, frame.stage, frame.environment?.habitat].join(':');
     if (state.previousSeed !== sceneKey) {
         state.tracks.length = 0;
         state.previousActors.clear();

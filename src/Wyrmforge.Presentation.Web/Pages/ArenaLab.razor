@@ -53,7 +53,8 @@
 
     <section class="arena-tools" aria-label="Arena testing actions">
         <span>TEST</span>
-        <button class="@(tool == "walk" ? "selected" : "")" aria-pressed="@(tool == "walk" ? "true" : "false")" @onclick='() => ChangeTool("walk")'>Walk / pan</button>
+        <button class="@(tool == "walk" ? "selected" : "")" aria-pressed="@(tool == "walk" ? "true" : "false")" @onclick='() => ChangeTool("walk")'>Walk</button>
+        <button class="@(tool == "pan" ? "selected" : "")" aria-pressed="@(tool == "pan" ? "true" : "false")" @onclick='() => ChangeTool("pan")'>Pan</button>
         <button class="@(tool == "hit" ? "selected" : "")" aria-pressed="@(tool == "hit" ? "true" : "false")" @onclick='() => ChangeTool("hit")'>Hit prop</button>
         <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast" ? "true" : "false")" @onclick='() => ChangeTool("blast")'>Blast area</button>
         <label class="toggle"><input type="checkbox" @bind="showCollision" @bind:after="SyncOptions" /> Collision outlines</label>
@@ -64,7 +65,7 @@
     <div class="arena-layout">
         <section class="arena-stage">
             <canvas @ref="canvas" aria-label="Playable generated arena map" tabindex="0"></canvas>
-            <div class="arena-tip">@(tool == "walk" ? "Move: WASD / arrows / drag left side" : tool == "hit" ? "Tap a prop to strike it" : "Tap to send an area attack")</div>
+            <div class="arena-tip">@(tool == "walk" ? "Move: WASD / arrows / drag to steer" : tool == "pan" ? "Drag to inspect · Walk recenters" : tool == "hit" ? "Tap a prop to strike it" : "Tap to send an area attack")</div>
             <div class="arena-readout" aria-live="polite">@status</div>
             <div class="arena-badge">REAL C# COLLISION · TEST ONLY</div>
         </section>
