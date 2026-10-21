@@ -20,13 +20,17 @@ def flight_state(phase):
         cruise = .65*math.cos((phase-.29)*math.pi*2/.18)
         flare = smooth((phase-.64)/.12)
         flap = (cruise*(1-flare)-.80*flare)*(1-smooth((phase-.85)/.13))
+    # Near-ground downstrokes must not drive the extended membrane through
+    # the floor. Leg drive supplies the initial clearance before full amplitude.
+    altitude = .34*rise*(1-descent)
+    flap = min(flap, .12+1.5*altitude)
     names = [(0, 'settle'), (.03, 'open / crouch'), (.12, 'leg drive'),
              (.16, 'first power stroke'), (.22, 'departure'), (.40, 'flight'),
              (.64, 'approach / extend paws'), (.76, 'flare'),
              (.81, 'forepaw catch'), (.845, 'hindpaw catch'), (.88, 'recover')]
     label = next(name for start, name in reversed(names) if phase >= start)
     return dict(
-        altitude=.34*rise*(1-descent),
+        altitude=altitude,
         bob=-.020*crouch-.018*impact,
         pitch=-.12*rise*(1-descent)-.06*impact,
         spread=.08+.92*smooth((phase-.03)/.13)*(1-smooth((phase-.88)/.12)),

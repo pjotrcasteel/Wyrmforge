@@ -106,22 +106,27 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         for side,sign in [('L',1),('R',-1)]:
             for limb,shift in [('fore',0 if side=='L' else .5),('hind',.25 if side=='L' else .75)]:
                 n=f'{limb}.0.{side}';hip=point(bones[n]['head']);ankle=Vector(bones[f'{limb}.2.{side}']['head']);clearance=0
+                if limb=='fore':ankle.y+=.05
+                rest_goal=ankle.copy()
                 if clip=='walk':
                     t=(phase+shift)%1
-                    if t<.72:ankle.y+=.16*(t/.72-.5)
+                    if t<.72:ankle.y+=.11*(t/.72-.5)
                     else:
-                        t=(t-.72)/.28;ankle.y+=.08-.16*t;clearance=.045*math.sin(t*math.pi)
+                        t=(t-.72)/.28;ankle.y+=.055-.11*t;clearance=.045*math.sin(t*math.pi)
                     ankle.z+=clearance
                 else:
-                    airborne=flight[limb+'Tuck'] if flight else smooth(altitude/.08)
-                    ground=ankle.copy()
-                    if flight and limb=='fore':ground.y-=.035*flight['landingReach']
-                    ankle=ground.lerp(point(ankle)+Vector((0,.045,.065)),airborne)
-                    if limb=='fore':ankle=ankle.lerp(point(bones[f'{limb}.2.{side}']['head'])+Vector((0,.055,.065)),rear)
+                    if flight:
+                        tuck=flight[limb+'Tuck']
+                        ankle=point(rest_goal)+Vector((0,.045*tuck,.065*tuck))
+                        if limb=='fore':ankle.y-=.020*flight['landingReach']
+                    else:
+                        if limb=='fore':ankle=ankle.lerp(point(rest_goal)+Vector((0,.055,.065)),rear)
                 fn=f'{limb}.2.{side}';fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
                 sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
                 if clip=='walk':ankle.z=sole_height+clearance
-                elif altitude<.01:ankle.z=max(ankle.z,sole_height)
+                elif altitude<.01:
+                    catch_clearance=.025*(1-smooth((phase-.81)/.035)) if flight and limb=='hind' and phase>.76 and phase<.845 else 0
+                    ankle.z=max(ankle.z,sole_height+catch_clearance)
                 foot_goals[fn]=ankle.copy()
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
             wingroot=point(bones['wing.upper.'+side]['head'])
@@ -170,7 +175,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,tailCorrectionRadians=tail_correction,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else []);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
+    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else [],strideDistanceModelUnits=.11/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip])
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and three anatomy/motion blocking sequences',flush=True)

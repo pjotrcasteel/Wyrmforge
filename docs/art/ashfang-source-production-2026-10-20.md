@@ -119,3 +119,15 @@ are review targets, not claims of measured contact. A per-paw skin/IK audit
 records actual sole height and goal error so floor minima alone cannot hide
 early liftoff or unreachable foot goals. Current main checked at 2740d7f5;
 Refuge PR #202 and other concurrent work remain untouched.
+
+### V11 audit failure / V12 contact-aware targets — in progress
+V11 reveals previously unmeasured foot errors: walk max IK goal error 0.0501,
+rear/breath 0.0159, landing 0.0902 model units. Floor-only checks were insufficient
+to establish planted contact. V12 recenters forepaw goals under the shoulders
+and reduces walk travel from 0.16 to 0.11 units, preserving a 0.72 stance share.
+The resulting in-place clip records a matching 0.15278-unit cycle travel for
+future movement synchronization. Airborne extending paws now travel with the
+body instead of interpolating toward unreachable floor goals while still high.
+Hind catch retains clearance briefly after the forepaw catch. A source shoulder
+stroke limit near ground prevents the new first downstroke penetrating the
+floor (V11 worst -0.26543). V11 is preserved as failed source, not approved art.
