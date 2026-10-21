@@ -364,3 +364,6 @@ Owner rejected V20 rear-foot wedge, short tail, head shape and rigid wing stroke
 
 V21 GPU reviews pass finite/clipping/floor checks for all three studies with exact walk closure. Visual inspection still found an apron around the extended rear shin. V22 constrains that source surface toward the lower-limb axis and adds an editable membrane pressure/recovery shape key, keyed separately per action. This deforms the 3D bays between spars; no image warping. V22 visual review pending.
 
+
+V22 reviews remain finite, unclipped and floor-safe with exact walking closure. The extended foot silhouette still has a low apron, so V23 additionally tapers the actual textured foot surface around the hock-to-toe axis, preserving a wider toe fan. This is a source geometry correction, not a knee-pole or image transform. V23 build completed; render pending. Head refinement remains incomplete.
+

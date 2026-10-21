@@ -63,6 +63,15 @@ for sign in [1,-1]:
     strength=np.clip((-.085-v[:,2])/.025,0,1)*region
     factor=1-strength*np.maximum(0,1-limit/np.maximum(radius,.0001))
     v=axis+radial*factor[:,None]
+# The final apron is below the shin: collapse its transverse excess around
+# the hock-to-toe axis, retaining a wider toe fan at the forward end.
+for sign in [1,-1]:
+    a=np.array((sign*.17,.23,-.16));b=np.array((sign*.17,.075,-.185));d=b-a
+    t=np.clip(((v-a)@d)/(d@d),0,1);axis=a+t[:,None]*d;radial=v-axis
+    radius=np.linalg.norm(radial,axis=1);limit=.020+.014*t**3
+    region=(v[:,1]>.04)&(v[:,1]<.34)&(v[:,0]*sign>.035)&(v[:,2]<-.135)
+    strength=np.clip((-.135-v[:,2])/.012,0,1)*region
+    v=axis+radial*(1-strength*np.maximum(0,1-limit/np.maximum(radius,.0001)))[:,None]
 v,faces,uv,body_count,removed_wing_vertices,wing_camber=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
