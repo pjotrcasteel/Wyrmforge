@@ -141,8 +141,7 @@
 
     private static string GeometryLabelStyle(TownNavigationMap map, TownFootprint obstacle) =>
         FormattableString.Invariant(
-            $"left:{obstacle.Footprint.Average(point => point.X) / map.Width * 100:0.##}%;" +
-            $"top:{obstacle.Footprint.Average(point => point.Y) / map.Height * 100:0.##}%");
+            $"left:{obstacle.Footprint.Average(point => point.X) / map.Width * 100:0.##}%;top:{obstacle.Footprint.Average(point => point.Y) / map.Height * 100:0.##}%");
 
     public void Dispose()
     {
