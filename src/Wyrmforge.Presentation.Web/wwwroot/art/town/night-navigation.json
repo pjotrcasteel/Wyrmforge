@@ -1495,6 +1495,24 @@
       "y": 824,
       "buildingId": "legends",
       "activity": "guard-duty"
+    },
+    {
+      "id": "nexus-west-terrace",
+      "x": 155,
+      "y": 420,
+      "activity": "roaming"
+    },
+    {
+      "id": "nexus-front-terrace",
+      "x": 267,
+      "y": 430,
+      "activity": "roaming"
+    },
+    {
+      "id": "forge-clear-yard",
+      "x": 345,
+      "y": 752,
+      "activity": "roaming"
     }
   ],
   "occluders": [
