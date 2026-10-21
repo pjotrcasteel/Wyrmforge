@@ -1,8 +1,10 @@
 @using Wyrmforge.Application.World
 @using System.Net.Http
 @using System.Text.Json
+@using Microsoft.JSInterop
 @inject NavigationManager Navigation
 @inject ILogger<CanonicalTownView> Logger
+@inject IJSRuntime JS
 @implements IDisposable
 @* Night town vacancy follows actual game progress, not a local preview toggle. *@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
@@ -46,6 +48,9 @@
         {
             @foreach (var foreground in crowd.Navigation.Occluders)
             {
+                // The well and noticeboard are real transparent PNG cutouts, not
+                // one broad SVG polygon that hides a whole pedestrian.
+                if (foreground.Id is "well-foreground" or "noticeboard-foreground") continue;
                 var minX = foreground.Clip.Min(point => point.X) - 1;
                 var minY = foreground.Clip.Min(point => point.Y) - 1;
                 var maxX = foreground.Clip.Max(point => point.X) + 1;
@@ -67,30 +72,26 @@
                      preserveAspectRatio="none" aria-hidden="true">
                     <defs>
                         <clipPath id="@maskId" clipPathUnits="userSpaceOnUse">
-                            @if (foreground.Id == "noticeboard-foreground")
-                            {
-                                <path d="M715 449 L724 439 L738 431 L794 414 L807 418 L810 438
-                                         L795 442 L795 491 L793 536 L785 539 L782 490
-                                         L744 500 L747 544 L732 544 L729 499 L715 503 Z" />
-                            }
-                            else if (foreground.Id == "well-foreground")
-                            {
-                                <path d="M812 432 L826 412 L839 401 L840 389 L851 393 L857 401 L878 402
-                                         L901 413 L919 429 L931 444 L925 467 L904 468 L819 465 Z" />
-                                <path d="M825 458 L837 458 L836 523 L824 523 Z M900 457 L913 459 L914 519 L900 519 Z" />
-                                <path d="M710 512 L740 500 L785 494 L889 495 L926 506 L942 520 L944 541
-                                         L924 555 L889 563 L762 566 L724 559 L704 544 L702 528 Z" />
-                            }
-                            else
-                            {
-                                <polygon points="@GeometryPoints(foreground.Clip)" />
-                            }
+                            <polygon points="@GeometryPoints(foreground.Clip)" />
                         </clipPath>
                     </defs>
                     <image x="0" y="0" width="@crowd.Navigation.Width" height="@crowd.Navigation.Height"
                            preserveAspectRatio="none" href="@foreground.Artwork"
                            clip-path="@($"url(#{maskId})")" />
                 </svg>
+            }
+        }
+
+        @* One-time PNGs cut directly from the approved panorama. Each physical part
+           has its own foot-depth: roof, supports and masonry cannot hide an entire NPC. *@
+        @if (crowd is not null)
+        {
+            @foreach (var cutout in TownForegroundCutouts)
+            {
+                <img @key="cutout.Id" class="refuge-town-scenery-foreground refuge-town-png-cutout"
+                     data-town-cutout="@cutout.Id" data-town-foreground-layer="@cutout.Id"
+                     alt="" draggable="false" aria-hidden="true"
+                     style="@FormattableString.Invariant($"left:{cutout.X / 1672f * 100:0.###}%;top:{cutout.Y / 941f * 100:0.###}%;width:{cutout.Width / 1672f * 100:0.###}%;height:{cutout.Height / 941f * 100:0.###}%;z-index:{cutout.DepthY * 10};")" />
             }
         }
 
@@ -197,12 +198,27 @@
                         @onclick="SelectNextRoute">Next</button>
             }
         </div>
+        <output class="refuge-town-geometry-selection" data-town-geometry-selection="true"
+                aria-live="polite">Tap town to inspect</output>
     }
 </div>
 
 @code {
     private TownCrowd? crowd;
     private readonly CancellationTokenSource loadingStop = new();
+    private IJSObjectReference? foregroundModule;
+    private DotNetObjectReference<CanonicalTownView>? routeClickReference;
+    private bool foregroundMounted;
+
+    private sealed record TownCutout(string Id, float X, float Y, float Width, float Height, int DepthY);
+    private static readonly TownCutout[] TownForegroundCutouts =
+    [
+        new("noticeboard-panel", 712, 412, 101, 100, 477),
+        new("noticeboard-supports", 724, 475, 78, 74, 519),
+        new("well-roof", 806, 384, 132, 87, 472),
+        new("well-supports", 815, 445, 107, 84, 520),
+        new("well-front-rim", 698, 491, 252, 78, 567)
+    ];
 
     private bool showTownGeometry;
     private bool showTownMetrics;
@@ -222,6 +238,34 @@
 
     private void SelectNextRoute() =>
         selectedRouteCitizenId = crowd?.InspectNextWalkingCitizenId(selectedRouteCitizenId);
+
+    [JSInvokable]
+    public Task SelectTownRouteCitizen(int id)
+    {
+        if (!showTownGeometry || geometryLayer != TownGeometryLayer.Route ||
+            crowd?.InspectActiveRoute(id) is null)
+            return Task.CompletedTask;
+
+        selectedRouteCitizenId = id;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (foregroundMounted || crowd is null) return;
+        foregroundMounted = true;
+        try
+        {
+            foregroundModule = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/refuge-foreground-cutouts.js");
+            routeClickReference = DotNetObjectReference.Create(this);
+            await foregroundModule.InvokeVoidAsync("mountTownCutoutsAndRouteSelection", routeClickReference);
+        }
+        catch (JSException exception)
+        {
+            Logger.LogWarning(exception, "Optional town PNG foregrounds could not initialize.");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -280,6 +324,11 @@
     {
         loadingStop.Cancel();
         loadingStop.Dispose();
+        // A disposed instance must not receive route-click callbacks.
+        // The JS mount listens only while this viewport remains in the DOM.
+        routeClickReference?.Dispose();
+        if (foregroundModule is not null)
+            _ = foregroundModule.DisposeAsync();
     }
 
     [Parameter] public bool NexusUnlocked { get; set; }
