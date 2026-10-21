@@ -3,12 +3,25 @@
 
 @* Keep the constantly moving citizens in their own render subtree. The approved
    panorama, vacant layers, hotspots and static geometry no longer rerender at 10 Hz. *@
-<div class="refuge-town-crowd" aria-hidden="true">
+<div class="refuge-town-crowd refuge-town-crowd--behind" aria-hidden="true">
     @foreach (var person in Crowd.Citizens)
     {
-        @if (person.IsPresent)
+        @if (person.IsPresent && IsBehindWell(person))
         {
-            <span @key="person.Id" class="refuge-town-citizen"
+            <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
+                  data-town-depth="behind-well"
+                  data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
+                  style="@CitizenStyle(person)"></span>
+        }
+    }
+</div>
+<div class="refuge-town-crowd refuge-town-crowd--front" aria-hidden="true">
+    @foreach (var person in Crowd.Citizens)
+    {
+        @if (person.IsPresent && !IsBehindWell(person))
+        {
+            <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
+                  data-town-depth="in-front"
                   data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
                   style="@CitizenStyle(person)"></span>
         }
@@ -61,6 +74,13 @@
             }
         }
         catch (OperationCanceledException) { /* The town actor layer was disposed. */ }
+    }
+
+    private bool IsBehindWell(TownCitizen person)
+    {
+        var well = Crowd.Navigation.Occluders.FirstOrDefault(layer => layer.Id == "well-foreground");
+        // Sort by the contact point, not whether the sprite rectangle touches a roof.
+        return well is not null && person.Position.Y < well.DepthY;
     }
 
     private static string CitizenStyle(TownCitizen citizen) =>
