@@ -35,6 +35,56 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Step_FourteenRoamers_PerTickPathSearchBudgetNeverExceedsOne()
+    {
+        var crowd = new TownCrowd(Scene(), seed: 205, citizenCount: 14);
+        var moved = new HashSet<int>();
+        var initial = crowd.Citizens.ToDictionary(person => person.Id, person => person.Position);
+
+        for (var tick = 0; tick < 900; tick++)
+        {
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+            Assert.IsTrue(crowd.LastStepPathSearches <= 1,
+                $"Tick {tick} synchronously ran too many expensive A* searches.");
+            foreach (var citizen in crowd.Citizens)
+            {
+                if (citizen.Position != initial[citizen.Id])
+                    moved.Add(citizen.Id);
+                if (citizen.IsPresent && !citizen.DepartingSouth && !citizen.ReturningSouth)
+                    Assert.IsTrue(crowd.Navigation.IsWalkable(citizen.Position),
+                        $"Citizen {citizen.Id} stepped into scenery while routing.");
+            }
+        }
+
+        Assert.IsTrue(moved.Count >= 7, "Budgeting may not freeze the ambient town crowd.");
+        Assert.IsTrue(crowd.CachedRouteCount > 0, "Authored routes should be reused without repeated A*.");
+    }
+
+    [TestMethod]
+    public void Step_RouteCache_SameAuthoredPairAvoidsSecondPathSearch()
+    {
+        var map = Scene();
+        var crowd = new TownCrowd(map, seed: 205, citizenCount: 14);
+        var origin = crowd.Citizens[0].CurrentNode;
+        var destination = map.Destinations.FindIndex(stop =>
+            stop.Id == "lower-square");
+        Assert.IsTrue(destination >= 0);
+
+        var citizen = crowd.Citizens[0];
+        // All path requests go through ordinary NPC logic so the production
+        // cache and single-search budget are exercised, not a separate test router.
+        citizen.IdleSeconds = 0;
+        for (var tick = 0; tick < 100; tick++)
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+
+        Assert.IsTrue(crowd.PathfindCount > 0);
+        Assert.IsTrue(crowd.CachedRouteCount > 0);
+        Assert.IsTrue(crowd.LastStepPathSearches <= 1);
+        Assert.AreEqual(origin, crowd.Citizens[0].PreviousNode == -1
+            ? crowd.Citizens[0].CurrentNode : origin);
+    }
+
+    [TestMethod]
     public void Step_LongBackgroundDelay_IsLimitedToOneTick()
     {
         var resumed = new TownCrowd(Scene(), 17);

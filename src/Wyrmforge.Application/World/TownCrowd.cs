@@ -64,14 +64,49 @@ public sealed class TownCrowd
     private uint _randomState;
     public int PathfindCount { get; private set; }
     public double PathfindTotalMilliseconds { get; private set; }
+    public int LastStepPathSearches { get; private set; }
+    public int CachedRouteCount => _routeCache.Count;
 
-    private bool TryPath(TownPoint start, TownPoint target, out List<TownPoint> path)
+    // Never chain many synchronous A* searches within a single 100 ms UI tick.
+    // Reuse exact routes between authored destinations. Cache invalidates with geometry.
+    private const int MaxPathSearchesPerStep = 1;
+    private readonly Dictionary<(int StartNode, int EndNode), TownPoint[]?> _routeCache = [];
+    private int _routeCacheRevision = -1;
+
+    private enum PathResult { Found, Unreachable, Deferred }
+
+    private PathResult TryPath(TownCitizen citizen, int destinationNode, out List<TownPoint> path)
     {
+        path = [];
+        if (_routeCacheRevision != _navigation.Revision)
+        {
+            _routeCache.Clear();
+            _routeCacheRevision = _navigation.Revision;
+        }
+
+        // Only reuse paths when feet are precisely at the authored origin.
+        // A sidestepping walker or a changed obstacle needs a fresh path.
+        var fromNode = citizen.CurrentNode;
+        var cacheable = fromNode >= 0 && fromNode < _navigation.Destinations.Count &&
+            Distance(citizen.Position, _navigation.Destinations[fromNode].Position) < .01f;
+        var key = (StartNode: fromNode, EndNode: destinationNode);
+        if (cacheable && _routeCache.TryGetValue(key, out var cached))
+        {
+            if (cached is null) return PathResult.Unreachable;
+            path = [.. cached];
+            return PathResult.Found;
+        }
+
+        if (LastStepPathSearches >= MaxPathSearchesPerStep) return PathResult.Deferred;
+        LastStepPathSearches++;
+
         var startTick = System.Diagnostics.Stopwatch.GetTimestamp();
-        var found = _navigation.TryFindPath(start, target, out path);
+        var found = _navigation.TryFindPath(citizen.Position,
+            _navigation.Destinations[destinationNode].Position, out path);
         PathfindTotalMilliseconds += System.Diagnostics.Stopwatch.GetElapsedTime(startTick).TotalMilliseconds;
         PathfindCount++;
-        return found;
+        if (cacheable) _routeCache[key] = found ? [.. path] : null;
+        return found ? PathResult.Found : PathResult.Unreachable;
     }
 
     public TownCrowd(TownNavigationMap navigation, int seed = 205, int citizenCount = 7,
@@ -257,6 +292,7 @@ public sealed class TownCrowd
         // A background-tab resumption cannot make an NPC jump through scenery.
         var seconds = (float)Math.Clamp(elapsed.TotalSeconds, 0d, .1d);
         if (seconds <= 0) return;
+        LastStepPathSearches = 0;
 
         foreach (var citizen in _citizens)
         {
@@ -335,8 +371,9 @@ public sealed class TownCrowd
             // Rechecking every remaining segment on every 100 ms tick caused visible iPhone stalls.
             if (citizen.PathRevision != _navigation.Revision || citizen.PathIndex >= citizen.Path.Count)
             {
-                var destination = _navigation.Destinations[citizen.DestinationNode].Position;
-                if (!TryPath(citizen.Position, destination, out var path))
+                var result = TryPath(citizen, citizen.DestinationNode, out var path);
+                if (result == PathResult.Deferred) continue; // Keep the route; retry next tick.
+                if (result == PathResult.Unreachable)
                 {
                     citizen.DestinationNode = -1;
                     citizen.IdleSeconds = .7f;
@@ -562,8 +599,9 @@ public sealed class TownCrowd
                  (other.IsPresent && !other.IsWalking && other.CurrentNode == destinationNode))))
                 continue;
 
-            var target = _navigation.Destinations[destinationNode].Position;
-            if (!TryPath(citizen.Position, target, out var path)) continue;
+            var result = TryPath(citizen, destinationNode, out var path);
+            if (result == PathResult.Deferred) return false; // Never scan more A* candidates in this tick.
+            if (result == PathResult.Unreachable) continue;
 
             citizen.WorkBuildingId = null;
             citizen.CurrentActivity = null;
