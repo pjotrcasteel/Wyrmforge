@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createWetForestDressingPlan, createWetForestRuinTraces, appendWetForestFootprint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js';
+import { createWetForestDressingPlan, createWetForestRuinTraces, createWetForestCastShadowPlan, appendWetForestFootprint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js';
 
 const props = [{ id: 1, kind: 'pine', x: .21, y: .36, radius: 12 },
     { id: 2, kind: 'fallen-log', x: .72, y: .66, radius: 39 }];
@@ -81,4 +81,38 @@ test('stone and charred timber traces belong only to real physical ruin feet', (
     const before = createWetForestDressingPlan(1204, ruins);
     assert.deepEqual(before.ruinTraces, marks);
     assert.deepEqual(ruins, structuredClone(ruins), 'Rendering may not mutate authoritative object IDs');
+});
+
+test('upright forest props cast seeded directional ground shadows without phantom obstacles', () => {
+    const physical = [
+        { id: 11, kind: 'pine', x: .28, y: .37, radius: 12 },
+        { id: 12, kind: 'dead-tree', x: .62, y: .51, radius: 12 },
+        { id: 13, kind: 'moss-rock', x: .76, y: .61, radius: 15 },
+        { id: 14, kind: 'waystone', x: .57, y: .72, radius: 19 },
+        { id: 15, kind: 'barrel', x: .18, y: .58, radius: 10 },
+    ];
+    const before = structuredClone(physical);
+    const shadows = createWetForestCastShadowPlan(1441, physical);
+    assert.deepEqual(shadows, createWetForestCastShadowPlan(1441, physical));
+    assert.notDeepEqual(shadows, createWetForestCastShadowPlan(1442, physical));
+    assert.deepEqual(physical, before, 'Art must not mutate canonical physics props');
+    const ids = new Set(shadows.map(s => s.id));
+    assert.deepEqual([...ids].sort(), [11, 12, 13, 14]);
+    assert.equal(shadows.length, 8, 'Tree branches add relief only to real tree positions');
+    assert.ok(shadows.every(s => s.alpha > 0 && s.alpha <= .3 &&
+        s.points.length >= 4 && s.points.every(p => p.length === 2 &&
+            p.every(n => Number.isFinite(n) && n % 2 === 0))));
+    const withoutTree = physical.filter(p => p.id !== 11);
+    assert.ok(createWetForestCastShadowPlan(1441, withoutTree)
+        .every(shadow => shadow.id !== 11), 'Destroyed props must not keep baked shadows');
+    assert.deepEqual(createWetForestCastShadowPlan(1441, []), []);
+});
+
+test('the Lab draws current-prop shadows under actors, without global lighting effects', () => {
+    const env = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(env, /environment\.generatorPreview === true && environment\.habitat === 'WetForest'/);
+    assert.match(env, /drawWetForestCastShadows\(ctx, environment\.seed, environment\.props \?\? \[\]/);
+    assert.ok(env.indexOf('drawWetForestCastShadows(ctx, environment.seed') >
+        env.indexOf('ctx.drawImage(texture.image, 0, 0, width, height)'));
+    assert.doesNotMatch(env, /drawWetForestCastShadows\(ctx,.*?frame\.mobs/);
 });
