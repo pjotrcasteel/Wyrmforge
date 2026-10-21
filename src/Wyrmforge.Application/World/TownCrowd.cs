@@ -210,8 +210,9 @@ public sealed class TownCrowd
         var anchors = Enumerable.Range(0, _navigation.Destinations.Count)
             .Where(index => index != citizen.CurrentNode &&
                 (!citizen.IsReturning || !_navigation.Destinations[index].IsExit) &&
-                !_citizens.Any(other => other != citizen && other.IsPresent &&
-                    (other.DestinationNode == index || (!other.IsWalking && other.CurrentNode == index))))
+                !_citizens.Any(other => other != citizen &&
+                    (other.DestinationNode == index ||
+                     (other.IsPresent && !other.IsWalking && other.CurrentNode == index))))
             .ToArray();
         var preferred = anchors.Where(index => index != citizen.PreviousNode).ToArray();
         var candidates = preferred.Length > 0 ? preferred : anchors;
