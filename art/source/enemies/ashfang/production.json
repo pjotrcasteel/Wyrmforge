@@ -3,14 +3,14 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "v37 larger body-dominant Tier-I candidate with compact grounded wing fold; owner review pending",
-  "method": "local TRELLIS 1 DINOv2 torso with card-textured local anatomy retopology and editable Blender rig",
+  "status": "V40 anatomical stance WIP; V37 cricket appearance rejected; folded membrane, skull and material correction still required",
+  "method": "Locally authored volumetric anatomy and articulated Blender rig with original concept-card UV appearance; preserved TRELLIS source reference",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "owner review of larger threatening body silhouette and compact wing fold in native Hunt framing",
+    "correct folded membrane hump, skull planes and too-molten material; review native silhouette before full motion bake",
     "finalize fire VFX and remaining action/direction library; validate encounter rules in C#",
     "eight-direction animation export and motion metadata; only still turnarounds currently reviewed",
     "native 320/390px viewport fitting and actual in-game mobile validation",
@@ -24,20 +24,9 @@
   ],
   "divineTier": 5,
   "divineTargetViewportWidthFraction": 1.0,
-  "sourceRig": "model/local-appearance-001/rigged-block-v37/ashfang-rigged.blend",
-  "review": "model/local-appearance-001/rigged-block-v37/motion-review-v1",
+  "sourceRig": "model/local-appearance-001/rigged-block-v40-stance/ashfang-rigged.blend",
+  "review": "model/local-appearance-001/rigged-block-v40-stance/silhouette-review-v1",
   "productionDocumentation": "../../../../docs/art/ashfang-source-production-2026-10-20.md",
-  "contactReview": {
-    "floorZ": -0.197,
-    "tolerance": 0.001,
-    "wholeSurfacePass": true,
-    "worstSurfaceZ": -0.19554036855697632,
-    "clips": [
-      "walk",
-      "rear-breath",
-      "takeoff-flight-land"
-    ]
-  },
   "turnaroundReview": "model/local-appearance-001/rigged-block-v26/turnaround-review-v1",
   "sourceChecks": "model/local-appearance-001/rigged-block-v37/source-check-summary.json",
   "bodyReview": "model/local-appearance-001/rigged-block-v26/body-review-v1",
@@ -109,5 +98,22 @@
     "referenceScreenshotAndCompositesLocalOnly": true,
     "liveGameplayCapture": false,
     "pixelsPerModelUnit": 94
+  },
+  "legacyMotionSourceRig": "model/local-appearance-001/rigged-block-v37/ashfang-rigged.blend",
+  "legacyMotionReview": "model/local-appearance-001/rigged-block-v37/motion-review-v1",
+  "legacyMotionContactReview": {
+    "floorZ": -0.197,
+    "tolerance": 0.001,
+    "wholeSurfacePass": true,
+    "worstSurfaceZ": -0.19554036855697632,
+    "clips": [
+      "walk",
+      "rear-breath",
+      "takeoff-flight-land"
+    ]
+  },
+  "contactReview": {
+    "scope": "one grounded stance only; full motion not validated for changed anatomy",
+    "audit": "model/local-appearance-001/rigged-block-v40-stance/floor-audit.json"
   }
 }
