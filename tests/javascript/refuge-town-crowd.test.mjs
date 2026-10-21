@@ -41,9 +41,12 @@ test('every painted foreground draws between citizens using actual feet depth', 
     const actor = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     const map = JSON.parse(source(art + '/night-navigation.json'));
-    assert.equal(map.occluders.length, 7);
+    assert.equal(map.occluders.length, 8);
     assert.equal(map.occluders.find(part => part.id === 'well-foreground').depthY, 572);
     assert.equal(map.occluders.find(part => part.id === 'noticeboard-foreground').depthY, 522);
+    assert.equal(map.occluders.find(part => part.id === 'hall-terrace-foliage-foreground').depthY, 830);
+    assert.ok(!map.obstacles.some(part => part.id === 'hall-terrace-foliage-foreground'),
+        'Painted overhanging trees must never become solid collisions.');
     assert.match(markup, /@foreach \(var foreground in crowd\.Navigation\.Occluders\)/);
     assert.match(markup, /class="refuge-town-scenery-foreground"/);
     assert.match(markup, /data-town-foreground-layer="@foreground\.Id"/);
