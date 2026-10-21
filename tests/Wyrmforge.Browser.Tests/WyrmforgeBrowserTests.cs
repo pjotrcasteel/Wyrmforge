@@ -87,6 +87,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
         var kinds = first.GetProperty("enemyKinds").EnumerateArray().Select(kind => kind.GetInt32()).ToArray();
         CollectionAssert.AreEqual(new[] { 0, 2 }, kinds, "The lab should contain the actual Hollow and Ashling.");
+        // These screenshots are only useful after BOTH authentic directional rigs are decoded.
+        // Do not mistake the tiny generic loading fallback for the approved Hollow/Ashling.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const mod = await import('./js/arena-lab.js');
+            const scene = mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
+            return scene?.enemyArt?.hollow === true && scene?.enemyArt?.ashling === true &&
+                scene?.enemyAnimation?.hollow?.length === 1 && scene?.enemyAnimation?.ashling?.length === 1;
+        }", null, new() { Timeout = 45000 });
         // Capture both narrow portrait sizes after the real scene appears, never the ignition mask.
         await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
         Directory.CreateDirectory(ArtifactDirectory);
