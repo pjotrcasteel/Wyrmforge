@@ -134,7 +134,14 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                     n=f'wing.finger.{finger}.{j}.{side}'
                     lag=.12*math.sin((phase-.18)*math.pi*8-finger*.18-j*.22)*opening
                     r=fore_rotation@Quaternion((0,0,1),sign*(.10+.10*finger)*fold)@Quaternion((0,1,0),sign*(.20*fold+lag))
-                    tip=previous+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,previous,tip,r);previous=tip
+                    # Gather each digit toward the trailing body line when
+                    # folded. Quaternion interpolation retains segment lengths
+                    # and opens the fan without scaling its vertices.
+                    rest_direction=Vector(bones[n]['tail']-bones[n]['head'])
+                    folded_direction=rotation@Vector((sign*(-.25+finger*.04),1,-.18-j*.08)).normalized()
+                    folded_rotation=rest_direction.rotation_difference(folded_direction)
+                    r=r.slerp(folded_rotation,fold)
+                    tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
         # Rotate the articulated chain about its attached base until its actual
         # skinned surface clears the floor. No vertex flattening or body lift.
         tail_correction=0

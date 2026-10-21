@@ -60,3 +60,11 @@ raised forepaws use a sole-floor lower bound through the rearing transition;
 this preserves their raised goal while avoiding an abrupt contact-mode switch.
 V7 texture correction removes the conspicuous pale throat spot; all eight
 source views and previous candidates remain preserved.
+
+### V8 contact / V9 digit fan revision — in progress
+V8 whole-surface minima: walk -0.197091, rear/breath -0.197481, flight -0.197460
+against floor -0.197, inside the documented 0.001 tolerance. All eight cameras
+were reviewed. The arm folds improved but the digit fan still stayed too broad
+when grounded. V9 gathers individual finger chains toward the trailing body
+line with quaternion rotations and preserved lengths, reopening them for
+flight; no vertex scaling or mirrored sprites. Awaiting regenerated review.
