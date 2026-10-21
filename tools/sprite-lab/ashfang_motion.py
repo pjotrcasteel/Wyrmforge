@@ -1,5 +1,7 @@
 """Authored launch/catch timing for the editable Ashfang source, not gameplay."""
 import math
+from ashfang_performance import stroke
+PERFORMANCE_ENABLED=False
 
 
 def smooth(value):
@@ -81,6 +83,12 @@ def cruise_state(phase):
         tailKick=.04*math.sin(angle-.7),foreTuck=1,hindTuck=1,
         toeRoll=0,kickTrail=0,landingReach=0,sourcePhase=.485,
         tailSin=math.sin(angle),tailCos=math.cos(angle),label='sustained flight')
+    if PERFORMANCE_ENABLED:
+        state.update(flap=stroke(phase),bob=.018*math.sin(angle-.55),
+            pitch=.025*math.sin(angle-.3),pelvisTilt=.035*math.sin(angle-.8),
+            spineBend=.025*math.sin(angle-.4),chestLift=.045*math.sin(angle),
+            neckBase=-.030*math.sin(angle-.35),neckTip=-.020*math.sin(angle-.65),
+            headCounter=-.025*math.sin(angle-.3),tailKick=.065*math.sin(angle-1.1))
     return state
 
 
@@ -116,7 +124,7 @@ def connected_flight_state(frame):
         state['label']=label
         return state
     if frame<=34:return original(frame)
-    cruise=cruise_state((frame-40)/16)
+    cruise=cruise_state((frame-40)/(32 if PERFORMANCE_ENABLED else 16))
     if frame<46:
         return blend(original(frame),cruise,smooth((frame-34)/12),'takeoff into flight')
     if frame<=104:return cruise

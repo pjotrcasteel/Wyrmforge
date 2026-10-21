@@ -19,7 +19,7 @@ for emitter in range(len(anchors)*2):
             a=offset+ring*sides+j;b=offset+ring*sides+(j+1)%sides;c=a+sides;d=b+sides;faces.extend([[a,b,c],[b,d,c]])
 faces=np.array(faces,np.int32);profile=json.loads((rig/'profile.json').read_text());reports={}
 for path in rig.glob('*-samples.npz'):
-    if path.name.startswith('body-fire-'):continue
+    if path.name.startswith('body-'):continue
     clip=path.name[:-12];s=np.load(path);positions=s['positions'];spec=profile['clips'][clip];frames=[];colors=[]
     for frame,p in enumerate(positions):
         time=frame/(len(positions)-1)*round((len(positions)-1)/spec['fps']*3) /3 if spec['loop'] else frame/spec['fps']
@@ -44,5 +44,22 @@ for path in rig.glob('*-samples.npz'):
         frames.append(verts);colors.append(rgb)
     values=np.array(frames,np.float32);assert np.isfinite(values).all()
     np.savez_compressed(rig/f'body-fire-{clip}-samples.npz',positions=values,faces=faces,colors=np.array(colors,np.float32))
+    if '--smoke' in sys.argv:
+        centers=[];radii=[];densities=[]
+        for frame,p in enumerate(positions):
+            cs=[];rs=[];ds=[]
+            for i,anchor in enumerate(anchors):
+                for puff in range(3):
+                    # Continuous particle ages wrap only at zero density.
+                    seconds=frame/spec['fps'];age=(seconds*.8+puff/3+i*.137)%1
+                    if spec['loop']:age=(frame/(len(positions)-1)*2+puff/3+i*.137)%1
+                    delay=age*.9*spec['fps'];sample=frame-delay
+                    if spec['loop']:sample%=len(positions)-1
+                    sample=max(0,min(len(positions)-1,sample));lo=int(sample);hi=min(len(positions)-1,lo+1);mix=sample-lo
+                    origin=(positions[lo,anchor['vertices']].mean(0)*(1-mix)+positions[hi,anchor['vertices']].mean(0)*mix)
+                    drift=np.array([.025*math.sin(i*2.4+age*6),.09*age,.10+.22*age])
+                    cs.append(origin+drift);rs.append(.022+.065*age);ds.append(.34*math.sin(math.pi*age)**.75)
+            centers.append(cs);radii.append(rs);densities.append(ds)
+        np.savez_compressed(rig/f'body-smoke-{clip}-samples.npz',centers=np.array(centers,np.float32),radii=np.array(radii,np.float32),densities=np.array(densities,np.float32))
     reports[clip]=dict(frames=len(values),finite=True,loopError=float(abs(values[0]-values[-1]).max()) if spec['loop'] else None)
-(rig/'body-fire-source.json').write_text(json.dumps(dict(anchors=anchors,method='Surface-bound volumetric tongues; buoyant upward drift, rearward trail and local motion drag; deterministic periodic flicker',clips=reports,gameplayDamage=False,ownerAccepted=False),indent=2)+'\n');print('Authored fire on',len(reports),'motions',flush=True)
+(rig/'body-fire-source.json').write_text(json.dumps(dict(anchors=anchors,method='Surface-bound volumetric tongues; buoyant upward drift, rearward trail and local motion drag; deterministic periodic flicker',smoke='Historical surface-bound expanding density spheres with buoyant rise and drift' if '--smoke' in sys.argv else None,clips=reports,gameplayDamage=False,ownerAccepted=False),indent=2)+'\n');print('Authored fire on',len(reports),'motions',flush=True)
