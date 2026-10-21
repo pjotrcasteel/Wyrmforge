@@ -75,7 +75,7 @@
             </dl>
             <h3>Quick tests</h3>
             <p>Wet Forest first: explore a different old trail and woodland site each seed. No artificial lane walls or crossing unlocks. Strike props and inspect real collision.</p>
-            <p>The environment is authoritative C#; rendering uses production terrain and sprite modules. No real Hunt saves, enemy combat, or permanent currency changes occur in this lab.</p>
+            <p>Hollow and Ashling are non-attacking pathing probes. Their positions and collision come from C#; their approved artwork is preserved. No Hunt saves, combat rewards or permanent currency change here.</p>
             <button class="secondary" @onclick="CopyLink">Copy seed link</button>
         </aside>
     </div>
@@ -162,7 +162,7 @@
         {
             destroyedProps += difference;
             siteName = environment.Snapshot().WetForest?.Site.Replace('-', ' ') ?? "—";
-        remainingProps = environment.Snapshot().Props.Count;
+            remainingProps = environment.Snapshot().Props.Count;
             status = $"{destroyedProps} objects destroyed · loot is collectible on approach";
             _ = InvokeAsync(StateHasChanged);
         }
@@ -199,8 +199,15 @@
         if (environment.IsBlocked(player, WorldWidth, WorldHeight, 12))
             player = new Vector2D(WorldWidth * .5, WorldHeight * .55);
         mobs.Clear();
-        mobs.Add(new LabMob(1, 0, WorldWidth * .20, WorldHeight * .5));
-        mobs.Add(new LabMob(2, 1, WorldWidth * .80, WorldHeight * .5));
+        var forest = environment.Snapshot().WetForest;
+        var fromSite = forest is null
+            ? new Vector2D(WorldWidth * .20, WorldHeight * .5)
+            : new Vector2D(forest.SiteX * WorldWidth + 75, forest.SiteY * WorldHeight + 85);
+        var hollow = environment.AdjustSpawnPosition(fromSite, player, WorldWidth, WorldHeight, 12);
+        var ashling = environment.AdjustSpawnPosition(
+            new Vector2D(WorldWidth * .80, WorldHeight * .76), player, WorldWidth, WorldHeight, 12);
+        if (hollow is { } hollowStart) mobs.Add(new LabMob(1, 0, hollowStart.X, hollowStart.Y));
+        if (ashling is { } ashlingStart) mobs.Add(new LabMob(2, 2, ashlingStart.X, ashlingStart.Y));
         remainingProps = environment.Snapshot().Props.Count;
         destroyedProps = 0;
         collectedSupplies = 0;
