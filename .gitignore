@@ -8,3 +8,6 @@ artifacts/
 .DS_Store
 *.log
 playtest-reports/
+
+# Local sprite-source Python bytecode
+tools/sprite-lab/__pycache__/

@@ -78,3 +78,34 @@ places a distal wing finger at -0.201694: rotating the trailing fold direction
 with the raised torso points it down. V10 keeps that folded direction in world
 space and adds slight tip clearance in the raised pose. This must be audited
 again; V9 is not a passed contact source.
+
+### V10 checked motion study — 21 October
+
+Source and review: `art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v10/`.
+The local RTX 5090 rendered three motion studies and eight independent
+camera stills. No hosted inference, model downloads or GPU setting changes.
+
+- Native cell 192px, source density 80 pixels/model-unit; same camera/pixel
+  density as V5 for the saved `progress-comparison.png`.
+- Walk minimum Z -0.197091, rear/breath -0.197481, takeoff/flight/landing
+  -0.197460 against floor -0.197: all within 0.001 contact tolerance.
+- All sampled coordinates finite; all three rendered clips unclipped. Walk
+  endpoint position error exactly zero. These are numerical checks, not proof
+  of anatomical quality, planted-foot drift or accepted animation.
+- Broader authored wing skeleton, independently folding shoulder/elbow/wrist
+  and finger chains; finger fan closes by rotation at preserved bone lengths.
+- Existing tail surface and chain lengthened together. Throat hotspot corrected
+  locally in the derived UV atlas; original texture preserved.
+
+Visual comparison confirms a larger changing flight span and removes the pale
+throat distraction. Still not production quality: body/leg separation remains
+dark, membranes need less broad/paddle-like folds, launch should show clearer
+leg drive and a power stroke before sustained altitude, and landing needs more
+weight. The current breath jet remains a geometric alignment placeholder.
+Eight still directions are not eight-direction animated atlases. No live
+Ashfang replacement, new aerial mechanics, release or owner acceptance.
+
+Next source work: refine anatomy and native silhouette, then launch/landing
+performance; only after that gate export the full directional action set and
+implement/validate C# aerial encounter behavior. All previous candidates and
+source meshes, latents, textures, Blender rigs and review evidence remain intact.

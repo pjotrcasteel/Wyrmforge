@@ -3,18 +3,18 @@
   "dragonId": "Ashfang",
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
-  "status": "v5 local source and native pixel motion studies preserved; flight articulation and anatomy readability remain unaccepted",
+  "status": "v10 articulated local motion studies; contact audit passed within tolerance, visual source refinement still required",
   "method": "local TRELLIS 1 DINOv2 and editable textured Blender source",
   "gpu": "RTX 5090; installed offline weights; no hardware changes",
   "ownerAccepted": false,
   "rigged": true,
   "runtimeIntegrated": false,
   "remaining": [
-    "anatomy comparison and source refinement",
-    "independent wing elbow/wrist folding and broader flight membrane silhouette",
-    "walk rear sit breath takeoff flight landing motions",
-    "eight-direction native pixel export and motion metadata",
-    "explicit C# aerial encounter integration and actual mobile validation"
+    "source anatomy, native pixel body/leg separation and membrane shape refinement",
+    "weighted launch and landing timing, neck/torso performance and complete action library",
+    "eight-direction animation export and motion metadata; only still turnarounds currently reviewed",
+    "native 320/390px viewport fitting and actual in-game mobile validation",
+    "explicit C# aerial encounter integration"
   ],
   "tier": 1,
   "tierCount": 5,
@@ -24,15 +24,19 @@
   ],
   "divineTier": 5,
   "divineTargetViewportWidthFraction": 1.0,
-  "sourceRig": "model/local-appearance-001/rigged-block-v5/ashfang-rigged.blend",
-  "review": "model/local-appearance-001/rigged-block-v5/motion-review-v1",
+  "sourceRig": "model/local-appearance-001/rigged-block-v10/ashfang-rigged.blend",
+  "review": "model/local-appearance-001/rigged-block-v10/motion-review-v1",
   "productionDocumentation": "../../../../docs/art/ashfang-source-production-2026-10-20.md",
   "contactReview": {
-    "tailFloorResolvedWithinTolerance": true,
     "floorZ": -0.197,
     "tolerance": 0.001,
-    "wholeSurfacePass": false,
-    "worstSurfaceZ": -0.20215767621994019,
-    "remainingRegion": "hind.1.R during takeoff crouch"
-  }
+    "wholeSurfacePass": true,
+    "worstSurfaceZ": -0.19748139381408691,
+    "clips": [
+      "walk",
+      "rear-breath",
+      "takeoff-flight-land"
+    ]
+  },
+  "turnaroundReview": "model/local-appearance-001/rigged-block-v10/turnaround-review-v1"
 }
