@@ -1,6 +1,7 @@
 // Wet Forest visual-only layers. These never invent blockers, loot, collision or attack effects.
 // Baked ground texture is deterministic; actor contact is drawn only for visible moving entities.
-import { createWetForestRootVeins, createWetForestUnderstory, drawWetForestRootVeins } from './arena-wet-forest-vegetation.js';
+import { createWetForestRootVeins, createWetForestUnderstory, drawWetForestRootVeins,
+    wetForestTreeFireState } from './arena-wet-forest-vegetation.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 function randomStream(seed) {
@@ -187,6 +188,74 @@ export function drawWetForestCastShadows(ctx, seed, props, width, height) {
         ctx.fill();
     }
     ctx.restore();
+}
+
+
+/**
+ * Reference-grade night lighting must come from a real burning object. This plan
+ * is entirely derived from authoritative C# trees, so no imaginary fireplaces,
+ * global orange wash, or lighting lingering where a tree was destroyed.
+ */
+export function createWetForestFirelightPlan(environment, width, height) {
+    if (!environment || environment.generatorPreview !== true ||
+        environment.habitat !== 'WetForest' || environment.element !== 'fire' ||
+        width <= 0 || height <= 0) return [];
+    const influence = clamp(Number(environment.corruption) || 0, 0, 1);
+    if (influence < .15) return [];
+    const seed = environment.seed | 0;
+    const lights = [];
+    for (const prop of environment.props ?? []) {
+        const state = wetForestTreeFireState(prop.kind, prop.id, seed, influence, 'fire');
+        if (state !== 'burning' && state !== 'split-glowing') continue;
+        const id = prop.id | 0;
+        const variant = randomHash(seed ^ 0x45a9d2, id, 1);
+        lights.push({ id, x: pixel(prop.x * width), y: pixel(prop.y * height),
+            radius: pixel(state === 'split-glowing' ? 104 + variant * 18 : 78 + variant * 28),
+            intensity: state === 'split-glowing' ? .30 : .23, state,
+        });
+    }
+    // Upper bound for predictable mobile work, keeping strong fires visually distributed.
+    if (lights.length <= 24) return lights;
+    const stride = lights.length / 24;
+    return Array.from({ length: 24 }, (_, i) => lights[Math.floor(i * stride)]);
+}
+
+let wetForestLightSprite = null;
+function firelightSprite() {
+    if (wetForestLightSprite || typeof document === 'undefined') return wetForestLightSprite;
+    const bitmap = document.createElement('canvas');
+    bitmap.width = bitmap.height = 192;
+    const ctx = bitmap.getContext('2d');
+    if (!ctx) return null;
+    const glow = ctx.createRadialGradient(96, 96, 2, 96, 96, 96);
+    glow.addColorStop(0, 'rgba(246,142,59,.69)');
+    glow.addColorStop(.21, 'rgba(226,115,37,.40)');
+    glow.addColorStop(.58, 'rgba(158,69,23,.17)');
+    glow.addColorStop(1, 'rgba(102,37,15,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 192, 192);
+    wetForestLightSprite = bitmap;
+    return bitmap;
+}
+
+/** Warm pools on soil, stone and roots under actors; the actual flame stays on the tree. */
+export function drawWetForestFirelight(ctx, environment, width, height, seconds = 0) {
+    const sprite = firelightSprite();
+    if (!sprite) return false;
+    const lights = createWetForestFirelightPlan(environment, width, height);
+    if (!lights.length) return false;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.imageSmoothingEnabled = true;
+    for (const light of lights) {
+        const flicker = .95 + .045 * Math.sin(seconds * 6.7 + light.id * 2.1) +
+            .025 * Math.sin(seconds * 13.9 + light.id);
+        ctx.globalAlpha = light.intensity * flicker;
+        ctx.drawImage(sprite, light.x - light.radius, light.y - light.radius * .57,
+            light.radius * 2, light.radius * 1.14);
+    }
+    ctx.restore();
+    return true;
 }
 
 // Contact shadow and wet footprint belong to the exact position supplied by authoritative C#.
