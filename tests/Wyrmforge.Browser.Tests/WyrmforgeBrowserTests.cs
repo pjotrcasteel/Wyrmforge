@@ -61,6 +61,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" })).ToBeVisibleAsync();
+        // Native select controls must not overlap the adjacent stage slider on narrow phones.
+        var controlsOverlap = await Page.EvaluateAsync<bool>(@"() => {
+            const habitat = document.querySelector('.arena-controls select').getBoundingClientRect();
+            const slider = document.querySelector('.arena-controls input[type=range]').getBoundingClientRect();
+            return habitat.left < slider.right && slider.left < habitat.right &&
+                habitat.top < slider.bottom && slider.top < habitat.bottom;
+        }");
+        Assert.IsFalse(controlsOverlap, "Habitat and Wyrm-proximity controls must not overlap.");
         // Canvas has no ARIA role in every browser; retain a direct locator for the render check.
         var stage = Page.Locator(".arena-stage canvas");
         await Expect(stage).ToBeVisibleAsync();
