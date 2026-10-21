@@ -8,6 +8,7 @@ from mathutils import Vector,Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
 from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
+from ashfang_material import stone_separation
 from ashfang_motion import flight_state,cruise_state,connected_flight_state,CONNECTED_FLIGHT_FRAMES,CONNECTED_FLIGHT_EVENTS,FLIGHT_EVENTS,high_launch_state,fire_pass_state,arena_flyover_state,hunt_fitted_arena_state,ARENA_FLYOVER_FRAMES
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 stance_only='--stance-only' in sys.argv
@@ -99,6 +100,7 @@ for axis in (0,1):
     for delta in (-2,-1,1,2):near_dark|=np.roll(raw[:,:,0],delta,axis)<.14
 charcoal=warm&~near_dark
 raw[charcoal,:3]*=np.array([.30,.38,.48])
+raw=stone_separation(raw)
 eye_score=np.where((raw[:,:,1]>.15)&(raw[:,:,0]>raw[:,:,1]*1.5),raw[:,:,0]-.3*raw[:,:,1],-1)
 eye_y,eye_x=np.unravel_index(eye_score.argmax(),eye_score.shape)
 for loop in mesh.loops:

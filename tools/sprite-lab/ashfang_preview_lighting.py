@@ -9,8 +9,8 @@ LIGHTING = dict(method='world-space vertex normals', keyDirection=[-.4, -.6, 1],
 
 def palette_for(image):
     palette = image.quantize(colors=48)
-    stone = [10,9,11, 16,14,16, 23,20,21, 32,27,27,
-             42,35,32, 54,44,39, 68,55,47, 84,68,56]
+    stone = [10,11,13, 17,18,21, 25,26,29, 35,35,38,
+             47,46,48, 60,58,59, 75,70,69, 91,83,78]
     fire = [82,15,12, 145,30,10, 214,55,9, 255,100,12,
             255,153,25, 255,204,58, 255,237,130, 255,251,211]
     palette.putpalette(palette.getpalette()[:144]+stone+fire)
