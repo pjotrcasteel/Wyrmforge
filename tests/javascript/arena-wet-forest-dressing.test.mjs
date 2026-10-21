@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createWetForestDressingPlan, createWetForestRuinTraces, createWetForestCastShadowPlan, appendWetForestFootprint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js';
+import { createWetForestDressingPlan, createWetForestRuinTraces, createWetForestCastShadowPlan,
+    createWetForestFirelightPlan, appendWetForestFootprint } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-dressing.js';
 
 const props = [{ id: 1, kind: 'pine', x: .21, y: .36, radius: 12 },
     { id: 2, kind: 'fallen-log', x: .72, y: .66, radius: 39 }];
@@ -115,4 +116,38 @@ test('the Lab draws current-prop shadows under actors, without global lighting e
     assert.ok(env.indexOf('drawWetForestCastShadows(ctx, environment.seed') >
         env.indexOf('ctx.drawImage(texture.image, 0, 0, width, height)'));
     assert.doesNotMatch(env, /drawWetForestCastShadows\(ctx,.*?frame\.mobs/);
+});
+
+test('late Fire node gets localized warm light only from actual burning C# trees', () => {
+    const physical = Array.from({ length: 48 }, (_, i) => ({
+        id: i + 1, kind: i % 3 === 0 ? 'dead-tree' : 'pine',
+        x: .12 + ((i * 31) % 77) / 100, y: .10 + ((i * 17) % 79) / 100,
+        radius: 12,
+    }));
+    const environment = { generatorPreview: true, habitat: 'WetForest', element: 'fire',
+        corruption: 1, seed: 1441, props: physical };
+    const lights = createWetForestFirelightPlan(environment, 950, 1550);
+    assert.ok(lights.length >= 6 && lights.length <= 24);
+    assert.deepEqual(lights, createWetForestFirelightPlan(environment, 950, 1550));
+    assert.deepEqual(lights.map(l => l.id), [...new Set(lights.map(l => l.id))]);
+    assert.ok(lights.every(l => physical.some(p => p.id === l.id &&
+        Math.abs(l.x - p.x * 950) < 2 && Math.abs(l.y - p.y * 1550) < 2)));
+    assert.ok(lights.every(l => l.radius >= 78 && l.radius <= 124 && l.intensity <= .30));
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, props: [] }, 950, 1550), []);
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, element: 'frost' }, 950, 1550), []);
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, generatorPreview: false }, 950, 1550), []);
+    assert.deepEqual(createWetForestFirelightPlan({ ...environment, corruption: 0 }, 950, 1550), []);
+    const withoutFirst = createWetForestFirelightPlan({
+        ...environment, props: physical.filter(p => p.id !== lights[0].id),
+    }, 950, 1550);
+    assert.ok(withoutFirst.every(l => l.id !== lights[0].id), 'Destroyed fire must stop lighting the soil');
+});
+
+test('firelight is a canvas-only layer between physical shadows and sorted sprites', () => {
+    const env = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(env, /drawWetForestFirelight\(ctx, environment, width, height, elapsedSeconds\)/);
+    assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') >
+        env.indexOf('drawWetForestCastShadows(ctx, environment'));
+    assert.ok(env.indexOf('drawWetForestFirelight(ctx, environment') <
+        env.lastIndexOf('const cloister = texture.cloister'));
 });
