@@ -103,7 +103,7 @@ export function createWetForestTilePlan(recipe, seed, width, height) {
 // Deliberately irregular 2px silt/soil edges bridge neighbouring material cells.
 // The road and flooded patches keep their C# recipe footprint; these are paint only.
 // Plan generated once during terrain bake, not every animation frame.
-export function createWetForestMaterialEdges(tiles, seed, width) {
+export function createWetForestMaterialEdges(tiles, seed, width, height = Infinity) {
     if (!tiles?.length || width <= 0) return [];
     const columns = Math.ceil(width / CELL);
     const marks = [];
@@ -123,8 +123,10 @@ export function createWetForestMaterialEdges(tiles, seed, width) {
             const shift = 2 + Math.floor(side * 4) * 2;
             const x = current.x + (dx ? CELL - 2 : shift);
             const y = current.y + (dy ? CELL - 2 : shift);
-            marks.push({ x, y, width: dx ? 4 : 2, height: dy ? 4 : 2,
-                color: bank(current.material, neighbour.material) });
+            const edgeWidth = dx ? 4 : 2, edgeHeight = dy ? 4 : 2;
+            if (x + edgeWidth <= width && y + edgeHeight <= height)
+                marks.push({ x, y, width: edgeWidth, height: edgeHeight,
+                    color: bank(current.material, neighbour.material) });
         }
     }
     return marks;
@@ -200,7 +202,7 @@ export function drawWetForestGround(ctx, plan) {
     }
     // The floor uses a semantic material map: worn road margins and wet banks
     // blend locally rather than exposing an even grid of perfectly square cells.
-    for (const mark of createWetForestMaterialEdges(tiles, seed, width)) {
+    for (const mark of createWetForestMaterialEdges(tiles, seed, width, height)) {
         ctx.globalAlpha = .73;
         rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
     }
