@@ -798,3 +798,17 @@ trees, character animation and saved games are unchanged.
 need a dedicated silhouette/canopy illustration pass and iPhone-scale visual inspection. Maintain
 the restrained loam/moss/timber palette, actual single source of physical truth and honest art
 status; no giant uncollidable background trees or global color washes.
+
+### Wet Forest silhouette experiment — 21 October 2026 (unapproved)
+
+**Not final art.** The previous 36px-wide triangular pine frames still read too regular on the
+390px browser capture. A second Lab-only candidate draws larger asymmetrical, broken-edged pine
+crowns and bare skeletal deadwood from authored two-pixel-aligned shapes; the frames are cached
+per C# physical tree, never baked as permanent fake background structures. Original atlas PNG,
+manifest and other biome rendering stay byte-identical and provide a fallback. Tree destruction,
+foot-depth and collisions remain sourced exclusively from C#.
+
+This is a visual acceptance experiment: compare the new 320/390px browser captures with the
+previous triangular atlas trees. Reject it if dense crowns obscure the player/attack telegraphs,
+cause a runtime frame-rate loss, or read as stacked artificial rectangles rather than decaying
+Gothic woodland. Even a passing visual check does not approve a production forest atlas.
