@@ -3,7 +3,7 @@ from pathlib import Path
 import json,math
 import numpy as np,cv2,torch
 from PIL import Image,ImageDraw
-base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-004';out.mkdir(exist_ok=False);(out/'frames').mkdir()
+base=Path('art/source/enemies/ashfang/restart-2026-10-21');source=base/'articulated-layers-002';out=base/'layered-stalk-005';out.mkdir(exist_ok=False);(out/'frames').mkdir()
 spec=json.loads((source/'source.json').read_text());device='cuda'
 W,H=231,115;cw,ch=320,192;offset=(48,40)
 body=Image.open(source/'hidden-overlap-001/torso-with-overlap.png').convert('RGBA')
@@ -33,11 +33,13 @@ for name in names:
   p=vertices[list(t)].astype(int);lo=p.min(0);hi=p.max(0)
   if rgba[lo[1]:min(H,hi[1]+1),lo[0]:min(W,hi[0]+1),3].any():kept.append(t)
  joints=spec['bones'][name];keys=['shoulder','elbow','paw'] if 'fore' in name else ['hip','knee','hock','paw'];chain=np.array([joints[k] for k in keys],float)
- distances=[]
+ distances=[];arc_positions=[];lengths=np.linalg.norm(np.diff(chain,axis=0),axis=1);starts=np.concatenate([[0],np.cumsum(lengths)])
  for a,b in zip(chain[:-1],chain[1:]):
-  along=np.clip((vertices-a)@(b-a)/np.dot(b-a,b-a),0,1);nearest=a+along[:,None]*(b-a);distances.append(np.linalg.norm(vertices-nearest,axis=1))
- weights=(np.array(distances).T+1)**-4;weights/=weights.sum(axis=1,keepdims=True)
- pawregion=vertices[:,1]>=chain[-1,1]-4;weights[pawregion]=0;weights[pawregion,-1]=1
+  along=np.clip((vertices-a)@(b-a)/np.dot(b-a,b-a),0,1);nearest=a+along[:,None]*(b-a);index=len(distances);distances.append(np.linalg.norm(vertices-nearest,axis=1));arc_positions.append(starts[index]+along*lengths[index])
+ nearest_bone=np.argmin(np.array(distances),axis=0);arc=np.array(arc_positions)[nearest_bone,np.arange(len(vertices))];centers=starts[:-1]+lengths*.5
+ weights=np.zeros((len(vertices),len(lengths)))
+ for index in range(len(lengths)):
+  samples=np.zeros(len(lengths));samples[index]=1;weights[:,index]=np.interp(arc,centers,samples)
  layers.append(dict(name=name,texture=torch.from_numpy(rgba).permute(2,0,1)[None].to(device),tri=np.array(kept),chain=chain,weights=weights))
 bodyrgba=np.array(body).astype(np.float32)/255;bodytri=[]
 for t in tri:
