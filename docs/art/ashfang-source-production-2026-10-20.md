@@ -309,3 +309,12 @@ claw span, and toe roll reduced to 0.32 radians to retain more leg extension.
 Fore goals recenter slightly and cycle travel becomes 0.10/0.72 units to avoid
 reintroducing unreachable steps after the underside sculpt. V18 remains a
 failed floor-gate candidate; inspect-source-floor.py preserves this diagnostic.
+
+V19 regenerated source passes floor tolerance for walk (-0.197478), rear/breath
+(-0.197483) and flight (-0.197418). All goals are reachable within 0.000277
+units (0.023 native px) in walk and below 1e-7 in other studies. The rear chain
+reaches about 0.952 hip-to-hock extension ratio during the push before delayed
+tuck. Knees remain below hips; the loaded crouch bends forward. At frames 22–23
+the nearly extended leg trails behind, so knee Y may pass behind hip Y without
+inverting its bend plane. Do not confuse that normal leg sweep with the old
+neutral knee-above-hip inversion. Visual/native silhouette gate remains pending.
