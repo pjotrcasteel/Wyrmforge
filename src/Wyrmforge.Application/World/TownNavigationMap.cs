@@ -69,6 +69,7 @@ public sealed class TownNavigationMap
     private int _geometryRevision = -1;
     private (TownPolygon Polygon, PolygonBounds Bounds)[] _cachedFloors = [];
     private (TownFootprint Obstacle, PolygonBounds Bounds)[] _cachedObstacles = [];
+    private (TownForeground Foreground, PolygonBounds Bounds)[] _cachedOccluders = [];
 
     private readonly record struct PolygonBounds(float MinX, float MinY, float MaxX, float MaxY)
     {
@@ -94,6 +95,7 @@ public sealed class TownNavigationMap
         if (_geometryRevision == Revision) return;
         _cachedFloors = Walkable.Select(p => (p, PolygonBounds.From(p.Points))).ToArray();
         _cachedObstacles = Obstacles.Select(p => (p, PolygonBounds.From(p.Footprint))).ToArray();
+        _cachedOccluders = Occluders.Select(p => (p, PolygonBounds.From(p.Clip))).ToArray();
         _geometryRevision = Revision;
     }
 
@@ -409,6 +411,44 @@ public sealed class TownNavigationMap
         return Occluders.Any(foreground =>
             feet.Y < foreground.DepthY &&
             PolygonIntersectsBody(foreground.Clip, left, top, right, feet.Y));
+    }
+
+    /// <summary>
+    /// Temporary rectangle placeholders cannot be partially clipped like real animated sprites:
+    /// either show the whole rectangle or conceal it behind painted foreground masonry.
+    /// Never alter actual foot position, routes, or the underlying walkable pavement.
+    /// The result is -1 for concealed sprites, otherwise a safe stacking depth.
+    /// </summary>
+    public int PlaceholderDepth(TownPoint feet, float width = 16f, float height = 30f)
+    {
+        RefreshGeometryCache();
+        var stackingDepth = (int)MathF.Floor(feet.Y * 10f) + 1;
+        var bounds = PolygonBounds.Around(new(feet.X - width / 2, feet.Y - height), new(feet.X + width / 2, feet.Y));
+
+        foreach (var entry in _cachedOccluders)
+        {
+            var foreground = entry.Foreground;
+            if (feet.Y >= foreground.DepthY || !entry.Bounds.Intersects(bounds)) continue;
+
+            var covered = 0;
+            for (var row = 0; row < 4; row++)
+            for (var column = 0; column < 4; column++)
+            {
+                var point = new TownPoint(
+                    feet.X + (column - 1.5f) * width / 4f,
+                    feet.Y - height + (row + .5f) * height / 4f);
+                if (Contains(foreground.Clip, point)) covered++;
+            }
+
+            // A substantial painted-object overlap should conceal the entire test
+            // rectangle. Smaller edge contacts draw in front rather than leave
+            // floating heads or triangular body fragments on otherwise open paving.
+            if (covered >= 11) return -1;
+            if (covered > 0)
+                stackingDepth = Math.Max(stackingDepth, (int)MathF.Floor(foreground.DepthY * 10f) + 1);
+        }
+
+        return stackingDepth;
     }
 
     private static bool PolygonIntersectsBody(IReadOnlyList<TownPoint> polygon, float left, float top, float right, float bottom)

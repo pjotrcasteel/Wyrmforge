@@ -9,13 +9,14 @@
 <div class="refuge-town-crowd" aria-hidden="true">
     @foreach (var person in Crowd.Citizens)
     {
-        @if (person.IsPresent)
+        var depth = person.IsPresent ? Crowd.Navigation.PlaceholderDepth(person.Position) : -1;
+        @if (depth >= 0)
         {
             <span @key="person.Id" class="refuge-town-citizen" data-town-citizen-id="@person.Id"
                   data-town-feet-y="@person.Position.Y"
                   data-town-citizen-state="@CitizenState(person)"
                   data-town-work-building="@person.WorkBuildingId"
-                  style="@CitizenStyle(person)"></span>
+                  style="@CitizenStyle(person, depth)"></span>
         }
     }
 </div>
@@ -133,10 +134,10 @@
     private static string CitizenState(TownCitizen citizen) =>
         citizen.IsWorking ? "working" : citizen.IsWalking ? "walking" : "idling";
 
-    // Render order follows contact feet Y, not which painted building the NPC overlaps.
-    private static string CitizenStyle(TownCitizen citizen) =>
+    // Preserve the original painted-object sort while keeping temporary rectangles whole.
+    private static string CitizenStyle(TownCitizen citizen, int depth) =>
         FormattableString.Invariant(
-            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{(int)MathF.Floor(citizen.Position.Y * 10f) + 1}");
+            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;z-index:{depth}");
 
     public async ValueTask DisposeAsync()
     {
