@@ -41,6 +41,10 @@ belly_surface=-.10+.02*np.maximum(0,1-abs(v[:,0])/.25)**2
 v[:,2]+=np.maximum(0,belly_surface-v[:,2])*belly_front*belly_back*low*clear_of_paws
 # Replace the failed local reconstruction rather than repeatedly squeezing it.
 v,faces,uv,source_labels,anatomy_changes=rebuild_anatomy(v,faces,uv)
+# Give the reconstructed upper chest more volume without moving soles,
+# limb joints, tail topology or the separately authored wing membrane.
+chest_mass=np.exp(-((v[:,1]+.13)/.15)**2)*np.clip((v[:,2]+.075)/.07,0,1)*(source_labels==0)
+v[:,0]*=1+.15*chest_mass;v[:,2]+=.018*chest_mass
 v,faces,uv,body_count,removed_wing_vertices,wing_camber,source_labels=rebuild_wings(v,faces,uv,source_labels)
 (out/'anatomy-rebuild.json').write_text(json.dumps(anatomy_changes,indent=2)+'\n')
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
@@ -229,7 +233,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
             # Each transform moves its joint from the previous joint, retaining
             # bone lengths. Shoulder powers the stroke, elbow opens the span,
             # and the wrist/digits trail through the membrane recovery.
-            shoulder=wing_rotation@Quaternion((0,0,1),sign*.75*fold)@Quaternion((0,1,0),sign*(-.05*fold+flap))
+            shoulder=wing_rotation@Quaternion((0,0,1),sign*.75*fold)@Quaternion((0,1,0),sign*(.25*fold+flap))
             upper='wing.upper.'+side;fore='wing.fore.'+side
             elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
             # Sample the SAME shoulder stroke at successive delays. Recovery bends

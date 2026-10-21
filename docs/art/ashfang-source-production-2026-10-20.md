@@ -547,3 +547,7 @@ The source rig, path metadata, numeric fit settings and implementation receipts
 are checkpointed publicly without screenshot pixels. Actual responsive HUD,
 C# aerial integration, final VFX/actions/directions and mobile runtime validation
 remain outstanding. Do not treat local screenshot compositing as live validation.
+
+## V35 size and threat correction — owner rejection of V34
+Owner rejected the native ~15% fit as butterfly-like, too small and not scary. New candidate uses native94 vs56 px/unit (1.68x linear, ~2.82x projected area before pose changes), lower folded-wing shoulder carriage, and localized upper-chest volume. It retains articulated wings, head/tail/rear-leg repairs and unchanged player. Flyover placement offset recalibrated to keep tracks near the player row. Code checkpoint before source generation; visual result not yet built or accepted. Screenshot reference and V35 composites remain local-only and ignored.
+

@@ -197,7 +197,7 @@ def hunt_fitted_arena_state(frame):
     state=arena_flyover_state(frame)
     weight=smooth((frame-54)/25)*(1-smooth((frame-210)/25))
     # Retarget the ground track to the unchanged player's portrait-screen row.
-    # Camera basis and 56px/unit fit are recorded in current-hunt-fit.json.
-    state['actorX']=state.get('actorX',0)+3.613255210741538*weight
-    state['actorY']=state.get('actorY',0)+-5.419882816112307*weight
+    # Camera basis and 94px/unit fit are recorded in current-hunt-fit.json.
+    state['actorX']=state.get('actorX',0)+2.152577572356661*weight
+    state['actorY']=state.get('actorY',0)+-3.2288663585349915*weight
     return state
