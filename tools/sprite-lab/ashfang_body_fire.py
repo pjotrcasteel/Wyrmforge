@@ -33,15 +33,21 @@ def composite_fire(rig,clip,index,ctx,matrix,raster,rgb,alpha):
         scale=torch.linalg.vector_norm(matrix[:3,:3],dim=1)
         center_clip=torch.cat([centers,torch.ones_like(centers[:,:1])],1)@matrix.T
         depth=torch.where(visible,fire[0,:,:,2],raster[0,:,:,2])/scale[2]
-        occupied=(alpha>0);optical=torch.zeros_like(alpha)
-        for c,radius,density in zip(center_clip,radii,densities):
-            d2=((gx-c[0])/scale[0])**2+((gy-c[1])/scale[1])**2
-            half=torch.sqrt((radius*radius-d2).clamp(min=0))
+        occupied=(alpha>0);optical=torch.zeros_like(alpha);smoke_light=torch.zeros_like(rgb)
+        right=matrix[0,:3]/scale[0];up=matrix[1,:3]/scale[1]
+        for center,c,radius,density in zip(centers,center_clip,radii,densities):
+            dx=(gx-c[0])/scale[0];dy=(gy-c[1])/scale[1];d2=dx*dx+dy*dy
+            sample=center+dx[:,:,None]*right+dy[:,:,None]*up
+            billow=torch.sin(sample[:,:,0]*70+sample[:,:,1]*45)*torch.sin(sample[:,:,2]*60-sample[:,:,1]*35)
+            half=torch.sqrt((radius*radius*(1+.13*billow)**2-d2).clamp(min=0))
             length=torch.where(occupied,(depth-c[2]/scale[2]+half).clamp(min=0),2*half)
             length=torch.minimum(length,2*half)
-            optical+=density*length/(2*radius)
+            thickness=density*length/(2*radius);optical+=thickness
+            age=((radius-.024)/.070).clamp(0,1);heat=(1-age)**2
+            soot=t([.065,.062,.060])+heat*t([.20,.075,.012])
+            smoke_light+=thickness[:,:,None]*soot
         opacity=(1-torch.exp(-optical)).clamp(max=.78)
-        soot=t([.070,.061,.055]);combined=alpha+opacity*(1-alpha)
+        soot=smoke_light/optical[:,:,None].clamp(min=1e-6);combined=alpha+opacity*(1-alpha)
         rgb=(rgb*alpha[:,:,None]*(1-opacity[:,:,None])+soot*opacity[:,:,None])/combined[:,:,None].clamp(min=1e-6)
         alpha=combined
     return rgb,alpha

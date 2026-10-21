@@ -49,16 +49,16 @@ for path in rig.glob('*-samples.npz'):
         for frame,p in enumerate(positions):
             cs=[];rs=[];ds=[]
             for i,anchor in enumerate(anchors):
-                for puff in range(3):
+                for puff in range(5):
                     # Continuous particle ages wrap only at zero density.
-                    seconds=frame/spec['fps'];age=(seconds*.8+puff/3+i*.137)%1
-                    if spec['loop']:age=(frame/(len(positions)-1)*2+puff/3+i*.137)%1
+                    seconds=frame/spec['fps'];age=(seconds*.8+puff/5+i*.137)%1
+                    if spec['loop']:age=(frame/(len(positions)-1)*2+puff/5+i*.137)%1
                     delay=age*.9*spec['fps'];sample=frame-delay
                     if spec['loop']:sample%=len(positions)-1
                     sample=max(0,min(len(positions)-1,sample));lo=int(sample);hi=min(len(positions)-1,lo+1);mix=sample-lo
                     origin=(positions[lo,anchor['vertices']].mean(0)*(1-mix)+positions[hi,anchor['vertices']].mean(0)*mix)
                     drift=np.array([.025*math.sin(i*2.4+age*6),.09*age,.10+.22*age])
-                    cs.append(origin+drift);rs.append(.022+.065*age);ds.append(.34*math.sin(math.pi*age)**.75)
+                    cs.append(origin+drift);rs.append(.024+.070*age);ds.append(.66*math.sin(math.pi*age)**.85)
             centers.append(cs);radii.append(rs);densities.append(ds)
         np.savez_compressed(rig/f'body-smoke-{clip}-samples.npz',centers=np.array(centers,np.float32),radii=np.array(radii,np.float32),densities=np.array(densities,np.float32))
     reports[clip]=dict(frames=len(values),finite=True,loopError=float(abs(values[0]-values[-1]).max()) if spec['loop'] else None)
