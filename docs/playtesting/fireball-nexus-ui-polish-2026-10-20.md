@@ -60,3 +60,11 @@ Implementation on `feature/fireball-mutator-sources-20261021` (PR pending valida
 - The existing Fireball socket menu displays required quantities, common enemy/scenery sources, and crafts the permanently learned Cinder Needle once. Existing Wyrm unlocks, signature level, unlocked socket count and rare resource recipes stay unchanged.
 - Regression gates: `FireballCoreStateTests` (atomic spend/restore), `RunMaterialCargoStateTests` (extraction/loss), `ArenaEnvironmentStateTests` (deterministic normal barrels / loot pickup), mobile browser test (craft/persistence), existing Ashfang source UI coverage. Validate actual enemy drop rates and art readability on phone before treating this as final balance.
 - Existing full Wet Forest environmental generation remains a lab-only preview; only a few breakable salvage props are enabled in normal Hunts to avoid shipping unfinished habitat layout/terrain.
+
+## Trail Cleared loot visibility (21 Oct)
+
+The full-screen `TRAIL CLEARED` moment now replaces the generic `XP collected` placeholder with **XP earned on the just-finished trail**, plus a compact itemized list of each ordinary crafting material the player actually picked up (`Ember Residue`, `Charred Scrap`). Zero-drop trails truthfully show `No crafting materials collected`.
+
+This is **not** a secured inventory summary. The panel explicitly warns `Materials carried · secure at Refuge to keep them`; death/abandon and extraction rules remain unchanged. A new route resets the *displayed* trail ledger while keeping all prior pending/secured cargo. The moment snapshots actual simulation counters at the existing trail-completion transition, and its overlay is scroll-safe at phone dimensions. No bonus drops, invented boss rewards or game progression changes.
+
+Validation: cargo tests for per-trail resets versus secure/pending status; simulation test for XP earned since route entry and itemized pickups; existing browser suite and on-phone visual check before release.
