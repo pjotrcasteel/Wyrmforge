@@ -194,15 +194,35 @@ public sealed partial class RunSimulation
         ClearSupportState();
         projectiles.Clear();
         lightning.Clear();
-        ascendantActive = SelectedHunt is not null ? SelectedAscendantHunt(definition.Id)
-            : AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id);
+        var tier = SelectedHunt is not null ? SelectedHuntTier(definition.Id)
+            : AscendantHuntRule.IsEncounter(selectedAscendant, ascendantHuntConsumed, depthState.Depth, definition.Id) ? WyrmTier.Ascendant : WyrmTier.Wyrm;
+        ascendantActive = tier >= WyrmTier.Ascendant;
         if (ascendantActive) ascendantHuntConsumed = true;
-        var hunt = ascendantActive ? DragonHuntCatalog.GetAscendant(definition.Id) : DragonHuntCatalog.Get(definition.Id);
+        var hunt = tier switch
+        {
+            WyrmTier.Elder => DragonHuntCatalog.GetElder(definition.Id),
+            WyrmTier.Ascendant => DragonHuntCatalog.GetAscendant(definition.Id),
+            _ => DragonHuntCatalog.Get(definition.Id),
+        };
         dragonHuntState.Start(hunt);
         dragonHuntHazards.Clear();
-        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height), depthState.DragonHealthMultiplier * (ascendantActive ? 1.35 : 1),
-            ascendantActive ? WyrmTier.Ascendant : WyrmTier.Wyrm);
+        dragon = new DragonState(++enemyId, definition, ArenaPoint(hunt.Entrance.Start, width, height),
+            depthState.DragonHealthMultiplier * DragonTierHealth(tier), tier);
     }
+
+    private static double DragonTierHealth(WyrmTier tier) => tier switch
+    {
+        WyrmTier.Elder => 1.75,
+        WyrmTier.Ascendant => 1.35,
+        _ => 1,
+    };
+
+    private static int DragonTierScore(WyrmTier tier) => tier switch
+    {
+        WyrmTier.Elder => 12000,
+        WyrmTier.Ascendant => 6000,
+        _ => 0,
+    };
 
     private void MoveDragon(DragonState activeDragon, double delta)
     {
@@ -304,7 +324,7 @@ public sealed partial class RunSimulation
         foreach (var spell in SpellLineageCatalog.FeatsEarnedAtDefeat(definition.Id, build.Spells)) qualifiedWyrmFeats.Add(spell);
         var reward = definition.Combat.Reward;
         var dragonScore = reward.BaseScore + (int)(elapsed * reward.ScorePerElapsedSecond);
-        score += (int)((dragonScore + (ascendantActive ? 6000 : 0)) * depthState.ScoreMultiplier);
+        score += (int)((dragonScore + DragonTierScore(defeatedDragon.Tier)) * depthState.ScoreMultiplier);
         dragon = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
@@ -335,8 +355,15 @@ public sealed partial class RunSimulation
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
         var definition = activeDragon.Definition;
-        var rite = ascendantActive ? AscendantRiteCatalog.Get(definition.Id) : null;
-        return new DragonRenderSnapshot(ascendantActive ? $"Ascendant {definition.Name}" : definition.Name, rite is null ? definition.Title : $"The {rite.Trophy}",
+        // Only the invoked rite carries its trophy title; a ladder Ascendant or Elder is named for its tier.
+        var rite = ascendantActive && SelectedHunt is null ? AscendantRiteCatalog.Get(definition.Id) : null;
+        var name = activeDragon.Tier switch
+        {
+            WyrmTier.Elder => $"Elder {definition.Name}",
+            WyrmTier.Ascendant => $"Ascendant {definition.Name}",
+            _ => definition.Name,
+        };
+        return new DragonRenderSnapshot(name, rite is null ? definition.Title : $"The {rite.Trophy}",
             definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
             activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
         { IsAscendant = ascendantActive, Tier = activeDragon.Tier };

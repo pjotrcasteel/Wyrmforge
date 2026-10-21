@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation;
+using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
@@ -79,6 +80,28 @@ public sealed class FireTierThreeHuntTests
         Assert.IsFalse(HuntSelection.FireTierTwo.HasWatchtower);
         Assert.IsFalse(WyrmrealmMapGenerator.GenerateFireHunt(7, WyrmTier.Ascendant).Any(n => n.Watchtower));
     }
+
+    [TestMethod]
+    public void TierThree_HuntsElderAshfangWithItsOwnProfileAndNoCrown()
+    {
+        var simulation = new RunSimulationFactory(new FirstRandomSource()).Create(new HashSet<string>(), seed: 42, hunt: HuntSelection.FireTierThree);
+        Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
+        simulation.Tick(0, default, 390, 700);
+        Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
+        var dragon = Field<DragonState>(simulation, "dragon");
+        Assert.AreEqual(WyrmTier.Elder, dragon.Tier);
+        Assert.AreSame(DragonHuntCatalog.ElderAshfang, Field<DragonHuntState>(simulation, "dragonHuntState").Profile);
+        var snapshot = (DragonRenderSnapshot)typeof(RunSimulation).GetMethod("CreateDragonSnapshot", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, [])!;
+        Assert.AreEqual("Elder Ashfang", snapshot.Name);
+        Invoke(simulation, "DefeatDragon", dragon);
+        Assert.AreEqual(0, simulation.CreateEvaluationSummary().AscendantDragonIds.Count, "The Crown of Embers is earned only through the rite.");
+    }
+
+    private static T Field<T>(RunSimulation simulation, string name) =>
+        (T)typeof(RunSimulation).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(simulation)!;
+
+    private static void Invoke(RunSimulation simulation, string name, params object[] args) =>
+        typeof(RunSimulation).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(simulation, args);
 
     private static void AssertRejoinsEveryRoad(IReadOnlyList<WyrmrealmMapNode> nodes, WyrmrealmMapNode side, string roadPrefix)
     {

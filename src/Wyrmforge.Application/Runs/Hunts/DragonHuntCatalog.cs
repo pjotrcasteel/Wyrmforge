@@ -149,6 +149,29 @@ public static class DragonHuntCatalog
         PhaseTwoCallout = "THE STORM REVERSES ITS CURRENT",
     };
 
+    // Fire Tier III. The Elder keeps the Crownfall but its own ground smoulders: each pressure beat ignites a wide ring under the Wyrm.
+    // Ashfang pursues to 120-190 px, so the ring leaves only a narrow band beyond it: the hunter must keep moving at the edge of its reach.
+    public static DragonHuntProfile ElderAshfang { get; } = AscendantAshfang with
+    {
+        Entrance = AscendantAshfang.Entrance with { OmenSeconds = 1.2, TravelSeconds = 1.25, RevealSeconds = 1.8 },
+        PhaseBreakSeconds = 1.9,
+        Pressure = AscendantAshfang.Pressure with
+        {
+            Origin = DragonHuntPressureOrigin.Dragon,
+            Cadence = new DragonHuntPressureCadence(new DragonPhaseValues(4.6, 3.4), new DragonPhaseValues(1.05, 0.85)),
+            Radius = new DragonPhaseValues(130, 165),
+            Damage = new DragonPhaseValues(20, 28),
+        },
+        Signature = AscendantAshfang.Signature with { PhaseOneStrikes = 7, PhaseTwoStrikes = 10 },
+        PhaseTwoCallout = "THE ELDER'S GROUND BURNS",
+    };
+
+    public static DragonHuntProfile GetElder(DragonId id) => id switch
+    {
+        DragonId.Ashfang => ElderAshfang,
+        _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Only Elder Ashfang is authored."),
+    };
+
     public static DragonHuntProfile GetAscendant(DragonId id) => id switch
     {
         DragonId.Ashfang => AscendantAshfang,

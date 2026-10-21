@@ -30,7 +30,8 @@ public sealed partial class RunSimulation
         }
     }
 
-    private bool SelectedAscendantHunt(DragonId wyrm) => SelectedHunt is { Tier: WyrmTier.Ascendant } hunt && hunt.Target == wyrm;
+    /// <summary>The tier a selected Hunt fields for its own target; any other Wyrm stays an ordinary Wyrm.</summary>
+    private WyrmTier SelectedHuntTier(DragonId wyrm) => SelectedHunt is { } hunt && hunt.Target == wyrm ? hunt.Tier : WyrmTier.Wyrm;
 
     private void TrySecureRefuge(WyrmrealmMapNode node)
     {

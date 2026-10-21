@@ -187,7 +187,7 @@
     [Parameter] public int RefugeReturns { get; set; }
     [Parameter] public int LastRefugeLoss { get; set; }
 
-    private string HuntTargetLabel => Hunt?.Tier == Wyrmforge.Domain.Combat.Dragons.WyrmTier.Ascendant ? "Ascendant Ashfang" : "Ashfang";
+    private string HuntTargetLabel => Hunt?.TargetName ?? "Ashfang";
 
     private WyrmrealmTerritory? Territory => Nodes.FirstOrDefault()?.Territory;
     private double EntryX => Territory?.Camp.X ?? 50;

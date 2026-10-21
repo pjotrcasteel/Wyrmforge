@@ -296,7 +296,7 @@
 
     private string HuntResultText(Wyrmforge.Application.Runs.Hunts.HuntSelection hunt)
     {
-        var target = hunt.HasRefuge ? "Ascendant Ashfang" : "Ashfang";
+        var target = hunt.TargetName;
         if (Summary.Outcome != Wyrmforge.Application.Runs.EndRun.RunOutcome.Extracted || !Summary.DragonIds.Contains(hunt.Target))
             return $"Fire Tier {hunt.TierNumber}. Defeat {target} and extract to secure an Essence.";
         var next = hunt.TierNumber + 1;

@@ -16,6 +16,9 @@ public sealed record HuntSelection([property: JsonIgnore] RegionId Region, WyrmT
     public DragonId Target => RegionCatalog.Get(Region).HomeLineage;
     [JsonIgnore]
     public int TierNumber => HuntLadder.Number(Tier);
+    /// <summary>The tiered wyrm's name, e.g. "Elder Ashfang"; Tier I hunts the plain lineage.</summary>
+    [JsonIgnore]
+    public string TargetName => Tier == WyrmTier.Wyrm ? DragonCatalog.Get(Target).Name : $"{Tier} {DragonCatalog.Get(Target).Name}";
     /// <summary>From Tier II an optional, harder refuge can be reclaimed; a fall after that returns the hunter there.</summary>
     [JsonIgnore]
     public bool HasRefuge => Tier >= WyrmTier.Ascendant;
