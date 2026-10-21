@@ -1,0 +1,98 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 0,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05326857417821884,
+      -0.09090644866228104,
+      -0.05146339535713196
+    ],
+    "extensionRatio": 0.5522881886126304,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07028671354055405,
+      -0.053457409143447876,
+      -0.07714978605508804
+    ],
+    "extensionRatio": 0.5982627670463538,
+    "toeRoll": 0
+  }
+]
