@@ -37,6 +37,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
         }");
         Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
+        var kinds = first.GetProperty("enemyKinds").EnumerateArray().Select(kind => kind.GetInt32()).ToArray();
+        CollectionAssert.AreEqual(new[] { 0, 2 }, kinds, "The lab should contain the actual Hollow and Ashling.");
         if (width == 390)
         {
             // A full-page screenshot taken while the fixed ignition splash covers the viewport
