@@ -1,5 +1,5 @@
 import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
-import { drawWetForestDressing } from './arena-wet-forest-dressing.js';
+import { drawWetForestDressing, drawWetForestCastShadows } from './arena-wet-forest-dressing.js';
 import { wetForestTreeFrame, drawWetForestTreeAccents, drawWetForestTreeArt } from './arena-wet-forest-vegetation.js';
 import { drawWetForestStoryArt } from './arena-wet-forest-sites.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
@@ -471,6 +471,10 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
     if (!environment) return false;
     const texture = terrainTexture(environment, width, height);
     ctx.drawImage(texture.image, 0, 0, width, height);
+    // Render low-angle shadows from CURRENT physical props, never frozen floor art:
+    // destroyed trees and ruins lose their shadows in the same C# simulation frame.
+    if (environment.generatorPreview === true && environment.habitat === 'WetForest')
+        drawWetForestCastShadows(ctx, environment.seed, environment.props ?? [], width, height);
     const cloister = texture.cloister;
     // With the atlas loaded, closed territory walls are depth-sorted layers (getArenaCloisterElevations).
     const spriteWalls = !cloister && artReady();

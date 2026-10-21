@@ -128,6 +128,67 @@ export function drawWetForestDressing(ctx, scene, props, width, height) {
     ctx.restore();
 }
 
+
+/**
+ * Projected, low-angle ground shadows make EXISTING physical forest props read
+ * as upright silhouettes. Rendering is tied to the current C# props snapshot,
+ * so a destroyed prop immediately loses its shadow. No new walk blockers.
+ */
+export function createWetForestCastShadowPlan(seed, props = [], width = 950, height = 1550) {
+    const sizes = { pine: 78, 'dead-tree': 66, stump: 22, 'moss-rock': 17,
+        'grave-marker': 26, waystone: 38, 'camp-remains': 22, 'broken-cart': 35,
+        'fallen-log': 21 };
+    const shapes = [];
+    for (const prop of props) {
+        const length = sizes[prop.kind];
+        if (!length) continue;
+        const x = pixel(prop.x * width), y = pixel(prop.y * height);
+        const jitter = randomHash(seed ^ 0x32e9c14, prop.id, 1);
+        const run = pixel(length * (.87 + jitter * .23));
+        const rise = pixel(run * (.36 + jitter * .10));
+        const girth = prop.kind === 'pine' ? 17 : prop.kind === 'dead-tree' ? 11 :
+            Math.min(15, 6 + prop.radius * .15);
+        const widthAtRoot = pixel(girth);
+        const points = [
+            [x - widthAtRoot, y + 1], [x + widthAtRoot, y + 1],
+            [x + run * .63, y + rise * .69 + 6],
+            [x + run + 4, y + rise + 1],
+            [x + run - 6, y + rise + 7],
+            [x + run * .55, y + rise * .69 + 9],
+        ].map(([px, py]) => [pixel(px), pixel(py)]);
+        if (x < 0 || y < 0 || x > width || y > height) continue;
+        shapes.push({ id: prop.id, points, alpha: prop.kind === 'pine' ? .29 : .25 });
+        // Sparse projected branch cuts make a tree read as tall, not a flat oval.
+        if (prop.kind === 'pine' || prop.kind === 'dead-tree') {
+            for (const [index, t] of [.32, .64].entries()) {
+                const fx = pixel(x + run * t);
+                const fy = pixel(y + rise * t + 2);
+                shapes.push({ id: prop.id, points: [
+                    [fx - 14 + index * 4, fy - 5], [fx + 12, fy + 2],
+                    [fx + 26 - index * 4, fy + 10], [fx + 8, fy + 6],
+                ].map(([px, py]) => [pixel(px), pixel(py)]), alpha: .13 });
+            }
+        }
+    }
+    return shapes;
+}
+
+export function drawWetForestCastShadows(ctx, seed, props, width, height) {
+    const shadows = createWetForestCastShadowPlan(seed, props, width, height);
+    if (!shadows.length) return;
+    ctx.save();
+    ctx.fillStyle = '#08120f';
+    for (const shadow of shadows) {
+        ctx.globalAlpha = shadow.alpha;
+        ctx.beginPath();
+        ctx.moveTo(...shadow.points[0]);
+        for (let i = 1; i < shadow.points.length; i++) ctx.lineTo(...shadow.points[i]);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
 // Contact shadow and wet footprint belong to the exact position supplied by authoritative C#.
 // They must remain subtle and BELOW the approved mage/monster sprite; no fake combat telegraphs.
 export function drawWetForestActorContact(ctx, x, y, radius, moving = false, phase = 0) {
