@@ -388,3 +388,30 @@ V23 still fails the owner screenshots: flat tail, broad black head cap and stret
 
 V25 excludes authored anatomy from the legacy wing-cap removal mask. V24/V25 still retain a low original underside which penetrates the deep crouch; both are preserved as failed-contact intermediates, not approved sources. V26 restores the prior underside arch alongside the new retopology. All sampled V26 vertices clear floor -0.197 (minimum -0.195541); source geometry is built, GPU silhouette review pending. Larger wings use a shallower near-ground downstroke clearance bound. No aerodynamic simulation is claimed.
 
+
+### V26 inspected correction candidate
+
+Actual RTX 5090 reviews: all 148 samples finite and unclipped, zero walking
+loop position error, no surface below floor -0.197. Minimum Z per study:
+walk -0.195540369, rear/breath -0.195513263, flight -0.195522904.
+Numerical audit: V26/source-check-summary.json. No hardware settings changed.
+
+Matched V23/V26 close-ups are preserved at
+V26/anatomy-review-v1/before-after-defects.png. Identical source density,
+camera and nearest-neighbour enlargement; head uses walk frame 0 side crop
+(43,70,83,106), rear departure frame 22 side (88,90,120,127), tail departure
+frame 22 side (103,71,169,103), wings flight frame 38 game (35,10,159,135).
+No retouching or pose-specific image repair. The old black head slab and rear
+triangular sheet are absent in those inspected poses; tail now has a curved
+volumetric taper. Continuous authored rear-leg surfaces replace the failed
+original reconstruction; card-derived texture UVs are transferred locally.
+Source anatomy replacement counts are in anatomy-rebuild.json. Larger wing
+span is 2.24 vs 1.70 source units, with fuller membrane bays and the existing
+articulated recovery/pressure motion. Lift is art-directed, not simulated.
+
+Owner acceptance is pending. No runtime replacement or completed creature
+claim. Final fire, complete actions/directions and C# aerial mechanics remain
+outstanding. Native grounded source widths at 80 px/model unit range 62–127px
+in the eight actual camera views; this is NOT yet the final 320/390px viewport
+fit. Preserve source proportions when selecting final export density, and
+revalidate mobile readability rather than stretching or cropping frames.
