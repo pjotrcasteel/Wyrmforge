@@ -14,9 +14,17 @@ Design authority: [Hunts and world](../canon/hunts-and-world.md), [modes and pro
 
 ## Verification and acceptance
 
-Implementation checkpoint only: automated tests and browser acceptance have not yet run.
-Added coverage targets 1,000 deterministic layouts, 3/4-fight route budgets, graph/geography agreement, committed forks/reward uniqueness, selected-target precedence, validation, harvest/extraction/death and legacy compatibility.
-Mobile browser coverage targets 320/390px World Gate and actual map plus additive-save persistence.
+Draft PR: [#205](https://github.com/pjotrcasteel/Wyrmforge/pull/205). No merge requested.
+
+Initial local results before integrating concurrent main changes:
+
+- 61 focused Application checks passed, including 1,000 deterministic Fire layouts, 3/4-fight route budgets, graph/geography agreement, target precedence, harvest/extraction/death and legacy navigation/aim/extraction regressions.
+- Six real-game Chromium browser cases passed: World Gate and actual map at 320/390px, first-run/character creation, existing Frost and additive completion-save persistence across reload.
+- Four map JavaScript checks passed. Release web publish and browser test build succeeded.
+- Fixed a real selection-serialization issue found by the round-trip test: persist a stable region string without changing Domain region/save types.
+- Used the public NuGet source for restore because this machine's unrelated Azure package feed could not supply vulnerability metadata. Repository package configuration is unchanged.
+
+Concurrent main added ordinary salvage/material cargo during validation. Integrate and revalidate before considering this slice ready. New selected-Hunt routes must secure or lose that cargo under the same extraction/death lifecycle.
 
 Physical iPhone playthrough, first-Hunt balance and owner acceptance remain required. Automated or synthetic browser evidence is not physical-device acceptance. Do not merge on an unverified playability claim.
 

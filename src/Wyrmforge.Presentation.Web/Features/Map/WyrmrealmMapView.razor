@@ -13,7 +13,7 @@
             <b class="map-run-progress">@CompletedNodes.Count(node => node.Type == WyrmrealmNodeType.Combat) cleared</b>
         </header>
         <details class="map-attention">
-            <summary>Wyrm signs <b>@DominantLabel</b></summary>
+            <summary>@(Hunt is not null ? "Hunt target" : "Wyrm signs") <b>@(Hunt is not null ? "Ashfang" : DominantLabel)</b></summary>
             <div class="resonance-panel" aria-label="Current magic resonance">
                 @foreach (var entry in Resonance)
                 {

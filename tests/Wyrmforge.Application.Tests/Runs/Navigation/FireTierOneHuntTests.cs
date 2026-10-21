@@ -60,6 +60,48 @@ public sealed class FireTierOneHuntTests
     }
 
     [TestMethod]
+    [DataRow(1, 3)]
+    [DataRow(2, 4)]
+    public void EachRoad_CommitsTheForkAndCompletesOnlyOnce(int roadLength, int expectedFights)
+    {
+        var map = new WyrmrealmMapState(seed: 42, introductoryFire: true);
+        Complete(map.AvailableNodes.Single());
+        var roads = map.AvailableNodes.ToArray();
+        Assert.AreEqual(2, roads.Length);
+        var selected = roads.Single(n => n.Territory!.Roads.Single(r => r.Id == n.Site!.RoadId).Encounters == roadLength);
+        var skipped = roads.Single(n => n != selected);
+        Assert.IsNotNull(map.Choose(selected.Id));
+        Assert.IsNull(map.Choose(skipped.Id));
+        Finish();
+        while (map.AvailableNodes.Single().Type != WyrmrealmNodeType.Dragon)
+        {
+            Assert.IsFalse(map.AvailableNodes.Any(n => n.Id == skipped.Id));
+            Complete(map.AvailableNodes.Single());
+        }
+        Assert.AreEqual(expectedFights, map.CompletedNodes.Count);
+        Assert.AreEqual(expectedFights, map.CompletedNodes.Select(n => n.Id).Distinct().Count());
+        Assert.IsNull(map.Choose(skipped.Id));
+        Assert.IsNotNull(map.Choose(map.AvailableNodes.Single().Id));
+        map.CompleteDragon();
+        Assert.AreEqual(0, map.AvailableNodes.Count);
+
+        void Complete(WyrmrealmMapNode node)
+        {
+            Assert.IsNotNull(map.Choose(node.Id));
+            Finish();
+        }
+
+        void Finish()
+        {
+            var current = map.CurrentNode!;
+            for (var kill = 0; kill < map.CurrentNodeKillsRequired; kill++) map.RegisterKill(false);
+            Assert.IsTrue(map.TryCompleteEncounter());
+            Assert.IsFalse(map.TryCompleteEncounter());
+            Assert.IsNull(map.Choose(current.Id));
+        }
+    }
+
+    [TestMethod]
     public void SelectedHunt_OverridesResearchTargetAndKeepsLegacyFactorySeparate()
     {
         var factory = new RunSimulationFactory(new FirstRandomSource());
