@@ -75,7 +75,7 @@
                 <dt>Discovery</dt><dd>@siteName</dd>
                 <dt>Region</dt><dd>@WyrmrealmHabitatCatalog.School(habitat)</dd>
                 <dt>Wyrm influence</dt><dd>@(Math.Round(HuntProgress * 100))% · selected route</dd>
-                <dt>Combat pressure</dt><dd>Stage @stage / 8</dd>
+                <dt>Visual phase</dt><dd>@stage / 8 · route-relative</dd>
                 <dt>Props remaining</dt><dd>@remainingProps</dd>
                 <dt>Destroyed</dt><dd>@destroyedProps</dd>
                 <dt>Picked up</dt><dd>@collectedSupplies</dd>
@@ -218,8 +218,11 @@
         var node = map.AvailableNodes.First(candidate => candidate.Type == WyrmrealmNodeType.Combat) with
         {
             Habitat = habitat,
-            Position = new WyrmrealmNodePosition(stage, 0),
-            PreLair = stage >= 7,
+            // Fire progress is a render-only gradient within the *same* seeded
+            // woodland so players can observe each physical tree evolve.
+            // The actual combat-pressure stage and route progression stay distinct.
+            Position = new WyrmrealmNodePosition(habitat == WyrmrealmHabitat.WetForest ? 1 : stage, 0),
+            PreLair = habitat != WyrmrealmHabitat.WetForest && stage >= 7,
         };
         environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
         player = new Vector2D(WorldWidth * .5, WorldHeight * .5);
