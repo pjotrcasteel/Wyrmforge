@@ -220,6 +220,25 @@ export function createWetForestScorchPlan(props, seed, width, height, influence,
                 color: ember ? '#a45f2c' : i % 3 === 0 ? '#1c211d' : '#322721',
                 alpha: ember ? .60 : .78, treeId: prop.id });
         }
+        // Rare late-route roots split the soil. Every 2px hot seam belongs to
+        // a real burning C# tree and stays visibly small and non-solid.
+        // Gameplay damage/telegraphs will only come with a later hazard system.
+        if (burning && influence > .78 && (prop.id % 3 === 0 || state === 'split-glowing')) {
+            for (let arm = 0; arm < 2; arm++) {
+                const theta = hash(seed ^ prop.id, arm, 991) * Math.PI * 2;
+                for (let segment = 0; segment < 4; segment++) {
+                    const radius = 12 + segment * 7;
+                    const x = snap2(px + Math.cos(theta) * radius);
+                    const y = snap2(py + Math.sin(theta) * radius * .48);
+                    if (x < 0 || y < 0 || x + 6 > width || y + 2 > height) continue;
+                    marks.push({ x, y, width: 6, height: 2, color: '#171b18', alpha: .78, treeId: prop.id });
+                    if (segment % 2 === 0) marks.push({
+                        x: x + 2, y, width: 2, height: 2,
+                        color: '#bb7131', alpha: .72, treeId: prop.id,
+                    });
+                }
+            }
+        }
     }
     return marks;
 }
