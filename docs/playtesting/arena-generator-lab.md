@@ -229,7 +229,10 @@ remain completely unchanged: no C# path edits, new blockers or combat hazards.
 - **Wet soil**: small seed-stable striations, crushed leaf tips, softened road
   wear, dim moss and interrupted reed reflections in dark puddles. Different
   material families get different *microgeometry*, not a single random
-  noise brush. Built into the static floor texture, not the game loop.
+  noise brush. The same real C# winding trail gets broken eroded ruts; physical
+  200px+ combat glades get dispersed crushed leaf/soil around their margins,
+  **not** around an invisible collision circle. Built into the static floor
+  texture, not the game loop.
 - **Fire ecology**: scorches are anchored solely to actual C# tree IDs whose
   seeded art has already become charred/burning at the chosen route percentage.
   Baked ash remains harmless, as do a few restrained hot embers beside actively
