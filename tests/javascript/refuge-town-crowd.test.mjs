@@ -6,27 +6,35 @@ import { test } from 'node:test';
 const root = process.cwd();
 const source = path => readFileSync(join(root, path), 'utf8');
 const scene = 'src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor';
+const actors = 'src/Wyrmforge.Presentation.Web/Features/Forge/RefugeTownActors.razor';
 const art = 'src/Wyrmforge.Presentation.Web/wwwroot/art/town';
 
-test('real Refuge scene retains the art and renders depth-sorted, larger ambient townspeople', () => {
+test('painted Refuge stays static while only its NPC actor subtree repaints', () => {
     const markup = source(scene);
+    const actorMarkup = source(actors);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    assert.match(markup, /<div class="refuge-town-crowd" aria-hidden="true">/);
-    assert.match(markup, /@foreach \(var person in crowd\.Citizens\)/);
-    assert.match(markup, /style="@CitizenStyle\(person\)"/);
-    assert.doesNotMatch(markup, /crowd\.Navigation\.IsBodyOccluded\(person\.Position\)/);
-    assert.doesNotMatch(markup, /data-town-citizen-occluded/);
-    assert.doesNotMatch(markup, /refuge-town-foreground/, 'Do not paint a polygon over half a citizen');
-    assert.match(markup, /art\/town\/night-navigation\.json/);
-    assert.doesNotMatch(markup, /visibility:\{\(occluded/, 'Rectangles must not disappear near art');
+    assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
+    assert.match(actorMarkup, /<div class="refuge-town-crowd" aria-hidden="true">/);
+    assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
+    assert.match(actorMarkup, /@if \(person\.IsPresent\)/);
+    assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
+    assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
+    assert.match(actorMarkup, /crowdStop\.Cancel\(\)/);
+    assert.doesNotMatch(markup, /PeriodicTimer/,
+        'The whole painted town must not own an NPC animation timer');
+    assert.match(markup, /GeometryChanged="OnGeometryChanged"/);
+    assert.match(actorMarkup, /await GeometryChanged\.InvokeAsync\(\)/,
+        'Rare obstacle revisions must still update red geometry while NPCs animate');
+    assert.doesNotMatch(actorMarkup, /refuge-town-geometry-solid|refuge-town-night-base/,
+        'The moving layer must not own static SVG or large paintings');
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /\.refuge-town-citizen\s*\{[^}]*pointer-events:none/s);
-    assert.doesNotMatch(css, /\.refuge-town-foreground\s*\{/);
+    assert.match(css, /\.refuge-town-geometry-feet-layer\s*\{[^}]*pointer-events:none/s);
     assert.match(css, /width:0\.957%;height:3\.188%/);
     assert.match(css, /\.refuge-town-spot \{z-index:3\}/);
     assert.match(css, /prefers-reduced-motion:reduce/);
-    assert.match(markup, /crowdStop\.Cancel\(\)/);
-    assert.ok(markup.includes('art/town/night-active.webp?v=140'), 'Keep approved nighttime artwork unchanged');
+    assert.match(markup, /loadingStop\.Cancel\(\)/);
+    assert.ok(markup.includes('art/town/night-active.webp?v=140'));
 });
 
 test('navigation is authored to the actual artwork pixel size with a real well collider and occluder', () => {
@@ -92,13 +100,58 @@ test('debug geometry displays actual solid town buildings in red only after URL 
         'Roof is a visual object, not solid ground');
     assert.ok(!map.obstacles.some(obstacle => obstacle.id === 'world-gate-arch-roof'));
     assert.match(markup, /class="refuge-town-geometry-visual"/);
-    assert.match(markup, /data-town-feet="@person.Id"/);
-    assert.match(markup, /r="@crowd.Navigation.FootRadius"/);
+    assert.match(source(actors), /data-town-feet="@person.Id"/);
+    assert.match(source(actors), /r="@Crowd.Navigation.FootRadius"/);
 
     assert.match(css, /\.refuge-town-geometry-debug\s*\{[^}]*pointer-events:none/s,
         'Debug artwork must not intercept swipes or building taps');
     assert.match(css, /fill:rgba\(235,36,40,\.32\)/, 'Solid shapes must be translucent red');
     assert.match(css, /refuge-town-geometry-walkable/, 'Show paved routing area for comparison');
+});
+
+test('debug geometry stays label-free and residents have authored four connected exits', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const markup = source(scene);
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const exits = map.destinations.filter(destination => destination.isExit);
+    assert.deepEqual(exits.map(exit => exit.id).sort(), [
+        'east-street-exit', 'south-street-exit', 'west-street-exit', 'world-gate-exit'
+    ]);
+    assert.ok(exits.find(exit => exit.id === 'world-gate-exit').y < 300,
+        'Gate exit must be inside the arch, not beside the stairs');
+    assert.match(source(actors), /@if \(person\.IsPresent\)/);
+    assert.doesNotMatch(markup, /refuge-town-geometry-legend|refuge-town-geometry-label/,
+        'No explanatory overlay should block the town scenery');
+    assert.match(simulation, /citizen\.AwaySeconds/);
+    assert.match(simulation, /citizen\.IsReturning/);
+    assert.match(simulation, /citizen\.DepartureCount\+\+/);
+    assert.match(simulation, /_navigation\.Destinations\[citizen\.CurrentNode\]\.IsExit/);
+    assert.ok(map.walkable.some(surface => surface.id === 'world-gate-stairs'));
+    assert.ok(map.walkable.some(surface => surface.id === 'west-market-approach'));
+    assert.ok(map.walkable.some(surface => surface.id === 'east-market-approach'));
+    assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-terrace-inner-planter'));
+    assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-foreground-parapet-garden'));
+});
+
+test('marked well noticeboard and east stair planting physically block only NPC feet', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    for (const id of ['well-noticeboard-post', 'east-stair-railing-planter']) {
+        assert.ok(map.obstacles.find(obstacle => obstacle.id === id)?.footprint.length >= 4,
+            `Screenshot-grounded collider missing: ${id}`);
+    }
+    const front = map.obstacles.find(obstacle => obstacle.id === 'east-foreground-parapet-garden');
+    assert.ok(front.footprint.some(point => point.x < 900),
+        'The front garden ground footprint must reach its marked west edge.');
+});
+
+test('NPC routing avoids expensive polygon resampling on every animation tick', () => {
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const navigation = source('src/Wyrmforge.Application/World/TownNavigationMap.cs');
+    assert.doesNotMatch(simulation, /!_navigation\.IsSegmentWalkable\(citizen\.Position/,
+        'A path is only invalidated by geometry revision or exhausted waypoints');
+    assert.match(navigation, /_cachedGridCells/);
+    assert.match(navigation, /_cachedGridEdges/);
+    assert.match(navigation, /if \(_cachedRevision == Revision\) return/);
 });
 
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {

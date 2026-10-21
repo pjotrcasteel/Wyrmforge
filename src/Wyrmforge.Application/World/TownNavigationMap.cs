@@ -21,6 +21,10 @@ public sealed class TownDestination
     public string Id { get; set; } = string.Empty;
     public float X { get; set; }
     public float Y { get; set; }
+
+    /// <summary>A connected world boundary or doorway. Citizens leave here and may later return.</summary>
+    public bool IsExit { get; set; }
+
     public TownPoint Position => new(X, Y);
 }
 
@@ -53,12 +57,49 @@ public sealed class TownNavigationMap
 
     public int Revision { get; private set; }
 
+    // Re-use collision answers while geometry is unchanged. Walking from one
+    // waypoint to the next must never repeat thousands of polygon/edge scans.
+    private readonly Dictionary<int, bool> _cachedGridCells = [];
+    private readonly Dictionary<long, bool> _cachedGridEdges = [];
+    private int _cachedRevision = -1;
+
+    public int CachedGridCellCount => _cachedGridCells.Count;
+    public int CachedGridEdgeCount => _cachedGridEdges.Count;
+
+    private void RefreshGridCache()
+    {
+        if (_cachedRevision == Revision) return;
+        _cachedGridCells.Clear();
+        _cachedGridEdges.Clear();
+        _cachedRevision = Revision;
+    }
+
+    private bool IsCachedGridCellWalkable(int index, int columns)
+    {
+        if (_cachedGridCells.TryGetValue(index, out var walkable)) return walkable;
+        walkable = IsWalkable(Centre(index, columns));
+        _cachedGridCells.Add(index, walkable);
+        return walkable;
+    }
+
+    private bool IsCachedGridEdgeWalkable(int from, int to, int columns)
+    {
+        var first = Math.Min(from, to);
+        var second = Math.Max(from, to);
+        var key = ((long)first << 32) | (uint)second;
+        if (_cachedGridEdges.TryGetValue(key, out var walkable)) return walkable;
+
+        walkable = IsSegmentWalkable(Centre(from, columns), Centre(to, columns));
+        _cachedGridEdges.Add(key, walkable);
+        return walkable;
+    }
+
     public static TownNavigationMap FromJson(string json)
     {
         var result = JsonSerializer.Deserialize<TownNavigationMap>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new JsonException("No town navigation map was supplied.");
         if (result.Width <= 0 || result.Height <= 0 || result.CellSize is < 8 or > 64 ||
-            result.Clearance < 0 || result.Walkable.Count == 0 || result.Destinations.Count == 0 ||
+            result.Clearance < 0 || result.Walkable.Count == 0 || result.Destinations.All(d => d.IsExit) ||
             result.Walkable.Any(p => p.Points.Count < 3) || result.Obstacles.Any(p => p.Footprint.Count < 3))
             throw new JsonException("Invalid town navigation geometry.");
         if (result.Destinations.Any(d => !result.IsWalkable(d.Position)))
@@ -127,7 +168,9 @@ public sealed class TownNavigationMap
         var dx = b.X - a.X;
         var dy = b.Y - a.Y;
         var length = MathF.Sqrt(dx * dx + dy * dy);
-        var samples = Math.Max(1, (int)MathF.Ceiling(length / (CellSize / 3f)));
+        // Two-pixel steps close the narrow gaps that coarser five-pixel
+        // sampling could miss around planter corners and sign supports.
+        var samples = Math.Max(1, (int)MathF.Ceiling(length / MathF.Min(2f, CellSize / 8f)));
         for (var i = 0; i <= samples; i++)
         {
             var t = (float)i / samples;
@@ -147,6 +190,7 @@ public sealed class TownNavigationMap
             return true;
         }
 
+        RefreshGridCache();
         var columns = (Width + CellSize - 1) / CellSize;
         var rows = (Height + CellSize - 1) / CellSize;
         var count = columns * rows;
@@ -158,7 +202,7 @@ public sealed class TownNavigationMap
             {
                 for (var y = Math.Max(0, cy - radius); y <= Math.Min(rows - 1, cy + radius); y++)
                 for (var x = Math.Max(0, cx - radius); x <= Math.Min(columns - 1, cx + radius); x++)
-                    if (Math.Max(Math.Abs(cx - x), Math.Abs(cy - y)) == radius && IsWalkable(Centre(y * columns + x, columns)))
+                    if (Math.Max(Math.Abs(cx - x), Math.Abs(cy - y)) == radius && IsCachedGridCellWalkable(y * columns + x, columns))
                         return y * columns + x;
             }
             return null;
@@ -198,10 +242,11 @@ public sealed class TownNavigationMap
                 var next = nextY * columns + nextX;
                 if (closed[next]) continue;
                 var nextPoint = Centre(next, columns);
-                if (!IsWalkable(nextPoint) || !IsSegmentWalkable(currentPoint, nextPoint)) continue;
+                if (!IsCachedGridCellWalkable(next, columns) ||
+                    !IsCachedGridEdgeWalkable(current, next, columns)) continue;
                 if (stepX != 0 && stepY != 0 &&
-                    (!IsWalkable(Centre(currentY * columns + nextX, columns)) ||
-                     !IsWalkable(Centre(nextY * columns + currentX, columns)))) continue;
+                    (!IsCachedGridCellWalkable(currentY * columns + nextX, columns) ||
+                     !IsCachedGridCellWalkable(nextY * columns + currentX, columns))) continue;
                 var nextScore = score[current] + MathF.Sqrt(stepX * stepX + stepY * stepY);
                 if (nextScore >= score[next]) continue;
                 score[next] = nextScore;
@@ -223,10 +268,14 @@ public sealed class TownNavigationMap
         var cursor = start;
         for (var i = 0; i < reversed.Count;)
         {
+            // Start with the farthest waypoint and stop at the first clear
+            // segment. The former loop tested every shorter waypoint as well.
             var lastVisible = i;
-            for (var j = i + 1; j < reversed.Count; j++)
+            for (var j = reversed.Count - 1; j > i; j--)
             {
-                if (IsSegmentWalkable(cursor, reversed[j])) lastVisible = j;
+                if (!IsSegmentWalkable(cursor, reversed[j])) continue;
+                lastVisible = j;
+                break;
             }
             cursor = reversed[lastVisible];
             path.Add(cursor);

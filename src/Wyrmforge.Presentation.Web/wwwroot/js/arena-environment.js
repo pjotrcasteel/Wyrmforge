@@ -452,6 +452,23 @@ export function drawArenaEnvironment(ctx, environment, width, height, elapsedSec
 function drawSupply(ctx, supply, width, height, elapsed) {
     const x = supply.x * width;
     const y = supply.y * height;
+    if (supply.kind?.startsWith('material:')) {
+        // World pickups stay independent of the environment atlas and its supply caches.
+        // These are small, collected-on-contact pixel fragments, not fake Wyrm Essences.
+        const ember = supply.kind === 'material:EmberResidue';
+        const bob = Math.round(Math.sin(elapsed * 3 + x * .01) * 2);
+        ctx.save();
+        ctx.fillStyle = '#0c0a10a0';
+        ctx.fillRect(Math.round(x) - 9, Math.round(y) - 2, 18, 5);
+        ctx.fillStyle = ember ? '#b8472c' : '#866c56';
+        ctx.fillRect(Math.round(x) - 6, Math.round(y) - 12 + bob, 12, 10);
+        ctx.fillStyle = ember ? '#f8a34f' : '#d6b895';
+        ctx.fillRect(Math.round(x) - 3, Math.round(y) - 11 + bob, 6, 5);
+        ctx.fillStyle = ember ? '#ffe1a0' : '#eee0c8';
+        ctx.fillRect(Math.round(x) - 1, Math.round(y) - 9 + bob, 3, 2);
+        ctx.restore();
+        return;
+    }
     const opened = supply.open;
     const experience = supply.kind === 'experience';
     const color = experience ? '#b7a0f1' : '#b2d4aa';

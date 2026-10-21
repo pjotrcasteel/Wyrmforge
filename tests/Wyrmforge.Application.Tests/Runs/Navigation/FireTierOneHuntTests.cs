@@ -12,6 +12,7 @@ using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Player;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Application.Tests.Runs.Navigation;
 
@@ -137,6 +138,8 @@ public sealed class FireTierOneHuntTests
             Wyrmforge.Domain.Progression.DragonEssences.DragonEssenceCatalog.AshfangChoices.Select(c => c.Id).ToArray(),
             simulation.PendingDragonEssenceChoices.Select(c => c.Id).ToArray());
         var essence = simulation.PendingDragonEssenceChoices[0].Id;
+        Field<RunMaterialCargoState>(simulation, "materialCargoState").Collect(HuntMaterialId.EmberResidue);
+        Field<RunMaterialCargoState>(simulation, "materialCargoState").Collect(HuntMaterialId.CharredScrap);
         Assert.IsTrue(simulation.ApplyDragonEssence(essence));
         Assert.IsFalse(simulation.ApplyDragonEssence(essence));
         var ritual = Field<RunExtractionState>(simulation, "extractionState");
@@ -154,9 +157,11 @@ public sealed class FireTierOneHuntTests
         var summary = simulation.CreateEvaluationSummary();
         Assert.AreEqual(RunOutcome.Extracted, summary.Outcome);
         CollectionAssert.AreEqual(new[] { essence }, summary.EssenceIds.ToArray());
+        CollectionAssert.AreEquivalent(new[] { HuntMaterialId.EmberResidue, HuntMaterialId.CharredScrap }, summary.SecuredMaterials.ToArray());
         Assert.AreEqual(1, simulation.ExtractionRitualsCompleted);
         simulation.Tick(.05, default, 390, 700);
         Assert.AreEqual(1, simulation.SecuredEssenceCount);
+        Assert.AreEqual(2, simulation.CreateEvaluationSummary().SecuredMaterials.Count);
         Assert.AreEqual(1, simulation.ExtractionRitualsCompleted);
     }
 
@@ -169,12 +174,14 @@ public sealed class FireTierOneHuntTests
         Invoke(simulation, "SpawnDragon", DragonCatalog.Get(DragonId.Ashfang), 390d, 700d);
         Invoke(simulation, "DefeatDragon", Field<DragonState>(simulation, "dragon"));
         Assert.IsTrue(simulation.ApplyDragonEssence(simulation.PendingDragonEssenceChoices[0].Id));
+        Field<RunMaterialCargoState>(simulation, "materialCargoState").Collect(HuntMaterialId.EmberResidue);
         while (simulation.PendingChoices.Count > 0) simulation.ApplyChoice(simulation.PendingChoices[0].Id);
         Field<PlayerState>(simulation, "player").Health = 0;
         simulation.Tick(.05, default, 390, 700);
         var summary = simulation.CreateEvaluationSummary();
         Assert.AreEqual(RunOutcome.Defeated, summary.Outcome);
         Assert.AreEqual(0, summary.EssenceIds.Count);
+        Assert.AreEqual(0, summary.SecuredMaterials.Count);
     }
 
     private static void AssertDryEdge(HuntPoint start, HuntPoint end, WyrmrealmTerritory land, int seed)

@@ -14,6 +14,7 @@ using Wyrmforge.Domain.Progression.Quests;
 using Wyrmforge.Domain.Progression.Experience;
 using Wyrmforge.Domain.Progression.Onboarding;
 using Wyrmforge.Domain.Progression.SpellMastery;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
 
@@ -25,6 +26,7 @@ public partial class Home
     private const string ArcaneBuildKey = "wyrmforge.arcaneBuild.v1";
     private const string BestScoreKey = "wyrmforge.bestScore";
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
+    private const string HuntMaterialsKey = "wyrmforge.huntMaterials.v1";
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
     private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
     private const string ForgeMasteryKey = "wyrmforge.forgeMastery";
@@ -38,6 +40,7 @@ public partial class Home
     private bool questsOpen;
     private bool activeRewardCache;
     private readonly DragonEssenceVault essenceVault = new();
+    private readonly HuntMaterialSatchel huntMaterials = new();
     private readonly ArcaneCodex arcaneCodex = new();
     private readonly ForgeProgressionState forgeProgression = new();
     private readonly SpellMasteryState spellMastery = new();
@@ -116,6 +119,7 @@ public partial class Home
         catch (JSException) { }
         bestScore = await TryGetBestScoreAsync();
         await TryLoadEssenceVaultAsync();
+        await TryLoadHuntMaterialsAsync();
         await TryLoadForgeProgressionAsync();
         await TryLoadForgeMasteryAsync();
         await TryLoadSpellMasteryAsync();
@@ -292,6 +296,11 @@ public partial class Home
             await RecordFireballDiscoveriesAsync(value.EssenceIds);
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
+        }
+        if (value.SecuredMaterials.Count > 0)
+        {
+            foreach (var material in value.SecuredMaterials) huntMaterials.Store(material);
+            await TrySetHuntMaterialsAsync();
         }
         await RefreshResearchPromptAsync(activeResearchLead is not null && value.Outcome != RunOutcome.Abandoned);
         if (value.Score <= bestScore) return;
@@ -603,6 +612,30 @@ public partial class Home
         }
         catch (JSException) { }
         catch (JsonException) { }
+    }
+
+    private async Task TryLoadHuntMaterialsAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, HuntMaterialsKey);
+            if (string.IsNullOrWhiteSpace(stored)) return;
+            var items = JsonSerializer.Deserialize<string[]>(stored) ?? [];
+            huntMaterials.Restore(items.Select(value => Enum.TryParse<HuntMaterialId>(value, out var id)
+                ? (HuntMaterialId?)id : null).OfType<HuntMaterialId>());
+        }
+        catch (JSException) { }
+        catch (JsonException) { }
+    }
+
+    private async Task TrySetHuntMaterialsAsync()
+    {
+        try
+        {
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, HuntMaterialsKey,
+                JsonSerializer.Serialize(huntMaterials.Items.Select(id => id.ToString()).ToArray()));
+        }
+        catch (JSException) { }
     }
 
     private async Task TrySetEssenceVaultAsync()

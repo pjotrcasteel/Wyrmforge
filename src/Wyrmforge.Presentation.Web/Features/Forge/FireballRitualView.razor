@@ -138,6 +138,33 @@
                                 </div>
                             </details>
                         }
+                        else if (mutation.Id == FireballMutationId.CinderNeedle)
+                        {
+                            <details class="fireball-source-details fireball-common-source">
+                                <summary>Craft: common Hunt materials</summary>
+                                <div class="fireball-source-description">
+                                    <p>Find Ember Residue on Ashlings or Ash Slingers. Break barrels and crates for Charred Scrap.</p>
+                                    <div class="fireball-common-recipe" aria-label="Cinder Needle crafting ingredients">
+                                        @foreach (var need in HuntMaterialCatalog.CinderNeedleRecipe)
+                                        {
+                                            <span class="@(Materials.Count(need.Material) >= need.Required ? "ready" : "missing")">
+                                                @HuntMaterialCatalog.Name(need.Material): @Materials.Count(need.Material) / @need.Required
+                                            </span>
+                                        }
+                                    </div>
+                                    <p>Extract safely to secure collected materials. Craft once, then equip in any unlocked socket.</p>
+                                    @if (learned)
+                                    {
+                                        <strong class="fireball-crafted">Already crafted</strong>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="fireball-craft-action" disabled="@(!Core.CanCraftCinderNeedle(Materials))"
+                                                @onclick="CraftCinderNeedleAsync">Craft Cinder Needle</button>
+                                    }
+                                </div>
+                            </details>
+                        }
                         else
                         {
                             <span class="fireball-source-unavailable">Source not available yet</span>
@@ -149,7 +176,7 @@
             {
                 <button type="button" class="fireball-remove" @onclick="() => EquipAsync(slot, null)">Remove mutator</button>
             }
-            <p class="fireball-help">Only unlocked mutators can be equipped. Your first secured Ashfang sample unlocks each playable mutator permanently.</p>
+            <p class="fireball-help">Secure Ashfang Essences for powerful mutators, or craft Cinder Needle from ordinary Hunt materials.</p>
         }
         @if (!string.IsNullOrWhiteSpace(notice))
         {
@@ -161,6 +188,8 @@
 @code {
     [Parameter, EditorRequired] public FireballCoreState Core { get; set; } = null!;
     [Parameter, EditorRequired] public DragonEssenceVault Vault { get; set; } = null!;
+    [Parameter] public HuntMaterialSatchel Materials { get; set; } = new();
+    [Parameter] public Func<Task<bool>>? OnCraftCinderNeedle { get; set; }
     [Parameter] public Func<Task<bool>>? OnUpgrade { get; set; }
     [Parameter] public Func<int, FireballMutationId?, Task<bool>>? OnEquip { get; set; }
 
@@ -229,6 +258,16 @@
         if (OnUpgrade is null || !await OnUpgrade()) { notice = "Fireball cannot be upgraded yet."; return; }
         notice = $"Fireball strengthened to level {Core.Level}. A new socket is open.";
     }
+    private async Task CraftCinderNeedleAsync()
+    {
+        if (OnCraftCinderNeedle is null || !await OnCraftCinderNeedle())
+        {
+            notice = "Find and secure the missing common materials first.";
+            return;
+        }
+        notice = "Cinder Needle crafted. Select it to equip in this socket.";
+    }
+
     private async Task EquipAsync(int slot, FireballMutationId? mutation)
     {
         if (OnEquip is null || !await OnEquip(slot, mutation)) { notice = "That mutation cannot be equipped."; return; }

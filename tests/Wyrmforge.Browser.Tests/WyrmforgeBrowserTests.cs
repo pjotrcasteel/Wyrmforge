@@ -115,10 +115,16 @@ public sealed class WyrmforgeBrowserTests : PageTest
             "element => getComputedStyle(element).pointerEvents === 'none'"));
         Assert.IsTrue(await debug.Locator(".refuge-town-geometry-solid").First.EvaluateAsync<bool>(
             "element => getComputedStyle(element).fill.includes('235, 36, 40')"), "Solid geometry should be red.");
-        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(2);
+        await Expect(debug.Locator(".refuge-town-geometry-walkable")).ToHaveCountAsync(5);
         await Expect(debug.Locator(".refuge-town-geometry-visual[data-town-foreground='world-gate-arch-roof']"))
             .ToHaveCountAsync(1);
-        await Expect(debug.Locator(".refuge-town-geometry-feet")).ToHaveCountAsync(7);
+        await Expect(debug.Locator(".refuge-town-geometry-label")).ToHaveCountAsync(0);
+        await Expect(debug.Locator(".refuge-town-geometry-legend")).ToHaveCountAsync(0);
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(@"() => {
+            const feet = document.querySelectorAll('.refuge-town-geometry-feet').length;
+            const citizens = document.querySelectorAll('.refuge-town-citizen').length;
+            return feet === citizens && citizens > 0 && citizens <= 7;
+        }"), "Only currently present citizens should have debug contact discs.");
         await Expect(Page.Locator(".refuge-town-citizen[style*='visibility:hidden']")).ToHaveCountAsync(0);
 
         Assert.AreEqual(before, await Page.Locator(".refuge-town-spot[data-town-building]").EvaluateAllAsync<string>(
@@ -499,8 +505,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".fireball-socket--1").ClickAsync();
 
         await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
-        await Expect(Page.Locator(".fireball-source-details")).ToHaveCountAsync(3);
-        await Expect(Page.Locator(".fireball-source-unavailable")).ToHaveCountAsync(7);
+        await Expect(Page.Locator(".fireball-source-details")).ToHaveCountAsync(4);
+        await Expect(Page.Locator(".fireball-source-unavailable")).ToHaveCountAsync(6);
 
         var meteor = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Meteor Heart" });
         await Expect(meteor.Locator("summary")).ToContainTextAsync("Ashfang");
@@ -523,6 +529,41 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(planned.Locator("details")).ToHaveCountAsync(0);
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
             "Source disclosures must not cause horizontal overflow on mobile.");
+    }
+
+    [TestMethod]
+    public async Task Mobile_Fireball_CraftMinorMutationFromSecuredOrdinaryLoot()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('cinderCraftTestSeeded')) {
+            localStorage.setItem('cinderCraftTestSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.setItem('wyrmforge.huntMaterials.v1',JSON.stringify([
+                'EmberResidue','EmberResidue','CharredScrap','CharredScrap']));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+        }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+        var needle = Page.Locator(".fireball-mutator-entry").Filter(new() { HasText = "Cinder Needle" });
+        await Expect(needle.Locator(".fireball-mutator")).ToBeDisabledAsync();
+        await needle.Locator("summary").ClickAsync();
+        await Expect(needle.Locator(".fireball-common-recipe")).ToContainTextAsync("Ember Residue: 2 / 2");
+        await Expect(needle.Locator(".fireball-common-recipe")).ToContainTextAsync("Charred Scrap: 2 / 2");
+        await needle.GetByRole(AriaRole.Button, new() { Name = "Craft Cinder Needle" }).ClickAsync();
+        await Expect(needle.Locator(".fireball-mutator")).ToBeEnabledAsync();
+        await Expect(needle.Locator(".fireball-crafted")).ToHaveTextAsync("Already crafted");
+        await needle.Locator(".fireball-mutator").ClickAsync();
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Cinder Needle");
+        Assert.AreEqual(0, await Page.EvaluateAsync<int>(@"() =>
+            JSON.parse(localStorage.getItem('wyrmforge.huntMaterials.v1')).length"));
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Cinder Needle");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"));
     }
 
     [TestMethod]

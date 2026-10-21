@@ -1,3 +1,5 @@
+using Wyrmforge.Domain.Progression.Signature;
+
 namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
@@ -7,6 +9,13 @@ public sealed partial class RunSimulation
         if ((!mapState.EncounterActive && !trailExitPending) || arenaEnvironment is null) return;
         var collected = arenaEnvironment.TryCollect(player.Position, width, height, player.Radius, player.Health < player.MaxHealth);
         if (collected is null) return;
+
+        if (collected.Kind.StartsWith("material:", StringComparison.Ordinal) &&
+            Enum.TryParse<HuntMaterialId>(collected.Kind["material:".Length..], out var material))
+        {
+            materialCargoState.Collect(material);
+            return;
+        }
 
         switch (collected.Kind)
         {

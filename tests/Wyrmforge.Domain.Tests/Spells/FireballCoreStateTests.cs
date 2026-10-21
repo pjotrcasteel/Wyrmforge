@@ -72,6 +72,41 @@ public sealed class FireballCoreStateTests
     }
 
     [TestMethod]
+    public void CraftCinderNeedle_MissingMaterialsNeverSpendOrUnlock()
+    {
+        var satchel = new HuntMaterialSatchel();
+        satchel.Store(HuntMaterialId.EmberResidue);
+        satchel.Store(HuntMaterialId.CharredScrap);
+        var core = new FireballCoreState();
+
+        Assert.IsFalse(core.CraftCinderNeedle(satchel));
+        Assert.AreEqual(1, satchel.Count(HuntMaterialId.EmberResidue));
+        Assert.AreEqual(1, satchel.Count(HuntMaterialId.CharredScrap));
+        Assert.IsFalse(core.Discovered.Contains(FireballMutationId.CinderNeedle));
+    }
+
+    [TestMethod]
+    public void CraftCinderNeedle_PaysExactCommonRecipeOnceAndPersistsEquippedMutation()
+    {
+        var satchel = new HuntMaterialSatchel();
+        satchel.Restore([HuntMaterialId.EmberResidue, HuntMaterialId.EmberResidue,
+            HuntMaterialId.EmberResidue, HuntMaterialId.CharredScrap, HuntMaterialId.CharredScrap]);
+        var core = new FireballCoreState();
+
+        Assert.IsTrue(core.CraftCinderNeedle(satchel));
+        Assert.IsTrue(core.Equip(0, FireballMutationId.CinderNeedle));
+        Assert.AreEqual(1, satchel.Count(HuntMaterialId.EmberResidue));
+        Assert.AreEqual(0, satchel.Count(HuntMaterialId.CharredScrap));
+        Assert.IsFalse(core.CraftCinderNeedle(satchel));
+
+        var restored = new FireballCoreState();
+        restored.Restore(core.ToSave());
+        Assert.AreEqual(FireballMutationId.CinderNeedle, restored.Slots[0]);
+        Assert.IsTrue(restored.Discovered.Contains(FireballMutationId.CinderNeedle));
+        Assert.IsTrue(HuntMaterialCatalog.CinderNeedleRecipe.All(need => need.Required == 2));
+    }
+
+    [TestMethod]
     public void SavedCore_ClampsLevelAndDoesNotGrantMissingDiscovery()
     {
         var core = new FireballCoreState();

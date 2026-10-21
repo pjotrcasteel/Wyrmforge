@@ -73,15 +73,47 @@ public sealed class ArenaEnvironmentStateTests
 
 
     [TestMethod]
-    public void Create_NormalHunt_DoesNotEnableExperimentalArenaPropsOrArt()
+    public void Create_NormalHunt_GetsOnlySmallPhysicalSalvagePropsNotLabGeography()
     {
         var map = new WyrmrealmMapState(seed: 1204);
         var normal = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]).Snapshot();
+        var again = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]).Snapshot();
         var lab = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0], generatorPreview: true).Snapshot();
         Assert.IsFalse(normal.GeneratorPreview);
-        Assert.IsEmpty(normal.Props);
+        Assert.IsGreaterThan(0, normal.Props.Count);
+        Assert.IsLessThanOrEqualTo(6, normal.Props.Count);
+        Assert.IsTrue(normal.Props.All(prop => prop.Kind is "barrel" or "crate"));
+        CollectionAssert.AreEqual(normal.Props.ToArray(), again.Props.ToArray());
         Assert.IsTrue(lab.GeneratorPreview);
-        Assert.IsGreaterThan(0, lab.Props.Count);
+        Assert.IsGreaterThan(normal.Props.Count, lab.Props.Count);
+    }
+
+    [TestMethod]
+    public void NormalHunt_BreakBarrel_DropsSinglePhysicalCharredScrapPickup()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var prop = environment.Snapshot().Props[0];
+        var at = new Vector2D(prop.X * width, prop.Y * height);
+        Assert.IsTrue(environment.TryDamageProp(at, width, height, 2, 500));
+        Assert.IsFalse(environment.TryDamageProp(at, width, height, 2, 500));
+        var drop = environment.Snapshot().Supplies.Single(s => s.Kind == "material:CharredScrap");
+        var location = new Vector2D(drop.X * width, drop.Y * height);
+        Assert.AreEqual("material:CharredScrap", environment.TryCollect(location, width, height, 10, true)?.Kind);
+        Assert.IsNull(environment.TryCollect(location, width, height, 10, true));
+    }
+
+    [TestMethod]
+    public void EnemyMaterialPickup_IsCollectedExactlyOnce()
+    {
+        const int width = 950, height = 1550;
+        var map = new WyrmrealmMapState(seed: 1204);
+        var environment = ArenaEnvironmentState.Create(map.Seed, map.AvailableNodes[0]);
+        var location = new Vector2D(760, 720);
+        environment.SpawnMaterialPickup(location, width, height, "EmberResidue");
+        Assert.AreEqual("material:EmberResidue", environment.TryCollect(location, width, height, 10, true)?.Kind);
+        Assert.IsNull(environment.TryCollect(location, width, height, 10, true));
     }
 
     [TestMethod]

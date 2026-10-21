@@ -19,7 +19,7 @@ public static class FireballCoreCatalog
         new(FireballMutationId.Detonation, "Detonation", "Fireball explodes on impact, damaging nearby enemies.", DragonEssenceId.CinderHeart, "✹"),
         new(FireballMutationId.ScorchedEarth, "Scorched Earth", "Fireball leaves a short-lived patch of burning ground.", DragonEssenceId.AshenWing, "♨"),
         // Shown as future research only. Never equip or run concepts without implemented combat effects.
-        new(FireballMutationId.CinderNeedle, "Cinder Needle", "Compresses Fireball into a fast ember needle.", null, "➤", false),
+        new(FireballMutationId.CinderNeedle, "Cinder Needle", "A faster, smaller Fireball with reduced impact damage.", null, "➤"),
         new(FireballMutationId.PhoenixVolley, "Phoenix Volley", "Splits Fireball into several projectiles.", null, "✧", false),
         new(FireballMutationId.PiercingEmber, "Piercing Ember", "Fireball passes through enemies.", null, "↗", false),
         new(FireballMutationId.SeekerEmber, "Seeker Ember", "Curves toward eligible enemies.", null, "⌁", false),
@@ -61,6 +61,18 @@ public sealed class FireballCoreState
         foreach (var candidate in FireballCoreCatalog.Mutations)
             if (candidate is { Playable: true, ResearchSample: { } sample } && owned.Contains(sample)) changed |= discovered.Add(candidate.Id);
         return changed;
+    }
+
+    public bool CanCraftCinderNeedle(HuntMaterialSatchel satchel) =>
+        !discovered.Contains(FireballMutationId.CinderNeedle) &&
+        HuntMaterialCatalog.CinderNeedleRecipe.All(need => satchel.Count(need.Material) >= need.Required);
+
+    public bool CraftCinderNeedle(HuntMaterialSatchel satchel)
+    {
+        ArgumentNullException.ThrowIfNull(satchel);
+        if (!CanCraftCinderNeedle(satchel) || !satchel.ConsumeRecipe(HuntMaterialCatalog.CinderNeedleRecipe)) return false;
+        discovered.Add(FireballMutationId.CinderNeedle);
+        return true;
     }
 
     public bool Equip(int index, FireballMutationId? mutation)
