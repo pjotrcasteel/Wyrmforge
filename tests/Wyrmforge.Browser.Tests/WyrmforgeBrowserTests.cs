@@ -388,7 +388,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".fireball-socket--1").ClickAsync();
         await Expect(Page.Locator(".fireball-mutator").Filter(new() { HasText = "Detonation" })).ToBeDisabledAsync();
         Assert.AreEqual("Arcanist", await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
-        Assert.AreEqual(1, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem(\'wyrmforge.essenceVault\')).length"));
+        Assert.AreEqual(1, await Page.EvaluateAsync<int>("() => JSON.parse(localStorage.getItem('wyrmforge.essenceVault')).length"));
     }
 
     [TestMethod]
