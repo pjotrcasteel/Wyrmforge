@@ -1,0 +1,114 @@
+{
+  "method": "local offline SDXL masked hidden attachment painting",
+  "seed": 6207,
+  "strength": 0.55,
+  "steps": 40,
+  "prompt": "isometric pixel art, black obsidian dragon body, overlapping jagged charcoal armor plates, warm red orange molten cracks, muscular shoulder and hip attachments, same crouching dragon, detailed game sprite",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "model": "/opt/wyrmforge-models/SDXL-card-art",
+  "hostedInference": false,
+  "polygons": [
+    [
+      [
+        101,
+        75
+      ],
+      [
+        116,
+        75
+      ],
+      [
+        121,
+        84
+      ],
+      [
+        117,
+        91
+      ],
+      [
+        106,
+        91
+      ],
+      [
+        100,
+        86
+      ]
+    ],
+    [
+      [
+        132,
+        77
+      ],
+      [
+        144,
+        77
+      ],
+      [
+        149,
+        85
+      ],
+      [
+        144,
+        91
+      ],
+      [
+        133,
+        89
+      ]
+    ],
+    [
+      [
+        61,
+        78
+      ],
+      [
+        75,
+        78
+      ],
+      [
+        79,
+        85
+      ],
+      [
+        72,
+        94
+      ],
+      [
+        57,
+        94
+      ],
+      [
+        55,
+        87
+      ]
+    ],
+    [
+      [
+        81,
+        81
+      ],
+      [
+        92,
+        81
+      ],
+      [
+        96,
+        88
+      ],
+      [
+        91,
+        96
+      ],
+      [
+        81,
+        95
+      ],
+      [
+        77,
+        89
+      ]
+    ]
+  ],
+  "ownerAccepted": false,
+  "status": "hidden overlap candidate requiring rest and pose review"
+}
