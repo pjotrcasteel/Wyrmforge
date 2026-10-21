@@ -1,5 +1,6 @@
 // Arena Materials Lab 01: only ground. No layout, heightmap, props or gameplay.
 // Material samples deliberately use simple horizontal strips, not a proposed arena.
+import { MATERIAL_REFERENCE_ATLAS, MATERIAL_REFERENCE_TILE_SIZE } from './arena-material-reference.js';
 export const CELL = 16;
 export const COLS = 30;
 export const ROWS = 40;
@@ -123,13 +124,32 @@ export function drawMaterialBoard(ctx, board, seed, columns = COLS, rows = ROWS)
             drawGroundMaterialTile(ctx, board[row * columns + col], col, row, seed);
 }
 
+// Direct photographic crops from the user's supplied Gothic Wet Forest reference.
+// Each painted cell copies the corresponding portion of the approved source.
+// No synthetic geometric cobble, grass or mud patterns are applied over it.
+export function drawReferenceGroundBoard(ctx, board, atlas, columns = COLS, rows = ROWS) {
+    if (!atlas || !ctx || board.length !== columns * rows) return false;
+    const length = MATERIAL_REFERENCE_TILE_SIZE;
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+            const index = board[row * columns + col];
+            if (!Number.isInteger(index) || index >= MATERIALS.length) continue;
+            const x = col * CELL, y = row * CELL;
+            ctx.drawImage(atlas, index * length + x % length, y % length,
+                CELL, CELL, x, y, CELL, CELL);
+        }
+    }
+    return true;
+}
+
 function render(state) {
     state.pending = false;
     if (state.disposed) return;
     const ctx = state.canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    drawMaterialBoard(ctx, state.cells, state.seed);
+    if (!drawReferenceGroundBoard(ctx, state.cells, state.atlas))
+        drawMaterialBoard(ctx, state.cells, state.seed);
 }
 function redraw(state) {
     if (!state.pending && !state.disposed) {
@@ -159,7 +179,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
     const state = {
         canvas, seed: seed | 0, selected: 0, radius: 2,
         cells: materialSampleBoard(), history: [], pointer: null,
-        listeners: [], pending: false, frameId: 0, disposed: false,
+        listeners: [], pending: false, frameId: 0, disposed: false, atlas: null,
     };
     const bind = (target, name, handler, options) => {
         target.addEventListener(name, handler, options);
@@ -186,6 +206,15 @@ export function initMaterialsLab(canvas, seed = 1441) {
     bind(canvas, 'touchmove', preventScroll, { passive: false });
     contexts.set(canvas, state);
     render(state);
+    const atlas = new Image();
+    atlas.onload = () => {
+        if (!state.disposed && atlas.width === MATERIAL_REFERENCE_TILE_SIZE * MATERIALS.length &&
+            atlas.height === MATERIAL_REFERENCE_TILE_SIZE) {
+            state.atlas = atlas;
+            redraw(state);
+        }
+    };
+    atlas.src = MATERIAL_REFERENCE_ATLAS;
 }
 export function selectGroundMaterial(canvas, index) {
     const s = contexts.get(canvas);

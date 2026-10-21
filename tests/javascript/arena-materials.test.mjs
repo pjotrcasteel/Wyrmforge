@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { MATERIAL_REFERENCE_ATLAS, MATERIAL_REFERENCE_TILE_SIZE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-material-reference.js';
 import {
     CELL, COLS, ROWS, MATERIALS, materialSampleBoard,
     paintGroundCells, materialNoise, drawGroundMaterialTile,
-    drawMaterialBoard,
+    drawMaterialBoard, drawReferenceGroundBoard,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
 test('new material lab starts as five plain labeled material strips, not a generated map', () => {
@@ -74,4 +75,30 @@ test('iPhone touch drags are owned by the new painter and remain separate from l
     assert.match(js, /setPointerCapture/);
     assert.match(css, /touch-action:none/);
     assert.doesNotMatch(js, /HuntArenaGenerator|RestrictMovement|DamagePropsInRadius|spawnMob|drawArenaEnvironment/);
+});
+
+test('actual cropped reference materials are embedded and rendered without invented geometry', () => {
+    assert.equal(MATERIAL_REFERENCE_TILE_SIZE, 64);
+    assert.match(MATERIAL_REFERENCE_ATLAS, /^data:image\/webp;base64,UklG/);
+    const imageBytes = Buffer.from(MATERIAL_REFERENCE_ATLAS.split(',')[1], 'base64');
+    assert.equal(imageBytes.toString('ascii', 0, 4), 'RIFF');
+    assert.equal(imageBytes.toString('ascii', 8, 12), 'WEBP');
+    assert.ok(imageBytes.length > 2000);
+    const cells = materialSampleBoard();
+    const copied = [];
+    const ctx = { drawImage(...args) { copied.push(args); } };
+    const atlas = { width: 320, height: 64 };
+    assert.equal(drawReferenceGroundBoard(ctx, cells, atlas), true);
+    assert.equal(copied.length, COLS * ROWS);
+    for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+            const mark = copied[row * COLS + col];
+            const index = cells[row * COLS + col];
+            assert.equal(mark[0], atlas);
+            assert.equal(mark[1], index * 64 + (col * CELL) % 64);
+            assert.equal(mark[2], (row * CELL) % 64);
+            assert.deepEqual(mark.slice(3), [CELL, CELL, col * CELL, row * CELL, CELL, CELL]);
+        }
+    }
+    assert.equal(drawReferenceGroundBoard(ctx, cells, null), false);
 });
