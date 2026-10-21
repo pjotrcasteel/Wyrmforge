@@ -32,17 +32,15 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
-        @* Navigation owns pedestrian feet. Whole-body occlusion avoids slicing rectangles with painted scenery masks. *@
+        @* Prototype pedestrians stay visible. Feet, not their full rectangular bodies, collide with the ground. *@
         @if (crowd is not null)
         {
             <div class="refuge-town-crowd" aria-hidden="true">
                 @foreach (var person in crowd.Citizens)
                 {
-                    var occluded = crowd.Navigation.IsBodyOccluded(person.Position);
                     <span @key="person.Id" class="refuge-town-citizen"
                           data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
-                          data-town-citizen-occluded="@(occluded ? "true" : "false")"
-                          style="@CitizenStyle(person, occluded)"></span>
+                          style="@CitizenStyle(person)"></span>
                 }
             </div>
         }
@@ -61,13 +59,24 @@
                         <polygon @key="obstacle.Id" class="refuge-town-geometry-solid"
                                  data-town-obstacle="@obstacle.Id" points="@GeometryPoints(obstacle.Footprint)" />
                     }
+                    @foreach (var foreground in crowd.Navigation.Occluders)
+                    {
+                        <polygon @key="foreground.Id" class="refuge-town-geometry-visual"
+                                 data-town-foreground="@foreground.Id" points="@GeometryPoints(foreground.Clip)" />
+                    }
+                    @foreach (var person in crowd.Citizens)
+                    {
+                        <circle @key="person.Id" class="refuge-town-geometry-feet"
+                                data-town-feet="@person.Id" cx="@person.Position.X"
+                                cy="@person.Position.Y" r="@crowd.Navigation.Clearance" />
+                    }
                 </svg>
                 @foreach (var obstacle in crowd.Navigation.Obstacles)
                 {
                     <span @key="obstacle.Id" class="refuge-town-geometry-label"
                           style="@GeometryLabelStyle(crowd.Navigation, obstacle)">@obstacle.Id.Replace('-', ' ')</span>
                 }
-                <span class="refuge-town-geometry-legend">RED = SOLID · CYAN = WALKABLE</span>
+                <span class="refuge-town-geometry-legend">RED = FEET BLOCKED · AMBER = VISUAL · CYAN = PATH · WHITE = NPC FEET</span>
             </div>
         }
 
@@ -132,9 +141,8 @@
         catch (OperationCanceledException) { /* Navigating away cancels ambient movement. */ }
     }
 
-    private static string CitizenStyle(TownCitizen citizen, bool occluded) =>
-        FormattableString.Invariant(
-            $"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%;visibility:{(occluded ? "hidden" : "visible")}");
+    private static string CitizenStyle(TownCitizen citizen) =>
+        FormattableString.Invariant($"left:{citizen.XPercent:0.###}%;top:{citizen.YPercent:0.###}%");
 
     private static string GeometryPoints(IReadOnlyList<TownPoint> points) =>
         string.Join(" ", points.Select(point => FormattableString.Invariant($"{point.X:0.##},{point.Y:0.##}")));
