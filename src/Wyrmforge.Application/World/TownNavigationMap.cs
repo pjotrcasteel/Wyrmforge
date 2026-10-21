@@ -268,10 +268,14 @@ public sealed class TownNavigationMap
         var cursor = start;
         for (var i = 0; i < reversed.Count;)
         {
+            // Start with the farthest waypoint and stop at the first clear
+            // segment. The former loop tested every shorter waypoint as well.
             var lastVisible = i;
-            for (var j = i + 1; j < reversed.Count; j++)
+            for (var j = reversed.Count - 1; j > i; j--)
             {
-                if (IsSegmentWalkable(cursor, reversed[j])) lastVisible = j;
+                if (!IsSegmentWalkable(cursor, reversed[j])) continue;
+                lastVisible = j;
+                break;
             }
             cursor = reversed[lastVisible];
             path.Add(cursor);
