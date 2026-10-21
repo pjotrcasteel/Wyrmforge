@@ -30,7 +30,7 @@ export function createTerrainPlan(environment, width, height) {
     // They read as arbitrary spires, sit on traversable floor and undermine
     // its coherent historic layout. Other terrain biomes keep their debris.
     const remains = [];
-    if (!story.cloister) for (let index = 0; index < 10; index++) {
+    if (!story.cloister && !story.wetForest) for (let index = 0; index < 10; index++) {
         const side = index % 2 === 0 ? 1 : -1;
         remains.push({ x: Math.max(9, Math.min(width - 9, width * .5 + side * (trailWidth * .68 + random() * width * .16))),
             y: 20 + random() * Math.max(1, height - 40), size: 7 + random() * 11, rotation: random() * Math.PI });
@@ -38,7 +38,7 @@ export function createTerrainPlan(environment, width, height) {
     const proximity = Math.max(0, Math.min(1, environment.corruption ?? ((environment.stage - 1) / 7)));
     const element = ['fire', 'frost', 'storm', 'arcane'].includes(environment.element) ? environment.element : 'arcane';
     const scars = [];
-    for (let index = 0; index < 3 + Math.floor(proximity * 20); index++) {
+    for (let index = 0; index < (story.wetForest ? 0 : 3 + Math.floor(proximity * 20)); index++) {
         // Irregular, sparsely placed burn/frost/charge/rift deposits build toward the lair.
         // Leave the central fighting ground clearer than the ruined approach and outer terrain.
         const side = index % 2 === 0 ? -1 : 1;
@@ -162,8 +162,9 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.restore();
     }
     drawTerritoryLandmarks(ctx, plan.story);
-    if (artReady() && !plan.story.cloister) drawForestEdges(ctx, plan, width, height);
-    if (plan.stage >= 5) {
+    // The Wet Forest edge can be explored; never bake fake solid-looking trees without C# footprints.
+    if (artReady() && !plan.story.cloister && !plan.story.wetForest) drawForestEdges(ctx, plan, width, height);
+    if (plan.stage >= 5 && !plan.story.wetForest) {
         ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : snow ? 'rgba(150,206,236,.24)' : 'rgba(128,178,153,.19)';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -175,7 +176,7 @@ function drawTerrain(ctx, plan, width, height) {
     }
     // A restrained habitat wash tells forest from flood from scorch at a glance; the full tile pass comes later.
     const tint = habitatTint(plan.habitat);
-    if (tint) {
+    if (tint && !plan.story.wetForest) {
         ctx.fillStyle = tint;
         ctx.fillRect(0, 0, width, height);
     }
@@ -183,7 +184,8 @@ function drawTerrain(ctx, plan, width, height) {
     const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
         width * .5, height * .49, Math.max(width, height) * .7);
     vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
+    vignette.addColorStop(1, plan.story.wetForest ? 'rgba(1,4,6,.3)' :
+        plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
 }
@@ -213,7 +215,7 @@ export function habitatTint(habitat) {
 
 function terrainTexture(environment, width, height) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, width, height, artGeneration()].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration()].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
