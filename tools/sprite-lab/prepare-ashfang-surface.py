@@ -64,5 +64,6 @@ else:
                 for keyframe in curve.keyframe_points:keyframe.interpolation='LINEAR'
         fire['source_clip']=clip;fire['presentation_only']=True
     bpy.context.scene.frame_set(1)
+    bpy.context.scene.frame_end=len(np.load(target/'walk-samples.npz')['positions'])
     bpy.ops.wm.save_as_mainfile(filepath=str(target/'ashfang-rigged.blend'),compress=True)
 print(mode, str(target),flush=True)
