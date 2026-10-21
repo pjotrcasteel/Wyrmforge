@@ -102,10 +102,19 @@ raw[charcoal,:3]*=np.array([.30,.38,.48])
 eye_score=np.where((raw[:,:,1]>.15)&(raw[:,:,0]>raw[:,:,1]*1.5),raw[:,:,0]-.3*raw[:,:,1],-1)
 eye_y,eye_x=np.unravel_index(eye_score.argmax(),eye_score.shape)
 for loop in mesh.loops:
-    if source_labels[loop.vertex_index]==10:layer.data[loop.index].uv=((eye_x+.5)/2048,(eye_y+.5)/1024)
+    if source_labels[loop.vertex_index]==10:uv[loop.vertex_index]=((eye_x+.5)/2048,(eye_y+.5)/1024)
 raw[1020:1024,1020:1024,:]=[.62,.55,.43,1]
 for loop in mesh.loops:
-    if source_labels[loop.vertex_index]==11:layer.data[loop.index].uv=(1022/2048,1022/1024)
+    if source_labels[loop.vertex_index]==11:uv[loop.vertex_index]=(1022/2048,1022/1024)
+# Original authored charcoal tile for the solid scutes. This reserved area is
+# outside the card-projected body UVs; original reference art remains intact.
+tile_y,tile_x=np.mgrid[0:128,0:128];tone=.145+.045*(1-tile_y/127)+.012*np.sin(tile_x*.11)*np.sin(tile_y*.08)
+raw[896:1024,0:128,:3]=tone[:,:,None]*np.array([.94,.96,1.0]);raw[896:1024,0:128,3]=1
+for index in range(body_count):
+    if source_labels[index] in (20,21,22,23):
+        x,y,z=v[index];u=(x*4+.5)%1;w=(y*4+.5)%1
+        uv[index]=[(8+u*110)/2048,(904+w*110)/1024]
+for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
 card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.png'));cp=np.empty(len(card.pixels),np.float32);card.pixels.foreach_get(cp);cp=cp.reshape(card.size[1],card.size[0],4);rows=(np.arange(1024)*card.size[1]//1024);cols=(np.arange(1024)*card.size[0]//1024);atlas=np.concatenate([raw,cp[rows[:,None],cols[None,:]]],axis=1)
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
@@ -149,13 +158,13 @@ for index,p in enumerate(v):
         for name,weight in anchors:
             if weight>0:obj.vertex_groups[name].add([index],weight,'REPLACE')
         continue
-    elif source_labels[index]==1 or (source_labels[index]==0 and ((y>.27 and abs(x)<.13) or y>=.34)):permitted=[n for n in names if n.startswith('tail.')];region='tail'
-    elif source_labels[index] in (2,10,11):
+    elif source_labels[index] in (1,23) or (source_labels[index]==0 and ((y>.27 and abs(x)<.13) or y>=.34)):permitted=[n for n in names if n.startswith('tail.')];region='tail'
+    elif source_labels[index] in (2,10,11,22):
         permitted=['head'];region='head'
     elif source_labels[index] in (3,4):
         side='L' if source_labels[index]==3 else 'R';permitted=[f'hind.{i}.{side}' for i in range(3)];region='hind'
-    elif source_labels[index]==5:permitted=['pelvis','spine','chest'];region='body'
-    elif source_labels[index]==6:permitted=['chest','neck.0','neck.1'];region='neck'
+    elif source_labels[index] in (5,20):permitted=['pelvis','spine','chest'];region='body'
+    elif source_labels[index] in (6,21):permitted=['chest','neck.0','neck.1'];region='neck'
     elif source_labels[index] in (7,8):
         side='L' if source_labels[index]==7 else 'R';permitted=[f'fore.{i}.{side}' for i in range(3)];region='fore'
     elif source_labels[index]==9:permitted=['jaw'];region='jaw'

@@ -86,4 +86,20 @@ def rebuild_anatomy(v,faces,uv):
         for y,z in [(-.14,.11),(-.035,.115),(.085,.095)]:
             plate=np.array([(sign*.11,y,z),(sign*.157,y+.018,z+.036),(sign*.18,y+.054,z+.065)])
             loft(plate,[.040,.031,.001],[.026,.024,.001],5,headref,steps=2,sides=6)
+    # Overlapping solid stone scutes supply broad readable planes rather than
+    # relying on the card's tiny orange texture detail at mobile resolution.
+    def armor(center,width,length,height,label):
+        x,y,z=center;start=len(vertices)
+        local=[(-width/2,-length/2,0),(width/2,-length/2,0),(width/2,length*.28,.003),(0,length/2,.006),(-width/2,length*.28,.003),(0,-length*.05,height),(0,0,-.009)]
+        for a,b,c in local:vertices.append([x+a,y+b,z+c]);coords.append([0,0]);labels.append(label)
+        for j in range(5):
+            k=(j+1)%5;triangles.extend([[start+j,start+k,start+5],[start+k,start+j,start+6]])
+    for y,z,width in [(.17,.096,.095),(.065,.128,.11),(-.04,.15,.12),(-.14,.153,.105)]:
+        armor((0,y,z),width,.115,.023,20)
+        for sign in [-1,1]:armor((sign*.087,y+.025,z-.025),.070,.105,.019,20)
+    for y,z in [(-.235,.165),(-.30,.176)]:armor((0,y,z),.095,.09,.021,21)
+    armor((0,-.375,.198),.105,.09,.022,22)
+    for i in range(1,6):
+        p=TAIL_POINTS[i].copy();p[2]+=[0,.064,.052,.045,.036,.027][i]
+        armor(p,.13*(1-i/8),.09,.014,23)
     return np.array(vertices),np.array(triangles,np.int32),np.array(coords),np.array(labels),dict(removedVertices=int(remove.sum()),replacement='Full volumetric trunk, neck, four limbs, skull/jaw and tail; original UV appearance transfer',silhouetteGateOnly=True)
