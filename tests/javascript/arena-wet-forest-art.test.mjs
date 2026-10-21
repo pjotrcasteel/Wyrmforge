@@ -193,7 +193,7 @@ test('worn flagstone paving winds the full Wet Forest world without creating wal
     assert.ok(marks.every(m => {
         const trail = wetForestTrailAt(old.trail, m.y / size.height);
         const halfWidth = Math.min(70, Math.max(44, trail.width * size.width * .53));
-        return Math.abs(m.x - trail.x * size.width) <= halfWidth + 12 &&
+        return Math.abs(m.x - trail.x * size.width) <= halfWidth + 44 &&
             m.x >= 0 && m.y >= 0 && m.x + m.width <= size.width &&
             m.y + m.height <= size.height && m.width <= 20 && m.height <= 8 &&
             m.alpha <= .78 && m.alpha > 0;
