@@ -218,7 +218,7 @@ test('Gothic cobbles have coherent pixel-height relief without creating any rais
     assert.equal(faces.length, shadows.length * 2, 'Each stone has two chipped face planes');
     assert.equal(highlights.length, shadows.length, 'Consistent top-left light per cobble');
     assert.ok(shadows.every(s => faces.some(f =>
-        f.x === s.x - 2 && f.y === s.y - 2)), 'Depth must sit exactly under each stone');
+        f.x === s.x && f.y === s.y - 2)), 'Depth must sit exactly under each stone');
     assert.ok(marks.every(m => m.width <= 20 && m.height <= 8 &&
         m.x >= 0 && m.y >= 0 && m.x + m.width <= size.width &&
         m.y + m.height <= size.height), 'Relief is a bounded floor-only texture');
