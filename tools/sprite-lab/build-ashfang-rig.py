@@ -253,7 +253,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
             recovery=max(0,min(1,(earlier-flap)*5))*opening
             elbow_lag=(delayed-flap)*.65*opening
             fore_rotation=shoulder@Quaternion((0,0,1),sign*(.65*fold+.65*recovery))@Quaternion((0,1,0),sign*(.10*fold+elbow_lag))@Quaternion((1,0,0),.30*recovery)
-            closed_fore=Vector(bones[fore]['tail']-bones[fore]['head']).rotation_difference(Vector((sign*-.04,.32,-.08+.14*rear)))
+            closed_fore=Vector(bones[fore]['tail']-bones[fore]['head']).rotation_difference(Vector((sign*-.04,-.32,.005+.14*rear)))
             fore_rotation=fore_rotation.slerp(wing_rotation@closed_fore,fold)
             wrist=elbow+fore_rotation@Vector(bones[fore]['tail']-bones[fore]['head']);segment(fore,elbow,wrist,fore_rotation)
             for finger in range(4):
@@ -269,9 +269,11 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                     # folded. Quaternion interpolation retains segment lengths
                     # and opens the fan without scaling its vertices.
                     rest_direction=Vector(bones[n]['tail']-bones[n]['head'])
-                    folded_direction=Vector((sign*(-.12+finger*.018),1,-.10-j*.04+rear*.24)).normalized()
+                    # Fold back at BOTH wrist and finger knuckle. Aligning all
+                    # segments tailward made a sail longer than the torso.
+                    folded_direction=Vector((sign*(.035+finger*.008),.8 if j==0 else -.8,-.08+rear*.24)).normalized()
                     folded_rotation=rest_direction.rotation_difference(folded_direction)
-                    r=r.slerp(folded_rotation,fold)
+                    r=r.slerp(wing_rotation@folded_rotation,fold)
                     tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
         # Rotate the articulated chain about its attached base until its actual
         # skinned surface clears the floor. No vertex flattening or body lift.
@@ -305,7 +307,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
     if stance_only:clips[clip].update(frames=1,loop=False,silhouetteGateOnly=True)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots),attackSignals=np.array(attack_signals))
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];obj.data.shape_keys.animation_data.action=bpy.data.actions['Ashfang_membrane_walk'];path_root.animation_data.action=bpy.data.actions['Ashfang_path_walk'];scene.frame_set(1)
-bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and nine motion studies',flush=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and '+('one stance sample' if stance_only else 'nine motion studies'),flush=True)
 
 (out/'paw-contact-audit.json').write_text(json.dumps(contacts,indent=2)+'\n')
 

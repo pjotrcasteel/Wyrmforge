@@ -49,6 +49,10 @@ def rebuild_anatomy(v,faces,uv):
     loft(trunk,[.045,.100,.125,.145,.161,.143,.094],[.047,.080,.096,.113,.128,.116,.080],5,(abs(source[:,0])<.10)&(source[:,1]>-.20)&(source[:,1]<.25),steps=4,sides=16,ridges=.035)
     neck=np.array([(0,-.17,.047),(0,-.23,.078),(0,-.29,.104),(0,-.35,.110),(0,-.39,.099)])
     loft(neck,[.105,.102,.090,.080,.069],[.086,.088,.077,.067,.047],6,(source[:,1]<-.18)&(source[:,1]>-.36),steps=4,sides=16,ridges=.04)
+    # A small run of actual dorsal stone crests, not a floating head cap.
+    for y,z in [(.18,.094),(.08,.121),(-.02,.145),(-.12,.148),(-.23,.16)]:
+        crest=np.array([(0,y,z),(0,y+.012,z+.035),(0,y+.028,z+.068)])
+        loft(crest,[.027,.018,.001],[.020,.012,.001],5 if y>-.18 else 6,(abs(source[:,0])<.10)&(source[:,2]>.02),steps=2,sides=6)
     loft(TAIL_POINTS,[.090,.078,.060,.047,.035,.026,.018,.011,.002],[.074,.069,.058,.050,.042,.032,.023,.015,.003],1,source[:,1]>.25,steps=4,ridges=.06)
     for sign,label in [(1,3),(-1,4)]:
         # Heavy thigh, visible narrow hock, forward toe fan. Continuous rings
