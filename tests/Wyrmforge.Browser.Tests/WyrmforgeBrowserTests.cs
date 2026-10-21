@@ -119,6 +119,27 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_ArenaLab_MalformedDeepLink_RecoversInsteadOfShowingBlackScreen()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        // Regression for the mistakenly encoded link: '&stage=...' became part of seed.
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') +
+            "/arena-lab?seed=1441%26stage%3D5%26habitat%3DWetForest",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" }))
+            .ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"async () => {
+            const mod = await import('./js/arena-lab.js');
+            const stage = document.querySelector('.arena-stage canvas');
+            const scene = stage && mod.readArenaLabDiagnostics(stage);
+            return scene?.active && scene?.seed === 1204 && scene?.stage === 1 &&
+                scene.world?.width === 950 && stage.width > 0;
+        }");
+        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
     public async Task Refuge_NightOnly_IgnoresPriorDayPreferenceAndPreservesBuildingStates()
     {
         await Page.SetViewportSizeAsync(390, 844);
