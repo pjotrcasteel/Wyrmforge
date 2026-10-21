@@ -469,3 +469,6 @@ Owner requested a powerful jump out of the viewport, flyovers, and downward aren
 
 References revisited before the materially new aerial attack: Framestore https://www.framestore.com/work/how-train-your-dragon (skeletal/muscle-driven weight and real-animal-informed flight), Weta https://www.wetafx.co.nz/films/case-studies/smaug (skeleton-to-motion construction). Written production accounts/stills inform original choreography; no film models or clips copied or downloaded. Existing ash ground tile reused from the current game atlas in the fixed-camera arena art study. Native 390px-wide preview uses 52 px/model unit; character scale is fixed across launch and passes. GPU review pending.
 
+
+V32 first arena render confirms full offscreen departure and two grounded fire passes, but uniform tube shading reads as a solid beam and sparse fire stamps as separated spots. Preserve arena-review-v1 as first evidence. Renderer revision adds moving world-space heat/turbulence and pixel breakup plus dense ground-fire stamps; second render pending. Source model/rig/path unchanged.
+

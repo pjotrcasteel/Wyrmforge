@@ -5,7 +5,7 @@ import numpy as np,torch
 import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
-rig=Path(sys.argv[1]);out=rig/'arena-review-v1';out.mkdir(exist_ok=False)
+rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'arena-review-v1');out.mkdir(exist_ok=False)
 s=np.load(rig/'arena-flyovers-samples.npz');vtx=s['positions'];faces=s['faces'];mouth=s['mouth'];signals=s['attackSignals'][:,0];roots=s['rootMotion']
 W,H=390,520;density=52
 forward=-np.array((2,-3,2.2),float);forward/=np.linalg.norm(forward)
@@ -38,9 +38,9 @@ for frame,points in enumerate(vtx):
         age=frame-born
         if age>=60:continue
         x,y=project(target);life=1-age/60
-        draw.ellipse((x-7,y-3,x+7,y+3),fill=(int(100*life),int(32*life),8))
+        draw.ellipse((x-9,y-4,x+9,y+4),fill=(int(100*life),int(32*life),8))
         for j in range(4):
-            dx=round(6*math.sin(born*1.7+j*2.1));h=round((3+3*math.sin(frame*.8+j))*life)
+            dx=round(6*math.sin(born*1.7+j*2.1));h=round((7+5*math.sin(frame*.8+j))*life)
             draw.line((x+dx,y,x+dx-1,y-h),fill=(int(235*life),int(104*life),int(20*life)),width=1)
     r,V,_=raster(points,faces);coords=dr.interpolate(UV[None],r,F)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,V,F,r);alpha=(r[0,:,:,3]>0).float()
     origin,direction=mouth[frame];direction=direction/np.linalg.norm(direction);strength=float(signals[frame]);target=None
@@ -48,7 +48,7 @@ for frame,points in enumerate(vtx):
         distance=(-.197-origin[2])/direction[2]
         if distance>0:
             target=origin+direction*distance
-            if frame%3==0:embers.append((frame,target.copy()))
+            embers.append((frame,target.copy()))
             verts=[];colors=[];tris=[];side=np.cross(direction,[0,0,1]);side/=np.linalg.norm(side);other=np.cross(side,direction)
             # A flowing irregular tube with billowing edges and a hot core.
             # Every ring is anchored along the current world-space mouth ray.
@@ -62,8 +62,16 @@ for frame,points in enumerate(vtx):
                     colors.append([1,.88-.50*t,.26*(1-t)])
                     if ring:
                         a=(ring-1)*9+j;b=(ring-1)*9+(j+1)%9;c=ring*9+j;d=ring*9+(j+1)%9;tris.extend([[a,b,c],[b,d,c]])
-            fr,_,ff=raster(verts,tris);color=dr.interpolate(T(colors)[None],fr,ff)[0][0]
-            visible=(fr[0,:,:,3]>0)&((r[0,:,:,3]==0)|(fr[0,:,:,2]<=r[0,:,:,2]));rgb=torch.where(visible[:,:,None],color,rgb);alpha=torch.maximum(alpha,visible.float())
+            fr,_,ff=raster(verts,tris)
+            worldpos=dr.interpolate(T(verts)[None],fr,ff)[0][0]
+            flow=dr.interpolate(T(np.repeat(np.arange(23)/22,9)[:,None])[None],fr,ff)[0][0,:,:,0]
+            # Animated world-space turbulence creates hot tongues and holes,
+            # instead of a uniformly coloured, opaque cone. Native pixels and
+            # palette quantization keep the edge breakup readable on mobile.
+            noise=torch.sin(worldpos[:,:,0]*67+worldpos[:,:,2]*43-frame*1.5)*torch.sin(worldpos[:,:,1]*79+worldpos[:,:,2]*31+frame*.7)
+            heat=(.5+.5*torch.sin(flow*72-frame*2.0+noise*3.0)).clamp(0,1)
+            color=torch.stack([torch.ones_like(heat),.22+.70*heat,.015+.26*heat],-1)
+            visible=(fr[0,:,:,3]>0)&(noise>-.72)&((r[0,:,:,3]==0)|(fr[0,:,:,2]<=r[0,:,:,2]));rgb=torch.where(visible[:,:,None],color,rgb);alpha=torch.maximum(alpha,visible.float())
     rgba=(torch.cat([rgb,alpha[:,:,None]],-1).flip(0).cpu().numpy()*255).clip(0,255).astype('uint8');actor=Image.fromarray(rgba);pixel=actor.convert('RGB').quantize(palette=palette,dither=Image.Dither.NONE).convert('RGBA');pixel.putalpha(actor.getchannel('A'));board.paste(pixel,(0,0),pixel)
     draw=ImageDraw.Draw(board);draw.rectangle((0,0,W,42),fill=(20,18,22));draw.text((9,7),'ASHFANG / AERIAL FIRE ATTACK STUDY',fill=(226,192,147));draw.text((9,24),labels[frame],fill=(189,167,145));draw.rectangle((0,H-22,W,H),fill=(20,18,22));draw.text((9,H-16),'LOCAL SOURCE PREVIEW / NO GAMEPLAY DAMAGE',fill=(175,155,139))
     board.save(out/f'frame-{frame:03d}.png');frames.append(board)
