@@ -447,3 +447,19 @@ are still outstanding; these actions alone are not a finished flight system.
 ## V29 continuous flight lifecycle
 Owner requested continuation after V28 flight/landing previews. V29 adds a 148-frame connected sequence at 24fps: approved takeoff, 12-frame source-control overlap into cruise, several sustained wingbeats, 12-frame overlap into landing, then flare/catch/settle. Blends are evaluated before FK/IK and skinning. Delayed shoulder/wrist/digit/membrane/tail controls sample the same continuous timeline, including across boundaries. Tail sway mixes sine/cosine components rather than interpolating wrapped phase numbers. Prior five clips remain vertex-identical to V28; connected takeoff through frame 34 is also exact. Transition controls are continuous at frames 34/46/104/116, finite whole sequence and floor-safe. Receipts: V29/transition-audit.json. GPU visual review pending. This is an editable source motion demonstration, not a C# aerial state machine or final spritesheet.
 
+
+V29 RTX 5090 rendered review completed. All six clips are finite, unclipped
+and above the floor; walk/flight loops still close exactly. Six-clip source
+summary: source-check-summary.json. Connected sequence lasts 148 source
+frames at 24fps; preview: motion-review-v1/flight-sequence.gif. Twelve selected
+actual game-camera frames across both joins and landing are preserved in
+flight-transition-keyposes.png. The wingbeat continues through each overlap,
+then the landing flare opens into the fore/hind catch and wing fold.
+
+Prior five clips remain exactly unchanged. Maximum adjacent-frame vertex
+movement at the four join boundaries is 0.0652/0.1740/0.1032/0.2152 model units,
+below the sequence's ordinary wing-motion maximum 0.4193. Maximum paw goal
+error is 7.46e-8 model units. These numerical bounds support continuity/contact
+review but are not a claim of owner visual approval. No gameplay changes.
+Final fire breath, remaining actions/directions, mobile export-density fitting,
+actual Hunt validation and explicit C# aerial state integration remain open.
