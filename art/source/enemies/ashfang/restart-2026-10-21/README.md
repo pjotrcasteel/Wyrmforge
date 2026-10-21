@@ -41,3 +41,27 @@ Reference v2 exposed clipping from inherited coarse masks. V3 restores the
 original wing pixels; v4 additionally excludes warm floor regions below paws.
 All RGB is original card data. Mask boards are input evidence, never new art.
 Next: sample against references-v4 and inspect before rigging or effects.
+
+
+## Method stop and art-master dependency
+
+Multi seed 4729 is also rejected after large/native/clay review: slab-like tail
+and fused geometry remain. Three source attempts have not passed Gate B. Stop
+this reconstruction method rather than rigging failed anatomy. The initial
+no-new-weights experiment is complete; it did not supply the needed art quality.
+
+Next bounded stage: an actual larger 2.5D art master, reference-guided from the
+original card idle pose, using local SDXL 1.0 image-to-image on RTX 5090. Public
+fp16 weights (~6.94 GB) come from ModelScope, not Hugging Face; no online image
+generation, account, subscription or GPU/driver change. Install two pinned
+Python libraries in an isolated environment that reads the existing Torch
+runtime without altering TRELLIS. The primary licence is CreativeML Open
+RAIL++-M (https://github.com/Stability-AI/generative-models/blob/main/model_licenses/LICENSE-SDXL1.0).
+Dependency URL, file sizes and locally computed hashes go in local-art-dependency.json;
+weights stay outside Git at /opt/wyrmforge-models/SDXL-card-art.
+
+The master candidates must match the card at large/native size before being
+called accepted art. They are not automatically riggable meshes or animations.
+The standalone raster master stage preserves the exact source pose and colour
+reference; it does not authorize a new photorealistic style. Existing rejected
+sources remain as evidence. No successful new art candidate claimed yet.
