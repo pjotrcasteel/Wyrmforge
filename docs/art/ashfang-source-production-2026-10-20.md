@@ -565,3 +565,12 @@ V37 lifts the closed forearm direction during rearing only, retaining the compac
 
 V37 all nine actions pass finite/floor gates, including repaired rear-breath minimum -0.195513. Arena positions/faces/UV/mouth/signals/root motion and texture pixels are exactly equal to rendered V36, so the existing local arena render is reused with an explicit cache-provenance receipt. Grounded silhouette is100.627px (~22.87% of440px viewport), versus64.712px (~14.71%) in rejected V34. The player stays at native size, and overhead pass body visibility stays zero. Local comparison shows compact back-fold wings and a clearer larger body/head. V36 remains a failed overall intermediate because of its separate rear-breath contact fault; V37 is current. Owner review pending, no runtime replacement. Screenshot-derived comparison/full animation remain private and ignored.
 
+
+V37 source-only GPU review completed for six regular actions: finite,
+unclipped and above floor; loop closure remains exact. Rear/breath compact
+fold visually inspected after clearance repair. Source-only renders are public
+review receipts, not final fire VFX. Local native screenshot comparison:
+hunt-fit-review-v1/grounded-comparison.png; larger compact-wing arena preview:
+hunt-fit-review-v1/aerial-fire-attack.gif. Both remain Git-ignored/private.
+Actual fit now ~23% width, preserving native player and HUD. Do not mark
+frightening appearance accepted before owner review or claim runtime integration.
