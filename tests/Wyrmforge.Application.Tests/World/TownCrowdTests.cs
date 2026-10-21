@@ -595,8 +595,10 @@ public sealed class TownCrowdTests
         Assert.IsFalse(map.IsWalkable(new TownPoint(915, 452)),
             "A resident must not stand inside the east-hand well shelter/roof projection.");
 
-        Assert.IsTrue(map.IsWalkable(new TownPoint(550, 710)),
-            "Keep the narrow paved route to the blacksmith open.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(550, 710)),
+            "The previously misaligned shrub is now positioned over its actual painted ground.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(520, 815)),
+            "Keep the separate lower paved route to the blacksmith open.");
         Assert.IsTrue(map.IsWalkable(new TownPoint(825, 478)),
             "The real paved rear passage behind the well stays walkable.");
 
@@ -604,6 +606,31 @@ public sealed class TownCrowdTests
         foreach (var destination in map.Destinations)
             Assert.IsTrue(map.TryFindPath(origin, destination.Position, out _),
                 $"The two corrected obstructions may not isolate {destination.Id}.");
+    }
+
+    [TestMethod]
+    public void Navigation_ReviewedBushStripe_UsesActualScreenshotCoordinatesAndPreservesPavedBypass()
+    {
+        var map = Scene();
+        var bushes = map.Obstacles.Single(obstacle => obstacle.Id == "west-plaza-bushes-ground");
+        var lowerRoad = map.Walkable.Single(surface => surface.Id == "forge-lower-street-paved-link");
+
+        Assert.IsTrue(bushes.Footprint.Min(point => point.X) <= 530f);
+        Assert.IsTrue(bushes.Footprint.Max(point => point.X) >= 590f);
+        Assert.IsTrue(bushes.Footprint.Max(point => point.Y) >= 765f);
+        Assert.IsTrue(lowerRoad.Points.Max(point => point.X) >= 750f);
+
+        foreach (var point in new[] { new TownPoint(560, 610), new TownPoint(558, 650),
+            new TownPoint(560, 700), new TownPoint(550, 742) })
+            Assert.IsFalse(map.IsWalkable(point), $"Foliage footprint {point} may not be walked through.");
+
+        Assert.IsTrue(map.IsWalkable(new TownPoint(520, 815)),
+            "The alternate cobbled lower street must remain walkable.");
+
+        var start = map.Destinations.Single(destination => destination.Id == "lower-square").Position;
+        foreach (var destination in map.Destinations)
+            Assert.IsTrue(map.TryFindPath(start, destination.Position, out _),
+                $"Correcting the hedge must not strand {destination.Id}.");
     }
 
     [TestMethod]
