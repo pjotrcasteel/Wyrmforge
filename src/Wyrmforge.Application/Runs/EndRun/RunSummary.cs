@@ -2,6 +2,7 @@
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells.Synergies;
 using Wyrmforge.Domain.Spells;
@@ -22,6 +23,7 @@ public sealed record RunSummary(
     int Depth,
     RunOutcome Outcome)
 {
+    public IReadOnlyList<HuntMaterialId> SecuredMaterials { get; init; } = [];
     public int Seed { get; init; }
     public int ExperienceEarned { get; init; }
     public int CompletedRouteNodes { get; init; }
