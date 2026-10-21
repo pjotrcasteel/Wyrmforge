@@ -16,7 +16,7 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(markup, /<RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"/);
     assert.match(actorMarkup, /class="refuge-town-crowd"/);
     assert.match(actorMarkup, /@foreach \(var person in Crowd\.Citizens\)/);
-    assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
+    assert.match(actorMarkup, /style="@CitizenStyle\(person, depth\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.CancelAsync\(\)/);
     assert.doesNotMatch(markup, /PeriodicTimer/,
