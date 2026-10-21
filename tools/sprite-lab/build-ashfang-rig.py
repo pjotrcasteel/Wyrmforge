@@ -117,6 +117,8 @@ for side,sign in [('L',1),('R',-1)]:
     for finger in range(4):
         middle=middles[finger];tip=tips[finger]
         bone(f'wing.finger.{finger}.0.{side}',points[2],middle,'wing.fore.'+side);bone(f'wing.finger.{finger}.1.{side}',middle,tip,f'wing.finger.{finger}.0.{side}')
+    for anchor_name,anchor in [('root',wr),('wrist',ww)]+[(f'tip.{f}',tip) for f,tip in enumerate(tips)]:
+        bone(f'membrane.{anchor_name}.{side}',anchor,anchor+np.array([0,0,.02]),'root')
 tail=TAIL_POINTS.tolist()
 for i in range(len(tail)-1):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
 arm=bpy.data.armatures.new('Ashfang articulated anatomy');rig=bpy.data.objects.new('Ashfang editable animation rig',arm);bpy.context.collection.objects.link(rig);bpy.context.view_layer.objects.active=rig;rig.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
@@ -141,7 +143,7 @@ for index,p in enumerate(v):
         if index in spar_bind:
             obj.vertex_groups[spar_bind[index]].add([index],1,'REPLACE');continue
         bind=membrane_by_index[index];side=bind['side'];bay=bind['bay']
-        anchors=[('wing.upper.'+side,bind['c']),('wing.fore.'+side if bay==0 else f'wing.finger.{bay-1}.1.{side}',bind['a']),(f'wing.finger.{bay}.1.{side}',bind['b'])]
+        anchors=[('membrane.root.'+side,bind['c']),('membrane.wrist.'+side if bay==0 else f'membrane.tip.{bay-1}.{side}',bind['a']),(f'membrane.tip.{bay}.{side}',bind['b'])]
         for name,weight in anchors:
             if weight>0:obj.vertex_groups[name].add([index],weight,'REPLACE')
         continue
@@ -323,21 +325,18 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                     folded_rotation=rest_direction.rotation_difference(folded_direction)
                     r=r.slerp(wing_rotation@folded_rotation,fold)
                     tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
-        # Fold corrective is authored into the persistent source, not an image
-        # edit. The membrane interpolates its actual root/wrist/finger anchors;
-        # inverse LBS stores that pleat as an editable rest-space shape key.
+        # Translation-only membrane controls follow the actual rib endpoints.
+        # This avoids cancellation of opposing rotation matrices when folding.
+        for side in ['L','R']:
+            endpoints=[('root',rig.pose.bones['wing.upper.'+side].head.copy()),('wrist',rig.pose.bones['wing.fore.'+side].tail.copy())]+[(f'tip.{f}',rig.pose.bones[f'wing.finger.{f}.1.{side}'].tail.copy()) for f in range(4)]
+            for anchor_name,anchor in endpoints:
+                segment(f'membrane.{anchor_name}.{side}',anchor,anchor+Vector((0,0,.02)),Quaternion())
         if not fold_correction_ready:
-            matrices={n:np.array(rig.pose.bones[n].matrix@rest[n].inverted()) for n in names}
             for bind in membrane_bind:
                 index=bind['index'];side=bind['side'];bay=bind['bay'];a=bind['a'];b=bind['b'];c=bind['c']
-                anchor=np.array(rig.pose.bones['wing.upper.'+side].head)
-                rim=[np.array(rig.pose.bones['wing.fore.'+side].tail)]+[np.array(rig.pose.bones[f'wing.finger.{f}.1.{side}'].tail) for f in range(4)]
-                desired=anchor*c+rim[bay]*a+rim[bay+1]*b
-                desired+=(anchor-desired)*(.16*4*a*b*(a+b)**2)
-                desired[2]-=.006*27*a*b*c
-                groups=mesh.vertices[index].groups;total=sum(g.weight for g in groups)
-                blend=sum(matrices[obj.vertex_groups[g.group].name]*(g.weight/total) for g in groups)
-                folded_membrane.data[index].co=np.linalg.solve(blend,np.append(desired,1))[:3]
+                anchor=bones['membrane.root.'+side]['head']
+                rim=[bones['membrane.wrist.'+side]['head']]+[bones[f'membrane.tip.{f}.{side}']['head'] for f in range(4)]
+                folded_membrane.data[index].co=anchor*c+rim[bay]*a+rim[bay+1]*b
             fold_correction_ready=True
         folded_membrane.value=min(1,max(0,(1-spread)/.92))
         folded_membrane.keyframe_insert('value',frame=frame+1)
