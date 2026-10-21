@@ -13,6 +13,7 @@ test('real Refuge scene retains the art and renders depth-sorted, larger ambient
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
     assert.match(markup, /<div class="refuge-town-crowd" aria-hidden="true">/);
     assert.match(markup, /@foreach \(var person in crowd\.Citizens\)/);
+    assert.match(markup, /@if \(person\.IsPresent\)/, 'Residents away through a portal must be absent from the DOM');
     assert.match(markup, /style="@CitizenStyle\(person\)"/);
     assert.doesNotMatch(markup, /crowd\.Navigation\.IsBodyOccluded\(person\.Position\)/);
     assert.doesNotMatch(markup, /data-town-citizen-occluded/);
@@ -99,6 +100,30 @@ test('debug geometry displays actual solid town buildings in red only after URL 
         'Debug artwork must not intercept swipes or building taps');
     assert.match(css, /fill:rgba\(235,36,40,\.32\)/, 'Solid shapes must be translucent red');
     assert.match(css, /refuge-town-geometry-walkable/, 'Show paved routing area for comparison');
+});
+
+test('debug geometry stays label-free and residents have authored four connected exits', () => {
+    const map = JSON.parse(source(`${art}/night-navigation.json`));
+    const markup = source(scene);
+    const simulation = source('src/Wyrmforge.Application/World/TownCrowd.cs');
+    const exits = map.destinations.filter(destination => destination.isExit);
+    assert.deepEqual(exits.map(exit => exit.id).sort(), [
+        'east-street-exit', 'south-street-exit', 'west-street-exit', 'world-gate-exit'
+    ]);
+    assert.ok(exits.find(exit => exit.id === 'world-gate-exit').y < 300,
+        'Gate exit must be inside the arch, not beside the stairs');
+    assert.match(markup, /@if \(person\.IsPresent\)/);
+    assert.doesNotMatch(markup, /refuge-town-geometry-legend|refuge-town-geometry-label/,
+        'No explanatory overlay should block the town scenery');
+    assert.match(simulation, /citizen\.AwaySeconds/);
+    assert.match(simulation, /citizen\.IsReturning/);
+    assert.match(simulation, /citizen\.DepartureCount\+\+/);
+    assert.match(simulation, /_navigation\.Destinations\[citizen\.CurrentNode\]\.IsExit/);
+    assert.ok(map.walkable.some(surface => surface.id === 'world-gate-stairs'));
+    assert.ok(map.walkable.some(surface => surface.id === 'west-market-approach'));
+    assert.ok(map.walkable.some(surface => surface.id === 'east-market-approach'));
+    assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-terrace-inner-planter'));
+    assert.ok(map.obstacles.some(obstacle => obstacle.id === 'east-foreground-parapet-garden'));
 });
 
 test('dynamic props invalidate C# routes and navigation prevents shortcutting through solid scenery', () => {

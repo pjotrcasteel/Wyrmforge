@@ -64,10 +64,11 @@ public sealed class TownCrowdTests
                 Assert.IsTrue(town.Navigation.IsWalkable(person.Position));
             }
 
-            var destinations = town.Citizens.Where(c => c.IsWalking).Select(c => c.DestinationNode).ToList();
+            var destinations = town.Citizens.Where(c => c.IsPresent && c.IsWalking)
+                .Select(c => c.DestinationNode).ToList();
             Assert.AreEqual(destinations.Count, destinations.Distinct().Count(), "Multiple people claimed one destination.");
-            foreach (var person in town.Citizens)
-            foreach (var other in town.Citizens.Where(candidate => candidate.Id > person.Id))
+            foreach (var person in town.Citizens.Where(candidate => candidate.IsPresent))
+            foreach (var other in town.Citizens.Where(candidate => candidate.IsPresent && candidate.Id > person.Id))
             {
                 var dx = person.Position.X - other.Position.X;
                 var dy = person.Position.Y - other.Position.Y;
@@ -75,6 +76,57 @@ public sealed class TownCrowdTests
                     $"Citizens {person.Id} and {other.Id} overlap on the painted ground.");
             }
         }
+    }
+
+    [TestMethod]
+    public void Navigation_ExteriorStreetsAndGateRemainConnected()
+    {
+        var map = Scene();
+        var origin = map.Destinations.Single(d => d.Id == "lower-square").Position;
+        var exits = map.Destinations.Where(d => d.IsExit).ToArray();
+
+        Assert.HasCount(4, exits);
+        foreach (var exit in exits)
+        {
+            Assert.IsTrue(map.IsWalkable(exit.Position), $"Exit {exit.Id} must fit an NPC's feet.");
+            Assert.IsTrue(map.TryFindPath(origin, exit.Position, out var path),
+                $"Exit {exit.Id} must connect to the actual town navigation, not just a fake label.");
+            CheckRoute(map, origin, path);
+        }
+        Assert.IsTrue(map.Destinations.Any(d => d.Id == "world-gate-exit" && d.Y < 300));
+    }
+
+    [TestMethod]
+    public void Step_ResidentsLeaveViaGateOrRoadAndReturnWithoutVisibleTeleport()
+    {
+        var town = new TownCrowd(Scene(), 205);
+        var departed = new HashSet<string>();
+        var observedReturn = false;
+        var wasAbsent = new HashSet<int>();
+
+        for (var tick = 0; tick < 4200; tick++)
+        {
+            var previous = town.Citizens.ToDictionary(c => c.Id, c => c.Position);
+            town.Step(TimeSpan.FromMilliseconds(100));
+            foreach (var person in town.Citizens)
+            {
+                if (person.LastExitId is not null) departed.Add(person.LastExitId);
+                if (!person.IsPresent) wasAbsent.Add(person.Id);
+                if (person.IsPresent && wasAbsent.Contains(person.Id)) observedReturn = true;
+
+                if (!person.IsPresent) continue;
+                var old = previous[person.Id];
+                var dx = person.Position.X - old.X;
+                var dy = person.Position.Y - old.Y;
+                Assert.IsTrue(dx * dx + dy * dy <= 5.2f * 5.2f,
+                    $"Present citizen {person.Id} visibly jumped after returning through an exit.");
+            }
+        }
+
+        foreach (var exit in new[] { "world-gate-exit", "west-street-exit",
+            "east-street-exit", "south-street-exit" })
+            Assert.IsTrue(departed.Contains(exit), $"At least one resident must traverse {exit}.");
+        Assert.IsTrue(observedReturn, "Residents can come back through an entrance after time away.");
     }
 
     [TestMethod]

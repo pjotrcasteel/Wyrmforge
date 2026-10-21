@@ -21,6 +21,10 @@ public sealed class TownDestination
     public string Id { get; set; } = string.Empty;
     public float X { get; set; }
     public float Y { get; set; }
+
+    /// <summary>A connected world boundary or doorway. Citizens leave here and may later return.</summary>
+    public bool IsExit { get; set; }
+
     public TownPoint Position => new(X, Y);
 }
 
@@ -58,7 +62,7 @@ public sealed class TownNavigationMap
         var result = JsonSerializer.Deserialize<TownNavigationMap>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))
             ?? throw new JsonException("No town navigation map was supplied.");
         if (result.Width <= 0 || result.Height <= 0 || result.CellSize is < 8 or > 64 ||
-            result.Clearance < 0 || result.Walkable.Count == 0 || result.Destinations.Count == 0 ||
+            result.Clearance < 0 || result.Walkable.Count == 0 || result.Destinations.All(d => d.IsExit) ||
             result.Walkable.Any(p => p.Points.Count < 3) || result.Obstacles.Any(p => p.Footprint.Count < 3))
             throw new JsonException("Invalid town navigation geometry.");
         if (result.Destinations.Any(d => !result.IsWalkable(d.Position)))
