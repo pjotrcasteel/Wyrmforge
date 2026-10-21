@@ -59,6 +59,7 @@ for index,p in enumerate(v):
     scores=np.array([1/max(.008,distance(p,bones[n]['head'],bones[n]['tail']))**4 for n in permitted]);scores/=scores.sum();ownership[region]=ownership.get(region,0)+1
     for n,w in zip(permitted,scores):
         if w>.001:obj.vertex_groups[n].add([index],float(w),'REPLACE')
+tail_indices=[p.index for p in mesh.vertices if any(obj.vertex_groups[g.group].name.startswith('tail.') for g in p.groups)]
 rest={n:rig.data.bones[n].matrix_local.copy() for n in bones};lengths={n:rig.data.bones[n].length for n in bones}
 soles={}
 for limb in ['fore','hind']:
@@ -83,7 +84,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
         rotation=Quaternion((1,0,0),pitch);origin=Vector(bones['pelvis']['head']);offset=Vector((0,advance,altitude+bob));point=lambda p:origin+rotation@(Vector(p)-origin)+offset
         segment('root',bones['root']['head'],bones['root']['tail'])
         for n in ['pelvis','spine','chest','neck.0','neck.1']:segment(n,point(bones[n]['head']),point(bones[n]['tail']),rotation)
-        h=point(bones['head']['head']);headrotation=Quaternion((1,0,0),rear*.30)@rotation;segment('head',h,h+headrotation@Vector(bones['head']['tail']-bones['head']['head']),headrotation)
+        h=point(bones['head']['head']);headrotation=Quaternion((1,0,0),rear*.68)@rotation;segment('head',h,h+headrotation@Vector(bones['head']['tail']-bones['head']['head']),headrotation)
         jh=h+headrotation@Vector(bones['jaw']['head']-bones['head']['head']);jr=headrotation@Quaternion((1,0,0),jaw);segment('jaw',jh,jh+jr@Vector(bones['jaw']['tail']-bones['jaw']['head']),jr)
         mh=h+headrotation@Vector(bones['mouth']['head']-bones['head']['head']);segment('mouth',mh,mh+headrotation@Vector((0,-.055,0)),headrotation)
         for side,sign in [('L',1),('R',-1)]:
@@ -102,22 +103,32 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                 if clip=='walk' or (altitude<.01 and (limb=='hind' or rear<.01)):
                     ankle.z=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+clearance
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
-            wingroot=point(bones['wing.upper.'+side]['head']);wr=rotation@Quaternion((0,1,0),-sign*flap)@Quaternion((0,0,1),-sign*spread)
+            wingroot=point(bones['wing.upper.'+side]['head']);wr=rotation@Quaternion((0,1,0),sign*(spread+flap))
             wingpoint=lambda p:wingroot+wr@Vector(np.array(p)-bones['wing.upper.'+side]['head'])
             for n in ['wing.upper.'+side,'wing.fore.'+side]:segment(n,wingpoint(bones[n]['head']),wingpoint(bones[n]['tail']),wr)
             for finger in range(4):
                 previous=wingpoint(bones[f'wing.finger.{finger}.0.{side}']['head'])
                 for j in range(2):
                     n=f'wing.finger.{finger}.{j}.{side}';r=wr@Quaternion((1,0,0),.10*math.sin(phase*math.pi*8-finger*.3)*spread);tip=previous+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,previous,tip,r);previous=tip
-        previous=None
-        for i in range(6):
-            n=f'tail.{i}';h=point(bones[n]['head']) if previous is None else previous;r=Quaternion((1,0,0),pitch*.15)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+        # Rotate the articulated chain about its attached base until its actual
+        # skinned surface clears the floor. No vertex flattening or body lift.
+        tail_correction=0
+        for contact_iteration in range(30):
+            previous=None
+            for i in range(6):
+                n=f'tail.{i}';h=point(bones[n]['head']) if previous is None else previous;r=Quaternion((1,0,0),pitch*.15+tail_correction)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+            ev=obj.evaluated_get(deps);contact_mesh=ev.to_mesh()
+            tail_min=min(contact_mesh.vertices[index].co.z for index in tail_indices)
+            ev.to_mesh_clear()
+            if tail_min>=-.1975:break
+            tail_correction+=.015
+        if tail_min<-.198:raise RuntimeError(f'Tail contact unresolved: {clip} {frame} {tail_min}')
         for p in rig.pose.bones:
             p.rotation_mode='QUATERNION'
             for prop in ['location','rotation_quaternion','scale']:p.keyframe_insert(prop,frame=frame+1,group=p.name)
         bpy.context.scene.frame_set(frame+1);bpy.context.view_layer.update();ev=obj.evaluated_get(deps);evaluated=ev.to_mesh();coords=np.array([p.co[:] for p in evaluated.vertices],np.float32);sample.append(coords)
         lowest=int(coords[:,2].argmin());dominant=max(obj.data.vertices[lowest].groups,key=lambda g:g.weight)
-        floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
+        floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,tailCorrectionRadians=tail_correction,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
     clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)

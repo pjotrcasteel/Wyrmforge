@@ -13,3 +13,6 @@ Current visual/technical gate remains open. The reconstructed core still needs s
 Scripts: `prepare-ashfang-reference.py`, existing offline `reconstruct-creature-local.py`, parameterized appearance rendering/baking, `build-ashfang-rig.py`, `ashfang_wings.py` and `render-ashfang-block.py`. Existing Hollow/Ashling runtime art and C# behaviour are unchanged. Remote checkpoints precede long generation/capture work; draft PR #186 preserves unfinished production.
 
 Remaining: refine source silhouette/anatomy and contacts; validate one readable walk; polish raised/sitting breath, takeoff, sustained/banked flight and landing transitions; export true directions; design explicit C# airborne encounter states and verify actual mobile combat. No aerial gameplay has shipped.
+
+### 21 October contact and unfolding revision (in progress)
+V4 rendered evidence is preserved. Next source revision corrects tail contact by evaluating the skinned surface and rotating the attached tail chain, opens wings about their longitudinal hinge, and counter-rotates the raised head toward a near-horizontal breath aim. These are source changes awaiting regenerated motion and visual review; no runtime or acceptance claim. Checked current main and open PRs; concurrent Wet Forest work remains separate.
