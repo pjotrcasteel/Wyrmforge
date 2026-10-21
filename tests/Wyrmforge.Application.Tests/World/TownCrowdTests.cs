@@ -277,6 +277,19 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_OptInFootprintScan_MarksPavingButNotTheWellBasin()
+    {
+        var map = Scene();
+        var scan = map.DebugWalkabilityScanPath();
+
+        StringAssert.Contains(scan, "M822 646h4v4h-4z",
+            "A scanned NPC feet-disc centre on the southern paving should be green.");
+        Assert.IsFalse(scan.Contains("M822 534h4v4h-4z", StringComparison.Ordinal),
+            "The centre of the well's stone basin is solid, never a green walkable pixel.");
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => map.DebugWalkabilityScanPath(4));
+    }
+
+    [TestMethod]
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();
