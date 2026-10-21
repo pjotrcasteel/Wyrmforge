@@ -38,9 +38,12 @@
             <div class="refuge-town-crowd" aria-hidden="true">
                 @foreach (var person in crowd.Citizens)
                 {
-                    <span @key="person.Id" class="refuge-town-citizen"
-                          data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
-                          style="@CitizenStyle(person)"></span>
+                    @if (person.IsPresent)
+                    {
+                        <span @key="person.Id" class="refuge-town-citizen"
+                              data-town-citizen-state="@(person.IsWalking ? "walking" : "idling")"
+                              style="@CitizenStyle(person)"></span>
+                    }
                 }
             </div>
         }
@@ -66,9 +69,12 @@
                     }
                     @foreach (var person in crowd.Citizens)
                     {
-                        <circle @key="person.Id" class="refuge-town-geometry-feet"
-                                data-town-feet="@person.Id" cx="@person.Position.X"
-                                cy="@person.Position.Y" r="@crowd.Navigation.FootRadius" />
+                        @if (person.IsPresent)
+                        {
+                            <circle @key="person.Id" class="refuge-town-geometry-feet"
+                                    data-town-feet="@person.Id" cx="@person.Position.X"
+                                    cy="@person.Position.Y" r="@crowd.Navigation.FootRadius" />
+                        }
                     }
                 </svg>
             </div>
