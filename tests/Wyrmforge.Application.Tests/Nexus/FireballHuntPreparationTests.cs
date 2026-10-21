@@ -17,7 +17,7 @@ public sealed class FireballHuntPreparationTests
                 FireballMutationId.Detonation, FireballMutationId.CinderNeedle]);
 
         CollectionAssert.AreEquivalent(
-            new[] { FireballMutationId.MeteorHeart, FireballMutationId.Detonation },
+            new[] { FireballMutationId.MeteorHeart, FireballMutationId.Detonation, FireballMutationId.CinderNeedle },
             simulation.PreparedFireballMutations.ToArray());
         Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
         Assert.IsTrue(simulation.PreparedFireballMutations.Contains(FireballMutationId.MeteorHeart));
