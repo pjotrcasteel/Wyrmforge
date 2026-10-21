@@ -157,3 +157,12 @@ finger tips, producing smooth concave trailing bays. The fingers retain full
 length/span; this changes the skinned 3D geometry rather than masking a render
 or warping an image. Existing source-card UV appearance remains attached.
 Regenerate and inspect the open/folded silhouette plus contact audit.
+
+### Native source lighting refinement — in progress
+V13 pixel review will use one shared world-space directional key computed from
+the actual deformed vertex normals. A restrained stone highlight and reserved
+stone palette ramp improve plate/limb shape separation, while bright molten
+albedo retains its source values. This is a reproducible 3D render-lighting
+change, not painted outlines or a blanket glow. Both game/side motion and all
+eight cameras use the same light; original source albedo remains intact.
+Visual/native contact checks still required; it is not new runtime lighting.

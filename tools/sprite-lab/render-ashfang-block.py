@@ -4,8 +4,9 @@ import sys,json,math
 import numpy as np,torch
 import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
+from ashfang_preview_lighting import shade,palette_for,LIGHTING
 rig=Path(sys.argv[1]);out=rig/'motion-review-v1';out.mkdir(exist_ok=False);profile=json.loads((rig/'profile.json').read_text());cell=192
-t=lambda a,dtype=torch.float32:torch.tensor(np.asarray(a),dtype=dtype,device='cuda').contiguous();ctx=dr.RasterizeCudaContext();texture_image=Image.open(rig/'ashfang-albedo.png' if (rig/'ashfang-albedo.png').exists() else rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(texture_image)/255).flip(0)[None];palette=texture_image.quantize(colors=56);pal=palette.getpalette()[:168]+[82,15,12,145,30,10,214,55,9,255,100,12,255,153,25,255,204,58,255,237,130,255,251,211];palette.putpalette(pal)
+t=lambda a,dtype=torch.float32:torch.tensor(np.asarray(a),dtype=dtype,device='cuda').contiguous();ctx=dr.RasterizeCudaContext();texture_image=Image.open(rig/'ashfang-albedo.png' if (rig/'ashfang-albedo.png').exists() else rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(texture_image)/255).flip(0)[None];palette=palette_for(texture_image)
 mvps=[]
 for eye in [(2,-3,2.2),(3,0,.7)]:
     f=-np.array(eye,float);f/=np.linalg.norm(f);right=np.cross(f,[0,0,1]);right/=np.linalg.norm(right);up=np.cross(right,f);m=np.eye(4,dtype=np.float32);m[0,:3]=right/1.2;m[1,:3]=up/1.2;m[2,:3]=f*.2;m[1,3]=-.10;mvps.append(m)
@@ -17,7 +18,7 @@ for clip,spec in profile['clips'].items():
     for index,position in enumerate(source['positions']):
         panels=[]
         for view,m in enumerate(mvps):
-            mvp=t(m);v=t(position);projected=torch.cat([v,torch.ones_like(v[:,:1])],1)@mvp.T;r,_=dr.rasterize(ctx,projected[None],faces,[cell,cell]);coords=dr.interpolate(uv[None],r,faces)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);alpha=(r[0,:,:,3]>0).float()
+            mvp=t(m);v=t(position);projected=torch.cat([v,torch.ones_like(v[:,:1])],1)@mvp.T;r,_=dr.rasterize(ctx,projected[None],faces,[cell,cell]);coords=dr.interpolate(uv[None],r,faces)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,v,faces,r);alpha=(r[0,:,:,3]>0).float()
             # A compact mouth-bound geometric jet tests origin/aim with the jaw.
             phase=index/max(1,spec['frames']-1);strength=min(1,max(0,(phase-.27)/.08),max(0,(.76-phase)/.10)) if clip=='rear-breath' else 0
             if strength>0:
@@ -41,4 +42,4 @@ for clip,spec in profile['clips'].items():
     print(clip,'native-pixel review rendered',flush=True)
 # Native Tier-I footprint reference: no UI or runtime claim.
 strip=Image.new('RGB',(390,160),(24,22,27));draw=ImageDraw.Draw(strip);frame=Image.open(out/'walk/view-0-frame-00.png');strip.paste(frame,(99,-23),frame);draw.line((0,134,389,134),fill=(90,76,65));draw.text((8,141),'390px WIDTH / TIER-I SOURCE CANDIDATE',fill=(220,190,145));strip.save(out/'tier-one-native-scale.png')
-(out/'technical-review.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(),nativeCell=192,modelToPixel=80,clips=reports,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');print('Saved motion and Tier-I footprint review')
+(out/'technical-review.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(),nativeCell=192,modelToPixel=80,lighting=LIGHTING,clips=reports,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');print('Saved motion and Tier-I footprint review')

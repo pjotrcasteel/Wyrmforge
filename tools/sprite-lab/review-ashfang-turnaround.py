@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import nvdiffrast.torch as dr
 from PIL import Image, ImageDraw
+from ashfang_preview_lighting import shade, palette_for, LIGHTING
 
 rig = Path(sys.argv[1])
 out = rig / 'turnaround-review-v1'
@@ -20,7 +21,7 @@ vertices = torch.cat([vertices, torch.ones_like(vertices[:, :1])], 1)
 faces = tensor(source['faces'], torch.int32)
 uv = tensor(source['uv'])
 albedo = Image.open(rig / 'ashfang-albedo.png').convert('RGB')
-palette = albedo.quantize(colors=64)
+palette = palette_for(albedo)
 texture = tensor(np.asarray(albedo) / 255).flip(0)[None]
 board = Image.new('RGB', (cell*4, (cell+20)*2), (30, 29, 31))
 draw = ImageDraw.Draw(board)
@@ -39,6 +40,7 @@ for view in range(8):
     raster, _ = dr.rasterize(ctx, (vertices @ tensor(matrix).T)[None], faces, [cell, cell])
     texcoords = dr.interpolate(uv[None], raster, faces)[0]
     color = dr.texture(texture, texcoords, filter_mode='nearest')[0].clamp(0, 1)
+    color = shade(color, vertices[:, :3], faces, raster)
     alpha = (raster[0, :, :, 3] > 0).float()
     rgba = (torch.cat([color, alpha[:, :, None]], -1).flip(0).cpu().numpy()*255).astype('uint8')
     original = Image.fromarray(rgba)
@@ -51,5 +53,5 @@ for view in range(8):
     bounds = image.getbbox()
     observations.append(dict(angleDegrees=view*45, bounds=bounds, width=bounds[2]-bounds[0]))
 board.save(out / 'turnaround.png')
-(out / 'review.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(), views=observations, ownerAccepted=False), indent=2)+'\n')
+(out / 'review.json').write_text(json.dumps(dict(gpu=torch.cuda.get_device_name(), views=observations, lighting=LIGHTING, ownerAccepted=False), indent=2)+'\n')
 print('Eight real views saved:', out, flush=True)
