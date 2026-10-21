@@ -138,6 +138,61 @@ export function createWetForestMaterialEdges(tiles, seed, width, height = Infini
 }
 
 
+/**
+ * Worn, connected details along the actual C# route. Broken twin ruts help the
+ * forest read as a traversed place at phone scale, without painting a narrow
+ * obligatory lane or adding any blocker to the generous combat glades.
+ */
+export function createWetForestTrailImprints(recipe, seed, width, height) {
+    if (!recipe?.trail?.length || width <= 0 || height <= 0) return [];
+    const marks = [];
+    const steps = Math.max(1, Math.floor(height / 9));
+    for (let i = 0; i < steps; i++) {
+        const y = snap2((i + .5) * height / steps);
+        const trail = wetForestTrailAt(recipe.trail, y / height);
+        for (const side of [-1, 1]) {
+            const irregularity = hash(seed ^ 0x16c4b6, i, side + 2);
+            if (irregularity < .43) continue;
+            const offset = side * (14 + trail.width * width * .12);
+            const x = snap2(trail.x * width + offset + (irregularity - .5) * 10);
+            const w = irregularity > .82 ? 8 : 4;
+            if (x < 0 || y < 0 || x + w > width || y + 2 > height) continue;
+            marks.push({ x, y, width: w, height: 2, alpha: .46,
+                color: irregularity > .82 ? '#544537' : '#232a24', kind: 'rut' });
+        }
+    }
+    return marks;
+}
+
+/**
+ * Clearing edges read as trampled soil giving way to leaf duff. Every mark is
+ * INSIDE a seeded C# ground patch; the central fighting floor remains clean
+ * enough to see automatic spell telegraphs and hundreds of moving enemies.
+ */
+export function createWetForestGladeMargins(recipe, seed, width, height) {
+    const margins = [];
+    for (const [index, clearing] of (recipe?.ground ?? []).entries()) {
+        if (clearing.kind !== 'clearing') continue;
+        const cx = clearing.x * width, cy = clearing.y * height;
+        const rx = clearing.radiusX * width, ry = clearing.radiusY * height;
+        const large = clearing.radiusX >= .15;
+        const count = large ? 46 : 20;
+        for (let i = 0; i < count; i++) {
+            const variation = hash(seed ^ (index * 467), i, 47);
+            if (variation < .14) continue;
+            const theta = (i / count) * Math.PI * 2 + variation * .10;
+            const radius = .80 + variation * .30;
+            const x = snap2(cx + Math.cos(theta) * rx * radius);
+            const y = snap2(cy + Math.sin(theta) * ry * radius);
+            const w = variation > .82 ? 8 : 4;
+            if (x < 0 || y < 0 || x + w > width || y + 2 > height) continue;
+            margins.push({ x, y, width: w, height: 2, alpha: large ? .34 : .45,
+                color: i % 3 === 0 ? '#202923' : '#4f4a39', kind: 'margin' });
+        }
+    }
+    return margins;
+}
+
 // A second, sparse authored-pixel vocabulary breaks up the flat fill on each
 // *walkable* material. The marks never define colliders, flames or tall props.
 // Their direction, count and colors reflect wet soil, eroded stone and leaf litter.
@@ -320,6 +375,16 @@ export function drawWetForestGround(ctx, plan) {
     ctx.globalAlpha = 1;
     // Baked micro-material detail: broken soil facets, not a flat color wash.
     for (const mark of createWetForestSurfaceDetails(tiles, seed, width, height)) {
+        ctx.globalAlpha = mark.alpha;
+        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+    }
+    ctx.globalAlpha = 1;
+    // Large-scale continuity: eroded ruts and soft edges of spacious glades.
+    // These strokes are all walkable, and generated once with the static texture.
+    for (const mark of [
+        ...createWetForestGladeMargins(recipe, seed, width, height),
+        ...createWetForestTrailImprints(recipe, seed, width, height),
+    ]) {
         ctx.globalAlpha = mark.alpha;
         rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
     }
