@@ -180,18 +180,19 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
         var layers = Page.Locator(".refuge-town-scenery-foreground");
-        await Expect(layers).ToHaveCountAsync(12);
+        await Expect(layers).ToHaveCountAsync(14);
         var hallFoliage = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='hall-terrace-foliage-foreground']");
         await Expect(hallFoliage).ToHaveCountAsync(1);
         await Page.WaitForFunctionAsync(@"() => {
             const cutouts = [...document.querySelectorAll('.refuge-town-png-cutout')];
-            return cutouts.length === 6 && cutouts.every(img =>
+            return cutouts.length === 8 && cutouts.every(img =>
                 img.dataset.townPngReady === 'true' &&
                 img.src.startsWith('data:image/png;base64,') &&
                 img.naturalWidth > 0 && img.naturalHeight > 0);
         }");
         foreach (var id in new[] { "noticeboard-panel", "noticeboard-supports", "well-roof",
-            "well-supports", "well-front-rim", "nexus-terrace-parapet" })
+            "well-supports", "well-front-rim", "nexus-terrace-parapet",
+            "nexus-terrace-bushes", "nexus-stairs-shrubs" })
         {
             var png = Page.Locator($".refuge-town-png-cutout[data-town-cutout='{id}']");
             await Expect(png).ToBeVisibleAsync();

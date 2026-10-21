@@ -26,6 +26,17 @@ export const CUTOUTS = [
         // A large duplicate-floor SVG previously hid walkers on actual paving.
         id: "nexus-terrace-parapet", x: 39, y: 397, width: 289, height: 73,
         path: "M43 403 L81 407 L112 411 L153 413 L181 420 L216 425 L247 431 L283 440 L318 449 L323 464 L304 466 L279 454 L242 444 L203 439 L166 432 L129 424 L91 419 L52 417 Z"
+    },
+    {
+        // The low bushes remain in front of a citizen's legs when they pass behind
+        // the terrace edge; nearby paving is transparent, not an extra solid floor.
+        id: "nexus-terrace-bushes", x: 335, y: 420, width: 147, height: 61,
+        path: "M337 450 L350 439 L360 429 L377 430 L389 437 L400 430 L422 436 L437 442 L455 441 L472 451 L479 466 L470 473 L453 471 L436 470 L420 466 L407 468 L393 463 L369 467 L353 469 L337 459 Z"
+    },
+    {
+        // Independent shrub tuft beside the Nexus stairs; not the stairs themselves.
+        id: "nexus-stairs-shrubs", x: 497, y: 411, width: 49, height: 53,
+        path: "M499 432 L505 418 L513 414 L523 419 L535 431 L542 445 L537 460 L525 459 L513 451 L499 448 Z"
     }
 ];
 

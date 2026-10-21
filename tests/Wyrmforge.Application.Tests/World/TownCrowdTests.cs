@@ -262,6 +262,40 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_NexusStairsPlanting_BlocksFeetButPreservesResearchAndStairs()
+    {
+        var map = Scene();
+
+        Assert.IsFalse(map.IsWalkable(new TownPoint(440, 455)),
+            "Terrace flowerbed is solid planting, not open cobblestone.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(520, 440)),
+            "Stairside shrubs must not be walked through.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(485, 461)),
+            "The intentionally open paved passage beside the bushes must remain accessible.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(520, 474)),
+            "NPCs must be able to reach the Nexus steps beside the planting.");
+
+        foreach (var id in new[] { "nexus-workbench", "nexus-research-assistant",
+            "nexus-west-terrace", "nexus-front-terrace" })
+        {
+            var destination = map.Destinations.Single(stop => stop.Id == id);
+            Assert.IsTrue(map.IsWalkable(destination.Position), id + " must stand on clear paving.");
+            var origin = map.Destinations.Single(stop => stop.Id == "lower-square").Position;
+            Assert.IsTrue(map.TryFindPath(origin, destination.Position, out var route),
+                id + " must still be reachable without cutting across foliage.");
+            CheckRoute(map, origin, route);
+        }
+
+        Assert.IsTrue(map.Occluders.Any(layer => layer.Id == "nexus-terrace-bushes-foreground" &&
+            layer.DepthY > 470));
+        Assert.IsTrue(map.Occluders.Any(layer => layer.Id == "nexus-stairs-shrubs-foreground" &&
+            layer.DepthY > 460));
+        Assert.IsFalse(map.Obstacles.Any(obstacle =>
+            obstacle.Id is "nexus-terrace-bushes-foreground" or "nexus-stairs-shrubs-foreground"),
+            "Visual cover is separate from physical shrub bases.");
+    }
+
+    [TestMethod]
     public void Navigation_FourBuildingForecourtsConnectWithoutCrossingFoundations()
     {
         var map = Scene();

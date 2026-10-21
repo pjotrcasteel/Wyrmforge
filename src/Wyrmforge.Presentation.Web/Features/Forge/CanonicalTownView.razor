@@ -51,6 +51,7 @@
                 // Do not replay broad painted floor polygons over walking citizens.
                 // Physical structures use one-time alpha silhouettes at feet depth.
                 if (foreground.Id is "well-foreground" or "noticeboard-foreground" or
+                    "nexus-terrace-bushes-foreground" or "nexus-stairs-shrubs-foreground" or
                     "nexus-low-terrace-railing-foreground") continue;
                 var minX = foreground.Clip.Min(point => point.X) - 1;
                 var minY = foreground.Clip.Min(point => point.Y) - 1;
@@ -219,7 +220,9 @@
         new("well-roof", 806, 384, 132, 87, 472),
         new("well-supports", 815, 445, 107, 84, 520),
         new("well-front-rim", 698, 491, 252, 78, 567),
-        new("nexus-terrace-parapet", 39, 397, 289, 73, 458)
+        new("nexus-terrace-parapet", 39, 397, 289, 73, 458),
+        new("nexus-terrace-bushes", 335, 420, 147, 61, 477),
+        new("nexus-stairs-shrubs", 497, 411, 49, 53, 466)
     ];
 
     private bool showTownGeometry;
