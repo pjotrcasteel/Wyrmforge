@@ -94,7 +94,7 @@ public sealed class TownCrowd
         // and 3 roamers (11 actors), not a second simulation or timer.
         var workerStops = navigation.Destinations.Count(destination =>
             destination.BuildingId is { } building && _openBuildings.Contains(building));
-        var population = Math.Max(citizenCount, workerStops + 3);
+        var population = citizenCount == 0 ? 0 : Math.Max(citizenCount, workerStops + 3);
         if (population > starts.Length)
             throw new ArgumentOutOfRangeException(nameof(citizenCount), "Not enough distinct work and roaming starts.");
         for (var i = 0; i < population; i++)
