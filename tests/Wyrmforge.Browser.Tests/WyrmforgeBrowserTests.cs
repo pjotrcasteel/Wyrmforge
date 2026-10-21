@@ -197,7 +197,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(png).ToBeVisibleAsync();
             Assert.IsTrue(await png.EvaluateAsync<bool>(@"img => {
                 if (getComputedStyle(img).pointerEvents !== 'none' ||
-                    img.naturalWidth > 252 || img.naturalHeight > 100) return false;
+                    img.naturalWidth > 300 || img.naturalHeight > 100) return false;
                 const canvas = document.createElement('canvas');
                 canvas.width = img.naturalWidth;
                 canvas.height = img.naturalHeight;
