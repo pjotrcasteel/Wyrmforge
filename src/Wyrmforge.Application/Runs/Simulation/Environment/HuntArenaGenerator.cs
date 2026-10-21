@@ -53,19 +53,19 @@ public static class HuntArenaGenerator
         // around them remains fully open for Vampire Survivors-style horde kiting.
         foreach (var fraction in new[] { .13, .32, .50, .70, .87 })
         {
-            var y = fraction == .50 ? .50 : Math.Clamp(fraction + (rng.NextDouble() - .5) * .032, .10, .90);
-            var x = fraction == .50 ? .50 : Math.Clamp(TrailXAt(trail, y) + (rng.NextDouble() - .5) * .13, .23, .77);
+            var gladeY = fraction == .50 ? .50 : Math.Clamp(fraction + (rng.NextDouble() - .5) * .032, .10, .90);
+            var gladeX = fraction == .50 ? .50 : Math.Clamp(TrailXAt(trail, gladeY) + (rng.NextDouble() - .5) * .13, .23, .77);
             // The central spawn stays open around the actual mage. Other glades
             // move away from authored camps/graves plus their nearby physical props,
             // so decorative ruins do not secretly consume an enemy-combat orbit.
             const double minimumSiteDistance = 275;
-            if (fraction != .50 && Math.Sqrt(Math.Pow((x - siteX) * 950, 2) +
-                    Math.Pow((y - siteY) * 1550, 2)) < minimumSiteDistance)
-                x = Math.Clamp(x + (x <= siteX ? -.30 : .30), .17, .83);
-            if (fraction != .50 && Math.Sqrt(Math.Pow((x - siteX) * 950, 2) +
-                    Math.Pow((y - siteY) * 1550, 2)) < minimumSiteDistance)
-                y = Math.Clamp(y + (y <= siteY ? -.14 : .14), .10, .90);
-            ground.Add(new GroundPatch("clearing", x, y, .17, .105));
+            if (fraction != .50 && Math.Sqrt(Math.Pow((gladeX - siteX) * 950, 2) +
+                    Math.Pow((gladeY - siteY) * 1550, 2)) < minimumSiteDistance)
+                gladeX = Math.Clamp(gladeX + (gladeX <= siteX ? -.30 : .30), .17, .83);
+            if (fraction != .50 && Math.Sqrt(Math.Pow((gladeX - siteX) * 950, 2) +
+                    Math.Pow((gladeY - siteY) * 1550, 2)) < minimumSiteDistance)
+                gladeY = Math.Clamp(gladeY + (gladeY <= siteY ? -.14 : .14), .10, .90);
+            ground.Add(new GroundPatch("clearing", gladeX, gladeY, .17, .105));
         }
         return new WetForestRecipe(site, siteX, siteY, trail, ground);
     }
