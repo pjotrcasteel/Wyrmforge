@@ -49,7 +49,7 @@ def flight_state(phase):
         flap=flap,
         foreTuck=smooth((phase-.17)/.10)*(1-smooth((phase-.64)/.14)),
         hindTuck=smooth((phase-.31)/.08)*(1-smooth((phase-.68)/.16)),
-        toeRoll=.42*smooth((phase-.19)/.075)*(1-smooth((phase-.28)/.04)),
+        toeRoll=.32*smooth((phase-.19)/.075)*(1-smooth((phase-.28)/.04)),
         kickTrail=smooth((phase-.24)/.045)*(1-smooth((phase-.34)/.10)),
         landingReach=smooth((phase-.64)/.14)*(1-smooth((phase-.88)/.12)),
         label=label,

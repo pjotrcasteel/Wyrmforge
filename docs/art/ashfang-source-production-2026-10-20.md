@@ -297,3 +297,15 @@ failed source. V18 restores the prior low forepaw ownership, keeps rear-paw
 isolation, and sculpts the full unprotected inter-leg underside to a curved
 belly contour rather than leaving low peripheral webbing. Paw footprint masks
 protect the actual soles; no rendered floor clamping or deleted faces.
+
+### V18 exact failure inspection / V19 paw-boundary correction
+Rest-vertex inspection pinpoints the remaining failures: low rear paw inner
+edge (X .053/Y .301) was assigned to pelvis; front edge (X .198/Y .071) fell
+just outside the restricted rear row; another low paw point (X .063/Y .275)
+was assigned to shin. V19 retains these actual low paw surfaces in the rear
+foot group over Y .04–.34, with original lateral threshold, while excluding
+midbody and trailing tail. The rear toe endpoint is placed nearer the actual
+claw span, and toe roll reduced to 0.32 radians to retain more leg extension.
+Fore goals recenter slightly and cycle travel becomes 0.10/0.72 units to avoid
+reintroducing unreachable steps after the underside sculpt. V18 remains a
+failed floor-gate candidate; inspect-source-floor.py preserves this diagnostic.

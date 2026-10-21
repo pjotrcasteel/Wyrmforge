@@ -58,7 +58,7 @@ bones={}
 def bone(n,a,b,parent=None,deform=True):bones[n]=dict(head=np.array(a,float),tail=np.array(b,float),parent=parent,deform=deform)
 bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.07),'chest');bone('neck.1',(0,-.25,.07),(0,-.35,.10),'neck.0');bone('head',(0,-.35,.10),(0,-.52,.065),'neck.1');bone('jaw',(0,-.35,.045),(0,-.54,.005),'head');bone('mouth',(0,-.57,.045),(0,-.625,.045),'head',False)
 for side,sign in [('L',1),('R',-1)]:
-    for limb,points,parent in [('fore',[(sign*.115,-.18,-.005),(sign*.15,-.22,-.075),(sign*.17,-.29,-.165),(sign*.17,-.37,-.185)],'chest'),('hind',[(sign*.105,.17,-.025),(sign*.18,.095,-.075),(sign*.18,.23,-.16),(sign*.18,.13,-.185)],'pelvis')]:
+    for limb,points,parent in [('fore',[(sign*.115,-.18,-.005),(sign*.15,-.22,-.075),(sign*.17,-.29,-.165),(sign*.17,-.37,-.185)],'chest'),('hind',[(sign*.105,.17,-.025),(sign*.18,.095,-.075),(sign*.18,.23,-.16),(sign*.18,.075,-.185)],'pelvis')]:
         for i in range(3):bone(f'{limb}.{i}.{side}',points[i],points[i+1],parent if i==0 else f'{limb}.{i-1}.{side}')
     wr,we,ww,middles,tips=wing_layout(sign);points=[wr,we,ww]
     bone('wing.upper.'+side,points[0],points[1],'chest');bone('wing.fore.'+side,points[1],points[2],'wing.upper.'+side)
@@ -87,9 +87,8 @@ for index,p in enumerate(v):
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.035 and y<-.055:
         permitted=['fore.2.'+side] if z<-.135 else [f'fore.{i}.{side}' for i in range(3)];region='fore'
-    elif z<-.055 and abs(x)>.06 and .075<y<.34:
-        in_paw=((abs(x)-.17)/.085)**2+((y-.19)/.14)**2<1.2
-        if z<-.135:permitted=['hind.2.'+side] if in_paw else ['hind.0.'+side,'hind.1.'+side]
+    elif z<-.055 and abs(x)>.035 and .04<y<.34:
+        if z<-.135:permitted=['hind.2.'+side]
         else:permitted=[f'hind.{i}.{side}' for i in range(3)]
         region='hind'
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
@@ -144,7 +143,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
             for limb,shift in [('fore',0 if side=='L' else .5),('hind',.25 if side=='L' else .75)]:
                 n=f'{limb}.0.{side}';parent='chest' if limb=='fore' else 'pelvis'
                 hip=attached(parent,bones[n]['head']);ankle=Vector(bones[f'{limb}.2.{side}']['head']);clearance=0
-                if limb=='fore':ankle.y+=.05
+                if limb=='fore':ankle.y+=.07
                 else:ankle.x=sign*.16
                 rest_goal=ankle.copy();fn=f'{limb}.2.{side}'
                 fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
@@ -152,9 +151,9 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
                 sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
                 if clip=='walk':
                     t=(phase+shift)%1
-                    if t<.72:ankle.y+=.11*(t/.72-.5)
+                    if t<.72:ankle.y+=.10*(t/.72-.5)
                     else:
-                        t=(t-.72)/.28;ankle.y+=.055-.11*t;clearance=.045*math.sin(t*math.pi)
+                        t=(t-.72)/.28;ankle.y+=.05-.10*t;clearance=.045*math.sin(t*math.pi)
                     ankle.z=sole_height+clearance
                 elif flight:
                     tuck=flight[limb+'Tuck']
@@ -235,7 +234,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         floor.append(dict(clip=clip,frame=frame,minZ=float(coords[:,2].min()),altitude=altitude,rootAdvance=advance,tailCorrectionRadians=tail_correction,lowestVertex=lowest,lowestDominantGroup=obj.vertex_groups[dominant.group].name,penetratingVertexFraction=float((coords[:,2]<-.198).mean())));ev.to_mesh_clear();emitters.append([list(mh),list(headrotation@Vector((0,-1,0)))])
     for curve in action.fcurves:
         for key in curve.keyframe_points:key.interpolation='LINEAR'
-    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else [],strideDistanceModelUnits=.11/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
+    clips[clip]=dict(frames=count,fps=24,loop=clip=='walk',action=action.name,events=FLIGHT_EVENTS if flight else [],strideDistanceModelUnits=.10/.72 if clip=='walk' else None);positions[clip]=np.array(sample);mouths[clip]=np.array(emitters)
     np.savez_compressed(out/(clip+'-samples.npz'),positions=positions[clip],faces=faces,uv=uv,mouth=mouths[clip],bonePoints=np.array(skeleton),boneNames=np.array(list(bones)),rootMotion=np.array(roots))
 scene=bpy.context.scene;scene.frame_start=1;scene.frame_end=24;scene.render.fps=24;rig.animation_data.action=bpy.data.actions['Ashfang_walk'];scene.frame_set(1)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-rigged.blend'));(out/'profile.json').write_text(json.dumps(dict(clips=clips,groundRoot=[0,0,-.197],nativeCell=192,modelToPixel=80,tier=1,targetGroundedViewportWidthFraction=[.15,.25],boneCount=len(bones),skinOwnership=ownership,ownerAccepted=False,runtimeIntegrated=False),indent=2)+'\n');(out/'floor-audit.json').write_text(json.dumps(floor,indent=2)+'\n');print('Saved source rig and three anatomy/motion blocking sequences',flush=True)
