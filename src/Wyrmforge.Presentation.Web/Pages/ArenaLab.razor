@@ -51,7 +51,6 @@
         <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast" ? "true" : "false")" @onclick='() => ChangeTool("blast")'>Blast area</button>
         <label class="toggle"><input type="checkbox" @bind="showCollision" @bind:after="SyncOptions" /> Collision outlines</label>
         <label class="toggle"><input type="checkbox" @bind="showMobs" @bind:after="SyncOptions" /> Pathing mobs</label>
-        <label class="toggle"><input type="checkbox" @bind="openCrossings" @bind:after="Regenerate" /> Open crossings</label>
         <button class="secondary" @onclick="ResetScene">Reset scene</button>
     </section>
 
@@ -66,6 +65,7 @@
             <h2>World inspector</h2>
             <dl>
                 <dt>Habitat</dt><dd>@WyrmrealmHabitatCatalog.DisplayName(habitat)</dd>
+                <dt>Discovery</dt><dd>@siteName</dd>
                 <dt>Region</dt><dd>@WyrmrealmHabitatCatalog.School(habitat)</dd>
                 <dt>Wyrm influence</dt><dd>@(Math.Round(HuntArenaGenerator.WyrmInfluence(stage, stage >= 7) * 100))%</dd>
                 <dt>Props remaining</dt><dd>@remainingProps</dd>
@@ -74,7 +74,7 @@
                 <dt>World</dt><dd>950 × 1550</dd>
             </dl>
             <h3>Quick tests</h3>
-            <p>Try different seeds at the same stage. Move around the forest, strike barrels or trees, and observe collision and loot drops. Show pathing mobs to inspect obstacle avoidance.</p>
+            <p>Wet Forest first: explore a different old trail and woodland site each seed. No artificial lane walls or crossing unlocks. Strike props and inspect real collision.</p>
             <p>The environment is authoritative C#; rendering uses production terrain and sprite modules. No real Hunt saves, enemy combat, or permanent currency changes occur in this lab.</p>
             <button class="secondary" @onclick="CopyLink">Copy seed link</button>
         </aside>
@@ -99,12 +99,12 @@
     private WyrmrealmHabitat habitat = WyrmrealmHabitat.WetForest;
     private int seed = 1204;
     private int stage = 1;
+    private string siteName = "—";
     private int remainingProps;
     private int destroyedProps;
     private int collectedSupplies;
     private bool showCollision;
     private bool showMobs = true;
-    private bool openCrossings = true;
     private string tool = "walk";
     private string status = "Choose a seed and explore.";
 
@@ -161,7 +161,8 @@
         if (difference > 0)
         {
             destroyedProps += difference;
-            remainingProps = environment.Snapshot().Props.Count;
+            siteName = environment.Snapshot().WetForest?.Site.Replace('-', ' ') ?? "—";
+        remainingProps = environment.Snapshot().Props.Count;
             status = $"{destroyedProps} objects destroyed · loot is collectible on approach";
             _ = InvokeAsync(StateHasChanged);
         }
@@ -194,7 +195,6 @@
             PreLair = stage >= 7,
         };
         environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
-        if (openCrossings) environment.SetPhase(EncounterPhase.Surge);
         player = new Vector2D(WorldWidth * .5, WorldHeight * .5);
         if (environment.IsBlocked(player, WorldWidth, WorldHeight, 12))
             player = new Vector2D(WorldWidth * .5, WorldHeight * .55);

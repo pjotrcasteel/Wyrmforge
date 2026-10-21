@@ -74,13 +74,15 @@ public sealed class ArenaEnvironmentState
         var environment = new ArenaEnvironmentState(seed, biome, element, stage, landmark, district, habitat, node.PreLair, generatorPreview);
         if (node.Type != WyrmrealmNodeType.Combat) return environment;
 
-        // The hunter begins in the central courtyard. Both crossings have a permanent narrow throat.
-        // A sealed barricade temporarily closes that throat. The north opens after wave two;
-        // the south opens at the surge. Neither gate can lock again during this encounter.
-        environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
-        environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
-        environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
-        environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
+        // The old fixed gated encounter remains part of current Hunts ONLY.
+        // Arena Lab previews have natural continuous ground: no synthetic cross-walls or wave checkpoints.
+        if (!generatorPreview)
+        {
+            environment.AddCrossing(.315 + random.NextDouble() * .035, EncounterPhase.BreathingRoom);
+            environment.AddCrossing(.675 + random.NextDouble() * .035, EncounterPhase.Surge);
+            environment.supplies.Add(new Supply("experience", 0.50, 0.20 + random.NextDouble() * 0.05, EncounterPhase.BreathingRoom));
+            environment.supplies.Add(new Supply("health", 0.50, 0.81 + random.NextDouble() * 0.05, EncounterPhase.Surge));
+        }
         foreach (var prop in generatorPreview ? HuntArenaGenerator.Generate(seed, node.Habitat, stage, node.PreLair) : [])
         {
             var center = new Vector2D(prop.X * 950, prop.Y * 1550);
@@ -105,6 +107,8 @@ public sealed class ArenaEnvironmentState
     {
         Corruption = HuntArenaGenerator.WyrmInfluence(stage, generatorPreview && preLair),
         GeneratorPreview = generatorPreview,
+        WetForest = generatorPreview && habitat == nameof(WyrmrealmHabitat.WetForest)
+            ? HuntArenaGenerator.GenerateWetForest(seed) : null,
         Props = destructibles.Where(prop => prop.Health > 0)
             .Select(prop => new ArenaPropRenderSnapshot(prop.Spec.Id, prop.Spec.Kind, prop.Spec.X, prop.Spec.Y, prop.Spec.Radius,
                 prop.Health / prop.Spec.Health)).ToArray(),

@@ -30,7 +30,7 @@ export function createTerrainPlan(environment, width, height) {
     // They read as arbitrary spires, sit on traversable floor and undermine
     // its coherent historic layout. Other terrain biomes keep their debris.
     const remains = [];
-    if (!story.cloister) for (let index = 0; index < 10; index++) {
+    if (!story.cloister && !story.wetForest) for (let index = 0; index < 10; index++) {
         const side = index % 2 === 0 ? 1 : -1;
         remains.push({ x: Math.max(9, Math.min(width - 9, width * .5 + side * (trailWidth * .68 + random() * width * .16))),
             y: 20 + random() * Math.max(1, height - 40), size: 7 + random() * 11, rotation: random() * Math.PI });
@@ -38,7 +38,7 @@ export function createTerrainPlan(environment, width, height) {
     const proximity = Math.max(0, Math.min(1, environment.corruption ?? ((environment.stage - 1) / 7)));
     const element = ['fire', 'frost', 'storm', 'arcane'].includes(environment.element) ? environment.element : 'arcane';
     const scars = [];
-    for (let index = 0; index < 3 + Math.floor(proximity * 20); index++) {
+    for (let index = 0; index < (story.wetForest ? 0 : 3 + Math.floor(proximity * 20)); index++) {
         // Irregular, sparsely placed burn/frost/charge/rift deposits build toward the lair.
         // Leave the central fighting ground clearer than the ruined approach and outer terrain.
         const side = index % 2 === 0 ? -1 : 1;
@@ -162,8 +162,9 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.restore();
     }
     drawTerritoryLandmarks(ctx, plan.story);
-    if (artReady() && !plan.story.cloister) drawForestEdges(ctx, plan, width, height);
-    if (plan.stage >= 5) {
+    // The Wet Forest edge can be explored; never bake fake solid-looking trees without C# footprints.
+    if (artReady() && !plan.story.cloister && !plan.story.wetForest) drawForestEdges(ctx, plan, width, height);
+    if (plan.stage >= 5 && !plan.story.wetForest) {
         ctx.strokeStyle = ash ? 'rgba(247,81,43,.3)' : ridge ? 'rgba(195,163,93,.23)' : snow ? 'rgba(150,206,236,.24)' : 'rgba(128,178,153,.19)';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -175,7 +176,7 @@ function drawTerrain(ctx, plan, width, height) {
     }
     // A restrained habitat wash tells forest from flood from scorch at a glance; the full tile pass comes later.
     const tint = habitatTint(plan.habitat);
-    if (tint) {
+    if (tint && !plan.story.wetForest) {
         ctx.fillStyle = tint;
         ctx.fillRect(0, 0, width, height);
     }
@@ -183,7 +184,8 @@ function drawTerrain(ctx, plan, width, height) {
     const vignette = ctx.createRadialGradient(width * .5, height * .49, Math.min(width, height) * .2,
         width * .5, height * .49, Math.max(width, height) * .7);
     vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(1, plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
+    vignette.addColorStop(1, plan.story.wetForest ? 'rgba(1,4,6,.3)' :
+        plan.story.cloister ? 'rgba(1,3,7,.37)' : 'rgba(1,3,7,.56)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
 }
@@ -213,7 +215,7 @@ export function habitatTint(habitat) {
 
 function terrainTexture(environment, width, height) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, width, height, artGeneration()].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration()].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
@@ -323,6 +325,7 @@ export function drawDestructibleProp(ctx, layer) {
     // The wide canopy is visual; collision belongs to the much smaller trunk radius.
     if (treeName && drawArtFrame(ctx, 'environment', treeName, x, y,
         { flipX: prop.id % 2 === 0 })) return true;
+    if (drawWetForestProp(ctx, prop, x, y, size)) return true;
     const ember = prop.kind === 'ember-urn';
     const frost = prop.kind === 'frozen-urn';
     const wood = prop.kind === 'crate' || prop.kind === 'barrel' || prop.kind === 'stump';
@@ -362,6 +365,64 @@ export function drawDestructibleProp(ctx, layer) {
         ctx.fillStyle = '#161717';
         ctx.fillRect(x - 2, top + 10, 3, 9);
         ctx.fillRect(x + 1, top + 18, 5, 3);
+    }
+    ctx.restore();
+    return true;
+}
+
+// Authoritative silhouettes for historical Wet Forest props. Every raised shape has a C# footprint.
+function drawWetForestProp(ctx, prop, x, y, size) {
+    const kind = prop.kind;
+    if (kind === 'moss-rock' && drawArtFrame(ctx, 'environment', 'prop.rock.a', x, y)) return true;
+    if (!['moss-rock', 'fallen-log', 'broken-cart', 'camp-remains', 'grave-marker', 'waystone'].includes(kind)) return false;
+    ctx.save();
+    ctx.fillStyle = 'rgba(5,8,8,.48)';
+    ctx.beginPath();ctx.ellipse(x+2,y+2,size+7,6,0,0,Math.PI*2);ctx.fill();
+    if(kind === 'fallen-log') {
+        // Top-down collapsed timber with rough bark, moss and branch nubs.
+        ctx.fillStyle='#242923';ctx.fillRect(x-36,y-11,68,16);
+        ctx.fillStyle='#493e33';ctx.fillRect(x-33,y-13,65,11);
+        ctx.fillStyle='#675346';ctx.fillRect(x-31,y-12,58,3);
+        ctx.fillStyle='#2f4137';
+        for (const dx of [-23,-5,14,28]) ctx.fillRect(x+dx,y-13,8,5);
+        ctx.fillStyle='#473428';ctx.fillRect(x+20,y-19,5,13);
+        ctx.fillRect(x-18,y-4,4,10);
+    } else if(kind === 'grave-marker' || kind === 'waystone') {
+        const big=kind==='waystone';
+        ctx.fillStyle='#242826';ctx.fillRect(x-(big?13:9),y-(big?45:30),big?26:18,big?46:30);
+        ctx.fillStyle='#555b51';ctx.fillRect(x-(big?11:7),y-(big?43:28),big?22:14,big?41:27);
+        ctx.fillStyle='#7b7969';ctx.fillRect(x-(big?10:6),y-(big?42:27),big?16:10,3);
+        ctx.fillStyle='#344238';ctx.fillRect(x-8,y-11,11,4);
+        ctx.fillStyle='#1e2522';ctx.fillRect(x-1,y-(big?33:22),2,big?17:12);
+        ctx.fillRect(x-5,y-(big?28:18),10,2);
+    } else if(kind === 'broken-cart'){
+        // No intact wagon: exposed rotten chassis and two visible broken wheel hubs.
+        ctx.fillStyle='#26231e';ctx.fillRect(x-31,y-27,62,25);
+        ctx.fillStyle='#65503d';ctx.fillRect(x-27,y-26,54,6);
+        for(const dx of [-21,-5,12]) { ctx.fillStyle='#48392c';ctx.fillRect(x+dx,y-20,7,19); }
+        for(const dx of [-31,29]){
+            ctx.strokeStyle='#655b46';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x+dx,y-1,9,0,Math.PI*2);ctx.stroke();
+            ctx.fillStyle='#26211d';ctx.fillRect(x+dx-3,y-4,6,6);
+        }
+        ctx.fillStyle='#45362b';ctx.fillRect(x+28,y-23,26,4);
+    } else if(kind === 'camp-remains'){
+        // Extinguished fire ring, charred timbers and a collapsed bit of shelter.
+        for(let i=0;i<8;i++){
+            const a=i*Math.PI/4;
+            ctx.fillStyle=i%2?'#54594c':'#3f463e';
+            ctx.fillRect(Math.round(x+Math.cos(a)*17)-4,Math.round(y-4+Math.sin(a)*10),8,5);
+        }
+        ctx.fillStyle='#1a1d1c';ctx.fillRect(x-10,y-13,21,8);
+        ctx.fillStyle='#62513d';ctx.fillRect(x-39,y-24,5,22);
+        ctx.fillRect(x-35,y-25,28,4);
+        ctx.fillStyle='#4a3a31';ctx.fillRect(x+29,y-18,4,16);
+    } else {
+        ctx.fillStyle='#313c36';ctx.fillRect(x-19,y-14,35,14);
+        ctx.fillStyle='#616e5e';ctx.fillRect(x-17,y-14,30,4);
+        ctx.fillStyle='#273e31';ctx.fillRect(x-5,y-15,18,4);
+    }
+    if(prop.healthFraction<.55){
+        ctx.fillStyle='#141d1b';ctx.fillRect(x-2,y-18,4,9);ctx.fillRect(x+1,y-11,8,2);
     }
     ctx.restore();
     return true;

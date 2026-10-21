@@ -29,7 +29,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const canvas = document.querySelector('.arena-stage canvas');
             const scene = mod.readArenaLabDiagnostics(canvas);
             return scene?.active && scene?.seed === 1441 && scene?.stage === 5 &&
-                scene.props > 0 && scene.world?.width === 950 && canvas.width > 0;
+                scene.props > 0 && scene.barriers === 0 && Boolean(scene.site) &&
+                scene.world?.width === 950 && canvas.width > 0;
         }");
         var first = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
             const mod = await import('./js/arena-lab.js');
@@ -38,6 +39,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
         if (width == 390)
         {
+            // A full-page screenshot taken while the fixed ignition splash covers the viewport
+            // looks like a black horizontal terrain seam; wait until the real artwork is visible.
+            await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
             Directory.CreateDirectory(ArtifactDirectory);
             await ScreenshotAsync("arena-lab-wetforest-390.png");
         }

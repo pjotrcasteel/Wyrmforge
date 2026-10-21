@@ -2,22 +2,22 @@
 
 This development lab is a routed Blazor WebAssembly page at `/arena-lab`. It is built on top of the **same C# `ArenaEnvironmentState` and `HuntArenaGenerator`** as the proposed in-game arenas, not a screenshot, imitation generator or independent random playground.
 
-## Open the draft preview
+## Open the lab
 
-1. Open [PR #192](https://github.com/pjotrcasteel/Wyrmforge/pull/192), choose the latest **Browser smoke** workflow run and download its `wyrmforge-playable-preview-<commit>` artifact.
-2. Extract it and start `python3 preview_server.py --directory wwwroot --port 4173 --host 0.0.0.0` on your development computer.
-3. Open `http://localhost:4173/arena-lab` on that computer. On your iPhone, use your computer's local LAN address on the same private Wi-Fi network: `http://COMPUTER_IP:4173/arena-lab`.
-
-This is a temporary unmerged PR preview; the public Pages site does **not** include this route until a validated release is merged.
+The development page is at https://pjotrcasteel.github.io/Wyrmforge/arena-lab.
+Wet Forest is being developed and accepted first; other biome modes remain experimental.
+Normal Hunts do not use the new scene until acceptance.
 
 ## What to test
 
 - Cycle through Abandoned Road, Wet Forest, and the Frost habitats. Regenerate with identical seeds, verify reproducible placement and distinct environmental texture with different seeds.
-- Move using WASD/arrows or drag on touch. Explore both sides of the road and both crosswise fighting lanes. Walls and props must have consistent physical collision, without invisible walls across clear ground.
+- Explore the wet old road, scattered wooded glades and human traces in both directions. There are
+  **no compulsory horizontal barriers, gated checkpoints or empty cross-shaped bands** in Wet Forest.
+  Movement must stay reachable in multiple ways; physical prop collision must match actual art.
 - Toggle **Collision outlines** to inspect the actual C# collider coordinates. Tree canopy may overhang walkable space; its narrow trunk remains solid.
 - Enable **Pathing mobs** to observe two non-attacking enemy movement probes approaching around props. This is for navigation only, not a full combat simulation.
 - Select **Hit prop** or **Blast area**, then tap an object. Destruction should remove its collider and its rendered object. Drops should appear only when applicable, and be collectible once by moving close.
-- Set Wyrm proximity to stages 1, 4, and 8. Fire and Frost should grow in influence without repainting every tile as one colored overlay.
+- Set Wyrm proximity to stages 1, 4 and 8. Wet Forest should gradually show localized Fire influence, without a uniform color wash.
 - Test portrait 320×568 and 390×844, and a wide desktop display. Keep the controls usable and maintain 30+ FPS or better where possible.
 
 ## Scope
