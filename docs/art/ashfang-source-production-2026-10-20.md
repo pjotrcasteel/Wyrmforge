@@ -269,3 +269,11 @@ shorter interval. Hind drive rolls around a toe anchor, retains rear-leg
 extension through departure and delays tuck. A hind-leg audit records local
 knee offsets and extension ratios. These changes await contact/visual gates.
 Current main checked at 3dd57e18; concurrent Fire Hunt PR #205 remains separate.
+
+V16 source completes and the rear-knee plane check passes for every sampled
+walk/rear/flight frame: knees are forward and below the hips in pelvis-local
+space. Whole-surface contact remains within tolerance and flight IK goals
+remain reachable. The coiled left leg changes from extension ratio ~0.397 to
+~0.752 during launch, but hock/toe calibration still needs visual review; the
+posed bone toe sits higher than the actual lowest paw surface during roll.
+Preserve this source before inspecting exact foot skin ownership and rendering.
