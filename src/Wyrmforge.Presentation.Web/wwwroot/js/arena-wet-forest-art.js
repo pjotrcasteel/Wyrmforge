@@ -4,18 +4,20 @@ const CELL = 12;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = t => t * t * (3 - 2 * t);
+// Restrained wet-earth materials: separated by value and texture, not bright greens
+// or a fullscreen "Gothic" color grade. The mage and enemies keep their own palette.
 const MATERIALS = Object.freeze({
-    loam: ['#27332d', '#2b352f', '#2d3830', '#26312b'],
-    moss: ['#304339', '#34463a', '#35483d', '#2d4037'],
-    mud: ['#35372f', '#393930', '#3a3c32', '#31362f'],
-    leafbed: ['#433d32', '#463c30', '#4b4032', '#3e392e'],
-    puddle: ['#192a29', '#1d302e', '#20332f', '#1a2b29'],
-    road: ['#464134', '#484235', '#4a4336', '#423e32'],
-    clearing: ['#363a31', '#393b32', '#3d3e33', '#34382f'],
+    loam: ['#252c25', '#272e27', '#283029', '#242b25'],
+    moss: ['#283329', '#29342a', '#2b362c', '#283228'],
+    mud: ['#2d2d29', '#30302b', '#32322d', '#2c2c28'],
+    leafbed: ['#383229', '#39332a', '#3b352b', '#373229'],
+    puddle: ['#151e1f', '#182122', '#1b2424', '#161f20'],
+    road: ['#39362d', '#3b372e', '#3d392e', '#38352d'],
+    clearing: ['#30312c', '#32332d', '#34342e', '#2e302b'],
 });
 const GRAIN = Object.freeze({
-    loam: '#485044', moss: '#52674c', mud: '#514e3e', leafbed: '#76604a',
-    puddle: '#4b6258', road: '#716451', clearing: '#596052',
+    loam: '#464a3d', moss: '#495843', mud: '#4b4638', leafbed: '#62503a',
+    puddle: '#455650', road: '#625543', clearing: '#505044',
 });
 
 // Integer-only coordinate hashing avoids random state shared with simulation or actor motion.
@@ -71,7 +73,7 @@ export function createWetForestTilePlan(recipe, seed, width, height) {
             const n = noise(seed ^ 0x342cdf6a, x, y, 96);
             const small = noise(seed ^ 0x415c7a39, x, y, 42);
             const jitter = (small - .5) * 12;
-            let material = n > .66 ? 'moss' : n < .28 ? 'mud' : 'loam';
+            let material = n > .72 ? 'moss' : n < .29 ? 'mud' : 'loam';
             // Broad coherent ecology patches, rather than a different random color per cell.
             for (const patch of patches) {
                 const dx = (x - patch.x) / patch.rx;
@@ -96,6 +98,42 @@ export function createWetForestTilePlan(recipe, seed, width, height) {
         }
     }
     return tiles;
+}
+
+// Deliberately irregular 2px silt/soil edges bridge neighbouring material cells.
+// The road and flooded patches keep their C# recipe footprint; these are paint only.
+// Plan generated once during terrain bake, not every animation frame.
+export function createWetForestMaterialEdges(tiles, seed, width, height = Infinity) {
+    if (!tiles?.length || width <= 0) return [];
+    const columns = Math.ceil(width / CELL);
+    const marks = [];
+    const bank = (a, b) => a === 'puddle' || b === 'puddle' ? '#222a27'
+        : a === 'road' || b === 'road' ? '#302f29'
+            : a === 'leafbed' || b === 'leafbed' ? '#302f27' : '#293329';
+    for (let i = 0; i < tiles.length; i++) {
+        const current = tiles[i], col = i % columns;
+        for (const [neighbour, dx, dy, salt] of [
+            [col + 1 < columns ? tiles[i + 1] : null, CELL, 0, 129],
+            [tiles[i + columns], 0, CELL, 317],
+        ]) {
+            if (!neighbour || neighbour.material === current.material) continue;
+            // Irregular 2px/4px sediment pixels dissolve square 12px seams.
+            // Borrow a few dark adjacent grains on BOTH sides, never a grid line.
+            const seamX = current.x + dx, seamY = current.y + dy;
+            for (let step = 0; step < CELL; step += 2) {
+                const pick = hash(seed ^ salt, current.x + step, current.y + step);
+                if (pick < .23) continue;
+                const offset = Math.floor(hash(seed ^ (salt + 17), step + current.x, current.y) * 4) * 2 - 4;
+                const x = dx ? seamX + offset : current.x + step;
+                const y = dy ? seamY + offset : current.y + step;
+                const edgeWidth = pick > .8 ? 4 : 2, edgeHeight = 2;
+                if (x >= 0 && y >= 0 && x + edgeWidth <= width && y + edgeHeight <= height)
+                    marks.push({ x, y, width: edgeWidth, height: edgeHeight,
+                        color: bank(current.material, neighbour.material) });
+            }
+        }
+    }
+    return marks;
 }
 
 function rect(ctx, x, y, w, h, color) {
@@ -153,14 +191,26 @@ export function drawWetForestGround(ctx, plan) {
         const { x, y, material, variation } = tile;
         const colors = MATERIALS[material] || MATERIALS.loam;
         rect(ctx, x, y, Math.min(CELL, width - x), Math.min(CELL, height - y), colors[variation]);
-        // Restrained 2px/4px material motifs, all on one visual grid.
-        if (variation === 0) continue;
-        ctx.globalAlpha = material === 'puddle' ? .34 : .29;
-        rect(ctx, x + 2, y + 2 + (variation % 2) * 4, variation === 3 ? 8 : 4, 2, GRAIN[material] || GRAIN.loam);
-        if (variation === 3 && material !== 'puddle')
-            rect(ctx, x + 8, y + 8, 2, 2, '#171f1c');
-        ctx.globalAlpha = 1;
+        // Soil flecks must not reveal the underlying 12px tile grid. Keep the
+        // visual noise sparse, seed-stable and contained in the original floor.
+        const grain = hash(seed ^ 0x4f6a21, x / CELL, y / CELL);
+        if (grain < .46) {
+            const dx = 2 + Math.floor(grain * 5) * 2;
+            const dy = 2 + Math.floor(hash(seed ^ 0x78a41f, y / CELL, x / CELL) * 4) * 2;
+            ctx.globalAlpha = material === 'puddle' ? .16 : .2;
+            rect(ctx, x + dx, y + dy, grain < .15 ? 4 : 2, 2, GRAIN[material] || GRAIN.loam);
+            if (material === 'road' && grain < .12)
+                rect(ctx, x + dx + 2, y + 8, 4, 2, '#252923');
+            ctx.globalAlpha = 1;
+        }
     }
+    // The floor uses a semantic material map: worn road margins and wet banks
+    // blend locally rather than exposing an even grid of perfectly square cells.
+    for (const mark of createWetForestMaterialEdges(tiles, seed, width, height)) {
+        ctx.globalAlpha = .73;
+        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+    }
+    ctx.globalAlpha = 1;
     // Distinct ground-only history around one physical C# story landmark.
     groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
     const influence = clamp(plan.corruption || 0, 0, 1);

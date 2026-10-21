@@ -1,6 +1,7 @@
 import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
 import { drawWetForestDressing } from './arena-wet-forest-dressing.js';
 import { wetForestTreeFrame, drawWetForestTreeAccents, drawWetForestTreeArt } from './arena-wet-forest-vegetation.js';
+import { drawWetForestStoryArt } from './arena-wet-forest-sites.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
@@ -326,6 +327,10 @@ export function drawDestructibleProp(ctx, layer) {
     // The lab alone paints a larger, ragged woodland silhouette anchored to the same C# trunk.
     // One cached bitmap per tree replaces hundreds of per-frame drawing calls.
     if (layer.wetForest && drawWetForestTreeArt(ctx, prop.kind, prop.id, layer.forestSeed, x, y))
+        return true;
+    // Story-site art belongs to the same destructible C# prop, is removed with
+    // that prop, and shares its world-foot depth. Never baked into the floor.
+    if (layer.wetForest && drawWetForestStoryArt(ctx, prop, layer.forestSeed, x, y))
         return true;
     const treeName = layer.wetForest ? wetForestTreeFrame(prop.kind, prop.id, layer.forestSeed)
         : prop.kind === 'pine' ? 'prop.pine.a'
