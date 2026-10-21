@@ -1,0 +1,9 @@
+{
+  "oldSource": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v48",
+  "newSource": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v50-head-limbs",
+  "inspectionOnly": true,
+  "modelToPixel": 400,
+  "frames": 16,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "ownerAccepted": false
+}
