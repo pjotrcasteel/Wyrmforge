@@ -66,6 +66,14 @@ public sealed class TownCrowdTests
 
             var destinations = town.Citizens.Where(c => c.IsWalking).Select(c => c.DestinationNode).ToList();
             Assert.AreEqual(destinations.Count, destinations.Distinct().Count(), "Multiple people claimed one destination.");
+            foreach (var person in town.Citizens)
+            foreach (var other in town.Citizens.Where(candidate => candidate.Id > person.Id))
+            {
+                var dx = person.Position.X - other.Position.X;
+                var dy = person.Position.Y - other.Position.Y;
+                Assert.IsTrue(dx * dx + dy * dy >= 19f * 19f,
+                    $"Citizens {person.Id} and {other.Id} overlap on the painted ground.");
+            }
         }
     }
 
