@@ -105,7 +105,7 @@ public partial class ArenaView
         ShowRunMoment(new RunMoment("ESSENCE STOLEN", essence.Name, "Unsecured — hold the evacuation circle to carry it to Refuge.", RunMomentTone.Danger));
 
     private void ShowRelicMoment(RelicDefinition relic) =>
-        ShowRunMoment(new RunMoment("RELIC CLAIMED", relic.Name, "It remains yours for the rest of this run.", relic.Rarity == RelicRarity.Rare ? RunMomentTone.Rare : RunMomentTone.Standard));
+        ShowRunMoment(new RunMoment("RELIC CLAIMED", relic.Name, "It remains yours for the rest of this run.", relic.Rarity >= Wyrmforge.Domain.Progression.Loot.LootRarity.Rare ? RunMomentTone.Rare : RunMomentTone.Standard));
 
     private void ShowMapMoment(WyrmrealmMapNode node)
     {

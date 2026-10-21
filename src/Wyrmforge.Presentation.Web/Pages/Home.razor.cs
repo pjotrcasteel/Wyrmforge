@@ -26,6 +26,7 @@ public partial class Home
     private const string ArcaneBuildKey = "wyrmforge.arcaneBuild.v1";
     private const string BestScoreKey = "wyrmforge.bestScore";
     private const string EssenceVaultKey = "wyrmforge.essenceVault";
+    private const string EssenceGradesKey = "wyrmforge.essenceGrades.v1";
     private const string HuntMaterialsKey = "wyrmforge.huntMaterials.v1";
     private const string ArcaneCodexKey = "wyrmforge.arcaneCodex";
     private const string ForgeProgressionKey = "wyrmforge.forgeProgression";
@@ -167,7 +168,11 @@ public partial class Home
     private void SelectAscendant(DragonId? selected) =>
         selectedAscendant = selected is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm) && greatHunt.IsSealed(wyrm, spellMastery) ? selected : null;
 
-    private async Task StartRunAsync()
+    private Task StartRunAsync() => BeginRunAsync(
+        CurrentRegion.Id == Wyrmforge.Application.World.RegionCatalog.CinderFrontierId && selectedAscendant is null
+            ? Wyrmforge.Application.Runs.Hunts.HuntSelection.FireTierOne : null);
+
+    private async Task BeginRunAsync(Wyrmforge.Application.Runs.Hunts.HuntSelection? hunt)
     {
         // Character creation owns magical affinity; Hunts never prompt for a new primary.
         if (characterSchool is null || preferredPrimary is null) return;
@@ -179,7 +184,8 @@ public partial class Home
         newlySealedOaths = [];
         newlyConqueredAscendants = [];
         bestiaryDiscoveries = null;
-        activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
+        activeHunt = hunt;
+        activeAscendant = hunt is null && selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
         // The character's signature is committed automatically before combat begins.
         // No consumables or discoveries are charged until Arena confirms that commitment.
@@ -221,6 +227,7 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        await RecordHuntClearedAsync(value);
         if (value.Outcome is RunOutcome.Defeated or RunOutcome.Extracted) await TryPlayAudioAsync(value.Outcome == RunOutcome.Extracted ? "victory" : "death");
         var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
@@ -284,7 +291,7 @@ public partial class Home
 
         if (value.EssenceIds.Count > 0)
         {
-            foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId);
+            foreach (var essenceId in value.EssenceIds) essenceVault.Store(essenceId, value.EssenceRarity);
             await RecordFireballDiscoveriesAsync(value.EssenceIds);
             await TrySetEssenceVaultAsync();
             if (forgeProgression.Discover(ForgeDiscoveryContext.FromEssences(value.EssenceIds)).Count > 0) await TrySetForgeProgressionAsync();
@@ -305,6 +312,12 @@ public partial class Home
         if (summary is null) return;
         await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
+        activeHunt = summary.Hunt;
+        if (activeHunt is { } replayHunt)
+        {
+            activeRegion = replayHunt.Region;
+            activeAscendant = null;
+        }
         PrepareLaboratoryRun();
         activeRewardCache = false;
         summary = null;
@@ -500,10 +513,32 @@ public partial class Home
             if (storedEssences is null) return;
             var essenceIds = new List<DragonEssenceId>();
             foreach (var storedEssence in storedEssences) if (Enum.TryParse<DragonEssenceId>(storedEssence, out var essenceId)) essenceIds.Add(essenceId);
-            essenceVault.Restore(essenceIds);
+            essenceVault.Restore(essenceIds, await TryLoadEssenceGradesAsync());
         }
         catch (JSException) { }
         catch (JsonException) { }
+    }
+
+    // Graded (non-Rare) Essence copies live beside the plain id list, so older builds still read the vault.
+    private async Task<IReadOnlyDictionary<DragonEssenceId, IReadOnlyDictionary<Wyrmforge.Domain.Progression.Loot.LootRarity, int>>?> TryLoadEssenceGradesAsync()
+    {
+        try
+        {
+            var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, EssenceGradesKey);
+            if (string.IsNullOrWhiteSpace(stored)) return null;
+            var raw = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, int>>>(stored) ?? [];
+            var grades = new Dictionary<DragonEssenceId, IReadOnlyDictionary<Wyrmforge.Domain.Progression.Loot.LootRarity, int>>();
+            foreach (var (id, counts) in raw)
+            {
+                if (!Enum.TryParse<DragonEssenceId>(id, out var essence) || !Enum.IsDefined(essence)) continue;
+                grades[essence] = counts
+                    .Select(pair => (Ok: Enum.TryParse<Wyrmforge.Domain.Progression.Loot.LootRarity>(pair.Key, out var rarity) && Enum.IsDefined(rarity), Rarity: rarity, pair.Value))
+                    .Where(pair => pair.Ok).ToDictionary(pair => pair.Rarity, pair => pair.Value);
+            }
+            return grades;
+        }
+        catch (JSException) { return null; }
+        catch (JsonException) { return null; }
     }
 
     private async Task TryLoadForgeProgressionAsync()
@@ -630,6 +665,9 @@ public partial class Home
         {
             var storedEssences = essenceVault.SecuredEssences.Select(essence => essence.ToString()).ToArray();
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceVaultKey, JsonSerializer.Serialize(storedEssences));
+            var grades = essenceVault.Grades().ToDictionary(pair => pair.Key.ToString(),
+                pair => pair.Value.ToDictionary(grade => grade.Key.ToString(), grade => grade.Value));
+            await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, EssenceGradesKey, JsonSerializer.Serialize(grades));
         }
         catch (JSException) { }
     }

@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Domain.Progression.DragonEssences;
+using Wyrmforge.Domain.Progression.Loot;
 using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Domain.Tests.Spells;
@@ -25,16 +26,16 @@ public sealed class FireballCoreStateTests
         var core = new FireballCoreState();
         var vault = new DragonEssenceVault();
 
-        Assert.IsFalse(core.Upgrade(vault));
+        Assert.IsFalse(core.Upgrade(vault, new HuntMaterialSatchel()));
         Assert.AreEqual(1, core.Level);
         vault.Store(DragonEssenceId.CinderHeart);
         vault.Store(DragonEssenceId.MoltenFang);
 
-        Assert.IsTrue(core.Upgrade(vault));
+        Assert.IsTrue(core.Upgrade(vault, new HuntMaterialSatchel()));
         Assert.AreEqual(2, core.Level);
         Assert.AreEqual(0, vault.Count(DragonEssenceId.CinderHeart));
         Assert.AreEqual(1, vault.Count(DragonEssenceId.MoltenFang));
-        Assert.IsTrue(core.Upgrade(vault));
+        Assert.IsTrue(core.Upgrade(vault, new HuntMaterialSatchel()));
         Assert.AreEqual(3, core.Level);
         Assert.AreEqual(0, vault.Count(DragonEssenceId.MoltenFang));
     }
@@ -50,7 +51,7 @@ public sealed class FireballCoreStateTests
 
         var vault = new DragonEssenceVault();
         vault.Store(DragonEssenceId.CinderHeart);
-        Assert.IsTrue(core.Upgrade(vault));
+        Assert.IsTrue(core.Upgrade(vault, new HuntMaterialSatchel()));
         Assert.IsFalse(core.Equip(1, FireballMutationId.Detonation));
         Assert.IsTrue(core.Equip(0, null));
         Assert.IsTrue(core.Equip(1, FireballMutationId.Detonation));
@@ -113,5 +114,42 @@ public sealed class FireballCoreStateTests
         core.Restore(new FireballCoreSave(999, [], [FireballMutationId.MeteorHeart]));
         Assert.AreEqual(5, core.Level);
         Assert.AreEqual(0, core.Equipped.Count);
+    }
+
+    [TestMethod]
+    public void HighCoreLevels_RequireRareEmberglassAndRefundEssencesWhenMissing()
+    {
+        var core = new FireballCoreState();
+        core.Restore(new FireballCoreSave(3, [], []));
+        var vault = new DragonEssenceVault();
+        vault.Store(DragonEssenceId.CinderHeart, LootRarity.Epic);
+        vault.Store(DragonEssenceId.AshenWing);
+        var satchel = new HuntMaterialSatchel();
+
+        Assert.AreEqual(LootRarity.Rare, HuntMaterialCatalog.Rarity(HuntMaterialId.Emberglass));
+        Assert.IsFalse(core.CanUpgrade(vault, satchel));
+        Assert.IsFalse(core.Upgrade(vault, satchel));
+        Assert.AreEqual(3, core.Level);
+        Assert.AreEqual(1, vault.Count(DragonEssenceId.CinderHeart, LootRarity.Epic), "Graded Essence is never lost to a failed upgrade.");
+        Assert.AreEqual(1, vault.Count(DragonEssenceId.AshenWing));
+
+        satchel.Store(HuntMaterialId.Emberglass);
+        Assert.IsTrue(core.Upgrade(vault, satchel));
+        Assert.AreEqual(4, core.Level);
+        Assert.AreEqual(0, satchel.Count(HuntMaterialId.Emberglass));
+        Assert.AreEqual(0, vault.Count(DragonEssenceId.CinderHeart));
+        CollectionAssert.AreEqual(new[] { new HuntMaterialNeed(HuntMaterialId.Emberglass, 1), new HuntMaterialNeed(HuntMaterialId.Wyrmcinder, 1) },
+            FireballCoreCatalog.UpgradeMaterialsTo(5).ToArray(), "The last core level needs Epic Tier-III Wyrmcinder.");
+        Assert.AreEqual(0, FireballCoreCatalog.UpgradeMaterialsTo(3).Count, "Early levels stay Common-only.");
+
+        vault.Store(DragonEssenceId.CinderHeart);
+        vault.Store(DragonEssenceId.MoltenFang);
+        vault.Store(DragonEssenceId.AshenWing);
+        satchel.Store(HuntMaterialId.Emberglass);
+        Assert.IsFalse(core.Upgrade(vault, satchel), "Rare Emberglass alone no longer reaches the last core level.");
+        satchel.Store(HuntMaterialId.Wyrmcinder);
+        Assert.IsTrue(core.Upgrade(vault, satchel));
+        Assert.AreEqual(5, core.Level);
+        Assert.AreEqual(0, satchel.Count(HuntMaterialId.Wyrmcinder));
     }
 }

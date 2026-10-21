@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Application.Abstractions.Randomness;
+using Wyrmforge.Domain.Progression.Loot;
+using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Rewards;
 using Wyrmforge.Domain.Progression.Relics;
 using Wyrmforge.Domain.Spells;
@@ -45,11 +46,12 @@ public sealed class RelicChoiceService
         _ => RelicRole.Power,
     };
 
-    private static RewardRarity ToRewardRarity(RelicRarity rarity) => rarity switch
+    // Relic drafts reuse the level-up weights; an Epic relic is drawn as rarely as a Legendary choice.
+    private static RewardRarity ToRewardRarity(LootRarity rarity) => rarity switch
     {
-        RelicRarity.Common => RewardRarity.Common,
-        RelicRarity.Rare => RewardRarity.Rare,
-        RelicRarity.Legendary => RewardRarity.Legendary,
+        LootRarity.Common => RewardRarity.Common,
+        LootRarity.Rare => RewardRarity.Rare,
+        LootRarity.Epic or LootRarity.Legendary => RewardRarity.Legendary,
         _ => throw new ArgumentOutOfRangeException(nameof(rarity)),
     };
 }

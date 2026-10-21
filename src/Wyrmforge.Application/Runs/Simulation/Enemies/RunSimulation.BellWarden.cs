@@ -77,6 +77,10 @@ public sealed partial class RunSimulation
 
     private string BellRoadVariant => bellRoadKind == EnemyKind.BellOfWinter ? "winter" : "fire";
 
+    /// <summary>A lair road whose region brings a bell set piece; it carries no elite and no Reliquary.</summary>
+    private static bool IsBellRoad(WyrmrealmMapNode node) => node.PreLair && node.Type == WyrmrealmNodeType.Combat
+        && WyrmrealmHabitatCatalog.School(node.Habitat) is Domain.Spells.SpellSchool.Fire or Domain.Spells.SpellSchool.Frost;
+
     private void PrepareBellWardenNode(WyrmrealmMapNode node)
     {
         if (!node.PreLair || node.Type != WyrmrealmNodeType.Combat) return;

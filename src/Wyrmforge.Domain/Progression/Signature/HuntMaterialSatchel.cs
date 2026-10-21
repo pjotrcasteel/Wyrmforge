@@ -1,16 +1,22 @@
+using Wyrmforge.Domain.Progression.Loot;
+
 namespace Wyrmforge.Domain.Progression.Signature;
 
-/// <summary>Common salvage found in ordinary Hunts; never represented as a Wyrm Essence.</summary>
-public enum HuntMaterialId { EmberResidue, CharredScrap }
+/// <summary>Hunt salvage; never represented as a Wyrm Essence. Append new ids only: saves store names.</summary>
+public enum HuntMaterialId { EmberResidue, CharredScrap, Emberglass, Wyrmcinder }
 
 public sealed record HuntMaterialNeed(HuntMaterialId Material, int Required);
 
 public static class HuntMaterialCatalog
 {
+    public static IReadOnlyList<HuntMaterialId> All { get; } = Enum.GetValues<HuntMaterialId>();
+
     public static string Name(HuntMaterialId id) => id switch
     {
         HuntMaterialId.EmberResidue => "Ember Residue",
         HuntMaterialId.CharredScrap => "Charred Scrap",
+        HuntMaterialId.Emberglass => "Emberglass",
+        HuntMaterialId.Wyrmcinder => "Wyrmcinder Core",
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 
@@ -18,6 +24,16 @@ public static class HuntMaterialCatalog
     {
         HuntMaterialId.EmberResidue => "Ashlings and Ash Slingers",
         HuntMaterialId.CharredScrap => "Break barrels and crates in Hunts",
+        HuntMaterialId.Emberglass => "Elite Fire foes and reclaimed refuges, Fire Tier 2 and up",
+        HuntMaterialId.Wyrmcinder => "Elite Fire foes, Fire Tier 3 and up",
+        _ => throw new ArgumentOutOfRangeException(nameof(id)),
+    };
+
+    public static LootRarity Rarity(HuntMaterialId id) => id switch
+    {
+        HuntMaterialId.EmberResidue or HuntMaterialId.CharredScrap => LootRarity.Common,
+        HuntMaterialId.Emberglass => LootRarity.Rare,
+        HuntMaterialId.Wyrmcinder => LootRarity.Epic,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 

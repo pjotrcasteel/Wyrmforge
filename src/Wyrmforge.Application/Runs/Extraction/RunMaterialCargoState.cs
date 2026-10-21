@@ -25,4 +25,12 @@ public sealed class RunMaterialCargoState
     }
 
     public void LosePending() => pending.Clear();
+
+    /// <summary>Keeps the first <paramref name="kept"/> provisional finds and loses everything gathered after them.</summary>
+    public int LosePendingAfter(int kept)
+    {
+        var lost = Math.Max(0, pending.Count - Math.Max(0, kept));
+        pending.RemoveRange(pending.Count - lost, lost);
+        return lost;
+    }
 }

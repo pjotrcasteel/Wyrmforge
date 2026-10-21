@@ -27,6 +27,8 @@ internal static class WyrmrealmRouteGenerator
         var nodes = new List<WyrmrealmMapNode>(layouts.Count);
         var schools = ShuffleSchools(random);
         var rareId = random.NextDouble() < .65 ? layouts.Where(l => l.Stage == 5).Select(l => l.Id).FirstOrDefault() : null;
+        // An authored refuge is the route's only hard side quest; it never shares the map with a random rare site.
+        if (layouts.Any(l => l.Refuge)) rareId = null;
         foreach (var draft in layouts)
         {
             var layout = draft.Id == rareId ? draft with { Rarity = WyrmrealmNodeRarity.Rare } : draft;

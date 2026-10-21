@@ -9,6 +9,8 @@ Long-term progression should unlock **meaningful new possibilities** (mutation b
 
 ## 7. Eternal Hunt: persistent frontier, saves, refuges and connected travel
 
+**21 October owner decision:** Implement the personal lineage Hunt ladder before seasonal work: Tier I–V, then a non-seasonally-resetting Endless frontier for that lineage. Progress is independent per lineage (Fire frontier 115 does not unlock Frost tiers). Treat this frontier as the lineage-specific evolution of the persistent Eternal journey, not a fourth competing seasonal mode. Start with Fire Tier I; Fire Tier II with its refuge is now implemented (rules in [hunts-and-world](hunts-and-world.md)); Tiers III–V and the Endless lifecycle are subsequent slices. Refuge reclamation is an optional harder objective: before it is reclaimed death ends the run; afterwards a death returns to the refuge and loses only cargo gathered after it. Seasonal rotation, cadence changes and rare seasonal rewards are deferred; the existing four-week competitive contract is unchanged until separately revised.
+
 ### 7.1 Mode identity — LOCKED
 
 **The Eternal Hunt** is a persistent, player-owned expedition that **never resets at season boundaries**, lasts over many sessions and can become extraordinarily deep. It uses the Living Hunter's Chart, expandable/recognizable regions, earned knowledge, evolving settlements, Wyrm threats, actual route decisions, procedural arenas and long-term magic progression. No leaderboard normalization of earned power here: permanent seasonal spell/research/upgrade rewards and the Arcane Nexus explicitly support pushing to harder frontiers. The all-time board records the **deepest verified conquered frontier**, not visits/reclaim/grind.

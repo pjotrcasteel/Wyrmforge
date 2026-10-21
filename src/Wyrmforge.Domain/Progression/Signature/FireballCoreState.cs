@@ -39,6 +39,14 @@ public static class FireballCoreCatalog
         5 => [new(DragonEssenceId.CinderHeart, 1), new(DragonEssenceId.MoltenFang, 1), new(DragonEssenceId.AshenWing, 1)],
         _ => [],
     };
+
+    // Rare Tier-II salvage gates the two highest core levels and Epic Tier-III salvage the last; the Essence costs above are unchanged.
+    public static IReadOnlyList<HuntMaterialNeed> UpgradeMaterialsTo(int nextLevel) => nextLevel switch
+    {
+        4 => [new(HuntMaterialId.Emberglass, 1)],
+        5 => [new(HuntMaterialId.Emberglass, 1), new(HuntMaterialId.Wyrmcinder, 1)],
+        _ => [],
+    };
 }
 
 public sealed class FireballCoreState
@@ -50,8 +58,9 @@ public sealed class FireballCoreState
     public IReadOnlySet<FireballMutationId> Discovered => new HashSet<FireballMutationId>(discovered);
     public IReadOnlyList<FireballMutationId?> Slots => slots.ToArray();
     public IReadOnlyList<FireballMutationId> Equipped => slots.Take(Level).OfType<FireballMutationId>().ToArray();
-    public bool CanUpgrade(DragonEssenceVault vault) =>
-        Level < 5 && FireballCoreCatalog.UpgradeTo(Level + 1).All(need => vault.Count(need.Material) >= need.Required);
+    public bool CanUpgrade(DragonEssenceVault vault, HuntMaterialSatchel materials) =>
+        Level < 5 && FireballCoreCatalog.UpgradeTo(Level + 1).All(need => vault.Count(need.Material) >= need.Required)
+        && FireballCoreCatalog.UpgradeMaterialsTo(Level + 1).All(need => materials.Count(need.Material) >= need.Required);
 
     public bool DiscoverSecured(IEnumerable<DragonEssenceId> secured)
     {
@@ -87,22 +96,33 @@ public sealed class FireballCoreState
         return true;
     }
 
-    public bool Upgrade(DragonEssenceVault vault)
+    public bool Upgrade(DragonEssenceVault vault, HuntMaterialSatchel materials)
     {
         ArgumentNullException.ThrowIfNull(vault);
-        if (!CanUpgrade(vault)) return false;
-        var spent = new List<DragonEssenceId>();
+        ArgumentNullException.ThrowIfNull(materials);
+        if (!CanUpgrade(vault, materials)) return false;
+        var spent = new List<SecuredEssence>();
         foreach (var need in FireballCoreCatalog.UpgradeTo(Level + 1))
         {
             for (var i = 0; i < need.Required; i++)
             {
-                if (vault.Consume(need.Material)) { spent.Add(need.Material); continue; }
-                foreach (var item in spent) vault.Store(item);
+                if (vault.TryConsume(need.Material, out var rarity)) { spent.Add(new SecuredEssence(need.Material, rarity)); continue; }
+                Refund(vault, spent);
                 return false;
             }
         }
+        if (!materials.ConsumeRecipe(FireballCoreCatalog.UpgradeMaterialsTo(Level + 1)))
+        {
+            Refund(vault, spent);
+            return false;
+        }
         Level++;
         return true;
+    }
+
+    private static void Refund(DragonEssenceVault vault, IEnumerable<SecuredEssence> spent)
+    {
+        foreach (var item in spent) vault.Store(item.Id, item.Rarity);
     }
 
     public FireballCoreSave ToSave() => new(Level, discovered.OrderBy(id => id).ToArray(), slots.ToArray());

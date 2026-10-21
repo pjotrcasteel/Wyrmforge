@@ -38,6 +38,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public SpellMasteryState? Masteries { get; set; }
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
     [Parameter] public int? RunSeed { get; set; }
+    [Parameter] public Wyrmforge.Application.Runs.Hunts.HuntSelection? Hunt { get; set; }
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
@@ -67,6 +68,7 @@ public partial class ArenaView : IAsyncDisposable
     private IReadOnlyList<WyrmrealmMapNode> MapNodes => simulation?.MapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> AvailableMapNodes => simulation?.AvailableMapNodes ?? Array.Empty<WyrmrealmMapNode>();
     private IReadOnlyList<WyrmrealmMapNode> CompletedMapNodes => simulation?.CompletedMapNodes ?? Array.Empty<WyrmrealmMapNode>();
+    private IReadOnlyDictionary<string, TrailScoutReport> ScoutReports => simulation?.ScoutReports ?? new Dictionary<string, TrailScoutReport>();
     private IReadOnlyList<RunResonanceEntry> CurrentResonance => simulation?.Resonance ?? Array.Empty<RunResonanceEntry>();
     private IReadOnlyList<DragonSign> CurrentDragonSigns => simulation?.DragonSigns ?? Array.Empty<DragonSign>();
     private IReadOnlyList<RealmInfluenceCue> CurrentRealmInfluences => simulation?.RealmInfluences ?? Array.Empty<RealmInfluenceCue>();
@@ -93,7 +95,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt);
         if (RewardCache) simulation.OpenRewardCache();
     }
 
@@ -135,6 +137,7 @@ public partial class ArenaView : IAsyncDisposable
         var previousBellCracks = current.BellWardenCracks;
         var previousWinterRimes = current.WinterBellRimes;
         var bellWardenWasSlain = current.BellWardenDefeat is not null;
+        var previousRefugeReturns = current.RefugeReturns;
         var snapshot = current.Tick(delta, new MovementInput(movementX, movementY, aimX, aimY), width, height);
         var simulationMilliseconds = Stopwatch.GetElapsedTime(frameStarted).TotalMilliseconds;
         var stateChanged = hadChoices != current.PendingChoices.Count > 0
@@ -149,7 +152,8 @@ public partial class ArenaView : IAsyncDisposable
             || current.EvacuationActive && previousEvacuationSecond != (int)Math.Ceiling(current.EvacuationRemainingSeconds);
         if (previousEvacuation && !current.EvacuationActive && current.AtCheckpoint && !wasAtCheckpoint) ShowEssenceSecuredMoment();
         if (!wasAtCheckpoint && current.AtCheckpoint) await TryRecordPlaytestMilestoneAsync("refuge_reached");
-        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended)
+        // A fall caught by the refuge reopens the map without a "trail cleared" beat.
+        if (!hadMapChoice && current.PendingMapChoice && current.CompletedMapNodes.Count > 0 && !snapshot.Ended && current.RefugeReturns == previousRefugeReturns)
         {
             ShowTrailTransition();
             await TryPlayAudioAsync("trail-clear");

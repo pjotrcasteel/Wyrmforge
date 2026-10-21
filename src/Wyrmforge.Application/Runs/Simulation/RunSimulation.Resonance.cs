@@ -50,6 +50,11 @@ public sealed partial class RunSimulation
     private void ResolveDragonAttraction()
     {
         if (attractedDragon is not null) return;
+        if (SelectedHunt is { } hunt)
+        {
+            attractedDragon = hunt.Target;
+            return;
+        }
         if (AscendantHuntRule.ShouldForce(selectedAscendant, ascendantHuntConsumed, depthState.Depth))
         {
             attractedDragon = selectedAscendant;

@@ -10,6 +10,7 @@ using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Application.World;
 using Wyrmforge.Domain.World;
+using Wyrmforge.Application.Runs.Hunts;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -33,8 +34,11 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutationId>? fireballMutations = null)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, HuntSelection? hunt = null)
     {
+        hunt?.Validate();
+        if (hunt is not null && (ascendantAshfang || ascendantWyrm is not null || region is { } selectedRegion && selectedRegion != hunt.Region))
+            throw new ArgumentException("A tiered Hunt cannot also select a different region or an Ascendant rite.");
         var runSeed = seed ?? seedSource.Next(int.MaxValue);
         var randomSource = new SeededRandomSource(runSeed);
         var content = progression is null ? RunContentProfile.All : RunContentProfile.From(progression, masteries);
@@ -43,6 +47,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         simulation.InitializeRunSeed(runSeed);
         simulation.EnableAscendantRite(ascendantWyrm ?? (ascendantAshfang ? DragonId.Ashfang : null));
         simulation.EnterRegion(region is { } regionId ? RegionCatalog.Get(regionId) : RegionCatalog.Starting);
+        simulation.SelectHunt(hunt);
         simulation.EnableFirstHunt(firstHunt);
         simulation.EnableRegionOpening(regionOpening);
         simulation.InitializeContentProfile(content);
