@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
     wetForestTreeFrame, createWetForestRootVeins, createWetForestUnderstory,
     drawWetForestRootVeins, drawWetForestTreeAccents,
+    createWetForestTreeArtPlan, drawWetForestTreeArt,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-vegetation.js';
 import { createDestructibleLayers } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js';
 
@@ -88,4 +89,33 @@ test('accents draw only pixel-scaled rectangles and never generate geometry or a
     assert.equal(calls.length, count);
     const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-vegetation.js', import.meta.url), 'utf8');
     assert.doesNotMatch(source, /Math\.random|TryDamageProp|RestrictMovement|DamagePropsInRadius|SetPhase/);
+});
+
+test('new Lab-only tree silhouettes are crisp, asymmetric, seeded, and safely inside cached blit bounds', () => {
+    const pine = createWetForestTreeArtPlan('pine', 1, 1441);
+    const dead = createWetForestTreeArtPlan('dead-tree', 2, 1441);
+    assert.ok(pine.shapes.length > 45);
+    assert.ok(dead.shapes.length > 35);
+    for (const plan of [pine, dead]) {
+        assert.ok(plan.shapes.every(item => item.x % 2 === 0 && item.y % 2 === 0));
+        assert.ok(plan.shapes.every(item => item.x >= -56 && item.x + item.w <= 56 &&
+            item.y >= -118 && item.y + item.h <= 10), 'All art fits one 112x128 transparent image.');
+    }
+    assert.deepEqual(pine, createWetForestTreeArtPlan('pine', 1, 1441));
+    assert.notDeepEqual(pine, createWetForestTreeArtPlan('pine', 5, 1441));
+    assert.notDeepEqual(dead, createWetForestTreeArtPlan('dead-tree', 2, 1442));
+    assert.equal(createWetForestTreeArtPlan('moss-rock', 4, 1441), null);
+});
+
+test('tree art fallback draws C#-anchored opaque pixel rectangles, without any atlas mutation', () => {
+    const rects = [];
+    const ctx = { save() {}, restore() {}, set fillStyle(_) {},
+        fillRect(...args) { rects.push(args); }, imageSmoothingEnabled: true };
+    assert.equal(drawWetForestTreeArt(ctx, 'pine', 1, 1441, 412, 556), true);
+    assert.ok(rects.length > 45);
+    assert.ok(rects.every(([x, y, w, h]) => Number.isFinite(x) && Number.isFinite(y) &&
+        w >= 2 && h >= 2 && x > 350 && x < 470 && y > 430 && y < 565));
+    assert.equal(drawWetForestTreeArt(ctx, 'barrel', 20, 1441, 412, 556), false);
+    const source = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
+    assert.match(source, /if \(layer\.wetForest && drawWetForestTreeArt\(/);
 });
