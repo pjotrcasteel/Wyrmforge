@@ -205,6 +205,65 @@ public sealed class TownNavigationMap
         return true;
     }
 
+    /// <summary>
+    /// Rectangle placeholders must be either fully visible or fully hidden. A
+    /// loosely authored foreground polygon must never crop a pedestrian in half.
+    /// True per-pixel character occlusion belongs to a future transparent art layer.
+    /// </summary>
+    public bool IsBodyOccluded(TownPoint feet, float bodyWidth = 16f, float bodyHeight = 30f)
+    {
+        if (bodyWidth <= 0 || bodyHeight <= 0)
+            throw new ArgumentOutOfRangeException(nameof(bodyWidth), "The citizen body must have positive dimensions.");
+
+        var left = feet.X - bodyWidth / 2f;
+        var top = feet.Y - bodyHeight;
+        var right = feet.X + bodyWidth / 2f;
+
+        return Occluders.Any(foreground =>
+            feet.Y < foreground.DepthY &&
+            PolygonIntersectsBody(foreground.Clip, left, top, right, feet.Y));
+    }
+
+    private static bool PolygonIntersectsBody(IReadOnlyList<TownPoint> polygon, float left, float top, float right, float bottom)
+    {
+        if (polygon.Count < 3) return false;
+        var corners = new TownPoint[]
+        {
+            new(left, top), new(right, top), new(right, bottom), new(left, bottom)
+        };
+        if (corners.Any(point => Contains(polygon, point))) return true;
+        if (polygon.Any(point => point.X >= left && point.X <= right && point.Y >= top && point.Y <= bottom))
+            return true;
+
+        for (var i = 0; i < polygon.Count; i++)
+        {
+            var next = polygon[(i + 1) % polygon.Count];
+            for (var side = 0; side < corners.Length; side++)
+                if (SegmentsIntersect(polygon[i], next, corners[side], corners[(side + 1) % corners.Length]))
+                    return true;
+        }
+        return false;
+    }
+
+    private static bool SegmentsIntersect(TownPoint a, TownPoint b, TownPoint c, TownPoint d)
+    {
+        static float Cross(TownPoint first, TownPoint second, TownPoint third) =>
+            (second.X - first.X) * (third.Y - first.Y) - (second.Y - first.Y) * (third.X - first.X);
+        static bool Between(float n, float first, float second) =>
+            n >= MathF.Min(first, second) && n <= MathF.Max(first, second);
+
+        var first = Cross(a, b, c);
+        var second = Cross(a, b, d);
+        var third = Cross(c, d, a);
+        var fourth = Cross(c, d, b);
+
+        if (first * second < 0 && third * fourth < 0) return true;
+        if (first == 0 && Between(c.X, a.X, b.X) && Between(c.Y, a.Y, b.Y)) return true;
+        if (second == 0 && Between(d.X, a.X, b.X) && Between(d.Y, a.Y, b.Y)) return true;
+        if (third == 0 && Between(a.X, c.X, d.X) && Between(a.Y, c.Y, d.Y)) return true;
+        return fourth == 0 && Between(b.X, c.X, d.X) && Between(b.Y, c.Y, d.Y);
+    }
+
     public string ForegroundClip(TownForeground occluder) =>
         "polygon(" + string.Join(",", occluder.Clip.Select(p =>
             FormattableString.Invariant($"{p.X / Width * 100:0.###}% {p.Y / Height * 100:0.###}%"))) + ")";
