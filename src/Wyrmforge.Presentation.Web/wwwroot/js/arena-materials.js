@@ -93,6 +93,58 @@ function groundPatchMask(ctx, horizontal) {
     ctx.fillRect(0, 0, size, size);
 }
 
+// Very restrained, broad tonal variation. These overlays are baked over the
+// existing approved artwork; they never create extra props, decals or tiles.
+// Positions wrap at the edges so the finished quilt remains seamless.
+const GROUND_TONES = Object.freeze([
+    ['43,54,31', '15,24,18'], // grass: uneven moss and canopy shade
+    ['80,69,51', '23,22,20'], // mud: damp and drier soil
+    ['95,94,78', '28,30,27'], // paving: worn and shaded stone
+    ['105,78,55', '30,26,23'], // dirt: compacted and looser earth
+    ['85,52,41', '17,20,19'], // scorched: charcoal and faint warm ash
+    ['64,94,91', '16,28,30'], // marsh: damp and shaded ground
+]);
+
+export function groundMaterialVariationPlan(index, seed = 1441) {
+    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
+    const hash = (spot, channel) => {
+        let n = (seed | 0) ^ Math.imul(index + 31, 0x9e3779b1) ^
+            Math.imul(spot + 17, 0x85ebca6b) ^ Math.imul(channel + 5, 0xc2b2ae35);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+    };
+    return Array.from({ length: 14 }, (_, spot) => ({
+        x: Math.floor(hash(spot, 0) * GROUND_TILE_SIZE),
+        y: Math.floor(hash(spot, 1) * GROUND_TILE_SIZE),
+        radius: 65 + Math.floor(hash(spot, 2) * 71),
+        tone: GROUND_TONES[index][spot % 2],
+        opacity: .055 + hash(spot, 3) * .045,
+    }));
+}
+
+function drawGroundMaterialVariation(ctx, index, seed) {
+    for (const spot of groundMaterialVariationPlan(index, seed)) {
+        const radius = spot.radius;
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+        gradient.addColorStop(0, `rgba(${spot.tone},${spot.opacity})`);
+        gradient.addColorStop(1, `rgba(${spot.tone},0)`);
+        ctx.fillStyle = gradient;
+        // Wrap across the material's own edges, never into neighboring materials.
+        for (const offsetY of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
+            for (const offsetX of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
+                const x = spot.x + offsetX;
+                const y = spot.y + offsetY;
+                if (x + radius <= 0 || y + radius <= 0 ||
+                    x - radius >= GROUND_TILE_SIZE || y - radius >= GROUND_TILE_SIZE) continue;
+                ctx.save();
+                ctx.translate(index * GROUND_TILE_SIZE + x, y);
+                ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+                ctx.restore();
+            }
+    }
+}
+
 /** Build once on atlas load, not during walking or every brush stroke. */
 export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
     if (!source || source.width !== GROUND_SOURCE_TILE_SIZE * MATERIALS.length ||
@@ -135,6 +187,7 @@ export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
                     ctx.drawImage(scratch, index * GROUND_TILE_SIZE + dx, dy);
                 }
         }
+        drawGroundMaterialVariation(ctx, index, seed);
         ctx.restore();
     }
     return canvas;
@@ -153,8 +206,8 @@ export function drawReferenceGroundBoard(ctx, board, atlas, columns = COLS, rows
             const index = board[row * columns + col];
             if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) continue;
             const x = col * CELL, y = row * CELL;
-            // 112 is divisible by CELL, so each 16px sub-tile stays inside its
-            // material's source region and never borrows a neighbor's artwork.
+            // The quilt period is divisible by CELL, so painted cells stay world-aligned
+            // and never sample into a neighboring material's artwork.
             const sx = (x + phase) % length, sy = (y + phase) % length;
             ctx.drawImage(atlas, index * length + sx, sy,
                 CELL, CELL, x, y, CELL, CELL);
