@@ -106,9 +106,9 @@
         {
             <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" data-town-geometry-layer="@geometryLayer" aria-hidden="true">
                 <svg viewBox="0 0 1672 941" preserveAspectRatio="none" class="refuge-town-geometry-map">
-                    @if (geometryLayer == TownGeometryLayer.Walkable)
+                    @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable)
                     {
-                        @* Walk inspection subtracts all solid footprints. The other views retain their own shapes. *@
+                        @* Walkable pavement excludes ground obstructions in BOTH the All and Walk views. *@
                         <defs>
                             <mask id="refuge-town-unblocked-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse"
                                   x="0" y="0" width="1672" height="941">
@@ -122,7 +122,7 @@
                     }
                     @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable)
                     {
-                        <g mask="@(geometryLayer == TownGeometryLayer.Walkable ? "url(#refuge-town-unblocked-mask)" : null)">
+                        <g mask="url(#refuge-town-unblocked-mask)">
                             @foreach (var floor in crowd.Navigation.Walkable)
                             {
                                 <polygon class="refuge-town-geometry-walkable" data-town-floor="@floor.Id"
