@@ -20,8 +20,11 @@ test('painted Refuge stays static while only its NPC actor subtree repaints', ()
     assert.match(actorMarkup, /style="@CitizenStyle\(person\)"/);
     assert.match(actorMarkup, /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
     assert.match(actorMarkup, /crowdStop\.Cancel\(\)/);
-    assert.doesNotMatch(markup, /StateHasChanged|PeriodicTimer/,
-        'Static town and debug polygons must not be rerendered at every NPC tick');
+    assert.doesNotMatch(markup, /PeriodicTimer/,
+        'The whole painted town must not own an NPC animation timer');
+    assert.match(markup, /GeometryChanged="OnGeometryChanged"/);
+    assert.match(actorMarkup, /await GeometryChanged\.InvokeAsync\(\)/,
+        'Rare obstacle revisions must still update red geometry while NPCs animate');
     assert.doesNotMatch(actorMarkup, /refuge-town-geometry-solid|refuge-town-night-base/,
         'The moving layer must not own static SVG or large paintings');
     assert.match(css, /\.refuge-town-crowd\s*\{[^}]*pointer-events:none/s);
