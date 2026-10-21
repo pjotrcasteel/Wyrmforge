@@ -495,6 +495,44 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    public async Task Mobile_EmptyFireballSocket_GuidesToActualCommonRecipe(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:[]}));
+            localStorage.removeItem('wyrmforge.fireballCore.v1');
+            localStorage.removeItem('wyrmforge.essenceVault');
+            localStorage.removeItem('wyrmforge.huntMaterials.v1');");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.Locator(".fireball-socket--1").ClickAsync();
+
+        var guide = Page.Locator(".fireball-empty-guide");
+        await Expect(guide).ToContainTextAsync("No mutators ready");
+        await Expect(guide).ToContainTextAsync("ordinary monster and scenery drops");
+        await Expect(Page.Locator(".fireball-mutator")).ToHaveCountAsync(10);
+
+        await guide.GetByRole(AriaRole.Button, new() { Name = "View Cinder Needle recipe" }).ClickAsync();
+        var summary = Page.Locator(".fireball-common-source summary");
+        await Expect(Page.Locator(".fireball-common-source")).ToHaveAttributeAsync("open", "");
+        await Expect(summary).ToBeFocusedAsync();
+        await Expect(Page.Locator(".fireball-common-recipe")).ToContainTextAsync("Ember Residue: 0 / 2");
+        await Expect(Page.Locator(".fireball-common-recipe")).ToContainTextAsync("Charred Scrap: 0 / 2");
+        Assert.IsTrue(await summary.EvaluateAsync<bool>(@"element => {
+            const summary = element.getBoundingClientRect();
+            const list = element.closest('.fireball-mutator-list').getBoundingClientRect();
+            return summary.top >= list.top - 2 && summary.bottom <= list.bottom + 2;
+        }"), "Focusing the source must scroll the nested mutator list into view.");
+        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"));
+
+        await Page.Locator(".fireball-center").ClickAsync();
+        await Expect(Page.Locator(".fireball-empty-guide")).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
     public async Task Mobile_FireballMutationSources_ExplainRealAshfangUnlocksWithoutInventedCrafting(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
