@@ -2,9 +2,9 @@
 // Material samples deliberately use simple horizontal strips, not a proposed arena.
 // The material atlas is cut from the six standalone Gothic ground paintings the player approved.
 export const GROUND_SOURCE_TILE_SIZE = 112;
-export const GROUND_TILE_SIZE = 640;
-export const GROUND_PATCH_SIZE = 96;
-export const GROUND_PATCH_STEP = 64;
+export const GROUND_TILE_SIZE = 672;
+export const GROUND_PATCH_SIZE = 72;
+export const GROUND_PATCH_STEP = 48;
 export const GROUND_ATLAS_URL = new URL('../art/environment/wet-forest-materials-painted.webp', import.meta.url).href;
 export const CELL = 16;
 export const COLS = 30;
@@ -50,7 +50,7 @@ export function paintGroundCells(cells, columns, rows, x, y, index, radius = 2) 
 
 // The six approved material paintings are just 112px wide. Repeating those
 // directly produces obvious checkerboard motifs. Quilt each one once into a
-// 640px toroidal texture with deterministic, overlapping 96px source patches.
+// 672px toroidal texture with deterministic, overlapping 72px source patches.
 // Edges are softly crossfaded, not mirrored into rigid repeated symmetry.
 export function groundQuiltPatchPlan(index, seed = 1441) {
     if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
@@ -82,7 +82,7 @@ export function groundQuiltPatchPlan(index, seed = 1441) {
 
 function groundPatchMask(ctx, horizontal) {
     const size = GROUND_PATCH_SIZE;
-    const fade = 16;
+    const fade = 12;
     const gradient = ctx.createLinearGradient(0, 0,
         horizontal ? size : 0, horizontal ? 0 : size);
     gradient.addColorStop(0, 'rgba(255,255,255,0)');
