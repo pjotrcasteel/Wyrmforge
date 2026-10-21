@@ -207,6 +207,12 @@ export function createWetForestTreeArtPlan(kind, id, seed) {
                     if (sparse) continue;
                     const needles = 5 + variation(137 + level * 11 + sprig + side, 7);
                     const dark = sprig % 3 === 0;
+                    // Connected dark needle pads give the old tree actual weight;
+                    // broken pads leave forked negative spaces, not a lush oval.
+                    if (level < 6 && sprig % 2 === 1) {
+                        block(bx - 5, by - 1, 10, 5, treeInk.shadow);
+                        block(bx - 4, by - 5, 8, 5, treeInk.deep);
+                    }
                     block(bx - 2, by - needles * .55, 4, needles,
                         dark ? treeInk.deep : treeInk.leaf);
                     // Tiny cold-lit branch facet with no glowing crown outline.
