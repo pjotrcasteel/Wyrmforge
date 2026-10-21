@@ -277,3 +277,13 @@ remain reachable. The coiled left leg changes from extension ratio ~0.397 to
 ~0.752 during launch, but hock/toe calibration still needs visual review; the
 posed bone toe sits higher than the actual lowest paw surface during roll.
 Preserve this source before inspecting exact foot skin ownership and rendering.
+
+### V16 foot ownership diagnostic / V17 source correction
+`foot-skin-bounds.json` confirms hind paw ownership spans Y -0.0549 to +0.4313
+(~0.486 units) versus a 0.103-unit foot bone. The hard low-Z classification
+captured underbelly/tail, causing toe roll to raise the hock excessively. V17
+restricts leg rows and low paw ellipses, assigns trailing source to tail instead
+of paws, and sculpts the low inter-leg webbing into an arched underside before
+skinning. Actual paw rows and original source remain preserved. No faces are
+deleted or render pixels masked. Revalidate knee plane, contact, toe roll and
+push extension; do not infer quality from V16 floor pass alone.

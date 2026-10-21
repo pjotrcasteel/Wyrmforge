@@ -26,6 +26,11 @@ for sign in [1,-1]:
     region=(v[:,1]>.025)&(v[:,1]<.255)&(v[:,2]>-.125)&(v[:,2]<.015)&(v[:,0]*sign>.065)
     influence=np.exp(-np.sum(radial*radial,axis=1)/(.065**2))*region
     v+=radial*(.40*influence[:,None])
+# Reconstructed low inter-leg webbing belongs to an arched underside, not a
+# giant paw. Sculpt it upward in the source; keep actual paw rows unchanged.
+midbody=np.exp(-((v[:,1]+.01)/.095)**4)
+low=np.clip((-.10-v[:,2])/.06,0,1);inner=np.clip((.20-abs(v[:,0]))/.10,0,1)
+v[:,2]+=.085*midbody*low*inner
 v,faces,uv,body_count,removed_wing_vertices=rebuild_wings(v,faces,uv)
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
@@ -72,11 +77,16 @@ for index,p in enumerate(v):
     x,y,z=p;side='L' if x>=0 else 'R'
     if index>=body_count:
         permitted=[n for n in names if n.startswith('wing.') and n.endswith('.'+side)];region='wing'
-    elif y>.27 and abs(x)<.075:permitted=[n for n in names if n.startswith('tail.')];region='tail'
+    elif y>.31 and (abs(x)<.13 or y>.35):permitted=[n for n in names if n.startswith('tail.')];region='tail'
     elif y<-.30 and abs(x)<.15 and z>-.08:
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
-    elif z<-.055 and abs(x)>.035:
-        limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.2.{side}'] if z<-.135 else [f'{limb}.{i}.{side}' for i in range(3)];region=limb
+    elif z<-.055 and abs(x)>.06 and (y<-.12 or .075<y<.34):
+        limb='fore' if y<-.12 else 'hind'
+        paw_y,paw_radius=(-.285,.135) if limb=='fore' else (.19,.14)
+        in_paw=((abs(x)-.17)/.085)**2+((y-paw_y)/paw_radius)**2<1.2
+        if z<-.135:permitted=[f'{limb}.2.{side}'] if in_paw else [f'{limb}.0.{side}',f'{limb}.1.{side}']
+        else:permitted=[f'{limb}.{i}.{side}' for i in range(3)]
+        region=limb
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
     else:permitted=['pelvis','spine','chest'];region='body'
     scores=np.array([1/max(.008,distance(p,bones[n]['head'],bones[n]['tail']))**4 for n in permitted]);scores/=scores.sum();ownership[region]=ownership.get(region,0)+1
