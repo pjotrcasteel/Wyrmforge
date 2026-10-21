@@ -122,8 +122,9 @@ public sealed class TownCrowdTests
             }
         }
 
-        Assert.IsTrue(departed.Count >= 2, "Residents should explore the connected roads and gate.");
-        Assert.IsTrue(departed.Contains("world-gate-exit"), "Citizens must walk into the World Gate.");
+        foreach (var exit in new[] { "world-gate-exit", "west-street-exit",
+            "east-street-exit", "south-street-exit" })
+            Assert.IsTrue(departed.Contains(exit), $"At least one resident must traverse {exit}.");
         Assert.IsTrue(observedReturn, "Residents can come back through an entrance after time away.");
     }
 
