@@ -53,7 +53,7 @@ for index,p in enumerate(v):
     elif y<-.30 and abs(x)<.15 and z>-.08:
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.035:
-        limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.2.{side}'] if z<-.15 else [f'{limb}.{i}.{side}' for i in range(3)];region=limb
+        limb='fore' if y<-.055 else 'hind';permitted=[f'{limb}.2.{side}'] if z<-.135 else [f'{limb}.{i}.{side}' for i in range(3)];region=limb
     elif y<-.21:permitted=['neck.0','neck.1','head','chest'];region='neck'
     else:permitted=['pelvis','spine','chest'];region='body'
     scores=np.array([1/max(.008,distance(p,bones[n]['head'],bones[n]['tail']))**4 for n in permitted]);scores/=scores.sum();ownership[region]=ownership.get(region,0)+1
@@ -80,7 +80,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
         elif clip=='rear-breath':
             rear=smooth(phase/.25)*(1-smooth((phase-.78)/.22));bob=.025*rear;pitch=-.62*rear;spread=.14+.18*rear;jaw=.48*smooth((phase-.22)/.12)*(1-smooth((phase-.68)/.12))
         else:
-            lift=smooth((phase-.18)/.17);land=smooth((phase-.74)/.18);altitude=.28*lift*(1-land);spread=1.12*smooth((phase-.07)/.18)*(1-smooth((phase-.87)/.13));flap=.40*math.sin((phase-.21)*math.pi*8)*smooth((phase-.18)/.12)*(1-smooth((phase-.82)/.10));bob=-.025*math.sin(min(1,phase/.20)*math.pi)*(1-lift);pitch=-.12*lift*(1-land)
+            lift=smooth((phase-.18)/.17);land=smooth((phase-.74)/.18);altitude=.28*lift*(1-land);spread=1.0*smooth((phase-.07)/.18)*(1-smooth((phase-.87)/.13));flap=-.65*math.cos((phase-.18)*math.pi*8)*smooth((phase-.18)/.12)*(1-smooth((phase-.82)/.10));bob=-.012*math.sin(min(1,phase/.20)*math.pi)*(1-lift);pitch=-.12*lift*(1-land)
         rotation=Quaternion((1,0,0),pitch);origin=Vector(bones['pelvis']['head']);offset=Vector((0,advance,altitude+bob));point=lambda p:origin+rotation@(Vector(p)-origin)+offset
         segment('root',bones['root']['head'],bones['root']['tail'])
         for n in ['pelvis','spine','chest','neck.0','neck.1']:segment(n,point(bones[n]['head']),point(bones[n]['tail']),rotation)
@@ -103,13 +103,23 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                 if clip=='walk' or (altitude<.01 and (limb=='hind' or rear<.01)):
                     ankle.z=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+clearance
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
-            wingroot=point(bones['wing.upper.'+side]['head']);wr=rotation@Quaternion((0,1,0),sign*(spread+flap))
-            wingpoint=lambda p:wingroot+wr@Vector(np.array(p)-bones['wing.upper.'+side]['head'])
-            for n in ['wing.upper.'+side,'wing.fore.'+side]:segment(n,wingpoint(bones[n]['head']),wingpoint(bones[n]['tail']),wr)
+            wingroot=point(bones['wing.upper.'+side]['head'])
+            opening=min(1,max(0,spread));fold=1-opening
+            # Each transform moves its joint from the previous joint, retaining
+            # bone lengths. Shoulder powers the stroke, elbow opens the span,
+            # and the wrist/digits trail through the membrane recovery.
+            shoulder=rotation@Quaternion((0,0,1),sign*.95*fold)@Quaternion((0,1,0),sign*(-.25*fold+flap))
+            upper='wing.upper.'+side;fore='wing.fore.'+side
+            elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
+            fore_rotation=shoulder@Quaternion((0,0,1),sign*.85*fold)@Quaternion((0,1,0),-sign*.35*fold)
+            wrist=elbow+fore_rotation@Vector(bones[fore]['tail']-bones[fore]['head']);segment(fore,elbow,wrist,fore_rotation)
             for finger in range(4):
-                previous=wingpoint(bones[f'wing.finger.{finger}.0.{side}']['head'])
+                previous=wrist
                 for j in range(2):
-                    n=f'wing.finger.{finger}.{j}.{side}';r=wr@Quaternion((1,0,0),.10*math.sin(phase*math.pi*8-finger*.3)*spread);tip=previous+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,previous,tip,r);previous=tip
+                    n=f'wing.finger.{finger}.{j}.{side}'
+                    lag=.12*math.sin((phase-.18)*math.pi*8-finger*.18-j*.22)*opening
+                    r=fore_rotation@Quaternion((0,0,1),sign*(.35+.12*finger)*fold)@Quaternion((0,1,0),sign*(-.45*fold+lag))
+                    tip=previous+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,previous,tip,r);previous=tip
         # Rotate the articulated chain about its attached base until its actual
         # skinned surface clears the floor. No vertex flattening or body lift.
         tail_correction=0

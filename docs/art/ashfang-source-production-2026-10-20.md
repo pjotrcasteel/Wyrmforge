@@ -35,3 +35,10 @@ and a larger exposed membrane silhouette. Dark torso/leg separation, a pale
 baked hotspot below the muzzle, and walk readability remain open. No owner
 acceptance, eight-direction export, aerial gameplay integration or release is
 claimed. Current main checked at 4f4c0635; open Wet Forest PR #199 is separate.
+
+### V6 articulated span revision — in progress
+The extended wing anatomy is rebuilt with a broader bat-like finger fan.
+Shoulder, elbow, wrist and digits now fold independently at preserved bone
+lengths. Delayed finger recovery follows the shoulder power stroke. The small
+takeoff crouch is reduced and the low paw weighting boundary adjusted; contact
+and mobile silhouette must be revalidated from the regenerated source.

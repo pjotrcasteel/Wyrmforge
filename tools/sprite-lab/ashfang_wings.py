@@ -3,8 +3,10 @@ No cinematic assets: membrane texture coordinates point into the original card.
 """
 import numpy as np
 def wing_layout(sign):
-    root=np.array((sign*.075,-.11,.055));elbow=np.array((sign*.16,-.025,.20));wrist=np.array((sign*.22,.06,.32))
-    tips=[np.array((sign*x,y,z)) for x,y,z in [(.35,.30,.34),(.38,.39,.20),(.30,.40,.075),(.18,.34,.015)]]
+    # Author the extended skeleton; folding is articulated in shoulder, elbow,
+    # wrist and digits rather than scaling or rotating a single wing slab.
+    root=np.array((sign*.075,-.11,.055));elbow=np.array((sign*.26,-.10,.14));wrist=np.array((sign*.48,-.20,.18))
+    tips=[np.array((sign*x,y,z)) for x,y,z in [(.85,-.12,.14),(.78,.12,.08),(.59,.31,.04),(.30,.33,.025)]]
     middles=[wrist*.42+tip*.58 for tip in tips]
     return root,elbow,wrist,middles,tips
 def rebuild_wings(v,faces,uv):
