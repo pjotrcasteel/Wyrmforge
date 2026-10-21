@@ -106,13 +106,29 @@
         {
             <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" data-town-geometry-layer="@geometryLayer" aria-hidden="true">
                 <svg viewBox="0 0 1672 941" preserveAspectRatio="none" class="refuge-town-geometry-map">
+                    @if (geometryLayer == TownGeometryLayer.Walkable)
+                    {
+                        @* Walk inspection subtracts all solid footprints. The other views retain their own shapes. *@
+                        <defs>
+                            <mask id="refuge-town-unblocked-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse"
+                                  x="0" y="0" width="1672" height="941">
+                                <rect x="0" y="0" width="1672" height="941" fill="white" />
+                                @foreach (var obstacle in crowd.Navigation.Obstacles)
+                                {
+                                    <polygon fill="black" points="@GeometryPoints(obstacle.Footprint)" />
+                                }
+                            </mask>
+                        </defs>
+                    }
                     @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Walkable)
                     {
-                        @foreach (var floor in crowd.Navigation.Walkable)
-                        {
-                            <polygon class="refuge-town-geometry-walkable" data-town-floor="@floor.Id"
-                                     points="@GeometryPoints(floor.Points)" />
-                        }
+                        <g mask="@(geometryLayer == TownGeometryLayer.Walkable ? "url(#refuge-town-unblocked-mask)" : null)">
+                            @foreach (var floor in crowd.Navigation.Walkable)
+                            {
+                                <polygon class="refuge-town-geometry-walkable" data-town-floor="@floor.Id"
+                                         points="@GeometryPoints(floor.Points)" />
+                            }
+                        </g>
                     }
                     @if (geometryLayer is TownGeometryLayer.All or TownGeometryLayer.Blocked)
                     {
