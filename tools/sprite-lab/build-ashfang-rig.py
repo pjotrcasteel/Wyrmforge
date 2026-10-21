@@ -114,25 +114,26 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',64)]:
                     airborne=smooth(altitude/.08);ankle=ankle.lerp(point(ankle)+Vector((0,.045,.065)),airborne)
                     if limb=='fore':ankle=ankle.lerp(point(bones[f'{limb}.2.{side}']['head'])+Vector((0,.055,.065)),rear)
                 fn=f'{limb}.2.{side}';fr=rotation if altitude>.01 or (limb=='fore' and rear>.01) else Quaternion((1,0,0),0)
-                if clip=='walk' or (altitude<.01 and (limb=='hind' or rear<.01)):
-                    ankle.z=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+clearance+.0015
+                sole_height=-.197-float((soles[fn]@np.array(fr.to_matrix()).T)[:,2].min())+.0015
+                if clip=='walk':ankle.z=sole_height+clearance
+                elif altitude<.01:ankle.z=max(ankle.z,sole_height)
                 knee,ankle=ik(hip,ankle,lengths[n],lengths[f'{limb}.1.{side}'],(sign*.6,-1 if limb=='fore' else 1,0));segment(n,hip,knee);segment(f'{limb}.1.{side}',knee,ankle);segment(fn,ankle,ankle+fr@Vector(bones[fn]['tail']-bones[fn]['head']),fr)
             wingroot=point(bones['wing.upper.'+side]['head'])
             opening=min(1,max(0,spread));fold=1-opening
             # Each transform moves its joint from the previous joint, retaining
             # bone lengths. Shoulder powers the stroke, elbow opens the span,
             # and the wrist/digits trail through the membrane recovery.
-            shoulder=rotation@Quaternion((0,0,1),sign*.95*fold)@Quaternion((0,1,0),sign*(-.25*fold+flap))
+            shoulder=rotation@Quaternion((0,0,1),sign*.75*fold)@Quaternion((0,1,0),sign*(-.05*fold+flap))
             upper='wing.upper.'+side;fore='wing.fore.'+side
             elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
-            fore_rotation=shoulder@Quaternion((0,0,1),sign*.85*fold)@Quaternion((0,1,0),-sign*.35*fold)
+            fore_rotation=shoulder@Quaternion((0,0,1),sign*.65*fold)@Quaternion((0,1,0),sign*.10*fold)
             wrist=elbow+fore_rotation@Vector(bones[fore]['tail']-bones[fore]['head']);segment(fore,elbow,wrist,fore_rotation)
             for finger in range(4):
                 previous=wrist
                 for j in range(2):
                     n=f'wing.finger.{finger}.{j}.{side}'
                     lag=.12*math.sin((phase-.18)*math.pi*8-finger*.18-j*.22)*opening
-                    r=fore_rotation@Quaternion((0,0,1),sign*(.35+.12*finger)*fold)@Quaternion((0,1,0),sign*(-.45*fold+lag))
+                    r=fore_rotation@Quaternion((0,0,1),sign*(.10+.10*finger)*fold)@Quaternion((0,1,0),sign*(.20*fold+lag))
                     tip=previous+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,previous,tip,r);previous=tip
         # Rotate the articulated chain about its attached base until its actual
         # skinned surface clears the floor. No vertex flattening or body lift.

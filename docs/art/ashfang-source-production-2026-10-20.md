@@ -51,3 +51,12 @@ V7 extends the existing tail surface and matching bone chain together, corrects
 the baked pale throat hotspot to molten amber in its local UV region, and makes
 a small source value adjustment for native pixel readability. Original texture
 and previous sources remain preserved. These changes await visual review.
+
+### V7 turnaround review / V8 fold correction — in progress
+Eight independent cameras exposed overlapping upright folded membranes in the
+front view. V8 reduces the shoulder/elbow sweep and changes wrist tuck so the
+folded fan trails back beside the body instead of standing like a sail. Grounded
+raised forepaws use a sole-floor lower bound through the rearing transition;
+this preserves their raised goal while avoiding an abrupt contact-mode switch.
+V7 texture correction removes the conspicuous pale throat spot; all eight
+source views and previous candidates remain preserved.

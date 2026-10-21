@@ -1,0 +1,86 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "views": [
+    {
+      "angleDegrees": 0,
+      "bounds": [
+        73,
+        51,
+        119,
+        137
+      ],
+      "width": 46
+    },
+    {
+      "angleDegrees": 45,
+      "bounds": [
+        61,
+        57,
+        136,
+        135
+      ],
+      "width": 75
+    },
+    {
+      "angleDegrees": 90,
+      "bounds": [
+        51,
+        70,
+        150,
+        128
+      ],
+      "width": 99
+    },
+    {
+      "angleDegrees": 135,
+      "bounds": [
+        61,
+        71,
+        133,
+        135
+      ],
+      "width": 72
+    },
+    {
+      "angleDegrees": 180,
+      "bounds": [
+        73,
+        67,
+        119,
+        142
+      ],
+      "width": 46
+    },
+    {
+      "angleDegrees": 225,
+      "bounds": [
+        56,
+        72,
+        131,
+        136
+      ],
+      "width": 75
+    },
+    {
+      "angleDegrees": 270,
+      "bounds": [
+        42,
+        70,
+        141,
+        128
+      ],
+      "width": 99
+    },
+    {
+      "angleDegrees": 315,
+      "bounds": [
+        59,
+        57,
+        130,
+        136
+      ],
+      "width": 71
+    }
+  ],
+  "ownerAccepted": false
+}
