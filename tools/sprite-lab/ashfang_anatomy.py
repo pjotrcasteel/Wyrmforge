@@ -68,17 +68,19 @@ def rebuild_anatomy(v,faces,uv):
         for limb in ['fore','hind']:
             for digit in range(3):loft(digit_points(limb,side,digit),[.011,.009,.001],[.009,.007,.001],digit_label(limb,side,digit),source[:,2]<-.10,steps=4,sides=8)
     # Angular upper skull replaces the broad fused cap; lower jaw is retained.
-    points=np.array([(0,-.315,.145),(0,-.36,.163),(0,-.415,.143),(0,-.46,.123),(0,-.525,.110),(0,-.590,.095)])
+    points=np.array([(0,-.315,.145),(0,-.36,.163),(0,-.415,.143),(0,-.46,.123),(0,-.515,.112),(0,-.570,.100)])
     headref=(source[:,1]<-.29)&(source[:,2]>.015)
     skull_profile=[(1,.15),(.78,.80),(.30,1),(-.30,1),(-.78,.80),(-1,.15),(-.78,-.65),(-.35,-1),(.35,-1),(.78,-.65)]
     loft(points,[.069,.100,.079,.061,.046,.024],[.050,.064,.047,.034,.027,.022],2,headref,steps=3,ridges=.015,profile=skull_profile)
-    jaw=np.array([(0,-.35,.079),(0,-.405,.072),(0,-.47,.070),(0,-.54,.067),(0,-.587,.069)])
+    jaw=np.array([(0,-.35,.085),(0,-.405,.078),(0,-.47,.076),(0,-.525,.073),(0,-.568,.075)])
     loft(jaw,[.060,.066,.052,.039,.021],[.017,.019,.017,.013,.006],9,headref,steps=3,ridges=.015)
     for sign in [1,-1]:
         brow=np.array([(sign*.049,-.452,.160),(sign*.074,-.421,.183),(sign*.095,-.38,.186)])
         loft(brow,[.013,.019,.013],[.012,.016,.010],2,headref,steps=2,sides=6)
         eye=np.array([(sign*.071,-.444,.162),(sign*.078,-.431,.166),(sign*.081,-.418,.168)])
         loft(eye,[.002,.004,.002],[.002,.004,.002],10,headref,steps=2,sides=6)
+        nostril=np.array([(sign*.025,-.540,.126),(sign*.026,-.549,.124),(sign*.023,-.557,.122)])
+        loft(nostril,[.002,.004,.002],[.002,.003,.002],12,headref,steps=2,sides=6)
     for sign in [1,-1]:
         horn=np.array([(sign*.075,-.345,.173),(sign*.100,-.305,.220),(sign*.115,-.245,.264),(sign*.105,-.185,.290)])
         loft(horn,[.026,.020,.012,.0008],[.024,.019,.010,.0008],2,headref,steps=3,sides=8)

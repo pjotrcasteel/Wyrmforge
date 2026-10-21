@@ -106,23 +106,27 @@ eye_y,eye_x=np.unravel_index(eye_score.argmax(),eye_score.shape)
 for loop in mesh.loops:
     if source_labels[loop.vertex_index]==10:uv[loop.vertex_index]=((eye_x+.5)/2048,(eye_y+.5)/1024)
 raw[1020:1024,1020:1024,:]=[.62,.55,.43,1]
+raw[1016:1020,1020:1024,:]=[.018,.016,.018,1]
 for loop in mesh.loops:
     if source_labels[loop.vertex_index]==11:uv[loop.vertex_index]=(1022/2048,1022/1024)
+    if source_labels[loop.vertex_index]==12:uv[loop.vertex_index]=(1022/2048,1018/1024)
 # Original authored charcoal tile for the solid scutes. This reserved area is
 # outside the card-projected body UVs; original reference art remains intact.
 tile_y,tile_x=np.mgrid[0:128,0:128];tone=.145+.045*(1-tile_y/127)+.012*np.sin(tile_x*.11)*np.sin(tile_y*.08)
 raw[896:1024,0:128,:3]=tone[:,:,None]*np.array([.94,.96,1.0]);raw[896:1024,0:128,3]=1
+head_tone=.205+.07*(1-tile_y/127)+.008*np.sin(tile_x*.09)*np.sin(tile_y*.1)
+raw[896:1024,128:256,:3]=head_tone[:,:,None]*np.array([.94,.96,1.0]);raw[896:1024,128:256,3]=1
 for index in range(body_count):
     if source_labels[index] in (2,9,20,21,22,23):
         x,y,z=v[index];u=(x*4+.5)%1;w=(y*4+.5)%1
-        uv[index]=[(8+u*110)/2048,(904+w*110)/1024]
+        uv[index]=[((136 if source_labels[index] in (2,9,22) else 8)+u*110)/2048,(904+w*110)/1024]
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
 raw=stone_separation(raw)
 card=bpy.data.images.load(str(folder.parent.parent/'references/front-card-crop.png'));cp=np.empty(len(card.pixels),np.float32);card.pixels.foreach_get(cp);cp=cp.reshape(card.size[1],card.size[0],4);rows=(np.arange(1024)*card.size[1]//1024);cols=(np.arange(1024)*card.size[0]//1024);atlas=np.concatenate([raw,cp[rows[:,None],cols[None,:]]],axis=1)
 image=bpy.data.images.new('Ashfang original surface and authored card wings',width=2048,height=1024);image.pixels.foreach_set(atlas.ravel());image.filepath_raw=str(out/'ashfang-albedo.png');image.file_format='PNG';image.save();image.pack();texture.image=image;texture.interpolation='Closest';shader=material.node_tree.nodes.get('Principled BSDF');material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);mesh.materials.append(material)
 bones={}
 def bone(n,a,b,parent=None,deform=True):bones[n]=dict(head=np.array(a,float),tail=np.array(b,float),parent=parent,deform=deform)
-bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.07),'chest');bone('neck.1',(0,-.25,.07),(0,-.35,.10),'neck.0');bone('head',(0,-.35,.10),(0,-.52,.065),'neck.1');bone('jaw',(0,-.36,.085),(0,-.565,.075),'head');bone('mouth',(0,-.595,.080),(0,-.65,.080),'head',False)
+bone('root',(0,0,-.197),(0,0,-.12),deform=False);bone('pelvis',(0,.16,-.025),(0,.07,.005),'root');bone('spine',(0,.07,.005),(0,-.05,.025),'pelvis');bone('chest',(0,-.05,.025),(0,-.16,.03),'spine');bone('neck.0',(0,-.16,.03),(0,-.25,.07),'chest');bone('neck.1',(0,-.25,.07),(0,-.35,.10),'neck.0');bone('head',(0,-.35,.10),(0,-.52,.065),'neck.1');bone('jaw',(0,-.36,.085),(0,-.565,.075),'head');bone('mouth',(0,-.575,.080),(0,-.63,.080),'head',False)
 for side,sign in [('L',1),('R',-1)]:
     for limb,points,parent in [('fore',[(sign*.115,-.18,-.005),(sign*.15,-.22,-.075),(sign*.17,-.29,-.165),(sign*.17,-.37,-.185)],'chest'),('hind',[(sign*.105,.17,-.025),(sign*.18,.095,-.075),(sign*.18,.23,-.16),(sign*.18,.075,-.185)],'pelvis')]:
         for i in range(3):bone(f'{limb}.{i}.{side}',points[i],points[i+1],parent if i==0 else f'{limb}.{i-1}.{side}')
@@ -167,7 +171,7 @@ for index,p in enumerate(v):
     elif 30<=source_labels[index]<=41:
         limb,side,digit=digit_identity(int(source_labels[index]));permitted=[f'toe.{limb}.{digit}.{joint}.{side}' for joint in range(2)];region='digit'
     elif source_labels[index] in (1,23) or (source_labels[index]==0 and ((y>.27 and abs(x)<.13) or y>=.34)):permitted=[n for n in names if n.startswith('tail.')];region='tail'
-    elif source_labels[index] in (2,10,11,22):
+    elif source_labels[index] in (2,10,11,12,22):
         permitted=['head'];region='head'
     elif source_labels[index] in (3,4):
         side='L' if source_labels[index]==3 else 'R';permitted=[f'hind.{i}.{side}' for i in range(3)];region='hind'

@@ -6,7 +6,7 @@ import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
 rig=Path(sys.argv[1]);out=rig/'head-review-v1';out.mkdir(exist_ok=False)
-s=np.load(rig/'walk-samples.npz');labels=s['semanticLabels'];head=np.isin(labels,[2,6,9,10,11,21,22]);faces=s['faces'][np.all(head[s['faces']],axis=1)]
+s=np.load(rig/'walk-samples.npz');labels=s['semanticLabels'];head=np.isin(labels,[2,6,9,10,11,12,21,22]);faces=s['faces'][np.all(head[s['faces']],axis=1)]
 def t(x,dtype=torch.float32):return torch.tensor(np.asarray(x),device='cuda',dtype=dtype).contiguous()
 ctx=dr.RasterizeCudaContext();v=t(s['positions'][0]);hom=torch.cat([v,torch.ones_like(v[:,:1])],1);f=t(faces,torch.int32);uv=t(s['uv']);albedo=Image.open(rig/'ashfang-albedo.png').convert('RGB');texture=t(np.asarray(albedo)/255).flip(0)[None];palette=palette_for(albedo)
 cell=256;board=Image.new('RGB',(cell*3,cell*2+64),(38,39,43));draw=ImageDraw.Draw(board);audits=[]
