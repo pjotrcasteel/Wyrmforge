@@ -1,0 +1,29 @@
+.materials-lab{min-height:100dvh;background:#0c0d0e;color:#e6e0d5;font:14px/1.5 system-ui,sans-serif;padding:15px}
+.materials-lab>header,.materials-tools,.brush-tools,.material-workspace{max-width:1000px;margin:0 auto 13px}
+.materials-lab>header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.materials-lab .eyebrow{font-size:10px;color:#c7a67e;letter-spacing:.15em;font-weight:750}
+.materials-lab h1{margin:3px 0 5px;font-size:28px;line-height:1.2}
+.materials-lab p{margin:5px 0;font-size:12px;color:#b7b3aa}
+.materials-lab button,.materials-lab .other-lab{min-height:43px;border-radius:7px;border:1px solid #575047;background:#262322;color:#f2e5d6;padding:8px 12px;cursor:pointer;font:600 13px system-ui;touch-action:manipulation;text-decoration:none}
+.materials-lab button.selected{background:#a5774d;border-color:#d0a777;color:#1e140d}
+.materials-lab button.secondary{background:#191b1b;color:#d4c9ba}
+.materials-lab button:focus-visible,.materials-lab a:focus-visible{outline:2px solid #d4ae7e;outline-offset:2px}
+.materials-tools,.brush-tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center;border:1px solid #393830;border-radius:9px;background:#171819;padding:10px}
+.materials-tools .section-title,.brush-tools>span{font-size:11px;letter-spacing:.08em;color:#b5aaa0;font-weight:650;margin-right:5px}
+.materials-tools button{display:inline-flex;align-items:center;gap:8px}
+.materials-lab .sample{display:block;width:19px;height:19px;border-radius:3px;border:1px solid #0008;box-shadow:inset 0 1px #ffffff2a}
+.materials-lab .grass{background:#354934}.materials-lab .mud{background:#423a30}
+.materials-lab .paving{background:#646557}.materials-lab .dirt{background:#564538}
+.materials-lab .scorched{background:#272522}
+.material-workspace{display:grid;grid-template-columns:minmax(0,600px) minmax(180px,1fr);gap:14px;align-items:start}
+.materials-lab .canvas-wrap{background:#0c0f0d;border:1px solid #686052;border-radius:10px;overflow:hidden;width:100%;line-height:0;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.materials-lab canvas{display:block;width:100%;height:auto;aspect-ratio:3/4;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;image-rendering:pixelated;cursor:crosshair}
+.materials-lab aside{background:#191a1a;border:1px solid #3e3930;border-radius:9px;padding:13px}
+.materials-lab h2{font-size:16px;margin:0 0 10px}
+.materials-lab .detail{font-size:11px;color:#a59078;margin-top:17px}
+@media(max-width:700px){.materials-lab{padding:9px}.materials-lab>header{align-items:start;display:block}
+.materials-lab h1{font-size:24px}.materials-lab .other-lab{display:inline-flex;margin-top:8px;align-items:center;font-size:11px;min-height:35px}
+.material-workspace{grid-template-columns:1fr}.materials-tools,.brush-tools{gap:5px}
+.materials-tools button{flex:1 1 28%;padding:7px 8px;font-size:12px}
+.brush-tools button{flex:1 1 24%;font-size:11px;padding:6px}
+.materials-lab aside{padding:10px}.materials-lab aside p{font-size:11px}}
