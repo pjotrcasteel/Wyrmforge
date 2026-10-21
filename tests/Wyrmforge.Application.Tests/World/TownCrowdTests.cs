@@ -449,6 +449,33 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void TownCrowd_FourteenCitizenStressRun_PreservesWorkersAndGroundSeparation()
+    {
+        var open = new[] { "build", "forge", "codex", "legends" };
+        var crowded = new TownCrowd(Scene(), seed: 205, citizenCount: 14, openBuildings: open);
+        Assert.HasCount(14, crowded.Citizens);
+        Assert.AreEqual(8, crowded.AssignedWorkers);
+        Assert.AreEqual(6, crowded.Citizens.Count(citizen => citizen.AssignedBuildingId is null));
+        Assert.HasCount(14, new TownCrowd(Scene(), citizenCount: 14).Citizens);
+
+        for (var tick = 0; tick < 300; tick++)
+        {
+            crowded.Step(TimeSpan.FromMilliseconds(100));
+            foreach (var person in crowded.Citizens.Where(citizen => citizen.IsPresent))
+            {
+                Assert.IsTrue(crowded.Navigation.IsWalkable(person.Position));
+                foreach (var other in crowded.Citizens.Where(citizen => citizen.IsPresent && citizen.Id > person.Id))
+                {
+                    var dx = person.Position.X - other.Position.X;
+                    var dy = person.Position.Y - other.Position.Y;
+                    Assert.IsTrue(dx * dx + dy * dy >= 19f * 19f,
+                        $"Citizens {person.Id} and {other.Id} overlap under 14-NPC load.");
+                }
+            }
+        }
+    }
+
+    [TestMethod]
     public void TownCrowd_InvalidCount_IsRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: -1));

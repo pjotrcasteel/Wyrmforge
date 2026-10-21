@@ -100,6 +100,7 @@
                         var spent = Stopwatch.GetElapsedTime(began).TotalMilliseconds;
                         measuredTicks++;
                         measuredTotalMilliseconds += spent;
+                        // Keep the high-water mark for the lifetime of this town session.
                         measuredMaxMilliseconds = Math.Max(measuredMaxMilliseconds, spent);
                     }
                     StateHasChanged();
@@ -136,7 +137,6 @@
         };
         measuredTicks = 0;
         measuredTotalMilliseconds = 0;
-        measuredMaxMilliseconds = 0;
         lastPathCount = paths;
         lastPathMilliseconds = milliseconds;
         try { await performanceMonitor!.InvokeVoidAsync("update", data); }

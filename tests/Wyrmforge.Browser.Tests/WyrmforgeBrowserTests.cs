@@ -37,6 +37,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_RefugeMetrics_FourteenNpcStressOverrideShowsActualPopulation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync();
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townMetrics=1&townNpcCount=14",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            /NPC \d+\/14/.test(document.querySelector('#refuge-town-performance')?.textContent ?? '')");
+        Assert.IsTrue(await Page.Locator(".refuge-town-citizen").CountAsync() <= 14);
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls(int width, int height)

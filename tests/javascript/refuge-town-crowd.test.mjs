@@ -102,6 +102,49 @@ test('two work anchors per unlocked building reuse one 100ms simulation with thr
     assert.match(source(actors), /new PeriodicTimer\(TimeSpan\.FromMilliseconds\(100\)\)/);
 });
 
+test('Refuge session max never decreases in subsequent faster intervals', async () => {
+    const script = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-performance.js');
+    const { startRefugePerformance } = await import('data:text/javascript;base64,' + Buffer.from(script).toString('base64'));
+    const previousDocument = globalThis.document;
+    const previousRaf = globalThis.requestAnimationFrame;
+    const previousCancel = globalThis.cancelAnimationFrame;
+    const output = { textContent: '' };
+    let callback;
+    let cancelled = false;
+    globalThis.document = { querySelector: () => output };
+    globalThis.requestAnimationFrame = frame => { callback = frame; return 1; };
+    globalThis.cancelAnimationFrame = () => { cancelled = true; };
+    try {
+        const monitor = startRefugePerformance('#refuge-town-performance');
+        monitor.update({ total: 14, present: 14, workers: 8, away: 0, stepMax: 32 });
+        for (let ms = 100; ms <= 1100; ms += 100) callback(ms);
+        assert.match(output.textContent, /NPC 14\/14/);
+        assert.match(output.textContent, /max 100\.0ms/);
+        assert.match(output.textContent, /32\.0ms max/);
+        for (let ms = 1120; ms <= 2120; ms += 20) callback(ms);
+        assert.match(output.textContent, /max 100\.0ms/,
+            'Subsequent shorter frame windows must not lower the recorded maximum');
+        monitor.dispose();
+        assert.equal(output.textContent, '');
+        assert.equal(cancelled, true);
+    } finally {
+        globalThis.document = previousDocument;
+        globalThis.requestAnimationFrame = previousRaf;
+        globalThis.cancelAnimationFrame = previousCancel;
+    }
+    const actors = source('src/Wyrmforge.Presentation.Web/Features/Forge/RefugeTownActors.razor');
+    assert.match(actors, /measuredMaxMilliseconds = Math\.Max\(measuredMaxMilliseconds, spent\)/);
+    assert.doesNotMatch(actors, /measuredMaxMilliseconds = 0;/);
+});
+
+test('NPC stress override is bounded at fourteen residents and optional', () => {
+    const markup = source(scene);
+    assert.match(markup, /townNpcCount=/);
+    assert.match(markup, /requestedCount is >= 7 and <= 14/);
+    assert.match(markup, /requestedCount : 7/);
+    assert.match(markup, /citizenCount: citizenCount/);
+});
+
 test('blue marked left stair planter is part of real blocking map', () => {
     const map = JSON.parse(source(`${art}/night-navigation.json`));
     const left = map.obstacles.find(area => area.id === 'west-stair-railing-planter');
