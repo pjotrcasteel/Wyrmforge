@@ -1,0 +1,92 @@
+{
+  "arena-flyovers-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "fire-flyover-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "flight-loop-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "flight-sequence-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "high-launch-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "landing-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "rear-breath-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "takeoff-flight-land-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  },
+  "walk-samples": {
+    "positions": true,
+    "faces": true,
+    "semanticLabels": true,
+    "mouth": true,
+    "bonePoints": true,
+    "boneNames": true,
+    "rootMotion": true,
+    "attackSignals": true
+  }
+}
