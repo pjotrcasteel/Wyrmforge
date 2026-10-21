@@ -154,8 +154,10 @@ public sealed class TownCrowdTests
             "Behind the well roof is still paved ground, not a roof-sized collider.");
         Assert.IsTrue(map.IsWalkable(new TownPoint(825, 584)),
             "An NPC in front of the well can overlap its image without colliding.");
-        Assert.IsTrue(map.IsWalkable(new TownPoint(935, 730)),
-            "Cobblestones beside the east flowerbed must be walkable.");
+        Assert.IsFalse(map.IsWalkable(new TownPoint(935, 730)),
+            "The marked east staircase flowerbed is physical ground, not free paving.");
+        Assert.IsTrue(map.IsWalkable(new TownPoint(850, 730)),
+            "The central approach beside the flowerbed must stay walkable.");
         Assert.IsFalse(map.IsWalkable(new TownPoint(1036, 738)),
             "The planter's ground footprint remains solid.");
         Assert.IsFalse(map.IsWalkable(new TownPoint(624, 444)),
