@@ -7,11 +7,11 @@ const smooth = t => t * t * (3 - 2 * t);
 // Restrained wet-earth materials: separated by value and texture, not bright greens
 // or a fullscreen "Gothic" color grade. The mage and enemies keep their own palette.
 const MATERIALS = Object.freeze({
-    loam: ['#212923', '#242b25', '#262e27', '#202823'],
-    moss: ['#29372e', '#2b3930', '#2d3b32', '#29362e'],
+    loam: ['#252c25', '#272e27', '#283029', '#242b25'],
+    moss: ['#283329', '#29342a', '#2b362c', '#283228'],
     mud: ['#2d2d29', '#30302b', '#32322d', '#2c2c28'],
     leafbed: ['#383229', '#39332a', '#3b352b', '#373229'],
-    puddle: ['#141f20', '#182323', '#192627', '#151f20'],
+    puddle: ['#151e1f', '#182122', '#1b2424', '#161f20'],
     road: ['#39362d', '#3b372e', '#3d392e', '#38352d'],
     clearing: ['#30312c', '#32332d', '#34342e', '#2e302b'],
 });
@@ -73,7 +73,7 @@ export function createWetForestTilePlan(recipe, seed, width, height) {
             const n = noise(seed ^ 0x342cdf6a, x, y, 96);
             const small = noise(seed ^ 0x415c7a39, x, y, 42);
             const jitter = (small - .5) * 12;
-            let material = n > .66 ? 'moss' : n < .28 ? 'mud' : 'loam';
+            let material = n > .72 ? 'moss' : n < .29 ? 'mud' : 'loam';
             // Broad coherent ecology patches, rather than a different random color per cell.
             for (const patch of patches) {
                 const dx = (x - patch.x) / patch.rx;
@@ -117,16 +117,20 @@ export function createWetForestMaterialEdges(tiles, seed, width, height = Infini
             [tiles[i + columns], 0, CELL, 317],
         ]) {
             if (!neighbour || neighbour.material === current.material) continue;
-            // Do not stamp identical seams around each square tile.
-            if (hash(seed ^ salt, current.x / CELL, current.y / CELL) < .22) continue;
-            const side = hash(seed ^ (salt + 17), current.x / CELL, current.y / CELL);
-            const shift = 2 + Math.floor(side * 4) * 2;
-            const x = current.x + (dx ? CELL - 2 : shift);
-            const y = current.y + (dy ? CELL - 2 : shift);
-            const edgeWidth = dx ? 4 : 2, edgeHeight = dy ? 4 : 2;
-            if (x + edgeWidth <= width && y + edgeHeight <= height)
-                marks.push({ x, y, width: edgeWidth, height: edgeHeight,
-                    color: bank(current.material, neighbour.material) });
+            // Irregular 2px/4px sediment pixels dissolve square 12px seams.
+            // Borrow a few dark adjacent grains on BOTH sides, never a grid line.
+            const seamX = current.x + dx, seamY = current.y + dy;
+            for (let step = 0; step < CELL; step += 2) {
+                const pick = hash(seed ^ salt, current.x + step, current.y + step);
+                if (pick < .23) continue;
+                const offset = Math.floor(hash(seed ^ (salt + 17), step + current.x, current.y) * 4) * 2 - 4;
+                const x = dx ? seamX + offset : current.x + step;
+                const y = dy ? seamY + offset : current.y + step;
+                const edgeWidth = pick > .8 ? 4 : 2, edgeHeight = 2;
+                if (x >= 0 && y >= 0 && x + edgeWidth <= width && y + edgeHeight <= height)
+                    marks.push({ x, y, width: edgeWidth, height: edgeHeight,
+                        color: bank(current.material, neighbour.material) });
+            }
         }
     }
     return marks;
