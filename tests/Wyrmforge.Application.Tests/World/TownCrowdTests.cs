@@ -188,6 +188,9 @@ public sealed class TownCrowdTests
         town.SetOpenBuildings(["forge"]);
         Assert.AreEqual(2, town.AssignedWorkers);
         Assert.AreEqual(7, town.Citizens.Count);
+        // Unlock while residents are already travelling: do not accidentally
+        // spawn above the bounded workforce just because everyone is busy.
+        for (var tick = 0; tick < 30; tick++) town.Step(TimeSpan.FromMilliseconds(100));
         town.SetOpenBuildings(["build", "forge", "codex", "legends"]);
         Assert.AreEqual(8, town.AssignedWorkers);
         Assert.HasCount(11, town.Citizens);
