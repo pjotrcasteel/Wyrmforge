@@ -48,9 +48,10 @@
         {
             @foreach (var foreground in crowd.Navigation.Occluders)
             {
-                // The well and noticeboard are real transparent PNG cutouts, not
-                // one broad SVG polygon that hides a whole pedestrian.
-                if (foreground.Id is "well-foreground" or "noticeboard-foreground") continue;
+                // Do not replay broad painted floor polygons over walking citizens.
+                // Physical structures use one-time alpha silhouettes at feet depth.
+                if (foreground.Id is "well-foreground" or "noticeboard-foreground" or
+                    "nexus-low-terrace-railing-foreground") continue;
                 var minX = foreground.Clip.Min(point => point.X) - 1;
                 var minY = foreground.Clip.Min(point => point.Y) - 1;
                 var maxX = foreground.Clip.Max(point => point.X) + 1;
@@ -217,7 +218,8 @@
         new("noticeboard-supports", 724, 475, 78, 74, 519),
         new("well-roof", 806, 384, 132, 87, 472),
         new("well-supports", 815, 445, 107, 84, 520),
-        new("well-front-rim", 698, 491, 252, 78, 567)
+        new("well-front-rim", 698, 491, 252, 78, 567),
+        new("nexus-terrace-parapet", 39, 397, 289, 73, 458)
     ];
 
     private bool showTownGeometry;
