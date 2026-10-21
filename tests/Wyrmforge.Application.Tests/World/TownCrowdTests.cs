@@ -290,6 +290,34 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_HallRoofAndTrees_DoNotBlockGroundedPavement()
+    {
+        var map = Scene();
+        foreach (var position in new[]
+        {
+            new TownPoint(1080, 810),
+            new TownPoint(1110, 812),
+            new TownPoint(1130, 813),
+            new TownPoint(1140, 811)
+        })
+            Assert.IsTrue(map.IsWalkable(position),
+                $"Actual paved feet position {position} remains open under an overhanging roof or foliage.");
+
+        Assert.IsFalse(map.IsWalkable(new TownPoint(1050, 783)),
+            "The raised garden's actual solid ground-contact remains forbidden.");
+
+        var foliage = map.Occluders.Single(x => x.Id == "hall-terrace-foliage-foreground");
+        Assert.IsTrue(foliage.DepthY > 815f, "Foreground foliage paints over people walking behind it.");
+        Assert.IsFalse(map.Obstacles.Any(x => x.Id == foliage.Id),
+            "Foliage is visual occlusion, never a new feet-level collider.");
+
+        var origin = map.Destinations.Single(x => x.Id == "lower-square").Position;
+        var destination = map.Destinations.Single(x => x.Id == "hall-of-fame-steps").Position;
+        Assert.IsTrue(map.TryFindPath(origin, destination, out var path));
+        CheckRoute(map, origin, path);
+    }
+
+    [TestMethod]
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();
