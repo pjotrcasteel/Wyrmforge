@@ -28,7 +28,7 @@ Concurrent main added ordinary salvage/material cargo during validation. Integra
 
 Actual-game captures: [320px map](evidence/fire-tier-one-2026-10-21/fire-tier-one-map-320.png), [390px map](evidence/fire-tier-one-2026-10-21/fire-tier-one-map-390.png), [390px tier selection](evidence/fire-tier-one-2026-10-21/world-gate-fire-tiers-390.png). These are Chromium viewport captures, not physical iPhone photos and not a new map-art approval.
 
-CI for `1d54188f`: [compare](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39570967148) passed; [validate](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39570967208) and [browser](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39570967186) were still running when this receipt was written. Do not interpret pending checks as success.
+CI for `1d54188f`: [compare](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39570967148) passed; [validate](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39570967208) and [browser](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39570967186) were still running when this receipt was written. Do not interpret pending checks as success. Later head `8cd749cf`: [compare](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39571427365), [validate](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39571427245) and [browser](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39571427032) all passed.
 
 Physical iPhone playthrough, first-Hunt balance and owner acceptance remain required. Automated or synthetic browser evidence is not physical-device acceptance. Do not merge on an unverified playability claim.
 
