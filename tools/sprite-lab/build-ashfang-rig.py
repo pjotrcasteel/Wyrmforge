@@ -13,6 +13,7 @@ folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index
 stance_only='--stance-only' in sys.argv
 fold_sweep='--fold-sweep' in sys.argv
 wing_gate='--wing-gate' in sys.argv or fold_sweep
+motion_gate='--motion-gate' in sys.argv
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
 s=np.load(folder/'textured-v1/textured-mesh.npz');original=s['vertices'];v=np.stack([original[:,1],-original[:,0],original[:,2]],1);faces=s['faces'];uv=s['uv']
 # Original source sculpt: lift and broaden the low reconstructed skull/neck so
@@ -187,6 +188,7 @@ def smooth(t):t=max(0,min(1,t));return t*t*(3-2*t)
 clips={};positions={};mouths={};floor=[];contacts=[];body_audit=[];hind_audit=[];deps=bpy.context.evaluated_depsgraph_get()
 for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('flight-loop',17),('landing',31),('flight-sequence',CONNECTED_FLIGHT_FRAMES),('high-launch',55),('fire-flyover',56),('arena-flyovers',ARENA_FLYOVER_FRAMES)]:
     if (stance_only or wing_gate) and clip!='walk':continue
+    if motion_gate and clip not in ('walk','rear-breath','takeoff-flight-land'):continue
     arena_clip=clip in ('high-launch','fire-flyover','arena-flyovers')
     def state_at(t):
         if clip=='high-launch':return high_launch_state(t*(count-1))
