@@ -169,7 +169,7 @@ public sealed class TownCrowd
             // Keep at least three free-roaming residents. Prefer reassigning an
             // existing citizen; a new worker is only spawned when the pool is full.
             var citizen = available > 3
-                ? _citizens.FirstOrDefault(c => c.AssignedWorkNode < 0 && c.IsPresent && !c.IsWalking)
+                ? _citizens.FirstOrDefault(c => c.AssignedWorkNode < 0)
                 : null;
             if (citizen is null)
             {
