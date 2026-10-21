@@ -180,19 +180,26 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var debug = Page.Locator(".refuge-town-geometry-debug");
         await Expect(debug).ToBeVisibleAsync();
         var layers = Page.Locator(".refuge-town-scenery-foreground");
-        await Expect(layers).ToHaveCountAsync(9);
-        var well = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='well-foreground']");
-        var board = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='noticeboard-foreground']");
+        await Expect(layers).ToHaveCountAsync(12);
         var hallFoliage = Page.Locator(".refuge-town-scenery-foreground[data-town-foreground-layer='hall-terrace-foliage-foreground']");
         await Expect(hallFoliage).ToHaveCountAsync(1);
-        await Expect(well).ToBeVisibleAsync();
-        await Expect(well.Locator("clipPath path")).ToHaveCountAsync(3);
-        await Expect(board.Locator("clipPath path")).ToHaveCountAsync(1);
-        Assert.IsTrue(await well.EvaluateAsync<bool>(@"svg => {
-            const artwork = svg.querySelector('image');
-            return getComputedStyle(svg).pointerEvents === 'none' &&
-                artwork?.getAttribute('href') === 'art/town/night-active.webp?v=140';
-        }"), "The approved town image must be clipped per painted structure.");
+        await Page.WaitForFunctionAsync(@"() => {
+            const cutouts = [...document.querySelectorAll('.refuge-town-png-cutout')];
+            return cutouts.length === 5 && cutouts.every(img =>
+                img.dataset.townPngReady === 'true' &&
+                img.src.startsWith('data:image/png;base64,') &&
+                img.naturalWidth > 0 && img.naturalHeight > 0);
+        }");
+        foreach (var id in new[] { "noticeboard-panel", "noticeboard-supports", "well-roof",
+            "well-supports", "well-front-rim" })
+        {
+            var png = Page.Locator($".refuge-town-png-cutout[data-town-cutout='{id}']");
+            await Expect(png).ToBeVisibleAsync();
+            Assert.IsTrue(await png.EvaluateAsync<bool>(@"img =>
+                getComputedStyle(img).pointerEvents === 'none' &&
+                img.naturalWidth <= 252 && img.naturalHeight <= 100"),
+                "Well and board cutouts must remain small transparent PNGs, not rectangular town paintings.");
+        }
         await Expect(Page.Locator(".refuge-town-crowd")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".refuge-town-crowd--behind, .refuge-town-crowd--front")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"() =>
