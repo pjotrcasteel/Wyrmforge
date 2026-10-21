@@ -554,3 +554,6 @@ Owner rejected the native ~15% fit as butterfly-like, too small and not scary. N
 
 V35 nine source actions built; native fit/stance visual review pending. Source surfaces, rig and baked motion preserved before GPU rendering. Model card identity and original reference assets retained. Player-size reference unchanged and screenshot-based previews remain local-only.
 
+
+V35 local first render is larger but still wing-heavy: resting forearms remain too wide. V36 closes shoulder and wrist toward an attached back-fold pose with preserved segment lengths, narrowing the resting membrane fan; full-spread flight retains the original open pose. V35 source/review kept. V36 screenshot composites remain local-only. Code checkpoint before source generation; visual result pending.
+

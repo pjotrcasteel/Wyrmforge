@@ -235,6 +235,9 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
             # and the wrist/digits trail through the membrane recovery.
             shoulder=wing_rotation@Quaternion((0,0,1),sign*.75*fold)@Quaternion((0,1,0),sign*(.25*fold+flap))
             upper='wing.upper.'+side;fore='wing.fore.'+side
+            closed_upper=Vector(bones[upper]['tail']-bones[upper]['head']).rotation_difference(Vector((sign*.095,.17,.065)))
+            shoulder=shoulder.slerp(wing_rotation@closed_upper,fold)
+
             elbow=wingroot+shoulder@Vector(bones[upper]['tail']-bones[upper]['head']);segment(upper,wingroot,elbow,shoulder)
             # Sample the SAME shoulder stroke at successive delays. Recovery bends
             # the elbow and feathers the wrist; the powered stroke extends it.
@@ -243,6 +246,8 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
             recovery=max(0,min(1,(earlier-flap)*5))*opening
             elbow_lag=(delayed-flap)*.65*opening
             fore_rotation=shoulder@Quaternion((0,0,1),sign*(.65*fold+.65*recovery))@Quaternion((0,1,0),sign*(.10*fold+elbow_lag))@Quaternion((1,0,0),.30*recovery)
+            closed_fore=Vector(bones[fore]['tail']-bones[fore]['head']).rotation_difference(Vector((sign*-.04,.32,-.08)))
+            fore_rotation=fore_rotation.slerp(wing_rotation@closed_fore,fold)
             wrist=elbow+fore_rotation@Vector(bones[fore]['tail']-bones[fore]['head']);segment(fore,elbow,wrist,fore_rotation)
             for finger in range(4):
                 previous=wrist
@@ -257,7 +262,7 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
                     # folded. Quaternion interpolation retains segment lengths
                     # and opens the fan without scaling its vertices.
                     rest_direction=Vector(bones[n]['tail']-bones[n]['head'])
-                    folded_direction=Vector((sign*(-.25+finger*.04),1,-.10-j*.04+rear*.24)).normalized()
+                    folded_direction=Vector((sign*(-.12+finger*.018),1,-.10-j*.04+rear*.24)).normalized()
                     folded_rotation=rest_direction.rotation_difference(folded_direction)
                     r=r.slerp(folded_rotation,fold)
                     tip=previous+r@rest_direction;segment(n,previous,tip,r);previous=tip
