@@ -35,6 +35,7 @@ Design authority: [Magic and combat](../canon/magic-and-combat.md) (persistent-l
   - The upgrade is blocked without Emberglass.
   - The upgrade spends the Epic Cinder Heart, the Ashen Wing and the Emberglass, and saves all three keys.
   - Full browser suite: 88/88 passed against a Release publish at `fe3297be` + this test. After the muted-source CSS change, only the Fireball browser tests (8/8) were rerun.
+- After merging the Tier-II Crown fix (#209 `a9915c94`) and main `a0384843` (head `819b1bb3`): Domain 349/349, Application 571/571, full browser suite 99/99 against a fresh Release publish.
 
 Chromium viewport capture (not a physical-device photo): [Fireball Lv 4 Emberglass gate, 390](evidence/fire-loot-rarity-2026-10-21/fireball-emberglass-gate-390.png).
 
