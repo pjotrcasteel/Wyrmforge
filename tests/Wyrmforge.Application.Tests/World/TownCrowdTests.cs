@@ -778,6 +778,32 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void InspectNextWalkingCitizenId_CyclesMovingResidentsWithoutChangingPaths()
+    {
+        var crowd = new TownCrowd(Scene(), seed: 205, citizenCount: 14);
+        for (var tick = 0; tick < 25; tick++)
+            crowd.Step(TimeSpan.FromMilliseconds(100));
+
+        var active = crowd.Citizens.Where(citizen => citizen.IsPresent && citizen.IsWalking).ToArray();
+        Assert.IsTrue(active.Length >= 2, "Two residents should be moving for selection testing.");
+
+        var before = crowd.PathfindCount;
+        int? selected = crowd.InspectNextWalkingCitizenId(null);
+        Assert.AreEqual(active[0].Id, selected);
+        foreach (var citizen in active.Skip(1))
+        {
+            selected = crowd.InspectNextWalkingCitizenId(selected);
+            Assert.AreEqual(citizen.Id, selected);
+            Assert.AreEqual(selected, crowd.InspectActiveRoute(selected)?.CitizenId);
+        }
+
+        Assert.AreEqual(active[0].Id, crowd.InspectNextWalkingCitizenId(selected),
+            "The selection must wrap around to the first moving resident.");
+        Assert.IsNull(crowd.InspectActiveRoute(-1), "An invalid selection must not silently show another citizen.");
+        Assert.AreEqual(before, crowd.PathfindCount, "Cycling debug routes must not trigger pathfinding.");
+    }
+
+    [TestMethod]
     public void TownCrowd_InvalidCount_IsRejected()
     {
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: -1));

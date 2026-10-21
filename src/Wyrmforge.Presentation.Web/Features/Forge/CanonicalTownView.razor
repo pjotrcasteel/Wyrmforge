@@ -36,6 +36,7 @@
         {
             <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"
                               ShowRoutes="@(showTownGeometry && geometryLayer == TownGeometryLayer.Route)"
+                              RouteCitizenId="selectedRouteCitizenId"
                               ShowMetrics="showTownMetrics" GeometryChanged="OnGeometryChanged" />
         }
 
@@ -190,6 +191,11 @@
                     @onclick="() => ShowLayer(TownGeometryLayer.Occlusion)">Cover</button>
             <button type="button" data-town-layer-select="Route" aria-pressed="@(geometryLayer == TownGeometryLayer.Route ? "true" : "false")"
                     @onclick="() => ShowLayer(TownGeometryLayer.Route)">Route</button>
+            @if (geometryLayer == TownGeometryLayer.Route)
+            {
+                <button type="button" data-town-route-next="true" aria-label="Show next moving NPC route"
+                        @onclick="SelectNextRoute">Next</button>
+            }
         </div>
     }
 </div>
@@ -203,10 +209,19 @@
     private bool showTownWalkScan;
     private string? walkScanPath;
     private TownGeometryLayer geometryLayer = TownGeometryLayer.All;
+    private int? selectedRouteCitizenId;
 
     private enum TownGeometryLayer { All, Walkable, Blocked, Occlusion, Route }
 
-    private void ShowLayer(TownGeometryLayer layer) => geometryLayer = layer;
+    private void ShowLayer(TownGeometryLayer layer)
+    {
+        geometryLayer = layer;
+        if (layer == TownGeometryLayer.Route)
+            selectedRouteCitizenId = crowd?.InspectNextWalkingCitizenId(null);
+    }
+
+    private void SelectNextRoute() =>
+        selectedRouteCitizenId = crowd?.InspectNextWalkingCitizenId(selectedRouteCitizenId);
 
     protected override async Task OnInitializedAsync()
     {
