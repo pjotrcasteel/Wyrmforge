@@ -1,4 +1,5 @@
 import { territoryBiome, createTerritoryStoryPlan, drawTerritoryGround, drawTerritoryLandmarks, drawTerritoryMotes } from './arena-territory-art.js';
+import { drawWetForestDressing } from './arena-wet-forest-dressing.js';
 import { drawCloisterWall, drawCloisterMist, drawCloisterReflections, drawCloisterElevation, createCloisterElevationLayers } from './arena-cloister-art.js';
 import { artReady, artGeneration, artTilePattern, drawArtFrame } from './art-atlas.js';
 import { createTerritoryWallLayers, drawTerritoryWall, drawOpenedGateRubble } from './arena-territory-walls.js';
@@ -48,7 +49,7 @@ export function createTerrainPlan(environment, width, height) {
             angle: random() * Math.PI * 2 });
     }
     return { biome, element, proximity, bend, trailWidth, rubble, remains, scars, stage: environment.stage, landmark: environment.landmark, habitat: environment.habitat,
-        story };
+        story, forestProps: story.wetForest ? environment.props ?? [] : [] };
 }
 
 function drawTerrain(ctx, plan, width, height) {
@@ -75,6 +76,7 @@ function drawTerrain(ctx, plan, width, height) {
     }
     drawTerritoryGround(ctx, plan.story);
     if (tile) drawGroundDecals(ctx, plan, width, height);
+    if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height);
 
     // No shared road overlay: the canonical encounter district now owns the entire
     // large-scale ground composition through its deterministic territory story plan.
