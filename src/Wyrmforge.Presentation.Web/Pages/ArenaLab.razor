@@ -34,8 +34,15 @@
                 <option value="@WyrmrealmHabitat.GlacierApproach">Glacier Approach</option>
             </select>
         </label>
-        <label>Wyrm proximity · stage @stage
-            <input aria-label="Wyrm proximity stage" type="range" min="1" max="8" step="1" @bind="stage" @bind:event="onchange" />
+        <label>Hunt route length
+            <select aria-label="Hunt route length" @bind="routeNodeCount" @bind:after="Regenerate">
+                <option value="4">Short · 4 nodes</option>
+                <option value="8">Medium · 8 nodes</option>
+                <option value="14">Long · 14 nodes</option>
+            </select>
+        </label>
+        <label>Wyrm proximity · node @routeNode / @routeNodeCount · @(Math.Round(HuntProgress * 100))%
+            <input aria-label="Hunt route node" type="range" min="1" max="@routeNodeCount" step="1" @bind="routeNode" @bind:event="onchange" @bind:after="Regenerate" />
         </label>
         <label>World seed
             <input aria-label="World seed" type="number" @bind="seed" />
@@ -67,7 +74,8 @@
                 <dt>Habitat</dt><dd>@WyrmrealmHabitatCatalog.DisplayName(habitat)</dd>
                 <dt>Discovery</dt><dd>@siteName</dd>
                 <dt>Region</dt><dd>@WyrmrealmHabitatCatalog.School(habitat)</dd>
-                <dt>Wyrm influence</dt><dd>@(Math.Round(HuntArenaGenerator.WyrmInfluence(stage, stage >= 7) * 100))%</dd>
+                <dt>Wyrm influence</dt><dd>@(Math.Round(HuntProgress * 100))% · selected route</dd>
+                <dt>Visual phase</dt><dd>@stage / 8 · route-relative</dd>
                 <dt>Props remaining</dt><dd>@remainingProps</dd>
                 <dt>Destroyed</dt><dd>@destroyedProps</dd>
                 <dt>Picked up</dt><dd>@collectedSupplies</dd>
@@ -90,6 +98,8 @@
     // when a mobile chat/browser encodes the '&' separators into the seed value.
     [Parameter, SupplyParameterFromQuery(Name = "seed")] public string? SeedQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "stage")] public string? StageQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "nodes")] public string? RouteNodesQuery { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "node")] public string? RouteNodeQuery { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "habitat")] public string? HabitatQuery { get; set; }
 
     private ElementReference canvas;
@@ -101,6 +111,10 @@
     private WyrmrealmHabitat habitat = WyrmrealmHabitat.WetForest;
     private int seed = 1204;
     private int stage = 1;
+    private int routeNodeCount = 8;
+    private int routeNode = 1;
+    private double HuntProgress => WyrmrealmHuntProgress.Fraction(routeNode, routeNodeCount);
+    private ArenaEnvironmentRenderSnapshot LabSnapshot() => environment!.Snapshot() with { Corruption = HuntProgress };
     private string siteName = "—";
     private int remainingProps;
     private int destroyedProps;
@@ -119,9 +133,16 @@
         if (int.TryParse(SeedQuery, System.Globalization.NumberStyles.Integer,
                 System.Globalization.CultureInfo.InvariantCulture, out var requestedSeed))
             seed = requestedSeed;
-        if (int.TryParse(StageQuery, System.Globalization.NumberStyles.Integer,
-                System.Globalization.CultureInfo.InvariantCulture, out var requestedStage))
-            stage = Math.Clamp(requestedStage, 1, 8);
+        if (int.TryParse(RouteNodesQuery, out var nodes) && nodes is 4 or 8 or 14)
+            routeNodeCount = nodes;
+        if (int.TryParse(RouteNodeQuery, out var nodeIndex))
+            routeNode = Math.Clamp(nodeIndex, 1, routeNodeCount);
+        else if (int.TryParse(StageQuery, out var legacyStage))
+            routeNode = 1 + (int)Math.Round((Math.Clamp(legacyStage, 1, 8) - 1) / 7d * (routeNodeCount - 1));
+        routeNode = Math.Clamp(routeNode, 1, routeNodeCount);
+        // Combat-pressure stage is merely an arena generator input in this Lab.
+        // Actual Wyrm influence comes from the selected route percentage.
+        stage = 1 + (int)Math.Round(HuntProgress * 7, MidpointRounding.AwayFromZero);
         if (Enum.TryParse<WyrmrealmHabitat>(HabitatQuery, true, out var parsed) && Enum.IsDefined(parsed))
             habitat = parsed;
     }
@@ -151,7 +172,7 @@
             if (collectedSupplies % 2 == 1) _ = InvokeAsync(StateHasChanged);
         }
         if (showMobs) AdvanceMobs(Math.Clamp(delta, 0, .05));
-        return new LabFrame(player.X, player.Y, environment.Snapshot(),
+        return new LabFrame(player.X, player.Y, LabSnapshot(),
             showMobs ? mobs.ToArray() : [], WorldWidth, WorldHeight, seed, stage);
     }
 
@@ -172,7 +193,7 @@
             status = $"{destroyedProps} objects destroyed · loot is collectible on approach";
             _ = InvokeAsync(StateHasChanged);
         }
-        return new LabFrame(player.X, player.Y, environment.Snapshot(),
+        return new LabFrame(player.X, player.Y, LabSnapshot(),
             showMobs ? mobs.ToArray() : [], WorldWidth, WorldHeight, seed, stage);
     }
 
@@ -197,8 +218,11 @@
         var node = map.AvailableNodes.First(candidate => candidate.Type == WyrmrealmNodeType.Combat) with
         {
             Habitat = habitat,
-            Position = new WyrmrealmNodePosition(stage, 0),
-            PreLair = stage >= 7,
+            // Fire progress is a render-only gradient within the *same* seeded
+            // woodland so players can observe each physical tree evolve.
+            // The actual combat-pressure stage and route progression stay distinct.
+            Position = new WyrmrealmNodePosition(habitat == WyrmrealmHabitat.WetForest ? 1 : stage, 0),
+            PreLair = habitat != WyrmrealmHabitat.WetForest && stage >= 7,
         };
         environment = ArenaEnvironmentState.Create(seed, node, generatorPreview: true);
         player = new Vector2D(WorldWidth * .5, WorldHeight * .5);
@@ -218,12 +242,14 @@
         remainingProps = environment.Snapshot().Props.Count;
         destroyedProps = 0;
         collectedSupplies = 0;
-        status = $"Seed {seed} · {WyrmrealmHabitatCatalog.DisplayName(habitat)} · stage {stage}";
+        status = $"Seed {seed} · {WyrmrealmHabitatCatalog.DisplayName(habitat)} · node {routeNode}/{routeNodeCount} · {Math.Round(HuntProgress * 100)}%";
         _ = InvokeAsync(StateHasChanged);
     }
 
     private void Regenerate()
     {
+        routeNode = Math.Clamp(routeNode, 1, routeNodeCount);
+        stage = 1 + (int)Math.Round(HuntProgress * 7, MidpointRounding.AwayFromZero);
         environment = null;
         UpdateShareableQuery();
     }
@@ -253,6 +279,8 @@
         {
             ["seed"] = seed,
             ["stage"] = stage,
+            ["nodes"] = routeNodeCount,
+            ["node"] = routeNode,
             ["habitat"] = habitat.ToString(),
         }), replace: true);
 

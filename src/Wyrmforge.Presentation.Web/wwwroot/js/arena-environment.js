@@ -298,15 +298,20 @@ export function getArenaCloisterElevations(environment, width, height, seconds =
     const masonry = !cloister
         ? createTerritoryWallLayers(environment, texture.plan, width, height, seconds)
         : createCloisterElevationLayers(cloister, environment.barriers, width, height);
-    return [...masonry, ...createDestructibleLayers(environment, width, height)];
+    return [...masonry, ...createDestructibleLayers(environment, width, height, seconds)];
 }
 
-export function createDestructibleLayers(environment, width, height) {
+export function createDestructibleLayers(environment, width, height, seconds = 0) {
     return (environment?.props ?? []).map(prop => ({
         kind: 'masonry', style: 'destructible', depth: prop.y * height,
         prop, width, height,
         wetForest: environment.generatorPreview === true && environment.habitat === 'WetForest',
         forestSeed: environment.seed,
+        // Normal Hunts never use candidate fire trees; only the Lab passes this
+        // deterministic route-normalized value to its existing physical tree art.
+        fireInfluence: Math.max(0, Math.min(1, environment.corruption ?? 0)),
+        forestElement: environment.element,
+        seconds,
     }));
 }
 
@@ -326,7 +331,8 @@ export function drawDestructibleProp(ctx, layer) {
     const size = Math.round(prop.radius);
     // The lab alone paints a larger, ragged woodland silhouette anchored to the same C# trunk.
     // One cached bitmap per tree replaces hundreds of per-frame drawing calls.
-    if (layer.wetForest && drawWetForestTreeArt(ctx, prop.kind, prop.id, layer.forestSeed, x, y))
+    if (layer.wetForest && drawWetForestTreeArt(ctx, prop.kind, prop.id, layer.forestSeed, x, y,
+        layer.fireInfluence, layer.forestElement, layer.seconds))
         return true;
     // Story-site art belongs to the same destructible C# prop, is removed with
     // that prop, and shares its world-foot depth. Never baked into the floor.

@@ -141,10 +141,27 @@ const treeInk = {
     rot: '#1b1b18', ash: '#413f38',
 };
 
+// Four physical-object variants advance monotonically as the chosen route approaches
+// its Wyrm. Each tree's thresholds are stable by seed and prop id; the renderer does
+// not add/remove trees or alter collision when a tree is visibly burning.
+export function wetForestTreeFireState(kind, id, seed, progress = 0, element = 'fire') {
+    if (!isTree(kind) || element !== 'fire') return 'healthy';
+    const heat = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0));
+    const threshold = .08 + (hash(seed, id, 401) % 360) / 1000;
+    if (heat < threshold) return 'healthy';
+    const split = hash(seed, id, 409) % 5 === 0;
+    if (split && heat >= .78 + (hash(seed, id, 413) % 170) / 1000) return 'split-glowing';
+    const coldSkeleton = hash(seed, id, 419) % 6 === 0;
+    if (!coldSkeleton && heat >= .48 + (hash(seed, id, 421) % 370) / 1000) return 'burning';
+    return 'charred';
+}
+
 /** Deterministic drawing instructions, relative to the physical trunk's foot. */
-export function createWetForestTreeArtPlan(kind, id, seed) {
+export function createWetForestTreeArtPlan(kind, id, seed, progress = 0, element = 'fire') {
     if (!isTree(kind)) return null;
     const stamp = hash(seed, id, 203);
+    const fireState = wetForestTreeFireState(kind, id, seed, progress, element);
+    const damaged = fireState !== 'healthy';
     const shapes = [];
     const block = (x, y, w, h, color) => {
         shapes.push({ x: snap(x), y: snap(y), w: Math.max(2, snap(w)),
@@ -203,20 +220,21 @@ export function createWetForestTreeArtPlan(kind, id, seed) {
                     const t = sprig / (clusters + 1);
                     const bx = baseX + (tipX - baseX) * t;
                     const by = y + (tipY - y) * t;
-                    const sparse = variation(100 + level * 31 + sprig * 7 + side, 6) === 0;
+                    const sparse = variation(100 + level * 31 + sprig * 7 + side, 6) === 0 ||
+                        (damaged && variation(108 + level * 31 + sprig * 7 + side, 4) === 0);
                     if (sparse) continue;
                     const needles = 5 + variation(137 + level * 11 + sprig + side, 7);
                     const dark = sprig % 3 === 0;
                     // Connected dark needle pads give the old tree actual weight;
                     // broken pads leave forked negative spaces, not a lush oval.
                     if (level < 6 && sprig % 2 === 1) {
-                        block(bx - 5, by - 1, 10, 5, treeInk.shadow);
-                        block(bx - 4, by - 5, 8, 5, treeInk.deep);
+                        block(bx - 5, by - 1, 10, 5, damaged ? treeInk.rot : treeInk.shadow);
+                        block(bx - 4, by - 5, 8, 5, damaged ? treeInk.ash : treeInk.deep);
                     }
                     block(bx - 2, by - needles * .55, 4, needles,
-                        dark ? treeInk.deep : treeInk.leaf);
+                        damaged ? (dark ? treeInk.rot : treeInk.deep) : (dark ? treeInk.deep : treeInk.leaf));
                     // Tiny cold-lit branch facet with no glowing crown outline.
-                    if (level < 5 && variation(185 + level * 23 + sprig + side, 4) === 0)
+                    if (!damaged && level < 5 && variation(185 + level * 23 + sprig + side, 4) === 0)
                         block(bx - 2, by - needles * .6, 2, 2, treeInk.lit);
                 }
                 // Exposed snapped twig silhouette extends beyond sparse needles.
@@ -255,7 +273,47 @@ export function createWetForestTreeArtPlan(kind, id, seed) {
             if (i % 2 === 0) block(x, y, 2, 4, treeInk.ash);
         }
     }
-    return { id, kind, seed, shapes };
+    if (damaged) {
+        // Irregular black scars across the actual old trunk. The original tree
+        // geometry remains recognisable; scorch never becomes a global palette wash.
+        for (let i = 0; i < 12; i++) {
+            const y = -14 - i * 7;
+            const x = variation(290 + i * 13, 11) - 6;
+            block(x, y, 4 + variation(341 + i, 3) * 2, 4 + variation(349 + i, 3) * 2,
+                i % 3 === 0 ? '#31302a' : '#111613');
+        }
+        block(-7, -9, 14, 5, '#181713');
+        // Burnt boughs expose brittle branch tips even on trees that never ignite.
+        for (let i = 0; i < 5; i++) {
+            const y = -29 - i * 16;
+            const side = i % 2 === 0 ? -1 : 1;
+            block(side * (13 + variation(380 + i, 10)), y, 8, 2, '#181613');
+        }
+    }
+    if (fireState === 'burning' || fireState === 'split-glowing') {
+        // Fire is local: short tongues attached to wood at different heights,
+        // cold char underneath, no giant soft orange aura around the whole tree.
+        for (let i = 0; i < 5; i++) {
+            const y = -21 - i * 16;
+            const x = variation(430 + i, 23) - 11;
+            if (variation(451 + i, 5) === 0) continue;
+            block(x - 4, y + 2, 12, 4, '#5e2e19');
+            block(x - 2, y - 3, 8, 8, '#ad451d');
+            block(x, y - 9, 4, 9, '#ec8731');
+            block(x + 2, y - 5, 2, 5, '#efba65');
+        }
+    }
+    if (fireState === 'split-glowing') {
+        // A branching molten timber crack, not an environmental lava fissure.
+        let x = variation(495, 5) - 2;
+        for (let i = 0; i < 11; i++) {
+            const y = -87 + i * 7;
+            x += variation(502 + i, 3) - 1;
+            block(x, y, 2, 8, i % 3 === 0 ? '#f0a348' : '#ad471e');
+            if (i % 3 === 1) block(x + 2, y + 2, 4, 2, '#d56e25');
+        }
+    }
+    return { id, kind, seed, fireState, shapes };
 }
 
 function drawWetForestTreeShapes(ctx, plan, offsetX, offsetY) {
@@ -266,9 +324,10 @@ function drawWetForestTreeShapes(ctx, plan, offsetX, offsetY) {
 }
 
 /** Draw the lab-only tree with one cached blit per C# prop; safe on low-end phones. */
-export function drawWetForestTreeArt(ctx, kind, id, seed, x, y) {
+export function drawWetForestTreeArt(ctx, kind, id, seed, x, y, progress = 0, element = 'fire', seconds = 0) {
     if (!isTree(kind)) return false;
-    const key = `${seed | 0}:${id | 0}:${kind}`;
+    const fireState = wetForestTreeFireState(kind, id, seed, progress, element);
+    const key = `${seed | 0}:${id | 0}:${kind}:${fireState}`;
     let bitmap = treeArtCache.get(key);
     if (!bitmap && typeof document !== 'undefined') {
         const canvas = document.createElement('canvas');
@@ -277,7 +336,7 @@ export function drawWetForestTreeArt(ctx, kind, id, seed, x, y) {
         const surface = canvas.getContext('2d');
         if (surface) {
             surface.imageSmoothingEnabled = false;
-            drawWetForestTreeShapes(surface, createWetForestTreeArtPlan(kind, id, seed), 56, 118);
+            drawWetForestTreeShapes(surface, createWetForestTreeArtPlan(kind, id, seed, progress, element), 56, 118);
             bitmap = canvas;
             if (treeArtCache.size >= 96) treeArtCache.delete(treeArtCache.keys().next().value);
             treeArtCache.set(key, bitmap);
@@ -286,7 +345,18 @@ export function drawWetForestTreeArt(ctx, kind, id, seed, x, y) {
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     if (bitmap) ctx.drawImage(bitmap, snap(x) - 56, snap(y) - 118);
-    else drawWetForestTreeShapes(ctx, createWetForestTreeArtPlan(kind, id, seed), snap(x), snap(y));
+    else drawWetForestTreeShapes(ctx, createWetForestTreeArtPlan(kind, id, seed, progress, element), snap(x), snap(y));
+    if (fireState === 'burning' || fireState === 'split-glowing') {
+        // Small bounded 2px ember oscillation, no per-frame bitmap regeneration.
+        const period = Math.floor(Math.max(0, seconds) * 7);
+        const rootX = snap(x), rootY = snap(y);
+        for (let i = 0; i < 4; i++) {
+            const drift = hash(seed ^ period, id, 551 + i);
+            const dx = (drift % 21) - 10, dy = -24 - i * 17 - (drift % 7);
+            ctx.fillStyle = i % 2 ? '#e2812c' : '#bf4c25';
+            ctx.fillRect(rootX + dx, rootY + dy, 2, 2);
+        }
+    }
     ctx.restore();
     return true;
 }
