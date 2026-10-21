@@ -298,6 +298,46 @@ export function createWetForestScorchPlan(props, seed, width, height, influence,
     return marks;
 }
 
+// Surviving pieces of an ancient footpath that meets the real C# site offshoot.
+// Every stone is FLAT floor detail: there are no fake walls, colliders or route changes.
+// The gaps and offsets are deterministic so this reads as a decayed causeway, not a tiled grid.
+export function createWetForestOldPaving(recipe, seed, width, height) {
+    if (!recipe?.trail?.length || width <= 0 || height <= 0) return [];
+    const startX = wetForestTrailAt(recipe.trail, recipe.siteY).x * width;
+    const siteX = recipe.siteX * width, siteY = recipe.siteY * height;
+    const length = Math.abs(siteX - startX);
+    if (length < 25) return []; // The C# recipe has no offshoot in this case.
+    const marks = [];
+    const rows = Math.max(9, Math.ceil(length / 10));
+    for (let i = 0; i <= rows; i++) {
+        const t = i / rows;
+        const x = startX + (siteX - startX) * t;
+        const y = siteY + 13 * Math.sin(Math.PI * t) *
+            Math.sin((seed & 15) * .37 + t * Math.PI);
+        for (let lane = -2; lane <= 2; lane++) {
+            const roll = hash(seed ^ 0x5e9a4d13, i, lane + 3);
+            // Leave sizeable irregular gaps; never make a continuous grey road band.
+            if (roll < .40 || (i + lane) % 7 === 0) continue;
+            const drift = hash(seed ^ 0x21ab8a17, lane + 9, i) - .5;
+            const px = Math.round((x + drift * 13) / 2) * 2;
+            const py = Math.round((y + lane * 7 + drift * 3) / 2) * 2;
+            const w = 8 + Math.floor(hash(seed ^ 0x347291, i, lane + 7) * 5) * 2;
+            const h = roll > .82 ? 6 : 4;
+            if (px < 3 || py < 3 || px + w + 2 >= width || py + h + 3 >= height) continue;
+            const face = roll > .74 ? '#626458' : roll > .55 ? '#50564b' : '#41483e';
+            marks.push({ x: px - 2, y: py + 2, width: w + 2, height: h + 2,
+                color: '#202723', alpha: .80 });
+            marks.push({ x: px, y: py, width: w, height: h, color: face, alpha: .85 });
+            // Broken rim / damp moss only on some stones, not on every tile.
+            if (roll > .66) marks.push({ x: px + 2, y: py, width: Math.min(6, w - 2),
+                height: 2, color: '#78786a', alpha: .55 });
+            if (roll < .54) marks.push({ x: px + w - 4, y: py + h - 2, width: 4,
+                height: 2, color: '#303d31', alpha: .9 });
+        }
+    }
+    return marks;
+}
+
 function rect(ctx, x, y, w, h, color) {
     ctx.fillStyle = color;
     ctx.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, w, h);
@@ -385,6 +425,13 @@ export function drawWetForestGround(ctx, plan) {
         ...createWetForestGladeMargins(recipe, seed, width, height),
         ...createWetForestTrailImprints(recipe, seed, width, height),
     ]) {
+        ctx.globalAlpha = mark.alpha;
+        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+    }
+    ctx.globalAlpha = 1;
+    // A broken, walkable old causeway links the winding woodland trail to the
+    // existing physical site. It is baked once; the gameplay geometry is unchanged.
+    for (const mark of createWetForestOldPaving(recipe, seed, width, height)) {
         ctx.globalAlpha = mark.alpha;
         rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
     }
