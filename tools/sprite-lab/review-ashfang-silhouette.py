@@ -8,7 +8,7 @@ from PIL import Image,ImageDraw
 from ashfang_preview_lighting import shade,palette_for
 
 rig=Path(sys.argv[1]);out=rig/'silhouette-review-v1';out.mkdir(exist_ok=False)
-s=np.load(rig/'walk-samples.npz');cell=256;density=94
+s=np.load(rig/'walk-samples.npz');cell=256;density=110
 def tensor(a,dtype=torch.float32):return torch.tensor(np.asarray(a),device='cuda',dtype=dtype).contiguous()
 v=tensor(s['positions'][0]);hom=torch.cat([v,torch.ones_like(v[:,:1])],1)
 faces=tensor(s['faces'],torch.int32);ctx=dr.RasterizeCudaContext()
