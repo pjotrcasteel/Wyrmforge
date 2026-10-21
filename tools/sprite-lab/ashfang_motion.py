@@ -15,10 +15,12 @@ def flight_state(phase):
     impact = smooth((phase-.81)/.035)*(1-smooth((phase-.86)/.12))
     if phase < .16:
         flap = -.85*smooth((phase-.06)/.10)
-    elif phase < .29:
-        flap = -.85+1.50*smooth((phase-.16)/.13)
+    elif phase < .265:
+        flap = -.85
+    elif phase < .365:
+        flap = -.85+1.50*smooth((phase-.265)/.10)
     else:
-        cruise = .65*math.cos((phase-.29)*math.pi*2/.18)
+        cruise = .65*math.cos((phase-.365)*math.pi*2/.18)
         flare = smooth((phase-.64)/.12)
         flap = (cruise*(1-flare)-.80*flare)*(1-smooth((phase-.85)/.13))
     # Near-ground downstrokes must not drive the extended membrane through
@@ -26,7 +28,7 @@ def flight_state(phase):
     altitude = .34*rise*(1-descent)
     flap = min(flap, .12+1.5*altitude)
     names = [(0, 'settle'), (.03, 'open / crouch'), (.12, 'leg drive'),
-             (.16, 'first power stroke'), (.22, 'departure'), (.40, 'flight'),
+             (.16, 'rear preload / leg drive'), (.22, 'hind-leg extension'), (.265, 'departure / first downstroke'), (.40, 'flight'),
              (.64, 'approach / extend paws'), (.76, 'flare'),
              (.81, 'forepaw catch'), (.845, 'hindpaw catch'), (.88, 'recover')]
     label = next(name for start, name in reversed(names) if phase >= start)
@@ -57,8 +59,8 @@ def flight_state(phase):
 
 
 FLIGHT_EVENTS = [
-    dict(phase=.12, name='leg-drive'), dict(phase=.16, name='first-downstroke'),
-    dict(phase=.22, name='departure'), dict(phase=.40, name='cruise'),
+    dict(phase=.12, name='leg-drive'), dict(phase=.22, name='hind-leg-extension'),
+    dict(phase=.265, name='departure-first-downstroke'), dict(phase=.40, name='cruise'),
     dict(phase=.64, name='approach'), dict(phase=.76, name='flare'),
     dict(phase=.81, name='forepaw-catch-target'),
     dict(phase=.845, name='hindpaw-catch-target'), dict(phase=.88, name='recovery'),

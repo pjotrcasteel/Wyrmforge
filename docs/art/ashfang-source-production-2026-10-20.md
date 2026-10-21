@@ -318,3 +318,13 @@ tuck. Knees remain below hips; the loaded crouch bends forward. At frames 22–23
 the nearly extended leg trails behind, so knee Y may pass behind hip Y without
 inverting its bend plane. Do not confuse that normal leg sweep with the old
 neutral knee-above-hip inversion. Visual/native silhouette gate remains pending.
+
+### V19 visual review / V20 readable push timing
+V19 passes finite/unclipped, floor and reach checks; walk closes exactly. Actual
+foot ownership shrinks from ~0.486 to ~0.266 rear Y span, excluding belly/tail.
+Game/side motion, bone overlays and eight camera stills are preserved. Review
+shows the early wing downstroke hides the corrected hind extension at frame 22.
+V20 holds the wing up until phase 0.265, exposing the leg push, then powers the
+wing through its first downstroke by 0.365. Body/leg kinematics stay unchanged;
+review labels now distinguish hind extension from departure/first downstroke.
+This is an authored readability choice, not a measured tiger/dragon timing.
