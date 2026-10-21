@@ -33,6 +33,8 @@ belly_back=np.clip((v[:,1]-.075)/.065,0,1);belly_back=1-belly_back**2*(3-2*belly
 low=np.clip((-.10-v[:,2])/.06,0,1)
 fore_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]+.285)/.135)**2
 hind_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]-.19)/.14)**2
+fore_paw=np.where(v[:,1]<-.055,fore_paw,2.0)
+hind_paw=np.where((v[:,1]>.04)&(v[:,1]<.34),hind_paw,2.0)
 clear_of_paws=np.clip((np.minimum(fore_paw,hind_paw)-1.2)/.4,0,1)
 belly_surface=-.10+.02*np.maximum(0,1-abs(v[:,0])/.25)**2
 v[:,2]+=np.maximum(0,belly_surface-v[:,2])*belly_front*belly_back*low*clear_of_paws
@@ -82,7 +84,7 @@ for index,p in enumerate(v):
     x,y,z=p;side='L' if x>=0 else 'R'
     if index>=body_count:
         permitted=[n for n in names if n.startswith('wing.') and n.endswith('.'+side)];region='wing'
-    elif y>.31 and (abs(x)<.13 or y>.35):permitted=[n for n in names if n.startswith('tail.')];region='tail'
+    elif (y>.27 and abs(x)<.13) or y>=.34:permitted=[n for n in names if n.startswith('tail.')];region='tail'
     elif y<-.30 and abs(x)<.15 and z>-.08:
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.035 and y<-.055:
