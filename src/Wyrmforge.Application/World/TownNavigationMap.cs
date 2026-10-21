@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 namespace Wyrmforge.Application.World;
@@ -141,6 +142,27 @@ public sealed class TownNavigationMap
         if (result.Destinations.Any(d => !result.IsWalkable(d.Position)))
             throw new JsonException("Town destination is outside the navigable ground.");
         return result;
+    }
+
+    /// <summary>
+    /// Debug-only raster probe of the real feet-disc collision model. A single SVG
+    /// path avoids thousands of DOM elements and is rebuilt only on geometry changes.
+    /// The samples describe navigability, not inferred color or brightness of artwork.
+    /// </summary>
+    public string DebugWalkabilityScanPath(int step = 16)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(step, 8);
+        var pixels = new StringBuilder();
+        var inset = Math.Max(1, step / 8);
+        for (var y = step / 2; y < Height; y += step)
+        for (var x = step / 2; x < Width; x += step)
+        {
+            if (!IsWalkable(new TownPoint(x, y))) continue;
+            pixels.Append('M').Append(x - inset).Append(' ').Append(y - inset)
+                .Append('h').Append(inset * 2).Append('v').Append(inset * 2)
+                .Append('h').Append(-inset * 2).Append('z');
+        }
+        return pixels.ToString();
     }
 
     /// <summary>Place or move a prop such as a cart; existing pedestrian routes replan on the next tick.</summary>
