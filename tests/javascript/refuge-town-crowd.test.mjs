@@ -55,7 +55,7 @@ test('every painted foreground draws between citizens using actual feet depth', 
     assert.match(markup, /class="refuge-town-scenery-foreground"/);
     assert.match(markup, /data-town-foreground-layer="@foreground\.Id"/);
     assert.match(markup, /clipPath id="@maskId" clipPathUnits="userSpaceOnUse"/);
-    assert.match(markup, /foreground\.Id is "well-foreground" or "noticeboard-foreground"/);
+    assert.match(markup, /"well-foreground" or "noticeboard-foreground"/);
     assert.match(markup, /data-town-cutout="@cutout.Id"/);
     assert.match(markup, /foreground\.DepthY \* 10f/);
     assert.match(markup, /preserveAspectRatio="none" href="@foreground\.Artwork"/);
@@ -435,12 +435,12 @@ test('approved town well is cropped to separate transparent PNG layers rather th
     const markup = source(scene);
     const cutouts = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    for (const id of ['noticeboard-panel', 'noticeboard-supports', 'well-roof', 'well-supports', 'well-front-rim'])
+    for (const id of ['noticeboard-panel', 'noticeboard-supports', 'well-roof', 'well-supports', 'well-front-rim', 'nexus-terrace-parapet'])
         assert.ok(cutouts.includes('id: "' + id + '"'), id + ' needs its own silhouette');
     assert.match(cutouts, /canvas\.toDataURL\("image\/png"\)/);
     assert.match(cutouts, /context\.globalCompositeOperation = "destination-in"/);
     assert.match(cutouts, /context\.fill\(new Path2D\(cutout\.path\)\)/);
-    assert.match(markup, /foreground\.Id is "well-foreground" or "noticeboard-foreground"\) continue;/);
+    assert.match(markup, /"nexus-low-terrace-railing-foreground"\) continue;/);
     assert.match(markup, /data-town-cutout="@cutout.Id"/);
     assert.match(css, /refuge-town-png-cutout\s*\{[^}]*visibility:hidden/s);
 });
@@ -470,4 +470,16 @@ test('All, Walk, Block and Cover are tap-to-inspect, without affecting gameplay 
     assert.match(cutouts, /selected\.dataset\.townSelected = "true"/);
     assert.match(cutouts, /output\.textContent = type \+ " · " \+ id/);
     assert.match(css, /refuge-town-geometry-selection\s*\{[^}]*pointer-events:none/s);
+});
+
+test('Nexus parapet occlusion follows physical stonework, not the paved terrace', () => {
+    const nav = JSON.parse(source(`${art}/night-navigation.json`));
+    const foreground = nav.occluders.find(x => x.id === 'nexus-low-terrace-railing-foreground');
+    assert.ok(foreground);
+    assert.ok(Math.min(...foreground.clip.map(p => p.y)) >= 400);
+    assert.ok(Math.max(...foreground.clip.map(p => p.y)) <= 470);
+    const cutouts = source('src/Wyrmforge.Presentation.Web/wwwroot/js/refuge-foreground-cutouts.js');
+    assert.match(cutouts, /id: "nexus-terrace-parapet"/);
+    assert.match(cutouts, /Only the raised parapet, not the entire walkable Nexus terrace/);
+    assert.match(source(scene), /"nexus-low-terrace-railing-foreground"\) continue;/);
 });

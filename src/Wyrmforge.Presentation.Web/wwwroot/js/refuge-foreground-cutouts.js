@@ -20,6 +20,12 @@ export const CUTOUTS = [
     {
         id: "well-front-rim", x: 698, y: 491, width: 252, height: 78,
         path: "M705 519 L722 509 L737 501 L761 499 L787 494 L816 496 L849 496 L885 499 L917 503 L937 515 L942 524 L946 541 L933 554 L916 563 L886 566 L759 566 L736 561 L715 552 L702 539 Z"
+    },
+    {
+        // Only the raised parapet, not the entire walkable Nexus terrace.
+        // A large duplicate-floor SVG previously hid walkers on actual paving.
+        id: "nexus-terrace-parapet", x: 39, y: 397, width: 289, height: 73,
+        path: "M43 403 L81 407 L112 411 L153 413 L181 420 L216 425 L247 431 L283 440 L318 449 L323 464 L304 466 L279 454 L242 444 L203 439 L166 432 L129 424 L91 419 L52 417 Z"
     }
 ];
 

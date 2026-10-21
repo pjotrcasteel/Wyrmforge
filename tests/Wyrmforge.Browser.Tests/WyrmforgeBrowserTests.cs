@@ -185,19 +185,19 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(hallFoliage).ToHaveCountAsync(1);
         await Page.WaitForFunctionAsync(@"() => {
             const cutouts = [...document.querySelectorAll('.refuge-town-png-cutout')];
-            return cutouts.length === 5 && cutouts.every(img =>
+            return cutouts.length === 6 && cutouts.every(img =>
                 img.dataset.townPngReady === 'true' &&
                 img.src.startsWith('data:image/png;base64,') &&
                 img.naturalWidth > 0 && img.naturalHeight > 0);
         }");
         foreach (var id in new[] { "noticeboard-panel", "noticeboard-supports", "well-roof",
-            "well-supports", "well-front-rim" })
+            "well-supports", "well-front-rim", "nexus-terrace-parapet" })
         {
             var png = Page.Locator($".refuge-town-png-cutout[data-town-cutout='{id}']");
             await Expect(png).ToBeVisibleAsync();
             Assert.IsTrue(await png.EvaluateAsync<bool>(@"img => {
                 if (getComputedStyle(img).pointerEvents !== 'none' ||
-                    img.naturalWidth > 252 || img.naturalHeight > 100) return false;
+                    img.naturalWidth > 300 || img.naturalHeight > 100) return false;
                 const canvas = document.createElement('canvas');
                 canvas.width = img.naturalWidth;
                 canvas.height = img.naturalHeight;
@@ -214,6 +214,25 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 return transparent > total * 0.05 && painted > total * 0.02;
             }"), $"Foreground {id} must contain both actual opaque artwork and transparent surroundings.");
         }
+
+        // The terrace mask must leave the painted paving itself transparent.
+        // A broad replacement image that hides NPCs on paved stone fails this check.
+        var terrace = Page.Locator("[data-town-cutout='nexus-terrace-parapet']");
+        Assert.IsTrue(await terrace.EvaluateAsync<bool>(@"img => {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth;
+            c.height = img.naturalHeight;
+            const ctx = c.getContext('2d');
+            if (!ctx) return false;
+            ctx.drawImage(img, 0, 0);
+            const data = ctx.getImageData(0, 0, c.width, c.height).data;
+            let filled = 0;
+            for (let i = 3; i < data.length; i += 4)
+                if (data[i] > 239) filled++;
+            const sample = (x, y) => data[((y * c.width + x) * 4) + 3];
+            return filled / (c.width * c.height) < 0.45 &&
+                sample(126, 8) < 16 && sample(126, 65) < 16;
+        }"), "The terrace cutout must not repaint a large area of pavement.");
 
         // A real in-browser click must choose a moving NPC. Do not just assert
         // that the click handler's source text or an inert debug button exists.
