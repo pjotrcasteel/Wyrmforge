@@ -100,6 +100,36 @@ export function createWetForestTilePlan(recipe, seed, width, height) {
     return tiles;
 }
 
+// Deliberately irregular 2px silt/soil edges bridge neighbouring material cells.
+// The road and flooded patches keep their C# recipe footprint; these are paint only.
+// Plan generated once during terrain bake, not every animation frame.
+export function createWetForestMaterialEdges(tiles, seed, width) {
+    if (!tiles?.length || width <= 0) return [];
+    const columns = Math.ceil(width / CELL);
+    const marks = [];
+    const bank = (a, b) => a === 'puddle' || b === 'puddle' ? '#222a27'
+        : a === 'road' || b === 'road' ? '#302f29'
+            : a === 'leafbed' || b === 'leafbed' ? '#302f27' : '#293329';
+    for (let i = 0; i < tiles.length; i++) {
+        const current = tiles[i], col = i % columns;
+        for (const [neighbour, dx, dy, salt] of [
+            [col + 1 < columns ? tiles[i + 1] : null, CELL, 0, 129],
+            [tiles[i + columns], 0, CELL, 317],
+        ]) {
+            if (!neighbour || neighbour.material === current.material) continue;
+            // Do not stamp identical seams around each square tile.
+            if (hash(seed ^ salt, current.x / CELL, current.y / CELL) < .22) continue;
+            const side = hash(seed ^ (salt + 17), current.x / CELL, current.y / CELL);
+            const shift = 2 + Math.floor(side * 4) * 2;
+            const x = current.x + (dx ? CELL - 2 : shift);
+            const y = current.y + (dy ? CELL - 2 : shift);
+            marks.push({ x, y, width: dx ? 4 : 2, height: dy ? 4 : 2,
+                color: bank(current.material, neighbour.material) });
+        }
+    }
+    return marks;
+}
+
 function rect(ctx, x, y, w, h, color) {
     ctx.fillStyle = color;
     ctx.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, w, h);
@@ -168,6 +198,13 @@ export function drawWetForestGround(ctx, plan) {
             ctx.globalAlpha = 1;
         }
     }
+    // The floor uses a semantic material map: worn road margins and wet banks
+    // blend locally rather than exposing an even grid of perfectly square cells.
+    for (const mark of createWetForestMaterialEdges(tiles, seed, width)) {
+        ctx.globalAlpha = .73;
+        rect(ctx, mark.x, mark.y, mark.width, mark.height, mark.color);
+    }
+    ctx.globalAlpha = 1;
     // Distinct ground-only history around one physical C# story landmark.
     groundSite(ctx, recipe.site, recipe.siteX * width, recipe.siteY * height, seed);
     const influence = clamp(plan.corruption || 0, 0, 1);
