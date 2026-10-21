@@ -1830,11 +1830,52 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".gate-tier")).ToHaveCountAsync(5);
         await Expect(Page.Locator(".gate-tier--ready")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(4);
+        await Expect(Page.GetByText("3-4 trails, one fork, then Ashfang. Extract to secure your Essence.", new() { Exact = true })).ToBeVisibleAsync();
         await ScreenshotAsync($"world-gate-fire-tiers-{width}.png");
 
         await Page.Locator(".gate-tier--ready").ClickAsync();
         await Expect(Page.Locator(".world-gate")).ToHaveCountAsync(0);
         await Expect(Page.Locator("canvas").First).ToBeVisibleAsync();
+        await Expect(Page.GetByText("FIRE · TIER 1", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator("button.route-node")).ToHaveCountAsync(6);
+        await Expect(Page.Locator("button.route-node.available")).ToHaveCountAsync(1);
+        await ScreenshotAsync($"fire-tier-one-map-{width}.png");
+    }
+
+    [TestMethod]
+    public async Task FireTierOne_CompletionPersistsWithoutUnlockingFrostOrHigherTiers()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"if (!localStorage.getItem('fireTierTestSeeded')) {
+            localStorage.setItem('fireTierTestSeeded','1');
+            localStorage.setItem('wyrmforge.firstHunt.v1','2');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:2,Nodes:[]}));
+            localStorage.setItem('wyrmforge.world.v1',JSON.stringify({
+                Discovered:['cinder-frontier'], Selected:'glacier-region', CompletedTierOneHunts:['cinder-frontier']
+            }));
+        }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Expect(Page.GetByText("Tier 1 cleared. Tier 2 is in development.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.Locator(".gate-tier--locked")).ToHaveCountAsync(4);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to Wyrm lineages" }).ClickAsync();
+        await Page.Locator(".gate-lineage--frost").ClickAsync();
+        await Expect(Page.GetByText("Tier 1 cleared. Tier 2 is in development.", new() { Exact = true })).ToHaveCountAsync(0);
+        await Page.Locator(".gate-tier--ready").ClickAsync();
+        var save = await Page.EvaluateAsync<JsonElement>("() => JSON.parse(localStorage.getItem('wyrmforge.world.v1'))");
+        Assert.AreEqual("glacier-region", save.GetProperty("Selected").GetString());
+        CollectionAssert.AreEqual(new[] { "cinder-frontier" }, save.GetProperty("CompletedTierOneHunts").EnumerateArray().Select(v => v.GetString()).ToArray());
+        await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Enter Free Play" }).ClickAsync();
+        await Page.Locator(".gate-action--primary").ClickAsync();
+        await Page.Locator(".gate-lineage--fire").ClickAsync();
+        await Expect(Page.GetByText("Tier 1 cleared. Tier 2 is in development.", new() { Exact = true })).ToBeVisibleAsync();
     }
 
     [TestMethod]

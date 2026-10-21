@@ -3,6 +3,7 @@
 @using Wyrmforge.Domain.Chronicles
 @using Wyrmforge.Domain.Combat.Dragons
 @using Wyrmforge.Domain.World
+@using Wyrmforge.Application.Runs.Hunts
 
 @* One decision per mobile screen. The original painted gateway is preserved; no companion or invented Wyrm artwork is added. *@
 <section class="world-gate" aria-label="World Gate">
@@ -95,6 +96,10 @@
                     <span class="gate-eyebrow">NEW HUNT</span>
                     <h2><span class="gate-sigil gate-sigil--@selected.Key gate-heading-sigil" aria-hidden="true"></span> @selected.Name</h2>
                     <p>Choose your Wyrm tier</p>
+                    @if (selected.Region == RegionCatalog.CinderFrontierId)
+                    {
+                        <p>@(FireTierOneCompleted ? "Tier 1 cleared. Tier 2 is in development." : "3-4 trails, one fork, then Ashfang. Extract to secure your Essence.")</p>
+                    }
                 </div>
             </header>
             <div class="gate-tier-list" aria-label="@selected.Name Wyrm tiers">
@@ -120,6 +125,8 @@
     [Parameter] public RegionAccessContext? Access { get; set; }
     [Parameter] public EventCallback<RegionId> OnRegionChanged { get; set; }
     [Parameter] public EventCallback OnExplore { get; set; }
+    [Parameter] public EventCallback<HuntSelection> OnStartHunt { get; set; }
+    [Parameter] public bool FireTierOneCompleted { get; set; }
 
     private GatePage page = GatePage.Gateway;
     private LineageChoice? selectedLineage;
@@ -160,8 +167,13 @@
         starting = true;
         try
         {
-            await OnRegionChanged.InvokeAsync(region);
-            await OnExplore.InvokeAsync();
+            if (region == RegionCatalog.CinderFrontierId)
+                await OnStartHunt.InvokeAsync(HuntSelection.FireTierOne);
+            else
+            {
+                await OnRegionChanged.InvokeAsync(region);
+                await OnExplore.InvokeAsync();
+            }
         }
         finally
         {

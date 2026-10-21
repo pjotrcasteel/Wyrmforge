@@ -9,7 +9,7 @@
 <div class="realm-map-overlay">
     <section class="realm-map-card" aria-label="Hunt expedition">
         <header class="map-header">
-            <div><div class="eyebrow">@(Territory?.Name.ToUpperInvariant() ?? "THE GREAT HUNT") · DEPTH @Depth</div><h2>Choose your trail.</h2></div>
+            <div><div class="eyebrow">@(Hunt is not null ? "FIRE · TIER 1" : $"{Territory?.Name.ToUpperInvariant() ?? "THE GREAT HUNT"} · DEPTH {Depth}")</div><h2>Choose your trail.</h2></div>
             <b class="map-run-progress">@CompletedNodes.Count(node => node.Type == WyrmrealmNodeType.Combat) cleared</b>
         </header>
         <details class="map-attention">
@@ -152,7 +152,7 @@
                         @if (selected.Rarity == WyrmrealmNodeRarity.Rare) { <span class="rare-trait">✦ Rare · stronger enemies</span> }
                         @if (route.ModifierSet.TryGetHazardInterval(WyrmrealmHazardKind.UnstableRifts, out _)) { <span>⚠ Unstable rifts</span> }
                     }
-                    else { <span>Wyrm duel · Refuge beyond</span> }
+                    else { <span>@(Hunt is not null ? "Ashfang duel · Harvest an Essence, then extract" : "Wyrm duel · Refuge beyond")</span> }
                 </div>
                 <button class="enter-trail" disabled="@(!IsAvailable(selected))" @onclick="ConfirmSelectedAsync">@(IsAvailable(selected) ? selected.Type == WyrmrealmNodeType.Dragon ? "Face the wyrm" : selected.Rarity == WyrmrealmNodeRarity.Rare ? "Enter rare trail" : "Enter trail" : IsCompleted(selected) ? "Trail cleared" : "Not connected yet")</button>
             }
@@ -167,6 +167,7 @@
 
 @code {
     [Parameter] public int Depth { get; set; } = 1;
+    [Parameter] public Wyrmforge.Application.Runs.Hunts.HuntSelection? Hunt { get; set; }
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> Nodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> AvailableNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();
     [Parameter, EditorRequired] public IReadOnlyList<WyrmrealmMapNode> CompletedNodes { get; set; } = Array.Empty<WyrmrealmMapNode>();

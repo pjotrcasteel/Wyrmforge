@@ -5,6 +5,8 @@
 
 ## How to choose the next slice
 
+**21 October owner checkpoint:** Seasons are deferred. Start P2 with a complete selected **Fire Tier-I** route/target/extraction/material loop, preserving Arena Lab as a design/test tool only. Build toward separate per-lineage Tier I–V ladders and persistent post-V frontiers. The next authored tier introduces an optional harder refuge-reclamation objective; exact recovery costs remain open. Higher-tier content and seasonal systems are not part of the initial Fire slice.
+
 Read current `main`, open PRs, CI and runtime before taking the next priority. Do not revive an already-implemented item, discard unfinished validated branch work, or convert a design candidate into a shipping claim. Ship vertical slices including state, UI, saves, automated checks and physical device review when visuals or input change.
 
 ## 12. Explicit next-step priorities — no invented progress status

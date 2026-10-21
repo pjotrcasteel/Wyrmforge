@@ -5,6 +5,7 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Spells.Synergies;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Application.Runs.Hunts;
 
 namespace Wyrmforge.Application.Runs.EndRun;
 
@@ -22,6 +23,7 @@ public sealed record RunSummary(
     int Depth,
     RunOutcome Outcome)
 {
+    public HuntSelection? Hunt { get; init; }
     public int Seed { get; init; }
     public int ExperienceEarned { get; init; }
     public int CompletedRouteNodes { get; init; }

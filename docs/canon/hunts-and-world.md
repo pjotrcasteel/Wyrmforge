@@ -13,6 +13,12 @@
 
 ### 4.2 Hunt length & pacing — LOCKED principle, TUNABLE values
 
+**21 October owner decision — incremental lineage Hunts (LOCKED direction):** Start with a complete Fire Tier-I Hunt, not an Arena Lab demonstration. Select the Hunt lineage and tier explicitly at the World Gate. Each lineage has its own Tier I–V progression followed by its own persistent Endless frontier: Fire Endless 115 does not advance Frost beyond Tier I. This is encounter progression, independent of the character's school, permanent signature level, mutation mastery and temporary Hunt XP. Higher tiers become longer and teach more complex systems incrementally; they must introduce meaningful choices rather than just more enemy health. Loot eligibility and material sources must follow the selected lineage/tier without bypassing research or mastery gates.
+
+The first slice teaches combat, one committed fork, the selected Wyrm and securing its material through extraction. Follow it with an optional, harder refuge-reclamation side quest in the next authored tier: securing that refuge makes it a valuable recovery anchor, so death does not erase the whole expedition. Later tiers introduce earned scouting and increasingly complex objectives/world consequences. Exact tier-by-tier content, death penalties, pre-refuge recovery and recipe/drop quantities still require authoring and acceptance; no invented economy or unavailable higher-tier bosses.
+
+**Delivery boundary:** Arena Lab is solely for arena design/testing. Keep it independent of real Hunt-route progression and do not enable lab generation in ordinary Hunts as part of this change. Preserve existing Frost/Ascendant paths while Fire is delivered. Seasons come later.
+
 Introductory hunts **shorter**, increasingly formidable Wyrms have longer, richer expeditions (more acts, hazards and meaningful branch decisions). Illustrative shortest-path **combat fights before boss**, not locked balance constants:
 
 | Illustrative tier | Combat encounters | Intent |

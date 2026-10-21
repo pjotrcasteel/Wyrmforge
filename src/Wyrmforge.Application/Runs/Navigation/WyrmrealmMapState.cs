@@ -6,12 +6,15 @@ public sealed class WyrmrealmMapState
     public const int CombatStages = 8;
     private readonly List<WyrmrealmMapNode> completedNodes = [];
 
-    public WyrmrealmMapState(int depth = 1, int? seed = null, Domain.Spells.SpellSchool region = Domain.Spells.SpellSchool.Fire)
+    public WyrmrealmMapState(int depth = 1, int? seed = null, Domain.Spells.SpellSchool region = Domain.Spells.SpellSchool.Fire,
+        bool introductoryFire = false)
     {
+        if (introductoryFire && (depth != 1 || region != Domain.Spells.SpellSchool.Fire))
+            throw new ArgumentException("The introductory Fire route requires Fire at depth one.");
         Depth = depth;
         Seed = seed ?? Random.Shared.Next();
         Region = region;
-        Nodes = WyrmrealmMapGenerator.Generate(depth, Seed, region);
+        Nodes = introductoryFire ? WyrmrealmMapGenerator.GenerateFireTierOne(Seed) : WyrmrealmMapGenerator.Generate(depth, Seed, region);
     }
 
     /// <summary>The discipline of the region this map charts; it picks the habitats, never the layout.</summary>

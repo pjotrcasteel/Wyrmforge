@@ -163,7 +163,11 @@ public partial class Home
     private void SelectAscendant(DragonId? selected) =>
         selectedAscendant = selected is { } wyrm && AscendantRiteCatalog.IsAvailable(wyrm) && greatHunt.IsSealed(wyrm, spellMastery) ? selected : null;
 
-    private async Task StartRunAsync()
+    private Task StartRunAsync() => BeginRunAsync(
+        CurrentRegion.Id == Wyrmforge.Application.World.RegionCatalog.CinderFrontierId && selectedAscendant is null
+            ? Wyrmforge.Application.Runs.Hunts.HuntSelection.FireTierOne : null);
+
+    private async Task BeginRunAsync(Wyrmforge.Application.Runs.Hunts.HuntSelection? hunt)
     {
         // Character creation owns magical affinity; Hunts never prompt for a new primary.
         if (characterSchool is null || preferredPrimary is null) return;
@@ -175,7 +179,8 @@ public partial class Home
         newlySealedOaths = [];
         newlyConqueredAscendants = [];
         bestiaryDiscoveries = null;
-        activeAscendant = selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
+        activeHunt = hunt;
+        activeAscendant = hunt is null && selectedAscendant is { } wyrm && greatHunt.IsSealed(wyrm, spellMastery) ? wyrm : null;
         summary = null;
         // The character's signature is committed automatically before combat begins.
         // No consumables or discoveries are charged until Arena confirms that commitment.
@@ -217,6 +222,9 @@ public partial class Home
     {
         if (lastCreditedRunNumber == runNumber) return;
         lastCreditedRunNumber = runNumber;
+        if (value.Hunt is { } completedHunt && value.Outcome == RunOutcome.Extracted
+            && value.DragonIds.Contains(completedHunt.Target) && completedTierOneHunts.Add(completedHunt.Region.Value))
+            await TrySetWorldAsync();
         if (value.Outcome is RunOutcome.Defeated or RunOutcome.Extracted) await TryPlayAudioAsync(value.Outcome == RunOutcome.Extracted ? "victory" : "death");
         var previouslyConquered = AscendantRiteCatalog.All.Where(rite => greatHunt.Get(rite.Wyrm).AscendantDefeated).Select(rite => rite.Wyrm).ToHashSet();
         var oldSeals = GreatHuntCatalog.All.Where(oath => greatHunt.IsSealed(oath.Wyrm, spellMastery)).Select(oath => oath.Wyrm).ToHashSet();
@@ -296,6 +304,12 @@ public partial class Home
         if (summary is null) return;
         await TryPlayAudioAsync("hunt-start");
         activeRunSeed = summary.Seed;
+        activeHunt = summary.Hunt;
+        if (activeHunt is { } replayHunt)
+        {
+            activeRegion = replayHunt.Region;
+            activeAscendant = null;
+        }
         PrepareLaboratoryRun();
         activeRewardCache = false;
         summary = null;

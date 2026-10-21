@@ -38,6 +38,7 @@ public partial class ArenaView : IAsyncDisposable
     [Parameter] public SpellMasteryState? Masteries { get; set; }
     [Parameter] public DragonEssenceId? RunOffering { get; set; }
     [Parameter] public int? RunSeed { get; set; }
+    [Parameter] public Wyrmforge.Application.Runs.Hunts.HuntSelection? Hunt { get; set; }
     [Parameter] public bool AscendantAshfang { get; set; }
     [Parameter] public DragonId? AscendantWyrm { get; set; }
     [Parameter] public bool FirstHunt { get; set; }
@@ -93,7 +94,7 @@ public partial class ArenaView : IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening);
+        simulation = SimulationFactory.Create(new HashSet<string>(SelectedNodes), RunOffering, RunSeed, Progression, Masteries, AscendantAshfang, AscendantWyrm, FirstHunt, researchLead: ResearchLead, preparedMutations: PreparedMutations, fireballMutations: FireballMutations, contextualSpell: ContextualSpell, region: Region, regionOpening: RegionOpening, hunt: Hunt);
         if (RewardCache) simulation.OpenRewardCache();
     }
 

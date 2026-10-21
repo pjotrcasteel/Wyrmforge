@@ -31,6 +31,8 @@
 
 ## First-run and gate journey — LOCKED direction
 
+- **21 October progression update:** The selected Fire Tier-I Hunt must be passed explicitly to C# (lineage, threat tier and rules version), not inferred from character school or generic run depth. Its first delivered loop is a short connected Hunt, one committed fork, Ashfang, harvest and extraction to secure an existing Essence. Fire Tier-I completion is remembered independently of Frost; higher tiers stay visibly unavailable until authored. Existing Frost and Ascendant preparation remain compatible. This is not an Arena Lab release or a seasonal mode.
+
 - Character creation chooses a permanent Divine school and signature, separate from World Gate Hunt/Wyrm lineage. The character-creation copy must be short and meaningful; show recognizable pixel emblems with one accessible label each, not repeated overpainted words.
 - The owner has requested **Fire-only character creation temporarily** while completing Fire end-to-end. Render the other five schools disabled without implying they are available. This is implemented for new players on main v0.0.138 through [PR #172](https://github.com/pjotrcasteel/Wyrmforge/pull/172); existing non-Fire characters retain their saved selection.
 - The World Gate leads to **Free Play** and a visibly unavailable grayscale Campaign route as appropriate to actually implemented story content. New Hunt is active; **Endless Hunt** and **Endless Arena** are visibly future/disabled options until built. A Free Play new Hunt chooses available lineage and Wyrm tier; never pretend Tier II–V or a missing region is playable. Keep class choice and region choice separate.

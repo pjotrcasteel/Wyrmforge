@@ -18,6 +18,12 @@
             <span class="eyebrow">@OutcomeLabel</span>
             <h2>@Summary.Score.ToString("N0") <small>score</small></h2>
             <p>@Summary.Kills kills · @Summary.CompletedRouteNodes trails · @Summary.Seconds s</p>
+            @if (Summary.Hunt is not null)
+            {
+                <p>@(Summary.Outcome == Wyrmforge.Application.Runs.EndRun.RunOutcome.Extracted
+                    ? "Fire Tier 1 cleared. Use your secured Essence at the Arcane Nexus. Tier 2 is in development."
+                    : "Fire Tier 1. Defeat Ashfang and extract to secure an Essence.")</p>
+            }
         </header>
 
         <section class="hunter-run-progress" aria-label="Hunter XP earned">

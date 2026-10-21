@@ -309,7 +309,7 @@ public sealed partial class RunSimulation
         ascendantActive = false;
         spawnTimer = ExtractionDefenseProfile.OpeningGraceSeconds;
         mapState.CompleteDragon();
-        if (firstHunt)
+        if (firstHunt && SelectedHunt is null)
         {
             // First Hunt is a self-contained chapter: reaching a Wyrm is the ending, not the next menu.
             // Preserve the actual victory and score while skipping the normal harvest/refuge flow.

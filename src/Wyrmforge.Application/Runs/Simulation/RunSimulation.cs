@@ -117,7 +117,7 @@ public sealed partial class RunSimulation
     public DragonId? HuntTarget => AttractedDragon;
     public bool PendingMapChoice => mapState.DecisionPending && !dragonEncounterStarted && !trailExitPending;
     public bool AtCheckpoint => checkpointState.IsOpen;
-    public bool CanPushDeeper => depthState.CanPushDeeper;
+    public bool CanPushDeeper => SelectedHunt is null && depthState.CanPushDeeper;
     public bool DepthTrialActive => depthTrialState.IsActive;
     public bool EvacuationActive => extractionState.IsActive;
     public double EvacuationRemainingSeconds => extractionState.RemainingSeconds;
@@ -206,7 +206,12 @@ public sealed partial class RunSimulation
             ExtractionRitualsCompleted++;
             essenceCargoState.SecurePending();
             ClearMapEncounterField();
-            checkpointState.Enter();
+            if (SelectedHunt is not null)
+            {
+                outcome = RunOutcome.Extracted;
+                IsEnded = true;
+            }
+            else checkpointState.Enter();
         }
         return CreateSnapshot();
     }
@@ -254,7 +259,7 @@ public sealed partial class RunSimulation
 
     public bool PushDeeper()
     {
-        if (!AtCheckpoint || !depthState.CanPushDeeper || !checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
+        if (!AtCheckpoint || !CanPushDeeper || !checkpointState.TryUse(RunCheckpointActionId.Descend)) return false;
         if (!depthState.PushDeeper()) return false;
         mapState = CreateSeededMapState(depthState.Depth);
         depthTrialState.Start(depthState.Difficulty);
@@ -291,6 +296,7 @@ public sealed partial class RunSimulation
     public RunSummary CreateSummary() => new(score, kills, dragonsSlain, essenceCargoState.SecuredCount, essenceCargoState.Secured, (int)elapsed, level, choiceCount,
         build.Spells.LearnedCount, build.Synergies.Count, depthState.Depth, outcome)
     {
+        Hunt = SelectedHunt,
         SynergyIds = build.Synergies.Snapshot().ToArray(),
         ExperienceEarned = experienceEarned,
         PreparedMutation = activeLaboratoryMutation,
@@ -408,7 +414,7 @@ public sealed partial class RunSimulation
     [
         new(RunCheckpointActionId.MendWounds, checkpointState.CanUse(RunCheckpointActionId.MendWounds) && player.Health < player.MaxHealth,
             checkpointState.HasUsed(RunCheckpointActionId.MendWounds)),
-        new(RunCheckpointActionId.Descend, depthState.CanPushDeeper),
+        new(RunCheckpointActionId.Descend, CanPushDeeper),
         new(RunCheckpointActionId.LeaveRealm, true),
     ];
 
