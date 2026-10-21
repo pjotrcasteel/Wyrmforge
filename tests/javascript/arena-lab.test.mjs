@@ -22,7 +22,7 @@ test('Arena Lab reuses real game renderer, mage atlas and collision snapshots', 
     assert.match(js, /getArenaCloisterElevations\(frame\.environment/);
     assert.match(js, /drawMage\(ctx, player/);
     assert.match(js, /drawCollision\(ctx, frame\.environment/);
-    assert.match(razor, /ArenaEnvironmentState\.Create\(seed, node\)/);
+    assert.match(razor, /ArenaEnvironmentState\.Create\(seed, node, generatorPreview: true\)/);
     assert.match(razor, /environment!?.RestrictMovement\(player, candidate/);
     assert.match(razor, /environment\.DamagePropsInRadius\(point/);
     assert.match(razor, /environment\.TryDamageProp\(point/);
