@@ -1,0 +1,1 @@
+Incomplete render: source lighting function name was shadowed by shadow-tone integer after the first frame. Corrected import alias; rerender to motion-review-v2 to preserve this failed attempt.

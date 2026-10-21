@@ -166,3 +166,8 @@ albedo retains its source values. This is a reproducible 3D render-lighting
 change, not painted outlines or a blanket glow. Both game/side motion and all
 eight cameras use the same light; original source albedo remains intact.
 Visual/native contact checks still required; it is not new runtime lighting.
+
+V13 initial render stopped because a shadow-tone integer shadowed the lighting
+function name. The import is now explicitly `shade_surface`; partial frames and
+a failure receipt remain in motion-review-v1, and retry uses motion-review-v2.
+No successful render or visual acceptance is claimed for the partial folder.

@@ -4,8 +4,8 @@ import sys,json,math
 import numpy as np,torch
 import nvdiffrast.torch as dr
 from PIL import Image,ImageDraw
-from ashfang_preview_lighting import shade,palette_for,LIGHTING
-rig=Path(sys.argv[1]);out=rig/'motion-review-v1';out.mkdir(exist_ok=False);profile=json.loads((rig/'profile.json').read_text());cell=192
+from ashfang_preview_lighting import shade as shade_surface,palette_for,LIGHTING
+rig=Path(sys.argv[1]);out=rig/(sys.argv[2] if len(sys.argv)>2 else 'motion-review-v1');out.mkdir(exist_ok=False);profile=json.loads((rig/'profile.json').read_text());cell=192
 t=lambda a,dtype=torch.float32:torch.tensor(np.asarray(a),dtype=dtype,device='cuda').contiguous();ctx=dr.RasterizeCudaContext();texture_image=Image.open(rig/'ashfang-albedo.png' if (rig/'ashfang-albedo.png').exists() else rig.parent/'textured-v1/hollow-albedo.png').convert('RGB');texture=t(np.asarray(texture_image)/255).flip(0)[None];palette=palette_for(texture_image)
 mvps=[]
 for eye in [(2,-3,2.2),(3,0,.7)]:
@@ -18,7 +18,7 @@ for clip,spec in profile['clips'].items():
     for index,position in enumerate(source['positions']):
         panels=[]
         for view,m in enumerate(mvps):
-            mvp=t(m);v=t(position);projected=torch.cat([v,torch.ones_like(v[:,:1])],1)@mvp.T;r,_=dr.rasterize(ctx,projected[None],faces,[cell,cell]);coords=dr.interpolate(uv[None],r,faces)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade(rgb,v,faces,r);alpha=(r[0,:,:,3]>0).float()
+            mvp=t(m);v=t(position);projected=torch.cat([v,torch.ones_like(v[:,:1])],1)@mvp.T;r,_=dr.rasterize(ctx,projected[None],faces,[cell,cell]);coords=dr.interpolate(uv[None],r,faces)[0];rgb=dr.texture(texture,coords,filter_mode='nearest')[0].clamp(0,1);rgb=shade_surface(rgb,v,faces,r);alpha=(r[0,:,:,3]>0).float()
             # A compact mouth-bound geometric jet tests origin/aim with the jaw.
             phase=index/max(1,spec['frames']-1);strength=min(1,max(0,(phase-.27)/.08),max(0,(.76-phase)/.10)) if clip=='rear-breath' else 0
             if strength>0:
