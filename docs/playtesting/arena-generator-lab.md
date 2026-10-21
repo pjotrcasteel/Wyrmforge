@@ -23,3 +23,17 @@ Normal Hunts do not use the new scene until acceptance.
 ## Scope
 
 The page does not unlock abilities, save player data or spawn real combat rewards. It is a test-only inspection surface, not a replacement for the full game or final environmental art. Report visual scale, hitbox and navigation issues before merging the gameplay PR.
+
+
+## Wet Forest depth and cohesion check (21 October 2026)
+
+- Compare seeds with contact shadows and litter enabled (the dressing is part of the cached
+  terrain texture and therefore cheap to render each frame). Ground should read as wet loam,
+  moss, old wood and scattered forest floor, not an unrelated uniform color tint.
+- **Hollow and Ashling**, not Mire Hound, are the two non-attacking movement probes.
+  Their approved pixels should remain intact; real movement distance determines foot poses.
+  Check feet touching dirt at 390px and 320px, including movement behind rooted trees.
+- Compare resting vs moving enemies, collisions at fallen logs, barrel destruction and
+  pickup readability. No mandatory crossing walls or glow circles have been reintroduced.
+- Acceptance is visual: the current environment atlas is still a basic proxy and needs
+  a later focused Gothic tree/canopy art pass. Do not describe this as final artwork.

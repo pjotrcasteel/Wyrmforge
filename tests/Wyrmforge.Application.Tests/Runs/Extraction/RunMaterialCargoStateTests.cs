@@ -18,6 +18,27 @@ public sealed class RunMaterialCargoStateTests
     }
 
     [TestMethod]
+    public void BeginTrail_ResetsDisplayedGatheringWithoutDiscardingUnsecuredCargo()
+    {
+        var cargo = new RunMaterialCargoState();
+        cargo.BeginTrail();
+        cargo.Collect(HuntMaterialId.EmberResidue);
+        cargo.Collect(HuntMaterialId.CharredScrap);
+        CollectionAssert.AreEqual(new[] { HuntMaterialId.EmberResidue, HuntMaterialId.CharredScrap },
+            cargo.TrailCollected.ToArray());
+
+        cargo.BeginTrail();
+        Assert.IsEmpty(cargo.TrailCollected);
+        Assert.HasCount(2, cargo.Pending);
+        cargo.Collect(HuntMaterialId.EmberResidue);
+        CollectionAssert.AreEqual(new[] { HuntMaterialId.EmberResidue }, cargo.TrailCollected.ToArray());
+        cargo.SecurePending();
+        Assert.IsEmpty(cargo.Pending);
+        Assert.HasCount(3, cargo.Secured);
+        CollectionAssert.AreEqual(new[] { HuntMaterialId.EmberResidue }, cargo.TrailCollected.ToArray());
+    }
+
+    [TestMethod]
     public void SecurePending_PreservesOnlyExtractedMaterialsAcrossLaterLoss()
     {
         var cargo = new RunMaterialCargoState();

@@ -724,3 +724,31 @@ that a WyrmForge candidate meets the standard. Accessed 20 October 2026.
 No source authorizes copying another game's artwork or replacing WyrmForge's
 approved Gothic painterly/pixel identity. The card/mage comparison and game-scale
 motion review determine whether the implementation fits.
+
+
+### Wet Forest material and creature grounding — 21 October 2026
+
+**Approved design direction, not approval of final assets.** Wet Forest must feel like one grounded
+Gothic space, not flat ground behind independently floating monsters. Keep:
+- Three coherent material families at game scale: near-black wet loam, desaturated moss/sedge,
+  and worn grey-brown timber and bone. Litter follows ground clusters and physical object roots,
+  not evenly distributed sparkle or high-contrast noisy overlays.
+- Physical tree trunks, carts and stones keep their C# collision and feet; baked ground shadow,
+  litter and disturbed earth can remain after destruction. Never bake upright solid-looking scenery
+  without corresponding real geometry.
+- Preserve the **approved** Hollow, Ashling and mage sprites. Their world-foot contact, grime-dark
+  shadows and distance-driven walk poses integrate them into the ground; do not recolor or replace
+  their silhouettes. Weak ambient shadows, never opaque covers that hide attacks/loot.
+- One coherent visual scale in the Arena Lab: authored atlas sprite footprint and entity world
+  coordinates use the same perspective. Test actual portraits, night lighting, 320–390px width,
+  and combat readability rather than judging enlarged screenshots alone.
+- Contextual field marks help explain ecology (e.g. grave-scarred ground under a Hollow);
+  such presentation cannot invent C# collision, rewards or a new enemy type.
+
+References: [Diablo II: Resurrected art/visibility trade-offs](https://www.playstationlifestyle.net/2021/09/21/behind-diablo-ii-resurrected-authenticity-developer-interview/),
+[Dead Cells art deep dive: palette, parallax and placement rules](https://www.gamedeveloper.com/production/art-design-deep-dive-giving-back-colors-to-cryptic-worlds-in-i-dead-cells-i-),
+[Dead Cells procedural level design by a developer](https://deepnight.net/tutorial/the-level-design-of-dead-cells-a-hybrid-approach/).
+
+**Implementation checkpoint:** the Arena Lab uses baked seeded mud/litter/root dressing and
+distance-driven motion with actual kind 0 Hollow and kind 2 Ashling. Those are code/art
+integration improvements, **not** a claim that final Gothic environment assets are finished.

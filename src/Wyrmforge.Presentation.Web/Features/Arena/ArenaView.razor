@@ -1,5 +1,6 @@
 @using Wyrmforge.Application.Runs.Navigation
 @using Wyrmforge.Application.Runs.Simulation
+@using Wyrmforge.Domain.Progression.Signature
 <main class="game-screen">
     <canvas @ref="canvas" class="game-canvas" aria-label="Wyrmforge combat arena"></canvas>
     <RealmInfluenceView Influences="CurrentRealmInfluences" />
@@ -16,8 +17,25 @@
         <div class="trail-clear-transition" role="dialog" aria-modal="true" aria-label="Trail cleared">
             <div class="trail-power-burst" aria-hidden="true"></div>
             <strong>TRAIL CLEARED</strong>
-            <p>XP collected</p>
-            <button @onclick="ContinueAfterTrail">CONTINUE</button>
+            <section class="trail-gathered" aria-label="Collected on this trail">
+                <span class="trail-gathered-title">GATHERED</span>
+                <div class="trail-gathered-items">
+                    <span class="trail-gathered-xp">+@trailGatheredExperience XP</span>
+                    @foreach (var stack in trailGatheredMaterials.GroupBy(material => material).OrderBy(group => group.Key))
+                    {
+                        <span class="trail-gathered-item">@HuntMaterialCatalog.Name(stack.Key) ×@stack.Count()</span>
+                    }
+                </div>
+                @if (trailGatheredMaterials.Count > 0)
+                {
+                    <small>Materials carried · secure at Refuge to keep them</small>
+                }
+                else
+                {
+                    <small>No crafting materials collected</small>
+                }
+            </section>
+            <button type="button" @onclick="ContinueAfterTrail">CONTINUE</button>
         </div>
     }
     @if (runMoment is { } moment)

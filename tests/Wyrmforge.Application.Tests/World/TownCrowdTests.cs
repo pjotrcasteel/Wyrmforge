@@ -130,6 +130,50 @@ public sealed class TownCrowdTests
     }
 
     [TestMethod]
+    public void Navigation_FourBuildingForecourtsConnectWithoutCrossingFoundations()
+    {
+        var map = Scene();
+        var origin = map.Destinations.Single(node => node.Id == "lower-square").Position;
+        var work = map.Destinations.Where(node => node.BuildingId is not null).ToArray();
+
+        Assert.HasCount(4, work);
+        foreach (var destination in work)
+        {
+            Assert.IsFalse(destination.IsExit);
+            Assert.IsTrue(map.IsWalkable(destination.Position),
+                $"Work destination {destination.Id} overlaps scenery.");
+            Assert.IsTrue(map.TryFindPath(origin, destination.Position, out var path),
+                $"Forecourt {destination.Id} must have a real street connection.");
+            CheckRoute(map, origin, path);
+        }
+        Assert.IsFalse(map.IsWalkable(new TownPoint(672, 739)),
+            "The blue-marked left staircase flowerbed is a real solid ground footprint.");
+    }
+
+    [TestMethod]
+    public void TownCrowd_OnlyUnlockedBuildingsReceiveWorkers_WithoutIncreasingPopulation()
+    {
+        var map = Scene();
+        var vacant = new TownCrowd(map, seed: 205);
+        Assert.IsFalse(vacant.Citizens.Any(citizen => citizen.IsWorking));
+        Assert.HasCount(7, vacant.Citizens);
+
+        var unlocked = new[] { "build", "forge", "codex", "legends" };
+        var populated = new TownCrowd(Scene(), seed: 205, openBuildings: unlocked);
+        Assert.HasCount(7, populated.Citizens);
+        CollectionAssert.AreEquivalent(unlocked,
+            populated.Citizens.Where(citizen => citizen.IsWorking)
+                .Select(citizen => citizen.WorkBuildingId!).ToArray());
+        Assert.IsTrue(populated.Citizens.Where(citizen => citizen.IsWorking)
+            .All(citizen => citizen.CurrentActivity is not null));
+
+        populated.SetOpenBuildings([]);
+        Assert.IsFalse(populated.Citizens.Any(citizen => citizen.IsWorking),
+            "Workers must stop when an active building becomes vacant.");
+        Assert.IsTrue(populated.Citizens.All(citizen => citizen.WorkBuildingId is null));
+    }
+
+    [TestMethod]
     public void Navigation_WellForcesPhysicalDetour()
     {
         var map = Scene();
@@ -191,7 +235,7 @@ public sealed class TownCrowdTests
         var map = Scene();
         var foreground = map.Occluders.Single(part => part.Id == "well-foreground");
         Assert.IsTrue(foreground.Clip.Min(point => point.Y) < 365);
-        Assert.IsTrue(foreground.DepthY > 580);
+        Assert.AreEqual(572f, foreground.DepthY, "People behind the well are sorted using their feet, not sprite tops.");
         Assert.IsTrue(foreground.Clip.Any(point => point.X < 670),
             "Sign and well sides need an occlusion silhouette, not only a roof rectangle.");
     }
