@@ -14,6 +14,7 @@ reports={};all_frames={}
 floor_audit=json.loads((rig/'floor-audit.json').read_text())
 paw_audit=json.loads((rig/'paw-contact-audit.json').read_text()) if (rig/'paw-contact-audit.json').exists() else []
 for clip,spec in profile['clips'].items():
+    if spec.get('reviewRenderer')=='arena':continue
     source=np.load(rig/(clip+'-samples.npz'));faces=t(source['faces'],torch.int32);uv=t(source['uv']);frames=[];bounds=[];folder=out/clip;folder.mkdir()
     for index,position in enumerate(source['positions']):
         panels=[]

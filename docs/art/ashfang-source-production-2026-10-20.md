@@ -463,3 +463,9 @@ error is 7.46e-8 model units. These numerical bounds support continuity/contact
 review but are not a claim of owner visual approval. No gameplay changes.
 Final fire breath, remaining actions/directions, mobile export-density fitting,
 actual Hunt validation and explicit C# aerial state integration remain open.
+
+## High launch and arena fire flyovers — owner addition, 21 October
+Owner requested a powerful jump out of the viewport, flyovers, and downward arena fire. Canonical creature scope updated in the same branch. V30 aborted on a mouth-direction Matrix/Quaternion operation; its partial folder is preserved. V31 built all nine source actions with actual editable Blender object-level path/yaw/bank, high launch, downward-breath flyover and two-pass arena sequence. V32 lowers the head and opens the jaw before ignition rather than aiming only as fire ramps up. Six previously reviewed actions are retained. New source path is art choreography, not C# damage, targetability, collision or invulnerability. Proposed lane warnings and lingering ground-fire duration are preview proposals, not finalized balance.
+
+References revisited before the materially new aerial attack: Framestore https://www.framestore.com/work/how-train-your-dragon (skeletal/muscle-driven weight and real-animal-informed flight), Weta https://www.wetafx.co.nz/films/case-studies/smaug (skeleton-to-motion construction). Written production accounts/stills inform original choreography; no film models or clips copied or downloaded. Existing ash ground tile reused from the current game atlas in the fixed-camera arena art study. Native 390px-wide preview uses 52 px/model unit; character scale is fixed across launch and passes. GPU review pending.
+
