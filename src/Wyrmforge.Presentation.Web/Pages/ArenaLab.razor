@@ -208,6 +208,7 @@
             new Vector2D(WorldWidth * .80, WorldHeight * .76), player, WorldWidth, WorldHeight, 12);
         if (hollow is { } hollowStart) mobs.Add(new LabMob(1, 0, hollowStart.X, hollowStart.Y));
         if (ashling is { } ashlingStart) mobs.Add(new LabMob(2, 2, ashlingStart.X, ashlingStart.Y));
+        siteName = forest?.Site.Replace('-', ' ') ?? "—";
         remainingProps = environment.Snapshot().Props.Count;
         destroyedProps = 0;
         collectedSupplies = 0;
