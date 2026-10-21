@@ -121,5 +121,5 @@ test('iPhone touch drags work and previous procedural tile generators are not us
     assert.match(js, /setPointerCapture/);
     assert.match(css, /touch-action:none/);
     assert.doesNotMatch(js, /MATERIAL_REFERENCE_ATLAS|const palettes|function materialNoise|function drawGroundMaterialTile|drawMaterialBoard|drawArenaEnvironment/);
-    assert.match(js, /buildGroundQuiltAtlas\\(atlas, state\\.seed\\)/);
+    assert.ok(js.includes('buildGroundQuiltAtlas(atlas, state.seed)'));
 });
