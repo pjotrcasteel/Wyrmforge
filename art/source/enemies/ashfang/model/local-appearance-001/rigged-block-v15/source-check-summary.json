@@ -1,0 +1,37 @@
+{
+  "floorZ": -0.197,
+  "penetrationTolerance": 0.001,
+  "nativePixelsPerModelUnit": 80,
+  "clips": {
+    "walk": {
+      "finite": true,
+      "clipped": false,
+      "minSurfaceZ": -0.19709068536758423,
+      "withinFloorTolerance": true,
+      "maxIKGoalErrorModelUnits": 0.004076059211751012,
+      "maxIKGoalErrorNativePixels": 0.32608473694008094,
+      "loopEndpointError": 0.0
+    },
+    "rear-breath": {
+      "finite": true,
+      "clipped": false,
+      "minSurfaceZ": -0.19748139381408691,
+      "withinFloorTolerance": true,
+      "maxIKGoalErrorModelUnits": 4.712160915387242e-08,
+      "maxIKGoalErrorNativePixels": 3.769728732309794e-06,
+      "loopEndpointError": null
+    },
+    "takeoff-flight-land": {
+      "finite": true,
+      "clipped": false,
+      "minSurfaceZ": -0.1973559558391571,
+      "withinFloorTolerance": true,
+      "maxIKGoalErrorModelUnits": 9.06402249678704e-08,
+      "maxIKGoalErrorNativePixels": 7.251217997429632e-06,
+      "loopEndpointError": null
+    }
+  },
+  "bodyEvidence": "body-review-v1/body-angle-review.json",
+  "visualAccepted": false,
+  "actualHuntValidated": false
+}

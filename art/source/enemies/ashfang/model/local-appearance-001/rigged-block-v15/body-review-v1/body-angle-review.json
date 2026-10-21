@@ -1,0 +1,30 @@
+{
+  "actualBoneAnglesRelativeToFrame0": {
+    "pelvis": {
+      "minChangeDegrees": -10.313244413899136,
+      "maxChangeDegrees": 15.522984708669576
+    },
+    "spine": {
+      "minChangeDegrees": -11.459158044910344,
+      "maxChangeDegrees": 14.323947392723218
+    },
+    "chest": {
+      "minChangeDegrees": -6.875487171303597,
+      "maxChangeDegrees": 21.210029469713223
+    },
+    "neck.0": {
+      "minChangeDegrees": -5.703156122368238,
+      "maxChangeDegrees": 10.313245728166372
+    },
+    "neck.1": {
+      "minChangeDegrees": -8.014810224367125,
+      "maxChangeDegrees": 11.38719908406778
+    },
+    "head": {
+      "minChangeDegrees": -11.445954006460394,
+      "maxChangeDegrees": 11.387209256211797
+    }
+  },
+  "rootForwardTravel": -0.24,
+  "visualAcceptance": false
+}

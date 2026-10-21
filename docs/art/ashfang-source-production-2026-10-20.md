@@ -225,3 +225,35 @@ fore soles are about -0.104 versus hind -0.194. Landing fore soles catch at
 frame 68 and hind at 71. Other motions remain unchanged within float precision
 (walk max coordinate delta versus V13 1.79e-7 units). A side-view bone overlay
 will expose actual spine/pelvis/neck articulation during the rendered review.
+
+### V15 research-led jump review completed — 21 October
+
+Current source is rigged-block-v15, with motion-review-v1 and body-review-v1.
+`before-after-jump.gif` compares V13/V15 at the same camera, pixel density and
+24fps timing; `body-mechanics.gif` overlays the actual bone poses on the source
+side view. Body angle evidence shows separate pelvis, spine, chest, neck and
+head changes relative to frame 0. No skeletal lengths are scaled to create the
+body motion. Source root travel is -0.24 units forward and preserved explicitly
+in rootMotion; the shadow follows its ground projection. This travel has not
+been connected to C# gameplay movement.
+
+The game/side renders show forequarter release over hind support, a changed
+line of action into departure, and delayed recovery of neck/tail. Finite and
+unclipped checks pass for all three studies, walk endpoint error remains zero
+and all source minima are within the 0.001 floor tolerance. Flight max IK goal
+error is below 1e-7 units. Walking's pre-existing max error remains 0.004076
+(0.326 native px). These checks establish source integrity, not final art quality.
+
+Primary research and the limits of its transfer are recorded in
+`art/source/enemies/ashfang/jump-reference-study.md`: felid morphology and
+mammal spine timing, ILM dinosaur performance, Framestore dragon anatomy and
+Capcom secondary-motion practice. No exact tiger/dinosaur jump curve or
+frame-by-frame movie measurements are claimed; this is an original authored
+six-limbed creature performance informed by those sources.
+
+The reconstructed torso/neck silhouette and native limb separation still need
+art refinement. Fire is still a geometric alignment jet. Current turnaround
+stills remain the V13 anatomy reference, not a completed V15 directional
+animation library. Sustained flight/overflight, all actions/directions, viewport
+fitting and actual C# aerial gameplay/mobile Hunt validation remain outstanding.
+Keep draft and do not present this as finished or owner-approved artwork.
