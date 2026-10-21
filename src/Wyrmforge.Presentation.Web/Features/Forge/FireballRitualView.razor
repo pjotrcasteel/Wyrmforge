@@ -105,11 +105,37 @@
         else
         {
             var slot = selectedSlot.Value;
+            var learnedMutators = Core.Discovered;
             <h3>Slot @(slot + 1) <small>Select a mutator</small></h3>
+            @if (learnedMutators.Count == 0 && Core.Slots[slot] is null)
+            {
+                <div class="fireball-first-mutator" role="status">
+                    <strong>No mutators unlocked yet</strong>
+                    <p>Hunt Ashlings or Ash Slingers for Ember Residue. Break barrels and crates for Charred Scrap. Extract to keep your materials.</p>
+                    <div class="fireball-first-materials" aria-label="Cinder Needle crafting materials">
+                        @foreach (var need in HuntMaterialCatalog.CinderNeedleRecipe)
+                        {
+                            var owned = Materials.Count(need.Material);
+                            <span class="@(owned >= need.Required ? "ready" : "missing")">
+                                <b>@HuntMaterialCatalog.Name(need.Material)</b><small>@owned / @need.Required</small>
+                            </span>
+                        }
+                    </div>
+                    @if (Core.CanCraftCinderNeedle(Materials))
+                    {
+                        <button type="button" class="fireball-first-action" @onclick="CraftCinderNeedleAsync">Craft Cinder Needle</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="fireball-first-action" @onclick="() => OnOpenWorldGate.InvokeAsync()">Open World Gate</button>
+                    }
+                    <small>Stronger mutators come from secured Ashfang Essences. Their sources are listed below.</small>
+                </div>
+            }
             <div class="fireball-mutator-list" aria-label="Researched Fireball mutations">
-                @foreach (var mutation in FireballCoreCatalog.Mutations)
+                @foreach (var mutation in FireballCoreCatalog.Mutations.OrderByDescending(mutation => learnedMutators.Contains(mutation.Id)))
                 {
-                    var learned = mutation.Playable && Core.Discovered.Contains(mutation.Id);
+                    var learned = mutation.Playable && learnedMutators.Contains(mutation.Id);
                     var current = Core.Slots[slot] == mutation.Id;
                     var inAnotherSlot = Core.Equipped.Contains(mutation.Id) && !current;
                     <div class="fireball-mutator-entry @(current ? "equipped" : "")">
@@ -192,6 +218,7 @@
     [Parameter] public Func<Task<bool>>? OnCraftCinderNeedle { get; set; }
     [Parameter] public Func<Task<bool>>? OnUpgrade { get; set; }
     [Parameter] public Func<int, FireballMutationId?, Task<bool>>? OnEquip { get; set; }
+    [Parameter] public EventCallback OnOpenWorldGate { get; set; }
 
     private int? selectedSlot;
     private int? inspectedLockedSlot;

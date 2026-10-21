@@ -170,3 +170,16 @@
 .fireball-craft-action{min-height:44px;width:100%;padding:9px;border:2px solid #bb8851;background:#59301e;color:#f4d4ad;font:600 .9rem Georgia,serif;cursor:pointer}
 .fireball-craft-action:disabled{border-color:#60545a;background:#302831;color:#a79ba0;cursor:not-allowed}
 .fireball-crafted{color:#aed394;font:.77rem system-ui,sans-serif}
+
+/* A first mutator hint lives below the altar, never over the spell or socket art. */
+.fireball-first-mutator{display:grid;gap:8px;padding:10px;border:1px solid #956d4c;background:#261b1e}
+.fireball-first-mutator>strong{font:600 1rem/1.2 Georgia,serif;color:#f0c294}
+.fireball-context .fireball-first-mutator p{font-size:.77rem}
+.fireball-first-mutator>small{font:.72rem/1.4 system-ui,sans-serif;color:#bbaba0}
+.fireball-first-materials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.fireball-first-materials>span{min-width:0;display:grid;gap:3px;padding:6px;border:1px solid #674a42;background:#171219}
+.fireball-first-materials b{font:.73rem/1.2 system-ui,sans-serif;color:#e6cab1}
+.fireball-first-materials small{font:600 .72rem/1.2 system-ui,sans-serif;color:#dfa895}
+.fireball-first-materials .ready small{color:#acd59c}
+.fireball-first-action{min-height:44px;padding:9px;border:2px solid #a7784b;background:#4b2b1e;color:#f4d4ad;font:600 .88rem Georgia,serif;cursor:pointer}
+.fireball-first-action:focus-visible{outline:2px solid #ffe0a1;outline-offset:3px}
