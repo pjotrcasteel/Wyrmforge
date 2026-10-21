@@ -381,3 +381,7 @@ surface taper. Do not mark these owner criticisms resolved. Full action/directio
 library, final fire, mobile footprint fitting and gameplay integration remain
 open. V21/V22 sources, renders and diagnostics are preserved. V23 is the current
 review candidate, not accepted final art or a runtime replacement.
+
+## Owner rejection and local topology repair — 21 October
+V23 still fails the owner screenshots: flat tail, broad black head cap and stretched rear-leg sheet. Exact rest/skin tracing finds head-cap vertices spanning X -0.269 to 0.207 and Z up to 0.267, and body/limb boundary triangles with over 200x area inflation at departure. Proportion squeezing did not repair that topology. V24 replaces those local surfaces with card-textured volumetric lofts and a continuous hind-leg joint surface; original torso/jaw remain. Tail has eight attached segments and a rising curved taper. Wing span increases from 1.70 to 2.24 model units and trailing bays deepen (larger membrane area). These are artistic proportions, not measured aerodynamic lift certification. Source built; visual review not yet performed. The legacy wing-removal mask also needs to exclude authored anatomy before review; V24 is preserved as an intermediate.
+

@@ -7,6 +7,7 @@ from pathlib import Path
 from mathutils import Vector,Quaternion
 sys.path.insert(0,str(Path(__file__).parent))
 from ashfang_wings import rebuild_wings,wing_layout
+from ashfang_anatomy import rebuild_anatomy,TAIL_POINTS
 from ashfang_motion import flight_state,FLIGHT_EVENTS
 folder=Path(sys.argv[sys.argv.index('--')+1]);out=folder/sys.argv[sys.argv.index('--')+2];out.mkdir(exist_ok=False)
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.context.preferences.filepaths.save_version=0
@@ -26,53 +27,10 @@ v[:,2]+=.035*tail_t**2
 muzzle=np.clip((-v[:,1]-.38)/.18,0,1)
 v[:,0]*=1-.30*muzzle
 v[:,2]+=.018*muzzle
-# The reconstructed rear sole spans a wide triangular apron. Taper its heel
-# into the hock, keeping the forward toe fan and contact height intact.
-heel=np.clip((v[:,1]-.17)/.13,0,1)*np.clip((-.11-v[:,2])/.04,0,1)
-heel*=((v[:,1]>.04)&(v[:,1]<.34)&(abs(v[:,0])>.045))
-v[:,0]+=(np.sign(v[:,0])*.17-v[:,0])*.60*heel
-v[:,1]-=.055*heel
-# Build haunch volume on the existing surface, preserving its texture/skin.
-# Restrict the radial sculpt to the upper rear limb, clear of tail and soles.
-for sign in [1,-1]:
-    a=np.array((sign*.105,.17,-.025));b=np.array((sign*.18,.095,-.075));d=b-a
-    t=np.clip(((v-a)@d)/(d@d),0,1);radial=v-(a+t[:,None]*d)
-    region=(v[:,1]>.025)&(v[:,1]<.255)&(v[:,2]>-.125)&(v[:,2]<.015)&(v[:,0]*sign>.065)
-    influence=np.exp(-np.sum(radial*radial,axis=1)/(.065**2))*region
-    v+=radial*(.40*influence[:,None])
-# Reconstructed low inter-leg webbing belongs to an arched underside, not a
-# giant paw. Sculpt it upward in the source; keep actual paw rows unchanged.
-belly_front=np.clip((v[:,1]+.14)/.085,0,1);belly_front=belly_front**2*(3-2*belly_front)
-belly_back=np.clip((v[:,1]-.075)/.065,0,1);belly_back=1-belly_back**2*(3-2*belly_back)
-low=np.clip((-.10-v[:,2])/.06,0,1)
-fore_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]+.285)/.135)**2
-hind_paw=((abs(v[:,0])-.17)/.085)**2+((v[:,1]-.19)/.14)**2
-fore_paw=np.where(v[:,1]<-.055,fore_paw,2.0)
-hind_paw=np.where((v[:,1]>.04)&(v[:,1]<.34),hind_paw,2.0)
-clear_of_paws=np.clip((np.minimum(fore_paw,hind_paw)-1.2)/.4,0,1)
-belly_surface=-.10+.02*np.maximum(0,1-abs(v[:,0])/.25)**2
-v[:,2]+=np.maximum(0,belly_surface-v[:,2])*belly_front*belly_back*low*clear_of_paws
-# Constrain the broad reconstructed lower rear limb to its anatomical axis.
-# Preserve its existing textured surface, but remove the sail-like side apron.
-for sign in [1,-1]:
-    a=np.array((sign*.18,.095,-.075));b=np.array((sign*.18,.23,-.16));d=b-a
-    t=np.clip(((v-a)@d)/(d@d),0,1);axis=a+t[:,None]*d;radial=v-axis
-    radius=np.linalg.norm(radial,axis=1)
-    region=(v[:,1]>.045)&(v[:,1]<.32)&(v[:,0]*sign>.045)&(v[:,2]<-.085)&(v[:,2]>-.145)
-    limit=.034-.012*t
-    strength=np.clip((-.085-v[:,2])/.025,0,1)*region
-    factor=1-strength*np.maximum(0,1-limit/np.maximum(radius,.0001))
-    v=axis+radial*factor[:,None]
-# The final apron is below the shin: collapse its transverse excess around
-# the hock-to-toe axis, retaining a wider toe fan at the forward end.
-for sign in [1,-1]:
-    a=np.array((sign*.17,.23,-.16));b=np.array((sign*.17,.075,-.185));d=b-a
-    t=np.clip(((v-a)@d)/(d@d),0,1);axis=a+t[:,None]*d;radial=v-axis
-    radius=np.linalg.norm(radial,axis=1);limit=.020+.014*t**3
-    region=(v[:,1]>.04)&(v[:,1]<.34)&(v[:,0]*sign>.035)&(v[:,2]<-.135)
-    strength=np.clip((-.135-v[:,2])/.012,0,1)*region
-    v=axis+radial*(1-strength*np.maximum(0,1-limit/np.maximum(radius,.0001)))[:,None]
-v,faces,uv,body_count,removed_wing_vertices,wing_camber=rebuild_wings(v,faces,uv)
+# Replace the failed local reconstruction rather than repeatedly squeezing it.
+v,faces,uv,source_labels,anatomy_changes=rebuild_anatomy(v,faces,uv)
+v,faces,uv,body_count,removed_wing_vertices,wing_camber,source_labels=rebuild_wings(v,faces,uv,source_labels)
+(out/'anatomy-rebuild.json').write_text(json.dumps(anatomy_changes,indent=2)+'\n')
 mesh=bpy.data.meshes.new('Ashfang original reconstructed surface');mesh.from_pydata(v.tolist(),[],faces.tolist());mesh.update();obj=bpy.data.objects.new('Ashfang skinned character',mesh);bpy.context.collection.objects.link(obj);layer=mesh.uv_layers.new(name='AppearanceUV')
 for loop in mesh.loops:layer.data[loop.index].uv=uv[loop.vertex_index]
 obj.shape_key_add(name='Basis')
@@ -105,9 +63,8 @@ for side,sign in [('L',1),('R',-1)]:
     for finger in range(4):
         middle=middles[finger];tip=tips[finger]
         bone(f'wing.finger.{finger}.0.{side}',points[2],middle,'wing.fore.'+side);bone(f'wing.finger.{finger}.1.{side}',middle,tip,f'wing.finger.{finger}.0.{side}')
-tail=[(0,.23,-.025),(0,.28,-.04),(0,.33,-.055),(-.01,.38,-.065),(-.025,.43,-.08),(-.035,.47,-.10),(-.04,.495,-.12)]
-tail=[(x,y+1.40*max(0,y-.29),z+.035*max(0,min(1,(y-.29)/.205))**2) for x,y,z in tail]
-for i in range(6):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
+tail=TAIL_POINTS.tolist()
+for i in range(len(tail)-1):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
 arm=bpy.data.armatures.new('Ashfang articulated anatomy');rig=bpy.data.objects.new('Ashfang editable animation rig',arm);bpy.context.collection.objects.link(rig);bpy.context.view_layer.objects.active=rig;rig.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
 for n,b in bones.items():
     edit=arm.edit_bones.new(n);edit.head=b['head'];edit.tail=b['tail'];edit.use_deform=b['deform']
@@ -122,7 +79,11 @@ for index,p in enumerate(v):
     x,y,z=p;side='L' if x>=0 else 'R'
     if index>=body_count:
         permitted=[n for n in names if n.startswith('wing.') and n.endswith('.'+side)];region='wing'
-    elif (y>.27 and abs(x)<.13) or y>=.34:permitted=[n for n in names if n.startswith('tail.')];region='tail'
+    elif source_labels[index]==1 or (source_labels[index]==0 and ((y>.27 and abs(x)<.13) or y>=.34)):permitted=[n for n in names if n.startswith('tail.')];region='tail'
+    elif source_labels[index]==2:
+        permitted=['head'];region='head'
+    elif source_labels[index] in (3,4):
+        side='L' if source_labels[index]==3 else 'R';permitted=[f'hind.{i}.{side}' for i in range(3)];region='hind'
     elif y<-.30 and abs(x)<.15 and z>-.08:
         permitted=['head','jaw'] if z<.065 else ['head','neck.1'];region='head'
     elif z<-.055 and abs(x)>.035 and y<-.055:
@@ -268,8 +229,8 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84)]:
         tail_correction=0
         for contact_iteration in range(45):
             previous=None
-            for i in range(6):
-                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=flight_state(max(0,phase-.018-i*.012)) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/8)) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
+            for i in range(len(tail)-1):
+                n=f'tail.{i}';h=attached('pelvis',bones[n]['head']) if previous is None else previous;lagged=flight_state(max(0,phase-.018-i*.012)) if flight else None;tail_response=(lagged['pelvisTilt']*.35+lagged['tailKick']*(1-i/(len(tail)+1))) if lagged else 0;r=Quaternion((1,0,0),pitch*.15+tail_response+tail_correction)@Quaternion((0,0,1),.12*math.sin(phase*math.pi*2-i*.35));previous=h+r@Vector(bones[n]['tail']-bones[n]['head']);segment(n,h,previous,r)
             ev=obj.evaluated_get(deps);contact_mesh=ev.to_mesh()
             tail_min=min(contact_mesh.vertices[index].co.z for index in tail_indices)
             ev.to_mesh_clear()
