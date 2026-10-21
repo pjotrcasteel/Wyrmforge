@@ -14,7 +14,7 @@ def rebuild_wings(v,faces,uv,source_labels):
     retained=faces[~np.any(old[faces],axis=1)];used=np.unique(retained);mapping=np.full(len(v),-1);mapping[used]=np.arange(len(used));retained=mapping[retained]
     vertices=v[used].tolist();coords=(uv[used]*[.5,1]).tolist();triangles=retained.tolist();body_count=len(vertices);camber=[0.0]*body_count;labels=source_labels[used].tolist();membrane_bind=[];spar_bind={};seam_cache={}
     def card_uv(p):return [.5+p[0]/228*.5,1-p[1]/193]
-    def append_tri(points,texcoords,sign,bay):
+    def append_tri(points,texcoords,sign,anchor_names):
         start=len(vertices);steps=10;indices={}
         for i in range(steps+1):
             for j in range(steps+1-i):
@@ -29,15 +29,43 @@ def rebuild_wings(v,faces,uv,source_labels):
                     indices[i,j]=seam_cache[cache_key];continue
                 seam_cache[cache_key]=len(vertices)
                 labels.append(0);camber.append(.055*27*a*b*c)
-                membrane_bind.append(dict(index=len(vertices),side='L' if sign>0 else 'R',bay=bay,a=a,b=b,c=c))
+                membrane_bind.append(dict(index=len(vertices),side='L' if sign>0 else 'R',anchors=list(zip(anchor_names,[c,a,b]))))
                 indices[i,j]=len(vertices);vertices.append(point.tolist());coords.append(card_uv(np.array(texcoords[0])*c+np.array(texcoords[1])*a+np.array(texcoords[2])*b))
         for i in range(steps):
             for j in range(steps-i):
                 triangles.append([indices[i,j],indices[i+1,j],indices[i,j+1]])
                 if i+j<steps-1:triangles.append([indices[i+1,j],indices[i+1,j+1],indices[i,j+1]])
     for sign in [1,-1]:
-        root,elbow,wrist,middles,tips=wing_layout(sign);rim=[wrist]+tips;texture_rim=[(169,32),(216,76),(205,92),(190,101),(174,111)]
-        for i in range(len(rim)-1):append_tri([root,rim[i],rim[i+1]],[(150,101),texture_rim[i],texture_rim[i+1]],sign,i)
+        root,elbow,wrist,middles,tips=wing_layout(sign);texture_wrist=np.array((169,32));texture_tips=[np.array(p) for p in [(216,76),(205,92),(190,101),(174,111)]]
+        # Fingers originate at the wrist, not the shoulder. Each bay follows
+        # both knuckles, so bent ribs cannot float above an unrelated fan.
+        for bay in range(3):
+            grid={};steps=12
+            for row in range(steps+1):
+                radial=row/steps
+                for col in range(steps+1):
+                    u=col/steps;t=radial-.12*4*u*(1-u)*radial**4
+                    if t<=.58:
+                        q=t/.58;anchors=[('wrist',1-q),(f'mid.{bay}',q*(1-u)),(f'mid.{bay+1}',q*u)]
+                        point=wrist*(1-q)+(middles[bay]*(1-u)+middles[bay+1]*u)*q
+                    else:
+                        q=(t-.58)/.42;anchors=[(f'mid.{bay}',(1-q)*(1-u)),(f'mid.{bay+1}',(1-q)*u),(f'tip.{bay}',q*(1-u)),(f'tip.{bay+1}',q*u)]
+                        point=(middles[bay]*(1-u)+middles[bay+1]*u)*(1-q)+(tips[bay]*(1-u)+tips[bay+1]*u)*q
+                    point=point.copy();point[2]-=.014*4*u*(1-u)*np.sin(np.pi*t)
+                    key=(sign,tuple(np.round(point,9)))
+                    if key in seam_cache:grid[row,col]=seam_cache[key];continue
+                    index=len(vertices);seam_cache[key]=index;grid[row,col]=index
+                    vertices.append(point.tolist());labels.append(0);camber.append(.025*4*u*(1-u)*np.sin(np.pi*t))
+                    coords.append(card_uv(texture_wrist*(1-t)+(texture_tips[bay]*(1-u)+texture_tips[bay+1]*u)*t))
+                    membrane_bind.append(dict(index=index,side='L' if sign>0 else 'R',anchors=anchors))
+            for row in range(steps):
+                for col in range(steps):
+                    a,b,c,d=grid[row,col],grid[row+1,col],grid[row,col+1],grid[row+1,col+1]
+                    if len({a,b,c})==3:triangles.append([a,b,c])
+                    if len({b,d,c})==3:triangles.append([b,d,c])
+        texture_mid=texture_wrist*.42+texture_tips[3]*.58
+        append_tri([root,wrist,middles[3]],[(150,101),texture_wrist,texture_mid],sign,['root','wrist','mid.3'])
+        append_tri([root,middles[3],tips[3]],[(150,101),texture_mid,texture_tips[3]],sign,['root','mid.3','tip.3'])
         side='L' if sign>0 else 'R'
         spars=[(root,elbow,.012,'wing.upper.'+side),(elbow,wrist,.009,'wing.fore.'+side)]+[(wrist,mid,.006,f'wing.finger.{f}.0.{side}') for f,mid in enumerate(middles)]+[(mid,tip,.004,f'wing.finger.{f}.1.{side}') for f,(mid,tip) in enumerate(zip(middles,tips))]
         for a,b,radius,bone_name in spars:

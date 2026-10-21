@@ -117,7 +117,7 @@ for side,sign in [('L',1),('R',-1)]:
     for finger in range(4):
         middle=middles[finger];tip=tips[finger]
         bone(f'wing.finger.{finger}.0.{side}',points[2],middle,'wing.fore.'+side);bone(f'wing.finger.{finger}.1.{side}',middle,tip,f'wing.finger.{finger}.0.{side}')
-    for anchor_name,anchor in [('root',wr),('wrist',ww)]+[(f'tip.{f}',tip) for f,tip in enumerate(tips)]:
+    for anchor_name,anchor in [('root',wr),('wrist',ww)]+[(f'mid.{f}',mid) for f,mid in enumerate(middles)]+[(f'tip.{f}',tip) for f,tip in enumerate(tips)]:
         bone(f'membrane.{anchor_name}.{side}',anchor,anchor+np.array([0,0,.02]),'root')
 tail=TAIL_POINTS.tolist()
 for i in range(len(tail)-1):bone(f'tail.{i}',tail[i],tail[i+1],'pelvis' if i==0 else f'tail.{i-1}')
@@ -142,8 +142,8 @@ for index,p in enumerate(v):
         # neighbouring fingers pull tubes apart and distort the folded outline.
         if index in spar_bind:
             obj.vertex_groups[spar_bind[index]].add([index],1,'REPLACE');continue
-        bind=membrane_by_index[index];side=bind['side'];bay=bind['bay']
-        anchors=[('membrane.root.'+side,bind['c']),('membrane.wrist.'+side if bay==0 else f'membrane.tip.{bay-1}.{side}',bind['a']),(f'membrane.tip.{bay}.{side}',bind['b'])]
+        bind=membrane_by_index[index];side=bind['side']
+        anchors=[(f'membrane.{name}.{side}',weight) for name,weight in bind['anchors']]
         for name,weight in anchors:
             if weight>0:obj.vertex_groups[name].add([index],weight,'REPLACE')
         continue
@@ -328,15 +328,13 @@ for clip,count in [('walk',24),('rear-breath',40),('takeoff-flight-land',84),('f
         # Translation-only membrane controls follow the actual rib endpoints.
         # This avoids cancellation of opposing rotation matrices when folding.
         for side in ['L','R']:
-            endpoints=[('root',rig.pose.bones['wing.upper.'+side].head.copy()),('wrist',rig.pose.bones['wing.fore.'+side].tail.copy())]+[(f'tip.{f}',rig.pose.bones[f'wing.finger.{f}.1.{side}'].tail.copy()) for f in range(4)]
+            endpoints=[('root',rig.pose.bones['wing.upper.'+side].head.copy()),('wrist',rig.pose.bones['wing.fore.'+side].tail.copy())]+[(f'mid.{f}',rig.pose.bones[f'wing.finger.{f}.0.{side}'].tail.copy()) for f in range(4)]+[(f'tip.{f}',rig.pose.bones[f'wing.finger.{f}.1.{side}'].tail.copy()) for f in range(4)]
             for anchor_name,anchor in endpoints:
                 segment(f'membrane.{anchor_name}.{side}',anchor,anchor+Vector((0,0,.02)),Quaternion())
         if not fold_correction_ready:
             for bind in membrane_bind:
-                index=bind['index'];side=bind['side'];bay=bind['bay'];a=bind['a'];b=bind['b'];c=bind['c']
-                anchor=bones['membrane.root.'+side]['head']
-                rim=[bones['membrane.wrist.'+side]['head']]+[bones[f'membrane.tip.{f}.{side}']['head'] for f in range(4)]
-                folded_membrane.data[index].co=anchor*c+rim[bay]*a+rim[bay+1]*b
+                index=bind['index'];side=bind['side']
+                folded_membrane.data[index].co=sum(bones[f'membrane.{name}.{side}']['head']*weight for name,weight in bind['anchors'])
             fold_correction_ready=True
         folded_membrane.value=min(1,max(0,(1-spread)/.92))
         folded_membrane.keyframe_insert('value',frame=frame+1)
