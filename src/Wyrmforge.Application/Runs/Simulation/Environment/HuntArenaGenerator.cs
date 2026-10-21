@@ -59,7 +59,7 @@ public static class HuntArenaGenerator
             or WyrmrealmHabitat.SnowboundPines;
         var frost = WyrmrealmHabitatCatalog.School(habitat) == SpellSchool.Frost;
         var recipe = wetForest ? GenerateWetForest(seed) : null;
-        var desired = wetForest ? 30 + rng.Next(8) : otherForest ? 16 : 12;
+        var desired = wetForest ? 54 + rng.Next(10) : otherForest ? 16 : 12;
         var props = new List<Prop>(desired);
         if (recipe is not null)
         {
