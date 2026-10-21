@@ -26,7 +26,7 @@ public sealed class TownCrowdTests
                 var expected = replay.Citizens[i];
                 Assert.AreEqual(expected.Position, actual.Position);
                 Assert.AreEqual(expected.DestinationNode, actual.DestinationNode);
-                Assert.IsTrue(first.Navigation.IsWalkable(actual.Position), "A citizen left the paved pedestrian region.");
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(first, actual), "A citizen left the paved pedestrian region.");
                 witnessedMovement |= actual.IsWalking;
             }
         }
@@ -61,7 +61,7 @@ public sealed class TownCrowdTests
                 var travel = MathF.Sqrt(MathF.Pow(person.Position.X - before[i].X, 2) +
                     MathF.Pow(person.Position.Y - before[i].Y, 2));
                 Assert.IsTrue(travel <= 5.2f, $"Citizen {person.Id} jumped {travel} painted pixels.");
-                Assert.IsTrue(town.Navigation.IsWalkable(person.Position));
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(town, person));
             }
 
             var destinations = town.Citizens.Where(c => c.IsPresent && c.IsWalking)
@@ -284,7 +284,7 @@ public sealed class TownCrowdTests
         {
             town.Step(TimeSpan.FromMilliseconds(100));
             foreach (var citizen in town.Citizens)
-                Assert.IsTrue(town.Navigation.IsWalkable(citizen.Position));
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(town, citizen));
         }
         Assert.IsTrue(town.PathfindCount > 0);
         Assert.IsTrue(town.PathfindTotalMilliseconds >= 0);
@@ -637,7 +637,7 @@ public sealed class TownCrowdTests
             crowded.Step(TimeSpan.FromMilliseconds(100));
             foreach (var person in crowded.Citizens.Where(citizen => citizen.IsPresent))
             {
-                Assert.IsTrue(crowded.Navigation.IsWalkable(person.Position));
+                Assert.IsTrue(OnWalkableGroundOrValidSouthPassage(crowded, person));
                 foreach (var other in crowded.Citizens.Where(citizen => citizen.IsPresent && citizen.Id > person.Id))
                 {
                     var dx = person.Position.X - other.Position.X;
@@ -710,6 +710,21 @@ public sealed class TownCrowdTests
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new TownCrowd(Scene(), citizenCount: 20));
         Assert.HasCount(0, new TownCrowd(Scene(), citizenCount: 0).Citizens);
         Assert.HasCount(7, new TownCrowd(Scene()).Citizens);
+    }
+
+    private static bool OnWalkableGroundOrValidSouthPassage(TownCrowd crowd, TownCitizen citizen)
+    {
+        if (crowd.Navigation.IsWalkable(citizen.Position)) return true;
+
+        // The deliberately offscreen south corridor is the only exception to
+        // grounded paving. Everyone else must remain inside physical walkability.
+        if (citizen.LastExitId != "south-street-exit" ||
+            !(citizen.DepartingSouth || citizen.ReturningSouth || !citizen.IsPresent))
+            return false;
+
+        var threshold = crowd.Navigation.Destinations.Single(d => d.Id == "south-street-exit");
+        return MathF.Abs(citizen.Position.X - threshold.X) < .01f &&
+            citizen.Position.Y >= threshold.Y;
     }
 
     private static void CheckRoute(TownNavigationMap map, TownPoint start, IReadOnlyList<TownPoint> path)
