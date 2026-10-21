@@ -1,6 +1,8 @@
 // Arena Materials Lab 01: only ground. No layout, heightmap, props or gameplay.
 // Material samples deliberately use simple horizontal strips, not a proposed arena.
-import { MATERIAL_REFERENCE_ATLAS, MATERIAL_REFERENCE_TILE_SIZE } from './arena-material-reference.js';
+// The material atlas is cut from the six standalone Gothic ground paintings the player approved.
+export const GROUND_TILE_SIZE = 112;
+export const GROUND_ATLAS_URL = new URL('../art/environment/wet-forest-materials-painted.webp', import.meta.url).href;
 export const CELL = 16;
 export const COLS = 30;
 export const ROWS = 40;
@@ -10,6 +12,7 @@ export const MATERIALS = Object.freeze([
     { id: 'paving', label: 'Old paving' },
     { id: 'dirt', label: 'Trampled earth' },
     { id: 'scorched', label: 'Scorched ground' },
+    { id: 'marsh', label: 'Marsh / wet bank' },
 ]);
 const contexts = new WeakMap();
 
@@ -42,100 +45,23 @@ export function paintGroundCells(cells, columns, rows, x, y, index, radius = 2) 
     return changed;
 }
 
-export function materialNoise(seed, x, y, channel = 0) {
-    let v = (seed | 0) ^ Math.imul(x + 1, 0x9e3779b1) ^
-        Math.imul(y + 1, 0x85ebca6b) ^ Math.imul(channel + 1, 0xc2b2ae35);
-    v = Math.imul(v ^ (v >>> 16), 0x7feb352d);
-    v = Math.imul(v ^ (v >>> 15), 0x846ca68b);
-    return ((v ^ (v >>> 16)) >>> 0) / 4294967296;
-}
-
-const palettes = [
-    ['#273329', '#2a352a', '#2c372c', '#303a2d'],
-    ['#302d27', '#352f29', '#38322b', '#33302a'],
-    ['#34342e', '#39392f', '#3a3a33', '#35352e'],
-    ['#373128', '#3b332b', '#40372e', '#383129'],
-    ['#232523', '#282623', '#2c2925', '#262525'],
-];
-export function drawGroundMaterialTile(ctx, index, col, row, seed = 1441) {
-    if (!ctx || !palettes[index]) return false;
-    const x = col * CELL, y = row * CELL;
-    const n = materialNoise(seed, col, row);
-    const v = materialNoise(seed, col, row, 3);
-    const p = palettes[index];
-    ctx.fillStyle = p[Math.floor(n * p.length)];
-    ctx.fillRect(x, y, CELL, CELL);
-    const pixel = (dx, dy, w, h, color) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(x + dx, y + dy, w, h);
-    };
-
-    if (index === 0) { // damp forest grass, clumped rather than noise sprayed everywhere
-        if (n > .19) {
-            const gx = 2 + Math.floor(v * 5) * 2, gy = 4 + Math.floor(n * 3) * 2;
-            pixel(gx, gy, 2, 6, '#3a4933');
-            pixel(gx + 2, gy - 2, 2, 6, '#46523a');
-            if (v > .42) pixel(gx + 4, gy + 2, 2, 4, '#36462f');
-        }
-        if (v > .54) pixel(2, 12, 8, 2, '#202f28');
-        if (n < .30) pixel(10, 4, 4, 2, '#45513c');
-    } else if (index === 1) { // wet muddy ground: compressed ruts and restrained reflected wet glints
-        if (n > .20) {
-            pixel(2, 4 + Math.floor(v * 3) * 2, 10, 4, '#282924');
-            pixel(4, 6 + Math.floor(v * 3) * 2, 7, 2, '#404138');
-        }
-        if (v > .55) pixel(0, 12, 8, 2, '#242823');
-        if (n > .67) pixel(9, 3, 5, 2, '#575144');
-        if (v < .16) pixel(4, 2, 4, 2, '#4a483c');
-    } else if (index === 2) { // sunken Gothic road: short broken stones, subtle bevels
-        pixel(0, 0, 16, 2, '#272c28');
-        const shift = row % 2 ? 5 : 0;
-        for (let k = -1; k <= 2; k++) {
-            const left = k * 11 + shift;
-            const px = Math.max(0, left);
-            const right = Math.min(16, left + 10);
-            if (right <= px) continue;
-            const shade = materialNoise(seed, col * 4 + k, row, 7);
-            pixel(px, 3, right - px, 5, shade > .66 ? '#57574c' : shade > .29 ? '#4b4d43' : '#42483f');
-            if (shade > .51) pixel(px + 2 < right ? px + 2 : px, 3,
-                Math.max(1, Math.min(4, right - px - 2)), 1, '#777564');
-            pixel(px, 9, right - px, 4, shade > .6 ? '#3a4038' : '#41453c');
-            if (shade < .15 && right - px > 5) pixel(px + 3, 6, 2, 2, '#303a31');
-        }
-        if (n > .68) pixel(2, 14, 7, 2, '#334032');
-        if (v < .15) pixel(12, 10, 2, 4, '#273529');
-    } else if (index === 3) { // compacted forest earth; warm neutral grit, no checkerboard
-        if (n > .24) pixel(2 + Math.floor(v * 4) * 2, 8, 8, 2, '#554636');
-        if (v > .49) pixel(2, 4, 4, 2, '#292d26');
-        if (n < .42) pixel(10, 10, 4, 4, '#484034');
-        if (v < .29) pixel(0, 14, 8, 2, '#2d3027');
-    } else { // blackened earth with soot and scarce embers; no painted flames
-        if (n > .26) pixel(2, 5 + Math.floor(v * 3) * 2, 10, 2, '#171d1b');
-        if (v > .46) pixel(5, 10, 7, 2, '#3d332b');
-        if (n > .88) pixel(11, 4, 2, 2, '#805036');
-        if (v < .22) pixel(1, 13, 4, 2, '#40382f');
-    }
-    return true;
-}
-
-export function drawMaterialBoard(ctx, board, seed, columns = COLS, rows = ROWS) {
-    for (let row = 0; row < rows; row++)
-        for (let col = 0; col < columns; col++)
-            drawGroundMaterialTile(ctx, board[row * columns + col], col, row, seed);
-}
-
-// Direct photographic crops from the user's supplied Gothic Wet Forest reference.
-// Each painted cell copies the corresponding portion of the approved source.
-// No synthetic geometric cobble, grass or mud patterns are applied over it.
-export function drawReferenceGroundBoard(ctx, board, atlas, columns = COLS, rows = ROWS) {
-    if (!atlas || !ctx || board.length !== columns * rows) return false;
-    const length = MATERIAL_REFERENCE_TILE_SIZE;
+// Paint the GENERATED standalone material illustrations, not crops containing
+// buildings, tree trunks, torches or flames from the full arena concept image.
+// Sample in world coordinates so adjacent brush cells continue the same texture.
+export function drawReferenceGroundBoard(ctx, board, atlas, columns = COLS, rows = ROWS, seed = 1441) {
+    if (!ctx || !atlas || atlas.width !== GROUND_TILE_SIZE * MATERIALS.length ||
+        atlas.height !== GROUND_TILE_SIZE || board.length !== columns * rows) return false;
+    const length = GROUND_TILE_SIZE;
+    const phase = Math.abs(seed | 0) % 7 * CELL;
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < columns; col++) {
             const index = board[row * columns + col];
-            if (!Number.isInteger(index) || index >= MATERIALS.length) continue;
+            if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) continue;
             const x = col * CELL, y = row * CELL;
-            ctx.drawImage(atlas, index * length + x % length, y % length,
+            // 112 is divisible by CELL, so each 16px sub-tile stays inside its
+            // material's source region and never borrows a neighbor's artwork.
+            const sx = (x + phase) % length, sy = (y + phase) % length;
+            ctx.drawImage(atlas, index * length + sx, sy,
                 CELL, CELL, x, y, CELL, CELL);
         }
     }
@@ -148,8 +74,10 @@ function render(state) {
     const ctx = state.canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    if (!drawReferenceGroundBoard(ctx, state.cells, state.atlas))
-        drawMaterialBoard(ctx, state.cells, state.seed);
+    if (!drawReferenceGroundBoard(ctx, state.cells, state.atlas, COLS, ROWS, state.seed)) {
+        ctx.fillStyle = '#171a16';
+        ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+    }
 }
 function redraw(state) {
     if (!state.pending && !state.disposed) {
@@ -207,14 +135,17 @@ export function initMaterialsLab(canvas, seed = 1441) {
     contexts.set(canvas, state);
     render(state);
     const atlas = new Image();
+    atlas.onerror = () => {
+        if (!state.disposed) console.error('WyrmForge material artwork failed to load.', GROUND_ATLAS_URL);
+    };
     atlas.onload = () => {
-        if (!state.disposed && atlas.width === MATERIAL_REFERENCE_TILE_SIZE * MATERIALS.length &&
-            atlas.height === MATERIAL_REFERENCE_TILE_SIZE) {
+        if (!state.disposed && atlas.width === GROUND_TILE_SIZE * MATERIALS.length &&
+            atlas.height === GROUND_TILE_SIZE) {
             state.atlas = atlas;
             redraw(state);
         }
     };
-    atlas.src = MATERIAL_REFERENCE_ATLAS;
+    atlas.src = GROUND_ATLAS_URL;
 }
 export function selectGroundMaterial(canvas, index) {
     const s = contexts.get(canvas);

@@ -1,104 +1,74 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { MATERIAL_REFERENCE_ATLAS, MATERIAL_REFERENCE_TILE_SIZE } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-material-reference.js';
 import {
-    CELL, COLS, ROWS, MATERIALS, materialSampleBoard,
-    paintGroundCells, materialNoise, drawGroundMaterialTile,
-    drawMaterialBoard, drawReferenceGroundBoard,
+    CELL, COLS, ROWS, MATERIALS, GROUND_TILE_SIZE, GROUND_ATLAS_URL,
+    materialSampleBoard, paintGroundCells, drawReferenceGroundBoard,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
-test('new material lab starts as five plain labeled material strips, not a generated map', () => {
-    assert.deepEqual(MATERIALS.map(m => m.id), ['grass', 'mud', 'paving', 'dirt', 'scorched']);
+test('material studio starts with six standalone ground types, not an arena layout', () => {
+    assert.deepEqual(MATERIALS.map(m => m.id),
+        ['grass', 'mud', 'paving', 'dirt', 'scorched', 'marsh']);
     const board = materialSampleBoard();
     assert.equal(board.length, COLS * ROWS);
-    for (let row = 0; row < ROWS; row++) {
-        const expected = Math.floor(row / 8);
+    for (let row = 0; row < ROWS; row++)
         assert.deepEqual([...board.slice(row * COLS, (row + 1) * COLS)],
-            Array(COLS).fill(expected));
-    }
+            Array(COLS).fill(Math.floor(row * MATERIALS.length / ROWS)));
 });
 
-test('brush stamps arbitrary material spots on a plain ground canvas without geometry', () => {
+test('painting edits cells without altering collision or inventing props', () => {
     const board = materialSampleBoard();
-    const reference = board.slice();
-    const before = board[20 * COLS + 13];
-    assert.equal(before, 2);
+    const before = board.slice();
     const changed = paintGroundCells(board, COLS, ROWS, 13 * CELL + 4, 20 * CELL + 4, 1, 3);
     assert.ok(changed > 10 && changed < 60);
     assert.equal(board[20 * COLS + 13], 1);
-    assert.equal(board[0], reference[0]);
-    assert.equal(board[(ROWS - 1) * COLS], reference[(ROWS - 1) * COLS]);
+    assert.equal(board[0], before[0]);
+    assert.equal(board.at(-1), before.at(-1));
     assert.equal(paintGroundCells(board, COLS, ROWS, -600, -600, 4, 2), 0);
     assert.equal(paintGroundCells(board, COLS, ROWS, 0, 0, 99, 1), 0);
-    assert.notDeepEqual(board, reference);
+    assert.notDeepEqual(board, before);
 });
 
-test('five materials draw deterministic, bounded, crisp pixel details', () => {
+test('generated material atlas is a compact six-panel ground-only WebP', () => {
+    const art = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-materials-painted.webp', import.meta.url));
+    assert.equal(art.toString('ascii', 0, 4), 'RIFF');
+    assert.equal(art.toString('ascii', 8, 12), 'WEBP');
+    assert.ok(art.length > 7000 && art.length < 25000);
+    assert.equal(GROUND_TILE_SIZE, 112);
+    assert.match(GROUND_ATLAS_URL, /wet-forest-materials-painted\.webp$/);
+});
+
+test('painter samples a continuous world-aligned texture, never screenshot blocks', () => {
+    const board = materialSampleBoard();
+    const atlas = { width: GROUND_TILE_SIZE * MATERIALS.length, height: GROUND_TILE_SIZE };
     const calls = [];
-    const ctx = {
-        set fillStyle(value) { this.color = value; },
-        fillRect(x, y, w, h) { calls.push({ x, y, w, h, color: this.color }); },
-    };
-    for (let i = 0; i < MATERIALS.length; i++) {
-        const count = calls.length;
-        assert.equal(drawGroundMaterialTile(ctx, i, 4, 6, 1441), true);
-        const marks = calls.slice(count);
-        assert.ok(marks.length >= 1, MATERIALS[i].id + ' should paint the tile');
-        const textureStart = calls.length;
-        for (let j = 0; j < 10; j++)
-            drawGroundMaterialTile(ctx, i, 10 + j, 6, 1441);
-        assert.ok(calls.length - textureStart > 13,
-            MATERIALS[i].id + ' should show varied detail across neighboring tiles');
-        assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
-            m.w > 0 && m.h > 0 && m.x >= 4 * CELL && m.y >= 6 * CELL &&
-            m.x + m.w <= 5 * CELL && m.y + m.h <= 7 * CELL));
-    }
-    assert.equal(drawGroundMaterialTile(ctx, -1, 4, 6, 1441), false);
-    assert.equal(materialNoise(1441, 2, 3), materialNoise(1441, 2, 3));
-    assert.notEqual(materialNoise(1441, 2, 3), materialNoise(1442, 2, 3));
-    const many = [];
-    drawMaterialBoard({ set fillStyle(_v) {}, fillRect(...args) { many.push(args); } },
-        materialSampleBoard(), 1441);
-    assert.ok(many.length > COLS * ROWS * 2);
+    const ctx = { drawImage(...args) { calls.push(args); } };
+    assert.equal(drawReferenceGroundBoard(ctx, board, atlas), true);
+    assert.equal(calls.length, COLS * ROWS);
+    for (let row = 0; row < ROWS; row++)
+        for (let col = 0; col < COLS; col++) {
+            const [image,sx,sy,sw,sh,x,y,w,h] = calls[row * COLS + col];
+            assert.equal(image, atlas);
+            assert.equal(sx, board[row * COLS + col] * GROUND_TILE_SIZE +
+                (col * CELL + (1441 % 7) * CELL) % GROUND_TILE_SIZE);
+            assert.equal(sy, (row * CELL + (1441 % 7) * CELL) % GROUND_TILE_SIZE);
+            assert.deepEqual([sw,sh,x,y,w,h],
+                [CELL,CELL,col * CELL,row * CELL,CELL,CELL]);
+        }
+    assert.equal(drawReferenceGroundBoard(ctx, board, null), false);
+    assert.equal(drawReferenceGroundBoard(ctx, board, { width: 320, height: 64 }), false);
 });
 
-test('iPhone touch drags are owned by the new painter and remain separate from live arena', () => {
+test('iPhone touch drags work and previous procedural tile generators are not used', () => {
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
     const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
     const css = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor.css', import.meta.url), 'utf8');
     assert.match(page, /@page "\/arena-materials"/);
     assert.match(page, /initMaterialsLab/);
-    assert.match(page, /canvas.*width="480".*height="640"/);
+    assert.match(page, /Pick\(5\)/);
     assert.match(js, /'touchstart', preventScroll, \{ passive: false \}/);
     assert.match(js, /'touchmove', preventScroll, \{ passive: false \}/);
     assert.match(js, /setPointerCapture/);
     assert.match(css, /touch-action:none/);
-    assert.doesNotMatch(js, /HuntArenaGenerator|RestrictMovement|DamagePropsInRadius|spawnMob|drawArenaEnvironment/);
-});
-
-test('actual cropped reference materials are embedded and rendered without invented geometry', () => {
-    assert.equal(MATERIAL_REFERENCE_TILE_SIZE, 64);
-    assert.match(MATERIAL_REFERENCE_ATLAS, /^data:image\/webp;base64,UklG/);
-    const imageBytes = Buffer.from(MATERIAL_REFERENCE_ATLAS.split(',')[1], 'base64');
-    assert.equal(imageBytes.toString('ascii', 0, 4), 'RIFF');
-    assert.equal(imageBytes.toString('ascii', 8, 12), 'WEBP');
-    assert.ok(imageBytes.length > 2000);
-    const cells = materialSampleBoard();
-    const copied = [];
-    const ctx = { drawImage(...args) { copied.push(args); } };
-    const atlas = { width: 320, height: 64 };
-    assert.equal(drawReferenceGroundBoard(ctx, cells, atlas), true);
-    assert.equal(copied.length, COLS * ROWS);
-    for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-            const mark = copied[row * COLS + col];
-            const index = cells[row * COLS + col];
-            assert.equal(mark[0], atlas);
-            assert.equal(mark[1], index * 64 + (col * CELL) % 64);
-            assert.equal(mark[2], (row * CELL) % 64);
-            assert.deepEqual(mark.slice(3), [CELL, CELL, col * CELL, row * CELL, CELL, CELL]);
-        }
-    }
-    assert.equal(drawReferenceGroundBoard(ctx, cells, null), false);
+    assert.doesNotMatch(js, /MATERIAL_REFERENCE_ATLAS|const palettes|function materialNoise|function drawGroundMaterialTile|drawMaterialBoard|drawArenaEnvironment/);
 });
