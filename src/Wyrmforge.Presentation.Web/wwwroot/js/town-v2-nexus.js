@@ -198,6 +198,24 @@ function overlapsFoliage(position, foliage) {
             if (foliage.alpha[y * foliage.width + x] > 80) return true;
     return false;
 }
+// Walking and idle animation are derived from DISTANCE moved, never wall time
+// or Math.random(): recording/replaying the same positions yields the same pose.
+function updateResidentMotion(person, previous, dt) {
+    const dx = person.position.x - previous.x;
+    const dy = person.position.y - previous.y;
+    const distance = Math.hypot(dx, dy);
+    person.moving = distance > .015;
+    if (person.moving) {
+        person.stride += distance * .25;
+        person.distanceWalked += distance;
+        person.walkingFrames++;
+        person.idleSeconds = 0;
+        if (Math.abs(dx) > .03) person.facing = dx > 0 ? 1 : -1;
+    } else {
+        person.idleSeconds += dt;
+        person.idleFrames++;
+    }
+}
 // Every NPC uses the same foot-space and the same sampled architectural alpha.
 // Sorted feet let a closer NPC appear IN FRONT of the props while a rear NPC
 // disappears BEHIND exactly the wood/tiles; no copied pavement or broad overlays.
@@ -206,11 +224,33 @@ function drawCitizen(ctx, person) {
     ctx.translate(person.position.x, person.position.y);
     ctx.fillStyle = "#061622aa";
     ctx.beginPath();ctx.ellipse(0, 2, 9, 4, 0, 0, Math.PI * 2);ctx.fill();
+    const animated = person.animated === true;
+    const step = animated && person.moving ? Math.sin(person.stride) : 0;
+    const bob = animated && person.moving ? Math.round(Math.abs(step) * 1.3) : 0;
+    const arm = animated && person.moving ? Math.round(step * 2) : 0;
+    // Bob the body, not the world-space foot origin used by navigation/depth.
+    ctx.translate(0, -bob);
+    if (animated) {
+        ctx.fillStyle = "#332d2d";
+        ctx.fillRect(-5, -3 + arm, 4, 5);
+        ctx.fillRect(1, -3 - arm, 4, 5);
+    }
     ctx.fillStyle = person.id === 0 ? "#d5ac73" : person.id === 1 ? "#be996e" : "#c5ae84";
     ctx.fillRect(-5,-21,10,19);
     ctx.fillStyle = person.id === 0 ? "#52677e" : person.id === 1 ? "#785548" : "#466c56";
     ctx.fillRect(-6,-17,12,11);
+    if (animated) {
+        ctx.fillStyle = "#a17c55";
+        ctx.fillRect(-7,-16 + arm,2,8);
+        ctx.fillRect(5,-16 - arm,2,8);
+    }
     ctx.fillStyle = "#edcfad";ctx.fillRect(-4,-29,8,9);
+    if (animated) {
+        const glance = person.moving ? person.facing :
+            (Math.floor(Math.max(0, person.idleSeconds - .5) / 1.6) + person.id) % 2 === 0 ? 1 : -1;
+        ctx.fillStyle = "#47372d";
+        ctx.fillRect(glance > 0 ? 2 : -3, -26, 1, 1);
+    }
     ctx.strokeStyle = "#fcdd8d";ctx.lineWidth = 1.5;
     ctx.strokeRect(-7,-31,14,31);
     ctx.restore();
@@ -227,7 +267,8 @@ function draw(w) {
         w.route.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
         ctx.stroke();ctx.restore();
     }
-    const residents = [{ id: 0, position: w.position }, ...w.extras]
+    const residents = [{ id: 0, position: w.position, animated: w.extras.length > 0,
+        stride: w.stride, moving: w.moving, facing: w.facing, idleSeconds: w.idleSeconds }, ...w.extras]
         .sort((a,b) => a.position.y - b.position.y || a.id - b.id);
     for (const person of residents) {
         drawCitizen(ctx, person);
@@ -262,8 +303,11 @@ function draw(w) {
     }
 }
 function advanceExtra(w, person, dt) {
-    if (person.pause > 0) { person.pause -= dt; return; }
-    let remaining = person.speed * dt;
+    person.landmarkCooldown = Math.max(0, person.landmarkCooldown - dt);
+    if (person.pause > 0) { person.pause = Math.max(0, person.pause - dt); return; }
+    // A subtle deterministic change of pace, tied to footsteps rather than
+    // frame rate. Do not alter the authored route, end points or foot disc.
+    let remaining = person.speed * (1 + .07 * Math.sin(person.stride * .37 + person.id)) * dt;
     while (remaining > 0 && person.targetIndex >= 0 && person.targetIndex < person.route.length) {
         const target = person.route[person.targetIndex];
         const dx = target.x - person.position.x, dy = target.y - person.position.y;
@@ -292,6 +336,16 @@ function advanceExtra(w, person, dt) {
         person.position = candidate;
         remaining -= travel;
         if (distance <= travel + .001) person.targetIndex += person.direction;
+        // A moment of interest at wide paved landmarks, not on the narrow
+        // noticeboard passage. Cooldown prevents repeat pauses on nearby cells.
+        const landmark = person.id === 1 ? WELL_FRONT_MID : PLAZA_END;
+        if (person.landmarkCooldown <= 0 &&
+            Math.hypot(person.position.x - landmark.x, person.position.y - landmark.y) < 8) {
+            person.pause = .55 + person.id * .15;
+            person.landmarkCooldown = 18;
+            person.landmarkPauses++;
+            break;
+        }
     }
     if (person.targetIndex < 0 || person.targetIndex >= person.route.length) {
         person.direction = -person.direction;
@@ -305,6 +359,7 @@ function animate(w, now) {
     if (w.disposed) return;
     const dt = Math.min(.05, Math.max(0, (now - w.lastTime) / 1000));
     w.lastTime = now;
+    const primaryBefore = { ...w.position };
     // Opt-in deterministic screenshot pose only. Normal V2 walking is unchanged.
     if (w.inspectPose || w.inspectWell) {
         // Keep rendering at a fixed position for exact photographic pixel checks.
@@ -341,7 +396,12 @@ function animate(w, now) {
             w.pause = .6;
         }
     }
-    for (const person of w.extras) advanceExtra(w, person, dt);
+    if (w.extras.length) updateResidentMotion(w, primaryBefore, dt);
+    for (const person of w.extras) {
+        const before = { ...person.position };
+        advanceExtra(w, person, dt);
+        updateResidentMotion(person, before, dt);
+    }
     for (const person of w.extras)
         if (!w.nav.canStand(person.position.x, person.position.y)) w.maskViolations++;
     if (w.extras.length) {
@@ -404,7 +464,8 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         rearMode, inspectPose, inspectWell, residentCount,
         nav: null, foliage: null, wellCutout: null, noticeCutout: null,
         extras: [], crowdFrames: 0, crowdOverlapFrames: 0, crowdOcclusionFrames: 0,
-        primaryYieldFrames: 0,
+        primaryYieldFrames: 0, stride: 0, facing: 1, moving: false,
+        idleSeconds: 0, walkingFrames: 0, idleFrames: 0, distanceWalked: 0,
         route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
@@ -430,12 +491,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.175", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.175", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.176", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.176", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode || residentCount > 1) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.175", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.175", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.176", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.176", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
@@ -522,7 +583,10 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                 state.extras.push({
                     id, route, position: { ...route[0] }, targetIndex: 1,
                     direction: 1, speed, pause: id * .65,
-                    turns: 0, yieldFrames: 0
+                    turns: 0, yieldFrames: 0,
+                    stride: 0, facing: id === 1 ? 1 : -1, moving: false,
+                    idleSeconds: 0, walkingFrames: 0, idleFrames: 0, distanceWalked: 0,
+                    landmarkCooldown: 0, landmarkPauses: 0
                 });
             }
         }
@@ -541,11 +605,16 @@ export function readTownV2Diagnostics(canvas) {
         version: 2, source: "nexus-v2-walk-mask.svg", usingLegacyNavigation: false,
         npcCount: entry.extras.length + 1, routeLength: entry.route.length,
         residents: [{ id: 0, route: entry.rearMode ? "rear" : "front",
-            position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x, entry.position.y) },
+            position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x, entry.position.y),
+            moving: entry.moving, facing: entry.facing, walkingFrames: entry.walkingFrames,
+            idleFrames: entry.idleFrames, stride: entry.stride, distanceWalked: entry.distanceWalked },
             ...entry.extras.map(p => ({ id: p.id,
                 route: p.id === 1 ? (entry.rearMode ? "front" : "rear") : "plaza",
                 position: { ...p.position }, safe: entry.nav?.canStand(p.position.x, p.position.y),
-                turns: p.turns, yieldFrames: p.yieldFrames }))],
+                turns: p.turns, yieldFrames: p.yieldFrames,
+                moving: p.moving, facing: p.facing, walkingFrames: p.walkingFrames,
+                idleFrames: p.idleFrames, stride: p.stride,
+                distanceWalked: p.distanceWalked, landmarkPauses: p.landmarkPauses }))],
         crowdFrames: entry.crowdFrames, crowdOverlapFrames: entry.crowdOverlapFrames,
         crowdOcclusionFrames: entry.crowdOcclusionFrames,
         primaryYieldFrames: entry.primaryYieldFrames,
