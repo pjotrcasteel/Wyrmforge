@@ -338,7 +338,7 @@ function advanceExtra(w, person, dt) {
         if (distance <= travel + .001) person.targetIndex += person.direction;
         // A moment of interest at wide paved landmarks, not on the narrow
         // noticeboard passage. Cooldown prevents repeat pauses on nearby cells.
-        const landmark = person.id === 1 ? WELL_FRONT_MID : PLAZA_END;
+        const landmark = person.id === 1 ? REAR_ENTRY : PLAZA_END;
         if (person.landmarkCooldown <= 0 &&
             Math.hypot(person.position.x - landmark.x, person.position.y - landmark.y) < 8) {
             person.pause = .55 + person.id * .15;
@@ -582,7 +582,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                     throw new Error("Town V2 secondary citizen left approved paving.");
                 state.extras.push({
                     id, route, position: { ...route[0] }, targetIndex: 1,
-                    direction: 1, speed, pause: id * .65,
+                    direction: 1, speed, pause: id * .65, animated: true,
                     turns: 0, yieldFrames: 0,
                     stride: 0, facing: id === 1 ? 1 : -1, moving: false,
                     idleSeconds: 0, walkingFrames: 0, idleFrames: 0, distanceWalked: 0,
