@@ -244,6 +244,13 @@ def main():
     scene = bpy.context.scene
     scene.render.engine = "CYCLES"
     scene.cycles.samples = 32
+    # Ubuntu package builds of Blender may omit OpenImageDenoise entirely.
+    # Explicitly disable denoising on CPU CI; no dependency on vendor binaries.
+    if hasattr(scene.cycles, "use_denoising"):
+        scene.cycles.use_denoising = False
+    view_layer_cycles = getattr(bpy.context.view_layer, "cycles", None)
+    if view_layer_cycles is not None and hasattr(view_layer_cycles, "use_denoising"):
+        view_layer_cycles.use_denoising = False
     scene.render.film_transparent = True
     scene.render.resolution_x = 768
     scene.render.resolution_y = 768
