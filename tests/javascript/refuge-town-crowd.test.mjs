@@ -717,6 +717,29 @@ test('Town V2 three residents are opt-in, use independent foot-safe routes and s
     assert.doesNotMatch(js, /REAR_POST_BYPASS|buildDebugOverlay/);
 });
 
+test('Town V2 living residents animate by distance, turn safely and idle without random reroutes', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /function updateResidentMotion\(person, previous, dt\)/);
+    assert.match(js, /person.stride \+= distance \* \.25/);
+    assert.match(js, /person.facing = dx > 0 \? 1 : -1/);
+    assert.match(js, /person.idleSeconds \+= dt/);
+    assert.match(js, /function drawCitizen\(ctx, person\)/);
+    assert.match(js, /const animated = person.animated === true/);
+    assert.match(js, /const step = animated && person.moving \? Math.sin\(person.stride\) : 0/);
+    assert.match(js, /const glance = person.moving \? person.facing/);
+    assert.match(js, /const residents = \[\{ id: 0, position: w.position, animated: w.extras.length > 0/);
+    assert.match(js, /person.landmarkCooldown = Math.max\(0, person.landmarkCooldown - dt\)/);
+    assert.match(js, /person.landmarkPauses\+\+/);
+    assert.match(js, /if \(w.extras.length\) updateResidentMotion\(w, primaryBefore, dt\)/);
+    assert.match(js, /updateResidentMotion\(person, before, dt\)/);
+    assert.match(js, /distanceWalked: p.distanceWalked, landmarkPauses: p.landmarkPauses/);
+    assert.doesNotMatch(js, /Math.random\(/);
+    // One-person depth and pixel pose remain in the old exact-art layout.
+    assert.match(js, /const inspectPose = rearMode && query.get\("townPose"\) === "post"/);
+    assert.match(js, /const inspectWell = rearMode && query.get\("townPose"\) === "well"/);
+    assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+});
+
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
     const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
     const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
