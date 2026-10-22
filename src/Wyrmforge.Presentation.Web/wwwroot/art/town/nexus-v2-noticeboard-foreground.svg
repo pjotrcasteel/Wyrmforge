@@ -10,7 +10,12 @@
   <path fill="#fff" d="M731 454 L731 449 L738 445 L757 442 L775 437
     L793 433 L799 431 L802 433 L803 437 L803 486
     L799 492 L739 507 L733 505 Z"/>
-  <!-- Only the two timber legs, stopping before planter soil and cobbles. -->
+  <!-- The left support ends before the planter soil. -->
   <path fill="#fff" d="M733 505 L739 503 L740 532 L734 534 Z"/>
-  <path fill="#fff" d="M796 491 L802 489 L804 525 L798 527 Z"/>
+  <!-- Continuous RIGHT timber upright. The former alpha began at y491,
+       leaving its upper section in front of the rear walker near (800,444).
+       Follow only the slender wood from the sloping top cap down to the foot;
+       do not turn the cobbles or well behind it into foreground. -->
+  <path fill="#fff" d="M797 435 L801 431 L805 435 L806 439
+    L807 525 L800 528 L797 525 Z"/>
 </svg>
