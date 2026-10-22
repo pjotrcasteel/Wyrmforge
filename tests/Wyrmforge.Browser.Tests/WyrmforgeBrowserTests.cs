@@ -26,7 +26,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Mount registers the scene before its asynchronous masks and route are
         // ready. Await the qualifying snapshot, not an async polling Promise.
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.173');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
             const deadline = performance.now() + 15000;
             while (performance.now() < deadline) {
                 const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
@@ -67,7 +67,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.173');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -77,7 +77,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.173');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
@@ -85,7 +85,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.173');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
                 d.wellFrontEndpointWalkable && d.wellRimExcluded &&
@@ -113,7 +113,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // WaitForFunction MUST be synchronous: an async callback returns a
         // truthy Promise before its false diagnostic result is resolved.
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.173');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
             window.__readTownV2Rear = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -163,7 +163,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.173');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
             window.__readRightPostPose = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -223,6 +223,77 @@ public sealed class WyrmforgeBrowserTests : PageTest
             on.GetProperty("outside").EnumerateArray().Select(x => x.GetInt32()).ToArray(),
             off.GetProperty("outside").EnumerateArray().Select(x => x.GetInt32()).ToArray(),
             "Toggling the timber must not paste surrounding paving over the NPC.");
+    }
+
+    [TestMethod]
+    public async Task Mobile_TownV2_WellRoofDepthUsesOnlyOriginalTimberPixels()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townV2=1&townRoute=rear&townPose=well",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js?v=0.0.174');
+            window.__readWellPose = () =>
+                module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        await Page.WaitForFunctionAsync(@"() => {
+            const d = window.__readWellPose?.();
+            return d?.active && d.inspectingWellRoof && d.wellDepthReady &&
+                d.wellOcclusionFrames > 3 && d.safe && d.violations === 0;
+        }", null, new PageWaitForFunctionOptions { Timeout = 15000 });
+
+        await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
+        await Expect(Page.Locator("[data-town-v2-mask-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
+        await Page.WaitForTimeoutAsync(120);
+        var on = await Page.EvaluateAsync<JsonElement>(@"() => {
+            const ctx = document.querySelector('[data-town-v2-canvas]').getContext('2d');
+            const base = document.querySelector('.refuge-town-night-base');
+            const scratch = document.createElement('canvas');
+            scratch.width = 1672; scratch.height = 941;
+            const art = scratch.getContext('2d');
+            art.drawImage(base, 0, 0);
+            const pixel = (surface, x, y) => Array.from(surface.getImageData(x, y, 1, 1).data);
+            return {
+                position: window.__readWellPose().position,
+                roof: pixel(ctx, 852, 438),
+                originalRoof: pixel(art, 852, 438),
+                transparentEdge: pixel(ctx, 817, 438)
+            };
+        }");
+
+        await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
+        await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
+        await Page.WaitForTimeoutAsync(120);
+        var off = await Page.EvaluateAsync<JsonElement>(@"() => {
+            const ctx = document.querySelector('[data-town-v2-canvas]').getContext('2d');
+            const pixel = (x, y) => Array.from(ctx.getImageData(x, y, 1, 1).data);
+            return {
+                position: window.__readWellPose().position,
+                roof: pixel(852, 438),
+                transparentEdge: pixel(817, 438)
+            };
+        }");
+
+        Assert.AreEqual(852, on.GetProperty("position").GetProperty("x").GetInt32());
+        Assert.AreEqual(452, on.GetProperty("position").GetProperty("y").GetInt32());
+        Assert.AreEqual(on.GetProperty("position").GetRawText(), off.GetProperty("position").GetRawText(),
+            "The inspector must never relocate the NPC when depth is toggled.");
+
+        var roofWithDepth = on.GetProperty("roof").EnumerateArray().Select(v => v.GetInt32()).ToArray();
+        var originalRoof = on.GetProperty("originalRoof").EnumerateArray().Select(v => v.GetInt32()).ToArray();
+        var roofWithoutDepth = off.GetProperty("roof").EnumerateArray().Select(v => v.GetInt32()).ToArray();
+        CollectionAssert.AreEqual(originalRoof, roofWithDepth,
+            "The roof must repaint exact original timber/tiles, not a rectangle of cobbles.");
+        Assert.IsTrue(roofWithDepth.Where((value, i) => i < 3 && value != roofWithoutDepth[i]).Any(),
+            "Depth OFF must uncover the same stationary NPC behind the roof.");
+        CollectionAssert.AreEqual(
+            on.GetProperty("transparentEdge").EnumerateArray().Select(v => v.GetInt32()).ToArray(),
+            off.GetProperty("transparentEdge").EnumerateArray().Select(v => v.GetInt32()).ToArray(),
+            "Roof depth must not affect the transparent paved surroundings.");
+        Assert.IsTrue((await Page.EvaluateAsync<JsonElement>("() => window.__readWellPose()"))
+            .GetProperty("safe").GetBoolean());
     }
 
     [TestMethod]
