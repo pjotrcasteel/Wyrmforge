@@ -35,8 +35,9 @@ for ob in [o for o in bpy.data.objects if o.type=='MESH']:
         for i,v in enumerate(ob.data.vertices):v.co=mapping(v.co,influence[i])
 # Rest bones follow the same feature mapping as the associated weighted vertices.
 bpy.ops.object.select_all(action='DESELECT');rig.select_set(True);bpy.context.view_layer.objects.active=rig;bpy.ops.object.mode_set(mode='EDIT')
+rest={b.name:(b.head.copy(),b.tail.copy()) for b in rig.data.edit_bones}
 for b in rig.data.edit_bones:
-    h,t=b.head.copy(),b.tail.copy();b.head=mapping(h,float(b.name in wing_names));b.tail=mapping(t,float(b.name in wing_names))
+    h,t=rest[b.name];b.head=mapping(h,float(b.name in wing_names));b.tail=mapping(t,float(b.name in wing_names))
 bpy.ops.object.mode_set(mode='OBJECT')
 # Sink proximal limb skin into the widened shoulder; keep feet and claws grounded.
 for side in ('l','r'):
