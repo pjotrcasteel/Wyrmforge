@@ -1,5 +1,14 @@
 # Wyrmforge
 
+## Prototype 0.0.174 — Pyromancer Immolation causes real burning damage
+
+- Four Immolation minor nodes now grant **burning-ground damage**, distinct from generic direct spell damage and mutation duration.
+- Burning-ground ticks apply the same additive build-stat pipeline as all other passives, so the bonus is authoritative in combat and remains relevant across school switches when a Fire burn is active.
+- Domain tests verify additive +14% burn damage from the four nodes without increasing other spell damage or duration. Fireball mutations and amplification retain their independent rules.
+
+
+
+
 ## Prototype 0.0.173 — Socket an equipped mutation into a Web amplifier
 
 - Conflagration's Crown of Ash amplifies the **Detonation explosion radius** by ×1.20; Immolation's Furnace enhances **Scorched Earth burning duration** by ×1.25, only when the mutation is equipped.
