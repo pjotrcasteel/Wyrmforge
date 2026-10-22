@@ -7,6 +7,7 @@ using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -124,7 +125,7 @@ public sealed partial class RunSimulation
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var mutationSplash = id != SpellId.FireBolt ? 0 :
-                HasFireballMutation(FireballMutationId.Detonation) ? 46 :
+                HasFireballMutation(FireballMutationId.Detonation) ? 46 * FireballEffectFactor(FireballMutationId.Detonation, MutationEffectCapability.Area) :
                 HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
             var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
             if (id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.Detonation))
