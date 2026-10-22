@@ -5,6 +5,7 @@ public sealed class PassiveTreeSelection
     private readonly HashSet<string> selected = [];
     private int pointBudget;
     private readonly Dictionary<PassiveSchool, int> reserved = [];
+    private IReadOnlySet<Wyrmforge.Domain.Progression.Signature.FireballMutationId>? knownMutations;
 
     // Null is the legacy catalogue/import authoring context. The character editor
     // always binds its actual school before allowing player allocation or loadouts.
@@ -20,7 +21,12 @@ public sealed class PassiveTreeSelection
         reserved.Remove(school);
     }
 
-    public bool CanLearn(PassiveNodeDefinition node) => ActiveSchool is null || ArcaneSchoolCatalog.Owner(node) == ActiveSchool;
+    public void SetKnownFireballMutations(IEnumerable<Wyrmforge.Domain.Progression.Signature.FireballMutationId> mutations) =>
+        knownMutations = mutations.ToHashSet();
+
+    public bool CanLearn(PassiveNodeDefinition node) =>
+        (ActiveSchool is null || ArcaneSchoolCatalog.Owner(node) == ActiveSchool) &&
+        (node.Requirement?.FireballMutation is not { } mutation || knownMutations is null || knownMutations.Contains(mutation));
 
     public void RestoreReserved(IReadOnlyDictionary<PassiveSchool, int>? saved)
     {

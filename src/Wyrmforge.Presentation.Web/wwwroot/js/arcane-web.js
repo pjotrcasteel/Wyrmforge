@@ -1,6 +1,6 @@
 (function () {
     const width = 1200;
-    const height = 900;
+    const height = 1200;
     const states = new WeakMap();
     const edgeGutter = 20;
 
@@ -20,7 +20,7 @@
         if (!canvas || !space) return;
 
         const oldScale = state.scale;
-        const nextScale = clamp(scale, 0.55, 1.45);
+        const nextScale = clamp(scale, viewport.dataset.wheel ? 0.22 : 0.55, 1.45);
         const anchorX = focusX ?? viewport.clientWidth / 2;
         const anchorY = focusY ?? viewport.clientHeight / 2;
         const worldX = (viewport.scrollLeft + anchorX) / oldScale;
@@ -30,7 +30,7 @@
         canvas.style.transform = `scale(${nextScale})`;
         space.style.width = `${width * nextScale}px`;
         // Phones get room below the Web so any node can be lifted above the bottom-sheet inspector.
-        space.style.height = `${height * nextScale + (window.innerWidth <= 760 ? viewport.clientHeight * 0.5 : 0)}px`;
+        space.style.height = `${height * nextScale + (!viewport.dataset.wheel && window.innerWidth <= 760 ? viewport.clientHeight * 0.5 : 0)}px`;
         viewport.scrollLeft = worldX * nextScale - anchorX;
         viewport.scrollTop = worldY * nextScale - anchorY;
     }
@@ -63,10 +63,11 @@
         };
         states.set(viewport, state);
         apply(viewport, state, state.scale);
-        center(viewport, state);
+        if (viewport.dataset.wheel) overview(viewport);
+        else center(viewport, state);
 
         viewport.addEventListener('pointerdown', event => {
-            if (event.target.closest('.web-node')) return;
+            if (event.target.closest('button')) return;
             // Leave the screen edge to the OS back gesture instead of starting a pan there.
             if (event.pointerType === 'touch' && event.clientX < edgeGutter) return;
             viewport.setPointerCapture(event.pointerId);
@@ -155,7 +156,7 @@
         const state = states.get(viewport);
         if (!state) return;
         let anchorY = viewport.clientHeight / 2;
-        if (window.innerWidth <= 760) {
+        if (!viewport.dataset.wheel && window.innerWidth <= 760) {
             const rect = viewport.getBoundingClientRect();
             const sheetTop = window.innerHeight - Math.min(window.innerHeight * 0.55, 460) - 8;
             anchorY = clamp((Math.max(rect.top, 0) + sheetTop) / 2 - rect.top, 40, viewport.clientHeight / 2);
@@ -177,5 +178,25 @@
         });
     }
 
-    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector };
+    function overview(viewport) {
+        const state = states.get(viewport);
+        if (!state) return;
+        apply(viewport, state, Math.min(viewport.clientWidth / 1100, viewport.clientHeight / 1100, 0.8));
+        center(viewport, state);
+    }
+
+    function focusSchool(viewport, x, y) {
+        const state = states.get(viewport);
+        if (!state) return;
+        apply(viewport, state, defaultScale(viewport));
+        requestAnimationFrame(() => focus(viewport, x, y));
+    }
+
+    function openRefundDialog(dialog) {
+        if (!dialog || dialog.open) return;
+        dialog.showModal();
+        dialog.querySelector('button')?.focus();
+    }
+
+    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector, overview, focusSchool, openRefundDialog };
 })();

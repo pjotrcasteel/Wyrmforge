@@ -47,10 +47,16 @@
 
 - **21 October progression update:** The selected Fire Tier-I Hunt must be passed explicitly to C# (lineage, threat tier and rules version), not inferred from character school or generic run depth. Its first delivered loop is a short connected Hunt, one committed fork, Ashfang, harvest and extraction to secure an existing Essence. Fire Tier-I completion is remembered independently of Frost; higher tiers stay visibly unavailable until authored. Existing Frost and Ascendant preparation remain compatible. This is not an Arena Lab release or a seasonal mode.
 
-- Character creation chooses a permanent Divine school and signature, separate from World Gate Hunt/Wyrm lineage. The character-creation copy must be short and meaningful; show recognizable pixel emblems with one accessible label each, not repeated overpainted words.
+- Character creation chooses a Divine school and signature, separate from World Gate Hunt/Wyrm lineage. The character-creation copy must be short and meaningful; show recognizable pixel emblems with one accessible label each, not repeated overpainted words.
 - The owner has requested **Fire-only character creation temporarily** while completing Fire end-to-end. Render the other five schools disabled without implying they are available. This is implemented for new players on main v0.0.138 through [PR #172](https://github.com/pjotrcasteel/Wyrmforge/pull/172); existing non-Fire characters retain their saved selection.
 - The World Gate leads to **Free Play** and a visibly unavailable grayscale Campaign route as appropriate to actually implemented story content. New Hunt is active; **Endless Hunt** and **Endless Arena** are visibly future/disabled options until built. A Free Play new Hunt chooses available lineage and Wyrm tier; never pretend an unauthored tier or a missing region is playable (Fire Tier II opens after a Fire Tier-I clear; higher tiers show "Not yet available"). Keep class choice and region choice separate.
 - Campaign remains **optional** by product design and is not the exclusive gate to research/endgame. Disabled story UI indicates implementation readiness, not an eventual requirement to finish it for free-play progression.
+
+## Arcane Web wheel — owner decision, 22 October 2026
+
+Six school emblems surround one wheel, with the active school north. Sector shortcuts inspect and zoom the map without changing school. Distinguish learning access from learned effects: inactive learned nodes stay visibly learned, while unlearned paths explain that their school must be active. Conditional mutation effects state whether their matching mutation is equipped. Keep the Fireball chamber's bronze, masonry and bone lettering, existing pixel sigils, visible 44px camera controls and the inspector beneath the graph on phones. A full-wheel overview must have accessible shortcuts to useful reading scale.
+
+The first accepted refund of an inactive-school node per Web visit requires a cancellable warning: removed bonuses stop, and refunded points remain reserved until that school is active again. Follow the [shared learning/effect rules](magic-and-combat.md#six-school-arcane-web--owner-decision-22-october-2026). School switching itself is not exposed by this first slice; existing Fire-only creation and legacy saved schools remain supported.
 
 ## UI conventions and accessibility
 

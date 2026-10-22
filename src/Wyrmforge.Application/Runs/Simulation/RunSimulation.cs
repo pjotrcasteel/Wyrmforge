@@ -85,6 +85,7 @@ public sealed partial class RunSimulation
         this.randomSource = randomSource;
         Offering = offering;
         mapState = new WyrmrealmMapState();
+        learnedPassiveNodeIds = selectedNodes.ToHashSet(StringComparer.Ordinal);
         passiveProfile = PassiveCombatProfile.Create(selectedNodes);
         ApplyOffering();
         RefreshBuildHud();

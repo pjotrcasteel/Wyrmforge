@@ -28,6 +28,10 @@ public static class PassiveTreeCatalog
         new(OriginId, "arcane-start"),
 
         new("fire-start", "fire-1"),
+        new("fire-1", "fire-needle-practice"),
+        new("fire-1", "fire-molten-density"),
+        new("fire-needle-practice", "fire-blast-shaping"),
+        new("fire-molten-density", "fire-banked-embers"),
         new("fire-1", "fire-2"),
         new("fire-2", "fire-major"),
         new("fire-major", "wildfire"),

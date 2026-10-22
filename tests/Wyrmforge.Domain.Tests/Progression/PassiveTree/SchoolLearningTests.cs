@@ -1,5 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Domain.Combat.Stats;
+using Wyrmforge.Domain.Combat.Modifiers;
+using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Progression.Loadouts;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Progression.PassiveTree;
@@ -109,5 +112,25 @@ public sealed class SchoolLearningTests
         Assert.AreEqual(1, selection.ReservedPoints);
         Assert.AreEqual(0, selection.AvailablePoints);
         Assert.AreEqual(2, selection.PointBudget);
+    }
+    [TestMethod]
+    public void MutationEnhancement_RequiresDiscovery_AndOnlyAffectsMatchingRecipe()
+    {
+        var selection = new PassiveTreeSelection();
+        selection.SetActiveSchool(PassiveSchool.Fire);
+        selection.SetKnownFireballMutations([]);
+        selection.Select("fire-start");
+        selection.Select("fire-1");
+        Assert.IsFalse(selection.Select("fire-needle-practice"));
+        selection.SetKnownFireballMutations([FireballMutationId.CinderNeedle]);
+        Assert.IsTrue(selection.Select("fire-needle-practice"));
+        selection.SetActiveSchool(PassiveSchool.Storm);
+        Assert.AreEqual(1d, PassiveCombatProfile.Create(selection.Selected).ProjectileSpeedMultiplier);
+        Assert.AreEqual(1.1d, PassiveNodeEffects.ResolveConditional(selection.Selected, SpellId.FireBolt,
+            new HashSet<FireballMutationId> { FireballMutationId.CinderNeedle }).Apply(BuildStatId.ProjectileSpeed, 1), .00001);
+        Assert.AreEqual(1d, PassiveNodeEffects.ResolveConditional(selection.Selected, SpellId.FireBolt,
+            new HashSet<FireballMutationId>()).Apply(BuildStatId.ProjectileSpeed, 1));
+        Assert.AreEqual(1d, PassiveNodeEffects.ResolveConditional(selection.Selected, SpellId.FrostShard,
+            new HashSet<FireballMutationId> { FireballMutationId.CinderNeedle }).Apply(BuildStatId.ProjectileSpeed, 1));
     }
 }
