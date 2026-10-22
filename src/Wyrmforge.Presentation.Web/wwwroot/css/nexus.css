@@ -348,3 +348,19 @@
 }
 .menu-nexus .school-wheel-view .region-immolation { color:#b27a5590; }
 .menu-nexus .school-wheel-view .overview .web-region-label { opacity:.65; }
+
+/* Mutation amplifier assignments live in the Web inspector; crafting remains in Research. */
+.menu-nexus .web-amplifier-socket {
+    display:grid; gap:8px; padding:12px; margin:10px 0;
+    border:2px solid #896744; background:linear-gradient(180deg,#291d23,#171117);
+}
+.menu-nexus .web-amplifier-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; }
+.menu-nexus .web-amplifier-heading strong { color:#f0d5b6; font:600 .9rem/1.3 Georgia,serif; }
+.menu-nexus .web-amplifier-heading small { color:#dfb17d; }
+.menu-nexus .web-amplifier-socket label { color:#c4ad9b; font:.78rem/1.4 Georgia,serif; }
+.menu-nexus .web-amplifier-socket select {
+    width:100%; min-height:44px; padding:8px 12px; border:1px solid #99744c;
+    border-radius:0; color:#f1d8b9; background:#1a141b; font:600 .89rem/1.3 Georgia,serif;
+}
+.menu-nexus .web-amplifier-socket select:disabled { opacity:.65; }
+.menu-nexus .web-amplifier-socket > small { color:#bda993; font:.76rem/1.45 Georgia,serif; }
