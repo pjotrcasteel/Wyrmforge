@@ -45,9 +45,12 @@ for ob in bpy.data.objects:
                     boundaryEdges=sum(e.is_boundary for e in bm.edges),
                     nonManifoldEdges=sum(not e.is_manifold for e in bm.edges),
                     finite=all(math.isfinite(c) for v in ob.data.vertices for c in v.co))
+        info['shapeKeys']=[key.name for key in ob.data.shape_keys.key_blocks] if ob.data.shape_keys else []
+        info['shapeKeysFinite']=all(math.isfinite(c) for key in ob.data.shape_keys.key_blocks
+            for point in key.data for c in point.co) if ob.data.shape_keys else True
         bm.free()
         info['armatureModifiers']=[m.object.name if m.object else None for m in ob.modifiers if m.type=='ARMATURE']
-        if not info['finite'] or not len(ob.data.vertices): report['technicalPass']=False
+        if not info['finite'] or not info['shapeKeysFinite'] or not len(ob.data.vertices): report['technicalPass']=False
         if ob.name=='Ashfang original primary skin' and info['nonManifoldEdges']:
             report['technicalPass']=False
     report['objects'].append(info)

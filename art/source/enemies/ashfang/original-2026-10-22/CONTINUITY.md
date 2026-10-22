@@ -50,3 +50,36 @@ and --python tools/ashfang/refine-primary-r02.py. Never rerun into existing r02.
 R01 was independently retrieved from exact remote commit dde6d9a8 and SHA256
 matched6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98.
 Large sculpt/texture LFS quota remains unverified; no LFS bytes or paid overage.
+
+R02 ten1024px/32-sample neutral views rendered locally with Cycles/OptiX:
+front/side/rear/top, both three-quarter,34deg relaxed/extended, skull side/three-quarter.
+All reviewed through the contact sheet; head/right/left/rear and native board
+also inspected individually. Render time2.39sec first view,1.38-1.44sec subsequent.
+GPU temperature31C before/after; board memory sampled after2246MiB, not peak or
+sustained-load certification. Source/review snapshot both reopened; finite shape
+keys checked separately. No missing external dependencies. No rig or actions yet.
+
+Agent artistic verdict FAIL: r02 improves muzzle length and cranial integration,
+but remains too smooth/generic to claim recognizable Ashfang. Native23%-width
+comparison at320/390/440px lacks threatening card identity. Wing roots and neck
+primary silhouette need further authored anatomical work. No owner acceptance
+requested for this failed candidate; no materials/fire/animation expansion.
+
+Static native boards use public runtime mage.N.idle at unchanged36x42 frame size,
+with explicit pixel-equality check after compositing. They are NOT live Hunt or
+phone captures, final sprites or proof of pixel-art quality. Camera34deg is still
+provisional. Closed-jaw/rearing studies and full native environment comparison
+remain undone. r01/r02 are preserved research, not M1 completion.
+
+Pinned Pillow11.3.0 (MIT-CMU) and NumPy2.3.3 (BSD) installed in ignored local venv
+artifacts/ashfang-python from PyPI wheels, no global package changes. Commands:
+`python tools/ashfang/compare-native-size.py --review <reviews/M1-r02> --output <reviews/M1-r02-native>`;
+`python tools/ashfang/contact-sheet.py --review <reviews/M1-r02> --output <reviews/M1-r02-contact.png>`.
+Syntax check: python -m compileall -q tools/ashfang passed. A shell wildcard
+py_compile invocation failed before compileall; no source change resulted.
+
+Billing connection has no quota API; available in-app browser was signed out,
+so remaining LFS allowance could not be inspected. Owner offered to sign in;
+browser shown for owner-operated authentication. No credentials read/entered,
+billing changes, LFS uploads or paid overage. Native pilot currently13,996,536bytes
+across8 .blend files, all individually below8MiB. Next large sculpt still gated.
