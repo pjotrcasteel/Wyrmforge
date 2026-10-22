@@ -1,5 +1,14 @@
 # Wyrmforge
 
+
+## Prototype 0.0.175 — Grand Cryomancer Web
+
+- Twelve new playable Frost specialization nodes in asymmetrical **Shattering Cold** and **Frozen Sanctuary** arcs, culminating in two major landmarks.
+- Frost-only Frozen/Chilled duration bonuses genuinely affect combat (capped at ×1.50); vitality and damage-reduction bonuses persist when changing schools.
+- Current Deep Freeze / Ice Armor mastery exclusivity, six outer school icons, node spacing, existing saves and the 24-point Hunter budget remain unchanged.
+- [Cryomancer implementation, scope and validation](docs/playtesting/2026-10-22-cryomancer-web-specialization.md).
+
+
 ## Prototype 0.0.174 — Pyromancer Immolation causes real burning damage
 
 - Four Immolation minor nodes now grant **burning-ground damage**, distinct from generic direct spell damage and mutation duration.
