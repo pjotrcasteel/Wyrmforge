@@ -496,6 +496,11 @@ function render(state) {
         ctx.fillStyle = '#171a16';
         ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
     }
+    // Expose actual completed paint frames to browser tests (and debugging).
+    state.renderCount++;
+    state.canvas.dataset.materialRender = String(state.renderCount);
+    state.canvas.dataset.materialReady = String(Boolean(state.atlas));
+    state.canvas.dataset.fineDetail = state.fineDetail ? 'on' : 'off';
 }
 function redraw(state) {
     if (!state.pending && !state.disposed) {
@@ -530,7 +535,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
         canvas, seed: seed | 0, selected: 0, radius: 2,
         cells: materialSampleBoard(), history: [], pointer: null, lastPoint: null,
         listeners: [], pending: false, frameId: 0, disposed: false, atlas: null, sourceAtlas: null,
-        fineDetail: false,
+        fineDetail: false, renderCount: 0,
     };
     const bind = (target, name, handler, options) => {
         target.addEventListener(name, handler, options);
@@ -624,10 +629,16 @@ export function changeMaterialSeed(canvas, seed) {
 
 export function setGroundFineDetail(canvas, enabled) {
     const s = contexts.get(canvas);
-    if (!s || s.fineDetail === !!enabled) return;
-    s.fineDetail = !!enabled;
-    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed, undefined, s.fineDetail);
+    if (!s || !s.sourceAtlas) return false;
+    const requested = !!enabled;
+    if (s.fineDetail === requested) return Boolean(s.atlas);
+    // Bake first; a failed bake must never make the UI say On.
+    const atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed, undefined, requested);
+    if (!atlas) return false;
+    s.atlas = atlas;
+    s.fineDetail = requested;
     redraw(s);
+    return true;
 }
 export function disposeMaterialsLab(canvas) {
     const s = contexts.get(canvas);
