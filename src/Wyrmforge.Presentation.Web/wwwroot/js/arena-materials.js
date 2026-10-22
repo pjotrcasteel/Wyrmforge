@@ -254,8 +254,8 @@ export function groundMaterialFineDetailPlan(index, seed = 1441) {
             const height = 9 + Math.floor(random(cluster, mark, 3) * 22);
             const source = mark % 4 === 0 ? GROUND_ACCENTS[index][cluster % 2] : index;
             marks.push({
-                x: (centerX + (random(cluster, mark, 4) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE,
-                y: (centerY + (random(cluster, mark, 5) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE,
+                x: Math.floor((centerX + (random(cluster, mark, 4) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
+                y: Math.floor((centerY + (random(cluster, mark, 5) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
                 width, height, source,
                 sourceX: Math.floor(random(cluster, mark, 6) * (GROUND_SOURCE_TILE_SIZE - width + 1)),
                 sourceY: Math.floor(random(cluster, mark, 7) * (GROUND_SOURCE_TILE_SIZE - height + 1)),
@@ -291,7 +291,7 @@ function drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed) {
         sc.restore();
         sc.globalCompositeOperation = 'source-over';
 
-        const left = mark.x - width / 2, top = mark.y - height / 2;
+        const left = Math.round(mark.x - width / 2), top = Math.round(mark.y - height / 2);
         ctx.globalAlpha = mark.opacity;
         for (const offsetY of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
             for (const offsetX of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
