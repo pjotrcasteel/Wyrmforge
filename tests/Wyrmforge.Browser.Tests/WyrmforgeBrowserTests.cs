@@ -24,11 +24,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
@@ -63,7 +63,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -73,7 +73,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
@@ -81,7 +81,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
                 d.wellFrontEndpointWalkable && d.wellRimExcluded &&
@@ -109,7 +109,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // WaitForFunction MUST be synchronous: an async callback returns a
         // truthy Promise before its false diagnostic result is resolved.
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
             window.__readTownV2Rear = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -147,6 +147,61 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "true");
         await Page.Locator(".refuge-town-spot--gate").ClickAsync();
         await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_TownV2_FreezeAtCoverKeepsExactlyTheSameFeetForDepthComparison()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townV2=1&townRoute=rear",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
+        await Page.EvaluateAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
+            window.__readTownV2Freeze = () =>
+                module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+
+        var freeze = Page.Locator("[data-town-v2-freeze-toggle]");
+        await Expect(freeze).ToBeVisibleAsync();
+        await freeze.ClickAsync();
+        await Expect(freeze).ToHaveAttributeAsync("aria-pressed", "true");
+        await Page.WaitForFunctionAsync(
+            "() => window.__readTownV2Freeze?.()?.frozenAtCover === true",
+            null, new PageWaitForFunctionOptions { Timeout = 25000 });
+        var before = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Freeze()");
+        Assert.IsTrue(before.GetProperty("rearMode").GetBoolean());
+        Assert.IsGreaterThan(0, before.GetProperty("freezeCount").GetInt32());
+        Assert.IsTrue(before.GetProperty("wellCoveredPixels").GetInt32() >= 25 ||
+            before.GetProperty("noticeCoveredPixels").GetInt32() >= 25,
+            "The NPC must freeze on an actual object-alpha overlap.");
+        Assert.AreEqual(0, before.GetProperty("violations").GetInt32());
+
+        await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
+        await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
+        await Page.WaitForTimeoutAsync(450);
+        var after = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Freeze()");
+        Assert.IsTrue(after.GetProperty("frozenAtCover").GetBoolean());
+        Assert.AreEqual(before.GetProperty("position").GetProperty("x").GetDouble(),
+            after.GetProperty("position").GetProperty("x").GetDouble());
+        Assert.AreEqual(before.GetProperty("position").GetProperty("y").GetDouble(),
+            after.GetProperty("position").GetProperty("y").GetDouble());
+        Assert.IsFalse(after.GetProperty("depthVisible").GetBoolean());
+        Assert.IsFalse(after.GetProperty("maskVisible").GetBoolean());
+        Assert.AreEqual(0, after.GetProperty("violations").GetInt32());
+
+        await freeze.ClickAsync();
+        await Expect(freeze).ToHaveAttributeAsync("aria-pressed", "false");
+        await Page.WaitForTimeoutAsync(800);
+        var resumed = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Freeze()");
+        Assert.IsFalse(resumed.GetProperty("frozenAtCover").GetBoolean());
+        Assert.IsTrue(before.GetProperty("position").GetProperty("x").GetDouble() !=
+            resumed.GetProperty("position").GetProperty("x").GetDouble() ||
+            before.GetProperty("position").GetProperty("y").GetDouble() !=
+            resumed.GetProperty("position").GetProperty("y").GetDouble(),
+            "Resuming must move the actor, not restart the route or teleport.");
+        Assert.AreEqual(0, resumed.GetProperty("violations").GetInt32());
     }
 
     [TestMethod]
