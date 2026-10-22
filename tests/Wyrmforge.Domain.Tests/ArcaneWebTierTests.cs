@@ -69,6 +69,22 @@ public sealed class ArcaneWebTierTests
     }
 
     [TestMethod]
+    public void Immolation_MinorBonuses_OnlyIncreaseBurnDamage()
+    {
+        var modifiers = BuildModifierSet.Aggregate(new[]
+        {
+            PassiveTreeCatalog.Get("fire-cinder-temper").Modifiers,
+            PassiveTreeCatalog.Get("fire-burning-veins").Modifiers,
+            PassiveTreeCatalog.Get("fire-searing-focus").Modifiers,
+            PassiveTreeCatalog.Get("fire-coalbed").Modifiers,
+        });
+
+        Assert.AreEqual(114, modifiers.Apply(BuildStatId.BurnDamage, 100), 0.00001);
+        Assert.AreEqual(100, modifiers.Apply(BuildStatId.Damage, 100), 0.00001);
+        Assert.AreEqual(100, modifiers.Apply(BuildStatId.MutationDuration, 100), 0.00001);
+    }
+
+    [TestMethod]
     public void FireBranch_InactiveSchool_DoesNotAllowNewAllocation()
     {
         var selection = new PassiveTreeSelection();
