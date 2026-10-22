@@ -51,7 +51,7 @@ public static class FireProgressionCohorts
                 throw new InvalidOperationException($"Illegal Fire progression amplifier {binding.NodeId} in {name}.");
         }
 
-        if (coreLevel is < 1 or > FireballCoreCatalog.MaximumLevel || mutations.Count > coreLevel)
+        if (coreLevel is < 1 or > 5 || mutations.Count > coreLevel)
             throw new InvalidOperationException($"Illegal Fireball core level or mutation equipment in {name}.");
 
         var build = new SelfPlayBuildDefinition(name, SelfPlayBuildCohort.FullBuild, SpellSchool.Fire,
