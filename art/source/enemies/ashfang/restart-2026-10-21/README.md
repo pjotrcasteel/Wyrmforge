@@ -163,3 +163,5 @@ The initial supported hold, acceleration and first foot releases still need moti
 review. This is an entry, not a complete idle/walk/stop controller. Stopping,
 breath entry, collapse, flight and additional directions remain unfinished.
 Current main checked at 1e630566; no shipped files changed.
+
+Validation follow-up: all 160 entry PNGs are RGBA 320x192, nonempty and clear of cell edges. Browser gallery ran from frame 6 to frame 160 and exposed Replay at the terminal pose. Large/native views were inspected with the root-driven grid. Full continuous motion and rendered paw contact remain artistic review work; no acceptance inferred.
