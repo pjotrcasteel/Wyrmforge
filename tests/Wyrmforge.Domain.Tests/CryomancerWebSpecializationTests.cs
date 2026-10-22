@@ -47,9 +47,9 @@ public sealed class CryomancerWebSpecializationTests
 
         Assert.IsTrue(frozen > 1 && frozen <= 1.5);
         Assert.AreEqual(frozen * 2, chilled, 0.00001);
-        Assert.AreEqual(1, FrostControlDurationModifier.Apply(SpellSchool.Fire, CombatStatusId.Frozen, 1, modifiers));
-        Assert.AreEqual(1, FrostControlDurationModifier.Apply(SpellSchool.Frost, CombatStatusId.Burning, 1, modifiers));
-        Assert.AreEqual(1, FrostControlDurationModifier.Apply(SpellSchool.Storm, CombatStatusId.Shocked, 1, modifiers));
+        Assert.AreEqual(1d, FrostControlDurationModifier.Apply(SpellSchool.Fire, CombatStatusId.Frozen, 1, modifiers), 0.00001);
+        Assert.AreEqual(1d, FrostControlDurationModifier.Apply(SpellSchool.Frost, CombatStatusId.Burning, 1, modifiers), 0.00001);
+        Assert.AreEqual(1d, FrostControlDurationModifier.Apply(SpellSchool.Storm, CombatStatusId.Shocked, 1, modifiers), 0.00001);
         Assert.AreEqual(100, modifiers.Apply(BuildStatId.Damage, 100), 0.00001);
     }
 
