@@ -582,6 +582,59 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
+    public async Task Mobile_Nexus_SharedMaterialsKeepResearchAndWebReadable(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await ScreenshotAsync($"nexus-town-reference-{width}.png");
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.Locator("main.menu-nexus .fireball-ritual")).ToBeVisibleAsync();
+        await ScreenshotAsync($"nexus-fireball-reference-{width}.png");
+
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Research" }).ClickAsync();
+        await Expect(Page.Locator(".spellcraft-stage")).ToBeVisibleAsync();
+        Assert.AreEqual(0, await Page.Locator(".fireball-hero-art").CountAsync());
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(@"() => {
+            const reading = document.querySelector('.spellcraft-reading').getBoundingClientRect();
+            const dock = document.querySelector('.spellcraft-dock');
+            return getComputedStyle(dock).position === 'static' && dock.getBoundingClientRect().top >= reading.bottom - 1
+                && [...document.querySelectorAll('.element-token i')].every(icon =>
+                    getComputedStyle(icon, '::after').backgroundImage.includes('divine-lineage-sigils.webp'))
+                && document.documentElement.scrollWidth <= window.innerWidth + 1;
+        }"), "The shared pixel emblems must load without a sticky tray hiding research or causing horizontal overflow.");
+        await Page.WaitForFunctionAsync(@"async () => {
+            const circle = await import(new URL('js/spellcraft-circle.js', document.baseURI).href);
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            circle.drawEmblem(ctx, 'fire', 32, 32, 48);
+            return ctx.getImageData(0, 0, 64, 64).data.some((value, index) => index % 4 === 3 && value > 0);
+        }");
+        await ScreenshotAsync($"nexus-research-shared-style-{width}.png");
+        await Page.Locator(".spellcraft-dock").ScrollIntoViewIfNeededAsync();
+        await ScreenshotAsync($"nexus-research-actions-{width}.png");
+
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+        await Expect(Page.Locator(".atlas-stage")).ToBeVisibleAsync();
+        Assert.IsTrue(await Page.Locator(".atlas-stage").EvaluateAsync<bool>(@"stage => {
+            const frame = getComputedStyle(stage);
+            return frame.borderTopWidth === '3px' && frame.borderTopLeftRadius === '0px'
+                && [...document.querySelectorAll('.atlas-action')].every(button => {
+                    const box = button.getBoundingClientRect();
+                    return box.width >= 44 && box.height >= 44;
+                });
+        }"), "Web frame and controls must use the same material treatment with real 44px tap targets.");
+        await ScreenshotAsync($"nexus-web-shared-style-{width}.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        await Expect(Page.Locator(".town-square")).ToBeVisibleAsync();
+        await Expect(Page.Locator("main.menu-nexus")).ToHaveCountAsync(0);
+    }
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
     public async Task Mobile_ArcaneNexus_SocketsWrapAndInspectorLeavesWebVisible(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
