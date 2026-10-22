@@ -97,3 +97,11 @@ remain outstanding. Preliminary three-source license screen is in
 Python inspector syntax check and native reopen checks passed. No gameplay tests
 run because runtime files were untouched. No owner sign-off. M0 remains open;
 M1 has a recovered review baseline, not a newly completed blockout.
+
+Remote source-backup verification: evidence commit
+`09cb51d3afa1461a01d4752978f63940d383b7c1` was confirmed via ls-remote.
+The native review snapshot was then independently downloaded from that exact
+raw.githubusercontent.com commit into local artifacts. Retrieved SHA-256
+`ce924a613f1da0515d4f6ccf554edab1f843e3b60d1679a044950f0c900ce87e`
+matches the source snapshot. Thus the new editable review source is remotely
+retrievable, not merely locally committed. Final receipt-only commit follows.
