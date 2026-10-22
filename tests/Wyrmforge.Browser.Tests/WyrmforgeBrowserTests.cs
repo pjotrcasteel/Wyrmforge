@@ -324,7 +324,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 .Select(p => p.GetProperty("route").GetString()).ToArray());
 
         await Page.WaitForTimeoutAsync(1800);
+        // Do not count the mere presence of an SVG as proven depth: the
+        // real rear walker must reach actual wooden or tiled alpha coverage.
+        await Page.WaitForFunctionAsync(@"() => {
+            const d = window.__readTownV2Crowd?.();
+            return d?.crowdOcclusionFrames > 3 && d.violations === 0 &&
+                d.residents.every(p => p.safe);
+        }", null, new PageWaitForFunctionOptions { Timeout = 18000 });
         var later = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Crowd()");
+        Assert.IsGreaterThan(3, later.GetProperty("crowdOcclusionFrames").GetInt32());
         Assert.AreEqual(3, later.GetProperty("npcCount").GetInt32());
         Assert.IsTrue(later.GetProperty("residents").EnumerateArray()
             .All(p => p.GetProperty("safe").GetBoolean()), "Every actor's feet remain inside the authored mask.");
