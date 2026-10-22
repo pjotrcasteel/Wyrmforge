@@ -38,6 +38,25 @@ public static class PassiveTreeCatalog
         new("fire-major", "detonation"),
         new("wildfire", "inferno"),
         new("detonation", "volcanic"),
+        // Distinct routes join the existing Fire spine without invalidating old saved nodes.
+        new("fire-1", "fire-ember-drift"),
+        new("fire-ember-drift", "fire-scorching-winds"),
+        new("fire-scorching-winds", "fire-cinder-halo"),
+        new("fire-cinder-halo", "fire-conflagration"),
+        new("fire-conflagration", "fire-ashfront"),
+        new("fire-ashfront", "fire-spread-crown"),
+
+        new("fire-ember-drift", "fire-storm-gate"),
+        new("fire-1", "fire-cinder-temper"),
+        new("fire-cinder-temper", "fire-frost-gate"),
+        new("fire-frost-gate", "fire-burning-veins"),
+        new("fire-burning-veins", "fire-searing-focus"),
+        new("fire-searing-focus", "fire-immolation"),
+        new("fire-immolation", "fire-coalbed"),
+        new("fire-coalbed", "fire-ember-altar"),
+        new("fire-burning-veins", "fire-molten-density"),
+        new("fire-immolation", "fire-banked-embers"),
+
         new("fire-1", "fire-frost-gate"),
         new("fire-1", "fire-storm-gate"),
 
