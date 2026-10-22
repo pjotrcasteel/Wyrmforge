@@ -132,5 +132,21 @@
   "historicalEvidenceNotice": "All model/, prior approval, motion, contact and viewport evidence below predates the rejected V59/restart; it does not validate the current raster study.",
   "partialRig": "restart-2026-10-21/skeletal-idle-002/skin-source.json",
   "ownerJointGuide": "restart-2026-10-21/owner-guide-001/skeleton.json",
-  "locomotionEntryStudy": "restart-2026-10-21/idle-stalk-entry-001"
+  "locomotionEntryStudy": "restart-2026-10-21/idle-stalk-entry-001",
+  "nativeRecovery20261022": {
+    "milestone": "M0 in progress; legacy clay fails M1",
+    "continuity": "CONTINUITY.md",
+    "inventory": "recovery-2026-10-22/source-inventory.json",
+    "sourceBranch": "codex/ashfang-native-recovery",
+    "checkpointBeforeRender": "78c84030c2cb8270ee32f853ef3e2c7eae1e4696",
+    "draftPr": 293,
+    "blender": "4.5.14 LTS",
+    "portableArchiveSha256": "b9533d2397ac1984db4466fb23a7a4649391cca93f6e84209f9bcc60d071c8b9",
+    "snapshot": "recovery-2026-10-22/v48-clay-r01/ashfang-neutral-review.blend",
+    "snapshotSha256": "ce924a613f1da0515d4f6ccf554edab1f843e3b60d1679a044950f0c900ce87e",
+    "reopened": true,
+    "renderer": "RTX 5090 OptiX",
+    "ownerApproved": false,
+    "next": "Complete candidate neutral comparison and anatomy references; revise primary volumes before sculpt/material/animation expansion."
+  }
 }

@@ -1,0 +1,428 @@
+[
+  {
+    "path": "art/source/enemies/ashfang/production.json",
+    "bytes": 5906,
+    "sha256": "495c6be9734db2f5600864ae63dedb00ad03433fca259973ad4586473b46e8e7",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/ashfang-initial.glb",
+    "bytes": 8517448,
+    "sha256": "511a843965c1952386127b3c67b5d07a19d8d6b0c5e3ebd81d04c12b5d8f50a4",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v1/ashfang-rigged.blend",
+    "bytes": 15828768,
+    "sha256": "536e08e136e0162227e336cd3a4449334024ae1fab96de3e6e814d2b7889064c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v10/ashfang-rigged.blend",
+    "bytes": 14695376,
+    "sha256": "9c51709b72bb500e78ae016ebd1e00757195db8636fc43d671fcc80ac55e5810",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v11/ashfang-rigged.blend",
+    "bytes": 15372176,
+    "sha256": "8083e7a958b18a621fb5b388c1712a9437fc2f41dfa24914618cdbbc6a756a06",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v12/ashfang-rigged.blend",
+    "bytes": 15372176,
+    "sha256": "427183cffb6bb8fa42b827e10a3755a24271e1880db74bfc76dd5582165aca32",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v13/ashfang-rigged.blend",
+    "bytes": 15373600,
+    "sha256": "050b73b8b066e78b13524be47404162673237b933e2dcfa40b7d41d44b0f48e5",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v15/ashfang-rigged.blend",
+    "bytes": 15373600,
+    "sha256": "5bd5ea792a27b75abec6aadb987bdae5b75c17774690791e177d9d524a6e8da6",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v16/ashfang-rigged.blend",
+    "bytes": 15373928,
+    "sha256": "ef96d10c047533548e41e05df610b6b5fcd85ed1ad45c9a80100295c6e55f1f7",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v17/ashfang-rigged.blend",
+    "bytes": 15453472,
+    "sha256": "72f68f813eb3bdef2da20b35f5ac7153c279d22499fad6d7616e96a8669b0d4a",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v18/ashfang-rigged.blend",
+    "bytes": 15439056,
+    "sha256": "a86547ef55b312a87b69c5016f86d1af1feabe356c2cf9bd4890f02218f43b48",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v19/ashfang-rigged.blend",
+    "bytes": 15463368,
+    "sha256": "73b7caabdd3acca977b1a9ada3150befabb23a05da805f5172011c0de9efd01c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v2/ashfang-rigged.blend",
+    "bytes": 15730456,
+    "sha256": "b7256a3b898ecfc5e364376d2e65dac314f8d02f27d54f7cb3888c78d401f641",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v20/ashfang-rigged.blend",
+    "bytes": 15463368,
+    "sha256": "62b0b24fc7a22c6bc7719fa1ee43c7eaabcf8272ae414539d0eabb386b3ff7f9",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v21/ashfang-rigged.blend",
+    "bytes": 15409784,
+    "sha256": "891caafeae04a35f3420db8d75313d72aa660e5102b67fe0f64ef0cdb36afc0d",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v22/ashfang-rigged.blend",
+    "bytes": 16546476,
+    "sha256": "99dbb7aec4da0c1dc7bf8d89b6b1491448ff12eb7970a0def3776199e7b55e3c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v23/ashfang-rigged.blend",
+    "bytes": 16544956,
+    "sha256": "1a20716692c156d8dd9dab16d7de912b61afd2ee22564fbaab3d5c90f675cee3",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v24/ashfang-rigged.blend",
+    "bytes": 13890576,
+    "sha256": "0187843779cc7e2dd75b3bff7e3e191140446d706055937ede1e60832eb3b3ba",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v25/ashfang-rigged.blend",
+    "bytes": 13921268,
+    "sha256": "cfb4dc139e8ac578ee29c2762a72dd206e51a41c6a9ff4754b3d08676e4c488d",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v26/ashfang-rigged.blend",
+    "bytes": 13927172,
+    "sha256": "963687deb03bf9f6194c9bc6d7c86dc012c53c8205e6adc21d4ed7bd274a6685",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v27/ashfang-rigged.blend",
+    "bytes": 13927172,
+    "sha256": "b51ea3ca4e2d283d1b3e1050157f0322e343cb426d8ed161fe1a5e75b140b054",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v28/ashfang-rigged.blend",
+    "bytes": 15866660,
+    "sha256": "0d5b46b7fd45be48f066a02bf2edde733f2b26288c92ad3e252d3d6cceb1fafc",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v29/ashfang-rigged.blend",
+    "bytes": 21220052,
+    "sha256": "3cda62256f953c1336fd2fb9b2b1cf15e20080f943b3178c880f7efc059a60d1",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v3/ashfang-rigged.blend",
+    "bytes": 14672892,
+    "sha256": "bb2119ee78e7b1efaf507a1af0bd2e5d4b68baf28be38ffa4be472bc7c0bf9e3",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v31/ashfang-rigged.blend",
+    "bytes": 35704008,
+    "sha256": "06dd9e7d5b982562df8dbb3d5621f06550ded8bc5ffe5813a4ae852abfa4a031",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v32/ashfang-rigged.blend",
+    "bytes": 35704008,
+    "sha256": "0d16f32f00b9c850fcc861dd2e7204b94c628f6d386774753e92780ab7bb15b3",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v33/ashfang-rigged.blend",
+    "bytes": 35704008,
+    "sha256": "431b2a9223a2707593adcbddbeeb0513e45a2d3b49029297e17a0b1dc85fb002",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v34/ashfang-rigged.blend",
+    "bytes": 35704008,
+    "sha256": "3e8aa3fe9a65867a587e927f054b51f9c994dd19877479e8cd80f190c1996190",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v35/ashfang-rigged.blend",
+    "bytes": 35648920,
+    "sha256": "7e24eb6edc266275c17eebbf85048ff9425c9de7ae0686ccb6ad36ce60f0512c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v36/ashfang-rigged.blend",
+    "bytes": 35648920,
+    "sha256": "a0223507996612a757d91be9fd0a443b17f0070e8bc80825264fedf47216be60",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v37/ashfang-rigged.blend",
+    "bytes": 35648920,
+    "sha256": "80605c06a906d38df5664616ecdc6ba355cf38e32ed031e04e541a3eebb28a5b",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v38-stance/ashfang-rigged.blend",
+    "bytes": 2860716,
+    "sha256": "6622e377b3530e85d08f70e8728e91d1d39fca442647b2bceb1b2b7885026eea",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v39-stance/ashfang-rigged.blend",
+    "bytes": 2897128,
+    "sha256": "4af8df12832751598bf8706f0e4225b68580395855cf54926a8cda8af54b4aeb",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v4/ashfang-rigged.blend",
+    "bytes": 14661108,
+    "sha256": "ed1150e8475dfff548ea2740f978aef02a8ea9649ff76c9c17ce7ef7e7fa8e3e",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v40-stance/ashfang-rigged.blend",
+    "bytes": 1959700,
+    "sha256": "ebf8b1ee8d364ebe17409095698c065a9f50010e8b13fb3efdb7ab909236747c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v41-stance/ashfang-rigged.blend",
+    "bytes": 2044528,
+    "sha256": "c13329abc29a9e70df5e21d5ef17f90075e864fa0b60eb3c65516e3016e8f66e",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v42-gate/ashfang-rigged.blend",
+    "bytes": 2210628,
+    "sha256": "da92da3b83823d20c5f7c7f8c6effb59911c25a47e2df5563bdd3a2629ac1b94",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v43-gate/ashfang-rigged.blend",
+    "bytes": 2294988,
+    "sha256": "3dd544b81dcb3b680b3fdc7689e9f33201136a58fddd0d57d15984ccaba7f069",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v44-gate/ashfang-rigged.blend",
+    "bytes": 2552772,
+    "sha256": "25b5a3bfc91b986c11461f539ccf946c25bdee2bd917f045a8bbb847024b667c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v45-sweep/ashfang-rigged.blend",
+    "bytes": 4051956,
+    "sha256": "a0fb02eefcac7463baf6eaa9348075714b146eddafd4d914e33fb464a222c49a",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v46-motion-gate/ashfang-rigged.blend",
+    "bytes": 10353644,
+    "sha256": "4d205aab458ba7da078f3bddd25b0a3daa1de5fc6fd2316163a4bd3de4a92342",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v47/ashfang-rigged.blend",
+    "bytes": 41752328,
+    "sha256": "626c4a7023468703c2b0d4f816a9bb5df81215a1f8428b305e12eeb8761e67dc",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v48/ashfang-rigged.blend",
+    "bytes": 41737344,
+    "sha256": "aab1245208652a985d972cfea8235fded9b9437ad5789653359583293373772b",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v49-head-limbs/ashfang-rigged.blend",
+    "bytes": 25219624,
+    "sha256": "8a5bea5e28e93d68455c304a7304af434e9b897fdfeca923f244d2c2a7bbfe75",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v5/ashfang-rigged.blend",
+    "bytes": 14661108,
+    "sha256": "3acb9823dd30dd921a8164ed30e6b6d2e7af4dd3701e8ef78f6230f32dd66adf",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v50-head-limbs/ashfang-rigged.blend",
+    "bytes": 55230812,
+    "sha256": "a3ae2d8650cabfa7172d7c9a118a470af5bb72c36c7ab6c7a9ed3dd83b9741c6",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v51-surface/ashfang-rigged.blend",
+    "bytes": 6694778,
+    "sha256": "6e0253d8ebf046c6464df783114d8079cb3e9e079a6a5e44d02e134e81bb62f2",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v52-surface/ashfang-rigged.blend",
+    "bytes": 6380537,
+    "sha256": "9d100fa53c610665074b70d7bb5f58dda7d9714865633e6d42fdf7194c5185ef",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v53-surface/ashfang-rigged.blend",
+    "bytes": 6439471,
+    "sha256": "4132d97b45d217b50a2e559b847a0c4a07068264269c7d010e6e336f5870edec",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v54-fire/ashfang-rigged.blend",
+    "bytes": 12646791,
+    "sha256": "ac177e94a9f449b58eae2ce7681636ec4b973d1cce7692dc522325a00fafe647",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v54-fire/ashfang-texture-only.blend",
+    "bytes": 6384052,
+    "sha256": "f502ba4739aa08c4301e8b97fb7875a74c3af9a5b424250a09f1dd192954a3f1",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v55-charcoal/ashfang-rigged.blend",
+    "bytes": 12777411,
+    "sha256": "f0697ba928a1a4962729d70eb96c7523aaaf600d16d64858a7d9790b59d18324",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v56-performance/ashfang-rigged.blend",
+    "bytes": 6520728,
+    "sha256": "b0b0ac29d403bcb420642033acc90da22d9a94dbace89e7c176223b0a39e543b",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v57-shadowfire/ashfang-rigged.blend",
+    "bytes": 14319293,
+    "sha256": "6abe86552e9fdc69f1832572dededf03787e542a514bf1d4831b020afdc32a1e",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v58-shadowfire/ashfang-rigged.blend",
+    "bytes": 14311096,
+    "sha256": "b6d71a359eff40a2c0112cba84f0e35ac77280b094e766dfda475e5263d16f3c",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v59-crimson/ashfang-rigged.blend",
+    "bytes": 13878774,
+    "sha256": "3160c7c374ed90f61392c423c6ab709ce69eeda97ffdd55379ab391e5f4fa3ec",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v6/ashfang-rigged.blend",
+    "bytes": 14644068,
+    "sha256": "b65a73847b36e3c0a969e3e035a794e609be05fbed75a6217f5ec9964558d83b",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v7/ashfang-rigged.blend",
+    "bytes": 14695376,
+    "sha256": "dc22de215f17cc3c8dfc110973509fa8cdc4a09343fd481d3e605bf2cf2d6de8",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v8/ashfang-rigged.blend",
+    "bytes": 14695376,
+    "sha256": "6e12c0f773caddafda3acb616930cecc6e1997011d0d746ccc9949971468e568",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v9/ashfang-rigged.blend",
+    "bytes": 14695376,
+    "sha256": "b855a4e00dd334811dc54493526b9cf590b4b11b09c09230b51e2b708bb968c3",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-001/textured-v1/hollow-textured.glb",
+    "bytes": 3497860,
+    "sha256": "79f49599e058c04d53448d3a968e599adf665446b7e76398b23f3f165a3e8fad",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/model/local-appearance-002/ashfang-initial.glb",
+    "bytes": 6858020,
+    "sha256": "cb5535a0fd1e9de752b0bae6b0e78dd497bed41f97ce1c15d85c9270b859c501",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/art-master-002/card-review-v1/card-art-2801.ora",
+    "bytes": 1138964,
+    "sha256": "fc7eee31c8b65d9a0b3b1a2718b7f7a9983d53512b968853bc39c089a3a1f0fb",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/art-master-002/card-review-v1/card-art-2802.ora",
+    "bytes": 1114806,
+    "sha256": "dcb009b87258c6c524c13fb3289fe784bff310d9495c429c5bf050f1afa9f416",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/art-master-002/card-review-v1/card-art-2803.ora",
+    "bytes": 991118,
+    "sha256": "da1fd68dda82ceb855b27902af17d2387c248f63511e7eb41d36eea89c08c308",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/articulated-layers-001/ashfang-limb-preparation.ora",
+    "bytes": 314895,
+    "sha256": "4d7edd648619de8637002d077266eecde7802e5876709aea93f2e7fc927960c7",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/articulated-layers-002/ashfang-limb-preparation.ora",
+    "bytes": 314987,
+    "sha256": "2f0c66fbf7d1c78d8d231bf8842b656bf9d848fdfe7e5a0b1ec22b3cf32a5794",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/idle-seed-6283/card-conditioned-source.glb",
+    "bytes": 1540168,
+    "sha256": "5a131cdddd7462956007a15077b1bfaf89095d9d526cfaae7bd490ca0cf1f5e5",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/multi-seed-4729/card-conditioned-source.glb",
+    "bytes": 3097168,
+    "sha256": "016b1cf4a1465513eb490fcb236706d7ee918bd7dda06e1ff5c8698dc458a486",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/multi-seed-9137/card-conditioned-source.glb",
+    "bytes": 3280596,
+    "sha256": "a444c72b8383592ff8dde419ff995576bb22ec485920c788b89a530e4c6e737f",
+    "reopenVerifiedThisSession": false
+  },
+  {
+    "path": "art/source/enemies/ashfang/restart-2026-10-21/owner-guide-001/skeleton.json",
+    "bytes": 2761,
+    "sha256": "92b380ac1c1c7854c2efbea225eea1da11620c4898458aafc9c402bc8f5933ca",
+    "reopenVerifiedThisSession": false
+  }
+]
