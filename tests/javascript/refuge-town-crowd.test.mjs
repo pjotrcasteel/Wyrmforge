@@ -616,7 +616,7 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     assert.match(js, /destination-in/);
     assert.match(js, /canvas\.toDataURL\("image\/png"\)/);
     assert.match(js, /STAIR_EXIT, REAR_ENTRY/);
-    assert.match(js, /REAR_END = \{ x: 842, y: 445 \}/);
+    assert.match(js, /REAR_END = \{ x: 852, y: 452 \}/);
     assert.match(js, /state\.route = \[\.\.\.entryRoute, \.\.\.rearRoute\.slice\(1\)\]/);
     assert.match(js, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
     assert.match(js, /wellOcclusionFrames: entry\.wellOcclusionFrames/);
