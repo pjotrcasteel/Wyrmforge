@@ -13,9 +13,10 @@ const WELL_FRONT_END = { x: 974, y: 614 };
 const FRONT_VISUAL_CONTACT_MAX_Y = 590; // Feet close enough for sprite to overlap well's front
 // Independently selectable Phase 5 debug route; front V2 stays the default.
 const REAR_ENTRY = { x: 680, y: 469 };
-const REAR_BOARD_PASS = { x: 756, y: 444 };
-const REAR_POST_BYPASS = { x: 802, y: 405 };
 const REAR_END = { x: 852, y: 452 };
+// A walker belongs on the far side of the TIMBER, not diverted around it.
+// Screenshot-grounded crossing where the actual post alpha should occlude it.
+const RIGHT_POST_PASS = { x: 800, y: 444 };
 // Crop to the existing approved alpha contours with >=10px clear margins on each edge.
 const WELL_CUTOUT = { x: 810, y: 392, width: 130, height: 160, depthY: 498 };
 const NOTICE_CUTOUT = { x: 721, y: 411, width: 93, height: 139, depthY: 459 };
@@ -230,6 +231,9 @@ function draw(w) {
     if (w.lastNoticeOccluded && w.showDepth) {
         ctx.drawImage(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y);
         w.noticeOcclusionFrames++;
+        if (Math.abs(w.position.x - RIGHT_POST_PASS.x) <= 9 &&
+            Math.abs(w.position.y - RIGHT_POST_PASS.y) <= 15)
+            w.rightPostOcclusionFrames++;
     }
     w.lastOccluded = overlapsFoliage(w.position, w.foliage);
     if (w.lastOccluded && w.showDepth) {
@@ -317,6 +321,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         depthFrames: 0, maskViolations: 0, plazaVisits: 0, wellFrontVisits: 0,
         nearWellFrames: 0, nearestWellFootY: HEIGHT,
         rearFrames: 0, wellOcclusionFrames: 0, noticeOcclusionFrames: 0,
+        rightPostOcclusionFrames: 0,
         lastWellOccluded: false, lastNoticeOccluded: false
     };
     live.set(scene, state);
@@ -331,12 +336,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.171", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.171", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.172", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.172", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.171", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.171", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.172", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.172", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
@@ -361,19 +366,19 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                 buildArchitectureCutout(scene, noticeMask, NOTICE_CUTOUT, "noticeboard")
             ]);
             if (state.disposed) return;
-            if (![STAIR_EXIT, REAR_ENTRY, REAR_BOARD_PASS, REAR_POST_BYPASS, REAR_END]
-                .every(p => state.nav.canStand(p.x,p.y)))
+            if (![STAIR_EXIT, REAR_ENTRY, REAR_END].every(p => state.nav.canStand(p.x,p.y)))
                 throw new Error("Town V2 well rear feet leave verified paving.");
             const entryRoute = planRoute(state.nav, STAIR_EXIT, REAR_ENTRY);
-            const boardRoute = planRoute(state.nav, REAR_ENTRY, REAR_BOARD_PASS);
-            const bypassRoute = planRoute(state.nav, REAR_BOARD_PASS, REAR_POST_BYPASS);
-            const wellRoute = planRoute(state.nav, REAR_POST_BYPASS, REAR_END);
-            const rearRoute = [...boardRoute, ...bypassRoute.slice(1), ...wellRoute.slice(1)];
+            const rearRoute = planRoute(state.nav, REAR_ENTRY, REAR_END);
             state.route = [...entryRoute, ...rearRoute.slice(1)];
             if (!state.route.some(p => p.x >= 820 && p.x <= 855 && p.y < 473))
                 throw new Error("Town V2 rear route never travels behind the well roof.");
-            if (state.route.some(p => p.x >= 790 && p.x <= 810 && p.y >= 420))
-                throw new Error("Town V2 rear NPC still crosses the noticeboard right upright.");
+            // Unlike v0.0.171, the route MUST actually pass behind the right
+            // post. Test both movement coordinates and real object alpha.
+            if (!state.route.some(p => Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
+                    Math.abs(p.y - RIGHT_POST_PASS.y) <= 15 &&
+                    overlapsFoliage(p, state.noticeCutout)))
+                throw new Error("Town V2 rear walker must pass behind real right-post timber.");
         } else {
         // Explicit intermediate anchors preserve the owner-approved Nexus/plaza
         // traversal and force actual CLOSE well frontage rather than a wide arc.
@@ -445,9 +450,11 @@ export function readTownV2Diagnostics(canvas) {
         noticeDepthEdgesClear: entry.noticeCutout?.edgeTransparent === true,
         behindWell: entry.lastWellOccluded,
         behindNoticeboard: entry.lastNoticeOccluded,
-        clearOfRightPost: entry.route.length > 0 &&
-            entry.route.every(p => p.x < 790 || p.x > 810 || p.y < 420),
-        routedOverBoard: entry.route.some(p => p.x >= 790 && p.x <= 810 && p.y < 420),
+        passesBehindRightPost: entry.rearMode && !!entry.noticeCutout &&
+            entry.route.some(p => Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
+                Math.abs(p.y - RIGHT_POST_PASS.y) <= 15 &&
+                overlapsFoliage(p, entry.noticeCutout)),
+        rightPostOcclusionFrames: entry.rightPostOcclusionFrames,
         stairMasonryBlocked: entry.nav ? !entry.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y) : false,
         foliageExcludesStairs: FOLIAGE.x + FOLIAGE.width <= 465,
         stairAreaOccluded: entry.position.x >= 475 && entry.lastOccluded,
