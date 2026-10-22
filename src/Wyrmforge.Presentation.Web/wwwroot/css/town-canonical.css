@@ -246,10 +246,13 @@
     z-index:1;pointer-events:none;user-select:none;
     opacity:var(--nexus-radiance-strength, .16);
     mix-blend-mode:screen;
+    /* Two magic emitters in the approved painting: the Nexus dome and portal.
+       Light the actual spellwork, not a generic blob across the masonry. */
     background:
-        radial-gradient(ellipse 29% 44% at 49% 37%, rgb(var(--nexus-light-core) / .77), transparent 90%),
-        radial-gradient(ellipse 51% 61% at 49% 51%, rgb(var(--nexus-light) / .62), transparent 94%),
-        radial-gradient(ellipse 39% 26% at 51% 83%, rgb(var(--nexus-light) / .38), transparent 98%);
+        radial-gradient(ellipse 19% 23% at 43% 16%, rgb(var(--nexus-light-core) / .95), transparent 96%),
+        radial-gradient(ellipse 25% 27% at 68% 60%, rgb(var(--nexus-light-core) / .92), transparent 94%),
+        radial-gradient(ellipse 39% 41% at 68% 58%, rgb(var(--nexus-light) / .74), transparent 98%),
+        radial-gradient(ellipse 45% 45% at 47% 44%, rgb(var(--nexus-light) / .36), transparent 98%);
     transform-origin:49% 45%;
     animation:nexus-magical-light 7s ease-in-out infinite;
 }
