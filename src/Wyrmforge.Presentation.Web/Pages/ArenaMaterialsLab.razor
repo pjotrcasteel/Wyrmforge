@@ -39,7 +39,7 @@
         <button class="secondary" @onclick="Clear">All grass</button>
         <button class="secondary" @onclick="Preview">Natural ground</button>
         <button class="secondary" @onclick="Reroll">Different ground</button>
-        <button class="@(fineDetail ? "selected" : "secondary")" aria-pressed="@fineDetail"
+        <button class="@(fineDetail ? "selected" : "secondary")" aria-pressed="@(fineDetail ? "true" : "false")"
                 disabled="@fineDetailBusy" aria-busy="@fineDetailBusy"
                 @onclick="ToggleFineDetail">@(fineDetailBusy ? "Applying detail…" : $"Fine detail {(fineDetail ? "On" : "Off")}")</button>
     </section>
