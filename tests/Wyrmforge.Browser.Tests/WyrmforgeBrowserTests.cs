@@ -372,6 +372,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
+        var legend = Page.Locator(".refuge-town-v2-coverage-legend");
+        await Expect(legend).ToBeVisibleAsync();
+        Assert.IsTrue((await legend.InnerTextAsync()).Contains("NOT walkable", StringComparison.Ordinal),
+            "Proposed paving must be clearly marked as unverified on a phone.");
         await Page.EvaluateAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             window.__readTownV2Coverage = () =>
