@@ -620,7 +620,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".atlas-stage")).ToBeVisibleAsync();
         Assert.IsTrue(await Page.Locator(".atlas-stage").EvaluateAsync<bool>(@"stage => {
             const frame = getComputedStyle(stage);
+            const heading = document.querySelector('.nexus-equipped-head > div').getBoundingClientRect();
+            const craft = document.querySelector('.nexus-equipped-head > button').getBoundingClientRect();
             return frame.borderTopWidth === '3px' && frame.borderTopLeftRadius === '0px'
+                && craft.top < heading.bottom && craft.left >= heading.right - 1
                 && [...document.querySelectorAll('.atlas-action')].every(button => {
                     const box = button.getBoundingClientRect();
                     return box.width >= 44 && box.height >= 44;

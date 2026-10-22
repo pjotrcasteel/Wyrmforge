@@ -1,7 +1,7 @@
 /* One Nexus, three working instruments. Materials follow the approved Fireball
    chamber and Refuge's stone, timber, brass and painted Divine emblems.
    Scoped to the Nexus: elemental colour describes magic, never generic chrome. */
-.menu-nexus {
+.game-shell.menu-nexus {
     --nexus-gold: #d4a467;
     --nexus-edge: #8b5d43;
     --nexus-line: #60463b;
@@ -127,6 +127,7 @@
 .menu-nexus .loadout-panel,
 .menu-nexus .loadout-panel button { border-color: #73513e; border-radius: 0; background: #1d151c; color: var(--nexus-bone); }
 .menu-nexus .nexus-equipped { padding: 12px 13px 5px; }
+.menu-nexus .nexus-equipped .nexus-equipped-head { display: flex; }
 .menu-nexus .nexus-equipped-head span { color: #d4ad7e; font: 600 .75rem/1.3 Georgia, serif; letter-spacing: .04em; }
 .menu-nexus .nexus-equipped-head strong { color: var(--nexus-muted); }
 .menu-nexus .nexus-equipped-head button { border: 1px solid #ac7f50; border-radius: 0; background: linear-gradient(180deg, #44302a, #21171e); color: var(--nexus-bone); box-shadow: inset 0 0 0 2px #21141c; }
@@ -201,6 +202,7 @@
 .menu-nexus .route-summary,
 .menu-nexus .route-steps li,
 .menu-nexus .route-gains,
+.menu-nexus .route-gain,
 .menu-nexus .route-landmarks,
 .menu-nexus .mastery-warning,
 .menu-nexus .nexus-experiments,
