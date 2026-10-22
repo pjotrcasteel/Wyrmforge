@@ -649,7 +649,7 @@ test('Town V2 well and noticeboard alpha avoid the garden wall and paving', () =
     assert.match(code, /noticeDepthEdgesClear:/);
     assert.match(well, /Garden walls, planters, flowers, and all paving stay transparent/);
     assert.match(well, /Actual small well's round masonry ring/);
-    assert.match(sign, /only actual wood and sign face/);
+    assert.match(sign, /timber noticeboard alone/);
     assert.doesNotMatch(well, /M 769 528 Q 808 523/);
     assert.match(well, /M818 439 L823 426/);
     assert.match(sign, /M731 454 L731 449/);
