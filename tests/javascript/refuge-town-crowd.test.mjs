@@ -677,7 +677,7 @@ test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowe
     for (const [x, y] of [[760, 470], [795, 470], [736, 518], [800, 510]])
         assert.equal(covered(x, y), true, `Board or timber support pixel ${x},${y} must hide the rear NPC`);
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
-    assert.match(js, /w.lastNoticeOccluded = w.noticeCoveredPixels > 0/);
+    assert.match(js, /w.lastNoticeOccluded = w.rearMode && overlapsFoliage\(w.position, w.noticeCutout\)/);
     assert.match(js, /ctx.drawImage\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\)/);
     assert.doesNotMatch(js, /buildDebugOverlay/);
 });
