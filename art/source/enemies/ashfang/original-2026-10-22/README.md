@@ -93,3 +93,7 @@ read-only hardware/tool/card checks. Use Blender bundled Python for bpy work.
 Native review/validation CLI is implemented incrementally; unsupported production
 operations must report unimplemented rather than generate placeholder success.
 See CONTINUITY.md for actual commands, revision hashes, evidence and next task.
+
+## Current capability checkpoint
+
+Headless-only owner constraint applies. M1 remains incomplete. R05 is the preceding working native; r06 is a retained failed comparison. See CONTINUITY.md and reviews/M1-r06/decision.md for the direct-viewport sculpting capability gap and required pause. No owner acceptance or runtime integration.

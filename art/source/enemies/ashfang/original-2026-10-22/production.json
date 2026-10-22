@@ -15,17 +15,15 @@
     "units": "METRIC"
   },
   "storage": {
-    "largeSourceBackend": "Git LFS; path-scoped original r03 upload and independent fresh-checkout retrieval verified",
+    "largeSourceBackend": "Git LFS; independent native download/hash/reopen verified through r06",
     "numericQuotaVerified": true,
     "paidOverageAuthorized": false,
-    "pilotNativeFileLimitBytes": 8388608,
-    "pilotNativeTotalLimitBytes": 20971520,
     "retrievalVerified": true,
-    "retrievalSourceCommit": "6e2a953cb9dbdfb03a7111df569e4fcb2c5e0502"
+    "retrievalSourceCommit": "f2741738c9464fd788eb5b29041da0e3da146d6b"
   },
   "milestones": {
     "M0": "source foundation verified for primary studies; optional paint/video tools deferred",
-    "M1": "r05 primary facial correction reviewed; artistic gate still failed",
+    "M1": "Incomplete; r06 reviewed and rejected by agent; paused at direct-sculpt capability gap under owner headless-only constraint",
     "M2": "blocked-on-owner-M1-acceptance",
     "M3": "not-started",
     "M4": "not-started",
@@ -35,7 +33,7 @@
     "M8": "not-started"
   },
   "technicalPass": true,
-  "agentVisualStatus": "Sockets improved but brows remain soft, horn roots generic, torso/haunch planes unresolved. Continue primary forms headlessly.",
+  "agentVisualStatus": "R05/r06 fail card-specific primary anatomy. R06 adds stepped cheek artifact; retain as rejected study, not approved working improvement.",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "assets": [
@@ -103,9 +101,51 @@
       "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
       "bytes": 6252347,
       "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-before-anatomical-restructure.blend",
+      "bytes": 2881459,
+      "sha256": "568f3e60f3ac79a4ef5b37febc2d5e22ef18b4f81d66a8c773a8092e0e287785"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-planar-preboolean.blend",
+      "bytes": 4309285,
+      "sha256": "c9171c71b896d54d747e70de8837077a845a0eab8f62826e858b739aad8e3e57"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-primary.blend",
+      "bytes": 4348975,
+      "sha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04.blend",
+      "bytes": 4348975,
+      "sha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-primary-repaired.blend",
+      "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+      "bytes": 5214554
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04-repaired.blend",
+      "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+      "bytes": 5214554
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r06/ashfang-primary.blend",
+      "bytes": 9099282,
+      "sha256": "7888465c04ef9a682cbd0ebe50f054876fc00b70758cc1523e2f83f47130ccb3"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r06.blend",
+      "bytes": 9099282,
+      "sha256": "7888465c04ef9a682cbd0ebe50f054876fc00b70758cc1523e2f83f47130ccb3"
     }
   ],
-  "nextTask": "Change the primary modeling approach to resolve card-specific skull/neck and grounded wing silhouette; do not repeat smooth contour studies or advance to M2",
+  "nextTask": "When owner authorizes desktop work, open preserved r05 native, save a new revision, sculpt integrated brow/cheek/muzzle and shoulder/haunch planes directly. Preserve r06 as rejected comparison. Do not advance M2 or claim headless edits are manual sculpting.",
   "authoritativeWorkingProject": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
-  "operatingMode": "Headless only until owner says otherwise; pause before any necessary desktop input"
+  "operatingMode": "Headless only until owner says otherwise; pause before any necessary desktop input",
+  "productionStatus": "paused-needs-direct-viewport-sculpting",
+  "latestStudyProject": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r06/ashfang-primary.blend"
 }

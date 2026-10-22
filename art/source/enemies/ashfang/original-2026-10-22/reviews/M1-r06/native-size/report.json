@@ -1,0 +1,67 @@
+{
+  "purpose": "Static original clay scale and silhouette review only",
+  "runtimeIntegrated": false,
+  "liveGameplay": false,
+  "pixelArtAccepted": false,
+  "ownerAccepted": false,
+  "mageRgbaSha256": "a7f0e6ca88fc93805b42ab57611d279211f30c6478af17f418e41892b5b3a360",
+  "measurements": [
+    {
+      "viewportWidth": 320,
+      "targetFootprintWidth": 74,
+      "viewportFraction": 0.23125,
+      "mageFrameSize": [
+        36,
+        42
+      ],
+      "mageOpaqueBounds": [
+        7,
+        2,
+        31,
+        41
+      ],
+      "mageScale": 1,
+      "mageCompositedPixelsUnchanged": true,
+      "sourceRender": "art\\source\\enemies\\ashfang\\original-2026-10-22\\reviews\\M1-r06\\game-elevated.png",
+      "silhouetteOccupiedPixels": 1258
+    },
+    {
+      "viewportWidth": 390,
+      "targetFootprintWidth": 90,
+      "viewportFraction": 0.23076923076923078,
+      "mageFrameSize": [
+        36,
+        42
+      ],
+      "mageOpaqueBounds": [
+        7,
+        2,
+        31,
+        41
+      ],
+      "mageScale": 1,
+      "mageCompositedPixelsUnchanged": true,
+      "sourceRender": "art\\source\\enemies\\ashfang\\original-2026-10-22\\reviews\\M1-r06\\game-elevated.png",
+      "silhouetteOccupiedPixels": 1868
+    },
+    {
+      "viewportWidth": 440,
+      "targetFootprintWidth": 101,
+      "viewportFraction": 0.22954545454545455,
+      "mageFrameSize": [
+        36,
+        42
+      ],
+      "mageOpaqueBounds": [
+        7,
+        2,
+        31,
+        41
+      ],
+      "mageScale": 1,
+      "mageCompositedPixelsUnchanged": true,
+      "sourceRender": "art\\source\\enemies\\ashfang\\original-2026-10-22\\reviews\\M1-r06\\game-elevated.png",
+      "silhouetteOccupiedPixels": 2354
+    }
+  ]
+}
