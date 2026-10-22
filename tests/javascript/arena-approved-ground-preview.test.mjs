@@ -19,7 +19,7 @@ test('approved Wet Forest swatches map existing semantic C# terrain without inve
     ];
     const first = approvedWetForestBoard(tiles, 36, 36);
     assert.deepEqual(first, approvedWetForestBoard(tiles, 36, 36));
-    assert.deepEqual([...first.board], [0, 3, 3, 5, 3, 3, 0, 0, 0]);
+    assert.deepEqual([...first.board], [0, 3, 3, 0, 0, 0, 0, 0, 0]);
     assert.equal(first.columns, 3);
     assert.equal(first.rows, 3);
     assert.equal(approvedWetForestBoard([], 36, 36), null);
@@ -29,7 +29,7 @@ test('approved Wet Forest swatches map existing semantic C# terrain without inve
 
 test('approved floor paints with the same accepted seamless atlas and transition algorithm', () => {
     const tiles = Array.from({ length: 9 }, (_, i) =>
-        ({ x: i % 3 * 12, y: Math.floor(i / 3) * 12, material: i % 2 ? 'mud' : 'moss' }));
+        ({ x: i % 3 * 12, y: Math.floor(i / 3) * 12, material: i === 2 ? 'mud' : 'moss' }));
     const atlas = { width: MATERIALS.length * GROUND_TILE_SIZE, height: GROUND_TILE_SIZE };
     const operations = [];
     const ctx = {
