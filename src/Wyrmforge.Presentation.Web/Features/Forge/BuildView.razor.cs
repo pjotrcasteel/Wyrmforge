@@ -2,8 +2,6 @@ using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
-using Wyrmforge.Application.Nexus;
-using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Progression.Loadouts;
 using Wyrmforge.Domain.Progression.PassiveTree;
@@ -32,75 +30,13 @@ public partial class BuildView : IAsyncDisposable
     [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
     [Parameter] public Func<int, Task> ClearLoadout { get; set; } = _ => Task.CompletedTask;
 
-    // Arcane Nexus: research is embedded in the Web's node inspector (amendment §3). Null until research unlocks.
-    [Parameter] public LaboratoryState? Laboratory { get; set; }
-    [Parameter] public DragonEssenceVault? Vault { get; set; }
     [Parameter] public string? FocusNodeId { get; set; }
-    [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task>? Equip { get; set; }
-    [Parameter] public EventCallback<LaboratoryMutationId?> OnOpenSpellcraft { get; set; }
 
-    private bool NexusReady => Laboratory is not null && Vault is not null;
-    private NexusNode? FocusedNexus => NexusReady && FocusedNode.Kind != PassiveNodeKind.Origin ? ArcaneNexus.Node(focusedId, Laboratory!, Vault!, Selection.Selected, Loadouts) : null;
-    private NexusSuggestion? Suggestion => NexusReady ? ArcaneNexus.Suggest(Laboratory!, Vault!, Selection.Selected) : null;
-    private NexusResearchStage? MarkFor(string nodeId) => NexusReady && ArcaneNexus.IsResearchNode(nodeId) ? ArcaneNexus.Mark(nodeId, Laboratory!, Vault!, Selection.Selected) : null;
+    // Specialize currently edits learned Web nodes only. Research/crafting stays
+    // in its own facet; socket-node integration can return as a separate slice.
+    private static string NodeAriaLabel(PassiveNodeDefinition node) => $"{node.Name}. {node.Description}";
 
-    private string NodeAriaLabel(PassiveNodeDefinition node) => MarkFor(node.Id) is { } mark
-        ? $"{node.Name}. {node.Description} Research: {StageLabel(mark)}."
-        : $"{node.Name}. {node.Description}";
-
-    private static string StageClass(NexusResearchStage stage) => stage.ToString().ToLowerInvariant();
-
-    // Shape and text carry the state as well as colour.
-    private static string StageGlyph(NexusResearchStage stage) => stage switch
-    {
-        NexusResearchStage.NeedsMaterial => "?",
-        NexusResearchStage.Experimenting => "!",
-        NexusResearchStage.ReadyToStabilize => "★",
-        NexusResearchStage.Discovered => "✓",
-        _ => "◆",
-    };
-
-    private static string StageLabel(NexusResearchStage stage) => stage switch
-    {
-        NexusResearchStage.NeedsMaterial => "Needs material",
-        NexusResearchStage.Experimenting => "Experiment ready",
-        NexusResearchStage.ReadyToStabilize => "Ready to stabilize",
-        NexusResearchStage.Discovered => "Discovered",
-        _ => "Equipped",
-    };
-
-    private static string MaterialHelp(NexusMaterialNeed material) => material.Met
-        ? "Secured in your vault. Research only studies it."
-        : material.Tracked
-            ? $"Found on {material.SourceName} · tracked, {material.TrackedHuntsLeft} hunt{(material.TrackedHuntsLeft == 1 ? string.Empty : "s")} left"
-            : $"Found on {material.SourceName} · secure it after a hunt";
-
-    private static string EquipBlocked(MutationEquipResult result) => result switch
-    {
-        MutationEquipResult.SocketLocked => "ALLOCATE THIS NODE FIRST",
-        MutationEquipResult.FoundationTaken => "SAME SPELL ALREADY MUTATED",
-        MutationEquipResult.SocketLimitReached => $"{LaboratoryCatalog.MaxEquippedMutations} SOCKETS IN USE",
-        _ => "CANNOT EQUIP HERE",
-    };
-
-    private string SocketHelp(NexusSocket socket)
-    {
-        var accepts = string.Join(" + ", socket.Definition.Accepts);
-        var holds = socket.Holder is { } holder ? $"Holds {LaboratoryCatalog.Get(holder).Name}." : "Empty.";
-        return socket.Unlocked ? $"{holds} Accepts {accepts} blueprints." : $"Opens when you allocate {socket.Definition.NodeName}. Accepts {accepts} blueprints.";
-    }
-
-    private async Task EquipAsync(LaboratoryMutationId id, ArcaneMutationSocketId? socket)
-    {
-        if (Equip is not null) await Equip(id, socket);
-    }
-
-    private async Task FocusNodeAsync(string nodeId)
-    {
-        var node = PassiveTreeCatalog.Get(nodeId);
-        InspectNode(node);
-        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, ArcaneWheelLayout.Position(node, ActiveSchool).X, ArcaneWheelLayout.Position(node, ActiveSchool).Y);
-    }
+    private Task FocusNodeAsync(string nodeId) => InspectNode(PassiveTreeCatalog.Get(nodeId));
 
     private enum LoadoutAction { None, Overwrite, Clear }
     private int? openLoadout;
@@ -191,11 +127,13 @@ public partial class BuildView : IAsyncDisposable
 
     private bool IsSelected(PassiveNodeDefinition node) => node.Kind == PassiveNodeKind.Origin || Selection.Selected.Contains(node.Id);
 
-    private void InspectNode(PassiveNodeDefinition node)
+    private async Task InspectNode(PassiveNodeDefinition node)
     {
         focusedId = node.Id;
         inspectorOpen = true;
         revealInspector = true;
+        var point = ArcaneWheelLayout.Position(node, ActiveSchool);
+        await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focus", viewport, point.X, point.Y);
     }
 
     private async Task AllocateFocusedRoute()
@@ -322,11 +260,12 @@ public partial class BuildView : IAsyncDisposable
     }
 
     private async Task ZoomAsync(double delta) => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.zoom", viewport, delta);
-    private async Task ResetViewAsync() => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.overview", viewport);
+    private async Task ResetViewAsync() => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.reset", viewport);
+    private async Task ShowOverviewAsync() => await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.overview", viewport);
 
     private async Task FocusSchoolAsync(PassiveSchool school)
     {
-        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 380);
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 740);
         inspectorOpen = false;
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);
     }
