@@ -16,9 +16,16 @@ public sealed partial class RunSimulation
         // Detonation alone grants an explosion, not a free persistent hazard at Rank I.
         // Keep existing Rank II+ Fireball behavior, while Scorched Earth enables ground fire at Rank I.
         if (projectile.Rank < 2 && !HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)) return;
-        var duration = HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)
-            ? fireballWebModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationDuration, 1) : 1;
-        burningGrounds.Add(new BurningGroundState(position, projectile.Damage * BurningGroundDamageFraction, duration));
+        var hasScorchedEarth = HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth);
+        var duration = hasScorchedEarth
+            ? buildModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationDuration, 1) *
+                FireballEffectFactor(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth,
+                    Wyrmforge.Domain.Progression.PassiveTree.MutationEffectCapability.Duration) : 1;
+        var radius = hasScorchedEarth
+            ? buildModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationRadius, 1) : 1;
+        var damagePerTick = buildModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.BurnDamage,
+            projectile.Damage * BurningGroundDamageFraction);
+        burningGrounds.Add(new BurningGroundState(position, damagePerTick, duration, radius));
     }
 
     private void UpdateBurningGrounds(double delta)
@@ -28,7 +35,7 @@ public sealed partial class RunSimulation
             var ticks = ground.Advance(delta);
             for (var tick = 0; tick < ticks; tick++)
             {
-                combatSpatialIndex.CollectWithinRadius(ground.Position, BurningGroundState.Radius, int.MinValue, spatialQueryBuffer);
+                combatSpatialIndex.CollectWithinRadius(ground.Position, ground.EffectiveRadius, int.MinValue, spatialQueryBuffer);
                 foreach (var target in spatialQueryBuffer) DamageTarget(target, ground.DamagePerTick);
             }
         }
@@ -46,7 +53,7 @@ public sealed partial class RunSimulation
             snapshots[index++] = new EssenceBurstRenderSnapshot(
                 ground.Position.X,
                 ground.Position.Y,
-                BurningGroundState.Radius,
+                ground.EffectiveRadius,
                 Math.Min(0.2, ground.RemainingSeconds));
         }
         return snapshots;

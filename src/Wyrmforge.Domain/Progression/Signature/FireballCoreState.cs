@@ -30,6 +30,10 @@ public static class FireballCoreCatalog
 
     public static FireballMutationDefinition Get(FireballMutationId id) => Mutations.Single(mutation => mutation.Id == id);
 
+    // Each permanent core level grows only Fireball base damage, independently of in-Hunt spell ranks.
+    // Research adds possible mutations; Web investment augments the effects of equipped mutations.
+    public static double DamageMultiplier(int level) => 1 + 0.08 * (Math.Clamp(level, 1, 5) - 1);
+
     // Initial recipe tuning, using real secured Ashfang materials. No fictional wallet or resources.
     public static IReadOnlyList<FireballUpgradeNeed> UpgradeTo(int nextLevel) => nextLevel switch
     {

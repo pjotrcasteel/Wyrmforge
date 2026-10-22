@@ -7,6 +7,7 @@ using Wyrmforge.Domain.Combat.Stats;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
 using Wyrmforge.Domain.Spells.Synergies;
@@ -99,13 +100,9 @@ public sealed partial class RunSimulation
         var cinderNeedle = id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.CinderNeedle);
         var baseSpeed = profile.CalculateSpeed(rank) * passiveProfile.ProjectileSpeedMultiplier * evolution.ProjectileSpeedMultiplier;
         var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed) * (meteorHeart ? 0.75 : 1) * (cinderNeedle ? 1.4 : 1);
-        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
+        var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier
+            * (id == SpellId.FireBolt ? PreparedFireballDamageMultiplier : 1);
         var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School) * (meteorHeart ? 1.15 : 1) * (cinderNeedle ? 0.70 : 1);
-        if (id == SpellId.FireBolt)
-        {
-            speed = fireballWebModifiers.Apply(BuildStatId.ProjectileSpeed, speed);
-            damage = fireballWebModifiers.Apply(BuildStatId.Damage, damage);
-        }
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var piercingArcaneOrb = id == SpellId.ArcaneOrb && rank >= 2;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
@@ -124,11 +121,11 @@ public sealed partial class RunSimulation
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var mutationSplash = id != SpellId.FireBolt ? 0 :
-                HasFireballMutation(FireballMutationId.Detonation) ? 46 :
+                HasFireballMutation(FireballMutationId.Detonation) ? 46 * FireballEffectFactor(FireballMutationId.Detonation, MutationEffectCapability.Area) :
                 HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
             var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
             if (id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.Detonation))
-                splashRadius = fireballWebModifiers.Apply(BuildStatId.MutationRadius, splashRadius);
+                splashRadius = buildModifiers.Apply(BuildStatId.MutationRadius, splashRadius);
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,

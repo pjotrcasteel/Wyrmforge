@@ -15,27 +15,33 @@ namespace Wyrmforge.Application.Tests.Nexus;
 public sealed class MutationWebCombatTests
 {
     [TestMethod]
-    [DataRow(FireballMutationId.CinderNeedle, "fire-needle-practice", "speed", 1.10)]
-    [DataRow(FireballMutationId.MeteorHeart, "fire-molten-density", "damage", 1.08)]
-    [DataRow(FireballMutationId.Detonation, "fire-blast-shaping", "radius", 1.10)]
-    public void LearnedEnhancement_ChangesActualMatchingProjectileOnly(FireballMutationId mutation, string node, string stat, double multiplier)
+    [DataRow("fire-needle-practice", 1.03)]
+    [DataRow("fire-blast-shaping", 1.04)]
+    public void FireMinorAreaNode_LearnedWithDetonation_IncreasesExplosionRadiusOnly(string node, double multiplier)
     {
-        var baseline = Cast([], [mutation]);
-        var enhanced = Cast([node], [mutation]);
-        var unmutated = Cast([], []);
-        var dormant = Cast([node], []);
-        double Value(ProjectileState projectile) => stat switch
-        {
-            "speed" => Math.Sqrt(projectile.Velocity.X * projectile.Velocity.X + projectile.Velocity.Y * projectile.Velocity.Y),
-            "damage" => projectile.Damage,
-            _ => projectile.SplashRadius,
-        };
-        Assert.AreEqual(Value(baseline) * multiplier, Value(enhanced), .000001);
-        Assert.AreEqual(Value(unmutated), Value(dormant), .000001);
+        var baseline = Cast([], [FireballMutationId.Detonation]);
+        var enhanced = Cast([node], [FireballMutationId.Detonation]);
+        var unrelated = Cast([node], [FireballMutationId.MeteorHeart]);
+
+        Assert.AreEqual(baseline.SplashRadius * multiplier, enhanced.SplashRadius, .000001);
+        Assert.AreEqual(baseline.Damage, enhanced.Damage, .000001);
+        Assert.AreEqual(0d, unrelated.SplashRadius, .000001, "Area bonuses cannot grant Detonation to another mutation.");
     }
 
     [TestMethod]
-    public void BlastShaping_EnhancesTheFinalExplosionAtHigherFireballRanks()
+    public void HotCoals_BoostsOnlyBurningGroundDamage_NotProjectileDamage()
+    {
+        var baselineProjectile = Cast([], [FireballMutationId.ScorchedEarth]);
+        var enhancedProjectile = Cast(["fire-molten-density"], [FireballMutationId.ScorchedEarth]);
+        var baselineGround = Ground([], [FireballMutationId.ScorchedEarth]);
+        var enhancedGround = Ground(["fire-molten-density"], [FireballMutationId.ScorchedEarth]);
+
+        Assert.AreEqual(baselineProjectile.Damage, enhancedProjectile.Damage, .000001);
+        Assert.AreEqual(baselineGround.DamagePerTick * 1.03, enhancedGround.DamagePerTick, .000001);
+    }
+
+    [TestMethod]
+    public void BlastShaping_IncreasesFinalExplosionAtHigherFireballRanks()
     {
         ProjectileState RankedCast(string[] nodes)
         {
@@ -45,26 +51,52 @@ public sealed class MutationWebCombatTests
             build.Spells.LearnOrUpgrade(SpellId.FireBolt);
             return Fire(simulation);
         }
+
         var baseline = RankedCast([]);
         var enhanced = RankedCast(["fire-blast-shaping"]);
-        Assert.AreEqual(baseline.SplashRadius * 1.10, enhanced.SplashRadius, .000001);
+        Assert.AreEqual(baseline.SplashRadius * 1.04, enhanced.SplashRadius, .000001);
     }
 
     [TestMethod]
-    public void BankedEmbers_ExtendsActualScorchedEarthGroundOnly()
+    public void BankedEmbers_ExtendsScorchedEarthWithoutRequiringExtraResearch()
     {
         var normal = GroundDuration([], [FireballMutationId.ScorchedEarth]);
         var enhanced = GroundDuration(["fire-banked-embers"], [FireballMutationId.ScorchedEarth]);
-        Assert.AreEqual(normal * 1.15, enhanced, .000001);
+
+        Assert.AreEqual(normal * 1.04, enhanced, .000001);
     }
 
-    private static double GroundDuration(string[] nodes, FireballMutationId[] mutations)
+    [TestMethod]
+    public void ConflagrationAreaAndDuration_ModifyActualBurningGroundNotProjectileDamage()
+    {
+        var baseline = Ground([], [FireballMutationId.ScorchedEarth]);
+        var enhanced = Ground(["fire-ember-drift", "fire-ashfront"], [FireballMutationId.ScorchedEarth]);
+
+        Assert.AreEqual(baseline.EffectiveRadius * 1.03, enhanced.EffectiveRadius, .000001);
+        Assert.AreEqual(baseline.RemainingSeconds * 1.04, enhanced.RemainingSeconds, .000001);
+        Assert.AreEqual(baseline.DamagePerTick, enhanced.DamagePerTick, .000001);
+    }
+
+    [TestMethod]
+    public void LegacyNodeIds_StillGrantMinorBonusesWithoutEquippedMutations()
+    {
+        var plain = Cast([], []);
+        var learned = Cast(["fire-molten-density", "fire-banked-embers", "fire-blast-shaping"], []);
+
+        Assert.AreEqual(plain.Damage, learned.Damage, .000001);
+        Assert.AreEqual(plain.SplashRadius, learned.SplashRadius, .000001);
+    }
+
+    private static BurningGroundState Ground(string[] nodes, FireballMutationId[] mutations)
     {
         var simulation = Create(nodes, mutations);
         var projectile = Fire(simulation);
         Invoke(simulation, "RegisterBurningGround", projectile, new Vector2D(80, 80));
-        return Field<List<BurningGroundState>>(simulation, "burningGrounds").Single().RemainingSeconds;
+        return Field<List<BurningGroundState>>(simulation, "burningGrounds").Single();
     }
+
+    private static double GroundDuration(string[] nodes, FireballMutationId[] mutations) =>
+        Ground(nodes, mutations).RemainingSeconds;
 
     private static ProjectileState Cast(string[] nodes, FireballMutationId[] mutations) => Fire(Create(nodes, mutations));
 
