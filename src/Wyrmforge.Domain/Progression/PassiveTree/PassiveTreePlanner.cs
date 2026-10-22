@@ -9,6 +9,7 @@ public static class PassiveTreePlanner
         if (targetId == PassiveTreeCatalog.OriginId || selection.Selected.Contains(targetId))
             return new PassiveTreeRoutePlan(targetId, Array.Empty<string>(), 0);
         if (HasMasteryConflict(selection, target)) return null;
+        if (!selection.CanLearn(target)) return null;
 
         var distances = new Dictionary<string, int>(StringComparer.Ordinal);
         var previous = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -27,6 +28,7 @@ public static class PassiveTreePlanner
             {
                 var node = PassiveTreeCatalog.Get(neighbor);
                 if (HasMasteryConflict(selection, node)) continue;
+                if (neighbor != PassiveTreeCatalog.OriginId && !selection.Selected.Contains(neighbor) && !selection.CanLearn(node)) continue;
 
                 var additionalCost = selection.Selected.Contains(neighbor) || neighbor == PassiveTreeCatalog.OriginId ? 0 : node.Cost;
                 var candidate = currentCost + additionalCost;

@@ -407,6 +407,7 @@ public partial class Home
             if (state is null) return;
             selection.RestoreBudget(state.Budget);
             selection.RestoreNodes(state.Nodes ?? []);
+            selection.RestoreReserved(state.Reserved);
             hunter.Restore(state.HunterExperience);
             selection.RestoreBudget(Math.Max(selection.PointBudget, hunter.AtlasBudget));
             quests.Restore(state.Quests, hunter.EarnedCaches);
@@ -419,13 +420,13 @@ public partial class Home
     {
         try
         {
-            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience);
+            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience, selection.Reserved);
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
         }
         catch (JSException) { }
     }
 
-    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null);
+    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null, IReadOnlyDictionary<PassiveSchool, int>? Reserved = null);
 
     private HunterExperienceGain CreditHunterExperience(int experience)
     {

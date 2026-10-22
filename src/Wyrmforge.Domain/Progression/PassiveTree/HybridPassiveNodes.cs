@@ -28,5 +28,7 @@ internal static class HybridPassiveNodes
     ];
 
     private static PassiveNodeDefinition Travel(string id, string name, string description, double x, double y, BuildModifierProfile modifiers) =>
-        new(id, name, description, PassiveNodeKind.Travel, null, 1, x, y, modifiers);
+        new(id, name, description, PassiveNodeKind.Travel, null, 1, x, y, modifiers,
+            LearningSchool: id.StartsWith("hybrid-fire-", StringComparison.Ordinal) ? PassiveSchool.Fire
+                : id.StartsWith("hybrid-storm-", StringComparison.Ordinal) ? PassiveSchool.Storm : PassiveSchool.Arcane);
 }

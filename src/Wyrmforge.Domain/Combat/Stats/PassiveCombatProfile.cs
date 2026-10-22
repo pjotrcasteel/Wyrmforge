@@ -29,7 +29,8 @@ public sealed record PassiveCombatProfile(
 {
     public static PassiveCombatProfile Create(IReadOnlySet<string> selected)
     {
-        var modifiers = BuildModifierSet.Aggregate(selected.Select(id => PassiveTreeCatalog.Get(id).Modifiers));
+        var modifiers = BuildModifierSet.Aggregate(selected.Select(PassiveTreeCatalog.Get)
+            .Where(node => node.Requirement is null).Select(node => node.Modifiers));
         return new PassiveCombatProfile(
             modifiers.Apply(BuildStatId.Damage, 1),
             modifiers.Apply(BuildStatId.CastInterval, 1),
