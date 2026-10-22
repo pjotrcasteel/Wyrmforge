@@ -201,7 +201,7 @@ The long-term ambition is hundreds of mechanically distinct legal builds and a l
 
 ### Six-school Arcane Web — owner decision, 22 October 2026
 
-The Web is a large six-sector wheel. The character's active Divine school is north and is the only school accepting new investments. Inspecting or panning to another sector never switches the character's school. Death and Binding remain visible future sectors until their content is authored; this does not unlock character creation or introduce a school-switching economy.
+The Web is a large six-sector wheel. The character's active Divine school is north and is the only school accepting new investments. The owner’s 22 October phone correction prioritizes a readable, freely pannable specialization map: no separate school picker or embedded crafting panel. Crafting/socket integration is temporarily disconnected while this Web is refined; school changes are managed elsewhere. Inspecting or panning to another sector never switches the character's school. Death and Binding remain visible future sectors until their content is authored; this does not unlock character creation or introduce a school-switching economy.
 
 Learned knowledge persists across school changes. **Unconditional stats continue contributing**, including Storm cast speed while playing Fire. Mutation-specific enhancements contribute only to their required signature and equipped mutation; an unequipped mutation's enhancement stays learned but contributes nothing. Keep learning ownership separate from effect requirements and presentation coordinates so future school-native signatures can extend the system without rewriting saves.
 

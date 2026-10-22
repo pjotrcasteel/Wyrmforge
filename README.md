@@ -1,5 +1,11 @@
 # Wyrmforge
 
+## Prototype 0.0.160 — Readable, pannable specialization map
+
+- Specialize opens on the active school at reading scale, with wider node/cluster spacing and drag/pinch navigation from nodes or empty space. Whole-Web overview is optional.
+- Removed the extra school strip and crafted-spell panel; research/crafting actions are disconnected from Web node details for now. Saved builds sit beneath the map. Learning, bonuses, reservations and old saves retain their rules.
+- [Navigation correction and verification receipt](docs/playtesting/2026-10-22-specialize-navigation.md).
+
 ## Prototype 0.0.159 — Six-school Arcane Web construction
 
 - Six school sectors surround the Wyrmheart, with the active school north and camera shortcuts for inspection.

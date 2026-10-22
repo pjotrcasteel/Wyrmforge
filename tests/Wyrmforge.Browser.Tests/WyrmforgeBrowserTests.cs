@@ -689,7 +689,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_ArcaneNexus_SocketsWrapAndInspectorLeavesWebVisible(int width, int height)
+    public async Task Mobile_ArcaneWeb_TouchPanUsesReadableSpacedMapWithoutCraftPanels(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
         await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
@@ -710,24 +710,42 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "Nexus purposes must remain readable, tappable, and contained at 320px and 390px.");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
 
-        var rack = Page.Locator(".nexus-rack-details");
-        await Expect(rack).ToBeVisibleAsync();
-        await rack.Locator("summary").ClickAsync();
-        await Expect(Page.Locator(".nexus-rack-socket")).ToHaveCountAsync(4);
-
-        var socketsFit = await Page.Locator(".nexus-socket-rack").EvaluateAsync<bool>(@"rack => {
-            return [...rack.querySelectorAll('button')].every(button => {
-                const box = button.getBoundingClientRect();
-                const parent = rack.getBoundingClientRect();
-                return button.scrollWidth <= button.clientWidth + 2 &&
-                    box.left >= parent.left - 1 && box.right <= parent.right + 1;
-            });
+        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details")).ToHaveCountAsync(0);
+        var viewport = Page.GetByRole(AriaRole.Region, new() { Name = "Arcane specialization map" });
+        await viewport.ScrollIntoViewIfNeededAsync();
+        await Expect(viewport).ToHaveAttributeAsync("data-scale", "0.95");
+        var minimumSeparation = await Page.EvaluateAsync<double>(@"() => {
+            const nodes = [...document.querySelectorAll('.web-node')].map(n => ({ x:parseFloat(n.style.left), y:parseFloat(n.style.top) }));
+            return Math.min(...nodes.flatMap((a,i) => nodes.slice(i+1).map(b => Math.hypot(a.x-b.x,a.y-b.y))));
         }");
-        Assert.IsTrue(socketsFit, "Crafted spell socket names must wrap without clipping.");
-
-        await Page.Locator(".nexus-rack-socket").First.ClickAsync();
+        Assert.IsGreaterThanOrEqualTo(90, minimumSeparation, "Node centers must have meaningful world-space separation.");
+        await ScreenshotAsync($"specialize-readable-{width}.png");
+        var node = Page.Locator(".web-node[data-node-id='fire-1']");
+        var box = await node.BoundingBoxAsync();
+        Assert.IsNotNull(box);
+        var x = box.X + box.Width / 2;
+        var y = box.Y + box.Height / 2;
+        var before = await Page.Locator(".arcane-web-canvas").GetAttributeAsync("style");
+        var pageY = await Page.EvaluateAsync<double>("window.scrollY");
+        var cdp = await Page.Context.NewCDPSessionAsync(Page);
+        await cdp.SendAsync("Emulation.setTouchEmulationEnabled", new Dictionary<string, object> { ["enabled"] = true });
+        // Trusted browser touch input begins ON a node, not an empty test div.
+        await cdp.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchStart", ["touchPoints"] = new[] { new { x, y, id = 1 } } });
+        for (var step = 1; step <= 6; step++)
+        {
+            await cdp.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchMove", ["touchPoints"] = new[] { new { x = x + step * 12, y = y - step * 12, id = 1 } } });
+            await Page.WaitForTimeoutAsync(20);
+        }
+        await cdp.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchEnd", ["touchPoints"] = Array.Empty<object>() });
+        await Expect(Page.Locator(".arcane-web-canvas")).Not.ToHaveAttributeAsync("style", before!);
+        await Expect(Page.Locator(".node-inspector.open")).ToHaveCountAsync(0);
+        Assert.AreEqual(pageY, await Page.EvaluateAsync<double>("window.scrollY"), 1, "A Web drag must not scroll the document.");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Center current school" }).ClickAsync();
+        await viewport.ScrollIntoViewIfNeededAsync();
+        await node.ClickAsync();
         var inspector = Page.Locator(".node-inspector.open");
         await Expect(inspector).ToBeVisibleAsync();
+        await Expect(inspector.Locator(".nexus-bench")).ToHaveCountAsync(0);
 
         var webNotOccluded = await Page.EvaluateAsync<bool>(@"() => {
             const web = document.querySelector('.atlas-stage').getBoundingClientRect();
@@ -735,7 +753,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return details.top >= web.bottom - 1;
         }");
         Assert.IsTrue(webNotOccluded, "The node inspector must sit beneath the Web, not over the skill nodes.");
-        await ScreenshotAsync($"nexus-sockets-{width}.png");
+        await ScreenshotAsync($"specialize-inspector-{width}.png");
     }
 
     [TestMethod]
@@ -2890,12 +2908,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".wheel-school-badge")).ToHaveCountAsync(6);
         var active = Page.Locator(".wheel-school-badge[data-active='true']");
         await Expect(active).ToHaveAttributeAsync("data-school", "Fire");
-        Assert.IsTrue(await active.EvaluateAsync<bool>("el => el.style.left === '600px' && el.style.top === '130px'"));
+        Assert.IsTrue(await active.EvaluateAsync<bool>("el => el.style.left === '1600px' && el.style.top === '280px'"));
+        await ScreenshotAsync($"arcane-wheel-start-{width}.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
         await ScreenshotAsync($"arcane-wheel-overview-{width}.png");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Stormcaller", Exact = true }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Stormcaller sector", Exact = true }).ClickAsync();
         await Expect(active).ToHaveAttributeAsync("data-school", "Fire");
         await Page.WaitForFunctionAsync(@"() => {
-            const badge = document.querySelector('.wheel-school-badge[data-school=Storm]').getBoundingClientRect();
+            const badge = document.querySelector('.web-node[data-node-id=storm-major]').getBoundingClientRect();
             const map = document.querySelector('.arcane-web-viewport').getBoundingClientRect();
             return badge.left >= map.left && badge.right <= map.right && badge.top >= map.top && badge.bottom <= map.bottom;
         }");
@@ -2923,6 +2943,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(warning).ToBeVisibleAsync();
         await warning.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
         // Refund-all must ask too; cancelling does not acknowledge the warning.
+        await Page.Locator(".loadout-strip > summary").ClickAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Refund all learned Arcane points" }).ClickAsync();
         await Expect(warning).ToBeVisibleAsync();
         await warning.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
@@ -2957,8 +2978,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         var active = Page.Locator(".wheel-school-badge[data-active='true']");
         await Expect(active).ToHaveAttributeAsync("data-school", sector);
-        Assert.IsTrue(await active.EvaluateAsync<bool>("el => el.style.left === '600px' && el.style.top === '130px'"));
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Pyromancer", Exact = true }).ClickAsync();
+        Assert.IsTrue(await active.EvaluateAsync<bool>("el => el.style.left === '1600px' && el.style.top === '280px'"));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Pyromancer sector", Exact = true }).ClickAsync();
         await Expect(active).ToHaveAttributeAsync("data-school", sector);
         await Page.Locator(".web-node[aria-label^='Spark.']").EvaluateAsync("el => el.click()");
         await Expect(Page.Locator(".node-inspector")).ToContainTextAsync("OTHER SCHOOL");
