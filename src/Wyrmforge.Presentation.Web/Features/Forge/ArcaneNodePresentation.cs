@@ -65,6 +65,7 @@ internal static class ArcaneNodePresentation
     private static string Icon(BuildStatId stat) => stat switch
     {
         BuildStatId.Damage => "✹",
+        BuildStatId.FrostControlDuration => "❄",
         BuildStatId.BurnDamage => "♨",
         BuildStatId.CastInterval => "⟳",
         BuildStatId.ProjectileSpeed => "➶",
