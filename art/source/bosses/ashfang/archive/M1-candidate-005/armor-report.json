@@ -1,0 +1,25 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\M1-candidate-003\\ashfang-master-working.blend",
+  "sourceSha256": "4eb477382a5ecdd40a292e6cabf7bd780ec1c3c378b760572b2a4e3c9c77ed90",
+  "sha256": "0fe1cfbd7640e03a67ceeb9c40c53d7d018b487ed62bc2df22e562f47d6f8886",
+  "plateCount": 30,
+  "armorVertices": 390,
+  "armorFaces": 390,
+  "bones": [
+    "Head",
+    "Neck01",
+    "Neck02",
+    "Neck03",
+    "Spine01",
+    "Spine02",
+    "Spine03",
+    "UpperHead"
+  ],
+  "preservedTailCorrection": true,
+  "ownerAccepted": false,
+  "limitations": [
+    "Separate forelegs not yet authored",
+    "Plate intersections and deformation pending review",
+    "Master identity not accepted"
+  ]
+}
