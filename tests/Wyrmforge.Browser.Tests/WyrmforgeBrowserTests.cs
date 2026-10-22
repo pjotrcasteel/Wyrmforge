@@ -32,6 +32,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
         await Expect(radiance).ToBeVisibleAsync();
         await Expect(radiance).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-fire-unlearned-{width}.png");
         var initial = await radiance.EvaluateAsync<double>("el => Number(getComputedStyle(el).opacity)");
         Assert.AreEqual(0.16, initial, 0.01);
         Assert.IsTrue(await radiance.EvaluateAsync<bool>("el => getComputedStyle(el).pointerEvents === 'none'"));
@@ -50,6 +52,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var brighter = masteredScene.Locator(".refuge-town-nexus-radiance");
         var points = int.Parse(await masteredScene.GetAttributeAsync("data-nexus-mastery-points") ?? "0");
         Assert.IsGreaterThan(0, points, "Learned Fire Web nodes should power the building.");
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-fire-invested-{width}.png");
         var final = await brighter.EvaluateAsync<double>("el => Number(getComputedStyle(el).opacity)");
         Assert.IsGreaterThan(initial, final, "A learned Pyromancer school must glow more brightly.");
         Assert.IsLessThanOrEqualTo(0.86, final, "The aura must never wash out the approved painting.");
