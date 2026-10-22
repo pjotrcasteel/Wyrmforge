@@ -1,6 +1,6 @@
 // WyrmForge Arena Lab. All geometry, props, collisions, destruction and loot
 // are authoritative C# data. This module only handles viewport/input/drawing.
-import { drawArenaEnvironment, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js';
+import { drawArenaEnvironment, getArenaCloisterElevations, drawArenaCloisterElevation } from './arena-environment.js?v=20261022-approved-ground-preview-1';
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { drawWetForestActorContact, appendWetForestFootprint, drawWetForestFootprints } from './arena-wet-forest-dressing.js';
