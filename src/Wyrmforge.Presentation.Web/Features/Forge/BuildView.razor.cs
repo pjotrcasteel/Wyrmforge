@@ -158,7 +158,7 @@ public partial class BuildView : IAsyncDisposable
 
     private string NodeClass(PassiveNodeDefinition node)
     {
-        var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}" };
+        var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}", $"tier-{PassiveNodeTiers.For(node).ToString().ToLowerInvariant()}" };
         if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
         else classes.Add("school-hybrid");
 
@@ -225,10 +225,10 @@ public partial class BuildView : IAsyncDisposable
     private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
     {
         PassiveNodeKind.Origin => "ORIGIN",
-        PassiveNodeKind.Travel => "MINOR BONUS",
-        PassiveNodeKind.Notable => "NOTABLE LANDMARK",
-        PassiveNodeKind.Mastery => "MASTERY LANDMARK",
-        _ => "KEYSTONE LANDMARK",
+        PassiveNodeKind.Travel => "MINOR · PASSIVE BONUS",
+        PassiveNodeKind.Notable => node.Cost == 1 ? "MINOR · MUTATION SPECIALIZATION" : "MEDIUM · SPECIALIZATION",
+        PassiveNodeKind.Mastery => "MEDIUM · MASTERY CHOICE",
+        _ => "MAJOR · KEYSTONE",
     };
 
     private string NodeState(PassiveNodeDefinition node)
