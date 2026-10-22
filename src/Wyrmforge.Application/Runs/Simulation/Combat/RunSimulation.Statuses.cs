@@ -1,4 +1,5 @@
-﻿using Wyrmforge.Domain.Combat.Projectiles;
+﻿using Wyrmforge.Domain.Combat.Modifiers;
+using Wyrmforge.Domain.Combat.Projectiles;
 using Wyrmforge.Domain.Combat.Targets;
 using Wyrmforge.Domain.Spells;
 using Wyrmforge.Domain.Spells.Evolutions;
@@ -15,7 +16,8 @@ public sealed partial class RunSimulation
         var evolution = EvolutionProfile(spell.Id);
         return new ProjectileStatusEffect(
             status.Status,
-            status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier,
+            FrostControlDurationModifier.Apply(spell.School, status.Status,
+                status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier, buildModifiers),
             status.Stacks + evolution.BonusStatusStacks);
     }
 
@@ -24,7 +26,8 @@ public sealed partial class RunSimulation
         if (spell.Ability.Status is { } status)
         {
             var evolution = EvolutionProfile(spell.Id);
-            var duration = status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier;
+            var duration = FrostControlDurationModifier.Apply(spell.School, status.Status,
+                status.CalculateDurationSeconds(rank) * evolution.StatusDurationMultiplier, buildModifiers);
             for (var stack = 0; stack < status.Stacks + evolution.BonusStatusStacks; stack++) ApplyStatus(target, status.Status, duration);
         }
         foreach (var infusion in SpellCombinationResolver.Resolve(spell.Id, build.Spells, build.Synergies, firstLink)) ApplyStatusEffect(target, infusion);
