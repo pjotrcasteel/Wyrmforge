@@ -580,7 +580,7 @@ test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts'
     assert.match(code, /wellFrontVisits: entry\.wellFrontVisits/);
     assert.match(code, /wellRimExcluded:/);
     assert.match(code, /noticeboardExcluded:/);
-    assert.match(code, /wellForegroundRequired: false/);
+    assert.match(code, /wellForegroundRequired: entry\.rearMode/);
     assert.match(code, /Town V2 route bypassed previously approved stairs\/plaza/);
     assert.match(code, /Town V2 plaza route cuts across an unwalkable pixel/);
     assert.match(foliage, /V2 depth ONLY: planted leaf tips/);
