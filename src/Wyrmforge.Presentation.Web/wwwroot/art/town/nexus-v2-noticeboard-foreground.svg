@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
-  <!-- Separate signage cover for the rear-west approach. Only the wooden
-       noticeboard and its poles, not the planter, flowerbeds or pavement.
-       It may cover a walker visually at y~440 but never changes foot collision. -->
-  <path fill="#fff" d="M 712 442 L 730 429 L 792 412 L 809 427
-    L 803 474 L 793 496 L 714 511 L 708 493 Z"/>
-  <path fill="#fff" d="M 718 497 L 733 495 L 739 526 L 722 530 Z"/>
-  <path fill="#fff" d="M 781 486 L 799 485 L 799 532 L 785 535 Z"/>
+  <!-- Screenshot-traced wooden sign, NOT its flowerpots or surrounding stone.
+       Independent V2 alpha and foot-collision geometry. -->
+  <path fill="#fff" d="M 746 443 L 752 440 L 812 426
+    L 816 430 L 816 490 L 749 505 Z"/>
+  <path fill="#fff" d="M 746 504 L 752 502 L 753 518 L 748 520 Z"/>
+  <path fill="#fff" d="M 808 489 L 815 490 L 817 515 L 810 518 Z"/>
 </svg>
