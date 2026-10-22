@@ -668,3 +668,14 @@ test('Town V2 freezes only on real rear foreground coverage and checks every ani
     assert.match(js, /state.freezeToggle.removeEventListener/);
     assert.doesNotMatch(js, /setInterval/);
 });
+
+test('Town V2 diagnostic cyan never overpaints raised well and noticeboard silhouettes', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /function buildDebugOverlay\(nav, route, foregrounds\)/);
+    assert.match(js, /ctx.globalCompositeOperation = "destination-out"/);
+    assert.match(js, /ctx.drawImage\(foreground.image, foreground.x, foreground.y\)/);
+    assert.match(js, /rearMode \? \[state.wellCutout, state.noticeCutout, state.foliage\]/);
+    assert.match(js, /if \(w.showMask && w.debugOverlay\) ctx.drawImage\(w.debugOverlay, 0, 0\)/);
+    assert.match(js, /depthAwareMaskReady: !!entry.debugOverlay/);
+    assert.doesNotMatch(js, /if \(w.showMask\) ctx.drawImage\(w.nav.overlay/);
+});
