@@ -51,24 +51,16 @@ test('approved floor paints with the same accepted seamless atlas and transition
     assert.equal(drawApprovedWetForestBase(ctx, tiles, { width: 0, height: 0 }, 1204, 36, 36), false);
 });
 
-test('approved ground preview remains opt-in to the playable C# Arena Lab only', () => {
+test('ground-only arena lab does not promote old environment, trails or props into the new foundation', () => {
     const read = filename => readFileSync(
         new URL('../../src/Wyrmforge.Presentation.Web/' + filename, import.meta.url), 'utf8');
-    const js = read('wwwroot/js/arena-lab.js');
     const razor = read('Pages/ArenaLab.razor');
-    const renderer = read('wwwroot/js/arena-environment.js');
-    const territory = read('wwwroot/js/arena-territory-art.js');
-    assert.match(js, /approvedGround: false/);
-    assert.match(js, /if \(!state\.options\.approvedGround/);
-    assert.match(js, /frame\?\.environment\?\.habitat !== 'WetForest'/);
-    assert.match(js, /drawArenaEnvironment\(ctx, frame\.environment, ww, wh, state\.clock, groundAtlas\)/);
-    assert.match(razor, /ArenaEnvironmentState\.Create\(seed, node, generatorPreview: true\)/);
-    assert.match(razor, /@bind="approvedGroundPreview"/);
-    assert.match(razor, /"import", "\.\/js\/arena-lab\.js"/);
-    assert.match(js, /arena-environment\.js\?v=20261022-approved-ground-preview-1/);
-    assert.match(territory, /drawWetForestGround\(ctx, plan, approvedAtlas\)/);
-    assert.match(renderer, /approvedAtlas \? 'approvedGroundPreview' : 'canonicalGround'/);
+    const ground = read('wwwroot/js/arena-ground-foundation.js');
+    assert.match(razor, /Arena Ground Foundation/);
+    assert.doesNotMatch(razor, /approvedGroundPreview|ArenaEnvironmentState|RouteNodesQuery|LabMob/);
+    assert.match(ground, /naturalGroundPreview/);
+    assert.doesNotMatch(ground, /arena-environment|arena-territory|wet-forest-art|arena-lab\.js/);
     const hunt = read('wwwroot/js/arena.js');
     assert.match(hunt, /drawArenaEnvironment\(ctx, snapshot\.environment, worldWidth, worldHeight, visualSeconds\)/);
-    assert.doesNotMatch(hunt, /approvedGroundPreview/);
+    assert.doesNotMatch(hunt, /groundFoundationBoard|arena-ground-foundation/);
 });
