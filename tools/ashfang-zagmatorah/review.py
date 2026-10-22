@@ -14,6 +14,7 @@ r['animationSamples']=[]
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
 mesh=bpy.data.objects['Zagmatorah']
 old=rig.animation_data.action if rig.animation_data else None
+saved_pose={b.name:b.matrix_basis.copy() for b in rig.pose.bones}
 rig.data.pose_position='POSE'
 if rig.animation_data:
     for track in rig.animation_data.nla_tracks: track.mute=True
@@ -28,7 +29,8 @@ for action in bpy.data.actions:
     movement=max((v-poses[0][i]).length for pose in poses[1:] for i,v in enumerate(pose))
     r['animationSamples'].append({'name':action.name,'maxSampledVertexTravel':movement,'sampleFrames':[action.frame_range[0],sum(action.frame_range)/2,action.frame_range[1]]})
 rig.animation_data.action=old
-rig.data.pose_position='REST'; bpy.context.view_layer.update()
+for name,matrix in saved_pose.items():rig.pose.bones[name].matrix_basis=matrix
+rig.data.pose_position='POSE' if rig.get('AshfangReviewPose') else 'REST'; bpy.context.view_layer.update()
 (out/'validation.json').write_text(json.dumps(r,indent=2))
 if not a.render: raise SystemExit()
 scene=bpy.context.scene
