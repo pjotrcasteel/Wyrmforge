@@ -553,7 +553,8 @@ test('Town V2 Phase 3 extends the raster route into the open west plaza, not the
     assert.match(code, /w\.plazaVisits\+\+/);
     assert.match(code, /plazaVisits: entry\.plazaVisits/);
     assert.match(code, /plaza route cuts across an unwalkable pixel/);
-    assert.match(code, /if \(w\.showMask\) \{[\s\S]*w\.route\.forEach/);
+    assert.match(code, /route\.forEach\(\(point, index\) => index/);
+    assert.match(code, /if \(w\.showMask && w\.debugOverlay\) ctx\.drawImage\(w\.debugOverlay, 0, 0\)/);
     assert.match(code, /ctx\.save\(\);\s*ctx\.translate\(w\.position/);
     assert.doesNotMatch(code, /BEHIND_SHRUB|night-navigation\.json[^\n]*import/);
 });
