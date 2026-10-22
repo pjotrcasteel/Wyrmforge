@@ -56,7 +56,7 @@ test('ground-only arena lab does not promote old environment, trails or props in
         new URL('../../src/Wyrmforge.Presentation.Web/' + filename, import.meta.url), 'utf8');
     const razor = read('Pages/ArenaLab.razor');
     const ground = read('wwwroot/js/arena-ground-foundation.js');
-    assert.match(razor, /Arena Ground Foundation/);
+    assert.match(razor, /Natural Terrain & Forest Trails/);
     assert.doesNotMatch(razor, /approvedGroundPreview|ArenaEnvironmentState|RouteNodesQuery|LabMob/);
     assert.match(ground, /naturalGroundPreview/);
     assert.doesNotMatch(ground, /arena-environment|arena-territory|wet-forest-art|arena-lab\.js/);
