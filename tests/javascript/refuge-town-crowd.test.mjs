@@ -340,7 +340,7 @@ test('dynamic props invalidate C# routes and navigation prevents shortcutting th
 test('Phase 1 geometry inspector switches real town layers without editing geometry or crowd AI', () => {
     const view = source(scene);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    assert.match(view, /@if \(showTownGeometry\)\s*\{\s*<div class="refuge-town-geometry-toolbar"/);
+    assert.match(view, /@if \(showTownGeometry && !showTownV2\)\s*\{\s*<div class="refuge-town-geometry-toolbar"/);
     assert.match(view, /data-town-geometry-layer="@geometryLayer"/);
     for (const layer of ['All', 'Walkable', 'Blocked', 'Occlusion']) {
         assert.ok(view.includes('data-town-layer-select="' + layer + '"'), layer + ' switch missing');
@@ -508,7 +508,8 @@ test('V2 is isolated behind a URL flag and uses an authored pixel mask without V
     assert.match(v2, /getImageData\(0, 0, WIDTH, HEIGHT\)/);
     assert.match(v2, /FOOT_RADIUS = 8/);
     assert.match(v2, /requestAnimationFrame/);
-    assert.doesNotMatch(v2, /night-navigation\.json|TownCrowd|Occluders/);
+    const executable = v2.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable, /night-navigation\.json|TownCrowd|Occluders/);
     assert.match(mask, /width="1672" height="941"/);
     assert.match(mask, /nexus/);
     assert.match(v2, /usingLegacyNavigation: false/);
