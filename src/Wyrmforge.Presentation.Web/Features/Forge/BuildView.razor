@@ -112,6 +112,38 @@
                 </div>
             </div>
             <p class="inspector-effect">@FocusedNode.Description</p>
+            @if (FocusedAmplifier is { } amplifier)
+            {
+                <section class="web-amplifier-socket" aria-label="Mutation amplifier socket">
+                    <div class="web-amplifier-heading">
+                        <strong>Mutation amplifier socket</strong>
+                        <small>×@amplifier.Factor.ToString("0.##", CultureInfo.InvariantCulture) @amplifier.Capability</small>
+                    </div>
+                    <label for="web-amplifier-mutation">Amplify equipped mutation</label>
+                    <select id="web-amplifier-mutation" value="@AssignedFireballMutation"
+                            disabled="@(!IsSelected(FocusedNode) || CompatibleFireballMutations.Count == 0)"
+                            @onchange="AssignFocusedAmplifierAsync">
+                        <option value="">No mutation assigned</option>
+                        @foreach (var id in CompatibleFireballMutations)
+                        {
+                            <option value="@id">@FireballCoreCatalog.Get(id).Name</option>
+                        }
+                    </select>
+                    @if (!IsSelected(FocusedNode))
+                    {
+                        <small>Learn this major node before choosing a mutation.</small>
+                    }
+                    else if (CompatibleFireballMutations.Count == 0)
+                    {
+                        <small>Equip a compatible mutation in Main Spell first.</small>
+                    }
+                    else
+                    {
+                        <small>Only the selected mutation's @amplifier.Capability.ToString().ToLowerInvariant() effect receives this boost.</small>
+                    }
+                </section>
+            }
+
             @if (FocusedNode.Requirement?.FireballMutation is { } requiredMutation)
             {
                 <p class="mutation-effect-state" role="status">@(Selection.Selected.Contains(FocusedNode.Id) && FireballCore?.Equipped.Contains(requiredMutation) == true && CharacterSchool == Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer
