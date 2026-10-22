@@ -326,7 +326,7 @@ public partial class BuildView : IAsyncDisposable
 
     private async Task FocusSchoolAsync(PassiveSchool school)
     {
-        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 280);
+        var point = ArcaneWheelLayout.Anchor(school, ActiveSchool, 350);
         inspectorOpen = false;
         await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.focusSchool", viewport, point.X, point.Y);
     }

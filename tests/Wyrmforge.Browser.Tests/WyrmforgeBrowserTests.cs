@@ -2882,6 +2882,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await ScreenshotAsync($"arcane-wheel-overview-{width}.png");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Stormcaller", Exact = true }).ClickAsync();
         await Expect(active).ToHaveAttributeAsync("data-school", "Fire");
+        await Page.WaitForFunctionAsync(@"() => {
+            const badge = document.querySelector('.wheel-school-badge[data-school=Storm]').getBoundingClientRect();
+            const map = document.querySelector('.arcane-web-viewport').getBoundingClientRect();
+            return badge.left >= map.left && badge.right <= map.right && badge.top >= map.top && badge.bottom <= map.bottom;
+        }");
+        await ScreenshotAsync($"arcane-wheel-storm-sector-{width}.png");
         var stormLeaf = Page.Locator(".web-node[aria-label^='Surge.']");
         await stormLeaf.EvaluateAsync("el => el.click()");
         await Page.Locator(".route-action.refund").ClickAsync();

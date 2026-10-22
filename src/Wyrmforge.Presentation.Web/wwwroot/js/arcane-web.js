@@ -168,6 +168,7 @@
     function focus(viewport, x, y) {
         const state = states.get(viewport);
         if (!state) return;
+        if (state.overview) apply(viewport, state, defaultScale(viewport));
         state.overview = false;
         let anchorY = viewport.clientHeight / 2;
         if (!viewport.dataset.wheel && window.innerWidth <= 760) {
