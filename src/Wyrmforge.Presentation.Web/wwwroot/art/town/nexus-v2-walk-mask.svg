@@ -18,4 +18,12 @@
   <!-- Root/plant bed touching the left side of the lower treads. -->
   <path d="M 417 434 L 428 431 L 448 433 L 463 432
            L 470 449 L 451 462 L 422 455 Z" fill="#000"/>
+  <!-- Phase 3, still one NPC: the unoccluded west-of-well cobbled lane.
+       Starts at the approved stair foot, turns southeast on open stone,
+       and STOPS before the noticeboard, central well and garden furniture.
+       No V1 navigation polygons or automatically inferred walkable area. -->
+  <path d="M 575 492 C 609 510 627 536 645 558
+           C 661 580 670 605 681 623"
+        fill="none" stroke="#fff" stroke-width="36"
+        stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
