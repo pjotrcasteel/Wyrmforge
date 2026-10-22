@@ -57,3 +57,43 @@ checkpoint before any long render or destructive topology/rig edit.
 Remote recovery source is already published at #186's exact head; new recovery
 documentation checkpoint and draft PR will be recorded after upload. No new
 model, sculpt, animation, render, runtime integration or owner approval claimed.
+
+## Executed follow-up and review gate
+
+Draft recovery PR: https://github.com/pjotrcasteel/Wyrmforge/pull/293 (stacked on
+#186). Pre-render remote checkpoint `78c84030c2cb8270ee32f853ef3e2c7eae1e4696`
+verified with ls-remote. Official Blender 4.5.14 LTS portable archive SHA-256
+`b9533d2397ac1984db4466fb23a7a4649391cca93f6e84209f9bcc60d071c8b9`, matched
+the official https://download.blender.org/release/Blender4.5/blender-4.5.14.sha256.
+Portable tool is in C:/Wyrmforge/artifacts/toolchains/blender-4.5.14/;
+not a tracked source dependency. Blender reports build 62c1db4208e8.
+
+V48 and V59 reopened with auto-execution disabled; reports are preserved here.
+V48: 71-bone rig, 5318-vertex bound mesh. V59: 95-bone rig, 6270-vertex bound
+mesh plus fire objects, editable actions and packed albedo. Original hashes
+unchanged. Blender detects CPU AMD Ryzen 7 9800X3D and RTX 5090 OptiX.
+
+Executed neutral review:
+`blender --background --disable-autoexec art/source/enemies/ashfang/model/local-appearance-001/rigged-block-v48/ashfang-rigged.blend --python tools/sprite-lab/review-ashfang-clay.py -- --output-dir art/source/enemies/ashfang/recovery-2026-10-22/v48-clay-r01`
+
+New immutable editable review snapshot:
+`recovery-2026-10-22/v48-clay-r01/ashfang-neutral-review.blend`, SHA-256
+`ce924a613f1da0515d4f6ccf554edab1f843e3b60d1679a044950f0c900ce87e`.
+Reopened successfully; original materials, packed image, rig and actions remain.
+Rest pose/material override/camera/light are review configuration, no new anatomy.
+Four actual orthographic 512px/32-sample Cycles OptiX views rendered in
+1.408, 0.549, 0.537, 0.539 seconds. Render log peak device allocation approximately
+1431 MiB; not total-board VRAM, temperature or a production load benchmark.
+
+Visually inspected side and three-quarter: FAIL M1 anatomy gate. Thin torso,
+weak chest/haunch mass, blunt short skull, repetitive dorsal slabs and simple
+flat wing membranes do not match the card. Preserve this source and its motion;
+do not multiply animations/material polish before rebuilding primary anatomy.
+Front/rear were rendered but not visually inspected this session. Phone/game
+scale review, full candidate model comparison and biological reference research
+remain outstanding. Preliminary three-source license screen is in
+`recovery-2026-10-22/candidate-screening.md`; no outside asset adopted.
+
+Python inspector syntax check and native reopen checks passed. No gameplay tests
+run because runtime files were untouched. No owner sign-off. M0 remains open;
+M1 has a recovered review baseline, not a newly completed blockout.

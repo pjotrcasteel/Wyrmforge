@@ -1,0 +1,35 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-native-recovery\\art\\source\\enemies\\ashfang\\model\\local-appearance-001\\rigged-block-v48\\ashfang-rigged.blend",
+  "sourceSha256": "aab1245208652a985d972cfea8235fded9b9437ad5789653359583293373772b",
+  "snapshotSha256": "ce924a613f1da0515d4f6ccf554edab1f843e3b60d1679a044950f0c900ce87e",
+  "blender": "4.5.14 LTS",
+  "device": "RTX 5090 OptiX",
+  "samples": 32,
+  "resolution": 512,
+  "views": [
+    {
+      "view": "front",
+      "azimuthDegrees": 0,
+      "elapsedSeconds": 1.4080523999873549
+    },
+    {
+      "view": "side",
+      "azimuthDegrees": 90,
+      "elapsedSeconds": 0.5486677999142557
+    },
+    {
+      "view": "rear",
+      "azimuthDegrees": 180,
+      "elapsedSeconds": 0.5370719999773428
+    },
+    {
+      "view": "three-quarter",
+      "azimuthDegrees": 45,
+      "elapsedSeconds": 0.5392053999239579
+    }
+  ],
+  "axisNotice": "Front assumes legacy -Y; verify skull orientation visually.",
+  "ownerApproved": false,
+  "geometryChanged": false,
+  "status": "Recovered legacy rest-pose review; not a new completed M1 model."
+}

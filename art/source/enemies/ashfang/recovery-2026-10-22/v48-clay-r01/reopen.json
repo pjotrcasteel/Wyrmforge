@@ -1,0 +1,262 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-native-recovery\\art\\source\\enemies\\ashfang\\recovery-2026-10-22\\v48-clay-r01\\ashfang-neutral-review.blend",
+  "sha256": "ce924a613f1da0515d4f6ccf554edab1f843e3b60d1679a044950f0c900ce87e",
+  "blenderVersion": "4.5.14 LTS",
+  "opened": true,
+  "saved": false,
+  "ownerApproved": false,
+  "objects": [
+    {
+      "name": "Ashfang arena flight path",
+      "type": "EMPTY",
+      "vertices": null,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Ashfang editable animation rig",
+      "type": "ARMATURE",
+      "vertices": null,
+      "bones": 71,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Ashfang skinned character",
+      "type": "MESH",
+      "vertices": 5318,
+      "bones": null,
+      "armatureModifiers": [
+        "Ashfang editable animation rig"
+      ]
+    },
+    {
+      "name": "Recovery Fill",
+      "type": "LIGHT",
+      "vertices": null,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Recovery Key",
+      "type": "LIGHT",
+      "vertices": null,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Recovery orthographic camera",
+      "type": "CAMERA",
+      "vertices": null,
+      "bones": null,
+      "armatureModifiers": []
+    }
+  ],
+  "actions": [
+    {
+      "name": "Ashfang_arena-flyovers",
+      "frameRange": [
+        1.0,
+        279.0
+      ]
+    },
+    {
+      "name": "Ashfang_fire-flyover",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Ashfang_flight-loop",
+      "frameRange": [
+        1.0,
+        17.0
+      ]
+    },
+    {
+      "name": "Ashfang_flight-sequence",
+      "frameRange": [
+        1.0,
+        148.0
+      ]
+    },
+    {
+      "name": "Ashfang_high-launch",
+      "frameRange": [
+        1.0,
+        55.0
+      ]
+    },
+    {
+      "name": "Ashfang_landing",
+      "frameRange": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_arena-flyovers",
+      "frameRange": [
+        1.0,
+        279.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_fire-flyover",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_flight-loop",
+      "frameRange": [
+        1.0,
+        17.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_flight-sequence",
+      "frameRange": [
+        1.0,
+        148.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_high-launch",
+      "frameRange": [
+        1.0,
+        55.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_landing",
+      "frameRange": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_rear-breath",
+      "frameRange": [
+        1.0,
+        40.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        84.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_walk",
+      "frameRange": [
+        1.0,
+        24.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_arena-flyovers",
+      "frameRange": [
+        1.0,
+        279.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_fire-flyover",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_flight-loop",
+      "frameRange": [
+        1.0,
+        17.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_flight-sequence",
+      "frameRange": [
+        1.0,
+        148.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_high-launch",
+      "frameRange": [
+        1.0,
+        55.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_landing",
+      "frameRange": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_rear-breath",
+      "frameRange": [
+        1.0,
+        40.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        84.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_walk",
+      "frameRange": [
+        1.0,
+        24.0
+      ]
+    },
+    {
+      "name": "Ashfang_rear-breath",
+      "frameRange": [
+        1.0,
+        40.0
+      ]
+    },
+    {
+      "name": "Ashfang_takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        84.0
+      ]
+    },
+    {
+      "name": "Ashfang_walk",
+      "frameRange": [
+        1.0,
+        24.0
+      ]
+    }
+  ],
+  "images": [
+    {
+      "name": "Ashfang original surface and authored card wings",
+      "packed": true,
+      "path": "art\\source\\enemies\\ashfang\\model\\local-appearance-001\\rigged-block-v48\\ashfang-albedo.png",
+      "externalExists": null
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "engine": "CYCLES",
+      "camera": "Recovery orthographic camera",
+      "fps": 24.0
+    }
+  ],
+  "limits": "Opening is not proof of deformation, motion, rights or artistic acceptance."
+}
