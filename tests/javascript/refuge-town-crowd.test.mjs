@@ -514,3 +514,25 @@ test('V2 is isolated behind a URL flag and uses an authored pixel mask without V
     assert.match(mask, /Nexus/i);
     assert.match(v2, /usingLegacyNavigation: false/);
 });
+
+test('V2 uses independent rear-stone feet and cropped foliage alpha, never broad V1 cover', () => {
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const sceneCode = source(scene);
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const foliage = source(art + '/nexus-v2-foliage-mask.svg');
+    assert.match(ground, /Upper leaf canopy|leaf canopy rises above a passable rear flagstone/);
+    assert.match(ground, /root\/base footprint|roots and the planter base/);
+    assert.match(foliage, /width="1672" height="941"/);
+    assert.match(foliage, /independent of the ground-contact navigation mask/);
+    assert.match(code, /destination-in/);
+    assert.match(code, /toDataURL\("image\/png"\)/);
+    assert.match(code, /function overlapsFoliage\(/);
+    assert.match(code, /BEHIND_SHRUB = \{ x: 520, y: 430 \}/);
+    assert.match(code, /planRoute\(state\.nav, START, BEHIND_SHRUB\)/);
+    assert.match(code, /planRoute\(state\.nav, BEHIND_SHRUB, FINISH\)/);
+    assert.match(code, /depthFrames: entry\.depthFrames/);
+    assert.match(sceneCode, /data-town-v2-depth-toggle="true"/);
+    assert.match(code, /depthToggle\.removeEventListener/);
+    const executable = code.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable, /night-navigation\.json|TownCrowd|\.Occluders|CUTOUTS/);
+});
