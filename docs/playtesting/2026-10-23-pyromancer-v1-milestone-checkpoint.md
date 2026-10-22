@@ -11,7 +11,7 @@ Date: 23 October 2026. This is an **implementation/evidence checkpoint**, not an
 | 3. Saves and mobile browser safeguards | **Automated checks green** | Socket assignments and legacy saves, loadouts and Hunt snapshots tested; Chromium and WebKit checks green at Fire PR #290 | Physical iPhone touch/scroll/reload review |
 | 4. Early/mid/advanced Fire combat balance | **Diagnostic evidence pending** | Generic Balance Lab succeeded but does not prepare different core levels/mutation sockets as a cohort comparison | New `--fire-progression` study must run with reproducible same-seed agents and produce reports; review deaths, kills/min, Wyrm reach and total run time |
 | 5. Art, power feedback and mobile acceptance | **Human acceptance pending** | Web map has tiers, large asymmetric Fire branches and test-verified interaction | Compare 320/390px screenshots and test on iPhone: tier silhouettes, legibility, pan/zoom, major-socket interaction, actual combat power payoff |
-| 6. Arcane Nexus school radiance | **Separate presentation milestone** | PR #292 adds school palette and growing brightness from invested Web points while retaining night-only approved building art | Complete PR CI and visual acceptance before calling it deployed |
+| 6. Arcane Nexus school radiance | **Merged; deployment/visual acceptance pending** | PR #292 merged to `main` after Validate, Chromium and WebKit passed; release version 0.0.178 | Confirm post-merge deployment and visually review the real dome/portal glow on iPhone |
 
 ## Fire-only power diagnostic
 
