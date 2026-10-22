@@ -14,9 +14,13 @@ def geometry_hash():
  return h.hexdigest()
 before=geometry_hash();assert before=='9b9d87decdf1034d5e72e06114fdde7d7e1995e8c64a360549bc34f44d046ed3'
 textures=out.parent/'M0-001/original/download/textures'
+relief=body.data.attributes.new('Ashfang scale relief','FLOAT','POINT')
 rest=body.data.attributes.new('Ashfang rest position','FLOAT_VECTOR','POINT');heat=body.data.attributes.new('Ashfang subscale heat','FLOAT','POINT')
 for v in body.data.vertices:
  rest.data[v.index].vector=v.co;x,y,z=v.co
+ # Preserve the source's longitudinal horn sculpture above the skull/back.
+ horn_floor=3.52 if x < -1.5 else 3.14
+ relief.data[v.index].value=max(0,min(1,(horn_floor+.12-z)/.22))
  # Broad, uneven warmth under the throat, shoulder and rib cage. No new geometry.
  neck=math.exp(-((x+2.25)/1.35)**2-((z-2.75)/.62)**2-(y/.62)**2)
  ribs=math.exp(-((x-.1)/1.8)**2-((z-2.5)/.95)**2-(y/1.0)**2)
@@ -63,13 +67,13 @@ for slot in body.material_slots:
   warp=node('ShaderNodeVectorMath','Warp fine scales');warp.operation='SCALE';warp.inputs['Scale'].default_value=.12;link(noise.outputs['Color'],warp.inputs[0])
   add=node('ShaderNodeVectorMath','Organic scale coordinates');add.operation='ADD';link(coord.outputs['Vector'],add.inputs[0]);link(warp.outputs['Vector'],add.inputs[1])
   cells=node('ShaderNodeTexVoronoi','Fine fractured scales');cells.feature='DISTANCE_TO_EDGE';cells.inputs['Scale'].default_value=8.5;link(add.outputs[0],cells.inputs['Vector'])
-  bump=node('ShaderNodeBump','Subtle scale relief');bump.inputs['Strength'].default_value=.48;bump.inputs['Distance'].default_value=.035;link(ramp(cells.outputs['Distance'],[(.008,(0,0,0,1)),(.065,(1,1,1,1))]),bump.inputs['Height']);link(normal.outputs['Normal'],bump.inputs['Normal']);link(bump.outputs['Normal'],bs.inputs['Normal'])
+  bump=node('ShaderNodeBump','Subtle scale relief');scale_mask=node('ShaderNodeAttribute','Retain original horn grooves');scale_mask.attribute_name=relief.name;link(mathnode('MULTIPLY',scale_mask.outputs['Fac'],.48),bump.inputs['Strength']);bump.inputs['Distance'].default_value=.035;link(ramp(cells.outputs['Distance'],[(.008,(0,0,0,1)),(.065,(1,1,1,1))]),bump.inputs['Height']);link(normal.outputs['Normal'],bump.inputs['Normal']);link(bump.outputs['Normal'],bs.inputs['Normal'])
   fracture=node('ShaderNodeTexVoronoi','Sparse deep fractures beneath fine scales');fracture.feature='DISTANCE_TO_EDGE';fracture.inputs['Scale'].default_value=2.8;link(add.outputs[0],fracture.inputs['Vector'])
   cracks=ramp(fracture.outputs['Distance'],[(.006,(1,1,1,1)),(.028,(0,0,0,1))])
   patch=ramp(noise.outputs['Fac'],[(.48,(0,0,0,1)),(.68,(1,1,1,1))])
   region=node('ShaderNodeAttribute','Heat under existing neck and chest');region.attribute_name=heat.name
   edgeheat=mathnode('MULTIPLY',cracks,patch);edgeheat=mathnode('MULTIPLY',edgeheat,mathnode('POWER',region.outputs['Fac'],1.8))
-  cavity=mathnode('POWER',mathnode('SUBTRACT',1,ao),2.2);cavity=mathnode('MULTIPLY',cavity,region.outputs['Fac'])
+  cavity=mathnode('POWER',mathnode('SUBTRACT',1,ao),2.2);cavity=mathnode('MULTIPLY',cavity,mathnode('POWER',region.outputs['Fac'],2))
   strength=mathnode('MAXIMUM',edgeheat,mathnode('MULTIPLY',cavity,.22));link(mathnode('MULTIPLY',strength,6.0),bs.inputs['Emission Strength']);link(ramp(strength,[(0,(1,.018,.001,1)),(.3,(1,.095,.003,1)),(.7,(1,.3,.018,1))]),bs.inputs['Emission Color'])
 # Arrange editable shader graphs in dependency order.
 for mat in body.data.materials:
