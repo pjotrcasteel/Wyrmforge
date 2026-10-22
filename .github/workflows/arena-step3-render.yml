@@ -1,0 +1,58 @@
+name: Arena Step 3 · Editable Forest Asset Renders
+
+on:
+  pull_request:
+    paths:
+      - tools/art/step3_wet_forest.py
+      - art/source/environment/wet-forest/catalog.json
+      - .github/workflows/arena-step3-render.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render-new-environment-art:
+    name: Render original wet-forest Blender source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Install free Blender renderer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender
+          blender --version | head -2
+      - name: Render independent original living tree
+        run: |
+          blender -b -t 4 --python tools/art/step3_wet_forest.py -- \
+            --asset ancient_oak --output-dir artifacts/wet-forest/ancient_oak
+      - name: Render independent original dead tree
+        run: |
+          blender -b -t 4 --python tools/art/step3_wet_forest.py -- \
+            --asset dead_elm --output-dir artifacts/wet-forest/dead_elm
+      - name: Validate saved editable source and exported RGBA candidates
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ('ancient_oak', 'dead_elm'):
+              root = Path('artifacts/wet-forest') / name
+              blend = root / (name + '.blend')
+              png = root / (name + '-candidate.png')
+              meta = json.loads((root / 'production.json').read_text())
+              assert blend.stat().st_size > 10000
+              assert png.read_bytes()[:8] == bytes.fromhex('89504e470d0a1a0a')
+              assert meta['id'] == name
+              assert meta['approval'] == 'candidate-not-approved'
+              assert meta['render']['transparent']
+              print(name, 'source bytes', blend.stat().st_size, 'PNG bytes', png.stat().st_size)
+          PY
+      - name: Preserve editable .blend files and review PNGs
+        uses: actions/upload-artifact@v4
+        with:
+          name: arena-step3-original-wet-forest-candidates
+          path: artifacts/wet-forest/
+          if-no-files-found: error
+          retention-days: 30
