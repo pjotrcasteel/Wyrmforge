@@ -1,4 +1,4 @@
-// Town Scene V2 / west-plaza continuation: independent ground and foliage masks.
+// Town Scene V2 / approved plaza -> well-front continuation. Independent masks only.
 // Navigation comes ONLY from the rasterized mask, never night-navigation.json.
 // V1 remains completely unmodified outside the explicit ?townV2=1 test.
 const WIDTH = 1672;
@@ -8,8 +8,14 @@ const CELL = 6;
 const START = { x: 440, y: 401 };
 const STAIR_EXIT = { x: 575, y: 492 };
 const PLAZA_END = { x: 681, y: 623 };
-// The end of this deliberately short extension is BEFORE the noticeboard,
-// well and southern garden; those areas remain black/unverified.
+const WELL_FRONT_MID = { x: 800, y: 630 };
+const WELL_FRONT_END = { x: 970, y: 616 };
+const WELL_RIM = { x: 920, y: 551 };
+const WELL_CENTER = { x: 820, y: 535 };
+const NOTICEBOARD_POST = { x: 762, y: 495 };
+const LOWER_GARDEN = { x: 950, y: 708 };
+// Only the front/south approach is allowed. The well base, noticeboard and
+// rear side remain forbidden; no foreground well layer is needed in this slice.
 // Screenshot-grounded: painted foliage is LEFT of the stair, not over its treads.
 // The old (497..547, 411..465) cutout inadvertently replayed STAIR pixels over NPCs.
 const FOLIAGE = { x: 418, y: 412, width: 42, height: 29, depthY: 438 };
@@ -194,7 +200,10 @@ function animate(w, now) {
             }
         }
         if (w.targetIndex < 0 || w.targetIndex >= w.route.length) {
-            if (w.direction === 1) w.plazaVisits++;
+            if (w.direction === 1) {
+                w.plazaVisits++;
+                w.wellFrontVisits++;
+            }
             w.direction = -w.direction;
             w.targetIndex = Math.max(0, Math.min(w.route.length - 1, w.targetIndex + w.direction * 2));
             w.pause = .6;
@@ -205,7 +214,7 @@ function animate(w, now) {
         w.lastStatus = now;
         const safe = w.nav.canStand(w.position.x,w.position.y);
         w.status.textContent = "V2 · 1 NPC · " + (safe ? "ON MASK" : "OUTSIDE MASK") +
-            " · " + (w.position.y >= 540 ? "PLAZA" : "STAIRS") +
+            " · " + (w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
             " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
             " · " + Math.round(w.position.x) + "," + Math.round(w.position.y);
         if (!safe) w.maskViolations++;
@@ -232,7 +241,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         nav: null, foliage: null, route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
-        depthFrames: 0, maskViolations: 0, plazaVisits: 0
+        depthFrames: 0, maskViolations: 0, plazaVisits: 0, wellFrontVisits: 0
     };
     live.set(scene, state);
     state.click = () => {
@@ -246,30 +255,31 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.161", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.161", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.162", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.162", document.baseURI);
         const [walkMask, depthMask] = await Promise.all([
             loadMask(walkUrl.href), loadMask(depthUrl.href)
         ]);
         if (state.disposed) return;
         state.nav = buildNavigation(walkMask);
-        if (![START, STAIR_EXIT, STAIR_TREAD, PLAZA_STONE, PLAZA_END]
-            .every(p => state.nav.canStand(p.x,p.y)))
-            throw new Error("Town V2 stairs and plaza stops must fit the foot-safe mask.");
+        if (![START, STAIR_EXIT, STAIR_TREAD, PLAZA_STONE, PLAZA_END,
+            WELL_FRONT_MID, WELL_FRONT_END].every(p => state.nav.canStand(p.x,p.y)))
+            throw new Error("Town V2 stairs, plaza and well-front stops must fit the mask.");
         if (state.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y))
             throw new Error("Town V2 staircase side masonry must be blocked.");
         if (state.nav.canStand(PLANT_BASE.x, PLANT_BASE.y))
             throw new Error("Town V2 stair-side garden roots must be blocked.");
-        if (state.nav.canStand(WELL_BASE.x, WELL_BASE.y) ||
-            state.nav.canStand(WEST_PLANTER.x, WEST_PLANTER.y))
-            throw new Error("Town V2 plaza mask must exclude the well and planted edges.");
+        if ([WELL_BASE, WELL_CENTER, WELL_RIM, NOTICEBOARD_POST, WEST_PLANTER,
+            LOWER_GARDEN].some(p => state.nav.canStand(p.x,p.y)))
+            throw new Error("Town V2 well, noticeboard and garden feet must stay blocked.");
         state.foliage = await buildFoliage(scene, depthMask);
         if (state.disposed) return;
-        // One connected raster-planned route through the previously approved
-        // staircase and onto the west-plaza cobbles; no teleport or old V1 A*.
-        state.route = planRoute(state.nav, START, PLAZA_END);
-        if (!state.route.some(p => Math.hypot(p.x - STAIR_EXIT.x, p.y - STAIR_EXIT.y) <= 12))
-            throw new Error("Town V2 plaza route bypassed its approved staircase exit.");
+        // Preserve the approved stairs and plaza; extend along visible cobbles
+        // IN FRONT OF the well. No rear-of-well foreground is attempted here.
+        state.route = planRoute(state.nav, START, WELL_FRONT_END);
+        if (!state.route.some(p => Math.hypot(p.x - STAIR_EXIT.x, p.y - STAIR_EXIT.y) <= 12) ||
+            !state.route.some(p => Math.hypot(p.x - PLAZA_END.x, p.y - PLAZA_END.y) <= 16))
+            throw new Error("Town V2 route bypassed previously approved stairs/plaza.");
         // Grid navigation is small, but still verify interpolated feet along
         // every diagonal/straight segment before any movement begins.
         for (let i = 1; i < state.route.length; i++) {
@@ -303,6 +313,15 @@ export function readTownV2Diagnostics(canvas) {
         wellExcluded: entry.nav ? !entry.nav.canStand(WELL_BASE.x, WELL_BASE.y) : false,
         westPlanterExcluded: entry.nav ? !entry.nav.canStand(WEST_PLANTER.x, WEST_PLANTER.y) : false,
         plazaVisits: entry.plazaVisits,
+        wellFrontVisits: entry.wellFrontVisits,
+        wellFrontWalkable: entry.nav?.canStand(WELL_FRONT_MID.x, WELL_FRONT_MID.y) ?? false,
+        wellFrontEndpointWalkable: entry.nav?.canStand(WELL_FRONT_END.x, WELL_FRONT_END.y) ?? false,
+        wellCenterExcluded: entry.nav ? !entry.nav.canStand(WELL_CENTER.x, WELL_CENTER.y) : false,
+        wellRimExcluded: entry.nav ? !entry.nav.canStand(WELL_RIM.x, WELL_RIM.y) : false,
+        noticeboardExcluded: entry.nav ? !entry.nav.canStand(NOTICEBOARD_POST.x, NOTICEBOARD_POST.y) : false,
+        lowerGardenExcluded: entry.nav ? !entry.nav.canStand(LOWER_GARDEN.x, LOWER_GARDEN.y) : false,
+        wellFrontStage: entry.position.x >= 720 && entry.position.y >= 590,
+        wellForegroundRequired: false,
         stairMasonryBlocked: entry.nav ? !entry.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y) : false,
         foliageExcludesStairs: FOLIAGE.x + FOLIAGE.width <= 465,
         stairAreaOccluded: entry.position.x >= 475 && entry.lastOccluded,
