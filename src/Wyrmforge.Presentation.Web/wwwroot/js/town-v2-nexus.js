@@ -198,47 +198,107 @@ function overlapsFoliage(position, foliage) {
             if (foliage.alpha[y * foliage.width + x] > 80) return true;
     return false;
 }
-function draw(w) {
-    const ctx = w.canvas.getContext("2d");
-    ctx.clearRect(0, 0, WIDTH, HEIGHT);
-    if (w.showMask) ctx.drawImage(w.nav.overlay, 0, 0);
-    if (w.showMask) {
-        ctx.save();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "rgba(251,211,127,.85)";
-        ctx.setLineDash([6,5]); ctx.beginPath();
-        w.route.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
-        ctx.stroke();ctx.restore();
-    }
-    // One simple V2 test citizen. Never composite stair stone as if it were leaves.
+// Every NPC uses the same foot-space and the same sampled architectural alpha.
+// Sorted feet let a closer NPC appear IN FRONT of the props while a rear NPC
+// disappears BEHIND exactly the wood/tiles; no copied pavement or broad overlays.
+function drawCitizen(ctx, person) {
     ctx.save();
-    ctx.translate(w.position.x, w.position.y);
-    ctx.fillStyle = "#061622aa";ctx.beginPath();ctx.ellipse(0,2,9,4,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle = "#d5ac73";ctx.fillRect(-5,-21,10,19);
-    ctx.fillStyle = "#52677e";ctx.fillRect(-6,-17,12,11);
+    ctx.translate(person.position.x, person.position.y);
+    ctx.fillStyle = "#061622aa";
+    ctx.beginPath();ctx.ellipse(0, 2, 9, 4, 0, 0, Math.PI * 2);ctx.fill();
+    ctx.fillStyle = person.id === 0 ? "#d5ac73" : person.id === 1 ? "#be996e" : "#c5ae84";
+    ctx.fillRect(-5,-21,10,19);
+    ctx.fillStyle = person.id === 0 ? "#52677e" : person.id === 1 ? "#785548" : "#466c56";
+    ctx.fillRect(-6,-17,12,11);
     ctx.fillStyle = "#edcfad";ctx.fillRect(-4,-29,8,9);
     ctx.strokeStyle = "#fcdd8d";ctx.lineWidth = 1.5;
     ctx.strokeRect(-7,-31,14,31);
     ctx.restore();
-    // V2 real-world depth is by FEET. A rear walker can go behind the roof
-    // while the approved front walker NEVER gets stone repainted over it.
-    w.lastWellOccluded = w.rearMode && overlapsFoliage(w.position, w.wellCutout);
-    w.lastNoticeOccluded = w.rearMode && overlapsFoliage(w.position, w.noticeCutout);
-    if (w.lastWellOccluded && w.showDepth) {
-        ctx.drawImage(w.wellCutout.image, w.wellCutout.x, w.wellCutout.y);
-        w.wellOcclusionFrames++;
+}
+function draw(w) {
+    const ctx = w.canvas.getContext("2d");
+    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    if (w.showMask) {
+        ctx.drawImage(w.nav.overlay, 0, 0);
+        ctx.save();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(251,211,127,.85)";
+        ctx.setLineDash([6,5]);ctx.beginPath();
+        w.route.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+        ctx.stroke();ctx.restore();
     }
-    if (w.lastNoticeOccluded && w.showDepth) {
-        ctx.drawImage(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y);
-        w.noticeOcclusionFrames++;
-        if (Math.abs(w.position.x - RIGHT_POST_PASS.x) <= 9 &&
-            Math.abs(w.position.y - RIGHT_POST_PASS.y) <= 15)
-            w.rightPostOcclusionFrames++;
+    const residents = [{ id: 0, position: w.position }, ...w.extras]
+        .sort((a,b) => a.position.y - b.position.y || a.id - b.id);
+    for (const person of residents) {
+        drawCitizen(ctx, person);
+        const well = !!w.wellCutout && overlapsFoliage(person.position, w.wellCutout);
+        const notice = !!w.noticeCutout && overlapsFoliage(person.position, w.noticeCutout);
+        const shrub = overlapsFoliage(person.position, w.foliage);
+        if (person.id === 0) {
+            w.lastWellOccluded = well && w.rearMode;
+            w.lastNoticeOccluded = notice && w.rearMode;
+            w.lastOccluded = shrub;
+        }
+        if (!w.showDepth) continue;
+        if (well) {
+            ctx.drawImage(w.wellCutout.image, w.wellCutout.x, w.wellCutout.y);
+            if (person.id === 0) w.wellOcclusionFrames++;
+            else w.crowdOcclusionFrames++;
+        }
+        if (notice) {
+            ctx.drawImage(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y);
+            if (person.id === 0) {
+                w.noticeOcclusionFrames++;
+                if (Math.abs(w.position.x - RIGHT_POST_PASS.x) <= 9 &&
+                    Math.abs(w.position.y - RIGHT_POST_PASS.y) <= 15)
+                    w.rightPostOcclusionFrames++;
+            } else w.crowdOcclusionFrames++;
+        }
+        if (shrub) {
+            ctx.drawImage(w.foliage.image, w.foliage.x, w.foliage.y);
+            if (person.id === 0) w.depthFrames++;
+            else w.crowdOcclusionFrames++;
+        }
     }
-    w.lastOccluded = overlapsFoliage(w.position, w.foliage);
-    if (w.lastOccluded && w.showDepth) {
-        ctx.drawImage(w.foliage.image, w.foliage.x, w.foliage.y);
-        w.depthFrames++;
+}
+function advanceExtra(w, person, dt) {
+    if (person.pause > 0) { person.pause -= dt; return; }
+    let remaining = person.speed * dt;
+    while (remaining > 0 && person.targetIndex >= 0 && person.targetIndex < person.route.length) {
+        const target = person.route[person.targetIndex];
+        const dx = target.x - person.position.x, dy = target.y - person.position.y;
+        const distance = Math.hypot(dx, dy);
+        const travel = Math.min(remaining, distance);
+        const candidate = distance < .001 ? { ...target } : {
+            x: person.position.x + dx / distance * travel,
+            y: person.position.y + dy / distance * travel
+        };
+        // If moving into another resident's space, turn back along the SAME
+        // raster route. Do not freeze forever or generate an off-mask detour.
+        // Movement AWAY from someone already near is always permitted.
+        const neighbors = [{ position: w.position }, ...w.extras.filter(p => p !== person)];
+        if (neighbors.some(p => {
+            const next = Math.hypot(candidate.x - p.position.x, candidate.y - p.position.y);
+            const previous = Math.hypot(person.position.x - p.position.x, person.position.y - p.position.y);
+            return next < 19 && next < previous - .01;
+        })) {
+            person.yieldFrames++;
+            person.direction = -person.direction;
+            person.targetIndex = Math.max(0, Math.min(person.route.length - 1,
+                person.targetIndex + person.direction));
+            person.pause = .1;
+            return;
+        }
+        person.position = candidate;
+        remaining -= travel;
+        if (distance <= travel + .001) person.targetIndex += person.direction;
+    }
+    if (person.targetIndex < 0 || person.targetIndex >= person.route.length) {
+        person.direction = -person.direction;
+        person.targetIndex = Math.max(0, Math.min(person.route.length - 1,
+            person.targetIndex + person.direction * 2));
+        person.pause = .8 + person.id * .35;
+        person.turns++;
     }
 }
 function animate(w, now) {
@@ -255,17 +315,21 @@ function animate(w, now) {
             const target = w.route[w.targetIndex];
             const dx = target.x - w.position.x, dy = target.y - w.position.y;
             const distance = Math.hypot(dx,dy);
-            if (distance <= remaining + .001) {
-                w.position = { ...target };
-                remaining -= distance;
-                w.targetIndex += w.direction;
-            } else {
-                w.position = {
-                    x: w.position.x + dx / distance * remaining,
-                    y: w.position.y + dy / distance * remaining
-                };
+            const travel = Math.min(remaining, distance);
+            const next = distance < .001 ? { ...target } : {
+                x: w.position.x + dx / distance * travel,
+                y: w.position.y + dy / distance * travel
+            };
+            // The approved route never changes: the leader merely yields a
+            // frame when another NPC would occupy the same foot space.
+            if (w.extras.some(p => Math.hypot(next.x - p.position.x, next.y - p.position.y) < 17)) {
+                w.primaryYieldFrames++;
                 remaining = 0;
+                break;
             }
+            w.position = next;
+            remaining -= travel;
+            if (distance <= travel + .001) w.targetIndex += w.direction;
         }
         if (w.targetIndex < 0 || w.targetIndex >= w.route.length) {
             if (w.direction === 1) {
@@ -276,6 +340,17 @@ function animate(w, now) {
             w.targetIndex = Math.max(0, Math.min(w.route.length - 1, w.targetIndex + w.direction * 2));
             w.pause = .6;
         }
+    }
+    for (const person of w.extras) advanceExtra(w, person, dt);
+    for (const person of w.extras)
+        if (!w.nav.canStand(person.position.x, person.position.y)) w.maskViolations++;
+    if (w.extras.length) {
+        w.crowdFrames++;
+        const positions = [w.position, ...w.extras.map(p => p.position)];
+        for (let i = 0; i < positions.length; i++)
+            for (let j = i + 1; j < positions.length; j++)
+                if (Math.hypot(positions[i].x - positions[j].x,
+                    positions[i].y - positions[j].y) < 12) w.crowdOverlapFrames++;
     }
     if (w.rearMode && w.position.x >= 810 && w.position.x <= 854 &&
         w.position.y <= 473) w.rearFrames++;
@@ -293,7 +368,8 @@ function animate(w, now) {
     draw(w);
     if (now - w.lastStatus > 300) {
         w.lastStatus = now;
-        w.status.textContent = "V2 · 1 NPC · " + (safe ? "ON MASK" : "OUTSIDE MASK") +
+        w.status.textContent = "V2 · " + (w.extras.length + 1) + " NPC · " +
+            (safe && w.maskViolations === 0 ? "ON MASK" : "OUTSIDE MASK") +
             " · " + (w.rearMode ? "WELL REAR" :
                 w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
             " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
@@ -320,10 +396,15 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     const rearMode = query.get("townRoute") === "rear";
     const inspectPose = rearMode && query.get("townPose") === "post";
     const inspectWell = rearMode && query.get("townPose") === "well";
+    // Explicit V2-only crowd preview. Keep the approved one-person inspection
+    // and normal gameplay untouched until several residents pass on mobile.
+    const residentCount = !inspectPose && !inspectWell && query.get("townResidents") === "3" ? 3 : 1;
     const state = {
         canvas, toggle, depthToggle, status, disposed: false, frame: 0,
-        rearMode, inspectPose, inspectWell,
+        rearMode, inspectPose, inspectWell, residentCount,
         nav: null, foliage: null, wellCutout: null, noticeCutout: null,
+        extras: [], crowdFrames: 0, crowdOverlapFrames: 0, crowdOcclusionFrames: 0,
+        primaryYieldFrames: 0,
         route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
@@ -334,6 +415,10 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         lastWellOccluded: false, lastNoticeOccluded: false
     };
     live.set(scene, state);
+    if (residentCount > 1) {
+        state.showMask = false;
+        toggle.setAttribute("aria-pressed", "false");
+    }
     state.click = () => {
         state.showMask = !state.showMask;
         toggle.setAttribute("aria-pressed", String(state.showMask));
@@ -345,12 +430,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.174", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.174", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.175", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.175", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
-        if (rearMode) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.174", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.174", document.baseURI).href));
+        if (rearMode || residentCount > 1) {
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.175", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.175", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
@@ -367,7 +452,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
             throw new Error("Town V2 well, noticeboard and garden feet must stay blocked.");
         state.foliage = await buildFoliage(scene, depthMask);
         if (state.disposed) return;
-        if (rearMode) {
+        if (rearMode || residentCount > 1) {
             // A separate cutout each for the timber well and the noticeboard.
             // Neither reaches into front-route rendering or legacy occluders.
             [state.wellCutout, state.noticeCutout] = await Promise.all([
@@ -379,16 +464,17 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                 throw new Error("Town V2 well rear feet leave verified paving.");
             const entryRoute = planRoute(state.nav, STAIR_EXIT, REAR_ENTRY);
             const rearRoute = planRoute(state.nav, REAR_ENTRY, REAR_END);
-            state.route = [...entryRoute, ...rearRoute.slice(1)];
-            if (!state.route.some(p => p.x >= 820 && p.x <= 855 && p.y < 473))
+            state.rearRoute = [...entryRoute, ...rearRoute.slice(1)];
+            if (!state.rearRoute.some(p => p.x >= 820 && p.x <= 855 && p.y < 473))
                 throw new Error("Town V2 rear route never travels behind the well roof.");
-            // Unlike v0.0.171, the route MUST actually pass behind the right
-            // post. Test both movement coordinates and real object alpha.
-            if (!state.route.some(p => Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
+            // Keep the validated passage BEHIND real noticeboard timber.
+            if (!state.rearRoute.some(p => Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
                     Math.abs(p.y - RIGHT_POST_PASS.y) <= 15 &&
                     overlapsFoliage(p, state.noticeCutout)))
                 throw new Error("Town V2 rear walker must pass behind real right-post timber.");
-        } else {
+            if (rearMode) state.route = state.rearRoute;
+        }
+        if (!rearMode) {
         // Explicit intermediate anchors preserve the owner-approved Nexus/plaza
         // traversal and force actual CLOSE well frontage rather than a wide arc.
         // All legs are still derived from the single authored 8px-foot-eroded mask.
@@ -419,6 +505,27 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
             throw new Error("Town V2 well inspection feet are outside the approved paving.");
         state.position = state.inspectPose ? { ...RIGHT_POST_PASS } :
             state.inspectWell ? { ...REAR_END } : { ...state.route[0] };
+        if (residentCount === 3) {
+            // Three independently timed routes through verified paving. Never
+            // derive a parallel-offset route through planters or cobblestones.
+            const front = rearMode ? [
+                ...planRoute(state.nav, START, PLAZA_END),
+                ...planRoute(state.nav, PLAZA_END, WELL_FRONT_MID).slice(1),
+                ...planRoute(state.nav, WELL_FRONT_MID, WELL_FRONT_END).slice(1)
+            ] : state.route;
+            const second = rearMode ? front : planRoute(state.nav, REAR_ENTRY, REAR_END);
+            const third = planRoute(state.nav, PLAZA_END, WELL_FRONT_MID);
+            for (const [id, route, speed] of [[1, second, 29], [2, third, 24]]) {
+                if (!route || route.length < 5 ||
+                    route.some(p => !state.nav.canStand(p.x, p.y)))
+                    throw new Error("Town V2 secondary citizen left approved paving.");
+                state.extras.push({
+                    id, route, position: { ...route[0] }, targetIndex: 1,
+                    direction: 1, speed, pause: id * .65,
+                    turns: 0, yieldFrames: 0
+                });
+            }
+        }
         state.lastTime = performance.now();
         state.frame = requestAnimationFrame(t => animate(state,t));
     } catch (e) {
@@ -432,7 +539,16 @@ export function readTownV2Diagnostics(canvas) {
     return {
         active: !!entry.nav && entry.route.length > 1,
         version: 2, source: "nexus-v2-walk-mask.svg", usingLegacyNavigation: false,
-        npcCount: 1, routeLength: entry.route.length,
+        npcCount: entry.extras.length + 1, routeLength: entry.route.length,
+        residents: [{ id: 0, route: entry.rearMode ? "rear" : "front",
+            position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x, entry.position.y) },
+            ...entry.extras.map(p => ({ id: p.id,
+                route: p.id === 1 ? (entry.rearMode ? "front" : "rear") : "plaza",
+                position: { ...p.position }, safe: entry.nav?.canStand(p.position.x, p.position.y),
+                turns: p.turns, yieldFrames: p.yieldFrames }))],
+        crowdFrames: entry.crowdFrames, crowdOverlapFrames: entry.crowdOverlapFrames,
+        crowdOcclusionFrames: entry.crowdOcclusionFrames,
+        primaryYieldFrames: entry.primaryYieldFrames,
         position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x,entry.position.y),
         shrubBlocked: entry.nav ? !entry.nav.canStand(PLANT_BASE.x, PLANT_BASE.y) : false,
         stairTreadsWalkable: entry.nav?.canStand(STAIR_TREAD.x, STAIR_TREAD.y) ?? false,
@@ -470,6 +586,11 @@ export function readTownV2Diagnostics(canvas) {
         inspectingWellRoof: entry.inspectWell,
         passesBehindRightPost: entry.rearMode && !!entry.noticeCutout &&
             entry.route.some(p => Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
+                Math.abs(p.y - RIGHT_POST_PASS.y) <= 15 &&
+                overlapsFoliage(p, entry.noticeCutout)),
+        crowdRearPassesRightPost: entry.extras.length > 0 && !!entry.noticeCutout &&
+            (entry.rearMode ? entry.route : entry.rearRoute ?? []).some(p =>
+                Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
                 Math.abs(p.y - RIGHT_POST_PASS.y) <= 15 &&
                 overlapsFoliage(p, entry.noticeCutout)),
         rightPostOcclusionFrames: entry.rightPostOcclusionFrames,
