@@ -106,21 +106,18 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
-        await Page.WaitForFunctionAsync(@"async () => {
+        // Import once through EvaluateAsync (which awaits module loading).
+        // WaitForFunction MUST be synchronous: an async callback returns a
+        // truthy Promise before its false diagnostic result is resolved.
+        await Page.EvaluateAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.166');
-            const canvas = document.querySelector('[data-town-v2-canvas]');
-            const d = module.readTownV2Diagnostics(canvas);
-            return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
-                d.wellDepthTransparent && d.noticeDepthTransparent &&
-                d.wellDepthEdgesClear && d.noticeDepthEdgesClear && d.safe;
-        }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
-        // Capture one consistent frame. During Blazor re-render, a second read
-        // can briefly observe a remount between two individually successful
-        // checks. The snapshot still requires all pixel/route/depth invariants
-        // together; none are skipped.
-        var depthEvidenceHandle = await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
-            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            window.__readTownV2Rear = () =>
+                module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        // Return the actual diagnostic object as the JSHandle, not a false
+        // promise result or a window variable from another evaluation world.
+        var depthEvidenceHandle = await Page.WaitForFunctionAsync(@"() => {
+            const d = window.__readTownV2Rear?.();
             if (!d?.active || !d.rearMode || !d.wellForegroundRequired ||
                 !d.wellDepthReady || !d.noticeDepthReady ||
                 !d.wellDepthTransparent || !d.noticeDepthTransparent ||
@@ -138,15 +135,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsFalse(before.GetProperty("usingLegacyNavigation").GetBoolean());
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
-        var hidden = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.166');
-            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-        }");
+        var hidden = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Rear()");
         await Page.WaitForTimeoutAsync(500);
-        var after = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.166');
-            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-        }");
+        var after = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Rear()");
         Assert.IsFalse(after.GetProperty("depthVisible").GetBoolean());
         Assert.AreEqual(hidden.GetProperty("wellOcclusionFrames").GetInt32(),
             after.GetProperty("wellOcclusionFrames").GetInt32());
