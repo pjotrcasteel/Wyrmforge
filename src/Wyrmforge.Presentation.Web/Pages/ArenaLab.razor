@@ -59,6 +59,10 @@
         <button class="@(tool == "blast" ? "selected" : "")" aria-pressed="@(tool == "blast" ? "true" : "false")" @onclick='() => ChangeTool("blast")'>Blast area</button>
         <label class="toggle"><input type="checkbox" @bind="showCollision" @bind:after="SyncOptions" /> Collision outlines</label>
         <label class="toggle"><input type="checkbox" @bind="showMobs" @bind:after="SyncOptions" /> Pathing mobs</label>
+        @if (habitat == WyrmrealmHabitat.WetForest)
+        {
+            <label class="toggle"><input type="checkbox" @bind="approvedGroundPreview" @bind:after="SyncOptions" /> Approved ground preview</label>
+        }
         <button class="secondary" @onclick="ResetScene">Reset scene</button>
     </section>
 
@@ -84,6 +88,7 @@
             </dl>
             <h3>Quick tests</h3>
             <p>Wet Forest first: explore a different old trail and woodland site each seed. No artificial lane walls or crossing unlocks. Strike props and inspect real collision.</p>
+            <p><strong>Approved ground preview</strong> (Wet Forest only) compares the six accepted painted materials against the existing playable C# environment. This changes only the floor artwork, never routes, collisions, enemies or live Hunts. Off is the unchanged baseline.</p>
             <p>Hollow and Ashling are non-attacking pathing probes. Their positions and collision come from C#; their approved artwork is preserved. No Hunt saves, combat rewards or permanent currency change here.</p>
             <button class="secondary" @onclick="CopyLink">Copy seed link</button>
         </aside>
@@ -122,6 +127,7 @@
     private int collectedSupplies;
     private bool showCollision;
     private bool showMobs = true;
+    private bool approvedGroundPreview;
     private string tool = "walk";
     private string status = "Choose a seed and explore.";
 
@@ -151,7 +157,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena-lab.js");
+        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena-lab.js?v=20261022-approved-ground-preview-1");
         reference = DotNetObjectReference.Create(this);
         await module.InvokeVoidAsync("initializeArenaLab", canvas, reference);
         await SyncOptions();
@@ -272,7 +278,7 @@
     private async Task SyncOptions()
     {
         if (module is not null)
-            await module.InvokeVoidAsync("configureArenaLab", canvas, tool, showCollision, showMobs);
+            await module.InvokeVoidAsync("configureArenaLab", canvas, tool, showCollision, showMobs, approvedGroundPreview);
     }
 
     private void UpdateShareableQuery() =>
