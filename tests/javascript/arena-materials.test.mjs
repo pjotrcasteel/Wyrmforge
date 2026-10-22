@@ -151,7 +151,8 @@ test('opt-in fine ground detail uses deterministic clusters from approved materi
         assert.equal(marks.length, 48);
         assert.deepEqual(marks, groundMaterialFineDetailPlan(index, 1441));
         assert.notDeepEqual(marks, groundMaterialFineDetailPlan(index, 1442));
-        assert.ok(marks.every(m => m.x >= 0 && m.x < GROUND_TILE_SIZE &&
+        assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
+            m.x >= 0 && m.x < GROUND_TILE_SIZE &&
             m.y >= 0 && m.y < GROUND_TILE_SIZE && m.width >= 14 && m.width <= 37 &&
             m.height >= 9 && m.height <= 30 && m.opacity >= .18 && m.opacity <= .35 &&
             m.sourceX >= 0 && m.sourceX + m.width <= GROUND_SOURCE_TILE_SIZE &&
