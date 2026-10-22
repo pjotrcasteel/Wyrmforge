@@ -549,8 +549,8 @@ test('Town V2 Phase 3 extends the raster route into the open west plaza, not the
     assert.match(code, /PLAZA_STONE = \{ x: 650, y: 565 \}/);
     assert.match(code, /WELL_BASE = \{ x: 735, y: 550 \}/);
     assert.match(code, /WEST_PLANTER = \{ x: 560, y: 612 \}/);
-    assert.match(code, /state\.route = planRoute\(state\.nav, START, PLAZA_END\)/);
-    assert.match(code, /if \(w\.direction === 1\) w\.plazaVisits\+\+/);
+    assert.match(code, /Math\.hypot\(p\.x - PLAZA_END\.x, p\.y - PLAZA_END\.y\) <= 16/);
+    assert.match(code, /w\.plazaVisits\+\+/);
     assert.match(code, /plazaVisits: entry\.plazaVisits/);
     assert.match(code, /plaza route cuts across an unwalkable pixel/);
     assert.match(code, /if \(w\.showMask\) \{[\s\S]*w\.route\.forEach/);
