@@ -38,7 +38,7 @@ const PLAZA_STONE = { x: 650, y: 565 };
 const live = new Map();
 
 const pixelIndex = (x, y) => ((Math.round(y) * WIDTH + Math.round(x)) * 4);
-function buildNavigation(source) {
+function buildNavigation(source, includeCoverage = false) {
     const canvas = document.createElement("canvas");
     canvas.width = WIDTH; canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -61,13 +61,45 @@ function buildNavigation(source) {
     overlay.width = WIDTH; overlay.height = HEIGHT;
     const overlayCtx = overlay.getContext("2d");
     const img = overlayCtx.createImageData(WIDTH, HEIGHT);
+    // Audit is an optional second overlay. Do NOT convert black pixels into
+    // "known solid": the current mask has no separate reviewed-solid class.
+    const coverageOverlay = includeCoverage ? document.createElement("canvas") : null;
+    if (coverageOverlay) {
+        coverageOverlay.width = WIDTH;
+        coverageOverlay.height = HEIGHT;
+    }
+    const coverageCtx = coverageOverlay?.getContext("2d");
+    const coverageImg = coverageCtx?.createImageData(WIDTH, HEIGHT);
+    let authoredGroundPixels = 0;
     for (let p = 0; p < pixels.length; p += 4) {
-        if (pixels[p] <= 230) continue;
-        img.data[p] = 42; img.data[p + 1] = 224;
-        img.data[p + 2] = 194; img.data[p + 3] = 74;
+        const authored = pixels[p] > 230;
+        if (authored) {
+            authoredGroundPixels++;
+            img.data[p] = 42; img.data[p + 1] = 224;
+            img.data[p + 2] = 194; img.data[p + 3] = 74;
+        }
+        if (coverageImg) {
+            // Teal = raw approved route paint, NOT necessarily safe foot
+            // centers. Amber = not independently classified: includes known
+            // walls AND yet-unreviewed regions, without pretending otherwise.
+            coverageImg.data[p] = authored ? 42 : 240;
+            coverageImg.data[p + 1] = authored ? 224 : 147;
+            coverageImg.data[p + 2] = authored ? 194 : 59;
+            coverageImg.data[p + 3] = authored ? 93 : 82;
+        }
     }
     overlayCtx.putImageData(img, 0, 0);
-    return { canStand, overlay };
+    if (coverageImg) coverageCtx.putImageData(coverageImg, 0, 0);
+    const totalPixels = WIDTH * HEIGHT;
+    return {
+        canStand, overlay, coverageOverlay,
+        coverage: {
+            totalPixels, authoredGroundPixels,
+            notSeparatelyClassifiedPixels: totalPixels - authoredGroundPixels,
+            knownSolidClassAvailable: false,
+            fullSceneMapped: false
+        }
+    };
 }
 function planRoute(nav, from, to) {
     const toCell = ({ x, y }) => [Math.round(x / CELL), Math.round(y / CELL)];
@@ -258,6 +290,8 @@ function drawCitizen(ctx, person) {
 function draw(w) {
     const ctx = w.canvas.getContext("2d");
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    if (w.coverageAudit && w.nav.coverageOverlay)
+        ctx.drawImage(w.nav.coverageOverlay, 0, 0);
     if (w.showMask) {
         ctx.drawImage(w.nav.overlay, 0, 0);
         ctx.save();
@@ -433,7 +467,11 @@ function animate(w, now) {
             " · " + (w.rearMode ? "WELL REAR" :
                 w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
             " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
-            " · " + Math.round(w.position.x) + "," + Math.round(w.position.y);
+            " · " + Math.round(w.position.x) + "," + Math.round(w.position.y) +
+            (w.coverageAudit ? " · PATH PAINT " +
+                (w.nav.coverage.authoredGroundPixels * 100 /
+                    w.nav.coverage.totalPixels).toFixed(1) +
+                "% · REST NOT SEPARATELY CLASSIFIED" : "");
     }
     w.frame = requestAnimationFrame(t => animate(w,t));
 }
@@ -456,12 +494,13 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     const rearMode = query.get("townRoute") === "rear";
     const inspectPose = rearMode && query.get("townPose") === "post";
     const inspectWell = rearMode && query.get("townPose") === "well";
+    const coverageAudit = query.get("townCoverage") === "1";
     // Explicit V2-only crowd preview. Keep the approved one-person inspection
     // and normal gameplay untouched until several residents pass on mobile.
     const residentCount = !inspectPose && !inspectWell && query.get("townResidents") === "3" ? 3 : 1;
     const state = {
         canvas, toggle, depthToggle, status, disposed: false, frame: 0,
-        rearMode, inspectPose, inspectWell, residentCount,
+        rearMode, inspectPose, inspectWell, residentCount, coverageAudit,
         nav: null, foliage: null, wellCutout: null, noticeCutout: null,
         extras: [], crowdFrames: 0, crowdOverlapFrames: 0, crowdOcclusionFrames: 0,
         primaryYieldFrames: 0, stride: 0, facing: 1, moving: false,
@@ -476,7 +515,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         lastWellOccluded: false, lastNoticeOccluded: false
     };
     live.set(scene, state);
-    if (residentCount > 1) {
+    if (residentCount > 1 || coverageAudit) {
         state.showMask = false;
         toggle.setAttribute("aria-pressed", "false");
     }
@@ -491,16 +530,16 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.176", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.176", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.177", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.177", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
-        if (rearMode || residentCount > 1) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.176", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.176", document.baseURI).href));
+        if (rearMode || residentCount > 1 || coverageAudit) {
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.177", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.177", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
-        state.nav = buildNavigation(walkMask);
+        state.nav = buildNavigation(walkMask, coverageAudit);
         if (![START, STAIR_EXIT, STAIR_TREAD, PLAZA_STONE, PLAZA_END,
             WELL_FRONT_MID, WELL_FRONT_END].every(p => state.nav.canStand(p.x,p.y)))
             throw new Error("Town V2 stairs, plaza and well-front stops must fit the mask.");
@@ -513,7 +552,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
             throw new Error("Town V2 well, noticeboard and garden feet must stay blocked.");
         state.foliage = await buildFoliage(scene, depthMask);
         if (state.disposed) return;
-        if (rearMode || residentCount > 1) {
+        if (rearMode || residentCount > 1 || coverageAudit) {
             // A separate cutout each for the timber well and the noticeboard.
             // Neither reaches into front-route rendering or legacy occluders.
             [state.wellCutout, state.noticeCutout] = await Promise.all([
@@ -671,7 +710,11 @@ export function readTownV2Diagnostics(canvas) {
         foregroundPixels: entry.foliage?.opaquePixels ?? 0,
         depthVisible: entry.showDepth, depthFrames: entry.depthFrames,
         occludingNow: entry.lastOccluded,
-        maskVisible: entry.showMask, violations: entry.maskViolations
+        maskVisible: entry.showMask, violations: entry.maskViolations,
+        coverageAudit: entry.coverageAudit,
+        coverage: entry.nav?.coverage ?? null,
+        coverageLegend: entry.coverageAudit
+            ? { authoredGround: "teal", notSeparatelyClassified: "amber" } : null
     };
 }
 export function disposeTownV2Nexus(sceneSelector) {
