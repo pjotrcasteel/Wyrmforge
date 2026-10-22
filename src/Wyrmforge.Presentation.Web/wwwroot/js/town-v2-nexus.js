@@ -15,8 +15,8 @@ const FRONT_VISUAL_CONTACT_MAX_Y = 590; // Feet close enough for sprite to overl
 const REAR_ENTRY = { x: 680, y: 469 };
 const REAR_END = { x: 852, y: 452 };
 // Crop to the existing approved alpha contours with >=10px clear margins on each edge.
-const WELL_CUTOUT = { x: 756, y: 390, width: 188, height: 184, depthY: 498 };
-const NOTICE_CUTOUT = { x: 736, y: 415, width: 94, height: 118, depthY: 459 };
+const WELL_CUTOUT = { x: 810, y: 392, width: 130, height: 160, depthY: 498 };
+const NOTICE_CUTOUT = { x: 721, y: 411, width: 93, height: 139, depthY: 459 };
 const WELL_RIM = { x: 920, y: 551 };
 const WELL_CENTER = { x: 820, y: 535 };
 const NOTICEBOARD_POST = { x: 762, y: 495 };
@@ -329,12 +329,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.165", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.165", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.167", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.167", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.165", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.165", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.167", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.167", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
