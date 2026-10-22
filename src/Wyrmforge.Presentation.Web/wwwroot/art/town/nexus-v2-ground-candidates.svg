@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- PROPOSED ground, visually traced from night-active.webp (1672x941).
+       These polygons are hypotheses to REVIEW, never a trusted collider.
+       Their white pixels may overlap already-approved foot routes or known
+       obstacles: runtime audit categorizes the authoritative classes first.
+       DO NOT import this SVG into buildNavigation's physical walk mask. -->
+  <!-- Main south cobbled plaza between the well and lower stair approaches.
+       Planted islands/lamps have NOT been fully carved out yet. -->
+  <path fill="#fff" d="M 555 551 L 706 545 L 740 578 L 960 580
+    L 1068 560 L 1124 600 L 1107 679 L 1020 700
+    L 960 719 L 705 713 L 582 677 L 535 608 Z"/>
+  <!-- Northwest approach: stone apron between Nexus-side stair and plaza;
+       boundaries near planters/posts are not yet confirmed pixel by pixel. -->
+  <path fill="#fff" d="M 535 370 L 666 360 L 743 397
+    L 736 470 L 690 512 L 550 515 L 506 449 Z"/>
+  <!-- East cobbled apron toward right-hand buildings and side staircase.
+       This is NOT a navigation connection until object footprints verified. -->
+  <path fill="#fff" d="M 958 366 L 1052 350 L 1143 361
+    L 1200 400 L 1200 473 L 1137 496 L 1010 476 L 951 438 Z"/>
+</svg>
