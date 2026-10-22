@@ -671,6 +671,23 @@ test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowe
         }
         return inside;
     };
+    const rightPost = paths[2];
+    // Screenshot at world feet (800,444): the actor's upper body overlaps
+    // this narrow vertical timber. The post must cover that overlap, not
+    // adjacent paving; unlike the old lower-leg-only alpha, it starts at the cap.
+    for (const [x, y] of [[803, 441], [803, 460], [803, 487], [803, 512]]) {
+        assert.equal(contains(rightPost, { x, y }), true,
+            `Right timber missing at ${x},${y}; rear NPC would paint over the post`);
+    }
+    for (const [x, y] of [[792, 441], [811, 441], [790, 475], [812, 514], [803, 428]]) {
+        assert.equal(contains(rightPost, { x, y }), false,
+            `Right post includes non-wood foreground at ${x},${y}`);
+    }
+    const walkerOverlapsRightPost = Array.from({ length: 31 }, (_, y) => y + 414)
+        .some(y => Array.from({ length: 13 }, (_, x) => x + 794)
+            .some(x => contains(rightPost, { x, y })));
+    assert.equal(walkerOverlapsRightPost, true,
+        'The rear walker at (800,444) must overlap real foreground timber');
     const covered = (x, y) => paths.some(path => contains(path, { x, y }));
     for (const [x, y] of [[740, 430], [760, 428], [795, 423], [755, 512], [780, 506]])
         assert.equal(covered(x, y), false, `Cobble or flowerbed pixel ${x},${y} cannot cover the NPC`);
