@@ -233,4 +233,4 @@
     background:#c9ab78;color:#101824;border:0;border-radius:4px;
     font:inherit;min-height:38px;padding:6px 9px;cursor:pointer;touch-action:manipulation;
 }
-.game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:170px}
+.game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
