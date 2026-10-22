@@ -24,11 +24,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
@@ -63,7 +63,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -73,7 +73,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
@@ -81,7 +81,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
                 d.wellFrontEndpointWalkable && d.wellRimExcluded &&
@@ -106,36 +106,40 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             const canvas = document.querySelector('[data-town-v2-canvas]');
             const d = module.readTownV2Diagnostics(canvas);
             return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
                 d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
         }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
                 d.noticeOcclusionFrames > 0 && d.violations === 0;
         }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
         var before = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const m = await import('./js/town-v2-nexus.js?v=0.0.166');
             return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
         Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
         Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
+        Assert.IsTrue(before.GetProperty("wellDepthEdgesClear").GetBoolean(),
+            "A cropped well mask may not cut through the painted roof or masonry.");
+        Assert.IsTrue(before.GetProperty("noticeDepthEdgesClear").GetBoolean(),
+            "A cropped sign mask may not cut through any wooden post.");
         Assert.AreEqual(1, before.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(before.GetProperty("usingLegacyNavigation").GetBoolean());
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
         var hidden = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const m = await import('./js/town-v2-nexus.js?v=0.0.166');
             return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         await Page.WaitForTimeoutAsync(500);
         var after = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const m = await import('./js/town-v2-nexus.js?v=0.0.166');
             return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsFalse(after.GetProperty("depthVisible").GetBoolean());

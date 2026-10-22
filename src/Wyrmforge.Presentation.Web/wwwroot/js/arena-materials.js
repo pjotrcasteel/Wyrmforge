@@ -232,178 +232,56 @@ export function groundMaterialAccentPlan(index, seed = 1441) {
     }));
 }
 
-// Optional micro-detail study: cluster tiny flecks cut from the six approved
-// paintings rather than scattering procedural pebbles, plants or props.
-// Positions wrap within each material panel; nothing changes collision.
-export function groundMaterialFineDetailPlan(index, seed = 1441) {
-    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
-    const random = (cluster, mark, channel) => {
-        let n = (seed | 0) ^ Math.imul(index + 43, 0x9e3779b1) ^
-            Math.imul(cluster + 59, 0x85ebca6b) ^ Math.imul(mark + 73, 0xc2b2ae35) ^
-            Math.imul(channel + 19, 0x27d4eb2d);
-        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
-        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
-        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
-    };
-    const marks = [];
-    for (let cluster = 0; cluster < 6; cluster++) {
-        const centerX = random(cluster, 0, 0) * GROUND_TILE_SIZE;
-        const centerY = random(cluster, 0, 1) * GROUND_TILE_SIZE;
-        for (let mark = 0; mark < 8; mark++) {
-            const width = 14 + Math.floor(random(cluster, mark, 2) * 24);
-            const height = 9 + Math.floor(random(cluster, mark, 3) * 22);
-            const source = mark % 4 === 0 ? GROUND_ACCENTS[index][cluster % 2] : index;
-            marks.push({
-                x: Math.floor((centerX + (random(cluster, mark, 4) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
-                y: Math.floor((centerY + (random(cluster, mark, 5) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
-                width, height, source,
-                sourceX: Math.floor(random(cluster, mark, 6) * (GROUND_SOURCE_TILE_SIZE - width + 1)),
-                sourceY: Math.floor(random(cluster, mark, 7) * (GROUND_SOURCE_TILE_SIZE - height + 1)),
-                opacity: .18 + random(cluster, mark, 8) * .17,
-            });
+// Fine Detail is local texture clarity, NOT a second layer of foreign ground
+// materials. This pure calculation preserves the original alpha and hue
+// relationships, source pixels, the 672px toroidal material period and the
+// approved transition renderer. It is portable to a native iOS/Android adapter.
+export function enhanceGroundDetailPixels(pixels, width, height, strength = 1.5) {
+    if (!pixels || !Number.isInteger(width) || !Number.isInteger(height) ||
+        width < 1 || height < 1 || pixels.length !== width * height * 4 ||
+        !Number.isFinite(strength) || strength < 0 || strength > 2) return null;
+    const output = new Uint8ClampedArray(pixels);
+    if (strength === 0 || width < 3 || height < 3) return output;
+
+    // Fine-scale luminance differences are strengthened within the SAME
+    // material. Wrapped neighbours avoid creating a new quilt-edge seam.
+    // A shared RGB offset preserves chroma; the alpha channel is not touched.
+    const luminance = new Uint8Array(width * height);
+    for (let p = 0, i = 0; p < luminance.length; p++, i += 4)
+        luminance[p] = Math.round((pixels[i] * 3 + pixels[i + 1] * 6 + pixels[i + 2]) / 10);
+
+    for (let y = 0; y < height; y++) {
+        const row = y * width;
+        const top = (y === 0 ? height - 1 : y - 1) * width;
+        const bottom = (y + 1 === height ? 0 : y + 1) * width;
+        for (let x = 0; x < width; x++) {
+            const position = row + x;
+            const left = row + (x === 0 ? width - 1 : x - 1);
+            const right = row + (x + 1 === width ? 0 : x + 1);
+            const average = (luminance[left] + luminance[right] +
+                luminance[top + x] + luminance[bottom + x]) / 4;
+            const adjustment = Math.max(-14, Math.min(14,
+                Math.round((luminance[position] - average) * strength)));
+            const i = position * 4;
+            if (pixels[i + 3] === 0) continue;
+            output[i] = pixels[i] + adjustment;
+            output[i + 1] = pixels[i + 1] + adjustment;
+            output[i + 2] = pixels[i + 2] + adjustment;
         }
     }
-    return marks;
+    return output;
 }
 
-// The former tiny flecks were almost invisible at phone size. Fine Detail now
-// also adds clustered, material-specific *wear*, assembled only from existing
-// approved artwork. Every 112px world-height band receives two irregular
-// clusters, so the six-row material sampler and grass-only preview both show
-// the change. No new stones, plants, puddles, decals, or terrain geometry.
-export function groundMaterialWearPlan(index, seed = 1441) {
-    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
-    const random = (group, mark, channel) => {
-        let n = (seed | 0) ^ Math.imul(index + 97, 0x9e3779b1) ^
-            Math.imul(group + 41, 0x85ebca6b) ^ Math.imul(mark + 53, 0xc2b2ae35) ^
-            Math.imul(channel + 23, 0x27d4eb2d);
-        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
-        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
-        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
-    };
-    const patches = [];
-    const bands = [0, 1, 2, 3, 4, 5, 1, 3, 5];
-    for (let group = 0; group < bands.length; group++) {
-        const centerX = 78 + random(group, 0, 0) * 516;
-        const centerY = (bands[group] + .28 + random(group, 0, 1) * .48) * GROUND_SOURCE_TILE_SIZE;
-        const slope = (random(group, 0, 9) - .5) * .42;
-        for (let mark = 0; mark < 3; mark++) {
-            const dominant = mark === 0;
-            const width = (dominant ? 150 : 70) + Math.floor(random(group, mark, 2) * (dominant ? 55 : 45));
-            const height = (dominant ? 40 : 24) + Math.floor(random(group, mark, 3) * (dominant ? 26 : 19));
-            const shift = mark === 1 ? -42 : mark === 2 ? 50 : 0;
-            const x = (Math.round(centerX + shift + (random(group, mark, 4) - .5) * 25) +
-                GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
-            const y = (Math.round(centerY + shift * slope + (random(group, mark, 5) - .5) * 18) +
-                GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
-            const source = mark === 2 ? index :
-                index === 0 ? 3 : GROUND_ACCENTS[index][(group + mark) % 2];
-            const sourceWidth = Math.min(GROUND_SOURCE_TILE_SIZE, Math.round(width * .56));
-            const sourceHeight = Math.min(GROUND_SOURCE_TILE_SIZE, height + 12);
-            patches.push({
-                group, x, y, width, height, source, sourceWidth, sourceHeight,
-                sourceX: Math.floor(random(group, mark, 6) * (GROUND_SOURCE_TILE_SIZE - sourceWidth + 1)),
-                sourceY: Math.floor(random(group, mark, 7) * (GROUND_SOURCE_TILE_SIZE - sourceHeight + 1)),
-                opacity: dominant ? .69 + random(group, mark, 8) * .12 : .54 + random(group, mark, 8) * .16,
-                rim: Array.from({ length: 8 }, (_, step) => ({
-                    top: .65 + random(group, mark, 20 + step) * .55,
-                    bottom: .65 + random(group, mark, 30 + step) * .55,
-                    bend: (random(group, mark, 40 + step) - .5) * .21,
-                })),
-            });
-        }
-    }
-    return patches;
-}
-
-function drawGroundMaterialWear(ctx, sc, scratch, source, index, seed, canvasFactory) {
-    const maskCanvas = canvasFactory();
-    const maskCtx = maskCanvas.getContext('2d');
-    if (!maskCtx) return;
-    for (const patch of groundMaterialWearPlan(index, seed)) {
-        const { width, height } = patch;
-        scratch.width = width;
-        scratch.height = height;
-        sc.globalCompositeOperation = 'source-over';
-        sc.clearRect(0, 0, width, height);
-        sc.imageSmoothingEnabled = true;
-        sc.drawImage(source, patch.source * GROUND_SOURCE_TILE_SIZE + patch.sourceX,
-            patch.sourceY, patch.sourceWidth, patch.sourceHeight, 0, 0, width, height);
-
-        // Build a connected, softly feathered erosion contour using only
-        // radial-gradient alpha stamps on a separate mask surface. Overlapping
-        // short segments form one irregular ribbon, not isolated circles.
-        // CanvasRenderingContext2D.filter is disabled in mobile Safari.
-        maskCanvas.width = width;
-        maskCanvas.height = height;
-        maskCtx.clearRect(0, 0, width, height);
-        for (let step = 1; step < 16; step++) {
-            const t = step / 16;
-            const ridge = patch.rim[Math.min(patch.rim.length - 1, Math.floor(t * patch.rim.length))];
-            const taper = Math.pow(Math.sin(Math.PI * t), .57);
-            const cx = width * t;
-            const cy = height * (.5 + ridge.bend);
-            const radius = Math.max(1, height * .52 * taper * (.65 + (ridge.top + ridge.bottom) * .19));
-            const gradient = maskCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-            gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(.58, 'rgba(255,255,255,.92)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0)');
-            maskCtx.fillStyle = gradient;
-            maskCtx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
-        }
-        sc.globalCompositeOperation = 'destination-in';
-        sc.drawImage(maskCanvas, 0, 0);
-        sc.globalCompositeOperation = 'source-over';
-
-        ctx.globalAlpha = patch.opacity;
-        for (const oy of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
-            for (const ox of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
-                const x = Math.round(patch.x - width / 2 + ox);
-                const y = Math.round(patch.y - height / 2 + oy);
-                if (x + width <= 0 || y + height <= 0 ||
-                    x >= GROUND_TILE_SIZE || y >= GROUND_TILE_SIZE) continue;
-                ctx.drawImage(scratch, index * GROUND_TILE_SIZE + x, y);
-            }
-    }
-    ctx.globalAlpha = 1;
-}
-
-function drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed) {
-    for (const mark of groundMaterialFineDetailPlan(index, seed)) {
-        const { width, height } = mark;
-        scratch.width = width;
-        scratch.height = height;
-        sc.globalCompositeOperation = 'source-over';
-        sc.clearRect(0, 0, width, height);
-        sc.drawImage(source, mark.source * GROUND_SOURCE_TILE_SIZE + mark.sourceX, mark.sourceY,
-            width, height, 0, 0, width, height);
-
-        // Feather an elliptical footprint. Sampling the approved paint gives
-        // it real texture; the ellipse is only a transparency mask.
-        sc.save();
-        sc.globalCompositeOperation = 'destination-in';
-        sc.translate(width / 2, height / 2);
-        sc.scale(width / height, 1);
-        const mask = sc.createRadialGradient(0, 0, 0, 0, 0, height / 2);
-        mask.addColorStop(0, 'rgba(255,255,255,1)');
-        mask.addColorStop(.56, 'rgba(255,255,255,.88)');
-        mask.addColorStop(1, 'rgba(255,255,255,0)');
-        sc.fillStyle = mask;
-        sc.fillRect(-height / 2, -height / 2, height, height);
-        sc.restore();
-        sc.globalCompositeOperation = 'source-over';
-
-        const left = Math.round(mark.x - width / 2), top = Math.round(mark.y - height / 2);
-        ctx.globalAlpha = mark.opacity;
-        for (const offsetY of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
-            for (const offsetX of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
-                const x = left + offsetX, y = top + offsetY;
-                if (x + width <= 0 || y + height <= 0 || x >= GROUND_TILE_SIZE || y >= GROUND_TILE_SIZE)
-                    continue;
-                ctx.drawImage(scratch, index * GROUND_TILE_SIZE + x, y);
-            }
-    }
-    ctx.globalAlpha = 1;
+function applyGroundDetailToPanel(ctx, index) {
+    const x = index * GROUND_TILE_SIZE;
+    const image = ctx.getImageData(x, 0, GROUND_TILE_SIZE, GROUND_TILE_SIZE);
+    const improved = enhanceGroundDetailPixels(image.data, image.width, image.height);
+    if (!improved) return false;
+    image.data.set(improved);
+    // Never draw a foreign image over the tile: write the same panel in place.
+    // The base material borders are unchanged and transitions use this atlas.
+    ctx.putImageData(image, x, 0);
+    return true;
 }
 
 function drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed) {
@@ -481,10 +359,7 @@ export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory, fineDe
         }
         drawGroundMaterialVariation(ctx, index, seed);
         drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed);
-        if (fineDetail) {
-            drawGroundMaterialWear(ctx, sc, scratch, source, index, seed, create);
-            drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed);
-        }
+        if (fineDetail) applyGroundDetailToPanel(ctx, index);
         ctx.restore();
     }
     return canvas;
