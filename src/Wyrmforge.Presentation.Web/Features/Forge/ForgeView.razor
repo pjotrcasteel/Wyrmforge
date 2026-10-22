@@ -105,6 +105,8 @@
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
+                                       NexusSchool="@TownNexusSchool"
+                                       NexusMasteryPoints="@TownNexusMasteryPoints"
                                        OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)"
                                         OnBuilding="ActivateCanonicalBuildingAsync" />
                     @if (townLockNotice is { } notice)
@@ -291,6 +293,11 @@
         new(ShellSection.Forge, "anvil", "Forge"),
         new(ShellSection.Codex, "book", "Codex"),
     ];
+
+    private PassiveSchool? TownNexusSchool => CharacterSchool is { } school ? ArcaneSchoolCatalog.For(school) : null;
+    private int TownNexusMasteryPoints => TownNexusSchool is { } school
+        ? TownNexusRadiance.Points(school, Selection.Selected)
+        : 0;
 
     private string SignatureName => CharacterSchool is { } school
         ? DivineArchetypeCatalog.Get(school).ExistingSignature is { } signature

@@ -12,6 +12,123 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_TownArcaneNexus_FireMagicGrowsBrighterWithSchoolInvestment(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            if (!localStorage.getItem('nexusAuraSeeded')) {
+                localStorage.setItem('nexusAuraSeeded', '1');
+                localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,Nodes:[]}));
+            }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        var radiance = scene.Locator(".refuge-town-nexus-radiance");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
+        await Expect(radiance).ToBeVisibleAsync();
+        await Expect(radiance).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-fire-unlearned-{width}.png");
+        var initial = await radiance.EvaluateAsync<double>("el => Number(getComputedStyle(el).opacity)");
+        Assert.AreEqual(0.16, initial, 0.01);
+        Assert.IsTrue(await radiance.EvaluateAsync<bool>("el => getComputedStyle(el).pointerEvents === 'none'"));
+        Assert.IsTrue(await radiance.EvaluateAsync<bool>(@"el => {
+            const scene = el.closest('.refuge-canonical-scene').getBoundingClientRect();
+            const light = el.getBoundingClientRect();
+            // The Blacksmith's independent vacant painting starts at 37.5133% of the same panorama.
+            return (light.bottom - scene.top) / scene.height <= .3752;
+        }"), "Nexus magic must not tint the adjacent Blacksmith painting.");
+
+        await Page.EvaluateAsync(@"() => localStorage.setItem('wyrmforge.arcaneBuild.v1',
+            JSON.stringify({Budget:24,Nodes:['fire-start','fire-1','fire-2','fire-major','wildfire']}))");
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        var masteredScene = Page.Locator(".refuge-canonical-scene");
+        var brighter = masteredScene.Locator(".refuge-town-nexus-radiance");
+        var points = int.Parse(await masteredScene.GetAttributeAsync("data-nexus-mastery-points") ?? "0");
+        Assert.IsGreaterThan(0, points, "Learned Fire Web nodes should power the building.");
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-fire-invested-{width}.png");
+        var final = await brighter.EvaluateAsync<double>("el => Number(getComputedStyle(el).opacity)");
+        Assert.IsGreaterThan(initial, final, "A learned Pyromancer school must glow more brightly.");
+        Assert.IsLessThanOrEqualTo(0.86, final, "The aura must never wash out the approved painting.");
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    [DataRow("Pyromancer", "fire", "242 83 32")]
+    [DataRow("Cryomancer", "frost", "71 191 247")]
+    [DataRow("Stormcaller", "storm", "105 141 252")]
+    [DataRow("Arcanist", "arcane", "153 96 242")]
+    public async Task TownArcaneNexus_AuraColorFollowsMageSchoolWithoutChangingArtwork(string school, string color, string rgb)
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync($@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','{school}');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({{Budget:24,Nodes:[]}}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        var scene = Page.Locator(".refuge-canonical-scene");
+        var glow = scene.Locator(".refuge-town-nexus-radiance");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", color);
+        await Expect(glow).ToHaveAttributeAsync("data-nexus-school", color);
+        Assert.AreEqual(rgb, (await glow.EvaluateAsync<string>("el => getComputedStyle(el).getPropertyValue('--nexus-light')")).Trim());
+        Assert.IsTrue(await scene.Locator(".refuge-town-night-base").EvaluateAsync<bool>(
+            "img => img.getAttribute('src').includes('/night-active.webp') || img.getAttribute('src').includes('/day-active.webp')"),
+            "Existing approved day/night artwork must remain the actual rendered town.");
+        Assert.IsTrue(await glow.EvaluateAsync<bool>("el => getComputedStyle(el).mixBlendMode === 'screen'"));
+    }
+
+    [TestMethod]
+    public async Task TownArcaneNexus_OtherSchoolsLearnedNodes_DoNotInflateCurrentSchoolBrightness()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Arcanist');
+            if (!localStorage.getItem('schoolAuraSeeded')) {
+                localStorage.setItem('schoolAuraSeeded','1');
+                localStorage.setItem('wyrmforge.arcaneBuild.v1',
+                    JSON.stringify({Budget:24,Nodes:['fire-start','fire-1','storm-start']}));
+            }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "arcane");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
+        var glow = scene.Locator(".refuge-town-nexus-radiance");
+        Assert.AreEqual(0.16, await glow.EvaluateAsync<double>("el => Number(getComputedStyle(el).opacity)"), 0.01);
+
+        await Page.EvaluateAsync(@"() => localStorage.setItem('wyrmforge.arcaneBuild.v1',
+            JSON.stringify({Budget:24,Nodes:['fire-start','fire-1','storm-start','arcane-start']}))");
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "1");
+        Assert.IsGreaterThan(0.16, await glow.EvaluateAsync<double>("el => Number(getComputedStyle(el).opacity)"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_TownArcaneNexus_LockedBuildingHasNoMagicalRadiance()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','0');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,Nodes:[]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+
+        await Expect(Page.Locator(".refuge-town-spot--nexus")).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(Page.Locator(".refuge-town-nexus-radiance")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-vacant-layer[src*='ArcaneNexus']")).ToHaveCountAsync(1);
+    }
+
+    [TestMethod]
     public async Task Mobile_TownV2_NexusMaskMovesOneNpcWithoutLegacyGeometry()
     {
         await Page.SetViewportSizeAsync(390, 844);
