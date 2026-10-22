@@ -192,88 +192,63 @@ public sealed class WyrmforgeBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_ArenaLab_GeneratesPhysicalSeededWorldAndAcceptsTestControls(int width, int height)
+    public async Task Mobile_ArenaLab_GroundFoundationHasNoLegacyAssetsOrCollision(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/arena-lab?seed=1441&stage=5&habitat=WetForest",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" })).ToBeVisibleAsync();
-        // Native select controls must not overlap the adjacent stage slider on narrow phones.
-        var controlsOverlap = await Page.EvaluateAsync<bool>(@"() => {
-            const habitat = document.querySelector('.arena-controls select').getBoundingClientRect();
-            const slider = document.querySelector('.arena-controls input[type=range]').getBoundingClientRect();
-            return habitat.left < slider.right && slider.left < habitat.right &&
-                habitat.top < slider.bottom && slider.top < habitat.bottom;
-        }");
-        Assert.IsFalse(controlsOverlap, "Habitat and Wyrm-proximity controls must not overlap.");
-        // Canvas has no ARIA role in every browser; retain a direct locator for the render check.
-        var stage = Page.Locator(".arena-stage canvas");
-        await Expect(stage).ToBeVisibleAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
-            const mod = await import('./js/arena-lab.js');
-            const canvas = document.querySelector('.arena-stage canvas');
-            const scene = mod.readArenaLabDiagnostics(canvas);
-            return scene?.active && scene?.seed === 1441 && scene?.stage === 5 &&
-                scene.props > 0 && scene.barriers === 0 && Boolean(scene.site) &&
-                scene.world?.width === 950 && canvas.width > 0;
-        }");
-        var first = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
-            const mod = await import('./js/arena-lab.js');
-            return mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
-        }");
-        Assert.IsGreaterThan(0, first.GetProperty("props").GetInt32());
-        var kinds = first.GetProperty("enemyKinds").EnumerateArray().Select(kind => kind.GetInt32()).ToArray();
-        CollectionAssert.AreEqual(new[] { 0, 2 }, kinds, "The lab should contain the actual Hollow and Ashling.");
-        // These screenshots are only useful after BOTH authentic directional rigs are decoded.
-        // Do not mistake the tiny generic loading fallback for the approved Hollow/Ashling.
-        await Page.WaitForFunctionAsync(@"async () => {
-            const mod = await import('./js/arena-lab.js');
-            const scene = mod.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
-            return scene?.enemyArt?.hollow === true && scene?.enemyArt?.ashling === true &&
-                scene?.enemyAnimation?.hollow?.length === 1 && scene?.enemyAnimation?.ashling?.length === 1;
-        }", null, new() { Timeout = 45000 });
-        // Capture both narrow portrait sizes after the real scene appears, never the ignition mask.
-        await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
-        Directory.CreateDirectory(ArtifactDirectory);
-        await ScreenshotAsync($"arena-lab-wetforest-{width}.png");
-        await Page.GetByRole(AriaRole.Checkbox, new() { Name = "Collision outlines" }).CheckAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
-            const m = await import('./js/arena-lab.js');
-            return m.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'))?.collisionVisible === true;
-        }");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Blast area" }).ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Blast area" }))
-            .ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Ground Foundation" }))
+            .ToBeVisibleAsync();
+        var canvas = Page.Locator(".arena-stage canvas");
+        await Expect(canvas).ToBeVisibleAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-ready", "true",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 45000 });
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-assets", "0");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-roads", "0");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-collision", "0");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "natural");
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Hit prop" })).ToHaveCountAsync(0);
+        await Expect(Page.GetByRole(AriaRole.Checkbox, new() { Name = "Pathing mobs" })).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".arena-stage .legacy-tree")).ToHaveCountAsync(0);
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Different seed ↻" }).ClickAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
-            const m = await import('./js/arena-lab.js');
-            const scene = m.readArenaLabDiagnostics(document.querySelector('.arena-stage canvas'));
-            return scene?.seed === 1442 && scene.props > 0;
+        var diagnostics = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
+            const m = await import('./js/arena-ground-foundation.js?v=20261022-ground-reset-1');
+            return m.readGroundFoundationDiagnostics(document.querySelector('.arena-stage canvas'));
         }");
-        await Expect(Page.GetByRole(AriaRole.Spinbutton, new() { Name = "World seed" })).ToHaveValueAsync("1442");
+        Assert.AreEqual(0, diagnostics.GetProperty("assets").GetInt32());
+        Assert.AreEqual(0, diagnostics.GetProperty("mobs").GetInt32());
+        Assert.AreEqual(0, diagnostics.GetProperty("obstacles").GetInt32());
+        Assert.AreEqual(0, diagnostics.GetProperty("roads").GetInt32());
+        Assert.AreEqual(960, diagnostics.GetProperty("worldWidth").GetInt32());
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "All grass" }).ClickAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "grass");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Natural ground" }).ClickAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "natural");
+        Directory.CreateDirectory(ArtifactDirectory);
+        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
+        {
+            Path = Path.Combine(ArtifactDirectory, $"arena-foundation-ground-only-{width}.png"),
+        });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Different ground ↻" }).ClickAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-seed", "1442");
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.arenaLabProgress')"));
     }
 
     [TestMethod]
-    public async Task Mobile_ArenaLab_MalformedDeepLink_RecoversInsteadOfShowingBlackScreen()
+    public async Task Mobile_ArenaLab_MalformedDeepLink_StillRendersGroundOnly()
     {
         await Page.SetViewportSizeAsync(390, 844);
-        // Regression for the mistakenly encoded link: '&stage=...' became part of seed.
         await Page.GotoAsync(BaseUrl.TrimEnd('/') +
             "/arena-lab?seed=1441%26stage%3D5%26habitat%3DWetForest",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Generator Lab" }))
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Ground Foundation" }))
             .ToBeVisibleAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
-            const mod = await import('./js/arena-lab.js');
-            const stage = document.querySelector('.arena-stage canvas');
-            const scene = stage && mod.readArenaLabDiagnostics(stage);
-            return scene?.active && scene?.seed === 1204 && scene?.stage === 1 &&
-                scene.world?.width === 950 && stage.width > 0;
-        }");
+        var canvas = Page.Locator(".arena-stage canvas");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-seed", "1204");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-ready", "true",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 45000 });
         await Expect(Page.Locator("#wyrmforge-ignition")).ToHaveCountAsync(0);
     }
 
