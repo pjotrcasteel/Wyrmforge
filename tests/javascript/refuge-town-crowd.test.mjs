@@ -497,3 +497,19 @@ test('Nexus stair planting is a foot collider while the foreground draws only it
         assert.ok(cutouts.includes('id: "' + id + '"'), id + ' must be an alpha silhouette');
     assert.match(code, /"nexus-terrace-bushes-foreground" or "nexus-stairs-shrubs-foreground"/);
 });
+
+test('V2 is isolated behind a URL flag and uses an authored pixel mask without V1 polygons', () => {
+    const sceneCode = source(scene);
+    const v2 = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const mask = source(art + '/nexus-v2-walk-mask.svg');
+    assert.match(sceneCode, /"townV2=1"/);
+    assert.match(sceneCode, /<canvas class="refuge-town-v2-canvas"/);
+    assert.match(sceneCode, /crowd is not null && !showTownV2/);
+    assert.match(v2, /getImageData\(0, 0, WIDTH, HEIGHT\)/);
+    assert.match(v2, /FOOT_RADIUS = 8/);
+    assert.match(v2, /requestAnimationFrame/);
+    assert.doesNotMatch(v2, /night-navigation\.json|TownCrowd|Occluders/);
+    assert.match(mask, /width="1672" height="941"/);
+    assert.match(mask, /nexus/);
+    assert.match(v2, /usingLegacyNavigation: false/);
+});

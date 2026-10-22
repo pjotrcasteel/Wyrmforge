@@ -34,7 +34,12 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
-        @if (crowd is not null)
+        @if (showTownV2)
+        {
+            <canvas class="refuge-town-v2-canvas" data-town-v2-canvas="true"
+                    width="1672" height="941" aria-label="Town V2 single NPC mask navigation test"></canvas>
+        }
+        @if (crowd is not null && !showTownV2)
         {
             <RefugeTownActors Crowd="crowd" ShowGeometry="showTownGeometry"
                               ShowRoutes="@(showTownGeometry && geometryLayer == TownGeometryLayer.Route)"
@@ -44,7 +49,7 @@
 
         @* Reuse small, clipped regions of the approved panorama. Only the painted
            object—not its surrounding pavement—can cover a citizen behind it. *@
-        @if (crowd is not null)
+        @if (crowd is not null && !showTownV2)
         {
             @foreach (var foreground in crowd.Navigation.Occluders)
             {
@@ -86,7 +91,7 @@
 
         @* One-time PNGs cut directly from the approved panorama. Each physical part
            has its own foot-depth: roof, supports and masonry cannot hide an entire NPC. *@
-        @if (crowd is not null)
+        @if (crowd is not null && !showTownV2)
         {
             @foreach (var cutout in TownForegroundCutouts)
             {
@@ -107,7 +112,7 @@
         }
 
         @* Developer-only overlay. The red shapes are the exact colliders used by pathfinding. *@
-        @if (showTownGeometry && crowd is not null)
+        @if (showTownGeometry && crowd is not null && !showTownV2)
         {
             <div class="refuge-town-geometry-debug" data-town-geometry-debug="true" data-town-geometry-layer="@geometryLayer" aria-hidden="true">
                 <svg viewBox="0 0 1672 941" preserveAspectRatio="none" class="refuge-town-geometry-map">
@@ -181,7 +186,14 @@
         <output id="refuge-town-performance" class="refuge-town-performance"
                 data-town-performance="true" aria-label="Refuge performance measurements"></output>
     }
-    @if (showTownGeometry)
+    @if (showTownV2)
+    {
+        <div class="refuge-town-v2-toolbar" role="group" aria-label="V2 navigation mask controls">
+            <button type="button" data-town-v2-mask-toggle="true" aria-pressed="true">Mask on/off</button>
+            <output data-town-v2-status="true" aria-live="off">Loading mask-driven walker…</output>
+        </div>
+    }
+    @if (showTownGeometry && !showTownV2)
     {
         <div class="refuge-town-geometry-toolbar" role="group" aria-label="Town debug geometry layers">
             <button type="button" data-town-layer-select="All" aria-pressed="@(geometryLayer == TownGeometryLayer.All ? "true" : "false")"
@@ -211,6 +223,9 @@
     private IJSObjectReference? foregroundModule;
     private DotNetObjectReference<CanonicalTownView>? routeClickReference;
     private bool foregroundMounted;
+    private bool showTownV2;
+    private IJSObjectReference? townV2Module;
+    private bool townV2Mounted;
 
     private sealed record TownCutout(string Id, float X, float Y, float Width, float Height, int DepthY);
     private static readonly TownCutout[] TownForegroundCutouts =
@@ -257,6 +272,22 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (showTownV2)
+        {
+            if (townV2Mounted) return;
+            townV2Mounted = true;
+            try
+            {
+                townV2Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/town-v2-nexus.js");
+                await townV2Module.InvokeVoidAsync("mountTownV2Nexus",
+                    ".refuge-canonical-scene", "[data-town-v2-mask-toggle]", "[data-town-v2-status]");
+            }
+            catch (JSException exception)
+            {
+                Logger.LogWarning(exception, "Isolated Town V2 diagnostic unavailable.");
+            }
+            return;
+        }
         if (foregroundMounted || crowd is null) return;
         foregroundMounted = true;
         try
@@ -276,6 +307,8 @@
     {
         var query = new Uri(Navigation.Uri).Query.TrimStart('?')
             .Split('&', StringSplitOptions.RemoveEmptyEntries);
+        showTownV2 = query.Any(parameter =>
+            string.Equals(parameter, "townV2=1", StringComparison.OrdinalIgnoreCase));
         showTownGeometry = query.Any(parameter =>
             string.Equals(parameter, "townGeometry=1", StringComparison.OrdinalIgnoreCase));
         showTownMetrics = query.Any(parameter =>
@@ -332,6 +365,10 @@
         // A disposed instance must not receive route-click callbacks.
         // The JS mount listens only while this viewport remains in the DOM.
         routeClickReference?.Dispose();
+        if (townV2Module is not null)
+            _ = townV2Module.InvokeVoidAsync("disposeTownV2Nexus", ".refuge-canonical-scene");
+        if (townV2Module is not null)
+            _ = townV2Module.DisposeAsync();
         if (foregroundModule is not null)
             _ = foregroundModule.DisposeAsync();
     }

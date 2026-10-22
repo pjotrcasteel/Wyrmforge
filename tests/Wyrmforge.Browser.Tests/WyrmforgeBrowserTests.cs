@@ -12,6 +12,45 @@ public sealed class WyrmforgeBrowserTests : PageTest
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
 
     [TestMethod]
+    public async Task Mobile_TownV2_NexusMaskMovesOneNpcWithoutLegacyGeometry()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townGeometry=1&townV2=1",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        var canvas = Page.Locator("[data-town-v2-canvas]");
+        await Expect(canvas).ToBeVisibleAsync();
+        await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js');
+            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
+        }");
+        var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const module = await import('./js/town-v2-nexus.js');
+            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
+        Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
+        Assert.IsTrue(first.GetProperty("shrubBlocked").GetBoolean());
+        Assert.IsGreaterThan(4, first.GetProperty("routeLength").GetInt32());
+        await Page.WaitForTimeoutAsync(1200);
+        var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const module = await import('./js/town-v2-nexus.js');
+            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
+        Assert.AreEqual(0, second.GetProperty("violations").GetInt32());
+        Assert.AreNotEqual(first.GetProperty("position").GetProperty("x").GetDouble(),
+            second.GetProperty("position").GetProperty("x").GetDouble(), "The demo citizen must actually move.");
+        await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
+        await Expect(Page.Locator("[data-town-v2-mask-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
     public async Task Mobile_RefugeMetrics_DebugUrlShowsLiveFPSAndSimulationCosts()
     {
         await Page.SetViewportSizeAsync(390, 844);
