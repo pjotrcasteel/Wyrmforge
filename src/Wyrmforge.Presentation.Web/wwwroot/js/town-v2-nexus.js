@@ -13,7 +13,7 @@ const WELL_FRONT_END = { x: 974, y: 614 };
 const FRONT_VISUAL_CONTACT_MAX_Y = 590; // Feet close enough for sprite to overlap well's front
 // Independently selectable Phase 5 debug route; front V2 stays the default.
 const REAR_ENTRY = { x: 680, y: 469 };
-const REAR_END = { x: 842, y: 445 };
+const REAR_END = { x: 852, y: 452 };
 const WELL_CUTOUT = { x: 703, y: 383, width: 249, height: 187, depthY: 498 };
 const NOTICE_CUTOUT = { x: 706, y: 410, width: 106, height: 127, depthY: 459 };
 const WELL_RIM = { x: 920, y: 551 };
