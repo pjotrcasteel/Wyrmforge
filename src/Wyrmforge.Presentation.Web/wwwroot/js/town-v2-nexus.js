@@ -182,18 +182,22 @@ async function buildArchitectureCutout(scene, source, bounds, label) {
     });
     return { ...bounds, image, alpha, opaquePixels, format: "image/png", edgeTransparent: !clippedEdge };
 }
-function overlapsFoliage(position, foliage) {
-    if (!foliage || position.y >= foliage.depthY) return false;
+function countForegroundOverlap(position, foliage) {
+    if (!foliage || position.y >= foliage.depthY) return 0;
     // Actual alpha coverage of the actor's silhouette, not a broad rectangular
     // clip that makes whole citizens vanish when approaching a plant.
     const left = Math.max(0, Math.floor(position.x - 6 - foliage.x));
     const right = Math.min(foliage.width - 1, Math.ceil(position.x + 6 - foliage.x));
     const top = Math.max(0, Math.floor(position.y - 30 - foliage.y));
     const bottom = Math.min(foliage.height - 1, Math.ceil(position.y - foliage.y));
+    let covered = 0;
     for (let y = top; y <= bottom; y++)
         for (let x = left; x <= right; x++)
-            if (foliage.alpha[y * foliage.width + x] > 80) return true;
-    return false;
+            if (foliage.alpha[y * foliage.width + x] > 80) covered++;
+    return covered;
+}
+function overlapsFoliage(position, foliage) {
+    return countForegroundOverlap(position, foliage) > 0;
 }
 function draw(w) {
     const ctx = w.canvas.getContext("2d");
@@ -219,8 +223,20 @@ function draw(w) {
     ctx.restore();
     // V2 real-world depth is by FEET. A rear walker can go behind the roof
     // while the approved front walker NEVER gets stone repainted over it.
-    w.lastWellOccluded = w.rearMode && overlapsFoliage(w.position, w.wellCutout);
-    w.lastNoticeOccluded = w.rearMode && overlapsFoliage(w.position, w.noticeCutout);
+    w.wellCoveredPixels = w.rearMode ? countForegroundOverlap(w.position, w.wellCutout) : 0;
+    w.noticeCoveredPixels = w.rearMode ? countForegroundOverlap(w.position, w.noticeCutout) : 0;
+    w.lastWellOccluded = w.wellCoveredPixels > 0;
+    w.lastNoticeOccluded = w.noticeCoveredPixels > 0;
+    // Freeze at genuine object coverage, not at one stray antialiased pixel.
+    // The same walker position is retained while Depth is turned on and off.
+    if (w.freezePending && (w.wellCoveredPixels >= 25 || w.noticeCoveredPixels >= 25)) {
+        w.pausedForInspection = true;
+        w.freezePending = false;
+        w.frozenCover = w.wellCoveredPixels >= 25 ? "well" : "noticeboard";
+        w.freezeCount++;
+        w.freezeToggle.textContent = "Resume walker";
+        w.freezeToggle.setAttribute("aria-pressed", "true");
+    }
     if (w.lastWellOccluded && w.showDepth) {
         ctx.drawImage(w.wellCutout.image, w.wellCutout.x, w.wellCutout.y);
         w.wellOcclusionFrames++;
@@ -239,7 +255,9 @@ function animate(w, now) {
     if (w.disposed) return;
     const dt = Math.min(.05, Math.max(0, (now - w.lastTime) / 1000));
     w.lastTime = now;
-    if (w.pause > 0) w.pause -= dt;
+    if (w.pausedForInspection) {
+        // Keep rendering so Mask/Depth changes remain immediate while feet stay fixed.
+    } else if (w.pause > 0) w.pause -= dt;
     else {
         let remaining = 35 * dt;
         while (remaining > 0 && w.targetIndex >= 0 && w.targetIndex < w.route.length) {
@@ -277,16 +295,19 @@ function animate(w, now) {
         w.nearWellFrames++;
         w.nearestWellFootY = Math.min(w.nearestWellFootY, w.position.y);
     }
+    // Sample collision on EVERY animation frame, not every 300 ms status tick.
+    // A short illegal excursion must not silently escape the acceptance counter.
+    const safe = w.nav.canStand(w.position.x, w.position.y);
+    if (!safe) w.maskViolations++;
     draw(w);
     if (now - w.lastStatus > 300) {
         w.lastStatus = now;
-        const safe = w.nav.canStand(w.position.x,w.position.y);
         w.status.textContent = "V2 · 1 NPC · " + (safe ? "ON MASK" : "OUTSIDE MASK") +
             " · " + (w.rearMode ? "WELL REAR" :
                 w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
             " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
-            " · " + Math.round(w.position.x) + "," + Math.round(w.position.y);
-        if (!safe) w.maskViolations++;
+            " · " + Math.round(w.position.x) + "," + Math.round(w.position.y) +
+            (w.pausedForInspection ? " · FROZEN: " + w.frozenCover : "");
     }
     w.frame = requestAnimationFrame(t => animate(w,t));
 }
@@ -304,10 +325,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     const toggle = document.querySelector(toggleSelector);
     const depthToggle = document.querySelector(depthSelector);
     const status = document.querySelector(statusSelector);
-    if (!scene || !canvas || !toggle || !depthToggle || !status || live.has(scene)) return;
+    const freezeToggle = document.querySelector("[data-town-v2-freeze-toggle]");
+    if (!scene || !canvas || !toggle || !depthToggle || !freezeToggle || !status || live.has(scene)) return;
     const rearMode = new URLSearchParams(window.location.search).get("townRoute") === "rear";
+    freezeToggle.hidden = !rearMode;
     const state = {
-        canvas, toggle, depthToggle, status, disposed: false, frame: 0,
+        canvas, toggle, depthToggle, freezeToggle, status, disposed: false, frame: 0,
         rearMode, nav: null, foliage: null, wellCutout: null, noticeCutout: null,
         route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
@@ -315,7 +338,9 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         depthFrames: 0, maskViolations: 0, plazaVisits: 0, wellFrontVisits: 0,
         nearWellFrames: 0, nearestWellFootY: HEIGHT,
         rearFrames: 0, wellOcclusionFrames: 0, noticeOcclusionFrames: 0,
-        lastWellOccluded: false, lastNoticeOccluded: false
+        lastWellOccluded: false, lastNoticeOccluded: false,
+        wellCoveredPixels: 0, noticeCoveredPixels: 0,
+        freezePending: false, pausedForInspection: false, frozenCover: null, freezeCount: 0
     };
     live.set(scene, state);
     state.click = () => {
@@ -328,13 +353,25 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         depthToggle.setAttribute("aria-pressed", String(state.showDepth));
     };
     depthToggle.addEventListener("click", state.depthClick);
+    state.freezeClick = () => {
+        if (!state.rearMode) return;
+        if (state.pausedForInspection) {
+            state.pausedForInspection = false;
+            state.frozenCover = null;
+        } else {
+            state.freezePending = !state.freezePending;
+        }
+        freezeToggle.textContent = state.freezePending ? "Cancel freeze" : "Freeze at cover";
+        freezeToggle.setAttribute("aria-pressed", String(state.freezePending));
+    };
+    freezeToggle.addEventListener("click", state.freezeClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.167", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.167", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.168", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.168", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.167", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.167", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.168", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.168", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
@@ -437,6 +474,12 @@ export function readTownV2Diagnostics(canvas) {
         noticeDepthEdgesClear: entry.noticeCutout?.edgeTransparent === true,
         behindWell: entry.lastWellOccluded,
         behindNoticeboard: entry.lastNoticeOccluded,
+        wellCoveredPixels: entry.wellCoveredPixels,
+        noticeCoveredPixels: entry.noticeCoveredPixels,
+        freezeAtCoverArmed: entry.freezePending,
+        frozenAtCover: entry.pausedForInspection,
+        frozenCover: entry.frozenCover,
+        freezeCount: entry.freezeCount,
         stairMasonryBlocked: entry.nav ? !entry.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y) : false,
         foliageExcludesStairs: FOLIAGE.x + FOLIAGE.width <= 465,
         stairAreaOccluded: entry.position.x >= 475 && entry.lastOccluded,
@@ -456,5 +499,6 @@ export function disposeTownV2Nexus(sceneSelector) {
     cancelAnimationFrame(state.frame);
     state.toggle.removeEventListener("click",state.click);
     state.depthToggle.removeEventListener("click",state.depthClick);
+    state.freezeToggle.removeEventListener("click", state.freezeClick);
     live.delete(scene);
 }
