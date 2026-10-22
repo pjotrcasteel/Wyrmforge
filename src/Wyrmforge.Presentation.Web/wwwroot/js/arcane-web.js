@@ -193,7 +193,7 @@
         const state = states.get(viewport);
         if (!state) return;
         state.x = state.y = state.size / 2;
-        state.scale = Math.max(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size - 240));
+        state.scale = Math.max(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200));
         render(viewport, state);
     }
 
