@@ -37,6 +37,8 @@
         <button class="secondary" @onclick="Undo">Undo</button>
         <button class="secondary" @onclick="Reset">Reset samples</button>
         <button class="secondary" @onclick="Clear">All grass</button>
+        <button class="secondary" @onclick="Preview">Natural ground</button>
+        <button class="secondary" @onclick="Reroll">Different ground</button>
     </section>
 
     <section class="material-workspace" aria-label="Editable pixel ground material samples">
@@ -47,7 +49,8 @@
         <aside>
             <h2>Material samples</h2>
             <p>Top to bottom: grass, wet mud, old paving, dirt, scorched ground, marsh.</p>
-            <p>Paint any surface beside another. These are actual image samples for visual direction—not invented placeholder textures or finished seamless tiles.</p>
+            <p>Paint any surface, or tap Natural ground to see large connected patches without structures or roads. Repaint or undo freely.</p>
+            <p>Stone paving and scorched earth stay brush-only until road and fire-area design.</p>
             <p class="detail">Reference image material study · No gameplay collision</p>
         </aside>
     </section>
@@ -60,6 +63,7 @@
     private int selected;
     private int brush = 2;
     private int seed = 1441;
+    private int previewSeed = 1441;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -93,6 +97,17 @@
     private async Task Clear()
     {
         if (module is not null) await module.InvokeVoidAsync("clearMaterialSamples", canvas);
+    }
+
+    private async Task Preview()
+    {
+        if (module is not null) await module.InvokeVoidAsync("previewNaturalGround", canvas, previewSeed);
+    }
+
+    private async Task Reroll()
+    {
+        previewSeed++;
+        await Preview();
     }
 
     public async ValueTask DisposeAsync()
