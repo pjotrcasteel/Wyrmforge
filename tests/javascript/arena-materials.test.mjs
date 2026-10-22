@@ -181,7 +181,9 @@ test('opt-in fine ground detail uses deterministic clusters from approved materi
     assert.match(razor, /@onclick="ToggleFineDetail"/);
     assert.match(js, /export function setGroundFineDetail/);
     assert.match(js, /if \(fineDetail\) \{/);
-    assert.match(js, /drawGroundMaterialWear\(ctx, sc, scratch, source, index, seed\)/);
+    assert.match(js, /drawGroundMaterialWear\(ctx, sc, scratch, source, index, seed, create\)/);
+    assert.doesNotMatch(js, /sc\.filter\s*=/, 'iPhone Safari cannot use canvas filter for masks');
+    assert.match(js, /maskCtx\.createRadialGradient/, 'Soft contours must use Safari-supported gradients');
     assert.match(js, /drawGroundMaterialFineDetails\(ctx, sc, scratch, source, index, seed\)/);
 });
 
@@ -239,7 +241,7 @@ test('fine details are baked only when requested, not on every ground frame', ()
     };
     const original = bake(false), enhanced = bake(true);
     assert.equal(enhanced.originalSamples - original.originalSamples, MATERIALS.length * (48 + 27));
-    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * 48);
+    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * (48 + 27 * 15));
 });
 
 test('mixed paint has seeded irregular material boundaries but uniform grass has none', () => {
