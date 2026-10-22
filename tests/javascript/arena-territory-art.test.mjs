@@ -72,7 +72,7 @@ test('original place language is integrated into existing cached world texture a
     assert.equal(plan.story.width, width);
     assert.equal(plan.story.height, height);
     const script = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(script, /drawTerritoryGround\(ctx, plan\.story\)/);
+    assert.match(script, /drawTerritoryGround\(ctx, plan\.story, approvedAtlas\)/);
     assert.match(script, /drawTerritoryLandmarks\(ctx, plan\.story\)/);
     assert.match(script, /drawTerritoryMotes\(ctx, environment/);
     assert.match(script, /for \(const barrier of environment\.barriers/);
