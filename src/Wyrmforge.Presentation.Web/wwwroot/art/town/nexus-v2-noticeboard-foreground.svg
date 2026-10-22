@@ -1,11 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
-  <!-- Screenshot-refined noticeboard alpha; only actual wood and sign face.
-       The previous broad polygon included the open paved background on the
-       left and tall blank paving above the sign. This one does not.
-       The two legs are skinny, separately bounded supports; never a garden
-       collider. Foot navigation and depth are deliberately independent. -->
-  <path fill="#fff" d="M729 440 L735 435 L792 421 L802 419
-    L806 427 L806 493 L801 500 L738 515 L731 510 Z"/>
-  <path fill="#fff" d="M732 505 L739 503 L740 541 L734 542 Z"/>
-  <path fill="#fff" d="M795 495 L802 493 L804 534 L798 535 Z"/>
+  <!-- V2 photographic foreground ALPHA of the timber noticeboard alone.
+       Owner's 22 October 14:16 iPhone screenshots exposed cobblestones above
+       the earlier mask (old rising top edge y440..419) and flowers beneath its
+       broad bottom (old y515..500). The main panel now follows the actual
+       slanted wooden top rail and lower beam, with separately narrow legs.
+       Keep the arch/paving/plants 100% transparent. No collision changes. -->
+  <!-- Painted board: follow the descending left-to-right-in-art woodwork,
+       never the open plaza above its upper rail. -->
+  <path fill="#fff" d="M731 454 L731 449 L738 445 L757 442 L775 437
+    L793 433 L799 431 L802 433 L803 437 L803 486
+    L799 492 L739 507 L733 505 Z"/>
+  <!-- Only the two timber legs, stopping before planter soil and cobbles. -->
+  <path fill="#fff" d="M733 505 L739 503 L740 532 L734 534 Z"/>
+  <path fill="#fff" d="M796 491 L802 489 L804 525 L798 527 Z"/>
 </svg>
