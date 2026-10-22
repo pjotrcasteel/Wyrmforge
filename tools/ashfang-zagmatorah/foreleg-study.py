@@ -61,5 +61,5 @@ for image in bpy.data.images:
     if not texture.is_file():raise RuntimeError('Missing preserved texture '+str(texture))
     if image.packed_file:image.unpack(method='REMOVE')
     image.filepath='//../M0-001/original/download/textures/'+name
-bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-master-working.blend'),compress=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-master-working.blend'),compress=True,relative_remap=False)
 (out/'foreleg-report.json').write_text(json.dumps({'source':str(source),'sourceSha256':sha(source),'sha256':sha(out/'ashfang-master-working.blend'),'retainedLimbVertices':counts,'newBones':sum(len(n)+1 for n in chains.values()),'sourceTopologyPreserved':True,'sharedRelativeTextures':'../M0-001/original/download/textures/','ownerAccepted':False,'limitations':['Adapted hindleg topology is provisional foreleg anatomy','Open shoulder transition needs integration','No authored gait or accepted deformation test','Original wing carriage still overlaps front body']},indent=2))

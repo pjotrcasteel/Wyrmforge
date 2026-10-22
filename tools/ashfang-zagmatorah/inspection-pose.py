@@ -30,5 +30,5 @@ changes={n:max((v-before[n][i]).length for i,v in enumerate(snapshot(n))) for n 
 if changes['Ashfang provisional foreleg l']<.01 or changes['Zagmatorah']>1e-5 or changes['Ashfang provisional foreleg r']>1e-5:raise RuntimeError('Independent foreleg isolation check failed '+str(changes))
 rig.pose.bones['AshfangFore_UpperLeg_l'].matrix_basis.identity();bpy.context.view_layer.update()
 # Dependencies already use stable relative archive layout; save without repacking.
-bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-master-working.blend'),compress=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-master-working.blend'),compress=True,relative_remap=False)
 (out/'pose-report.json').write_text(json.dumps({'source':str(source),'sourceSha256':sha(source),'sha256':sha(out/'ashfang-master-working.blend'),'staticPose':{'wingUpperArmDegrees':48,'jawDegrees':12},'forelegIsolationMaxVertexTravel':changes,'technicalIsolationPass':True,'ownerAccepted':False,'limits':['A single isolation test is not full deformation acceptance','Foreleg seams, muscle shape, wing/jaw intersections and stance need visual correction','No animation authored']},indent=2))

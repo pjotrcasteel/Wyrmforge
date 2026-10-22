@@ -32,6 +32,7 @@ rig.animation_data.action=old
 for name,matrix in saved_pose.items():rig.pose.bones[name].matrix_basis=matrix
 rig.data.pose_position='POSE' if rig.get('AshfangReviewPose') else 'REST'; bpy.context.view_layer.update()
 (out/'validation.json').write_text(json.dumps(r,indent=2))
+if r['missingDependencies']:raise RuntimeError('Missing texture dependencies: '+', '.join(r['missingDependencies']))
 if not a.render: raise SystemExit()
 scene=bpy.context.scene
 if a.profile=='clay':
