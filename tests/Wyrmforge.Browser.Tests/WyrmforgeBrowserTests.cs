@@ -110,7 +110,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const canvas = document.querySelector('[data-town-v2-canvas]');
             const d = module.readTownV2Diagnostics(canvas);
             return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
-                d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
+                d.wellDepthTransparent && d.noticeDepthTransparent &&
+                d.wellDepthEdgesClear && d.noticeDepthEdgesClear && d.safe;
         }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
         // Capture one consistent frame. During Blazor re-render, a second read
         // can briefly observe a remount between two individually successful
@@ -131,12 +132,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var before = await Page.EvaluateAsync<JsonElement>(
             "() => window.__townV2RearEvidence");
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
-        Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
-        Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
-        Assert.IsTrue(before.GetProperty("wellDepthEdgesClear").GetBoolean(),
-            "A cropped well mask may not cut through the painted roof or masonry.");
-        Assert.IsTrue(before.GetProperty("noticeDepthEdgesClear").GetBoolean(),
-            "A cropped sign mask may not cut through any wooden post.");
+        // Foreground ready, transparent edges, and actual occlusion were already
+        // observed atomically by the two live WaitForFunction predicates above.
+        // Rechecking transient readiness here races Blazor scene remounts.
         Assert.AreEqual(1, before.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(before.GetProperty("usingLegacyNavigation").GetBoolean());
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
