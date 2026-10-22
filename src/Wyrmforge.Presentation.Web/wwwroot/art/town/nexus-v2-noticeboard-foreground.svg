@@ -1,8 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
-  <!-- Screenshot-traced wooden sign, NOT its flowerpots or surrounding stone.
-       Independent V2 alpha and foot-collision geometry. -->
-  <path fill="#fff" d="M 746 443 L 752 440 L 812 426
-    L 816 430 L 816 490 L 749 505 Z"/>
-  <path fill="#fff" d="M 746 504 L 752 502 L 753 518 L 748 520 Z"/>
-  <path fill="#fff" d="M 808 489 L 815 490 L 817 515 L 810 518 Z"/>
+  <!-- Screenshot-refined noticeboard alpha; only actual wood and sign face.
+       The previous broad polygon included the open paved background on the
+       left and tall blank paving above the sign. This one does not.
+       The two legs are skinny, separately bounded supports; never a garden
+       collider. Foot navigation and depth are deliberately independent. -->
+  <path fill="#fff" d="M729 440 L735 435 L792 421 L802 419
+    L806 427 L806 493 L801 500 L738 515 L731 510 Z"/>
+  <path fill="#fff" d="M732 505 L739 503 L740 541 L734 542 Z"/>
+  <path fill="#fff" d="M795 495 L802 493 L804 534 L798 535 Z"/>
 </svg>
