@@ -770,6 +770,20 @@ test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unk
     assert.doesNotMatch(solids, /<rect[\s\S]*fill="#fff"/);
 });
 
+test('Town V2 region grid covers the full canvas without inventing playable ground', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /const tileSize = 256/);
+    assert.match(js, /const tileColumns = Math.ceil\(WIDTH \/ tileSize\)/);
+    assert.match(js, /const tileRows = Math.ceil\(HEIGHT \/ tileSize\)/);
+    assert.match(js, /tiles\[Math.floor\(y \/ tileSize\) \* tileColumns \+ Math.floor\(x \/ tileSize\)\]/);
+    assert.match(js, /tile\.classConflictPixels\+\+/);
+    assert.match(js, /tile\.notSeparatelyClassifiedPixels\+\+/);
+    assert.match(js, /tile\.width \* tile\.height/);
+    assert.match(js, /tileSize, tileColumns, tileRows, tiles/);
+    assert.match(js, /fullSceneMapped: false/);
+    assert.doesNotMatch(js, /const tile = .*canStand|w\.position = .*tile/);
+});
+
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
     const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
     const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
