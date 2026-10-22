@@ -608,9 +608,9 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     assert.match(ground, /Phase 5 is an opt-in REAR test route/);
     assert.match(ground, /M 575 492 C 610 492 651 486 680 469/);
     assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
-    assert.match(well, /Separate alpha islands: exact roof, timber posts, stone lip/);
-    assert.match(well, /night-active artwork/);
-    assert.match(sign, /Screenshot-traced wooden sign/);
+    assert.match(well, /tiled roof, narrow posts and the small circular well/);
+    assert.match(well, /approved town well detail/);
+    assert.match(sign, /Screenshot-refined noticeboard alpha/);
     assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\("townRoute"\) === "rear"/);
     assert.match(js, /buildArchitectureCutout/);
     assert.match(js, /destination-in/);
