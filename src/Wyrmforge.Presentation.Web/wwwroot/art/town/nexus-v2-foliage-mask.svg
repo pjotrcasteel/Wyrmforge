@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
-  <!-- Town V2 CANOPY ONLY, independent of the ground-contact navigation mask.
-       White alpha keeps original painted foliage; everything else is transparent.
-       The tightly bounded generated PNG cannot repaint adjacent stairs or paving. -->
-  <path fill="#fff" d="M 499 432 L 503 420 L 511 415 L 522 418 L 530 425
-    L 538 433 L 542 445 L 539 455 L 533 461 L 525 460 L 518 452
-    L 510 450 L 500 445 Z"/>
+  <!-- V2 depth ONLY: planted leaf tips to the LEFT of the secondary stair.
+       In the screenshot this is x=420..458, y=414..438. Stair treads start
+       farther right; no staircase, paving or wall pixels may be replayed
+       above an actor. Independent of V1's legacy shrubs/occluders. -->
+  <path fill="#fff" d="M 420 429 L 423 422 L 430 418 L 435 414
+    L 440 418 L 447 415 L 452 421 L 457 432 L 451 438
+    L 442 434 L 434 438 L 424 435 Z"/>
 </svg>

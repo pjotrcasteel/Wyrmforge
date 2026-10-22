@@ -1,15 +1,18 @@
-// Town Scene V2 / Nexus slice 2: independent ground and foliage masks.
+// Town Scene V2 / Nexus stair correction: independent ground and foliage masks.
 // Navigation comes ONLY from the rasterized mask, never night-navigation.json.
 // V1 remains completely unmodified outside the explicit ?townV2=1 test.
 const WIDTH = 1672;
 const HEIGHT = 941;
 const FOOT_RADIUS = 8;
 const CELL = 6;
-const START = { x: 442, y: 402 };
+const START = { x: 440, y: 401 };
 const FINISH = { x: 575, y: 492 };
-// A foot-safe point BEHIND the leaf canopy. The planting's roots remain solid.
-const BEHIND_SHRUB = { x: 520, y: 430 };
-const FOLIAGE = { x: 497, y: 411, width: 50, height: 54, depthY: 460 };
+// Screenshot-grounded: painted foliage is LEFT of the stair, not over its treads.
+// The old (497..547, 411..465) cutout inadvertently replayed STAIR pixels over NPCs.
+const FOLIAGE = { x: 418, y: 412, width: 42, height: 29, depthY: 438 };
+const STAIR_MASONRY = { x: 530, y: 432 };
+const STAIR_TREAD = { x: 500, y: 440 };
+const PLANT_BASE = { x: 445, y: 443 };
 const live = new Map();
 
 const pixelIndex = (x, y) => ((Math.round(y) * WIDTH + Math.round(x)) * 4);
@@ -90,6 +93,10 @@ async function buildFoliage(scene, mask) {
         throw new Error("Town V2 art and depth mask have different dimensions.");
 
     const { x, y, width, height } = FOLIAGE;
+    // Reject a foreground cutout that reaches the stone staircase itself.
+    // No paint sampled from stairs may ever be composited in front of a citizen.
+    if (x + width > 465 || y + height > 445)
+        throw new Error("Town V2 foliage mask overlaps the staircase.");
     const cutout = document.createElement("canvas");
     cutout.width = width; cutout.height = height;
     const ctx = cutout.getContext("2d", { willReadFrequently: true });
@@ -139,7 +146,7 @@ function draw(w) {
     ctx.setLineDash([6,5]); ctx.beginPath();
     w.route.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
     ctx.stroke();ctx.setLineDash([]);
-    // One simple V2 test citizen. Sprite animation and occlusion are later slices.
+    // One simple V2 test citizen. Never composite stair stone as if it were leaves.
     ctx.translate(w.position.x, w.position.y);
     ctx.fillStyle = "#061622aa";ctx.beginPath();ctx.ellipse(0,2,9,4,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle = "#d5ac73";ctx.fillRect(-5,-21,10,19);
@@ -228,23 +235,24 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.158", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.160", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.160", document.baseURI);
         const [walkMask, depthMask] = await Promise.all([
             loadMask(walkUrl.href), loadMask(depthUrl.href)
         ]);
         if (state.disposed) return;
         state.nav = buildNavigation(walkMask);
-        if (![START,BEHIND_SHRUB,FINISH].every(p => state.nav.canStand(p.x,p.y)))
-            throw new Error("Town V2 route stops must all fit the foot-clear mask.");
-        if (state.nav.canStand(520, 450))
-            throw new Error("The shrub's roots must remain impassable.");
+        if (![START, FINISH, STAIR_TREAD].every(p => state.nav.canStand(p.x,p.y)))
+            throw new Error("Town V2 landing, treads and exit must fit the foot-safe mask.");
+        if (state.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y))
+            throw new Error("Town V2 staircase side masonry must be blocked.");
+        if (state.nav.canStand(PLANT_BASE.x, PLANT_BASE.y))
+            throw new Error("Town V2 stair-side garden roots must be blocked.");
         state.foliage = await buildFoliage(scene, depthMask);
         if (state.disposed) return;
-        // Two ordinary mask-planned legs deliberately exercise rear foliage depth.
-        const firstLeg = planRoute(state.nav, START, BEHIND_SHRUB);
-        const secondLeg = planRoute(state.nav, BEHIND_SHRUB, FINISH);
-        state.route = [...firstLeg, ...secondLeg];
+        // One uninterrupted stair-center route. No invented detour into foliage
+        // and no old "behind shrub" waypoint that sat directly on painted steps.
+        state.route = planRoute(state.nav, START, FINISH);
         state.position = { ...state.route[0] };
         state.lastTime = performance.now();
         state.frame = requestAnimationFrame(t => animate(state,t));
@@ -261,8 +269,11 @@ export function readTownV2Diagnostics(canvas) {
         version: 2, source: "nexus-v2-walk-mask.svg", usingLegacyNavigation: false,
         npcCount: 1, routeLength: entry.route.length,
         position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x,entry.position.y),
-        shrubBlocked: entry.nav ? !entry.nav.canStand(520,450) : false,
-        behindShrubWalkable: entry.nav?.canStand(BEHIND_SHRUB.x,BEHIND_SHRUB.y) ?? false,
+        shrubBlocked: entry.nav ? !entry.nav.canStand(PLANT_BASE.x, PLANT_BASE.y) : false,
+        stairTreadsWalkable: entry.nav?.canStand(STAIR_TREAD.x, STAIR_TREAD.y) ?? false,
+        stairMasonryBlocked: entry.nav ? !entry.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y) : false,
+        foliageExcludesStairs: FOLIAGE.x + FOLIAGE.width <= 465,
+        stairAreaOccluded: entry.position.x >= 475 && entry.lastOccluded,
         foregroundReady: !!entry.foliage && entry.foliage.opaquePixels > 100,
         foregroundFormat: entry.foliage?.format ?? null,
         foregroundPixels: entry.foliage?.opaquePixels ?? 0,
