@@ -132,6 +132,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Rechecking transient readiness here races Blazor scene remounts.
         Assert.AreEqual(1, before.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(before.GetProperty("usingLegacyNavigation").GetBoolean());
+        Assert.IsTrue(before.GetProperty("depthAwareMaskReady").GetBoolean(),
+            "Mask debug painting must be prepared beneath the real well and noticeboard.");
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
         var hidden = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Rear()");
