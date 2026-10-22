@@ -580,7 +580,7 @@ test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts'
     assert.match(code, /wellFrontVisits: entry\.wellFrontVisits/);
     assert.match(code, /wellRimExcluded:/);
     assert.match(code, /noticeboardExcluded:/);
-    assert.match(code, /wellForegroundRequired: false/);
+    assert.match(code, /wellForegroundRequired: entry\.rearMode/);
     assert.match(code, /Town V2 route bypassed previously approved stairs\/plaza/);
     assert.match(code, /Town V2 plaza route cuts across an unwalkable pixel/);
     assert.match(foliage, /V2 depth ONLY: planted leaf tips/);
@@ -598,4 +598,32 @@ test('V2 well foreground correction must physically approach the stone base, not
     assert.match(code, /w\.nearWellFrames\+\+/);
     assert.match(code, /Math\.min\(w\.nearestWellFootY, w\.position\.y\)/);
     assert.match(code, /closeWellFrontRoute:/);
+});
+
+test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves approved front', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const well = source(art + '/nexus-v2-well-foreground.svg');
+    const sign = source(art + '/nexus-v2-noticeboard-foreground.svg');
+    assert.match(ground, /Phase 5 is an opt-in REAR test route/);
+    assert.match(ground, /M 575 492 C 610 492 651 486 680 469/);
+    assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
+    assert.match(well, /Separate alpha islands: exact roof, timber posts, stone lip/);
+    assert.match(well, /night-active artwork/);
+    assert.match(sign, /Screenshot-traced wooden sign/);
+    assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\("townRoute"\) === "rear"/);
+    assert.match(js, /buildArchitectureCutout/);
+    assert.match(js, /destination-in/);
+    assert.match(js, /canvas\.toDataURL\("image\/png"\)/);
+    assert.match(js, /STAIR_EXIT, REAR_ENTRY/);
+    assert.match(js, /REAR_END = \{ x: 852, y: 452 \}/);
+    assert.match(js, /state\.route = \[\.\.\.entryRoute, \.\.\.rearRoute\.slice\(1\)\]/);
+    assert.match(js, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.match(js, /wellOcclusionFrames: entry\.wellOcclusionFrames/);
+    assert.match(js, /noticeOcclusionFrames: entry\.noticeOcclusionFrames/);
+    assert.match(js, /if \(w\.lastWellOccluded && w\.showDepth\)/);
+    assert.match(js, /if \(w\.lastNoticeOccluded && w\.showDepth\)/);
+    assert.match(js, /Town V2 plaza route cuts across an unwalkable pixel/);
+    const executable = js.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable, /night-navigation\.json[^\n]*import|CUTOUTS|TownCrowd/);
 });

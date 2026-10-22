@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- Phase 5 V2 well foreground, screenshot-traced from the approved
+       1672x941 night-active artwork. NO paving and NO broad V1 occluder.
+       Separate alpha islands: exact roof, timber posts, stone lip.
+       Every part is physically painted well structure only. -->
+  <path fill="#fff" d="M 824 438 L 833 424 L 838 411 L 843 404
+    L 847 402 L 857 410 L 868 411 L 879 414 L 896 419
+    L 912 427 L 923 432 L 926 441 L 920 445 L 907 454
+    L 899 454 L 888 453 L 874 446 L 860 443 L 848 440 L 838 440 Z"/>
+  <path fill="#fff" d="M 836 440 L 845 444 L 847 499 L 836 498 Z"/>
+  <path fill="#fff" d="M 882 452 L 890 454 L 893 501 L 883 501 Z"/>
+  <!-- Rear stone lip and front ring are separate from cobblestones. -->
+  <path fill="#fff" d="M 828 507 Q 851 494 879 495
+    Q 901 499 905 514 L 896 522 L 889 525
+    Q 855 533 834 525 L 827 518 Z"/>
+  <path fill="#fff" d="M 769 528 Q 808 523 848 528
+    L 870 527 L 877 536 L 867 557 L 853 561
+    L 787 561 L 775 553 Z"/>
+</svg>

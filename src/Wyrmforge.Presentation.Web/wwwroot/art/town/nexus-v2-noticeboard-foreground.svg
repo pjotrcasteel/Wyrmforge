@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- Screenshot-traced wooden sign, NOT its flowerpots or surrounding stone.
+       Independent V2 alpha and foot-collision geometry. -->
+  <path fill="#fff" d="M 746 443 L 752 440 L 812 426
+    L 816 430 L 816 490 L 749 505 Z"/>
+  <path fill="#fff" d="M 746 504 L 752 502 L 753 518 L 748 520 Z"/>
+  <path fill="#fff" d="M 808 489 L 815 490 L 817 515 L 810 518 Z"/>
+</svg>
