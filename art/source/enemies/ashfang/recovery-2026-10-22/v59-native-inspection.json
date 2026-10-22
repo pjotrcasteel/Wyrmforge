@@ -1,0 +1,367 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-native-recovery\\art\\source\\enemies\\ashfang\\model\\local-appearance-001\\rigged-block-v59-crimson\\ashfang-rigged.blend",
+  "sha256": "3160c7c374ed90f61392c423c6ab709ce69eeda97ffdd55379ab391e5f4fa3ec",
+  "blenderVersion": "4.5.14 LTS",
+  "opened": true,
+  "saved": false,
+  "ownerApproved": false,
+  "objects": [
+    {
+      "name": "Animated fire / arena-flyovers",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / fire-flyover",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / flight-loop",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / flight-sequence",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / high-launch",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / landing",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / rear-breath",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / takeoff-flight-land",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Animated fire / walk",
+      "type": "MESH",
+      "vertices": 1372,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Ashfang arena flight path",
+      "type": "EMPTY",
+      "vertices": null,
+      "bones": null,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Ashfang editable animation rig",
+      "type": "ARMATURE",
+      "vertices": null,
+      "bones": 95,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Ashfang skinned character",
+      "type": "MESH",
+      "vertices": 6270,
+      "bones": null,
+      "armatureModifiers": [
+        "Ashfang editable animation rig"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "Ashfang_arena-flyovers",
+      "frameRange": [
+        1.0,
+        279.0
+      ]
+    },
+    {
+      "name": "Ashfang_fire-flyover",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Ashfang_flight-loop",
+      "frameRange": [
+        1.0,
+        33.0
+      ]
+    },
+    {
+      "name": "Ashfang_flight-sequence",
+      "frameRange": [
+        1.0,
+        148.0
+      ]
+    },
+    {
+      "name": "Ashfang_high-launch",
+      "frameRange": [
+        1.0,
+        55.0
+      ]
+    },
+    {
+      "name": "Ashfang_landing",
+      "frameRange": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_arena-flyovers",
+      "frameRange": [
+        1.0,
+        279.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_fire-flyover",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_flight-loop",
+      "frameRange": [
+        1.0,
+        33.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_flight-sequence",
+      "frameRange": [
+        1.0,
+        148.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_high-launch",
+      "frameRange": [
+        1.0,
+        55.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_landing",
+      "frameRange": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_rear-breath",
+      "frameRange": [
+        1.0,
+        73.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        84.0
+      ]
+    },
+    {
+      "name": "Ashfang_membrane_walk",
+      "frameRange": [
+        1.0,
+        49.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_arena-flyovers",
+      "frameRange": [
+        1.0,
+        279.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_fire-flyover",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_flight-loop",
+      "frameRange": [
+        1.0,
+        33.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_flight-sequence",
+      "frameRange": [
+        1.0,
+        148.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_high-launch",
+      "frameRange": [
+        1.0,
+        55.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_landing",
+      "frameRange": [
+        1.0,
+        31.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_rear-breath",
+      "frameRange": [
+        1.0,
+        73.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        84.0
+      ]
+    },
+    {
+      "name": "Ashfang_path_walk",
+      "frameRange": [
+        1.0,
+        49.0
+      ]
+    },
+    {
+      "name": "Ashfang_rear-breath",
+      "frameRange": [
+        1.0,
+        73.0
+      ]
+    },
+    {
+      "name": "Ashfang_takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        84.0
+      ]
+    },
+    {
+      "name": "Ashfang_walk",
+      "frameRange": [
+        1.0,
+        49.0
+      ]
+    },
+    {
+      "name": "Body fire / arena-flyovers",
+      "frameRange": [
+        1.0,
+        280.0
+      ]
+    },
+    {
+      "name": "Body fire / fire-flyover",
+      "frameRange": [
+        1.0,
+        57.0
+      ]
+    },
+    {
+      "name": "Body fire / flight-loop",
+      "frameRange": [
+        1.0,
+        34.0
+      ]
+    },
+    {
+      "name": "Body fire / flight-sequence",
+      "frameRange": [
+        1.0,
+        149.0
+      ]
+    },
+    {
+      "name": "Body fire / high-launch",
+      "frameRange": [
+        1.0,
+        56.0
+      ]
+    },
+    {
+      "name": "Body fire / landing",
+      "frameRange": [
+        1.0,
+        32.0
+      ]
+    },
+    {
+      "name": "Body fire / rear-breath",
+      "frameRange": [
+        1.0,
+        74.0
+      ]
+    },
+    {
+      "name": "Body fire / takeoff-flight-land",
+      "frameRange": [
+        1.0,
+        85.0
+      ]
+    },
+    {
+      "name": "Body fire / walk",
+      "frameRange": [
+        1.0,
+        50.0
+      ]
+    }
+  ],
+  "images": [
+    {
+      "name": "ashfang-albedo.png",
+      "packed": true,
+      "path": "art\\source\\enemies\\ashfang\\model\\local-appearance-001\\rigged-block-v59-crimson\\ashfang-albedo.png",
+      "externalExists": null
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "engine": "BLENDER_EEVEE_NEXT",
+      "camera": null,
+      "fps": 24.0
+    }
+  ],
+  "limits": "Opening is not proof of deformation, motion, rights or artistic acceptance."
+}
