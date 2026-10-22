@@ -652,3 +652,19 @@ test('Town V2 well and noticeboard alpha avoid the garden wall and paving', () =
     assert.match(well, /M818 439 L823 426/);
     assert.match(sign, /M729 440 L735 435/);
 });
+
+test('Town V2 freezes only on real rear foreground coverage and checks every animation frame', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const razor = source(scene);
+    assert.match(razor, /data-town-v2-freeze-toggle="true"/);
+    assert.match(js, /freezeToggle.hidden = !rearMode/);
+    assert.match(js, /countForegroundOverlap\(w.position, w.wellCutout\)/);
+    assert.match(js, /w.wellCoveredPixels >= 25 \|\| w.noticeCoveredPixels >= 25/);
+    assert.match(js, /w.pausedForInspection = true/);
+    assert.match(js, /w.freezeToggle.textContent = "Resume walker"/);
+    assert.match(js, /if \(w.pausedForInspection\)/);
+    assert.match(js, /if \(!safe\) w.maskViolations\+\+/);
+    assert.match(js, /frozenAtCover: entry.pausedForInspection/);
+    assert.match(js, /state.freezeToggle.removeEventListener/);
+    assert.doesNotMatch(js, /setInterval/);
+});
