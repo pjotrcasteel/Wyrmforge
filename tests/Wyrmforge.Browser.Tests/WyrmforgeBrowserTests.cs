@@ -112,16 +112,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
                 d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
         }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
-        await Page.WaitForFunctionAsync(@"async () => {
+        var ready = await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.164');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
-                d.noticeOcclusionFrames > 0 && d.violations === 0;
+                d.noticeOcclusionFrames > 0 && d.violations === 0 && d.wellForegroundRequired ? d : null;
         }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
-        var before = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
-            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-        }");
+        // Capture the same qualifying frame; the NPC can leave the rear-depth
+        // region between a wait and a separate diagnostics read.
+        var before = await ready.JsonValueAsync<JsonElement>();
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
         Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
         Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
@@ -759,10 +758,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".atlas-stage")).ToBeVisibleAsync();
         Assert.IsTrue(await Page.Locator(".atlas-stage").EvaluateAsync<bool>(@"stage => {
             const frame = getComputedStyle(stage);
-            const heading = document.querySelector('.nexus-equipped-head > div').getBoundingClientRect();
-            const craft = document.querySelector('.nexus-equipped-head > button').getBoundingClientRect();
             return frame.borderTopWidth === '3px' && frame.borderTopLeftRadius === '0px'
-                && craft.top < heading.bottom && craft.left >= heading.right - 1
+                && !document.querySelector('.nexus-equipped, .school-wheel-navigation')
                 && [...document.querySelectorAll('.atlas-action')].every(button => {
                     const box = button.getBoundingClientRect();
                     return box.width >= 44 && box.height >= 44;
