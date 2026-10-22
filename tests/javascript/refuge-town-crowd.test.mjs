@@ -696,6 +696,24 @@ test('Town V2 well inspector preserves walking and checks every actual frame of 
     assert.doesNotMatch(js, /REAR_POST_BYPASS|buildDebugOverlay/);
 });
 
+test('Town V2 three residents are opt-in, use independent foot-safe routes and sorted depth', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /query.get\("townResidents"\) === "3" \? 3 : 1/);
+    assert.match(js, /residentCount = !inspectPose && !inspectWell &&/);
+    assert.match(js, /const residents = \[\{ id: 0, position: w.position \}, ...w.extras\]/);
+    assert.match(js, /sort\(\(a,b\) => a.position.y - b.position.y/);
+    assert.match(js, /if \(well\) \{/);
+    assert.match(js, /if \(notice\) \{/);
+    assert.match(js, /ctx.drawImage\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\)/);
+    assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+    assert.match(js, /const third = planRoute\(state.nav, PLAZA_END, WELL_FRONT_MID\)/);
+    assert.match(js, /w.crowdOverlapFrames\+\+/);
+    assert.match(js, /if \(!w.nav.canStand\(person.position.x, person.position.y\)\)/);
+    assert.match(js, /crowdRearPassesRightPost:/);
+    assert.match(js, /npcCount: entry.extras.length \+ 1/);
+    assert.doesNotMatch(js, /REAR_POST_BYPASS|buildDebugOverlay/);
+});
+
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
     const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
     const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
