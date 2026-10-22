@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
     CELL, COLS, ROWS, MATERIALS, GROUND_SOURCE_TILE_SIZE, GROUND_TILE_SIZE,
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
-    materialSampleBoard, naturalGroundPreview, paintGroundCells, drawReferenceGroundBoard,
+    materialSampleBoard, naturalGroundPreview, paintGroundCells, paintGroundStroke, drawReferenceGroundBoard,
     groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
     groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
@@ -30,6 +30,22 @@ test('painting edits cells without altering collision or inventing props', () =>
     assert.equal(paintGroundCells(board, COLS, ROWS, -600, -600, 4, 2), 0);
     assert.equal(paintGroundCells(board, COLS, ROWS, 0, 0, 99, 1), 0);
     assert.notDeepEqual(board, before);
+});
+
+test('fast touch drags form continuous strokes across skipped pointer positions', () => {
+    const board = new Uint8Array(COLS * ROWS);
+    const y = 20 * CELL + 8;
+    paintGroundCells(board, COLS, ROWS, 2 * CELL + 8, y, 3, 1);
+    assert.ok(paintGroundStroke(board, COLS, ROWS, 2 * CELL + 8, y, 27 * CELL + 8, y, 3, 1) > 50);
+    for (let x = 2; x <= 27; x++)
+        assert.equal(board[20 * COLS + x], 3, 'Fast horizontal drag must not contain blank cells');
+    const before = board.slice();
+    assert.equal(paintGroundStroke(board, COLS, ROWS, 1, NaN, 120, 120, 3, 1), 0);
+    assert.deepEqual(board, before);
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(js, /paintGroundStroke\(state\.cells/);
+    assert.match(js, /e\.type === 'pointerup'/);
+    assert.match(js, /state\.lastPoint = null/);
 });
 
 test('natural ground preview uses coherent seeded natural materials only, never invented roads', () => {
