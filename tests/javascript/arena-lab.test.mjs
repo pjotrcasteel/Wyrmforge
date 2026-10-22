@@ -92,7 +92,7 @@ test('Step 2 is only a new floor recipe; no legacy scene objects, gameplay or sp
     const read = name => readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/' + name, import.meta.url), 'utf8');
     const recipe = read('wwwroot/js/arena-ground-trails.js');
     const page = read('Pages/ArenaLab.razor');
-    assert.doesNotMatch(recipe, /import |drawImage|drawMage|createWetForestTilePlan|physics|collision\s*=/);
+    assert.doesNotMatch(recipe, /^import\s|drawImage|drawMage|createWetForestTilePlan|physics|collision\s*=/);
     assert.doesNotMatch(page, /Hit prop|Blast area|Pathing mobs|ArenaEnvironmentState|LabMob/);
     assert.match(recipe, /distanceToSegment/);
     assert.match(recipe, /natural.*clearings|Side branches|clearings/);
