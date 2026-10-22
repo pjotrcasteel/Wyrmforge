@@ -24,18 +24,22 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.159');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.159');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
         Assert.IsTrue(first.GetProperty("shrubBlocked").GetBoolean());
-        Assert.IsTrue(first.GetProperty("behindShrubWalkable").GetBoolean(),
-            "Raised foliage is cover, not a ground-contact obstacle.");
+        Assert.IsTrue(first.GetProperty("stairTreadsWalkable").GetBoolean(),
+            "The actual Nexus stone stair treads must remain walkable.");
+        Assert.IsTrue(first.GetProperty("stairMasonryBlocked").GetBoolean(),
+            "The iPhone screenshot showed the old mask walking into side masonry.");
+        Assert.IsTrue(first.GetProperty("foliageExcludesStairs").GetBoolean(),
+            "Foreground alpha must not include any stair-stone source pixels.");
         Assert.IsTrue(first.GetProperty("foregroundReady").GetBoolean(),
             "The cropped V2 shrub PNG must have usable nontransparent pixels.");
         Assert.AreEqual("image/png", first.GetProperty("foregroundFormat").GetString());
@@ -43,17 +47,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.159');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
         Assert.AreEqual(0, second.GetProperty("violations").GetInt32());
         Assert.AreNotEqual(first.GetProperty("position").GetProperty("x").GetDouble(),
             second.GetProperty("position").GetProperty("x").GetDouble(), "The demo citizen must actually move.");
+        // The walking NPC must reach actual stair treads WITHOUT a stone PNG
+        // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.depthFrames > 0;
-        }", null, new PageWaitForFunctionOptions { Timeout = 10000 });
+            const module = await import('./js/town-v2-nexus.js?v=0.0.159');
+            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
+                d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
+        }", null, new PageWaitForFunctionOptions { Timeout = 15000 });
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
         await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
