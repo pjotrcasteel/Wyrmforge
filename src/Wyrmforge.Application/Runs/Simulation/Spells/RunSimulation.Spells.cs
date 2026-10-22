@@ -120,12 +120,13 @@ public sealed partial class RunSimulation
             var pierces = (piercingArcaneOrb ? 1 : 0) + (passiveProfile.ArcaneReservoir ? 1 : 0) + evolution.BonusPierces + focused.BonusPierces + surge.BonusPierces;
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
+            // Mutation amplification is applied to Detonation's own explosion before
+            // combining it with spell mastery, surges and other independent effects.
+            var detonationRadius = 46 * FireballEffectFactor(FireballMutationId.Detonation, MutationEffectCapability.Area);
             var mutationSplash = id != SpellId.FireBolt ? 0 :
-                HasFireballMutation(FireballMutationId.Detonation) ? 46 * FireballEffectFactor(FireballMutationId.Detonation, MutationEffectCapability.Area) :
+                HasFireballMutation(FireballMutationId.Detonation) ? buildModifiers.Apply(BuildStatId.MutationRadius, detonationRadius) :
                 HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
             var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
-            if (id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.Detonation))
-                splashRadius = buildModifiers.Apply(BuildStatId.MutationRadius, splashRadius);
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
