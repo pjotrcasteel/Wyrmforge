@@ -148,15 +148,15 @@ test('actual macro variation comes from related ground artwork, not barely visib
 test('fine-detail control requests updated canvas pixels and uses a versioned renderer module', () => {
     const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
-    assert.match(page, /arena-materials\\.js\\?v=20261022-fine-pixels-1/);
-    assert.match(page, /InvokeAsync<bool>\\("setGroundFineDetail"/);
-    assert.match(page, /if \\(await module\\.InvokeAsync<bool>/);
-    assert.match(js, /state\\.canvas\\.dataset\\.materialRender =/);
-    assert.match(js, /state\\.canvas\\.dataset\\.fineDetail =/);
-    assert.match(js, /if \\(!s \\|\\| !s\\.sourceAtlas\\) return false;/);
+    assert.match(page, /arena-materials\.js\?v=20261022-fine-pixels-1/);
+    assert.match(page, /InvokeAsync<bool>\("setGroundFineDetail"/);
+    assert.match(page, /if \(await module\.InvokeAsync<bool>/);
+    assert.match(js, /state\.canvas\.dataset\.materialRender =/);
+    assert.match(js, /state\.canvas\.dataset\.fineDetail =/);
+    assert.match(js, /if \(!s \|\| !s\.sourceAtlas\) return false;/);
     const browser = readFileSync(new URL('../Wyrmforge.Browser.Tests/MaterialLabBrowserTests.cs', import.meta.url), 'utf8');
-    assert.match(browser, /Assert\\.AreNotEqual\\(baseline, enhanced/);
-    assert.match(browser, /Assert\\.AreEqual\\(baseline, restored/);
+    assert.match(browser, /Assert\.AreNotEqual\(baseline, enhanced/);
+    assert.match(browser, /Assert\.AreEqual\(baseline, restored/);
 });
 
 test('opt-in fine ground detail uses deterministic clusters from approved material paintings', () => {
