@@ -1,4 +1,4 @@
-// Town Scene V2 / front-of-well distance correction based on iPhone photo. Independent masks only.
+// Town Scene V2 / separate optional rear-well silhouette, approved front route untouched.
 // Navigation comes ONLY from the rasterized mask, never night-navigation.json.
 // V1 remains completely unmodified outside the explicit ?townV2=1 test.
 const WIDTH = 1672;
@@ -11,6 +11,11 @@ const PLAZA_END = { x: 681, y: 623 };
 const WELL_FRONT_MID = { x: 820, y: 582 };
 const WELL_FRONT_END = { x: 974, y: 614 };
 const FRONT_VISUAL_CONTACT_MAX_Y = 590; // Feet close enough for sprite to overlap well's front
+// Independently selectable Phase 5 debug route; front V2 stays the default.
+const REAR_ENTRY = { x: 680, y: 469 };
+const REAR_END = { x: 842, y: 445 };
+const WELL_CUTOUT = { x: 703, y: 383, width: 249, height: 187, depthY: 498 };
+const NOTICE_CUTOUT = { x: 706, y: 410, width: 106, height: 127, depthY: 459 };
 const WELL_RIM = { x: 920, y: 551 };
 const WELL_CENTER = { x: 820, y: 535 };
 const NOTICEBOARD_POST = { x: 762, y: 495 };
@@ -136,6 +141,38 @@ async function buildFoliage(scene, mask) {
     return { ...FOLIAGE, image, alpha, opaquePixels, format: "image/png" };
 }
 
+// Render the exact alpha of a photographed prop, never its bounding rectangle.
+async function buildArchitectureCutout(scene, source, bounds, label) {
+    const base = scene.querySelector(".refuge-town-night-base");
+    if (!base || !base.complete || base.naturalWidth !== WIDTH || base.naturalHeight !== HEIGHT)
+        throw new Error("Town V2 " + label + " needs the approved 1672x941 panorama.");
+    const { x, y, width, height } = bounds;
+    const canvas = document.createElement("canvas");
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Town V2 " + label + " cannot build alpha.");
+    ctx.drawImage(base, x, y, width, height, 0, 0, width, height);
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.drawImage(source, x, y, width, height, 0, 0, width, height);
+    ctx.globalCompositeOperation = "source-over";
+    const rgba = ctx.getImageData(0, 0, width, height).data;
+    const alpha = new Uint8Array(width * height);
+    let opaquePixels = 0;
+    for (let i = 0; i < alpha.length; i++) {
+        alpha[i] = rgba[i * 4 + 3];
+        if (alpha[i] > 80) opaquePixels++;
+    }
+    if (opaquePixels < 120 || alpha[0] > 0 ||
+        alpha[width - 1] > 0 || alpha[(height - 1) * width] > 0)
+        throw new Error("Town V2 " + label + " is not a tight transparent silhouette.");
+    const image = new Image();
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error("Town V2 " + label + " alpha PNG failed."));
+        image.src = canvas.toDataURL("image/png");
+    });
+    return { ...bounds, image, alpha, opaquePixels, format: "image/png" };
+}
 function overlapsFoliage(position, foliage) {
     if (!foliage || position.y >= foliage.depthY) return false;
     // Actual alpha coverage of the actor's silhouette, not a broad rectangular
@@ -171,6 +208,18 @@ function draw(w) {
     ctx.strokeStyle = "#fcdd8d";ctx.lineWidth = 1.5;
     ctx.strokeRect(-7,-31,14,31);
     ctx.restore();
+    // V2 real-world depth is by FEET. A rear walker can go behind the roof
+    // while the approved front walker NEVER gets stone repainted over it.
+    w.lastWellOccluded = w.rearMode && overlapsFoliage(w.position, w.wellCutout);
+    w.lastNoticeOccluded = w.rearMode && overlapsFoliage(w.position, w.noticeCutout);
+    if (w.lastWellOccluded && w.showDepth) {
+        ctx.drawImage(w.wellCutout.image, w.wellCutout.x, w.wellCutout.y);
+        w.wellOcclusionFrames++;
+    }
+    if (w.lastNoticeOccluded && w.showDepth) {
+        ctx.drawImage(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y);
+        w.noticeOcclusionFrames++;
+    }
     w.lastOccluded = overlapsFoliage(w.position, w.foliage);
     if (w.lastOccluded && w.showDepth) {
         ctx.drawImage(w.foliage.image, w.foliage.x, w.foliage.y);
@@ -210,6 +259,8 @@ function animate(w, now) {
             w.pause = .6;
         }
     }
+    if (w.rearMode && w.position.x >= 810 && w.position.x <= 854 &&
+        w.position.y <= 473) w.rearFrames++;
     // Visual-acceptance telemetry: a route that merely passes far south is
     // NOT accepted as "in front of the well", even if it remains mask-safe.
     if (w.position.x >= 760 && w.position.x <= 920 &&
@@ -222,7 +273,8 @@ function animate(w, now) {
         w.lastStatus = now;
         const safe = w.nav.canStand(w.position.x,w.position.y);
         w.status.textContent = "V2 · 1 NPC · " + (safe ? "ON MASK" : "OUTSIDE MASK") +
-            " · " + (w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
+            " · " + (w.rearMode ? "WELL REAR" :
+                w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
             " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
             " · " + Math.round(w.position.x) + "," + Math.round(w.position.y);
         if (!safe) w.maskViolations++;
@@ -244,13 +296,17 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     const depthToggle = document.querySelector(depthSelector);
     const status = document.querySelector(statusSelector);
     if (!scene || !canvas || !toggle || !depthToggle || !status || live.has(scene)) return;
+    const rearMode = new URLSearchParams(window.location.search).get("townRoute") === "rear";
     const state = {
         canvas, toggle, depthToggle, status, disposed: false, frame: 0,
-        nav: null, foliage: null, route: [], position: { ...START }, targetIndex: 1,
+        rearMode, nav: null, foliage: null, wellCutout: null, noticeCutout: null,
+        route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
         depthFrames: 0, maskViolations: 0, plazaVisits: 0, wellFrontVisits: 0,
-        nearWellFrames: 0, nearestWellFootY: HEIGHT
+        nearWellFrames: 0, nearestWellFootY: HEIGHT,
+        rearFrames: 0, wellOcclusionFrames: 0, noticeOcclusionFrames: 0,
+        lastWellOccluded: false, lastNoticeOccluded: false
     };
     live.set(scene, state);
     state.click = () => {
@@ -264,11 +320,14 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.163", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.163", document.baseURI);
-        const [walkMask, depthMask] = await Promise.all([
-            loadMask(walkUrl.href), loadMask(depthUrl.href)
-        ]);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.164", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.164", document.baseURI);
+        const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
+        if (rearMode) {
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.164", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.164", document.baseURI).href));
+        }
+        const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
         state.nav = buildNavigation(walkMask);
         if (![START, STAIR_EXIT, STAIR_TREAD, PLAZA_STONE, PLAZA_END,
@@ -283,6 +342,22 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
             throw new Error("Town V2 well, noticeboard and garden feet must stay blocked.");
         state.foliage = await buildFoliage(scene, depthMask);
         if (state.disposed) return;
+        if (rearMode) {
+            // A separate cutout each for the timber well and the noticeboard.
+            // Neither reaches into front-route rendering or legacy occluders.
+            [state.wellCutout, state.noticeCutout] = await Promise.all([
+                buildArchitectureCutout(scene, wellMask, WELL_CUTOUT, "well"),
+                buildArchitectureCutout(scene, noticeMask, NOTICE_CUTOUT, "noticeboard")
+            ]);
+            if (state.disposed) return;
+            if (![STAIR_EXIT, REAR_ENTRY, REAR_END].every(p => state.nav.canStand(p.x,p.y)))
+                throw new Error("Town V2 well rear feet leave verified paving.");
+            const entryRoute = planRoute(state.nav, STAIR_EXIT, REAR_ENTRY);
+            const rearRoute = planRoute(state.nav, REAR_ENTRY, REAR_END);
+            state.route = [...entryRoute, ...rearRoute.slice(1)];
+            if (!state.route.some(p => p.x >= 820 && p.x <= 855 && p.y < 473))
+                throw new Error("Town V2 rear route never travels behind the well roof.");
+        } else {
         // Explicit intermediate anchors preserve the owner-approved Nexus/plaza
         // traversal and force actual CLOSE well frontage rather than a wide arc.
         // All legs are still derived from the single authored 8px-foot-eroded mask.
@@ -295,6 +370,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
             throw new Error("Town V2 route bypassed previously approved stairs/plaza.");
         if (!state.route.some(p => p.x >= 780 && p.x <= 880 && p.y <= FRONT_VISUAL_CONTACT_MAX_Y))
             throw new Error("Town V2 walker remains too far below the front of the well.");
+        }
         // Grid navigation is small, but still verify interpolated feet along
         // every diagonal/straight segment before any movement begins.
         for (let i = 1; i < state.route.length; i++) {
@@ -339,7 +415,17 @@ export function readTownV2Diagnostics(canvas) {
         noticeboardExcluded: entry.nav ? !entry.nav.canStand(NOTICEBOARD_POST.x, NOTICEBOARD_POST.y) : false,
         lowerGardenExcluded: entry.nav ? !entry.nav.canStand(LOWER_GARDEN.x, LOWER_GARDEN.y) : false,
         wellFrontStage: entry.position.x >= 720 && entry.position.y >= 590,
-        wellForegroundRequired: false,
+        wellForegroundRequired: entry.rearMode,
+        rearMode: entry.rearMode,
+        rearFrames: entry.rearFrames,
+        wellOcclusionFrames: entry.wellOcclusionFrames,
+        noticeOcclusionFrames: entry.noticeOcclusionFrames,
+        wellDepthReady: !!entry.wellCutout && entry.wellCutout.opaquePixels > 120,
+        noticeDepthReady: !!entry.noticeCutout && entry.noticeCutout.opaquePixels > 120,
+        wellDepthTransparent: entry.wellCutout?.format === "image/png",
+        noticeDepthTransparent: entry.noticeCutout?.format === "image/png",
+        behindWell: entry.lastWellOccluded,
+        behindNoticeboard: entry.lastNoticeOccluded,
         stairMasonryBlocked: entry.nav ? !entry.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y) : false,
         foliageExcludesStairs: FOLIAGE.x + FOLIAGE.width <= 465,
         stairAreaOccluded: entry.position.x >= 475 && entry.lastOccluded,
