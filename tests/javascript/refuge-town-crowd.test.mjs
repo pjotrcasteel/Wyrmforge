@@ -530,7 +530,7 @@ test('Town V2 iPhone staircase correction isolates physical treads from foregrou
     assert.match(code, /x \+ width > 465 \|\| y \+ height > 445/);
     assert.match(code, /destination-in/);
     assert.match(code, /toDataURL\("image\/png"\)/);
-    assert.match(code, /state\.route = planRoute\(state\.nav, START, WELL_FRONT_END\)/);
+    assert.match(code, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
     assert.doesNotMatch(code, /BEHIND_SHRUB/);
     assert.match(code, /stairAreaOccluded/);
     assert.match(sceneCode, /data-town-v2-depth-toggle="true"/);
@@ -562,15 +562,21 @@ test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts'
     const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     const ground = source(art + '/nexus-v2-walk-mask.svg');
     const foliage = source(art + '/nexus-v2-foliage-mask.svg');
-    assert.match(ground, /front-of-well cobblestones only/);
-    assert.match(ground, /M 681 623 C 710 630 741 635 782 632/);
+    assert.match(ground, /Phase 4 correction: iPhone at x822,y624/);
+    assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
+    assert.match(ground, /stroke-width="30"/);
     assert.match(ground, /M 727 511 L 745 497 L 906 497/);
     assert.match(ground, /M 746 462 L 773 462 L 783 492/);
-    assert.match(code, /WELL_FRONT_MID = \{ x: 800, y: 630 \}/);
-    assert.match(code, /WELL_FRONT_END = \{ x: 970, y: 616 \}/);
+    assert.match(code, /WELL_FRONT_MID = \{ x: 820, y: 582 \}/);
+    assert.match(code, /WELL_FRONT_END = \{ x: 974, y: 614 \}/);
     assert.match(code, /NOTICEBOARD_POST = \{ x: 762, y: 495 \}/);
     assert.match(code, /WELL_RIM = \{ x: 920, y: 551 \}/);
-    assert.match(code, /state\.route = planRoute\(state\.nav, START, WELL_FRONT_END\)/);
+    assert.match(code, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.match(code, /const approach = planRoute\(state\.nav, PLAZA_END, WELL_FRONT_MID\)/);
+    assert.match(code, /const frontage = planRoute\(state\.nav, WELL_FRONT_MID, WELL_FRONT_END\)/);
+    assert.match(code, /nearWellFrames: entry\.nearWellFrames/);
+    assert.match(code, /nearestWellFootY: entry\.nearestWellFootY/);
+    assert.match(code, /Town V2 walker remains too far below the front of the well/);
     assert.match(code, /wellFrontVisits: entry\.wellFrontVisits/);
     assert.match(code, /wellRimExcluded:/);
     assert.match(code, /noticeboardExcluded:/);
@@ -579,4 +585,17 @@ test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts'
     assert.match(code, /Town V2 plaza route cuts across an unwalkable pixel/);
     assert.match(foliage, /V2 depth ONLY: planted leaf tips/);
     assert.doesNotMatch(code, /night-navigation\.json[^\n]*import|CUTOUTS/);
+});
+
+test('V2 well foreground correction must physically approach the stone base, not a distant arc', () => {
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(ground, /front edge \(y~582\)/);
+    assert.match(ground, /C 776 579 805 581 852 582/);
+    assert.doesNotMatch(ground, /C 710 630 741 635 782 632/);
+    assert.match(code, /FRONT_VISUAL_CONTACT_MAX_Y = 590/);
+    assert.match(code, /w\.position\.x >= 760 && w\.position\.x <= 920/);
+    assert.match(code, /w\.nearWellFrames\+\+/);
+    assert.match(code, /Math\.min\(w\.nearestWellFootY, w\.position\.y\)/);
+    assert.match(code, /closeWellFrontRoute:/);
 });
