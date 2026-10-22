@@ -51,7 +51,7 @@ for ob in bpy.data.objects:
         bm.free()
         info['armatureModifiers']=[m.object.name if m.object else None for m in ob.modifiers if m.type=='ARMATURE']
         if not info['finite'] or not info['shapeKeysFinite'] or not len(ob.data.vertices): report['technicalPass']=False
-        if ob.name=='Ashfang original primary skin' and info['nonManifoldEdges']:
+        if (ob.name=='Ashfang original primary skin' or 'integrated primary skin' in ob.name) and info['nonManifoldEdges']:
             report['technicalPass']=False
     report['objects'].append(info)
 for image in bpy.data.images:
@@ -115,8 +115,8 @@ if a.operation in ('review','benchmark'):
     report['render']={'device':'RTX 5090 OptiX','resolution':a.resolution,'samples':32,'views':[]}
     views=[('front',0,0),('side',90,0),('rear',180,0),('top',0,90),
            ('three-quarter-left',-45,25),('three-quarter-right',45,25),('game-elevated',45,34),
-           ('game-extended',45,34),
-           ('skull-side',90,8),('skull-three-quarter',45,12)]
+           ('game-extended',45,34),('game-jaw-closed',45,34),
+           ('skull-side',90,8),('skull-three-quarter',45,12),('skull-jaw-closed',45,12)]
     if a.operation=='benchmark': views=views[:1]
     for index,(label,azimuth,elevation) in enumerate(views):
         for ob in bpy.data.objects:
@@ -124,10 +124,12 @@ if a.operation in ('review','benchmark'):
                 for key in ob.data.shape_keys.key_blocks:
                     if key.name.startswith('Provisional relaxed digit'):
                         key.value=0 if label=='game-extended' else 1
+                    if key.name=='M1 jaw closed study':
+                        key.value=1 if label.endswith('jaw-closed') else 0
         bpy.context.view_layer.update()
         target=center
         if label.startswith('skull'):
-            target=Vector((0,-4.9,3.25))
+            target=Vector(scene.get('camera_head_target',(0,-4.9,3.25)))
             cam_data.ortho_scale=4.8
         else:
             cam_data.ortho_scale=span*1.18
