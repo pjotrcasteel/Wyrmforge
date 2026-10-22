@@ -46,7 +46,7 @@ for slot in body.material_slots:
   rough=bs.inputs['Roughness'].links[0].from_socket
   floor=n.new('ShaderNodeMath');floor.operation='MAXIMUM';floor.inputs[1].default_value=c['bodyRoughnessFloor'];l.new(rough,floor.inputs[0]);l.new(floor.outputs[0],bs.inputs['Roughness'])
  detail=n.new('ShaderNodeMixRGB');detail.blend_type='MULTIPLY';detail.inputs[0].default_value=c['aoInfluence'];l.new(tint.outputs[0],detail.inputs[1]);l.new(ao.outputs['Color'],detail.inputs[2]);l.new(detail.outputs[0],bs.inputs['Base Color'])
- metallic=n.new('ShaderNodeTexImage');metallic.image=image(prefix+'_Metalic.png',True);l.new(metallic.outputs['Color'],bs.inputs['Metallic'])
+ metallic=n.new('ShaderNodeTexImage');metallic.image=image(prefix+'_Metalic.png',True);bs.inputs['Metallic'].default_value=0.0
  for node in n:
   if node.type=='TEX_IMAGE' and node.image and any(word in node.image.name for word in ('Normal','Roughness','Opacity')):node.image.colorspace_settings.name='Non-Color'
  if kind=='body':

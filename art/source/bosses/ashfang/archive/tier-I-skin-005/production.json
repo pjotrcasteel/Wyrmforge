@@ -1,0 +1,62 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\source-fidelity-001\\ashfang-master-working.blend",
+  "sourceSha256": "81e0bb96e05b15b43478ca6e033b8a67097ac66546409dc42509b841616ce98c",
+  "sha256": "9418aa89cba26c77aa87d7f5d2242096c9319caf71ba9176c25af90df5cc68b1",
+  "approvedBodyGeometrySha256": "9b9d87decdf1034d5e72e06114fdde7d7e1995e8c64a360549bc34f44d046ed3",
+  "resultBodyGeometrySha256": "9b9d87decdf1034d5e72e06114fdde7d7e1995e8c64a360549bc34f44d046ed3",
+  "anatomyUnchanged": true,
+  "bones": 112,
+  "originalUVsUnchanged": true,
+  "fireCollection": null,
+  "fireAndSmoke": "Runtime VFX only; absent from character",
+  "ventAnchors": [
+    {
+      "point": [
+        -0.8999999761581421,
+        -0.23999999463558197,
+        2.979680061340332
+      ],
+      "bone": "Spine01"
+    },
+    {
+      "point": [
+        1.25,
+        0.23999999463558197,
+        2.785287857055664
+      ],
+      "bone": "Spine02"
+    }
+  ],
+  "parameters": {
+    "revision": "tier-I-skin-005",
+    "bodyValue": 0.12,
+    "bodySaturation": 0.3,
+    "bodyTint": [
+      0.68,
+      0.73,
+      0.8,
+      1
+    ],
+    "wingValue": 0.22,
+    "wingSaturation": 0.85,
+    "wingTint": [
+      0.55,
+      0.12,
+      0.055,
+      1
+    ],
+    "aoInfluence": 0.65,
+    "localHeatStrength": 2.0,
+    "fireEnabled": false,
+    "flameHeight": 0.5,
+    "flameWidth": 0.15,
+    "flameEmission": 5.0,
+    "emberCount": 0,
+    "ownerAcceptedMaterials": false,
+    "bodySpecular": 0.3,
+    "bodyRoughnessFloor": 0.56
+  },
+  "ownerAcceptedAnatomy": true,
+  "ownerAcceptedMaterials": false,
+  "effectsMotion": "No effects or creature motion authored"
+}
