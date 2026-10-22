@@ -33,6 +33,7 @@ test('phase 1 does not import or render legacy arena assets, gameplay or topolog
     assert.match(js, /drawReferenceGroundBoard/);
     assert.match(js, /drawGroundMaterialTransitions/);
     assert.match(js, /buildGroundQuiltAtlas\(state\.source, state\.seed, undefined, false\)/);
+    assert.match(js, /state\.atlasSeed !== state\.seed/, 'Quilt is cached across grass/natural switches');
     assert.match(js, /foundationAssets = '0'/);
     assert.match(js, /foundationCollision = '0'/);
     assert.match(js, /foundationRoads = '0'/);
