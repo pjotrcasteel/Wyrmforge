@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
     CELL, COLS, ROWS, MATERIALS, GROUND_SOURCE_TILE_SIZE, GROUND_TILE_SIZE,
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
-    materialSampleBoard, paintGroundCells, drawReferenceGroundBoard,
+    materialSampleBoard, naturalGroundPreview, paintGroundCells, drawReferenceGroundBoard,
     groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
     groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
@@ -30,6 +30,39 @@ test('painting edits cells without altering collision or inventing props', () =>
     assert.equal(paintGroundCells(board, COLS, ROWS, -600, -600, 4, 2), 0);
     assert.equal(paintGroundCells(board, COLS, ROWS, 0, 0, 99, 1), 0);
     assert.notDeepEqual(board, before);
+});
+
+test('natural ground preview uses coherent seeded natural materials only, never invented roads', () => {
+    const original = naturalGroundPreview(1441);
+    assert.equal(original.length, COLS * ROWS);
+    assert.deepEqual(original, naturalGroundPreview(1441));
+    assert.notDeepEqual(original, naturalGroundPreview(1442));
+    assert.ok(original.every(index => [0, 1, 3, 5].includes(index)),
+        'Paving and scorched earth must be placed deliberately, not scattered by default');
+    assert.ok(original.includes(0), 'Grass should remain a natural substrate');
+    const materialCounts = new Map([0, 1, 3, 5].map(index =>
+        [index, original.filter(value => value === index).length]));
+    assert.ok(materialCounts.get(0) > COLS * ROWS * .25,
+        'Natural ground should retain substantial vegetation');
+    const cross = Array.from({ length: 6 }, (_, i) => naturalGroundPreview(1441 + i));
+    assert.ok(cross.some(board => board.includes(1)) && cross.some(board => board.includes(3)),
+        'Across seeds there must be wet soil and drier trampled ground');
+    assert.ok(cross.some(board => board.includes(5)), 'Some seeds should form marshy terrain');
+    assert.equal(naturalGroundPreview(1441, 0, 40).length, 0);
+    assert.equal(naturalGroundPreview(1441, 1000, 1000).length, 0);
+});
+
+test('natural preview remains a reversible manual painting surface, not another arena renderer', () => {
+    const ground = naturalGroundPreview(1441);
+    const original = ground.slice();
+    assert.ok(paintGroundCells(ground, COLS, ROWS, 16 * 8, 16 * 12, 2, 3) > 0);
+    assert.notDeepEqual(ground, original);
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
+    assert.match(page, /@onclick="Preview"/);
+    assert.match(page, /@onclick="Reroll"/);
+    assert.match(js, /record\(s\);\s*s\.cells = naturalGroundPreview\(seed, COLS, ROWS\)/);
+    assert.doesNotMatch(js, /HuntArenaGenerator|DamagePropsInRadius|RestrictMovement/);
 });
 
 test('generated material atlas is a compact six-panel ground-only WebP', () => {

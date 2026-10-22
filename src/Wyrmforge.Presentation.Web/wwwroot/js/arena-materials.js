@@ -48,6 +48,47 @@ export function paintGroundCells(cells, columns, rows, x, y, index, radius = 2) 
     return changed;
 }
 
+// Ground-only placement study. Derived from two correlated low-frequency soil
+// fields (wetness and wear), not a hand-drawn road, random prop scatter, or
+// gameplay collision map. Hardcoded structures and paving never appear here.
+function naturalNoise(seed, x, y, channel) {
+    const hash = (ix, iy) => {
+        let n = (seed | 0) ^ Math.imul(ix + 137, 0x9e3779b1) ^
+            Math.imul(iy + 311, 0x85ebca6b) ^ Math.imul(channel + 17, 0xc2b2ae35);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+    };
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const u = x - ix, v = y - iy;
+    const tx = u * u * (3 - 2 * u), ty = v * v * (3 - 2 * v);
+    const a = hash(ix, iy) * (1 - tx) + hash(ix + 1, iy) * tx;
+    const b = hash(ix, iy + 1) * (1 - tx) + hash(ix + 1, iy + 1) * tx;
+    return a * (1 - ty) + b * ty;
+}
+
+export function naturalGroundPreview(seed = 1441, columns = COLS, rows = ROWS) {
+    if (!Number.isInteger(columns) || !Number.isInteger(rows) ||
+        columns < 1 || rows < 1 || columns * rows > 65536) return new Uint8Array();
+    const board = new Uint8Array(columns * rows);
+    for (let row = 0; row < rows; row++)
+        for (let col = 0; col < columns; col++) {
+            const x = col + .5, y = row + .5;
+            // Large patches come from smooth low-frequency fields, while a
+            // smaller second octave varies the edges without confetti.
+            const wet = .7 * naturalNoise(seed, x * .14, y * .12, 1) +
+                .3 * naturalNoise(seed, x * .29, y * .26, 2);
+            const wear = .75 * naturalNoise(seed, 24 + x * .115, 17 + y * .13, 3) +
+                .25 * naturalNoise(seed, x * .24, y * .20, 4);
+            let material = 0; // natural forest grass is the dominant substrate
+            if (wet > .68) material = 5; // marsh near saturated ground
+            else if (wet > .56) material = 1; // damp, compacted earth
+            else if (wear > .60) material = 3; // dry/trampled earth
+            board[row * columns + col] = material;
+        }
+    return board;
+}
+
 // The six approved material paintings are just 112px wide. Repeating those
 // directly produces obvious checkerboard motifs. Quilt each one once into a
 // 672px toroidal texture with deterministic, overlapping 72px source patches.
@@ -451,6 +492,14 @@ export function resetMaterialSamples(canvas) {
     s.cells = materialSampleBoard();
     redraw(s);
 }
+export function previewNaturalGround(canvas, seed = 1441) {
+    const s = contexts.get(canvas);
+    if (!s) return;
+    record(s);
+    s.cells = naturalGroundPreview(seed, COLS, ROWS);
+    redraw(s);
+}
+
 export function clearMaterialSamples(canvas) {
     const s = contexts.get(canvas);
     if (!s) return;
