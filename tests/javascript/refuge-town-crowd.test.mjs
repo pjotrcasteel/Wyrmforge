@@ -746,9 +746,9 @@ test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unk
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     const solids = source(art + '/nexus-v2-reviewed-solid-footprints.svg');
     const nonplay = source(art + '/nexus-v2-out-of-play.svg');
-    assert.match(js, /function buildNavigation\(source, includeCoverage = false, reviewedMask = null, candidateMask = null, outMask = null\)/);
+    assert.match(js, /function buildNavigation\(source, includeCoverage = false, reviewedMask = null, candidateMask = null, outMask = null, pavingMask = null\)/);
     assert.match(js, /const coverageAudit = query.get\("townCoverage"\) === "1"/);
-    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit, reviewedMask, candidateMask, outMask\)/);
+    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit, reviewedMask, candidateMask, outMask, pavingMask\)/);
     assert.match(js, /const authored = pixels\[p\] > 230/);
     assert.match(js, /reviewedPixels\[p\] > 230/);
     assert.match(js, /reviewedSolidPixels\+\+/);
@@ -782,6 +782,25 @@ test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unk
     assert.match(js, /outOfPlayNames: includeCoverage/);
     assert.match(js, /outOfPlay \? \[137, 109, 209\]/);
     assert.doesNotMatch(js, /buildNavigation\(outMask|const canStand = .*outOfPlay/);
+});
+
+test('Town V2 visually reviewed plaza stays separated from gameplay navigation', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const svg = source(art + '/nexus-v2-reviewed-paving.svg');
+    assert.equal((svg.match(/<path fill="#fff" d="/g) ?? []).length, 1,
+        'Only one conservative central cobblestone patch is reviewed');
+    assert.match(svg, /M 752 616 L 898 611 L 916 650/);
+    assert.match(js, /const reviewedPaving = !!pavingPixels/);
+    assert.match(js, /reviewedPaving &&/);
+    assert.match(js, /reviewedPavingPixels\+\+/);
+    assert.match(js, /reviewedPavingConflictPixels\+\+/);
+    assert.match(js, /reviewedPavingRouteOverlapPixels\+\+/);
+    assert.match(js, /reviewedPaving \? palette.reviewedPaving/);
+    assert.match(js, /reviewedPaving: "green"/);
+    assert.match(js, /fullSceneMapped: false/);
+    assert.match(js, /pavingMask\)/);
+    assert.doesNotMatch(js, /buildNavigation\(pavingMask|const canStand = .*pavingPixels/);
+    assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
 });
 
 test('Town V2 region grid covers the full canvas without inventing playable ground', () => {
