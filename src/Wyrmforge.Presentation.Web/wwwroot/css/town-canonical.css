@@ -234,3 +234,11 @@
     font:inherit;min-height:38px;padding:6px 9px;cursor:pointer;touch-action:manipulation;
 }
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
+
+/* V2 opt-in phone inspector: independent, reachable 44px targets and a status row.
+   Do not consume gestures on the painted world outside this small toolbar. */
+@media (max-width: 520px) {
+    .game-shell.refuge-home .refuge-town-v2-toolbar { flex-wrap:wrap;justify-content:flex-end; }
+    .game-shell.refuge-home .refuge-town-v2-toolbar button { min-height:44px;flex:0 0 auto; }
+    .game-shell.refuge-home .refuge-town-v2-toolbar output { flex:1 1 100%;max-width:none;text-align:right; }
+}
