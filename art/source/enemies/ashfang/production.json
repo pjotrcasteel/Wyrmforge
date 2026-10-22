@@ -10,7 +10,7 @@
   "rigged": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Connect idle, stalk and breath replacement poses while preserving foot contact.",
+    "Complete stalk stopping and breath entry; idle-to-stalk contact-entry study exists but is not accepted.",
     "Further visual refinement of joint overlaps and jaw at native size.",
     "Author collapse, takeoff, flight, landing and remaining directions with hidden anatomy.",
     "Validate native mobile gameplay fit and integrate approved source with C# behavior."
@@ -131,5 +131,6 @@
   "sourceChecks": "restart-2026-10-21/motion-review-validation-002.json",
   "historicalEvidenceNotice": "All model/, prior approval, motion, contact and viewport evidence below predates the rejected V59/restart; it does not validate the current raster study.",
   "partialRig": "restart-2026-10-21/skeletal-idle-002/skin-source.json",
-  "ownerJointGuide": "restart-2026-10-21/owner-guide-001/skeleton.json"
+  "ownerJointGuide": "restart-2026-10-21/owner-guide-001/skeleton.json",
+  "locomotionEntryStudy": "restart-2026-10-21/idle-stalk-entry-001"
 }

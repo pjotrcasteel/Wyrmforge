@@ -145,3 +145,21 @@ further joint/jaw polish and connected state changes. Collapse, flight/landing
 and additional directions are not built. Next useful slice is a shared-rig
 idle-to-stalk transition with foot-contact preservation, then breath-pose entry.
 No routine approval wait is required by the owner.
+
+
+## 22 October: planted locomotion entry
+
+idle-stalk-entry-001 exports 160 actual frames at 24 fps. It starts supported,
+ramps body pose and actor travel, and releases each paw into swing independently.
+World-space contact anchors prevent stance joints sliding while root speed changes.
+No rendered-image crossfade is used. contact-track.json preserves root travel,
+pose blend and foot contacts; skin-source.json preserves the editable mesh weights.
+The gallery plays this entry once and uses its actual root travel for the grid.
+
+Local RTX 5090 render: minimum triangle area ratio 0.287 (no flips), no unreachable
+targets, maximum joint contact drift below 4e-14 source pixels. Contact-sheet review
+retains card silhouette; this is not owner acceptance or proof of raster contact.
+The initial supported hold, acceleration and first foot releases still need motion
+review. This is an entry, not a complete idle/walk/stop controller. Stopping,
+breath entry, collapse, flight and additional directions remain unfinished.
+Current main checked at 1e630566; no shipped files changed.
