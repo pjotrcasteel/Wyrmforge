@@ -245,7 +245,10 @@ function animate(w, now) {
     if (w.disposed) return;
     const dt = Math.min(.05, Math.max(0, (now - w.lastTime) / 1000));
     w.lastTime = now;
-    if (w.pause > 0) w.pause -= dt;
+    // Opt-in deterministic screenshot pose only. Normal V2 walking is unchanged.
+    if (w.inspectPose) {
+        // Keep drawing while standing still so Mask/Depth toggles can be tested.
+    } else if (w.pause > 0) w.pause -= dt;
     else {
         let remaining = 35 * dt;
         while (remaining > 0 && w.targetIndex >= 0 && w.targetIndex < w.route.length) {
@@ -311,10 +314,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     const depthToggle = document.querySelector(depthSelector);
     const status = document.querySelector(statusSelector);
     if (!scene || !canvas || !toggle || !depthToggle || !status || live.has(scene)) return;
-    const rearMode = new URLSearchParams(window.location.search).get("townRoute") === "rear";
+    const query = new URLSearchParams(window.location.search);
+    const rearMode = query.get("townRoute") === "rear";
+    const inspectPose = rearMode && query.get("townPose") === "post";
     const state = {
         canvas, toggle, depthToggle, status, disposed: false, frame: 0,
-        rearMode, nav: null, foliage: null, wellCutout: null, noticeCutout: null,
+        rearMode, inspectPose, nav: null, foliage: null, wellCutout: null, noticeCutout: null,
         route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
@@ -336,12 +341,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.172", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.172", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.173", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.173", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.172", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.172", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.173", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.173", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
@@ -402,7 +407,11 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                     from.y + (to.y - from.y) * t))
                     throw new Error("Town V2 plaza route cuts across an unwalkable pixel.");
         }
-        state.position = { ...state.route[0] };
+        // Debug-only stable frame at the real crossing. It never changes the
+        // path or masks. This proves a painted post occludes a stationary actor.
+        if (state.inspectPose && !state.nav.canStand(RIGHT_POST_PASS.x, RIGHT_POST_PASS.y))
+            throw new Error("Town V2 post inspection feet are outside the approved paving.");
+        state.position = state.inspectPose ? { ...RIGHT_POST_PASS } : { ...state.route[0] };
         state.lastTime = performance.now();
         state.frame = requestAnimationFrame(t => animate(state,t));
     } catch (e) {
@@ -450,6 +459,7 @@ export function readTownV2Diagnostics(canvas) {
         noticeDepthEdgesClear: entry.noticeCutout?.edgeTransparent === true,
         behindWell: entry.lastWellOccluded,
         behindNoticeboard: entry.lastNoticeOccluded,
+        inspectingRightPost: entry.inspectPose,
         passesBehindRightPost: entry.rearMode && !!entry.noticeCutout &&
             entry.route.some(p => Math.abs(p.x - RIGHT_POST_PASS.x) <= 9 &&
                 Math.abs(p.y - RIGHT_POST_PASS.y) <= 15 &&
