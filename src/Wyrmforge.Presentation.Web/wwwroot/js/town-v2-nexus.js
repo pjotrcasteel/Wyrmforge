@@ -38,7 +38,7 @@ const PLAZA_STONE = { x: 650, y: 565 };
 const live = new Map();
 
 const pixelIndex = (x, y) => ((Math.round(y) * WIDTH + Math.round(x)) * 4);
-function buildNavigation(source, includeCoverage = false, reviewedMask = null, candidateMask = null) {
+function buildNavigation(source, includeCoverage = false, reviewedMask = null, candidateMask = null, outMask = null) {
     const canvas = document.createElement("canvas");
     canvas.width = WIDTH; canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -72,6 +72,7 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
     const coverageImg = coverageCtx?.createImageData(WIDTH, HEIGHT);
     let reviewedPixels = null;
     let candidatePixels = null;
+    let outPixels = null;
     if (coverageImg) {
         if (!reviewedMask || reviewedMask.naturalWidth !== WIDTH || reviewedMask.naturalHeight !== HEIGHT)
             throw new Error("Town V2 audit needs a separate full-sized reviewed-solid atlas.");
@@ -92,6 +93,15 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
         if (!candidateCtx) throw new Error("Town V2 cannot read candidate-ground atlas.");
         candidateCtx.drawImage(candidateMask, 0, 0);
         candidatePixels = candidateCtx.getImageData(0, 0, WIDTH, HEIGHT).data;
+        if (!outMask || outMask.naturalWidth !== WIDTH || outMask.naturalHeight !== HEIGHT)
+            throw new Error("Town V2 audit needs a separate full-sized out-of-play atlas.");
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width = WIDTH;
+        outCanvas.height = HEIGHT;
+        const outCtx = outCanvas.getContext("2d", { willReadFrequently: true });
+        if (!outCtx) throw new Error("Town V2 cannot read out-of-play atlas.");
+        outCtx.drawImage(outMask, 0, 0);
+        outPixels = outCtx.getImageData(0, 0, WIDTH, HEIGHT).data;
     }
     // Tile audit is calculated during the SAME raster pass. It is accounting,
     // not pathfinding; decorative unmapped areas remain unclassified.
@@ -106,7 +116,7 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
             width: Math.min(tileSize, WIDTH - x), height: Math.min(tileSize, HEIGHT - y),
             authoredGroundPixels: 0, reviewedSolidPixels: 0,
             classConflictPixels: 0, candidateGroundPixels: 0,
-            notSeparatelyClassifiedPixels: 0
+            outOfPlayPixels: 0, notSeparatelyClassifiedPixels: 0
         };
     }) : [];
     let authoredGroundPixels = 0;
@@ -114,6 +124,8 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
     let classConflictPixels = 0;
     let candidateGroundPixels = 0;
     let candidateSolidOverlapPixels = 0;
+    let outOfPlayPixels = 0;
+    let outOfPlayConflictPixels = 0;
     let notSeparatelyClassifiedPixels = 0;
     for (let p = 0; p < pixels.length; p += 4) {
         const authored = pixels[p] > 230;
@@ -121,6 +133,12 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
             reviewedPixels[p + 3] > 230;
         const candidateGround = !!candidatePixels && candidatePixels[p] > 230 &&
             candidatePixels[p + 3] > 230;
+        const outOfPlay = !!outPixels && outPixels[p] > 230 && outPixels[p + 3] > 230;
+        // Out-of-play never changes active navigation, but an overlap with any
+        // authored surface/obstacle is a semantic ERROR, not an invisible win.
+        const outConflict = outOfPlay && (authored || reviewedSolid || candidateGround);
+        if (outConflict) outOfPlayConflictPixels++;
+        const conflict = (authored && reviewedSolid) || outConflict;
         // Hypothesized paving is never proof of safe footsteps or a reason
         // to erase a previously verified obstacle.
         if (candidateGround && reviewedSolid) candidateSolidOverlapPixels++;
@@ -130,9 +148,10 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
             img.data[p] = 42; img.data[p + 1] = 224;
             img.data[p + 2] = 194; img.data[p + 3] = 74;
         }
-        if (authored && reviewedSolid) classConflictPixels++;
+        if (conflict) classConflictPixels++;
         else if (authored) authoredGroundPixels++;
         else if (reviewedSolid) reviewedSolidPixels++;
+        else if (outOfPlay) outOfPlayPixels++;
         else if (candidateGround) candidateGroundPixels++;
         else notSeparatelyClassifiedPixels++;
         if (coverageImg) {
@@ -140,17 +159,19 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
             const x = coordinate % WIDTH;
             const y = Math.floor(coordinate / WIDTH);
             const tile = tiles[Math.floor(y / tileSize) * tileColumns + Math.floor(x / tileSize)];
-            if (authored && reviewedSolid) tile.classConflictPixels++;
+            if (conflict) tile.classConflictPixels++;
             else if (authored) tile.authoredGroundPixels++;
             else if (reviewedSolid) tile.reviewedSolidPixels++;
+            else if (outOfPlay) tile.outOfPlayPixels++;
             else if (candidateGround) tile.candidateGroundPixels++;
             else tile.notSeparatelyClassifiedPixels++;
-            // Teal = approved route, red = independently reviewed solid,
-            // magenta = authoritative contradiction, blue = proposed paving
-            // only (still BLOCKED for foot navigation), amber = unknown.
-            const color = authored && reviewedSolid ? [227, 54, 198] :
+            // Teal = approved route, red = reviewed solid, violet = reviewed
+            // non-playable BACKGROUND, magenta = semantic contradiction,
+            // blue = proposed paving, amber = still genuinely unknown.
+            const color = conflict ? [227, 54, 198] :
                 authored ? [42, 224, 194] :
                 reviewedSolid ? [232, 76, 67] :
+                outOfPlay ? [137, 109, 209] :
                 candidateGround ? [67, 130, 236] : [240, 147, 59];
             coverageImg.data[p] = color[0];
             coverageImg.data[p + 1] = color[1];
@@ -183,12 +204,13 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
     if (includeCoverage && reviewedSolidPixels === 0)
         throw new Error("Town V2 audit has no independently reviewed solid pixels.");
     if (authoredGroundPixels + reviewedSolidPixels + classConflictPixels +
-        candidateGroundPixels + notSeparatelyClassifiedPixels !== totalPixels)
+        outOfPlayPixels + candidateGroundPixels +
+        notSeparatelyClassifiedPixels !== totalPixels)
         throw new Error("Town V2 semantic audit does not account for every canvas pixel.");
     for (const tile of tiles)
         if (tile.authoredGroundPixels + tile.reviewedSolidPixels +
-            tile.classConflictPixels + tile.candidateGroundPixels +
-            tile.notSeparatelyClassifiedPixels !==
+            tile.classConflictPixels + tile.outOfPlayPixels +
+            tile.candidateGroundPixels + tile.notSeparatelyClassifiedPixels !==
                 tile.width * tile.height)
             throw new Error("Town V2 coverage tile does not account for its entire raster.");
     return {
@@ -196,12 +218,15 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
         coverage: {
             totalPixels, authoredGroundPixels, reviewedSolidPixels,
             classConflictPixels, candidateGroundPixels, candidateSolidOverlapPixels,
-            notSeparatelyClassifiedPixels,
+            outOfPlayPixels, outOfPlayConflictPixels, notSeparatelyClassifiedPixels,
             knownSolidClassAvailable: includeCoverage,
             reviewedSolidNames: includeCoverage
                 ? ["well-footprint", "noticeboard-base", "stair-root-bed"] : [],
             candidateGroundNames: includeCoverage
                 ? ["south-plaza", "west-apron", "east-apron"] : [],
+            outOfPlayNames: includeCoverage
+                ? ["upper-backdrop", "northwest-elevated-background",
+                    "northeast-elevated-background"] : [],
             tileSize, tileColumns, tileRows, tiles,
             fullSceneMapped: false
         }
@@ -639,23 +664,25 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.181", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.181", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.182", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.182", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode || residentCount > 1 || coverageAudit) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.181", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.181", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.182", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.182", document.baseURI).href));
         }
         if (coverageAudit) {
             urls.push(loadMask(new URL(
-                "art/town/nexus-v2-reviewed-solid-footprints.svg?v=0.0.181", document.baseURI).href));
+                "art/town/nexus-v2-reviewed-solid-footprints.svg?v=0.0.182", document.baseURI).href));
             urls.push(loadMask(new URL(
-                "art/town/nexus-v2-ground-candidates.svg?v=0.0.181", document.baseURI).href));
+                "art/town/nexus-v2-ground-candidates.svg?v=0.0.182", document.baseURI).href));
+            urls.push(loadMask(new URL(
+                "art/town/nexus-v2-out-of-play.svg?v=0.0.182", document.baseURI).href));
         }
-        const [walkMask, depthMask, wellMask, noticeMask, reviewedMask, candidateMask] =
+        const [walkMask, depthMask, wellMask, noticeMask, reviewedMask, candidateMask, outMask] =
             await Promise.all(urls);
         if (state.disposed) return;
-        state.nav = buildNavigation(walkMask, coverageAudit, reviewedMask, candidateMask);
+        state.nav = buildNavigation(walkMask, coverageAudit, reviewedMask, candidateMask, outMask);
         if (![START, STAIR_EXIT, STAIR_TREAD, PLAZA_STONE, PLAZA_END,
             WELL_FRONT_MID, WELL_FRONT_END].every(p => state.nav.canStand(p.x,p.y)))
             throw new Error("Town V2 stairs, plaza and well-front stops must fit the mask.");
@@ -830,7 +857,7 @@ export function readTownV2Diagnostics(canvas) {
         coverageAudit: entry.coverageAudit,
         coverage: entry.nav?.coverage ?? null,
         coverageLegend: entry.coverageAudit
-            ? { authoredGround: "teal", reviewedSolid: "red",
+            ? { authoredGround: "teal", reviewedSolid: "red", outOfPlay: "violet",
                 classConflict: "magenta", candidateGround: "blue",
                 notSeparatelyClassified: "amber" } : null
     };
