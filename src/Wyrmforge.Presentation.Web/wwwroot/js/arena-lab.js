@@ -240,6 +240,9 @@ function draw(state) {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
     const groundAtlas = previewGroundAtlas(state, frame);
+    // Instrument actual applied floor mode, not just the checkbox state.
+    canvas.dataset.groundPreview = groundAtlas ? 'approved' : 'canonical';
+    canvas.dataset.groundPreviewSeed = groundAtlas ? String(frame.seed) : '';
     drawArenaEnvironment(ctx, frame.environment, ww, wh, state.clock, groundAtlas);
     if (frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest')
         drawWetForestFootprints(ctx, state.tracks, state.clock);
