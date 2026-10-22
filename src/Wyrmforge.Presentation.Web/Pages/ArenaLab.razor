@@ -157,7 +157,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena-lab.js?v=20261022-approved-ground-preview-1");
+        module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/arena-lab.js");
         reference = DotNetObjectReference.Create(this);
         await module.InvokeVoidAsync("initializeArenaLab", canvas, reference);
         await SyncOptions();
