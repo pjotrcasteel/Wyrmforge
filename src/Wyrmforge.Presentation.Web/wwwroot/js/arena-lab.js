@@ -13,17 +13,18 @@ import { resolveArenaCamera } from './arena-camera.js';
 const labs = new WeakMap();
 let approvedSource = null;
 let approvedSourcePromise = null;
+let approvedSourceUnavailable = false;
 let approvedAtlas = null;
 let approvedAtlasSeed = null;
 
 // Lazy opt-in art: do not allocate the ~11MB approved quilt atlas in normal
 // Hunts or on an Arena Lab screen that never enables the preview.
 function requestApprovedGround() {
-    if (approvedSource || approvedSourcePromise) return;
+    if (approvedSource || approvedSourcePromise || approvedSourceUnavailable) return;
     const image = new Image();
     image.src = GROUND_ATLAS_URL;
     approvedSourcePromise = image.decode().then(() => { approvedSource = image; })
-        .catch(error => { console.warn('Approved ground preview unavailable:', error); })
+        .catch(error => { approvedSourceUnavailable = true; console.warn('Approved ground preview unavailable:', error); })
         .finally(() => { approvedSourcePromise = null; });
 }
 function previewGroundAtlas(state, frame) {
@@ -108,7 +109,8 @@ export function configureArenaLab(canvas, tool, collision, mobs, approvedGround 
     if (!state) return;
     const oldTool = state.options.tool;
     state.options = { tool, collision: Boolean(collision), mobs: Boolean(mobs), approvedGround: Boolean(approvedGround) };
-    if (state.options.approvedGround) requestApprovedGround();
+    if (state.options.approvedGround && state.frame?.environment?.habitat === 'WetForest')
+        requestApprovedGround();
     state.pointer = null;
     if (tool === 'walk' && oldTool !== 'walk') state.freeCamera = null;
 }
@@ -127,7 +129,8 @@ export function readArenaLabDiagnostics(canvas) {
             ashling: ashlingSprites.diagnostics(state.ashling).entities.map(p => ({ clip: p.clip, frame: p.frame, direction: p.direction })) },
         collisionVisible: state.options.collision, tool: state.options.tool,
         approvedGroundRequested: state.options.approvedGround,
-        approvedGroundReady: Boolean(approvedSource && approvedAtlas) };
+        approvedGroundReady: Boolean(approvedSource && approvedAtlas),
+        approvedGroundError: approvedSourceUnavailable };
 }
 export function disposeArenaLab(canvas) {
     const state = labs.get(canvas);
