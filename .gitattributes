@@ -13,3 +13,6 @@ art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/*.blend filter=
 art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r06*.blend filter=lfs diff=lfs merge=lfs -text
 art/source/enemies/ashfang/original-2026-10-22/reviews/M1-r06/*.blend filter=lfs diff=lfs merge=lfs -text
 art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r06/*.blend filter=lfs diff=lfs merge=lfs -text
+art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r07/*.blend filter=lfs diff=lfs merge=lfs -text
+art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r07*.blend filter=lfs diff=lfs merge=lfs -text
+art/source/enemies/ashfang/original-2026-10-22/reviews/M1-r07/*.blend filter=lfs diff=lfs merge=lfs -text
