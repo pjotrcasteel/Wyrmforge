@@ -742,6 +742,23 @@ test('Town V2 living residents animate by distance, turn safely and idle without
     assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
 });
 
+test('Town V2 coverage audit distinguishes authored corridors from not-yet-classified scenery', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /function buildNavigation\(source, includeCoverage = false\)/);
+    assert.match(js, /const coverageAudit = query.get\("townCoverage"\) === "1"/);
+    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit\)/);
+    assert.match(js, /const authored = pixels\[p\] > 230/);
+    assert.match(js, /notSeparatelyClassifiedPixels: totalPixels - authoredGroundPixels/);
+    assert.match(js, /knownSolidClassAvailable: false/);
+    assert.match(js, /fullSceneMapped: false/);
+    assert.match(js, /coverageAudit: entry.coverageAudit/);
+    assert.match(js, /ctx.drawImage\(w.nav.coverageOverlay, 0, 0\)/);
+    assert.match(js, /notSeparatelyClassified: "amber"/);
+    // The visual audit is not a license to mark all black pixels as "known solid".
+    assert.doesNotMatch(js, /knownSolidClassAvailable: true|fullSceneMapped: true/);
+    assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+});
+
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
     const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
     const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
