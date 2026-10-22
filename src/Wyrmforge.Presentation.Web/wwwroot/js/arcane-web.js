@@ -55,6 +55,7 @@
         if (!viewport || states.has(viewport)) return;
 
         const state = {
+            overview: false,
             scale: defaultScale(viewport),
             pointers: new Map(),
             dragStart: null,
@@ -66,10 +67,19 @@
         if (viewport.dataset.wheel) overview(viewport);
         else center(viewport, state);
 
+        // The phone inspector changes the map's height. Keep the full-wheel
+        // overview framed after that resize without resetting a user's camera.
+        const resize = new ResizeObserver(() => {
+            if (state.overview) overview(viewport);
+        });
+        resize.observe(viewport);
+        state.resize = resize;
+
         viewport.addEventListener('pointerdown', event => {
             if (event.target.closest('button')) return;
             // Leave the screen edge to the OS back gesture instead of starting a pan there.
             if (event.pointerType === 'touch' && event.clientX < edgeGutter) return;
+            state.overview = false;
             viewport.setPointerCapture(event.pointerId);
             state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
             viewport.classList.add('dragging');
@@ -133,6 +143,7 @@
         viewport.addEventListener('wheel', event => {
             if (!event.ctrlKey && !event.metaKey) return;
             event.preventDefault();
+            state.overview = false;
             const rect = viewport.getBoundingClientRect();
             apply(viewport, state, state.scale + (event.deltaY < 0 ? 0.1 : -0.1), event.clientX - rect.left, event.clientY - rect.top);
         }, { passive: false });
@@ -141,12 +152,14 @@
     function zoom(viewport, delta) {
         const state = states.get(viewport);
         if (!state) return;
+        state.overview = false;
         apply(viewport, state, state.scale + delta);
     }
 
     function reset(viewport) {
         const state = states.get(viewport);
         if (!state) return;
+        state.overview = false;
         apply(viewport, state, defaultScale(viewport));
         center(viewport, state);
     }
@@ -155,6 +168,7 @@
     function focus(viewport, x, y) {
         const state = states.get(viewport);
         if (!state) return;
+        state.overview = false;
         let anchorY = viewport.clientHeight / 2;
         if (!viewport.dataset.wheel && window.innerWidth <= 760) {
             const rect = viewport.getBoundingClientRect();
@@ -181,6 +195,7 @@
     function overview(viewport) {
         const state = states.get(viewport);
         if (!state) return;
+        state.overview = true;
         apply(viewport, state, Math.min(viewport.clientWidth / 1100, viewport.clientHeight / 1100, 0.8));
         center(viewport, state);
     }
@@ -188,8 +203,14 @@
     function focusSchool(viewport, x, y) {
         const state = states.get(viewport);
         if (!state) return;
+        state.overview = false;
         apply(viewport, state, defaultScale(viewport));
         requestAnimationFrame(() => focus(viewport, x, y));
+    }
+
+    function dispose(viewport) {
+        states.get(viewport)?.resize?.disconnect();
+        states.delete(viewport);
     }
 
     function openRefundDialog(dialog) {
@@ -198,5 +219,5 @@
         dialog.querySelector('button')?.focus();
     }
 
-    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector, overview, focusSchool, openRefundDialog };
+    window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector, overview, focusSchool, openRefundDialog, dispose };
 })();

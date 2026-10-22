@@ -12,7 +12,7 @@ using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Presentation.Web.Features.Forge;
 
-public partial class BuildView
+public partial class BuildView : IAsyncDisposable
 {
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
@@ -350,4 +350,10 @@ public partial class BuildView
         else if (id is not null && Selection.Remove(id)) await OnSelectionChanged.InvokeAsync();
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        try { await JavaScript.InvokeVoidAsync("wyrmforgeArcaneWeb.dispose", viewport); }
+        catch (JSException) { }
+        catch (TaskCanceledException) { }
+    }
 }

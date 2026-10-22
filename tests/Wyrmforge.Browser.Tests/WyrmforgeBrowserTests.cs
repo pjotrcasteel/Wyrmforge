@@ -2887,6 +2887,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".route-action.refund").ClickAsync();
         var warning = Page.GetByRole(AriaRole.Dialog);
         await Expect(warning).ToBeVisibleAsync();
+        await ScreenshotAsync($"arcane-wheel-refund-warning-{width}.png");
         await warning.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
         await Expect(stormLeaf).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("selected"));
         await Page.Locator(".route-action.refund").ClickAsync();
