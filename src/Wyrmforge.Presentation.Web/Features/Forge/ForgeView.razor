@@ -11,6 +11,7 @@
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.Loadouts
+@using Wyrmforge.Domain.Progression.PassiveTree
 
 <main class="game-shell @(section == ShellSection.Build ? "menu-nexus" : string.Empty) @(section == ShellSection.Run ? (enteredTown || SkipTitle ? "menu-home refuge-home" : "menu-home arrival-home") : string.Empty)">
     @if (section == ShellSection.Run)
@@ -149,12 +150,12 @@
                 }
                 else if (SpellcraftOpen)
                 {
-                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
                         FocusNodeId="@nexusFocus" />
                 }
                 else
                 {
-                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
+                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
                 }
                 break;
             case ShellSection.Forge:
@@ -251,6 +252,8 @@
     [Parameter] public Func<LaboratoryMutationId, Task<bool>> StabilizeMutation { get; set; } = _ => Task.FromResult(false);
     [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task> EquipMutation { get; set; } = (_, _) => Task.CompletedTask;
     [Parameter] public Func<LaboratoryMutationId?, Task> TrackMutation { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
+    [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
     [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
     [Parameter] public Func<int, Task> SaveLoadout { get; set; } = _ => Task.CompletedTask;
     [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
