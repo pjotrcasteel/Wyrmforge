@@ -282,27 +282,34 @@ export function groundMaterialWearPlan(index, seed = 1441) {
         return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
     };
     const patches = [];
-    for (let group = 0; group < 12; group++) {
-        const column = group % 2;
-        const band = Math.floor(group / 2);
-        const centerX = (column ? 380 : 65) + random(group, 0, 0) * 205;
-        const centerY = (band + .36 + random(group, 0, 1) * .28) * GROUND_SOURCE_TILE_SIZE;
+    const bands = [0, 1, 2, 3, 4, 5, 1, 3, 5];
+    for (let group = 0; group < bands.length; group++) {
+        const centerX = 78 + random(group, 0, 0) * 516;
+        const centerY = (bands[group] + .28 + random(group, 0, 1) * .48) * GROUND_SOURCE_TILE_SIZE;
+        const slope = (random(group, 0, 9) - .5) * .42;
         for (let mark = 0; mark < 3; mark++) {
             const dominant = mark === 0;
-            const width = (dominant ? 76 : 44) + Math.floor(random(group, mark, 2) * (dominant ? 30 : 47));
-            const height = (dominant ? 52 : 30) + Math.floor(random(group, mark, 3) * (dominant ? 30 : 40));
-            const source = mark === 2 ? index : GROUND_ACCENTS[index][(group + mark) % 2];
-            const shift = dominant ? 10 : 86;
-            const x = (Math.round(centerX + (random(group, mark, 4) - .5) * shift) + GROUND_TILE_SIZE) %
-                GROUND_TILE_SIZE;
-            const y = (Math.round(centerY + (random(group, mark, 5) - .5) * shift) + GROUND_TILE_SIZE) %
-                GROUND_TILE_SIZE;
+            const width = (dominant ? 150 : 70) + Math.floor(random(group, mark, 2) * (dominant ? 55 : 45));
+            const height = (dominant ? 40 : 24) + Math.floor(random(group, mark, 3) * (dominant ? 26 : 19));
+            const shift = mark === 1 ? -42 : mark === 2 ? 50 : 0;
+            const x = (Math.round(centerX + shift + (random(group, mark, 4) - .5) * 25) +
+                GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
+            const y = (Math.round(centerY + shift * slope + (random(group, mark, 5) - .5) * 18) +
+                GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
+            const source = mark === 2 ? index :
+                index === 0 ? 3 : GROUND_ACCENTS[index][(group + mark) % 2];
+            const sourceWidth = Math.min(GROUND_SOURCE_TILE_SIZE, Math.round(width * .56));
+            const sourceHeight = Math.min(GROUND_SOURCE_TILE_SIZE, height + 12);
             patches.push({
-                group, x, y, width, height, source,
-                sourceX: Math.floor(random(group, mark, 6) * (GROUND_SOURCE_TILE_SIZE - width + 1)),
-                sourceY: Math.floor(random(group, mark, 7) * (GROUND_SOURCE_TILE_SIZE - height + 1)),
-                opacity: dominant ? .78 + random(group, mark, 8) * .12 :
-                    .58 + random(group, mark, 8) * .17,
+                group, x, y, width, height, source, sourceWidth, sourceHeight,
+                sourceX: Math.floor(random(group, mark, 6) * (GROUND_SOURCE_TILE_SIZE - sourceWidth + 1)),
+                sourceY: Math.floor(random(group, mark, 7) * (GROUND_SOURCE_TILE_SIZE - sourceHeight + 1)),
+                opacity: dominant ? .69 + random(group, mark, 8) * .12 : .54 + random(group, mark, 8) * .16,
+                rim: Array.from({ length: 8 }, (_, step) => ({
+                    top: .65 + random(group, mark, 20 + step) * .55,
+                    bottom: .65 + random(group, mark, 30 + step) * .55,
+                    bend: (random(group, mark, 40 + step) - .5) * .21,
+                })),
             });
         }
     }
@@ -318,23 +325,34 @@ function drawGroundMaterialWear(ctx, sc, scratch, source, index, seed) {
         sc.clearRect(0, 0, width, height);
         sc.imageSmoothingEnabled = true;
         sc.drawImage(source, patch.source * GROUND_SOURCE_TILE_SIZE + patch.sourceX,
-            patch.sourceY, width, height, 0, 0, width, height);
+            patch.sourceY, patch.sourceWidth, patch.sourceHeight, 0, 0, width, height);
 
-        // Feathery, overlapping non-identical shapes read as physical wear,
-        // not stamps or sharp rectangles.
+        // Irregular, connected erosion ridges rather than repeated soft circles.
+        // Blur only the noncircular contour edge; retain approved painted pixels.
         sc.save();
         sc.globalCompositeOperation = 'destination-in';
-        sc.translate(width / 2, height / 2);
-        sc.scale(width / height, 1);
-        const mask = sc.createRadialGradient(0, 0, 0, 0, 0, height / 2);
-        mask.addColorStop(0, 'rgba(255,255,255,1)');
-        mask.addColorStop(.46, 'rgba(255,255,255,.95)');
-        mask.addColorStop(.77, 'rgba(255,255,255,.55)');
-        mask.addColorStop(1, 'rgba(255,255,255,0)');
-        sc.fillStyle = mask;
-        sc.fillRect(-height / 2, -height / 2, height, height);
+        sc.filter = 'blur(4px)';
+        sc.fillStyle = 'rgba(255,255,255,1)';
+        sc.beginPath();
+        sc.moveTo(0, height * .5);
+        for (let step = 0; step < patch.rim.length; step++) {
+            const t = (step + 1) / (patch.rim.length + 1);
+            const taper = Math.pow(Math.sin(Math.PI * t), .6);
+            const ridge = patch.rim[step];
+            sc.lineTo(width * t, height * (.5 + ridge.bend - .43 * taper * ridge.top));
+        }
+        sc.lineTo(width, height * .5);
+        for (let step = patch.rim.length - 1; step >= 0; step--) {
+            const t = (step + 1) / (patch.rim.length + 1);
+            const taper = Math.pow(Math.sin(Math.PI * t), .6);
+            const ridge = patch.rim[step];
+            sc.lineTo(width * t, height * (.5 + ridge.bend + .43 * taper * ridge.bottom));
+        }
+        sc.closePath();
+        sc.fill();
         sc.restore();
         sc.globalCompositeOperation = 'source-over';
+
         ctx.globalAlpha = patch.opacity;
         for (const oy of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
             for (const ox of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
