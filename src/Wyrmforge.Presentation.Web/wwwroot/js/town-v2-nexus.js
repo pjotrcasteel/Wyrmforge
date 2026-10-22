@@ -228,7 +228,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.158", document.baseURI);
         const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg", document.baseURI);
         const [walkMask, depthMask] = await Promise.all([
             loadMask(walkUrl.href), loadMask(depthUrl.href)
