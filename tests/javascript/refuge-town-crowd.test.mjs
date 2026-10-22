@@ -340,7 +340,7 @@ test('dynamic props invalidate C# routes and navigation prevents shortcutting th
 test('Phase 1 geometry inspector switches real town layers without editing geometry or crowd AI', () => {
     const view = source(scene);
     const css = source('src/Wyrmforge.Presentation.Web/wwwroot/css/town-canonical.css');
-    assert.match(view, /@if \(showTownGeometry\)\s*\{\s*<div class="refuge-town-geometry-toolbar"/);
+    assert.match(view, /@if \(showTownGeometry && !showTownV2\)\s*\{\s*<div class="refuge-town-geometry-toolbar"/);
     assert.match(view, /data-town-geometry-layer="@geometryLayer"/);
     for (const layer of ['All', 'Walkable', 'Blocked', 'Occlusion']) {
         assert.ok(view.includes('data-town-layer-select="' + layer + '"'), layer + ' switch missing');
@@ -496,4 +496,21 @@ test('Nexus stair planting is a foot collider while the foreground draws only it
     for (const id of ['nexus-terrace-bushes', 'nexus-stairs-shrubs'])
         assert.ok(cutouts.includes('id: "' + id + '"'), id + ' must be an alpha silhouette');
     assert.match(code, /"nexus-terrace-bushes-foreground" or "nexus-stairs-shrubs-foreground"/);
+});
+
+test('V2 is isolated behind a URL flag and uses an authored pixel mask without V1 polygons', () => {
+    const sceneCode = source(scene);
+    const v2 = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const mask = source(art + '/nexus-v2-walk-mask.svg');
+    assert.match(sceneCode, /"townV2=1"/);
+    assert.match(sceneCode, /<canvas class="refuge-town-v2-canvas"/);
+    assert.match(sceneCode, /crowd is not null && !showTownV2/);
+    assert.match(v2, /getImageData\(0, 0, WIDTH, HEIGHT\)/);
+    assert.match(v2, /FOOT_RADIUS = 8/);
+    assert.match(v2, /requestAnimationFrame/);
+    const executable = v2.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable, /night-navigation\.json|TownCrowd|Occluders/);
+    assert.match(mask, /width="1672" height="941"/);
+    assert.match(mask, /Nexus/i);
+    assert.match(v2, /usingLegacyNavigation: false/);
 });

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- Town V2 authored raster source, NOT the V1 navigation geometry.
+       White = validated candidate paving; black = inaccessible.
+       Begin with ONLY the Nexus terrace-to-stairs micro-area.
+       This is a deliberately small painted region awaiting visual approval. -->
+  <rect width="1672" height="941" fill="#000"/>
+  <path d="M 442 402 C 478 396 503 391 525 401
+           C 550 410 550 430 558 452
+           C 565 469 571 482 575 492"
+        fill="none" stroke="#fff" stroke-width="38"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Keep the planted stair-side shrub island inaccessible in the raster itself. -->
+  <path d="M 499 422 L 509 414 L 523 419 L 537 432 L 538 449
+           L 528 456 L 509 449 L 499 438 Z" fill="#000"/>
+  <!-- Front terrace flowerbed: physically planted, not cobblestone. -->
+  <path d="M 345 446 L 366 438 L 389 442 L 408 439 L 437 446
+           L 461 451 L 479 462 L 473 475 L 434 473 L 388 472
+           L 354 467 Z" fill="#000"/>
+</svg>
