@@ -1,0 +1,782 @@
+{
+  "revision": "M1-r01",
+  "operation": "review",
+  "source": "C:\\Wyrmforge\\ashfang-original-production\\art\\source\\enemies\\ashfang\\original-2026-10-22\\milestones\\M1-r01\\ashfang-primary.blend",
+  "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98",
+  "blender": "4.5.14 LTS",
+  "ownerAccepted": false,
+  "sourceOpened": true,
+  "runtimeIntegrated": false,
+  "objects": [
+    {
+      "name": "Ashfang original primary skin",
+      "type": "MESH",
+      "vertices": 34590,
+      "polygons": 34588,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Independent lower mandible",
+      "type": "MESH",
+      "vertices": 624,
+      "polygons": 602,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 1",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 2",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 3",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 4",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cheek and jaw-closing mass",
+      "type": "MESH",
+      "vertices": 220,
+      "polygons": 202,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 0",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 1",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 2",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 3",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 4",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L orbital brow sweep",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L original swept crown horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L original swept temple horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L recessed eye placeholder",
+      "type": "MESH",
+      "vertices": 112,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 0",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 1",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 2",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 3",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 4",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 1",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 2",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 3",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 4",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 5",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing thumb claw",
+      "type": "MESH",
+      "vertices": 154,
+      "polygons": 142,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Mouth floor and tongue study",
+      "type": "MESH",
+      "vertices": 220,
+      "polygons": 202,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Original elongated predatory cranium",
+      "type": "MESH",
+      "vertices": 744,
+      "polygons": 722,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 1",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 2",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 3",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 4",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cheek and jaw-closing mass",
+      "type": "MESH",
+      "vertices": 220,
+      "polygons": 202,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 0",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 1",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 2",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 3",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 4",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R orbital brow sweep",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R original swept crown horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R original swept temple horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R recessed eye placeholder",
+      "type": "MESH",
+      "vertices": 112,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 0",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 1",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 2",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 3",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 4",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 1",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 2",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 3",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 4",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 5",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing thumb claw",
+      "type": "MESH",
+      "vertices": 154,
+      "polygons": 142,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "armatureModifiers": []
+    }
+  ],
+  "missingDependencies": [],
+  "technicalPass": true,
+  "limits": "Mesh format checks do not establish anatomy, deformation or motion quality.",
+  "actions": [],
+  "rigs": [],
+  "render": {
+    "device": "RTX 5090 OptiX",
+    "resolution": 1024,
+    "samples": 32,
+    "views": [
+      {
+        "label": "front",
+        "azimuthDegrees": 0,
+        "elevationDegrees": 0,
+        "elapsedSeconds": 2.280841299914755
+      },
+      {
+        "label": "side",
+        "azimuthDegrees": 90,
+        "elevationDegrees": 0,
+        "elapsedSeconds": 1.433757400023751
+      },
+      {
+        "label": "rear",
+        "azimuthDegrees": 180,
+        "elevationDegrees": 0,
+        "elapsedSeconds": 1.4550156999612227
+      },
+      {
+        "label": "top",
+        "azimuthDegrees": 0,
+        "elevationDegrees": 90,
+        "elapsedSeconds": 1.4681484999600798
+      },
+      {
+        "label": "three-quarter-left",
+        "azimuthDegrees": -45,
+        "elevationDegrees": 25,
+        "elapsedSeconds": 1.4704308999935165
+      },
+      {
+        "label": "three-quarter-right",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 25,
+        "elapsedSeconds": 1.423145999899134
+      },
+      {
+        "label": "game-elevated",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 34,
+        "elapsedSeconds": 1.4288487999001518
+      },
+      {
+        "label": "skull-side",
+        "azimuthDegrees": 90,
+        "elevationDegrees": 8,
+        "elapsedSeconds": 1.4807995000155643
+      },
+      {
+        "label": "skull-three-quarter",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 12,
+        "elapsedSeconds": 1.481234399951063
+      }
+    ]
+  },
+  "reviewSnapshot": {
+    "path": "C:\\Wyrmforge\\ashfang-original-production\\art\\source\\enemies\\ashfang\\original-2026-10-22\\reviews\\M1-r01\\ashfang-review-scene.blend",
+    "sha256": "f6ed4eac58219a43e55e289ecb19a4f69952b3e472d33550e5102d186af12a0b"
+  }
+}

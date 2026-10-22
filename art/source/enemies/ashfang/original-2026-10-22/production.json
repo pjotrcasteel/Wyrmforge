@@ -33,7 +33,7 @@
     "M8": "not-started"
   },
   "technicalPass": true,
-  "agentVisualStatus": "not inspected yet",
+  "agentVisualStatus": "M1-r01 rejected by agent: rounded muzzle/brow, attached-looking cheek, insufficient identity and wing staging",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "assets": [
@@ -53,5 +53,5 @@
       "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
     }
   ],
-  "nextTask": "Push editable r01 source then neutral multi-angle review and actual-size comparison"
+  "nextTask": "Preserve r01 then refine original primary head and wing staging; M1 still in progress"
 }

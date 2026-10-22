@@ -25,3 +25,13 @@ Reopen: `blender --background --disable-autoexec <M1-r01/ashfang-primary.blend> 
 All three native files total about 3.21 MiB, within the bounded ordinary-Git pilot.
 Blender emitted a denied user-extension-cache write warning; native saves and
 reopen passed. No system install or hardware settings changed. GPU review pending.
+
+M1-r01 neutral review rendered with RTX 5090 OptiX, nine real views at1024/32
+samples including front/side/rear/top, both three-quarter, elevated34deg, two
+head closeups. Front/side/top/right three-quarter/skull three-quarter inspected.
+Agent review FAIL for owner submission: muzzle/brow are too soft/rounded and
+cheek looks attached; wing rest staging obscures body/does not meet card presence.
+Remaining views rendered but not yet visually inspected. Geometry format pass is
+not artistic acceptance. Preserve r01; next revision edits these original forms,
+not legacy geometry, before armor/fire/rig/animation. Review camera/light native
+snapshot also retained. Native r01 SHA256 in authoring-report.json.
