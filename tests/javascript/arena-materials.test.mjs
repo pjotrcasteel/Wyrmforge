@@ -6,7 +6,7 @@ import {
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
     materialSampleBoard, naturalGroundPreview, paintGroundCells, paintGroundStroke, drawReferenceGroundBoard,
     groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
-    groundMaterialFineDetailPlan, groundMaterialWearPlan,
+    enhanceGroundDetailPixels,
     groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
@@ -148,7 +148,7 @@ test('actual macro variation comes from related ground artwork, not barely visib
 test('fine-detail control requests updated canvas pixels and uses a versioned renderer module', () => {
     const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
-    assert.match(page, /arena-materials\.js\?v=20261022-organic-wear-3/);
+    assert.match(page, /arena-materials\.js\?v=20261022-preserve-blends-4/);
     assert.match(page, /InvokeAsync<bool>\("setGroundFineDetail"/);
     assert.match(page, /if \(await module\.InvokeAsync<bool>/);
     assert.match(js, /state\.canvas\.dataset\.materialRender =/);
@@ -159,89 +159,91 @@ test('fine-detail control requests updated canvas pixels and uses a versioned re
     assert.match(browser, /Assert\.AreEqual\(baseline, restored/);
 });
 
-test('opt-in fine ground detail uses deterministic clusters from approved material paintings', () => {
-    for (let index = 0; index < MATERIALS.length; index++) {
-        const marks = groundMaterialFineDetailPlan(index, 1441);
-        assert.equal(marks.length, 48);
-        assert.deepEqual(marks, groundMaterialFineDetailPlan(index, 1441));
-        assert.notDeepEqual(marks, groundMaterialFineDetailPlan(index, 1442));
-        assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
-            m.x >= 0 && m.x < GROUND_TILE_SIZE &&
-            m.y >= 0 && m.y < GROUND_TILE_SIZE && m.width >= 14 && m.width <= 37 &&
-            m.height >= 9 && m.height <= 30 && m.opacity >= .18 && m.opacity <= .35 &&
-            m.sourceX >= 0 && m.sourceX + m.width <= GROUND_SOURCE_TILE_SIZE &&
-            m.sourceY >= 0 && m.sourceY + m.height <= GROUND_SOURCE_TILE_SIZE));
-        assert.ok(marks.some(m => m.source === index));
-        assert.ok(marks.some(m => m.source !== index));
-        assert.ok(marks.every(m => m.source >= 0 && m.source < MATERIALS.length));
-    }
-    assert.deepEqual(groundMaterialFineDetailPlan(-1), []);
-    const razor = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
-    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
-    assert.match(razor, /@onclick="ToggleFineDetail"/);
-    assert.match(js, /export function setGroundFineDetail/);
-    assert.match(js, /if \(fineDetail\) \{/);
-    assert.match(js, /drawGroundMaterialWear\(ctx, sc, scratch, source, index, seed, create\)/);
-    assert.doesNotMatch(js, /sc\.filter\s*=/, 'iPhone Safari cannot use canvas filter for masks');
-    assert.match(js, /maskCtx\.createRadialGradient/, 'Soft contours must use Safari-supported gradients');
-    assert.match(js, /drawGroundMaterialFineDetails\(ctx, sc, scratch, source, index, seed\)/);
-});
 
-test('fine-detail wear is visibly clustered, seeded and sampled only from approved art', () => {
-    for (let index = 0; index < MATERIALS.length; index++) {
-        const wear = groundMaterialWearPlan(index, 1441);
-        assert.equal(wear.length, 27);
-        assert.deepEqual(wear, groundMaterialWearPlan(index, 1441));
-        assert.notDeepEqual(wear, groundMaterialWearPlan(index, 1442));
-        assert.deepEqual([...new Set(wear.map(p => p.group))], Array.from({ length: 9 }, (_, i) => i));
-        assert.ok(wear.every(p => Number.isInteger(p.x) && p.x >= 0 && p.x < GROUND_TILE_SIZE &&
-            Number.isInteger(p.y) && p.y >= 0 && p.y < GROUND_TILE_SIZE &&
-            p.width >= 70 && p.width <= 204 && p.height >= 24 && p.height <= 65 &&
-            p.width / p.height > 1.6 &&
-            p.sourceX >= 0 && p.sourceX + p.sourceWidth <= GROUND_SOURCE_TILE_SIZE &&
-            p.sourceY >= 0 && p.sourceY + p.sourceHeight <= GROUND_SOURCE_TILE_SIZE &&
-            p.opacity >= .54 && p.opacity <= .81 && p.source >= 0 && p.source < MATERIALS.length &&
-            p.rim.length === 8 && p.rim.every(point =>
-                point.top >= .65 && point.top <= 1.2 &&
-                point.bottom >= .65 && point.bottom <= 1.2 && Math.abs(point.bend) <= .105)));
-        const bands = [0, 1, 2, 3, 4, 5, 1, 3, 5];
-        for (let band = 0; band < 6; band++) {
-            const accents = wear.filter(p => bands[p.group] === band);
-            assert.ok(accents.length >= 3, 'Every sampler band gets natural contour wear');
-            assert.ok(accents.some(p => p.source !== index));
+test('Fine Detail is local and bounded; ground coverage and chroma are preserved', () => {
+    const w = 8, h = 6, pixels = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4, v = (x * 23 + y * 11) % 95;
+            pixels.set([40 + v, 48 + v, 31 + v, x === 3 && y === 2 ? 0 : 255], i);
         }
-        if (index === 0)
-            assert.ok(wear.every(p => [0, 3].includes(p.source)),
-                'Grass wear uses approved earth, never marsh-blue artificial spots');
-        assert.ok(wear.some(p => p.width >= 150));
+    const original = pixels.slice();
+    const detailed = enhanceGroundDetailPixels(pixels, w, h);
+    assert.notDeepEqual(detailed, original);
+    assert.deepEqual(pixels, original);
+    assert.deepEqual(detailed, enhanceGroundDetailPixels(pixels, w, h));
+    for (let i = 0; i < pixels.length; i += 4) {
+        assert.equal(detailed[i + 3], pixels[i + 3], 'No new shape, tint patch or transparency');
+        for (let c = 0; c < 3; c++)
+            assert.ok(Math.abs(detailed[i + c] - pixels[i + c]) <= 14,
+                'Never replace terrain colours with a foreign surface');
+        if (!pixels[i + 3])
+            assert.deepEqual([...detailed.slice(i, i + 4)], [...pixels.slice(i, i + 4)]);
     }
-    assert.deepEqual(groundMaterialWearPlan(99), []);
+    assert.deepEqual(enhanceGroundDetailPixels(pixels, w, h, 0), original);
+    assert.equal(enhanceGroundDetailPixels(pixels, w + 1, h), null);
+    assert.equal(enhanceGroundDetailPixels(null, w, h), null);
+    assert.equal(enhanceGroundDetailPixels(pixels, w, h, 99), null);
 });
 
-test('fine details are baked only when requested, not on every ground frame', () => {
+test('Fine Detail wraps inside each material and does not stamp other material textures', () => {
+    const pixels = new Uint8ClampedArray(3 * 3 * 4);
+    for (let y = 0; y < 3; y++)
+        for (let x = 0; x < 3; x++) {
+            const i = (y * 3 + x) * 4, v = x === 0 ? 150 : 30;
+            pixels.set([v, v + 5, v + 11, 255], i);
+        }
+    const detailed = enhanceGroundDetailPixels(pixels, 3, 3);
+    assert.ok(detailed[0] > pixels[0]);
+    assert.ok(detailed[8] < pixels[8]);
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(js, /if \(fineDetail\) applyGroundDetailToPanel\(ctx, index\)/);
+    assert.match(js, /ctx\.putImageData\(image, x, 0\)/);
+    assert.doesNotMatch(js, /function drawGroundMaterialWear|function drawGroundMaterialFineDetails/,
+        'Foreign material blob overlay renderers must be gone');
+    assert.match(js, /drawGroundMaterialTransitions\(ctx, state\.cells, state\.atlas/,
+        'Keep the approved material-transition renderer');
+});
+
+test('Fine Detail only changes panel pixels, not paint operations or blending masks', () => {
     const raw = { width: GROUND_SOURCE_TILE_SIZE * MATERIALS.length, height: GROUND_SOURCE_TILE_SIZE };
     const bake = enabled => {
-        let canvasNo = 0, originalSamples = 0, gradients = 0;
+        let canvasNo = 0, reads = 0, writes = 0, samples = 0, gradients = 0;
         const factory = () => {
             const output = canvasNo++ === 0;
             const ctx = {
-                globalCompositeOperation: 'source-over',
-                globalAlpha: 1, imageSmoothingEnabled: false,
+                globalCompositeOperation: 'source-over', globalAlpha: 1, imageSmoothingEnabled: false,
                 save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
-                moveTo() {}, lineTo() {}, closePath() {}, fill() {},
                 clearRect() {}, translate() {}, scale() {}, fillRect() {},
                 createLinearGradient() { return { addColorStop() {} }; },
                 createRadialGradient() { gradients++; return { addColorStop() {} }; },
-                drawImage(image) { if (!output && image === raw) originalSamples++; },
+                drawImage(image) { if (!output && image === raw) samples++; },
+                getImageData(x, y, width, height) {
+                    assert.ok(output);
+                    assert.equal(x % GROUND_TILE_SIZE, 0);
+                    reads++;
+                    return { width, height, data: new Uint8ClampedArray(width * height * 4) };
+                },
+                putImageData(image, x, y) {
+                    assert.ok(output);
+                    assert.equal(image.width, GROUND_TILE_SIZE);
+                    assert.equal(x % GROUND_TILE_SIZE, 0);
+                    assert.equal(y, 0);
+                    writes++;
+                },
             };
             return { width: 0, height: 0, getContext() { return ctx; } };
         };
         assert.ok(buildGroundQuiltAtlas(raw, 1441, factory, enabled));
-        return { originalSamples, gradients };
+        return { reads, writes, samples, gradients };
     };
-    const original = bake(false), enhanced = bake(true);
-    assert.equal(enhanced.originalSamples - original.originalSamples, MATERIALS.length * (48 + 27));
-    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * (48 + 27 * 15));
+    const off = bake(false), on = bake(true);
+    assert.equal(off.reads, 0);
+    assert.equal(off.writes, 0);
+    assert.equal(on.reads, MATERIALS.length);
+    assert.equal(on.writes, MATERIALS.length);
+    assert.equal(on.samples, off.samples);
+    assert.equal(on.gradients, off.gradients);
 });
 
 test('mixed paint has seeded irregular material boundaries but uniform grass has none', () => {

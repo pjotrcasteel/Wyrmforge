@@ -92,3 +92,5 @@ The first accepted refund of an inactive-school node per Web visit requires a ca
 
 - **Screenshot silhouette audit:** The first proposed masks extended above/beside the actual roof and across plaza cobbles. They were replaced before merge with tighter screenshot-traced alpha contours for individual roof, posts, ring and noticeboard (not the legacy broad polygons). The rear endpoint moved to (852,452) for visibly testable partial upper-body roof occlusion while retaining foot clearance. No scenery/background pixels should be extracted outside those painted shapes.
 
+- **22 October v0.0.165 final rear-mask hardening:** The main branch already has the reviewed tight well and noticeboard SVG alpha polygons. Preserve those canonical polygons; crop the well PNG to (756,390,188,184) and noticeboard to (736,415,94,118), leaving transparent margins around every existing alpha contour. During PNG extraction inspect EVERY perimeter alpha pixel, not merely corners, and reject clipped cutouts. Keep the default front route and opt-in rear route unchanged. Browser acceptance checks both foreground masks report completely transparent boundaries.
+

@@ -1,6 +1,6 @@
 # Wyrmforge
 
-## Prototype 0.0.165 — Readable, pannable specialization map
+## Prototype 0.0.166 — Readable, pannable specialization map
 
 - Specialize opens on the active school at reading scale, with wider node/cluster spacing and drag/pinch navigation from nodes or empty space. Whole-Web overview is optional.
 - Removed the extra school strip and crafted-spell panel; research/crafting actions are disconnected from Web node details for now. Saved builds sit beneath the map. Learning, bonuses, reservations and old saves retain their rules.
