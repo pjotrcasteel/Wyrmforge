@@ -1,6 +1,6 @@
 # Wyrmforge
 
-## Prototype 0.0.160 — Readable, pannable specialization map
+## Prototype 0.0.165 — Readable, pannable specialization map
 
 - Specialize opens on the active school at reading scale, with wider node/cluster spacing and drag/pinch navigation from nodes or empty space. Whole-Web overview is optional.
 - Removed the extra school strip and crafted-spell panel; research/crafting actions are disconnected from Web node details for now. Saved builds sit beneath the map. Learning, bonuses, reservations and old saves retain their rules.
@@ -822,3 +822,4 @@ dotnet run --project src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.c
 ### 0.0.100 — generated territories and road choices
 
 Hunts now generate seeded river, ridge and caldera territories with unequal encounter placement. Two major forks offer 2–4 committed roads: at least one short road (2 fights), medium roads (3), and occasional long detours (5) with a guaranteed additional relic cache. The quickest hunt has eight fights; detours add encounters and upgrades. Encounter icons remain readable on the map, and route previews show road length and rewards. Terrain and landmarks are structured data rendered as artless SVG, ready for a future art layer.
+

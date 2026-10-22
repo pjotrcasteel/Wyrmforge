@@ -24,18 +24,38 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.foregroundReady;
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
         Assert.IsTrue(first.GetProperty("shrubBlocked").GetBoolean());
-        Assert.IsTrue(first.GetProperty("behindShrubWalkable").GetBoolean(),
-            "Raised foliage is cover, not a ground-contact obstacle.");
+        Assert.IsTrue(first.GetProperty("stairTreadsWalkable").GetBoolean(),
+            "The actual Nexus stone stair treads must remain walkable.");
+        Assert.IsTrue(first.GetProperty("stairMasonryBlocked").GetBoolean(),
+            "The iPhone screenshot showed the old mask walking into side masonry.");
+        Assert.IsTrue(first.GetProperty("foliageExcludesStairs").GetBoolean(),
+            "Foreground alpha must not include any stair-stone source pixels.");
+        Assert.IsTrue(first.GetProperty("stairExitWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("plazaWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("plazaEndpointWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellExcluded").GetBoolean(),
+            "The first plaza slice must stop west of the central well.");
+        Assert.IsTrue(first.GetProperty("westPlanterExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellFrontWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellFrontEndpointWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("closeWellFrontRoute").GetBoolean(),
+            "The NPC path must visibly approach the stone well base, not a distant plaza arc.");
+        Assert.IsTrue(first.GetProperty("wellCenterExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellRimExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("noticeboardExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("lowerGardenExcluded").GetBoolean());
+        Assert.IsFalse(first.GetProperty("wellForegroundRequired").GetBoolean(),
+            "This front-of-well slice must not repaint any well stone over an NPC.");
         Assert.IsTrue(first.GetProperty("foregroundReady").GetBoolean(),
             "The cropped V2 shrub PNG must have usable nontransparent pixels.");
         Assert.AreEqual("image/png", first.GetProperty("foregroundFormat").GetString());
@@ -43,21 +63,89 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
         Assert.AreEqual(0, second.GetProperty("violations").GetInt32());
         Assert.AreNotEqual(first.GetProperty("position").GetProperty("x").GetDouble(),
             second.GetProperty("position").GetProperty("x").GetDouble(), "The demo citizen must actually move.");
+        // The walking NPC must reach actual stair treads WITHOUT a stone PNG
+        // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.depthFrames > 0;
-        }", null, new PageWaitForFunctionOptions { Timeout = 10000 });
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
+                d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
+        }", null, new PageWaitForFunctionOptions { Timeout = 15000 });
+        // Real one-NPC traversal from the approved stairs into the new plaza
+        // must reach its far endpoint without crossing stonework or teleporting.
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
+                d.wellFrontEndpointWalkable && d.wellRimExcluded &&
+                d.noticeboardExcluded && d.nearWellFrames > 20 &&
+                d.nearestWellFootY <= 590 && d.violations === 0;
+        }", null, new PageWaitForFunctionOptions { Timeout = 25000 });
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
         await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-mask-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
+        await Page.Locator(".refuge-town-spot--gate").ClickAsync();
+        await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task Mobile_TownV2_RearWellUsesTransparentDepthWithoutHidingFrontRoute()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/?townV2=1&townRoute=rear",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const canvas = document.querySelector('[data-town-v2-canvas]');
+            const d = module.readTownV2Diagnostics(canvas);
+            return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
+                d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
+        }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js?v=0.0.164');
+            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            return d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
+                d.noticeOcclusionFrames > 0 && d.violations === 0;
+        }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
+        var before = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
+            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
+        Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
+        Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
+        Assert.AreEqual(1, before.GetProperty("npcCount").GetInt32());
+        Assert.IsFalse(before.GetProperty("usingLegacyNavigation").GetBoolean());
+        await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
+        await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
+        var hidden = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
+            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        await Page.WaitForTimeoutAsync(500);
+        var after = await Page.EvaluateAsync<JsonElement>(@"async () => {
+            const m = await import('./js/town-v2-nexus.js?v=0.0.164');
+            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        }");
+        Assert.IsFalse(after.GetProperty("depthVisible").GetBoolean());
+        Assert.AreEqual(hidden.GetProperty("wellOcclusionFrames").GetInt32(),
+            after.GetProperty("wellOcclusionFrames").GetInt32());
+        Assert.AreEqual(hidden.GetProperty("noticeOcclusionFrames").GetInt32(),
+            after.GetProperty("noticeOcclusionFrames").GetInt32());
+        Assert.AreEqual(0, after.GetProperty("violations").GetInt32());
+        await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
+        await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "true");
         await Page.Locator(".refuge-town-spot--gate").ClickAsync();
         await Expect(Page.Locator(".world-gate")).ToBeVisibleAsync();
     }
@@ -3092,3 +3180,4 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Path = Path.Combine(ArtifactDirectory, name),
     });
 }
+

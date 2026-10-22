@@ -48,6 +48,22 @@ export function paintGroundCells(cells, columns, rows, x, y, index, radius = 2) 
     return changed;
 }
 
+// Fill the space between pointer events. Mobile browsers can coalesce rapid
+// moves; stamping only at each reported position leaves broken paint strokes.
+// Eight-pixel sampling is independent of frame rate, pressure and device DPI.
+export function paintGroundStroke(cells, columns, rows, fromX, fromY, toX, toY, index, radius = 2) {
+    if (![fromX, fromY, toX, toY].every(Number.isFinite)) return 0;
+    const distance = Math.hypot(toX - fromX, toY - fromY);
+    const steps = Math.max(1, Math.min(256, Math.ceil(distance / (CELL / 2))));
+    let changed = 0;
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        changed += paintGroundCells(cells, columns, rows,
+            fromX + (toX - fromX) * t, fromY + (toY - fromY) * t, index, radius);
+    }
+    return changed;
+}
+
 // Ground-only placement study. Derived from two correlated low-frequency soil
 // fields (wetness and wear), not a hand-drawn road, random prop scatter, or
 // gameplay collision map. Hardcoded structures and paving never appear here.
@@ -216,6 +232,180 @@ export function groundMaterialAccentPlan(index, seed = 1441) {
     }));
 }
 
+// Optional micro-detail study: cluster tiny flecks cut from the six approved
+// paintings rather than scattering procedural pebbles, plants or props.
+// Positions wrap within each material panel; nothing changes collision.
+export function groundMaterialFineDetailPlan(index, seed = 1441) {
+    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
+    const random = (cluster, mark, channel) => {
+        let n = (seed | 0) ^ Math.imul(index + 43, 0x9e3779b1) ^
+            Math.imul(cluster + 59, 0x85ebca6b) ^ Math.imul(mark + 73, 0xc2b2ae35) ^
+            Math.imul(channel + 19, 0x27d4eb2d);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+    };
+    const marks = [];
+    for (let cluster = 0; cluster < 6; cluster++) {
+        const centerX = random(cluster, 0, 0) * GROUND_TILE_SIZE;
+        const centerY = random(cluster, 0, 1) * GROUND_TILE_SIZE;
+        for (let mark = 0; mark < 8; mark++) {
+            const width = 14 + Math.floor(random(cluster, mark, 2) * 24);
+            const height = 9 + Math.floor(random(cluster, mark, 3) * 22);
+            const source = mark % 4 === 0 ? GROUND_ACCENTS[index][cluster % 2] : index;
+            marks.push({
+                x: Math.floor((centerX + (random(cluster, mark, 4) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
+                y: Math.floor((centerY + (random(cluster, mark, 5) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
+                width, height, source,
+                sourceX: Math.floor(random(cluster, mark, 6) * (GROUND_SOURCE_TILE_SIZE - width + 1)),
+                sourceY: Math.floor(random(cluster, mark, 7) * (GROUND_SOURCE_TILE_SIZE - height + 1)),
+                opacity: .18 + random(cluster, mark, 8) * .17,
+            });
+        }
+    }
+    return marks;
+}
+
+// The former tiny flecks were almost invisible at phone size. Fine Detail now
+// also adds clustered, material-specific *wear*, assembled only from existing
+// approved artwork. Every 112px world-height band receives two irregular
+// clusters, so the six-row material sampler and grass-only preview both show
+// the change. No new stones, plants, puddles, decals, or terrain geometry.
+export function groundMaterialWearPlan(index, seed = 1441) {
+    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
+    const random = (group, mark, channel) => {
+        let n = (seed | 0) ^ Math.imul(index + 97, 0x9e3779b1) ^
+            Math.imul(group + 41, 0x85ebca6b) ^ Math.imul(mark + 53, 0xc2b2ae35) ^
+            Math.imul(channel + 23, 0x27d4eb2d);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+    };
+    const patches = [];
+    const bands = [0, 1, 2, 3, 4, 5, 1, 3, 5];
+    for (let group = 0; group < bands.length; group++) {
+        const centerX = 78 + random(group, 0, 0) * 516;
+        const centerY = (bands[group] + .28 + random(group, 0, 1) * .48) * GROUND_SOURCE_TILE_SIZE;
+        const slope = (random(group, 0, 9) - .5) * .42;
+        for (let mark = 0; mark < 3; mark++) {
+            const dominant = mark === 0;
+            const width = (dominant ? 150 : 70) + Math.floor(random(group, mark, 2) * (dominant ? 55 : 45));
+            const height = (dominant ? 40 : 24) + Math.floor(random(group, mark, 3) * (dominant ? 26 : 19));
+            const shift = mark === 1 ? -42 : mark === 2 ? 50 : 0;
+            const x = (Math.round(centerX + shift + (random(group, mark, 4) - .5) * 25) +
+                GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
+            const y = (Math.round(centerY + shift * slope + (random(group, mark, 5) - .5) * 18) +
+                GROUND_TILE_SIZE) % GROUND_TILE_SIZE;
+            const source = mark === 2 ? index :
+                index === 0 ? 3 : GROUND_ACCENTS[index][(group + mark) % 2];
+            const sourceWidth = Math.min(GROUND_SOURCE_TILE_SIZE, Math.round(width * .56));
+            const sourceHeight = Math.min(GROUND_SOURCE_TILE_SIZE, height + 12);
+            patches.push({
+                group, x, y, width, height, source, sourceWidth, sourceHeight,
+                sourceX: Math.floor(random(group, mark, 6) * (GROUND_SOURCE_TILE_SIZE - sourceWidth + 1)),
+                sourceY: Math.floor(random(group, mark, 7) * (GROUND_SOURCE_TILE_SIZE - sourceHeight + 1)),
+                opacity: dominant ? .69 + random(group, mark, 8) * .12 : .54 + random(group, mark, 8) * .16,
+                rim: Array.from({ length: 8 }, (_, step) => ({
+                    top: .65 + random(group, mark, 20 + step) * .55,
+                    bottom: .65 + random(group, mark, 30 + step) * .55,
+                    bend: (random(group, mark, 40 + step) - .5) * .21,
+                })),
+            });
+        }
+    }
+    return patches;
+}
+
+function drawGroundMaterialWear(ctx, sc, scratch, source, index, seed, canvasFactory) {
+    const maskCanvas = canvasFactory();
+    const maskCtx = maskCanvas.getContext('2d');
+    if (!maskCtx) return;
+    for (const patch of groundMaterialWearPlan(index, seed)) {
+        const { width, height } = patch;
+        scratch.width = width;
+        scratch.height = height;
+        sc.globalCompositeOperation = 'source-over';
+        sc.clearRect(0, 0, width, height);
+        sc.imageSmoothingEnabled = true;
+        sc.drawImage(source, patch.source * GROUND_SOURCE_TILE_SIZE + patch.sourceX,
+            patch.sourceY, patch.sourceWidth, patch.sourceHeight, 0, 0, width, height);
+
+        // Build a connected, softly feathered erosion contour using only
+        // radial-gradient alpha stamps on a separate mask surface. Overlapping
+        // short segments form one irregular ribbon, not isolated circles.
+        // CanvasRenderingContext2D.filter is disabled in mobile Safari.
+        maskCanvas.width = width;
+        maskCanvas.height = height;
+        maskCtx.clearRect(0, 0, width, height);
+        for (let step = 1; step < 16; step++) {
+            const t = step / 16;
+            const ridge = patch.rim[Math.min(patch.rim.length - 1, Math.floor(t * patch.rim.length))];
+            const taper = Math.pow(Math.sin(Math.PI * t), .57);
+            const cx = width * t;
+            const cy = height * (.5 + ridge.bend);
+            const radius = Math.max(1, height * .52 * taper * (.65 + (ridge.top + ridge.bottom) * .19));
+            const gradient = maskCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(.58, 'rgba(255,255,255,.92)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            maskCtx.fillStyle = gradient;
+            maskCtx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+        }
+        sc.globalCompositeOperation = 'destination-in';
+        sc.drawImage(maskCanvas, 0, 0);
+        sc.globalCompositeOperation = 'source-over';
+
+        ctx.globalAlpha = patch.opacity;
+        for (const oy of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
+            for (const ox of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
+                const x = Math.round(patch.x - width / 2 + ox);
+                const y = Math.round(patch.y - height / 2 + oy);
+                if (x + width <= 0 || y + height <= 0 ||
+                    x >= GROUND_TILE_SIZE || y >= GROUND_TILE_SIZE) continue;
+                ctx.drawImage(scratch, index * GROUND_TILE_SIZE + x, y);
+            }
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed) {
+    for (const mark of groundMaterialFineDetailPlan(index, seed)) {
+        const { width, height } = mark;
+        scratch.width = width;
+        scratch.height = height;
+        sc.globalCompositeOperation = 'source-over';
+        sc.clearRect(0, 0, width, height);
+        sc.drawImage(source, mark.source * GROUND_SOURCE_TILE_SIZE + mark.sourceX, mark.sourceY,
+            width, height, 0, 0, width, height);
+
+        // Feather an elliptical footprint. Sampling the approved paint gives
+        // it real texture; the ellipse is only a transparency mask.
+        sc.save();
+        sc.globalCompositeOperation = 'destination-in';
+        sc.translate(width / 2, height / 2);
+        sc.scale(width / height, 1);
+        const mask = sc.createRadialGradient(0, 0, 0, 0, 0, height / 2);
+        mask.addColorStop(0, 'rgba(255,255,255,1)');
+        mask.addColorStop(.56, 'rgba(255,255,255,.88)');
+        mask.addColorStop(1, 'rgba(255,255,255,0)');
+        sc.fillStyle = mask;
+        sc.fillRect(-height / 2, -height / 2, height, height);
+        sc.restore();
+        sc.globalCompositeOperation = 'source-over';
+
+        const left = Math.round(mark.x - width / 2), top = Math.round(mark.y - height / 2);
+        ctx.globalAlpha = mark.opacity;
+        for (const offsetY of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
+            for (const offsetX of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
+                const x = left + offsetX, y = top + offsetY;
+                if (x + width <= 0 || y + height <= 0 || x >= GROUND_TILE_SIZE || y >= GROUND_TILE_SIZE)
+                    continue;
+                ctx.drawImage(scratch, index * GROUND_TILE_SIZE + x, y);
+            }
+    }
+    ctx.globalAlpha = 1;
+}
+
 function drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed) {
     for (const spot of groundMaterialAccentPlan(index, seed)) {
         const size = spot.radius * 2;
@@ -248,7 +438,7 @@ function drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed) {
 }
 
 /** Build once on atlas load, not during walking or every brush stroke. */
-export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
+export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory, fineDetail = false) {
     if (!source || source.width !== GROUND_SOURCE_TILE_SIZE * MATERIALS.length ||
         source.height !== GROUND_SOURCE_TILE_SIZE) return null;
     const create = canvasFactory ?? (() => document.createElement('canvas'));
@@ -291,6 +481,10 @@ export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
         }
         drawGroundMaterialVariation(ctx, index, seed);
         drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed);
+        if (fineDetail) {
+            drawGroundMaterialWear(ctx, sc, scratch, source, index, seed, create);
+            drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed);
+        }
         ctx.restore();
     }
     return canvas;
@@ -407,6 +601,11 @@ function render(state) {
         ctx.fillStyle = '#171a16';
         ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
     }
+    // Expose actual completed paint frames to browser tests (and debugging).
+    state.renderCount++;
+    state.canvas.dataset.materialRender = String(state.renderCount);
+    state.canvas.dataset.materialReady = String(Boolean(state.atlas));
+    state.canvas.dataset.fineDetail = state.fineDetail ? 'on' : 'off';
 }
 function redraw(state) {
     if (!state.pending && !state.disposed) {
@@ -427,7 +626,11 @@ function locate(state, event) {
 }
 function stroke(state, event) {
     const p = locate(state, event);
-    paintGroundCells(state.cells, COLS, ROWS, p.x, p.y, state.selected, state.radius);
+    if (state.lastPoint)
+        paintGroundStroke(state.cells, COLS, ROWS,
+            state.lastPoint.x, state.lastPoint.y, p.x, p.y, state.selected, state.radius);
+    else paintGroundCells(state.cells, COLS, ROWS, p.x, p.y, state.selected, state.radius);
+    state.lastPoint = p;
     redraw(state);
 }
 
@@ -435,8 +638,9 @@ export function initMaterialsLab(canvas, seed = 1441) {
     if (contexts.has(canvas)) return;
     const state = {
         canvas, seed: seed | 0, selected: 0, radius: 2,
-        cells: materialSampleBoard(), history: [], pointer: null,
+        cells: materialSampleBoard(), history: [], pointer: null, lastPoint: null,
         listeners: [], pending: false, frameId: 0, disposed: false, atlas: null, sourceAtlas: null,
+        fineDetail: false, renderCount: 0,
     };
     const bind = (target, name, handler, options) => {
         target.addEventListener(name, handler, options);
@@ -446,6 +650,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (state.pointer !== null) return;
         if (e.cancelable) e.preventDefault();
         state.pointer = e.pointerId;
+        state.lastPoint = null;
         record(state);
         canvas.setPointerCapture?.(e.pointerId);
         stroke(state, e);
@@ -455,7 +660,12 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (e.cancelable) e.preventDefault();
         stroke(state, e);
     });
-    const finish = e => { if (e.pointerId === state.pointer) state.pointer = null; };
+    const finish = e => {
+        if (e.pointerId !== state.pointer) return;
+        if (e.type === 'pointerup') stroke(state, e);
+        state.pointer = null;
+        state.lastPoint = null;
+    };
     bind(canvas, 'pointerup', finish);
     bind(canvas, 'pointercancel', finish);
     const preventScroll = e => { if (e.cancelable) e.preventDefault(); };
@@ -471,7 +681,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (!state.disposed && atlas.width === GROUND_SOURCE_TILE_SIZE * MATERIALS.length &&
             atlas.height === GROUND_SOURCE_TILE_SIZE) {
             state.sourceAtlas = atlas;
-            state.atlas = buildGroundQuiltAtlas(atlas, state.seed);
+            state.atlas = buildGroundQuiltAtlas(atlas, state.seed, undefined, state.fineDetail);
             redraw(state);
         }
     };
@@ -518,8 +728,22 @@ export function changeMaterialSeed(canvas, seed) {
     const s = contexts.get(canvas);
     if (!s) return;
     s.seed = seed | 0;
-    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed);
+    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed, undefined, s.fineDetail);
     redraw(s);
+}
+
+export function setGroundFineDetail(canvas, enabled) {
+    const s = contexts.get(canvas);
+    if (!s || !s.sourceAtlas) return false;
+    const requested = !!enabled;
+    if (s.fineDetail === requested) return Boolean(s.atlas);
+    // Bake first; a failed bake must never make the UI say On.
+    const atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed, undefined, requested);
+    if (!atlas) return false;
+    s.atlas = atlas;
+    s.fineDetail = requested;
+    redraw(s);
+    return true;
 }
 export function disposeMaterialsLab(canvas) {
     const s = contexts.get(canvas);

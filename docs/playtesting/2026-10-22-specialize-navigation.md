@@ -22,3 +22,4 @@ The owner’s iPhone captures (IMG_6040–6042) show an unnecessary school strip
 Local: 329 JavaScript tests pass, including gesture/camera behavior tests for pan from a node, pan at full overview, cancellation, pinch midpoint anchoring, cursor zoom and listener cleanup. Browser test project builds; full Web publish is blocked locally by the executor’s out-of-process WASM task host and must pass CI.
 
 Pending: full build/regression CI; actual game captures at 320×568 and 390×844; trusted browser touch drags starting on real nodes, no accidental selection or document scroll; minimum node spacing, school orientation, saved reservations and refund warning regressions. Physical iPhone/Safari acceptance remains a separate owner playtest after deployment.
+

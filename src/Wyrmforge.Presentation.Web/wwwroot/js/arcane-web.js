@@ -199,3 +199,4 @@
 
     window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector, overview, focusSchool, openRefundDialog, dispose };
 })();
+

@@ -4,8 +4,9 @@ import { readFileSync } from 'node:fs';
 import {
     CELL, COLS, ROWS, MATERIALS, GROUND_SOURCE_TILE_SIZE, GROUND_TILE_SIZE,
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
-    materialSampleBoard, naturalGroundPreview, paintGroundCells, drawReferenceGroundBoard,
+    materialSampleBoard, naturalGroundPreview, paintGroundCells, paintGroundStroke, drawReferenceGroundBoard,
     groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
+    groundMaterialFineDetailPlan, groundMaterialWearPlan,
     groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
@@ -30,6 +31,22 @@ test('painting edits cells without altering collision or inventing props', () =>
     assert.equal(paintGroundCells(board, COLS, ROWS, -600, -600, 4, 2), 0);
     assert.equal(paintGroundCells(board, COLS, ROWS, 0, 0, 99, 1), 0);
     assert.notDeepEqual(board, before);
+});
+
+test('fast touch drags form continuous strokes across skipped pointer positions', () => {
+    const board = new Uint8Array(COLS * ROWS);
+    const y = 20 * CELL + 8;
+    paintGroundCells(board, COLS, ROWS, 2 * CELL + 8, y, 3, 1);
+    assert.ok(paintGroundStroke(board, COLS, ROWS, 2 * CELL + 8, y, 27 * CELL + 8, y, 3, 1) > 50);
+    for (let x = 2; x <= 27; x++)
+        assert.equal(board[20 * COLS + x], 3, 'Fast horizontal drag must not contain blank cells');
+    const before = board.slice();
+    assert.equal(paintGroundStroke(board, COLS, ROWS, 1, NaN, 120, 120, 3, 1), 0);
+    assert.deepEqual(board, before);
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(js, /paintGroundStroke\(state\.cells/);
+    assert.match(js, /e\.type === 'pointerup'/);
+    assert.match(js, /state\.lastPoint = null/);
 });
 
 test('natural ground preview uses coherent seeded natural materials only, never invented roads', () => {
@@ -126,6 +143,105 @@ test('actual macro variation comes from related ground artwork, not barely visib
             'Accent blends must come from a different approved ground painting');
     }
     assert.deepEqual(groundMaterialAccentPlan(99), []);
+});
+
+test('fine-detail control requests updated canvas pixels and uses a versioned renderer module', () => {
+    const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(page, /arena-materials\.js\?v=20261022-organic-wear-3/);
+    assert.match(page, /InvokeAsync<bool>\("setGroundFineDetail"/);
+    assert.match(page, /if \(await module\.InvokeAsync<bool>/);
+    assert.match(js, /state\.canvas\.dataset\.materialRender =/);
+    assert.match(js, /state\.canvas\.dataset\.fineDetail =/);
+    assert.match(js, /if \(!s \|\| !s\.sourceAtlas\) return false;/);
+    const browser = readFileSync(new URL('../Wyrmforge.Browser.Tests/MaterialLabBrowserTests.cs', import.meta.url), 'utf8');
+    assert.match(browser, /Assert\.AreNotEqual\(baseline, enhanced/);
+    assert.match(browser, /Assert\.AreEqual\(baseline, restored/);
+});
+
+test('opt-in fine ground detail uses deterministic clusters from approved material paintings', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const marks = groundMaterialFineDetailPlan(index, 1441);
+        assert.equal(marks.length, 48);
+        assert.deepEqual(marks, groundMaterialFineDetailPlan(index, 1441));
+        assert.notDeepEqual(marks, groundMaterialFineDetailPlan(index, 1442));
+        assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
+            m.x >= 0 && m.x < GROUND_TILE_SIZE &&
+            m.y >= 0 && m.y < GROUND_TILE_SIZE && m.width >= 14 && m.width <= 37 &&
+            m.height >= 9 && m.height <= 30 && m.opacity >= .18 && m.opacity <= .35 &&
+            m.sourceX >= 0 && m.sourceX + m.width <= GROUND_SOURCE_TILE_SIZE &&
+            m.sourceY >= 0 && m.sourceY + m.height <= GROUND_SOURCE_TILE_SIZE));
+        assert.ok(marks.some(m => m.source === index));
+        assert.ok(marks.some(m => m.source !== index));
+        assert.ok(marks.every(m => m.source >= 0 && m.source < MATERIALS.length));
+    }
+    assert.deepEqual(groundMaterialFineDetailPlan(-1), []);
+    const razor = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(razor, /@onclick="ToggleFineDetail"/);
+    assert.match(js, /export function setGroundFineDetail/);
+    assert.match(js, /if \(fineDetail\) \{/);
+    assert.match(js, /drawGroundMaterialWear\(ctx, sc, scratch, source, index, seed, create\)/);
+    assert.doesNotMatch(js, /sc\.filter\s*=/, 'iPhone Safari cannot use canvas filter for masks');
+    assert.match(js, /maskCtx\.createRadialGradient/, 'Soft contours must use Safari-supported gradients');
+    assert.match(js, /drawGroundMaterialFineDetails\(ctx, sc, scratch, source, index, seed\)/);
+});
+
+test('fine-detail wear is visibly clustered, seeded and sampled only from approved art', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const wear = groundMaterialWearPlan(index, 1441);
+        assert.equal(wear.length, 27);
+        assert.deepEqual(wear, groundMaterialWearPlan(index, 1441));
+        assert.notDeepEqual(wear, groundMaterialWearPlan(index, 1442));
+        assert.deepEqual([...new Set(wear.map(p => p.group))], Array.from({ length: 9 }, (_, i) => i));
+        assert.ok(wear.every(p => Number.isInteger(p.x) && p.x >= 0 && p.x < GROUND_TILE_SIZE &&
+            Number.isInteger(p.y) && p.y >= 0 && p.y < GROUND_TILE_SIZE &&
+            p.width >= 70 && p.width <= 204 && p.height >= 24 && p.height <= 65 &&
+            p.width / p.height > 1.6 &&
+            p.sourceX >= 0 && p.sourceX + p.sourceWidth <= GROUND_SOURCE_TILE_SIZE &&
+            p.sourceY >= 0 && p.sourceY + p.sourceHeight <= GROUND_SOURCE_TILE_SIZE &&
+            p.opacity >= .54 && p.opacity <= .81 && p.source >= 0 && p.source < MATERIALS.length &&
+            p.rim.length === 8 && p.rim.every(point =>
+                point.top >= .65 && point.top <= 1.2 &&
+                point.bottom >= .65 && point.bottom <= 1.2 && Math.abs(point.bend) <= .105)));
+        const bands = [0, 1, 2, 3, 4, 5, 1, 3, 5];
+        for (let band = 0; band < 6; band++) {
+            const accents = wear.filter(p => bands[p.group] === band);
+            assert.ok(accents.length >= 3, 'Every sampler band gets natural contour wear');
+            assert.ok(accents.some(p => p.source !== index));
+        }
+        if (index === 0)
+            assert.ok(wear.every(p => [0, 3].includes(p.source)),
+                'Grass wear uses approved earth, never marsh-blue artificial spots');
+        assert.ok(wear.some(p => p.width >= 150));
+    }
+    assert.deepEqual(groundMaterialWearPlan(99), []);
+});
+
+test('fine details are baked only when requested, not on every ground frame', () => {
+    const raw = { width: GROUND_SOURCE_TILE_SIZE * MATERIALS.length, height: GROUND_SOURCE_TILE_SIZE };
+    const bake = enabled => {
+        let canvasNo = 0, originalSamples = 0, gradients = 0;
+        const factory = () => {
+            const output = canvasNo++ === 0;
+            const ctx = {
+                globalCompositeOperation: 'source-over',
+                globalAlpha: 1, imageSmoothingEnabled: false,
+                save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
+                moveTo() {}, lineTo() {}, closePath() {}, fill() {},
+                clearRect() {}, translate() {}, scale() {}, fillRect() {},
+                createLinearGradient() { return { addColorStop() {} }; },
+                createRadialGradient() { gradients++; return { addColorStop() {} }; },
+                drawImage(image) { if (!output && image === raw) originalSamples++; },
+            };
+            return { width: 0, height: 0, getContext() { return ctx; } };
+        };
+        assert.ok(buildGroundQuiltAtlas(raw, 1441, factory, enabled));
+        return { originalSamples, gradients };
+    };
+    const original = bake(false), enhanced = bake(true);
+    assert.equal(enhanced.originalSamples - original.originalSamples, MATERIALS.length * (48 + 27));
+    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * (48 + 27 * 15));
 });
 
 test('mixed paint has seeded irregular material boundaries but uniform grass has none', () => {
@@ -232,5 +348,5 @@ test('iPhone touch drags work and previous procedural tile generators are not us
     assert.match(js, /setPointerCapture/);
     assert.match(css, /touch-action:none/);
     assert.doesNotMatch(js, /MATERIAL_REFERENCE_ATLAS|const palettes|function materialNoise|function drawGroundMaterialTile|drawMaterialBoard|drawArenaEnvironment/);
-    assert.ok(js.includes('buildGroundQuiltAtlas(atlas, state.seed)'));
+    assert.ok(js.includes('buildGroundQuiltAtlas(atlas, state.seed, undefined, state.fineDetail)'));
 });

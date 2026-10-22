@@ -97,3 +97,4 @@ test('wheel zoom anchors under the cursor and disposing removes all gesture list
     assert.equal(m.listeners.size, 0);
     assert.equal(m.disconnected(), true);
 });
+

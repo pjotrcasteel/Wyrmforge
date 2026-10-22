@@ -297,3 +297,4 @@
 .school-refund-dialog button { min-height:44px; padding:8px 13px; border:1px solid #98724d; border-radius:0; background:#21171e; color:#f0dbc2; font:600 .85rem Georgia,serif; cursor:pointer; }
 .school-refund-dialog .confirm-refund { background:linear-gradient(180deg,#57402b,#30212a); }
 .school-refund-dialog button:focus-visible { outline:2px solid #f0ce98; outline-offset:2px; }
+

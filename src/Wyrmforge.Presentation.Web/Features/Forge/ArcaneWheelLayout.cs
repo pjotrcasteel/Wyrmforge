@@ -62,3 +62,4 @@ internal static class ArcaneWheelLayout
             Center + Math.Sin(angle) * radius + Math.Cos(angle) * side);
     }
 }
+

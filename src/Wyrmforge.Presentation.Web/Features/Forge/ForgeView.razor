@@ -123,7 +123,62 @@
                 break;
             case ShellSection.Build:
                 <div class="nexus-facets" role="tablist" aria-label="Arcane Nexus">
-                    <button type="button" role="tab" aria-selected="@(…1346 tokens truncated…">
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Signature)" class="@(facet == NexusFacet.Signature ? "active" : "")"
+                            @onclick="() => OpenFacet(NexusFacet.Signature)"><b>@SignatureName</b><small aria-hidden="true">@(CharacterSchool == DivineArchetype.Pyromancer ? "Upgrade core" : "Signature spell")</small></button>
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Spellcraft)" disabled="@(!SpellcraftOpen)"
+                            class="@(facet == NexusFacet.Spellcraft ? "active" : "")"
+                            @onclick="() => OpenFacet(NexusFacet.Spellcraft)"><b>Research</b><small aria-hidden="true">Discover</small></button>
+                    <button type="button" role="tab" aria-selected="@(facet == NexusFacet.Web)" class="@(facet == NexusFacet.Web ? "active" : "")"
+                            @onclick="() => OpenFacet(NexusFacet.Web)"><b>Arcane Web</b><small aria-hidden="true">Specialize</small></button>
+                </div>
+                @if (facet == NexusFacet.Signature)
+                {
+                    @if (CharacterSchool == DivineArchetype.Pyromancer)
+                    {
+                        <FireballRitualView Core="FireballCore" Vault="Vault" Materials="HuntMaterials" OnCraftCinderNeedle="CraftCinderNeedle" OnUpgrade="UpgradeFireball" OnEquip="EquipFireball" OnOpenWorldGate="() => Navigate(ShellSection.Gate)" />
+                    }
+                    else
+                    {
+                        <SignatureFoundationView School="CharacterSchool" />
+                    }
+                }
+                else if (facet == NexusFacet.Spellcraft && SpellcraftOpen)
+                {
+                    <SpellcraftView Laboratory="Laboratory" Vault="Vault" Selection="Selection" Loadouts="Loadouts" Focus="spellcraftFocus" Notice="@LaboratoryNotice" OnDismissNotice="OnDismissLaboratoryNotice"
+                        OnOpenWeb="OpenWebAt" RunExperiment="RunExperiment" Stabilize="StabilizeMutation" Equip="EquipMutation" Track="TrackMutation" />
+                }
+                else if (SpellcraftOpen)
+                {
+                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                        FocusNodeId="@nexusFocus" />
+                }
+                else
+                {
+                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
+                }
+                break;
+            case ShellSection.Forge:
+                @if (SpellcraftOpen)
+                {
+                    <button class="forge-lab-entry" aria-label="Open Spellcraft" @onclick="() => OpenSpellcraftFor(null)">
+                        <span><i class="px-icon px-sm px-flask" aria-hidden="true"></i>Spellcraft</span>
+                        <small>@LaboratoryStatus ›</small>
+                    </button>
+                }
+                <ForgeProgressionView Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" OnOfferingChanged="SelectOfferingAsync" OnForgeMastery="ForgeAsync" OnPrepareHunt="() => NavigateAsync(ShellSection.Run)" />
+                break;
+            case ShellSection.Codex:
+                <CodexView Codex="Codex" Bestiary="Bestiary" Progression="Progression" Masteries="Masteries" Hunt="Hunt" />
+                break;
+            case ShellSection.Prepare:
+                <RunHubView RewardCaches="RewardCaches" AtlasUnlocked="Progress.AtlasUnlocked" Selection="Selection" Vault="Vault" Progression="Progression" Masteries="Masteries" Hunt="Hunt" SelectedOffering="SelectedOffering" BestScore="BestScore" AscendantSelected="AscendantSelected" OnAscendantChanged="OnAscendantChanged" OnStart="StartAsync" OnFeedback="OnFeedback" LeaderboardUnlocked="Progress.LeaderboardUnlocked" OnLeaderboard="OnLeaderboard" OnEditBuild="() => NavigateAsync(ShellSection.Build)" Laboratory="@(SpellcraftOpen ? Laboratory : null)" Hunter="Hunter" Region="Region" World="World" OnEditForge="() => NavigateAsync(ShellSection.Forge)" ForgeUnlocked="ForgeUnlocked" />
+                break;
+            case ShellSection.Gate:
+                <Wyrmforge.Presentation.Web.Features.WorldGate.WorldGateView Region="Region" World="World" Advancement="Advancement" Access="RegionAccess" OnRegionChanged="OnRegionChanged" OnExplore="StartAsync" OnStartHunt="OnStartHunt" FireClearedTier="FireClearedTier" />
+                break;
+            case ShellSection.Options:
+                <div class="menu-options settings-screen" aria-label="Settings">
+                    <section class="settings-audio" aria-label="Audio settings">
                         <h3>Audio</h3>
                         <div class="settings-audio-slot" id="wyrmforge-audio-settings" aria-label="Sound settings"></div>
                     </section>
@@ -351,3 +406,4 @@
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
     private sealed record TownLockNotice(string Location, string Message);
 }
+

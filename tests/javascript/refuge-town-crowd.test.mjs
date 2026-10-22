@@ -515,24 +515,115 @@ test('V2 is isolated behind a URL flag and uses an authored pixel mask without V
     assert.match(v2, /usingLegacyNavigation: false/);
 });
 
-test('V2 uses independent rear-stone feet and cropped foliage alpha, never broad V1 cover', () => {
+test('Town V2 iPhone staircase correction isolates physical treads from foreground leaves', () => {
     const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     const sceneCode = source(scene);
     const ground = source(art + '/nexus-v2-walk-mask.svg');
     const foliage = source(art + '/nexus-v2-foliage-mask.svg');
-    assert.match(ground, /Upper leaf canopy|leaf canopy rises above a passable rear flagstone/);
-    assert.match(ground, /root\/base footprint|roots and the planter base/);
-    assert.match(foliage, /width="1672" height="941"/);
-    assert.match(foliage, /independent of the ground-contact navigation mask/);
+    assert.match(ground, /former broad white band ran onto staircase SIDE/);
+    assert.match(ground, /staircase.*treads|stone staircase|stone stair/);
+    assert.match(foliage, /no staircase, paving or wall pixels may be replayed/);
+    assert.match(code, /STAIR_MASONRY = \{ x: 530, y: 432 \}/);
+    assert.match(code, /STAIR_TREAD = \{ x: 500, y: 440 \}/);
+    assert.match(code, /PLANT_BASE = \{ x: 445, y: 443 \}/);
+    assert.match(code, /FOLIAGE = \{ x: 418, y: 412, width: 42, height: 29, depthY: 438 \}/);
+    assert.match(code, /x \+ width > 465 \|\| y \+ height > 445/);
     assert.match(code, /destination-in/);
     assert.match(code, /toDataURL\("image\/png"\)/);
-    assert.match(code, /function overlapsFoliage\(/);
-    assert.match(code, /BEHIND_SHRUB = \{ x: 520, y: 430 \}/);
-    assert.match(code, /planRoute\(state\.nav, START, BEHIND_SHRUB\)/);
-    assert.match(code, /planRoute\(state\.nav, BEHIND_SHRUB, FINISH\)/);
-    assert.match(code, /depthFrames: entry\.depthFrames/);
+    assert.match(code, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.doesNotMatch(code, /BEHIND_SHRUB/);
+    assert.match(code, /stairAreaOccluded/);
     assert.match(sceneCode, /data-town-v2-depth-toggle="true"/);
     assert.match(code, /depthToggle\.removeEventListener/);
     const executable = code.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(executable, /night-navigation\.json|TownCrowd|\.Occluders|CUTOUTS/);
+});
+
+test('Town V2 Phase 3 extends the raster route into the open west plaza, not the well', () => {
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const mask = source(art + '/nexus-v2-walk-mask.svg');
+    assert.match(mask, /Phase 3, still one NPC/);
+    assert.match(mask, /M 575 492 C 609 510 627 536 645 558/);
+    assert.match(code, /STAIR_EXIT = \{ x: 575, y: 492 \}/);
+    assert.match(code, /PLAZA_END = \{ x: 681, y: 623 \}/);
+    assert.match(code, /PLAZA_STONE = \{ x: 650, y: 565 \}/);
+    assert.match(code, /WELL_BASE = \{ x: 735, y: 550 \}/);
+    assert.match(code, /WEST_PLANTER = \{ x: 560, y: 612 \}/);
+    assert.match(code, /Math\.hypot\(p\.x - PLAZA_END\.x, p\.y - PLAZA_END\.y\) <= 16/);
+    assert.match(code, /w\.plazaVisits\+\+/);
+    assert.match(code, /plazaVisits: entry\.plazaVisits/);
+    assert.match(code, /plaza route cuts across an unwalkable pixel/);
+    assert.match(code, /if \(w\.showMask\) \{[\s\S]*w\.route\.forEach/);
+    assert.match(code, /ctx\.save\(\);\s*ctx\.translate\(w\.position/);
+    assert.doesNotMatch(code, /BEHIND_SHRUB|night-navigation\.json[^\n]*import/);
+});
+
+test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts', () => {
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const foliage = source(art + '/nexus-v2-foliage-mask.svg');
+    assert.match(ground, /Phase 4 correction: iPhone at x822,y624/);
+    assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
+    assert.match(ground, /stroke-width="30"/);
+    assert.match(ground, /M 727 511 L 745 497 L 906 497/);
+    assert.match(ground, /M 746 462 L 773 462 L 783 492/);
+    assert.match(code, /WELL_FRONT_MID = \{ x: 820, y: 582 \}/);
+    assert.match(code, /WELL_FRONT_END = \{ x: 974, y: 614 \}/);
+    assert.match(code, /NOTICEBOARD_POST = \{ x: 762, y: 495 \}/);
+    assert.match(code, /WELL_RIM = \{ x: 920, y: 551 \}/);
+    assert.match(code, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.match(code, /const approach = planRoute\(state\.nav, PLAZA_END, WELL_FRONT_MID\)/);
+    assert.match(code, /const frontage = planRoute\(state\.nav, WELL_FRONT_MID, WELL_FRONT_END\)/);
+    assert.match(code, /nearWellFrames: entry\.nearWellFrames/);
+    assert.match(code, /nearestWellFootY: entry\.nearestWellFootY/);
+    assert.match(code, /Town V2 walker remains too far below the front of the well/);
+    assert.match(code, /wellFrontVisits: entry\.wellFrontVisits/);
+    assert.match(code, /wellRimExcluded:/);
+    assert.match(code, /noticeboardExcluded:/);
+    assert.match(code, /wellForegroundRequired: entry\.rearMode/);
+    assert.match(code, /Town V2 route bypassed previously approved stairs\/plaza/);
+    assert.match(code, /Town V2 plaza route cuts across an unwalkable pixel/);
+    assert.match(foliage, /V2 depth ONLY: planted leaf tips/);
+    assert.doesNotMatch(code, /night-navigation\.json[^\n]*import|CUTOUTS/);
+});
+
+test('V2 well foreground correction must physically approach the stone base, not a distant arc', () => {
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(ground, /front edge \(y~582\)/i);
+    assert.match(ground, /C 776 579 805 581 852 582/);
+    assert.doesNotMatch(ground, /C 710 630 741 635 782 632/);
+    assert.match(code, /FRONT_VISUAL_CONTACT_MAX_Y = 590/);
+    assert.match(code, /w\.position\.x >= 760 && w\.position\.x <= 920/);
+    assert.match(code, /w\.nearWellFrames\+\+/);
+    assert.match(code, /Math\.min\(w\.nearestWellFootY, w\.position\.y\)/);
+    assert.match(code, /closeWellFrontRoute:/);
+});
+
+test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves approved front', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const well = source(art + '/nexus-v2-well-foreground.svg');
+    const sign = source(art + '/nexus-v2-noticeboard-foreground.svg');
+    assert.match(ground, /Phase 5 is an opt-in REAR test route/);
+    assert.match(ground, /M 575 492 C 610 492 651 486 680 469/);
+    assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
+    assert.match(well, /Separate alpha islands: exact roof, timber posts, stone lip/);
+    assert.match(well, /night-active artwork/);
+    assert.match(sign, /Screenshot-traced wooden sign/);
+    assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\("townRoute"\) === "rear"/);
+    assert.match(js, /buildArchitectureCutout/);
+    assert.match(js, /destination-in/);
+    assert.match(js, /canvas\.toDataURL\("image\/png"\)/);
+    assert.match(js, /STAIR_EXIT, REAR_ENTRY/);
+    assert.match(js, /REAR_END = \{ x: 852, y: 452 \}/);
+    assert.match(js, /state\.route = \[\.\.\.entryRoute, \.\.\.rearRoute\.slice\(1\)\]/);
+    assert.match(js, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.match(js, /wellOcclusionFrames: entry\.wellOcclusionFrames/);
+    assert.match(js, /noticeOcclusionFrames: entry\.noticeOcclusionFrames/);
+    assert.match(js, /if \(w\.lastWellOccluded && w\.showDepth\)/);
+    assert.match(js, /if \(w\.lastNoticeOccluded && w\.showDepth\)/);
+    assert.match(js, /Town V2 plaza route cuts across an unwalkable pixel/);
+    const executable = js.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable, /night-navigation\.json[^\n]*import|CUTOUTS|TownCrowd/);
 });
