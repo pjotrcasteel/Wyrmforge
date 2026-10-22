@@ -90,3 +90,7 @@ Current source: `archive/tier-I-skin-010-packed/ashfang-tier-I.blend`, SHA256 `1
 Rendered four 1600x1000 presentation views at 128 OptiX samples and prepared same-camera before/after comparison. Three neutral full-body views are generated from a separately downloaded remote master. Fresh independent LFS cache verification checked 133 objects; final packed master retrieved with matching SHA256 and reopened with no missing image dependencies. See `reviews/tier-I-skin-010/review.md`, source validation and remote retrieval reports.
 
 Owner-approved anatomy is maintained. Materials remain a review proposal; animation, higher tiers, runtime VFX and game/mobile acceptance are not complete. Current main `6fb92e6a` and open PRs were checked: concurrent Town/Nexus/arena work is untouched, prior Ashfang PRs remain preserved and draft. Canonical art/creature topics on main had no conflicting changes.
+
+
+## 23 October — owner authorizes full reusable animation foundation
+Owner requested all locomotion, pounce, claw, roar, breath, flight transitions/reactions/death and useful variants, with shared rig/action reuse for larger, more epic tiers. Build on the current skin master. Scale travel and named attachments coherently; do not author higher-tier geometry or bake fire/smoke into sprites. Prove one grounded gait before expanding; all export/acceptance status remains explicit in animation-production.json.

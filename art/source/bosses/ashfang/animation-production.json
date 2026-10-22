@@ -1,0 +1,60 @@
+{
+  "status": "authoring",
+  "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
+  "rig": "Zahmatorah_Skeleton",
+  "deformBones": 112,
+  "source": "archive/tier-I-skin-010-packed/ashfang-tier-I.blend",
+  "higherTierPolicy": "Reuse the same deform hierarchy and normalized timings; scale root travel and attachments with model scale. Horns/armor attach to named bones, fire/smoke remain separate VFX. Higher-tier artwork is not part of this export.",
+  "fpsSource": 24,
+  "fpsExport": 12,
+  "motions": [
+    "idle",
+    "alert",
+    "look",
+    "walk",
+    "stalk",
+    "run",
+    "turn_left",
+    "turn_right",
+    "pounce",
+    "claw_left",
+    "claw_right",
+    "claw_combo",
+    "bite",
+    "tail_left",
+    "tail_right",
+    "roar",
+    "breath_start",
+    "breath_loop",
+    "breath_end",
+    "breath_sweep",
+    "takeoff",
+    "fly",
+    "hover",
+    "glide",
+    "bank_left",
+    "bank_right",
+    "air_breath",
+    "land",
+    "hit_front",
+    "hit_left",
+    "hit_right",
+    "stagger",
+    "recover",
+    "death",
+    "death_alt"
+  ],
+  "research": [
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15772640/",
+      "principle": "Wing forelimbs can participate in terrestrial support and propulsion; use distinct fore/hind support phases rather than quadruped hindleg copies."
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/17671313/",
+      "principle": "Flight uses a broad extended downstroke and a more retracted upstroke; wing joints must articulate rather than rotating a flat wing rigidly."
+    }
+  ],
+  "ownerAuthorizedAllActions": true,
+  "ownerAcceptedMotion": false,
+  "runtimeIntegrated": false
+}
