@@ -1,6 +1,6 @@
 # Six-school Arcane Web construction receipt — 22 October 2026
 
-Canonical contracts: [magic and combat](../canon/magic-and-combat.md), [town and UX](../canon/town-and-ux.md). PR [#258](https://github.com/pjotrcasteel/Wyrmforge/pull/258), v0.0.158. This receipt records implementation evidence, not a competing design specification.
+Canonical contracts: [magic and combat](../canon/magic-and-combat.md), [town and UX](../canon/town-and-ux.md). PR [#258](https://github.com/pjotrcasteel/Wyrmforge/pull/258), v0.0.159. This receipt records implementation evidence, not a competing design specification.
 
 ## Implementation checkpoint
 

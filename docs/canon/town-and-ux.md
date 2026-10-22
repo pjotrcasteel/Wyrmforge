@@ -70,3 +70,11 @@ The first accepted refund of an inactive-school node per Web visit requires a ca
 ## Relevant implementation and visual evidence
 
 [Character school/sigil fix](../handover/2026-10-20-character-school-and-sigil-fix.md) · [World Gate](../art/world-gate-mobile-2026-10-19.md) · [visual-first UX research](../design/visual-first-magic-ui-rfc.md) · [town state](../art/refuge-night-panorama-preview-2026-10-20.md). Historic documents describe old screenshots/proposals; this topic is the active design contract.
+
+## Town Scene V2 — 22 October 2026 (flagged, isolated vertical slice)
+
+- Explicit `?townV2=1` enables the experimental 1672×941 raster-authority scene. Ordinary town and V1 NPCs remain unaffected. Phase 1 had one canvas citizen routed over a small Nexus pavement mask.
+- Phase 2 tests independent authored masks for **ground contact** (`nexus-v2-walk-mask.svg`) and **raised visual depth** (`nexus-v2-foliage-mask.svg`). Rear paving behind the stair shrub is foot-walkable; its roots/base remain impassable. Do not treat every leaf pixel as a ground collider.
+- A clipped, real alpha PNG for *only* the Nexus stair shrub is extracted once from the **approved panorama**, not synthesized or borrowed from V1 cutouts. Actor depth is determined by **feet Y**; compositing checks actual shrub-alpha overlap with the NPC body. No rectangular floor overpaint or whole-NPC hiding.
+- One NPC follows two raster-planned legs through a rear-foliage test stop. Toolbar `Mask` and `Depth` independently toggle diagnostic painting and foreground cover; both are on initially. Browser tests assert valid feet, blocked root pixels, generated PNG alpha, time spent behind foliage, and ordinary World Gate tap.
+- **Acceptance still required:** inspect the single citizen on a real iPhone, with Mask off and Depth alternated. Verify legs disappear *only behind leaves*, NPC stays visible on stone, stairs/flowerbed remain solid, town swipes and building taps work. **Do not** extend to the well/14 NPCs or alter the default town until this focused scene passes visual acceptance.

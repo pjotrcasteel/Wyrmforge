@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- Town V2 CANOPY ONLY, independent of the ground-contact navigation mask.
+       White alpha keeps original painted foliage; everything else is transparent.
+       The tightly bounded generated PNG cannot repaint adjacent stairs or paving. -->
+  <path fill="#fff" d="M 499 432 L 503 420 L 511 415 L 522 418 L 530 425
+    L 538 433 L 542 445 L 539 455 L 533 461 L 525 460 L 518 452
+    L 510 450 L 500 445 Z"/>
+</svg>

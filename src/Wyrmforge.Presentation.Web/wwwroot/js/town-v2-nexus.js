@@ -1,4 +1,4 @@
-// Town Scene V2 / Nexus slice 1.
+// Town Scene V2 / Nexus slice 2: independent ground and foliage masks.
 // Navigation comes ONLY from the rasterized mask, never night-navigation.json.
 // V1 remains completely unmodified outside the explicit ?townV2=1 test.
 const WIDTH = 1672;
@@ -7,6 +7,9 @@ const FOOT_RADIUS = 8;
 const CELL = 6;
 const START = { x: 442, y: 402 };
 const FINISH = { x: 575, y: 492 };
+// A foot-safe point BEHIND the leaf canopy. The planting's roots remain solid.
+const BEHIND_SHRUB = { x: 520, y: 430 };
+const FOLIAGE = { x: 497, y: 411, width: 50, height: 54, depthY: 460 };
 const live = new Map();
 
 const pixelIndex = (x, y) => ((Math.round(y) * WIDTH + Math.round(x)) * 4);
@@ -73,6 +76,59 @@ function planRoute(nav, from, to) {
     reverse.reverse();
     return reverse;
 }
+// Extract one actually transparent, tightly cropped PNG from the approved town art.
+// Its alpha comes from a separate V2 canopy mask, never V1 obstacle/occluder polygons.
+async function buildFoliage(scene, mask) {
+    const base = scene.querySelector(".refuge-town-night-base");
+    if (!base) throw new Error("Town V2 cannot find the approved night artwork.");
+    if (!base.complete) await new Promise((resolve, reject) => {
+        base.addEventListener("load", resolve, { once: true });
+        base.addEventListener("error", reject, { once: true });
+    });
+    if (typeof base.decode === "function") await base.decode();
+    if (base.naturalWidth !== WIDTH || base.naturalHeight !== HEIGHT)
+        throw new Error("Town V2 art and depth mask have different dimensions.");
+
+    const { x, y, width, height } = FOLIAGE;
+    const cutout = document.createElement("canvas");
+    cutout.width = width; cutout.height = height;
+    const ctx = cutout.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Town V2 cannot create its foreground cutout.");
+    ctx.drawImage(base, x, y, width, height, 0, 0, width, height);
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.drawImage(mask, x, y, width, height, 0, 0, width, height);
+    ctx.globalCompositeOperation = "source-over";
+    const pixels = ctx.getImageData(0, 0, width, height).data;
+    const alpha = new Uint8Array(width * height);
+    let opaquePixels = 0;
+    for (let i = 0; i < alpha.length; i++) {
+        alpha[i] = pixels[i * 4 + 3];
+        if (alpha[i] > 80) opaquePixels++;
+    }
+    if (opaquePixels < 100 || alpha[0] !== 0)
+        throw new Error("Town V2 foliage must be tightly cropped with transparent edges.");
+    const image = new Image();
+    await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error("Could not decode the V2 foreground PNG."));
+        image.src = cutout.toDataURL("image/png");
+    });
+    return { ...FOLIAGE, image, alpha, opaquePixels, format: "image/png" };
+}
+
+function overlapsFoliage(position, foliage) {
+    if (!foliage || position.y >= foliage.depthY) return false;
+    // Actual alpha coverage of the actor's silhouette, not a broad rectangular
+    // clip that makes whole citizens vanish when approaching a plant.
+    const left = Math.max(0, Math.floor(position.x - 6 - foliage.x));
+    const right = Math.min(foliage.width - 1, Math.ceil(position.x + 6 - foliage.x));
+    const top = Math.max(0, Math.floor(position.y - 30 - foliage.y));
+    const bottom = Math.min(foliage.height - 1, Math.ceil(position.y - foliage.y));
+    for (let y = top; y <= bottom; y++)
+        for (let x = left; x <= right; x++)
+            if (foliage.alpha[y * foliage.width + x] > 80) return true;
+    return false;
+}
 function draw(w) {
     const ctx = w.canvas.getContext("2d");
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
@@ -92,6 +148,11 @@ function draw(w) {
     ctx.strokeStyle = "#fcdd8d";ctx.lineWidth = 1.5;
     ctx.strokeRect(-7,-31,14,31);
     ctx.restore();
+    w.lastOccluded = overlapsFoliage(w.position, w.foliage);
+    if (w.lastOccluded && w.showDepth) {
+        ctx.drawImage(w.foliage.image, w.foliage.x, w.foliage.y);
+        w.depthFrames++;
+    }
 }
 function animate(w, now) {
     if (w.disposed) return;
@@ -127,6 +188,7 @@ function animate(w, now) {
         w.lastStatus = now;
         const safe = w.nav.canStand(w.position.x,w.position.y);
         w.status.textContent = "V2 · 1 NPC · " + (safe ? "ON MASK" : "OUTSIDE MASK") +
+            " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
             " · " + Math.round(w.position.x) + "," + Math.round(w.position.y);
         if (!safe) w.maskViolations++;
     }
@@ -140,17 +202,19 @@ function loadMask(url) {
         img.src = url;
     });
 }
-export async function mountTownV2Nexus(sceneSelector, toggleSelector, statusSelector) {
+export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelector, statusSelector) {
     const scene = document.querySelector(sceneSelector);
     const canvas = scene?.querySelector("[data-town-v2-canvas]");
     const toggle = document.querySelector(toggleSelector);
+    const depthToggle = document.querySelector(depthSelector);
     const status = document.querySelector(statusSelector);
-    if (!scene || !canvas || !toggle || !status || live.has(scene)) return;
+    if (!scene || !canvas || !toggle || !depthToggle || !status || live.has(scene)) return;
     const state = {
-        canvas, toggle, status, disposed: false, frame: 0,
-        nav: null, route: [], position: { ...START }, targetIndex: 1,
+        canvas, toggle, depthToggle, status, disposed: false, frame: 0,
+        nav: null, foliage: null, route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
-        lastStatus: 0, showMask: true, maskViolations: 0
+        lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
+        depthFrames: 0, maskViolations: 0
     };
     live.set(scene, state);
     state.click = () => {
@@ -158,14 +222,29 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, statusSele
         toggle.setAttribute("aria-pressed", String(state.showMask));
     };
     toggle.addEventListener("click", state.click);
+    state.depthClick = () => {
+        state.showDepth = !state.showDepth;
+        depthToggle.setAttribute("aria-pressed", String(state.showDepth));
+    };
+    depthToggle.addEventListener("click", state.depthClick);
     try {
-        const url = new URL("art/town/nexus-v2-walk-mask.svg", document.baseURI);
-        const source = await loadMask(url.href);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.158", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg", document.baseURI);
+        const [walkMask, depthMask] = await Promise.all([
+            loadMask(walkUrl.href), loadMask(depthUrl.href)
+        ]);
         if (state.disposed) return;
-        state.nav = buildNavigation(source);
-        if (!state.nav.canStand(START.x,START.y) || !state.nav.canStand(FINISH.x,FINISH.y))
-            throw new Error("Town V2 endpoints are outside the foot-clear mask.");
-        state.route = planRoute(state.nav,START,FINISH);
+        state.nav = buildNavigation(walkMask);
+        if (![START,BEHIND_SHRUB,FINISH].every(p => state.nav.canStand(p.x,p.y)))
+            throw new Error("Town V2 route stops must all fit the foot-clear mask.");
+        if (state.nav.canStand(520, 450))
+            throw new Error("The shrub's roots must remain impassable.");
+        state.foliage = await buildFoliage(scene, depthMask);
+        if (state.disposed) return;
+        // Two ordinary mask-planned legs deliberately exercise rear foliage depth.
+        const firstLeg = planRoute(state.nav, START, BEHIND_SHRUB);
+        const secondLeg = planRoute(state.nav, BEHIND_SHRUB, FINISH);
+        state.route = [...firstLeg, ...secondLeg];
         state.position = { ...state.route[0] };
         state.lastTime = performance.now();
         state.frame = requestAnimationFrame(t => animate(state,t));
@@ -182,7 +261,13 @@ export function readTownV2Diagnostics(canvas) {
         version: 2, source: "nexus-v2-walk-mask.svg", usingLegacyNavigation: false,
         npcCount: 1, routeLength: entry.route.length,
         position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x,entry.position.y),
-        shrubBlocked: entry.nav ? !entry.nav.canStand(520,438) : false,
+        shrubBlocked: entry.nav ? !entry.nav.canStand(520,450) : false,
+        behindShrubWalkable: entry.nav?.canStand(BEHIND_SHRUB.x,BEHIND_SHRUB.y) ?? false,
+        foregroundReady: !!entry.foliage && entry.foliage.opaquePixels > 100,
+        foregroundFormat: entry.foliage?.format ?? null,
+        foregroundPixels: entry.foliage?.opaquePixels ?? 0,
+        depthVisible: entry.showDepth, depthFrames: entry.depthFrames,
+        occludingNow: entry.lastOccluded,
         maskVisible: entry.showMask, violations: entry.maskViolations
     };
 }
@@ -193,5 +278,6 @@ export function disposeTownV2Nexus(sceneSelector) {
     state.disposed = true;
     cancelAnimationFrame(state.frame);
     state.toggle.removeEventListener("click",state.click);
+    state.depthToggle.removeEventListener("click",state.depthClick);
     live.delete(scene);
 }

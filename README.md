@@ -1,6 +1,6 @@
 # Wyrmforge
 
-## Prototype 0.0.158 — Six-school Arcane Web construction
+## Prototype 0.0.159 — Six-school Arcane Web construction
 
 - Six school sectors surround the Wyrmheart, with the active school north and camera shortcuts for inspection.
 - Learn only in the active school; previously learned stats continue contributing. Inactive-school refunds warn once per visit and reserve their points until returning to that school.
