@@ -25,6 +25,36 @@ internal static class FirePassiveNodes
             FireballMutationId.Detonation, BuildStatId.MutationRadius, 1.10),
         Enhancement("fire-banked-embers", "Banked Embers", "Scorched Earth: +15% burning-ground duration when equipped.", 685, 165,
             FireballMutationId.ScorchedEarth, BuildStatId.MutationDuration, 1.15),
+        // Conflagration: a long, winding area-control route rather than a mirrored spoke.
+        Travel("fire-ember-drift", "Ember Drift", "+3% mutation area.", 545, 375,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationRadius, 0.03))),
+        Travel("fire-scorching-winds", "Scorching Winds", "+4% mutation area.", 510, 320,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationRadius, 0.04))),
+        Travel("fire-cinder-halo", "Cinder Halo", "+3% spell damage.", 480, 265,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.03))),
+        Notable("fire-conflagration", "Conflagration", "Mutation area ×1.12 and duration ×1.06.", 468, 200,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Multiply(BuildStatId.MutationRadius, 1.12),
+                PassiveNodeModifiers.Multiply(BuildStatId.MutationDuration, 1.06))),
+        Travel("fire-ashfront", "Ashfront", "+4% mutation duration.", 455, 133,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationDuration, 0.04))),
+        Major("fire-spread-crown", "Crown of Ash", "Mutation area ×1.15 and duration ×1.10.", 440, 65,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Multiply(BuildStatId.MutationRadius, 1.15),
+                PassiveNodeModifiers.Multiply(BuildStatId.MutationDuration, 1.10))),
+
+        // Immolation: damage-over-time and sustained-pressure specialization.
+        Travel("fire-cinder-temper", "Cinder Temper", "+3% spell damage.", 660, 370,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.03))),
+        Travel("fire-burning-veins", "Burning Veins", "+4% mutation duration.", 708, 330,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationDuration, 0.04))),
+        Travel("fire-searing-focus", "Searing Focus", "+3% spell damage.", 740, 265,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.03))),
+        Notable("fire-immolation", "Immolation", "Mutation duration ×1.12.", 754, 190,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Multiply(BuildStatId.MutationDuration, 1.12))),
+        Travel("fire-coalbed", "Coalbed", "+4% mutation duration.", 787, 130,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.MutationDuration, 0.04))),
+        Major("fire-ember-altar", "Heart of the Furnace", "Spell damage ×1.12 and mutation duration ×1.08.", 805, 55,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Multiply(BuildStatId.Damage, 1.12),
+                PassiveNodeModifiers.Multiply(BuildStatId.MutationDuration, 1.08))),
         Travel("fire-frost-gate", "Searing Rime", "+2% spell damage.", 530, 280, PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.02))),
         Travel("fire-storm-gate", "Voltaic Coal", "+2% spell damage.", 670, 280, PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.02))),
     ];
@@ -40,6 +70,9 @@ internal static class FirePassiveNodes
 
     private static PassiveNodeDefinition Notable(string id, string name, string description, double x, double y, BuildModifierProfile modifiers) =>
         new(id, name, description, PassiveNodeKind.Notable, PassiveSchool.Fire, 2, x, y, modifiers);
+
+    private static PassiveNodeDefinition Major(string id, string name, string description, double x, double y, BuildModifierProfile modifiers) =>
+        new(id, name, description, PassiveNodeKind.Keystone, PassiveSchool.Fire, 3, x, y, modifiers);
 
     private static PassiveNodeDefinition Mastery(string id, string name, string description, double x, double y, string group) =>
         new(id, name, description, PassiveNodeKind.Mastery, PassiveSchool.Fire, 2, x, y, PassiveNodeModifiers.None, group);
