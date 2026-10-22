@@ -49,6 +49,19 @@ internal static class ArcaneWheelLayout
             ["fire-immolation"] = (800, 960),
             ["fire-coalbed"] = (920, 1100),
             ["fire-ember-altar"] = (1000, 1250),
+            // Frost paths grow from alternative mastery landmarks, then arc into different silhouettes.
+            ["frost-rime-threads"] = (-300, 1020),
+            ["frost-glasswind"] = (-450, 1040),
+            ["frost-cold-snap"] = (-600, 1060),
+            ["frost-arctic-focus"] = (-730, 1090),
+            ["frost-whiteout"] = (-870, 1130),
+            ["frost-pale-silence"] = (-1010, 1170),
+            ["frost-snowward"] = (310, 1040),
+            ["frost-iceweave"] = (440, 1050),
+            ["frost-frozen-blood"] = (560, 1080),
+            ["frost-crystal-bulwark"] = (680, 1120),
+            ["frost-veil"] = (810, 1135),
+            ["frost-everwinter"] = (930, 1160),
         };
     private static double Angle(PassiveSchool school, PassiveSchool active) =>
         (Array.IndexOf(Order, school) - Array.IndexOf(Order, active)) * Math.PI / 3 - Math.PI / 2;
