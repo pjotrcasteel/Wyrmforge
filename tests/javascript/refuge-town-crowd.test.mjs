@@ -653,19 +653,20 @@ test('Town V2 well and noticeboard alpha avoid the garden wall and paving', () =
     assert.match(sign, /M731 454 L731 449/);
 });
 
-test('V2 rear path goes around the right post rather than changing its foreground again', () => {
+test('Town V2 NPC walks BEHIND the right noticeboard post, never around it', () => {
     const ground = source(art + '/nexus-v2-walk-mask.svg');
     const script = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
-    assert.match(ground, /M 784 425 L 790 420 L 817 420 L 826 432/);
-    assert.match(ground, /M 764 440 C 777 420 784 405 802 405/);
-    assert.match(script, /REAR_BOARD_PASS = \{ x: 756, y: 444 \}/);
-    assert.match(script, /REAR_POST_BYPASS = \{ x: 802, y: 405 \}/);
-    assert.match(script, /planRoute\(state.nav, REAR_BOARD_PASS, REAR_POST_BYPASS\)/);
-    assert.match(script, /state.route.some\(p => p.x >= 790 && p.x <= 810 && p.y >= 420\)/);
-    assert.match(script, /clearOfRightPost:/);
-    assert.match(script, /routedOverBoard:/);
-    assert.match(script, /behindNoticeboard: entry.lastNoticeOccluded/);
-    assert.doesNotMatch(script, /setObstacle|night-navigation.json\s*\)/);
+    assert.match(ground, /C 776 443 797 446 818 451/);
+    assert.doesNotMatch(ground, /M 784 425 L 790 420/);
+    assert.doesNotMatch(ground, /M 764 440 C 777 420 784 405/);
+    assert.match(script, /RIGHT_POST_PASS = \\{ x: 800, y: 444 \\}/);
+    assert.match(script, /planRoute\\(state.nav, REAR_ENTRY, REAR_END\\)/);
+    assert.match(script, /overlapsFoliage\\(p, state.noticeCutout\\)/);
+    assert.match(script, /passesBehindRightPost:/);
+    assert.match(script, /rightPostOcclusionFrames: entry.rightPostOcclusionFrames/);
+    assert.match(script, /w.rightPostOcclusionFrames\\+\\+/);
+    assert.match(script, /ctx.drawImage\\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\\)/);
+    assert.doesNotMatch(script, /REAR_POST_BYPASS|clearOfRightPost|routedOverBoard/);
 });
 
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
