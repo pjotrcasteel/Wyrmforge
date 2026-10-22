@@ -42,13 +42,14 @@ public sealed class MutationWebCombatTests
     }
 
     [TestMethod]
-    public void BlastShaping_IncreasesFinalExplosionAtHigherFireballRanks()
+    public void BlastShaping_IncreasesDetonationExplosionAtRankTwo()
     {
         ProjectileState RankedCast(string[] nodes)
         {
             var simulation = Create(nodes, [FireballMutationId.Detonation]);
             var build = Field<RunBuildState>(simulation, "build");
-            build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+            // At Rank III the independent Focused Fireball splash is larger;
+            // Rank II keeps the Detonation effect larger than that independent splash.
             build.Spells.LearnOrUpgrade(SpellId.FireBolt);
             return Fire(simulation);
         }
@@ -129,8 +130,10 @@ public sealed class MutationWebCombatTests
 
         var baseline = AtMaximumRank(false);
         var empowered = AtMaximumRank(true);
-        Assert.AreEqual(56d, baseline.SplashRadius, .000001);
-        Assert.AreEqual(56d, empowered.SplashRadius, .000001,
+        var maxRank = SpellCatalog.Get(SpellId.FireBolt).MaxRank;
+        var expected = Math.Max(56d, FocusedCastProfile.For(SpellId.FireBolt, maxRank).SplashRadius);
+        Assert.AreEqual(expected, baseline.SplashRadius, .000001);
+        Assert.AreEqual(expected, empowered.SplashRadius, .000001,
             "A Detonation socket may not multiply Fireball mastery splash when mastery is larger.");
     }
 
