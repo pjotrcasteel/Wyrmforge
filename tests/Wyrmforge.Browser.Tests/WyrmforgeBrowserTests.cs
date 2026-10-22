@@ -23,14 +23,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
-        await Page.WaitForFunctionAsync(@"async () => {
+        // Import once and store the synchronous reader before waiting. An async
+        // predicate itself is a truthy Promise even before V2 has mounted.
+        await Page.EvaluateAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.168');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
+            window.__readTownV2Front = () =>
+                module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
-        var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-        }");
+        await Page.WaitForFunctionAsync(
+            "() => window.__readTownV2Front?.()?.active === true",
+            null, new PageWaitForFunctionOptions { Timeout = 15000 });
+        var first = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Front()");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
         Assert.IsTrue(first.GetProperty("shrubBlocked").GetBoolean());
@@ -62,32 +65,27 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(100, first.GetProperty("foregroundPixels").GetInt32());
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
-        var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-        }");
+        var second = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Front()");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
         Assert.AreEqual(0, second.GetProperty("violations").GetInt32());
         Assert.AreNotEqual(first.GetProperty("position").GetProperty("x").GetDouble(),
             second.GetProperty("position").GetProperty("x").GetDouble(), "The demo citizen must actually move.");
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
-            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        await Page.WaitForFunctionAsync(@"() => {
+            const d = window.__readTownV2Front?.();
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
         }", null, new PageWaitForFunctionOptions { Timeout = 15000 });
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
-            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+        await Page.WaitForFunctionAsync(@"() => {
+            const d = window.__readTownV2Front?.();
             return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
                 d.wellFrontEndpointWalkable && d.wellRimExcluded &&
                 d.noticeboardExcluded && d.nearWellFrames > 20 &&
                 d.nearestWellFootY <= 590 && d.violations === 0;
-        }", null, new PageWaitForFunctionOptions { Timeout = 25000 });
+        }", null, new PageWaitForFunctionOptions { Timeout = 30000 });
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
         await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
