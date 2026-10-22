@@ -20,7 +20,9 @@ public sealed partial class RunSimulation
             ? fireballWebModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationDuration, 1) *
                 FireballEffectFactor(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth,
                     Wyrmforge.Domain.Progression.PassiveTree.MutationEffectCapability.Duration) : 1;
-        burningGrounds.Add(new BurningGroundState(position, projectile.Damage * BurningGroundDamageFraction, duration));
+        var damagePerTick = buildModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.BurnDamage,
+            projectile.Damage * BurningGroundDamageFraction);
+        burningGrounds.Add(new BurningGroundState(position, damagePerTick, duration));
     }
 
     private void UpdateBurningGrounds(double delta)
