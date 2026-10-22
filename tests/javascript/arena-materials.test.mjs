@@ -6,7 +6,7 @@ import {
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
     materialSampleBoard, naturalGroundPreview, paintGroundCells, paintGroundStroke, drawReferenceGroundBoard,
     groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
-    groundMaterialFineDetailPlan,
+    groundMaterialFineDetailPlan, groundMaterialWearPlan,
     groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
@@ -180,7 +180,31 @@ test('opt-in fine ground detail uses deterministic clusters from approved materi
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
     assert.match(razor, /@onclick="ToggleFineDetail"/);
     assert.match(js, /export function setGroundFineDetail/);
-    assert.match(js, /if \(fineDetail\) drawGroundMaterialFineDetails/);
+    assert.match(js, /if \(fineDetail\) \{/);
+    assert.match(js, /drawGroundMaterialWear\(ctx, sc, scratch, source, index, seed\)/);
+    assert.match(js, /drawGroundMaterialFineDetails\(ctx, sc, scratch, source, index, seed\)/);
+});
+
+test('fine-detail wear is visibly clustered, seeded and sampled only from approved art', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const wear = groundMaterialWearPlan(index, 1441);
+        assert.equal(wear.length, 36);
+        assert.deepEqual(wear, groundMaterialWearPlan(index, 1441));
+        assert.notDeepEqual(wear, groundMaterialWearPlan(index, 1442));
+        assert.deepEqual([...new Set(wear.map(p => p.group))], Array.from({ length: 12 }, (_, i) => i));
+        assert.ok(wear.every(p => Number.isInteger(p.x) && p.x >= 0 && p.x < GROUND_TILE_SIZE &&
+            Number.isInteger(p.y) && p.y >= 0 && p.y < GROUND_TILE_SIZE &&
+            p.width >= 44 && p.width <= 105 && p.height >= 30 && p.height <= 81 &&
+            p.sourceX >= 0 && p.sourceX + p.width <= GROUND_SOURCE_TILE_SIZE &&
+            p.sourceY >= 0 && p.sourceY + p.height <= GROUND_SOURCE_TILE_SIZE &&
+            p.opacity >= .58 && p.opacity <= .90 && p.source >= 0 && p.source < MATERIALS.length));
+        for (let band = 0; band < 6; band++) {
+            const anchors = wear.filter(p => p.group >= band * 2 && p.group < band * 2 + 2);
+            assert.equal(anchors.length, 6, 'Every material sampler band receives real wear');
+            assert.ok(anchors.some(p => p.source !== index), 'Physical wear must contrast with its base');
+        }
+    }
+    assert.deepEqual(groundMaterialWearPlan(99), []);
 });
 
 test('fine details are baked only when requested, not on every ground frame', () => {
@@ -204,8 +228,8 @@ test('fine details are baked only when requested, not on every ground frame', ()
         return { originalSamples, gradients };
     };
     const original = bake(false), enhanced = bake(true);
-    assert.equal(enhanced.originalSamples - original.originalSamples, MATERIALS.length * 48);
-    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * 48);
+    assert.equal(enhanced.originalSamples - original.originalSamples, MATERIALS.length * (48 + 36));
+    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * (48 + 36));
 });
 
 test('mixed paint has seeded irregular material boundaries but uniform grass has none', () => {
