@@ -155,6 +155,7 @@ function draw(w) {
         ctx.stroke();ctx.restore();
     }
     // One simple V2 test citizen. Never composite stair stone as if it were leaves.
+    ctx.save();
     ctx.translate(w.position.x, w.position.y);
     ctx.fillStyle = "#061622aa";ctx.beginPath();ctx.ellipse(0,2,9,4,0,0,Math.PI*2);ctx.fill();
     ctx.fillStyle = "#d5ac73";ctx.fillRect(-5,-21,10,19);
