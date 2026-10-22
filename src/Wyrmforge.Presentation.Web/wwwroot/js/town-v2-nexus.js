@@ -273,11 +273,20 @@ function advanceExtra(w, person, dt) {
             x: person.position.x + dx / distance * travel,
             y: person.position.y + dy / distance * travel
         };
-        // Pause rather than teleport or stand inside another citizen. Later
-        // actors yield first; all positions remain on the 8px-eroded foot mask.
+        // If moving into another resident's space, turn back along the SAME
+        // raster route. Do not freeze forever or generate an off-mask detour.
+        // Movement AWAY from someone already near is always permitted.
         const neighbors = [{ position: w.position }, ...w.extras.filter(p => p !== person)];
-        if (neighbors.some(p => Math.hypot(candidate.x - p.position.x, candidate.y - p.position.y) < 16)) {
+        if (neighbors.some(p => {
+            const next = Math.hypot(candidate.x - p.position.x, candidate.y - p.position.y);
+            const previous = Math.hypot(person.position.x - p.position.x, person.position.y - p.position.y);
+            return next < 19 && next < previous - .01;
+        })) {
             person.yieldFrames++;
+            person.direction = -person.direction;
+            person.targetIndex = Math.max(0, Math.min(person.route.length - 1,
+                person.targetIndex + person.direction));
+            person.pause = .1;
             return;
         }
         person.position = candidate;
@@ -306,17 +315,21 @@ function animate(w, now) {
             const target = w.route[w.targetIndex];
             const dx = target.x - w.position.x, dy = target.y - w.position.y;
             const distance = Math.hypot(dx,dy);
-            if (distance <= remaining + .001) {
-                w.position = { ...target };
-                remaining -= distance;
-                w.targetIndex += w.direction;
-            } else {
-                w.position = {
-                    x: w.position.x + dx / distance * remaining,
-                    y: w.position.y + dy / distance * remaining
-                };
+            const travel = Math.min(remaining, distance);
+            const next = distance < .001 ? { ...target } : {
+                x: w.position.x + dx / distance * travel,
+                y: w.position.y + dy / distance * travel
+            };
+            // The approved route never changes: the leader merely yields a
+            // frame when another NPC would occupy the same foot space.
+            if (w.extras.some(p => Math.hypot(next.x - p.position.x, next.y - p.position.y) < 17)) {
+                w.primaryYieldFrames++;
                 remaining = 0;
+                break;
             }
+            w.position = next;
+            remaining -= travel;
+            if (distance <= travel + .001) w.targetIndex += w.direction;
         }
         if (w.targetIndex < 0 || w.targetIndex >= w.route.length) {
             if (w.direction === 1) {
@@ -391,6 +404,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         rearMode, inspectPose, inspectWell, residentCount,
         nav: null, foliage: null, wellCutout: null, noticeCutout: null,
         extras: [], crowdFrames: 0, crowdOverlapFrames: 0, crowdOcclusionFrames: 0,
+        primaryYieldFrames: 0,
         route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
@@ -534,6 +548,7 @@ export function readTownV2Diagnostics(canvas) {
                 turns: p.turns, yieldFrames: p.yieldFrames }))],
         crowdFrames: entry.crowdFrames, crowdOverlapFrames: entry.crowdOverlapFrames,
         crowdOcclusionFrames: entry.crowdOcclusionFrames,
+        primaryYieldFrames: entry.primaryYieldFrames,
         position: { ...entry.position }, safe: entry.nav?.canStand(entry.position.x,entry.position.y),
         shrubBlocked: entry.nav ? !entry.nav.canStand(PLANT_BASE.x, PLANT_BASE.y) : false,
         stairTreadsWalkable: entry.nav?.canStand(STAIR_TREAD.x, STAIR_TREAD.y) ?? false,
