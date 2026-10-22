@@ -305,3 +305,10 @@
 .menu-nexus .school-wheel-view .web-node.kind-mastery { border-radius:50%; border-width:3px; }
 .menu-nexus .school-wheel-view .web-node.kind-keystone { border-radius:50%; border:4px double #a8804d; }
 .menu-nexus .school-wheel-view .arcane-web-viewport { -webkit-touch-callout:none; overscroll-behavior:contain; }
+
+.menu-nexus .school-wheel-view .web-edge { vector-effect:non-scaling-stroke; stroke-width:1.5; }
+.menu-nexus .school-wheel-view .web-edge.active,
+.menu-nexus .school-wheel-view .web-edge.preview { stroke-width:2; }
+.menu-nexus .school-wheel-view .overview .wheel-school-badge { transform:translate(-50%,-50%) scale(clamp(1,calc(.45 / var(--web-scale,1)),4.5)); }
+.menu-nexus .school-wheel-view .overview .web-node { transform:translate(-50%,-50%) scale(clamp(1,calc(.18 / var(--web-scale,1)),2)); }
+.menu-nexus .school-wheel-view .overview .web-node.study-locked:not(.selected) { opacity:.72; }

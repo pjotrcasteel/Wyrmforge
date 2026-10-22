@@ -9,6 +9,7 @@
         const x = viewport.clientWidth / 2 - state.x * state.scale;
         const y = viewport.clientHeight / 2 - state.y * state.scale;
         state.canvas.style.transform = `translate(${x}px, ${y}px) scale(${state.scale})`;
+        state.canvas.style.setProperty('--web-scale', String(state.scale));
         viewport.dataset.scale = String(state.scale);
         viewport.classList.toggle('overview', state.scale < 0.5);
     }

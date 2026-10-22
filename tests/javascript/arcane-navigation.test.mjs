@@ -6,7 +6,7 @@ import vm from 'node:vm';
 function map(touchEvents = false) {
     const listeners = new Map(), frames = new Map(), captures = new Set();
     let nextFrame = 0, disconnected = false;
-    const canvas = { style: {} };
+    const canvas = { style: { setProperty(name, value) { this[name] = value; } } };
     const viewport = {
         clientWidth: 340, clientHeight: 500,
         dataset: { worldSize: '3200', startX: '1600', startY: '1200' },
