@@ -80,6 +80,7 @@ internal static class ArcaneNodePresentation
     private static string Label(BuildStatId stat) => stat switch
     {
         BuildStatId.Damage => "spell damage",
+        BuildStatId.FrostControlDuration => "frost control duration",
         BuildStatId.BurnDamage => "burning-ground damage",
         BuildStatId.CastInterval => "cast speed",
         BuildStatId.ProjectileSpeed => "projectile speed",
