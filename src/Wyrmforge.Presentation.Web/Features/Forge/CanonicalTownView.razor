@@ -41,6 +41,9 @@
            Render beneath the NPC/cutout strata; do not cover an unbuilt Nexus. *@
         @if (NexusUnlocked && NexusSchool is not null)
         {
+            @* Tint only the existing magical dome aperture and portal, never the masonry. *@
+            <div class="refuge-town-nexus-chroma" data-nexus-emitter-color="true"
+                 data-nexus-school="@NexusSchool.Value.ToString().ToLowerInvariant()" aria-hidden="true"></div>
             <div class="refuge-town-nexus-radiance" data-nexus-radiance="true"
                  data-nexus-school="@NexusSchool.Value.ToString().ToLowerInvariant()"
                  style="@TownNexusRadiance.Style(NexusMasteryPoints)" aria-hidden="true"></div>
