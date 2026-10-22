@@ -244,9 +244,7 @@
 .menu-nexus .school-icon-arcane { background-position:0 100%; }
 .menu-nexus .school-icon-death { background-position:50% 100%; }
 .menu-nexus .school-icon-binding { background-position:100% 100%; }
-.menu-nexus .school-wheel-view .atlas-stage { display:flex; flex-direction:column; height:clamp(420px,72svh,850px); }
-.menu-nexus .school-wheel-view .atlas-toolbar { position:relative; inset:auto; flex:none; padding:8px; border-bottom:1px solid #60463b; background:#171219; }
-.menu-nexus .web-current-school { padding:0 4px; color:#e5c49b; font:600 .78rem/1.2 Georgia,serif; }
+.menu-nexus .school-wheel-view .atlas-stage { position:relative; display:flex; flex-direction:column; height:clamp(420px,72svh,850px); }
 .menu-nexus .school-wheel-view .web-layout .arcane-web-viewport { flex:1; min-height:0; height:auto; overflow:hidden; touch-action:none; user-select:none; -webkit-user-select:none; }
 .menu-nexus .school-wheel-view .web-pan-space { position:static; width:100%; height:100%; }
 .menu-nexus .school-wheel-view .arcane-web-canvas,
@@ -312,3 +310,23 @@
 .menu-nexus .school-wheel-view .overview .wheel-school-badge { transform:translate(-50%,-50%) scale(clamp(1,calc(.45 / var(--web-scale,1)),4.5)); }
 .menu-nexus .school-wheel-view .overview .web-node { transform:translate(-50%,-50%) scale(clamp(1,calc(.18 / var(--web-scale,1)),2)); }
 .menu-nexus .school-wheel-view .overview .web-node.study-locked:not(.selected) { opacity:.72; }
+
+/* Arcane Web HUD: status and map controls float above the canvas, never consume a map row. */
+.menu-nexus .school-wheel-view .web-points-hud {
+    position:absolute; z-index:20; top:12px; left:12px;
+    display:flex; align-items:center; gap:8px;
+    min-height:44px; max-width:calc(100% - 24px); margin:0;
+    border:1px solid #896648; padding:7px 11px; cursor:pointer;
+    color:#e9ceb0; background:#171219ed; box-shadow:inset 0 0 0 2px #21141c,0 2px 8px #09060bcc;
+}
+.menu-nexus .school-wheel-view .web-points-hud strong { font:600 1.2rem/1 Georgia,serif; }
+.menu-nexus .school-wheel-view .web-points-hud span { display:inline; font:.74rem/1.1 Georgia,serif; white-space:nowrap; }
+.menu-nexus .school-wheel-view .atlas-stage > .reserved-points {
+    position:absolute; z-index:20; top:66px; left:12px; max-width:min(290px,calc(100% - 24px));
+    border:1px solid #785a45; padding:3px 9px; background:#171219eb;
+}
+.menu-nexus .school-wheel-view .web-floating-controls {
+    position:absolute; z-index:20; right:13px; bottom:13px;
+    display:grid; grid-template-columns:repeat(2,44px); gap:5px;
+}
+.menu-nexus .school-wheel-view .web-floating-controls .atlas-action { width:44px; height:44px; }
