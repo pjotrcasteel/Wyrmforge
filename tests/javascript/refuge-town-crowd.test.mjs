@@ -627,3 +627,21 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     const executable = js.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(executable, /night-navigation\.json[^\n]*import|CUTOUTS|TownCrowd/);
 });
+
+test('V2 rear foreground masks exclude painted floor, flowers and the wide V1 occluder', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const well = source(art + '/nexus-v2-well-foreground.svg');
+    const sign = source(art + '/nexus-v2-noticeboard-foreground.svg');
+    assert.match(js, /WELL_CUTOUT = \{ x: 810, y: 392, width: 130, height: 160/);
+    assert.match(js, /NOTICE_CUTOUT = \{ x: 721, y: 411, width: 93, height: 139/);
+    assert.match(js, /for \(let x = 0; x < width; x\+\+\)/);
+    assert.match(js, /for \(let y = 0; y < height; y\+\+\)/);
+    assert.match(js, /clippedEdge/);
+    assert.match(well, /Garden walls, planters, flowers, and all paving stay transparent/);
+    assert.match(well, /Actual small well's round masonry ring/);
+    assert.match(sign, /only actual wood and sign face/);
+    assert.doesNotMatch(well, /M 715 538|M 769 506 Q 791 495/);
+    assert.doesNotMatch(sign, /M 712 442 L 730 429|M 718 497 L 733 495/);
+    assert.match(well, /M818 439 L823 426/);
+    assert.match(sign, /M729 440 L735 435/);
+});
