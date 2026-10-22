@@ -624,6 +624,21 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
         lastWellOccluded: false, lastNoticeOccluded: false
     };
     live.set(scene, state);
+    if (coverageAudit) {
+        const legend = document.createElement("div");
+        legend.className = "refuge-town-v2-coverage-legend";
+        legend.setAttribute("role", "note");
+        legend.innerHTML = [
+            "<strong>TownV2 pixel audit — NOT complete</strong>",
+            "<span><i class='v2-teal'></i>Teal: approved path paint</span>",
+            "<span><i class='v2-red'></i>Red: confirmed solid footprint</span>",
+            "<span><i class='v2-blue'></i>Blue: proposed paving (NOT walkable)</span>",
+            "<span><i class='v2-pink'></i>Pink: class conflict</span>",
+            "<span><i class='v2-amber'></i>Amber: unclassified / outside play</span>"
+        ].join("");
+        scene.appendChild(legend);
+        state.coverageLegendElement = legend;
+    }
     if (residentCount > 1 || coverageAudit) {
         state.showMask = false;
         toggle.setAttribute("aria-pressed", "false");
@@ -843,5 +858,6 @@ export function disposeTownV2Nexus(sceneSelector) {
     cancelAnimationFrame(state.frame);
     state.toggle.removeEventListener("click",state.click);
     state.depthToggle.removeEventListener("click",state.depthClick);
+    state.coverageLegendElement?.remove();
     live.delete(scene);
 }
