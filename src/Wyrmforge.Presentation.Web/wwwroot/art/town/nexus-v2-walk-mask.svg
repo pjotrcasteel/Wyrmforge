@@ -26,13 +26,15 @@
            C 661 580 670 605 681 623"
         fill="none" stroke="#fff" stroke-width="36"
         stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Phase 4: front-of-well cobblestones only. Actor feet remain SOUTH of
-       the well's masonry base; rear passage/depth are intentionally not enabled.
-       This extends but never edits approved Nexus stairs / Phase 3 plaza masks. -->
-  <path d="M 681 623 C 710 630 741 635 782 632
-           C 828 631 882 624 932 623
-           C 949 622 960 620 970 616"
-        fill="none" stroke="#fff" stroke-width="44"
+  <!-- Phase 4 correction: iPhone at x822,y624 was ~60px BELOW the well.
+       This narrower lane now hugs the actual FRONT edge (y~582).
+       A foot disc of 8px still clears the well's painted masonry base ending
+       at y563; the character's upper body should visually overlap its front. -->
+  <path d="M 681 623 C 703 606 717 590 742 585
+           C 776 579 805 581 852 582
+           C 891 583 924 584 944 591
+           C 958 597 968 608 974 614"
+        fill="none" stroke="#fff" stroke-width="30"
         stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Well and noticeboard independently authored V2 physical keep-outs.
        Neither V1 polygon models nor occluder layers are read at runtime. -->
