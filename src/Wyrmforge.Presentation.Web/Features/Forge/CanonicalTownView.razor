@@ -190,7 +190,9 @@
     {
         <div class="refuge-town-v2-toolbar" role="group" aria-label="V2 ground and foreground mask controls">
             <button type="button" data-town-v2-mask-toggle="true" aria-pressed="true" aria-label="Show ground walk mask">Mask</button>
-            <button type="button" data-town-v2-depth-toggle="true" aria-pressed="true" aria-label="Show shrub foreground depth">Depth</button>
+            <button type="button" data-town-v2-depth-toggle="true" aria-pressed="true" aria-label="Show foreground depth">Depth</button>
+            <button type="button" data-town-v2-freeze-toggle="true" aria-pressed="false" hidden
+                    aria-label="Freeze NPC at the next real well or noticeboard occlusion">Freeze at cover</button>
             <output data-town-v2-status="true" aria-live="off">Loading independent masks…</output>
         </div>
     }
@@ -279,7 +281,7 @@
             townV2Mounted = true;
             try
             {
-                townV2Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/town-v2-nexus.js?v=0.0.167");
+                townV2Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/town-v2-nexus.js?v=0.0.168");
                 await townV2Module.InvokeVoidAsync("mountTownV2Nexus",
                     ".refuge-canonical-scene", "[data-town-v2-mask-toggle]",
                     "[data-town-v2-depth-toggle]", "[data-town-v2-status]");
