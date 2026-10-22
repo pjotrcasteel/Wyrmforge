@@ -32,6 +32,14 @@ This produces `pyromancer-progression-runs.json` and `pyromancer-progression-rep
 
 **No automatic 'better = balanced' assertion.** Different early and advanced cohorts deliberately have different gear/investment. Inspect survival/death, route depth, Wyrm time and kill-rate progression *together*, then adjust one balance variable per iteration. In particular, do not buff monsters solely because a level-5 mage outperforms a new mage.
 
+## Why the first short study could not measure Wyrm difficulty
+
+The initial 32 Fire progression study runs used a 180-second horizon and produced 0/8 first-Wyrm encounters per cohort. This is not evidence that Wyrms are unreachable or that the builds are badly balanced. The 480-run [post-Fire baseline Balance Lab](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39861791243) reaches the first Wyrm around 250–290 seconds median for its Fire builds, with an overall first-Wyrm-time median of approximately 285 seconds.
+
+For the next automated acceptance slice, the **pull-request study horizon is therefore extended to 420 simulated seconds**, retaining matched seeds and personalities. Review actual Wyrm reach rate, depth, survival and first-Wyrm time before interpreting relative kill-rate gains. The manual 420-second default remains available for a larger seed count; longer 720-second end-to-end runs can follow if player feedback warrants it.
+
+A Wyrm reached in self-play is still not proof that its telegraphs are fair or the rewards satisfying; physical mobile playtesting remains separate.
+
 ## Definition of ready-for-now
 
 Pyromancer may be marked ready-for-now when one beginner, one mid Detonation and one advanced Scorched Earth route are demonstrably playable, Fire skills feel substantially different and worthwhile across multiple Hunts, the unlocked mutation amplifiers work after save/load and remain correct in combat, and no mobile navigation/visual blockers remain. Future Fire variants, Frost, Storm, Arcane and hybrid expansions are explicitly excluded.
