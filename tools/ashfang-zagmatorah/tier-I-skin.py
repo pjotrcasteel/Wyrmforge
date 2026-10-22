@@ -36,7 +36,8 @@ for slot in body.material_slots:
  if old.name not in ('DragonSkin','DragonWing'):continue
  old.use_fake_user=True;material=old.copy();kind='body' if old.name=='DragonSkin' else 'wing';material.name='Ashfang Tier I '+kind+' source scales';slot.material=material
  n=material.node_tree.nodes;l=material.node_tree.links;bs=next(node for node in n if node.type=='BSDF_PRINCIPLED');base=bs.inputs['Base Color'].links[0].from_socket
- bs.inputs['Weight'].default_value=1.0
+ 
+ if 'Weight' in bs.inputs:bs.inputs['Weight'].default_value=1.0
  hue=n.new('ShaderNodeHueSaturation');hue.label='Retain original painted scale variation';hue.inputs['Value'].default_value=c['bodyValue'] if kind=='body' else c['wingValue'];hue.inputs['Saturation'].default_value=c['bodySaturation'] if kind=='body' else c['wingSaturation'];l.new(base,hue.inputs['Color'])
  tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=1;tint.inputs[2].default_value=c['bodyTint'] if kind=='body' else c['wingTint'];l.new(hue.outputs[0],tint.inputs[1])
  prefix='DragonSkin' if kind=='body' else 'DragonWing';ao=n.new('ShaderNodeTexImage');ao.image=image(prefix+'_AO.png',True)
