@@ -25,7 +25,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.158');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
+            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.foregroundReady;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.158');
@@ -2881,7 +2881,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             localStorage.setItem('wheelTestSeeded','1');
             localStorage.setItem('wyrmforge.firstHunt.v1','3');
             localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
-            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:['fire-start','storm-start','storm-1']}));
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:8,Nodes:['fire-start','storm-start','storm-1','storm-2']}));
         }");
         await Page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
@@ -2900,7 +2900,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return badge.left >= map.left && badge.right <= map.right && badge.top >= map.top && badge.bottom <= map.bottom;
         }");
         await ScreenshotAsync($"arcane-wheel-storm-sector-{width}.png");
-        var stormLeaf = Page.Locator(".web-node[aria-label^='Surge.']");
+        var stormLeaf = Page.Locator(".web-node[aria-label^='Overcharge.']");
         await stormLeaf.EvaluateAsync("el => el.click()");
         await Page.Locator(".route-action.refund").ClickAsync();
         var warning = Page.GetByRole(AriaRole.Dialog);
@@ -2911,20 +2911,33 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".route-action.refund").ClickAsync();
         await warning.GetByRole(AriaRole.Button, new() { Name = "Refund points", Exact = true }).ClickAsync();
         await Expect(warning).ToHaveCountAsync(0);
+        // An accepted warning covers subsequent refunds during this visit.
+        await Page.Locator(".web-node[aria-label^='Surge.']").EvaluateAsync("el => el.click()");
+        await Page.Locator(".route-action.refund").ClickAsync();
+        await Expect(warning).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("2 reserved");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Research" }).ClickAsync();
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         await Page.Locator(".web-node[aria-label^='Static.']").EvaluateAsync("el => el.click()");
         await Page.Locator(".route-action.refund").ClickAsync();
         await Expect(warning).ToBeVisibleAsync();
+        await warning.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
+        // Refund-all must ask too; cancelling does not acknowledge the warning.
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Refund all learned Arcane points" }).ClickAsync();
+        await Expect(warning).ToBeVisibleAsync();
+        await warning.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
+        await Expect(Page.Locator(".web-node[aria-label^='Static.']")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("selected"));
+        await Expect(Page.Locator(".web-node[aria-label^='Spark.']")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("selected"));
+        await Page.Locator(".route-action.refund").ClickAsync();
         await warning.GetByRole(AriaRole.Button, new() { Name = "Refund points", Exact = true }).ClickAsync();
         await Expect(warning).ToHaveCountAsync(0);
-        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("2 reserved");
+        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("3 reserved");
         await Expect(Page.Locator(".web-node[aria-label^='Spark.']")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("selected"));
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
-        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("2 reserved");
+        await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("3 reserved");
         await Page.Locator(".web-node[aria-label^='Surge.']").EvaluateAsync("el => el.click()");
         await Expect(Page.Locator(".node-inspector")).ToContainTextAsync("OTHER SCHOOL");
         await Expect(Page.Locator(".route-action.allocate")).ToHaveCountAsync(0);
