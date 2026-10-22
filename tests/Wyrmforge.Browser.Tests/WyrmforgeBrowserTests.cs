@@ -117,7 +117,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // can briefly observe a remount between two individually successful
         // checks. The snapshot still requires all pixel/route/depth invariants
         // together; none are skipped.
-        await Page.WaitForFunctionAsync(@"async () => {
+        var depthEvidenceHandle = await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             if (!d?.active || !d.rearMode || !d.wellForegroundRequired ||
@@ -126,11 +126,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 !d.wellDepthEdgesClear || !d.noticeDepthEdgesClear ||
                 d.rearFrames <= 3 || d.wellOcclusionFrames <= 0 ||
                 d.noticeOcclusionFrames <= 0 || d.violations !== 0 || !d.safe) return false;
-            window.__townV2RearEvidence = d;
-            return true;
+            return d;
         }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
-        var before = await Page.EvaluateAsync<JsonElement>(
-            "() => window.__townV2RearEvidence");
+        var before = await depthEvidenceHandle.JsonValueAsync<JsonElement>();
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
         // Foreground ready, transparent edges, and actual occlusion were already
         // observed atomically by the two live WaitForFunction predicates above.
