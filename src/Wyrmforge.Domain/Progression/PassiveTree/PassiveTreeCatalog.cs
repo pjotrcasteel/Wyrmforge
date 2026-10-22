@@ -67,6 +67,20 @@ public static class PassiveTreeCatalog
         new("frost-major", "ice-armor"),
         new("deep-freeze", "absolute-zero"),
         new("ice-armor", "winter-shell"),
+        // Cold-control and sanctuary arcs diverge rather than mirroring the old spine.
+        new("frost-1", "frost-rime-threads"),
+        new("frost-rime-threads", "frost-glasswind"),
+        new("frost-glasswind", "frost-cold-snap"),
+        new("frost-cold-snap", "frost-arctic-focus"),
+        new("frost-arctic-focus", "frost-whiteout"),
+        new("frost-whiteout", "frost-pale-silence"),
+        new("frost-1", "frost-snowward"),
+        new("frost-snowward", "frost-iceweave"),
+        new("frost-iceweave", "frost-frozen-blood"),
+        new("frost-frozen-blood", "frost-crystal-bulwark"),
+        new("frost-crystal-bulwark", "frost-veil"),
+        new("frost-veil", "frost-everwinter"),
+
         new("frost-1", "frost-fire-gate"),
         new("frost-1", "frost-arcane-gate"),
 
