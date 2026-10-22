@@ -34,7 +34,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
         Assert.IsTrue(first.GetProperty("shrubBlocked").GetBoolean());
-        Assert.IsGreaterThan(4, first.GetProperty("routeLength").GetInt32());
+        Assert.IsTrue(first.GetProperty("behindShrubWalkable").GetBoolean(),
+            "Raised foliage is cover, not a ground-contact obstacle.");
+        Assert.IsTrue(first.GetProperty("foregroundReady").GetBoolean(),
+            "The cropped V2 shrub PNG must have usable nontransparent pixels.");
+        Assert.AreEqual("image/png", first.GetProperty("foregroundFormat").GetString());
+        Assert.IsGreaterThan(100, first.GetProperty("foregroundPixels").GetInt32());
+        Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const module = await import('./js/town-v2-nexus.js');
@@ -44,6 +50,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(0, second.GetProperty("violations").GetInt32());
         Assert.AreNotEqual(first.GetProperty("position").GetProperty("x").GetDouble(),
             second.GetProperty("position").GetProperty("x").GetDouble(), "The demo citizen must actually move.");
+        await Page.WaitForFunctionAsync(@"async () => {
+            const module = await import('./js/town-v2-nexus.js');
+            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.depthFrames > 0;
+        }", null, new PageWaitForFunctionOptions { Timeout = 10000 });
+        await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
+        await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
         await Page.Locator("[data-town-v2-mask-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-mask-toggle]")).ToHaveAttributeAsync("aria-pressed","false");
         await Page.Locator(".refuge-town-spot--gate").ClickAsync();
