@@ -1,5 +1,16 @@
 # Wyrmforge
 
+## Prototype 0.0.173 — Socket an equipped mutation into a Web amplifier
+
+- Conflagration's Crown of Ash amplifies the **Detonation explosion radius** by ×1.20; Immolation's Furnace enhances **Scorched Earth burning duration** by ×1.25, only when the mutation is equipped.
+- The Web inspector assigns an already equipped compatible mutation to an unlocked major node; it never researches a mutation or unlocks a Main Spell mutation slot.
+- Amplifier assignments persist with the character and saved hunt loadouts. Hunts snapshot assignments at start and the simulation applies them to the assigned mutation's effect only, with a generic ×1.50 cap and no recursive processing.
+- State, deterministic-effect scope, UI persistence and hunt preparation are covered by dedicated tests. Both prior and new saved builds/loadouts remain readable.
+- [Implementation contract and validation criteria](docs/playtesting/2026-10-22-mutation-amplifier-sockets.md).
+
+
+
+
 
 ## Prototype 0.0.172 — Grand Arcane Web: Pyromancer expansion
 
