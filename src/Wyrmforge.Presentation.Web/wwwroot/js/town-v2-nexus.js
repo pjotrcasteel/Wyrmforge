@@ -499,7 +499,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                 ...planRoute(state.nav, PLAZA_END, WELL_FRONT_MID).slice(1),
                 ...planRoute(state.nav, WELL_FRONT_MID, WELL_FRONT_END).slice(1)
             ] : state.route;
-            const second = rearMode ? front : state.rearRoute;
+            const second = rearMode ? front : planRoute(state.nav, REAR_ENTRY, REAR_END);
             const third = planRoute(state.nav, PLAZA_END, WELL_FRONT_MID);
             for (const [id, route, speed] of [[1, second, 29], [2, third, 24]]) {
                 if (!route || route.length < 5 ||
