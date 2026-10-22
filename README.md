@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.157 — One visual language for the Arcane Nexus
+
+- Research and Arcane Web inherit the approved Fireball chamber's bronze frames, warm lettering, dark masonry and metal sockets, consistent with Refuge's materials.
+- Research uses the original Divine pixel emblems in its tray and live circle. Its actions stay below the research rather than covering it. Fireball's artwork stays specific to Fireball.
+- Phone Web controls, sockets, loadouts and node details share the same treatment. Skill graph, progression, saves and town paintings are preserved.
+- [Implementation, actual phone-size captures and validation](docs/playtesting/nexus-style-cohesion-2026-10-22.md): 321 JavaScript, 950 .NET and 104 browser checks pass. Physical Safari review remains separate.
+
 ## Prototype 0.0.141 — Animated Ashling
 
 - Ashling now hops in eight directions, launches into fire-infused claw attacks, and collapses into a held corpse. Small fiery eyes fade during death.

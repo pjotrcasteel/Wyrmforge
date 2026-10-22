@@ -11,12 +11,17 @@ The owner supplied five actual phone screenshots and approved Fireball as the re
 - Arcane Web retains all nodes, links, semantic node shapes, school colours, point allocation, zoom/pan, sockets, loadouts and inspector logic. Metal chrome is warm and neutral; available, selected and locked states remain distinct. Locked nodes are more legible. Mobile inspector placement is preserved.
 - No domain rules, storage keys, save schema, progression eligibility or material spending change. New stylesheet uses the existing build-version cache key.
 
-## Verification at checkpoint
+## Verification
 
-- JavaScript: **321/321 pass**, including existing circle animation/reduced-motion/vignette tests and a real-atlas draw contract.
-- `git diff --check`: passes.
-- Browser regression added at 320×568 and 390×844: captures town, Fireball, Research, research actions and Web; verifies that Research uses approved emblem pixels, has no Fireball hero, its tray does not overlap its content, page width fits, and Web controls remain at least 44px. The existing socket wrapping/inspector test remains unchanged.
-- Local .NET compilation reached all domain/application/infrastructure/bootstrap assemblies. Web publishing and local Chrome are blocked by this executor's refusal of Unix sockets/task-host pipes. GitHub Actions builds and runs the real published app independently; inspect those results and generated screenshots before merging.
-- CI, screenshot inspection and physical iPhone acceptance: **pending at this checkpoint**. Chromium emulation is not physical Safari acceptance.
+Validated runtime/test revision: `3171e6ed53070e22dbceecb83a5d39c31da849fa` (Actions PR merge snapshot `05e5423dc8f334d8352a3b09048d74c2851da7f5`). The following evidence-only documentation update does not change runtime or tests.
+
+- JavaScript: **321/321 pass**, including circle animation, reduced-motion, vignette and canonical atlas drawing tests.
+- .NET: **349 Domain + 601 Application tests pass**; Release build and web publish pass in [Validate Wyrmforge](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39727355606). Standard balance and portrait hunt samples also pass.
+- Browser: **104/104 pass** against the actual published app in [Browser smoke](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39727355546). New checks run at 320×568 and 390×844: town → Fireball → Research → Web → town, original emblem pixels, no Fireball hero in Research, no tray overlap or horizontal overflow, compact crafted-socket controls, 44px graph actions. Existing socket wrapping and inspector placement checks remain green.
+- Screenshot review: inspected both phone sizes, including `nexus-research-shared-style-*`, `nexus-web-shared-style-*` and `nexus-sockets-*`. Compared with the actual Refuge and Fireball captures. Review caught and corrected inherited purple shell styling and a legacy grid rule stacking the craft controls. Final captures confirm the neutral background, compact controls, shared frames and unobscured research.
+- [Browser captures and playable preview](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39727355546#artifacts). Screenshot artifact: `wyrmforge-browser-05e5423dc8f334d8352a3b09048d74c2851da7f5`.
+- CSS parsing, JavaScript syntax and `git diff --check` pass. All nine uploaded source/document files were byte-verified against GitHub blob hashes before final validation.
+- This executor blocks Unix sockets and MSBuild task-host pipes, preventing local web publishing/Chrome. GitHub Actions built and exercised the real game independently; no standalone mockup was substituted.
+- Physical iPhone Safari acceptance remains unverified. Chromium emulation and agent visual review do not claim owner approval.
 
 PR: https://github.com/pjotrcasteel/Wyrmforge/pull/256
