@@ -5,6 +5,20 @@
 
 ## Hard identity and acceptance rules
 
+### Ashfang original-source production — owner direction, 22 October 2026
+
+The owner rejects the previous V48/V59 geometry and requests a completely new
+original model from the approved Cinder Wyrm card. Preserve earlier native files,
+rigs and motion studies as history; do not use their geometry or neural/free-model
+reconstruction as the new body. The normal stance is a low, substantial quadruped
+with separate articulated wings and a long heavy tail; upright rearing, roaring
+and flight supply dramatic raised performances. Supplied Deathwing references
+inform mass and internal heat only, never his protected facial anatomy, plated
+chin, riveted armor, horns or silhouette. Review original primary forms in neutral
+clay and the elevated gameplay view before detail, effects or animation expansion.
+Owner acceptance remains explicit. C# gameplay, timing, damage and collision are
+unchanged by this source-art production work.
+
 - Four elemental creature families are currently established for expansion: **Fire, Frost, Storm/Electric and Arcane**. Build out an existing family rather than inventing arbitrary new elemental taxonomies. Demons, undead and cursed beasts suit the dark Gothic setting; avoid generic aliens, tentacles and disconnected high-fantasy art.
 - Existing game enemies must retain compatible `EnemyKind` identities and saved contracts. Encounter spawning, collision, hit results and reward legitimacy remain C# authority; animation is visual.
 - A rendered monster needs legible silhouette, physical feet/contact, real attack timing, hit reaction and recognizable death. Do not claim the whole roster has animated sprites because the Hollow works. [Sprite proof](../art/hollow-runtime-integration-2026-10-20.md); [layering](../art/shared-sprite-animation-layers-2026-10-20.md).

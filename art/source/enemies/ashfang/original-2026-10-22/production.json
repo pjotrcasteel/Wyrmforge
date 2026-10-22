@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "creatureId": "ashfang",
+  "productionId": "original-2026-10-22",
+  "branch": "codex/ashfang-original-production",
+  "baseMain": "1e6305662c42713aad69455036e47d87c5a451ae",
+  "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
+  "sourceCardSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
+  "geometryProvenance": "Original authored geometry only; no prior dragon meshes, reconstruction or free model imports",
+  "authoring": {"blender": "4.5.14 LTS", "up": "+Z", "forward": "-Y", "groundZ": 0, "units": "METRIC"},
+  "storage": {"largeSourceBackend": "Git LFS after quota verification", "numericQuotaVerified": false, "paidOverageAuthorized": false, "pilotNativeFileLimitBytes": 8388608, "pilotNativeTotalLimitBytes": 20971520},
+  "milestones": {"M0": "in-progress", "M1": "not-started", "M2": "blocked-on-owner-M1-acceptance", "M3": "not-started", "M4": "not-started", "M5": "not-started", "M6": "not-started", "M7": "not-started", "M8": "not-started"},
+  "technicalPass": false,
+  "agentVisualStatus": "No new source yet",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "assets": [],
+  "nextTask": "Preflight and preserved small original skull-neck-chest study; no detail or animation"
+}
