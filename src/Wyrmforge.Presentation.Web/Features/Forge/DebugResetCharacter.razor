@@ -1,0 +1,46 @@
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JavaScript
+
+<section class="debug-reset-settings" aria-label="Debug settings">
+    <h3>Debug</h3>
+    <button type="button" @onclick="OpenAsync">Reset character</button>
+    <dialog @ref="resetDialog" aria-labelledby="debug-reset-title">
+        <h2 id="debug-reset-title">Reset this character?</h2>
+        <p>Deletes this device’s character, progress, inventory, saved builds and settings. Returns to the start screen.</p>
+        @if (error is not null) { <p role="alert">@error</p> }
+        <div class="reset-actions">
+            <button type="button" class="cancel-reset" disabled="@busy" @onclick="CloseAsync">Cancel</button>
+            <button type="button" class="confirm-reset" disabled="@busy" @onclick="ConfirmAsync">@(busy ? "Resetting…" : "Reset everything")</button>
+        </div>
+    </dialog>
+</section>
+
+@code {
+    [Parameter] public EventCallback OnReset { get; set; }
+    private ElementReference resetDialog;
+    private IJSObjectReference? module;
+    private bool busy;
+    private string? error;
+    private async Task OpenAsync()
+    {
+        error = null;
+        module ??= await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/character-reset.js");
+        await module.InvokeVoidAsync("openResetDialog", resetDialog);
+    }
+    private async Task CloseAsync()
+    {
+        if (module is not null) await module.InvokeVoidAsync("closeResetDialog", resetDialog);
+    }
+    private async Task ConfirmAsync()
+    {
+        if (busy) return;
+        busy = true;
+        try { await OnReset.InvokeAsync(); }
+        catch (JSException) { error = "Reset could not finish. Check that this browser allows game storage, then try again."; busy = false; }
+    }
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null) await module.DisposeAsync();
+    }
+}

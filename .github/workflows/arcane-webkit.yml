@@ -1,0 +1,48 @@
+name: Arcane WebKit compatibility
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/Wyrmforge.Presentation.Web/**'
+      - 'tests/Wyrmforge.Browser.Tests/**'
+      - '.github/workflows/arcane-webkit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build browser tests
+        run: dotnet build tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release
+      - name: Install WebKit
+        run: pwsh tests/Wyrmforge.Browser.Tests/bin/Release/net10.0/playwright.ps1 install --with-deps webkit
+      - name: Publish game
+        run: dotnet publish src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.csproj -c Release -o ./artifacts/web
+      - name: Start game
+        run: |
+          python3 tools/development/spa_server.py --port 4173 --directory ./artifacts/web/wwwroot > ./artifacts/webkit-server.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat ./artifacts/webkit-server.log
+          exit 1
+      - name: Check phone touch and reset in WebKit
+        env:
+          WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
+          WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/arcane-webkit
+        run: dotnet test tests/Wyrmforge.Browser.Tests/Wyrmforge.Browser.Tests.csproj -c Release --no-build --filter FullyQualifiedName~ArcaneTouchCompatibilityTests -- Playwright.BrowserName=webkit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arcane-webkit-${{ github.sha }}
+          path: |
+            artifacts/arcane-webkit
+            artifacts/webkit-server.log
+          retention-days: 14

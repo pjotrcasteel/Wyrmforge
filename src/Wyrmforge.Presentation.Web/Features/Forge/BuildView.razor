@@ -38,13 +38,7 @@
                 <div class="web-pan-space">
                     <div class="arcane-web-canvas">
                         <svg class="school-wheel-rings" viewBox="0 0 3200 3200" aria-hidden="true">
-                            <circle cx="1600" cy="1600" r="1220" /><circle cx="1600" cy="1600" r="1200" />
-                            <circle cx="1600" cy="1600" r="740" /><circle cx="1600" cy="1600" r="300" />
-                            @foreach (var school in ArcaneSchoolCatalog.All)
-                            {
-                                var point = ArcaneWheelLayout.Anchor(school.Id, ActiveSchool, 1220);
-                                <line x1="1600" y1="1600" x2="@Coordinate(point.X)" y2="@Coordinate(point.Y)" />
-                            }
+                            <circle cx="1600" cy="1600" r="1500" />
                         </svg>
                         @foreach (var school in ArcaneSchoolCatalog.All)
                         {
@@ -60,9 +54,8 @@
                         <svg class="web-connections" viewBox="0 0 3200 3200" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
-                                var from = ArcaneWheelLayout.Position(PassiveTreeCatalog.Get(connection.From), ActiveSchool);
-                                var to = ArcaneWheelLayout.Position(PassiveTreeCatalog.Get(connection.To), ActiveSchool);
-                                <line class="@ConnectionClass(connection)" x1="@Coordinate(from.X)" y1="@Coordinate(from.Y)" x2="@Coordinate(to.X)" y2="@Coordinate(to.Y)" />
+                                <path class="@ConnectionClass(connection)" data-from="@connection.From" data-to="@connection.To"
+                                      d="@ArcaneWheelLayout.Path(connection, ActiveSchool)" />
                             }
                         </svg>
 
@@ -252,4 +245,3 @@
         <div><button @onclick="CancelRefund">Cancel</button><button class="confirm-refund" @onclick="ConfirmRefundAsync">Refund points</button></div>
     </dialog>
 }
-

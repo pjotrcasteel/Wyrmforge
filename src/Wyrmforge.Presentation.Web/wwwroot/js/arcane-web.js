@@ -9,6 +9,7 @@
         const x = viewport.clientWidth / 2 - state.x * state.scale;
         const y = viewport.clientHeight / 2 - state.y * state.scale;
         state.canvas.style.transform = `translate(${x}px, ${y}px) scale(${state.scale})`;
+        state.canvas.style.setProperty('--web-scale', String(state.scale));
         viewport.dataset.scale = String(state.scale);
         viewport.classList.toggle('overview', state.scale < 0.5);
     }
@@ -41,7 +42,7 @@
             state.removers.push(() => target.removeEventListener(name, action, options));
         };
         const point = event => {
-            const rect = viewport.getBoundingClientRect();
+            const rect = state.rect || viewport.getBoundingClientRect();
             return { x: event.clientX - rect.left, y: event.clientY - rect.top };
         };
         const startPan = position => {
@@ -62,18 +63,19 @@
                 render(viewport, state);
             }
         };
-        listen(viewport, 'pointerdown', event => {
+        const begin = event => {
             if (event.pointerType === 'mouse' && event.button !== 0) return;
             event.preventDefault();
             const position = point(event);
             if (state.pointers.size === 0) {
+                state.rect = viewport.getBoundingClientRect();
                 state.moved = false;
                 state.pinched = false;
                 state.button = event.target.closest('button');
                 startPan(position);
             }
             state.pointers.set(event.pointerId, position);
-            viewport.setPointerCapture(event.pointerId);
+            if (event.pointerType !== 'touch') viewport.setPointerCapture(event.pointerId);
             if (state.pointers.size === 2) {
                 const points = [...state.pointers.values()];
                 state.pinched = true;
@@ -81,8 +83,8 @@
                 state.pinch = { distance: Math.max(1, distance(points)), scale: state.scale,
                     world: worldPoint(viewport, state, midpoint(points)) };
             }
-        });
-        listen(viewport, 'pointermove', event => {
+        };
+        const move = event => {
             if (!state.pointers.has(event.pointerId)) return;
             event.preventDefault();
             const position = point(event);
@@ -90,9 +92,14 @@
             if (state.pan && Math.hypot(position.x - state.pan.pointer.x, position.y - state.pan.pointer.y) > 6) state.moved = true;
             viewport.classList.toggle('dragging', state.moved);
             if (!state.frame) state.frame = requestAnimationFrame(flush);
-        });
+        };
         const release = event => {
             if (!state.pointers.has(event.pointerId)) return;
+            if (event.type === 'pointerup') {
+                const position = point(event);
+                state.pointers.set(event.pointerId, position);
+                if (state.pan && Math.hypot(position.x - state.pan.pointer.x, position.y - state.pan.pointer.y) > 6) state.moved = true;
+            }
             if (state.frame) cancelAnimationFrame(state.frame);
             flush();
             const tapped = event.type === 'pointerup' && state.pointers.size === 1 && !state.moved && !state.pinched;
@@ -110,11 +117,28 @@
                     state.button.click();
                 }
                 state.button = null;
+                state.rect = null;
             }
         };
-        listen(viewport, 'pointerup', release);
-        listen(viewport, 'pointercancel', release);
-        listen(viewport, 'lostpointercapture', release);
+        // Safari's touch stream has explicit, non-passive ownership. Do not run
+        // both Pointer and Touch streams for the same finger gesture.
+        const touchEvents = 'ontouchstart' in window;
+        listen(viewport, 'pointerdown', event => { if (!touchEvents || event.pointerType !== 'touch') begin(event); });
+        listen(viewport, 'pointermove', event => { if (!touchEvents || event.pointerType !== 'touch') move(event); });
+        listen(viewport, 'pointerup', event => { if (!touchEvents || event.pointerType !== 'touch') release(event); });
+        const touch = (event, action, type) => {
+            event.preventDefault();
+            for (const finger of event.changedTouches) action({ type, pointerType:'touch', pointerId:finger.identifier,
+                clientX:finger.clientX, clientY:finger.clientY, target:event.target, preventDefault() {} });
+        };
+        if (touchEvents) {
+            listen(viewport, 'touchstart', event => touch(event, begin, 'pointerdown'), { passive:false });
+            listen(viewport, 'touchmove', event => touch(event, move, 'pointermove'), { passive:false });
+            listen(viewport, 'touchend', event => touch(event, release, 'pointerup'), { passive:false });
+            listen(viewport, 'touchcancel', event => touch(event, release, 'pointercancel'), { passive:false });
+        }
+        listen(viewport, 'pointercancel', event => { if (!touchEvents || event.pointerType !== 'touch') release(event); });
+        listen(viewport, 'lostpointercapture', event => { if (!touchEvents || event.pointerType !== 'touch') release(event); });
         // Capture retargets the native compatibility click. Dispatch one real
         // node action above for a tap; a drag, pinch or cancellation never taps.
         listen(viewport, 'click', event => {
@@ -122,7 +146,14 @@
         }, true);
         listen(viewport, 'wheel', event => {
             event.preventDefault();
-            applyScale(viewport, state, state.scale * (event.deltaY < 0 ? 1.12 : 1 / 1.12), point(event));
+            if (event.ctrlKey || event.metaKey) {
+                applyScale(viewport, state, state.scale * Math.exp(-event.deltaY * 0.005), point(event));
+            } else {
+                const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1;
+                state.x += (event.deltaX || 0) * unit / state.scale;
+                state.y += event.deltaY * unit / state.scale;
+                render(viewport, state);
+            }
         }, { passive: false });
         listen(viewport, 'keydown', event => {
             if (event.target !== viewport) return;
@@ -135,6 +166,10 @@
             } else if (event.key === '+' || event.key === '=') { event.preventDefault(); zoom(viewport, 0.15); }
             else if (event.key === '-') { event.preventDefault(); zoom(viewport, -0.15); }
             else if (event.key === 'Home') { event.preventDefault(); reset(viewport); }
+        });
+        listen(window, 'blur', () => {
+            state.pointers.clear(); state.pan = null; state.pinch = null; state.button = null; state.rect = null;
+            state.moved = true; viewport.classList.remove('dragging');
         });
         state.resize = new ResizeObserver(() => render(viewport, state));
         state.resize.observe(viewport);
@@ -158,7 +193,7 @@
         const state = states.get(viewport);
         if (!state) return;
         state.x = state.y = state.size / 2;
-        state.scale = Math.max(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size - 240));
+        state.scale = Math.max(0.08, Math.min(viewport.clientWidth, viewport.clientHeight) / (state.size + 200));
         render(viewport, state);
     }
 
@@ -199,4 +234,3 @@
 
     window.wyrmforgeArcaneWeb = { initialize, zoom, reset, focus, revealInspector, overview, focusSchool, openRefundDialog, dispose };
 })();
-

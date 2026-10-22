@@ -23,13 +23,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
-        }");
+        // Mount registers the scene before its asynchronous masks and route are
+        // ready. Await the qualifying snapshot, not an async polling Promise.
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.167');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            const deadline = performance.now() + 15000;
+            while (performance.now() < deadline) {
+                const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+                if (d?.active && d.foregroundReady && d.closeWellFrontRoute && d.routeLength > 20) return d;
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            throw new Error('Town V2 front route and foreground did not finish loading');
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
@@ -752,7 +756,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task Mobile_ArcaneWeb_TouchPanUsesReadableSpacedMapWithoutCraftPanels(int width, int height)
     {
         await Page.SetViewportSizeAsync(width, height);
-        await Page.AddInitScriptAsync("localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
+        await Page.AddInitScriptAsync("window.ontouchstart = null; localStorage.setItem('wyrmforge.firstHunt.v1','3'); localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({ Budget:24, Nodes:[] }));");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
@@ -779,6 +783,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return Math.min(...nodes.flatMap((a,i) => nodes.slice(i+1).map(b => Math.hypot(a.x-b.x,a.y-b.y))));
         }");
         Assert.IsGreaterThanOrEqualTo(90, minimumSeparation, "Node centers must have meaningful world-space separation.");
+        await AssertArcanePathsClearAsync();
         await ScreenshotAsync($"specialize-readable-{width}.png");
         var node = Page.Locator(".web-node[data-node-id='fire-1']");
         var box = await node.BoundingBoxAsync();
@@ -787,6 +792,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var y = box.Y + box.Height / 2;
         var before = await Page.Locator(".arcane-web-canvas").GetAttributeAsync("style");
         var pageY = await Page.EvaluateAsync<double>("window.scrollY");
+        await Page.Mouse.MoveAsync(x, y);
+        await Page.Mouse.WheelAsync(60, 80);
+        await Expect(Page.Locator(".arcane-web-canvas")).Not.ToHaveAttributeAsync("style", before!);
+        await Expect(viewport).ToHaveAttributeAsync("data-scale", "0.95");
+        Assert.AreEqual(pageY, await Page.EvaluateAsync<double>("window.scrollY"), 1);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Center current school" }).ClickAsync();
         var cdp = await Page.Context.NewCDPSessionAsync(Page);
         await cdp.SendAsync("Emulation.setTouchEmulationEnabled", new Dictionary<string, object> { ["enabled"] = true });
         // Trusted browser touch input begins ON a node, not an empty test div.
@@ -802,6 +813,13 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreEqual(pageY, await Page.EvaluateAsync<double>("window.scrollY"), 1, "A Web drag must not scroll the document.");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Center current school" }).ClickAsync();
         await viewport.ScrollIntoViewIfNeededAsync();
+        await cdp.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchStart", ["touchPoints"] = new[] { new { x = x - 35, y, id = 11 }, new { x = x + 35, y, id = 12 } } });
+        await cdp.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchMove", ["touchPoints"] = new[] { new { x = x - 65, y, id = 11 }, new { x = x + 65, y, id = 12 } } });
+        await cdp.SendAsync("Input.dispatchTouchEvent", new Dictionary<string, object> { ["type"] = "touchEnd", ["touchPoints"] = Array.Empty<object>() });
+        Assert.IsGreaterThan(0.95, double.Parse((await viewport.GetAttributeAsync("data-scale"))!, System.Globalization.CultureInfo.InvariantCulture));
+        await Expect(Page.Locator(".node-inspector.open")).ToHaveCountAsync(0);
+        Assert.AreEqual(pageY, await Page.EvaluateAsync<double>("window.scrollY"), 1);
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Center current school" }).ClickAsync();
         await node.ClickAsync();
         var inspector = Page.Locator(".node-inspector.open");
         await Expect(inspector).ToBeVisibleAsync();
@@ -2620,7 +2638,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
         Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
-        Assert.IsGreaterThan(40, await Page.Locator(".web-connections line").CountAsync());
+        Assert.IsGreaterThan(40, await Page.Locator(".web-connections path.web-edge").CountAsync());
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Zoom in", Exact = true })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
@@ -3151,5 +3169,79 @@ public sealed class WyrmforgeBrowserTests : PageTest
     {
         Path = Path.Combine(ArtifactDirectory, name),
     });
-}
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_DebugReset_CancelPreservesCharacterAndConfirmStartsFresh(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"if (!sessionStorage.getItem('other-project.reset-fixture')) {
+            sessionStorage.setItem('other-project.reset-fixture','keep');
+            sessionStorage.setItem('wyrmforge.debug-session','remove');
+            localStorage.setItem('other-project.save','keep');
+            localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Arcanist');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:['arcane-start']}));
+            localStorage.setItem('wyrmforge.future-save.v99','remove');
+        }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Reset character", Exact = true }).ClickAsync();
+        var dialog = Page.GetByRole(AriaRole.Dialog, new() { Name = "Reset this character?" });
+        await Expect(dialog).ToBeVisibleAsync();
+        await ScreenshotAsync($"debug-reset-confirm-{width}.png");
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Cancel", Exact = true }).ClickAsync();
+        await Expect(dialog).Not.ToBeVisibleAsync();
+        Assert.AreEqual("Arcanist", await Page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Reset character", Exact = true }).ClickAsync();
+        await dialog.GetByRole(AriaRole.Button, new() { Name = "Reset everything", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "START GAME", Exact = true })).ToBeVisibleAsync();
+        Assert.IsTrue(await Page.EvaluateAsync<bool>(@"() =>
+            !localStorage.getItem('wyrmforge.firstHunt.v1') && !localStorage.getItem('wyrmforge.characterSchool.v1') &&
+            !localStorage.getItem('wyrmforge.arcaneBuild.v1') && !localStorage.getItem('wyrmforge.future-save.v99') &&
+            !sessionStorage.getItem('wyrmforge.debug-session') && localStorage.getItem('other-project.save') === 'keep' &&
+            sessionStorage.getItem('other-project.reset-fixture') === 'keep' && !location.search"));
+        await ScreenshotAsync($"debug-reset-welcome-{width}.png");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "START GAME", Exact = true }).ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Choose your magic" })).ToBeVisibleAsync();
+    }
 
+    private async Task AssertArcanePathsClearAsync()
+    {
+        var issues = await Page.EvaluateAsync<string[]>(@"() => {
+            const nodes = [...document.querySelectorAll('.web-node')].map(n => ({ id:n.dataset.nodeId,
+                x:parseFloat(n.style.left), y:parseFloat(n.style.top), radius:n.offsetWidth/2 }));
+            const edges = [...document.querySelectorAll('.web-connections path')].map(e => {
+                const numbers = e.getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number);
+                return { from:e.dataset.from, to:e.dataset.to,
+                    points:Array.from({length:numbers.length/2},(_,i) => ({x:numbers[i*2],y:numbers[i*2+1]})) };
+            });
+            const issues = [];
+            const cross = (a,b) => a.x*b.y-a.y*b.x;
+            const sub = (a,b) => ({x:a.x-b.x,y:a.y-b.y});
+            const segments = e => e.points.slice(1).map((b,i) => [e.points[i],b]);
+            for (const e of edges) for (const [a,b] of segments(e)) for (const n of nodes) {
+                if (n.id === e.from || n.id === e.to) continue;
+                const dx=b.x-a.x,dy=b.y-a.y;
+                const t=Math.max(0,Math.min(1,((n.x-a.x)*dx+(n.y-a.y)*dy)/(dx*dx+dy*dy)));
+                if (Math.hypot(n.x-a.x-t*dx,n.y-a.y-t*dy) < n.radius+6)
+                    issues.push(`${e.from}/${e.to} runs through ${n.id}`);
+            }
+            for (let i=0;i<edges.length;i++) for (const f of edges.slice(i+1)) {
+                const e=edges[i], shared=nodes.filter(n => [e.from,e.to].includes(n.id) && [f.from,f.to].includes(n.id));
+                for (const [a,b] of segments(e)) for (const [c,d] of segments(f)) {
+                    const r=sub(b,a),q=sub(d,c),den=cross(r,q);
+                    if (Math.abs(den)<0.001) continue;
+                    const t=cross(sub(c,a),q)/den,u=cross(sub(c,a),r)/den;
+                    if(t<0||t>1||u<0||u>1) continue;
+                    const x=a.x+t*r.x,y=a.y+t*r.y;
+                    if(!shared.some(n => Math.hypot(x-n.x,y-n.y)<1)) issues.push(`${e.from}/${e.to} crosses ${f.from}/${f.to}`);
+                }
+            }
+            return [...new Set(issues)];
+        }");
+        Assert.AreEqual(0, issues.Length, string.Join("; ", issues));
+    }
+
+}
