@@ -742,21 +742,32 @@ test('Town V2 living residents animate by distance, turn safely and idle without
     assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
 });
 
-test('Town V2 coverage audit distinguishes authored corridors from not-yet-classified scenery', () => {
+test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unknown pixels separately', () => {
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
-    assert.match(js, /function buildNavigation\(source, includeCoverage = false\)/);
+    const solids = source(art + '/nexus-v2-reviewed-solid-footprints.svg');
+    assert.match(js, /function buildNavigation\(source, includeCoverage = false, reviewedMask = null\)/);
     assert.match(js, /const coverageAudit = query.get\("townCoverage"\) === "1"/);
-    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit\)/);
+    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit, reviewedMask\)/);
     assert.match(js, /const authored = pixels\[p\] > 230/);
-    assert.match(js, /notSeparatelyClassifiedPixels: totalPixels - authoredGroundPixels/);
-    assert.match(js, /knownSolidClassAvailable: false/);
+    assert.match(js, /reviewedPixels\[p\] > 230/);
+    assert.match(js, /reviewedSolidPixels\+\+/);
+    assert.match(js, /classConflictPixels\+\+/);
+    assert.match(js, /notSeparatelyClassifiedPixels\+\+/);
+    assert.match(js, /knownSolidClassAvailable: includeCoverage/);
     assert.match(js, /fullSceneMapped: false/);
     assert.match(js, /coverageAudit: entry.coverageAudit/);
     assert.match(js, /ctx.drawImage\(w.nav.coverageOverlay, 0, 0\)/);
+    assert.match(js, /reviewedSolid: "red"/);
+    assert.match(js, /classConflict: "magenta"/);
     assert.match(js, /notSeparatelyClassified: "amber"/);
-    // The visual audit is not a license to mark all black pixels as "known solid".
     assert.doesNotMatch(js, /knownSolidClassAvailable: true|fullSceneMapped: true/);
     assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+    assert.equal((solids.match(/<path fill="#fff" d="/g) ?? []).length, 3,
+        'Only three existing evidence-backed solid footprints are currently classified');
+    assert.match(solids, /M 727 511 L 745 497 L 906 497 L 934 511/);
+    assert.match(solids, /M 746 462 L 773 462 L 783 492 L 792 508/);
+    assert.match(solids, /M 417 434 L 428 431 L 448 433 L 463 432/);
+    assert.doesNotMatch(solids, /<rect[\s\S]*fill="#fff"/);
 });
 
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
