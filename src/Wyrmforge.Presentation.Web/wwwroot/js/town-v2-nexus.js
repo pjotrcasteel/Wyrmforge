@@ -109,6 +109,15 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
             notSeparatelyClassifiedPixels: 0
         };
     }) : [];
+    // Reuse palette objects: the audit visits 1.57M pixels on an iPhone and
+    // must not allocate a separate three-element array for every pixel.
+    const palette = {
+        conflict: [227, 54, 198],
+        authored: [42, 224, 194],
+        solid: [232, 76, 67],
+        candidate: [67, 130, 236],
+        unknown: [240, 147, 59]
+    };
     let authoredGroundPixels = 0;
     let reviewedSolidPixels = 0;
     let classConflictPixels = 0;
@@ -148,10 +157,10 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null, c
             // Teal = approved route, red = independently reviewed solid,
             // magenta = authoritative contradiction, blue = proposed paving
             // only (still BLOCKED for foot navigation), amber = unknown.
-            const color = authored && reviewedSolid ? [227, 54, 198] :
-                authored ? [42, 224, 194] :
-                reviewedSolid ? [232, 76, 67] :
-                candidateGround ? [67, 130, 236] : [240, 147, 59];
+            const color = authored && reviewedSolid ? palette.conflict :
+                authored ? palette.authored :
+                reviewedSolid ? palette.solid :
+                candidateGround ? palette.candidate : palette.unknown;
             coverageImg.data[p] = color[0];
             coverageImg.data[p + 1] = color[1];
             coverageImg.data[p + 2] = color[2];
