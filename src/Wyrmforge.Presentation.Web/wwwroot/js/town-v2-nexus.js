@@ -82,6 +82,21 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
         reviewedCtx.drawImage(reviewedMask, 0, 0);
         reviewedPixels = reviewedCtx.getImageData(0, 0, WIDTH, HEIGHT).data;
     }
+    // Tile audit is calculated during the SAME raster pass. It is accounting,
+    // not pathfinding; decorative unmapped areas remain unclassified.
+    const tileSize = 256;
+    const tileColumns = Math.ceil(WIDTH / tileSize);
+    const tileRows = Math.ceil(HEIGHT / tileSize);
+    const tiles = coverageImg ? Array.from({ length: tileColumns * tileRows }, (_, index) => {
+        const column = index % tileColumns, row = Math.floor(index / tileColumns);
+        const x = column * tileSize, y = row * tileSize;
+        return {
+            column, row, x, y,
+            width: Math.min(tileSize, WIDTH - x), height: Math.min(tileSize, HEIGHT - y),
+            authoredGroundPixels: 0, reviewedSolidPixels: 0,
+            classConflictPixels: 0, notSeparatelyClassifiedPixels: 0
+        };
+    }) : [];
     let authoredGroundPixels = 0;
     let reviewedSolidPixels = 0;
     let classConflictPixels = 0;
@@ -101,6 +116,14 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
         else if (reviewedSolid) reviewedSolidPixels++;
         else notSeparatelyClassifiedPixels++;
         if (coverageImg) {
+            const coordinate = p / 4;
+            const x = coordinate % WIDTH;
+            const y = Math.floor(coordinate / WIDTH);
+            const tile = tiles[Math.floor(y / tileSize) * tileColumns + Math.floor(x / tileSize)];
+            if (authored && reviewedSolid) tile.classConflictPixels++;
+            else if (authored) tile.authoredGroundPixels++;
+            else if (reviewedSolid) tile.reviewedSolidPixels++;
+            else tile.notSeparatelyClassifiedPixels++;
             // Teal = authored route; red = independently reviewed solid;
             // magenta = contradictory authored classes; amber = UNKNOWN.
             const color = authored && reviewedSolid ? [227, 54, 198] :
@@ -113,13 +136,37 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
         }
     }
     overlayCtx.putImageData(img, 0, 0);
-    if (coverageImg) coverageCtx.putImageData(coverageImg, 0, 0);
+    if (coverageImg) {
+        coverageCtx.putImageData(coverageImg, 0, 0);
+        // Bounded grid is an audit locator, never a rendered scenery cutout.
+        coverageCtx.save();
+        coverageCtx.strokeStyle = "rgba(255,255,255,.34)";
+        coverageCtx.lineWidth = 1;
+        for (let x = tileSize; x < WIDTH; x += tileSize) {
+            coverageCtx.beginPath();
+            coverageCtx.moveTo(x + .5, 0);
+            coverageCtx.lineTo(x + .5, HEIGHT);
+            coverageCtx.stroke();
+        }
+        for (let y = tileSize; y < HEIGHT; y += tileSize) {
+            coverageCtx.beginPath();
+            coverageCtx.moveTo(0, y + .5);
+            coverageCtx.lineTo(WIDTH, y + .5);
+            coverageCtx.stroke();
+        }
+        coverageCtx.restore();
+    }
     const totalPixels = WIDTH * HEIGHT;
     if (includeCoverage && reviewedSolidPixels === 0)
         throw new Error("Town V2 audit has no independently reviewed solid pixels.");
     if (authoredGroundPixels + reviewedSolidPixels + classConflictPixels +
         notSeparatelyClassifiedPixels !== totalPixels)
         throw new Error("Town V2 semantic audit does not account for every canvas pixel.");
+    for (const tile of tiles)
+        if (tile.authoredGroundPixels + tile.reviewedSolidPixels +
+            tile.classConflictPixels + tile.notSeparatelyClassifiedPixels !==
+                tile.width * tile.height)
+            throw new Error("Town V2 coverage tile does not account for its entire raster.");
     return {
         canStand, overlay, coverageOverlay,
         coverage: {
@@ -128,6 +175,7 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
             knownSolidClassAvailable: includeCoverage,
             reviewedSolidNames: includeCoverage
                 ? ["well-footprint", "noticeboard-base", "stair-root-bed"] : [],
+            tileSize, tileColumns, tileRows, tiles,
             fullSceneMapped: false
         }
     };
@@ -499,7 +547,7 @@ function animate(w, now) {
                 w.position.x >= 720 ? "WELL FRONT" : w.position.y >= 540 ? "PLAZA" : "STAIRS") +
             " · DEPTH " + (w.showDepth ? "ON" : "OFF") +
             " · " + Math.round(w.position.x) + "," + Math.round(w.position.y) +
-            (w.coverageAudit ? " · ROUTE " +
+            (w.coverageAudit ? " · 7x4 GRID · ROUTE " +
                 (w.nav.coverage.authoredGroundPixels * 100 /
                     w.nav.coverage.totalPixels).toFixed(1) +
                 "% · SOLID " + w.nav.coverage.reviewedSolidPixels +
@@ -563,16 +611,16 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.179", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.179", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.180", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.180", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode || residentCount > 1 || coverageAudit) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.179", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.179", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.180", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.180", document.baseURI).href));
         }
         if (coverageAudit)
             urls.push(loadMask(new URL(
-                "art/town/nexus-v2-reviewed-solid-footprints.svg?v=0.0.179", document.baseURI).href));
+                "art/town/nexus-v2-reviewed-solid-footprints.svg?v=0.0.180", document.baseURI).href));
         const [walkMask, depthMask, wellMask, noticeMask, reviewedMask] = await Promise.all(urls);
         if (state.disposed) return;
         state.nav = buildNavigation(walkMask, coverageAudit, reviewedMask);
