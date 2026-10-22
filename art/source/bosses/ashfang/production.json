@@ -7,7 +7,7 @@
   "storage": "Git LFS; user confirmed available capacity 2026-10-23",
   "blender": "4.5.14 LTS",
   "renderer": "Cycles OptiX NVIDIA GeForce RTX 5090; three views completed per review",
-  "currentCandidate": "archive/M1-candidate-007/ashfang-master-working.blend",
+  "currentCandidate": "archive/M1-candidate-008/ashfang-master-working.blend",
   "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
   "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
   "M0": "Import, packed dependency reopen, remote LFS retrieval and SHA256 verification passed. Structural issues documented; deformation/motion not validated.",
