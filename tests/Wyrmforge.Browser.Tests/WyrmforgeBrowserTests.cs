@@ -105,28 +105,23 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
-        await Page.WaitForFunctionAsync(@"async () => {
+        // Poll inside an awaited evaluation: WaitForFunction treats an async
+        // predicate's Promise as truthy before its diagnostics are ready.
+        var before = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.165');
             const canvas = document.querySelector('[data-town-v2-canvas]');
-            const d = module.readTownV2Diagnostics(canvas);
-            return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
-                d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
-        }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.165');
-            const canvas = document.querySelector('[data-town-v2-canvas]');
-            const d = module.readTownV2Diagnostics(canvas);
-            if (!(d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
-                d.noticeOcclusionFrames > 0 && d.violations === 0 && d.wellForegroundRequired &&
-                d.wellDepthReady && d.noticeDepthReady && d.wellDepthEdgesClear && d.noticeDepthEdgesClear)) return false;
-            canvas.dataset.testRearDepthSnapshot = JSON.stringify(d);
-            return true;
-        }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
-        // Serialize the qualifying diagnostics in the predicate itself, so the
-        // assertion reads that snapshot rather than a later animation frame.
-        var snapshot = await Page.Locator("[data-town-v2-canvas]").GetAttributeAsync("data-test-rear-depth-snapshot");
-        using var snapshotDocument = JsonDocument.Parse(snapshot!);
-        var before = snapshotDocument.RootElement;
+            const deadline = performance.now() + 22000;
+            while (performance.now() < deadline) {
+                const d = module.readTownV2Diagnostics(canvas);
+                if (d?.active && d.rearMode && d.safe && d.rearFrames > 3 &&
+                    d.wellOcclusionFrames > 0 && d.noticeOcclusionFrames > 0 && d.violations === 0 &&
+                    d.wellForegroundRequired && d.wellDepthReady && d.noticeDepthReady &&
+                    d.wellDepthTransparent && d.noticeDepthTransparent &&
+                    d.wellDepthEdgesClear && d.noticeDepthEdgesClear) return d;
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            throw new Error('Rear-depth diagnostics did not become ready within 22 seconds');
+        }");
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
         Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
         Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
