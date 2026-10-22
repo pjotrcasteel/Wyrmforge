@@ -50,7 +50,7 @@ jobs:
             SECONDS="${{ inputs.maximum_seconds }}"
           else
             RUNS="2"
-            SECONDS="180"
+            SECONDS="420"
           fi
           dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build -- \
             --fire-progression --runs-per-combination "$RUNS" --max-seconds "$SECONDS" \
