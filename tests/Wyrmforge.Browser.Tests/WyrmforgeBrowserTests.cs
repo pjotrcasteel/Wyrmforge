@@ -23,13 +23,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-citizen")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.167');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
-        }");
+        // Mount registers the scene before its asynchronous masks and route are
+        // ready. Await the qualifying snapshot, not an async polling Promise.
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.167');
-            return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+            const deadline = performance.now() + 15000;
+            while (performance.now() < deadline) {
+                const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
+                if (d?.active && d.foregroundReady && d.closeWellFrontRoute && d.routeLength > 20) return d;
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            throw new Error('Town V2 front route and foreground did not finish loading');
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(first.GetProperty("usingLegacyNavigation").GetBoolean());
@@ -2659,7 +2663,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
         Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
-        Assert.IsGreaterThan(40, await Page.Locator(".web-connections line").CountAsync());
+        Assert.IsGreaterThan(40, await Page.Locator(".web-connections path.web-edge").CountAsync());
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Zoom in", Exact = true })).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "BEGIN HUNT", Exact = true })).ToBeVisibleAsync();
