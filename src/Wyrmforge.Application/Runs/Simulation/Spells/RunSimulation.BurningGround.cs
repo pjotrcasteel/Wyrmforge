@@ -17,7 +17,9 @@ public sealed partial class RunSimulation
         // Keep existing Rank II+ Fireball behavior, while Scorched Earth enables ground fire at Rank I.
         if (projectile.Rank < 2 && !HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)) return;
         var duration = HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)
-            ? fireballWebModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationDuration, 1) : 1;
+            ? fireballWebModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationDuration, 1) *
+                FireballEffectFactor(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth,
+                    Wyrmforge.Domain.Progression.PassiveTree.MutationEffectCapability.Duration) : 1;
         burningGrounds.Add(new BurningGroundState(position, projectile.Damage * BurningGroundDamageFraction, duration));
     }
 
