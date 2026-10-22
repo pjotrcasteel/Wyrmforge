@@ -780,7 +780,7 @@ test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unk
     assert.match(nonplay, /M 1270 132 H 1672 V 263 H 1270 Z/);
     assert.match(js, /const outConflict = outOfPlay &&/);
     assert.match(js, /outOfPlayNames: includeCoverage/);
-    assert.match(js, /outOfPlay \? \[137, 109, 209\]/);
+    assert.match(js, /outOfPlay \? palette.outOfPlay/);
     assert.doesNotMatch(js, /buildNavigation\(outMask|const canStand = .*outOfPlay/);
 });
 
