@@ -1,0 +1,18 @@
+# Reproduce and review
+
+Use Blender 4.5.14 LTS, background mode, with `--disable-autoexec` when opening downloaded/native sources. Commands below run from this worktree. Never reuse an existing output directory.
+
+```powershell
+$blender = 'C:/Wyrmforge/artifacts/toolchains/blender-4.5.14/blender-4.5.14-windows-x64/blender.exe'
+& $blender -b --factory-startup --python tools/ashfang-zagmatorah/import_source.py -- --source C:/WyrmForgeAssets/Zagmatorah --output C:/Wyrmforge/ashfang-zagmatorah/artifacts/ashfang/M0-new
+& $blender -b art/source/bosses/ashfang/archive/M0-001/master/ashfang-master-working.blend --disable-autoexec --python tools/ashfang-zagmatorah/candidate.py -- --config tools/ashfang-zagmatorah/candidate.json --output C:/Wyrmforge/ashfang-zagmatorah/artifacts/ashfang/M1-new
+& $blender -b artifacts/ashfang/M1-new/ashfang-master-working.blend --disable-autoexec --python tools/ashfang-zagmatorah/review.py -- --output C:/Wyrmforge/ashfang-zagmatorah/artifacts/ashfang/M1-new/review --render
+```
+
+Original import contains no authoring edits. Packing and path repair are conversion/dependency preservation steps. Original creator-native Blender source was not supplied. Both candidates start from the preserved initial working copy; `archive/M1-candidate-00*/config.json` records each recipe, and Git history preserves script revisions. Candidate001 uses script e8ece45f; candidate002 uses 4f7cd6ca. Materials retain imported UV normals and opacity; AO/metallic dependencies are archived but not comprehensively reconstructed. Geometry/rig compatibility remains unvalidated beyond finite coordinates, group assignments, preserved topology and successful reopen.
+
+Source card SHA256: dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba.
+
+Review outcome: both candidates FAIL master identity gate. Candidate002 is a surface/proportion experiment only. No actual animated source clip, clay review, gameplay camera match, accepted rig test, six-tier system, sprite export or integration is claimed. The 1,074 boundary edges may include intentional membrane/open surfaces; 5 additional nonmanifold edges require localized diagnosis. The supplied FBX is a lightweight download with external maps, explaining its difference from the reported 139 MB package.
+
+All archived native `.blend` files are immutable milestones. Save a new revision rather than overwriting them. Keep LFS enabled on checkout (`git lfs pull`).

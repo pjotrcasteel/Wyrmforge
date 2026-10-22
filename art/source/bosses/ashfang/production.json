@@ -10,10 +10,19 @@
   "currentCandidate": "archive/M1-candidate-002/ashfang-master-working.blend",
   "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
   "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
-  "M0": "import and reopen technically verified; remote binary verification pending",
+  "M0": "Import, packed dependency reopen, remote LFS retrieval and SHA256 verification passed. Structural issues documented; deformation/motion not validated.",
   "M1": "provisional surface/proportion study; visual identity gate failed",
   "M2_M7": "not started",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
-  "remaining": ["Resolve foreleg/wing anatomy against card", "Author heavy cranial and chest armor with suitable topology", "Author mouth/throat heat and directed fissures", "Diagnose 5 non-boundary nonmanifold edges", "Deformation pose validation", "Author actual animation (imported actions are static)", "Clay and actual gameplay-camera review", "Tier I versus VI after master acceptance"]
+  "remaining": [
+    "Resolve foreleg/wing anatomy against card",
+    "Author heavy cranial and chest armor with suitable topology",
+    "Author mouth/throat heat and directed fissures",
+    "Diagnose 5 non-boundary nonmanifold edges",
+    "Deformation pose validation",
+    "Author actual animation (imported actions are static)",
+    "Clay and actual gameplay-camera review",
+    "Tier I versus VI after master acceptance"
+  ]
 }

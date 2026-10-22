@@ -1,0 +1,188 @@
+[
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/master/ashfang-master-working.blend",
+    "sha256": "2b7504c26b3cbe44ea908fb8e5dd0d53355f1d92494d1d5dcbcdfafbcd084463",
+    "bytes": 137029410,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/source/Zagmatorah.fbx",
+    "sha256": "8c229ad4e7a4c3b341bc20a566b18a35c27f36082a4388b0eedbb02e61cc8650",
+    "bytes": 3195964,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonEye_AO.png",
+    "sha256": "d3e33c9a94599d296a81556c8d83dd35164cdc7bd3e29b3a5a98ecd0266120ae",
+    "bytes": 74163,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonEye_Albedo.png",
+    "sha256": "b818463e259935e241128a3a55fb3e040c27cb43d12b29a28917fe044236cd1a",
+    "bytes": 2445960,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonEye_Metalic.png",
+    "sha256": "8dfe8458b658521e72fc2e23cd6ce3f49c8b66ffa288e876770b85b60c71ee12",
+    "bytes": 25568,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonEye_Normal.png",
+    "sha256": "59a8e08c91002b33addfc63f4d120df92e946df773aa8ab00eb04a50d30596b7",
+    "bytes": 10455152,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonEye_Opacity.png",
+    "sha256": "cb10c91a9c2e1b7888b6a41bf0f0f10e2ea150e61eba82ed729455550fbb07a6",
+    "bytes": 25554,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonEye_Roughness.png",
+    "sha256": "d9be3314e9471900982343dad33db51c066aa15976b730eab30207eb85fdd050",
+    "bytes": 25565,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonSkin_AO.png",
+    "sha256": "9c3ebc97af3a2a1bd27590cdff64a41c959fb5640a2de0262b188148e59fdbb1",
+    "bytes": 4762486,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonSkin_Albedo.png",
+    "sha256": "7cb7a74949a0865230b220be911e7e9eb1152aa60cc044cc6fe4982338c4546e",
+    "bytes": 17082142,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonSkin_Metalic.png",
+    "sha256": "2ca99833ba572100266be0d6b4f97021f41e6fc54e04ec36417a803b5a781ba5",
+    "bytes": 283260,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonSkin_Normal.png",
+    "sha256": "4bfbc045c7270ac73faa60ebf224a0218779678e4539652c50a77a085bce95a4",
+    "bytes": 46785443,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonSkin_Roughness.png",
+    "sha256": "5cdedfb178c856a483bf5db3eb96200b31dd89bb216a86529fb8adefae50e1f3",
+    "bytes": 6412185,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonWing_AO.png",
+    "sha256": "fd2b8b1f9e00323ab8d4d2663a62e2f2fdd0929359d824eec6a0b07de9a88173",
+    "bytes": 2368143,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonWing_Albedo.png",
+    "sha256": "1cb9ab09372c0668867f075349a754b0db8981ccbcbfed45a58079dcfe58f9af",
+    "bytes": 12175180,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonWing_Metalic.png",
+    "sha256": "927db41fbb13d2a6cae8c1ecf70cfb8557c5923b12b8325d464287fd85ce2372",
+    "bytes": 2116,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonWing_Normal.png",
+    "sha256": "b11cc499602e6b9c81eb390f6bfca481bb20786e21892a9f9ddafb5d3160183b",
+    "bytes": 35645023,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonWing_Opacity.png",
+    "sha256": "a4219dfc43fabadf56f6315228eaa9635e2c9560e6b751af0b279b91230a6505",
+    "bytes": 202513,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/download/textures/DragonWing_Roughness.png",
+    "sha256": "64a4f56cd68e18dd7b38cf69e4e1be8721aac77ad8878a8c8f7bc41e09c93b77",
+    "bytes": 4422321,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/original/zagmatorah-original-import.blend",
+    "sha256": "00e43897abe90aa7569b32d55f1b11c336bf634cb1527e4c496a56dab6ff954f",
+    "bytes": 137029422,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/review-original-r02/front.png",
+    "sha256": "7134063fc712eeea3c0fddec9fd812ba261203620500cedefe01e065632a6f3d",
+    "bytes": 217919,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/review-original-r02/side.png",
+    "sha256": "cbe0f4422f1c81a696338ad58bdeeb1db10cb1c6de7a8d2a33df56455cac5a41",
+    "bytes": 236910,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M0-001/review-original-r02/three-quarter.png",
+    "sha256": "0125f6eec55160e873c3ce6838a66212e8661323dd3788e8c27c414cbce84e0f",
+    "bytes": 244193,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-001/ashfang-master-working.blend",
+    "sha256": "2341baae4247c69380d27395d206b611b606a956203ddbc187d9de0c27c5d503",
+    "bytes": 137335143,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-001/review/front.png",
+    "sha256": "810a50c40ce867a67c301ff6084bd2a4b502f92df56573ea8306c58fd0a0e263",
+    "bytes": 233030,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-001/review/side.png",
+    "sha256": "6325ae5ae3bea45913ebb6419a886fae9cb269249c5e164f9de4a027ac5ca916",
+    "bytes": 273742,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-001/review/three-quarter.png",
+    "sha256": "5ee8e9704ecff0add4ac431792e27528eb8dca24819831f0d134aba4829b6c58",
+    "bytes": 274436,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-002/ashfang-master-working.blend",
+    "sha256": "43fd4c11115e0245dbad672a672df2ac09f086cc6a53fbfa320aaefc8ad4ad12",
+    "bytes": 137339337,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-002/review/front.png",
+    "sha256": "dbd7a81d8fcb3f650fc7222fadcc4f7cf3168d0e1e9bf0dac00b893b44d5878a",
+    "bytes": 216021,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-002/review/side.png",
+    "sha256": "85c495a900fed46c81a2c6b19e2af5eed0cf2371c74322ad8053033db30ba4f3",
+    "bytes": 235685,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-002/review/three-quarter.png",
+    "sha256": "6a0f0fd8e4c1a42e1583516ff31becd4c2257165f8f2727d4a92bd90977a29d2",
+    "bytes": 239166,
+    "verified": true
+  }
+]
