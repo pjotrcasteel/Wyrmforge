@@ -7,13 +7,51 @@
   "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
   "sourceCardSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
   "geometryProvenance": "Original authored geometry only; no prior dragon meshes, reconstruction or free model imports",
-  "authoring": {"blender": "4.5.14 LTS", "up": "+Z", "forward": "-Y", "groundZ": 0, "units": "METRIC"},
-  "storage": {"largeSourceBackend": "Git LFS after quota verification", "numericQuotaVerified": false, "paidOverageAuthorized": false, "pilotNativeFileLimitBytes": 8388608, "pilotNativeTotalLimitBytes": 20971520},
-  "milestones": {"M0": "in-progress", "M1": "not-started", "M2": "blocked-on-owner-M1-acceptance", "M3": "not-started", "M4": "not-started", "M5": "not-started", "M6": "not-started", "M7": "not-started", "M8": "not-started"},
-  "technicalPass": false,
-  "agentVisualStatus": "No new source yet",
+  "authoring": {
+    "blender": "4.5.14 LTS",
+    "up": "+Z",
+    "forward": "-Y",
+    "groundZ": 0,
+    "units": "METRIC"
+  },
+  "storage": {
+    "largeSourceBackend": "Git LFS after quota verification",
+    "numericQuotaVerified": false,
+    "paidOverageAuthorized": false,
+    "pilotNativeFileLimitBytes": 8388608,
+    "pilotNativeTotalLimitBytes": 20971520
+  },
+  "milestones": {
+    "M0": "partial: preflight/research/remote docs verified; large LFS quota unresolved",
+    "M1": "original primary contour study r01; technical reopen passed; visual review pending",
+    "M2": "blocked-on-owner-M1-acceptance",
+    "M3": "not-started",
+    "M4": "not-started",
+    "M5": "not-started",
+    "M6": "not-started",
+    "M7": "not-started",
+    "M8": "not-started"
+  },
+  "technicalPass": true,
+  "agentVisualStatus": "not inspected yet",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
-  "assets": [],
-  "nextTask": "Preflight and preserved small original skull-neck-chest study; no detail or animation"
+  "assets": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary-preunion.blend",
+      "bytes": 463801,
+      "sha256": "bab0a3e1f96084e8a3e81ea85313fed1f60fc00e7b6f7e1968743f38ea7b1e1d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary.blend",
+      "bytes": 1450348,
+      "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working.blend",
+      "bytes": 1450348,
+      "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
+    }
+  ],
+  "nextTask": "Push editable r01 source then neutral multi-angle review and actual-size comparison"
 }

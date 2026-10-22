@@ -1,0 +1,28 @@
+{
+  "revision": "M1-r01",
+  "stage": "M1 primary contour candidate, not accepted",
+  "geometryImported": false,
+  "voxelSize": 0.075,
+  "ownerAccepted": false,
+  "sculptComplete": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary-preunion.blend",
+      "bytes": 463801,
+      "sha256": "bab0a3e1f96084e8a3e81ea85313fed1f60fc00e7b6f7e1968743f38ea7b1e1d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary.blend",
+      "bytes": 1450348,
+      "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working.blend",
+      "bytes": 1450348,
+      "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
+    }
+  ],
+  "pilotStorageWithinLimit": true
+}
