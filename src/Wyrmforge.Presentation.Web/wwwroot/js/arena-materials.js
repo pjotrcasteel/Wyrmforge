@@ -316,7 +316,10 @@ export function groundMaterialWearPlan(index, seed = 1441) {
     return patches;
 }
 
-function drawGroundMaterialWear(ctx, sc, scratch, source, index, seed) {
+function drawGroundMaterialWear(ctx, sc, scratch, source, index, seed, canvasFactory) {
+    const maskCanvas = canvasFactory();
+    const maskCtx = maskCanvas.getContext('2d');
+    if (!maskCtx) return;
     for (const patch of groundMaterialWearPlan(index, seed)) {
         const { width, height } = patch;
         scratch.width = width;
@@ -327,30 +330,29 @@ function drawGroundMaterialWear(ctx, sc, scratch, source, index, seed) {
         sc.drawImage(source, patch.source * GROUND_SOURCE_TILE_SIZE + patch.sourceX,
             patch.sourceY, patch.sourceWidth, patch.sourceHeight, 0, 0, width, height);
 
-        // Irregular, connected erosion ridges rather than repeated soft circles.
-        // Blur only the noncircular contour edge; retain approved painted pixels.
-        sc.save();
+        // Build a connected, softly feathered erosion contour using only
+        // radial-gradient alpha stamps on a separate mask surface. Overlapping
+        // short segments form one irregular ribbon, not isolated circles.
+        // CanvasRenderingContext2D.filter is disabled in mobile Safari.
+        maskCanvas.width = width;
+        maskCanvas.height = height;
+        maskCtx.clearRect(0, 0, width, height);
+        for (let step = 1; step < 16; step++) {
+            const t = step / 16;
+            const ridge = patch.rim[Math.min(patch.rim.length - 1, Math.floor(t * patch.rim.length))];
+            const taper = Math.pow(Math.sin(Math.PI * t), .57);
+            const cx = width * t;
+            const cy = height * (.5 + ridge.bend);
+            const radius = Math.max(1, height * .52 * taper * (.65 + (ridge.top + ridge.bottom) * .19));
+            const gradient = maskCtx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(.58, 'rgba(255,255,255,.92)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            maskCtx.fillStyle = gradient;
+            maskCtx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+        }
         sc.globalCompositeOperation = 'destination-in';
-        sc.filter = 'blur(4px)';
-        sc.fillStyle = 'rgba(255,255,255,1)';
-        sc.beginPath();
-        sc.moveTo(0, height * .5);
-        for (let step = 0; step < patch.rim.length; step++) {
-            const t = (step + 1) / (patch.rim.length + 1);
-            const taper = Math.pow(Math.sin(Math.PI * t), .6);
-            const ridge = patch.rim[step];
-            sc.lineTo(width * t, height * (.5 + ridge.bend - .43 * taper * ridge.top));
-        }
-        sc.lineTo(width, height * .5);
-        for (let step = patch.rim.length - 1; step >= 0; step--) {
-            const t = (step + 1) / (patch.rim.length + 1);
-            const taper = Math.pow(Math.sin(Math.PI * t), .6);
-            const ridge = patch.rim[step];
-            sc.lineTo(width * t, height * (.5 + ridge.bend + .43 * taper * ridge.bottom));
-        }
-        sc.closePath();
-        sc.fill();
-        sc.restore();
+        sc.drawImage(maskCanvas, 0, 0);
         sc.globalCompositeOperation = 'source-over';
 
         ctx.globalAlpha = patch.opacity;
@@ -480,7 +482,7 @@ export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory, fineDe
         drawGroundMaterialVariation(ctx, index, seed);
         drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed);
         if (fineDetail) {
-            drawGroundMaterialWear(ctx, sc, scratch, source, index, seed);
+            drawGroundMaterialWear(ctx, sc, scratch, source, index, seed, create);
             drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed);
         }
         ctx.restore();
