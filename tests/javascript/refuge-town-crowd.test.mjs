@@ -610,7 +610,8 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
     assert.match(well, /M818 439 L823 426/);
     assert.match(sign, /M731 454 L731 449/);
-    assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\("townRoute"\) === "rear"/);
+    assert.match(js, /const query = new URLSearchParams\(window\.location\.search\)/);
+    assert.match(js, /const rearMode = query\.get\("townRoute"\) === "rear"/);
     assert.match(js, /buildArchitectureCutout/);
     assert.match(js, /destination-in/);
     assert.match(js, /canvas\.toDataURL\("image\/png"\)/);
@@ -667,6 +668,18 @@ test('Town V2 NPC walks BEHIND the right noticeboard post, never around it', () 
     assert.match(script, /w.rightPostOcclusionFrames\+\+/);
     assert.match(script, /ctx.drawImage\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\)/);
     assert.doesNotMatch(script, /REAR_POST_BYPASS|clearOfRightPost|routedOverBoard/);
+});
+
+test('Town V2 inspector freezes at real right-post crossing only when explicitly requested', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /query.get\("townPose"\) === "post"/);
+    assert.match(js, /const inspectPose = rearMode &&/);
+    assert.match(js, /if \(w.inspectPose\)/);
+    assert.match(js, /state.inspectPose && !state.nav.canStand/);
+    assert.match(js, /state.position = state.inspectPose \? \{ ...RIGHT_POST_PASS \}/);
+    assert.match(js, /inspectingRightPost: entry.inspectPose/);
+    assert.match(js, /rightPostOcclusionFrames: entry.rightPostOcclusionFrames/);
+    assert.doesNotMatch(js, /REAR_POST_BYPASS/);
 });
 
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
