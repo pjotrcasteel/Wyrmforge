@@ -8,3 +8,6 @@ artifacts/
 .DS_Store
 *.log
 playtest-reports/
+
+# Local immutable large-asset archive; remote storage capacity pending
+/artifacts/
