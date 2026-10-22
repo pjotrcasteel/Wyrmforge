@@ -34,6 +34,7 @@ public partial class Home
     // A free respec: the Web and sockets are rebuilt from the loadout, then saved like any manual change.
     private async Task<HuntLoadoutApplyResult?> ApplyLoadoutAsync(int index)
     {
+        selection.SetKnownFireballMutations(fireballCore.Discovered);
         if (loadouts.Apply(index, selection, laboratory, CanSelectOffering) is not { } result) return null;
         await SaveArcaneBuildAsync();
         await TrySetLaboratoryAsync();

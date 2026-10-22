@@ -142,7 +142,7 @@ public sealed class PassiveTreeSelection
     {
         if (ActiveSchool is null) { RestoreNodes(ids); return; }
         var requested = ids.Where(id => PassiveTreeCatalog.All.Any(node => node.Id == id)).ToHashSet(StringComparer.Ordinal);
-        var removals = selected.Where(id => !requested.Contains(id) && CanLearn(PassiveTreeCatalog.Get(id))).ToHashSet();
+        var removals = selected.Where(id => !requested.Contains(id) && ArcaneSchoolCatalog.Owner(PassiveTreeCatalog.Get(id)) == ActiveSchool).ToHashSet();
         while (removals.FirstOrDefault(CanRemove) is { } removable)
         {
             Remove(removable);

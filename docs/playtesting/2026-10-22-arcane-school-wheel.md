@@ -19,4 +19,4 @@ Canonical contracts: [magic and combat](../canon/magic-and-combat.md), [town and
 
 ## Verification status
 
-Initial progression tests: 7/7 passed locally. Domain and Application compiled. Local full Web build is blocked by the executor's out-of-process WASM task host; full build, browser captures and remaining regression results are pending CI. Phone visual acceptance is pending; automated screenshots do not establish physical Safari acceptance. Do not mark this construction checkpoint shipped until validation and review complete.
+Local regression evidence: 357 Domain tests, 601 existing Application tests, four new mutation combat tests and 324 JavaScript tests pass. Domain and Application compiled. Local full Web build is blocked by the executor's out-of-process WASM task host; full build, browser captures and remaining regression results are pending CI. Phone visual acceptance is pending; automated screenshots do not establish physical Safari acceptance. Do not mark this construction checkpoint shipped until validation and review complete.

@@ -16,6 +16,18 @@ internal static class ArcaneWheelLayout
     {
         if (node.Kind == PassiveNodeKind.Origin) return new(Center, Center);
         var school = ArcaneSchoolCatalog.Owner(node) ?? PassiveSchool.Fire;
+        var baseAngle = ((int)school - (int)active) * Math.PI / 3 - Math.PI / 2;
+        // Authored landmarks retain generous room around their hit areas. The
+        // catalogue's old four-way coordinates remain untouched for saved IDs.
+        var authored = node.Id switch
+        {
+            "fire-needle-practice" => (-26d, 300d),
+            "fire-molten-density" => (26d, 300d),
+            "fire-blast-shaping" => (-28d, 375d),
+            "fire-banked-embers" => (28d, 375d),
+            _ => ((double Angle, double Radius)?)null,
+        };
+        if (authored is { } placement) return Polar(baseAngle + placement.Angle * Math.PI / 180, placement.Radius);
         var x = node.X - 600;
         var y = node.Y - 450;
         var sourceAngle = school switch

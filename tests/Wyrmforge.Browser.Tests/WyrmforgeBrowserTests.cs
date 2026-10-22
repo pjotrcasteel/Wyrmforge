@@ -2891,8 +2891,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.Locator(".route-action.refund").ClickAsync();
         await warning.GetByRole(AriaRole.Button, new() { Name = "Refund points", Exact = true }).ClickAsync();
         await Expect(warning).ToHaveCountAsync(0);
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Research" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         await Page.Locator(".web-node[aria-label^='Static.']").EvaluateAsync("el => el.click()");
         await Page.Locator(".route-action.refund").ClickAsync();
+        await Expect(warning).ToBeVisibleAsync();
+        await warning.GetByRole(AriaRole.Button, new() { Name = "Refund points", Exact = true }).ClickAsync();
         await Expect(warning).ToHaveCountAsync(0);
         await Expect(Page.Locator(".reserved-points summary")).ToHaveTextAsync("2 reserved");
         await Expect(Page.Locator(".web-node[aria-label^='Spark.']")).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("selected"));
@@ -2906,6 +2910,28 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".route-action.allocate")).ToHaveCountAsync(0);
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 1"));
         await ScreenshotAsync($"arcane-wheel-reserved-{width}.png");
+    }
+
+    [TestMethod]
+    [DataRow("Cryomancer", "Frost")]
+    [DataRow("Stormcaller", "Storm")]
+    [DataRow("Arcanist", "Arcane")]
+    public async Task ArcaneWheel_SavedSchoolRemainsNorthWhenBrowsing(string school, string sector)
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await OpenAsync(school);
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+        var active = Page.Locator(".wheel-school-badge[data-active='true']");
+        await Expect(active).ToHaveAttributeAsync("data-school", sector);
+        Assert.IsTrue(await active.EvaluateAsync<bool>("el => el.style.left === '600px' && el.style.top === '130px'"));
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Pyromancer", Exact = true }).ClickAsync();
+        await Expect(active).ToHaveAttributeAsync("data-school", sector);
+        await Page.Locator(".web-node[aria-label^='Spark.']").EvaluateAsync("el => el.click()");
+        await Expect(Page.Locator(".node-inspector")).ToContainTextAsync("OTHER SCHOOL");
+        await Expect(Page.Locator(".route-action.allocate")).ToHaveCountAsync(0);
+        Assert.AreEqual(school, await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.characterSchool.v1')"));
+        await ScreenshotAsync($"arcane-wheel-{sector.ToLowerInvariant()}-north.png");
     }
 
     private async Task OpenAsync(string school = "Arcanist")

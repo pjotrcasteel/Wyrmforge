@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.158 — Six-school Arcane Web construction
+
+- Six school sectors surround the Wyrmheart, with the active school north and camera shortcuts for inspection.
+- Learn only in the active school; previously learned stats continue contributing. Inactive-school refunds warn once per visit and reserve their points until returning to that school.
+- Four Fireball mutation enhancement nodes affect their matching equipped mutation in real combat. Initial numbers remain tunable.
+- Legacy builds and saved schools are preserved. Death/Binding content and school-switching UI remain future work. [Construction and validation receipt](docs/playtesting/2026-10-22-arcane-school-wheel.md).
+
 ## Prototype 0.0.157 — One visual language for the Arcane Nexus
 
 - Research and Arcane Web inherit the approved Fireball chamber's bronze frames, warm lettering, dark masonry and metal sockets, consistent with Refuge's materials.
