@@ -1,5 +1,14 @@
 # Wyrmforge
 
+
+## Prototype 0.0.172 — Grand Arcane Web: Pyromancer expansion
+
+- Three visual and mechanical point tiers: minor (1), medium (2), major (3); inherited point costs and saves are preserved.
+- Pyromancer gains 12 playable Conflagration/Immolation nodes, diverging area and sustained-pressure paths, alternate links to prior Fire landmarks, and imposing Major nodes.
+- No separate points header or Pyromancer map toolbar; points and zoom/recenter controls float within the map. Six outer school emblems and node spacing remain.
+- [Product contract, precise implementation boundary, and acceptance checklist](docs/playtesting/2026-10-22-grand-arcane-web-tiers.md). Generic mutation amplifier sockets are the next working slice, not placeholders in this release.
+
+
 ## Prototype 0.0.168 — Routed Arcane paths and debug character reset
 
 - Arcane Web uses school stems, branching milestones and curved connections between schools, with no decorative spokes through skills. Stable progression and saved builds retain their rules.
