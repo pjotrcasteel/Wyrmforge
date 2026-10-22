@@ -112,16 +112,24 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
                 d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
         }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
+        // Capture one consistent frame. During Blazor re-render, a second read
+        // can briefly observe a remount between two individually successful
+        // checks. The snapshot still requires all pixel/route/depth invariants
+        // together; none are skipped.
         await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.166');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-            return d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
-                d.noticeOcclusionFrames > 0 && d.violations === 0;
+            if (!d?.active || !d.rearMode || !d.wellForegroundRequired ||
+                !d.wellDepthReady || !d.noticeDepthReady ||
+                !d.wellDepthTransparent || !d.noticeDepthTransparent ||
+                !d.wellDepthEdgesClear || !d.noticeDepthEdgesClear ||
+                d.rearFrames <= 3 || d.wellOcclusionFrames <= 0 ||
+                d.noticeOcclusionFrames <= 0 || d.violations !== 0 || !d.safe) return false;
+            window.__townV2RearEvidence = d;
+            return true;
         }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
-        var before = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const m = await import('./js/town-v2-nexus.js?v=0.0.166');
-            return m.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-        }");
+        var before = await Page.EvaluateAsync<JsonElement>(
+            "() => window.__townV2RearEvidence");
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
         Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
         Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
