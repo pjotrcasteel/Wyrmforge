@@ -799,6 +799,9 @@ test('Town V2 proposal atlas marks new cobbles BLUE without enabling unsafe NPC 
     assert.match(js, /candidateSolidOverlapPixels\+\+/);
     assert.match(js, /candidateGround: "blue"/);
     assert.match(js, /candidateGroundNames: includeCoverage/);
+    assert.match(js, /legend.className = "refuge-town-v2-coverage-legend"/);
+    assert.match(js, /Blue: proposed paving \(NOT walkable\)/);
+    assert.match(js, /state.coverageLegendElement\?\.remove\(\)/);
     assert.match(js, /candidateGround \? \[67, 130, 236\]/);
     // Preview proposals are never passed to the physical foot-mask builder.
     assert.match(js, /const pixels = ctx.getImageData\(0, 0, WIDTH, HEIGHT\).data/);
