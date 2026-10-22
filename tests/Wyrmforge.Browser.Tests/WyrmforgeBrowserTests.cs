@@ -83,6 +83,24 @@ public sealed class WyrmforgeBrowserTests : PageTest
             "img => img.getAttribute('src').includes('/night-active.webp') || img.getAttribute('src').includes('/day-active.webp')"),
             "Existing approved day/night artwork must remain the actual rendered town.");
         Assert.IsTrue(await glow.EvaluateAsync<bool>("el => getComputedStyle(el).mixBlendMode === 'screen'"));
+
+        var chroma = scene.Locator(".refuge-town-nexus-chroma");
+        await Expect(chroma).ToHaveAttributeAsync("data-nexus-school", color);
+        var expectedEmitter = color switch
+        {
+            "fire" => "255 177 59",
+            "frost" => "160 238 255",
+            "storm" => "240 225 138",
+            _ => "222 170 255",
+        };
+        Assert.AreEqual(expectedEmitter,
+            (await chroma.EvaluateAsync<string>("el => getComputedStyle(el).getPropertyValue('--nexus-emitter')")).Trim());
+        Assert.IsTrue(await chroma.EvaluateAsync<bool>(@"el => {
+            const style = getComputedStyle(el);
+            const mask = style.maskImage || style.webkitMaskImage || '';
+            return style.mixBlendMode === 'color' && style.pointerEvents === 'none' &&
+                (mask.match(/radial-gradient/g) || []).length >= 2;
+        }"), "Both canonical magic emitters must be recolored without touching the building or blocking taps.");
     }
 
     [TestMethod]
@@ -125,6 +143,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
 
         await Expect(Page.Locator(".refuge-town-spot--nexus")).ToHaveAttributeAsync("data-town-state", "vacant");
         await Expect(Page.Locator(".refuge-town-nexus-radiance")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-nexus-chroma")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-vacant-layer[src*='ArcaneNexus']")).ToHaveCountAsync(1);
     }
 

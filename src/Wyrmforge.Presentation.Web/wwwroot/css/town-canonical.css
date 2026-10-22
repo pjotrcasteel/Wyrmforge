@@ -236,6 +236,29 @@
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
 
 
+/* Recolor the painted SPELL EMITTERS only: the open dome aperture and portal.
+   Color blending preserves their existing luminance/detail and leaves masonry untouched.
+   These are two independently feathered masks, not a filter over canonical artwork. */
+.game-shell.refuge-home .refuge-town-nexus-chroma {
+    --nexus-emitter: 255 177 59;
+    position:absolute;left:3.8%;top:7.5%;width:28%;height:29.5%;
+    z-index:1;pointer-events:none;user-select:none;
+    background:rgb(var(--nexus-emitter));
+    opacity:.86;mix-blend-mode:color;
+    -webkit-mask-image:
+        radial-gradient(ellipse 11% 19% at 53% 17%,#000 51%,transparent 100%),
+        radial-gradient(ellipse 8% 20% at 76% 82%,#000 54%,transparent 100%);
+    mask-image:
+        radial-gradient(ellipse 11% 19% at 53% 17%,#000 51%,transparent 100%),
+        radial-gradient(ellipse 8% 20% at 76% 82%,#000 54%,transparent 100%);
+}
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="fire"] { --nexus-emitter:255 177 59 }
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="frost"] { --nexus-emitter:160 238 255 }
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="storm"] { --nexus-emitter:240 225 138 }
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="arcane"] { --nexus-emitter:222 170 255 }
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="death"] { --nexus-emitter:186 247 151 }
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="binding"] { --nexus-emitter:175 251 231 }
+
 /* Arcane Nexus magic grows with points invested in the currently followed school.
    The approved town image and vacant/active artwork remain completely unchanged.
    This painted light sits UNDER NPCs, cutouts, navigation and the V2 canvas. */
@@ -249,10 +272,10 @@
     /* Two magic emitters in the approved painting: the Nexus dome and portal.
        Light the actual spellwork, not a generic blob across the masonry. */
     background:
-        radial-gradient(ellipse 19% 23% at 43% 16%, rgb(var(--nexus-light-core) / .95), transparent 96%),
-        radial-gradient(ellipse 25% 27% at 68% 60%, rgb(var(--nexus-light-core) / .92), transparent 94%),
-        radial-gradient(ellipse 39% 41% at 68% 58%, rgb(var(--nexus-light) / .74), transparent 98%),
-        radial-gradient(ellipse 45% 45% at 47% 44%, rgb(var(--nexus-light) / .36), transparent 98%);
+        radial-gradient(ellipse 16% 24% at 53% 17%, rgb(var(--nexus-light-core) / .94), transparent 95%),
+        radial-gradient(ellipse 13% 25% at 76% 82%, rgb(var(--nexus-light-core) / .91), transparent 96%),
+        radial-gradient(ellipse 24% 32% at 76% 82%, rgb(var(--nexus-light) / .51), transparent 98%),
+        radial-gradient(ellipse 23% 29% at 53% 17%, rgb(var(--nexus-light) / .34), transparent 98%);
     transform-origin:49% 45%;
     animation:nexus-magical-light 7s ease-in-out infinite;
 }
