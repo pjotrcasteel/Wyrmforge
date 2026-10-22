@@ -55,7 +55,7 @@ public sealed class HuntLoadoutBook
         ArgumentNullException.ThrowIfNull(selection);
         ArgumentNullException.ThrowIfNull(laboratory);
         if (this[index] is not { } loadout) return null;
-        selection.RestoreNodes(loadout.Nodes);
+        selection.ReallocateNodes(loadout.Nodes);
         var selected = selection.Selected;
         var restored = loadout.Nodes.Count(selected.Contains);
         laboratory.Unequip();

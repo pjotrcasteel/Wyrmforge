@@ -6,4 +6,6 @@ public enum PassiveSchool
     Frost,
     Storm,
     Arcane,
+    Death,
+    Binding,
 }

@@ -1,4 +1,6 @@
 using Wyrmforge.Domain.Combat.Modifiers;
+using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Domain.Progression.PassiveTree.Schools;
 
@@ -15,9 +17,23 @@ internal static class FirePassiveNodes
         Mastery("detonation", "Detonation", "Every 4th hit explodes for ×2 damage in a small area.", 665, 115, "fire-mastery"),
         Keystone("inferno", "Dragon's Inferno", "Every 5th cast becomes a ×4 Inferno projectile.", 485, 48),
         Keystone("volcanic", "Volcanic Heart", "Detonation explosions are larger and deal ×2.5 damage.", 715, 48),
+        Enhancement("fire-needle-practice", "Needle Practice", "Cinder Needle: +10% projectile speed when equipped.", 545, 210,
+            FireballMutationId.CinderNeedle, BuildStatId.ProjectileSpeed, 1.10),
+        Enhancement("fire-molten-density", "Molten Density", "Meteor Heart: +8% impact damage when equipped.", 655, 210,
+            FireballMutationId.MeteorHeart, BuildStatId.Damage, 1.08),
+        Enhancement("fire-blast-shaping", "Blast Shaping", "Detonation: +10% explosion radius when equipped.", 515, 165,
+            FireballMutationId.Detonation, BuildStatId.MutationRadius, 1.10),
+        Enhancement("fire-banked-embers", "Banked Embers", "Scorched Earth: +15% burning-ground duration when equipped.", 685, 165,
+            FireballMutationId.ScorchedEarth, BuildStatId.MutationDuration, 1.15),
         Travel("fire-frost-gate", "Searing Rime", "+2% spell damage.", 530, 280, PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.02))),
         Travel("fire-storm-gate", "Voltaic Coal", "+2% spell damage.", 670, 280, PassiveNodeModifiers.Stats(PassiveNodeModifiers.Percent(BuildStatId.Damage, 0.02))),
     ];
+
+    private static PassiveNodeDefinition Enhancement(string id, string name, string description, double x, double y,
+        FireballMutationId mutation, BuildStatId stat, double multiplier) =>
+        new(id, name, description, PassiveNodeKind.Notable, PassiveSchool.Fire, 1, x, y,
+            PassiveNodeModifiers.Stats(PassiveNodeModifiers.Multiply(stat, multiplier)),
+            Requirement: new PassiveEffectRequirement(SpellId.FireBolt, mutation));
 
     private static PassiveNodeDefinition Travel(string id, string name, string description, double x, double y, BuildModifierProfile modifiers) =>
         new(id, name, description, PassiveNodeKind.Travel, PassiveSchool.Fire, 1, x, y, modifiers);

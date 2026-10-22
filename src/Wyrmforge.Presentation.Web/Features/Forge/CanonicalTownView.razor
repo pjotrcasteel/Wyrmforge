@@ -279,7 +279,7 @@
             townV2Mounted = true;
             try
             {
-                townV2Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/town-v2-nexus.js?v=0.0.159");
+                townV2Module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/town-v2-nexus.js?v=0.0.160");
                 await townV2Module.InvokeVoidAsync("mountTownV2Nexus",
                     ".refuge-canonical-scene", "[data-town-v2-mask-toggle]",
                     "[data-town-v2-depth-toggle]", "[data-town-v2-status]");

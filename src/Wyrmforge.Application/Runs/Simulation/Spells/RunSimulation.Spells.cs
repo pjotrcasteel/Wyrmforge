@@ -101,6 +101,11 @@ public sealed partial class RunSimulation
         var speed = buildModifiers.Apply(BuildStatId.ProjectileSpeed, baseSpeed) * (meteorHeart ? 0.75 : 1) * (cinderNeedle ? 1.4 : 1);
         var baseDamage = spell.Ability.CalculateDamage(rank) * passiveProfile.DamageMultiplier * evolution.DamageMultiplier;
         var damage = buildModifiers.Apply(BuildStatId.Damage, baseDamage) * damageScale * build.SchoolDamageMultiplier(spell.School) * (meteorHeart ? 1.15 : 1) * (cinderNeedle ? 0.70 : 1);
+        if (id == SpellId.FireBolt)
+        {
+            speed = fireballWebModifiers.Apply(BuildStatId.ProjectileSpeed, speed);
+            damage = fireballWebModifiers.Apply(BuildStatId.Damage, damage);
+        }
         var chains = (passiveProfile.LivingStorm ? 4 : passiveProfile.Chainstorm ? 1 : 0) + buildModifiers.ApplyInt(BuildStatId.BonusChains);
         var piercingArcaneOrb = id == SpellId.ArcaneOrb && rank >= 2;
         var masteredArcaneOrb = id == SpellId.ArcaneOrb && rank >= spell.MaxRank;
@@ -121,10 +126,13 @@ public sealed partial class RunSimulation
             var mutationSplash = id != SpellId.FireBolt ? 0 :
                 HasFireballMutation(FireballMutationId.Detonation) ? 46 :
                 HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
+            var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
+            if (id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.Detonation))
+                splashRadius = fireballWebModifiers.Apply(BuildStatId.MutationRadius, splashRadius);
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
-                Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius)))),
+                splashRadius,
                 status,
                 pierces,
                 Math.Max(masteryNova, evolution.FrostNovaRadius))

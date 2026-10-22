@@ -10,4 +10,6 @@ public enum BuildStatId
     DamageTaken,
     ExtraProjectiles,
     BonusChains,
+    MutationRadius,
+    MutationDuration,
 }
