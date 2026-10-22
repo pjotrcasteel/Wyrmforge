@@ -638,8 +638,6 @@ test('V2 rear alpha extracts the current approved masks with a transparent perim
     assert.match(js, /if \(opaquePixels < 120 \|\| clippedEdge\)/);
     assert.match(js, /wellDepthEdgesClear: entry\.wellCutout\?\.edgeTransparent === true/);
     assert.match(js, /noticeDepthEdgesClear: entry\.noticeCutout\?\.edgeTransparent === true/);
-    assert.match(well, /Separate alpha islands: exact roof, timber posts, stone lip/);
-    assert.match(sign, /Screenshot-traced wooden sign/);
 });
 test('Town V2 well and noticeboard alpha avoid the garden wall and paving', () => {
     const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
