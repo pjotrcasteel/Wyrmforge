@@ -49,7 +49,9 @@ public sealed class PyromancerVisualAcceptanceTests : PageTest
         await Expect(stage).ToBeVisibleAsync();
         await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(2);
         await Expect(Page.Locator(".web-node[data-tier='major'][data-node-id='" + majorId + "']")).ToHaveCountAsync(1);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Pyromancer sector" }).ClickAsync();
+        // The Fire sector is already active. Its large outer emblem is intentionally offscreen
+        // at phone detail zoom; clicking it here would fail without testing the major socket.
+        await Expect(Page.Locator(".wheel-school-badge[data-school='Fire'][data-active='true']")).ToHaveCountAsync(1);
 
         // Focusing the actual major first centers that landmark in the world-space map.
         // Close its inspector for a clean image before capturing the separate socket state.
