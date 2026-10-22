@@ -124,12 +124,15 @@ public sealed partial class RunSimulation
             var masterySplash = id == SpellId.FireBolt && rank >= spell.MaxRank ? 56 : 0;
             var masteryNova = masteredFrostShard ? FrostShardMastery.NovaRadius : 0;
             var mutationSplash = id != SpellId.FireBolt ? 0 :
-                HasFireballMutation(FireballMutationId.Detonation) ? fireballWebModifiers.Apply(BuildStatId.MutationRadius, 46) :
+                HasFireballMutation(FireballMutationId.Detonation) ? 46 :
                 HasFireballMutation(FireballMutationId.ScorchedEarth) ? 8 : 0;
+            var splashRadius = Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius))));
+            if (id == SpellId.FireBolt && HasFireballMutation(FireballMutationId.Detonation))
+                splashRadius = fireballWebModifiers.Apply(BuildStatId.MutationRadius, splashRadius);
             var effects = new ProjectileEffects(
                 inferno,
                 chains + evolution.BonusChains,
-                Math.Max(mutationSplash, Math.Max(surge.SplashRadius, Math.Max(focused.SplashRadius, Math.Max(masterySplash, evolution.SplashRadius)))),
+                splashRadius,
                 status,
                 pierces,
                 Math.Max(masteryNova, evolution.FrostNovaRadius))

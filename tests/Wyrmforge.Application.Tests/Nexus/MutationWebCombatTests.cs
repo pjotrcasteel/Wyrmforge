@@ -35,6 +35,22 @@ public sealed class MutationWebCombatTests
     }
 
     [TestMethod]
+    public void BlastShaping_EnhancesTheFinalExplosionAtHigherFireballRanks()
+    {
+        ProjectileState RankedCast(string[] nodes)
+        {
+            var simulation = Create(nodes, [FireballMutationId.Detonation]);
+            var build = Field<RunBuildState>(simulation, "build");
+            build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+            build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+            return Fire(simulation);
+        }
+        var baseline = RankedCast([]);
+        var enhanced = RankedCast(["fire-blast-shaping"]);
+        Assert.AreEqual(baseline.SplashRadius * 1.10, enhanced.SplashRadius, .000001);
+    }
+
+    [TestMethod]
     public void BankedEmbers_ExtendsActualScorchedEarthGroundOnly()
     {
         var normal = GroundDuration([], [FireballMutationId.ScorchedEarth]);
