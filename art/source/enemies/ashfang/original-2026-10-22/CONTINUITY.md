@@ -103,3 +103,34 @@ still pending. No M1 completion or owner acceptance. Push before rendering.
 
 Independent remote r02 download from exact commit0a4c051f matched SHA256
 503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c.
+
+R03 checkpoint fbd88a8a remotely verified. New native assets uploaded via LFS
+(two unique objects,5.8MB; duplicate working copies deduplicated). Independent
+shallow sparse clone in ignored artifacts fetched the corrected source from
+GitHub rather than local media. SHA256 matched
+57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c and Blender
+reopened the retrieved native source successfully (validation receipt retained).
+No paid overage or billing setting change; account details remain private.
+
+R03 ten neutral views, contact sheet and320/390/440px unchanged-mage static
+comparisons completed. Contact/native boards inspected. Bony crest better
+establishes dorsal silhouette, but agent artistic gate remains FAIL: card-specific
+skull/neck, wing shoulder construction and native-size threat remain insufficient.
+Do not ask for approval of a finished model or claim M1 complete. Do not multiply
+contour/spike variants, add material noise or start rigging to disguise the gap.
+Next task needs materially better primary sculptural planes and grounded wing
+carriage; not another identical render. Closed jaw/rearing pose, actual environment
+and phone review still missing. M2-M8 not implemented, no owner sign-off.
+
+Current authoritative working native is working/ashfang-working-r03-key-corrected.blend.
+Immutable counterpart is milestones/M1-r03/ashfang-primary-key-corrected.blend.
+R03 original mixed-key error version remains unique history, not authoritative.
+Review source carries reproducible light/camera setup; no animation or textures.
+The CLI currently implements audit/validate/review/benchmark only. bake/render/
+export/pack intentionally fail as unimplemented; their future plan is not shipped.
+Krita/FFmpeg not installed because paint/motion stages have not become eligible.
+
+Remote verification invocation:
+`git clone --depth1 --single-branch --branch codex/ashfang-original-production --filter=blob:none --no-checkout <origin> artifacts/ashfang-lfs-verification`
+followed by sparse checkout of exact r03 source, checkout HEAD, SHA256 and headless
+Blender validate. This native source is now remotely retrievable, not just local.

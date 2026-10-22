@@ -15,15 +15,17 @@
     "units": "METRIC"
   },
   "storage": {
-    "largeSourceBackend": "Git LFS after quota verification",
+    "largeSourceBackend": "Git LFS; path-scoped original r03 upload and independent fresh-checkout retrieval verified",
     "numericQuotaVerified": true,
     "paidOverageAuthorized": false,
     "pilotNativeFileLimitBytes": 8388608,
-    "pilotNativeTotalLimitBytes": 20971520
+    "pilotNativeTotalLimitBytes": 20971520,
+    "retrievalVerified": true,
+    "retrievalSourceCommit": "fbd88a8a1bc42cd99542a00b59711a5df3324848"
   },
   "milestones": {
-    "M0": "partial: preflight/research/remote docs verified; large LFS quota unresolved",
-    "M1": "r02 original primary anatomy saved/reopened; agent visual gate failed; not owner accepted",
+    "M0": "source foundation verified for primary studies; optional paint/video tools deferred",
+    "M1": "r03 original primary study; technical validity passed, artistic gate not passed",
     "M2": "blocked-on-owner-M1-acceptance",
     "M3": "not-started",
     "M4": "not-started",
@@ -33,7 +35,7 @@
     "M8": "not-started"
   },
   "technicalPass": true,
-  "agentVisualStatus": "r02 FAIL: still smooth/generic; native-size silhouette lacks card identity; wing-root/neck staging needs further primary work",
+  "agentVisualStatus": "r03 still generic at native size; primary neck, wing-root and skull silhouette need further sculptural refinement",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "assets": [
@@ -66,8 +68,28 @@
       "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r02.blend",
       "bytes": 2578460,
       "sha256": "503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r03/ashfang-primary.blend",
+      "bytes": 2881972,
+      "sha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03.blend",
+      "bytes": 2881972,
+      "sha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r03/ashfang-primary-key-corrected.blend",
+      "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+      "bytes": 2881315
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03-key-corrected.blend",
+      "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+      "bytes": 2881315
     }
   ],
-  "nextTask": "Resolve large-source storage and revise skull/neck primary silhouette and wing root anatomy; no M2 until owner M1 acceptance",
-  "authoritativeWorkingProject": "working/ashfang-working-r02.blend"
+  "nextTask": "Change the primary modeling approach to resolve card-specific skull/neck and grounded wing silhouette; do not repeat smooth contour studies or advance to M2",
+  "authoritativeWorkingProject": "working/ashfang-working-r03-key-corrected.blend"
 }
