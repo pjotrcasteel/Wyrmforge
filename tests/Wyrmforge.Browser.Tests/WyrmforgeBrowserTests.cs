@@ -195,6 +195,37 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task ArcaneWeb_MajorMutationAmplifier_SavesCompatibleEquippedMutation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,
+                Nodes:['fire-start','fire-1','fire-ember-drift','fire-scorching-winds',
+                    'fire-cinder-halo','fire-conflagration','fire-ashfront','fire-spread-crown']}));
+            localStorage.setItem('wyrmforge.fireballCore.v1',
+                JSON.stringify({Level:1,Discovered:[2],Slots:[2,null,null,null,null]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+
+        await Page.Locator(".web-node[data-node-id='fire-spread-crown']").EvaluateAsync("el => el.click()");
+        var slot = Page.Locator(".web-amplifier-socket select");
+        await Expect(slot).ToBeEnabledAsync();
+        await slot.SelectOptionAsync("Detonation");
+        var saved = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.arcaneBuild.v1') ?? ''");
+        StringAssert.Contains(saved, "fire-spread-crown");
+        StringAssert.Contains(saved, "Detonation");
+
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+        await Page.Locator(".web-node[data-node-id='fire-spread-crown']").EvaluateAsync("el => el.click()");
+        await Expect(Page.Locator(".web-amplifier-socket select")).ToHaveValueAsync("Detonation");
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GroundFoundationHasNoLegacyAssetsOrCollision(int width, int height)
