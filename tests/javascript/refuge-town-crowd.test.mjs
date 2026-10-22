@@ -745,14 +745,17 @@ test('Town V2 living residents animate by distance, turn safely and idle without
 test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unknown pixels separately', () => {
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     const solids = source(art + '/nexus-v2-reviewed-solid-footprints.svg');
-    assert.match(js, /function buildNavigation\(source, includeCoverage = false, reviewedMask = null, candidateMask = null\)/);
+    const nonplay = source(art + '/nexus-v2-out-of-play.svg');
+    assert.match(js, /function buildNavigation\(source, includeCoverage = false, reviewedMask = null, candidateMask = null, outMask = null\)/);
     assert.match(js, /const coverageAudit = query.get\("townCoverage"\) === "1"/);
-    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit, reviewedMask, candidateMask\)/);
+    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit, reviewedMask, candidateMask, outMask\)/);
     assert.match(js, /const authored = pixels\[p\] > 230/);
     assert.match(js, /reviewedPixels\[p\] > 230/);
     assert.match(js, /reviewedSolidPixels\+\+/);
     assert.match(js, /classConflictPixels\+\+/);
     assert.match(js, /candidateGroundPixels\+\+/);
+    assert.match(js, /outOfPlayPixels\+\+/);
+    assert.match(js, /outOfPlayConflictPixels\+\+/);
     assert.match(js, /notSeparatelyClassifiedPixels\+\+/);
     assert.match(js, /knownSolidClassAvailable: includeCoverage/);
     assert.match(js, /fullSceneMapped: false/);
@@ -761,6 +764,7 @@ test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unk
     assert.match(js, /reviewedSolid: "red"/);
     assert.match(js, /classConflict: "magenta"/);
     assert.match(js, /candidateGround: "blue"/);
+    assert.match(js, /outOfPlay: "violet"/);
     assert.match(js, /notSeparatelyClassified: "amber"/);
     assert.doesNotMatch(js, /knownSolidClassAvailable: true|fullSceneMapped: true/);
     assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
@@ -770,6 +774,14 @@ test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unk
     assert.match(solids, /M 746 462 L 773 462 L 783 492 L 792 508/);
     assert.match(solids, /M 417 434 L 428 431 L 448 433 L 463 432/);
     assert.doesNotMatch(solids, /<rect[\s\S]*fill="#fff"/);
+    assert.equal((nonplay.match(/<path fill="#fff" d="/g) ?? []).length, 3);
+    assert.match(nonplay, /M 0 0 H 1672 V 132 H 0 Z/);
+    assert.match(nonplay, /M 0 132 H 430 V 265 H 0 Z/);
+    assert.match(nonplay, /M 1270 132 H 1672 V 263 H 1270 Z/);
+    assert.match(js, /const outConflict = outOfPlay &&/);
+    assert.match(js, /outOfPlayNames: includeCoverage/);
+    assert.match(js, /outOfPlay \? \[137, 109, 209\]/);
+    assert.doesNotMatch(js, /buildNavigation\(outMask|const canStand = .*outOfPlay/);
 });
 
 test('Town V2 region grid covers the full canvas without inventing playable ground', () => {
