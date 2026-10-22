@@ -192,6 +192,7 @@
                         }
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
+                        <DebugResetCharacter OnReset="OnResetCharacter" />
                     </section>
                 </div>
                 break;
@@ -228,6 +229,7 @@
     [Parameter] public EventCallback<Wyrmforge.Application.Runs.Hunts.HuntSelection> OnStartHunt { get; set; }
     [Parameter] public int FireClearedTier { get; set; }
     [Parameter] public EventCallback OnFeedback { get; set; }
+    [Parameter] public EventCallback OnResetCharacter { get; set; }
     [Parameter] public EventCallback OnQuests { get; set; }
     [Parameter] public int QuestRewards { get; set; }
     [Parameter] public int RewardCaches { get; set; }
@@ -406,4 +408,3 @@
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
     private sealed record TownLockNotice(string Location, string Message);
 }
-

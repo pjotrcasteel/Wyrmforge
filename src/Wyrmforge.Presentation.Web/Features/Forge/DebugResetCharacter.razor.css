@@ -1,0 +1,11 @@
+.debug-reset-settings { margin-top:24px; padding-top:18px; border-top:1px solid #6e4c3b; }
+.debug-reset-settings h3 { color:#c5a17b; font-family:Georgia,serif; }
+.debug-reset-settings button { min-height:44px; padding:10px 16px; border:1px solid #976b4b; border-radius:0; background:#24191f; color:#ead6b9; font:600 .9rem Georgia,serif; cursor:pointer; }
+dialog { width:min(390px,calc(100vw - 36px)); box-sizing:border-box; padding:24px; border:3px solid #9b704d; background:#171119; color:#ead6b9; box-shadow:inset 0 0 0 3px #2b1d24,0 15px 60px #000a; }
+dialog::backdrop { background:#08060bd9; }
+dialog h2 { margin:0 0 14px; font:600 1.4rem Georgia,serif; }
+dialog p { color:#d0bca8; font:400 .95rem/1.5 system-ui,sans-serif; }
+.reset-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; margin-top:20px; }
+.confirm-reset { background:#53302c !important; }
+button:focus-visible { outline:2px solid #e5bc7e; outline-offset:3px; }
+button:disabled { opacity:.5; cursor:wait; }
