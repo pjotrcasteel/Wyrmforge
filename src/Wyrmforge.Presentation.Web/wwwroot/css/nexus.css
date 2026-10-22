@@ -184,6 +184,38 @@
 .menu-nexus .nexus-secondary,
 .menu-nexus .nexus-primary { border-color: #a0784d; border-radius: 0; background: #241a20; color: var(--nexus-bone); }
 .menu-nexus .nexus-primary { background: linear-gradient(180deg, #57402b, #30212a); }
+.menu-nexus .node-kind { color: #c5a278; }
+.menu-nexus .node-state { border-radius: 1px; color: #c6b4a6; background: #2b2229; }
+.menu-nexus .node-state.reachable { color: #e2c49f; background: #423025; }
+.menu-nexus .inspector-glyph,
+.menu-nexus .route-step-glyph { border-color: #8b6545; border-radius: 1px; color: #dfb681; background: #251b22; }
+.menu-nexus .inspector-title small,
+.menu-nexus .inspector-cost span,
+.menu-nexus .route-steps small,
+.menu-nexus .nexus-material small,
+.menu-nexus .nexus-socket small { color: var(--nexus-muted); }
+.menu-nexus .node-inspector > p { color: #c8b5a7; }
+.menu-nexus .node-inspector .inspector-effect { color: #d8c4b3 !important; }
+.menu-nexus .inspector-cost,
+.menu-nexus .inspector-effect,
+.menu-nexus .route-summary,
+.menu-nexus .route-steps li,
+.menu-nexus .route-gains,
+.menu-nexus .route-landmarks,
+.menu-nexus .mastery-warning,
+.menu-nexus .nexus-experiments,
+.menu-nexus .nexus-consent { border-color: #62483b; border-radius: 0; background: #171219; }
+.menu-nexus .route-action { min-height: 44px; border-color: #ad8153; border-radius: 0; background: linear-gradient(180deg, #57402b, #30212a); color: var(--nexus-bone); }
+.menu-nexus .route-action.refund { border-color: #765b48; background: #241a20; color: #d7bda2; }
+.menu-nexus .nexus-notice,
+.menu-nexus .build-view > .nexus-next { border-color: #9b734a; border-radius: 0; background: #21181f; color: #e3cdb5; }
+.menu-nexus .nexus-stage,
+.menu-nexus .nexus-conditions li { border-radius: 1px; }
+.menu-nexus .nexus-material,
+.menu-nexus .nexus-socket { border-color: #60463b; background: transparent; }
+.menu-nexus .nexus-enables { color: #d5c1b2; }
+.menu-nexus .nexus-socket.open > i { color: #e2be8e; background: #4b3528; }
+.menu-nexus .nexus-stage.stage-equipped { color: #e3c195; }
 .menu-nexus :is(button, summary):focus-visible { outline: 2px solid #f0ce98; outline-offset: -3px; }
 
 @media (min-width: 900px) {
