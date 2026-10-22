@@ -36,6 +36,19 @@ internal static class ArcaneWheelLayout
             ["echo-chamber"] = (-230, 1190), ["astral-barrage"] = (230, 1190),
             ["fire-needle-practice"] = (-260, 850), ["fire-molten-density"] = (260, 850),
             ["fire-blast-shaping"] = (-400, 1100), ["fire-banked-embers"] = (400, 1100),
+            // Asymmetrical Fire clusters. World-space minimum distance here is >150px.
+            ["fire-ember-drift"] = (-250, 380),
+            ["fire-scorching-winds"] = (-400, 410),
+            ["fire-cinder-halo"] = (-550, 420),
+            ["fire-conflagration"] = (-700, 490),
+            ["fire-ashfront"] = (-800, 630),
+            ["fire-spread-crown"] = (-910, 750),
+            ["fire-cinder-temper"] = (240, 475),
+            ["fire-burning-veins"] = (460, 730),
+            ["fire-searing-focus"] = (650, 840),
+            ["fire-immolation"] = (800, 960),
+            ["fire-coalbed"] = (920, 1100),
+            ["fire-ember-altar"] = (1000, 1250),
         };
     private static double Angle(PassiveSchool school, PassiveSchool active) =>
         (Array.IndexOf(Order, school) - Array.IndexOf(Order, active)) * Math.PI / 3 - Math.PI / 2;
@@ -47,6 +60,7 @@ internal static class ArcaneWheelLayout
             Center + Math.Sin(angle) * radius + Math.Cos(angle) * side);
     }
     internal static Point Anchor(PassiveSchool school, PassiveSchool active, double radius = 1320) => Local(school, active, 0, radius);
+    internal static Point RegionLabel(PassiveSchool school, PassiveSchool active, double side, double radius) => Local(school, active, side, radius);
 
     internal static Point Position(PassiveNodeDefinition node, PassiveSchool active)
     {
