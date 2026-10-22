@@ -180,7 +180,9 @@ test('opt-in fine ground detail uses deterministic clusters from approved materi
     const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
     assert.match(razor, /@onclick="ToggleFineDetail"/);
     assert.match(js, /export function setGroundFineDetail/);
-    assert.match(js, /if \(fineDetail\) drawGroundMaterialFineDetails/);
+    assert.match(js, /if \(fineDetail\) \{/);
+    assert.match(js, /drawGroundMaterialWear\(ctx, sc, scratch, source, index, seed\)/);
+    assert.match(js, /drawGroundMaterialFineDetails\(ctx, sc, scratch, source, index, seed\)/);
 });
 
 test('fine-detail wear is visibly clustered, seeded and sampled only from approved art', () => {
