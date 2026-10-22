@@ -234,3 +234,25 @@
     font:inherit;min-height:38px;padding:6px 9px;cursor:pointer;touch-action:manipulation;
 }
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
+
+/* Audit-only semantic key: shown inside the actual V2 town, never V1. */
+.game-shell.refuge-home .refuge-town-v2-coverage-legend {
+    position:absolute;top:10px;left:10px;z-index:11002;
+    display:grid;gap:4px;width:max-content;max-width:min(330px, calc(100% - 20px));
+    padding:9px 11px;color:#f6eed9;background:#101824ed;
+    border:1px solid #d7c29d8c;border-radius:7px;
+    font:600 12px/1.35 ui-monospace,monospace;
+    pointer-events:none;
+}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend span {
+    display:flex;align-items:center;gap:7px;
+}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend i {
+    display:block;flex:0 0 10px;width:10px;height:10px;border-radius:2px;
+}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend .v2-teal {background:#2ae0c2}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend .v2-red {background:#e84c43}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend .v2-blue {background:#4382ec}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend .v2-pink {background:#e336c6}
+.game-shell.refuge-home .refuge-town-v2-coverage-legend .v2-amber {background:#f0933b}
+
