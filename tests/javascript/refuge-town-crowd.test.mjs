@@ -553,8 +553,9 @@ test('Town V2 Phase 3 extends the raster route into the open west plaza, not the
     assert.match(code, /w\.plazaVisits\+\+/);
     assert.match(code, /plazaVisits: entry\.plazaVisits/);
     assert.match(code, /plaza route cuts across an unwalkable pixel/);
-    assert.match(code, /route\.forEach\(\(point, index\) => index/);
-    assert.match(code, /if \(w\.showMask && w\.debugOverlay\) ctx\.drawImage\(w\.debugOverlay, 0, 0\)/);
+    assert.match(code, /if \(w\.showMask\) \{/);
+    assert.match(code, /ctx\.drawImage\(w\.nav\.overlay, 0, 0\)/);
+    assert.match(code, /w\.route\.forEach\(\(point, index\) => index/);
     assert.match(code, /ctx\.save\(\);\s*ctx\.translate\(w\.position/);
     assert.doesNotMatch(code, /BEHIND_SHRUB|night-navigation\.json[^\n]*import/);
 });
@@ -610,7 +611,7 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     assert.match(ground, /M 575 492 C 610 492 651 486 680 469/);
     assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
     assert.match(well, /M818 439 L823 426/);
-    assert.match(sign, /M729 440 L735 435/);
+    assert.match(sign, /M731 454 L731 449/);
     assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\("townRoute"\) === "rear"/);
     assert.match(js, /buildArchitectureCutout/);
     assert.match(js, /destination-in/);
@@ -651,7 +652,7 @@ test('Town V2 well and noticeboard alpha avoid the garden wall and paving', () =
     assert.match(sign, /only actual wood and sign face/);
     assert.doesNotMatch(well, /M 769 528 Q 808 523/);
     assert.match(well, /M818 439 L823 426/);
-    assert.match(sign, /M729 440 L735 435/);
+    assert.match(sign, /M731 454 L731 449/);
 });
 
 test('Town V2 freezes only on real rear foreground coverage and checks every animation frame', () => {
@@ -670,13 +671,31 @@ test('Town V2 freezes only on real rear foreground coverage and checks every ani
     assert.doesNotMatch(js, /setInterval/);
 });
 
-test('Town V2 diagnostic cyan never overpaints raised well and noticeboard silhouettes', () => {
+test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
+    const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
+    const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
+        const values = [...match[1].matchAll(/-?\d+(?:\.\d+)?/g)].map(value => Number(value[0]));
+        assert.equal(values.length % 2, 0);
+        return Array.from({ length: values.length / 2 }, (_, i) => ({ x: values[i * 2], y: values[i * 2 + 1] }));
+    });
+    assert.equal(paths.length, 3, 'Board + precisely two timber supports; never a pasted rectangular floor');
+    const contains = (polygon, point) => {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const a = polygon[i], b = polygon[j];
+            if ((a.y > point.y) !== (b.y > point.y) &&
+                point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)
+                inside = !inside;
+        }
+        return inside;
+    };
+    const covered = (x, y) => paths.some(path => contains(path, { x, y }));
+    for (const [x, y] of [[740, 430], [760, 428], [795, 423], [755, 512], [780, 506]])
+        assert.equal(covered(x, y), false, `Cobble or flowerbed pixel ${x},${y} cannot cover the NPC`);
+    for (const [x, y] of [[760, 470], [795, 470], [736, 518], [800, 510]])
+        assert.equal(covered(x, y), true, `Board or timber support pixel ${x},${y} must hide the rear NPC`);
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
-    assert.match(js, /function buildDebugOverlay\(nav, route, foregrounds\)/);
-    assert.match(js, /ctx.globalCompositeOperation = "destination-out"/);
-    assert.match(js, /ctx.drawImage\(foreground.image, foreground.x, foreground.y\)/);
-    assert.match(js, /rearMode \? \[state.wellCutout, state.noticeCutout, state.foliage\]/);
-    assert.match(js, /if \(w.showMask && w.debugOverlay\) ctx.drawImage\(w.debugOverlay, 0, 0\)/);
-    assert.match(js, /depthAwareMaskReady: !!entry.debugOverlay/);
-    assert.doesNotMatch(js, /if \(w.showMask\) ctx.drawImage\(w.nav.overlay/);
+    assert.match(js, /w.lastNoticeOccluded = w.noticeCoveredPixels > 0/);
+    assert.match(js, /ctx.drawImage\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\)/);
+    assert.doesNotMatch(js, /buildDebugOverlay/);
 });
