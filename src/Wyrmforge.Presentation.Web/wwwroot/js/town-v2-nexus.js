@@ -38,7 +38,7 @@ const PLAZA_STONE = { x: 650, y: 565 };
 const live = new Map();
 
 const pixelIndex = (x, y) => ((Math.round(y) * WIDTH + Math.round(x)) * 4);
-function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
+function buildNavigation(source, includeCoverage = false, reviewedMask = null, candidateMask = null) {
     const canvas = document.createElement("canvas");
     canvas.width = WIDTH; canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -71,6 +71,7 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
     const coverageCtx = coverageOverlay?.getContext("2d");
     const coverageImg = coverageCtx?.createImageData(WIDTH, HEIGHT);
     let reviewedPixels = null;
+    let candidatePixels = null;
     if (coverageImg) {
         if (!reviewedMask || reviewedMask.naturalWidth !== WIDTH || reviewedMask.naturalHeight !== HEIGHT)
             throw new Error("Town V2 audit needs a separate full-sized reviewed-solid atlas.");
@@ -81,6 +82,16 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
         if (!reviewedCtx) throw new Error("Town V2 cannot read reviewed-solid atlas.");
         reviewedCtx.drawImage(reviewedMask, 0, 0);
         reviewedPixels = reviewedCtx.getImageData(0, 0, WIDTH, HEIGHT).data;
+        if (!candidateMask || candidateMask.naturalWidth !== WIDTH ||
+            candidateMask.naturalHeight !== HEIGHT)
+            throw new Error("Town V2 audit needs a separate full-sized candidate-ground atlas.");
+        const candidateCanvas = document.createElement("canvas");
+        candidateCanvas.width = WIDTH;
+        candidateCanvas.height = HEIGHT;
+        const candidateCtx = candidateCanvas.getContext("2d", { willReadFrequently: true });
+        if (!candidateCtx) throw new Error("Town V2 cannot read candidate-ground atlas.");
+        candidateCtx.drawImage(candidateMask, 0, 0);
+        candidatePixels = candidateCtx.getImageData(0, 0, WIDTH, HEIGHT).data;
     }
     // Tile audit is calculated during the SAME raster pass. It is accounting,
     // not pathfinding; decorative unmapped areas remain unclassified.
@@ -94,17 +105,25 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
             column, row, x, y,
             width: Math.min(tileSize, WIDTH - x), height: Math.min(tileSize, HEIGHT - y),
             authoredGroundPixels: 0, reviewedSolidPixels: 0,
-            classConflictPixels: 0, notSeparatelyClassifiedPixels: 0
+            classConflictPixels: 0, candidateGroundPixels: 0,
+            notSeparatelyClassifiedPixels: 0
         };
     }) : [];
     let authoredGroundPixels = 0;
     let reviewedSolidPixels = 0;
     let classConflictPixels = 0;
+    let candidateGroundPixels = 0;
+    let candidateSolidOverlapPixels = 0;
     let notSeparatelyClassifiedPixels = 0;
     for (let p = 0; p < pixels.length; p += 4) {
         const authored = pixels[p] > 230;
         const reviewedSolid = !!reviewedPixels && reviewedPixels[p] > 230 &&
             reviewedPixels[p + 3] > 230;
+        const candidateGround = !!candidatePixels && candidatePixels[p] > 230 &&
+            candidatePixels[p + 3] > 230;
+        // Hypothesized paving is never proof of safe footsteps or a reason
+        // to erase a previously verified obstacle.
+        if (candidateGround && reviewedSolid) candidateSolidOverlapPixels++;
         // The legacy teal mask remains purely based on the existing walk
         // pixels. The semantic atlas NEVER changes the actual foot collider.
         if (authored) {
@@ -114,6 +133,7 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
         if (authored && reviewedSolid) classConflictPixels++;
         else if (authored) authoredGroundPixels++;
         else if (reviewedSolid) reviewedSolidPixels++;
+        else if (candidateGround) candidateGroundPixels++;
         else notSeparatelyClassifiedPixels++;
         if (coverageImg) {
             const coordinate = p / 4;
@@ -123,12 +143,15 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
             if (authored && reviewedSolid) tile.classConflictPixels++;
             else if (authored) tile.authoredGroundPixels++;
             else if (reviewedSolid) tile.reviewedSolidPixels++;
+            else if (candidateGround) tile.candidateGroundPixels++;
             else tile.notSeparatelyClassifiedPixels++;
-            // Teal = authored route; red = independently reviewed solid;
-            // magenta = contradictory authored classes; amber = UNKNOWN.
+            // Teal = approved route, red = independently reviewed solid,
+            // magenta = authoritative contradiction, blue = proposed paving
+            // only (still BLOCKED for foot navigation), amber = unknown.
             const color = authored && reviewedSolid ? [227, 54, 198] :
                 authored ? [42, 224, 194] :
-                reviewedSolid ? [232, 76, 67] : [240, 147, 59];
+                reviewedSolid ? [232, 76, 67] :
+                candidateGround ? [67, 130, 236] : [240, 147, 59];
             coverageImg.data[p] = color[0];
             coverageImg.data[p + 1] = color[1];
             coverageImg.data[p + 2] = color[2];
@@ -160,21 +183,25 @@ function buildNavigation(source, includeCoverage = false, reviewedMask = null) {
     if (includeCoverage && reviewedSolidPixels === 0)
         throw new Error("Town V2 audit has no independently reviewed solid pixels.");
     if (authoredGroundPixels + reviewedSolidPixels + classConflictPixels +
-        notSeparatelyClassifiedPixels !== totalPixels)
+        candidateGroundPixels + notSeparatelyClassifiedPixels !== totalPixels)
         throw new Error("Town V2 semantic audit does not account for every canvas pixel.");
     for (const tile of tiles)
         if (tile.authoredGroundPixels + tile.reviewedSolidPixels +
-            tile.classConflictPixels + tile.notSeparatelyClassifiedPixels !==
+            tile.classConflictPixels + tile.candidateGroundPixels +
+            tile.notSeparatelyClassifiedPixels !==
                 tile.width * tile.height)
             throw new Error("Town V2 coverage tile does not account for its entire raster.");
     return {
         canStand, overlay, coverageOverlay,
         coverage: {
             totalPixels, authoredGroundPixels, reviewedSolidPixels,
-            classConflictPixels, notSeparatelyClassifiedPixels,
+            classConflictPixels, candidateGroundPixels, candidateSolidOverlapPixels,
+            notSeparatelyClassifiedPixels,
             knownSolidClassAvailable: includeCoverage,
             reviewedSolidNames: includeCoverage
                 ? ["well-footprint", "noticeboard-base", "stair-root-bed"] : [],
+            candidateGroundNames: includeCoverage
+                ? ["south-plaza", "west-apron", "east-apron"] : [],
             tileSize, tileColumns, tileRows, tiles,
             fullSceneMapped: false
         }
@@ -551,6 +578,7 @@ function animate(w, now) {
                 (w.nav.coverage.authoredGroundPixels * 100 /
                     w.nav.coverage.totalPixels).toFixed(1) +
                 "% · SOLID " + w.nav.coverage.reviewedSolidPixels +
+                " · CANDIDATE " + w.nav.coverage.candidateGroundPixels +
                 " · CONFLICT " + w.nav.coverage.classConflictPixels +
                 " · REST UNCLASSIFIED" : "");
     }
@@ -611,19 +639,23 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.180", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.180", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.181", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.181", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode || residentCount > 1 || coverageAudit) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.180", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.180", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.181", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.181", document.baseURI).href));
         }
-        if (coverageAudit)
+        if (coverageAudit) {
             urls.push(loadMask(new URL(
-                "art/town/nexus-v2-reviewed-solid-footprints.svg?v=0.0.180", document.baseURI).href));
-        const [walkMask, depthMask, wellMask, noticeMask, reviewedMask] = await Promise.all(urls);
+                "art/town/nexus-v2-reviewed-solid-footprints.svg?v=0.0.181", document.baseURI).href));
+            urls.push(loadMask(new URL(
+                "art/town/nexus-v2-ground-candidates.svg?v=0.0.181", document.baseURI).href));
+        }
+        const [walkMask, depthMask, wellMask, noticeMask, reviewedMask, candidateMask] =
+            await Promise.all(urls);
         if (state.disposed) return;
-        state.nav = buildNavigation(walkMask, coverageAudit, reviewedMask);
+        state.nav = buildNavigation(walkMask, coverageAudit, reviewedMask, candidateMask);
         if (![START, STAIR_EXIT, STAIR_TREAD, PLAZA_STONE, PLAZA_END,
             WELL_FRONT_MID, WELL_FRONT_END].every(p => state.nav.canStand(p.x,p.y)))
             throw new Error("Town V2 stairs, plaza and well-front stops must fit the mask.");
@@ -799,7 +831,8 @@ export function readTownV2Diagnostics(canvas) {
         coverage: entry.nav?.coverage ?? null,
         coverageLegend: entry.coverageAudit
             ? { authoredGround: "teal", reviewedSolid: "red",
-                classConflict: "magenta", notSeparatelyClassified: "amber" } : null
+                classConflict: "magenta", candidateGround: "blue",
+                notSeparatelyClassified: "amber" } : null
     };
 }
 export function disposeTownV2Nexus(sceneSelector) {
