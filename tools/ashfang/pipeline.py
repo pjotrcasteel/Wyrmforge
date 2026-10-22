@@ -20,6 +20,7 @@ p.add_argument('--output',required=True)
 p.add_argument('--revision',required=True)
 p.add_argument('--profile',choices=['clay'],default='clay')
 p.add_argument('--resolution',type=int,default=1024)
+p.add_argument('--views',help='Comma-separated review labels; omit for the complete review suite')
 a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 if a.operation in ('bake','render','export','pack'):
     raise SystemExit(f'{a.operation} is unimplemented and gated by accepted model/rig; no placeholder outputs')
@@ -117,6 +118,11 @@ if a.operation in ('review','benchmark'):
            ('three-quarter-left',-45,25),('three-quarter-right',45,25),('game-elevated',45,34),
            ('game-extended',45,34),('game-jaw-closed',45,34),
            ('skull-side',90,8),('skull-three-quarter',45,12),('skull-jaw-closed',45,12)]
+    if a.views:
+        requested=a.views.split(',')
+        unknown=set(requested)-{v[0] for v in views}
+        if unknown:raise SystemExit('Unknown review views: '+','.join(sorted(unknown)))
+        views=[v for v in views if v[0] in requested]
     if a.operation=='benchmark': views=views[:1]
     for index,(label,azimuth,elevation) in enumerate(views):
         for ob in bpy.data.objects:

@@ -21,11 +21,11 @@
     "pilotNativeFileLimitBytes": 8388608,
     "pilotNativeTotalLimitBytes": 20971520,
     "retrievalVerified": true,
-    "retrievalSourceCommit": "fbd88a8a1bc42cd99542a00b59711a5df3324848"
+    "retrievalSourceCommit": "6e2a953cb9dbdfb03a7111df569e4fcb2c5e0502"
   },
   "milestones": {
     "M0": "source foundation verified for primary studies; optional paint/video tools deferred",
-    "M1": "r04 technically valid primary study; visual gate failed; headless corrections continuing",
+    "M1": "r05 primary facial correction reviewed; artistic gate still failed",
     "M2": "blocked-on-owner-M1-acceptance",
     "M3": "not-started",
     "M4": "not-started",
@@ -35,7 +35,7 @@
     "M8": "not-started"
   },
   "technicalPass": true,
-  "agentVisualStatus": "R04 eye sockets over-excavated and face lacks brow/cheek integration; body still generic. No M1 acceptance.",
+  "agentVisualStatus": "Sockets improved but brows remain soft, horn roots generic, torso/haunch planes unresolved. Continue primary forms headlessly.",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "assets": [
@@ -88,9 +88,24 @@
       "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03-key-corrected.blend",
       "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
       "bytes": 2881315
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/ashfang-facial-preunion.blend",
+      "bytes": 5056134,
+      "sha256": "6a0a1fa7af0783c7018e5dde9bed7edfba4191bc5b9a2a28da23427c782303aa"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/ashfang-primary.blend",
+      "bytes": 6252347,
+      "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
+      "bytes": 6252347,
+      "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
     }
   ],
   "nextTask": "Change the primary modeling approach to resolve card-specific skull/neck and grounded wing silhouette; do not repeat smooth contour studies or advance to M2",
-  "authoritativeWorkingProject": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04-repaired.blend",
+  "authoritativeWorkingProject": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
   "operatingMode": "Headless only until owner says otherwise; pause before any necessary desktop input"
 }

@@ -154,3 +154,5 @@ M1 completion. Next: push current/pre-operation sources, inspect new clay views,
 correct visual defects and continue remaining M1 studies.
 
 Owner resumed with HEADLESS ONLY operating constraint. Do not control native desktop or browser UI. If a necessary stage cannot be completed headlessly, pause and explain capability gap. R04 review fails orbital anatomy and integrated facial planes. Continue primary form correction; no M2 approval.
+
+R05 headless source and preunion construction saved, LFS uploaded at 6e2a953c. Independent sparse download SHA256 d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82 and reopen pass. Clay review: sockets improved, but rounded brows, generic horn roots, undifferentiated torso and haunches still fail M1. Continue primary-plane work; no owner acceptance or desktop control.
