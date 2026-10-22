@@ -54,7 +54,7 @@ export function createTerrainPlan(environment, width, height) {
         story, forestProps: story.wetForest ? environment.props ?? [] : [] };
 }
 
-function drawTerrain(ctx, plan, width, height) {
+function drawTerrain(ctx, plan, width, height, approvedAtlas = null) {
     const ash = plan.biome === 'ash';
     const ridge = plan.biome === 'ridge';
     const snow = plan.biome === 'snow';
@@ -76,7 +76,7 @@ function drawTerrain(ctx, plan, width, height) {
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
     }
-    drawTerritoryGround(ctx, plan.story);
+    drawTerritoryGround(ctx, plan.story, approvedAtlas);
     if (tile) drawGroundDecals(ctx, plan, width, height);
     if (plan.story.wetForest) drawWetForestDressing(ctx, plan.story, plan.forestProps, width, height);
 
@@ -217,15 +217,15 @@ export function habitatTint(habitat) {
     return habitatTints[habitat] ?? null;
 }
 
-function terrainTexture(environment, width, height) {
+function terrainTexture(environment, width, height, approvedAtlas = null) {
     // Art generation is part of the key: the bake refreshes once the atlases finish loading.
-    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration()].join(':');
+    const key = [environment.seed, environment.biome, environment.element, environment.district, environment.habitat, environment.stage, environment.corruption, environment.generatorPreview, environment.wetForest?.site, width, height, artGeneration(), approvedAtlas ? 'approvedGroundPreview' : 'canonicalGround'].join(':');
     if (textures.has(key)) return textures.get(key);
     const image = document.createElement('canvas');
     image.width = Math.max(1, Math.round(width));
     image.height = Math.max(1, Math.round(height));
     const plan = createTerrainPlan(environment, image.width, image.height);
-    drawTerrain(image.getContext('2d'), plan, image.width, image.height);
+    drawTerrain(image.getContext('2d'), plan, image.width, image.height, approvedAtlas);
     // Keep at most two world textures on mobile; a whole territory is larger than one viewport.
     if (textures.size >= 2) textures.delete(textures.keys().next().value);
     const texture = { image, cloister: plan.story.cloister, plan };
@@ -291,9 +291,9 @@ export function drawArenaCloisterReflections(ctx, environment, width, height, li
 
 // Cache owns the cloister's fixed plan; these lightweight wall items sort with
 // actor foot positions in world space rather than being pasted over the viewport.
-export function getArenaCloisterElevations(environment, width, height, seconds = 0) {
+export function getArenaCloisterElevations(environment, width, height, seconds = 0, approvedAtlas = null) {
     if (!environment) return [];
-    const texture = terrainTexture(environment, width, height);
+    const texture = terrainTexture(environment, width, height, approvedAtlas);
     const cloister = texture.cloister;
     const masonry = !cloister
         ? createTerritoryWallLayers(environment, texture.plan, width, height, seconds)
@@ -467,9 +467,9 @@ function drawWetForestProp(ctx, prop, x, y, size) {
     return true;
 }
 
-export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0) {
+export function drawArenaEnvironment(ctx, environment, width, height, elapsedSeconds = 0, approvedAtlas = null) {
     if (!environment) return false;
-    const texture = terrainTexture(environment, width, height);
+    const texture = terrainTexture(environment, width, height, approvedAtlas);
     ctx.drawImage(texture.image, 0, 0, width, height);
     // Render low-angle shadows from CURRENT physical props, never frozen floor art:
     // destroyed trees and ruins lose their shadows in the same C# simulation frame.
