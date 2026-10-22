@@ -24,11 +24,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.161');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.162');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.161');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.162');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
@@ -46,6 +46,14 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsTrue(first.GetProperty("wellExcluded").GetBoolean(),
             "The first plaza slice must stop west of the central well.");
         Assert.IsTrue(first.GetProperty("westPlanterExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellFrontWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellFrontEndpointWalkable").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellCenterExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("wellRimExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("noticeboardExcluded").GetBoolean());
+        Assert.IsTrue(first.GetProperty("lowerGardenExcluded").GetBoolean());
+        Assert.IsFalse(first.GetProperty("wellForegroundRequired").GetBoolean(),
+            "This front-of-well slice must not repaint any well stone over an NPC.");
         Assert.IsTrue(first.GetProperty("foregroundReady").GetBoolean(),
             "The cropped V2 shrub PNG must have usable nontransparent pixels.");
         Assert.AreEqual("image/png", first.GetProperty("foregroundFormat").GetString());
@@ -53,7 +61,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.161');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.162');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -63,7 +71,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.161');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.162');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
@@ -71,10 +79,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.161');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.162');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-            return d?.plazaVisits >= 1 && d.safe && d.wellExcluded &&
-                d.westPlanterExcluded && d.violations === 0;
+            return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
+                d.wellFrontEndpointWalkable && d.wellRimExcluded &&
+                d.noticeboardExcluded && d.violations === 0;
         }", null, new PageWaitForFunctionOptions { Timeout = 25000 });
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed","false");

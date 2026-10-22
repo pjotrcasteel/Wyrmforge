@@ -530,7 +530,7 @@ test('Town V2 iPhone staircase correction isolates physical treads from foregrou
     assert.match(code, /x \+ width > 465 \|\| y \+ height > 445/);
     assert.match(code, /destination-in/);
     assert.match(code, /toDataURL\("image\/png"\)/);
-    assert.match(code, /state\.route = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.match(code, /state\.route = planRoute\(state\.nav, START, WELL_FRONT_END\)/);
     assert.doesNotMatch(code, /BEHIND_SHRUB/);
     assert.match(code, /stairAreaOccluded/);
     assert.match(sceneCode, /data-town-v2-depth-toggle="true"/);
@@ -549,11 +549,34 @@ test('Town V2 Phase 3 extends the raster route into the open west plaza, not the
     assert.match(code, /PLAZA_STONE = \{ x: 650, y: 565 \}/);
     assert.match(code, /WELL_BASE = \{ x: 735, y: 550 \}/);
     assert.match(code, /WEST_PLANTER = \{ x: 560, y: 612 \}/);
-    assert.match(code, /state\.route = planRoute\(state\.nav, START, PLAZA_END\)/);
-    assert.match(code, /if \(w\.direction === 1\) w\.plazaVisits\+\+/);
+    assert.match(code, /Math\.hypot\(p\.x - PLAZA_END\.x, p\.y - PLAZA_END\.y\) <= 16/);
+    assert.match(code, /w\.plazaVisits\+\+/);
     assert.match(code, /plazaVisits: entry\.plazaVisits/);
     assert.match(code, /plaza route cuts across an unwalkable pixel/);
     assert.match(code, /if \(w\.showMask\) \{[\s\S]*w\.route\.forEach/);
     assert.match(code, /ctx\.save\(\);\s*ctx\.translate\(w\.position/);
     assert.doesNotMatch(code, /BEHIND_SHRUB|night-navigation\.json[^\n]*import/);
+});
+
+test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts', () => {
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const ground = source(art + '/nexus-v2-walk-mask.svg');
+    const foliage = source(art + '/nexus-v2-foliage-mask.svg');
+    assert.match(ground, /front-of-well cobblestones only/);
+    assert.match(ground, /M 681 623 C 710 630 741 635 782 632/);
+    assert.match(ground, /M 727 511 L 745 497 L 906 497/);
+    assert.match(ground, /M 746 462 L 773 462 L 783 492/);
+    assert.match(code, /WELL_FRONT_MID = \{ x: 800, y: 630 \}/);
+    assert.match(code, /WELL_FRONT_END = \{ x: 970, y: 616 \}/);
+    assert.match(code, /NOTICEBOARD_POST = \{ x: 762, y: 495 \}/);
+    assert.match(code, /WELL_RIM = \{ x: 920, y: 551 \}/);
+    assert.match(code, /state\.route = planRoute\(state\.nav, START, WELL_FRONT_END\)/);
+    assert.match(code, /wellFrontVisits: entry\.wellFrontVisits/);
+    assert.match(code, /wellRimExcluded:/);
+    assert.match(code, /noticeboardExcluded:/);
+    assert.match(code, /wellForegroundRequired: false/);
+    assert.match(code, /Town V2 route bypassed previously approved stairs\/plaza/);
+    assert.match(code, /Town V2 plaza route cuts across an unwalkable pixel/);
+    assert.match(foliage, /V2 depth ONLY: planted leaf tips/);
+    assert.doesNotMatch(code, /night-navigation\.json[^\n]*import|CUTOUTS/);
 });
