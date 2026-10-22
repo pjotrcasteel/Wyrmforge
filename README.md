@@ -1,5 +1,12 @@
 # Wyrmforge
 
+## Prototype 0.0.168 — Routed Arcane paths and debug character reset
+
+- Arcane Web uses school stems, branching milestones and curved connections between schools, with no decorative spokes through skills. Stable progression and saved builds retain their rules.
+- Phone gestures use one touch stream, stable map height and cancellation-safe taps. Wheel/trackpad scrolling pans; Ctrl/pinch and buttons zoom.
+- Settings → Debug → Reset character clears this device’s Wyrmforge saves and settings after confirmation, then returns to the welcome screen. Other projects on the same origin are preserved.
+- [Implementation and verification receipt](docs/playtesting/2026-10-22-web-paths-and-debug-reset.md).
+
 ## Prototype 0.0.166 — Readable, pannable specialization map
 
 - Specialize opens on the active school at reading scale, with wider node/cluster spacing and drag/pinch navigation from nodes or empty space. Whole-Web overview is optional.
@@ -822,4 +829,3 @@ dotnet run --project src/Wyrmforge.Presentation.Web/Wyrmforge.Presentation.Web.c
 ### 0.0.100 — generated territories and road choices
 
 Hunts now generate seeded river, ridge and caldera territories with unequal encounter placement. Two major forks offer 2–4 committed roads: at least one short road (2 fights), medium roads (3), and occasional long detours (5) with a guaranteed additional relic cache. The quickest hunt has eight fights; detours add encounters and upgrades. Encounter icons remain readable on the map, and route previews show road length and rewards. Terrain and landmarks are structured data rendered as artless SVG, ready for a future art layer.
-
