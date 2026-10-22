@@ -66,7 +66,11 @@ function requestRender(state) {
 function buildScene(state) {
     if (!state.alive || !state.source) return;
     const board = groundFoundationBoard(state.seed, state.natural);
-    const atlas = buildGroundQuiltAtlas(state.source, state.seed, undefined, false);
+    if (!state.atlas || state.atlasSeed !== state.seed) {
+        state.atlas = buildGroundQuiltAtlas(state.source, state.seed, undefined, false);
+        state.atlasSeed = state.seed;
+    }
+    const atlas = state.atlas;
     if (!atlas) { state.canvas.dataset.foundationError = 'atlas'; return; }
     const scene = document.createElement('canvas');
     scene.width = FOUNDATION_WIDTH;
@@ -104,7 +108,8 @@ export function initializeGroundFoundation(canvas, seed = 1204, natural = true) 
     if (states.has(canvas)) return;
     const state = {
         alive: true, canvas, seed: seed | 0, natural: Boolean(natural), source: null,
-        scene: null, scheduled: false, camera: { x: 0, y: 0 }, pointer: null,
+        scene: null, atlas: null, atlasSeed: null, scheduled: false,
+        camera: { x: 0, y: 0 }, pointer: null,
         listeners: [],
     };
     states.set(canvas, state);
@@ -174,6 +179,7 @@ export function disposeGroundFoundation(canvas) {
     s.alive = false;
     s.listeners.forEach(remove => remove());
     s.scene = null;
+    s.atlas = null;
     s.source = null;
     states.delete(canvas);
 }
