@@ -14,8 +14,9 @@ const FRONT_VISUAL_CONTACT_MAX_Y = 590; // Feet close enough for sprite to overl
 // Independently selectable Phase 5 debug route; front V2 stays the default.
 const REAR_ENTRY = { x: 680, y: 469 };
 const REAR_END = { x: 852, y: 452 };
-const WELL_CUTOUT = { x: 703, y: 383, width: 249, height: 187, depthY: 498 };
-const NOTICE_CUTOUT = { x: 706, y: 410, width: 106, height: 127, depthY: 459 };
+// Tightly bounded with transparent edges; zero garden wall / paved floor.
+const WELL_CUTOUT = { x: 810, y: 392, width: 130, height: 160, depthY: 498 };
+const NOTICE_CUTOUT = { x: 721, y: 411, width: 93, height: 139, depthY: 459 };
 const WELL_RIM = { x: 920, y: 551 };
 const WELL_CENTER = { x: 820, y: 535 };
 const NOTICEBOARD_POST = { x: 762, y: 495 };
@@ -162,9 +163,17 @@ async function buildArchitectureCutout(scene, source, bounds, label) {
         alpha[i] = rgba[i * 4 + 3];
         if (alpha[i] > 80) opaquePixels++;
     }
-    if (opaquePixels < 120 || alpha[0] > 0 ||
-        alpha[width - 1] > 0 || alpha[(height - 1) * width] > 0)
-        throw new Error("Town V2 " + label + " is not a tight transparent silhouette.");
+    // Every edge must be transparent, not only three corners. This prevents
+    // sliced-off roof/post pixels from creating a hard rectangle on iPhone.
+    let clippedEdge = false;
+    for (let x = 0; x < width; x++) {
+        if (alpha[x] > 0 || alpha[(height - 1) * width + x] > 0) clippedEdge = true;
+    }
+    for (let y = 0; y < height; y++) {
+        if (alpha[y * width] > 0 || alpha[y * width + width - 1] > 0) clippedEdge = true;
+    }
+    if (opaquePixels < 120 || clippedEdge)
+        throw new Error("Town V2 " + label + " is clipped or lacks a transparent edge.");
     const image = new Image();
     await new Promise((resolve, reject) => {
         image.onload = resolve;
@@ -320,12 +329,12 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     };
     depthToggle.addEventListener("click", state.depthClick);
     try {
-        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.164", document.baseURI);
-        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.164", document.baseURI);
+        const walkUrl = new URL("art/town/nexus-v2-walk-mask.svg?v=0.0.165", document.baseURI);
+        const depthUrl = new URL("art/town/nexus-v2-foliage-mask.svg?v=0.0.165", document.baseURI);
         const urls = [loadMask(walkUrl.href), loadMask(depthUrl.href)];
         if (rearMode) {
-            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.164", document.baseURI).href));
-            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.164", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-well-foreground.svg?v=0.0.165", document.baseURI).href));
+            urls.push(loadMask(new URL("art/town/nexus-v2-noticeboard-foreground.svg?v=0.0.165", document.baseURI).href));
         }
         const [walkMask, depthMask, wellMask, noticeMask] = await Promise.all(urls);
         if (state.disposed) return;
