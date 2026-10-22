@@ -1,0 +1,26 @@
+{
+  "revision": "M1-r05",
+  "precedingSourceSha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+  "headless": true,
+  "manualSculpt": false,
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "intentionalOverlaps": "Primary teeth/horns/mandible remain separate; final topology not certified",
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/ashfang-facial-preunion.blend",
+      "bytes": 5056134,
+      "sha256": "6a0a1fa7af0783c7018e5dde9bed7edfba4191bc5b9a2a28da23427c782303aa"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/ashfang-primary.blend",
+      "bytes": 6252347,
+      "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
+      "bytes": 6252347,
+      "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
+    }
+  ]
+}
