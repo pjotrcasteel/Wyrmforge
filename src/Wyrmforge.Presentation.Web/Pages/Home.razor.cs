@@ -260,10 +260,8 @@ public partial class Home
             firstHunt.CompleteRun(false);
             await PersistFirstHuntAsync();
         }
-        // A completed tutorial already begins with one Atlas point. Subsequent hunts
-        // add one point, capped by PassiveTreeSelection; abandonment awards nothing.
-        if (firstHunt.AwardsArcanePoint(tutorialEnded, value.Outcome == RunOutcome.Abandoned))
-            selection.GrantPoints(1);
+        // Arcane points are earned only through Hunter XP level milestones.
+        // Never also award a point per hunt: that would bypass the account XP economy.
         hunterGain = CreditHunterExperience(value.ExperienceEarned);
         await TryUnlockAdvancedAccessAsync();
         quests.Record(new HuntQuestEvidence(value.CompletedRouteNodes, value.RareRouteNodes, value.Depth, value.Outcome == RunOutcome.Abandoned,

@@ -47,6 +47,24 @@ public sealed class HunterProgressTests
     }
 
     [TestMethod]
+    public void AddExperience_NoLevelChange_DoesNotAwardPointsMerelyForCompletingHunt()
+    {
+        var hunter = new HunterProgress();
+        var firstHunt = hunter.AddExperience(15);
+        var secondHunt = hunter.AddExperience(20);
+
+        Assert.AreEqual(0, firstHunt.AtlasPoints);
+        Assert.AreEqual(0, secondHunt.AtlasPoints);
+        Assert.AreEqual(1, hunter.AtlasBudget, "Hunts alone do not award an Arcane point.");
+
+        var milestone = hunter.AddExperience(5);
+        Assert.AreEqual(1, milestone.AtlasPoints);
+        Assert.AreEqual(2, hunter.AtlasBudget);
+        Assert.AreEqual(0, hunter.AddExperience(0).AtlasPoints,
+            "Repeated UI state updates must never grant a duplicate point.");
+    }
+
+    [TestMethod]
     public void NextReward_LegacyFullAtlas_PointsToActualMilestoneReward()
     {
         var hunter = new HunterProgress();
