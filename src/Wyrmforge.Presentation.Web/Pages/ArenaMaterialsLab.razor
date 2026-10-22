@@ -82,7 +82,7 @@
         if (!firstRender) return;
         // The page assembly and JS renderer must change together on iPhone Safari.
         // Keep a versioned module URL to avoid serving stale functions from its module cache.
-        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/arena-materials.js?v=20261022-fine-pixels-1");
+        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/arena-materials.js?v=20261022-visible-wear-2");
         await module.InvokeVoidAsync("initMaterialsLab", canvas, seed);
     }
 
