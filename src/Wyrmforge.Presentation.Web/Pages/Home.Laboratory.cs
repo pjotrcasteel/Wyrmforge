@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.JSInterop;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Progression.Laboratory;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Progression.Signature;
 
 namespace Wyrmforge.Presentation.Web.Pages;
@@ -12,6 +13,7 @@ public partial class Home
     private const string FireballCoreKey = "wyrmforge.fireballCore.v1";
     private readonly FireballCoreState fireballCore = new();
     private IReadOnlyList<FireballMutationId> activeFireballMutations = [];
+    private IReadOnlyList<MutationAmplifierAssignment> activeMutationAmplifiers = [];
 
     private readonly LaboratoryState laboratory = new();
     private IReadOnlyList<LaboratoryMutationId> activeLaboratoryMutations = [];
@@ -28,6 +30,7 @@ public partial class Home
     {
         activeLaboratoryMutations = laboratory.PreparedFor(selection.Selected);
         activeFireballMutations = fireballCore.Equipped;
+        activeMutationAmplifiers = mutationAmplifiers.ToSave();
         activeResearchLead = laboratory.LeadWyrm(essenceVault);
         activeResearchSpecimen = activeResearchLead is not null && laboratory.Tracked is { } tracked ? LaboratoryCatalog.Get(tracked).Stabilizer : null;
         researchPrompt = null;
@@ -92,6 +95,23 @@ public partial class Home
         else if (!laboratory.Unequip(id)) return;
         laboratoryNotice = null;
         await TrySetLaboratoryAsync();
+    }
+
+    private async Task<bool> AssignFireballAmplifierAsync(string nodeId, FireballMutationId? mutation)
+    {
+        if (mutation is null)
+        {
+            if (!mutationAmplifiers.Clear(nodeId)) return false;
+        }
+        else
+        {
+            var descriptor = MutationAmplifierCatalog.ForFireball(mutation.Value);
+            if (descriptor is null || !mutationAmplifiers.Assign(nodeId, descriptor, selection.Selected,
+                MutationAmplifierCatalog.EquippedFireball(fireballCore))) return false;
+        }
+
+        await SaveArcaneBuildAsync();
+        return true;
     }
 
     private async Task SaveArcaneSelectionAsync()
