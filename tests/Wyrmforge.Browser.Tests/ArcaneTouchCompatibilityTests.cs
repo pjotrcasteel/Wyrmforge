@@ -43,13 +43,15 @@ public sealed class ArcaneTouchCompatibilityTests : BrowserTest
         var before = await page.Locator(".arcane-web-canvas").GetAttributeAsync("style");
         var scrollY = await page.EvaluateAsync<double>("window.scrollY");
         // Playwright exposes native tap but no native WebKit swipe. Exercise the
-        // TouchEvent adapter in that engine; trusted swipe/pinch runs in Chromium.
+        // touch-shaped DOM events in that engine; trusted swipe/pinch runs in Chromium.
+        // WebKit does not expose a public Touch constructor.
         await node.EvaluateAsync(@"async target => {
             const r=target.getBoundingClientRect(), x=r.x+r.width/2, y=r.y+r.height/2;
             const send=(type,dx,dy) => {
-                const finger=new Touch({identifier:7,target,clientX:x+dx,clientY:y+dy});
-                target.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,
-                    touches:type==='touchend'?[]:[finger],changedTouches:[finger]}));
+                const finger={identifier:7,clientX:x+dx,clientY:y+dy};
+                const event=new Event(type,{bubbles:true,cancelable:true});
+                Object.defineProperties(event,{touches:{value:type==='touchend'?[]:[finger]},changedTouches:{value:[finger]}});
+                target.dispatchEvent(event);
             };
             send('touchstart',0,0);
             for(let i=1;i<=4;i++) { send('touchmove',i*12,i*10); await new Promise(requestAnimationFrame); }
