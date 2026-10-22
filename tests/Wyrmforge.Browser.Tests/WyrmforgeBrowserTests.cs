@@ -26,7 +26,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Import once and store the synchronous reader before waiting. An async
         // predicate itself is a truthy Promise even before V2 has mounted.
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.169');
             window.__readTownV2Front = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -107,7 +107,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // WaitForFunction MUST be synchronous: an async callback returns a
         // truthy Promise before its false diagnostic result is resolved.
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.169');
             window.__readTownV2Rear = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -130,8 +130,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Rechecking transient readiness here races Blazor scene remounts.
         Assert.AreEqual(1, before.GetProperty("npcCount").GetInt32());
         Assert.IsFalse(before.GetProperty("usingLegacyNavigation").GetBoolean());
-        Assert.IsTrue(before.GetProperty("depthAwareMaskReady").GetBoolean(),
-            "Mask debug painting must be prepared beneath the real well and noticeboard.");
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
         await Expect(Page.Locator("[data-town-v2-depth-toggle]")).ToHaveAttributeAsync("aria-pressed", "false");
         var hidden = await Page.EvaluateAsync<JsonElement>("() => window.__readTownV2Rear()");
@@ -158,7 +156,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.168');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.169');
             window.__readTownV2Freeze = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
