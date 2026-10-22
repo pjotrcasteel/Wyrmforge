@@ -46,7 +46,7 @@ for slot in body.material_slots:
   r.elements.remove(r.elements[1]);r.elements[0].position=stops[0][0];r.elements[0].color=stops[0][1]
   for pos,color in stops[1:]:e=r.elements.new(pos);e.color=color
   link(inp,v.inputs[0]);return v.outputs['Color']
- output=node('ShaderNodeOutputMaterial','Character surface only');bs=node('ShaderNodeBsdfPrincipled','Clean dielectric skin');link(bs.outputs[0],output.inputs['Surface']);bs.inputs['Metallic'].default_value=0;bs.inputs['Roughness'].default_value=.66;bs.inputs['Specular IOR Level'].default_value=.16
+ output=node('ShaderNodeOutputMaterial','Character surface only');bs=node('ShaderNodeBsdfPrincipled','Clean dielectric skin');link(bs.outputs[0],output.inputs['Surface']);bs.inputs['Metallic'].default_value=0;bs.inputs['Roughness'].default_value=.66;bs.inputs['Specular IOR Level'].default_value=.12
  albedo=tex('Albedo');grey=node('ShaderNodeRGBToBW','Original painted variation');link(albedo,grey.inputs[0]);ao=tex('AO',True)
  if wing:
   color=ramp(grey.outputs[0],[(.025,(.012,.001,.0005,1)),(.18,(.09,.008,.002,1)),(.45,(.24,.04,.009,1)),(.8,(.32,.075,.025,1))])
@@ -60,16 +60,29 @@ for slot in body.material_slots:
  else:
   coord=node('ShaderNodeAttribute','Stable rest coordinates');coord.attribute_name=rest.name
   noise=node('ShaderNodeTexNoise','Uneven scale field');noise.inputs['Scale'].default_value=3.1;noise.inputs['Detail'].default_value=3.5;link(coord.outputs['Vector'],noise.inputs['Vector'])
-  warp=node('ShaderNodeVectorMath','Warp fine scales');warp.operation='SCALE';warp.inputs['Scale'].default_value=.16;link(noise.outputs['Color'],warp.inputs[0])
+  warp=node('ShaderNodeVectorMath','Warp fine scales');warp.operation='SCALE';warp.inputs['Scale'].default_value=.12;link(noise.outputs['Color'],warp.inputs[0])
   add=node('ShaderNodeVectorMath','Organic scale coordinates');add.operation='ADD';link(coord.outputs['Vector'],add.inputs[0]);link(warp.outputs['Vector'],add.inputs[1])
   cells=node('ShaderNodeTexVoronoi','Fine fractured scales');cells.feature='DISTANCE_TO_EDGE';cells.inputs['Scale'].default_value=8.5;link(add.outputs[0],cells.inputs['Vector'])
-  bump=node('ShaderNodeBump','Subtle scale relief');bump.inputs['Strength'].default_value=.22;bump.inputs['Distance'].default_value=.025;link(cells.outputs['Distance'],bump.inputs['Height']);link(normal.outputs['Normal'],bump.inputs['Normal']);link(bump.outputs['Normal'],bs.inputs['Normal'])
-  cracks=ramp(cells.outputs['Distance'],[(.008,(1,1,1,1)),(.035,(0,0,0,1))])
-  patch=ramp(noise.outputs['Fac'],[(.43,(0,0,0,1)),(.68,(1,1,1,1))])
+  bump=node('ShaderNodeBump','Subtle scale relief');bump.inputs['Strength'].default_value=.48;bump.inputs['Distance'].default_value=.035;link(ramp(cells.outputs['Distance'],[(.008,(0,0,0,1)),(.065,(1,1,1,1))]),bump.inputs['Height']);link(normal.outputs['Normal'],bump.inputs['Normal']);link(bump.outputs['Normal'],bs.inputs['Normal'])
+  fracture=node('ShaderNodeTexVoronoi','Sparse deep fractures beneath fine scales');fracture.feature='DISTANCE_TO_EDGE';fracture.inputs['Scale'].default_value=2.8;link(add.outputs[0],fracture.inputs['Vector'])
+  cracks=ramp(fracture.outputs['Distance'],[(.006,(1,1,1,1)),(.028,(0,0,0,1))])
+  patch=ramp(noise.outputs['Fac'],[(.48,(0,0,0,1)),(.68,(1,1,1,1))])
   region=node('ShaderNodeAttribute','Heat under existing neck and chest');region.attribute_name=heat.name
-  edgeheat=mathnode('MULTIPLY',cracks,patch);edgeheat=mathnode('MULTIPLY',edgeheat,region.outputs['Fac'])
+  edgeheat=mathnode('MULTIPLY',cracks,patch);edgeheat=mathnode('MULTIPLY',edgeheat,mathnode('POWER',region.outputs['Fac'],1.8))
   cavity=mathnode('POWER',mathnode('SUBTRACT',1,ao),2.2);cavity=mathnode('MULTIPLY',cavity,region.outputs['Fac'])
-  strength=mathnode('MAXIMUM',edgeheat,mathnode('MULTIPLY',cavity,.55));link(mathnode('MULTIPLY',strength,3.5),bs.inputs['Emission Strength']);bs.inputs['Emission Color'].default_value=(1,.065,.002,1)
+  strength=mathnode('MAXIMUM',edgeheat,mathnode('MULTIPLY',cavity,.22));link(mathnode('MULTIPLY',strength,6.0),bs.inputs['Emission Strength']);link(ramp(strength,[(0,(1,.018,.001,1)),(.3,(1,.095,.003,1)),(.7,(1,.3,.018,1))]),bs.inputs['Emission Color'])
+# Arrange editable shader graphs in dependency order.
+for mat in body.data.materials:
+ if not mat.use_nodes or not mat.name.startswith('Ashfang '):continue
+ levels={}
+ def depth(node):
+  if node.name in levels:return levels[node.name]
+  incoming=[edge.from_node for edge in mat.node_tree.links if edge.to_node==node]
+  levels[node.name]=0 if not incoming else 1+max(depth(parent) for parent in incoming)
+  return levels[node.name]
+ rows={}
+ for node in mat.node_tree.nodes:
+  column=depth(node);row=rows.get(column,0);rows[column]=row+1;node.location=(column*250,-row*270);node.width=210
 for im in bpy.data.images:
  if im.source!='FILE':continue
  name=Path(im.filepath.replace('\\','/')).name
