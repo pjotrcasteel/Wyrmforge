@@ -610,7 +610,8 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     assert.match(ground, /M 681 623 C 703 606 717 590 742 585/);
     assert.match(well, /M818 439 L823 426/);
     assert.match(sign, /M731 454 L731 449/);
-    assert.match(js, /new URLSearchParams\(window\.location\.search\)\.get\("townRoute"\) === "rear"/);
+    assert.match(js, /const query = new URLSearchParams\(window\.location\.search\)/);
+    assert.match(js, /const rearMode = query\.get\("townRoute"\) === "rear"/);
     assert.match(js, /buildArchitectureCutout/);
     assert.match(js, /destination-in/);
     assert.match(js, /canvas\.toDataURL\("image\/png"\)/);
