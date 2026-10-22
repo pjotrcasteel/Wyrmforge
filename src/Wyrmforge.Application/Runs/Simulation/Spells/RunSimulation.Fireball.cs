@@ -16,6 +16,8 @@ public sealed partial class RunSimulation
 
     public IReadOnlySet<FireballMutationId> PreparedFireballMutations => preparedFireballMutations;
     public IReadOnlyList<MutationAmplifierAssignment> PreparedMutationAmplifiers => mutationAmplifiers.ToSave();
+    public double PreparedMutationEffectFactor(FireballMutationId mutation, MutationEffectCapability capability) =>
+        FireballEffectFactor(mutation, capability);
 
     public void PrepareFireballMutations(IEnumerable<FireballMutationId> mutations)
     {
