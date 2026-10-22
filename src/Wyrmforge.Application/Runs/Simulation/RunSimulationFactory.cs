@@ -7,6 +7,7 @@ using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Domain.Progression.Forge;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Progression.Signature;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Progression.SpellMastery;
 using Wyrmforge.Application.World;
 using Wyrmforge.Domain.World;
@@ -34,7 +35,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         return simulation;
     }
 
-    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, HuntSelection? hunt = null)
+    public RunSimulation Create(IReadOnlySet<string> selectedNodes, DragonEssenceId? offering = null, int? seed = null, ForgeProgressionState? progression = null, SpellMasteryState? masteries = null, bool ascendantAshfang = false, DragonId? ascendantWyrm = null, bool firstHunt = false, LaboratoryMutationId? preparedMutation = null, DragonId? researchLead = null, IReadOnlyCollection<LaboratoryMutationId>? preparedMutations = null, bool contextualSpell = false, RegionId? region = null, bool regionOpening = false, IReadOnlyCollection<FireballMutationId>? fireballMutations = null, HuntSelection? hunt = null, IReadOnlyCollection<MutationAmplifierAssignment>? amplifierAssignments = null)
     {
         hunt?.Validate();
         if (hunt is not null && (ascendantAshfang || ascendantWyrm is not null || region is { } selectedRegion && selectedRegion != hunt.Region))
@@ -57,6 +58,7 @@ public sealed class RunSimulationFactory(IRandomSource seedSource)
         if (preparedMutations is not null) prepared.AddRange(preparedMutations);
         simulation.PrepareLaboratoryMutations(prepared);
         simulation.PrepareFireballMutations(fireballMutations ?? []);
+        simulation.PrepareMutationAmplifiers(amplifierAssignments ?? []);
         simulation.EnableResearchLead(researchLead);
         // The first hunt teaches one spell; the contextual slot waits for the hunter's first milestone.
         simulation.PrepareContextualSpell(contextualSpell && !firstHunt);
