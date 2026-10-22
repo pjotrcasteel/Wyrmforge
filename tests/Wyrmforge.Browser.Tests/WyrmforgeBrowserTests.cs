@@ -405,6 +405,42 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task ArcaneWeb_MajorMutationAmplifier_SavesCompatibleEquippedMutation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        // This script also executes after ReloadAsync; never reset the state we are asserting survives it.
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            if (!localStorage.getItem('wyrmforge.arcaneBuild.v1')) {
+                localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,
+                    Nodes:['fire-start','fire-1','fire-ember-drift','fire-scorching-winds',
+                        'fire-cinder-halo','fire-conflagration','fire-ashfront','fire-spread-crown']}));
+            }
+            if (!localStorage.getItem('wyrmforge.fireballCore.v1')) {
+                localStorage.setItem('wyrmforge.fireballCore.v1',
+                    JSON.stringify({Level:1,Discovered:[2],Slots:[2,null,null,null,null]}));
+            }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+
+        await Page.Locator(".web-node[data-node-id='fire-spread-crown']").EvaluateAsync("el => el.click()");
+        var slot = Page.Locator(".web-amplifier-socket select");
+        await Expect(slot).ToBeEnabledAsync();
+        await slot.SelectOptionAsync("Detonation");
+        var saved = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.arcaneBuild.v1') ?? ''");
+        StringAssert.Contains(saved, "fire-spread-crown");
+        StringAssert.Contains(saved, "Detonation");
+
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+        await Page.Locator(".web-node[data-node-id='fire-spread-crown']").EvaluateAsync("el => el.click()");
+        await Expect(Page.Locator(".web-amplifier-socket select")).ToHaveValueAsync("Detonation");
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GroundFoundationHasNoLegacyAssetsOrCollision(int width, int height)
@@ -985,10 +1021,25 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "Nexus purposes must remain readable, tappable, and contained at 320px and 390px.");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
 
-        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details, .build-heading, .atlas-toolbar")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".atlas-stage > .web-points-hud")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".atlas-stage > .web-floating-controls .atlas-action")).ToHaveCountAsync(4);
+        Assert.IsTrue(await Page.Locator(".web-points-hud").EvaluateAsync<bool>(@"chip => {
+            const stage = chip.closest('.atlas-stage').getBoundingClientRect();
+            const rect = chip.getBoundingClientRect();
+            return rect.left >= stage.left && rect.right <= stage.right
+                && rect.top >= stage.top && rect.bottom <= stage.bottom;
+        }"), "Arcane point counter must float inside the Web without displacing the canvas.");
         var viewport = Page.GetByRole(AriaRole.Region, new() { Name = "Arcane specialization map" });
         await viewport.ScrollIntoViewIfNeededAsync();
         await Expect(viewport).ToHaveAttributeAsync("data-scale", "0.95");
+        Assert.IsGreaterThan(12, await Page.Locator(".web-node[data-tier='minor']").CountAsync());
+        Assert.IsGreaterThan(4, await Page.Locator(".web-node[data-tier='medium']").CountAsync());
+        Assert.IsGreaterThan(4, await Page.Locator(".web-node[data-tier='major']").CountAsync());
+        await Expect(Page.Locator(".web-node[data-node-id='fire-spread-crown'][data-tier='major']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='fire-conflagration'][data-tier='medium']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='fire-ember-drift'][data-tier='minor']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(2);
         var minimumSeparation = await Page.EvaluateAsync<double>(@"() => {
             const nodes = [...document.querySelectorAll('.web-node')].map(n => ({ x:parseFloat(n.style.left), y:parseFloat(n.style.top) }));
             return Math.min(...nodes.flatMap((a,i) => nodes.slice(i+1).map(b => Math.hypot(a.x-b.x,a.y-b.y))));
@@ -1441,8 +1492,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
         Assert.AreEqual("hidden", await Page.Locator("[data-game-version]").EvaluateAsync<string>("element => getComputedStyle(element).visibility"));
         await Expect(Page.Locator(".fireball-mini-pips i")).ToHaveCountAsync(10);
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +0%");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+8%");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
         await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +8%");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+16%");
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(3);
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();

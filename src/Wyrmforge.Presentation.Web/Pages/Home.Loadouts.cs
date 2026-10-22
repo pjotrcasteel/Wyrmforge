@@ -21,7 +21,7 @@ public partial class Home
 
     private async Task SaveLoadoutAsync(int index)
     {
-        loadouts.Save(index, selection, laboratory, primary: preferredPrimary, offering: selectedOffering);
+        loadouts.Save(index, selection, laboratory, primary: preferredPrimary, offering: selectedOffering, mutationAmplifiers: mutationAmplifiers);
         await TrySetLoadoutsAsync();
     }
 
@@ -35,7 +35,7 @@ public partial class Home
     private async Task<HuntLoadoutApplyResult?> ApplyLoadoutAsync(int index)
     {
         selection.SetKnownFireballMutations(fireballCore.Discovered);
-        if (loadouts.Apply(index, selection, laboratory, CanSelectOffering) is not { } result) return null;
+        if (loadouts.Apply(index, selection, laboratory, CanSelectOffering, mutationAmplifiers) is not { } result) return null;
         await SaveArcaneBuildAsync();
         await TrySetLaboratoryAsync();
         // A loadout cannot silently respec a character into another Divine Wyrm lineage.

@@ -205,3 +205,15 @@
     .fireball-mutator-entry .mutation-symbol{flex-basis:38px}
     .fireball-mutator-entry .mutation-state{flex-basis:70px;max-width:70px;font-size:.59rem}
 }
+
+
+/* Permanent core power is distinct from the mutation-slot unlock: both are visible before spending. */
+.fireball-damage-growth {
+    margin:8px 0 12px;
+    border:1px solid #7a573b;
+    padding:9px 12px;
+    color:#eecb96;
+    background:linear-gradient(90deg,#271b1a,#181219);
+    font:600 .87rem/1.4 Georgia,serif;
+    text-align:center;
+}

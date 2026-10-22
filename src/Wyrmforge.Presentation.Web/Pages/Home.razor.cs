@@ -34,6 +34,7 @@ public partial class Home
     private const string SpellMasteryKey = "wyrmforge.spellMastery.v1";
     private const string GreatHuntKey = "wyrmforge.greatHunt.v1";
     private readonly PassiveTreeSelection selection = new(1);
+    private readonly MutationAmplifierSockets mutationAmplifiers = MutationAmplifierCatalog.CreateSockets();
     private readonly FirstHuntProgress firstHunt = new();
     private readonly HuntQuestState quests = new();
     private readonly HunterProgress hunter = new();
@@ -408,6 +409,7 @@ public partial class Home
             selection.RestoreBudget(state.Budget);
             selection.RestoreNodes(state.Nodes ?? []);
             selection.RestoreReserved(state.Reserved);
+            mutationAmplifiers.Restore(state.Amplifiers);
             hunter.Restore(state.HunterExperience);
             selection.RestoreBudget(Math.Max(selection.PointBudget, hunter.AtlasBudget));
             quests.Restore(state.Quests, hunter.EarnedCaches);
@@ -420,13 +422,15 @@ public partial class Home
     {
         try
         {
-            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience, selection.Reserved);
+            var state = new ArcaneBuildSave(selection.PointBudget, selection.Selected.ToArray(), quests.Snapshot(), hunter.TotalExperience, selection.Reserved,
+                mutationAmplifiers.ToSave().ToArray());
             await JavaScript.InvokeVoidAsync("localStorage.setItem", CancellationToken.None, ArcaneBuildKey, JsonSerializer.Serialize(state));
         }
         catch (JSException) { }
     }
 
-    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null, IReadOnlyDictionary<PassiveSchool, int>? Reserved = null);
+    private sealed record ArcaneBuildSave(int Budget, string[] Nodes, HuntQuestSave? Quests = null, long? HunterExperience = null,
+        IReadOnlyDictionary<PassiveSchool, int>? Reserved = null, MutationAmplifierAssignment[]? Amplifiers = null);
 
     private HunterExperienceGain CreditHunterExperience(int experience)
     {

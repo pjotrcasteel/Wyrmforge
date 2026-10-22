@@ -15,6 +15,9 @@ public partial class BuildView : IAsyncDisposable
     [Parameter, EditorRequired] public PassiveTreeSelection Selection { get; set; } = null!;
     [Parameter] public DivineArchetype CharacterSchool { get; set; } = DivineArchetype.Pyromancer;
     [Parameter] public FireballCoreState? FireballCore { get; set; }
+    [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
+    [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
+
 
     private PassiveSchool ActiveSchool => ArcaneSchoolCatalog.For(CharacterSchool);
 
@@ -98,6 +101,29 @@ public partial class BuildView : IAsyncDisposable
     private bool inspectorOpen;
     private int PointsLeft => Selection.AvailablePoints;
     private PassiveNodeDefinition FocusedNode => PassiveTreeCatalog.Get(focusedId);
+    private MutationAmplifierDefinition? FocusedAmplifier =>
+        MutationAmplifierCatalog.All.FirstOrDefault(item => item.NodeId == focusedId);
+
+    private string AssignedFireballMutation =>
+        MutationAmplifiers.Assignments.FirstOrDefault(item => item.NodeId == focusedId)?.MutationId ?? string.Empty;
+
+    private IReadOnlyList<FireballMutationId> CompatibleFireballMutations => FocusedAmplifier is not { } socket || FireballCore is null
+        ? Array.Empty<FireballMutationId>()
+        : FireballCore.Equipped.Where(id => MutationAmplifierCatalog.ForFireball(id)?.Capabilities.Contains(socket.Capability) == true).ToArray();
+
+    private async Task AssignFocusedAmplifierAsync(ChangeEventArgs args)
+    {
+        var value = args.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            await OnAssignFireballAmplifier(focusedId, null);
+            return;
+        }
+
+        if (Enum.TryParse<FireballMutationId>(value, out var mutation) && Enum.IsDefined(mutation))
+            await OnAssignFireballAmplifier(focusedId, mutation);
+    }
+
     private PassiveTreeRoutePlan? FocusedPlan => PassiveTreePlanner.Plan(Selection, focusedId);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -158,7 +184,7 @@ public partial class BuildView : IAsyncDisposable
 
     private string NodeClass(PassiveNodeDefinition node)
     {
-        var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}" };
+        var classes = new List<string> { "web-node", $"kind-{node.Kind.ToString().ToLowerInvariant()}", $"tier-{PassiveNodeTiers.For(node).ToString().ToLowerInvariant()}" };
         if (node.School is { } school) classes.Add($"school-{school.ToString().ToLowerInvariant()}");
         else classes.Add("school-hybrid");
 
@@ -225,10 +251,10 @@ public partial class BuildView : IAsyncDisposable
     private static string KindLabel(PassiveNodeDefinition node) => node.Kind switch
     {
         PassiveNodeKind.Origin => "ORIGIN",
-        PassiveNodeKind.Travel => "MINOR BONUS",
-        PassiveNodeKind.Notable => "NOTABLE LANDMARK",
-        PassiveNodeKind.Mastery => "MASTERY LANDMARK",
-        _ => "KEYSTONE LANDMARK",
+        PassiveNodeKind.Travel => "MINOR · PASSIVE BONUS",
+        PassiveNodeKind.Notable => node.Cost == 1 ? "MINOR · MUTATION SPECIALIZATION" : "MEDIUM · SPECIALIZATION",
+        PassiveNodeKind.Mastery => "MEDIUM · MASTERY CHOICE",
+        _ => "MAJOR · KEYSTONE",
     };
 
     private string NodeState(PassiveNodeDefinition node)
