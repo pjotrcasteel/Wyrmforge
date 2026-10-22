@@ -2,8 +2,8 @@
 
 Owner-approved production plan, 22 October 2026. This is an original-geometry
 restart, not a continuation of the rejected V48/V59 body. Product authority:
-[creatures](../../../../../../docs/canon/creatures-and-encounters.md) and
-[art](../../../../../../docs/canon/art-and-animation.md).
+[creatures](../../../../../docs/canon/creatures-and-encounters.md) and
+[art](../../../../../docs/canon/art-and-animation.md).
 
 Original card: `user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png`,
 SHA-256 `dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba`.
