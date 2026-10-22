@@ -43,4 +43,15 @@
         fill="#000"/>
   <path d="M 746 462 L 773 462 L 783 492 L 792 508
            L 774 522 L 744 512 Z" fill="#000"/>
+  <!-- Phase 5 is an opt-in REAR test route, separately branched from the
+       APPROVED Nexus exit. This does not move a single Phase 1-4 pavement pixel.
+       Rear approach passes NORTH of noticeboard's physical posts and stops
+       behind the well's painted timber roof. 8px foot-disc erosion is applied
+       at runtime; this branch is deliberately narrow and bounded. -->
+  <path d="M 575 492 C 610 492 651 486 680 469
+           C 705 450 722 438 747 440
+           C 776 443 797 446 818 451
+           C 834 458 838 463 838 472"
+        fill="none" stroke="#fff" stroke-width="32"
+        stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
