@@ -590,7 +590,7 @@ test('Town V2 Phase 4 walks in FRONT of the well with explicit masonry keepouts'
 test('V2 well foreground correction must physically approach the stone base, not a distant arc', () => {
     const ground = source(art + '/nexus-v2-walk-mask.svg');
     const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
-    assert.match(ground, /front edge \(y~582\)/);
+    assert.match(ground, /front edge \(y~582\)/i);
     assert.match(ground, /C 776 579 805 581 852 582/);
     assert.doesNotMatch(ground, /C 710 630 741 635 782 632/);
     assert.match(code, /FRONT_VISUAL_CONTACT_MAX_Y = 590/);
