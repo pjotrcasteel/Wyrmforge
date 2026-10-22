@@ -9,11 +9,11 @@ def digest(rows):
  h=hashlib.sha256()
  for row in rows:h.update(struct.pack('<'+'d'*len(row),*row))
  return h.hexdigest()
-r={'geometry':digest([tuple(v.co) for v in body.data.vertices]+[tuple(p.vertices) for p in body.data.polygons]),'uv':digest([tuple(loop.uv) for layer in body.data.uv_layers for loop in layer.data]),'weights':digest([(v.index,g.group,g.weight) for v in body.data.vertices for g in v.groups]),'bones':digest([tuple(x for row in b.matrix_local for x in row) for b in rig.data.bones]),'boneHierarchy':[(b.name,b.parent.name if b.parent else None) for b in rig.data.bones],'objects':[(o.name,o.type) for o in bpy.context.scene.objects],'transforms':{o.name:list(o.matrix_world) for o in []},'vertices':len(body.data.vertices),'polygons':len(body.data.polygons),'boneCount':len(rig.data.bones),'tailMask':[(m.name,m.type,m.vertex_group) for m in body.modifiers if m.type=='MASK']}
+r={'geometry':digest([tuple(v.co) for v in body.data.vertices]+[tuple(p.vertices) for p in body.data.polygons]),'uv':digest([tuple(loop.uv) for layer in body.data.uv_layers for loop in layer.data]),'weights':digest([(v.index,g.group,g.weight) for v in body.data.vertices for g in v.groups]),'bones':digest([tuple(x for row in b.matrix_local for x in row) for b in rig.data.bones]),'boneHierarchy':[(b.name,b.parent.name if b.parent else None) for b in rig.data.bones],'objects':[(o.name,o.type) for o in bpy.context.scene.objects],'transforms':{o.name:[list(row) for row in o.matrix_world] for o in bpy.context.scene.objects},'vertices':len(body.data.vertices),'polygons':len(body.data.polygons),'boneCount':len(rig.data.bones),'tailMask':[(m.name,m.type,m.vertex_group) for m in body.modifiers if m.type=='MASK']}
 # Lists survive JSON roundtrip consistently.
 r=json.loads(json.dumps(r))
 if a.compare:
- baseline=json.loads(Path(a.compare).read_text());keys=['geometry','uv','weights','bones','boneHierarchy','objects','vertices','polygons','boneCount','tailMask'];r['baselineChecks']={k:r[k]==baseline[k] for k in keys};assert all(r['baselineChecks'].values()),r['baselineChecks']
+ baseline=json.loads(Path(a.compare).read_text());keys=['geometry','uv','weights','bones','boneHierarchy','objects','vertices','polygons','boneCount','tailMask','transforms'];r['baselineChecks']={k:r[k]==baseline[k] for k in keys};assert all(r['baselineChecks'].values()),r['baselineChecks']
 if a.pack_master:
  dest=Path(a.pack_master).resolve();assert not dest.exists();dest.parent.mkdir(parents=True,exist_ok=True);bpy.ops.file.pack_all()
  # Keep source rig and mesh selected sensibly; no review floor, light or FX objects.

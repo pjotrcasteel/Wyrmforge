@@ -81,3 +81,12 @@ Tier I skin/fire001: source body geometry SHA2569b9d87decdf1034d5e72e06114fdde7d
 
 ## 23 October — skin-only direction
 Owner explicitly reserved fire and smoke for runtime VFX. Preserve the approved Tier I anatomy; develop black volcanic skin and scorched red membranes from the original detailed textures. No body-flame meshes or smoke volumes in the new character. Prior skin/fire studies remain archived evidence, not the current design. Materials remain unapproved.
+
+
+## 23 October — completed Tier I skin proposal and remote verification
+
+Current source: `archive/tier-I-skin-010-packed/ashfang-tier-I.blend`, SHA256 `155bf614ebd5f73bfa06ea77d67858fcc1ef417ff95afc4517d39a78aad5011a`. Packed 20 image datablocks; exact approved baseline mesh/UVs/weights/112 bones/transforms/tail mask verified. Only source mesh and skeleton remain in the master. No flame/smoke/cinder geometry. Shader relief and selectively heated fractures provide the black volcanic identity; scorched red membranes retain original UV detail. Source horn grooves remain visible. All previous native revisions are preserved.
+
+Rendered four 1600x1000 presentation views at 128 OptiX samples and prepared same-camera before/after comparison. Three neutral full-body views are generated from a separately downloaded remote master. Fresh independent LFS cache verification checked 133 objects; final packed master retrieved with matching SHA256 and reopened with no missing image dependencies. See `reviews/tier-I-skin-010/review.md`, source validation and remote retrieval reports.
+
+Owner-approved anatomy is maintained. Materials remain a review proposal; animation, higher tiers, runtime VFX and game/mobile acceptance are not complete. Current main `6fb92e6a` and open PRs were checked: concurrent Town/Nexus/arena work is untouched, prior Ashfang PRs remain preserved and draft. Canonical art/creature topics on main had no conflicting changes.

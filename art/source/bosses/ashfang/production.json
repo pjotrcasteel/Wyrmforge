@@ -7,18 +7,22 @@
   "storage": "Git LFS; user confirmed available capacity 2026-10-23",
   "blender": "4.5.14 LTS",
   "renderer": "Cycles OptiX NVIDIA GeForce RTX 5090; three views completed per review",
-  "currentCandidate": "archive/source-fidelity-001/ashfang-master-working.blend",
+  "currentCandidate": "archive/tier-I-skin-010-packed/ashfang-tier-I.blend",
   "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
   "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
   "M0": "Import, packed dependency reopen, remote LFS retrieval and SHA256 verification passed. Structural issues documented; deformation/motion not validated.",
-  "M1": "Rejected experiments retired; restored untouched professional anatomy/materials/UVs/rig with tail correction only. No accepted Ashfang transformation.",
+  "M1": "Skin pass rendered: clean charcoal scale shaders, scorched oxblood membranes and selective ember fractures on the exact owner-approved source anatomy. Material proposal is not owner-approved.",
   "M2_M7": "not started",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Source-fidelity baseline with requested tail correction",
-    "Verify original material/rig appearance against original model",
-    "Restrained charcoal and recessed heat study preserving source anatomy",
-    "Compare source and candidate against approved Ashfang card before expanding"
-  ]
+    "Owner material review",
+    "Real authored creature motion and extreme-pose validation",
+    "Higher tiers if subsequently requested",
+    "Runtime VFX and eventual sprite/game integration with mobile acceptance"
+  ],
+  "ownerAcceptedAnatomy": true,
+  "ownerAcceptedMaterials": false,
+  "skinWorkStatus": "Skin proposal prepared for visual review; final render and remote retrieval evidence recorded in reviews/tier-I-skin-010.",
+  "fireAndSmoke": "Reserved for game VFX; no flame, smoke, particle or cinder geometry in the character master."
 }

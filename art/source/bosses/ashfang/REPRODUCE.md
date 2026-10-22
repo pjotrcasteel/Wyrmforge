@@ -1,5 +1,22 @@
 # Reproduce and review
 
+## Current Tier I skin workflow (23 October)
+
+The approved anatomy is `archive/source-fidelity-001/ashfang-master-working.blend`. The current self-contained skin proposal is `archive/tier-I-skin-010-packed/ashfang-tier-I.blend`. It contains the original mesh, UVs, weights and 112-bone rig, original reversible tail mask, packed source textures and editable volcanic skin shaders. No fire/smoke/ember geometry. Previous anatomy, plate and fire studies below are historical and must not be rerun as the current artistic direction.
+
+From the worktree root, use the Blender executable below with `--disable-autoexec --python-exit-code 1`:
+
+```powershell
+& $blender -b art/source/bosses/ashfang/archive/source-fidelity-001/ashfang-master-working.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/tier-I-volcanic-skin.py -- --output art/source/bosses/ashfang/archive/tier-I-skin-NEW
+& $blender -b art/source/bosses/ashfang/archive/tier-I-skin-010-packed/ashfang-tier-I.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/tier-I-presentation.py -- --output artifacts/ashfang/new-presentation --samples 96
+& $blender -b art/source/bosses/ashfang/archive/tier-I-skin-010-packed/ashfang-tier-I.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/tier-I-validate.py -- --output artifacts/ashfang/new-validation.json
+```
+
+Unpacked generated revisions require the sibling `M0-001/original/download/textures` archive. The packed current master can be opened alone. `tier-I-validate.py --compare BASELINE_JSON` verifies geometry, UVs, weights, bind matrices/hierarchy, object transforms, object list and the reversible tail mask; `--pack-master NEW_PATH` creates a new self-contained immutable revision. Presentation lights/floor/cameras exist only in memory during rendering and are not added to the character master. Neutral and staged stills are review evidence, not creature motion or device acceptance.
+
+## Historical rejected workflows
+
+
 Use Blender 4.5.14 LTS, background mode, with `--disable-autoexec` when opening downloaded/native sources. Commands below run from this worktree. Never reuse an existing output directory.
 
 ```powershell
