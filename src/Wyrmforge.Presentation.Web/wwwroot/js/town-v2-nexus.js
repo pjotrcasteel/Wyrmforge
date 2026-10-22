@@ -199,37 +199,22 @@ function countForegroundOverlap(position, foliage) {
 function overlapsFoliage(position, foliage) {
     return countForegroundOverlap(position, foliage) > 0;
 }
-// The white raster says where FEET can stand, including paved ground hidden
-// beneath a raised roof. The translucent diagnostic must not paint over that
-// roof or imply the NPC walks on top of it. Build this only once per route.
-function buildDebugOverlay(nav, route, foregrounds) {
-    const canvas = document.createElement("canvas");
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Town V2 cannot build its depth-aware debug overlay.");
-    ctx.drawImage(nav.overlay, 0, 0);
-    ctx.save();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(251,211,127,.85)";
-    ctx.setLineDash([6, 5]);
-    ctx.beginPath();
-    route.forEach((point, index) => index
-        ? ctx.lineTo(point.x, point.y)
-        : ctx.moveTo(point.x, point.y));
-    ctx.stroke();
-    ctx.restore();
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    for (const foreground of foregrounds)
-        if (foreground) ctx.drawImage(foreground.image, foreground.x, foreground.y);
-    ctx.restore();
-    return canvas;
-}
 function draw(w) {
     const ctx = w.canvas.getContext("2d");
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
-    if (w.showMask && w.debugOverlay) ctx.drawImage(w.debugOverlay, 0, 0);
+    if (w.showMask) {
+        ctx.drawImage(w.nav.overlay, 0, 0);
+        ctx.save();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(251,211,127,.85)";
+        ctx.setLineDash([6, 5]);
+        ctx.beginPath();
+        w.route.forEach((point, index) => index
+            ? ctx.lineTo(point.x, point.y)
+            : ctx.moveTo(point.x, point.y));
+        ctx.stroke();
+        ctx.restore();
+    }
     // One simple V2 test citizen. Never composite stair stone as if it were leaves.
     ctx.save();
     ctx.translate(w.position.x, w.position.y);
@@ -351,7 +336,7 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
     const state = {
         canvas, toggle, depthToggle, freezeToggle, status, disposed: false, frame: 0,
         rearMode, nav: null, foliage: null, wellCutout: null, noticeCutout: null,
-        debugOverlay: null, route: [], position: { ...START }, targetIndex: 1,
+        route: [], position: { ...START }, targetIndex: 1,
         direction: 1, pause: .5, lastTime: performance.now(),
         lastStatus: 0, showMask: true, showDepth: true, lastOccluded: false,
         depthFrames: 0, maskViolations: 0, plazaVisits: 0, wellFrontVisits: 0,
@@ -445,8 +430,6 @@ export async function mountTownV2Nexus(sceneSelector, toggleSelector, depthSelec
                     from.y + (to.y - from.y) * t))
                     throw new Error("Town V2 plaza route cuts across an unwalkable pixel.");
         }
-        state.debugOverlay = buildDebugOverlay(state.nav, state.route,
-            rearMode ? [state.wellCutout, state.noticeCutout, state.foliage] : [state.foliage]);
         state.position = { ...state.route[0] };
         state.lastTime = performance.now();
         state.frame = requestAnimationFrame(t => animate(state,t));
@@ -501,7 +484,6 @@ export function readTownV2Diagnostics(canvas) {
         frozenAtCover: entry.pausedForInspection,
         frozenCover: entry.frozenCover,
         freezeCount: entry.freezeCount,
-        depthAwareMaskReady: !!entry.debugOverlay,
         stairMasonryBlocked: entry.nav ? !entry.nav.canStand(STAIR_MASONRY.x, STAIR_MASONRY.y) : false,
         foliageExcludesStairs: FOLIAGE.x + FOLIAGE.width <= 465,
         stairAreaOccluded: entry.position.x >= 475 && entry.lastOccluded,
