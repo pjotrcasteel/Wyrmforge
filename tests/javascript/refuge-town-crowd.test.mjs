@@ -627,3 +627,18 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     const executable = js.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(executable, /night-navigation\.json[^\n]*import|CUTOUTS|TownCrowd/);
 });
+
+test('V2 rear alpha extracts the current approved masks with a transparent perimeter', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const well = source(art + '/nexus-v2-well-foreground.svg');
+    const sign = source(art + '/nexus-v2-noticeboard-foreground.svg');
+    assert.match(js, /WELL_CUTOUT = \{ x: 756, y: 390, width: 188, height: 184/);
+    assert.match(js, /NOTICE_CUTOUT = \{ x: 736, y: 415, width: 94, height: 118/);
+    assert.match(js, /for \(let x = 0; x < width; x\+\+\)/);
+    assert.match(js, /for \(let y = 0; y < height; y\+\+\)/);
+    assert.match(js, /if \(opaquePixels < 120 \|\| clippedEdge\)/);
+    assert.match(js, /wellDepthEdgesClear: entry\.wellCutout\?\.edgeTransparent === true/);
+    assert.match(js, /noticeDepthEdgesClear: entry\.noticeCutout\?\.edgeTransparent === true/);
+    assert.match(well, /Separate alpha islands: exact roof, timber posts, stone lip/);
+    assert.match(sign, /Screenshot-traced wooden sign/);
+});
