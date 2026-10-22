@@ -2,6 +2,7 @@
 @using System.Net.Http
 @using System.Text.Json
 @using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.PassiveTree
 @inject NavigationManager Navigation
 @inject ILogger<CanonicalTownView> Logger
 @inject IJSRuntime JS
@@ -9,7 +10,9 @@
 @* Night town vacancy follows actual game progress, not a local preview toggle. *@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
-    <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square">
+    <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
+         data-nexus-school="@(NexusSchool?.ToString().ToLowerInvariant() ?? "none")"
+         data-nexus-mastery-points="@NexusMasteryPoints">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
@@ -32,6 +35,15 @@
         {
             <img class="refuge-town-vacant-layer" src="art/town/night-vacant-HallOfFame.png?v=140"
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
+        }
+
+        @* A localized colored light, not an edit/filter of the approved town painting.
+           Render beneath the NPC/cutout strata; do not cover an unbuilt Nexus. *@
+        @if (NexusUnlocked && NexusSchool is not null)
+        {
+            <div class="refuge-town-nexus-radiance" data-nexus-radiance="true"
+                 data-nexus-school="@NexusSchool.Value.ToString().ToLowerInvariant()"
+                 style="@TownNexusRadiance.Style(NexusMasteryPoints)" aria-hidden="true"></div>
         }
 
         @if (showTownV2)
@@ -376,6 +388,8 @@
     }
 
     [Parameter] public bool NexusUnlocked { get; set; }
+    [Parameter] public PassiveSchool? NexusSchool { get; set; }
+    [Parameter] public int NexusMasteryPoints { get; set; }
     [Parameter] public bool ForgeUnlocked { get; set; }
     [Parameter] public bool CodexUnlocked { get; set; }
     [Parameter] public bool HallUnlocked { get; set; }

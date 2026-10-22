@@ -234,3 +234,53 @@
     font:inherit;min-height:38px;padding:6px 9px;cursor:pointer;touch-action:manipulation;
 }
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
+
+
+/* Arcane Nexus magic grows with points invested in the currently followed school.
+   The approved town image and vacant/active artwork remain completely unchanged.
+   This painted light sits UNDER NPCs, cutouts, navigation and the V2 canvas. */
+.game-shell.refuge-home .refuge-town-nexus-radiance {
+    --nexus-light: 244 115 55;
+    --nexus-light-core: 255 194 93;
+    position:absolute;left:3.8%;top:7.5%;width:28%;height:29.5%;
+    z-index:1;pointer-events:none;user-select:none;
+    opacity:var(--nexus-radiance-strength, .16);
+    mix-blend-mode:screen;
+    background:
+        radial-gradient(ellipse 29% 44% at 49% 37%, rgb(var(--nexus-light-core) / .77), transparent 90%),
+        radial-gradient(ellipse 51% 61% at 49% 51%, rgb(var(--nexus-light) / .62), transparent 94%),
+        radial-gradient(ellipse 39% 26% at 51% 83%, rgb(var(--nexus-light) / .38), transparent 98%);
+    transform-origin:49% 45%;
+    animation:nexus-magical-light 7s ease-in-out infinite;
+}
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="fire"] {
+    --nexus-light: 242 83 32;
+    --nexus-light-core: 255 177 59;
+}
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="frost"] {
+    --nexus-light: 71 191 247;
+    --nexus-light-core: 185 241 255;
+}
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="storm"] {
+    --nexus-light: 105 141 252;
+    --nexus-light-core: 240 225 138;
+}
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="arcane"] {
+    --nexus-light: 153 96 242;
+    --nexus-light-core: 222 170 255;
+}
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="death"] {
+    --nexus-light: 102 202 137;
+    --nexus-light-core: 186 247 151;
+}
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="binding"] {
+    --nexus-light: 78 202 187;
+    --nexus-light-core: 175 251 231;
+}
+@keyframes nexus-magical-light {
+    0%,100% { transform:scale(.98); }
+    50% { transform:scale(1.035); }
+}
+@media (prefers-reduced-motion:reduce) {
+    .game-shell.refuge-home .refuge-town-nexus-radiance { animation:none; }
+}
