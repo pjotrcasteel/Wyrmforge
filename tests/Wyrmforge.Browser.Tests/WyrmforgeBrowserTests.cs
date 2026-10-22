@@ -824,7 +824,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".web-node[data-node-id='fire-spread-crown'][data-tier='major']")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".web-node[data-node-id='fire-conflagration'][data-tier='medium']")).ToHaveCountAsync(1);
         await Expect(Page.Locator(".web-node[data-node-id='fire-ember-drift'][data-tier='minor']")).ToHaveCountAsync(1);
-        await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(2);
+        await Expect(Page.Locator(".web-node[data-node-id='frost-pale-silence'][data-tier='major']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='frost-arctic-focus'][data-tier='medium']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='frost-rime-threads'][data-tier='minor']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='frost-everwinter'][data-tier='major']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(4);
         var minimumSeparation = await Page.EvaluateAsync<double>(@"() => {
             const nodes = [...document.querySelectorAll('.web-node')].map(n => ({ x:parseFloat(n.style.left), y:parseFloat(n.style.top) }));
             return Math.min(...nodes.flatMap((a,i) => nodes.slice(i+1).map(b => Math.hypot(a.x-b.x,a.y-b.y))));
