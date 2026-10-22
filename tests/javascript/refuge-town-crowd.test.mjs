@@ -703,7 +703,8 @@ test('Town V2 three residents are opt-in, use independent foot-safe routes and s
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     assert.match(js, /query.get\("townResidents"\) === "3" \? 3 : 1/);
     assert.match(js, /residentCount = !inspectPose && !inspectWell &&/);
-    assert.match(js, /const residents = \[\{ id: 0, position: w.position \}, ...w.extras\]/);
+    assert.match(js, /const residents = \[\{ id: 0, position: w.position, animated: w.extras.length > 0/);
+    assert.match(js, /idleSeconds: w.idleSeconds \}, ...w.extras\]/);
     assert.match(js, /sort\(\(a,b\) => a.position.y - b.position.y/);
     assert.match(js, /if \(well\) \{/);
     assert.match(js, /if \(notice\) \{/);
@@ -733,7 +734,8 @@ test('Town V2 living residents animate by distance, turn safely and idle without
     assert.match(js, /if \(w.extras.length\) updateResidentMotion\(w, primaryBefore, dt\)/);
     assert.match(js, /updateResidentMotion\(person, before, dt\)/);
     assert.match(js, /distanceWalked: p.distanceWalked, landmarkPauses: p.landmarkPauses/);
-    assert.doesNotMatch(js, /Math.random\(/);
+    const executable = js.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable, /Math.random\(/);
     // One-person depth and pixel pose remain in the old exact-art layout.
     assert.match(js, /const inspectPose = rearMode && query.get\("townPose"\) === "post"/);
     assert.match(js, /const inspectWell = rearMode && query.get\("townPose"\) === "well"/);
