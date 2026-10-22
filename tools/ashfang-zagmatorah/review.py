@@ -5,7 +5,7 @@ import bpy
 from mathutils import Vector
 sys.path.insert(0, str(Path(__file__).parent))
 from import_source import inventory, sha
-p=argparse.ArgumentParser(); p.add_argument('--output',required=True); p.add_argument('--render',action='store_true'); p.add_argument('--profile',choices=['material','clay'],default='material'); p.add_argument('--samples',type=int,default=24); p.add_argument('--no-effects',action='store_true'); a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
+p=argparse.ArgumentParser(); p.add_argument('--output',required=True); p.add_argument('--render',action='store_true'); p.add_argument('--profile',choices=['material','clay'],default='material'); p.add_argument('--samples',type=int,default=24); p.add_argument('--no-effects',action='store_true'); p.add_argument('--focus',choices=['full','body'],default='full'); a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 out=Path(a.output).resolve(); out.mkdir(parents=True,exist_ok=True)
 r=inventory(); r['source']=bpy.data.filepath; r['sourceSha256']=sha(Path(bpy.data.filepath))
 r['missingDependencies']=[i['name'] for i in r['images'] if not i['packed'] and not i['exists']]
@@ -59,6 +59,7 @@ scene.world.node_tree.nodes['Background'].inputs[1].default_value=.4
 points=[mesh.matrix_world@Vector(c) for c in mesh.bound_box]
 center=sum(points,Vector())/8
 radius=max((v-center).length for v in points)
+if a.focus=='body':center=Vector((-1,0,2.5));radius=4.6
 def aim(ob,target): ob.rotation_euler=(target-ob.location).to_track_quat('-Z','Y').to_euler()
 for name,offset,power,size in [('Key',(-6,-8,12),2500,8),('Fill',(4,6,8),1800,7),('Rim',(8,-2,6),2200,6)]:
     data=bpy.data.lights.new(name,'AREA'); data.energy=power; data.shape='DISK'; data.size=size

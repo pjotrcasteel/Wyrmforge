@@ -39,6 +39,10 @@ for slot in body.material_slots:
  hue=n.new('ShaderNodeHueSaturation');hue.label='Retain original painted scale variation';hue.inputs['Value'].default_value=c['bodyValue'] if kind=='body' else c['wingValue'];hue.inputs['Saturation'].default_value=c['bodySaturation'] if kind=='body' else c['wingSaturation'];l.new(base,hue.inputs['Color'])
  tint=n.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=1;tint.inputs[2].default_value=c['bodyTint'] if kind=='body' else c['wingTint'];l.new(hue.outputs[0],tint.inputs[1])
  prefix='DragonSkin' if kind=='body' else 'DragonWing';ao=n.new('ShaderNodeTexImage');ao.image=image(prefix+'_AO.png',True)
+ if kind=='body' and 'bodySpecular' in c:
+  bs.inputs['Specular IOR Level'].default_value=c['bodySpecular']
+  rough=bs.inputs['Roughness'].links[0].from_socket
+  floor=n.new('ShaderNodeMath');floor.operation='MAXIMUM';floor.inputs[1].default_value=c['bodyRoughnessFloor'];l.new(rough,floor.inputs[0]);l.new(floor.outputs[0],bs.inputs['Roughness'])
  detail=n.new('ShaderNodeMixRGB');detail.blend_type='MULTIPLY';detail.inputs[0].default_value=c['aoInfluence'];l.new(tint.outputs[0],detail.inputs[1]);l.new(ao.outputs['Color'],detail.inputs[2]);l.new(detail.outputs[0],bs.inputs['Base Color'])
  metallic=n.new('ShaderNodeTexImage');metallic.image=image(prefix+'_Metalic.png',True);l.new(metallic.outputs['Color'],bs.inputs['Metallic'])
  for node in n:
