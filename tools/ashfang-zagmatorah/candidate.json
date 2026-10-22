@@ -1,11 +1,11 @@
 {
-  "revision": "M1-candidate-001",
+  "revision": "M1-candidate-002",
   "shoulderInflation": 0.18,
   "neckInflation": 0.09,
   "headWidth": 1.12,
   "hornGrowth": 1.16,
-  "fractureScale": 3.8,
-  "fractureWidth": 0.045,
+  "fractureScale": 2.6,
+  "fractureWidth": 0.022,
   "emissionStrength": 5.0,
   "ownerAccepted": false
 }

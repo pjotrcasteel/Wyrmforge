@@ -11,3 +11,6 @@ playtest-reports/
 
 # Local immutable large-asset archive; remote storage capacity pending
 /artifacts/
+
+__pycache__/
+*.pyc
