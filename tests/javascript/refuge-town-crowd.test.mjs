@@ -659,13 +659,13 @@ test('Town V2 NPC walks BEHIND the right noticeboard post, never around it', () 
     assert.match(ground, /C 776 443 797 446 818 451/);
     assert.doesNotMatch(ground, /M 784 425 L 790 420/);
     assert.doesNotMatch(ground, /M 764 440 C 777 420 784 405/);
-    assert.match(script, /RIGHT_POST_PASS = \\{ x: 800, y: 444 \\}/);
-    assert.match(script, /planRoute\\(state.nav, REAR_ENTRY, REAR_END\\)/);
-    assert.match(script, /overlapsFoliage\\(p, state.noticeCutout\\)/);
+    assert.match(script, /RIGHT_POST_PASS = \{ x: 800, y: 444 \}/);
+    assert.match(script, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+    assert.match(script, /overlapsFoliage\(p, state.noticeCutout\)/);
     assert.match(script, /passesBehindRightPost:/);
     assert.match(script, /rightPostOcclusionFrames: entry.rightPostOcclusionFrames/);
-    assert.match(script, /w.rightPostOcclusionFrames\\+\\+/);
-    assert.match(script, /ctx.drawImage\\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\\)/);
+    assert.match(script, /w.rightPostOcclusionFrames\+\+/);
+    assert.match(script, /ctx.drawImage\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\)/);
     assert.doesNotMatch(script, /REAR_POST_BYPASS|clearOfRightPost|routedOverBoard/);
 });
 
