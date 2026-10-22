@@ -5,14 +5,14 @@ import bpy
 from mathutils import Vector
 sys.path.insert(0, str(Path(__file__).parent))
 from import_source import inventory, sha
-p=argparse.ArgumentParser(); p.add_argument('--output',required=True); p.add_argument('--render',action='store_true'); a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
+p=argparse.ArgumentParser(); p.add_argument('--output',required=True); p.add_argument('--render',action='store_true'); p.add_argument('--profile',choices=['material','clay'],default='material'); a=p.parse_args(sys.argv[sys.argv.index('--')+1:])
 out=Path(a.output).resolve(); out.mkdir(parents=True,exist_ok=True)
 r=inventory(); r['source']=bpy.data.filepath; r['sourceSha256']=sha(Path(bpy.data.filepath))
 r['missingDependencies']=[i['name'] for i in r['images'] if not i['packed'] and not i['exists']]
 r['packedDependencies'] = sum(i['packed'] for i in r['images'])
 r['animationSamples']=[]
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
-mesh=next(o for o in bpy.data.objects if o.type=='MESH')
+mesh=bpy.data.objects['Zagmatorah']
 old=rig.animation_data.action if rig.animation_data else None
 rig.data.pose_position='POSE'
 if rig.animation_data:
@@ -32,6 +32,10 @@ rig.data.pose_position='REST'; bpy.context.view_layer.update()
 (out/'validation.json').write_text(json.dumps(r,indent=2))
 if not a.render: raise SystemExit()
 scene=bpy.context.scene
+if a.profile=='clay':
+    clay=bpy.data.materials.new('Neutral geometry review clay'); clay.use_nodes=True
+    shader=clay.node_tree.nodes.get('Principled BSDF'); shader.inputs['Base Color'].default_value=(.32,.32,.32,1); shader.inputs['Roughness'].default_value=.78
+    bpy.context.view_layer.material_override=clay
 scene.render.engine='CYCLES'; scene.cycles.samples=24
 prefs=bpy.context.preferences.addons['cycles'].preferences
 prefs.compute_device_type='OPTIX'; prefs.get_devices()

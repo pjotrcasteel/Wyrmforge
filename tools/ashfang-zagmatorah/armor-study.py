@@ -14,7 +14,7 @@ source=Path(bpy.data.filepath);body=bpy.data.objects['Zagmatorah'];rig=bpy.data.
 dg=bpy.context.evaluated_depsgraph_get();evaluated=body.evaluated_get(dg);surface=evaluated.to_mesh()
 bvh=BVHTree.FromPolygons([v.co.copy() for v in surface.vertices],[tuple(p.vertices) for p in surface.polygons],all_triangles=False)
 mat=bpy.data.materials.new('Ashfang fractured obsidian armor');mat.use_nodes=True
-bs=mat.node_tree.nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=(.033,.027,.024,1);bs.inputs['Roughness'].default_value=.69;bs.inputs['Specular IOR Level'].default_value=.27
+bs=mat.node_tree.nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=(.008,.006,.005,1);bs.inputs['Roughness'].default_value=.80;bs.inputs['Specular IOR Level'].default_value=.20
 noise=mat.node_tree.nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=38;noise.inputs['Detail'].default_value=2
 bump=mat.node_tree.nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.18;bump.inputs['Distance'].default_value=.035
 mat.node_tree.links.new(noise.outputs['Fac'],bump.inputs['Height']);mat.node_tree.links.new(bump.outputs['Normal'],bs.inputs['Normal'])
@@ -27,11 +27,11 @@ def shell(label,x,angle,length,width,rise,bone):
         theta=angle+da;direction=Vector((0,math.sin(theta),math.cos(theta)))
         origin=Vector((x+dx,0,center_z))
         hit,norm,index,dist=bvh.ray_cast(origin,direction,3.0)
-        if hit is None:return None
+        if hit is None or dist>(.85 if bone in ('Head','UpperHead','Neck01') else 1.25):return None
         return hit+direction*extra
     outline=[(-.52,-.32),(-.24,-.55),(.38,-.40),(.60,0),(.38,.40),(-.24,.55)]
     ring=[project(u*length,v*width,.025) for u,v in outline]
-    peak=project(.22*length,0,rise)
+    peak=project(.22*length,0,rise*.38)
     if peak is None or any(v is None for v in ring):return
     start=len(verts);radial=Vector((0,math.sin(angle),math.cos(angle)))
     verts.extend(ring);verts.append(peak);verts.extend([v-radial*.075 for v in ring])
@@ -56,6 +56,7 @@ armor=bpy.data.objects.new('Ashfang articulated cranial and thoracic armor',me);
 for indices,bone in assignments:
     group=armor.vertex_groups.get(bone) or armor.vertex_groups.new(name=bone);group.add(indices,1,'REPLACE')
 modifier=armor.modifiers.new('Shared original skeleton','ARMATURE');modifier.object=rig
+bevel=armor.modifiers.new('Worn plate edges','BEVEL');bevel.width=.025;bevel.segments=2
 armor['purpose']='Authored surface-conforming plate study; deformation and card fidelity require review'
 evaluated.to_mesh_clear();rig.data.pose_position='POSE'
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-master-working.blend'),compress=True)
