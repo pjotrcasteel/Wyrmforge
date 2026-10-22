@@ -1,4 +1,4 @@
-"""Reversible first Ashfang surface and proportion study; no rig/animation replacement."""
+# Reversible first Ashfang surface and proportion study; no rig/animation replacement.
 import argparse, json, sys
 from pathlib import Path
 import bpy
@@ -39,16 +39,16 @@ for mat in bpy.data.materials:
     bsdf.inputs['Specular IOR Level'].default_value=.16
     bsdf.inputs['Metallic'].default_value=0
     # Preserve UV texture normal and opacity connections; object-space fissures deform with mesh.
-    tex=n.new('ShaderNodeTexCoord'); vor=n.new('ShaderNodeTexVoronoi'); vor.feature='DISTANCE_TO_EDGE'; vor.inputs['Scale'].default_value=c['fractureScale']; "l.new(tex.outputs['Object'],vor.inputs['Vector'])
+    tex=n.new('ShaderNodeTexCoord'); vor=n.new('ShaderNodeTexVoronoi'); vor.feature='DISTANCE_TO_EDGE'; vor.inputs['Scale'].default_value=c['fractureScale']; l.new(tex.outputs['Object'],vor.inputs['Vector'])
     warp=n.new('ShaderNodeTexNoise'); warp.inputs['Scale'].default_value=2.1; warp.inputs['Detail'].default_value=3.0; l.new(tex.outputs['Object'],warp.inputs['Vector'])
-    add=n.new('ShaderNodeVectorMath'); add.operation='ADD'; l.new(tex.outputs['Object'],add.inputs[0]); l.new(warp.outputs['Color'],add.inputs[1]); l.new(add.outputs[0],vor.inputs['Vector'])"
+    add=n.new('ShaderNodeVectorMath'); add.operation='ADD'; l.new(tex.outputs['Object'],add.inputs[0]); l.new(warp.outputs['Color'],add.inputs[1]); l.new(add.outputs[0],vor.inputs['Vector'])
     ramp=n.new('ShaderNodeValToRGB'); ramp.color_ramp.elements[0].position=.008; ramp.color_ramp.elements[0].color=(1,1,1,1); ramp.color_ramp.elements[1].position=c['fractureWidth']; ramp.color_ramp.elements[1].color=(0,0,0,1); l.new(vor.outputs['Distance'],ramp.inputs[0])
     attr=n.new('ShaderNodeAttribute'); attr.attribute_name='AshfangHeat'
     mult=n.new('ShaderNodeMath'); mult.operation='MULTIPLY'; l.new(ramp.outputs[0],mult.inputs[0]); l.new(attr.outputs['Fac'],mult.inputs[1])
-    power=n.new('ShaderNodeMath'); power.operation='MULTIPLY'; power.inputs[1].default_value=c['emissionStrength']*(.22 if 'Wing' in mat.name else 1); "l.new(mult.outputs[0],power.inputs[0])
+    power=n.new('ShaderNodeMath'); power.operation='MULTIPLY'; power.inputs[1].default_value=c['emissionStrength']*(.22 if 'Wing' in mat.name else 1); l.new(mult.outputs[0],power.inputs[0])
     patch=n.new('ShaderNodeTexNoise'); patch.inputs['Scale'].default_value=1.1; patch.inputs['Detail'].default_value=2; l.new(tex.outputs['Object'],patch.inputs['Vector'])
     select=n.new('ShaderNodeMapRange'); select.inputs['From Min'].default_value=.49; select.inputs['From Max'].default_value=.65; l.new(patch.outputs['Fac'],select.inputs['Value'])
-    selective=n.new('ShaderNodeMath'); selective.operation='MULTIPLY'; l.new(mult.outputs[0],selective.inputs[0]); l.new(select.outputs['Result'],selective.inputs[1]); l.new(selective.outputs[0],power.inputs[0])"
+    selective=n.new('ShaderNodeMath'); selective.operation='MULTIPLY'; l.new(mult.outputs[0],selective.inputs[0]); l.new(select.outputs['Result'],selective.inputs[1]); l.new(selective.outputs[0],power.inputs[0])
     bsdf.inputs['Emission Color'].default_value=(1,.075,.003,1); l.new(power.outputs[0],bsdf.inputs['Emission Strength'])
     if 'Eye' in mat.name:
         for link in list(bsdf.inputs['Emission Strength'].links): l.remove(link)
@@ -57,4 +57,5 @@ rig.data.pose_position='POSE'
 (out/'config.json').write_text(json.dumps(c,indent=2))
 bpy.ops.file.pack_all(); bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-master-working.blend'),compress=True)
 (out/'candidate-report.json').write_text(json.dumps({'source':str(source),'sourceSha256':sha(source),'candidateSha256':sha(out/'ashfang-master-working.blend'),'changes':['Reversible weighted shoulder/neck inflation and crown shape key','Charred source albedo tint, retained normals and opacity','Anatomically weighted procedural fracture emission, provisional pattern'],'limitations':['Wyvern anatomy differs from approved four-legged card','No animated source actions','Procedural fissure pattern requires authored art review','Not deformation validated or owner accepted'],'config':c},indent=2))
+
 

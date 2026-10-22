@@ -1,3 +1,6 @@
 # Generated art must stay byte-identical to tools/art/build-art.mjs output (--check).
 src/Wyrmforge.Presentation.Web/wwwroot/art/** -text
 docs/art/previews/** -text
+art/source/bosses/ashfang/archive/**/*.blend filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/archive/**/*.png filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/archive/**/*.fbx filter=lfs diff=lfs merge=lfs -text

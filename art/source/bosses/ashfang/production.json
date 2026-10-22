@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "wyrmforge-ashfang-production/1",
+  "sourceCreator": "Seth Santos (Seth7Santos)",
+  "license": "CC-BY-4.0",
+  "download": "C:/WyrmForgeAssets/Zagmatorah",
+  "archive": "archive/",
+  "storage": "Git LFS; user confirmed available capacity 2026-10-23",
+  "blender": "4.5.14 LTS",
+  "renderer": "Cycles OptiX NVIDIA GeForce RTX 5090; three views completed per review",
+  "currentCandidate": "archive/M1-candidate-002/ashfang-master-working.blend",
+  "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
+  "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
+  "M0": "import and reopen technically verified; remote binary verification pending",
+  "M1": "provisional surface/proportion study; visual identity gate failed",
+  "M2_M7": "not started",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "remaining": ["Resolve foreleg/wing anatomy against card", "Author heavy cranial and chest armor with suitable topology", "Author mouth/throat heat and directed fissures", "Diagnose 5 non-boundary nonmanifold edges", "Deformation pose validation", "Author actual animation (imported actions are static)", "Clay and actual gameplay-camera review", "Tier I versus VI after master acceptance"]
+}

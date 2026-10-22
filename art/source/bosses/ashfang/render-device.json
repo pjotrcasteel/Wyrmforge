@@ -1,0 +1,26 @@
+{
+  "devices": [
+    {
+      "name": "NVIDIA GeForce RTX 5090",
+      "type": "CUDA"
+    },
+    {
+      "name": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "type": "CPU"
+    },
+    {
+      "name": "NVIDIA GeForce RTX 5090",
+      "type": "OPTIX"
+    },
+    {
+      "name": "AMD Radeon(TM) Graphics",
+      "type": "HIP"
+    }
+  ],
+  "selected": "OPTIX",
+  "completedViews": [
+    "three-quarter",
+    "side",
+    "front"
+  ]
+}
