@@ -1,0 +1,17 @@
+{
+  "revision": "tier-I-skin-fire-001",
+  "bodyValue": 0.52,
+  "bodySaturation": 0.40,
+  "bodyTint": [0.68, 0.73, 0.80, 1],
+  "wingValue": 0.48,
+  "wingSaturation": 0.70,
+  "wingTint": [0.82, 0.43, 0.32, 1],
+  "aoInfluence": 0.65,
+  "localHeatStrength": 1.1,
+  "fireEnabled": true,
+  "flameHeight": 0.65,
+  "flameWidth": 0.15,
+  "flameEmission": 5.0,
+  "emberCount": 9,
+  "ownerAcceptedMaterials": false
+}
