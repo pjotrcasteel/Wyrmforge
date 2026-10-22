@@ -774,7 +774,15 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "Nexus purposes must remain readable, tappable, and contained at 320px and 390px.");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
 
-        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details, .build-heading, .atlas-toolbar")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".atlas-stage > .web-points-hud")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".atlas-stage > .web-floating-controls .atlas-action")).ToHaveCountAsync(4);
+        Assert.IsTrue(await Page.Locator(".web-points-hud").EvaluateAsync<bool>(@"chip => {
+            const stage = chip.closest('.atlas-stage').getBoundingClientRect();
+            const rect = chip.getBoundingClientRect();
+            return rect.left >= stage.left && rect.right <= stage.right
+                && rect.top >= stage.top && rect.bottom <= stage.bottom;
+        }"), "Arcane point counter must float inside the Web without displacing the canvas.");
         var viewport = Page.GetByRole(AriaRole.Region, new() { Name = "Arcane specialization map" });
         await viewport.ScrollIntoViewIfNeededAsync();
         await Expect(viewport).ToHaveAttributeAsync("data-scale", "0.95");
