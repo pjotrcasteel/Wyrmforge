@@ -63,7 +63,7 @@ test('the painter is restricted to the Wet Forest Lab and never writes gameplay 
     const ground = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-wet-forest-art.js', import.meta.url), 'utf8');
     const territory = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-territory-art.js', import.meta.url), 'utf8');
     const environment = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-environment.js', import.meta.url), 'utf8');
-    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan\)/);
+    assert.match(territory, /if \(plan\.wetForest\) return drawWetForestGround\(ctx, plan, approvedAtlas\)/);
     assert.match(environment, /if \(plan\.story\.wetForest\) drawWetForestDressing/);
     assert.match(ground, /const CELL = 12/);
     assert.doesNotMatch(ground, /DamagePropsInRadius|RestrictMovement|Math\.random|setInterval|new Image\(/);
