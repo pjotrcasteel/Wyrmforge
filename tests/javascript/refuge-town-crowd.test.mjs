@@ -554,7 +554,8 @@ test('Town V2 Phase 3 extends the raster route into the open west plaza, not the
     assert.match(code, /plazaVisits: entry\.plazaVisits/);
     assert.match(code, /plaza route cuts across an unwalkable pixel/);
     assert.match(code, /if \(w\.showMask\) \{[\s\S]*w\.route\.forEach/);
-    assert.match(code, /ctx\.save\(\);\s*ctx\.translate\(w\.position/);
+    assert.match(code, /function drawCitizen\(ctx, person\)/);
+    assert.match(code, /ctx\.translate\(person\.position\.x, person\.position\.y\)/);
     assert.doesNotMatch(code, /BEHIND_SHRUB|night-navigation\.json[^\n]*import/);
 });
 
@@ -617,12 +618,14 @@ test('Town V2 rear-of-well trial uses independent alpha PNGs and preserves appro
     assert.match(js, /canvas\.toDataURL\("image\/png"\)/);
     assert.match(js, /STAIR_EXIT, REAR_ENTRY/);
     assert.match(js, /REAR_END = \{ x: 852, y: 452 \}/);
-    assert.match(js, /state\.route = \[\.\.\.entryRoute, \.\.\.rearRoute\.slice\(1\)\]/);
+    assert.match(js, /state\.rearRoute = \[\.\.\.entryRoute, \.\.\.rearRoute\.slice\(1\)\]/);
+    assert.match(js, /if \(rearMode\) state\.route = state\.rearRoute/);
     assert.match(js, /const staircaseAndPlaza = planRoute\(state\.nav, START, PLAZA_END\)/);
     assert.match(js, /wellOcclusionFrames: entry\.wellOcclusionFrames/);
     assert.match(js, /noticeOcclusionFrames: entry\.noticeOcclusionFrames/);
-    assert.match(js, /if \(w\.lastWellOccluded && w\.showDepth\)/);
-    assert.match(js, /if \(w\.lastNoticeOccluded && w\.showDepth\)/);
+    assert.match(js, /if \(!w\.showDepth\) continue/);
+    assert.match(js, /if \(well\) \{/);
+    assert.match(js, /if \(notice\) \{/);
     assert.match(js, /Town V2 plaza route cuts across an unwalkable pixel/);
     const executable = js.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(executable, /night-navigation\.json[^\n]*import|CUTOUTS|TownCrowd/);
@@ -692,7 +695,7 @@ test('Town V2 well inspector preserves walking and checks every actual frame of 
     assert.match(js, /if \(!safe\) w.maskViolations\+\+/);
     assert.equal((js.match(/if \(!safe\) w.maskViolations\+\+/g) ?? []).length, 1,
         'Count unsafe frames only in animation, never again on the status tick');
-    assert.match(js, /w.lastWellOccluded = w.rearMode && overlapsFoliage/);
+    assert.match(js, /w.lastWellOccluded = well && w.rearMode/);
     assert.doesNotMatch(js, /REAR_POST_BYPASS|buildDebugOverlay/);
 });
 
@@ -755,7 +758,7 @@ test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowe
     for (const [x, y] of [[760, 470], [795, 470], [736, 518], [800, 510]])
         assert.equal(covered(x, y), true, `Board or timber support pixel ${x},${y} must hide the rear NPC`);
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
-    assert.match(js, /w.lastNoticeOccluded = w.rearMode && overlapsFoliage\(w.position, w.noticeCutout\)/);
+    assert.match(js, /w.lastNoticeOccluded = notice && w.rearMode/);
     assert.match(js, /ctx.drawImage\(w.noticeCutout.image, w.noticeCutout.x, w.noticeCutout.y\)/);
     assert.doesNotMatch(js, /buildDebugOverlay/);
 });
