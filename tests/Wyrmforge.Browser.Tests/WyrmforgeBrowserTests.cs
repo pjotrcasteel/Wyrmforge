@@ -26,7 +26,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Mount registers the scene before its asynchronous masks and route are
         // ready. Await the qualifying snapshot, not an async polling Promise.
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             const deadline = performance.now() + 15000;
             while (performance.now() < deadline) {
                 const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
@@ -67,7 +67,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -77,7 +77,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
@@ -85,7 +85,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
                 d.wellFrontEndpointWalkable && d.wellRimExcluded &&
@@ -113,7 +113,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // WaitForFunction MUST be synchronous: an async callback returns a
         // truthy Promise before its false diagnostic result is resolved.
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             window.__readTownV2Rear = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -163,7 +163,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             window.__readRightPostPose = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -234,7 +234,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             window.__readWellPose = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -305,7 +305,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             window.__readTownV2Crowd = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -373,7 +373,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.180');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.181');
             window.__readTownV2Coverage = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -382,6 +382,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return d?.active && d.coverageAudit && d.npcCount === 3 &&
                 d.coverage?.authoredGroundPixels > 0 &&
                 d.coverage?.reviewedSolidPixels > 0 &&
+                d.coverage?.candidateGroundPixels > 0 &&
                 d.coverage?.notSeparatelyClassifiedPixels > 0 &&
                 d.crowdFrames > 3 && d.violations === 0;
         }", null, new PageWaitForFunctionOptions { Timeout = 15000 });
@@ -390,7 +391,8 @@ public sealed class WyrmforgeBrowserTests : PageTest
             const ctx = document.querySelector('[data-town-v2-canvas]').getContext('2d');
             const sample = (x,y) => Array.from(ctx.getImageData(x, y, 1, 1).data);
             return { diagnostics:d, knownPath:sample(650,565),
-                knownSolid:sample(820,550), nonPath:sample(1300,100) };
+                knownSolid:sample(820,550), candidate:sample(850,650),
+                nonPath:sample(1300,100) };
         }");
         var diagnostics = audit.GetProperty("diagnostics");
         var coverage = diagnostics.GetProperty("coverage");
@@ -399,9 +401,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
             coverage.GetProperty("authoredGroundPixels").GetInt32() +
             coverage.GetProperty("reviewedSolidPixels").GetInt32() +
             coverage.GetProperty("classConflictPixels").GetInt32() +
+            coverage.GetProperty("candidateGroundPixels").GetInt32() +
             coverage.GetProperty("notSeparatelyClassifiedPixels").GetInt32());
         Assert.IsTrue(coverage.GetProperty("knownSolidClassAvailable").GetBoolean());
         Assert.AreEqual(3, coverage.GetProperty("reviewedSolidNames").GetArrayLength());
+        Assert.AreEqual(3, coverage.GetProperty("candidateGroundNames").GetArrayLength());
+        Assert.IsGreaterThan(0, coverage.GetProperty("candidateGroundPixels").GetInt32());
         Assert.AreEqual(7, coverage.GetProperty("tileColumns").GetInt32());
         Assert.AreEqual(4, coverage.GetProperty("tileRows").GetInt32());
         Assert.AreEqual(256, coverage.GetProperty("tileSize").GetInt32());
@@ -413,6 +418,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 tile.GetProperty("authoredGroundPixels").GetInt32() +
                 tile.GetProperty("reviewedSolidPixels").GetInt32() +
                 tile.GetProperty("classConflictPixels").GetInt32() +
+                tile.GetProperty("candidateGroundPixels").GetInt32() +
                 tile.GetProperty("notSeparatelyClassifiedPixels").GetInt32(),
                 "Every coverage tile must account for all its image pixels.");
         Assert.AreEqual(1536, tiles[^1].GetProperty("x").GetInt32());
@@ -425,6 +431,9 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var walkway = audit.GetProperty("knownPath").EnumerateArray().Select(p => p.GetInt32()).ToArray();
         var unclassified = audit.GetProperty("nonPath").EnumerateArray().Select(p => p.GetInt32()).ToArray();
         var solid = audit.GetProperty("knownSolid").EnumerateArray().Select(p => p.GetInt32()).ToArray();
+        var candidate = audit.GetProperty("candidate").EnumerateArray().Select(p => p.GetInt32()).ToArray();
+        Assert.IsTrue(candidate[2] > candidate[1] && candidate[1] > candidate[0],
+            "Blue proposals are NOT yet classified as safe navigation.");
         Assert.IsTrue(solid[0] > solid[1] && solid[1] > solid[2],
             "Red means the independently reviewed well footprint, not the wooden roof foreground.");
         Assert.IsTrue(walkway[1] > walkway[0] && walkway[1] > walkway[2],
