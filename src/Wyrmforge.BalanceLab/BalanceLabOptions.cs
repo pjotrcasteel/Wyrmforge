@@ -9,7 +9,8 @@ internal sealed record BalanceLabOptions(
     double ArenaHeight,
     bool FreshHunter,
     bool Laboratory = false,
-    bool Contextual = false)
+    bool Contextual = false,
+    bool FireProgression = false)
 {
     public static BalanceLabOptions Parse(string[] args)
     {
@@ -30,7 +31,8 @@ internal sealed record BalanceLabOptions(
             ParseDouble(values, "--arena-height", 720, 200, 6000),
             values.ContainsKey("--fresh-hunter"),
             values.ContainsKey("--laboratory"),
-            values.ContainsKey("--contextual"));
+            values.ContainsKey("--contextual"),
+            values.ContainsKey("--fire-progression"));
     }
 
     private static int ParseInt(IReadOnlyDictionary<string, string> values, string key, int fallback, int minimum, int maximum) =>
