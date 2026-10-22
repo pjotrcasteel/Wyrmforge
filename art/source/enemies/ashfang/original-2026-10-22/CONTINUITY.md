@@ -83,3 +83,23 @@ so remaining LFS allowance could not be inspected. Owner offered to sign in;
 browser shown for owner-operated authentication. No credentials read/entered,
 billing changes, LFS uploads or paid overage. Native pilot currently13,996,536bytes
 across8 .blend files, all individually below8MiB. Next large sculpt still gated.
+
+Owner-assisted read-only account check now verifies included LFS allowance and
+existing hard no-paid-overage limit. No billing settings changed. Private quota
+receipt stays in ignored artifacts; no account-wide billing details published.
+New r03 native paths are LFS tracked; r01/r02 ordinary-Git sources/history untouched.
+
+R03 original primary silhouette: authored cervical/occipital/scapular bony
+landmarks following the card's major crest rhythm, nasal recess/cranial planes,
+and stronger wing-root mass. No scales, surface detail, materials or animation.
+Landmark roots intentionally intersect skin; they are not finished retopology.
+The RNA from_mix default was checked in pinned Blender and a duplicate r02
+shape offset was found in r03. Original r03 and working source preserved, then
+corrected copies created without overwriting either. Current editable source:
+M1-r03/ashfang-primary-key-corrected.blend, SHA256
+57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c.
+Corrected source reopened and finite shape-key integrity passed; visual review
+still pending. No M1 completion or owner acceptance. Push before rendering.
+
+Independent remote r02 download from exact commit0a4c051f matched SHA256
+503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c.

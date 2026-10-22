@@ -48,11 +48,13 @@ textures, geometry, future rig/actions and camera/light settings. Before destruc
 edits save/reopen a preceding snapshot. Push each coherent slice and before long
 rendering; verify head and independently retrieve/checksum native sources.
 
-Owner storage answer: existing GitHub LFS allowance, no paid overage. Remaining
-numeric quota is not exposed by the connection. Do not adopt large-source LFS
-uploads until remaining allowance and billing cap are verified. Bounded initial
-studies use ordinary Git: each compressed native file <8 MiB, total new native
-sources <=20 MiB for this slice; stop if exceeded. No history rewrite or cleanup.
+Owner storage answer: existing GitHub LFS allowance, no paid overage. An
+owner-assisted read-only billing check subsequently verified available included
+allowance and an existing hard no-paid-overage budget. Private account billing
+details stay in ignored local artifacts. Verify an actual LFS upload and fresh
+retrieval before large-source production. New native revisions use path-scoped
+LFS rules; do not migrate/rewrite historical source. The bounded initial r01/r02
+ordinary-Git pilot remains intact; no history rewrite or cleanup.
 
 No imported/free/neural dragon geometry. New authored geometry provenance is
 recorded in production.json. Study references are not asset licenses.
