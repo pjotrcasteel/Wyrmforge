@@ -5,7 +5,8 @@ The owner shared four screenshots at approximately 11:19–11:20 (all-grass On/O
 
 ## Scoped change
 - Keep **Off** pixel-identical with the previously approved six ground paintings.
-- The **On** wear clusters now use elongated, meandering **irregular ridge outlines**, blurred softly at the contour (rather than an elliptical radial-gradient stamp). Each outline has independent, seeded top/bottom irregularities.
+- The **On** wear clusters now use elongated, meandering **irregular ridge outlines**. Neighboring softly feathered gradient marks merge along each winding path instead of forming isolated circular stamps. Each outline has independent, seeded top/bottom irregularities.
+- **iOS compatibility:** Safari still disables `CanvasRenderingContext2D.filter`. The masking code therefore uses a separate alpha canvas with overlapping radial gradients (supported in Safari), applied once by `destination-in`—not a canvas blur filter.
 - Within each cluster, smaller satellites overlap along an irregular slope, so wear reads as a connected scar rather than detached polka-dots. Fewer clusters are placed unevenly across the 672px tile; at least one remains in each horizontal material band.
 - In the grass panel, wear samples the approved earthy material instead of the marsh art responsible for conspicuous blue dots.
 - All artwork still comes from the six existing approved material panels. No new image assets, scenery, props, materials, game collision or live arena authority.
