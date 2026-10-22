@@ -515,22 +515,24 @@ test('V2 is isolated behind a URL flag and uses an authored pixel mask without V
     assert.match(v2, /usingLegacyNavigation: false/);
 });
 
-test('V2 uses independent rear-stone feet and cropped foliage alpha, never broad V1 cover', () => {
+test('Town V2 iPhone staircase correction isolates physical treads from foreground leaves', () => {
     const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     const sceneCode = source(scene);
     const ground = source(art + '/nexus-v2-walk-mask.svg');
     const foliage = source(art + '/nexus-v2-foliage-mask.svg');
-    assert.match(ground, /Upper leaf canopy|leaf canopy rises above a passable rear flagstone/);
-    assert.match(ground, /root\/base footprint|roots and the planter base/);
-    assert.match(foliage, /width="1672" height="941"/);
-    assert.match(foliage, /independent of the ground-contact navigation mask/);
+    assert.match(ground, /former broad white band ran onto staircase SIDE/);
+    assert.match(ground, /staircase.*treads|stone staircase|stone stair/);
+    assert.match(foliage, /no staircase, paving or wall pixels may be replayed/);
+    assert.match(code, /STAIR_MASONRY = \{ x: 530, y: 432 \}/);
+    assert.match(code, /STAIR_TREAD = \{ x: 500, y: 440 \}/);
+    assert.match(code, /PLANT_BASE = \{ x: 445, y: 443 \}/);
+    assert.match(code, /FOLIAGE = \{ x: 418, y: 412, width: 42, height: 29, depthY: 438 \}/);
+    assert.match(code, /x \+ width > 465 \|\| y \+ height > 445/);
     assert.match(code, /destination-in/);
     assert.match(code, /toDataURL\("image\/png"\)/);
-    assert.match(code, /function overlapsFoliage\(/);
-    assert.match(code, /BEHIND_SHRUB = \{ x: 520, y: 430 \}/);
-    assert.match(code, /planRoute\(state\.nav, START, BEHIND_SHRUB\)/);
-    assert.match(code, /planRoute\(state\.nav, BEHIND_SHRUB, FINISH\)/);
-    assert.match(code, /depthFrames: entry\.depthFrames/);
+    assert.match(code, /state\.route = planRoute\(state\.nav, START, FINISH\)/);
+    assert.doesNotMatch(code, /BEHIND_SHRUB/);
+    assert.match(code, /stairAreaOccluded/);
     assert.match(sceneCode, /data-town-v2-depth-toggle="true"/);
     assert.match(code, /depthToggle\.removeEventListener/);
     const executable = code.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
