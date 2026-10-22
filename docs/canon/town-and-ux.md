@@ -54,6 +54,8 @@
 
 ## UI conventions and accessibility
 
+- **22 October — Nexus visual continuity:** Use the approved Fireball chamber as the shared material and typography reference for Research and Arcane Web: dark masonry, inset bronze frames, warm bone lettering, metal sockets and restrained local magical light. Match Refuge's physical materials. The central Fireball artwork represents Fireball only; do not use it as another spell, the Research result or the Web origin. Reuse the canonical Divine pixel emblems in research controls and its live circle. Research actions must not obscure the ritual; preserve graph interactions, readable state differences, 44px controls and the Web inspector below the graph on phones.
+
 - Art-led mobile-first composition; strong visual hierarchy with one obvious primary action, progressive disclosure, legible small-screen label, safe-area support and sensible tap targets. Avoid generic filler/AI-sounding narration and repeated instructions.
 - HUD/player identity, version and levels are overlays **on top of** authored artwork rather than reserved footer/header bands that reduce the art. Preserve aspect ratio, no stretched town/building illustrations. Browsers may capture gestures: accessible keyboard/focus alternatives must remain.
 - The player sees world and spells honestly: a painted bridge is traversable only if the simulation permits it; a disabled icon cannot secretly start a Hunt; color alone isn't the only state signal.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ELEMENTS, SEATS, RUNES, PULSES, VIGNETTE_SECONDS, elementOf, seatPoint, shardArcs, drawCircle, drawPulse, drawVignette, drawEmblem, haptic }
+import { ELEMENTS, EMBLEM_CELLS, SEATS, RUNES, PULSES, VIGNETTE_SECONDS, elementOf, seatPoint, shardArcs, drawCircle, drawPulse, drawVignette, drawEmblem, haptic }
     from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/spellcraft-circle.js';
 
 function mockContext() {
@@ -116,15 +116,24 @@ test('Arcane Conduit demonstrates chain discharge instead of a shatter', () => {
     assert.ok(named(ctx, 'lineTo').length >= 12, 'three jagged arcs');
 });
 
-test('emblems draw for every element and nothing for an empty seat', () => {
+test('every research emblem samples the approved atlas without smoothing or replacement glyphs', () => {
+    const atlas = { complete: true, naturalWidth: 192 };
+    const sources = [];
     for (const element of Object.keys(ELEMENTS)) {
         const ctx = mockContext();
-        drawEmblem(ctx, element, 10, 10, 20);
-        assert.ok(named(ctx, 'stroke').length > 0, element);
+        drawEmblem(ctx, element, 10, 10, 20, 1, atlas);
+        const images = named(ctx, 'drawImage');
+        assert.equal(images.length, 1, element);
+        assert.equal(images[0][1], atlas);
+        assert.deepEqual(sets(ctx, 'imageSmoothingEnabled'), [false]);
+        sources.push(images[0].slice(2, 4).join(','));
+        assert.equal(named(ctx, 'stroke').length, 0, 'no generic vector emblem');
     }
+    assert.equal(new Set(sources).size, Object.keys(EMBLEM_CELLS).length);
     const empty = mockContext();
-    drawEmblem(empty, null, 0, 0, 20);
-    assert.equal(empty.calls.length, 0);
+    drawEmblem(empty, null, 0, 0, 20, 1, atlas);
+    drawEmblem(empty, 'fire', 0, 0, 20, 1, { complete: false });
+    assert.equal(empty.calls.length, 0, 'empty seats and undecoded atlases are safe');
 });
 
 test('haptics are optional: no vibrate API means no haptic, never an error', () => {
