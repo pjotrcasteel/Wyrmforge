@@ -24,11 +24,11 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".refuge-town-geometry-debug")).ToHaveCountAsync(0);
         await Expect(Page.Locator(".refuge-town-png-cutout")).ToHaveCountAsync(0);
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.active;
         }");
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.AreEqual(1, first.GetProperty("npcCount").GetInt32());
@@ -43,7 +43,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -51,7 +51,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.AreNotEqual(first.GetProperty("position").GetProperty("x").GetDouble(),
             second.GetProperty("position").GetProperty("x").GetDouble(), "The demo citizen must actually move.");
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.158');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'))?.depthFrames > 0;
         }", null, new PageWaitForFunctionOptions { Timeout = 10000 });
         await Page.Locator("[data-town-v2-depth-toggle]").ClickAsync();
