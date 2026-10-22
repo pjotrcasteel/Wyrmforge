@@ -38,8 +38,10 @@ public sealed class MaterialLabBrowserTests : PageTest
         Assert.AreNotEqual(baseline, enhanced,
             "Fine detail ON must change real ground pixels, not just the button state.");
         var samplerDifference = await ReadVisibleDifferenceAsync();
-        Assert.IsGreaterThan(2.0, samplerDifference.GetProperty("changedPercent").GetDouble(),
-            "The material sampler must visibly change at phone scale, not merely alter a few pixels.");
+        Assert.IsGreaterThan(0.3, samplerDifference.GetProperty("changedPercent").GetDouble(),
+            "The existing material texture should gain real detail without broad recolouring.");
+        Assert.IsLessThan(19.0, samplerDifference.GetProperty("maximumRgbDelta").GetDouble(),
+            "Fine Detail must not introduce colour blocks or replace blended material pixels.");
 
         var artifactDir = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
@@ -78,8 +80,10 @@ public sealed class MaterialLabBrowserTests : PageTest
         Assert.AreNotEqual(plainGrass, wornGrass);
         var grassDifference = await ReadVisibleDifferenceAsync();
         Console.WriteLine($"Fine detail visibility: sampler {samplerDifference}, grass {grassDifference}");
-        Assert.IsGreaterThan(2.0, grassDifference.GetProperty("changedPercent").GetDouble(),
-            "All-grass Fine Detail must change at least two percent of phone-scale ground pixels noticeably.");
+        Assert.IsGreaterThan(0.3, grassDifference.GetProperty("changedPercent").GetDouble(),
+            "All-grass detail should be enhanced locally, without foreign-colour patches.");
+        Assert.IsLessThan(19.0, grassDifference.GetProperty("maximumRgbDelta").GetDouble(),
+            "Fine Detail must not create unrelated soil or water rectangles on grass.");
         await canvas.ScreenshotAsync(new LocatorScreenshotOptions
         {
             Path = Path.Combine(artifactDir, "material-lab-fine-on-grass-390.png"),
@@ -89,6 +93,34 @@ public sealed class MaterialLabBrowserTests : PageTest
             document.querySelector('.materials-lab .material-workspace canvas')?.dataset.fineDetail === 'off'");
         Assert.AreEqual(plainGrass, await ReadPixelHashAsync(),
             "The approved plain-grass preview must return byte-for-byte when Fine Detail is off.");
+
+        // Regression from 12:04 owner screenshots: natural mixed ground suffered
+        // rectangular colour bleed when Fine Detail painted foreign swatches.
+        var naturalFrame = await canvas.GetAttributeAsync("data-material-render");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Natural ground" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"frame =>
+            document.querySelector('.materials-lab .material-workspace canvas')?.dataset.materialRender !== frame",
+            naturalFrame);
+        await CaptureReferencePixelsAsync();
+        var naturalBaseline = await ReadPixelHashAsync();
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Fine detail Off" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelector('.materials-lab .material-workspace canvas')?.dataset.fineDetail === 'on'");
+        var mixedDifference = await ReadVisibleDifferenceAsync();
+        Assert.IsLessThan(19.0, mixedDifference.GetProperty("maximumRgbDelta").GetDouble(),
+            "Natural ground transitions must never acquire blocks from unrelated materials.");
+        Assert.IsGreaterThan(0.3, mixedDifference.GetProperty("changedPercent").GetDouble(),
+            "Fine Detail still sharpens the original mixed ground locally.");
+        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
+        {
+            Path = Path.Combine(artifactDir, "material-lab-natural-blends-on-390.png"),
+        });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Fine detail On" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelector('.materials-lab .material-workspace canvas')?.dataset.fineDetail === 'off'");
+        Assert.AreEqual(naturalBaseline, await ReadPixelHashAsync(),
+            "Fine Detail Off restores the original blended grass/mud/marsh boundaries.");
     }
 
     private async Task CaptureReferencePixelsAsync() =>
@@ -102,17 +134,20 @@ public sealed class MaterialLabBrowserTests : PageTest
             const old = canvas.__fineDetailBaseline;
             const current = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
             if (!old || old.length !== current.length) throw new Error('Missing reference ground pixels');
-            let changed = 0, rgbDelta = 0;
+            let changed = 0, rgbDelta = 0, maximumRgbDelta = 0;
             for (let i = 0; i < current.length; i += 4) {
                 const red = Math.abs(current[i] - old[i]);
                 const green = Math.abs(current[i + 1] - old[i + 1]);
                 const blue = Math.abs(current[i + 2] - old[i + 2]);
-                if (Math.max(red, green, blue) >= 16) changed++;
+                const maximum = Math.max(red, green, blue);
+                if (maximum >= 4) changed++;
+                maximumRgbDelta = Math.max(maximumRgbDelta, maximum);
                 rgbDelta += red + green + blue;
             }
             return {
                 changedPercent: 100 * changed / (canvas.width * canvas.height),
                 averageRgbDelta: rgbDelta / (canvas.width * canvas.height * 3),
+                maximumRgbDelta,
             };
         }");
 
