@@ -112,9 +112,16 @@ if a.operation in ('review','benchmark'):
     report['render']={'device':'RTX 5090 OptiX','resolution':a.resolution,'samples':32,'views':[]}
     views=[('front',0,0),('side',90,0),('rear',180,0),('top',0,90),
            ('three-quarter-left',-45,25),('three-quarter-right',45,25),('game-elevated',45,34),
+           ('game-extended',45,34),
            ('skull-side',90,8),('skull-three-quarter',45,12)]
     if a.operation=='benchmark': views=views[:1]
     for index,(label,azimuth,elevation) in enumerate(views):
+        for ob in bpy.data.objects:
+            if ob.type=='MESH' and ob.data.shape_keys:
+                for key in ob.data.shape_keys.key_blocks:
+                    if key.name.startswith('Provisional relaxed digit'):
+                        key.value=0 if label=='game-extended' else 1
+        bpy.context.view_layer.update()
         target=center
         if label.startswith('skull'):
             target=Vector((0,-4.9,3.25))
@@ -126,6 +133,7 @@ if a.operation in ('review','benchmark'):
         cam.location=target+direction*span*3
         cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler()
         scene.render.filepath=str(out/(label+'.png'))
+        scene.render.film_transparent=label.startswith('game')
         # Review source preserves all geometry/materials; only scene setup added.
         if index==0:
             snapshot=out/'ashfang-review-scene.blend'

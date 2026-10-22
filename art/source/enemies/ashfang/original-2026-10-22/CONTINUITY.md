@@ -35,3 +35,18 @@ Remaining views rendered but not yet visually inspected. Geometry format pass is
 not artistic acceptance. Preserve r01; next revision edits these original forms,
 not legacy geometry, before armor/fire/rig/animation. Review camera/light native
 snapshot also retained. Native r01 SHA256 in authoring-report.json.
+
+M1-r02: original r01 source preserved, then lengthened muzzle/mandible, flattened
+brow and nasal planes, merged cranial/temple/brow skin after saving a preceding
+native snapshot, editable primary chest/scapula shape-key corrections, and
+provisional relaxed wing-digit carriage shape keys. Extended basis retained.
+These static design poses are not a rig, animation or final membrane deformation.
+All native source totals11.42 MB before r02 review snapshot, within20MiB pilot.
+Reopen validation passes. r02 source SHA256:
+503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c.
+Exact authoring command: open M1-r01/ashfang-primary.blend with --disable-autoexec
+and --python tools/ashfang/refine-primary-r02.py. Never rerun into existing r02.
+
+R01 was independently retrieved from exact remote commit dde6d9a8 and SHA256
+matched6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98.
+Large sculpt/texture LFS quota remains unverified; no LFS bytes or paid overage.
