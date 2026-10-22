@@ -511,6 +511,6 @@ test('V2 is isolated behind a URL flag and uses an authored pixel mask without V
     const executable = v2.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(executable, /night-navigation\.json|TownCrowd|Occluders/);
     assert.match(mask, /width="1672" height="941"/);
-    assert.match(mask, /nexus/);
+    assert.match(mask, /Nexus/i);
     assert.match(v2, /usingLegacyNavigation: false/);
 });
