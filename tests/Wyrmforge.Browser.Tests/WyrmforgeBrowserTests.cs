@@ -202,7 +202,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/arena-lab?seed=1441&stage=5&habitat=WetForest",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Ground Foundation" }))
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Natural Terrain & Forest Trails" }))
             .ToBeVisibleAsync();
         var canvas = Page.Locator(".arena-stage canvas");
         await Expect(canvas).ToBeVisibleAsync();
@@ -211,30 +211,35 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-assets", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-roads", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-collision", "0");
-        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "natural");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "trails");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-trails", "2");
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Hit prop" })).ToHaveCountAsync(0);
         await Expect(Page.GetByRole(AriaRole.Checkbox, new() { Name = "Pathing mobs" })).ToHaveCountAsync(0);
         await Expect(Page.Locator(".arena-stage .legacy-tree")).ToHaveCountAsync(0);
 
         var diagnostics = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
-            const m = await import('./js/arena-ground-foundation.js?v=20261022-ground-reset-1');
+            const m = await import('./js/arena-ground-foundation.js?v=20261022-forest-trails-1');
             return m.readGroundFoundationDiagnostics(document.querySelector('.arena-stage canvas'));
         }");
         Assert.AreEqual(0, diagnostics.GetProperty("assets").GetInt32());
         Assert.AreEqual(0, diagnostics.GetProperty("mobs").GetInt32());
         Assert.AreEqual(0, diagnostics.GetProperty("obstacles").GetInt32());
         Assert.AreEqual(0, diagnostics.GetProperty("roads").GetInt32());
+        Assert.AreEqual(2, diagnostics.GetProperty("trailBranches").GetInt32());
         Assert.AreEqual(960, diagnostics.GetProperty("worldWidth").GetInt32());
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "All grass" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "grass");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Natural ground" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "natural");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-trails", "0");
         Directory.CreateDirectory(ArtifactDirectory);
         await canvas.ScreenshotAsync(new LocatorScreenshotOptions
         {
             Path = Path.Combine(ArtifactDirectory, $"arena-foundation-ground-only-{width}.png"),
         });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Forest trails" }).ClickAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "trails");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Different ground ↻" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-seed", "1442");
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.arenaLabProgress')"));
@@ -247,7 +252,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl.TrimEnd('/') +
             "/arena-lab?seed=1441%26stage%3D5%26habitat%3DWetForest",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Ground Foundation" }))
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Natural Terrain & Forest Trails" }))
             .ToBeVisibleAsync();
         var canvas = Page.Locator(".arena-stage canvas");
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-seed", "1204");
