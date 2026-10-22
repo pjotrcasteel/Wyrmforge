@@ -5,11 +5,37 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { drawWetForestActorContact, appendWetForestFootprint, drawWetForestFootprints } from './arena-wet-forest-dressing.js';
 import { loadArt } from './art-atlas.js';
+import { GROUND_ATLAS_URL, buildGroundQuiltAtlas } from './arena-materials.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy } from './hollow-sprites.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { resolveArenaCamera } from './arena-camera.js';
 
 const labs = new WeakMap();
+let approvedSource = null;
+let approvedSourcePromise = null;
+let approvedAtlas = null;
+let approvedAtlasSeed = null;
+
+// Lazy opt-in art: do not allocate the ~11MB approved quilt atlas in normal
+// Hunts or on an Arena Lab screen that never enables the preview.
+function requestApprovedGround() {
+    if (approvedSource || approvedSourcePromise) return;
+    const image = new Image();
+    image.src = GROUND_ATLAS_URL;
+    approvedSourcePromise = image.decode().then(() => { approvedSource = image; })
+        .catch(error => { console.warn('Approved ground preview unavailable:', error); })
+        .finally(() => { approvedSourcePromise = null; });
+}
+function previewGroundAtlas(state, frame) {
+    if (!state.options.approvedGround || frame?.environment?.habitat !== 'WetForest' ||
+        frame?.environment?.generatorPreview !== true) return null;
+    if (!approvedSource) { requestApprovedGround(); return null; }
+    if (!approvedAtlas || approvedAtlasSeed !== frame.seed) {
+        approvedAtlas = buildGroundQuiltAtlas(approvedSource, frame.seed);
+        approvedAtlasSeed = frame.seed;
+    }
+    return approvedAtlas;
+}
 const limit = (value, low, high) => Math.max(low, Math.min(high, value));
 
 export function worldClickPoint(x, y, camera) {
@@ -41,7 +67,7 @@ function cameraForState(state, width, height) {
 export async function initializeArenaLab(canvas, dotnet) {
     if (labs.has(canvas)) return;
     const state = {
-        canvas, dotnet, active: true, options: { tool: 'walk', collision: false, mobs: true },
+        canvas, dotnet, active: true, options: { tool: 'walk', collision: false, mobs: true, approvedGround: false },
         frame: null, keys: new Set(), pointer: null, freeCamera: null, keyboard: { x: 0, y: 0 }, clock: 0,
         busy: false, last: performance.now(), walk: { facing: 'S' }, enemyMotion: createEnemyMotionState(),
         hollow: createHollowState(), ashling: ashlingSprites.createState(),
@@ -77,11 +103,12 @@ function bind(target, name, listener, options) {
     target.addEventListener(name, listener, options);
     return () => target.removeEventListener(name, listener, options);
 }
-export function configureArenaLab(canvas, tool, collision, mobs) {
+export function configureArenaLab(canvas, tool, collision, mobs, approvedGround = false) {
     const state = labs.get(canvas);
     if (!state) return;
     const oldTool = state.options.tool;
-    state.options = { tool, collision: Boolean(collision), mobs: Boolean(mobs) };
+    state.options = { tool, collision: Boolean(collision), mobs: Boolean(mobs), approvedGround: Boolean(approvedGround) };
+    if (state.options.approvedGround) requestApprovedGround();
     state.pointer = null;
     if (tool === 'walk' && oldTool !== 'walk') state.freeCamera = null;
 }
@@ -98,7 +125,9 @@ export function readArenaLabDiagnostics(canvas) {
         enemyArt: { hollow: hollowSpritesReady(), ashling: ashlingSprites.ready() },
         enemyAnimation: { hollow: [...state.hollow.entities.values()].map(p => ({ clip: p.clip, frame: p.frame, direction: p.direction })),
             ashling: ashlingSprites.diagnostics(state.ashling).entities.map(p => ({ clip: p.clip, frame: p.frame, direction: p.direction })) },
-        collisionVisible: state.options.collision, tool: state.options.tool };
+        collisionVisible: state.options.collision, tool: state.options.tool,
+        approvedGroundRequested: state.options.approvedGround,
+        approvedGroundReady: Boolean(approvedSource && approvedAtlas) };
 }
 export function disposeArenaLab(canvas) {
     const state = labs.get(canvas);
@@ -207,7 +236,8 @@ function draw(state) {
     const camera = cameraForState(state, width, height);
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
-    drawArenaEnvironment(ctx, frame.environment, ww, wh, state.clock);
+    const groundAtlas = previewGroundAtlas(state, frame);
+    drawArenaEnvironment(ctx, frame.environment, ww, wh, state.clock, groundAtlas);
     if (frame.environment?.generatorPreview && frame.environment?.habitat === 'WetForest')
         drawWetForestFootprints(ctx, state.tracks, state.clock);
     // The same atlas and distance-driven gait as live Hunts: actors no longer walk on a timer.
@@ -243,7 +273,7 @@ function draw(state) {
     const moved = state.lastPlayer ? Math.hypot(frame.x - state.lastPlayer.x, frame.y - state.lastPlayer.y) > .1 : false;
     state.lastPlayer = { x: frame.x, y: frame.y };
     const layers = [
-        ...getArenaCloisterElevations(frame.environment, ww, wh, state.clock),
+        ...getArenaCloisterElevations(frame.environment, ww, wh, state.clock, groundAtlas),
         ...frame.mobs.map(mob => ({ kind: 'mob', depth: mob.y + 10, mob })),
         { kind: 'mage', depth: frame.y + 12 },
     ].sort((a, b) => a.depth - b.depth);
