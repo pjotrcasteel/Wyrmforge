@@ -232,6 +232,78 @@ export function groundMaterialAccentPlan(index, seed = 1441) {
     }));
 }
 
+// Optional micro-detail study: cluster tiny flecks cut from the six approved
+// paintings rather than scattering procedural pebbles, plants or props.
+// Positions wrap within each material panel; nothing changes collision.
+export function groundMaterialFineDetailPlan(index, seed = 1441) {
+    if (!Number.isInteger(index) || index < 0 || index >= MATERIALS.length) return [];
+    const random = (cluster, mark, channel) => {
+        let n = (seed | 0) ^ Math.imul(index + 43, 0x9e3779b1) ^
+            Math.imul(cluster + 59, 0x85ebca6b) ^ Math.imul(mark + 73, 0xc2b2ae35) ^
+            Math.imul(channel + 19, 0x27d4eb2d);
+        n = Math.imul(n ^ (n >>> 16), 0x7feb352d);
+        n = Math.imul(n ^ (n >>> 15), 0x846ca68b);
+        return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+    };
+    const marks = [];
+    for (let cluster = 0; cluster < 6; cluster++) {
+        const centerX = random(cluster, 0, 0) * GROUND_TILE_SIZE;
+        const centerY = random(cluster, 0, 1) * GROUND_TILE_SIZE;
+        for (let mark = 0; mark < 8; mark++) {
+            const width = 14 + Math.floor(random(cluster, mark, 2) * 24);
+            const height = 9 + Math.floor(random(cluster, mark, 3) * 22);
+            const source = mark % 4 === 0 ? GROUND_ACCENTS[index][cluster % 2] : index;
+            marks.push({
+                x: Math.floor((centerX + (random(cluster, mark, 4) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
+                y: Math.floor((centerY + (random(cluster, mark, 5) - .5) * 126 + GROUND_TILE_SIZE) % GROUND_TILE_SIZE),
+                width, height, source,
+                sourceX: Math.floor(random(cluster, mark, 6) * (GROUND_SOURCE_TILE_SIZE - width + 1)),
+                sourceY: Math.floor(random(cluster, mark, 7) * (GROUND_SOURCE_TILE_SIZE - height + 1)),
+                opacity: .18 + random(cluster, mark, 8) * .17,
+            });
+        }
+    }
+    return marks;
+}
+
+function drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed) {
+    for (const mark of groundMaterialFineDetailPlan(index, seed)) {
+        const { width, height } = mark;
+        scratch.width = width;
+        scratch.height = height;
+        sc.globalCompositeOperation = 'source-over';
+        sc.clearRect(0, 0, width, height);
+        sc.drawImage(source, mark.source * GROUND_SOURCE_TILE_SIZE + mark.sourceX, mark.sourceY,
+            width, height, 0, 0, width, height);
+
+        // Feather an elliptical footprint. Sampling the approved paint gives
+        // it real texture; the ellipse is only a transparency mask.
+        sc.save();
+        sc.globalCompositeOperation = 'destination-in';
+        sc.translate(width / 2, height / 2);
+        sc.scale(width / height, 1);
+        const mask = sc.createRadialGradient(0, 0, 0, 0, 0, height / 2);
+        mask.addColorStop(0, 'rgba(255,255,255,1)');
+        mask.addColorStop(.56, 'rgba(255,255,255,.88)');
+        mask.addColorStop(1, 'rgba(255,255,255,0)');
+        sc.fillStyle = mask;
+        sc.fillRect(-height / 2, -height / 2, height, height);
+        sc.restore();
+        sc.globalCompositeOperation = 'source-over';
+
+        const left = Math.round(mark.x - width / 2), top = Math.round(mark.y - height / 2);
+        ctx.globalAlpha = mark.opacity;
+        for (const offsetY of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE])
+            for (const offsetX of [-GROUND_TILE_SIZE, 0, GROUND_TILE_SIZE]) {
+                const x = left + offsetX, y = top + offsetY;
+                if (x + width <= 0 || y + height <= 0 || x >= GROUND_TILE_SIZE || y >= GROUND_TILE_SIZE)
+                    continue;
+                ctx.drawImage(scratch, index * GROUND_TILE_SIZE + x, y);
+            }
+    }
+    ctx.globalAlpha = 1;
+}
+
 function drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed) {
     for (const spot of groundMaterialAccentPlan(index, seed)) {
         const size = spot.radius * 2;
@@ -264,7 +336,7 @@ function drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed) {
 }
 
 /** Build once on atlas load, not during walking or every brush stroke. */
-export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
+export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory, fineDetail = false) {
     if (!source || source.width !== GROUND_SOURCE_TILE_SIZE * MATERIALS.length ||
         source.height !== GROUND_SOURCE_TILE_SIZE) return null;
     const create = canvasFactory ?? (() => document.createElement('canvas'));
@@ -307,6 +379,7 @@ export function buildGroundQuiltAtlas(source, seed = 1441, canvasFactory) {
         }
         drawGroundMaterialVariation(ctx, index, seed);
         drawGroundMaterialAccents(ctx, sc, scratch, source, index, seed);
+        if (fineDetail) drawGroundMaterialFineDetails(ctx, sc, scratch, source, index, seed);
         ctx.restore();
     }
     return canvas;
@@ -457,6 +530,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
         canvas, seed: seed | 0, selected: 0, radius: 2,
         cells: materialSampleBoard(), history: [], pointer: null, lastPoint: null,
         listeners: [], pending: false, frameId: 0, disposed: false, atlas: null, sourceAtlas: null,
+        fineDetail: false,
     };
     const bind = (target, name, handler, options) => {
         target.addEventListener(name, handler, options);
@@ -497,7 +571,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (!state.disposed && atlas.width === GROUND_SOURCE_TILE_SIZE * MATERIALS.length &&
             atlas.height === GROUND_SOURCE_TILE_SIZE) {
             state.sourceAtlas = atlas;
-            state.atlas = buildGroundQuiltAtlas(atlas, state.seed);
+            state.atlas = buildGroundQuiltAtlas(atlas, state.seed, undefined, state.fineDetail);
             redraw(state);
         }
     };
@@ -544,7 +618,15 @@ export function changeMaterialSeed(canvas, seed) {
     const s = contexts.get(canvas);
     if (!s) return;
     s.seed = seed | 0;
-    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed);
+    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed, undefined, s.fineDetail);
+    redraw(s);
+}
+
+export function setGroundFineDetail(canvas, enabled) {
+    const s = contexts.get(canvas);
+    if (!s || s.fineDetail === !!enabled) return;
+    s.fineDetail = !!enabled;
+    if (s.sourceAtlas) s.atlas = buildGroundQuiltAtlas(s.sourceAtlas, s.seed, undefined, s.fineDetail);
     redraw(s);
 }
 export function disposeMaterialsLab(canvas) {

@@ -6,6 +6,7 @@ import {
     GROUND_ATLAS_URL, GROUND_PATCH_SIZE, GROUND_PATCH_STEP,
     materialSampleBoard, naturalGroundPreview, paintGroundCells, paintGroundStroke, drawReferenceGroundBoard,
     groundQuiltPatchPlan, groundMaterialVariationPlan, groundMaterialAccentPlan,
+    groundMaterialFineDetailPlan,
     groundMaterialBoundaryPlan, drawGroundMaterialTransitions, buildGroundQuiltAtlas,
 } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js';
 
@@ -144,6 +145,55 @@ test('actual macro variation comes from related ground artwork, not barely visib
     assert.deepEqual(groundMaterialAccentPlan(99), []);
 });
 
+test('opt-in fine ground detail uses deterministic clusters from approved material paintings', () => {
+    for (let index = 0; index < MATERIALS.length; index++) {
+        const marks = groundMaterialFineDetailPlan(index, 1441);
+        assert.equal(marks.length, 48);
+        assert.deepEqual(marks, groundMaterialFineDetailPlan(index, 1441));
+        assert.notDeepEqual(marks, groundMaterialFineDetailPlan(index, 1442));
+        assert.ok(marks.every(m => Number.isInteger(m.x) && Number.isInteger(m.y) &&
+            m.x >= 0 && m.x < GROUND_TILE_SIZE &&
+            m.y >= 0 && m.y < GROUND_TILE_SIZE && m.width >= 14 && m.width <= 37 &&
+            m.height >= 9 && m.height <= 30 && m.opacity >= .18 && m.opacity <= .35 &&
+            m.sourceX >= 0 && m.sourceX + m.width <= GROUND_SOURCE_TILE_SIZE &&
+            m.sourceY >= 0 && m.sourceY + m.height <= GROUND_SOURCE_TILE_SIZE));
+        assert.ok(marks.some(m => m.source === index));
+        assert.ok(marks.some(m => m.source !== index));
+        assert.ok(marks.every(m => m.source >= 0 && m.source < MATERIALS.length));
+    }
+    assert.deepEqual(groundMaterialFineDetailPlan(-1), []);
+    const razor = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaMaterialsLab.razor', import.meta.url), 'utf8');
+    const js = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-materials.js', import.meta.url), 'utf8');
+    assert.match(razor, /@onclick="ToggleFineDetail"/);
+    assert.match(js, /export function setGroundFineDetail/);
+    assert.match(js, /if \(fineDetail\) drawGroundMaterialFineDetails/);
+});
+
+test('fine details are baked only when requested, not on every ground frame', () => {
+    const raw = { width: GROUND_SOURCE_TILE_SIZE * MATERIALS.length, height: GROUND_SOURCE_TILE_SIZE };
+    const bake = enabled => {
+        let canvasNo = 0, originalSamples = 0, gradients = 0;
+        const factory = () => {
+            const output = canvasNo++ === 0;
+            const ctx = {
+                globalCompositeOperation: 'source-over',
+                globalAlpha: 1, imageSmoothingEnabled: false,
+                save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
+                clearRect() {}, translate() {}, scale() {}, fillRect() {},
+                createLinearGradient() { return { addColorStop() {} }; },
+                createRadialGradient() { gradients++; return { addColorStop() {} }; },
+                drawImage(image) { if (!output && image === raw) originalSamples++; },
+            };
+            return { width: 0, height: 0, getContext() { return ctx; } };
+        };
+        assert.ok(buildGroundQuiltAtlas(raw, 1441, factory, enabled));
+        return { originalSamples, gradients };
+    };
+    const original = bake(false), enhanced = bake(true);
+    assert.equal(enhanced.originalSamples - original.originalSamples, MATERIALS.length * 48);
+    assert.equal(enhanced.gradients - original.gradients, MATERIALS.length * 48);
+});
+
 test('mixed paint has seeded irregular material boundaries but uniform grass has none', () => {
     const grass = new Uint8Array(COLS * ROWS);
     assert.deepEqual(groundMaterialBoundaryPlan(grass), []);
@@ -248,5 +298,5 @@ test('iPhone touch drags work and previous procedural tile generators are not us
     assert.match(js, /setPointerCapture/);
     assert.match(css, /touch-action:none/);
     assert.doesNotMatch(js, /MATERIAL_REFERENCE_ATLAS|const palettes|function materialNoise|function drawGroundMaterialTile|drawMaterialBoard|drawArenaEnvironment/);
-    assert.ok(js.includes('buildGroundQuiltAtlas(atlas, state.seed)'));
+    assert.ok(js.includes('buildGroundQuiltAtlas(atlas, state.seed, undefined, state.fineDetail)'));
 });
