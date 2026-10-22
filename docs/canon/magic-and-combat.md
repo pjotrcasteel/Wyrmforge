@@ -199,6 +199,16 @@ Node classes: **Specialization** (earned points/role/compatibility), **Research*
 
 The long-term ambition is hundreds of mechanically distinct legal builds and a large extensible Web. **“800+ nodes” is an aspiration, not a milestone.** Four initial schools are implemented or partly implemented. Necromancy and Summoning are now **approved fifth/sixth Divine archetypes**, not merely candidate cross-disciplines; secondary practices such as Warding, Spatial, Ritualism, Blood and Metamagic remain unapproved taxonomy. The six-school progression and mutation-tier rule in §3.0 overrides outdated four-school scope examples.
 
+### Six-school Arcane Web — owner decision, 22 October 2026
+
+The Web is a large six-sector wheel. The character's active Divine school is north and is the only school accepting new investments. Inspecting or panning to another sector never switches the character's school. Death and Binding remain visible future sectors until their content is authored; this does not unlock character creation or introduce a school-switching economy.
+
+Learned knowledge persists across school changes. **Unconditional stats continue contributing**, including Storm cast speed while playing Fire. Mutation-specific enhancements contribute only to their required signature and equipped mutation; an unequipped mutation's enhancement stays learned but contributes nothing. Keep learning ownership separate from effect requirements and presentation coordinates so future school-native signatures can extend the system without rewriting saves.
+
+Use the existing shared earned point budget. Switching schools preserves all investments and does not duplicate that budget. Nodes can be refunded from inactive schools, subject to the existing connected-route rule. Their bonuses stop immediately and their refunded points are **reserved to that school until it becomes active again**. Active-school refunds become available immediately. Warn before the first accepted inactive-school refund per Web visit, including refund-all; cancelling must preserve the node and must not suppress the next warning. Loadout application cannot bypass learning restrictions or silently erase inactive knowledge.
+
+Preserve legacy mixed-school saves, stable node IDs, connections, mastery exclusions and existing techniques. New conditional enhancements require discovering the underlying mutation before investment. The initial Fire implementation covers Cinder Needle speed, Meteor Heart damage, Detonation radius and Scorched Earth duration. Their numerical values are tunable implementation values, not approved final balance. Future requirement types must support each school's native mechanics rather than forcing every signature into a Fireball projectile model.
+
 ### 3.2 Typed, bounded spell grammar — LOCKED
 
 A blueprint is catalogue-backed **data**, never executable user-provided scripts:

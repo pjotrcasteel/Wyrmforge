@@ -5,6 +5,7 @@ using Wyrmforge.Domain.Progression.DragonEssences;
 using Wyrmforge.Domain.Progression.Laboratory;
 using Wyrmforge.Domain.Progression.Loadouts;
 using Wyrmforge.Domain.Spells;
+using Wyrmforge.Domain.Progression.PassiveTree;
 
 namespace Wyrmforge.Presentation.Web.Pages;
 
@@ -33,6 +34,7 @@ public partial class Home
     // A free respec: the Web and sockets are rebuilt from the loadout, then saved like any manual change.
     private async Task<HuntLoadoutApplyResult?> ApplyLoadoutAsync(int index)
     {
+        selection.SetKnownFireballMutations(fireballCore.Discovered);
         if (loadouts.Apply(index, selection, laboratory, CanSelectOffering) is not { } result) return null;
         await SaveArcaneBuildAsync();
         await TrySetLaboratoryAsync();
@@ -56,6 +58,7 @@ public partial class Home
         var definition = DivineArchetypeCatalog.Get(school);
         if (definition.ExistingSignature is not { } signature) return;
         characterSchool = school;
+        selection.SetActiveSchool(ArcaneSchoolCatalog.For(school));
         await SetPreferredPrimaryAsync(signature);
         await SaveCharacterSchoolAsync();
     }
@@ -94,7 +97,10 @@ public partial class Home
                 if (characterSchool is not null) await SaveCharacterSchoolAsync();
             }
             if (characterSchool is { } school)
+            {
+                selection.SetActiveSchool(ArcaneSchoolCatalog.For(school));
                 await SetPreferredPrimaryAsync(DivineArchetypeCatalog.Get(school).ExistingSignature!.Value);
+            }
             var stored = await JavaScript.InvokeAsync<string?>("localStorage.getItem", CancellationToken.None, LoadoutsKey);
             if (string.IsNullOrWhiteSpace(stored)) return;
             loadouts.Restore(JsonSerializer.Deserialize<HuntLoadoutSave>(stored));

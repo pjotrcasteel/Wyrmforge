@@ -16,7 +16,9 @@ public sealed partial class RunSimulation
         // Detonation alone grants an explosion, not a free persistent hazard at Rank I.
         // Keep existing Rank II+ Fireball behavior, while Scorched Earth enables ground fire at Rank I.
         if (projectile.Rank < 2 && !HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)) return;
-        burningGrounds.Add(new BurningGroundState(position, projectile.Damage * BurningGroundDamageFraction));
+        var duration = HasFireballMutation(Wyrmforge.Domain.Progression.Signature.FireballMutationId.ScorchedEarth)
+            ? fireballWebModifiers.Apply(Wyrmforge.Domain.Combat.Modifiers.BuildStatId.MutationDuration, 1) : 1;
+        burningGrounds.Add(new BurningGroundState(position, projectile.Damage * BurningGroundDamageFraction, duration));
     }
 
     private void UpdateBurningGrounds(double delta)
