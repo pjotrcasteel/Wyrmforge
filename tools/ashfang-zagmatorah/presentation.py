@@ -21,6 +21,7 @@ for name,offset,power,size,color in [('Softbox',(-6,-8,10),6500,7,(.84,.89,1)),(
     data=bpy.data.lights.new(name,'AREA');data.energy=power;data.shape='DISK';data.size=size;data.color=color;obj=bpy.data.objects.new(name,data);scene.collection.objects.link(obj);obj.location=target+Vector(offset);aim(obj,target)
 bpy.ops.mesh.primitive_plane_add(size=200,location=(0,0,.08));floor=bpy.context.object;floor.name='Presentation floor, not creature geometry';mat=bpy.data.materials.new('Neutral dark floor');mat.diffuse_color=(.018,.017,.016,1);mat.use_nodes=True;mat.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.018,.017,.016,1);mat.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value=.85;floor.data.materials.append(mat)
 cam=bpy.data.objects.new('Hero presentation camera',bpy.data.cameras.new('Hero presentation camera'));scene.collection.objects.link(cam);cam.location=(-13,-16,7);cam.data.lens=48;aim(cam,target);scene.camera=cam
+head=bpy.data.objects.new('Cranial detail camera',bpy.data.cameras.new('Cranial detail camera'));scene.collection.objects.link(head);head.location=(-9,-7,5.2);head.data.lens=65;aim(head,Vector((-3.7,0,3.2)))
 floor.is_shadow_catcher=True;scene.render.film_transparent=True;scene.use_nodes=True
 nodes=scene.node_tree.nodes;nodes.clear();layers=nodes.new('CompositorNodeRLayers');over=nodes.new('CompositorNodeAlphaOver');over.inputs[1].default_value=(.023,.026,.032,1);composite=nodes.new('CompositorNodeComposite')
 scene.node_tree.links.new(layers.outputs['Image'],over.inputs[2]);scene.node_tree.links.new(over.outputs[0],composite.inputs[0])
@@ -30,4 +31,5 @@ for im in bpy.data.images:
         absolute=bpy.path.abspath(im.filepath);im.filepath=bpy.path.relpath(absolute,start=str(out))
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-presentation.blend'),compress=True,relative_remap=False)
 scene.render.filepath=str(out/'hero.png');bpy.ops.render.render(write_still=True)
+scene.camera=head;scene.render.filepath=str(out/'head.png');bpy.ops.render.render(write_still=True)
 (out/'presentation.json').write_text(json.dumps({'source':str(source),'camera':'Perspective 48mm static hero presentation; not gameplay camera','renderer':'Cycles OptiX','samples':80,'completed':True,'ownerAccepted':False,'missingDependencies':missing},indent=2))
