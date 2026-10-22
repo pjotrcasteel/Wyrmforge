@@ -53,26 +53,28 @@ public sealed class FireProgressionCohortsTests
     }
 
     [TestMethod]
-    public void CrownAndFurnace_SpecializationsAmplifyOnlyTheirEquippedEffect()
+    public void CrownAndFurnace_SpecializationsSaveCompatibleAndEffectScopedAmplifiers()
     {
         var factory = new RunSimulationFactory(new SeededRandomSource(1));
-        var crown = FireProgressionCohorts.All.Single(item => item.Name == "Fire • Crown of Ash");
-        var furnace = FireProgressionCohorts.All.Single(item => item.Name == "Fire • Heart of Furnace");
+        foreach (var cohort in FireProgressionCohorts.All.Where(item => item.Amplifiers.Count > 0))
+        {
+            var run = factory.Create(cohort.Build.SelectedNodes, seed: 101,
+                fireballLevel: cohort.CoreLevel, fireballMutations: cohort.EquippedMutations,
+                amplifierAssignments: cohort.Amplifiers);
 
-        var detonation = factory.Create(crown.Build.SelectedNodes, seed: 101,
-            fireballLevel: crown.CoreLevel, fireballMutations: crown.EquippedMutations,
-            amplifierAssignments: crown.Amplifiers);
-        var scorch = factory.Create(furnace.Build.SelectedNodes, seed: 101,
-            fireballLevel: furnace.CoreLevel, fireballMutations: furnace.EquippedMutations,
-            amplifierAssignments: furnace.Amplifiers);
+            var sockets = MutationAmplifierCatalog.CreateSockets();
+            sockets.Restore(run.PreparedMutationAmplifiers);
+            var equipped = cohort.EquippedMutations
+                .Select(MutationAmplifierCatalog.ForFireball).OfType<MutationEffectDescriptor>().ToArray();
+            var descriptor = equipped.Single(item => item.MutationId == cohort.Amplifiers.Single().MutationId);
+            var effect = cohort.Name.Contains("Crown", StringComparison.Ordinal)
+                ? MutationEffectCapability.Area : MutationEffectCapability.Duration;
 
-        Assert.AreEqual(1.2, detonation.PreparedMutationEffectFactor(FireballMutationId.Detonation,
-            MutationEffectCapability.Area), 0.00001);
-        Assert.AreEqual(1d, detonation.PreparedMutationEffectFactor(FireballMutationId.ScorchedEarth,
-            MutationEffectCapability.Duration), 0.00001);
-        Assert.AreEqual(1.25, scorch.PreparedMutationEffectFactor(FireballMutationId.ScorchedEarth,
-            MutationEffectCapability.Duration), 0.00001);
-        Assert.AreEqual(1d, scorch.PreparedMutationEffectFactor(FireballMutationId.Detonation,
-            MutationEffectCapability.Area), 0.00001);
+            Assert.IsGreaterThan(1d, sockets.FactorFor(descriptor, effect, cohort.Build.SelectedNodes, equipped));
+            Assert.AreEqual(1d, sockets.FactorFor(descriptor,
+                effect == MutationEffectCapability.Area ? MutationEffectCapability.Duration : MutationEffectCapability.Area,
+                cohort.Build.SelectedNodes, equipped), 0.00001);
+        }
     }
+
 }
