@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- REVIEWED VISUAL PAVING ONLY; not a navigable mask and not a collider.
+       This small centre-plaza polygon was traced on the canonical
+       1672x941 night-active.webp. It avoids the well base, wooden noticeboard,
+       garden edges, signs, posts and raised foreground planters.
+       It is deliberately a conservative subset of the much larger BLUE
+       proposed south-plaza region. Authorize walking in a SEPARATE tested
+       change after erosion, connected-region and 3-NPC trajectory checks. -->
+  <path fill="#fff" d="M 752 616 L 898 611 L 916 650
+      L 889 683 L 755 688 L 736 657 Z"/>
+</svg>
