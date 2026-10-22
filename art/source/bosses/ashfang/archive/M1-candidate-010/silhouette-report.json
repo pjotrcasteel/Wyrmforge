@@ -1,0 +1,20 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\M1-candidate-008\\ashfang-master-working.blend",
+  "sourceSha256": "f5fffcfdea961b93b93661fe33af32ac979760469930f570771b3f81c095080f",
+  "sha256": "ac95bef3dcb037e05a2233a10d1c925004dfb4e44c3f50ef9028c334f44f9cdc",
+  "changes": [
+    "Independent tail shortening to 65 percent beyond pelvis",
+    "Broader cranium and torso",
+    "Wider articulated wing span",
+    "Chest radial mass",
+    "Reversible proximal foreleg shoulder correction",
+    "Static wing and jaw carriage"
+  ],
+  "originalSourcePreserved": true,
+  "ownerAccepted": false,
+  "limits": [
+    "Nonlinear rest-space mapping requires deformation review",
+    "Proximal overlapping skin is not final welded topology",
+    "No animation or final visual acceptance"
+  ]
+}
