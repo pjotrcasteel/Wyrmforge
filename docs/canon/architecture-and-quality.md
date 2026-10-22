@@ -114,6 +114,20 @@ Versioned Region/World state + Hunter Knowledge
 
 The current presentation uses Blazor WebAssembly and a canvas-based JavaScript renderer. A WebView-based mobile shell could preserve that investment, but this is **only a candidate**, not a decision to ship a wrapper. Test hardware before committing: a native rendering layer might become necessary for consistently satisfying control and frame-time targets. Keep Build Evolution, Great Hunt, Ascendants and Elder Wyrms independent of that UI decision.
 
+### Material Lab is a preview, not the mobile engine — reaffirmed 22 October 2026
+
+**iOS and Android are the production targets.** GitHub Pages, Blazor and JavaScript Canvas currently enable fast visual iteration, but are **not** the target game architecture by default. Do not optimize the project into an increasingly browser-dependent game.
+
+For every accepted ground/material change:
+
+- Treat the six approved source paintings, stable material identifiers, seeds, recipe parameters, variation masks and blending rules as **portable content**. Preserve the original assets and record their provenance.
+- Material generation and physical terrain ownership belong in deterministic, platform-neutral **C# Domain/Application** models and recipes when moved into the actual game; renderers consume the same approved recipe/snapshot, not their own independent world or random biome system.
+- The present `arena-materials.js` atlas baking, DOM controls, Canvas 2D mask effects and GitHub Pages URLs are **lab-only presentation mechanisms**. Do not make gameplay terrain authoritative in JavaScript or require these browser APIs in future iOS/Android builds.
+- A future native render adapter may implement visually equivalent blending using GPU texture atlases/masks/shaders, or a validated mobile shell may use existing graphics: choose only after profiling **real iOS and Android installs**. An iPhone screenshot of mobile Safari is visual feedback, not proof of native compatibility, battery efficiency or stable frame pacing.
+- Validate actual mobile constraints: low-/mid-range device CPU/GPU, draw calls, overdraw, texture decompression/memory budget, launch and resume, touch responsiveness, framerate, battery/thermal behavior and offline asset packaging. Do not introduce a second gameplay authority to solve a rendering problem.
+
+Until that adapter decision, keep the current browser lab replaceable: test appearance there, preserve portable input assets/recipes, and leave integration into production scenes behind explicit visual and native-device acceptance gates.
+
 ### Data continuity
 
 Playtest evidence now uses a versioned JSON schema and explicit export/sharing. Future analytics intake and native diagnostics should reuse its **meaningful events**, not browser-specific global functions. An iOS/Android release must have its own privacy choices and report-sharing affordances, and should never require a GitHub account.
