@@ -63,6 +63,8 @@ public sealed class ArcaneTouchCompatibilityTests : BrowserTest
         var artifacts = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.GetTempPath();
         Directory.CreateDirectory(artifacts);
         await page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, $"arcane-touch-{width}.png"), FullPage = true });
+        await page.GetByRole(AriaRole.Button, new() { Name = "Show whole Arcane Web" }).ClickAsync();
+        await page.ScreenshotAsync(new() { Path = Path.Combine(artifacts, $"arcane-overview-{width}.png"), FullPage = true });
         await page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Reset character", Exact = true }).ClickAsync();
