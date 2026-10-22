@@ -6,9 +6,9 @@
 <main class="arena-lab">
     <header>
         <div class="heading">
-            <span>WYRMFORGE / ARENA REBUILD / PHASE 1</span>
-            <h1>Arena Ground Foundation</h1>
-            <p>A clean start: approved ground materials and natural blending only. No old trees, camps, props, stone roads, monsters, sprites or hidden collision.</p>
+            <span>WYRMFORGE / ARENA REBUILD / PHASE 2</span>
+            <h1>Natural Terrain & Forest Trails</h1>
+            <p>Step 2: a connected forest trail and natural clearings, painted only with the approved ground materials. No legacy assets, cobblestones, enemies or collision.</p>
         </div>
     </header>
 
@@ -21,12 +21,15 @@
     </section>
 
     <section class="arena-tools" aria-label="Ground preview modes">
-        <span>STEP 1 · GROUND ONLY</span>
-        <button type="button" class="@(natural ? "selected" : "secondary")"
-                aria-pressed="@(natural ? "true" : "false")"
+        <span>STEP 2 · GROUND ONLY</span>
+        <button type="button" class="@(mode == "trails" ? "selected" : "secondary")"
+                aria-pressed="@(mode == "trails" ? "true" : "false")"
+                @onclick="ShowTrails">Forest trails</button>
+        <button type="button" class="@(mode == "natural" ? "selected" : "secondary")"
+                aria-pressed="@(mode == "natural" ? "true" : "false")"
                 @onclick="ShowNatural">Natural ground</button>
-        <button type="button" class="@(!natural ? "selected" : "secondary")"
-                aria-pressed="@(!natural ? "true" : "false")"
+        <button type="button" class="@(mode == "grass" ? "selected" : "secondary")"
+                aria-pressed="@(mode == "grass" ? "true" : "false")"
                 @onclick="ShowGrass">All grass</button>
         <button type="button" class="secondary" @onclick="CopyLink">Copy seed link</button>
     </section>
@@ -34,15 +37,17 @@
     <div class="arena-layout">
         <section class="arena-stage">
             <canvas @ref="canvas" aria-label="Ground foundation without scenery" tabindex="0"></canvas>
-            <div class="arena-tip">Drag to pan the bare ground · no obstacles</div>
-            <div class="arena-readout">Seed @seed · @(natural ? "Natural ground" : "All grass")</div>
-            <div class="arena-badge">FOUNDATION ONLY · NO OLD ASSETS</div>
+            <div class="arena-tip">Drag to pan · only natural ground materials</div>
+            <div class="arena-readout">Seed @seed · @(mode == "trails" ? "Forest trails" : mode == "natural" ? "Natural ground" : "All grass")</div>
+            <div class="arena-badge">TERRAIN ONLY · NO OLD ASSETS</div>
         </section>
         <aside class="arena-inspector">
-            <h2>Ground foundation</h2>
+            <h2>Step 2 — Terrain</h2>
             <dl>
                 <dt>Approved artwork</dt><dd>Six base materials</dd>
                 <dt>Visible scene</dt><dd>Ground only</dd>
+                <dt>Forest trail</dt><dd>@(mode == "trails" ? "Connected" : "Hidden")</dd>
+                <dt>Clearings</dt><dd>@(mode == "trails" ? "2, linked to trail" : "Hidden")</dd>
                 <dt>Old trees and structures</dt><dd>0</dd>
                 <dt>Roads and cobblestones</dt><dd>0</dd>
                 <dt>Enemies and characters</dt><dd>0</dd>
@@ -50,7 +55,7 @@
                 <dt>World</dt><dd>960 × 1536</dd>
             </dl>
             <h3>Rebuild order</h3>
-            <p><strong>Step 1:</strong> approve the natural ground foundation and transitions. Only then construct trails, vegetation and props as fresh independent layers.</p>
+            <p><strong>Step 1:</strong> the approved ground, unchanged in Natural ground mode. <strong>Step 2:</strong> one winding dirt trail, two connected clearings and wet borders. Inspect continuity and blending before adding any new objects.</p>
             <p>This browser page is a visual development laboratory. The eventual game targets iOS and Android; the approved textures and material rules must remain portable.</p>
         </aside>
     </div>
@@ -65,7 +70,7 @@
     private ElementReference canvas;
     private IJSObjectReference? module;
     private int seed = 1204;
-    private bool natural = true;
+    private string mode = "trails";
 
     protected override void OnParametersSet()
     {
@@ -78,19 +83,25 @@
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>(
-            "import", "./js/arena-ground-foundation.js?v=20261022-ground-reset-1");
-        await module.InvokeVoidAsync("initializeGroundFoundation", canvas, seed, natural);
+            "import", "./js/arena-ground-foundation.js?v=20261022-forest-trails-1");
+        await module.InvokeVoidAsync("initializeGroundFoundation", canvas, seed, mode);
+    }
+
+    private async Task ShowTrails()
+    {
+        mode = "trails";
+        await SyncGround();
     }
 
     private async Task ShowNatural()
     {
-        natural = true;
+        mode = "natural";
         await SyncGround();
     }
 
     private async Task ShowGrass()
     {
-        natural = false;
+        mode = "grass";
         await SyncGround();
     }
 
@@ -109,7 +120,7 @@
 
     private Task SyncGround() => module is null
         ? Task.CompletedTask
-        : module.InvokeVoidAsync("configureGroundFoundation", canvas, seed, natural).AsTask();
+        : module.InvokeVoidAsync("configureGroundFoundation", canvas, seed, mode).AsTask();
 
     private void UpdateLink() =>
         Navigation.NavigateTo(Navigation.GetUriWithQueryParameters(
