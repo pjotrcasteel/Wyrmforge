@@ -1,0 +1,200 @@
+/* One Nexus, three working instruments. Materials follow the approved Fireball
+   chamber and Refuge's stone, timber, brass and painted Divine emblems.
+   Scoped to the Nexus: elemental colour describes magic, never generic chrome. */
+.menu-nexus {
+    --nexus-gold: #d4a467;
+    --nexus-edge: #8b5d43;
+    --nexus-line: #60463b;
+    --nexus-bone: #f0dbc2;
+    --nexus-muted: #baaa9c;
+    --nexus-panel: linear-gradient(180deg, #21191c, #110e16);
+    --nexus-bevel: inset 0 0 0 2px #21141c, inset 0 0 0 4px #624439, 0 3px 0 #100b10;
+    --menu-ink: var(--nexus-bone);
+    --menu-muted: var(--nexus-muted);
+    --menu-line: var(--nexus-line);
+    --menu-gold: var(--nexus-gold);
+    background: linear-gradient(180deg, #17131a, #0c0b11 75%);
+}
+.menu-nexus .menu-header { border-bottom-color: #514039; background: #151219; }
+.menu-nexus .menu-header h1 { color: var(--nexus-bone); }
+.menu-nexus .menu-back { border: 1px solid var(--nexus-line); border-radius: 2px; background: #171219; color: var(--nexus-bone); }
+.menu-nexus .nexus-facets { width: min(100%, 960px); }
+.menu-nexus .nexus-facets button { box-shadow: inset 0 0 0 2px #100c11, inset 0 3px #ffffff04; }
+.menu-nexus .nexus-facets button.active { box-shadow: inset 0 0 0 2px #261820, inset 0 -3px var(--nexus-gold); }
+.menu-nexus .spellcraft,
+.menu-nexus .build-view { color: var(--nexus-bone); --gold: var(--nexus-gold); --ink: var(--nexus-bone); --muted: var(--nexus-muted); --line: var(--nexus-line); }
+.menu-nexus .spellcraft { gap: 7px; }
+.menu-nexus .build-view { gap: 7px; }
+
+/* Inset metal frames, like the Fireball chamber and its contextual panel. */
+.menu-nexus .spellcraft-stage,
+.menu-nexus .spellcraft-reading,
+.menu-nexus .spellcraft-dock,
+.menu-nexus .atlas-stage,
+.menu-nexus .node-inspector,
+.menu-nexus .nexus-equipped {
+    border: 3px solid var(--nexus-edge);
+    border-radius: 0;
+    background: var(--nexus-panel);
+    box-shadow: var(--nexus-bevel);
+}
+.menu-nexus .spellcraft-stage {
+    isolation: isolate;
+    overflow: hidden;
+    padding: 13px 6px 12px;
+    background: linear-gradient(180deg, #0c0a10a6, #100c15b8 40%, #100c15f0),
+        url('../art/spellcraft-study.jpg') center top / cover no-repeat, #171219;
+}
+.menu-nexus .spellcraft-stage::after,
+.menu-nexus .atlas-stage::after {
+    position: absolute;
+    z-index: 15;
+    inset: 7px;
+    content: '';
+    border: 1px solid #925b3b70;
+    box-shadow: 0 0 0 1px #100b12;
+    pointer-events: none;
+}
+.menu-nexus .spellcraft-study { display: none; }
+.menu-nexus .resonance-title { grid-row: 1; z-index: 1; gap: 4px; margin: 0; }
+.menu-nexus .resonance-title h2 { color: var(--nexus-bone); font: 600 clamp(1.65rem, 6.4vw, 2.2rem)/1.1 Georgia, serif; text-shadow: 1px 2px #080507; }
+.menu-nexus .resonance-pair { color: #ceb9ab; }
+.menu-nexus .resonance-stage { border-color: #695044; border-radius: 1px; background: #110d14; color: #c9b5a6; letter-spacing: .08em; }
+.menu-nexus .ritual { grid-row: 2; width: min(100%, 400px); margin: 18px 0 16px; }
+.menu-nexus .ritual-core small { color: #d2bda7; letter-spacing: .06em; }
+.menu-nexus .seat-caption { padding: 3px 8px; border: 1px solid #78573e; background: #100b11ed; color: #e7cbae; }
+.menu-nexus .seat i { border-color: #966e49; border-radius: 2px; background: #171219; color: #e3c5a4; }
+.menu-nexus .seat-swap { border: 2px solid #8b6545; box-shadow: inset 0 0 0 2px #302028; background: #171219; }
+.menu-nexus .spellcraft-reading { padding: 14px 12px; }
+.menu-nexus .resonance-text { color: #d5c1b2; font: .88rem/1.5 Georgia, serif; }
+.menu-nexus .resonance-shards li { border-radius: 1px; color: #b6a69d; border-color: #69534a; background: #151017; }
+.menu-nexus .resonance-shards li i { color: #b5a08d; }
+.menu-nexus .resonance-shards li.known { color: var(--nexus-bone); border-color: #a57849; }
+.menu-nexus .resonance-sides,
+.menu-nexus .research-log,
+.menu-nexus .resonance-pips span,
+.menu-nexus .resonance-result { border-color: var(--nexus-line); background: #120e16; }
+.menu-nexus .resonance-sides summary,
+.menu-nexus .research-log summary { color: #c9b7a9; letter-spacing: .02em; }
+.menu-nexus .spellcraft-grimoire { padding: 3px 0 6px; }
+.menu-nexus .grimoire-page { border: 1px solid #655044; border-radius: 1px; background: #181219; color: var(--nexus-muted); box-shadow: inset 0 0 0 2px #100c11; }
+.menu-nexus .grimoire-page.current,
+.menu-nexus .grimoire-page.known { border-color: #b68651; background: #2b1e22; color: var(--nexus-bone); box-shadow: inset 0 -2px var(--nexus-gold); }
+.menu-nexus .grimoire-page .pip { border-radius: 0; transform: rotate(45deg) scale(.8); }
+.menu-nexus .spellcraft-dock { position: static; margin: 0; padding: 12px; gap: 12px; backdrop-filter: none; }
+.menu-nexus .spellcraft-tray { gap: 4px; padding-bottom: 8px; border-bottom: 1px solid #544037; }
+.menu-nexus .element-token { color: #d1bca9; min-height: 72px; }
+.menu-nexus .element-token i {
+    width: 52px;
+    height: 52px;
+    border: 2px solid #896448;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #34252b, #100d15 72%);
+    box-shadow: inset 0 0 0 2px #171019, inset 0 0 0 4px #584039, 0 0 0 2px #100c12;
+}
+.menu-nexus .element-token i::after {
+    inset: 3px;
+    background: url('../art/divine-lineage-sigils.webp') 0 0 / 300% 200% no-repeat;
+    image-rendering: pixelated;
+    opacity: 1;
+    -webkit-mask: radial-gradient(ellipse 48% 44% at 50% 40%, #000 60%, transparent 98%);
+    mask: radial-gradient(ellipse 48% 44% at 50% 40%, #000 60%, transparent 98%);
+}
+.menu-nexus .element-token.el-frost i::after { background-position: 50% 0; }
+.menu-nexus .element-token.el-storm i::after { background-position: 100% 0; }
+.menu-nexus .element-token.el-arcane i::after { background-position: 0 100%; }
+.menu-nexus .element-token.seated { color: var(--nexus-bone); }
+.menu-nexus .element-token.seated i { border-color: var(--el); box-shadow: inset 0 0 0 2px #171019, inset 0 0 0 4px #584039, 0 0 7px #0008; transform: none; }
+.menu-nexus .rite-primary,
+.menu-nexus .rite-test,
+.menu-nexus .rite-secondary { border-radius: 0; box-shadow: inset 0 0 0 2px #21151b, inset 0 3px #f3c48222, 0 2px #08070d; }
+.menu-nexus .rite-primary { border: 2px solid #b58b57; background: linear-gradient(180deg, #57402b, #30212a); letter-spacing: .04em; }
+.menu-nexus .rite-primary.quiet { background: #1b151c; }
+.menu-nexus .rite-primary.bind { background: linear-gradient(180deg, #684526, #33202a); }
+.menu-nexus .rite-test,
+.menu-nexus .rite-secondary { border-color: #8b6545; background: #171219; color: var(--nexus-bone); }
+.menu-nexus .material-line { color: #e0c8ad; }
+.menu-nexus .action-hint { color: var(--nexus-muted); line-height: 1.4; }
+.menu-nexus .consent-sheet { border-color: #b88651; border-radius: 0; background: var(--nexus-panel); box-shadow: var(--nexus-bevel); }
+
+/* Arcane Web: a physical brass instrument, with readable, genuinely distinct states. */
+.menu-nexus .build-heading { padding: 5px 0; gap: 10px; border: 0; border-radius: 0; background: none; }
+.menu-nexus .build-points { min-width: 0; border: 1px solid #785a45; border-radius: 0; padding: 6px 9px; background: #171219; }
+.menu-nexus .build-points strong { color: var(--nexus-bone); font-family: Georgia, serif; }
+.menu-nexus .build-points span,
+.menu-nexus .loadout-strip > summary { color: var(--nexus-muted); }
+.menu-nexus .loadout-slot,
+.menu-nexus .loadout-panel,
+.menu-nexus .loadout-panel button { border-color: #73513e; border-radius: 0; background: #1d151c; color: var(--nexus-bone); }
+.menu-nexus .nexus-equipped { padding: 12px 13px 5px; }
+.menu-nexus .nexus-equipped-head span { color: #d4ad7e; font: 600 .75rem/1.3 Georgia, serif; letter-spacing: .04em; }
+.menu-nexus .nexus-equipped-head strong { color: var(--nexus-muted); }
+.menu-nexus .nexus-equipped-head button { border: 1px solid #ac7f50; border-radius: 0; background: linear-gradient(180deg, #44302a, #21171e); color: var(--nexus-bone); box-shadow: inset 0 0 0 2px #21141c; }
+.menu-nexus .nexus-rack-details { border-color: #60463b; }
+.menu-nexus .nexus-rack-details > summary { color: #d2b89a; font-family: Georgia, serif; }
+.menu-nexus .nexus-equipped .nexus-rack-socket { border-color: #745441; border-radius: 0; background: #171219; }
+.menu-nexus .nexus-equipped .nexus-rack-socket i { color: #cf9d64; }
+.menu-nexus .nexus-equipped .nexus-rack-socket small { color: var(--nexus-muted); }
+.menu-nexus .atlas-stage { background: #151017; }
+.menu-nexus .arcane-web-viewport {
+    background: linear-gradient(180deg, #0e0c13d9, #131018ed 35%, #100d15f2),
+        url('../art/spellcraft-study.jpg') center / cover no-repeat, #151017;
+}
+.menu-nexus .arcane-web-viewport::before { opacity: .35; }
+.menu-nexus .atlas-toolbar { align-items: center; top: 13px; left: 13px; right: 13px; gap: 4px; }
+.menu-nexus .atlas-action { width: 44px; height: 44px; border: 2px solid #8c6547; border-radius: 1px; background: #171219f5; color: #e0c3a0; box-shadow: inset 0 0 0 2px #302028, 0 2px #08070d; backdrop-filter: none; }
+.menu-nexus .atlas-action:hover { border-color: #d4a467; color: #f0dbc2; }
+.menu-nexus .build-actions { gap: 4px; }
+.menu-nexus .build-legend { border-color: #695044; border-radius: 0; background: #141017ed; padding: 5px; gap: 5px; backdrop-filter: none; }
+.menu-nexus .legend-dot { border-color: #aa8b70; background: #29202a; }
+.menu-nexus .legend-dot.mastery { border-color: #d4a467; background: #4b302a; }
+.menu-nexus .atlas-caption { border-radius: 0; color: #c7a981; background: #100c13ce; }
+.menu-nexus .atlas-caption span { color: #c7a981; }
+.menu-nexus .atlas-contours { opacity: .3; }
+.menu-nexus .atlas-center-sigil,
+.menu-nexus .atlas-center-sigil::before,
+.menu-nexus .atlas-center-sigil::after,
+.menu-nexus .atlas-center-sigil i { border-color: #c6955530; }
+.menu-nexus .web-edge { stroke: #86756670; }
+.menu-nexus .web-edge.available { stroke: #c59c6dba; filter: none; }
+.menu-nexus .web-edge.active { stroke: #e2b776; filter: drop-shadow(0 0 2px #bd814733); }
+.menu-nexus .web-node {
+    --node-accent: #d4a467;
+    border-color: #8a7161;
+    background: radial-gradient(circle at 50% 35%, #33282c, #141017 75%);
+    color: #d4c0ad;
+    box-shadow: inset 0 0 0 2px #120d15, inset 0 0 0 3px #58433b, 0 2px #060509;
+}
+.menu-nexus .web-node.school-fire { --node-accent: #e99560; }
+.menu-nexus .web-node.school-frost { --node-accent: #8bc5dd; }
+.menu-nexus .web-node.school-storm { --node-accent: #d7c265; }
+.menu-nexus .web-node.school-arcane { --node-accent: #ad8acb; }
+.menu-nexus .web-node.locked { opacity: .52; }
+.menu-nexus .web-node.available { border-color: #c8a578; color: #f0d5b6; background: #21191f; box-shadow: inset 0 0 0 2px #17101a, inset 0 0 0 3px #725441, 0 2px #060509; }
+.menu-nexus .web-node.selected { border-color: var(--node-accent); color: #f4dfc8; background: #382725; box-shadow: inset 0 0 0 2px #17101a, inset 0 0 0 3px #9a704c, 0 0 6px #cf935633; }
+.menu-nexus .web-node.kind-origin { border: 3px double #c5a075; background: radial-gradient(circle at 50% 35%, #44302d, #171019 75%); box-shadow: inset 0 0 0 5px #171019, inset 0 0 0 6px #79583d, 0 0 0 4px #0e0b12; color: var(--nexus-bone); }
+.menu-nexus .web-node.kind-origin::after { border-color: #a8814d60; }
+.menu-nexus .web-node.kind-notable { border-radius: 3px; }
+.menu-nexus .web-node.kind-mastery { border-radius: 3px; border-color: #9f7b54; }
+.menu-nexus .node-label b { color: #dac1a6; }
+.menu-nexus .node-inspector { color: var(--nexus-bone); }
+.menu-nexus .web-layout .node-inspector { border-color: #8b5d43; border-radius: 0; background: var(--nexus-panel); box-shadow: var(--nexus-bevel); }
+.menu-nexus .node-inspector h2 { color: var(--nexus-bone); font-family: Georgia, serif; }
+.menu-nexus .inspector-close,
+.menu-nexus .nexus-secondary,
+.menu-nexus .nexus-primary { border-color: #a0784d; border-radius: 0; background: #241a20; color: var(--nexus-bone); }
+.menu-nexus .nexus-primary { background: linear-gradient(180deg, #57402b, #30212a); }
+.menu-nexus :is(button, summary):focus-visible { outline: 2px solid #f0ce98; outline-offset: -3px; }
+
+@media (min-width: 900px) {
+    .menu-nexus .spellcraft { width: min(520px, 100%); }
+}
+@media (max-width: 760px) {
+    .menu-nexus .nexus-equipped-head { flex-wrap: wrap; gap: 7px; }
+    .menu-nexus .nexus-equipped-head > div { flex: 1 1 130px; }
+    .menu-nexus .nexus-equipped-head button { min-height: 44px; }
+    .menu-nexus .build-legend b { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .menu-nexus *, .menu-nexus *::before, .menu-nexus *::after { animation: none; transition: none; }
+}
