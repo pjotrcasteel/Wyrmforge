@@ -1,5 +1,10 @@
 # Wyrmforge
 
+## Prototype 0.0.180 — Hunt upgrades follow the new Main Spell design
+
+Hunts no longer offer the outdated **Fireball II/III** spell-rank upgrade cards, new primary spell cards or Rank-III evolutions. Permanent Fireball levels and researched mutations belong to the **Arcane Nexus**. Within a hunt, each normal level offers minor refinements and every fifth level offers temporary, build-defining major runes or attunement. Fateweave rerolls cannot restore obsolete choices. [Acceptance contract](docs/playtesting/2026-10-22-hunt-upgrade-cards.md).
+
+
 ## Prototype 0.0.175 — Pyromancer combat coherence
 
 - All three systems work together: Fireball core leveling grows permanent base damage (+8% per level) and opens mutation slots; Research unlocks compatible mutations; Arcane Web adds stat bonuses and socketable mutation amplification.

@@ -231,8 +231,8 @@ public sealed partial class RunSimulation
         ApplyChoiceEffects(choice);
         RefreshBuildHud();
 
-        // Rank III no longer grants a free immediate evolution.
-        // The player earns a separate evolution choice at a later five-level breakthrough.
+        // Hunt rewards only grant temporary refinements, runes or school attunement.
+        // Permanent spell ranks and researched mutations remain in the Arcane Nexus.
         pendingChoices = [];
         CloseFateweaveRound();
         if (mapState.EncounterActive || dragonEncounterStarted) ReleaseUpgradePower();
