@@ -50,11 +50,19 @@ public sealed class PyromancerVisualAcceptanceTests : PageTest
         await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(2);
         await Expect(Page.Locator(".web-node[data-tier='major'][data-node-id='" + majorId + "']")).ToHaveCountAsync(1);
         await Page.GetByRole(AriaRole.Button, new() { Name = "Inspect Pyromancer sector" }).ClickAsync();
+
+        // Focusing the actual major first centers that landmark in the world-space map.
+        // Close its inspector for a clean image before capturing the separate socket state.
+        var node = Page.Locator($".web-node[data-node-id='{majorId}']");
+        await node.EvaluateAsync("el => el.click()");
+        await Expect(Page.Locator(".node-inspector.open")).ToBeVisibleAsync();
+        await Page.Locator(".node-inspector.open .inspector-close").ClickAsync();
+        await stage.ScrollIntoViewIfNeededAsync();
         await CaptureAsync($"pyromancer-major-map-{majorId}-{width}.png");
 
-        // Programmatic node inspection avoids pretending the whole 3200px map is visible.
-        // Actual gestures and minimum hit-target sizes are tested by the general mobile suite.
-        await Page.Locator($".web-node[data-node-id='{majorId}']").EvaluateAsync("el => el.click()");
+        // Existing gesture tests cover touch pan/zoom. This test examines a focused major
+        // and proves the real persisted socket works without requiring a 3200px-wide screen.
+        await node.EvaluateAsync("el => el.click()");
         var inspector = Page.Locator(".node-inspector.open");
         await Expect(inspector).ToBeVisibleAsync();
         await Expect(inspector.Locator("h2")).ToHaveTextAsync(landmark);
