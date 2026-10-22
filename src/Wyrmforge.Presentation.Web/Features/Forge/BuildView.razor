@@ -1,8 +1,6 @@
 @using System.Globalization
 @using Microsoft.JSInterop
-@using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.Loadouts
-@using Wyrmforge.Application.Nexus
 @using Wyrmforge.Domain.Progression.Signature
 @inject IJSRuntime JavaScript
 
@@ -11,125 +9,41 @@
         <div class="build-points"><strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span></div>
         <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
     </header>
-
-    <div class="school-learning-status" aria-label="School learning status">
-        <span>Learning <strong>@ArcaneSchoolCatalog.Get(ActiveSchool).Name</strong> · North</span>
-        @if (Selection.ReservedPoints > 0)
-        {
-            <details class="reserved-points"><summary>@Selection.ReservedPoints reserved</summary>
-                @foreach (var reservation in Selection.Reserved)
-                {
-                    <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value</span>
-                }
-            </details>
-        }
-    </div>
-    <nav class="school-wheel-navigation" aria-label="Inspect school sectors">
-        @foreach (var school in ArcaneSchoolCatalog.All)
-        {
-            <button class="school-sector-shortcut @(school.Id == ActiveSchool ? "current" : string.Empty)" @onclick="() => FocusSchoolAsync(school.Id)"
-                    aria-label="@($"Inspect {school.Name}{(school.Id == ActiveSchool ? ", active school" : string.Empty)}")">
-                <i class="wheel-school-icon school-icon-@school.Icon" aria-hidden="true"></i><span>@school.Name</span>
-            </button>
-        }
-    </nav>
-    @if (Loadouts is not null)
+    @if (Selection.ReservedPoints > 0)
     {
-        <details class="loadout-strip" aria-label="Saved hunt loadouts"><summary>Saved builds <span aria-hidden="true">⌄</span></summary>
-            <div class="loadout-slots">
-                <span class="loadout-kicker">LOADOUTS</span>
-                @for (var index = 0; index < HuntLoadoutBook.SlotCount; index++)
-                {
-                    var slot = index;
-                    var loadout = Loadouts[slot];
-                    <button class="loadout-slot @(loadout is null ? "empty" : "filled") @(openLoadout == slot ? "open" : string.Empty)"
-                        aria-expanded="@((openLoadout == slot).ToString().ToLowerInvariant())"
-                        aria-label="@(loadout is null ? $"{HuntLoadoutBook.DefaultName(slot)}, empty" : $"{loadout.Name}, {LoadoutSummary(loadout)}")"
-                        @onclick="() => ToggleLoadout(slot)">@(loadout is null ? "+" : RomanFor(slot))</button>
-                }
-            </div>
-            @if (openLoadout is { } open)
+        <details class="reserved-points"><summary>@Selection.ReservedPoints reserved</summary>
+            @foreach (var reservation in Selection.Reserved)
             {
-                var loadout = Loadouts[open];
-                <div class="loadout-panel">
-                    @if (loadout is null)
-                    {
-                        <span><strong>@HuntLoadoutBook.DefaultName(open)</strong><small>Save this Web path and your equipped mutations.</small></span>
-                        <button class="primary" @onclick="() => SaveLoadoutAsync(open)">SAVE</button>
-                    }
-                    else
-                    {
-                        <span><strong>@loadout.Name</strong><small>@LoadoutSummary(loadout)</small></span>
-                        <button class="primary" aria-label="@($"Apply {loadout.Name}, free respec")" @onclick="() => ApplyLoadoutAsync(open)">APPLY</button>
-                        <button aria-label="@($"Overwrite {loadout.Name} with the current setup")" @onclick="() => ConfirmOrRun(LoadoutAction.Overwrite, () => SaveLoadoutAsync(open))">@(pendingAction == LoadoutAction.Overwrite ? "CONFIRM" : "OVERWRITE")</button>
-                        <button aria-label="@($"Clear {loadout.Name}")" @onclick="() => ConfirmOrRun(LoadoutAction.Clear, () => ClearLoadoutAsync(open))">@(pendingAction == LoadoutAction.Clear ? "CONFIRM" : "CLEAR")</button>
-                    }
-                </div>
-            }
-            @if (loadoutMessage is not null)
-            {
-                <p class="loadout-message" role="status">@loadoutMessage</p>
+                <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
             }
         </details>
-
-    }
-
-    @if (Laboratory is not null)
-    {
-        <section class="nexus-equipped" aria-label="Crafted spells and mutation sockets">
-            <div class="nexus-equipped-head">
-                <div><span>CRAFTED SPELL SOCKETS</span>
-                    <strong>@(Laboratory.EquippedMutations.Count) / @LaboratoryCatalog.MaxEquippedMutations equipped</strong></div>
-                <button @onclick="() => OnOpenSpellcraft.InvokeAsync(null)">CRAFT / EQUIP <span aria-hidden="true">›</span></button>
-            </div>
-            <details class="nexus-rack-details">
-                <summary>View spell sockets <span aria-hidden="true">⌄</span></summary>
-            <div class="nexus-socket-rack" aria-label="Places for crafted spells">
-                @foreach (var rackSocket in LaboratoryCatalog.Sockets)
-                {
-                    var unlocked = LaboratoryState.SocketUnlocked(rackSocket.Id, Selection.Selected);
-                    var occupied = Laboratory.Slotted.TryGetValue(rackSocket.Id, out var mutationId);
-                    <button class="nexus-rack-socket @(unlocked ? "unlocked" : "locked") @(occupied ? "occupied" : string.Empty)"
-                        aria-label="@($"{rackSocket.NodeName}: {(occupied ? LaboratoryCatalog.Get(mutationId).Name : unlocked ? "Empty socket" : "Locked")}. Show on the Web.")"
-                        @onclick="() => FocusNodeAsync(rackSocket.NodeId)">
-                        <i aria-hidden="true">@(occupied ? "◆" : unlocked ? "◇" : "◈")</i>
-                        <span><b>@rackSocket.NodeName</b><small>@(occupied ? LaboratoryCatalog.Get(mutationId).Name : unlocked ? "Empty" : "Locked")</small></span>
-                    </button>
-                }
-            </div>
-            </details>
-        </section>
     }
 
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
             <div class="atlas-toolbar">
-                <div class="build-legend" aria-label="Arcane Web legend">
-                    <span title="Minor bonus"><i class="legend-dot travel"></i><b>Minor</b></span>
-                    <span title="Notable"><i class="legend-dot notable"></i><b>Notable</b></span>
-                    <span title="Mastery"><i class="legend-dot mastery"></i><b>Mastery</b></span>
-                    <span title="Keystone"><i class="legend-dot keystone"></i><b>Keystone</b></span>
-                </div>
+                <span class="web-current-school">@ArcaneSchoolCatalog.Get(ActiveSchool).Name</span>
                 <div class="build-actions">
                     <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
-                    <button class="atlas-action center-action" aria-label="Center Arcane Web" title="Center Web" @onclick="ResetViewAsync">◎</button>
+                    <button class="atlas-action center-action" aria-label="Center current school" title="Center current school" @onclick="ResetViewAsync">◎</button>
                     <button class="atlas-action" aria-label="Zoom in" title="Zoom in" @onclick="() => ZoomAsync(0.15)">+</button>
-                    <button class="atlas-action respec-action" aria-label="Refund all learned Arcane points" title="Refund all" @onclick="Reset">↺</button>
+                    <button class="atlas-action" aria-label="Show whole Arcane Web" title="Whole Web" @onclick="ShowOverviewAsync">⤢</button>
                 </div>
             </div>
 
-            <div class="atlas-caption"><span>THE WYRMHEART</span></div>
 
-            <div class="arcane-web-viewport" data-wheel="six-schools" @ref="viewport">
+            <div class="arcane-web-viewport" data-wheel="six-schools" data-world-size="@ArcaneWheelLayout.Size"
+                 data-start-x="@Coordinate(ArcaneWheelLayout.Center)" data-start-y="@Coordinate(ArcaneWheelLayout.Center - 400)"
+                 role="region" aria-label="Arcane specialization map" tabindex="0" @ref="viewport">
                 <div class="web-pan-space">
                     <div class="arcane-web-canvas">
-                        <svg class="school-wheel-rings" viewBox="0 0 1200 1200" aria-hidden="true">
-                            <circle cx="600" cy="600" r="440" /><circle cx="600" cy="600" r="425" />
-                            <circle cx="600" cy="600" r="300" /><circle cx="600" cy="600" r="160" />
+                        <svg class="school-wheel-rings" viewBox="0 0 3200 3200" aria-hidden="true">
+                            <circle cx="1600" cy="1600" r="1220" /><circle cx="1600" cy="1600" r="1200" />
+                            <circle cx="1600" cy="1600" r="740" /><circle cx="1600" cy="1600" r="300" />
                             @foreach (var school in ArcaneSchoolCatalog.All)
                             {
-                                var point = ArcaneWheelLayout.Anchor(school.Id, ActiveSchool, 440);
-                                <line x1="600" y1="600" x2="@Coordinate(point.X)" y2="@Coordinate(point.Y)" />
+                                var point = ArcaneWheelLayout.Anchor(school.Id, ActiveSchool, 1220);
+                                <line x1="1600" y1="1600" x2="@Coordinate(point.X)" y2="@Coordinate(point.Y)" />
                             }
                         </svg>
                         @foreach (var school in ArcaneSchoolCatalog.All)
@@ -143,7 +57,7 @@
                             </button>
                         }
 
-                        <svg class="web-connections" viewBox="0 0 1200 1200" aria-hidden="true">
+                        <svg class="web-connections" viewBox="0 0 3200 3200" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
                                 var from = ArcaneWheelLayout.Position(PassiveTreeCatalog.Get(connection.From), ActiveSchool);
@@ -154,12 +68,8 @@
 
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
-                            <button class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
+                            <button data-node-id="@node.Id" class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
                                 aria-label="@NodeAriaLabel(node)" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
-                                @if (MarkFor(node.Id) is { } mark)
-                                {
-                                    <span class="nexus-mark stage-@StageClass(mark)" aria-hidden="true">@StageGlyph(mark)</span>
-                                }
                                 @if (node.Kind == PassiveNodeKind.Travel)
                                 {
                                     var bonuses = ArcaneNodePresentation.MinorBonuses(node);
@@ -212,74 +122,6 @@
                 <p class="school-learning-lock">@(ArcaneSchoolCatalog.Owner(FocusedNode) != ActiveSchool
                     ? $"Switch to {SchoolLabel(FocusedNode)} to invest here. Learned bonuses still apply when relevant."
                     : "Discover this mutation before specializing it.")</p>
-            }
-
-            @if (FocusedNexus is { Socket: { } socket } nexus)
-            {
-                <section class="nexus-bench" aria-label="@($"Research at {FocusedNode.Name}")">
-                    @foreach (var research in nexus.Research)
-                    {
-                        var mutation = research.Mutation;
-                        <header class="nexus-bench-head">
-                            <span>RESEARCH</span>
-                            <strong>@mutation.Name</strong>
-                            <b class="nexus-stage stage-@StageClass(research.Stage)"><i aria-hidden="true">@StageGlyph(research.Stage)</i>@StageLabel(research.Stage)</b>
-                        </header>
-                        <p class="nexus-enables"><span>@mutation.Summary</span></p>
-
-                        @if (research.Material is { } material)
-                        {
-                            <div class="nexus-material @(material.Met ? "met" : "missing")">
-                                <i aria-hidden="true">@(material.Met ? "✓" : "✗")</i>
-                                <span>
-                                    <b>@material.Material.Name <em>@material.Owned/@material.Needed</em></b>
-                                    <small>@MaterialHelp(material)</small>
-                                </span>
-                            </div>
-                        }
-
-                        <details class="nexus-details"><summary>Recipe details</summary>
-                            <p>@mutation.TradeOff</p>
-                            <p>@research.ConditionsKnown/@research.ConditionsNeeded conditions · @Spellcraft.SeatsOf(mutation).Foundation + @Spellcraft.SeatsOf(mutation).Infusion</p>
-                        </details>
-
-                        <div class="nexus-action">
-                            <p class="nexus-next-action-copy">@research.Next.Text</p>
-                            @switch (research.Next.Kind)
-                            {
-                                case NexusActionKind.Equip:
-                                    var check = Laboratory!.CheckEquip(mutation.Id, mutation.Socket, Selection.Selected);
-                                    <button class="nexus-primary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(mutation.Id, mutation.Socket)">@(check == MutationEquipResult.Equipped ? $"EQUIP IN {socket.Definition.Name.ToUpperInvariant()}" : EquipBlocked(check))</button>
-                                    break;
-                                case NexusActionKind.None:
-                                    <button class="nexus-secondary" @onclick="() => EquipAsync(mutation.Id, null)">UNEQUIP</button>
-                                    break;
-                                case NexusActionKind.AllocateNode:
-                                    break;
-                                default:
-                                    <button class="nexus-primary" @onclick="() => OnOpenSpellcraft.InvokeAsync(mutation.Id)">OPEN THE CIRCLE · SPELLCRAFT</button>
-                                    break;
-                            }
-                        </div>
-                    }
-
-                    <div class="nexus-socket @(socket.Unlocked ? "open" : "closed")">
-                        <i aria-hidden="true">@(socket.Unlocked ? "◆" : "◇")</i>
-                        <span>
-                            <b>@socket.Definition.Name</b>
-                            <small>@SocketHelp(socket)</small>
-                        </span>
-                        @foreach (var other in socket.Equippable.Where(id => id != socket.Holder && nexus.Research.All(research => research.Mutation.Id != id)))
-                        {
-                            var check = Laboratory!.CheckEquip(other, socket.Definition.Id, Selection.Selected);
-                            <button class="nexus-secondary" disabled="@(check != MutationEquipResult.Equipped)" @onclick="() => EquipAsync(other, socket.Definition.Id)">EQUIP @LaboratoryCatalog.Get(other).Name.ToUpperInvariant()</button>
-                        }
-                        @if (socket.Holder is { } holder && nexus.Research.All(research => research.Mutation.Id != holder))
-                        {
-                            <button class="nexus-secondary" @onclick="() => EquipAsync(holder, null)">UNEQUIP @LaboratoryCatalog.Get(holder).Name.ToUpperInvariant()</button>
-                        }
-                    </div>
-                </section>
             }
 
             @if (FocusedNode.Kind != PassiveNodeKind.Origin)
@@ -358,6 +200,48 @@
             }
         </aside>
     </div>
+    @if (Loadouts is not null)
+    {
+        <details class="loadout-strip" aria-label="Saved hunt loadouts"><summary>Saved builds <span aria-hidden="true">⌄</span></summary>
+            <div class="loadout-slots">
+                <span class="loadout-kicker">LOADOUTS</span>
+                <button class="web-refund-all" aria-label="Refund all learned Arcane points" @onclick="Reset">Refund all points</button>
+                @for (var index = 0; index < HuntLoadoutBook.SlotCount; index++)
+                {
+                    var slot = index;
+                    var loadout = Loadouts[slot];
+                    <button class="loadout-slot @(loadout is null ? "empty" : "filled") @(openLoadout == slot ? "open" : string.Empty)"
+                        aria-expanded="@((openLoadout == slot).ToString().ToLowerInvariant())"
+                        aria-label="@(loadout is null ? $"{HuntLoadoutBook.DefaultName(slot)}, empty" : $"{loadout.Name}, {LoadoutSummary(loadout)}")"
+                        @onclick="() => ToggleLoadout(slot)">@(loadout is null ? "+" : RomanFor(slot))</button>
+                }
+            </div>
+            @if (openLoadout is { } open)
+            {
+                var loadout = Loadouts[open];
+                <div class="loadout-panel">
+                    @if (loadout is null)
+                    {
+                        <span><strong>@HuntLoadoutBook.DefaultName(open)</strong><small>Save this Web path and your equipped mutations.</small></span>
+                        <button class="primary" @onclick="() => SaveLoadoutAsync(open)">SAVE</button>
+                    }
+                    else
+                    {
+                        <span><strong>@loadout.Name</strong><small>@LoadoutSummary(loadout)</small></span>
+                        <button class="primary" aria-label="@($"Apply {loadout.Name}, free respec")" @onclick="() => ApplyLoadoutAsync(open)">APPLY</button>
+                        <button aria-label="@($"Overwrite {loadout.Name} with the current setup")" @onclick="() => ConfirmOrRun(LoadoutAction.Overwrite, () => SaveLoadoutAsync(open))">@(pendingAction == LoadoutAction.Overwrite ? "CONFIRM" : "OVERWRITE")</button>
+                        <button aria-label="@($"Clear {loadout.Name}")" @onclick="() => ConfirmOrRun(LoadoutAction.Clear, () => ClearLoadoutAsync(open))">@(pendingAction == LoadoutAction.Clear ? "CONFIRM" : "CLEAR")</button>
+                    }
+                </div>
+            }
+            @if (loadoutMessage is not null)
+            {
+                <p class="loadout-message" role="status">@loadoutMessage</p>
+            }
+        </details>
+
+    }
+
 </section>
 
 @if (pendingRefundId is not null || pendingReset)
@@ -368,3 +252,4 @@
         <div><button @onclick="CancelRefund">Cancel</button><button class="confirm-refund" @onclick="ConfirmRefundAsync">Refund points</button></div>
     </dialog>
 }
+

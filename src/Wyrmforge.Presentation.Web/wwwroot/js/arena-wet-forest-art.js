@@ -1,5 +1,6 @@
 // Wet Forest floor painter: semantic, seeded 12px material tiles, not smoothed overlay blobs.
 import { wetForestTreeFireState } from './arena-wet-forest-vegetation.js';
+import { drawApprovedWetForestBase } from './arena-approved-ground-preview.js';
 // The C# recipe owns roads, human sites and shallow ground patches. No tile creates a collider.
 const CELL = 12;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -407,14 +408,15 @@ function groundSite(ctx, site, x, y, seed) {
     ctx.restore();
 }
 
-export function drawWetForestGround(ctx, plan) {
+export function drawWetForestGround(ctx, plan, approvedAtlas = null) {
     const recipe = plan?.wetForest;
     if (!recipe) return;
     const width = plan.width, height = plan.height, seed = plan.seed | 0;
     const tiles = createWetForestTilePlan(recipe, seed, width, height);
     ctx.save();
     ctx.globalAlpha = 1;
-    for (const tile of tiles) {
+    const painted = approvedAtlas && drawApprovedWetForestBase(ctx, tiles, approvedAtlas, seed, width, height);
+    if (!painted) for (const tile of tiles) {
         const { x, y, material, variation } = tile;
         const colors = MATERIALS[material] || MATERIALS.loam;
         rect(ctx, x, y, Math.min(CELL, width - x), Math.min(CELL, height - y), colors[variation]);

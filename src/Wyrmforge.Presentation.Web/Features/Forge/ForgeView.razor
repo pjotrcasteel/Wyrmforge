@@ -150,7 +150,7 @@
                 else if (SpellcraftOpen)
                 {
                     <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
-                        Laboratory="Laboratory" Vault="Vault" FocusNodeId="@nexusFocus" OnOpenSpellcraft="OpenSpellcraftFor" Equip="EquipMutation" />
+                        FocusNodeId="@nexusFocus" />
                 }
                 else
                 {
@@ -406,3 +406,4 @@
     private sealed record NavigationItem(ShellSection Section, string Icon, string Label);
     private sealed record TownLockNotice(string Location, string Message);
 }
+
