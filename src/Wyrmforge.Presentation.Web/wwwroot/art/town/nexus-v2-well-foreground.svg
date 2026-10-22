@@ -1,20 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
-  <!-- V2 well foreground: tightly bounded architectural silhouette cut
-       from the approved night-active panorama. White supplies alpha only.
-       Separate roof, supports and masonry: NEVER composite surrounding paving.
-       This mask is enabled only for actors whose feet are BEHIND the structure.
-       The old V1 broad polygon occluder is explicitly NOT used. -->
-  <!-- Pitched tiled roof, including the eaves (not the paved ground behind it). -->
-  <path fill="#fff" d="M 797 446 L 811 426 L 834 401 L 849 386
-    L 863 395 L 887 409 L 915 427 L 939 444 L 949 454
-    L 944 465 L 924 475 L 900 461 L 875 445
-    L 851 433 L 832 438 L 809 462 L 797 457 Z"/>
-  <!-- Roof support pillars only, narrow cropped masks without brick paving. -->
-  <path fill="#fff" d="M 808 448 L 825 452 L 827 518 L 808 516 Z"/>
-  <path fill="#fff" d="M 911 455 L 928 462 L 933 518 L 913 524 Z"/>
-  <!-- Circular well lip: front-facing stone, NOT a rectangle over the square. -->
-  <path fill="#fff" d="M 769 506 Q 791 495 825 496 Q 875 492 919 503
-    L 935 516 L 941 538 L 932 553 L 918 560
-    Q 839 568 763 559 L 723 550 L 715 538
-    L 733 518 L 756 510 Z"/>
+  <!-- Phase 5 V2 well foreground, screenshot-traced from the approved
+       1672x941 night-active artwork. NO paving and NO broad V1 occluder.
+       Separate alpha islands: exact roof, timber posts, stone lip.
+       Every part is physically painted well structure only. -->
+  <path fill="#fff" d="M 824 438 L 833 424 L 838 411 L 843 404
+    L 847 402 L 857 410 L 868 411 L 879 414 L 896 419
+    L 912 427 L 923 432 L 926 441 L 920 445 L 907 454
+    L 899 454 L 888 453 L 874 446 L 860 443 L 848 440 L 838 440 Z"/>
+  <path fill="#fff" d="M 836 440 L 845 444 L 847 499 L 836 498 Z"/>
+  <path fill="#fff" d="M 882 452 L 890 454 L 893 501 L 883 501 Z"/>
+  <!-- Rear stone lip and front ring are separate from cobblestones. -->
+  <path fill="#fff" d="M 828 507 Q 851 494 879 495
+    Q 901 499 905 514 L 896 522 L 889 525
+    Q 855 533 834 525 L 827 518 Z"/>
+  <path fill="#fff" d="M 769 528 Q 808 523 848 528
+    L 870 527 L 877 536 L 867 557 L 853 561
+    L 787 561 L 775 553 Z"/>
 </svg>
