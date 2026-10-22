@@ -26,7 +26,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Mount registers the scene before its asynchronous masks and route are
         // ready. Await the qualifying snapshot, not an async polling Promise.
         var first = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             const deadline = performance.now() + 15000;
             while (performance.now() < deadline) {
                 const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
@@ -67,7 +67,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         Assert.IsGreaterThan(20, first.GetProperty("routeLength").GetInt32());
         await Page.WaitForTimeoutAsync(1200);
         var second = await Page.EvaluateAsync<JsonElement>(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             return module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
         Assert.IsTrue(second.GetProperty("safe").GetBoolean(), "V2 walker must remain inside the foot-safe mask.");
@@ -77,7 +77,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // The walking NPC must reach actual stair treads WITHOUT a stone PNG
         // being incorrectly copied over its body as shrub foreground.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.position.x >= 495 && d.position.x <= 550 && d.safe &&
                 d.stairTreadsWalkable && d.stairMasonryBlocked && !d.stairAreaOccluded;
@@ -85,7 +85,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // Real one-NPC traversal from the approved stairs into the new plaza
         // must reach its far endpoint without crossing stonework or teleporting.
         await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
             return d?.plazaVisits >= 1 && d.wellFrontVisits >= 1 && d.safe &&
                 d.wellFrontEndpointWalkable && d.wellRimExcluded &&
@@ -113,7 +113,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         // WaitForFunction MUST be synchronous: an async callback returns a
         // truthy Promise before its false diagnostic result is resolved.
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             window.__readTownV2Rear = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -163,7 +163,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             window.__readRightPostPose = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -234,7 +234,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             window.__readWellPose = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -305,7 +305,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             window.__readTownV2Crowd = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
@@ -373,7 +373,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await EnterTownIfNeededAsync();
         await Expect(Page.Locator("[data-town-v2-canvas]")).ToBeVisibleAsync();
         await Page.EvaluateAsync(@"async () => {
-            const module = await import('./js/town-v2-nexus.js?v=0.0.177');
+            const module = await import('./js/town-v2-nexus.js?v=0.0.178');
             window.__readTownV2Coverage = () =>
                 module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
         }");
