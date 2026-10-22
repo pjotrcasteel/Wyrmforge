@@ -6,6 +6,7 @@ using Wyrmforge.Application.Tests.TestDoubles;
 using Wyrmforge.Domain.Combat.Enemies;
 using Wyrmforge.Domain.Combat.Geometry;
 using Wyrmforge.Domain.Combat.Projectiles;
+using Wyrmforge.Domain.Progression.PassiveTree;
 using Wyrmforge.Domain.Progression.Signature;
 using Wyrmforge.Domain.Spells;
 
@@ -87,9 +88,55 @@ public sealed class MutationWebCombatTests
         Assert.AreEqual(plain.SplashRadius, learned.SplashRadius, .000001);
     }
 
-    private static BurningGroundState Ground(string[] nodes, FireballMutationId[] mutations)
+    [TestMethod]
+    public void CrownOfAsh_SocketedDetonation_EnlargesRealExplosionButNotBaseFireballDamage()
     {
-        var simulation = Create(nodes, mutations);
+        var nodes = new[] { "fire-spread-crown" };
+        var baseline = Fire(Create(nodes, [FireballMutationId.Detonation]));
+        var empowered = Fire(Create(nodes, [FireballMutationId.Detonation],
+            [new("fire-spread-crown", "FireBolt", "Detonation")]));
+
+        Assert.AreEqual(baseline.SplashRadius * 1.20, empowered.SplashRadius, .000001);
+        Assert.AreEqual(baseline.Damage, empowered.Damage, .000001);
+    }
+
+    [TestMethod]
+    public void FurnaceAltar_SocketedScorchedEarth_ExtendsActualBurningGround()
+    {
+        var nodes = new[] { "fire-ember-altar" };
+        var baseline = Ground(nodes, [FireballMutationId.ScorchedEarth]);
+        var empowered = Ground(nodes, [FireballMutationId.ScorchedEarth],
+            [new("fire-ember-altar", "FireBolt", "ScorchedEarth")]);
+
+        Assert.AreEqual(baseline.RemainingSeconds * 1.25, empowered.RemainingSeconds, .000001);
+        Assert.AreEqual(baseline.DamagePerTick, empowered.DamagePerTick, .000001);
+        Assert.AreEqual(baseline.EffectiveRadius, empowered.EffectiveRadius, .000001);
+    }
+
+    [TestMethod]
+    public void DetonationSocket_FireballAtMaximumRank_DoesNotAmplifyIndependentMasteryRadius()
+    {
+        ProjectileState AtMaximumRank(bool socketed)
+        {
+            var simulation = Create(["fire-spread-crown"], [FireballMutationId.Detonation],
+                socketed ? [new MutationAmplifierAssignment("fire-spread-crown", "FireBolt", "Detonation")] : []);
+            var build = Field<RunBuildState>(simulation, "build");
+            var max = SpellCatalog.Get(SpellId.FireBolt).MaxRank;
+            while (build.Spells[SpellId.FireBolt] < max)
+                build.Spells.LearnOrUpgrade(SpellId.FireBolt);
+            return Fire(simulation);
+        }
+
+        var baseline = AtMaximumRank(false);
+        var empowered = AtMaximumRank(true);
+        Assert.AreEqual(56d, baseline.SplashRadius, .000001);
+        Assert.AreEqual(56d, empowered.SplashRadius, .000001,
+            "A Detonation socket may not multiply Fireball mastery splash when mastery is larger.");
+    }
+
+    private static BurningGroundState Ground(string[] nodes, FireballMutationId[] mutations, MutationAmplifierAssignment[]? assignments = null)
+    {
+        var simulation = Create(nodes, mutations, assignments);
         var projectile = Fire(simulation);
         Invoke(simulation, "RegisterBurningGround", projectile, new Vector2D(80, 80));
         return Field<List<BurningGroundState>>(simulation, "burningGrounds").Single();
@@ -100,13 +147,14 @@ public sealed class MutationWebCombatTests
 
     private static ProjectileState Cast(string[] nodes, FireballMutationId[] mutations) => Fire(Create(nodes, mutations));
 
-    private static RunSimulation Create(string[] nodes, FireballMutationId[] mutations)
+    private static RunSimulation Create(string[] nodes, FireballMutationId[] mutations, MutationAmplifierAssignment[]? assignments = null)
     {
         var random = new FirstRandomSource();
         var simulation = new RunSimulation(nodes.ToHashSet(), new LevelChoiceService(random), random);
         Field<List<EnemyState>>(simulation, "enemies").Add(new EnemyState(1, new Vector2D(80, 80), 10, 1000, 0));
         Invoke(simulation, "RebuildCombatSpatialIndex");
         simulation.PrepareFireballMutations(mutations);
+        simulation.PrepareMutationAmplifiers(assignments ?? []);
         Assert.IsTrue(simulation.ChoosePrimary(SpellId.FireBolt));
         return simulation;
     }
