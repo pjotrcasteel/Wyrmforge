@@ -114,8 +114,8 @@ function irregularShape(ctx, x, y, rx, ry, rotation, seed) {
     ctx.restore();
 }
 
-export function drawTerritoryGround(ctx, plan) {
-    if (plan.wetForest) return drawWetForestGround(ctx, plan);
+export function drawTerritoryGround(ctx, plan, approvedAtlas = null) {
+    if (plan.wetForest) return drawWetForestGround(ctx, plan, approvedAtlas);
     const { width, height, biome, seed } = plan;
     const colors = groundPalette[biome];
     for (const [i, patch] of plan.patches.entries()) {
