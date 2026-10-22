@@ -152,3 +152,5 @@ Boolean modifier-order warnings are recorded in ignored author log and require
 visual inspection of skull/orbits before any art pass. No owner acceptance or
 M1 completion. Next: push current/pre-operation sources, inspect new clay views,
 correct visual defects and continue remaining M1 studies.
+
+Owner resumed with HEADLESS ONLY operating constraint. Do not control native desktop or browser UI. If a necessary stage cannot be completed headlessly, pause and explain capability gap. R04 review fails orbital anatomy and integrated facial planes. Continue primary form correction; no M2 approval.

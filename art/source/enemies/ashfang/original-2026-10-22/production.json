@@ -25,7 +25,7 @@
   },
   "milestones": {
     "M0": "source foundation verified for primary studies; optional paint/video tools deferred",
-    "M1": "r03 original primary study; technical validity passed, artistic gate not passed",
+    "M1": "r04 technically valid primary study; visual gate failed; headless corrections continuing",
     "M2": "blocked-on-owner-M1-acceptance",
     "M3": "not-started",
     "M4": "not-started",
@@ -35,7 +35,7 @@
     "M8": "not-started"
   },
   "technicalPass": true,
-  "agentVisualStatus": "r03 still generic at native size; primary neck, wing-root and skull silhouette need further sculptural refinement",
+  "agentVisualStatus": "R04 eye sockets over-excavated and face lacks brow/cheek integration; body still generic. No M1 acceptance.",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "assets": [
@@ -91,5 +91,6 @@
     }
   ],
   "nextTask": "Change the primary modeling approach to resolve card-specific skull/neck and grounded wing silhouette; do not repeat smooth contour studies or advance to M2",
-  "authoritativeWorkingProject": "working/ashfang-working-r03-key-corrected.blend"
+  "authoritativeWorkingProject": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04-repaired.blend",
+  "operatingMode": "Headless only until owner says otherwise; pause before any necessary desktop input"
 }

@@ -1,0 +1,1913 @@
+{
+  "revision": "M1-r04",
+  "operation": "review",
+  "source": "C:\\Wyrmforge\\ashfang-original-production\\art\\source\\enemies\\ashfang\\original-2026-10-22\\milestones\\M1-r04\\ashfang-primary-repaired.blend",
+  "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+  "blender": "4.5.14 LTS",
+  "ownerAccepted": false,
+  "sourceOpened": true,
+  "runtimeIntegrated": false,
+  "objects": [
+    {
+      "name": "Ashfang r04 integrated primary skin",
+      "type": "MESH",
+      "vertices": 46996,
+      "polygons": 46992,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Cervical shoulder transition process",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger L0",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger L1",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger L2",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger L3",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger R0",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger R1",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger R2",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Construction folded finger R3",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "History r03 skin with all editable keys",
+      "type": "MESH",
+      "vertices": 34590,
+      "polygons": 34588,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis",
+        "r02 primary sternum scapula neck planes",
+        "r03 wing-root and cervical primary mass"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Independent lower mandible",
+      "type": "MESH",
+      "vertices": 624,
+      "polygons": 602,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 1",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 2",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 3",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L cambered membrane panel 4",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Fore curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L Hind curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 0",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 1",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 2",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 3",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L lower tooth 4",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L original swept crown horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L original swept temple horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated web panel 1",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated web panel 2",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated web panel 3",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated web panel 4",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated wing finger 1",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated wing finger 2",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated wing finger 3",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 articulated wing finger 4",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 lower rooted tooth 0",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 lower rooted tooth 1",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 lower rooted tooth 2",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 lower rooted tooth 3",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 lower rooted tooth 4",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 lower rooted tooth 5",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 nasal aperture",
+      "type": "MESH",
+      "vertices": 482,
+      "polygons": 512,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 orbital excavation",
+      "type": "MESH",
+      "vertices": 482,
+      "polygons": 512,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 sheltered eye",
+      "type": "MESH",
+      "vertices": 208,
+      "polygons": 194,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 upper rooted tooth 0",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 upper rooted tooth 1",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 upper rooted tooth 2",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 upper rooted tooth 3",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 upper rooted tooth 4",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 upper rooted tooth 5",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 wing shoulder humerus forearm wrist",
+      "type": "MESH",
+      "vertices": 496,
+      "polygons": 482,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L r04 wrist thumb",
+      "type": "MESH",
+      "vertices": 208,
+      "polygons": 194,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L recessed eye placeholder",
+      "type": "MESH",
+      "vertices": 112,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L scapular bony landmark",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L temporal crest",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 0",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 1",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 2",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 3",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L upper tooth 4",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 1",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 2",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 3",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 4",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing digit 5",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "L wing thumb claw",
+      "type": "MESH",
+      "vertices": 154,
+      "polygons": 142,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Lumbar process",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Mouth floor and tongue study",
+      "type": "MESH",
+      "vertices": 220,
+      "polygons": 202,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Occipital midline process",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Original cranial primary planes - r03",
+      "type": "MESH",
+      "vertices": 18446,
+      "polygons": 18444,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - r02 cranial source",
+        "r03 nasofacial and orbital primary planes"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Pelvic crest transition",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 1",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 2",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 3",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R cambered membrane panel 4",
+      "type": "MESH",
+      "vertices": 481,
+      "polygons": 432,
+      "boundaryEdges": 96,
+      "nonManifoldEdges": 96,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Fore curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 1",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 2",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 3",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R Hind curved claw 4",
+      "type": "MESH",
+      "vertices": 108,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 0",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 1",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 2",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 3",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R lower tooth 4",
+      "type": "MESH",
+      "vertices": 30,
+      "polygons": 22,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R original swept crown horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R original swept temple horn",
+      "type": "MESH",
+      "vertices": 288,
+      "polygons": 272,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated web panel 1",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated web panel 2",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated web panel 3",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated web panel 4",
+      "type": "MESH",
+      "vertices": 629,
+      "polygons": 576,
+      "boundaryEdges": 104,
+      "nonManifoldEdges": 104,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended membrane",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated wing finger 1",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated wing finger 2",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated wing finger 3",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 articulated wing finger 4",
+      "type": "MESH",
+      "vertices": 304,
+      "polygons": 290,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing",
+        "Provisional relaxed digit carriage - articulated study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 lower rooted tooth 0",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 lower rooted tooth 1",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 lower rooted tooth 2",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 lower rooted tooth 3",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 lower rooted tooth 4",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 lower rooted tooth 5",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 nasal aperture",
+      "type": "MESH",
+      "vertices": 482,
+      "polygons": 512,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 orbital excavation",
+      "type": "MESH",
+      "vertices": 482,
+      "polygons": 512,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 sheltered eye",
+      "type": "MESH",
+      "vertices": 208,
+      "polygons": 194,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 upper rooted tooth 0",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 upper rooted tooth 1",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 upper rooted tooth 2",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 upper rooted tooth 3",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 upper rooted tooth 4",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 upper rooted tooth 5",
+      "type": "MESH",
+      "vertices": 156,
+      "polygons": 146,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 wing shoulder humerus forearm wrist",
+      "type": "MESH",
+      "vertices": 496,
+      "polygons": 482,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R r04 wrist thumb",
+      "type": "MESH",
+      "vertices": 208,
+      "polygons": 194,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R recessed eye placeholder",
+      "type": "MESH",
+      "vertices": 112,
+      "polygons": 98,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R scapular bony landmark",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R temporal crest",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 0",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 1",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 2",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 3",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R upper tooth 4",
+      "type": "MESH",
+      "vertices": 50,
+      "polygons": 42,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 1",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 2",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 3",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 4",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing digit 5",
+      "type": "MESH",
+      "vertices": 308,
+      "polygons": 296,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R wing thumb claw",
+      "type": "MESH",
+      "vertices": 154,
+      "polygons": 142,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - extended wing study",
+        "Provisional relaxed digit carriage - no rig"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R04 independent mandible",
+      "type": "MESH",
+      "vertices": 84,
+      "polygons": 74,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R04 mouth floor and tongue",
+      "type": "MESH",
+      "vertices": 260,
+      "polygons": 242,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [
+        "Basis - open jaw",
+        "M1 jaw closed study"
+      ],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "R04 original cranial planes",
+      "type": "MESH",
+      "vertices": 1195,
+      "polygons": 1087,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Thoracic process",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    },
+    {
+      "name": "Upper cervical process",
+      "type": "MESH",
+      "vertices": 32,
+      "polygons": 26,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0,
+      "finite": true,
+      "shapeKeys": [],
+      "shapeKeysFinite": true,
+      "armatureModifiers": []
+    }
+  ],
+  "missingDependencies": [],
+  "technicalPass": true,
+  "limits": "Mesh format checks do not establish anatomy, deformation or motion quality.",
+  "actions": [],
+  "rigs": [],
+  "render": {
+    "device": "RTX 5090 OptiX",
+    "resolution": 1024,
+    "samples": 32,
+    "views": [
+      {
+        "label": "front",
+        "azimuthDegrees": 0,
+        "elevationDegrees": 0,
+        "elapsedSeconds": 3.438389500021003
+      },
+      {
+        "label": "side",
+        "azimuthDegrees": 90,
+        "elevationDegrees": 0,
+        "elapsedSeconds": 2.449478100053966
+      },
+      {
+        "label": "rear",
+        "azimuthDegrees": 180,
+        "elevationDegrees": 0,
+        "elapsedSeconds": 2.375712800072506
+      },
+      {
+        "label": "top",
+        "azimuthDegrees": 0,
+        "elevationDegrees": 90,
+        "elapsedSeconds": 2.406756400014274
+      },
+      {
+        "label": "three-quarter-left",
+        "azimuthDegrees": -45,
+        "elevationDegrees": 25,
+        "elapsedSeconds": 2.394073799951002
+      },
+      {
+        "label": "three-quarter-right",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 25,
+        "elapsedSeconds": 2.3761194000253454
+      },
+      {
+        "label": "game-elevated",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 34,
+        "elapsedSeconds": 2.3089574999175966
+      },
+      {
+        "label": "game-extended",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 34,
+        "elapsedSeconds": 2.406428199959919
+      },
+      {
+        "label": "game-jaw-closed",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 34,
+        "elapsedSeconds": 2.3458792000310495
+      },
+      {
+        "label": "skull-side",
+        "azimuthDegrees": 90,
+        "elevationDegrees": 8,
+        "elapsedSeconds": 2.4476483000908047
+      },
+      {
+        "label": "skull-three-quarter",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 12,
+        "elapsedSeconds": 2.5035454999888316
+      },
+      {
+        "label": "skull-jaw-closed",
+        "azimuthDegrees": 45,
+        "elevationDegrees": 12,
+        "elapsedSeconds": 2.4926169000100344
+      }
+    ]
+  },
+  "reviewSnapshot": {
+    "path": "C:\\Wyrmforge\\ashfang-original-production\\art\\source\\enemies\\ashfang\\original-2026-10-22\\reviews\\M1-r04\\ashfang-review-scene.blend",
+    "sha256": "9daade0646bceedf24444f49d77afa5f738b8a4e43a0daa82e16446e5885dc5c"
+  }
+}
