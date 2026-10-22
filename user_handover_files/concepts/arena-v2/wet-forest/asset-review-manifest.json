@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "scope": "ARENA_REBUILD_V2_STEP_3",
+  "biome": "WetForest",
+  "phase": "CONCEPT_REVIEW_ONLY",
+  "runtimeIntegration": false,
+  "previousArenaAssetsForbidden": true,
+  "ground": "Step-1 accepted six ground paintings only; Step-2 trails are separate and not imported",
+  "camera": "2.5D top-down three-quarter camera; matched across individual sprites",
+  "lighting": "neutral upper-left diffuse; no heavy baked shadows",
+  "render": "alpha RGBA with no opaque background, scenery tiles, or baked ground",
+  "targetPlatforms": [
+    "iOS",
+    "Android"
+  ],
+  "assetPipeline": "candidate concepts -> individually approved artwork -> lossless alpha QA -> mobile atlas/profile -> separately approved runtime integration",
+  "sourceArtState": "Reference boards and isolated studies available in the ChatGPT design review, NOT production sprites or committed binaries",
+  "assets": [
+    {
+      "slot": 1,
+      "id": "wet-forest-living-oak-01",
+      "name": "Ancient living oak",
+      "role": "canopy",
+      "silhouette": "asymmetric broad canopy with twisted crown and massive aged bark; no cute fantasy shapes",
+      "layers": [
+        "trunk",
+        "canopy-front"
+      ],
+      "pivot": {
+        "x": 0.5,
+        "y": 0.91
+      },
+      "footprint": "trunk base only",
+      "review": "Distinctive aged woodland identity; clear playable ground underneath",
+      "approved": false,
+      "reviewState": "pending",
+      "imagePath": null,
+      "requiredDeliverables": [
+        "separate transparent RGBA sprite",
+        "unclipped complete subject with consistent three-quarter projection",
+        "documented feet/pivot",
+        "game-scale preview on approved ground without altering its pixels"
+      ]
+    },
+    {
+      "slot": 2,
+      "id": "wet-forest-dead-elm-01",
+      "name": "Split dead elm",
+      "role": "deadwood",
+      "silhouette": "irregular cracked split trunk and skeletal branches; unmistakably Gothic and natural",
+      "layers": [
+        "trunk"
+      ],
+      "pivot": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "footprint": "trunk base only",
+      "review": "Open branchwork, no tentacles or alien forms",
+      "approved": false,
+      "reviewState": "pending",
+      "imagePath": null,
+      "requiredDeliverables": [
+        "separate transparent RGBA sprite",
+        "unclipped complete subject with consistent three-quarter projection",
+        "documented feet/pivot",
+        "game-scale preview on approved ground without altering its pixels"
+      ]
+    },
+    {
+      "slot": 3,
+      "id": "wet-forest-thorn-shrub-01",
+      "name": "Tangled understory shrub",
+      "role": "understory",
+      "silhouette": "dense thorny wet foliage with broken silhouette and small dark leaf clusters",
+      "layers": [
+        "foliage"
+      ],
+      "pivot": {
+        "x": 0.5,
+        "y": 0.93
+      },
+      "footprint": "none (visual candidate)",
+      "review": "Distinct silhouette at mobile scale; does not obscure path readability",
+      "approved": false,
+      "reviewState": "pending",
+      "imagePath": null,
+      "requiredDeliverables": [
+        "separate transparent RGBA sprite",
+        "unclipped complete subject with consistent three-quarter projection",
+        "documented feet/pivot",
+        "game-scale preview on approved ground without altering its pixels"
+      ]
+    },
+    {
+      "slot": 4,
+      "id": "wet-forest-root-cluster-01",
+      "name": "Exposed roots",
+      "role": "ground-anchored-prop",
+      "silhouette": "intertwined old roots with visible gaps and moist moss, without rectangular dirt base",
+      "layers": [
+        "roots"
+      ],
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "footprint": "none (visual candidate)",
+      "review": "Transparent gaps show approved ground unchanged; no soil texture painted into sprite",
+      "approved": false,
+      "reviewState": "pending",
+      "imagePath": null,
+      "requiredDeliverables": [
+        "separate transparent RGBA sprite",
+        "unclipped complete subject with consistent three-quarter projection",
+        "documented feet/pivot",
+        "game-scale preview on approved ground without altering its pixels"
+      ]
+    },
+    {
+      "slot": 5,
+      "id": "wet-forest-moss-boulder-01",
+      "name": "Wet moss-covered boulder",
+      "role": "rock",
+      "silhouette": "asymmetric grey-black stone, layered erosion and restrained moss",
+      "layers": [
+        "stone"
+      ],
+      "pivot": {
+        "x": 0.5,
+        "y": 0.89
+      },
+      "footprint": "stone body only",
+      "review": "Rock mass reads from 2.5D camera; no baked-on ground halo",
+      "approved": false,
+      "reviewState": "pending",
+      "imagePath": null,
+      "requiredDeliverables": [
+        "separate transparent RGBA sprite",
+        "unclipped complete subject with consistent three-quarter projection",
+        "documented feet/pivot",
+        "game-scale preview on approved ground without altering its pixels"
+      ]
+    },
+    {
+      "slot": 6,
+      "id": "wet-forest-fallen-trunk-01",
+      "name": "Fallen rotwood trunk",
+      "role": "deadwood-ground",
+      "silhouette": "long broken mossy log with splintered ends and slight diagonal orientation",
+      "layers": [
+        "log"
+      ],
+      "pivot": {
+        "x": 0.49,
+        "y": 0.87
+      },
+      "footprint": "log body only",
+      "review": "Coherent scale and perspective; organic edges, never a straight tile segment",
+      "approved": false,
+      "reviewState": "pending",
+      "imagePath": null,
+      "requiredDeliverables": [
+        "separate transparent RGBA sprite",
+        "unclipped complete subject with consistent three-quarter projection",
+        "documented feet/pivot",
+        "game-scale preview on approved ground without altering its pixels"
+      ]
+    }
+  ]
+}
