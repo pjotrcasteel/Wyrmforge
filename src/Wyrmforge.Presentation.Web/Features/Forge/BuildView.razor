@@ -5,32 +5,33 @@
 @inject IJSRuntime JavaScript
 
 <section class="build-view school-wheel-view">
-    <header class="build-heading">
-        <div class="build-points"><strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span></div>
-        <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
-    </header>
-    @if (Selection.ReservedPoints > 0)
-    {
-        <details class="reserved-points"><summary>@Selection.ReservedPoints reserved</summary>
-            @foreach (var reservation in Selection.Reserved)
-            {
-                <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
-            }
-        </details>
-    }
-
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
-            <div class="atlas-toolbar">
-                <span class="web-current-school">@ArcaneSchoolCatalog.Get(ActiveSchool).Name</span>
-                <div class="build-actions">
-                    <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
-                    <button class="atlas-action center-action" aria-label="Center current school" title="Center current school" @onclick="ResetViewAsync">◎</button>
-                    <button class="atlas-action" aria-label="Zoom in" title="Zoom in" @onclick="() => ZoomAsync(0.15)">+</button>
-                    <button class="atlas-action" aria-label="Show whole Arcane Web" title="Whole Web" @onclick="ShowOverviewAsync">⤢</button>
-                </div>
-            </div>
+            @* Keep progression visible without spending a full row above the map. The counter opens Hunter XP. *@
+            <button type="button" class="build-points web-points-hud"
+                    aria-label="@($"{PointsLeft} Arcane points available out of {Selection.PointBudget}. Earn more through Hunter XP.")"
+                    title="Earn Arcane points · Hunter XP" @onclick="() => OnQuests.InvokeAsync()">
+                <strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span>
+            </button>
 
+            @if (Selection.ReservedPoints > 0)
+            {
+                <details class="reserved-points">
+                    <summary>@Selection.ReservedPoints reserved</summary>
+                    @foreach (var reservation in Selection.Reserved)
+                    {
+                        <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
+                    }
+                </details>
+            }
+
+            @* Navigation stays accessible, but no longer steals vertical space or labels the active sector twice. *@
+            <nav class="web-floating-controls" aria-label="Arcane Web navigation">
+                <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
+                <button class="atlas-action" aria-label="Zoom in" title="Zoom in" @onclick="() => ZoomAsync(0.15)">+</button>
+                <button class="atlas-action center-action" aria-label="Center current school" title="Center current school" @onclick="ResetViewAsync">◎</button>
+                <button class="atlas-action" aria-label="Show whole Arcane Web" title="Whole Web" @onclick="ShowOverviewAsync">⤢</button>
+            </nav>
 
             <div class="arcane-web-viewport" data-wheel="six-schools" data-world-size="@ArcaneWheelLayout.Size"
                  data-start-x="@Coordinate(ArcaneWheelLayout.Center)" data-start-y="@Coordinate(ArcaneWheelLayout.Center - 400)"
