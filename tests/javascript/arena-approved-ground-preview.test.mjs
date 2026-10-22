@@ -64,7 +64,8 @@ test('approved ground preview remains opt-in to the playable C# Arena Lab only',
     assert.match(js, /drawArenaEnvironment\(ctx, frame\.environment, ww, wh, state\.clock, groundAtlas\)/);
     assert.match(razor, /ArenaEnvironmentState\.Create\(seed, node, generatorPreview: true\)/);
     assert.match(razor, /@bind="approvedGroundPreview"/);
-    assert.match(razor, /20261022-approved-ground-preview-1/);
+    assert.match(razor, /"import", "\.\/js\/arena-lab\.js"/);
+    assert.match(js, /arena-environment\.js\?v=20261022-approved-ground-preview-1/);
     assert.match(territory, /drawWetForestGround\(ctx, plan, approvedAtlas\)/);
     assert.match(renderer, /approvedAtlas \? 'approvedGroundPreview' : 'canonicalGround'/);
     const hunt = read('wwwroot/js/arena.js');
