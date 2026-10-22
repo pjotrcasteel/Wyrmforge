@@ -65,6 +65,7 @@ internal static class ArcaneNodePresentation
     private static string Icon(BuildStatId stat) => stat switch
     {
         BuildStatId.Damage => "✹",
+        BuildStatId.BurnDamage => "♨",
         BuildStatId.CastInterval => "⟳",
         BuildStatId.ProjectileSpeed => "➶",
         BuildStatId.MoveSpeed => "↟",
@@ -78,6 +79,7 @@ internal static class ArcaneNodePresentation
     private static string Label(BuildStatId stat) => stat switch
     {
         BuildStatId.Damage => "spell damage",
+        BuildStatId.BurnDamage => "burning-ground damage",
         BuildStatId.CastInterval => "cast speed",
         BuildStatId.ProjectileSpeed => "projectile speed",
         BuildStatId.MoveSpeed => "move speed",
