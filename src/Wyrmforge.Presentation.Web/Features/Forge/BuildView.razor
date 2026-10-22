@@ -8,7 +8,7 @@
 
 <section class="build-view school-wheel-view">
     <header class="build-heading">
-        <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points unspent</span></div>
+        <div class="build-points"><strong>@PointsLeft</strong><span>of @Selection.PointBudget points available</span></div>
         <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
     </header>
 
@@ -204,8 +204,8 @@
             <p class="inspector-effect">@FocusedNode.Description</p>
             @if (FocusedNode.Requirement?.FireballMutation is { } requiredMutation)
             {
-                <p class="mutation-effect-state" role="status">@(FireballCore?.Equipped.Contains(requiredMutation) == true && CharacterSchool == Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer
-                    ? "Active with your equipped mutation" : $"Needs {FireballCoreCatalog.Get(requiredMutation).Name} equipped")</p>
+                <p class="mutation-effect-state" role="status">@(Selection.Selected.Contains(FocusedNode.Id) && FireballCore?.Equipped.Contains(requiredMutation) == true && CharacterSchool == Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer
+                    ? "Active with your equipped mutation" : $"Applies when {FireballCoreCatalog.Get(requiredMutation).Name} is equipped")</p>
             }
             @if (!Selection.CanLearn(FocusedNode) && FocusedNode.Kind != PassiveNodeKind.Origin)
             {
