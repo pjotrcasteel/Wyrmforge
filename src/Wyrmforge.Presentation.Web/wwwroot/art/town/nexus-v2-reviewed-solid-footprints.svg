@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- COVERAGE CLASSIFICATION ONLY; never used to change NPC movement.
+       Exact three physical black exclusion shapes copied from the existing
+       nexus-v2-walk-mask.svg. These are the ONLY audited solid footprints
+       at this milestone; transparent pixels mean NOT YET CLASSIFIED, not
+       "walkable", and other black ground pixels mean NOT REVIEWED. -->
+  <!-- Well masonry/base footprint (independent from raised wooden roof alpha). -->
+  <path fill="#fff" d="M 727 511 L 745 497 L 906 497 L 934 511
+           L 943 541 L 920 563 L 726 563 L 703 542 L 708 521 Z"/>
+  <!-- Noticeboard physical base / surrounding planter: NOT the raised
+       board's art foreground. Never paste this shape over an NPC. -->
+  <path fill="#fff" d="M 746 462 L 773 462 L 783 492 L 792 508
+           L 774 522 L 744 512 Z"/>
+  <!-- Existing stair-side plant roots, not step treads. Potential white
+       route/solid conflict is measured and colored separately at runtime. -->
+  <path fill="#fff" d="M 417 434 L 428 431 L 448 433 L 463 432
+           L 470 449 L 451 462 L 422 455 Z"/>
+</svg>

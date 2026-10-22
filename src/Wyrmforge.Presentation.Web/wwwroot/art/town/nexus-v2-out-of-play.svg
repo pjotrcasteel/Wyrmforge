@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <!-- SEMANTIC AUDIT ONLY. This alpha does not participate in the foot mask,
+       NPC routing, collision or photographic depth. Pixel coordinates refer
+       to canonical night-active.webp at exactly 1672x941.
+       Classify only obvious upper distance/roof/sky portions that are not
+       ground-level navigable in the CURRENT town scene. Remaining black is
+       UNKNOWN, not a verified collider. Revisable for future upper floors. -->
+  <!-- Full upper sky, roofs and background above any town ground surface. -->
+  <path fill="#fff" d="M 0 0 H 1672 V 132 H 0 Z"/>
+  <!-- Far-left elevated town background and upper architecture. Stop well
+       ABOVE the Nexus walkway/landing, blacksmith roof and lateral stairs. -->
+  <path fill="#fff" d="M 0 132 H 430 V 265 H 0 Z"/>
+  <!-- Far-right elevated distant structures and water-facing upper facades.
+       Stop ABOVE the right entrance and stone stairs. -->
+  <path fill="#fff" d="M 1270 132 H 1672 V 263 H 1270 Z"/>
+</svg>

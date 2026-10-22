@@ -742,6 +742,105 @@ test('Town V2 living residents animate by distance, turn safely and idle without
     assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
 });
 
+test('Town V2 coverage audit counts walkable, reviewed solid, conflicted and unknown pixels separately', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const solids = source(art + '/nexus-v2-reviewed-solid-footprints.svg');
+    const nonplay = source(art + '/nexus-v2-out-of-play.svg');
+    assert.match(js, /function buildNavigation\(source, includeCoverage = false, reviewedMask = null, candidateMask = null, outMask = null, pavingMask = null\)/);
+    assert.match(js, /const coverageAudit = query.get\("townCoverage"\) === "1"/);
+    assert.match(js, /state.nav = buildNavigation\(walkMask, coverageAudit, reviewedMask, candidateMask, outMask, pavingMask\)/);
+    assert.match(js, /const authored = pixels\[p\] > 230/);
+    assert.match(js, /reviewedPixels\[p\] > 230/);
+    assert.match(js, /reviewedSolidPixels\+\+/);
+    assert.match(js, /classConflictPixels\+\+/);
+    assert.match(js, /candidateGroundPixels\+\+/);
+    assert.match(js, /outOfPlayPixels\+\+/);
+    assert.match(js, /outOfPlayConflictPixels\+\+/);
+    assert.match(js, /notSeparatelyClassifiedPixels\+\+/);
+    assert.match(js, /knownSolidClassAvailable: includeCoverage/);
+    assert.match(js, /fullSceneMapped: false/);
+    assert.match(js, /coverageAudit: entry.coverageAudit/);
+    assert.match(js, /ctx.drawImage\(w.nav.coverageOverlay, 0, 0\)/);
+    assert.match(js, /reviewedSolid: "red"/);
+    assert.match(js, /classConflict: "magenta"/);
+    assert.match(js, /candidateGround: "blue"/);
+    assert.match(js, /outOfPlay: "violet"/);
+    assert.match(js, /notSeparatelyClassified: "amber"/);
+    assert.doesNotMatch(js, /knownSolidClassAvailable: true|fullSceneMapped: true/);
+    assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+    assert.equal((solids.match(/<path fill="#fff" d="/g) ?? []).length, 3,
+        'Only three existing evidence-backed solid footprints are currently classified');
+    assert.match(solids, /M 727 511 L 745 497 L 906 497 L 934 511/);
+    assert.match(solids, /M 746 462 L 773 462 L 783 492 L 792 508/);
+    assert.match(solids, /M 417 434 L 428 431 L 448 433 L 463 432/);
+    assert.doesNotMatch(solids, /<rect[\s\S]*fill="#fff"/);
+    assert.equal((nonplay.match(/<path fill="#fff" d="/g) ?? []).length, 3);
+    assert.match(nonplay, /M 0 0 H 1672 V 132 H 0 Z/);
+    assert.match(nonplay, /M 0 132 H 430 V 265 H 0 Z/);
+    assert.match(nonplay, /M 1270 132 H 1672 V 263 H 1270 Z/);
+    assert.match(js, /const outConflict = outOfPlay &&/);
+    assert.match(js, /outOfPlayNames: includeCoverage/);
+    assert.match(js, /outOfPlay \? palette.outOfPlay/);
+    assert.doesNotMatch(js, /buildNavigation\(outMask|const canStand = .*outOfPlay/);
+});
+
+test('Town V2 visually reviewed plaza stays separated from gameplay navigation', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const svg = source(art + '/nexus-v2-reviewed-paving.svg');
+    assert.equal((svg.match(/<path fill="#fff" d="/g) ?? []).length, 1,
+        'Only one conservative central cobblestone patch is reviewed');
+    assert.match(svg, /M 752 616 L 898 611 L 916 650/);
+    assert.match(js, /const reviewedPaving = !!pavingPixels/);
+    assert.match(js, /reviewedPaving &&/);
+    assert.match(js, /reviewedPavingPixels\+\+/);
+    assert.match(js, /reviewedPavingConflictPixels\+\+/);
+    assert.match(js, /reviewedPavingRouteOverlapPixels\+\+/);
+    assert.match(js, /reviewedPaving \? palette.reviewedPaving/);
+    assert.match(js, /reviewedPaving: "green"/);
+    assert.match(js, /fullSceneMapped: false/);
+    assert.match(js, /pavingMask\)/);
+    assert.doesNotMatch(js, /buildNavigation\(pavingMask|const canStand = .*pavingPixels/);
+    assert.match(js, /planRoute\(state.nav, REAR_ENTRY, REAR_END\)/);
+});
+
+test('Town V2 region grid covers the full canvas without inventing playable ground', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /const tileSize = 256/);
+    assert.match(js, /const tileColumns = Math.ceil\(WIDTH \/ tileSize\)/);
+    assert.match(js, /const tileRows = Math.ceil\(HEIGHT \/ tileSize\)/);
+    assert.match(js, /tiles\[Math.floor\(y \/ tileSize\) \* tileColumns \+ Math.floor\(x \/ tileSize\)\]/);
+    assert.match(js, /tile\.classConflictPixels\+\+/);
+    assert.match(js, /tile\.notSeparatelyClassifiedPixels\+\+/);
+    assert.match(js, /tile\.width \* tile\.height/);
+    assert.match(js, /tileSize, tileColumns, tileRows, tiles/);
+    assert.match(js, /fullSceneMapped: false/);
+    assert.doesNotMatch(js, /const tile = .*canStand|w\.position = .*tile/);
+});
+
+test('Town V2 proposal atlas marks new cobbles BLUE without enabling unsafe NPC routes', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const svg = source(art + '/nexus-v2-ground-candidates.svg');
+    assert.equal((svg.match(/<path fill="#fff" d="/g) ?? []).length, 3,
+        'Three visually referenced paved candidate regions, not blanket white');
+    assert.match(svg, /M 555 551 L 706 545 L 740 578 L 960 580/);
+    assert.match(svg, /M 535 370 L 666 360 L 743 397/);
+    assert.match(svg, /M 958 366 L 1052 350 L 1143 361/);
+    assert.match(js, /const candidateGround = !!candidatePixels/);
+    assert.match(js, /candidateGroundPixels\+\+/);
+    assert.match(js, /candidateSolidOverlapPixels\+\+/);
+    assert.match(js, /candidateGround: "blue"/);
+    assert.match(js, /candidateGroundNames: includeCoverage/);
+    assert.match(js, /legend.className = "refuge-town-v2-coverage-legend"/);
+    assert.match(js, /Blue: proposed paving \(NOT walkable\)/);
+    assert.match(js, /state.coverageLegendElement\?\.remove\(\)/);
+    assert.match(js, /candidate: \[67, 130, 236\]/);
+    assert.match(js, /candidateGround \? palette.candidate : palette.unknown/);
+    // Preview proposals are never passed to the physical foot-mask builder.
+    assert.match(js, /const pixels = ctx.getImageData\(0, 0, WIDTH, HEIGHT\).data/);
+    assert.match(js, /const canStand = \(x, y\) =>/);
+    assert.doesNotMatch(js, /const canStand = .*candidate|buildNavigation\(candidateMask/);
+});
+
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
     const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
     const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
