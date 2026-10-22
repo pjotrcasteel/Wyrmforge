@@ -674,12 +674,26 @@ test('Town V2 inspector freezes at real right-post crossing only when explicitly
     const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
     assert.match(js, /query.get\("townPose"\) === "post"/);
     assert.match(js, /const inspectPose = rearMode &&/);
-    assert.match(js, /if \(w.inspectPose\)/);
+    assert.match(js, /if \(w.inspectPose \|\| w.inspectWell\)/);
     assert.match(js, /state.inspectPose && !state.nav.canStand/);
     assert.match(js, /state.position = state.inspectPose \? \{ ...RIGHT_POST_PASS \}/);
     assert.match(js, /inspectingRightPost: entry.inspectPose/);
     assert.match(js, /rightPostOcclusionFrames: entry.rightPostOcclusionFrames/);
     assert.doesNotMatch(js, /REAR_POST_BYPASS/);
+});
+
+test('Town V2 well inspector preserves walking and checks every actual frame of feet', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /const inspectWell = rearMode && query.get\("townPose"\) === "well"/);
+    assert.match(js, /state.inspectWell && !state.nav.canStand\(REAR_END.x, REAR_END.y\)/);
+    assert.match(js, /state.inspectWell \? \{ ...REAR_END \}/);
+    assert.match(js, /inspectingWellRoof: entry.inspectWell/);
+    assert.match(js, /const safe = w.nav.canStand\(w.position.x, w.position.y\)/);
+    assert.match(js, /if \(!safe\) w.maskViolations\+\+/);
+    assert.equal((js.match(/if \(!safe\) w.maskViolations\+\+/g) ?? []).length, 1,
+        'Count unsafe frames only in animation, never again on the status tick');
+    assert.match(js, /w.lastWellOccluded = w.rearMode && overlapsFoliage/);
+    assert.doesNotMatch(js, /REAR_POST_BYPASS|buildDebugOverlay/);
 });
 
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
