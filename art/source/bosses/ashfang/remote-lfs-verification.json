@@ -184,5 +184,179 @@
     "sha256": "6a0f0fd8e4c1a42e1583516ff31becd4c2257165f8f2727d4a92bd90977a29d2",
     "bytes": 239166,
     "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-003/ashfang-master-working.blend",
+    "sha256": "4eb477382a5ecdd40a292e6cabf7bd780ec1c3c378b760572b2a4e3c9c77ed90",
+    "bytes": 137358267,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-003/review/front.png",
+    "sha256": "679baa2adf84d9f64f78063649adc4b48198c3e672ad5a451bbdca4500fdd531",
+    "bytes": 210696,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-003/review/side.png",
+    "sha256": "2a5a853f01a970ea58535eb220bd9d90f3aa5c9970b0768f66f6950d1354e571",
+    "bytes": 229770,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-003/review/three-quarter.png",
+    "sha256": "45f1f33190cfbed7351707620b2f55a429d0c772ab71b65da3c48dbdfa36ca23",
+    "bytes": 230752,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-004/ashfang-master-working.blend",
+    "sha256": "279a4a3c25ae9c837b8a63731478e810edfa9df322347fb7f8d3296c55ff50cf",
+    "bytes": 137371914,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-004/review/front.png",
+    "sha256": "77b63c1eea69587b0022c51b66f5aa5238f95892ab8845524cb652013b668581",
+    "bytes": 467498,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-004/review/side.png",
+    "sha256": "084129cc1c0bd2a1d03c22a5656689d4e0f33ca9e46d71b37e12435115ef69b2",
+    "bytes": 488802,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-004/review/three-quarter.png",
+    "sha256": "1a6526ecdbd0285da7e863201d1e33999d5cf90acc24a366782da0f9ae03dbe3",
+    "bytes": 501134,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/ashfang-master-working.blend",
+    "sha256": "0fe1cfbd7640e03a67ceeb9c40c53d7d018b487ed62bc2df22e562f47d6f8886",
+    "bytes": 137371961,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/clay/front.png",
+    "sha256": "66cb487d3b7812e838aecbe076116c3fefd3e7fb23b2a97348829c1bf7d284fa",
+    "bytes": 202996,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/clay/side.png",
+    "sha256": "b3d289b9c1e96e74b8a408225e2df13c9b4f692f5cd20e0125511ea362708c7c",
+    "bytes": 218767,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/clay/three-quarter.png",
+    "sha256": "2759780817263500d4a77ae20849a8030266e27b1010d4b394237ff83f655b19",
+    "bytes": 218296,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/review/front.png",
+    "sha256": "e25624362b2f44ead14d2d577bb0177b3db4467668112a8f789967fae84cc526",
+    "bytes": 210003,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/review/side.png",
+    "sha256": "25b9f78c8b66b0728eb8c0b28ae11a6344a5e42f7bf7bc241f0440c6bca97616",
+    "bytes": 227329,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-005/review/three-quarter.png",
+    "sha256": "21117fb6870ad0f293319fe6c334719f54f572eef04065f8d589bb65b48230c2",
+    "bytes": 228522,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/ashfang-master-working.blend",
+    "sha256": "e5419f7ebc0cb715aab11b3a598c1c52e7cd7fb72bc58c2d4423b26e581af95f",
+    "bytes": 4567417,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/clay/front.png",
+    "sha256": "9022542cf8d0cc883e2eee4ededfb69d27effb24b2f723b676b95752bdf455d7",
+    "bytes": 206669,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/clay/side.png",
+    "sha256": "dda7cdf96ea357ff6832dfe87086e4f94cf294a6de9e3db0667f15abc6b3832b",
+    "bytes": 220102,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/clay/three-quarter.png",
+    "sha256": "be30648dfa0c7cc0a78b261c55790ed4e242fce89c6de94381e9870ebe3a92e6",
+    "bytes": 221086,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/review/front.png",
+    "sha256": "f21b9ca8ce400634cf9c18d96dd52755ab8ccc18904fea72905ba4976d34a637",
+    "bytes": 212607,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/review/side.png",
+    "sha256": "b1db83b100dc00f8e0bdbaf25993e5768b72c75b372507feebe6255dafc190cb",
+    "bytes": 227780,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-006/review/three-quarter.png",
+    "sha256": "f95313a98ed954c243040b96fb624ee005f860e6573937124b87d99704582b13",
+    "bytes": 231532,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/ashfang-master-working.blend",
+    "sha256": "de74ff280a092312df4d66880aadbf1839c57a1337bea25075aa38dba9a58966",
+    "bytes": 4562437,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/clay/front.png",
+    "sha256": "7873e608f24a90ca70f701be7e9e9340bd30ea237476d1118d361f8a5a36dae1",
+    "bytes": 209621,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/clay/side.png",
+    "sha256": "6ffae6f3e37829e639993bcfc2271b935a8848adf85c24e15af13ec3abd81439",
+    "bytes": 211211,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/clay/three-quarter.png",
+    "sha256": "bb7cef23d488e843675a002c3ce89071d30fef1f2d42b6150cd93178929d1f75",
+    "bytes": 217897,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/review/front.png",
+    "sha256": "a6090883e60577a1828e632b4ba4cd8cebb388d9d57050f25958ce1099d7e990",
+    "bytes": 224422,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/review/side.png",
+    "sha256": "60aeeb266a100b259ecfaa7a55f2a234389bed95be5507218a95aebfe2e40726",
+    "bytes": 224617,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/M1-candidate-007/review/three-quarter.png",
+    "sha256": "0adf77c2285a794463addbbb55e9e0ec19bc7325a6638e2ee5c180af837cec9a",
+    "bytes": 232198,
+    "verified": true
   }
 ]

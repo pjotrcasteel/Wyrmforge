@@ -16,3 +16,14 @@ Source card SHA256: dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc8
 Review outcome: both candidates FAIL master identity gate. Candidate002 is a surface/proportion experiment only. No actual animated source clip, clay review, gameplay camera match, accepted rig test, six-tier system, sprite export or integration is claimed. The 1,074 boundary edges may include intentional membrane/open surfaces; 5 additional nonmanifold edges require localized diagnosis. The supplied FBX is a lightweight download with external maps, explaining its difference from the reported 139 MB package.
 
 All archived native `.blend` files are immutable milestones. Save a new revision rather than overwriting them. Keep LFS enabled on checkout (`git lfs pull`).
+
+## Tail correction and later anatomy studies (23 October)
+
+- `remove-tail-fan.py`: open candidate002, write a new revision. The reversible mask removes the terminal membrane and its lateral supports while retaining the tail centerline and all source vertices.
+- `armor-study.py`: open candidate003, write candidate005-equivalent output. Current script is the corrected low-relief recipe; candidate004 preserves the earlier rejected tall-plate recipe (script at 7107f1d2).
+- `foreleg-study.py`: open candidate005, write candidate006-equivalent output. Creates two isolated 1,074/1,072-vertex source-topology limb blocks and 30 new bones, retaining original UVs/materials. Limb attachments and proportions remain provisional.
+- `inspection-pose.py`: open candidate006, write candidate007-equivalent output. Creates a static articulated wing/jaw inspection pose and tests left foreleg isolation. No animation is authored. Current review.py preserves this authored pose; `--profile clay` renders a neutral geometry review.
+
+Every stage accepts `--output NEW_ABSOLUTE_DIRECTORY`. Keep the sibling `M0-001/original/download/textures/` directory beside candidate006 and later outputs. New `.blend` files use that relative archive layout. Download the archive with Git LFS before opening; copying the small `.blend` alone will omit textures. Earlier packed sources, especially the original conversion, remain untouched.
+
+Current native candidate007: archive/M1-candidate-007/ashfang-master-working.blend. Tail-removal request is applied. Full Ashfang identity, foreleg seam/muscle correction, membrane extreme-pose checks and real motion remain unfinished. Clay views expose geometry and are not visual acceptance.
