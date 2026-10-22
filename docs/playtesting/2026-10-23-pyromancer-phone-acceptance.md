@@ -27,20 +27,24 @@ On a real iPhone (not merely a desktop-sized emulated viewport), inspect:
 Record pass/fail with phone model, iOS version, viewport dimensions, screenshots/video and the exact deployed game build. This pass remains **pending** until it actually happens.
 
 
-## First Fire balance sample: what it really tells us
+## Fire balance acceptance: 420-second Wyrm-contact study
 
-The first [PR #305 seeded headless report](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39866000323/artifacts/12462994562) contains **32 runs**: 2 seeds × 4 agent styles × 4 legal Pyromancer cohorts, each limited to 180 simulated seconds.
+The initial 180-second diagnostic was too short to reach a Wyrm. The follow-up **merged PR #313** extended every matched cohort to 420 simulated seconds with the same two seeds and four agent personalities. All four Fire cohorts now have first-Wyrm observations:
 
-| Matched comparison (same agent + seed) | Median change in kills/min | Higher in cases | Interpretation |
-| --- | ---: | ---: | --- |
-| Fresh Fireball → Mid Detonation | +14.3 | 7/8 | Clear first specialization power signal |
-| Mid Detonation → Crown of Ash | −0.3 | 4/8 | Major area specialization does **not yet show a consistent kill-rate gain** |
-| Mid Detonation → Heart of Furnace | +10.0 | 7/8 | Stronger early sustained-pressure damage signal |
-| Crown of Ash → Heart of Furnace | +12.3 | 8/8 | Furnace dominates this short-window kill rate; investigate build roles before tuning |
+| Fire progression cohort | Median kills/minute | First-Wyrm contact | Median first-Wyrm time | Median minimum health |
+| --- | ---: | ---: | ---: | ---: |
+| Fresh core Lv1 | 48.4 | 8/8 | 343 seconds | 64% |
+| Mid Detonation Lv3 | 61.0 | 7/8 | 320 seconds | 71% |
+| Crown of Ash Lv5 + Detonation amplifier | 63.1 | 6/8 | 315 seconds | 71% |
+| Heart of Furnace Lv5 + Scorched Earth amplifier | 74.9 | 8/8 | 297 seconds | 61% |
 
-Crown of Ash's median *paired minimum-health* difference against Mid Detonation was approximately +14 percentage points, so kill rate alone may miss survivability/risk behavior. All 32 runs remained at depth 1, reached **zero Wyrms**, and stopped at the time limit. The study therefore cannot establish encounter balance, long-run progression, mutation power feeling or TTK at advanced Hunt tiers. Eight matched comparisons per row are far too few for precise balance constants.
+Source: [420-second GitHub Actions Fire cohort report](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39869117378/artifacts/12465367794).
 
-**Next balance evidence:** run the new GitHub Actions **Pyromancer progression acceptance** workflow with more seeds and longer simulated runs; inspect per-agent survival, Wyrm contact, run time, and source-specific combat contribution. If the Crown still underperforms, inspect whether splash hits nearby mobs and whether agents create adequate clustered situations *before* buffing damage or weakening the Furnace. Do not rebalance Fire from this initial sample.
+The positive power curve and Wyrm contact make this a credible early balance checkpoint, **not a final tuning verdict**. Crown's 6/8 contact rate cannot support conclusions about its survival or balance at eight observations. Furnace achieves the highest kill rate but the lowest median minimum health. Next step: a larger matched-seed study, inspection of Wyrm telegraph fairness, and physical iPhone testing of how different the mutations feel. No buff/nerf is justified solely from this sample.
+
+### Phone evidence status
+
+Automated phone-size screenshots and socket save/reload checks are part of this PR; the first Chromium attempt failed because the test tried to click the huge outer Fire emblem **outside the portrait viewport**, even though Fire was already active. The assertion now checks the active school without pretending an offscreen element is a phone-tappable control. The node itself is still focused programmatically to capture its true inspector layout. Therefore **manual pan/zoom and actual touch reachability remain separate human acceptance gates** and are not falsely certified by these screenshots.
 
 ## Completion boundary
 
