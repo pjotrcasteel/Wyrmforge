@@ -134,3 +134,21 @@ Remote verification invocation:
 `git clone --depth1 --single-branch --branch codex/ashfang-original-production --filter=blob:none --no-checkout <origin> artifacts/ashfang-lfs-verification`
 followed by sparse checkout of exact r03 source, checkout HEAD, SHA256 and headless
 Blender validate. This native source is now remotely retrievable, not just local.
+
+Continuing M1 after owner corrected premature stop: failed visual review requires
+continued correction, not ending authorized work. R04 reconstructs cranial planes
+and orbital/nasal cavities, independent open/closed jaw design pose, and replaces
+wing-arm stalks/compressed fan with compact arms and explicit finger chains.
+Folded/extended finger landmark lengths agree within2.58e-7 authoring units; this
+is a structural check, not an animation/flight acceptance. Earlier geometry is
+retained hidden as native history, all pre-Boolean and pre-bake projects saved.
+
+The new body cut initially had10non-manifold junction edges. Original failed
+r04 retained; a separate voxel-closure source repaired those cut junctions.
+Current native source: milestones/M1-r04/ashfang-primary-repaired.blend, SHA256
+00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19.
+Reopened/validated: source finite, primary body manifold, all pose keys finite.
+Boolean modifier-order warnings are recorded in ignored author log and require
+visual inspection of skull/orbits before any art pass. No owner acceptance or
+M1 completion. Next: push current/pre-operation sources, inspect new clay views,
+correct visual defects and continue remaining M1 studies.

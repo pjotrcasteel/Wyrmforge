@@ -1,0 +1,112 @@
+{
+  "revision": "M1-r04",
+  "sourceSha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+  "ownerAccepted": false,
+  "rigged": false,
+  "sculptComplete": false,
+  "geometryImported": false,
+  "changes": [
+    "Explicit cranial planes and recessed orbits",
+    "Independent mandible open/closed study",
+    "Replaced old wing-arm stalks",
+    "Landmark-length-preserving articulated wing studies"
+  ],
+  "wingLengthChecks": [
+    {
+      "digit": 0,
+      "segment": 0,
+      "extendedLength": 2.356395757275045,
+      "foldedLength": 2.3563957098472263
+    },
+    {
+      "digit": 0,
+      "segment": 1,
+      "extendedLength": 2.230941226374748,
+      "foldedLength": 2.230941372067321
+    },
+    {
+      "digit": 0,
+      "segment": 2,
+      "extendedLength": 1.854103963752525,
+      "foldedLength": 1.8541039135221924
+    },
+    {
+      "digit": 1,
+      "segment": 0,
+      "extendedLength": 2.5164656974345916,
+      "foldedLength": 2.5164656440488917
+    },
+    {
+      "digit": 1,
+      "segment": 1,
+      "extendedLength": 2.245239636108984,
+      "foldedLength": 2.2452397489342384
+    },
+    {
+      "digit": 1,
+      "segment": 2,
+      "extendedLength": 1.743731434699325,
+      "foldedLength": 1.7437313876987457
+    },
+    {
+      "digit": 2,
+      "segment": 0,
+      "extendedLength": 2.5775376662342833,
+      "foldedLength": 2.577537677796606
+    },
+    {
+      "digit": 2,
+      "segment": 1,
+      "extendedLength": 2.3627102374835043,
+      "foldedLength": 2.3627101744154175
+    },
+    {
+      "digit": 2,
+      "segment": 2,
+      "extendedLength": 1.6363984839631556,
+      "foldedLength": 1.636398411541431
+    },
+    {
+      "digit": 3,
+      "segment": 0,
+      "extendedLength": 2.5519406245515364,
+      "foldedLength": 2.551940882203967
+    },
+    {
+      "digit": 3,
+      "segment": 1,
+      "extendedLength": 1.8894972393255969,
+      "foldedLength": 1.889497247211907
+    },
+    {
+      "digit": 3,
+      "segment": 2,
+      "extendedLength": 1.3956361021598802,
+      "foldedLength": 1.3956360487750419
+    }
+  ],
+  "maximumWingSegmentLengthError": 2.5765243050202e-07,
+  "limits": "Static design pose keys are not a production rig, skinning or physical flight validation",
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-before-anatomical-restructure.blend",
+      "bytes": 2881459,
+      "sha256": "568f3e60f3ac79a4ef5b37febc2d5e22ef18b4f81d66a8c773a8092e0e287785"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-planar-preboolean.blend",
+      "bytes": 4309285,
+      "sha256": "c9171c71b896d54d747e70de8837077a845a0eab8f62826e858b739aad8e3e57"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-primary.blend",
+      "bytes": 4348975,
+      "sha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04.blend",
+      "bytes": 4348975,
+      "sha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5"
+    }
+  ]
+}
