@@ -669,6 +669,18 @@ test('Town V2 NPC walks BEHIND the right noticeboard post, never around it', () 
     assert.doesNotMatch(script, /REAR_POST_BYPASS|clearOfRightPost|routedOverBoard/);
 });
 
+test('Town V2 inspector freezes at real right-post crossing only when explicitly requested', () => {
+    const js = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    assert.match(js, /query.get\("townPose"\) === "post"/);
+    assert.match(js, /const inspectPose = rearMode &&/);
+    assert.match(js, /if \(w.inspectPose\)/);
+    assert.match(js, /state.inspectPose && !state.nav.canStand/);
+    assert.match(js, /state.position = state.inspectPose \? \{ ...RIGHT_POST_PASS \}/);
+    assert.match(js, /inspectingRightPost: entry.inspectPose/);
+    assert.match(js, /rightPostOcclusionFrames: entry.rightPostOcclusionFrames/);
+    assert.doesNotMatch(js, /REAR_POST_BYPASS/);
+});
+
 test('V2 noticeboard PNG alpha traces only wood: no upper cobbles or lower flowerbeds', () => {
     const svg = source(art + '/nexus-v2-noticeboard-foreground.svg');
     const paths = [...svg.matchAll(/<path fill="#fff" d="([^"]+)"\s*\/>/g)].map(match => {
