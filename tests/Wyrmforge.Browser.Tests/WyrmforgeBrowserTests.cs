@@ -198,12 +198,17 @@ public sealed class WyrmforgeBrowserTests : PageTest
     public async Task ArcaneWeb_MajorMutationAmplifier_SavesCompatibleEquippedMutation()
     {
         await Page.SetViewportSizeAsync(390, 844);
+        // Init scripts run again on reload: seed missing keys only, or the test erases its own saved socket assignment.
         await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
-            localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,
-                Nodes:['fire-start','fire-1','fire-ember-drift','fire-scorching-winds',
-                    'fire-cinder-halo','fire-conflagration','fire-ashfront','fire-spread-crown']}));
-            localStorage.setItem('wyrmforge.fireballCore.v1',
-                JSON.stringify({Level:1,Discovered:[2],Slots:[2,null,null,null,null]}));");
+            if (!localStorage.getItem('wyrmforge.arcaneBuild.v1')) {
+                localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,
+                    Nodes:['fire-start','fire-1','fire-ember-drift','fire-scorching-winds',
+                        'fire-cinder-halo','fire-conflagration','fire-ashfront','fire-spread-crown']}));
+            }
+            if (!localStorage.getItem('wyrmforge.fireballCore.v1')) {
+                localStorage.setItem('wyrmforge.fireballCore.v1',
+                    JSON.stringify({Level:1,Discovered:[2],Slots:[2,null,null,null,null]}));
+            }");
         await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();
         await OpenTownBuildingAsync("Arcane Nexus");
