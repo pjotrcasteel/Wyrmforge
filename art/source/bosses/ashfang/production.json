@@ -7,20 +7,18 @@
   "storage": "Git LFS; user confirmed available capacity 2026-10-23",
   "blender": "4.5.14 LTS",
   "renderer": "Cycles OptiX NVIDIA GeForce RTX 5090; three views completed per review",
-  "currentCandidate": "archive/M1-candidate-008/ashfang-master-working.blend",
+  "currentCandidate": "archive/M0-001/master/ashfang-master-working.blend",
   "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
   "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
   "M0": "Import, packed dependency reopen, remote LFS retrieval and SHA256 verification passed. Structural issues documented; deformation/motion not validated.",
-  "M1": "Tail fan removed; articulated armor and independent foreleg prototype; static wing/jaw inspection pose; identity and full deformation acceptance pending",
+  "M1": "Owner rejected experimental appearance; reset to preserved professional source. Tail-only baseline in preparation; Ashfang transformation not accepted.",
   "M2_M7": "not started",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Correct foreleg shoulder joins and muscle proportions",
-    "Refine skull/chest armor and authored fissures",
-    "Validate extreme poses and membrane deformation",
-    "Author actual animation; imported actions are static",
-    "Actual gameplay-camera review",
-    "Tier I versus VI after master acceptance"
+    "Source-fidelity baseline with requested tail correction",
+    "Verify original material/rig appearance against original model",
+    "Restrained charcoal and recessed heat study preserving source anatomy",
+    "Compare source and candidate against approved Ashfang card before expanding"
   ]
 }

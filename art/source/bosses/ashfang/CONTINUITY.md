@@ -63,3 +63,11 @@ Candidate013 removes floating mouth emitter and most raised-wire heat, retains t
 Candidate014 hero/head close-up exposes two unresolved issues: linking original eye albedo alone leaves the visible globe on a blank atlas region; original eye UVs span painted iris and unpainted islands. Preserve original UV layer; create explicit eye-only repair layer using original golden slit-pupil texture and recess globe modestly. Furnace position mask also includes wing-rest vertices at chest coordinates; gate it with actual chest/neck weights. Candidate014 not accepted.
 
 Candidate015 gates heat to neck/chest weights and repairs eye-only UV layer without replacing creator UVs. Heat is more localized and angular. Eye sweep at recess0/.25/.5 shows painted slit still insufficiently legible; full recess1 hides iris excessively. Next: use recess.25 and add a small conforming black slit-pupil surface bound to each existing eye control, retaining original image texture and reversible repair layer. This is explicit authored facial geometry, not a claim that creator UVs rendered correctly. Preserve sweep inputs/images.
+
+## OWNER REJECTION — 23 October 2026
+
+Owner explicitly rejects the experimental appearance: original dragon looked better and the procedural changes lost its identity. Candidates001–015 are retained as rejected experiments, not accepted Ashfang progress. Do not continue the copied-hindleg, large-conical-horn, tiled-plate or glowing-wire approach. None of these experiments replaced runtime assets.
+
+Recovery direction: start again from the untouched imported professional model, preserve its anatomy/silhouette/UVs/rig, retain the requested tail-fan removal, verify original material dependencies and rig presentation, then make restrained source-texture/material changes and anatomically recessed heat. Compare against the approved card and original before further anatomy work. No further fabricated forelegs or replacement horns without compelling reviewed evidence. Technical checks never substitute for visual quality.
+
+Immediate next artifact: source-fidelity baseline with tail correction only. Original import remains immutable. All previous source files are preserved for recovery, but are rejected as the working artistic direction.
