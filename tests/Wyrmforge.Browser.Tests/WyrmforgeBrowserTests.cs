@@ -112,15 +112,21 @@ public sealed class WyrmforgeBrowserTests : PageTest
             return d?.active && d.rearMode && d.wellDepthReady && d.noticeDepthReady &&
                 d.wellDepthTransparent && d.noticeDepthTransparent && d.safe;
         }", null, new PageWaitForFunctionOptions { Timeout = 12000 });
-        var ready = await Page.WaitForFunctionAsync(@"async () => {
+        await Page.WaitForFunctionAsync(@"async () => {
             const module = await import('./js/town-v2-nexus.js?v=0.0.165');
-            const d = module.readTownV2Diagnostics(document.querySelector('[data-town-v2-canvas]'));
-            return d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
-                d.noticeOcclusionFrames > 0 && d.violations === 0 && d.wellForegroundRequired ? d : null;
+            const canvas = document.querySelector('[data-town-v2-canvas]');
+            const d = module.readTownV2Diagnostics(canvas);
+            if (!(d?.rearFrames > 3 && d.wellOcclusionFrames > 0 &&
+                d.noticeOcclusionFrames > 0 && d.violations === 0 && d.wellForegroundRequired &&
+                d.wellDepthReady && d.noticeDepthReady && d.wellDepthEdgesClear && d.noticeDepthEdgesClear)) return false;
+            canvas.dataset.testRearDepthSnapshot = JSON.stringify(d);
+            return true;
         }", null, new PageWaitForFunctionOptions { Timeout = 22000 });
-        // Capture the same qualifying frame; the NPC can leave the rear-depth
-        // region between a wait and a separate diagnostics read.
-        var before = await ready.JsonValueAsync<JsonElement>();
+        // Serialize the qualifying diagnostics in the predicate itself, so the
+        // assertion reads that snapshot rather than a later animation frame.
+        var snapshot = await Page.Locator("[data-town-v2-canvas]").GetAttributeAsync("data-test-rear-depth-snapshot");
+        using var snapshotDocument = JsonDocument.Parse(snapshot!);
+        var before = snapshotDocument.RootElement;
         Assert.IsTrue(before.GetProperty("wellForegroundRequired").GetBoolean());
         Assert.IsTrue(before.GetProperty("wellDepthReady").GetBoolean());
         Assert.IsTrue(before.GetProperty("noticeDepthReady").GetBoolean());
