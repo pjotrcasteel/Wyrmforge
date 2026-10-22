@@ -27,15 +27,15 @@ test('changing physical prop positions only changes the grounded root marks', ()
     assert.equal(after.roots[0].x, Math.round(relocated[0].x * 950 / 2) * 2);
 });
 
-test('the Wet Forest lab uses correct creature kinds and distance-driven sprites, not timer loops', () => {
-    const lab = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lab.js', import.meta.url), 'utf8');
+test('Wet Forest rigs remain in the actual game, never the new phase-1 ground foundation', () => {
+    const legacy = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lab.js', import.meta.url), 'utf8');
+    const ground = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-ground-foundation.js', import.meta.url), 'utf8');
     const page = readFileSync(new URL('../../src/Wyrmforge.Presentation.Web/Pages/ArenaLab.razor', import.meta.url), 'utf8');
-    assert.match(lab, /updateEnemyMotions\(state\.enemyMotion/);
-    assert.match(lab, /enemyFacing\(state\.enemyMotion, mob\.id\)/);
-    assert.match(lab, /drawWetForestActorContact\(ctx, mob\.x, mob\.y/);
-    assert.match(page, /new LabMob\(1, 0,/);
-    assert.match(page, /new LabMob\(2, 2,/);
-    assert.doesNotMatch(lab, /Math\.floor\(state\.clock \* 6\) % 4/);
+    assert.match(legacy, /updateEnemyMotions\(state\.enemyMotion/);
+    assert.match(legacy, /enemyFacing\(state\.enemyMotion, mob\.id\)/);
+    assert.doesNotMatch(legacy, /Math\.floor\(state\.clock \* 6\) % 4/);
+    assert.doesNotMatch(ground, /updateEnemyMotions|drawEnemy|drawMage|drawWetForestActorContact/);
+    assert.doesNotMatch(page, /new LabMob|Pathing mobs|Hollow and Ashling/);
 });
 
 test('ground dressing is baked, contact detail remains below actors, and no fake collision is created', () => {
