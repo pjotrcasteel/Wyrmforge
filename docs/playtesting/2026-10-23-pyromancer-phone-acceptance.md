@@ -26,6 +26,22 @@ On a real iPhone (not merely a desktop-sized emulated viewport), inspect:
 
 Record pass/fail with phone model, iOS version, viewport dimensions, screenshots/video and the exact deployed game build. This pass remains **pending** until it actually happens.
 
+
+## First Fire balance sample: what it really tells us
+
+The first [PR #305 seeded headless report](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39866000323/artifacts/12462994562) contains **32 runs**: 2 seeds × 4 agent styles × 4 legal Pyromancer cohorts, each limited to 180 simulated seconds.
+
+| Matched comparison (same agent + seed) | Median change in kills/min | Higher in cases | Interpretation |
+| --- | ---: | ---: | --- |
+| Fresh Fireball → Mid Detonation | +14.3 | 7/8 | Clear first specialization power signal |
+| Mid Detonation → Crown of Ash | −0.3 | 4/8 | Major area specialization does **not yet show a consistent kill-rate gain** |
+| Mid Detonation → Heart of Furnace | +10.0 | 7/8 | Stronger early sustained-pressure damage signal |
+| Crown of Ash → Heart of Furnace | +12.3 | 8/8 | Furnace dominates this short-window kill rate; investigate build roles before tuning |
+
+Crown of Ash's median *paired minimum-health* difference against Mid Detonation was approximately +14 percentage points, so kill rate alone may miss survivability/risk behavior. All 32 runs remained at depth 1, reached **zero Wyrms**, and stopped at the time limit. The study therefore cannot establish encounter balance, long-run progression, mutation power feeling or TTK at advanced Hunt tiers. Eight matched comparisons per row are far too few for precise balance constants.
+
+**Next balance evidence:** run the new GitHub Actions **Pyromancer progression acceptance** workflow with more seeds and longer simulated runs; inspect per-agent survival, Wyrm contact, run time, and source-specific combat contribution. If the Crown still underperforms, inspect whether splash hits nearby mobs and whether agents create adequate clustered situations *before* buffing damage or weakening the Furnace. Do not rebalance Fire from this initial sample.
+
 ## Completion boundary
 
 This PR does **not** declare Pyromancer ready-for-now. Pair its phone evidence with PR #305's seeded Fire progression report; evaluate early/mid/advanced Hunts including death, Wyrm reach, survival and power feel. No new Frost, Storm, Arcane or Fire mutations are part of this verification slice.
