@@ -40,8 +40,14 @@
         <button class="secondary" @onclick="Preview">Natural ground</button>
         <button class="secondary" @onclick="Reroll">Different ground</button>
         <button class="@(fineDetail ? "selected" : "secondary")" aria-pressed="@fineDetail"
-                @onclick="ToggleFineDetail">Fine detail @(fineDetail ? "On" : "Off")</button>
+                disabled="@fineDetailBusy" aria-busy="@fineDetailBusy"
+                @onclick="ToggleFineDetail">@(fineDetailBusy ? "Applying detail…" : $"Fine detail {(fineDetail ? "On" : "Off")}")</button>
     </section>
+
+    @if (fineDetailError is not null)
+    {
+        <p role="alert" class="material-detail-error">@fineDetailError</p>
+    }
 
     <section class="material-workspace" aria-label="Editable pixel ground material samples">
         <div class="canvas-wrap">
@@ -68,11 +74,15 @@
     private int seed = 1441;
     private int previewSeed = 1441;
     private bool fineDetail;
+    private bool fineDetailBusy;
+    private string? fineDetailError;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/arena-materials.js");
+        // The page assembly and JS renderer must change together on iPhone Safari.
+        // Keep a versioned module URL to avoid serving stale functions from its module cache.
+        module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/arena-materials.js?v=20261022-fine-pixels-1");
         await module.InvokeVoidAsync("initMaterialsLab", canvas, seed);
     }
 
@@ -116,8 +126,26 @@
 
     private async Task ToggleFineDetail()
     {
-        fineDetail = !fineDetail;
-        if (module is not null) await module.InvokeVoidAsync("setGroundFineDetail", canvas, fineDetail);
+        if (module is null || fineDetailBusy) return;
+        fineDetailBusy = true;
+        fineDetailError = null;
+        try
+        {
+            // Do not claim On unless the loaded renderer has baked the updated atlas.
+            var next = !fineDetail;
+            if (await module.InvokeAsync<bool>("setGroundFineDetail", canvas, next))
+                fineDetail = next;
+            else
+                fineDetailError = "The material artwork is still loading. Try again.";
+        }
+        catch (JSException)
+        {
+            fineDetailError = "The ground renderer could not switch details. Reload this page.";
+        }
+        finally
+        {
+            fineDetailBusy = false;
+        }
     }
 
     public async ValueTask DisposeAsync()
