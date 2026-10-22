@@ -530,11 +530,30 @@ test('Town V2 iPhone staircase correction isolates physical treads from foregrou
     assert.match(code, /x \+ width > 465 \|\| y \+ height > 445/);
     assert.match(code, /destination-in/);
     assert.match(code, /toDataURL\("image\/png"\)/);
-    assert.match(code, /state\.route = planRoute\(state\.nav, START, FINISH\)/);
+    assert.match(code, /state\.route = planRoute\(state\.nav, START, PLAZA_END\)/);
     assert.doesNotMatch(code, /BEHIND_SHRUB/);
     assert.match(code, /stairAreaOccluded/);
     assert.match(sceneCode, /data-town-v2-depth-toggle="true"/);
     assert.match(code, /depthToggle\.removeEventListener/);
     const executable = code.split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(executable, /night-navigation\.json|TownCrowd|\.Occluders|CUTOUTS/);
+});
+
+test('Town V2 Phase 3 extends the raster route into the open west plaza, not the well', () => {
+    const code = source('src/Wyrmforge.Presentation.Web/wwwroot/js/town-v2-nexus.js');
+    const mask = source(art + '/nexus-v2-walk-mask.svg');
+    assert.match(mask, /Phase 3, still one NPC/);
+    assert.match(mask, /M 575 492 C 609 510 627 536 645 558/);
+    assert.match(code, /STAIR_EXIT = \{ x: 575, y: 492 \}/);
+    assert.match(code, /PLAZA_END = \{ x: 681, y: 623 \}/);
+    assert.match(code, /PLAZA_STONE = \{ x: 650, y: 565 \}/);
+    assert.match(code, /WELL_BASE = \{ x: 735, y: 550 \}/);
+    assert.match(code, /WEST_PLANTER = \{ x: 560, y: 612 \}/);
+    assert.match(code, /state\.route = planRoute\(state\.nav, START, PLAZA_END\)/);
+    assert.match(code, /if \(w\.direction === 1\) w\.plazaVisits\+\+/);
+    assert.match(code, /plazaVisits: entry\.plazaVisits/);
+    assert.match(code, /plaza route cuts across an unwalkable pixel/);
+    assert.match(code, /if \(w\.showMask\) \{[\s\S]*w\.route\.forEach/);
+    assert.match(code, /ctx\.save\(\);\s*ctx\.translate\(w\.position/);
+    assert.doesNotMatch(code, /BEHIND_SHRUB|night-navigation\.json[^\n]*import/);
 });
