@@ -1,0 +1,29 @@
+{
+  "revision": "tier-I-skin-003",
+  "bodyValue": 0.12,
+  "bodySaturation": 0.3,
+  "bodyTint": [
+    0.68,
+    0.73,
+    0.8,
+    1
+  ],
+  "wingValue": 0.22,
+  "wingSaturation": 0.85,
+  "wingTint": [
+    0.55,
+    0.12,
+    0.055,
+    1
+  ],
+  "aoInfluence": 0.65,
+  "localHeatStrength": 2.0,
+  "fireEnabled": false,
+  "flameHeight": 0.5,
+  "flameWidth": 0.15,
+  "flameEmission": 5.0,
+  "emberCount": 0,
+  "ownerAcceptedMaterials": false,
+  "bodySpecular": 0.3,
+  "bodyRoughnessFloor": 0.56
+}
