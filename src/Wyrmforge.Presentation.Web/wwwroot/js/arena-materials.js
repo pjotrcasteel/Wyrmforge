@@ -48,6 +48,22 @@ export function paintGroundCells(cells, columns, rows, x, y, index, radius = 2) 
     return changed;
 }
 
+// Fill the space between pointer events. Mobile browsers can coalesce rapid
+// moves; stamping only at each reported position leaves broken paint strokes.
+// Eight-pixel sampling is independent of frame rate, pressure and device DPI.
+export function paintGroundStroke(cells, columns, rows, fromX, fromY, toX, toY, index, radius = 2) {
+    if (![fromX, fromY, toX, toY].every(Number.isFinite)) return 0;
+    const distance = Math.hypot(toX - fromX, toY - fromY);
+    const steps = Math.max(1, Math.min(256, Math.ceil(distance / (CELL / 2))));
+    let changed = 0;
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        changed += paintGroundCells(cells, columns, rows,
+            fromX + (toX - fromX) * t, fromY + (toY - fromY) * t, index, radius);
+    }
+    return changed;
+}
+
 // Ground-only placement study. Derived from two correlated low-frequency soil
 // fields (wetness and wear), not a hand-drawn road, random prop scatter, or
 // gameplay collision map. Hardcoded structures and paving never appear here.
@@ -427,7 +443,11 @@ function locate(state, event) {
 }
 function stroke(state, event) {
     const p = locate(state, event);
-    paintGroundCells(state.cells, COLS, ROWS, p.x, p.y, state.selected, state.radius);
+    if (state.lastPoint)
+        paintGroundStroke(state.cells, COLS, ROWS,
+            state.lastPoint.x, state.lastPoint.y, p.x, p.y, state.selected, state.radius);
+    else paintGroundCells(state.cells, COLS, ROWS, p.x, p.y, state.selected, state.radius);
+    state.lastPoint = p;
     redraw(state);
 }
 
@@ -435,7 +455,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
     if (contexts.has(canvas)) return;
     const state = {
         canvas, seed: seed | 0, selected: 0, radius: 2,
-        cells: materialSampleBoard(), history: [], pointer: null,
+        cells: materialSampleBoard(), history: [], pointer: null, lastPoint: null,
         listeners: [], pending: false, frameId: 0, disposed: false, atlas: null, sourceAtlas: null,
     };
     const bind = (target, name, handler, options) => {
@@ -446,6 +466,7 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (state.pointer !== null) return;
         if (e.cancelable) e.preventDefault();
         state.pointer = e.pointerId;
+        state.lastPoint = null;
         record(state);
         canvas.setPointerCapture?.(e.pointerId);
         stroke(state, e);
@@ -455,7 +476,12 @@ export function initMaterialsLab(canvas, seed = 1441) {
         if (e.cancelable) e.preventDefault();
         stroke(state, e);
     });
-    const finish = e => { if (e.pointerId === state.pointer) state.pointer = null; };
+    const finish = e => {
+        if (e.pointerId !== state.pointer) return;
+        if (e.type === 'pointerup') stroke(state, e);
+        state.pointer = null;
+        state.lastPoint = null;
+    };
     bind(canvas, 'pointerup', finish);
     bind(canvas, 'pointercancel', finish);
     const preventScroll = e => { if (e.cancelable) e.preventDefault(); };
