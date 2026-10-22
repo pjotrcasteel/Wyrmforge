@@ -93,6 +93,34 @@ public sealed class MaterialLabBrowserTests : PageTest
             document.querySelector('.materials-lab .material-workspace canvas')?.dataset.fineDetail === 'off'");
         Assert.AreEqual(plainGrass, await ReadPixelHashAsync(),
             "The approved plain-grass preview must return byte-for-byte when Fine Detail is off.");
+
+        // Regression from 12:04 owner screenshots: natural mixed ground suffered
+        // rectangular colour bleed when Fine Detail painted foreign swatches.
+        var naturalFrame = await canvas.GetAttributeAsync("data-material-render");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Natural ground" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"frame =>
+            document.querySelector('.materials-lab .material-workspace canvas')?.dataset.materialRender !== frame",
+            naturalFrame);
+        await CaptureReferencePixelsAsync();
+        var naturalBaseline = await ReadPixelHashAsync();
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Fine detail Off" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelector('.materials-lab .material-workspace canvas')?.dataset.fineDetail === 'on'");
+        var mixedDifference = await ReadVisibleDifferenceAsync();
+        Assert.IsLessThan(19.0, mixedDifference.GetProperty("maximumRgbDelta").GetDouble(),
+            "Natural ground transitions must never acquire blocks from unrelated materials.");
+        Assert.IsGreaterThan(0.3, mixedDifference.GetProperty("changedPercent").GetDouble(),
+            "Fine Detail still sharpens the original mixed ground locally.");
+        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
+        {
+            Path = Path.Combine(artifactDir, "material-lab-natural-blends-on-390.png"),
+        });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Fine detail On" }).ClickAsync();
+        await Page.WaitForFunctionAsync(@"() =>
+            document.querySelector('.materials-lab .material-workspace canvas')?.dataset.fineDetail === 'off'");
+        Assert.AreEqual(naturalBaseline, await ReadPixelHashAsync(),
+            "Fine Detail Off restores the original blended grass/mud/marsh boundaries.");
     }
 
     private async Task CaptureReferencePixelsAsync() =>
