@@ -1,0 +1,124 @@
+@page "/arena-lighting"
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+
+<main class="lighting-lab">
+    <header>
+        <div>
+            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / LIGHTING L0–L1</span>
+            <h1>Wet Forest — Lighting Foundation</h1>
+            <p>A/B test ambient light and contact shadows on the <strong>actual approved ground compositor</strong>.
+                The two tree candidates are loaded locally, remain unapproved and never enter Hunts.</p>
+        </div>
+        <a href="arena-lab">← Ground-only lab</a>
+    </header>
+
+    <section class="lighting-controls" aria-label="Lighting comparison">
+        <label class="switch">
+            <input type="checkbox" @bind="enabled" @bind:after="SyncLighting" />
+            Unified light @(enabled ? "ON" : "OFF (baseline)")
+        </label>
+        <label class="switch">
+            <input type="checkbox" @bind="shadows" @bind:after="SyncLighting" />
+            Contact shadows
+        </label>
+        <label>Ambient darkness <strong>@ambientPercent%</strong>
+            <input type="range" min="0" max="50" step="1" @bind="ambientPercent" @bind:event="oninput" @bind:after="SyncLighting" />
+        </label>
+        <label>Light direction <strong>@sunAngle°</strong>
+            <input type="range" min="0" max="359" step="1" @bind="sunAngle" @bind:event="oninput" @bind:after="SyncLighting" />
+        </label>
+        <label>Ground seed
+            <input type="number" @bind="seed" />
+        </label>
+        <button type="button" @onclick="SyncLighting">Apply seed</button>
+    </section>
+
+    <div class="lighting-layout">
+        <section class="lighting-stage">
+            <canvas @ref="canvas" aria-label="Ground lighting comparison with optional new tree candidate images" tabindex="0"></canvas>
+            <span class="lighting-help">Drag to pan · same approved ground and seed in both modes</span>
+            <span class="lighting-status">@(enabled ? "SHARED LIGHT" : "BASELINE") · @(shadows && enabled ? "SHADOWS" : "NO SHADOWS")</span>
+        </section>
+        <aside class="lighting-inspector">
+            <h2>Original tree candidates</h2>
+            <p>Use <a href="https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39959218973">
+                the Step 3 render artifact</a> from the source-only asset PR. Select each transparent
+                <code>*-candidate.png</code> after extracting the archive. Images stay in this browser tab.</p>
+            <label>Ancient oak PNG
+                <input type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
+            </label>
+            <span class="feedback">@oakStatus</span>
+            <label>Dead elm PNG
+                <input type="file" accept="image/png,image/webp" @ref="elmPicker" @onchange="LoadElm" />
+            </label>
+            <span class="feedback">@elmStatus</span>
+            <h3>Acceptance scope</h3>
+            <p>The same ambient and directional lighting applies to the ground and any loaded sprites.
+                Shadows are soft, based on authored trunk-root contact footprints, not canopy alpha or collision.</p>
+            <p><strong>Not implemented:</strong> normal maps, local spell lights, actual C# gameplay snapshots,
+                native GPU optimization, enemy rendering, physical collision, or final art approval.</p>
+            <p class="notice">L0–L1 isolated study. No legacy trees, props, cobblestones or sprite replacements.</p>
+        </aside>
+    </div>
+</main>
+
+@code {
+    [Inject] private IJSRuntime JavaScript { get; set; } = null!;
+
+    private ElementReference canvas;
+    private ElementReference oakPicker;
+    private ElementReference elmPicker;
+    private IJSObjectReference? module;
+    private int seed = 1204;
+    private int ambientPercent = 24;
+    private int sunAngle = 315;
+    private bool enabled;
+    private bool shadows = true;
+    private string oakStatus = "No image selected";
+    private string elmStatus = "No image selected";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
+            "./js/arena-lighting-lab.js?v=20261023-l1-1");
+        await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
+    }
+
+    private object Profile() => new
+    {
+        enabled,
+        shadows,
+        ambient = ambientPercent / 100.0,
+        sunDegrees = sunAngle,
+    };
+
+    private Task SyncLighting() => module is null
+        ? Task.CompletedTask
+        : module.InvokeVoidAsync("configureArenaLighting", canvas, seed, Profile()).AsTask();
+
+    private async Task LoadOak(ChangeEventArgs _)
+    {
+        oakStatus = module is not null && await module.InvokeAsync<bool>(
+            "loadArenaLightingSprite", canvas, oakPicker, "oak")
+            ? "Original candidate loaded (review only)" : "Invalid or missing image";
+    }
+
+    private async Task LoadElm(ChangeEventArgs _)
+    {
+        elmStatus = module is not null && await module.InvokeAsync<bool>(
+            "loadArenaLightingSprite", canvas, elmPicker, "elm")
+            ? "Original candidate loaded (review only)" : "Invalid or missing image";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeArenaLighting", canvas); }
+        catch (JSDisconnectedException) { }
+        await module.DisposeAsync();
+    }
+}
