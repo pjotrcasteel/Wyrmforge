@@ -20,36 +20,50 @@ public sealed class ArenaLightingBrowserTests : PageTest
         await Expect(canvas).ToBeVisibleAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const canvas = document.querySelector('.lighting-stage canvas');
-            return canvas?.dataset.lightingReady === 'true' && canvas.dataset.lightingEnabled === 'false';
+            return canvas?.dataset.lightingReady === 'true' && canvas.dataset.lightingEnabled === 'true';
         }", null, new PageWaitForFunctionOptions { Timeout = 30000 });
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-legacy-assets", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-physics-objects", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-approved-ground", "true");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-objects", "0");
 
-        var baseline = await CanvasPixelHashAsync(canvas);
         var lightingCheckbox = Page.Locator(".lighting-controls input[type='checkbox']").First;
-        await lightingCheckbox.CheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-enabled", "true");
+        await Expect(canvas).ToHaveAttributeAsync("data-gothic-night", "true");
+        await Expect(canvas).ToHaveAttributeAsync("data-fire-calibration", "true");
         var lit = await CanvasPixelHashAsync(canvas);
-        Assert.AreNotEqual(baseline, lit, "Lighting On must change actual approved ground pixels.");
+        var calibrationFire = Page.Locator(".lighting-controls input[type='checkbox']").Nth(2);
+        await calibrationFire.UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-fire-calibration", "false");
+        Assert.AreNotEqual(lit, await CanvasPixelHashAsync(canvas),
+            "Real darkness must visibly respond when its fire source disappears.");
+        await calibrationFire.CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-fire-calibration", "true");
+        Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas),
+            "Restoring the same physical light and ground must restore the exact original image.");
 
         var target = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(target);
         await canvas.ScreenshotAsync(new LocatorScreenshotOptions
         {
-            Path = Path.Combine(target, $"arena-lighting-l1-on-{width}.png"),
+            Path = Path.Combine(target, $"arena-gothic-night-fire-on-{width}.png"),
         });
 
         await lightingCheckbox.UncheckAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-enabled", "false");
-        // The source ground atlas, color and material masks must be untouched by the renderer.
+        var baseline = await CanvasPixelHashAsync(canvas);
+        Assert.AreNotEqual(lit, baseline, "The unlit approved material texture must differ from nighttime firelight.");
+        await lightingCheckbox.CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-enabled", "true");
+        Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas),
+            "Night light On must restore precisely the previous approved ground and fire rendering.");
+        await lightingCheckbox.UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-enabled", "false");
         Assert.AreEqual(baseline, await CanvasPixelHashAsync(canvas),
-            "Lighting Off must restore precisely the original approved ground rendering.");
+            "Disabling lighting again must preserve the untouched approved ground.");
         await canvas.ScreenshotAsync(new LocatorScreenshotOptions
         {
-            Path = Path.Combine(target, $"arena-lighting-l1-off-{width}.png"),
+            Path = Path.Combine(target, $"arena-gothic-night-original-ground-{width}.png"),
         });
     }
 
