@@ -37,25 +37,16 @@
                  style="left:51.7943%;top:35.3880%;width:48.2057%;height:64.6120%" alt="" draggable="false" />
         }
 
-        @* A localized colored light, not an edit/filter of the approved town painting.
-           Render beneath the NPC/cutout strata; do not cover an unbuilt Nexus. *@
+        @* These are six real, independent SVG asset files sourcing the six approved
+           painting panels, registered to the existing 1672x941 town panorama.
+           They affect only the Nexus footprint. No recoloring of the original scene. *@
         @if (NexusArtworkUnlocked && DisplayNexusSchool is { } displaySchool)
         {
-            @* Arcane stays exactly as painted. Other schools recolor only existing
-               violet magic pixels, without generating or editing building artwork. *@
-            @if (displaySchool != PassiveSchool.Arcane)
-            {
-                <div class="refuge-town-nexus-chroma" data-nexus-emitter-color="true"
-                     data-nexus-school="@displaySchool.ToString().ToLowerInvariant()" aria-hidden="true"></div>
-            }
-            <canvas class="refuge-town-nexus-pixels" data-nexus-pixels="true"
-                    width="1672" height="941" aria-hidden="true"></canvas>
-            @if (NexusArtworkUnlocked)
-            {
-                <div class="refuge-town-nexus-radiance" data-nexus-radiance="true"
-                     data-nexus-school="@displaySchool.ToString().ToLowerInvariant()"
-                     style="@TownNexusRadiance.Style(NexusMasteryPoints)" aria-hidden="true"></div>
-            }
+            var nexusVariant = displaySchool.ToString().ToLowerInvariant();
+            <img class="refuge-town-nexus-approved-variant"
+                 data-nexus-school-art="@nexusVariant"
+                 src="@($"art/town/nexus-school-variants/{nexusVariant}.svg?v={AppBuildInfo.Version}")"
+                 alt="" aria-hidden="true" draggable="false" />
         }
 
         @if (showTownV2)
@@ -262,8 +253,6 @@
     private DotNetObjectReference<CanonicalTownView>? routeClickReference;
     private bool foregroundMounted;
     private bool showTownV2;
-    private IJSObjectReference? nexusVariantModule;
-    private string? lastNexusRenderKey;
     private IJSObjectReference? townV2Module;
     private bool townV2Mounted;
 
@@ -312,29 +301,6 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (NexusArtworkUnlocked && DisplayNexusSchool is { } school)
-        {
-            var renderKey = school.ToString() + ":" + NexusMasteryPoints;
-            if (lastNexusRenderKey != renderKey)
-            {
-                try
-                {
-                    nexusVariantModule ??= await JS.InvokeAsync<IJSObjectReference>(
-                        "import", "./js/town-nexus-variants.js?v=1");
-                    await nexusVariantModule.InvokeVoidAsync("syncNexusVariant", ".refuge-canonical-scene");
-                    lastNexusRenderKey = renderKey;
-                }
-                catch (JSException exception)
-                {
-                    Logger.LogWarning(exception, "Nexus palette not available; retaining localized CSS color fallback.");
-                }
-            }
-        }
-        else
-        {
-            lastNexusRenderKey = null;
-        }
-
         if (showTownV2)
         {
             if (townV2Mounted) return;
@@ -433,8 +399,6 @@
             _ = townV2Module.InvokeVoidAsync("disposeTownV2Nexus", ".refuge-canonical-scene");
         if (townV2Module is not null)
             _ = townV2Module.DisposeAsync();
-        if (nexusVariantModule is not null)
-            _ = nexusVariantModule.DisposeAsync();
         if (foregroundModule is not null)
             _ = foregroundModule.DisposeAsync();
     }
