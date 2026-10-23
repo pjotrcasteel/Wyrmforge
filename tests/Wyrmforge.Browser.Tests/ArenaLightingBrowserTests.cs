@@ -91,12 +91,28 @@ public sealed class ArenaLightingBrowserTests : PageTest
         await Expect(canvas).ToHaveAttributeAsync("data-tree-self-lighting", "2");
         await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "2");
         var lit = await CanvasPixelHashAsync(canvas);
+        await canvas.EvaluateAsync(@"canvas => {
+            canvas.__shadowReference = canvas.getContext('2d')
+                .getImageData(0, 0, canvas.width, canvas.height).data.slice();
+        }");
         await SaveScreenshotAsync(canvas, $"arena-l4-source-tree-lit-shadows-{width}.png");
 
         await Page.Locator("#toggle-shadows").UncheckAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "0");
         Assert.AreNotEqual(lit, await CanvasPixelHashAsync(canvas),
             "Removing the actual tree silhouette cast must change ground pixels beneath the firelight.");
+        var shadowContrast = await canvas.EvaluateAsync<int>(@"canvas => {
+            const before = canvas.__shadowReference;
+            const after = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            let contrast = 0;
+            for (let index = 0; index < before.length; index += 4)
+                contrast = Math.max(contrast, Math.abs(before[index] - after[index]),
+                    Math.abs(before[index + 1] - after[index + 1]),
+                    Math.abs(before[index + 2] - after[index + 2]));
+            return contrast;
+        }");
+        Assert.IsGreaterThan(32, shadowContrast,
+            "A practically invisible shadow is not enough; the silhouette must create clear local contrast.");
         await SaveScreenshotAsync(canvas, $"arena-l4-source-tree-no-shadows-{width}.png");
         await Page.Locator("#toggle-shadows").CheckAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "2");
