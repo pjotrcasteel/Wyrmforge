@@ -105,13 +105,16 @@ public sealed class ArenaLightingBrowserTests : PageTest
 
         // Light moves in WORLD SPACE, so a tree's projected silhouette moves
         // opposite the Fireball while the lit tree face also changes direction.
-        await Page.Locator("#fireball-progress").FillAsync("15");
+        await Page.Locator("#fireball-progress").EvaluateAsync(
+            @"(input, value) => { input.value = String(value); input.dispatchEvent(new Event('input', { bubbles: true })); }", 15);
         await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.150");
         await SaveScreenshotAsync(canvas, $"arena-l4-shadow-fireball-left-{width}.png");
-        await Page.Locator("#fireball-progress").FillAsync("85");
+        await Page.Locator("#fireball-progress").EvaluateAsync(
+            @"(input, value) => { input.value = String(value); input.dispatchEvent(new Event('input', { bubbles: true })); }", 85);
         await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.850");
         await SaveScreenshotAsync(canvas, $"arena-l4-shadow-fireball-right-{width}.png");
-        await Page.Locator("#fireball-progress").FillAsync("50");
+        await Page.Locator("#fireball-progress").EvaluateAsync(
+            @"(input, value) => { input.value = String(value); input.dispatchEvent(new Event('input', { bubbles: true })); }", 50);
         await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.500");
         Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas));
         await SaveScreenshotAsync(canvas, $"arena-l3-original-trees-airborne-fire-{width}.png");
