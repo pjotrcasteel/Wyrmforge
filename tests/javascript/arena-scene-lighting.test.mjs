@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { resolveSceneLighting, contactShadowPlan, drawContactShadow, drawSceneLighting,
-    sortSpritesByFoot } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-scene-lighting.js';
+import { resolveSceneLighting, contactShadowPlan, projectedShadowPlan, drawContactShadow, drawSceneLighting,
+    sortSpritesByFoot, spriteFootPlacement } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-scene-lighting.js';
 import { groundFoundationBoard } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-ground-foundation.js';
 
 const read = path => readFileSync(
@@ -43,6 +43,7 @@ function fakeContext() {
         save() { operations.push('save'); }, restore() { operations.push('restore'); },
         translate(x, y) { operations.push(['translate', x, y]); },
         scale(x, y) { operations.push(['scale', x, y]); },
+        rotate(angle) { operations.push(['rotate', angle]); },
         fillRect(...args) { operations.push(['fill', ...args]); },
         createRadialGradient() { operations.push('radial'); return gradient(); },
         createLinearGradient(...args) { operations.push(['linear', ...args]); return gradient(); },
@@ -67,6 +68,26 @@ test('disabled lighting is exactly no-op, and world light is independent of came
     assert.equal(drawSceneLighting(ctx, { width: 0, height: 0 }, setting), false);
 });
 
+test('L2 projected shadows follow the shared sun direction and ignore sprite alpha or physics', () => {
+    const foot = { x: 480, y: 720 };
+    const east = projectedShadowPlan(foot, 42, 230, { enabled: true, sunDegrees: 0 });
+    const west = projectedShadowPlan(foot, 42, 230, { enabled: true, sunDegrees: 180 });
+    assert.ok(east.x < foot.x);
+    assert.ok(west.x > foot.x);
+    assert.ok(east.opacity > 0 && east.opacity < .11);
+    assert.ok(east.radiusX > east.radiusY);
+    assert.ok(Math.abs(east.y - foot.y) < 1e-9);
+    assert.deepEqual(east, projectedShadowPlan(foot, 42, 230, { enabled: true, sunDegrees: 0 }));
+    assert.deepEqual(foot, { x: 480, y: 720 }, 'Pure plans must not move the source foot pivot');
+    assert.equal(projectedShadowPlan(foot, 42, 230, { enabled: false }), null);
+    assert.equal(projectedShadowPlan(foot, 42, 230, { enabled: true, shadows: false }), null);
+    assert.equal(projectedShadowPlan(foot, 42, 0, { enabled: true }), null);
+    const ctx = fakeContext();
+    assert.equal(drawContactShadow(ctx, east), true);
+    assert.equal(ctx.operations.filter(x => Array.isArray(x) && x[0] === 'rotate').length, 1);
+    assert.equal(ctx.operations.at(-1), 'restore');
+});
+
 test('soft contact ellipse is painted behind independent sprites, not into material atlas', () => {
     const ctx = fakeContext();
     assert.equal(drawContactShadow(ctx, null), false);
@@ -76,6 +97,21 @@ test('soft contact ellipse is painted behind independent sprites, not into mater
     assert.ok(ctx.operations.includes('radial'));
     assert.equal(ctx.operations.filter(x => Array.isArray(x) && x[0] === 'scale').length, 1);
     assert.equal(ctx.operations.at(-1), 'restore');
+});
+
+test('L2 sprite placement registers the opaque trunk base, not the lowest thin roots', () => {
+    const foot = { x: 415, y: 755 };
+    const crop = { width: 452, height: 530, footInsetPixels: 30 };
+    const drawn = spriteFootPlacement(foot, crop, 235);
+    assert.ok(drawn.y > 755 - 235, 'Root projections may extend below the solid trunk pivot');
+    assert.ok(Math.abs(drawn.y + drawn.height - 755 - 30 * 235 / 530) < 1e-9);
+    assert.ok(Math.abs(drawn.x + drawn.width * .5 - 415) < 1e-9);
+    assert.deepEqual(foot, { x: 415, y: 755 });
+    assert.deepEqual(spriteFootPlacement(foot, crop, 235), drawn);
+    const legacy = spriteFootPlacement(foot, { width: 452, height: 530 }, 235);
+    assert.equal(legacy.y + legacy.height, 755);
+    assert.equal(spriteFootPlacement(foot, { width: 0, height: 530 }, 235), null);
+    assert.equal(spriteFootPlacement({ x: Number.NaN, y: 0 }, crop, 235), null);
 });
 
 test('sprites sort by foot anchor, not crown height; input is not mutated', () => {
@@ -101,7 +137,9 @@ test('isolated lab reuses exact accepted board + quilt + transitions with opt-in
     assert.match(lab, /drawGroundMaterialTransitions\(ctx, board, atlas/);
     assert.match(lab, /const crop = image\.crop/);
     assert.match(lab, /sortSpritesByFoot/);
-    assert.match(lab, /drawContactShadow\(ctx, plan\)/);
+    assert.match(lab, /state.showAnchors/);
+    assert.match(lab, /drawContactShadow\(ctx, contactShadowPlan\(/);
+    assert.match(lab, /drawContactShadow\(ctx, projectedShadowPlan\(/);
     assert.match(lab, /drawSceneLighting\(ctx, world, state\.light\)/);
     assert.match(lab, /URL\.revokeObjectURL/);
     assert.match(page, /@page "\/arena-lighting"/);

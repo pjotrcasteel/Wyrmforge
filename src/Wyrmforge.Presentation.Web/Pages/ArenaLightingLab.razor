@@ -7,7 +7,7 @@
 <main class="lighting-lab">
     <header>
         <div>
-            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / LIGHTING L0–L1</span>
+            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / LIGHTING L0–L2</span>
             <h1>Wet Forest — Lighting Foundation</h1>
             <p>A/B test ambient light and contact shadows on the <strong>actual approved ground compositor</strong>.
                 The two tree candidates are loaded locally, remain unapproved and never enter Hunts.</p>
@@ -22,7 +22,11 @@
         </label>
         <label class="switch">
             <input type="checkbox" @bind="shadows" @bind:after="SyncLighting" />
-            Contact shadows
+            Ground + cast shadows
+        </label>
+        <label class="switch">
+            <input type="checkbox" @bind="showAnchors" @bind:after="SyncLighting" />
+            Show root anchors (debug)
         </label>
         <label>Ambient darkness <strong>@ambientPercent%</strong>
             <input type="range" min="0" max="50" step="1" @bind="ambientPercent" @bind:event="oninput" @bind:after="SyncLighting" />
@@ -39,7 +43,7 @@
     <div class="lighting-layout">
         <section class="lighting-stage">
             <canvas @ref="canvas" aria-label="Ground lighting comparison with optional new tree candidate images" tabindex="0"></canvas>
-            <span class="lighting-help">Drag to pan · same approved ground and seed in both modes</span>
+            
             <span class="lighting-status">@(enabled ? "SHARED LIGHT" : "BASELINE") · @(shadows && enabled ? "SHADOWS" : "NO SHADOWS")</span>
         </section>
         <aside class="lighting-inspector">
@@ -56,11 +60,14 @@
             </label>
             <span class="feedback">@elmStatus</span>
             <h3>Acceptance scope</h3>
-            <p>The same ambient and directional lighting applies to the ground and any loaded sprites.
-                Shadows are soft, based on authored trunk-root contact footprints, not canopy alpha or collision.</p>
+            <p>Drag inside the canvas to pan; the light, tree anchors and approved ground share world coordinates.</p>
+            <p>The same ambient and directional light applies to the approved ground and optional sprites.
+                Soft contact shading and very subtle directional cast shadows are composed beneath all trees.
+                Enable <strong>Show root anchors</strong> to inspect the trunk-foot pivot and clearance,
+                rather than hiding artwork registration problems behind effects.</p>
             <p><strong>Not implemented:</strong> normal maps, local spell lights, actual C# gameplay snapshots,
                 native GPU optimization, enemy rendering, physical collision, or final art approval.</p>
-            <p class="notice">L0–L1 isolated study. No legacy trees, props, cobblestones or sprite replacements.</p>
+            <p class="notice">L0–L2 isolated study. No legacy trees, props, cobblestones or sprite replacements.</p>
         </aside>
     </div>
 </main>
@@ -77,6 +84,7 @@
     private int sunAngle = 315;
     private bool enabled;
     private bool shadows = true;
+    private bool showAnchors;
     private string oakStatus = "No image selected";
     private string elmStatus = "No image selected";
 
@@ -84,7 +92,7 @@
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
-            "./js/arena-lighting-lab.js?v=20261023-l1-1");
+            "./js/arena-lighting-lab.js?v=20261023-l2-1");
         await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
     }
 
@@ -92,6 +100,7 @@
     {
         enabled,
         shadows,
+        showAnchors,
         ambient = ambientPercent / 100.0,
         sunDegrees = sunAngle,
     };
