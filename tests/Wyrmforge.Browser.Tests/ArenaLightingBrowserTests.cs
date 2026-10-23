@@ -41,6 +41,13 @@ public sealed class ArenaLightingBrowserTests : PageTest
         var darkMaximum = await CanvasMaximumRgbAsync(canvas);
         Assert.IsLessThanOrEqualTo(28, darkMaximum,
             "With no flame, every approved ground pixel must be genuinely near-black.");
+        var nightEvidence = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
+            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+        Directory.CreateDirectory(nightEvidence);
+        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
+        {
+            Path = Path.Combine(nightEvidence, $"arena-gothic-night-no-fire-{width}.png"),
+        });
         await calibrationFire.CheckAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-fire-calibration", "true");
         Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas),
