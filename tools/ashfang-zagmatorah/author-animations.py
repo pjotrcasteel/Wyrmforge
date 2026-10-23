@@ -160,7 +160,9 @@ def setpose(name,t):
   if name.startswith('bank_'):rot('Spine03',(1,0,0),(.3 if name.endswith('left') else -.3)*bell(t,0,.5,1))
  if name=='takeoff':
   load=bell(t,0,.29,.44);rear=bell(t,.05,.31,.67);rootmove((.35*load,0,-.62*load));rot('Spine03',(0,1,0),.34*rear);rot('Tail01',(0,1,0),-.32*rear)
-  for con in ground_cons:con.influence=1-smooth((t-.385)/.075)
+  for con in ground_cons:con.influence=1-smooth((t-.34)/.10)
+  for foot in ('Feet_l','Feet_r','FeetConnection_l','FeetConnection_r'):
+   for con in solver.pose.bones[foot].constraints:con.influence=1-smooth((t-.385)/.075)
   for con in wing_cons:con.influence=1-smooth((t-.34)/.12)
   for side in ('l','r'):target,home=targets[('fore',side)];target.location=home+Vector((.25*rear,0,1.2*rear))
  if name=='land':rootmove((0,0,-.48*bell(t,.57,.74,.98)))
