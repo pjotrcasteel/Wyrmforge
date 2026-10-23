@@ -25,7 +25,9 @@ export function shadeTreeCameraNormals(albedo, normals, light, darkness = .90, o
         const supported = normals[i + 3] > 6;
         const nx = supported ? normals[i] / 127.5 - 1 : 0;
         const ny = supported ? normals[i + 1] / 127.5 - 1 : 0;
-        const nz = supported ? normals[i + 2] / 127.5 - 1 : 1;
+        // Blender camera looks down -Z: a surface facing the camera has negative
+        // camera Z. Flip it to the positive-facing term of our 2.5D light.
+        const nz = supported ? 1 - normals[i + 2] / 127.5 : 1;
         const dot = Math.max(0, nx * lx + ny * ly + nz * lz);
         const lighting = strength * dot;
         const diffuse = ambient + lighting * .98;
