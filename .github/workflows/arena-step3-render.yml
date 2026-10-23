@@ -5,6 +5,7 @@ on:
     paths:
       - tools/art/step3_wet_forest.py
       - tools/art/verify_step3_wet_forest.py
+      - tools/art/step3_ground_review.py
       - art/source/environment/wet-forest/catalog.json
       - .github/workflows/arena-step3-render.yml
   workflow_dispatch:
@@ -62,6 +63,13 @@ jobs:
           PY
       - name: Inspect real transparent pixels and silhouette framing
         run: python3 tools/art/verify_step3_wet_forest.py artifacts/wet-forest
+      - name: Make native-size review frames against existing approved grass and mud
+        run: |
+          python3 -m pip install --disable-pip-version-check "Pillow==11.3.0"
+          python3 tools/art/step3_ground_review.py \
+            --renders artifacts/wet-forest \
+            --atlas src/Wyrmforge.Presentation.Web/wwwroot/art/environment/wet-forest-materials-painted.webp \
+            --out artifacts/wet-forest/mobile-review
       - name: Preserve editable .blend files and review PNGs
         if: always()
         uses: actions/upload-artifact@v4
