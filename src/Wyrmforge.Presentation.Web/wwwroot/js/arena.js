@@ -16,6 +16,8 @@ import { drawWinterBellGround, drawWinterBellAir } from './arena-winterbell-vfx.
 import { drawGlassReliquaryGround, drawGlassReliquaryAir } from './arena-glass-reliquary-vfx.js';
 import { loadArt, artReady, hasArtFrame, drawArtFrame } from './art-atlas.js';
 import { buildSpellLights, drawSpellLightSpill, sampleSpellLight } from './arena-spell-lighting.js';
+import { gothicNightLightSources, gothicNightPlan, drawGothicNight, GOTHIC_NIGHT } from './arena-night-lighting.js';
+import { createWetForestFirelightPlan } from './arena-wet-forest-dressing.js';
 import { resolveArenaCamera, drawExitGuide } from './arena-camera.js';
 import { drawEliteGround, drawEliteCrest } from './arena-elite-vfx.js';
 import { drawLightningTrace } from './arena-lightning-vfx.js';
@@ -62,6 +64,7 @@ export function readArenaDiagnostics(canvas) {
         dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
         renderingFailed: Boolean(state.renderingFailed),
+        lighting: { mode: 'night', darkness: GOTHIC_NIGHT.darkness, source: 'authoritative-csharp-snapshot' },
     };
 }
 
@@ -78,6 +81,7 @@ function createState(canvas, dotNetReference) {
     return {
         canvas,
         context: canvas.getContext('2d'),
+        nightMask: document.createElement('canvas'),
         dotNetReference,
         active: true,
         simulationBusy: false,
@@ -295,7 +299,19 @@ function draw(state, snapshot, width, height) {
     }
     const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches, snapshot.dragonBreath);
-    // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
+    // The WORLD is always at night. Render the SAME darkness across ground,
+    // physical scenery, enemies, mage and Wyrm. Real fire/elemental cast,
+    // impacts, burning trees and Fire Wyrm breath cut light into all layers.
+    // Keep high-priority attack tells and magical VFX ABOVE the veil.
+    const realFires = createWetForestFirelightPlan(snapshot.environment, worldWidth, worldHeight);
+    const nightSources = gothicNightLightSources(snapshot, spellLights, worldWidth, worldHeight, realFires);
+    drawGothicNight(ctx, gothicNightPlan(snapshot.player, nightSources, lightViewport), state.nightMask);
+    // Tactical telegraphs must remain readable even when the ground is nearly
+    // black. They are presentation cues, not physical light emitters.
+    for (const enemy of snapshot.enemies) drawEnemyTelegraph(ctx, enemy);
+    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath,
+        snapshot.dragon?.school ?? snapshot.hunt?.school);
+    // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);

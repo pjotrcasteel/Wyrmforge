@@ -10,119 +10,138 @@ public sealed class ArenaLightingBrowserTests : PageTest
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_OriginalGround_SharedLightChangesPixelsAndOffRestoresBaseline(int width, int height)
+    public async Task Mobile_FireballTorchAndNight_BothContrastAndOriginalGroundArePreserved(int width, int height)
     {
-        await Page.SetViewportSizeAsync(width, height);
-        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
-        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/arena-lighting",
-            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        // Startup ignition fades out after Blazor is ready. Element screenshots
-        // taken during that fade show misleading ghost text over real terrain.
-        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
-            null, new PageWaitForFunctionOptions { Timeout = 30000 });
-        var canvas = Page.Locator(".lighting-stage canvas");
-        await Expect(canvas).ToBeVisibleAsync();
-        await Page.WaitForFunctionAsync(@"() => {
-            const canvas = document.querySelector('.lighting-stage canvas');
-            return canvas?.dataset.lightingReady === 'true' && canvas.dataset.lightingEnabled === 'false';
-        }", null, new PageWaitForFunctionOptions { Timeout = 30000 });
+        var canvas = await OpenLightingLabAsync(width, height);
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-approved-ground", "true");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-legacy-assets", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-physics-objects", "0");
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-approved-ground", "true");
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-objects", "0");
+        await Expect(canvas).ToHaveAttributeAsync("data-gothic-night", "true");
 
-        var baseline = await CanvasPixelHashAsync(canvas);
-        var lightingCheckbox = Page.Locator(".lighting-controls input[type='checkbox']").First;
-        await lightingCheckbox.CheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-enabled", "true");
-        var lit = await CanvasPixelHashAsync(canvas);
-        Assert.AreNotEqual(baseline, lit, "Lighting On must change actual approved ground pixels.");
+        // Freeze the flying projectile halfway through its actual world-space
+        // flight for reproducible captures, without stopping the firelight.
+        await Page.Locator("#toggle-animate").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.500");
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-calibration", "true");
+        await Page.Locator("#toggle-torch").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-torch-calibration", "false");
+        var fireball = await CanvasPixelHashAsync(canvas);
+        var fireballMax = await CanvasMaximumRgbAsync(canvas);
+        await SaveScreenshotAsync(canvas, $"arena-l3-mid-air-fireball-{width}.png");
 
-        var target = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
-            ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
-        Directory.CreateDirectory(target);
-        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
-        {
-            Path = Path.Combine(target, $"arena-lighting-l1-on-{width}.png"),
-        });
+        // The secondary torch is a separate, smaller light source, not
+        // just a duplicate fireball shape.
+        await Page.Locator("#toggle-torch").CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-torch-calibration", "true");
+        Assert.AreNotEqual(fireball, await CanvasPixelHashAsync(canvas));
+        await SaveScreenshotAsync(canvas, $"arena-l3-fireball-and-torch-{width}.png");
 
-        await lightingCheckbox.UncheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-enabled", "false");
-        // The source ground atlas, color and material masks must be untouched by the renderer.
-        Assert.AreEqual(baseline, await CanvasPixelHashAsync(canvas),
-            "Lighting Off must restore precisely the original approved ground rendering.");
-        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
-        {
-            Path = Path.Combine(target, $"arena-lighting-l1-off-{width}.png"),
-        });
+        await Page.Locator("#toggle-fireball").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-calibration", "false");
+        var torch = await CanvasPixelHashAsync(canvas);
+        Assert.AreNotEqual(fireball, torch);
+        await SaveScreenshotAsync(canvas, $"arena-l3-torch-alone-{width}.png");
+
+        await Page.Locator("#toggle-torch").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-torch-calibration", "false");
+        var darkness = await CanvasPixelHashAsync(canvas);
+        var nightMax = await CanvasMaximumRgbAsync(canvas);
+        Assert.IsLessThanOrEqualTo(28, nightMax, "Without any real light, approved ground must remain near-black.");
+        Assert.IsGreaterThan(nightMax + 45, fireballMax, "Airborne fire must brighten the same environment.");
+        await SaveScreenshotAsync(canvas, $"arena-l3-night-no-light-{width}.png");
+
+        await Page.Locator("#toggle-night").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-gothic-night", "false");
+        var original = await CanvasPixelHashAsync(canvas);
+        Assert.AreNotEqual(darkness, original);
+        await SaveScreenshotAsync(canvas, $"arena-l3-original-approved-ground-{width}.png");
+
+        await Page.Locator("#toggle-night").CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-gothic-night", "true");
+        Assert.AreEqual(darkness, await CanvasPixelHashAsync(canvas),
+            "Restoring night with no emitters must preserve original ground and deterministic darkness.");
+
+        await Page.Locator("#toggle-fireball").CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-calibration", "true");
+        Assert.AreEqual(fireball, await CanvasPixelHashAsync(canvas),
+            "Reinstating the same frozen Fireball must reproduce exact material, mist and glow pixels.");
     }
 
     [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
-    public async Task Mobile_OriginalCandidateTrees_HaveWorldFootAnchorsAndCoherentShadows(int width, int height)
+    public async Task Mobile_OriginalCandidateTrees_L2FeetAndL3FirePreserveIndependentArt(int width, int height)
     {
-        // Optional exact Step-3 source PNGs are downloaded as a CI review
-        // artifact. The art remains UNAPPROVED and never ships with the game.
         var assets = Environment.GetEnvironmentVariable("WYRMFORGE_STEP3_ASSETS");
         var oak = Path.Combine(assets ?? string.Empty, "ancient_oak", "ancient_oak-candidate.png");
         var elm = Path.Combine(assets ?? string.Empty, "dead_elm", "dead_elm-candidate.png");
         if (string.IsNullOrWhiteSpace(assets) || !File.Exists(oak) || !File.Exists(elm))
         {
-            Console.WriteLine("No source-candidate PNGs available: optional composition review skipped.");
+            Console.WriteLine("Original Step-3 PNG artifact unavailable: only optional unapproved tree composition skipped.");
             return;
         }
 
-        await Page.SetViewportSizeAsync(width, height);
-        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
-        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/arena-lighting",
-            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        // Startup ignition fades out after Blazor is ready. Element screenshots
-        // taken during that fade show misleading ghost text over real terrain.
-        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
-            null, new PageWaitForFunctionOptions { Timeout = 30000 });
-        var canvas = Page.Locator(".lighting-stage canvas");
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-ready", "true",
-            new LocatorAssertionsToHaveAttributeOptions { Timeout = 45000 });
+        var canvas = await OpenLightingLabAsync(width, height);
+        await Page.Locator("#toggle-animate").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.500");
         await Page.Locator(".lighting-inspector input[type='file']").Nth(0).SetInputFilesAsync(oak);
         await Page.Locator(".lighting-inspector input[type='file']").Nth(1).SetInputFilesAsync(elm);
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-objects", "2");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-physics-objects", "0");
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-legacy-assets", "0");
-        var baseline = await CanvasPixelHashAsync(canvas);
-
-        await Page.Locator(".lighting-controls input[type='checkbox']").First.CheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-shadows", "2");
         var lit = await CanvasPixelHashAsync(canvas);
-        Assert.AreNotEqual(baseline, lit, "Tree and ground must react to shared world lighting.");
+        await SaveScreenshotAsync(canvas, $"arena-l3-original-trees-airborne-fire-{width}.png");
+
+        await Page.Locator("#toggle-anchors").CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-anchors", "true");
+        await SaveScreenshotAsync(canvas, $"arena-l3-original-tree-foot-anchors-{width}.png");
+        await Page.Locator("#toggle-anchors").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-anchors", "false");
+        Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas));
+
+        await Page.Locator("#toggle-night").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-shadows", "0");
+        var baseline = await CanvasPixelHashAsync(canvas);
+        Assert.AreNotEqual(lit, baseline);
+        await Page.Locator("#toggle-night").CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-gothic-night", "true");
+        Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas));
+    }
+
+    private async Task<ILocator> OpenLightingLabAsync(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
+        await Page.GotoAsync(baseUrl.TrimEnd('/') + "/arena-lighting",
+            new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
+            null, new PageWaitForFunctionOptions { Timeout = 30000 });
+        var canvas = Page.Locator(".lighting-stage canvas");
+        await Expect(canvas).ToBeVisibleAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-lighting-ready", "true",
+            new LocatorAssertionsToHaveAttributeOptions { Timeout = 45000 });
+        return canvas;
+    }
+
+    private async Task SaveScreenshotAsync(ILocator canvas, string fileName)
+    {
         var dir = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
         Directory.CreateDirectory(dir);
-        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
-        {
-            Path = Path.Combine(dir, $"arena-lighting-l2-trees-{width}.png"),
-        });
-
-        await Page.Locator(".lighting-controls input[type='checkbox']").Nth(2).CheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-anchors", "true");
-        await canvas.ScreenshotAsync(new LocatorScreenshotOptions
-        {
-            Path = Path.Combine(dir, $"arena-lighting-l2-root-anchors-{width}.png"),
-        });
-
-        await Page.Locator(".lighting-controls input[type='checkbox']").First.UncheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-shadows", "0");
-        // Disable anchor annotations as well, so A/B compares identical sources.
-        await Page.Locator(".lighting-controls input[type='checkbox']").Nth(2).UncheckAsync();
-        await Expect(canvas).ToHaveAttributeAsync("data-lighting-anchors", "false");
-        Assert.AreEqual(baseline, await CanvasPixelHashAsync(canvas),
-            "Lighting Off must exactly restore the source tree and approved ground pixels.");
+        await canvas.ScreenshotAsync(new LocatorScreenshotOptions { Path = Path.Combine(dir, fileName) });
     }
+
+    private static Task<int> CanvasMaximumRgbAsync(ILocator canvas) =>
+        canvas.EvaluateAsync<int>(@"canvas => {
+            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            let max = 0;
+            for (let i = 0; i < pixels.length; i += 4)
+                max = Math.max(max, pixels[i], pixels[i + 1], pixels[i + 2]);
+            return max;
+        }");
 
     private static Task<uint> CanvasPixelHashAsync(ILocator canvas) =>
         canvas.EvaluateAsync<uint>(@"canvas => {
-            const pixels = canvas.getContext('2d')
-                .getImageData(0, 0, canvas.width, canvas.height).data;
+            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
             let hash = 2166136261;
             for (let i = 0; i < pixels.length; i++)
                 hash = Math.imul(hash ^ pixels[i], 16777619) >>> 0;

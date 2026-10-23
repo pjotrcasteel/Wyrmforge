@@ -7,9 +7,9 @@
 <main class="lighting-lab">
     <header>
         <div>
-            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / LIGHTING L0–L2</span>
-            <h1>Wet Forest — Lighting Foundation</h1>
-            <p>A/B test ambient light and contact shadows on the <strong>actual approved ground compositor</strong>.
+            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / L3 NIGHT / MATERIALS / FIREBALL</span>
+            <h1>Wet Forest — Fireball & Night</h1>
+            <p>Test a moving, airborne Fireball and optional torch in deep Gothic night, with wet-ground response and local mist on the <strong>actual approved ground compositor</strong>.
                 The two tree candidates are loaded locally, remain unapproved and never enter Hunts.</p>
         </div>
         <a href="arena-lab">← Ground-only lab</a>
@@ -17,19 +17,43 @@
 
     <section class="lighting-controls" aria-label="Lighting comparison">
         <label class="switch">
-            <input type="checkbox" @bind="enabled" @bind:after="SyncLighting" />
-            Unified light @(enabled ? "ON" : "OFF (baseline)")
+            <input id="toggle-night" type="checkbox" @bind="enabled" @bind:after="SyncLighting" />
+            Gothic night @(enabled ? "ON" : "OFF (original)")
         </label>
         <label class="switch">
-            <input type="checkbox" @bind="shadows" @bind:after="SyncLighting" />
+            <input id="toggle-shadows" type="checkbox" @bind="shadows" @bind:after="SyncLighting" />
             Ground + cast shadows
         </label>
         <label class="switch">
-            <input type="checkbox" @bind="showAnchors" @bind:after="SyncLighting" />
+            <input id="toggle-anchors" type="checkbox" @bind="showAnchors" @bind:after="SyncLighting" />
             Show root anchors (debug)
         </label>
-        <label>Ambient darkness <strong>@ambientPercent%</strong>
-            <input type="range" min="0" max="50" step="1" @bind="ambientPercent" @bind:event="oninput" @bind:after="SyncLighting" />
+        <label class="switch">
+            <input id="toggle-fireball" type="checkbox" @bind="demoFireball" @bind:after="SyncLighting" />
+            Flying Fireball (review only)
+        </label>
+        <label class="switch">
+            <input id="toggle-torch" type="checkbox" @bind="demoTorch" @bind:after="SyncLighting" />
+            Static torch (review only)
+        </label>
+        <label class="switch">
+            <input id="toggle-animate" type="checkbox" @bind="animateFireball" @bind:after="SyncLighting" />
+            Animate flight
+        </label>
+        <label class="switch">
+            <input id="toggle-wet" type="checkbox" @bind="wetResponse" @bind:after="SyncLighting" />
+            Wet material response
+        </label>
+        <label class="switch">
+            <input id="toggle-mist" type="checkbox" @bind="mist" @bind:after="SyncLighting" />
+            Local night mist
+        </label>
+        <label>Night darkness <strong>@ambientPercent%</strong>
+            <input id="night-darkness" type="range" min="65" max="97" step="1" @bind="ambientPercent" @bind:event="oninput" @bind:after="SyncLighting" />
+        </label>
+        <label>Fireball flight <strong>@fireballPercent%</strong>
+            <input id="fireball-progress" type="range" min="0" max="100" step="1"
+                   disabled="@animateFireball" @bind="fireballPercent" @bind:event="oninput" @bind:after="SyncLighting" />
         </label>
         <label>Light direction <strong>@sunAngle°</strong>
             <input type="range" min="0" max="359" step="1" @bind="sunAngle" @bind:event="oninput" @bind:after="SyncLighting" />
@@ -44,7 +68,7 @@
         <section class="lighting-stage">
             <canvas @ref="canvas" aria-label="Ground lighting comparison with optional new tree candidate images" tabindex="0"></canvas>
             
-            <span class="lighting-status">@(enabled ? "SHARED LIGHT" : "BASELINE") · @(shadows && enabled ? "SHADOWS" : "NO SHADOWS")</span>
+            <span class="lighting-status">@(enabled ? "GOTHIC NIGHT" : "SOURCE GROUND") · @(demoFireball && enabled ? "FIREBALL" : demoTorch && enabled ? "TORCH" : "NO FIRE")</span>
         </section>
         <aside class="lighting-inspector">
             <h2>Original tree candidates</h2>
@@ -61,13 +85,16 @@
             <span class="feedback">@elmStatus</span>
             <h3>Acceptance scope</h3>
             <p>Drag inside the canvas to pan; the light, tree anchors and approved ground share world coordinates.</p>
-            <p>The same ambient and directional light applies to the approved ground and optional sprites.
-                Soft contact shading and very subtle directional cast shadows are composed beneath all trees.
-                Enable <strong>Show root anchors</strong> to inspect the trunk-foot pivot and clearance,
-                rather than hiding artwork registration problems behind effects.</p>
+            <p>The Fireball moves above the ground while warm light reveals the same approved material
+                textures, optional original tree sprites, and local atmosphere. Disable flight animation
+                to scrub its position and compare identical screenshots at 320px and 390px.</p>
+            <p>Wet highlights occur only on approved mud, paving and marsh cells, inside actual calibration
+                light pools. Mist is subtle and local, never a global grey wash. Root anchors and L2
+                cast/contact shadows remain independently inspectable.</p>
             <p><strong>Not implemented:</strong> normal maps, local spell lights, actual C# gameplay snapshots,
-                native GPU optimization, enemy rendering, physical collision, or final art approval.</p>
-            <p class="notice">L0–L2 isolated study. No legacy trees, props, cobblestones or sprite replacements.</p>
+                native GPU optimization, enemy rendering, physical collision, or final art approval.
+                No calibration emitter is part of a live Hunt.</p>
+            <p class="notice">L3 isolated art/lighting study. No legacy trees, props, cobblestones or sprite replacements.</p>
         </aside>
     </div>
 </main>
@@ -80,9 +107,15 @@
     private ElementReference elmPicker;
     private IJSObjectReference? module;
     private int seed = 1204;
-    private int ambientPercent = 24;
+    private int ambientPercent = 90;
+    private int fireballPercent = 50;
     private int sunAngle = 315;
-    private bool enabled;
+    private bool enabled = true;
+    private bool demoFireball = true;
+    private bool demoTorch;
+    private bool animateFireball = true;
+    private bool wetResponse = true;
+    private bool mist = true;
     private bool shadows = true;
     private bool showAnchors;
     private string oakStatus = "No image selected";
@@ -92,7 +125,7 @@
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
-            "./js/arena-lighting-lab.js?v=20261023-l2-1");
+            "./js/arena-lighting-lab.js?v=20261023-l3-fireball-1");
         await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
     }
 
@@ -101,6 +134,13 @@
         enabled,
         shadows,
         showAnchors,
+        demoFireball,
+        demoTorch,
+        animateFireball,
+        wetResponse,
+        mist,
+        fireballProgress = fireballPercent / 100.0,
+        darkness = ambientPercent / 100.0,
         ambient = ambientPercent / 100.0,
         sunDegrees = sunAngle,
     };

@@ -18,6 +18,18 @@
 
 **Why now:** The original tree renders looked pasted over the approved ground. This is partly because temporary mobile review compositions repeat raw 112-pixel source swatches and do **not** exercise the Arena Materials Lab's actual seamless-material compositor. Even in the real arena, uncoordinated ambient color, direction, contact shadow, wet-surface response and depth will cause disconnected objects. A lighting system **cannot fix** incorrect perspective, tree silhouettes, feet/anchors, tree scale, alpha quality or material painting; those remain separate art acceptance gates.
 
+### Arena-night identity — LOCKED, 23 October 2026
+
+**All arenas and Hunts take place at night.** The mood is Gothic high contrast: shadows should visually approach **true black** and fire is the dominant warm illumination, not broad daylight or a generic orange screen wash. Keep an intentionally small, neutral player-readability halo and render enemy attack warnings above the darkness; a black environment is **not** permission for invisible projectiles, unreadable enemies or inaccessible play on mobile.
+
+- One shared, world-anchored darkness pass shades **approved ground, physical forest/stone assets, enemies, the mage and Wyrms together**. The ground painting itself remains unchanged. Night is not a gameplay mechanic or an alternate biome; **every arena is night by default**.
+- Only **real light emitters** reveal the dark world: player cast/projectile/impact, actual C#-derived burning trees, fire Wyrm breath; other elemental spells retain appropriately colored local light. No decorative permanent fake fireplaces or bright permanent ambient gradients.
+- Fire has locally warm color and intensity sufficient to reveal surfaces and silhouettes, with radial falloff. Extinguishing or moving the actual source immediately changes illumination. Background and deep shadows should remain near-black; prevent blown-out highlights and expensive screen-wide glow.
+- For portrait mobile combat, prioritize legibility of mage, foe silhouettes, telegraphs, pickups and navigational cues. Do not apply opaque night veils above HUD and essential combat warnings. Use one bounded, recyclable viewport mask and a strict cap on active dynamic sources.
+- The Lighting Lab may use a clearly labeled **calibration flame** to review unapproved source assets; that flame never enters a live Hunt, C# world state, drops, collision or saved progress.
+
+**Implementation evidence belongs in feature PRs.** A dark Canvas demo is not proof of actual iOS/Android frame pacing, correct source art or owner-accepted final night composition. Preserve the existing L0–L5 acceptance gates and do not rush additional forest assets.
+
 ### Visual and technical contract
 
 1. **One scene lighting model.** Use a consistent world-space key-light direction, ambient sky/fill color and intensity, camera/projection, exposure and atmospheric palette for **ground, trees, foliage, rocks, player, monsters and effects**. Do not separately bake incompatible daylight directions into each sprite. Authoring/export uses the same defined lighting rig; accepted RGBA cut-outs do not include baked ground patches.

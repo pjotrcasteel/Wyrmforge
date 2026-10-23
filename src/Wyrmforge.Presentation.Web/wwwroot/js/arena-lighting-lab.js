@@ -8,6 +8,9 @@ import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS,
     FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from './arena-ground-foundation.js';
 import { resolveSceneLighting, contactShadowPlan, projectedShadowPlan, drawContactShadow, drawSceneLighting,
     sortSpritesByFoot, spriteFootPlacement } from './arena-scene-lighting.js';
+import { gothicNightPlan, drawGothicNight } from './arena-night-lighting.js';
+import { calibrationEmitters, drawCalibrationEmitterCores } from './arena-lighting-calibration.js';
+import { litWetMaterialPlan, drawLitWetMaterial, drawLocalNightMist } from './arena-l3-material-atmosphere.js';
 
 const states = new WeakMap();
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -60,7 +63,24 @@ function render(state) {
             placement.x, placement.y, placement.width, placement.height);
         ctx.imageSmoothingEnabled = false;
     }
-    if (state.ground) drawSceneLighting(ctx, world, state.light);
+    // The lab uses the same night mask as live Hunts, but its mid-air Fireball
+    // and optional torch are explicit TEST SOURCES, never real gameplay props.
+    const flightProgress = state.animateFireball
+        ? ((performance.now() - state.animationStart) / 4800) % 1
+        : state.fireballProgress;
+    const sources = calibrationEmitters({
+        fireball: state.demoFireball, torch: state.demoTorch, progress: flightProgress,
+    });
+    if (state.ground && state.light.enabled) {
+        const view = { x: state.camera.x, y: state.camera.y, width, height };
+        drawGothicNight(ctx, gothicNightPlan(null, sources, view,
+            { darkness: state.darkness }), state.nightMask);
+        if (state.wetResponse)
+            drawLitWetMaterial(ctx, litWetMaterialPlan(state.board, FOUNDATION_COLUMNS,
+                FOUNDATION_ROWS, sources, state.seed));
+        if (state.mist) drawLocalNightMist(ctx, sources);
+        drawCalibrationEmitterCores(ctx, sources);
+    }
     // Technical calibration overlay; never enabled in the normal renderer.
     if (state.showAnchors) {
         ctx.save();
@@ -86,6 +106,12 @@ function render(state) {
 
     canvas.dataset.lightingReady = String(Boolean(state.ground));
     canvas.dataset.lightingEnabled = String(state.light.enabled);
+    canvas.dataset.gothicNight = String(state.light.enabled);
+    canvas.dataset.fireballCalibration = String(state.demoFireball);
+    canvas.dataset.torchCalibration = String(state.demoTorch);
+    canvas.dataset.fireballProgress = flightProgress.toFixed(3);
+    canvas.dataset.wetResponse = String(state.wetResponse);
+    canvas.dataset.mist = String(state.mist);
     canvas.dataset.lightingObjects = String(sprites.length);
     canvas.dataset.lightingShadows = String(state.light.enabled && state.light.shadows ? sprites.length : 0);
     canvas.dataset.lightingApprovedGround = String(Boolean(state.ground));
@@ -93,6 +119,8 @@ function render(state) {
     canvas.dataset.lightingPhysicsObjects = '0';
     canvas.dataset.lightingLegacyAssets = '0';
     canvas.dataset.lightingSeed = String(state.seed);
+    if (state.alive && state.animateFireball && state.demoFireball && state.light.enabled &&
+        !document.hidden) schedule(state);
 }
 
 function schedule(state) {
@@ -114,6 +142,7 @@ function buildGround(state) {
         return;
     drawGroundMaterialTransitions(ctx, board, atlas, FOUNDATION_COLUMNS, FOUNDATION_ROWS, state.seed);
     state.ground = canvas;
+    state.board = board;
     schedule(state);
 }
 
@@ -138,6 +167,15 @@ export function initializeArenaLighting(canvas, seed = 1204, options = {}) {
     const state = {
         canvas, alive: true, seed: seed | 0, light: resolveSceneLighting(options),
         showAnchors: options.showAnchors === true,
+        nightMask: document.createElement('canvas'),
+        darkness: Number.isFinite(options.darkness) ? options.darkness : .90,
+        demoFireball: options.demoFireball !== false,
+        demoTorch: options.demoTorch === true,
+        animateFireball: options.animateFireball !== false,
+        fireballProgress: Number.isFinite(options.fireballProgress) ? options.fireballProgress : .5,
+        animationStart: performance.now(),
+        wetResponse: options.wetResponse !== false,
+        mist: options.mist !== false, board: null,
         camera: { x: clamp(480 - width / 2, 0, Math.max(0, world.width - width)),
             y: clamp(695 - height / 2, 0, Math.max(0, world.height - height)) },
         source: null, ground: null, images: {}, pointer: null, pending: false, listeners: [],
@@ -191,6 +229,13 @@ export function configureArenaLighting(canvas, seed, options = {}) {
     }
     state.light = nextLight;
     state.showAnchors = options.showAnchors === true;
+    state.darkness = Number.isFinite(options.darkness) ? options.darkness : .90;
+    state.demoFireball = options.demoFireball !== false;
+    state.demoTorch = options.demoTorch === true;
+    state.animateFireball = options.animateFireball !== false;
+    state.fireballProgress = Number.isFinite(options.fireballProgress) ? options.fireballProgress : .5;
+    state.wetResponse = options.wetResponse !== false;
+    state.mist = options.mist !== false;
     schedule(state);
 }
 
@@ -262,6 +307,7 @@ export function readArenaLightingDiagnostics(canvas) {
     const s = states.get(canvas);
     if (!s) return null;
     return { ready: Boolean(s.ground), seed: s.seed, light: s.light,
+        demoFireball: s.demoFireball, demoTorch: s.demoTorch, wetResponse: s.wetResponse, mist: s.mist,
         sprites: Object.keys(s.images).sort(), showAnchors: s.showAnchors, physicsObjects: 0, legacyAssets: 0,
         camera: { ...s.camera }, world: { ...world }, groundRecipe: 'approved-forest-trails' };
 }
@@ -271,6 +317,6 @@ export function disposeArenaLighting(canvas) {
     if (!s) return;
     s.alive = false;
     for (const remove of s.listeners) remove();
-    s.images = {}; s.ground = null; s.source = null;
+    s.images = {}; s.ground = null; s.source = null; s.board = null; s.nightMask = null;
     states.delete(canvas);
 }
