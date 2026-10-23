@@ -18,9 +18,13 @@ export function gothicNightLightSources(snapshot, spellLights = [], width = 0, h
     for (const source of spellLights ?? []) {
         if (!isPoint(source) || !Number.isFinite(source.radius) || source.radius <= 0) continue;
         const fire = source.family === 'fire' || source.family === 'frostfire';
+        const energy = clamp(Number(source.strength) || 0, 0, 1.4);
+        if (energy < .005) continue; // A finished impact stops emitting light.
         lights.push({
             x: source.x, y: source.y, radius: clamp(source.radius * (fire ? 1.7 : 1.35), 36, 330),
-            relief: clamp((Number(source.strength) || 0) * (fire ? 1.25 : 1.0), .04, fire ? .99 : .86),
+            // Flames genuinely push back darkness, even for a small Fireball;
+            // smooth sqrt response lets weak dying embers fade rather than pop.
+            relief: clamp(fire ? Math.sqrt(energy) * 1.3 : energy, .01, fire ? .99 : .86),
             color: fire ? warmFire : source.center ?? [180, 195, 210],
             kind: fire ? 'fire' : 'spell',
         });
