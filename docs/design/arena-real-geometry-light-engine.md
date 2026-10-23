@@ -1,4 +1,4 @@
-# WyrmForge — reusable 2.5D lighting engine: implementation plan
+# WyrmForge — universal pixel-art lighting and visibility engine
 
 > **Implementation plan, updated 23 October 2026 after owner clarification.**
 > Binding requirements: [Art & animation](../canon/art-and-animation.md#proper-lighting-engine-and-foliage-self-shadowing--locked-23-october-2026),
@@ -447,10 +447,13 @@ unapproved candidates into production.
 ## First Work session: G0 → G1, prove a GENERIC ENGINE, not a specific tree
 
 1. **G0 inspect & reconcile:** repository `main`, #307 original Blender
-   asset/source pass, #327 experimental lighting, current C# snapshots and
-   render modules, dependency rules, approved terrain and existing CI.
-   Write a small architecture decision explaining the chosen GPU backend,
-   light/renderable/scene contracts, unit/color conventions and mobile limits.
+   asset/source pass, #327 experimental lighting, **every in-world
+   draw path for Town Square, player, Hollowed, Ashling, arena and FX**,
+   current C# snapshots, approved town/terrain sources and CI. Write a
+   small renderer architecture decision with typed cross-scene material,
+   emitter, environment, pixel sampling/color units and screen-space
+   exception contracts. The **current mage sprite is temporary** and
+   its replacement will use Hollowed/Ashling's sprite setup.
 2. **Build the common registry and surface path first.** A minimal,
    reusable light descriptor + renderable/material descriptor + scene
    compositor must allow objects to **register/update/remove themselves
@@ -463,20 +466,26 @@ unapproved candidates into production.
    overlapping local lights** must combine consistently; no ghost light
    after removal.
 4. **Prove several different receivers and occluders:** actual approved
-   wet ground; a solid rock/wall; the **existing Hollowed enemy** (using
-   actual approved sprites and properly authored normals/depth/caster data);
-   a **shallow water/puddle material** with specular reflections; and
-   *original 3D* ancient oak trunk/branches with cutout leaf layers.
-   The same Fireball lights all of them; Hollowed casts and receives dynamic
-   shadows, rock/tree cast onto ground, and leaves cast onto other leaves,
-   branches and trunk. Materials vary naturally without custom emitter code.
+   wet ground, rock/wall and shallow reflective water; **existing Hollowed
+   AND Ashling sprite animations** with per-pose lighting/occluders;
+   original 3D ancient oak/leaf layers; and an **isolated Town Square
+   corner** (paving, lantern, roof/wall, NPC, foreground post).
+   The same Fireball/torch lights all of them, without separate
+   `TownLighting`/`MageLighting` branches. Hollowed and Ashling
+   cast and receive real dynamic shadows; tree leaves cast onto other
+   leaves/trunk. Keep current mage graphics out of final art approval:
+   its **future replacement uses the same rigged-sprite pipeline**.
 5. **Prove add-an-object without engine edits:** add a new sample
    "glowing rune"/"lit crystal" using only descriptors/assets. It should
    light rock, ground, tree and any other eligible object in range.
    The generic lighting-renderer source must **not change** to add this
    object. Demonstrate removal and toggling `CastsShadow`/
    `ReceivesLight` separately.
-6. **Debug/test:** frozen seed/camera at 320×568 and 390×844.
+6. **Debug/test:** frozen seed/camera at 320×568 and 390×844,
+   **Town day/auto/night** versus Hunt nighttime environment profiles,
+   and **world-light ALL OFF** (including ambient and material emission)
+   that must make every ordinary *world* pixel black while independent
+   UI/accessibility channels remain readable.
    Views: lit, albedo, normals, actual geometry, light-space depth,
    shadow visibility, light bounds, per-object emitter registry.
    Presets: Fireball left/right/behind/off, torch only, overlapping
@@ -504,6 +513,12 @@ unapproved candidates into production.
 | **Water / reflective material** | One source produces moving, view-appropriate highlights/reflection on water or puddle; rock/foliage remain matte; disabling reflection removes it without disabling diffuse lighting |
 | **Zero light + readability** | World goes near-black; Hollowed outside light is mostly concealed, not mysteriously fully lit, while player orientation, actionable attack telegraphs and accessibility cues remain intentionally readable and testable |
 | **No emitters / budget fallback** | Near-black readable night; caster budget may reduce shadow quality but must not invent lights, change gameplay or break combat visibility |
+| **Existing Ashling / common sprites** | Hollowed and Ashling animate with the same lit-frame/normal/occluder material contract; replacement mage will adopt that SAME pipeline, never a unique lighting renderer |
+| **World zero-light invariant** | With ambient/local/sky and emissions OFF, ALL ordinary world pixels resolve to black across representative Town and Hunt scenes; screen-space UI remains readable |
+| **Mini Town corner** | Lantern/wall/roof/NPC/foreground post/paving use unchanged shared engine; roof blocks light; NPC responds and casts correctly |
+| **Town environment profile** | Same geometry and materials support Day/Night/Auto light environment without swapping whole pre-lit backgrounds; unlock, Nexus and navigation state preserved |
+| **Town fixture state** | Active vs vacant building lights and 6 Nexus school colors/mastery register/remove real emitters, no ghost or baked duplicate lighting |
+| **Pixel-art color and temporal stability** | Linear sRGB lighting with one output transform, non-color normals/depth, stable pixel scale and shadow sampling under camera pan/animation |
 | **New object uses engine** | Sample rune/second prop emits without modifying engine shaders/dispatch; casts/receives flags work independently |
 
 **G1 fails** if only tree shadow works, a new object requires its own
@@ -520,7 +535,7 @@ overlap makes night daylight, or the underlying approved ground changes.
 | **G2 — authoritative C# bridge** | Typed snapshot source mapping, stable lifecycle and environment settings; adapter boundary for browser/native | Deterministic replay, movement, extinction and no gameplay mutation/regressions |
 | **G3 — advanced material/light response** | AO, two-sided leaf transmission, roughness, reflection fidelity tiers (specular → probes → selective planar water), wet materials, localized fog, emissive effects and optional extended-source approximation | Material-specific A/B, correctly moving reflections and preserved Gothic night; no neon/plastic/filter stack |
 | **G4 — mobile and scale** | LOD, caster selection, caching/adaptive shadow quality, renderer-native choice | Real iOS/Android FPS, thermal/battery, memory and combat readability |
-| **G5 — live Hunt adoption** | One proven engine backend integrated across existing objects, biomes and effects with canonical authority | Combat, Wyrm, spell, save, collision, UI tests and owner/device review |
+| **G5 — universal scene adoption** | One proven renderer shared across Town, Hunts, other biomes, NPC/character sprites, fixture emissions and world VFX; relightable Town asset decomposition preserves approved art/layout | Whole-scene zero-light audit + dynamic lights, Town day/night/building/Nexus/route parity, combat/save/UI tests, owner/native-device review |
 
 Build G0/G1 in vertical, reviewable commits/PRs. Stop at the first
 generic light + receiver + actual shadow proof until it works; **do
@@ -550,8 +565,18 @@ behavior.
   not a decision to adopt Unity.
 - [Khronos glTF 2.0 materials specification](https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/Specification.adoc):
   `MASK` foliage alpha-cutoff, depth and double-sided behavior.
+- [Godot 2D lights, shadows and normal/specular maps](https://docs.godotengine.org/en/stable/tutorials/2d/2d_lights_and_shadows.html):
+  useful contrast between ambient modulation, lit sprites and *separate*
+  shadow occluders; no obligation to use Godot.
+- [Godot CanvasItem shaders](https://docs.godotengine.org/en/stable/tutorials/shaders/shader_reference/canvas_item_shader.html):
+  `unshaded` vs `light_only` demonstrates why all world pixels must
+  be in the lit pass, instead of bypassing it.
+- [Three.js color management](https://threejs.org/manual/pages/color-management.html):
+  sRGB albedo/emissive, non-color maps, linear light accumulation, one
+  output encoding; prevent incorrect dark/bright art.
 
-**Status at writing (23 October 2026):** #324 and #326 are merged;
+
+**Status at writing (23 October 2026):** audit of `main` found the Town's flattened `night-active.webp` and active/vacant painting layers, Arena's Canvas night mask, and enemy/mage-specific brightness helpers. **The mage visuals are temporary; replacement will use Hollowed/Ashling's rigged sprite architecture.** #324 and #326 are merged;
 the original editable tree source #307 and Canvas L4 normal/shadow PR #327
 were open at the latest inspection. Verify them before implementing.
 The **generic GPU light engine is not implemented yet**; updating its
