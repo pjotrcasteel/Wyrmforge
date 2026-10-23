@@ -49,7 +49,9 @@ jobs:
             RUNS="${{ inputs.runs_per_combination }}"
             SECONDS="${{ inputs.maximum_seconds }}"
           else
-            RUNS="2"
+            # Eight matched seeds across four agents and four real Fire builds:
+            # 128 observations. Keep the horizon long enough to reach first Wyrms.
+            RUNS="8"
             SECONDS="420"
           fi
           dotnet run --project src/Wyrmforge.BalanceLab/Wyrmforge.BalanceLab.csproj -c Release --no-build -- \

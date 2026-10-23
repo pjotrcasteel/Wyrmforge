@@ -81,8 +81,8 @@ internal static class FireProgressionStudy
             "These are headless combat/route diagnostics, **not** human fun or final difficulty acceptance. " +
                 "Core level, learned Fire Web routes, equipped mutations and assigned major amplifiers all enter real RunSimulation.",
             "",
-            "| Cohort | Core | Web points | Runs | Median kills/min | Median depth | Wyrms reached | Median minimum health |",
-            "|---|---:|---:|---:|---:|---:|---:|---:|",
+            "| Cohort | Core | Web points | Runs | Median kills/min | Median depth | Wyrms reached | Median first Wyrm | Essences secured | Median minimum health |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
         };
 
         foreach (var cohort in FireProgressionCohorts.All)
@@ -92,16 +92,28 @@ internal static class FireProgressionStudy
                 $"{Median(sample.Select(row => row.KillsPerMinute)):0.0} | " +
                 $"{Median(sample.Select(row => (double)row.Depth)):0.0} | " +
                 $"{sample.Count(row => row.WyrmsReached > 0)}/{sample.Length} | " +
+                $"{FirstWyrmMedian(sample)} | " +
+                $"{sample.Sum(row => row.EssencesSecured)} | " +
                 $"{Median(sample.Select(row => row.MinimumHealthRatio)):P0} |");
         }
 
         markdown.Add("");
         markdown.Add("Review the per-run JSON by identical seed and agent, especially the lowest-survival cohorts. " +
             "A higher kills/minute score alone is not proof of balanced pacing: examine duration, depth, deaths and Wyrm contact.");
+        markdown.Add("Median first-Wyrm contact only includes reached encounters; interpret it together with encounter frequency.");
         markdown.Add("Final Fire acceptance still requires gameplay on a real phone, readable Web navigation, and a human judgement of the power-unlock journey.");
         var reportPath = Path.Combine(options.OutputDirectory, "pyromancer-progression-report.md");
         await File.WriteAllLinesAsync(reportPath, markdown);
         Console.WriteLine($"Fire progression evidence: {reportPath}");
+    }
+
+    // The median is conditional on encounter. Runs without a Wyrm are censored
+    // and remain visible through the encounter fraction in the report.
+    private static string FirstWyrmMedian(IReadOnlyCollection<Observation> sample)
+    {
+        var contactTimes = sample.Where(row => row.FirstWyrmSeconds.HasValue)
+            .Select(row => row.FirstWyrmSeconds!.Value).ToArray();
+        return contactTimes.Length == 0 ? "not reached" : Median(contactTimes).ToString("0", CultureInfo.InvariantCulture) + "s";
     }
 
     private static double Median(IEnumerable<double> values)
