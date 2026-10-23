@@ -92,6 +92,7 @@ public sealed partial class RunSimulation
 
     private void BeginDragonPhaseBreak(DragonState activeDragon)
     {
+        ashfangBehavior.Interrupt();
         activeDragon.TelegraphRemaining = 0;
         activeDragon.AttackCooldown = 1;
         dragonHuntHazards.Clear();
@@ -176,6 +177,7 @@ public sealed partial class RunSimulation
 
     private void UpdateDragonCombat(DragonState activeDragon, double delta)
     {
+        if (activeDragon.Definition.Id == DragonId.Ashfang) { UpdateAshfangCombat(activeDragon, delta); return; }
         if (activeDragon.IsTelegraphing)
         {
             activeDragon.TelegraphRemaining -= delta;
@@ -190,6 +192,7 @@ public sealed partial class RunSimulation
 
     private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
+        ashfangBehavior.Interrupt();
         dragonAttackSequence = 0;
         dragonLastAttackAt = -1;
         dragonDefeat = null;
@@ -356,6 +359,7 @@ public sealed partial class RunSimulation
 
     private void ResetDragonHunt()
     {
+        ashfangBehavior.Interrupt();
         dragonDefeat = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
@@ -384,6 +388,10 @@ public sealed partial class RunSimulation
         {
             IsAscendant = ascendantActive, Tier = activeDragon.Tier, EntityId = activeDragon.Id,
             AttackSequence = dragonAttackSequence,
+            Action = definition.Id == DragonId.Ashfang ? ashfangBehavior.Action : null,
+            ActionPhase = definition.Id == DragonId.Ashfang ? ashfangBehavior.Phase : null,
+            ActionProgress = ashfangBehavior.Progress,
+            AttackTargetX = ashfangBehavior.Target.X, AttackTargetY = ashfangBehavior.Target.Y,
             AttackElapsed = dragonLastAttackAt < 0 ? -1 : elapsed - dragonLastAttackAt,
             TelegraphProgress = activeDragon.IsTelegraphing ? Math.Clamp(1 - activeDragon.TelegraphRemaining / definition.Combat.Attack.TelegraphSeconds.For(activeDragon.Phase), 0, 1) : 0,
             DirectionX = activeDragon.BreathDirection.X, DirectionY = activeDragon.BreathDirection.Y,
@@ -396,7 +404,8 @@ public sealed partial class RunSimulation
         var attack = activeDragon.Definition.Combat.Attack;
         if (attack.Pattern != DragonAttackPattern.Cone) return null;
         return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y,
-            attack.Geometry.Range, attack.Geometry.HalfAngle);
+            activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.Range : attack.Geometry.Range,
+            activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.HalfAngle : attack.Geometry.HalfAngle);
     }
 
     private DragonHuntRenderSnapshot? CreateDragonHuntSnapshot()

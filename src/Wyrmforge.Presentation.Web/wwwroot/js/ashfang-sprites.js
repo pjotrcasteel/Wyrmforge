@@ -25,6 +25,12 @@ export function selectAshfangMotion(snapshot,previous,dt){
   clip=hunt.entranceBeat===2?'fly':'land';progress=hunt.entranceBeatProgress;
   direction=spriteDirection(dx,dy,direction);
  }else if(hunt?.stage===3){clip='roar';progress=hunt.stageProgress;direction=spriteDirection(snapshot.player.x-dragon.x,snapshot.player.y-dragon.y,direction);}
+ else if(dragon.action&&dragon.action!=='idle'&&dragon.actionPhase!=='ready'){
+  direction=spriteDirection(dragon.directionX,dragon.directionY,direction);
+  const phase=dragon.actionProgress;
+  if(dragon.action==='breath'){clip=dragon.actionPhase==='windup'?'breath_start':dragon.actionPhase==='strike'?'breath_loop':'breath_end';progress=phase;}
+  else {clip=dragon.action;const hit=clip==='pounce'?.3:clip==='bite'?.45:.48,end=clip==='pounce'?.68:.6;progress=dragon.actionPhase==='windup'?phase*hit:dragon.actionPhase==='strike'?hit+phase*(end-hit):end+phase*(1-end);}
+ }
  else if(breath){clip='breath_start';progress=dragon.telegraphProgress;direction=spriteDirection(breath.directionX,breath.directionY,direction);}
  else if(dragon.attackElapsed>=0&&dragon.attackElapsed<.22){clip='breath_loop';direction=spriteDirection(dragon.directionX,dragon.directionY,direction);progress=null;}
  else if(dragon.attackElapsed>=.22&&dragon.attackElapsed<.48){clip='breath_end';direction=spriteDirection(dragon.directionX,dragon.directionY,direction);progress=(dragon.attackElapsed-.22)/.26;}
@@ -32,16 +38,43 @@ export function selectAshfangMotion(snapshot,previous,dt){
  else direction=spriteDirection(snapshot.player.x-dragon.x,snapshot.player.y-dragon.y,direction);
  return {clip,direction,progress,hidden:false};
 }
+// Short authored start/stop bridges own the support legs. Transitions consume
+// the early warning, never postpone the simulation strike. No alpha ghosting.
+export function advanceAshfangGraph(previous,desired,clock){
+ if(!previous||desired.hidden)return {...desired,graph:null};
+ const locomotion=c=>c==='walk'||c==='run';
+ if(previous.graph){
+  const g=previous.graph,age=clock-g.at;
+  if(g.target===desired.clip&&age>=g.duration&&g.clip.endsWith('_stop')&&locomotion(desired.clip)){const clip=desired.clip+'_start';return {...desired,clip,progress:0,graph:{clip,target:desired.clip,at:clock,duration:.18}};}
+  if(g.target===desired.clip&&age<g.duration)return {...desired,clip:g.clip,progress:age/g.duration,graph:g};
+ }
+ if(locomotion(previous.clip)&&desired.clip!==previous.clip){
+  const bridge=previous.clip+'_stop',duration=.16;
+  // Interrupt only inside the safe beginning of a windup; phase breaks,
+  // entrance and the actual strike always take precedence.
+  if(desired.clip==='idle'||locomotion(desired.clip)||(desired.progress!=null&&desired.progress<.1&&['bite','claw_right','pounce','breath_start'].includes(desired.clip)))
+   return {...desired,clip:bridge,progress:0,graph:{clip:bridge,target:desired.clip,at:clock,duration}};
+ }
+ if(locomotion(desired.clip)&&!locomotion(previous.clip)&&!previous.graph){
+  const bridge=desired.clip+'_start';return {...desired,clip:bridge,progress:0,graph:{clip:bridge,target:desired.clip,at:clock,duration:.18}};
+ }
+ return {...desired,graph:null};
+}
 export function updateAshfang(state,snapshot,seconds,reducedMotion=false){
  if(seconds<state.last||Number(snapshot.hud?.seconds??0)<state.lastHud)Object.assign(state,createAshfangState());
  const dt=state.last==null?0:Math.max(0,Math.min(.1,seconds-state.last));state.last=seconds;state.lastHud=Number(snapshot.hud?.seconds??0);
- if(!snapshot.paused&&!snapshot.ended)state.clock+=dt;
+ if(!snapshot.paused&&!snapshot.ended&&!snapshot.dragon?.frozen)state.clock+=dt;
  const dragon=snapshot.dragon,old=state.entity;
  if(isAshfang(dragon)){
   if(snapshot.paused||dragon.frozen){if(old)return;}
-  const sample=selectAshfangMotion(snapshot,old,dt),changed=!old||old.clip!==sample.clip||old.id!==dragon.entityId;
+  const desired=selectAshfangMotion(snapshot,old,dt);
+  const sample=advanceAshfangGraph(old,desired,state.clock),changed=!old||old.clip!==sample.clip||old.id!==dragon.entityId;
   const moved=old&&Math.hypot(dragon.x-old.x,dragon.y-old.y)>.001;
-  state.entity={...sample,motionAge:moved?0:(old?.motionAge??1)+dt,speed:moved&&dt>0?Math.hypot(dragon.x-old.x,dragon.y-old.y)/dt:old?.speed??0,id:dragon.entityId,x:dragon.x,y:dragon.y,radius:dragon.radius,at:changed?state.clock:old.at,frozen:dragon.frozen,reducedMotion};state.death=null;
+  const distance=old?Math.hypot(dragon.x-old.x,dragon.y-old.y):0;
+  const stride=manifest?.clips[desired.clip]?.travelPerCycle;
+  const gaitPhase=(old?.gaitPhase??0)+(stride&&distance<80?distance/(stride*manifest.worldCell/22*(dragon.radius/60)):0);
+  if(!sample.graph&&(sample.clip==='walk'||sample.clip==='run'))sample.progress=gaitPhase%1;
+  state.entity={...sample,gaitPhase,motionAge:moved?0:(old?.motionAge??1)+dt,speed:moved&&dt>0?Math.hypot(dragon.x-old.x,dragon.y-old.y)/dt:old?.speed??0,id:dragon.entityId,x:dragon.x,y:dragon.y,radius:dragon.radius,at:changed?state.clock:old.at,frozen:dragon.frozen,reducedMotion};state.death=null;
  }else state.entity=null;
  const dead=snapshot.dragonDefeat;
  if(isAshfang(dead)){
@@ -71,7 +104,7 @@ export function drawAshfang(ctx,state){return drawBody(ctx,state,state.entity);}
 export function drawAshfangDeath(ctx,state){return drawBody(ctx,state,state.death,true);}
 export function drawAshfangFire(ctx,state,snapshot,reducedMotion){
  const p=state.entity,d=snapshot.dragon;
- if(!p||!d||snapshot.hunt?.stage!==2||d.attackElapsed<0||d.attackElapsed>=.22||snapshot.dragonBreath||d.frozen)return;
+ if(!p||!d||(d.action&&d.action!=='breath')||snapshot.hunt?.stage!==2||d.attackElapsed<0||d.attackElapsed>=.22||snapshot.dragonBreath||d.frozen)return;
  const sample=sampleFrame(state,p);if(!sample)return;
  const f=sample.frame,scale=manifest.worldCell/512*(p.radius/60),x=p.x+(f.mouth[0]-f.pivot[0])*scale,y=p.y+(f.mouth[1]-f.pivot[1])*scale;
  const ex=d.x+d.directionX*340,ey=d.y+d.directionY*340,age=d.attackElapsed;

@@ -14,7 +14,7 @@
 <main class="hunt-lab">
     <header class="hunt-lab-head">
         <div><span>WYRMFORGE • DEVELOPER CINEMATIC</span>
-            <h1>Watch the Great Hunt fight itself.</h1>
+            <h1>@(ManualControl ? "Face Ashfang in live combat." : "Watch the Great Hunt fight itself.")</h1>
             <p>The actual combat renderer, deterministic simulation and movement agent. No account progress, loot or playtest report is credited.</p>
         </div>
         <div class="hunt-lab-actions"><button @onclick="Restart">↻ Restart encounter</button><button @onclick="Pause">@(paused ? "▶ Resume" : "Ⅱ Pause")</button><a href="balance-lab">← Balance Lab</a><a href="arena-lab">Arena Lab</a></div>
@@ -72,6 +72,7 @@
     private int phase = 1;
     private int seed = 1337;
     private bool invulnerable = true;
+    [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
     private bool paused;
     private string status = "PREPARING THE WYRMREALM";
     private RunAgentPersonality personality = RunAgentPersonality.Kiter;
@@ -100,7 +101,7 @@
         var snapshot = current.CreateSnapshot();
         if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot with { Paused = paused || snapshot.Paused, PresentationPaused = paused });
         var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
-        snapshot = current.Tick(delta, agent!.ChooseMovement(observation), width, height);
+        snapshot = current.Tick(delta, ManualControl ? new MovementInput(movementX, movementY, aimX, aimY) : agent!.ChooseMovement(observation), width, height);
         var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
             : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "WYRM DEFEATED • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
         if (current.IsEnded) nextStatus = "AGENT DEFEATED • RESTART TO WATCH AGAIN";

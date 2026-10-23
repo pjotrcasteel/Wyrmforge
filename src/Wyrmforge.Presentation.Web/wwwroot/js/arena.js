@@ -242,7 +242,7 @@ function draw(state, snapshot, width, height) {
     for (const wave of snapshot.avalancheRings ?? []) drawAvalancheWave(ctx, wave);
     drawPlayerChill(ctx, snapshot.player, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const shard of snapshot.experienceShards ?? []) drawExperienceShard(ctx, shard);
-    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school);
+    if (snapshot.dragonBreath) drawDragonBreath(ctx, snapshot.dragonBreath, snapshot.dragon?.school ?? snapshot.hunt?.school, snapshot.dragon);
     for (const pulse of snapshot.splashPulses) drawSplashPulse(ctx, pulse, snapshot.dragon?.school);
     drawAimRune(ctx, snapshot.player);
     drawWardReadiness(ctx, snapshot.player, visualSeconds, state.reducedMotion.matches);
@@ -1010,7 +1010,12 @@ function drawImpactCross(ctx, x, y, radius, color, rotation) {
     ctx.restore();
 }
 
-function drawDragonBreath(ctx, breath, school) {
+function drawDragonBreath(ctx, breath, school, dragon = null) {
+    if(dragon?.action==='pounce'){
+        ctx.save();ctx.strokeStyle='rgba(239,167,78,.8)';ctx.fillStyle='rgba(222,128,63,.12)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(dragon.attackTargetX,dragon.attackTargetY,70,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.setLineDash([7,6]);ctx.beginPath();ctx.moveTo(dragon.x,dragon.y);ctx.lineTo(dragon.attackTargetX,dragon.attackTargetY);ctx.stroke();ctx.restore();return;
+    }
     const palette = schoolPalette(school ?? 1);
     const angle = Math.atan2(breath.directionY, breath.directionX);
     ctx.beginPath();

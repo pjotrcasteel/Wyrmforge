@@ -495,3 +495,7 @@ Why: the Fire Reliquary is a damage race through wards; the glass one turns the 
 - ~~**F4b:**~~ Bell of Winter (the Frost lair road; see above).
 - ~~**F4c:**~~ Reliquary of Glass (the Frost rare boss; see above). The Frost roster is complete.
 - All numbers are provisional; balancing waits for the final pass (owner decision 2026-10-18).
+
+## Live creature AI direction — 23 October 2026
+
+The owner requires live, reactive, species-specific AI. Pre-rendered sprite frames are reusable actions, never a pre-recorded fight. C# chooses and resolves actions; presentation follows the decisions through authored transitions, preserving gait phase and committed attack timing. Hollow remains a direct chaser. Pack hunters surround and coordinate rather than sharing a universal chase routine. Ashfang uses a predator kit: close-range claw/bite, a committed pounce to a warned location, and aimed breath at range, with readable anticipation and vulnerable recovery. A shared deterministic decision/steering foundation should support distinct policies without replacing existing creature mechanics. Exact tuning remains provisional and requires live playtesting.

@@ -23,14 +23,30 @@ test('C# entrance, phase, cone warning and strike select their own authored moti
 });
 test('Movement survives repeated bridge snapshots and pause/freeze preserve the pose',()=>{
  const state=m.createAshfangState();m.updateAshfang(state,snapshot,0);m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:4}},.05);
- assert.equal(state.entity.clip,'walk');m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:4}},.07);assert.equal(state.entity.clip,'walk');
+ assert.equal(state.entity.clip,'walk_start');m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:4}},.07);assert.equal(state.entity.clip,'walk_start');
  const pose=JSON.stringify(state.entity);m.updateAshfang(state,{...snapshot,paused:true},.1);assert.equal(JSON.stringify(state.entity),pose);
  m.updateAshfang(state,{...snapshot,dragon:{...dragon,frozen:true}},.15);assert.equal(JSON.stringify(state.entity),pose);
- m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:20}},.2);assert.equal(state.entity.clip,'run');
+ m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:20}},.2);assert.ok(['run','run_start'].includes(state.entity.clip));
 });
 test('Only simulation defeat creates a body; reset and different lineage do not',()=>{
  const state=m.createAshfangState();m.updateAshfang(state,snapshot,0);m.updateAshfang(state,{...snapshot,dragon:null},.1);assert.equal(state.death,null);
  m.updateAshfang(state,{...snapshot,dragon:null,dragonDefeat:{...dragon,health:0}},.2);assert.equal(state.death.id,7);assert.ok(state.death.age>0);
  const age=state.death.age;m.updateAshfang(state,{...snapshot,dragon:null,dragonDefeat:{...dragon,health:0},presentationPaused:true},.3);assert.equal(state.death.age,age);
  m.updateAshfang(state,{...snapshot,dragon:null,dragonDefeat:{...dragon,school:2}},.4);assert.equal(state.death,null);
+});
+
+test('Authored bridges sequence movement changes while committed hits interrupt immediately',()=>{
+ const idle={clip:'idle',direction:'SE'};
+ const start=m.advanceAshfangGraph(idle,{clip:'walk',direction:'SE'},1);
+ assert.equal(start.clip,'walk_start');
+ const walking=m.advanceAshfangGraph(start,{clip:'walk',direction:'SE'},1.2);assert.equal(walking.clip,'walk');
+ const stop=m.advanceAshfangGraph(walking,{clip:'run',direction:'SE'},1.21);assert.equal(stop.clip,'walk_stop');
+ const runStart=m.advanceAshfangGraph(stop,{clip:'run',direction:'SE'},1.4);assert.equal(runStart.clip,'run_start');
+ const hit=m.advanceAshfangGraph(runStart,{clip:'bite',direction:'E',progress:.45},1.41);assert.equal(hit.clip,'bite');assert.equal(hit.progress,.45);
+});
+test('Action phases map to authored impact poses and retain locked facing',()=>{
+ const p=m.selectAshfangMotion({...snapshot,dragon:{...dragon,action:'pounce',actionPhase:'strike',actionProgress:1}},null,.05);
+ assert.equal(p.clip,'pounce');assert.equal(p.progress,.68);assert.equal(p.direction,'E');
+ const bite=m.selectAshfangMotion({...snapshot,dragon:{...dragon,action:'bite',actionPhase:'strike',actionProgress:0}},null,.05);
+ assert.equal(bite.progress,.45);
 });

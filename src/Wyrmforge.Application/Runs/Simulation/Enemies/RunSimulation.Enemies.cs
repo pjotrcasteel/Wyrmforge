@@ -217,7 +217,7 @@ public sealed partial class RunSimulation
                 : player.Position;
             // While a ruined wall separates enemy and hunter, everyone simply heads for the crossing.
             var crossing = target != player.Position;
-            var direction = Vector2D.DirectionTo(enemy.Position, target);
+            var direction = Wyrmforge.Domain.Combat.Behaviors.CreatureDecisions.Chase(enemy.Position, target);
             var speed = enemy.Speed;
             if (packbloodLeaders.Count > 0 && IsPackbloodEmpowered(enemy)) speed *= PackbloodSpeedMultiplier;
             if (IsWardEmpowered(enemy)) speed *= ReliquaryWardSpeedMultiplier;

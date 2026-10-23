@@ -6,6 +6,11 @@ namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 public sealed record DragonRenderSnapshot(string Name, string Title, SpellSchool School, double X, double Y, double Radius, double Health, double MaxHealth, int Phase, bool Frozen,
     IReadOnlyList<CombatStatusRenderSnapshot> Statuses)
 {
+    public string? Action { get; init; }
+    public string? ActionPhase { get; init; }
+    public double ActionProgress { get; init; }
+    public double AttackTargetX { get; init; }
+    public double AttackTargetY { get; init; }
     public int EntityId { get; init; }
     public int AttackSequence { get; init; }
     public double AttackElapsed { get; init; } = -1;

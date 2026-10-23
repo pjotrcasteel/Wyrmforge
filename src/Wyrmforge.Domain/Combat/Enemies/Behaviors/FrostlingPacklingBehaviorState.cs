@@ -114,7 +114,7 @@ public sealed class FrostlingPacklingBehaviorState(int id)
     public Vector2D CirclePoint(Vector2D target, double seconds)
     {
         var angle = SlotAngle + DriftSign * seconds * CircleDriftRadiansPerSecond;
-        return target + new Vector2D(Math.Cos(angle), Math.Sin(angle)) * CircleRadius;
+        return Wyrmforge.Domain.Combat.Behaviors.CreatureDecisions.SurroundSlot(target, CircleRadius, angle);
     }
 
     private void Enter(FrostlingPhase phase, double seconds)
