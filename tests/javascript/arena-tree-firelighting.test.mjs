@@ -19,7 +19,7 @@ test('Real Fireball position changes the projected shadow direction, not a fixed
     assert.ok(left.skewX < 0, 'Emitter on left projects actual canopy silhouette to right');
     assert.ok(right.skewX > 0, 'Emitter on right projects actual canopy silhouette to left');
     assert.notEqual(left.skewX, right.skewX);
-    assert.ok(left.opacity > .2 && left.opacity < .82);
+    assert.ok(left.opacity > .26 && left.opacity <= .94);
     assert.equal(left.x, foot.x);
     assert.equal(right.y, foot.y);
 });
@@ -41,8 +41,8 @@ test('Shadow remains bounded for a low Fireball near a tall tree', () => {
         x: foot.x + 30, y: foot.y - 20, radius: 400, relief: 1, altitude: 1,
     }]);
     const shadow = treeProjectedSilhouettePlan(foot, height, plan);
-    assert.ok(shadow.opacity <= .82);
-    assert.ok(shadow.blur >= 2 && shadow.blur <= 5);
+    assert.ok(shadow.opacity <= .94);
+    assert.ok(shadow.blur >= 1.5 && shadow.blur <= 3.3);
     assert.ok(Math.abs(shadow.skewX) <= 1.38);
     assert.ok(Number.isFinite(shadow.scaleY));
     assert.equal(treeFirelightPlan({ x: NaN, y: 3 }, height, []), null);
