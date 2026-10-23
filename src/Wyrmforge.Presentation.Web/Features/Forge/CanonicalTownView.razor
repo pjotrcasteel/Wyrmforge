@@ -50,7 +50,7 @@
             }
             <canvas class="refuge-town-nexus-pixels" data-nexus-pixels="true"
                     width="1672" height="941" aria-hidden="true"></canvas>
-            @if (displaySchool != PassiveSchool.Arcane || NexusMasteryPoints > 0)
+            @if (NexusArtworkUnlocked)
             {
                 <div class="refuge-town-nexus-radiance" data-nexus-radiance="true"
                      data-nexus-school="@displaySchool.ToString().ToLowerInvariant()"
