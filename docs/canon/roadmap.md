@@ -22,27 +22,86 @@ Read current `main`, open PRs, CI and runtime before taking the next priority. D
 | **P2 — correct Hunt topology** | Generate connected, credible terrain and route network **before** illustrative scenery: real bridges, no false river crossings, chapel and every chosen branch reaches a legal forward route; commit choice and prevent duplicate optional rewards; shorter first Wyrm hunt with tier-scaled envelope. | Seed/property tests proving crossings, branch continuation, Wyrm reachability, reward uniqueness and save compatibility; an actual playable short Fire hunt. | Existing Hunt generator and transition model. |
 | **P3 — Living Hunter's Chart, complete first visible slice** | Replace diagram-like surface with original, research-backed, grounded Gothic painterly/pixel-compatible map; physically motivated flame/lighting/reflections/river/mist; subtle location markers, preview, scroll/pinch, follow/free/recenter and mobile-safe controls. | Visual acceptance at iPhone portrait size **plus** rendered-to-graph topology check; no fake road or bridge; reduced-motion and frame-budget coverage. | P2 authoritative geography, approved visual references. |
 | **P4 — discovery and persistent causal world** | Progressive fog, automatic local reveal, **earned** knowledge through visits/previous discoveries, remembered geography after failure, meaningful route commitments and optional objectives paying immediate + lasting rewards; slow regional changes with advanced-hunt-only major mid-run events. | Versioned persistent region/world states, credible event cause, valid fallback paths and replay/save tests; consequences visible in the map. | P2–P3 map contract and state migration. |
-| **P5 — generative arenas, wave challenge and changing ground** | Compose believable site-dependent arenas, elemental terrain, real C# collisions and exits; introduce physical Endless Arena traversal, wave/challenge directors and one foreshadowed fair terrain transformation. For the **Wet Forest art/render workstream**, build a **generic scene-wide lighting engine** accepting declarative emitters from any current/future object and shading every supported material consistently. Demonstrate Fireball, torch and spot/directional light on ground, **reflective water/puddles**, rock, the **existing Hollowed enemies**, and the original 3D oak, with true leaf-on-leaf self-shadowing, **before** producing/integrating more forest art. | Deterministic seeded geometry, navigation/telegraph/dodge-room validation, responsive mobile combat, research-backed architecture, real visual QA, and new emitter registration without renderer edits, multiple sources/receivers, reflective water and existing Hollowed receiving/casting genuine light/shadows, genuinely dark unlit actors, internal foliage shadows and device frame-time proof. | Current Arena authority; P2 geography/site contracts where linked; [lighting foundation gate](art-and-animation.md#arena-rebuild-v2--shared-lighting-before-further-forest-asset-production-locked-23-october-2026). |
+| **P5 — generative arenas, wave challenge and changing ground** | Compose believable site-dependent arenas, elemental terrain, real C# collisions and exits; introduce physical Endless Arena traversal, wave/challenge directors and one foreshadowed fair terrain transformation. For the **entire game's world-rendering workstream**, build a **single generic scene-wide lighting engine** accepting declarative emitters from any current/future object and determining visibility of ALL in-world pixel art in Hunts, Town Square, interiors and future biomes (never merely brightening pre-lit images). Demonstrate Fireball, torch and spot/directional light on ground, **reflective water/puddles**, rock, the **existing Hollowed enemies**, and the original 3D oak, with true leaf-on-leaf self-shadowing, **before** producing/integrating more forest art. | Deterministic seeded geometry, navigation/telegraph/dodge-room validation, responsive mobile combat, research-backed architecture, real visual QA, and new emitter registration without renderer edits, multiple sources/receivers, reflective water and existing Hollowed receiving/casting genuine light/shadows, genuinely dark unlit actors, internal foliage shadows and device frame-time proof. | Current Arena authority; P2 geography/site contracts where linked; [lighting foundation gate](art-and-animation.md#arena-rebuild-v2--shared-lighting-before-further-forest-asset-production-locked-23-october-2026). |
 | **P6 — persistent Eternal Hunt** | Guaranteed major refuges plus optional developed outposts, restricted connected fast travel, recoverable death setbacks, atomic sanctuary suspend, **launch into town and Continue Eternal Hunt at saved sanctuary**, permanent frontier records. | Quit/relaunch, save migration, reward replay/idempotency, no bypass of unvisited frontier and one-life-long-run preservation tests. | World/route persistence and authoritative save lifecycle. |
 | **P7 — fair four-week competitive seasons** | Separate seasonal Expedition and Arena: shared immutable season seeds, equal legal starting pools, unlimited attempts, best verified per player, anti-farm Merit, privately validated records and archive. | Trusted verifier and frozen ruleset tests; never promote existing unverified Hall-of-Fame submissions to official. | Stable modes and scoring/event traces; identity and verification. |
 | **P8 — season-to-Eternal power loop** | Seasonal achievements unlock substantial earned powers through the **integrated Arcane Nexus** for Eternal/casual play; provide eventual legitimate catch-up, keep ranked starts normalized. | Cross-mode isolation, persistence, reward entitlement and no season-reset on Eternal; privacy-safe verified all-time frontier. | P6–P7 and existing Nexus/research progression. |
 | **P9 — expand depth, don't front-load scope** | Deeper Wyrm variants, region ecologies, authored Chronicle/story, private blueprint sharing and Conclave social polish in separate slices as each becomes a real playable journey. | Each feature has a use, real gameplay/state, migrations, tests, mobile acceptance and no contradictions to previously approved lore/art. | Proven earlier vertical slices. |
 
-### Arena V2 lighting-engine dependency within P5 — 23 October 2026 (LOCKED)
+### Universal lighting engine and Town Square relighting — P5 dependency, 23 October 2026 (LOCKED)
 
-**Owner clarification:** Build a **single reusable 2.5D light engine for the entire game**. A tree's leaf-to-leaf self-shadowing is a hard technical acceptance case, **not** the engine architecture. Any new light-emitting or light-receiving game object must connect through shared data/components without per-object-specific renderer logic. This is a Wet Forest/P5 rendering dependency, not a new global P1 priority.
+**Updated owner direction:** The single engine must determine the
+visibility/shading of **every world-space pixel** across Town, Hunts
+and all future gameplay scenes. Trees/leaf self-shadowing, actor
+lighting, wet reflections, town buildings and real fixtures use
+the SAME light/material/shadow registry. Normal maps alone do not
+cast geometry shadows. A 2D/3D sprite may not remain full-bright
+because its source image is bright. A zero-light test (ambient,
+all fixtures, all emission = off) yields black **world art**;
+UI/menus/explicit combat telegraphs have separate readable passes.
 
-1. **Protect approved groundwork:** six original painted materials/transitions, connected Step-2 trails, fixed orthographic view and original source art. No old roads, rejected props, collision shortcuts, extra fabricated light sources or daylight.
-2. **G0: design generic contracts FIRST:** reconcile `main`, source-only Blender [#307](https://github.com/pjotrcasteel/Wyrmforge/pull/307) and experimental [#327](https://github.com/pjotrcasteel/Wyrmforge/pull/327). Define portable emitter types/parameters (point, spot, directional/ambient; controlled future area approximation), stable IDs/lifetime, generic lit material/caster/receiver flags and central GPU renderer. Keep actual C# source-state authoritative.
-3. **G1 NEXT: implement a small real generic GPU proof:** any test object can register/update/remove its light by descriptor. Combine a moving Fireball and static torch; include spot and restrained directional/ambient settings. Demonstrate **same** scene rendering for approved wet ground, reflective puddle/water, stone wall/rock, an **existing Hollowed enemy** and original 3D ancient oak. Add a **new glowing rune or fixture by descriptor only** with zero lighting-engine code changes. Hollowed should not remain full-bright outside actual lights.
-4. **Occlusion stress case inside G1:** actual oak foliage/branches must cast on each other, trunk and ground using light-space depth/alpha cutout, while a rock casts on ground and lights may move/extinguish without ghost shadows. A normal map or projected tree silhouette **alone** does not pass.
-5. **Visual acceptance:** frozen Fireball left/right/behind/off, torch only, combined lights, spotlight, new emitter, shadows on/off, **water reflections on/off**, and **Hollowed entering/leaving illumination** at 320×568 and 390×844. Inspect normals/depth/shadow visibility, water highlights/reflections, actual enemy light reception/casting and near-black unlit terrain; separately test readable player/cues/telegraphs so darkness does not create unfair invisible attacks. Automated pixel checks are insufficient without visual sign-off.
-6. **G2–G3: C# source bridge and material quality:** mapped real spell/breath/burning state snapshots, with stable lifecycle and no renderer-owned gameplay; add bark/rock/leaf roughness, AO, optional restrained transmission, wet responses and local atmosphere through the common material engine.
-7. **G4–G5: mobile budgets and live adoption:** prioritize/cull shadow casters, near/far LOD and stable fallbacks; benchmark iOS/Android native performance before selecting the final renderer. Only after engine approval integrate accepted assets and real Hunts without reimplementing collision/combat/saves.
+1. **G0 — whole-repo lighting audit:** reconcile \`main\`,
+   source-only Blender [#307](https://github.com/pjotrcasteel/Wyrmforge/pull/307),
+   experimental [#327](https://github.com/pjotrcasteel/Wyrmforge/pull/327),
+   and **all drawing paths**: Hunt ground/scene actors, enemy/mage
+   sprite and VFX, Town panorama and building overlays, NPCs,
+   foreground, water, future interiors/biomes. Choose renderer and
+   document coordinate/depth/light/material/scene contracts,
+   world versus screen-space exceptions and sRGB↔linear conversion.
+2. **G1 — universal GPU engine NEXT:** point/spot/directional/
+   scene ambient, multiple independent emitters, roughness/normal/
+   specular/reflection materials, occluders/real shadows and source
+   lifecycle. Demonstrate one source illuminating approved terrain,
+   puddle, rock/wall, original oak with leaf-on-leaf shadowing,
+   real Hollowed and Ashling receivers, and a **small Town corner**
+   (lantern, paving, wall/roof, NPC and foreground). Add a new
+   light/object with descriptors only. Use a zero-light black-world
+   preset and a visibly distinct, fair near-black night preset.
+3. **G1 actor pipeline:** Hollowed and Ashling are existing rigged-
+   sprite references; the current mage sprite is **temporary**
+   and will be replaced **with the same sprite/animation setup**,
+   not custom lighting. Ensure their common LitSprite/pose material
+   can cast and receive via authored per-pose depth/occluders.
+4. **G2 — authoritative snapshot/lifecycle:** actual
+   C# events/states control Fireball, Wyrm breath, burning entity,
+   real town windows/Nexus/forge/lantern fixtures and scene profiles.
+   All emitters share registry/units/shadow budget across scenes.
+   No independent town, character or arena light simulators.
+5. **G3 — richer material response:** water/reflection quality,
+   roughness, AO/indirect and two-sided foliage, smoke/transparent
+   depth, atmospheric effects, pixel-stable light grids.
+   Reflections and emissive surfaces are explicit, not pasted
+   bright spots or duplicated baked direct fire.
+6. **G4 — optimize & town asset production:** select/measure
+   native mobile renderer and light/LOD budgets, and produce
+   a **non-destructive relightable Town material/geometry layer
+   set** from preserved approved paintings. Town's existing
+   building states, six Nexus variants/mastery, pedestrian paths,
+   depth masking, unlocks, well/board and three-district
+   composition are NOT redesigned. Town Auto/Day/Night settings
+   become environment profiles in same engine, while Hunts
+   remain night-only.
+7. **G5 — scene cutover with actual QA:** migrate Town, Hunts,
+   actors and environmental/FX paths to the one renderer;
+   delete legacy per-scene brightness/darkness hacks at approved
+   cutover, keep gameplay/collisions/navigation intact, test
+   zero-light + dynamic-light + normal daylight/near-black-night
+   and UI/accessibility at 320/390px, desktop and physical
+   iOS/Android. Do not claim **all art uses one engine** until
+   no world renderer bypass remains.
 
-**Stop rule:** Neither a beautiful isolated tree nor a manually tinted ground-shadow demo passes the gate unless the **same engine** can light newly introduced objects using data alone. Do not expand asset production or rewrite gameplay to compensate for missing renderer capabilities.
+**Stop rule:** G1 doesn't pass merely because one tree looks
+3D, a pre-lit panorama is masked, a Hollowed receives an orange
+tint, or a puddle has a pasted specular highlight. The same
+scene engine must light arbitrary registered objects and actually
+determine which world-space surfaces are visible. The full
+Town Square visual rebuild is a **subsequent gated asset/scene
+migration**, not an excuse to discard its accepted architecture
+or rewrite current gameplay before the engine exists.
 
-[Implementation plan: generic scene lighting and G0/G1 acceptance](../design/arena-real-geometry-light-engine.md) · [Canonical lighting requirements](art-and-animation.md#proper-lighting-engine-and-foliage-self-shadowing--locked-23-october-2026).
+[Universal lighting-engine implementation and scene inventory](../design/arena-real-geometry-light-engine.md) ·
+[Canonical art and visibility](art-and-animation.md#one-engine-controls-visibility-in-every-world-scene--locked-23-october-2026) ·
+[Town Square preservation and relighting migration](town-and-ux.md#future-town-square-presentation-migration--one-universal-lighting-engine-locked-23-october-2026).
 
 **Continuing compatible work in parallel:** The unified Arcane Nexus, minor/major upgrade pacing, Fateweave card-by-card reroll, research-to-spell proof and the future **3–4 intelligent spell scheduler** remain binding. If one of these is the active workstream, do not pause it merely to force P1; finish a safe checkpoint first. Otherwise plan them as **small dependency-conscious slices alongside P1–P5**, not as a massive replacement of the working Forge/Web/SpellBook system. Expand spell loadouts only after the auto-target/manual-override arbitration and shared cast scheduling are reliably tested.
 
