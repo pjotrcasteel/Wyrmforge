@@ -76,7 +76,7 @@
                 the Step 3 render artifact</a> from the source-only asset PR. Select each transparent
                 <code>*-candidate.png</code> after extracting the archive. Images stay in this browser tab.</p>
             <label>Ancient oak PNG
-                <input type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
+                <input id="oak-png" type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
             </label>
             <span class="feedback">@oakStatus</span>
             <label>Ancient oak camera-space normal PNG (optional)
@@ -84,7 +84,7 @@
             </label>
             <span class="feedback">@oakNormalStatus</span>
             <label>Dead elm PNG
-                <input type="file" accept="image/png,image/webp" @ref="elmPicker" @onchange="LoadElm" />
+                <input id="elm-png" type="file" accept="image/png,image/webp" @ref="elmPicker" @onchange="LoadElm" />
             </label>
             <span class="feedback">@elmStatus</span>
             <label>Dead elm camera-space normal PNG (optional)
