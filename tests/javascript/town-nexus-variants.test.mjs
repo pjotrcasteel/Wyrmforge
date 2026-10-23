@@ -28,7 +28,7 @@ test('six original approved school images are separately stored as registered RG
 test('canonical schools use explicit approved art while the underlying panorama remains unchanged', () => {
     const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
     const control = source('src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor');
-    assert.match(scene, /nexus-schools\/\{/);
+    assert.match(scene, /nexus-approved\/\{/);
     assert.match(scene, /data-nexus-school-art/);
     assert.match(scene, /art\/town\/night-active.webp\?v=140/);
     assert.match(scene, /NexusArtworkUnlocked => NexusUnlocked \|\| NexusPreviewSchool is not null/);
