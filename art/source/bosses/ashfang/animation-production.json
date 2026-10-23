@@ -1,5 +1,5 @@
 {
-  "status": "Source and eight-direction export candidate complete; owner review and game integration remain",
+  "status": "Aggressive performance revision 002 in production after owner rejected weak motion in foundation 001",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -75,27 +75,23 @@
     "ownerAcceptedMotion": false
   },
   "authoredClips": 41,
-  "currentMotionSource": "archive/motion-library-008/ashfang-animations.blend",
+  "currentMotionSource": "archive/motion-library-014/ashfang-animations.blend",
   "sourceValidationPassed": true,
-  "exportStatus": "41 clips; 7448 frames; 656 atlases; all master pixels verified",
+  "exportStatus": "Rendering performance revision 002 in four independent GPU batches; foundation 001 preserved",
   "resumeNote": "PAUSED.md",
-  "packedMaster": "archive/motion-foundation-001-packed/ashfang-animation-foundation.blend",
+  "packedMaster": "archive/motion-foundation-002-packed/ashfang-animation-foundation.blend",
   "rigFamily": "zagmatorah-112/v1",
-  "scaleTwoProofPassed": true,
+  "scaleTwoProofPassed": false,
   "exportProgress": {
-    "completedPackedClips": 41,
     "expectedClips": 41,
-    "completedPackedDirectionalFrames": 7448,
-    "expectedDirectionalFrames": 7448,
-    "masterAtlases": 328,
-    "runtimeAtlases": 328,
-    "status": "complete candidate"
+    "expectedDirectionalFrames": 7736,
+    "status": "rendering"
   },
   "browserValidationPassed": true,
   "remaining": [
-    "Owner art/motion review",
-    "Game integration and separate VFX",
-    "Actual Hunt and physical-phone validation"
+    "Complete aggressive directional export",
+    "Review actual playback and verify backup",
+    "Owner motion review and game integration"
   ],
   "remoteVerification": {
     "assetCheckpoint": "bffd886b064396b213c27960645a28538f4d7d95",
@@ -103,5 +99,6 @@
     "allFinalAtlases": 656,
     "packedMasterSha256": "38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b",
     "receipt": "remote-lfs-verification.json"
-  }
+  },
+  "previousFoundation": "exports/motion-foundation-001 (owner rejected performance as too weak)"
 }
