@@ -1,9 +1,20 @@
 @using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.PassiveTree
 @implements IAsyncDisposable
 @inject IJSRuntime JavaScript
 
 <section class="debug-reset-settings" aria-label="Debug settings">
     <h3>Debug</h3>
+    <label class="debug-nexus-label" for="debug-nexus-palette">Nexus building palette</label>
+    <select id="debug-nexus-palette" value="@(NexusPreviewSchool?.ToString() ?? string.Empty)"
+            aria-label="Preview Arcane Nexus magic school" @onchange="SelectNexusPaletteAsync">
+        <option value="">Auto — character school</option>
+        @foreach (var school in Enum.GetValues<PassiveSchool>())
+        {
+            <option value="@school">@school</option>
+        }
+    </select>
+    <p class="debug-nexus-description">Visual-only preview. Return to Refuge to switch colors instantly; no school, unlock or progress is changed.</p>
     <button type="button" @onclick="OpenAsync">Reset character</button>
     <dialog @ref="resetDialog" aria-labelledby="debug-reset-title">
         <h2 id="debug-reset-title">Reset this character?</h2>
@@ -18,6 +29,16 @@
 
 @code {
     [Parameter] public EventCallback OnReset { get; set; }
+    [Parameter] public PassiveSchool? NexusPreviewSchool { get; set; }
+    [Parameter] public EventCallback<PassiveSchool?> OnNexusPreviewChanged { get; set; }
+
+    private Task SelectNexusPaletteAsync(ChangeEventArgs args)
+    {
+        var choice = args.Value?.ToString();
+        PassiveSchool? school = Enum.TryParse<PassiveSchool>(choice, true, out var parsed) &&
+            Enum.IsDefined(parsed) ? parsed : null;
+        return OnNexusPreviewChanged.InvokeAsync(school);
+    }
     private ElementReference resetDialog;
     private IJSObjectReference? module;
     private bool busy;
