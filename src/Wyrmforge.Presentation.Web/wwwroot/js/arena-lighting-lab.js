@@ -139,7 +139,7 @@ export function initializeArenaLighting(canvas, seed = 1204, options = {}) {
         canvas, alive: true, seed: seed | 0, light: resolveSceneLighting(options),
         showAnchors: options.showAnchors === true,
         camera: { x: clamp(480 - width / 2, 0, Math.max(0, world.width - width)),
-            y: clamp(770 - height / 2, 0, Math.max(0, world.height - height)) },
+            y: clamp(695 - height / 2, 0, Math.max(0, world.height - height)) },
         source: null, ground: null, images: {}, pointer: null, pending: false, listeners: [],
     };
     states.set(canvas, state);
