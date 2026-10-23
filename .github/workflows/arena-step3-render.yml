@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - tools/art/step3_wet_forest.py
+      - tools/art/render_tree_camera_normals.py
       - tools/art/verify_step3_wet_forest.py
       - tools/art/step3_ground_review.py
       - art/source/environment/wet-forest/catalog.json
@@ -44,6 +45,14 @@ jobs:
         run: |
           blender -b -t 4 --python tools/art/step3_wet_forest.py -- \
             --asset dead_elm --output-dir artifacts/wet-forest/dead_elm
+      - name: Export actual camera-space 3D normal passes from editable source
+        run: |
+          blender -b -t 4 --python tools/art/render_tree_camera_normals.py -- \
+            --blend artifacts/wet-forest/ancient_oak/ancient_oak.blend \
+            --output artifacts/wet-forest/ancient_oak/ancient_oak-camera-normals.png
+          blender -b -t 4 --python tools/art/render_tree_camera_normals.py -- \
+            --blend artifacts/wet-forest/dead_elm/dead_elm.blend \
+            --output artifacts/wet-forest/dead_elm/dead_elm-camera-normals.png
       - name: Validate saved editable source and exported RGBA candidates
         run: |
           python3 - <<'PY'
@@ -53,13 +62,17 @@ jobs:
               root = Path('artifacts/wet-forest') / name
               blend = root / (name + '.blend')
               png = root / (name + '-candidate.png')
+              normals = root / (name + '-camera-normals.png')
               meta = json.loads((root / 'production.json').read_text())
               assert blend.stat().st_size > 10000
               assert png.read_bytes()[:8] == bytes.fromhex('89504e470d0a1a0a')
+              assert normals.read_bytes()[:8] == bytes.fromhex('89504e470d0a1a0a')
+              assert normals.stat().st_size > 5000
               assert meta['id'] == name
               assert meta['approval'] == 'candidate-not-approved'
               assert meta['render']['transparent']
-              print(name, 'source bytes', blend.stat().st_size, 'PNG bytes', png.stat().st_size)
+              print(name, 'source bytes', blend.stat().st_size, 'PNG bytes', png.stat().st_size,
+                    'normal PNG bytes', normals.stat().st_size)
           PY
       - name: Inspect real transparent pixels and silhouette framing
         run: python3 tools/art/verify_step3_wet_forest.py artifacts/wet-forest
