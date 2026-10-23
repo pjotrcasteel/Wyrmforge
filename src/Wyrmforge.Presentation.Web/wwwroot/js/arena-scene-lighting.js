@@ -1,4 +1,4 @@
-// WyrmForge Arena V2 L0/L1: presentation-only world lighting.
+// WyrmForge Arena V2 L0-L2: presentation-only world lighting and grounded sprite depth.
 // Reusable pure plans; NO DOM dependency, gameplay RNG, geometry or collision.
 // World coordinates match the existing approved ground and sprite foot anchors.
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -30,10 +30,33 @@ export function contactShadowPlan(anchor, trunkWidth, lighting) {
     });
 }
 
+// A broad, low-opacity projected shape is separate from tight root occlusion.
+// Art-directed widths/heights, not alpha bounding boxes, drive the footprint.
+// The cast shape is intentionally very soft: it must not cover attack telegraphs.
+export function projectedShadowPlan(anchor, trunkWidth, spriteHeight, lighting) {
+    const profile = resolveSceneLighting(lighting);
+    if (!profile.enabled || !profile.shadows ||
+        !Number.isFinite(anchor?.x) || !Number.isFinite(anchor?.y) ||
+        !Number.isFinite(trunkWidth) || trunkWidth <= 0 ||
+        !Number.isFinite(spriteHeight) || spriteHeight <= 0) return null;
+    const angle = profile.sunDegrees * Math.PI / 180;
+    const cast = clamp(spriteHeight * .26, 16, 84);
+    const dx = -Math.cos(angle), dy = -Math.sin(angle) * .55;
+    return Object.freeze({
+        x: anchor.x + dx * cast * .55,
+        y: anchor.y + dy * cast * .55,
+        radiusX: clamp(cast * .70 + trunkWidth * .52, 12, 105),
+        radiusY: clamp(trunkWidth * .43, 5, 44),
+        opacity: clamp(.065 + profile.ambient * .08, .065, .105),
+        rotation: Math.atan2(dy, dx),
+    });
+}
+
 export function drawContactShadow(ctx, plan) {
     if (!ctx || !plan) return false;
     ctx.save();
     ctx.translate(plan.x, plan.y);
+    if (Number.isFinite(plan.rotation)) ctx.rotate(plan.rotation);
     ctx.scale(plan.radiusX, plan.radiusY);
     const radial = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
     radial.addColorStop(0, 'rgba(8,12,10,' + plan.opacity.toFixed(3) + ')');
