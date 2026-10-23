@@ -114,6 +114,18 @@ Versioned Region/World state + Hunter Knowledge
 
 The current presentation uses Blazor WebAssembly and a canvas-based JavaScript renderer. A WebView-based mobile shell could preserve that investment, but this is **only a candidate**, not a decision to ship a wrapper. Test hardware before committing: a native rendering layer might become necessary for consistently satisfying control and frame-time targets. Keep Build Evolution, Great Hunt, Ascendants and Elder Wyrms independent of that UI decision.
 
+### Arena GPU lighting proof: preserve gameplay authority — 23 October 2026
+
+The next Wet Forest art milestone is **one real original Blender ancient oak with dynamic leaf-on-leaf GPU shadow visibility**, under one movable Fireball, in an isolated fixed-camera 2.5D review route. See the [complete implementation and acceptance plan](../design/arena-real-geometry-light-engine.md), which is subordinate to the [canonical art decision](art-and-animation.md#proper-lighting-engine-and-foliage-self-shadowing--locked-23-october-2026). The current Canvas masks, shadow ellipses/alpha projections, and per-pixel normals are valid *experimental baselines* but cannot demonstrate occlusion between distinct leaves.
+
+**Boundaries:**
+
+- C# `RunSimulation`, terrain recipes and movement/collision remain authoritative. Real light sources are derived from versioned snapshots (position, *height*, intensity/color, radius, lifetime, emitter kind and stable ID) and do not mutate gameplay. These are a **proposed typed renderer contract**, not permission to invent a parallel gameplay state or claim that APIs already exist.
+- One proof renderer using WebGL2/Three.js or equivalent may test actual 3D geometry, alpha-clipped foliage, cast/receive shadow maps, orthographic camera and light-space depth. Keep it at a separate opt-in route and **do not reroute existing Hunts or replace the working JS/Blazor UI** during G1. Check current libraries/tooling and dependency policy before adding packages.
+- Source artwork is Blender `.blend`, with reproducible low-poly export (e.g. glTF/GLB) and preserved source identity. The original PNG, geometry and exported passes are still unapproved until explicit visual sign-off. An alpha-masked shadow-pass must use the same leaf cutout as its color pass; a normal map alone cannot establish visibility.
+- Native iOS/Android architecture is **not decided** by using a browser proof. Prototype GPU performance and on-device testing determine the production renderer. Avoid tying `.NET 10` domain/gameplay code to a native runtime that cannot host it without a deliberate boundary/port plan. Frame-rate targets are aspirational until benchmarked.
+- Unit and screenshot tests must distinguish caster direction and *intra-tree self-occlusion*, not only a darker ground patch. Use reproducible Fireball left/right/behind/off/shadows-off presets, debug shadow depth/visibility and phone portrait captures. Visual and physical device acceptance is mandatory prior to production asset integration.
+
 ### Material Lab is a preview, not the mobile engine — reaffirmed 22 October 2026
 
 **iOS and Android are the production targets.** GitHub Pages, Blazor and JavaScript Canvas currently enable fast visual iteration, but are **not** the target game architecture by default. Do not optimize the project into an increasingly browser-dependent game.
