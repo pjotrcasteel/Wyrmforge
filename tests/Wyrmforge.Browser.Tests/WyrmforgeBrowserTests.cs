@@ -136,6 +136,33 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task Mobile_NexusDebugPalette_SwitchesVisualSchoolWithoutChangingCharacterOrUnlocks()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        await Page.Locator("#debug-nexus-palette").SelectOptionAsync("Frost");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+        var scene = Page.Locator(".refuge-canonical-scene");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "frost");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-pixels-ready", "true");
+        await Page.Locator("[data-nexus-preview-school='storm']").ClickAsync();
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "storm");
+        await Page.Locator("[data-nexus-preview-school='arcane']").ClickAsync();
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "arcane");
+        await Expect(scene.Locator(".refuge-town-nexus-chroma")).ToHaveCountAsync(0);
+        await Page.Locator("[data-nexus-preview-school='auto']").ClickAsync();
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await Expect(Page.Locator(".refuge-town-nexus-preview-controls")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-spot--nexus")).ToHaveAttributeAsync("data-town-state", "active");
+        Assert.AreEqual("Pyromancer", await Page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.characterSchool.v1')"));
+    }
+
+    [TestMethod]
     public async Task Mobile_TownArcaneNexus_LockedBuildingHasNoMagicalRadiance()
     {
         await Page.SetViewportSizeAsync(390, 844);
