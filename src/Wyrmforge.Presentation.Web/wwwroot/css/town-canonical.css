@@ -327,9 +327,9 @@
     animation:nexus-fire-flicker 5.6s step-end infinite;
 }
 @keyframes nexus-fire-flicker {
-    0%,8%,15%,46%,53%,79%,100% { opacity:var(--nexus-radiance-strength, .16); }
-    9%,48% { opacity:calc(var(--nexus-radiance-strength, .16) * .81); }
-    13%,51%,81% { opacity:calc(var(--nexus-radiance-strength, .16) * .94); }
+    0%,8%,15%,46%,53%,79%,100% { filter:brightness(1); }
+    9%,48% { filter:brightness(.84); }
+    13%,51%,81% { filter:brightness(.94); }
 }
 
 /* Only when Settings > Debug selects a preview. Never changes game/unlock hitboxes. */
