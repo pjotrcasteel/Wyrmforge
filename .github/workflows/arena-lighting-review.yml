@@ -1,4 +1,4 @@
-name: Arena V2 Lighting L0-L1 Review
+name: Arena V2 Lighting L0-L2 Review
 
 on:
   pull_request:
@@ -66,7 +66,7 @@ jobs:
           else
             echo "::warning::Unapproved candidate art not available; tree-composite tests will report a skip."
           fi
-      - name: Verify real L0-L1 pixel A/B at both mobile sizes
+      - name: Verify real L0-L2 ground and tree A/B at both mobile sizes
         env:
           WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
           WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/lighting
