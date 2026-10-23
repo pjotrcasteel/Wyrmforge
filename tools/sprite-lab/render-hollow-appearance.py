@@ -17,7 +17,7 @@ assert colors.shape[1] == 3, 'Expected three RGB channels'
 destination = folder / (sys.argv[2] if len(sys.argv) > 2 else 'appearance-views-rgb-v2')
 destination.mkdir(exist_ok=True)
 views, observations, masks, intrinsics = [], [], [], []
-width, height = 512, 640
+width, height = (768,640) if len(sys.argv)>3 and sys.argv[3]=='wide' else (512,640)
 for degrees in range(0, 360, 45):
     angle = math.radians(degrees)
     eye = np.array([2 * math.sin(angle), -2 * math.cos(angle), 0.18], dtype=np.float32)

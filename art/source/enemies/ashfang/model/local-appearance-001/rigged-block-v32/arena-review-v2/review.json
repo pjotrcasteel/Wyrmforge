@@ -1,0 +1,4057 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "viewport": [
+    390,
+    520
+  ],
+  "pixelsPerModelUnit": 52,
+  "frames": 279,
+  "finite": true,
+  "minZ": -0.19552290439605713,
+  "fullyOutsideFrames": [
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243
+  ],
+  "fireFrames": 74,
+  "runtimeIntegrated": false,
+  "groundFireLifetimePreviewFrames": 60,
+  "frameAudit": [
+    {
+      "frame": 0,
+      "label": "high push-off",
+      "bounds": [
+        173.40487713011595,
+        294.5810061193494,
+        233.4946573130088,
+        348.28185673271463
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 1,
+      "label": "high push-off",
+      "bounds": [
+        173.43933885370157,
+        294.5825584431924,
+        233.50438746964193,
+        348.2818573941657
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 2,
+      "label": "high push-off",
+      "bounds": [
+        173.5334666645519,
+        294.65146842333,
+        233.53179764495812,
+        348.2818607217733
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 3,
+      "label": "high push-off",
+      "bounds": [
+        173.67455436554752,
+        294.75100859356826,
+        233.3570829215069,
+        348.2818609354728
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 4,
+      "label": "high push-off",
+      "bounds": [
+        173.84834412667547,
+        294.84557177208524,
+        231.87961292242613,
+        348.28185894094355
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 5,
+      "label": "high push-off",
+      "bounds": [
+        174.03642954155455,
+        294.90200488255346,
+        233.70270162679307,
+        348.28186027402177
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 6,
+      "label": "high push-off",
+      "bounds": [
+        174.21529885878687,
+        294.8916946517538,
+        236.07646441528806,
+        348.28185826931633
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 7,
+      "label": "high push-off",
+      "bounds": [
+        174.3569616525281,
+        294.7914966430101,
+        238.4905859919948,
+        348.28185894094355
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 8,
+      "label": "high push-off",
+      "bounds": [
+        174.43109016184385,
+        294.58599188292914,
+        240.49204370869427,
+        348.28185872724396
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 9,
+      "label": "high push-off",
+      "bounds": [
+        174.155866161179,
+        291.7761904170581,
+        241.3873676946342,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 10,
+      "label": "high push-off",
+      "bounds": [
+        171.19534329330693,
+        288.6530501269081,
+        240.3478381281944,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 11,
+      "label": "high push-off",
+      "bounds": [
+        165.255386977945,
+        286.27958206854305,
+        236.75353855519273,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 12,
+      "label": "high push-off",
+      "bounds": [
+        161.26461339429997,
+        285.2641835969292,
+        234.48809349675855,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 13,
+      "label": "high push-off",
+      "bounds": [
+        159.2356659864712,
+        284.4082451892412,
+        231.77892999986932,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 14,
+      "label": "high push-off",
+      "bounds": [
+        159.85975680593387,
+        283.05487684544636,
+        230.70210064003874,
+        348.2818560610874
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 15,
+      "label": "high push-off",
+      "bounds": [
+        163.04309157843753,
+        281.11953302750123,
+        231.66810773660325,
+        348.2453591563757
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 16,
+      "label": "high push-off",
+      "bounds": [
+        166.30928720088937,
+        278.95551510662284,
+        233.17524616009246,
+        347.88720288203615
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 17,
+      "label": "high push-off",
+      "bounds": [
+        169.03462851231674,
+        276.8450444514446,
+        235.07076388445068,
+        346.5607948961776
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 18,
+      "label": "high push-off",
+      "bounds": [
+        169.26079405009304,
+        276.32262877194455,
+        236.94250767013534,
+        344.7662195532183
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 19,
+      "label": "high push-off",
+      "bounds": [
+        166.19817416763644,
+        275.9285800166828,
+        239.25019754590517,
+        341.95059070363294
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 20,
+      "label": "high push-off",
+      "bounds": [
+        161.07096531102502,
+        276.81933753815224,
+        242.4859306603555,
+        339.7826965625997
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 21,
+      "label": "high push-off",
+      "bounds": [
+        154.1576900977219,
+        280.17135653330814,
+        245.50147374293076,
+        339.7942874643859
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 22,
+      "label": "high push-off",
+      "bounds": [
+        147.2097023636605,
+        283.8233508740917,
+        246.70713032500618,
+        336.93553196081535
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 23,
+      "label": "high push-off",
+      "bounds": [
+        142.55431949599205,
+        278.2876088836487,
+        245.47155946422447,
+        331.27158834529445
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 24,
+      "label": "high push-off",
+      "bounds": [
+        140.4383353685813,
+        271.2107221834332,
+        243.17707995881065,
+        325.0255533388715
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 25,
+      "label": "high push-off",
+      "bounds": [
+        139.85237732437858,
+        262.70938925857035,
+        240.40632179382743,
+        321.8210032109466
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 26,
+      "label": "high push-off",
+      "bounds": [
+        139.709914644539,
+        252.91635503021686,
+        238.81404514452112,
+        313.9927633690198
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 27,
+      "label": "high push-off",
+      "bounds": [
+        139.58049900527715,
+        241.97988432017587,
+        238.20688302676146,
+        303.9412244859782
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 28,
+      "label": "high push-off",
+      "bounds": [
+        151.6194144645974,
+        230.04825701098196,
+        241.72978105302175,
+        284.6592793802005
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 29,
+      "label": "high push-off",
+      "bounds": [
+        154.2508600653857,
+        217.2413231475899,
+        242.45093704045246,
+        265.49556640503124
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 30,
+      "label": "high push-off",
+      "bounds": [
+        155.44071320196738,
+        203.66280729043507,
+        242.04275593813605,
+        247.60443531278798
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 31,
+      "label": "high push-off",
+      "bounds": [
+        155.3961744608774,
+        189.37094619469767,
+        240.90322750003975,
+        232.70089009657298
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 32,
+      "label": "climb out of view",
+      "bounds": [
+        155.11423588706464,
+        165.7313123153664,
+        237.6971368061779,
+        217.27352915830988
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 33,
+      "label": "climb out of view",
+      "bounds": [
+        153.83682767376257,
+        145.2223695256876,
+        237.01455931237575,
+        201.44651282254898
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 34,
+      "label": "climb out of view",
+      "bounds": [
+        154.64822164442944,
+        126.95272627283586,
+        237.08887565093653,
+        185.29320702089598
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 35,
+      "label": "climb out of view",
+      "bounds": [
+        152.10079589029226,
+        111.66971660494158,
+        238.51680643882082,
+        168.85137588632873
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 36,
+      "label": "climb out of view",
+      "bounds": [
+        146.84129593069093,
+        100.02680074063392,
+        240.48661299356664,
+        152.23655560219467
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 37,
+      "label": "climb out of view",
+      "bounds": [
+        141.04581941793026,
+        92.12553344686583,
+        241.48478273217992,
+        135.50223612709294
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 38,
+      "label": "climb out of view",
+      "bounds": [
+        136.90327550616,
+        77.17876911089749,
+        240.39316128203532,
+        121.38243928918911
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 39,
+      "label": "climb out of view",
+      "bounds": [
+        135.4191622832555,
+        60.63763829951614,
+        237.95406314370868,
+        113.74049195466841
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 40,
+      "label": "climb out of view",
+      "bounds": [
+        135.4671915536333,
+        44.19545364480524,
+        235.1244581192434,
+        103.28183316854745
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 41,
+      "label": "climb out of view",
+      "bounds": [
+        137.38349514135308,
+        27.93149042095763,
+        233.63842276273772,
+        89.00903087901844
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 42,
+      "label": "climb out of view",
+      "bounds": [
+        140.38981782812948,
+        11.965285023018225,
+        234.17092039161977,
+        71.17992940910233
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 43,
+      "label": "climb out of view",
+      "bounds": [
+        145.59722418476522,
+        -3.533626051791771,
+        236.73613791639357,
+        50.04658330922996
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 44,
+      "label": "climb out of view",
+      "bounds": [
+        146.76773821596873,
+        -18.368021628890972,
+        238.14252937486026,
+        29.49485153123686
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 45,
+      "label": "climb out of view",
+      "bounds": [
+        147.35024398443696,
+        -32.32322746604882,
+        238.85197504700386,
+        10.146986829883417
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 46,
+      "label": "climb out of view",
+      "bounds": [
+        147.93901946731492,
+        -45.19658617694205,
+        238.48462961287024,
+        -2.505869909075045
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 47,
+      "label": "climb out of view",
+      "bounds": [
+        148.17920235349646,
+        -61.593314847281135,
+        237.7586553969804,
+        -14.104603418087834
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 48,
+      "label": "climb out of view",
+      "bounds": [
+        147.60877267305563,
+        -75.73832658574895,
+        237.71930452542668,
+        -24.542158008195486
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 49,
+      "label": "climb out of view",
+      "bounds": [
+        147.97984245594915,
+        -86.68901588817727,
+        237.91868419447349,
+        -33.70883652130311
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 50,
+      "label": "climb out of view",
+      "bounds": [
+        147.24006085638217,
+        -94.08199316096051,
+        238.80917361897647,
+        -41.49182937703631
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 51,
+      "label": "climb out of view",
+      "bounds": [
+        144.82525716294356,
+        -97.47249733687937,
+        239.9688563069891,
+        -47.774069387280406
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 52,
+      "label": "climb out of view",
+      "bounds": [
+        141.49971931898472,
+        -96.76233444104031,
+        240.7629863200923,
+        -52.434372940362834
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 53,
+      "label": "climb out of view",
+      "bounds": [
+        138.32857625479886,
+        -95.6348472231374,
+        240.56670260997421,
+        -55.348278843093
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 54,
+      "label": "offscreen / approach",
+      "bounds": [
+        135.39882686622985,
+        -97.89950830422526,
+        239.15504419597337,
+        -47.64336908253978
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 55,
+      "label": "offscreen / approach",
+      "bounds": [
+        130.019585548023,
+        -100.4946853605698,
+        233.72957668217782,
+        -43.91270045689572
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 56,
+      "label": "offscreen / approach",
+      "bounds": [
+        116.24044846660448,
+        -107.92553735076967,
+        220.79737047774952,
+        -47.811202149970654
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 57,
+      "label": "offscreen / approach",
+      "bounds": [
+        97.30638718446203,
+        -119.0024871560521,
+        202.9632664818566,
+        -60.388860575107515
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 58,
+      "label": "offscreen / approach",
+      "bounds": [
+        73.04773730681481,
+        -132.41211608126503,
+        181.93451347288521,
+        -80.23826610537765
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 59,
+      "label": "offscreen / approach",
+      "bounds": [
+        44.54702195552707,
+        -146.88798520549096,
+        155.06880055145496,
+        -97.48919755112445
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 60,
+      "label": "offscreen / approach",
+      "bounds": [
+        14.414337810105764,
+        -161.35817903903836,
+        123.62239396560815,
+        -113.22034800215783
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 61,
+      "label": "offscreen / approach",
+      "bounds": [
+        -14.297589593034388,
+        -175.05979284895437,
+        89.57804157612767,
+        -129.0760459886398
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 62,
+      "label": "offscreen / approach",
+      "bounds": [
+        -38.994550833845295,
+        -187.51824890164824,
+        55.48074283031289,
+        -144.3366183619067
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 63,
+      "label": "offscreen / approach",
+      "bounds": [
+        -61.98980748261215,
+        -209.4110742728542,
+        24.309264962084455,
+        -158.57185814908905
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 64,
+      "label": "offscreen / approach",
+      "bounds": [
+        -82.61754354912046,
+        -226.7851165543933,
+        -0.9557542388607203,
+        -170.7760773310045
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 65,
+      "label": "offscreen / approach",
+      "bounds": [
+        -101.07354372803428,
+        -238.98272737225636,
+        -21.082318898144905,
+        -179.92204577116053
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 66,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.74569593948905,
+        -244.57313300003443,
+        -31.98933707344355,
+        -184.97591556623104
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 67,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.5645850277179,
+        -243.04817613435057,
+        -32.05938663645455,
+        -185.66500867168725
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 68,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.1140458517591,
+        -232.19582917537343,
+        -29.966482296159683,
+        -179.36844938603053
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 69,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.82570174193148,
+        -208.2246371436056,
+        -27.918835777794442,
+        -156.91545969556552
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 70,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.75107206808553,
+        -174.30957222337162,
+        -26.517411263848118,
+        -122.4762223890213
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 71,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.9124831512811,
+        -136.6451272857267,
+        -25.982920581855893,
+        -82.90247384268343
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 72,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.29322377630928,
+        -98.9248778603353,
+        -26.105751452162053,
+        -41.23868075604713
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 73,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.83525857479697,
+        -58.81202437394518,
+        -29.811473740272504,
+        -0.6996494355200866
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 74,
+      "label": "offscreen / approach",
+      "bounds": [
+        -112.44790685384584,
+        -18.581056815782233,
+        -34.39719624259911,
+        36.703005069013784
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 75,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.02677509622583,
+        19.47570698929212,
+        -37.84399785062308,
+        69.65218620124
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 76,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.47629646977691,
+        48.59785269299766,
+        -39.69529790585014,
+        96.70515607613785
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 77,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.72858768012628,
+        68.28813143908343,
+        -40.003272535765575,
+        116.25518139372667
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 78,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.75327454629735,
+        79.3683659899074,
+        -39.04717096043822,
+        129.65487557354646
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 79,
+      "label": "first fire pass",
+      "bounds": [
+        -110.98295565245462,
+        99.46539145856849,
+        -26.464636833596217,
+        150.67940747106107
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 80,
+      "label": "first fire pass",
+      "bounds": [
+        -99.70322580017563,
+        97.2633838855223,
+        -18.055312644025975,
+        147.24046890610455
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 81,
+      "label": "first fire pass",
+      "bounds": [
+        -88.58705954564368,
+        99.93856178715225,
+        -8.867342104333062,
+        148.52474467620056
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 82,
+      "label": "first fire pass",
+      "bounds": [
+        -77.5009837940525,
+        108.99146345458047,
+        -3.6475355790045683,
+        160.39046163995724
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 83,
+      "label": "first fire pass",
+      "bounds": [
+        -66.3252176437976,
+        113.11830236339472,
+        6.620068864737959,
+        157.03281525844284
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 84,
+      "label": "first fire pass",
+      "bounds": [
+        -55.02029374340444,
+        110.44438524851532,
+        18.61623189496433,
+        154.27694740165168
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 85,
+      "label": "first fire pass",
+      "bounds": [
+        -43.57052211859366,
+        108.37965852261337,
+        31.957441438198117,
+        158.49410820381962
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 86,
+      "label": "first fire pass",
+      "bounds": [
+        -31.98222621067572,
+        107.89790023928714,
+        46.27069354311885,
+        162.68183431233115
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 87,
+      "label": "first fire pass",
+      "bounds": [
+        -20.275597018767144,
+        109.6717351232513,
+        61.23706532688419,
+        166.96034773150458
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.006010518407212579,
+      "groundTarget": null
+    },
+    {
+      "frame": 88,
+      "label": "first fire pass",
+      "bounds": [
+        -8.484063850328653,
+        112.66167946404065,
+        73.23061508065817,
+        171.2613960754798
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.10110749366947702,
+      "groundTarget": [
+        -1.757125995281783,
+        1.1330886191853649,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 89,
+      "label": "first fire pass",
+      "bounds": [
+        3.356145030557343,
+        117.29597710251755,
+        84.8110814747838,
+        175.48273236369624
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.27968389125413917,
+      "groundTarget": [
+        -1.5177683794057697,
+        1.1320307952223494,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 90,
+      "label": "first fire pass",
+      "bounds": [
+        15.110439009549054,
+        124.02721653440759,
+        97.04769688532589,
+        179.53937947147912
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.5,
+      "groundTarget": [
+        -1.272938533081582,
+        1.1312076513978107,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 91,
+      "label": "first fire pass",
+      "bounds": [
+        26.70881666293863,
+        132.8719849981172,
+        109.51184958887417,
+        183.37686664061854
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.7203161087458606,
+      "groundTarget": [
+        -1.0211358557651349,
+        1.1306303891976008,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 92,
+      "label": "first fire pass",
+      "bounds": [
+        38.0873111725102,
+        143.40829406655834,
+        121.6237670118553,
+        186.98016008610594
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.8988925063305226,
+      "groundTarget": [
+        -0.7619240387711832,
+        1.1303071917792216,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 93,
+      "label": "first fire pass",
+      "bounds": [
+        49.196706977917415,
+        151.4357221672437,
+        132.97100535964748,
+        196.05924550688553
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.9939894815927868,
+      "groundTarget": [
+        -0.4960055828119665,
+        1.1302423447854526,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 94,
+      "label": "first fire pass",
+      "bounds": [
+        60.013907529251384,
+        154.72259981994833,
+        143.54328001400182,
+        206.08606454985448
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.22511851844802644,
+        1.1304366749097459,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 95,
+      "label": "first fire pass",
+      "bounds": [
+        70.55207892590192,
+        158.08956726783978,
+        153.71470213020947,
+        213.7275318133822
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.04823362805825626,
+        1.1308877367982697,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 96,
+      "label": "first fire pass",
+      "bounds": [
+        80.8638443031684,
+        161.6241098579589,
+        160.6048152467847,
+        217.73086314806685
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.3211709559322724,
+        1.1315891042513162,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 97,
+      "label": "first fire pass",
+      "bounds": [
+        91.03392195741169,
+        165.39898256502062,
+        166.984820238373,
+        218.62846876379996
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.5908820265894188,
+        1.1325311611919118,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 98,
+      "label": "first fire pass",
+      "bounds": [
+        101.16235223745568,
+        169.45922869917746,
+        174.80202756165392,
+        217.6046126585639
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.8550546485151851,
+        1.1337012625669591,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 99,
+      "label": "first fire pass",
+      "bounds": [
+        111.34360164853298,
+        173.81222427403702,
+        184.38515644764468,
+        215.59144858573205
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.1122238513098752,
+        1.1350834381955317,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 100,
+      "label": "first fire pass",
+      "bounds": [
+        121.64891979770967,
+        171.7700999612959,
+        195.55612757946162,
+        215.34322123175752
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.361988297045408,
+        1.1366590947252864,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 101,
+      "label": "first fire pass",
+      "bounds": [
+        132.11684219709366,
+        169.5390264789918,
+        207.90825152846062,
+        219.86176493720265
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.6050650815824814,
+        1.1384074394864554,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 102,
+      "label": "first fire pass",
+      "bounds": [
+        142.75252319063526,
+        169.0251976297674,
+        221.09053174149824,
+        224.5840782232881
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.843180241084124,
+        1.1403051924803898,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 103,
+      "label": "first fire pass",
+      "bounds": [
+        153.53308973233254,
+        170.87945795970757,
+        234.85576086248145,
+        229.41551017255966
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.0788095034701164,
+        1.1423276491576853,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 104,
+      "label": "first fire pass",
+      "bounds": [
+        164.415324762854,
+        173.96165335144255,
+        245.68592550005843,
+        234.24932193715097
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.314809969877225,
+        1.1444485376891578,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 105,
+      "label": "first fire pass",
+      "bounds": [
+        175.34209552575902,
+        178.55471851294206,
+        256.2420277125647,
+        238.982647573191
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.5539931194869694,
+        1.1466404841767024,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 106,
+      "label": "first fire pass",
+      "bounds": [
+        186.24767124122639,
+        185.01742265978945,
+        267.6790982980386,
+        243.53182562061403
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.7986977918548126,
+        1.1488753865091577,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 107,
+      "label": "first fire pass",
+      "bounds": [
+        197.06295309748086,
+        193.3710086281373,
+        279.6216154476829,
+        247.84429211571458
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.050432689741941,
+        1.1511247172467012,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 108,
+      "label": "first fire pass",
+      "bounds": [
+        207.7233948854089,
+        203.30575174186905,
+        291.483708799597,
+        256.31138429195835
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.3096366576992846,
+        1.1533596844851663,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 109,
+      "label": "first fire pass",
+      "bounds": [
+        218.1806183246855,
+        213.94905143283918,
+        302.7767612040008,
+        268.609499935177
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.575607861572675,
+        1.1555516587436783,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 110,
+      "label": "first fire pass",
+      "bounds": [
+        228.41595428438478,
+        222.14934550055426,
+        313.36631958741833,
+        279.06800539948955
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.8466056131294653,
+        1.1576725867340714,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 111,
+      "label": "first fire pass",
+      "bounds": [
+        238.45170834698285,
+        226.0301099767867,
+        323.49989905363003,
+        287.00911126264543
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.120120721374559,
+        1.1596951224385423,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 112,
+      "label": "first fire pass",
+      "bounds": [
+        248.3541082661328,
+        230.08453888304678,
+        330.2249012377166,
+        291.3125525304373
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.393264743025542,
+        1.1615928620736482,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 113,
+      "label": "first fire pass",
+      "bounds": [
+        258.22431244746315,
+        234.35671006536407,
+        336.2388687228431,
+        292.60230870738127
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.66321550446534,
+        1.1633410309095156,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 114,
+      "label": "first fire pass",
+      "bounds": [
+        268.1789117041194,
+        236.93765813945186,
+        343.5196701075739,
+        292.06897401407525
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.927648366688354,
+        1.1649167314304856,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 115,
+      "label": "first fire pass",
+      "bounds": [
+        278.3257913720651,
+        234.863950902876,
+        352.48335619573953,
+        290.5634703854905
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        5.185084740605168,
+        1.1662989815246925,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 116,
+      "label": "first fire pass",
+      "bounds": [
+        288.74350275908574,
+        232.59970155979988,
+        363.05465774846755,
+        288.66277436805
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        5.435109497336349,
+        1.1674690546602848,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 117,
+      "label": "first fire pass",
+      "bounds": [
+        299.4699658819143,
+        231.11568236745035,
+        374.9425726786965,
+        286.9082969303534
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        5.678426217121855,
+        1.168411166361601,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 118,
+      "label": "first fire pass",
+      "bounds": [
+        310.50164422103575,
+        231.30381109348838,
+        387.918012920157,
+        291.25607912615214
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        5.916747872030806,
+        1.1691125303906262,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 119,
+      "label": "first fire pass",
+      "bounds": [
+        321.80041832546164,
+        233.66113803673704,
+        401.82574985157646,
+        295.7987836234222
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.9894259398391628,
+      "groundTarget": [
+        6.152540151700073,
+        1.169563517703138,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 120,
+      "label": "first fire pass",
+      "bounds": [
+        333.30414207418875,
+        236.88967090404145,
+        413.18016783256945,
+        300.27109820998453
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.8841027353424044,
+      "groundTarget": [
+        6.388651284313221,
+        1.1697579010896577,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 121,
+      "label": "first fire pass",
+      "bounds": [
+        344.9363822887667,
+        241.23997475983862,
+        424.5834540832223,
+        304.5813217551169
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.6994740796393681,
+      "groundTarget": [
+        6.627887322520677,
+        1.169693043613384,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 122,
+      "label": "first fire pass",
+      "bounds": [
+        356.6146419578194,
+        247.19816857979623,
+        437.11506370445903,
+        308.654821780751
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.4772796838912533,
+      "groundTarget": [
+        6.872583788764658,
+        1.1693697867677826,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 123,
+      "label": "first fire pass",
+      "bounds": [
+        368.25740576790076,
+        254.9803696277466,
+        450.3025163136855,
+        313.52635946075986
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.2592592592592584,
+      "groundTarget": [
+        7.124250722768552,
+        1.1687925979784792,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 124,
+      "label": "first fire pass",
+      "bounds": [
+        379.79232894280005,
+        264.4622461920854,
+        463.44392711804664,
+        324.6622568368687
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.08715251690458237,
+      "groundTarget": [
+        7.383329981824686,
+        1.1679694743344755,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 125,
+      "label": "first fire pass",
+      "bounds": [
+        391.16656140478904,
+        274.8714727266649,
+        475.9420111532163,
+        335.17338709962064
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.002699167988424178,
+      "groundTarget": null
+    },
+    {
+      "frame": 126,
+      "label": "first fire pass",
+      "bounds": [
+        402.35837169705303,
+        284.8943345115496,
+        487.59811814655245,
+        343.8692228184372
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 127,
+      "label": "first fire pass",
+      "bounds": [
+        413.38603040436817,
+        288.4244825023291,
+        498.6600967384352,
+        350.148566914593
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 128,
+      "label": "first fire pass",
+      "bounds": [
+        424.3088709370296,
+        291.52015859201686,
+        506.23089616190623,
+        352.885217228373
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 129,
+      "label": "first fire pass",
+      "bounds": [
+        435.2169189495619,
+        294.78796915511083,
+        513.0856303292462,
+        352.6382359709334
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 130,
+      "label": "first fire pass",
+      "bounds": [
+        446.21119820798,
+        298.23424083857464,
+        521.2836161012935,
+        350.5212831981813
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 131,
+      "label": "first fire pass",
+      "bounds": [
+        457.38020250541433,
+        296.1009094685141,
+        531.2881117455825,
+        347.34263995928035
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 132,
+      "label": "first fire pass",
+      "bounds": [
+        468.7812004199105,
+        293.61475888943227,
+        543.0299754688169,
+        343.6950600817201
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 133,
+      "label": "first fire pass",
+      "bounds": [
+        480.43116277506175,
+        291.7632726648262,
+        556.1795562006134,
+        343.56703257854195
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 134,
+      "label": "first fire pass",
+      "bounds": [
+        492.3086194416986,
+        291.48241884114225,
+        570.4208125392706,
+        347.4390870979305
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 135,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        499.7968221366656,
+        290.36447165026493,
+        575.6417537767429,
+        348.7289211963518
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 136,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        507.26505905568405,
+        291.00139079977066,
+        587.0592067365851,
+        350.3495087004266
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 137,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        514.6090192060435,
+        293.8416747791642,
+        595.8521220856296,
+        351.1640213907582
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 138,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        515.2644379664249,
+        296.51639621851547,
+        603.3488866994999,
+        351.2488635387149
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 139,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        512.3212989745589,
+        302.13006619895623,
+        610.7986914232248,
+        350.7676513493721
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 140,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        508.31004383671825,
+        303.7680795799543,
+        616.7148467215551,
+        349.92128263733326
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 141,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        502.8572215937681,
+        301.3613833145991,
+        618.9212532229254,
+        349.66958440167673
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 142,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        496.7845499478079,
+        300.6050415192759,
+        615.6085109776488,
+        349.9543171816333
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 143,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        492.6747824542006,
+        301.9273848579289,
+        606.4767740209855,
+        353.0935507181963
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 144,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        490.37557283244485,
+        305.4725161192094,
+        595.087854773408,
+        365.5258347201343
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 145,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        492.0706453758607,
+        311.1619770736089,
+        583.3111704308908,
+        374.0499304753008
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 146,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        497.0361775234793,
+        318.7140742413095,
+        571.2665169385706,
+        379.7758569612801
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 147,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        494.9383406238805,
+        327.7150291459572,
+        566.4161056360931,
+        383.7661483991651
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 148,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        484.3361680237977,
+        329.9655630777209,
+        562.0682587719224,
+        386.2317458014833
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 149,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        474.7553945251357,
+        329.4030147184415,
+        555.7244257386244,
+        386.9200125205314
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 150,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        466.05908788031047,
+        329.3699417998046,
+        547.6978648844416,
+        387.10615762611593
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 151,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        458.0171319050798,
+        329.6925535444566,
+        538.3672679053157,
+        388.28311203035173
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 152,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        450.35422480222655,
+        330.1832618506517,
+        528.2023153675885,
+        392.65244190473777
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 153,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        440.8756854291998,
+        331.9362908326719,
+        517.7655098698572,
+        395.8560267110062
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 154,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        429.5454815176513,
+        333.6463700988616,
+        507.6987769837414,
+        396.87690333544646
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 155,
+      "label": "return fire pass",
+      "bounds": [
+        413.9186453728014,
+        345.7731755740556,
+        497.93478185907134,
+        406.4207722315377
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 156,
+      "label": "return fire pass",
+      "bounds": [
+        404.77900669339135,
+        343.4439150671821,
+        486.77992535895726,
+        401.1293373477151
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 157,
+      "label": "return fire pass",
+      "bounds": [
+        396.15711997259143,
+        344.2452077628585,
+        475.7397435558005,
+        400.5887073162046
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 158,
+      "label": "return fire pass",
+      "bounds": [
+        390.7630904324074,
+        350.5192235655545,
+        464.7005898706165,
+        403.5646304415988
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 159,
+      "label": "return fire pass",
+      "bounds": [
+        380.4954722345783,
+        342.95749825537285,
+        453.5727360810034,
+        395.5271827211749
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 160,
+      "label": "return fire pass",
+      "bounds": [
+        368.49932983548183,
+        333.04486580156583,
+        442.2977479500768,
+        387.18260809729594
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 161,
+      "label": "return fire pass",
+      "bounds": [
+        355.158120292248,
+        322.4261964105492,
+        430.84671094929956,
+        379.37657405230664
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 162,
+      "label": "return fire pass",
+      "bounds": [
+        340.8448681873273,
+        312.6222132135615,
+        419.22147844183996,
+        371.620994516186
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 163,
+      "label": "return fire pass",
+      "bounds": [
+        325.87849640356194,
+        304.48075734319843,
+        407.4532790813041,
+        368.1475204244078
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.006010518407212579,
+      "groundTarget": null
+    },
+    {
+      "frame": 164,
+      "label": "return fire pass",
+      "bounds": [
+        313.88494664978793,
+        299.53565989589885,
+        395.5996187037315,
+        365.3805009609104
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.10110749366947702,
+      "groundTarget": [
+        1.7571259952817826,
+        -1.233088450836204,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 165,
+      "label": "return fire pass",
+      "bounds": [
+        302.3044802556623,
+        296.52242057217506,
+        383.75940982284544,
+        362.4427824338336
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.27968389125413917,
+      "groundTarget": [
+        1.5177683794057693,
+        -1.232030508935937,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 166,
+      "label": "return fire pass",
+      "bounds": [
+        290.067847652512,
+        295.00924659189945,
+        372.00509521272386,
+        362.4144216110383
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.5,
+      "groundTarget": [
+        1.272938533081582,
+        -1.2312073659185674,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 167,
+      "label": "return fire pass",
+      "bounds": [
+        277.603712141572,
+        295.1173625767094,
+        360.40673819046424,
+        363.59281826348683
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.7203161087458606,
+      "groundTarget": [
+        1.0211358557651349,
+        -1.2306302231460213,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 168,
+      "label": "return fire pass",
+      "bounds": [
+        265.49178784154753,
+        296.71594791918335,
+        349.0282436808926,
+        364.8288441130657
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.8988925063305226,
+      "groundTarget": [
+        0.7619240387711832,
+        -1.2303068849697696,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 169,
+      "label": "return fire pass",
+      "bounds": [
+        254.1445460552337,
+        299.1254857578794,
+        337.9188478754854,
+        366.06731745362845
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.9939894815927873,
+      "groundTarget": [
+        0.49600534439338695,
+        -1.2302420369026699,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 170,
+      "label": "return fire pass",
+      "bounds": [
+        243.57226452383603,
+        301.17169682046716,
+        327.1016370085865,
+        366.4035749053728
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.22511851844802644,
+        -1.2304364847024922,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 171,
+      "label": "return fire pass",
+      "bounds": [
+        233.40085960023666,
+        301.57223534669674,
+        316.56347936602253,
+        364.61098395625595
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.04823362805825626,
+        -1.2308874472024685,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 172,
+      "label": "return fire pass",
+      "bounds": [
+        226.5107464836614,
+        300.76472660884764,
+        306.2517139887561,
+        360.13242087571496
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.32117107514156196,
+        -1.2315888131093287,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 173,
+      "label": "return fire pass",
+      "bounds": [
+        220.13073461502984,
+        296.7690240333034,
+        296.0816225804262,
+        353.9267757365022
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.5908821457987083,
+        -1.2325309879871178,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 174,
+      "label": "return fire pass",
+      "bounds": [
+        212.31352385322728,
+        290.3384562718213,
+        285.95320261594713,
+        346.6265137006562
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.8550546485151846,
+        -1.2337010885585347,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 175,
+      "label": "return fire pass",
+      "bounds": [
+        202.73040012501897,
+        282.06712756179985,
+        275.7719532048699,
+        337.17279427289526
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.1122238513098752,
+        -1.2350831447658475,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 176,
+      "label": "return fire pass",
+      "bounds": [
+        191.55942899320206,
+        271.89878566401524,
+        265.4666350556932,
+        327.1076588056775
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.3619882970454085,
+        -1.2366589209178411,
+        -0.19700000000000029
+      ]
+    },
+    {
+      "frame": 177,
+      "label": "return fire pass",
+      "bounds": [
+        179.20729816715973,
+        261.2031231270282,
+        254.9987160948308,
+        317.7991433095644
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.605065081582481,
+        -1.2384071474459575,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 178,
+      "label": "return fire pass",
+      "bounds": [
+        166.0250248311654,
+        251.1662735452904,
+        244.36303166276758,
+        308.56833426822953
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.8431802410841245,
+        -1.240304901832104,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 179,
+      "label": "return fire pass",
+      "bounds": [
+        152.2597957101822,
+        242.68363174126378,
+        233.5824651210703,
+        305.0114108612262
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.0788095034701164,
+        -1.2423273601069456,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 180,
+      "label": "return fire pass",
+      "bounds": [
+        141.42963107260525,
+        237.4183567985549,
+        222.7002352483313,
+        301.44658675729323
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.314809969877225,
+        -1.2444482501992138,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 181,
+      "label": "return fire pass",
+      "bounds": [
+        130.87352327250125,
+        234.27215409674642,
+        211.77346276616547,
+        297.7651443564541
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.553993119486969,
+        -1.246640317183208,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 182,
+      "label": "return fire pass",
+      "bounds": [
+        119.43645956407069,
+        232.92311884243196,
+        200.86788361217643,
+        293.9749444650521
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.7986977918548126,
+        -1.2488752190140853,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 183,
+      "label": "return fire pass",
+      "bounds": [
+        107.49394112498075,
+        233.4971901597549,
+        190.05260175592198,
+        294.1107560055477
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.0504326897419407,
+        -1.251124549977455,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 184,
+      "label": "return fire pass",
+      "bounds": [
+        95.6318503519579,
+        235.748635459122,
+        179.3921599679939,
+        294.5670671782882
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.309636538489995,
+        -1.253359518130232,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 185,
+      "label": "return fire pass",
+      "bounds": [
+        84.3387910705108,
+        238.81782871527994,
+        168.93493996723896,
+        294.38269390670837
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.575607861572675,
+        -1.2555514914181787,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 186,
+      "label": "return fire pass",
+      "bounds": [
+        73.74923698524532,
+        241.3797508649085,
+        158.69960293300167,
+        293.8506969714302
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.846605493920176,
+        -1.2576724180186032,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 187,
+      "label": "return fire pass",
+      "bounds": [
+        63.61565751903365,
+        240.7807098825408,
+        148.66384650641996,
+        291.8902307237772
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.120120721374558,
+        -1.2596948329154947,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 188,
+      "label": "return fire pass",
+      "bounds": [
+        56.89065533494704,
+        235.93272154901004,
+        138.76144658727,
+        287.3283744711626
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.393264743025542,
+        -1.2615925709865274,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 189,
+      "label": "return fire pass",
+      "bounds": [
+        50.8766878498206,
+        231.23327778019393,
+        128.89124412520053,
+        280.354890499832
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.66321550446534,
+        -1.263340857738834,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 190,
+      "label": "return fire pass",
+      "bounds": [
+        43.595884745828926,
+        226.67555008113206,
+        118.93664486854428,
+        272.1190573695767
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.927648366688354,
+        -1.2649165574336296,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 191,
+      "label": "return fire pass",
+      "bounds": [
+        34.6322055347066,
+        219.32441865396908,
+        108.78977035838099,
+        263.0044991840039
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -5.185084740605169,
+        -1.266298688083443,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 192,
+      "label": "return fire pass",
+      "bounds": [
+        24.060903981978555,
+        210.92010019431845,
+        98.3720538135779,
+        253.79469888620838
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -5.435109497336349,
+        -1.2674687616094398,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 193,
+      "label": "return fire pass",
+      "bounds": [
+        12.172982174706306,
+        200.24155157867722,
+        87.6455906907494,
+        244.3694359372402
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -5.678426217121854,
+        -1.2684109338708673,
+        -0.19699999999999984
+      ]
+    },
+    {
+      "frame": 194,
+      "label": "return fire pass",
+      "bounds": [
+        -0.8024546282325389,
+        189.7354416772108,
+        76.6139243864537,
+        241.09602054326845
+      ],
+      "fullyOutside": false,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -5.916747872030806,
+        -1.2691122396695802,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 195,
+      "label": "return fire pass",
+      "bounds": [
+        -14.71020187521691,
+        180.9379901611341,
+        65.31514856276698,
+        237.9953034639267
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.9894259398391628,
+      "groundTarget": [
+        -6.152540151700073,
+        -1.2695632666401528,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 196,
+      "label": "return fire pass",
+      "bounds": [
+        -26.06460610212332,
+        175.6492428953774,
+        53.81141449847493,
+        234.94351463078175
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.8841027353424089,
+      "groundTarget": [
+        -6.388651284313221,
+        -1.2697576517502314,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 197,
+      "label": "return fire pass",
+      "bounds": [
+        -37.467899229819494,
+        172.79299788854686,
+        42.17918459946185,
+        231.81656346675214
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.6994740796393681,
+      "groundTarget": [
+        -6.627886845683519,
+        -1.2696927956990758,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 198,
+      "label": "return fire pass",
+      "bounds": [
+        -49.9995019740129,
+        171.9153642428785,
+        30.50091461484425,
+        228.50938639025748
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.4772796838912533,
+      "groundTarget": [
+        -6.872583788764658,
+        -1.2693695608873032,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 199,
+      "label": "return fire pass",
+      "bounds": [
+        -63.186954583239356,
+        172.95145758408717,
+        18.858150804762857,
+        227.29217823271648
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.2592592592592584,
+      "groundTarget": [
+        -7.124250722768552,
+        -1.2687923723281485,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 200,
+      "label": "return fire pass",
+      "bounds": [
+        -76.3283722646438,
+        175.48533942720084,
+        7.323227629863567,
+        228.05253896388984
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.08715251690458237,
+      "groundTarget": [
+        -7.383329981824685,
+        -1.2679691886866178,
+        -0.19700000000000006
+      ]
+    },
+    {
+      "frame": 201,
+      "label": "return fire pass",
+      "bounds": [
+        -88.82644942277017,
+        178.58203699065072,
+        -4.050996235821287,
+        229.19633777828417
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0026991679884248443,
+      "groundTarget": null
+    },
+    {
+      "frame": 202,
+      "label": "return fire pass",
+      "bounds": [
+        -100.48255641610632,
+        180.95034861007792,
+        -15.24281512438941,
+        229.51470308099874
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 203,
+      "label": "return fire pass",
+      "bounds": [
+        -111.54454188503234,
+        178.79129274802744,
+        -26.27047383170452,
+        229.0053049361649
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 204,
+      "label": "return fire pass",
+      "bounds": [
+        -119.11534130850339,
+        174.57007482901972,
+        -37.19331608362677,
+        225.8103046654458
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 205,
+      "label": "return fire pass",
+      "bounds": [
+        -125.97007547584343,
+        170.4930365490986,
+        -48.10134174576828,
+        220.13257227605942
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 206,
+      "label": "return fire pass",
+      "bounds": [
+        -134.1680612478907,
+        165.78636997908936,
+        -59.09563991605552,
+        213.47946816345348
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 207,
+      "label": "return fire pass",
+      "bounds": [
+        -144.17257064626614,
+        158.7119715762991,
+        -70.26464593275062,
+        205.35453346780156
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 208,
+      "label": "return fire pass",
+      "bounds": [
+        -155.91442061541414,
+        149.61105951249766,
+        -81.66564556650769,
+        197.5239054110808
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 209,
+      "label": "return fire pass",
+      "bounds": [
+        -169.0640013472107,
+        138.59790810560807,
+        -93.31560792165891,
+        189.56449849367456
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 210,
+      "label": "return fire pass",
+      "bounds": [
+        -183.3052508088245,
+        128.41893608912187,
+        -105.19306286903497,
+        183.90537758641847
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 211,
+      "label": "climb / return to arena",
+      "bounds": [
+        -180.03109737274139,
+        131.08697032963232,
+        -105.93739965015504,
+        184.09597244618365
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 212,
+      "label": "climb / return to arena",
+      "bounds": [
+        -179.86736184891186,
+        111.09206956467386,
+        -105.49887810735555,
+        165.29159165267103
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 213,
+      "label": "climb / return to arena",
+      "bounds": [
+        -178.61378001173847,
+        93.13634918719842,
+        -105.22149600454145,
+        141.06823445550535
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 214,
+      "label": "climb / return to arena",
+      "bounds": [
+        -179.56988158706582,
+        52.62693410319946,
+        -105.15701340807846,
+        105.46321120285086
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 215,
+      "label": "climb / return to arena",
+      "bounds": [
+        -181.56821970500027,
+        8.078647960524563,
+        -105.29378404514512,
+        63.50781235617069
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 216,
+      "label": "climb / return to arena",
+      "bounds": [
+        -184.45853096952874,
+        -37.25798608751131,
+        -105.60014944692944,
+        23.826129132888695
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 217,
+      "label": "climb / return to arena",
+      "bounds": [
+        -184.77446233853743,
+        -79.06204753999003,
+        -106.03161514330736,
+        -15.856052315673423
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 218,
+      "label": "climb / return to arena",
+      "bounds": [
+        -185.1125928033049,
+        -116.34909684130378,
+        -106.53638324417517,
+        -53.3301347358651
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 219,
+      "label": "climb / return to arena",
+      "bounds": [
+        -186.55766591104958,
+        -147.3315106109236,
+        -107.05245032717795,
+        -85.0428460932751
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 220,
+      "label": "climb / return to arena",
+      "bounds": [
+        -188.65058400543109,
+        -169.6723984023999,
+        -107.50301357278835,
+        -106.90437139746581
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 221,
+      "label": "climb / return to arena",
+      "bounds": [
+        -190.69823740083956,
+        -181.36326192699306,
+        -107.79133361296442,
+        -119.35766857975324
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 222,
+      "label": "climb / return to arena",
+      "bounds": [
+        -192.09964128365596,
+        -180.96133602245897,
+        -107.86598047941857,
+        -121.14935865289794
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 223,
+      "label": "climb / return to arena",
+      "bounds": [
+        -190.76952483164376,
+        -174.26335352488684,
+        -105.9826058942599,
+        -116.81047522768807
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 224,
+      "label": "climb / return to arena",
+      "bounds": [
+        -176.65719242365282,
+        -167.18389322041332,
+        -92.743750824919,
+        -110.26504435509048
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 225,
+      "label": "climb / return to arena",
+      "bounds": [
+        -146.80551544249295,
+        -159.14868013602677,
+        -69.04515359919452,
+        -103.60442086699481
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 226,
+      "label": "climb / return to arena",
+      "bounds": [
+        -118.77409210460127,
+        -152.6610346037109,
+        -37.89727602429633,
+        -96.50338104778643
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 227,
+      "label": "climb / return to arena",
+      "bounds": [
+        -84.85601598411813,
+        -147.23771956456488,
+        -2.3089852930204984,
+        -89.90669907573749
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 228,
+      "label": "climb / return to arena",
+      "bounds": [
+        -46.16353880144504,
+        -143.35140850585128,
+        35.036843885187665,
+        -85.72246990626303
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 229,
+      "label": "climb / return to arena",
+      "bounds": [
+        -4.50324951482159,
+        -139.54545588303472,
+        71.992885687912,
+        -83.68454061781671
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 230,
+      "label": "climb / return to arena",
+      "bounds": [
+        37.99807122018234,
+        -134.77838789824057,
+        107.00552319454869,
+        -83.0548813107626
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 231,
+      "label": "climb / return to arena",
+      "bounds": [
+        74.86512365284393,
+        -128.38962743504715,
+        143.5755238911246,
+        -73.16752682942092
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 232,
+      "label": "climb / return to arena",
+      "bounds": [
+        100.01821381636756,
+        -120.42834504952151,
+        179.4377966720276,
+        -64.51719411905742
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 233,
+      "label": "climb / return to arena",
+      "bounds": [
+        122.94112654855385,
+        -113.02723667096888,
+        208.94435159937186,
+        -57.86533524401432
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 234,
+      "label": "climb / return to arena",
+      "bounds": [
+        137.86989723846904,
+        -106.80664853853568,
+        229.23788614191062,
+        -53.59769969766381
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 235,
+      "label": "descending into arena",
+      "bounds": [
+        136.48117892164214,
+        -100.42262224329647,
+        239.4772968572165,
+        -52.308082865558845
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 236,
+      "label": "descending into arena",
+      "bounds": [
+        135.91614041333003,
+        -98.34469065470404,
+        239.5591543035663,
+        -50.46798127177436
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 237,
+      "label": "descending into arena",
+      "bounds": [
+        135.4574966418471,
+        -92.96765830688742,
+        239.08071883129327,
+        -38.96838390852474
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 238,
+      "label": "descending into arena",
+      "bounds": [
+        149.5007534480838,
+        -84.5107363246247,
+        238.02674489504108,
+        -29.194697917004987
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 239,
+      "label": "descending into arena",
+      "bounds": [
+        151.84268326279297,
+        -73.28768960843018,
+        238.8657770579909,
+        -24.742356358670065
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 240,
+      "label": "descending into arena",
+      "bounds": [
+        152.29312616014568,
+        -59.58970034672228,
+        238.5304593039314,
+        -12.27962859915283
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 241,
+      "label": "descending into arena",
+      "bounds": [
+        151.39174521832297,
+        -43.7103300792694,
+        236.76223715533152,
+        3.539701695807082
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 242,
+      "label": "descending into arena",
+      "bounds": [
+        150.14972068222337,
+        -31.93336146262095,
+        233.8597767341906,
+        21.2779315760219
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 243,
+      "label": "descending into arena",
+      "bounds": [
+        148.19300457939113,
+        -15.395198551554017,
+        232.40461715300702,
+        40.63992905412147
+      ],
+      "fullyOutside": true,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 244,
+      "label": "descending into arena",
+      "bounds": [
+        148.8761726392863,
+        3.413858375215682,
+        232.5438480523128,
+        61.330499661052386
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 245,
+      "label": "descending into arena",
+      "bounds": [
+        146.63524338057118,
+        26.334618867615063,
+        234.40390989051394,
+        83.0542390544324
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 246,
+      "label": "descending into arena",
+      "bounds": [
+        142.3402908650948,
+        53.55171273846821,
+        237.2399380734175,
+        105.51614582750418
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 247,
+      "label": "descending into arena",
+      "bounds": [
+        137.9586497803533,
+        81.4488353728157,
+        239.46531661798002,
+        128.42089515447728
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 248,
+      "label": "descending into arena",
+      "bounds": [
+        135.42822536668896,
+        104.55742742673863,
+        239.6919482903472,
+        153.877005056514
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 249,
+      "label": "descending into arena",
+      "bounds": [
+        135.5285863576565,
+        127.67719132776975,
+        238.45203973450668,
+        185.02379007249002
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 250,
+      "label": "descending into arena",
+      "bounds": [
+        136.89439638363473,
+        150.72538463815238,
+        236.65158209018057,
+        213.2613898092079
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 251,
+      "label": "descending into arena",
+      "bounds": [
+        147.66420508054136,
+        173.34875224244988,
+        237.52168065149635,
+        229.9209383085684
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 252,
+      "label": "descending into arena",
+      "bounds": [
+        153.39944471144378,
+        195.19130853495565,
+        239.21134074693072,
+        243.60463271767154
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 253,
+      "label": "descending into arena",
+      "bounds": [
+        154.41158473369728,
+        215.8968192450747,
+        238.70783286424688,
+        265.0685498662323
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 254,
+      "label": "descending into arena",
+      "bounds": [
+        152.89297970014275,
+        235.10923193001636,
+        236.57156597217323,
+        285.0986409462111
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 255,
+      "label": "descending into arena",
+      "bounds": [
+        151.7812252759345,
+        246.36114221250574,
+        232.18141626561402,
+        303.29182277832405
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 256,
+      "label": "descending into arena",
+      "bounds": [
+        151.83612041441276,
+        257.33182466653744,
+        230.1156805444896,
+        319.24547631839783
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 257,
+      "label": "descending into arena",
+      "bounds": [
+        152.62549366263127,
+        268.2416979313906,
+        227.51501658949326,
+        332.55738608880665
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 258,
+      "label": "descending into arena",
+      "bounds": [
+        153.4414952523063,
+        276.85701398307367,
+        225.7446485884775,
+        342.8257396594873
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 259,
+      "label": "descending into arena",
+      "bounds": [
+        153.79113616829014,
+        282.60524085349005,
+        225.23989553114188,
+        349.64912195946033
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 260,
+      "label": "flare",
+      "bounds": [
+        153.78118078848905,
+        285.25676112401766,
+        225.06052934753146,
+        352.63301793082906
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 261,
+      "label": "flare",
+      "bounds": [
+        153.66347159617746,
+        285.98138785793947,
+        224.95826642427744,
+        353.4244979391825
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 262,
+      "label": "flare",
+      "bounds": [
+        153.59792735615568,
+        286.33126115734956,
+        224.9155978091487,
+        353.7707465479181
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 263,
+      "label": "forepaw catch",
+      "bounds": [
+        153.08335860896096,
+        286.70865795376403,
+        224.59856396413667,
+        354.0457117782256
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 264,
+      "label": "forepaw catch",
+      "bounds": [
+        151.68372556479324,
+        287.80515790993945,
+        223.71332688145083,
+        353.7428012181413
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 265,
+      "label": "forepaw catch",
+      "bounds": [
+        150.76548984948295,
+        288.612553916178,
+        223.11253892319596,
+        353.5077759487629
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 266,
+      "label": "hindpaw catch",
+      "bounds": [
+        150.6790222052337,
+        288.64963705986366,
+        223.15693023767028,
+        353.50311756274624
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 267,
+      "label": "hindpaw catch",
+      "bounds": [
+        150.10829896100722,
+        288.81748612423365,
+        223.6595165965525,
+        353.51137837397755
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 268,
+      "label": "hindpaw catch",
+      "bounds": [
+        149.07750839733552,
+        289.0834556711978,
+        224.77226260444095,
+        353.55515704061105
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 269,
+      "label": "recover",
+      "bounds": [
+        148.64124338436753,
+        289.6820801022252,
+        226.36380942752749,
+        353.61548978151313
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 270,
+      "label": "recover",
+      "bounds": [
+        150.82129318749145,
+        291.3172675710081,
+        229.5568881107509,
+        353.6713335594518
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 271,
+      "label": "recover",
+      "bounds": [
+        156.61721670806634,
+        292.26306014983896,
+        232.0566340342727,
+        353.71792391201495
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 272,
+      "label": "recover",
+      "bounds": [
+        164.76163203210018,
+        295.0470880230641,
+        234.82131418242804,
+        353.751703565654
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 273,
+      "label": "recover",
+      "bounds": [
+        166.45900838502007,
+        298.93336866520565,
+        234.06670696696096,
+        353.7705577392611
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 274,
+      "label": "recover",
+      "bounds": [
+        166.46867922715475,
+        302.63622219569584,
+        231.33335218083317,
+        353.7383769349141
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 275,
+      "label": "recover",
+      "bounds": [
+        166.47959481412602,
+        302.1524774222362,
+        228.2778190914929,
+        353.5187440485966
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 276,
+      "label": "recover",
+      "bounds": [
+        166.48546952836145,
+        301.5981454526623,
+        225.79769165323313,
+        353.38651235239456
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 277,
+      "label": "recover",
+      "bounds": [
+        166.4834356428067,
+        301.13489856883507,
+        225.6317859924286,
+        353.34593869083506
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 278,
+      "label": "recover",
+      "bounds": [
+        166.48221840614335,
+        300.7353626497485,
+        226.57357257232053,
+        353.333220757876
+      ],
+      "fullyOutside": false,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "status": "one-view bounded idle study; visual review required",
+  "ownerAccepted": false,
+  "riggedForFullLifecycle": false,
+  "frames": 64,
+  "fps": 16,
+  "durationSeconds": 4.0,
+  "cell": [
+    320,
+    192
+  ],
+  "atlas": [
+    8,
+    8
+  ],
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "minTriangleAreaRatio": 0.8483148217201233,
+  "flippedTriangles": false,
+  "loopClosureError": 4.410019550826942e-18,
+  "lowerPawVertexMaxDisplacement": 0.0021282045275298907,
+  "source": "original card pixels, no generated repaint",
+  "limitations": [
+    "No walk, attack, flight, alternate directions or hidden-surface art",
+    "Small continuous mesh deformations only; not an accepted full creature rig"
+  ],
+  "visibleRestPixelsMatchReferenceExactly": true,
+  "uniqueRasterFrames": 60,
+  "visualAssessment": "Contact sheet retains card silhouette, face and armour. Small breathing study only; full motion review pending. Not a walk or general-purpose rig."
+}

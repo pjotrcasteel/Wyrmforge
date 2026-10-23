@@ -1,0 +1,44 @@
+{
+  "clips": {
+    "walk": {
+      "frames": 4,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_walk",
+      "events": [],
+      "strideDistanceModelUnits": 0.1388888888888889,
+      "reviewRenderer": "block",
+      "poseGateOnly": true,
+      "poses": [
+        "folded",
+        "partial",
+        "raised-open",
+        "level-open"
+      ]
+    }
+  },
+  "groundRoot": [
+    0,
+    0,
+    -0.197
+  ],
+  "nativeCell": 192,
+  "modelToPixel": 80,
+  "tier": 1,
+  "targetGroundedViewportWidthFraction": [
+    0.15,
+    0.25
+  ],
+  "boneCount": 61,
+  "skinOwnership": {
+    "body": 722,
+    "neck": 306,
+    "tail": 398,
+    "hind": 700,
+    "fore": 700,
+    "head": 646,
+    "jaw": 158
+  },
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

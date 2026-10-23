@@ -1,0 +1,59 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "inspectionResolution": [
+    1024,
+    768
+  ],
+  "nativeResolution": [
+    96,
+    72
+  ],
+  "sourceGeometryVertices": 38466,
+  "sourceGeometryFaces": 76978,
+  "views": [
+    {
+      "viewDegrees": 0,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 45,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 90,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 135,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 180,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 225,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 270,
+      "clippedAppearance": false,
+      "meshFinite": true
+    },
+    {
+      "viewDegrees": 315,
+      "clippedAppearance": false,
+      "meshFinite": true
+    }
+  ],
+  "ownerAccepted": false,
+  "rigged": false,
+  "styleAccepted": false,
+  "notes": "Appearance and clay are separately saved. Native images rendered at native resolution, quantized to original card palette. Large previews are not accepted artwork or a finished rig."
+}

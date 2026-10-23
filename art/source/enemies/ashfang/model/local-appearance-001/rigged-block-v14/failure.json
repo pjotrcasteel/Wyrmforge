@@ -1,0 +1,9 @@
+{
+  "status": "failed source generation",
+  "sourceRevision": "95d24993f9a6c9dd16ccaee21081ed1affb2d36d",
+  "clip": "takeoff-flight-land",
+  "frame": 71,
+  "reason": "tail contact correction exhausted 30 iterations",
+  "tailMinZ": -0.20198960602283478,
+  "completeRigSaved": false
+}

@@ -1,0 +1,17 @@
+{
+  "bodyMotions": {
+    "arena-flyovers-samples.npz": "exactly unchanged",
+    "fire-flyover-samples.npz": "exactly unchanged",
+    "flight-loop-samples.npz": "exactly unchanged",
+    "flight-sequence-samples.npz": "exactly unchanged",
+    "high-launch-samples.npz": "exactly unchanged",
+    "landing-samples.npz": "exactly unchanged",
+    "rear-breath-samples.npz": "exactly unchanged",
+    "takeoff-flight-land-samples.npz": "exactly unchanged",
+    "walk-samples.npz": "exactly unchanged"
+  },
+  "allFireSmokeArraysFinite": true,
+  "walkFlightEffectsCloseExactly": true,
+  "geometryChanged": false,
+  "frameCountsChanged": false
+}

@@ -1,0 +1,50 @@
+{
+  "method": "Local SDXL image-to-image; existing card RGB pose is conditioning",
+  "referenceDirectory": "references-v5",
+  "referenceSha256": "f10e6d67eb7880990d300994277f8264626f1d683a690ae8a8b6db85934896ea",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "model": "/opt/wyrmforge-models/SDXL-card-art",
+  "modelOffline": true,
+  "hostedInference": false,
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "images": [
+    {
+      "file": "card-art-2801.png",
+      "seed": 2801,
+      "strength": 0.18,
+      "steps": 50,
+      "guidanceScale": 5.5
+    },
+    {
+      "file": "card-art-2802.png",
+      "seed": 2802,
+      "strength": 0.28,
+      "steps": 50,
+      "guidanceScale": 5.5
+    },
+    {
+      "file": "card-art-2803.png",
+      "seed": 2803,
+      "strength": 0.36,
+      "steps": 50,
+      "guidanceScale": 5.5
+    }
+  ],
+  "prompt": "isometric 2.5D pixel art game sprite, low crouching fire dragon, four muscular legs, separate broad ragged red wings, curved tail, long horned muzzle, jagged black obsidian plates, molten orange chest and throat, chunky pixels, Gothic dark fantasy, isolated on grey",
+  "negativePrompt": "text, letters, logo, watermark, floor, scenery, buildings, cartoon, cute, smooth plastic, shiny toy, photographic, blurry, flat red silhouette, thin stick legs, extra legs, extra heads, missing claws, cropped wings, cropped tail, worm, snake, glowing outline",
+  "torchVersion": "2.8.0+cu128",
+  "diffusersVersion": "0.35.1",
+  "conditioningResize": "4x nearest original card pixels over RGB 45/44/47; pose preserved",
+  "workingResolution": [
+    1024,
+    576
+  ],
+  "promptTokenCounts": [
+    61,
+    61
+  ],
+  "peakAllocatedMiB": 9035.56982421875,
+  "status": "art-candidates-awaiting-card-fidelity-review"
+}

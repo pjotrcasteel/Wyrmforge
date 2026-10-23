@@ -1,0 +1,54 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "sampleIndex": 3,
+  "modelToPixel": 110,
+  "cell": 384,
+  "views": [
+    {
+      "view": "Front",
+      "nativeBounds": [
+        69,
+        179,
+        315,
+        234
+      ],
+      "width": 246,
+      "clipped": false
+    },
+    {
+      "view": "Side",
+      "nativeBounds": [
+        130,
+        179,
+        304,
+        233
+      ],
+      "width": 174,
+      "clipped": false
+    },
+    {
+      "view": "Game",
+      "nativeBounds": [
+        82,
+        138,
+        298,
+        253
+      ],
+      "width": 216,
+      "clipped": false
+    },
+    {
+      "view": "Rear",
+      "nativeBounds": [
+        69,
+        178,
+        315,
+        233
+      ],
+      "width": 246,
+      "clipped": false
+    }
+  ],
+  "ownerAccepted": false,
+  "animationValidated": false
+}

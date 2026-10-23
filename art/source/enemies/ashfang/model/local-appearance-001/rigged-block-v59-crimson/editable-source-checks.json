@@ -1,0 +1,44 @@
+{
+  "restSurfaceMatches": true,
+  "bodyTexturesPacked": true,
+  "openingTimelineFrames": 49,
+  "actions": {
+    "walk": {
+      "editableFlameShapes": 49,
+      "bodyFrames": 49
+    },
+    "rear-breath": {
+      "editableFlameShapes": 73,
+      "bodyFrames": 73
+    },
+    "takeoff-flight-land": {
+      "editableFlameShapes": 84,
+      "bodyFrames": 84
+    },
+    "flight-loop": {
+      "editableFlameShapes": 33,
+      "bodyFrames": 33
+    },
+    "landing": {
+      "editableFlameShapes": 31,
+      "bodyFrames": 31
+    },
+    "flight-sequence": {
+      "editableFlameShapes": 148,
+      "bodyFrames": 148
+    },
+    "high-launch": {
+      "editableFlameShapes": 55,
+      "bodyFrames": 55
+    },
+    "fire-flyover": {
+      "editableFlameShapes": 56,
+      "bodyFrames": 56
+    },
+    "arena-flyovers": {
+      "editableFlameShapes": 279,
+      "bodyFrames": 279
+    }
+  },
+  "smokeSource": "Separate analytic density-sphere NPZ arrays and reproducible source recipe; not a Blender fluid cache"
+}

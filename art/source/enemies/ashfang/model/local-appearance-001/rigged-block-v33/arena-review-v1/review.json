@@ -1,0 +1,4424 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "viewport": [
+    390,
+    520
+  ],
+  "pixelsPerModelUnit": 52,
+  "frames": 279,
+  "finite": true,
+  "minZ": -0.19552290439605713,
+  "fullyOutsideFrames": [
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211,
+    212,
+    213,
+    214,
+    215,
+    216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
+    225,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    232,
+    233,
+    234,
+    235,
+    236,
+    237,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    244,
+    245
+  ],
+  "passBodyVisiblePixels": 0,
+  "fireFrames": 74,
+  "runtimeIntegrated": false,
+  "groundFireLifetimePreviewFrames": 60,
+  "frameAudit": [
+    {
+      "frame": 0,
+      "label": "high push-off",
+      "bounds": [
+        173.40487713011595,
+        294.5810061193494,
+        233.4946573130088,
+        348.28185673271463
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1334,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 1,
+      "label": "high push-off",
+      "bounds": [
+        173.43933885370157,
+        294.5825584431924,
+        233.50438746964193,
+        348.2818573941657
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1338,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 2,
+      "label": "high push-off",
+      "bounds": [
+        173.5334666645519,
+        294.65146842333,
+        233.53179764495812,
+        348.2818607217733
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1337,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 3,
+      "label": "high push-off",
+      "bounds": [
+        173.67455436554752,
+        294.75100859356826,
+        233.3570829215069,
+        348.2818609354728
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1340,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 4,
+      "label": "high push-off",
+      "bounds": [
+        173.84834412667547,
+        294.84557177208524,
+        231.87961292242613,
+        348.28185894094355
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1362,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 5,
+      "label": "high push-off",
+      "bounds": [
+        174.03642954155455,
+        294.90200488255346,
+        233.70270162679307,
+        348.28186027402177
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1405,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 6,
+      "label": "high push-off",
+      "bounds": [
+        174.21529885878687,
+        294.8916946517538,
+        236.07646441528806,
+        348.28185826931633
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1431,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 7,
+      "label": "high push-off",
+      "bounds": [
+        174.3569616525281,
+        294.7914966430101,
+        238.4905859919948,
+        348.28185894094355
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1456,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 8,
+      "label": "high push-off",
+      "bounds": [
+        174.43109016184385,
+        294.58599188292914,
+        240.49204370869427,
+        348.28185872724396
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1478,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 9,
+      "label": "high push-off",
+      "bounds": [
+        174.155866161179,
+        291.7761904170581,
+        241.3873676946342,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1489,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 10,
+      "label": "high push-off",
+      "bounds": [
+        171.19534329330693,
+        288.6530501269081,
+        240.3478381281944,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1490,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 11,
+      "label": "high push-off",
+      "bounds": [
+        165.255386977945,
+        286.27958206854305,
+        236.75353855519273,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1478,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 12,
+      "label": "high push-off",
+      "bounds": [
+        161.26461339429997,
+        285.2641835969292,
+        234.48809349675855,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1431,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 13,
+      "label": "high push-off",
+      "bounds": [
+        159.2356659864712,
+        284.4082451892412,
+        231.77892999986932,
+        348.28186249242685
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1373,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 14,
+      "label": "high push-off",
+      "bounds": [
+        159.85975680593387,
+        283.05487684544636,
+        230.70210064003874,
+        348.2818560610874
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1357,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 15,
+      "label": "high push-off",
+      "bounds": [
+        163.04309157843753,
+        281.11953302750123,
+        231.66810773660325,
+        348.2453591563757
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1366,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 16,
+      "label": "high push-off",
+      "bounds": [
+        166.30928720088937,
+        278.95551510662284,
+        233.17524616009246,
+        347.88720288203615
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1383,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 17,
+      "label": "high push-off",
+      "bounds": [
+        169.03462851231674,
+        276.8450444514446,
+        235.07076388445068,
+        346.5607948961776
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1376,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 18,
+      "label": "high push-off",
+      "bounds": [
+        169.658373115631,
+        276.01983815837536,
+        237.24261152399873,
+        344.5380283858699
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1348,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 19,
+      "label": "high push-off",
+      "bounds": [
+        167.59599597052616,
+        273.60556897052413,
+        240.27334169706234,
+        339.6893185415383
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1330,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 20,
+      "label": "high push-off",
+      "bounds": [
+        163.69655854796858,
+        272.43164354397476,
+        244.31786668092246,
+        339.6808636147773
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1292,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 21,
+      "label": "high push-off",
+      "bounds": [
+        157.67921959236637,
+        274.24893421487644,
+        247.7165238280934,
+        336.7990958731541
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1204,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 22,
+      "label": "high push-off",
+      "bounds": [
+        150.738759426915,
+        279.21267012642085,
+        248.37762947346528,
+        332.86562894158544
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1138,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 23,
+      "label": "high push-off",
+      "bounds": [
+        145.35825509672537,
+        283.9677871765365,
+        245.87042797538038,
+        330.02280957962836
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1181,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 24,
+      "label": "high push-off",
+      "bounds": [
+        142.32488650301983,
+        285.8014578888485,
+        242.10370244489937,
+        328.9299753342685
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1309,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 25,
+      "label": "high push-off",
+      "bounds": [
+        140.8054710528944,
+        282.5006970604939,
+        237.75778459137308,
+        326.51073969720807
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1346,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 26,
+      "label": "high push-off",
+      "bounds": [
+        140.3454789511103,
+        275.3742971064242,
+        236.1645348404404,
+        322.275099581005
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1435,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 27,
+      "label": "high push-off",
+      "bounds": [
+        140.13659219952225,
+        267.1258940759539,
+        235.38538431708108,
+        316.676858139557
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1548,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 28,
+      "label": "high push-off",
+      "bounds": [
+        148.42868601092036,
+        257.5084411322306,
+        238.57844022009854,
+        307.94489708869776
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1284,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 29,
+      "label": "high push-off",
+      "bounds": [
+        152.20758949563262,
+        247.72002305878854,
+        240.44216816709914,
+        298.0146483312995
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1400,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 30,
+      "label": "high push-off",
+      "bounds": [
+        156.50330321383882,
+        237.64013790487456,
+        243.12314889583942,
+        286.14663745022756
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1495,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 31,
+      "label": "high push-off",
+      "bounds": [
+        161.99399690440367,
+        226.90441134927082,
+        247.5296075105746,
+        270.9526442155504
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1547,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 32,
+      "label": "climb out of view",
+      "bounds": [
+        168.14036122706074,
+        209.08958051267504,
+        250.47433509944184,
+        257.2512813906897
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1578,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 33,
+      "label": "climb out of view",
+      "bounds": [
+        172.60070319527927,
+        187.02601911804047,
+        250.58047280677786,
+        242.82842972514044
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1660,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 34,
+      "label": "climb out of view",
+      "bounds": [
+        174.290746900785,
+        171.8743448496525,
+        250.862996359086,
+        229.3431883668703
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1687,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 35,
+      "label": "climb out of view",
+      "bounds": [
+        170.9224089182444,
+        157.3656715797901,
+        251.5021014833242,
+        216.47442217164576
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1732,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 36,
+      "label": "climb out of view",
+      "bounds": [
+        163.21690626884742,
+        143.5430372211485,
+        251.50366772993482,
+        203.4953093649849
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1868,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 37,
+      "label": "climb out of view",
+      "bounds": [
+        153.57293188266672,
+        130.40216839292438,
+        249.25654139557977,
+        188.86765438274847
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 2014,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 38,
+      "label": "climb out of view",
+      "bounds": [
+        144.91558454774253,
+        116.9272784891183,
+        244.09060017149602,
+        171.34843069960175
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 2114,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 39,
+      "label": "climb out of view",
+      "bounds": [
+        139.96950454690125,
+        95.20834913880552,
+        238.37386236595054,
+        151.44779287544242
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 2081,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 40,
+      "label": "climb out of view",
+      "bounds": [
+        137.54150036885636,
+        69.01018527249312,
+        233.2076619632976,
+        127.17126527176598
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 2017,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 41,
+      "label": "climb out of view",
+      "bounds": [
+        137.43108771948158,
+        39.77254295038881,
+        230.86250337676103,
+        97.86251808160657
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1900,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 42,
+      "label": "climb out of view",
+      "bounds": [
+        139.10483541126752,
+        7.194591326434534,
+        231.85766741763885,
+        64.26871955784588
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 367,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 43,
+      "label": "climb out of view",
+      "bounds": [
+        143.4939196059311,
+        -29.048144043591833,
+        234.65099131075158,
+        27.02400874071526
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 44,
+      "label": "climb out of view",
+      "bounds": [
+        146.81697612670575,
+        -69.3367499981427,
+        238.20687400064213,
+        -16.287449598956584
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 45,
+      "label": "climb out of view",
+      "bounds": [
+        150.84183856924523,
+        -114.10993125689964,
+        242.35932880633965,
+        -65.28508843165383
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 46,
+      "label": "climb out of view",
+      "bounds": [
+        155.55926698115874,
+        -164.13778968112194,
+        246.13308117071574,
+        -118.57032857314357
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 47,
+      "label": "climb out of view",
+      "bounds": [
+        160.0332573014282,
+        -170.32785803489833,
+        248.47024949257298,
+        -120.80316113871146
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 48,
+      "label": "climb out of view",
+      "bounds": [
+        163.28227342500435,
+        -176.7507361125106,
+        249.30998977607467,
+        -123.34545236513765
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 49,
+      "label": "climb out of view",
+      "bounds": [
+        164.9415483791743,
+        -178.73858399118285,
+        249.87094589956035,
+        -123.19137379568792
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 50,
+      "label": "climb out of view",
+      "bounds": [
+        163.87433097679522,
+        -178.2723750176342,
+        250.38148383975332,
+        -121.19654789341422
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 51,
+      "label": "climb out of view",
+      "bounds": [
+        160.05980268854995,
+        -176.31566157863517,
+        250.35516625469074,
+        -118.66287118153411
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 52,
+      "label": "climb out of view",
+      "bounds": [
+        154.40650173907127,
+        -172.87919333235584,
+        249.17515674595654,
+        -115.95886160572582
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 53,
+      "label": "climb out of view",
+      "bounds": [
+        148.2920400202634,
+        -168.20762549692557,
+        246.37875344180054,
+        -113.00052294268721
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 54,
+      "label": "offscreen / approach",
+      "bounds": [
+        135.39881826992573,
+        -164.48336124891927,
+        239.15504591523418,
+        -114.22720478880194
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 55,
+      "label": "offscreen / approach",
+      "bounds": [
+        130.01958726728384,
+        -167.0785871305273,
+        233.72956625915907,
+        -110.49649383029094
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 56,
+      "label": "offscreen / approach",
+      "bounds": [
+        116.24044674734365,
+        -174.50933654493411,
+        220.79734855717402,
+        -114.39504390087774
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 57,
+      "label": "offscreen / approach",
+      "bounds": [
+        97.30638374594038,
+        -185.58637773222256,
+        202.96326401041918,
+        -126.97265753051454
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 58,
+      "label": "offscreen / approach",
+      "bounds": [
+        73.0477441838581,
+        -198.99595984705388,
+        181.93450229768987,
+        -146.8220726874414
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 59,
+      "label": "offscreen / approach",
+      "bounds": [
+        44.54700992070133,
+        -213.4718285235282,
+        155.06880742849825,
+        -164.07299898404625
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 60,
+      "label": "offscreen / approach",
+      "bounds": [
+        14.4143098721174,
+        -227.94205483941005,
+        123.62241115821638,
+        -179.80418773818337
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 61,
+      "label": "offscreen / approach",
+      "bounds": [
+        -14.297594750816842,
+        -241.6436664105687,
+        89.57805533021427,
+        -195.6599334305498
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 62,
+      "label": "offscreen / approach",
+      "bounds": [
+        -38.99455556181255,
+        -254.10208147365006,
+        55.48074283031289,
+        -210.92037611870705
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 63,
+      "label": "offscreen / approach",
+      "bounds": [
+        -61.98980791242735,
+        -275.99483292515754,
+        24.309292470257617,
+        -225.15574290449024
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 64,
+      "label": "offscreen / approach",
+      "bounds": [
+        -82.61756589951113,
+        -293.3689878772502,
+        -0.9557920625988174,
+        -237.35996342966018
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 65,
+      "label": "offscreen / approach",
+      "bounds": [
+        -101.07354544729509,
+        -305.5665697947908,
+        -21.082318898144905,
+        -246.50592918330733
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 66,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.74568046614166,
+        -311.15697542256873,
+        -31.98935770457348,
+        -251.55975933201967
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 67,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.56463144776012,
+        -309.63199234307115,
+        -32.05936600532462,
+        -252.24889074057955
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 68,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.1140458517591,
+        -305.1118218343952,
+        -29.966509804332873,
+        -252.28444070179785
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 69,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.82570174193148,
+        -298.6470482616295,
+        -27.918815146664542,
+        -247.33786364956575
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 70,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.75107894512882,
+        -291.1780661423238,
+        -26.517411263848118,
+        -239.34469514154011
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 71,
+      "label": "offscreen / approach",
+      "bounds": [
+        -110.91246252015117,
+        -286.66429164138606,
+        -25.982913704812603,
+        -232.92158544507788
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 72,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.29322377630928,
+        -286.56433959066965,
+        -26.105758329205344,
+        -228.8782298386243
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 73,
+      "label": "offscreen / approach",
+      "bounds": [
+        -111.83526201331858,
+        -286.3069436296961,
+        -29.811459986185923,
+        -228.194454799577
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 74,
+      "label": "offscreen / approach",
+      "bounds": [
+        -112.44792404645409,
+        -285.931239842674,
+        -34.39720999668569,
+        -230.64707806859383
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 75,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.02677681548664,
+        -285.4947370222909,
+        -37.84399785062308,
+        -235.31833010185426
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 76,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.47625004973463,
+        -289.5233386871372,
+        -39.69528415176356,
+        -241.41597147905918
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 77,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.72859111864796,
+        -296.2789626644767,
+        -40.003272535765575,
+        -248.31192060654132
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 78,
+      "label": "offscreen / approach",
+      "bounds": [
+        -113.75325047664586,
+        -302.70524182160534,
+        -39.04717096043822,
+        -252.41864891548676
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 79,
+      "label": "first fire pass",
+      "bounds": [
+        -110.9829350213248,
+        -288.9403348397816,
+        -26.464636833596217,
+        -237.72631093058112
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 80,
+      "label": "first fire pass",
+      "bounds": [
+        -96.82628006929258,
+        -293.36480213362245,
+        -15.17836347462125,
+        -243.3877550777861
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 81,
+      "label": "first fire pass",
+      "bounds": [
+        -82.87107778504554,
+        -292.8335686146129,
+        -3.1513087659101586,
+        -244.24738488603055
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 82,
+      "label": "first fire pass",
+      "bounds": [
+        -69.02110114026749,
+        -285.820397010663,
+        4.832381459996924,
+        -234.42140431024188
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 83,
+      "label": "first fire pass",
+      "bounds": [
+        -55.19295566943188,
+        -283.6070336460609,
+        17.752365224320187,
+        -239.69255299929534
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 84,
+      "label": "first fire pass",
+      "bounds": [
+        -41.38176211032041,
+        -288.04964448103374,
+        32.25474977396175,
+        -245.2167908092723
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 85,
+      "label": "first fire pass",
+      "bounds": [
+        -27.604699317085988,
+        -291.7222375623817,
+        47.92328143231401,
+        -243.3812165324357
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 86,
+      "label": "first fire pass",
+      "bounds": [
+        -13.898119340590057,
+        -293.638501702794,
+        64.35477290503133,
+        -240.74276931266945
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 87,
+      "label": "first fire pass",
+      "bounds": [
+        -0.309728230175665,
+        -293.11604557810654,
+        81.20288941469424,
+        -237.77286502545076
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.006010518407212579,
+      "groundTarget": null
+    },
+    {
+      "frame": 88,
+      "label": "first fire pass",
+      "bounds": [
+        13.102785936470525,
+        -291.186517247933,
+        94.81746142893572,
+        -234.5406618171736
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.10110749366947702,
+      "groundTarget": [
+        -2.8088752000763453,
+        1.133088705788917,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 89,
+      "label": "first fire pass",
+      "bounds": [
+        26.282529380162373,
+        -287.4164205023553,
+        107.73750020960532,
+        -231.1901570513685
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.27968389125413917,
+      "groundTarget": [
+        -2.5563448863281333,
+        1.1320307283009736,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 90,
+      "label": "first fire pass",
+      "bounds": [
+        39.077822033968005,
+        -281.3490227836122,
+        121.01510741791797,
+        -227.80254068930674
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.5,
+      "groundTarget": [
+        -2.303156114654886,
+        1.1312075999642126,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 91,
+      "label": "first fire pass",
+      "bounds": [
+        51.40541041174845,
+        -272.96517058605775,
+        134.20843302211904,
+        -224.4297676957616
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.7203161087458606,
+      "groundTarget": [
+        -2.049092203229086,
+        1.1306303877302988,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 92,
+      "label": "first fire pass",
+      "bounds": [
+        63.192002424578845,
+        -262.6855308186474,
+        146.72846857948895,
+        -221.08507669795551
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.8988925063305226,
+      "groundTarget": [
+        -1.7940678991769938,
+        1.1303070235318107,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 93,
+      "label": "first fire pass",
+      "bounds": [
+        74.38333820085543,
+        -254.70951069324906,
+        158.15758156623917,
+        -210.0858359932556
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.9939894815927868,
+      "groundTarget": [
+        -1.538153101722031,
+        1.1302423407733173,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 94,
+      "label": "first fire pass",
+      "bounds": [
+        84.95515553183064,
+        -251.26849044263338,
+        168.48447987727803,
+        -199.90507294033205
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.2815611425973503,
+        1.1304368236135407,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 95,
+      "label": "first fire pass",
+      "bounds": [
+        94.9237564486371,
+        -247.54254931955222,
+        178.08633495216324,
+        -191.90463961338958
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.024614423000425,
+        1.130887606043315,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 96,
+      "label": "first fire pass",
+      "bounds": [
+        104.3490021746431,
+        -243.4454456677496,
+        184.08998343382436,
+        -187.33861275928803
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.7676889139078158,
+        1.1315889245937307,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 97,
+      "label": "first fire pass",
+      "bounds": [
+        113.32690311130115,
+        -238.90620802875833,
+        189.27781170782737,
+        -185.67664333100413
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.5111514566913822,
+        1.1325312077127752,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 98,
+      "label": "first fire pass",
+      "bounds": [
+        121.97267036494563,
+        -233.88310580208258,
+        195.61235256618718,
+        -185.73769395999057
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.2553007436922048,
+        1.1337012344116975,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 99,
+      "label": "first fire pass",
+      "bounds": [
+        130.39971669508913,
+        -228.37330097604115,
+        203.44125258233177,
+        -186.59408867222658
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.00032684708976415955,
+        1.1350833843802,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 100,
+      "label": "first fire pass",
+      "bounds": [
+        138.70179683298312,
+        -229.07152682767367,
+        212.60900977251754,
+        -187.34766035127427
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.25371403125323555,
+        1.13665902305016,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 101,
+      "label": "first fire pass",
+      "bounds": [
+        146.94332460465768,
+        -229.77986933900115,
+        222.73474425158958,
+        -181.22216012138466
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.5069003232771896,
+        1.138407311032969,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 102,
+      "label": "first fire pass",
+      "bounds": [
+        155.1582777617765,
+        -228.6036006458005,
+        233.49631468044308,
+        -174.71805711718144
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.7594330400204039,
+        1.140305064697076,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 103,
+      "label": "first fire pass",
+      "bounds": [
+        163.35537983376025,
+        -224.90612259567013,
+        244.67800798238855,
+        -167.9453615971559
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.0116061327084183,
+        1.142327558040266,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 104,
+      "label": "first fire pass",
+      "bounds": [
+        171.52498232886495,
+        -219.8446816080526,
+        252.79558951329744,
+        -161.02999772139327
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.2637700314200677,
+        1.1444484303448113,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 105,
+      "label": "first fire pass",
+      "bounds": [
+        179.6456254334861,
+        -213.15701601684748,
+        260.5455985601901,
+        -154.0968012882521
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.5162826181544897,
+        1.1466404867286815,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 106,
+      "label": "first fire pass",
+      "bounds": [
+        187.68847886286687,
+        -204.50782430953814,
+        269.11993514711304,
+        -147.25423675530544
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.7694582008581459,
+        1.1488753510385485,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 107,
+      "label": "first fire pass",
+      "bounds": [
+        195.62212312544966,
+        -193.90269626644715,
+        278.1807700023043,
+        -140.58269114331193
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.023515424686553,
+        1.1511246729503535,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 108,
+      "label": "first fire pass",
+      "bounds": [
+        203.41982027690042,
+        -181.68119583133557,
+        287.18013075256687,
+        -128.67557330222962
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.2785388475279937,
+        1.153359663251407,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 109,
+      "label": "first fire pass",
+      "bounds": [
+        211.07100094639634,
+        -168.74776741318078,
+        295.66710277835944,
+        -114.08730294697642
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.5344591823220846,
+        1.1555516064073081,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 110,
+      "label": "first fire pass",
+      "bounds": [
+        218.5937499310907,
+        -158.28805733711982,
+        303.54406902898955,
+        -101.36944211665866
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        2.791062728243643,
+        1.1576725181124063,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 111,
+      "label": "first fire pass",
+      "bounds": [
+        226.04596452122178,
+        -152.21345884859153,
+        311.09411353579395,
+        -91.23456373961784
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.0480261098330352,
+        1.1596949685506945,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 112,
+      "label": "first fire pass",
+      "bounds": [
+        233.52761210448222,
+        -146.06665234430602,
+        315.3984171108918,
+        -84.83857087910297
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.304973047901063,
+        1.1615927439129374,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 113,
+      "label": "first fire pass",
+      "bounds": [
+        241.17142079847264,
+        -139.8381058771168,
+        319.18599512609126,
+        -81.59241463576916
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.5615352801426203,
+        1.1633410484172986,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 114,
+      "label": "first fire pass",
+      "bounds": [
+        249.1228018153457,
+        -135.47099444848163,
+        324.46357569214763,
+        -80.33964682929616
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        3.8174127351110743,
+        1.1649168065740894,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 115,
+      "label": "first fire pass",
+      "bounds": [
+        257.51548592412377,
+        -135.96014714393084,
+        331.6730346297279,
+        -80.26070050997276
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.07241422452997,
+        1.1662989021484362,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 116,
+      "label": "first fire pass",
+      "bounds": [
+        266.4505214977425,
+        -136.87058318000538,
+        340.7616662790132,
+        -80.80745541534952
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.326482086600253,
+        1.167469038663223,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 117,
+      "label": "first fire pass",
+      "bounds": [
+        275.9847994141354,
+        -137.25597980959702,
+        351.4574182457435,
+        -81.4632873023204
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.579693202433683,
+        1.1684111855090795,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 118,
+      "label": "first fire pass",
+      "bounds": [
+        286.1299662684853,
+        -136.2452555835606,
+        363.5463766596816,
+        -76.58430617631376
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        4.832247100355267,
+        1.1691124623705778,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 119,
+      "label": "first fire pass",
+      "bounds": [
+        296.85926574185817,
+        -133.35694773454503,
+        376.8845706194302,
+        -71.48779505424284
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.9894259398391628,
+      "groundTarget": [
+        5.084437125975601,
+        1.1695634973465427,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 120,
+      "label": "first fire pass",
+      "bounds": [
+        308.1175602799994,
+        -129.89904782310361,
+        387.9935881874561,
+        -66.77532719221898
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.8841027353424044,
+      "groundTarget": [
+        5.336612635828143,
+        1.1697578486381082,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 121,
+      "label": "first fire pass",
+      "bounds": [
+        319.8316394588734,
+        -125.62538827417143,
+        399.47874907706705,
+        -62.543833152933246
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.6994740796393681,
+      "groundTarget": [
+        5.589130520080462,
+        1.169692989484378,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 122,
+      "label": "first fire pass",
+      "bounds": [
+        331.9180231722738,
+        -120.04833109484179,
+        412.4184630786059,
+        -58.86644546735778
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.4772796838912533,
+      "groundTarget": [
+        5.842305469795438,
+        1.16936970069214,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 123,
+      "label": "first fire pass",
+      "bounds": [
+        344.29001578584825,
+        -112.94440645357037,
+        426.33511953518,
+        -54.39840878490622
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.2592592592592584,
+      "groundTarget": [
+        6.0963552183192,
+        1.1687925928078617,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 124,
+      "label": "first fire pass",
+      "bounds": [
+        356.86590934834817,
+        -104.4254319780386,
+        440.51749806766014,
+        -44.22541251051592
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.08715251690458237,
+      "groundTarget": [
+        6.35136588927957,
+        1.167969424226024,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 125,
+      "label": "first fire pass",
+      "bounds": [
+        369.5797361174566,
+        -95.24519597759979,
+        454.35514417380887,
+        -34.94328907395277
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.002699167988424178,
+      "groundTarget": null
+    },
+    {
+      "frame": 126,
+      "label": "first fire pass",
+      "bounds": [
+        382.39258930131797,
+        -86.69496470412741,
+        467.6322906202207,
+        -27.72007236747652
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 127,
+      "label": "first fire pass",
+      "bounds": [
+        395.30199660286746,
+        -84.85389771745338,
+        480.5760173765227,
+        -23.129819797585867
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 128,
+      "label": "first fire pass",
+      "bounds": [
+        408.3430266447616,
+        -83.63367029029212,
+        490.26506648335527,
+        -22.26856262642127
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 129,
+      "label": "first fire pass",
+      "bounds": [
+        421.57838559721694,
+        -82.39455711286848,
+        499.44713308137875,
+        -24.54421660666901
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 130,
+      "label": "first fire pass",
+      "bounds": [
+        435.078889813572,
+        -81.09599713189743,
+        510.1513163031897,
+        -28.808887117296933
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 131,
+      "label": "first fire pass",
+      "bounds": [
+        448.9003181323684,
+        -85.46021462062117,
+        522.8082015836242,
+        -34.21847681827683
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 132,
+      "label": "first fire pass",
+      "bounds": [
+        463.0651894318783,
+        -90.22552482978932,
+        537.3139524459591,
+        -40.14515039960645
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 133,
+      "label": "first fire pass",
+      "bounds": [
+        477.55420500935287,
+        -94.36945384262367,
+        553.3026070312087,
+        -42.56559725529354
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 134,
+      "label": "first fire pass",
+      "bounds": [
+        492.3086125646554,
+        -96.92324395790735,
+        570.4208194163139,
+        -40.96662198233997
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 135,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        499.7968118211007,
+        -97.44965104162986,
+        575.6417606537862,
+        -39.085236379453534
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 136,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        507.2650349860325,
+        -95.09033420940699,
+        587.0592136136283,
+        -35.742308382736724
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 137,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        514.6090449949559,
+        -89.5502029315852,
+        595.8521117700647,
+        -32.227773608081975
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 138,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        515.2644347965377,
+        -83.43774505095229,
+        603.3488763839349,
+        -28.705303008358953
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 139,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        512.3213243336561,
+        -73.95410515988686,
+        610.7986948617464,
+        -25.316448572757963
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 140,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        508.31004555597906,
+        -68.35768818359452,
+        616.7148535985984,
+        -22.204497052686804
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 141,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        502.8572215937681,
+        -67.06918871021281,
+        618.9212532229254,
+        -18.761070375749057
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 142,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        496.78453963224297,
+        -64.72214055339862,
+        615.6085006620838,
+        -15.372810631703146
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 143,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        492.6747824542006,
+        -61.163617778118635,
+        606.4767740209855,
+        -9.997480980992634
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 144,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        490.3755951828356,
+        -56.44831082573944,
+        595.0878169496698,
+        3.6047827902443146
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 145,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        492.07062990251325,
+        -50.759065565437936,
+        583.3111751588581,
+        12.128956708572105
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 146,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        497.0361758042185,
+        -44.37700382050963,
+        571.2665633586129,
+        16.68484777177906
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 147,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        494.9383406238805,
+        -37.61207817257298,
+        566.4161073553539,
+        18.439031169045393
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 148,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        484.3361680237977,
+        -38.46507489884834,
+        562.0682624253516,
+        17.801158553121184
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 149,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        474.7553945251357,
+        -42.72268260057092,
+        555.7244274578852,
+        14.794313629300689
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 150,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        466.05908788031047,
+        -46.714217212800236,
+        547.6978683229634,
+        11.022126698417992
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 151,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        458.0171319050798,
+        -50.2616648298507,
+        538.3672713438373,
+        8.328838226446749
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 152,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        450.35422480222655,
+        -53.20853449144289,
+        528.2023188061103,
+        9.26062826315433
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 153,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        440.87569918328643,
+        -54.155592192072675,
+        517.7655047120747,
+        9.764183169801072
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 154,
+      "label": "offscreen bank / return approach",
+      "bounds": [
+        429.5454815176513,
+        -54.167755676412696,
+        507.69878042226304,
+        9.062778852545819
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 155,
+      "label": "return fire pass",
+      "bounds": [
+        413.91865224984474,
+        -42.63256920421907,
+        497.9347612279414,
+        18.01508305585554
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 156,
+      "label": "return fire pass",
+      "bounds": [
+        401.9020506469433,
+        -42.68880741050447,
+        483.90299682068235,
+        14.996595128258832
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 157,
+      "label": "return fire pass",
+      "bounds": [
+        390.4410866341686,
+        -39.59501405472139,
+        470.02371365589926,
+        16.74852942915038
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 158,
+      "label": "return fire pass",
+      "bounds": [
+        382.2831733934059,
+        -31.04196536613557,
+        456.2207072168315,
+        22.003411103512917
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 159,
+      "label": "return fire pass",
+      "bounds": [
+        369.3631896290826,
+        -36.37257634686705,
+        442.44045347550775,
+        16.19706763813099
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 160,
+      "label": "return fire pass",
+      "bounds": [
+        354.8608119564844,
+        -44.13772009876925,
+        428.6592369481227,
+        10.000056775586245
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 161,
+      "label": "return fire pass",
+      "bounds": [
+        339.19227342108877,
+        -52.727506958879815,
+        414.8808709551837,
+        4.222803316632678
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 162,
+      "label": "return fire pass",
+      "bounds": [
+        322.7607888254148,
+        -60.65614712198487,
+        401.13737501027595,
+        -1.6574264693332452
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 163,
+      "label": "return fire pass",
+      "bounds": [
+        305.9126723157519,
+        -67.10849819635723,
+        387.487406854191,
+        -3.44170470875207
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.006010518407212579,
+      "groundTarget": null
+    },
+    {
+      "frame": 164,
+      "label": "return fire pass",
+      "bounds": [
+        292.2980934244671,
+        -70.58101239037762,
+        374.0127689169323,
+        -4.736178489389715
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.10110749366947702,
+      "groundTarget": [
+        2.8088752000763457,
+        -1.2330884524132608,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 165,
+      "label": "return fire pass",
+      "bounds": [
+        279.3780408897109,
+        -72.3651643638799,
+        360.8330289117621,
+        -6.444895817699717
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.27968389125413917,
+      "groundTarget": [
+        2.5563448863281337,
+        -1.2320304751055824,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 166,
+      "label": "return fire pass",
+      "bounds": [
+        266.10044399696324,
+        -72.91559103489334,
+        348.03773281943484,
+        -5.510424970784015
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.5,
+      "groundTarget": [
+        2.3031561146548856,
+        -1.2312073468832003,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 167,
+      "label": "return fire pass",
+      "bounds": [
+        252.90711839276213,
+        -72.1290849552339,
+        335.7101306875678,
+        -3.653625320102492
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.7203161087458606,
+      "groundTarget": [
+        2.0490922032290855,
+        -1.2306301346802566,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 168,
+      "label": "return fire pass",
+      "bounds": [
+        240.38708283539225,
+        -70.14938151311355,
+        323.923552428824,
+        -2.0365120825580902
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.8988925063305226,
+      "groundTarget": [
+        1.7940678991769938,
+        -1.2303067704244433,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 169,
+      "label": "return fire pass",
+      "bounds": [
+        228.95796984864205,
+        -67.66315701433331,
+        312.7321960214175,
+        -0.7214487351732259
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.9939894815927873,
+      "groundTarget": [
+        1.5381528633034516,
+        -1.2302420875290552,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 170,
+      "label": "return fire pass",
+      "bounds": [
+        218.63107153760313,
+        -65.84640743073953,
+        302.1603993215722,
+        -0.6146070917722
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.2815611425973505,
+        -1.230436570173678,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 171,
+      "label": "return fire pass",
+      "bounds": [
+        209.02921646271793,
+        -65.97685770698479,
+        292.191805281809,
+        -2.9380883380389378
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        1.024614423000425,
+        -1.2308875907975485,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 172,
+      "label": "return fire pass",
+      "bounds": [
+        203.0255679810568,
+        -67.60696054052079,
+        282.7665526787597,
+        -8.239191967260581
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.7676889139078158,
+        -1.2315889091288326,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 173,
+      "label": "return fire pass",
+      "bounds": [
+        197.8377328300105,
+        -72.70122895685165,
+        273.7886448650584,
+        -15.543418964551506
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.5111513374820924,
+        -1.2325309536490334,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 174,
+      "label": "return fire pass",
+      "bounds": [
+        191.50319197165072,
+        -80.48573209866981,
+        265.1428844884572,
+        -24.197739430980448
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.25530074369220523,
+        -1.2337009802340342,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 175,
+      "label": "return fire pass",
+      "bounds": [
+        183.67429883254943,
+        -90.34140592424063,
+        256.7158381583137,
+        -35.2357612750817
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        0.00032684708976371546,
+        -1.2350831301725194,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 176,
+      "label": "return fire pass",
+      "bounds": [
+        174.50653992310282,
+        -102.29608319454928,
+        248.41374770485476,
+        -47.08719596906775
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.2537141504625251,
+        -1.2366588881102805,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 177,
+      "label": "return fire pass",
+      "bounds": [
+        164.38080716329162,
+        -114.94793096625841,
+        240.17222337170185,
+        -58.35195378821646
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.5069003232771896,
+        -1.2384072555531458,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 178,
+      "label": "return fire pass",
+      "bounds": [
+        153.61923501517728,
+        -127.0773679582934,
+        231.95727709162634,
+        -69.67540449918664
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -0.7594330400204039,
+        -1.2403050093158927,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 179,
+      "label": "return fire pass",
+      "bounds": [
+        142.4375417132318,
+        -137.75381053924497,
+        223.7601750196426,
+        -75.4258975619432
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.0116061923130628,
+        -1.2423273835629884,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 180,
+      "label": "return fire pass",
+      "bounds": [
+        134.3199670593662,
+        -145.2784815857113,
+        215.59057080527705,
+        -81.2502771895119
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.2637700612223903,
+        -1.2444483356877742,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 181,
+      "label": "return fire pass",
+      "bounds": [
+        126.56995865719632,
+        -150.71473843355506,
+        207.46992426213427,
+        -87.22186814071472
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.5162826479568123,
+        -1.2466402729991701,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 182,
+      "label": "return fire pass",
+      "bounds": [
+        117.9956227149962,
+        -154.35068695905358,
+        199.42707599053597,
+        -93.29877451335159
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -1.769458200858146,
+        -1.2488752566052659,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 183,
+      "label": "return fire pass",
+      "bounds": [
+        108.93477969331606,
+        -156.02801491936924,
+        191.49343172795315,
+        -95.41443445550834
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.023515424686553,
+        -1.2511245785409209,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 184,
+      "label": "return fire pass",
+      "bounds": [
+        99.9354258200968,
+        -155.96307322319592,
+        183.69573629576323,
+        -97.14467658128757
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.2785388475279937,
+        -1.2533595091944139,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 185,
+      "label": "return fire pass",
+      "bounds": [
+        91.44844949615214,
+        -154.98847931552552,
+        176.04455691571295,
+        -99.42373731935436
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.5344591823220846,
+        -1.255551511851801,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 186,
+      "label": "return fire pass",
+      "bounds": [
+        83.57148410515242,
+        -154.40585014457076,
+        168.52180857574137,
+        -101.93492607963316
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -2.7910626090343533,
+        -1.257672462924199,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 187,
+      "label": "return fire pass",
+      "bounds": [
+        76.02144303686971,
+        -156.70760087191695,
+        161.0695946303331,
+        -105.73853327845029
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.0480261098330352,
+        -1.2596949132492494,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 188,
+      "label": "return fire pass",
+      "bounds": [
+        71.71713946177188,
+        -163.23796478519193,
+        153.5879487663335,
+        -111.99045955712654
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.3049729286917735,
+        -1.261592688500661,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 189,
+      "label": "return fire pass",
+      "bounds": [
+        67.92956316583323,
+        -169.45311572897083,
+        145.94414007234306,
+        -120.48661897825053
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.5615352801426203,
+        -1.2633408837653581,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 190,
+      "label": "return fire pass",
+      "bounds": [
+        62.651986038298475,
+        -175.51007038736816,
+        137.99275475731795,
+        -130.06655083663878
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -3.8174127351110743,
+        -1.2649166120027144,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 191,
+      "label": "return fire pass",
+      "bounds": [
+        55.44252366219652,
+        -184.01784969201026,
+        129.6000704336323,
+        -140.33776107192028
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.07241422452997,
+        -1.2662987075437682,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 192,
+      "label": "return fire pass",
+      "bounds": [
+        46.35389545143295,
+        -193.3850961693489,
+        120.66503496746734,
+        -150.51048283395045
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.326482086600253,
+        -1.2674688441138606,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 193,
+      "label": "return fire pass",
+      "bounds": [
+        35.65814004618102,
+        -204.82785522739573,
+        111.13075705107443,
+        -160.70006569547235
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.579693202433682,
+        -1.2684109910951435,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 194,
+      "label": "return fire pass",
+      "bounds": [
+        23.569181632242874,
+        -215.89665436831012,
+        100.98559022358798,
+        -164.53622090572867
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 1.0,
+      "groundTarget": [
+        -4.832247100355267,
+        -1.269112268151407,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 195,
+      "label": "return fire pass",
+      "bounds": [
+        10.231001426580917,
+        -225.05314741046175,
+        90.25629077707863,
+        -167.99571988016157
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.9894259398391628,
+      "groundTarget": [
+        -5.084437125975601,
+        -1.2695633033517617,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 196,
+      "label": "return fire pass",
+      "bounds": [
+        -0.8780264570100087,
+        -230.49586901115947,
+        78.99799623893736,
+        -171.2016078589719
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.8841027353424089,
+      "groundTarget": [
+        -5.336612635828143,
+        -1.2697576623137068,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 197,
+      "label": "return fire pass",
+      "bounds": [
+        -12.363190785142564,
+        -233.30077240150717,
+        67.28391703319994,
+        -174.27730548126942
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.6994740796393681,
+      "groundTarget": [
+        -5.589130520080462,
+        -1.269692803341746,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 198,
+      "label": "return fire pass",
+      "bounds": [
+        -25.302904786681438,
+        -233.92192951857896,
+        55.197543501047164,
+        -177.3278263636402
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.4772796838912533,
+      "groundTarget": [
+        -5.8423049929582795,
+        -1.2693695072149482,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 199,
+      "label": "return fire pass",
+      "bounds": [
+        -39.21956468177717,
+        -232.42467169900704,
+        42.82554070622504,
+        -178.08403926759502
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.2592592592592584,
+      "groundTarget": [
+        -6.0963552183192,
+        -1.2687923993632941,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 200,
+      "label": "return fire pass",
+      "bounds": [
+        -53.401939775735656,
+        -229.22704406332434,
+        30.249657539880445,
+        -176.65985351219337
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.08715251690458237,
+      "groundTarget": [
+        -6.35136588927957,
+        -1.2679692307257784,
+        -0.19699999999999918
+      ]
+    },
+    {
+      "frame": 201,
+      "label": "return fire pass",
+      "bounds": [
+        -67.23958588188441,
+        -225.26616753662142,
+        17.535820455207073,
+        -174.65195833451747
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0026991679884248443,
+      "groundTarget": null
+    },
+    {
+      "frame": 202,
+      "label": "return fire pass",
+      "bounds": [
+        -80.51673232829626,
+        -221.8374231661428,
+        4.722966841530479,
+        -173.27311213792746
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 203,
+      "label": "return fire pass",
+      "bounds": [
+        -93.4604590845982,
+        -222.5868384292845,
+        -8.186419399073941,
+        -172.53109358672316
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 204,
+      "label": "return fire pass",
+      "bounds": [
+        -103.14950819143075,
+        -225.52345736014252,
+        -21.227450300598463,
+        -174.29156227499857
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 205,
+      "label": "return fire pass",
+      "bounds": [
+        -112.33157478945424,
+        -228.65151514194815,
+        -34.46282902455329,
+        -178.36138955808372
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 206,
+      "label": "return fire pass",
+      "bounds": [
+        -123.03575801126522,
+        -231.24445379707265,
+        -47.96333324090833,
+        -183.24599753111193
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 207,
+      "label": "return fire pass",
+      "bounds": [
+        -135.6926432916997,
+        -236.09982345617175,
+        -61.78476155970475,
+        -189.4572793729667
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 208,
+      "label": "return fire pass",
+      "bounds": [
+        -150.19839415403453,
+        -243.16106702486695,
+        -75.9496139473456,
+        -195.24820911585925
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 209,
+      "label": "return fire pass",
+      "bounds": [
+        -166.18705217780592,
+        -252.03030277391974,
+        -90.43864843668922,
+        -201.0638270611123
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 210,
+      "label": "return fire pass",
+      "bounds": [
+        -183.3052576858678,
+        -259.9867690427948,
+        -105.19303536086181,
+        -204.5004227944487
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 211,
+      "label": "climb / return to arena",
+      "bounds": [
+        -180.03109737274139,
+        -250.98671872842112,
+        -105.93737901902517,
+        -197.9776353653291
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 212,
+      "label": "climb / return to arena",
+      "bounds": [
+        -179.86734809482527,
+        -253.47502974908525,
+        -105.49888154587717,
+        -199.27558695380424
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 213,
+      "label": "climb / return to arena",
+      "bounds": [
+        -178.6138006428684,
+        -244.98476005089265,
+        -105.22149256601983,
+        -197.0528615128602
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 214,
+      "label": "climb / return to arena",
+      "bounds": [
+        -179.56988158706582,
+        -252.34350543086884,
+        -105.15701684660013,
+        -199.50718795217506
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 215,
+      "label": "climb / return to arena",
+      "bounds": [
+        -181.56822658204356,
+        -259.2714486096273,
+        -105.29375997549363,
+        -203.84223650809656
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 216,
+      "label": "climb / return to arena",
+      "bounds": [
+        -184.45852409248545,
+        -264.7527094723432,
+        -105.6001460084077,
+        -203.66863748031312
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 217,
+      "label": "climb / return to arena",
+      "bounds": [
+        -184.77446233853743,
+        -266.7016335824163,
+        -106.03161514330736,
+        -203.495582022823
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 218,
+      "label": "climb / return to arena",
+      "bounds": [
+        -185.1125928033049,
+        -266.3682215506051,
+        -106.5363729286102,
+        -203.34925228114275
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 219,
+      "label": "climb / return to arena",
+      "bounds": [
+        -186.5576865421795,
+        -264.19999679598664,
+        -107.0524262575264,
+        -201.9113450596077
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 220,
+      "label": "climb / return to arena",
+      "bounds": [
+        -188.6505427431713,
+        -260.0948798581103,
+        -107.50299294165848,
+        -197.32683201238012
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 221,
+      "label": "climb / return to arena",
+      "bounds": [
+        -190.69823740083956,
+        -254.27917260678987,
+        -107.7913542440943,
+        -192.27366123877505
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 222,
+      "label": "climb / return to arena",
+      "bounds": [
+        -192.09964128365596,
+        -247.54518292250805,
+        -107.86595640976702,
+        -187.7332380352815
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 223,
+      "label": "climb / return to arena",
+      "bounds": [
+        -190.76951795460042,
+        -240.84715361455426,
+        -105.98257838608669,
+        -183.39431765022243
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 224,
+      "label": "climb / return to arena",
+      "bounds": [
+        -176.65719242365282,
+        -233.76773564294763,
+        -92.74375426344068,
+        -176.8488551907933
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 225,
+      "label": "climb / return to arena",
+      "bounds": [
+        -146.80553607362282,
+        -225.73252524506995,
+        -69.04512952954298,
+        -170.1882460307449
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 226,
+      "label": "climb / return to arena",
+      "bounds": [
+        -118.77409210460127,
+        -219.24488105600858,
+        -37.89727774355714,
+        -163.0871865104715
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 227,
+      "label": "climb / return to arena",
+      "bounds": [
+        -84.85601598411813,
+        -213.8215673601169,
+        -2.3090042048895327,
+        -156.49053881176297
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 228,
+      "label": "climb / return to arena",
+      "bounds": [
+        -46.16354223996669,
+        -209.93530403527245,
+        35.03683056091626,
+        -152.30634928864657
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 229,
+      "label": "climb / return to arena",
+      "bounds": [
+        -4.50324951482159,
+        -206.12929813766232,
+        71.992873223271,
+        -150.26838393585393
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 230,
+      "label": "climb / return to arena",
+      "bounds": [
+        37.9980815357473,
+        -201.36214688635755,
+        107.00550944046209,
+        -149.63863817206015
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 231,
+      "label": "climb / return to arena",
+      "bounds": [
+        74.86511204783335,
+        -194.97339202005764,
+        143.5755195929725,
+        -139.7514129280766
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 232,
+      "label": "climb / return to arena",
+      "bounds": [
+        100.01824261398636,
+        -187.01222096183108,
+        179.4378027968943,
+        -131.10108021771316
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 233,
+      "label": "climb / return to arena",
+      "bounds": [
+        122.94112654855385,
+        -179.61107909350318,
+        208.94436492364323,
+        -124.4492177606582
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 234,
+      "label": "climb / return to arena",
+      "bounds": [
+        137.86990239625152,
+        -173.39049499083336,
+        229.2378836704732,
+        -120.18154519848957
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 235,
+      "label": "descending into arena",
+      "bounds": [
+        136.4811617290339,
+        -167.00645212878936,
+        239.47730717278142,
+        -118.89201196870863
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 236,
+      "label": "descending into arena",
+      "bounds": [
+        135.91613009776506,
+        -164.61743734539397,
+        239.55915688245753,
+        -116.74080479254724
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 237,
+      "label": "descending into arena",
+      "bounds": [
+        135.4574966418471,
+        -158.341206750192,
+        239.0806990597938,
+        -104.34197378919339
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 238,
+      "label": "descending into arena",
+      "bounds": [
+        149.50074227288843,
+        -148.44828313597657,
+        238.0267543509756,
+        -93.13222390791316
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 239,
+      "label": "descending into arena",
+      "bounds": [
+        151.84268154353214,
+        -135.3033260518327,
+        238.8657753387301,
+        -86.75797310100762
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 240,
+      "label": "descending into arena",
+      "bounds": [
+        152.29312272162403,
+        -119.24880183783,
+        238.5304661809747,
+        -71.93874889582258
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 241,
+      "label": "descending into arena",
+      "bounds": [
+        151.39174951647502,
+        -100.62938579559858,
+        236.76223113791863,
+        -53.37937653020998
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 242,
+      "label": "descending into arena",
+      "bounds": [
+        150.1497069281368,
+        -85.78005235406863,
+        233.859777593821,
+        -32.56871093791392
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 243,
+      "label": "descending into arena",
+      "bounds": [
+        148.19301403532563,
+        -65.88822351106279,
+        232.40461242503977,
+        -9.853066333437482
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 244,
+      "label": "descending into arena",
+      "bounds": [
+        148.87614083296106,
+        -43.49524388532734,
+        232.54383000007414,
+        14.4213219136808
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 245,
+      "label": "descending into arena",
+      "bounds": [
+        146.63521329350675,
+        -16.81167679443604,
+        234.4039000047642,
+        39.907955033919734
+      ],
+      "fullyOutside": true,
+      "bodyVisiblePixels": 0,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 246,
+      "label": "descending into arena",
+      "bounds": [
+        142.3402994613989,
+        14.29602503306262,
+        237.23993549452626,
+        66.26045476396251
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 690,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 247,
+      "label": "descending into arena",
+      "bounds": [
+        137.95865407850536,
+        46.16044800314734,
+        239.46531747761043,
+        93.13251584433556
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1124,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 248,
+      "label": "descending into arena",
+      "bounds": [
+        135.4282288052106,
+        73.2619687918608,
+        239.6919629040642,
+        122.581499163503
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1106,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 249,
+      "label": "descending into arena",
+      "bounds": [
+        135.52857432283074,
+        100.34907357049019,
+        238.45203973450668,
+        157.69563283167113
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1121,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 250,
+      "label": "descending into arena",
+      "bounds": [
+        136.89438262954815,
+        127.28785568596658,
+        236.65157521313728,
+        189.82386779717
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1141,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 251,
+      "label": "descending into arena",
+      "bounds": [
+        147.66420250165015,
+        153.67404881643205,
+        237.52167807260508,
+        210.2462182546889
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1383,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 252,
+      "label": "descending into arena",
+      "bounds": [
+        153.39944213255256,
+        179.10039732905267,
+        239.21134848360444,
+        227.51370891367014
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1320,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 253,
+      "label": "descending into arena",
+      "bounds": [
+        154.4115812951756,
+        203.15959161658932,
+        238.7078345835077,
+        252.3313231332498
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1202,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 254,
+      "label": "descending into arena",
+      "bounds": [
+        152.89298141940355,
+        225.44445849353684,
+        236.57156769143404,
+        275.4338684052346
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1231,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 255,
+      "label": "descending into arena",
+      "bounds": [
+        151.78122957408658,
+        239.43642134848622,
+        232.18141798487483,
+        296.36709837299736
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1307,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 256,
+      "label": "descending into arena",
+      "bounds": [
+        151.8361092392174,
+        252.7636291688607,
+        230.11567882522877,
+        314.67729032526375
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1349,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 257,
+      "label": "descending into arena",
+      "bounds": [
+        152.62549710115292,
+        265.5953888876639,
+        227.51502174727574,
+        329.91107897855215
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1339,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 258,
+      "label": "descending into arena",
+      "bounds": [
+        153.44149783119755,
+        275.64679725114996,
+        225.74464386051022,
+        341.6155117846575
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1350,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 259,
+      "label": "descending into arena",
+      "bounds": [
+        153.7911413260726,
+        282.29416184109283,
+        225.23989510132668,
+        349.3380435169286
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1362,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 260,
+      "label": "flare",
+      "bounds": [
+        153.78118078848905,
+        285.25676112401766,
+        225.06052934753146,
+        352.63301793082906
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1359,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 261,
+      "label": "flare",
+      "bounds": [
+        153.66347159617746,
+        285.98138785793947,
+        224.95826642427744,
+        353.4244979391825
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1361,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 262,
+      "label": "flare",
+      "bounds": [
+        153.59792735615568,
+        286.33126115734956,
+        224.9155978091487,
+        353.7707465479181
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1362,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 263,
+      "label": "forepaw catch",
+      "bounds": [
+        153.08335860896096,
+        286.70865795376403,
+        224.59856396413667,
+        354.0457117782256
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1373,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 264,
+      "label": "forepaw catch",
+      "bounds": [
+        151.68372556479324,
+        287.80515790993945,
+        223.71332688145083,
+        353.7428012181413
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1373,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 265,
+      "label": "forepaw catch",
+      "bounds": [
+        150.76548984948295,
+        288.612553916178,
+        223.11253892319596,
+        353.5077759487629
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1372,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 266,
+      "label": "hindpaw catch",
+      "bounds": [
+        150.6790222052337,
+        288.64963705986366,
+        223.15693023767028,
+        353.50311756274624
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1370,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 267,
+      "label": "hindpaw catch",
+      "bounds": [
+        150.10829896100722,
+        288.81748612423365,
+        223.6595165965525,
+        353.51137837397755
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1359,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 268,
+      "label": "hindpaw catch",
+      "bounds": [
+        149.07750839733552,
+        289.0834556711978,
+        224.77226260444095,
+        353.55515704061105
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1343,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 269,
+      "label": "recover",
+      "bounds": [
+        148.64124338436753,
+        289.6820801022252,
+        226.36380942752749,
+        353.61548978151313
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1340,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 270,
+      "label": "recover",
+      "bounds": [
+        150.82129318749145,
+        291.3172675710081,
+        229.5568881107509,
+        353.6713335594518
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1392,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 271,
+      "label": "recover",
+      "bounds": [
+        156.61721670806634,
+        292.26306014983896,
+        232.0566340342727,
+        353.71792391201495
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1456,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 272,
+      "label": "recover",
+      "bounds": [
+        164.76163203210018,
+        295.0470880230641,
+        234.82131418242804,
+        353.751703565654
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1486,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 273,
+      "label": "recover",
+      "bounds": [
+        166.45900838502007,
+        298.93336866520565,
+        234.06670696696096,
+        353.7705577392611
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1454,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 274,
+      "label": "recover",
+      "bounds": [
+        166.46867922715475,
+        302.63622219569584,
+        231.33335218083317,
+        353.7383769349141
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1429,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 275,
+      "label": "recover",
+      "bounds": [
+        166.47959481412602,
+        302.1524774222362,
+        228.2778190914929,
+        353.5187440485966
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1393,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 276,
+      "label": "recover",
+      "bounds": [
+        166.48546952836145,
+        301.5981454526623,
+        225.79769165323313,
+        353.38651235239456
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1367,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 277,
+      "label": "recover",
+      "bounds": [
+        166.4834356428067,
+        301.13489856883507,
+        225.6317859924286,
+        353.34593869083506
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1330,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    },
+    {
+      "frame": 278,
+      "label": "recover",
+      "bounds": [
+        166.48221840614335,
+        300.7353626497485,
+        226.57357257232053,
+        353.333220757876
+      ],
+      "fullyOutside": false,
+      "bodyVisiblePixels": 1330,
+      "fireStrength": 0.0,
+      "groundTarget": null
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "samples": 33,
+  "allFinite": true,
+  "maxEdge": 0.4299784004688263,
+  "maxSpan": [
+    2.241151809692383,
+    1.5898126363754272,
+    0.5639927983283997
+  ],
+  "minZ": -0.19563280045986176,
+  "clipped": false,
+  "modelToPixel": 110,
+  "cell": 320,
+  "diagnosticOnly": true,
+  "ownerAccepted": false,
+  "combatAnimationValidated": false
+}

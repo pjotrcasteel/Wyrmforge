@@ -1,0 +1,18 @@
+{
+  "status": "colored-mesh-candidate-needs-visual-and-topology-review",
+  "seed": 1729,
+  "method": "local TRELLIS 1 / DINOv2",
+  "weightsSource": "ModelScope AI-ModelScope/TRELLIS-image-large",
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "torch": "2.8.0+cu128",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "sourceRevision": "442aa1e1afb9014e80681d3bf604e8d728a86ee7",
+  "referenceSha256": "edcabff504aed2b4461d2b2ed32de97d0d6df7c2529b62db7e255425da9169e2",
+  "vertices": 171390,
+  "faces": 342900,
+  "vertexColor": true,
+  "sha256": "cb5535a0fd1e9de752b0bae6b0e78dd497bed41f97ce1c15d85c9270b859c501",
+  "peakAllocatedMiB": 14779.14599609375
+}

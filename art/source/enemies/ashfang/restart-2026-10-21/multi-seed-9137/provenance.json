@@ -1,0 +1,27 @@
+{
+  "status": "candidate-awaiting-large-and-native-visual-review",
+  "method": "Existing offline TRELLIS 1 / DINOv2; card-pixel conditioning; no procedural anatomy replacement",
+  "seed": 9137,
+  "mode": "multi",
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "torch": "2.8.0+cu128",
+  "references": [
+    "pixel-idle-reference.png",
+    "pixel-idle-reference.png",
+    "ashfang-front-reference.png",
+    "ashfang-side-reference.png"
+  ],
+  "referenceHashes": [
+    "7b700b868dd54d93f8cb3269b795169ea87f5e4596c809ada63f2eeec7e06f55",
+    "7b700b868dd54d93f8cb3269b795169ea87f5e4596c809ada63f2eeec7e06f55",
+    "e228475da2aeb3f9a9e12d68280a215248cb1d7ee76a69603fd82e1b5b7208a6",
+    "edcabff504aed2b4461d2b2ed32de97d0d6df7c2529b62db7e255425da9169e2"
+  ],
+  "samplingSteps": 40,
+  "vertices": 81970,
+  "faces": 164008,
+  "peakAllocatedMiB": 12791.29150390625
+}

@@ -1,0 +1,3406 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1644403338432312,
+        "ikGoalError": 0.04972862612016484
+      },
+      "fore.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550003111362457,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1806374043226242,
+        "ikGoalError": 2.9802322387695312e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.16722556948661804,
+        "ikGoalError": 0.04367253194860347
+      },
+      "fore.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 4.712160915387242e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.16246286034584045,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.17064402997493744,
+        "ikGoalError": 0.03719550835327992
+      },
+      "fore.2.R": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 5.5755039852469285e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1519957333803177,
+        "ikGoalError": 4.470348358154297e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.17509007453918457,
+        "ikGoalError": 0.029770292908091658
+      },
+      "fore.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550007581710815,
+        "ikGoalError": 4.712160915387242e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.15167759358882904,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18065135180950165,
+        "ikGoalError": 0.021235515492320316
+      },
+      "fore.2.R": {
+        "minZ": -0.1954999715089798,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550007581710815,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.16158294677734375,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1870492696762085,
+        "ikGoalError": 0.011895655543979877
+      },
+      "fore.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.17940077185630798,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19372472167015076,
+        "ikGoalError": 0.00246080754581302
+      },
+      "fore.2.R": {
+        "minZ": -0.17558056116104126,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.1954999417066574,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550004601478577,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.15899133682250977,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550003111362457,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 2.9802322387695312e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19549992680549622,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.150919109582901,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19549992680549622,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550003111362457,
+        "ikGoalError": 7.450580596923828e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.15324726700782776,
+        "ikGoalError": 1.666000468656264e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550004601478577,
+        "ikGoalError": 0.0
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.16543269157409668,
+        "ikGoalError": 6.828569911354542e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.1954999715089798,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.16401523351669312,
+        "ikGoalError": 0.033262944035216714
+      },
+      "hind.2.L": {
+        "minZ": -0.1913350224494934,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550004601478577,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999417066574,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.16306337714195251,
+        "ikGoalError": 0.05007746672316216
+      },
+      "hind.2.L": {
+        "minZ": -0.1708196997642517,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.16346777975559235,
+        "ikGoalError": 0.047190782442279866
+      },
+      "hind.2.L": {
+        "minZ": -0.15606191754341125,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.16489717364311218,
+        "ikGoalError": 0.04339172522336518
+      },
+      "hind.2.L": {
+        "minZ": -0.15050484240055084,
+        "ikGoalError": 7.450580596923828e-09
+      },
+      "hind.2.R": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 5.5755039852469285e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1678967922925949,
+        "ikGoalError": 0.03800468611576266
+      },
+      "hind.2.L": {
+        "minZ": -0.15544459223747253,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.17259934544563293,
+        "ikGoalError": 0.030846466784193574
+      },
+      "hind.2.L": {
+        "minZ": -0.1697290688753128,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1954999417066574,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18591506779193878,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1786727011203766,
+        "ikGoalError": 0.02228477762492881
+      },
+      "hind.2.L": {
+        "minZ": -0.19002562761306763,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.16642531752586365,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.18544845283031464,
+        "ikGoalError": 0.013111735436889023
+      },
+      "hind.2.L": {
+        "minZ": -0.19550003111362457,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.15371853113174438,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1921541690826416,
+        "ikGoalError": 0.004293385636222371
+      },
+      "hind.2.L": {
+        "minZ": -0.19550007581710815,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19549989700317383,
+        "ikGoalError": 4.470348358154297e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.15075887739658356,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550004601478577,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1954999715089798,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.15823698043823242,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550004601478577,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.16399013996124268,
+        "ikGoalError": 0.016989313169737993
+      },
+      "fore.2.R": {
+        "minZ": -0.1954999715089798,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550016522407532,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "phaseLabel": "walk",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1644403338432312,
+        "ikGoalError": 0.04972862612016484
+      },
+      "fore.2.R": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19550003111362457,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1806374043226242,
+        "ikGoalError": 2.9802322387695312e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 0,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 1,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19504263997077942,
+        "ikGoalError": 0.0005704393919105234
+      },
+      "hind.2.L": {
+        "minZ": -0.1938680112361908,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1945924311876297,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 2,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19287455081939697,
+        "ikGoalError": 0.003228681563862882
+      },
+      "fore.2.R": {
+        "minZ": -0.1909705400466919,
+        "ikGoalError": 0.005539108527013045
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 3,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18551002442836761,
+        "ikGoalError": 0.012043347676892024
+      },
+      "fore.2.R": {
+        "minZ": -0.18346136808395386,
+        "ikGoalError": 0.01444166704568455
+      },
+      "hind.2.L": {
+        "minZ": -0.19386804103851318,
+        "ikGoalError": 4.712160915387242e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 4.712160915387242e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 4,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.17155009508132935,
+        "ikGoalError": 0.01430657134587558
+      },
+      "fore.2.R": {
+        "minZ": -0.16862481832504272,
+        "ikGoalError": 0.01430657134587558
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 5,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.14914828538894653,
+        "ikGoalError": 0.0027926144749576476
+      },
+      "fore.2.R": {
+        "minZ": -0.1462036371231079,
+        "ikGoalError": 0.0027926144749576476
+      },
+      "hind.2.L": {
+        "minZ": -0.19386819005012512,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459259510040283,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 6,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.10431142151355743,
+        "ikGoalError": 3.1828894262453654e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.10137350857257843,
+        "ikGoalError": 3.1828894262453654e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.1938680112361908,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1945924460887909,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 7,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.04885394871234894,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.04594413936138153,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 8,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.0040392279624938965,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.006911709904670715,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386807084083557,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459249079227448,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 9,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.04105715453624725,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.04389949142932892,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 10,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 11,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 12,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 13,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 14,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 15,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 16,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 17,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 18,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 19,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 20,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 21,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 22,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 23,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 24,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 25,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 26,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 27,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 28,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 29,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 30,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.05063579976558685,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.05346992611885071,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 31,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.04317501187324524,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.04601556062698364,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 32,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.001876145601272583,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.004750281572341919,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386816024780273,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459258019924164,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 33,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.059114426374435425,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.05619840323925018,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386813044548035,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459255039691925,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 34,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.12060412019491196,
+        "ikGoalError": 5.122274160385132e-09
+      },
+      "fore.2.R": {
+        "minZ": -0.11766133457422256,
+        "ikGoalError": 5.122274160385132e-09
+      },
+      "hind.2.L": {
+        "minZ": -0.19386805593967438,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 35,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1603498011827469,
+        "ikGoalError": 0.009418726109233238
+      },
+      "fore.2.R": {
+        "minZ": -0.15741077065467834,
+        "ikGoalError": 0.009418726109233238
+      },
+      "hind.2.L": {
+        "minZ": -0.19386805593967438,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 36,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18123826384544373,
+        "ikGoalError": 0.015896836170412123
+      },
+      "fore.2.R": {
+        "minZ": -0.1783353090286255,
+        "ikGoalError": 0.015896836170412123
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 37,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19121742248535156,
+        "ikGoalError": 0.005235964257954565
+      },
+      "fore.2.R": {
+        "minZ": -0.18927378952503204,
+        "ikGoalError": 0.007571085556161471
+      },
+      "hind.2.L": {
+        "minZ": -0.19386816024780273,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459258019924164,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 38,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999715089798,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1946711242198944,
+        "ikGoalError": 0.0010313705480926817
+      },
+      "hind.2.L": {
+        "minZ": -0.19386813044548035,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459255039691925,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 39,
+    "phaseLabel": "rear-breath",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 0,
+    "phaseLabel": "settle",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 1,
+    "phaseLabel": "settle",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453375041484833,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386807084083557,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459249079227448,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 2,
+    "phaseLabel": "settle",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 4.712160915387242e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453375041484833,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386811554431915,
+        "ikGoalError": 0.0
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 0.0
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 3,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453378021717072,
+        "ikGoalError": 7.450580596923828e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386807084083557,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459249079227448,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 4,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 0.0
+      },
+      "fore.2.R": {
+        "minZ": -0.19453373551368713,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386816024780273,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 5,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550004601478577,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 6,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453373551368713,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386817514896393,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459259510040283,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 7,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386805593967438,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 8,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386811554431915,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 4.470348358154297e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 9,
+    "phaseLabel": "open / crouch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453370571136475,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386816024780273,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459258019924164,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 10,
+    "phaseLabel": "leg drive",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386804103851318,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 11,
+    "phaseLabel": "leg drive",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999715089798,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386816024780273,
+        "ikGoalError": 2.5809568279517847e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459258019924164,
+        "ikGoalError": 2.5809568279517847e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 12,
+    "phaseLabel": "leg drive",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1945337951183319,
+        "ikGoalError": 5.1619136559035694e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 5.1619136559035694e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 5.1619136559035694e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 13,
+    "phaseLabel": "leg drive",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453373551368713,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.1938682347536087,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1945926547050476,
+        "ikGoalError": 6.322027276634104e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 14,
+    "phaseLabel": "first power stroke",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453370571136475,
+        "ikGoalError": 6.828569911354542e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386805593967438,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 15,
+    "phaseLabel": "first power stroke",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.195499986410141,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386813044548035,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 4.470348358154297e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 16,
+    "phaseLabel": "first power stroke",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550000131130219,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453373551368713,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386811554431915,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 17,
+    "phaseLabel": "first power stroke",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 0.0
+      },
+      "fore.2.R": {
+        "minZ": -0.19453375041484833,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 18,
+    "phaseLabel": "first power stroke",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 0.0
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 0.0
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 19,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19544193148612976,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19266939163208008,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 20,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18738636374473572,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.18460938334465027,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19440388679504395,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19443275034427643,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 21,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1693211793899536,
+        "ikGoalError": 0.0
+      },
+      "fore.2.R": {
+        "minZ": -0.16653823852539062,
+        "ikGoalError": 0.0
+      },
+      "hind.2.L": {
+        "minZ": -0.19024434685707092,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19026747345924377,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 22,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1381916105747223,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.1354008913040161,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.174984410405159,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.17503757774829865,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 23,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.09323817491531372,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.09043838083744049,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.14572970569133759,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.1458188146352768,
+        "ikGoalError": 4.2146848510894035e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 24,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.03812858462333679,
+        "ikGoalError": 2.1912072747351074e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.03531894087791443,
+        "ikGoalError": 2.1912072747351074e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.10184311866760254,
+        "ikGoalError": 3.725290298461914e-09
+      },
+      "hind.2.R": {
+        "minZ": -0.1019725352525711,
+        "ikGoalError": 3.725290298461914e-09
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 25,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.017922401428222656,
+        "ikGoalError": 1.1175870895385742e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.02074219286441803,
+        "ikGoalError": 1.1175870895385742e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.04645682871341705,
+        "ikGoalError": 2.609365754969772e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.04662923514842987,
+        "ikGoalError": 2.609365754969772e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 26,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.06094437837600708,
+        "ikGoalError": 2.6863450374185958e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.0637742131948471,
+        "ikGoalError": 2.6863450374185958e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.012700557708740234,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.012483999133110046,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 27,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.0973813533782959,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.1002206951379776,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.06316293776035309,
+        "ikGoalError": 1.666000468656264e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.06290268898010254,
+        "ikGoalError": 1.666000468656264e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 28,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.13215985894203186,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.13500790297985077,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.09469981491565704,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.09439793229103088,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 29,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.16395297646522522,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.16680867969989777,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1215662807226181,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.12122637033462524,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 30,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.19143134355545044,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.19429339468479156,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.14479224383831024,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.14441952109336853,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 31,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.2132643461227417,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.21613122522830963,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.16325043141841888,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.16285166144371033,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 32,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.22812068462371826,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23099081218242645,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1758125275373459,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.1753961145877838,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 33,
+    "phaseLabel": "departure",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23467034101486206,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23754186928272247,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.18135134875774384,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.1809271275997162,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 34,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 35,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 36,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 37,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 38,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 39,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 40,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 41,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 42,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 43,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 44,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 45,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 46,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 47,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 48,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 49,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 50,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 51,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 52,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 53,
+    "phaseLabel": "flight",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.23486655950546265,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.23773814737796783,
+        "ikGoalError": 4.470348358154297e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.1815173476934433,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.18109285831451416,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 54,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.22330710291862488,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.22617782652378082,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.17803429067134857,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.1776147186756134,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 55,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.18612408638000488,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.18899179995059967,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.16640685498714447,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.16600364446640015,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 56,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.1309373378753662,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "fore.2.R": {
+        "minZ": 0.1338001936674118,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.L": {
+        "minZ": 0.14790447056293488,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.14752736687660217,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 57,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.07398626208305359,
+        "ikGoalError": 0.0090562792596218
+      },
+      "fore.2.R": {
+        "minZ": 0.07684262096881866,
+        "ikGoalError": 0.0090562792596218
+      },
+      "hind.2.L": {
+        "minZ": 0.12212525308132172,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.1217820942401886,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 58,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": 0.03673224151134491,
+        "ikGoalError": 0.04160598218050342
+      },
+      "fore.2.R": {
+        "minZ": 0.0395805686712265,
+        "ikGoalError": 0.04160598218050342
+      },
+      "hind.2.L": {
+        "minZ": 0.0839722603559494,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.0836690366268158,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 59,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.0006835758686065674,
+        "ikGoalError": 0.06793892135404465
+      },
+      "fore.2.R": {
+        "minZ": 0.0021555274724960327,
+        "ikGoalError": 0.06793892135404465
+      },
+      "hind.2.L": {
+        "minZ": 0.03808675706386566,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.R": {
+        "minZ": 0.03782761096954346,
+        "ikGoalError": 2.9802322387695312e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 60,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.03762306272983551,
+        "ikGoalError": 0.0845734609431886
+      },
+      "fore.2.R": {
+        "minZ": -0.03479407727718353,
+        "ikGoalError": 0.0845734609431886
+      },
+      "hind.2.L": {
+        "minZ": -0.010096132755279541,
+        "ikGoalError": 3.0719530773294423e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.010308951139450073,
+        "ikGoalError": 3.0719530773294423e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 61,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.07290598750114441,
+        "ikGoalError": 0.09021855779213775
+      },
+      "fore.2.R": {
+        "minZ": -0.07008764147758484,
+        "ikGoalError": 0.09021855779213775
+      },
+      "hind.2.L": {
+        "minZ": -0.05601963400840759,
+        "ikGoalError": 9.313225746154785e-10
+      },
+      "hind.2.R": {
+        "minZ": -0.056185781955718994,
+        "ikGoalError": 9.313225746154785e-10
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 62,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.10504548996686935,
+        "ikGoalError": 0.08566618995388284
+      },
+      "fore.2.R": {
+        "minZ": -0.10223788768053055,
+        "ikGoalError": 0.08566618995388284
+      },
+      "hind.2.L": {
+        "minZ": -0.09631365537643433,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.09643463790416718,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 63,
+    "phaseLabel": "approach / extend paws",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.13252562284469604,
+        "ikGoalError": 0.07333174485306915
+      },
+      "fore.2.R": {
+        "minZ": -0.1297282874584198,
+        "ikGoalError": 0.07333174485306915
+      },
+      "hind.2.L": {
+        "minZ": -0.12895581126213074,
+        "ikGoalError": 4.7706993203109864e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.12903505563735962,
+        "ikGoalError": 4.7706993203109864e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 64,
+    "phaseLabel": "flare",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1542011797428131,
+        "ikGoalError": 0.05646250896057819
+      },
+      "fore.2.R": {
+        "minZ": -0.15141311287879944,
+        "ikGoalError": 0.05646250896057819
+      },
+      "hind.2.L": {
+        "minZ": -0.15328572690486908,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.15332858264446259,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 65,
+    "phaseLabel": "flare",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.16976353526115417,
+        "ikGoalError": 0.03835951369997008
+      },
+      "fore.2.R": {
+        "minZ": -0.16698309779167175,
+        "ikGoalError": 0.03835951369997008
+      },
+      "hind.2.L": {
+        "minZ": -0.1698761135339737,
+        "ikGoalError": 0.0
+      },
+      "hind.2.R": {
+        "minZ": -0.1698988527059555,
+        "ikGoalError": 0.0
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 66,
+    "phaseLabel": "flare",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1780027598142624,
+        "ikGoalError": 0.023923485676814092
+      },
+      "fore.2.R": {
+        "minZ": -0.1759754717350006,
+        "ikGoalError": 0.025247859297600813
+      },
+      "hind.2.L": {
+        "minZ": -0.18006116151809692,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.18078556656837463,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 67,
+    "phaseLabel": "flare",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18249516189098358,
+        "ikGoalError": 0.018194765165501517
+      },
+      "fore.2.R": {
+        "minZ": -0.18052655458450317,
+        "ikGoalError": 0.019489449281787627
+      },
+      "hind.2.L": {
+        "minZ": -0.18677622079849243,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.18750065565109253,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 68,
+    "phaseLabel": "forepaw catch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18233537673950195,
+        "ikGoalError": 0.01842396286074366
+      },
+      "fore.2.R": {
+        "minZ": -0.18036648631095886,
+        "ikGoalError": 0.019718238245956667
+      },
+      "hind.2.L": {
+        "minZ": -0.1910562366247177,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19178065657615662,
+        "ikGoalError": 2.9802322387695312e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 69,
+    "phaseLabel": "forepaw catch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18134118616580963,
+        "ikGoalError": 0.019793762351546427
+      },
+      "fore.2.R": {
+        "minZ": -0.1793656200170517,
+        "ikGoalError": 0.021089360759865977
+      },
+      "hind.2.L": {
+        "minZ": -0.19343949854373932,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19416391849517822,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 70,
+    "phaseLabel": "forepaw catch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1806006133556366,
+        "ikGoalError": 0.020824923616964693
+      },
+      "fore.2.R": {
+        "minZ": -0.1786210834980011,
+        "ikGoalError": 0.022120768283423808
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 71,
+    "phaseLabel": "hindpaw catch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18058615922927856,
+        "ikGoalError": 0.020845124503338985
+      },
+      "fore.2.R": {
+        "minZ": -0.17860651016235352,
+        "ikGoalError": 0.022141034148170844
+      },
+      "hind.2.L": {
+        "minZ": -0.19386816024780273,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459259510040283,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 72,
+    "phaseLabel": "hindpaw catch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1806117594242096,
+        "ikGoalError": 0.02080927725537959
+      },
+      "fore.2.R": {
+        "minZ": -0.17863228917121887,
+        "ikGoalError": 0.022105166146641122
+      },
+      "hind.2.L": {
+        "minZ": -0.19386804103851318,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459247589111328,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 73,
+    "phaseLabel": "hindpaw catch",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1807481050491333,
+        "ikGoalError": 0.020618847711478438
+      },
+      "fore.2.R": {
+        "minZ": -0.1787693202495575,
+        "ikGoalError": 0.021914705624547247
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 2.1073424255447017e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459250569343567,
+        "ikGoalError": 2.1073424255447017e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 74,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18136295676231384,
+        "ikGoalError": 0.01970765540478908
+      },
+      "fore.2.R": {
+        "minZ": -0.17938292026519775,
+        "ikGoalError": 0.021006880156427286
+      },
+      "hind.2.L": {
+        "minZ": -0.19386811554431915,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 75,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18276861310005188,
+        "ikGoalError": 0.017614688209407522
+      },
+      "fore.2.R": {
+        "minZ": -0.18078309297561646,
+        "ikGoalError": 0.01892373982752273
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 76,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1847650110721588,
+        "ikGoalError": 0.01468728543751435
+      },
+      "fore.2.R": {
+        "minZ": -0.18277016282081604,
+        "ikGoalError": 0.01601095120939079
+      },
+      "hind.2.L": {
+        "minZ": -0.19386810064315796,
+        "ikGoalError": 4.9421560620597e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459252059459686,
+        "ikGoalError": 4.9421560620597e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 77,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18715018033981323,
+        "ikGoalError": 0.01127002709808565
+      },
+      "fore.2.R": {
+        "minZ": -0.18514251708984375,
+        "ikGoalError": 0.012611742167600673
+      },
+      "hind.2.L": {
+        "minZ": -0.19386813044548035,
+        "ikGoalError": 3.650024149988857e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459255039691925,
+        "ikGoalError": 3.650024149988857e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 78,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.18971754610538483,
+        "ikGoalError": 0.007691008209236517
+      },
+      "fore.2.R": {
+        "minZ": -0.1876944601535797,
+        "ikGoalError": 0.009052374695979139
+      },
+      "hind.2.L": {
+        "minZ": -0.19386807084083557,
+        "ikGoalError": 4.9421560620597e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459249079227448,
+        "ikGoalError": 4.9421560620597e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 79,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19225558638572693,
+        "ikGoalError": 0.004252812548239316
+      },
+      "fore.2.R": {
+        "minZ": -0.1902153491973877,
+        "ikGoalError": 0.005634086892044188
+      },
+      "hind.2.L": {
+        "minZ": -0.19386811554431915,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459253549575806,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 80,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19454914331436157,
+        "ikGoalError": 0.0012298550779098378
+      },
+      "fore.2.R": {
+        "minZ": -0.19249172508716583,
+        "ikGoalError": 0.00262946276779025
+      },
+      "hind.2.L": {
+        "minZ": -0.19386808574199677,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459249079227448,
+        "ikGoalError": 3.332000937312528e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 81,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19431017339229584,
+        "ikGoalError": 0.0002847945324423103
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 82,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.1954999566078186,
+        "ikGoalError": 4.2146848510894035e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453373551368713,
+        "ikGoalError": 2.9802322387695312e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 83,
+    "phaseLabel": "recover",
+    "paws": {
+      "fore.2.L": {
+        "minZ": -0.19550001621246338,
+        "ikGoalError": 6.322027276634104e-08
+      },
+      "fore.2.R": {
+        "minZ": -0.19453376531600952,
+        "ikGoalError": 3.332000937312528e-08
+      },
+      "hind.2.L": {
+        "minZ": -0.19386814534664154,
+        "ikGoalError": 1.4901161193847656e-08
+      },
+      "hind.2.R": {
+        "minZ": -0.19459256529808044,
+        "ikGoalError": 1.4901161193847656e-08
+      }
+    }
+  }
+]

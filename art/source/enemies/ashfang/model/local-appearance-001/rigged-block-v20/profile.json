@@ -1,0 +1,89 @@
+{
+  "clips": {
+    "walk": {
+      "frames": 24,
+      "fps": 24,
+      "loop": true,
+      "action": "Ashfang_walk",
+      "events": [],
+      "strideDistanceModelUnits": 0.1388888888888889
+    },
+    "rear-breath": {
+      "frames": 40,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_rear-breath",
+      "events": [],
+      "strideDistanceModelUnits": null
+    },
+    "takeoff-flight-land": {
+      "frames": 84,
+      "fps": 24,
+      "loop": false,
+      "action": "Ashfang_takeoff-flight-land",
+      "events": [
+        {
+          "phase": 0.12,
+          "name": "leg-drive"
+        },
+        {
+          "phase": 0.22,
+          "name": "hind-leg-extension"
+        },
+        {
+          "phase": 0.265,
+          "name": "departure-first-downstroke"
+        },
+        {
+          "phase": 0.4,
+          "name": "cruise"
+        },
+        {
+          "phase": 0.64,
+          "name": "approach"
+        },
+        {
+          "phase": 0.76,
+          "name": "flare"
+        },
+        {
+          "phase": 0.81,
+          "name": "forepaw-catch-target"
+        },
+        {
+          "phase": 0.845,
+          "name": "hindpaw-catch-target"
+        },
+        {
+          "phase": 0.88,
+          "name": "recovery"
+        }
+      ],
+      "strideDistanceModelUnits": null
+    }
+  },
+  "groundRoot": [
+    0,
+    0,
+    -0.197
+  ],
+  "nativeCell": 192,
+  "modelToPixel": 80,
+  "tier": 1,
+  "targetGroundedViewportWidthFraction": [
+    0.15,
+    0.25
+  ],
+  "boneCount": 47,
+  "skinOwnership": {
+    "tail": 7105,
+    "body": 17003,
+    "neck": 5434,
+    "fore": 6443,
+    "hind": 4107,
+    "head": 5965,
+    "wing": 848
+  },
+  "ownerAccepted": false,
+  "runtimeIntegrated": false
+}

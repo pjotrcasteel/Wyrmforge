@@ -1,0 +1,3554 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0527058020234108,
+      -0.08931028097867966,
+      -0.05473370850086212
+    ],
+    "extensionRatio": 0.5768735768634248,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 0,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06889433413743973,
+      -0.04846442490816116,
+      -0.08157680928707123
+    ],
+    "extensionRatio": 0.6291255514772647,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05392562970519066,
+      -0.08460869640111923,
+      -0.060691043734550476
+    ],
+    "extensionRatio": 0.597420432898158,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0678405836224556,
+      -0.06656359136104584,
+      -0.0686800628900528
+    ],
+    "extensionRatio": 0.556003792027982,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05497881397604942,
+      -0.08001686632633209,
+      -0.06576196849346161
+    ],
+    "extensionRatio": 0.6146988866722495,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06281837075948715,
+      -0.08240314573049545,
+      -0.05489608645439148
+    ],
+    "extensionRatio": 0.5028570794466498,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.056080274283885956,
+      -0.07580950856208801,
+      -0.06969882547855377
+    ],
+    "extensionRatio": 0.6260207811084917,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05519970878958702,
+      -0.09463135153055191,
+      -0.04180794209241867
+    ],
+    "extensionRatio": 0.47708560279198003,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05742005631327629,
+      -0.07202093303203583,
+      -0.07256671786308289
+    ],
+    "extensionRatio": 0.6307784513915976,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.048129912465810776,
+      -0.10209584981203079,
+      -0.031779758632183075
+    ],
+    "extensionRatio": 0.48290588998900263,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05908922106027603,
+      -0.06841772794723511,
+      -0.07468254119157791
+    ],
+    "extensionRatio": 0.6305961728595246,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04380497708916664,
+      -0.10535763949155807,
+      -0.02703508548438549
+    ],
+    "extensionRatio": 0.5180211790672602,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.061045289039611816,
+      -0.0646018460392952,
+      -0.07648584246635437
+    ],
+    "extensionRatio": 0.6287489146665294,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0424230732023716,
+      -0.10585225373506546,
+      -0.027305511757731438
+    ],
+    "extensionRatio": 0.5541856561602932,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0631069615483284,
+      -0.06018779054284096,
+      -0.0783897340297699
+    ],
+    "extensionRatio": 0.6290520813734124,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0436219647526741,
+      -0.10484665632247925,
+      -0.02922861836850643
+    ],
+    "extensionRatio": 0.5424231914665152,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06498604267835617,
+      -0.05494597181677818,
+      -0.08067066222429276
+    ],
+    "extensionRatio": 0.6346558848627153,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04526304081082344,
+      -0.10314317047595978,
+      -0.03259982168674469
+    ],
+    "extensionRatio": 0.5366914695330995,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06637810170650482,
+      -0.04883872717618942,
+      -0.08341901749372482
+    ],
+    "extensionRatio": 0.6471906372742463,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.047320857644081116,
+      -0.10046248883008957,
+      -0.037656769156455994
+    ],
+    "extensionRatio": 0.5393123980138286,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06709049642086029,
+      -0.04196825623512268,
+      -0.08653054386377335
+    ],
+    "extensionRatio": 0.6664627729260685,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04957199841737747,
+      -0.09667736291885376,
+      -0.044114723801612854
+    ],
+    "extensionRatio": 0.5504061991055791,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06780526041984558,
+      -0.03949714079499245,
+      -0.08713453263044357
+    ],
+    "extensionRatio": 0.6696224800701023,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.051723867654800415,
+      -0.09188452363014221,
+      -0.05130184441804886
+    ],
+    "extensionRatio": 0.567908136638813,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06930582970380783,
+      -0.057198528200387955,
+      -0.075332872569561
+    ],
+    "extensionRatio": 0.589525869242941,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.053595006465911865,
+      -0.08641090244054794,
+      -0.05840150639414787
+    ],
+    "extensionRatio": 0.5881901502777253,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06693434715270996,
+      -0.0733780488371849,
+      -0.062333472073078156
+    ],
+    "extensionRatio": 0.5249615721832697,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.055199477821588516,
+      -0.08073237538337708,
+      -0.06469392031431198
+    ],
+    "extensionRatio": 0.6071156349298109,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06080549955368042,
+      -0.0871819481253624,
+      -0.049517687410116196
+    ],
+    "extensionRatio": 0.48431323841964175,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05670030042529106,
+      -0.07532090693712234,
+      -0.06972692906856537
+    ],
+    "extensionRatio": 0.6212592086027127,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05328010395169258,
+      -0.0970379114151001,
+      -0.03866364434361458
+    ],
+    "extensionRatio": 0.4737236477544833,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.058296553790569305,
+      -0.07046811282634735,
+      -0.07338772714138031
+    ],
+    "extensionRatio": 0.6289375608506453,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.047451477497816086,
+      -0.10233549028635025,
+      -0.03202832117676735
+    ],
+    "extensionRatio": 0.49466628807042146,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06011703237891197,
+      -0.06617160141468048,
+      -0.07587666809558868
+    ],
+    "extensionRatio": 0.6307092839801252,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.044250115752220154,
+      -0.10418131947517395,
+      -0.030629847198724747
+    ],
+    "extensionRatio": 0.5408016925660033,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06215665116906166,
+      -0.062160640954971313,
+      -0.07760549336671829
+    ],
+    "extensionRatio": 0.6291487426448157,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.044577255845069885,
+      -0.10364648699760437,
+      -0.03194181248545647
+    ],
+    "extensionRatio": 0.5449999057418673,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0642586201429367,
+      -0.05805288627743721,
+      -0.0790613442659378
+    ],
+    "extensionRatio": 0.6279561125061718,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.04591720551252365,
+      -0.10238415747880936,
+      -0.03404557704925537
+    ],
+    "extensionRatio": 0.5360149265846278,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06614024937152863,
+      -0.0535384938120842,
+      -0.08067899942398071
+    ],
+    "extensionRatio": 0.6307392130484574,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.04756578058004379,
+      -0.1003919169306755,
+      -0.03753619268536568
+    ],
+    "extensionRatio": 0.5345788706239923,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06747522205114365,
+      -0.048480041325092316,
+      -0.08274529874324799
+    ],
+    "extensionRatio": 0.639942740265702,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.049403730779886246,
+      -0.09749849885702133,
+      -0.04246547818183899
+    ],
+    "extensionRatio": 0.5419285074802799,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06802551448345184,
+      -0.0428944006562233,
+      -0.08533816784620285
+    ],
+    "extensionRatio": 0.6562708029108207,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05118586868047714,
+      -0.09372911602258682,
+      -0.04842381551861763
+    ],
+    "extensionRatio": 0.5570218765616579,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0677574872970581,
+      -0.036880847066640854,
+      -0.08831043541431427
+    ],
+    "extensionRatio": 0.6786378554699639,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0527058020234108,
+      -0.08931028097867966,
+      -0.05473370850086212
+    ],
+    "extensionRatio": 0.5768735768634248,
+    "toeRoll": 0
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06889433413743973,
+      -0.04846442490816116,
+      -0.08157680928707123
+    ],
+    "extensionRatio": 0.6291255514772647,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 0,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 0,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 1,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0584154911339283,
+      -0.0800083726644516,
+      -0.06273991614580154
+    ],
+    "extensionRatio": 0.5712363131187217,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 1,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0584154911339283,
+      -0.0800083726644516,
+      -0.06273991614580154
+    ],
+    "extensionRatio": 0.5712363131187217,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 2,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06043006852269173,
+      -0.07571692764759064,
+      -0.06606937199831009
+    ],
+    "extensionRatio": 0.5759067463901331,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 2,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06043006852269173,
+      -0.07571692764759064,
+      -0.06606937199831009
+    ],
+    "extensionRatio": 0.5759067463901331,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 3,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06348315626382828,
+      -0.06900422275066376,
+      -0.07041524350643158
+    ],
+    "extensionRatio": 0.5828544190028198,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 3,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06348315626382828,
+      -0.06900422275066376,
+      -0.07041524350643158
+    ],
+    "extensionRatio": 0.5828544190028198,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 4,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06734378635883331,
+      -0.06029167398810387,
+      -0.07469765096902847
+    ],
+    "extensionRatio": 0.5914035387243455,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 4,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06734378635883331,
+      -0.06029167398810387,
+      -0.07469765096902847
+    ],
+    "extensionRatio": 0.5914035387243455,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 5,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07175584882497787,
+      -0.05022895336151123,
+      -0.07796257734298706
+    ],
+    "extensionRatio": 0.6008482098316369,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 5,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07175584882497787,
+      -0.05022895336151123,
+      -0.07796257734298706
+    ],
+    "extensionRatio": 0.6008482098316369,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 6,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07639404386281967,
+      -0.03973328322172165,
+      -0.07959412783384323
+    ],
+    "extensionRatio": 0.6104231917571874,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 6,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07639404386281967,
+      -0.03973328322172165,
+      -0.07959412783384323
+    ],
+    "extensionRatio": 0.6104231917571874,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 7,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08082856237888336,
+      -0.02991853468120098,
+      -0.0795087218284607
+    ],
+    "extensionRatio": 0.6192843388223613,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 7,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08082856237888336,
+      -0.02991853468120098,
+      -0.0795087218284607
+    ],
+    "extensionRatio": 0.6192843388223613,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 8,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08452802896499634,
+      -0.02195410430431366,
+      -0.07824980467557907
+    ],
+    "extensionRatio": 0.6265073633451511,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 8,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08452802896499634,
+      -0.02195410430431366,
+      -0.07824980467557907
+    ],
+    "extensionRatio": 0.6265073633451511,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 9,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08691513538360596,
+      -0.016933949664235115,
+      -0.07687001675367355
+    ],
+    "extensionRatio": 0.6311135425192578,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 9,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08691513538360596,
+      -0.016933949664235115,
+      -0.07687001675367355
+    ],
+    "extensionRatio": 0.6311135425192578,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 10,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 10,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 11,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 11,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 12,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 12,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 13,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 13,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 14,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 14,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 15,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 15,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 16,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 16,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 17,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 17,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 18,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 18,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 19,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 19,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 20,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 20,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 21,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 21,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 22,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 22,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 23,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 23,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 24,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 24,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 25,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 25,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 26,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 26,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 27,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 27,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 28,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 28,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 29,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 29,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 30,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 30,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08751088380813599,
+      -0.015695905312895775,
+      -0.07645580172538757
+    ],
+    "extensionRatio": 0.6322589776223978,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 31,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08704760670661926,
+      -0.016658201813697815,
+      -0.07678036391735077
+    ],
+    "extensionRatio": 0.6313682790161183,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 31,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08704760670661926,
+      -0.016658201813697815,
+      -0.07678036391735077
+    ],
+    "extensionRatio": 0.6313682790161183,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 32,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0843839943408966,
+      -0.022260086610913277,
+      -0.07831881940364838
+    ],
+    "extensionRatio": 0.6262282852994266,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 32,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0843839943408966,
+      -0.022260086610913277,
+      -0.07831881940364838
+    ],
+    "extensionRatio": 0.6262282852994266,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 33,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08006031811237335,
+      -0.031599260866642,
+      -0.07963567972183228
+    ],
+    "extensionRatio": 0.6177669804943702,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 33,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08006031811237335,
+      -0.031599260866642,
+      -0.07963567972183228
+    ],
+    "extensionRatio": 0.6177669804943702,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 34,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07491756230592728,
+      -0.04305456951260567,
+      -0.07926957309246063
+    ],
+    "extensionRatio": 0.6074120977121603,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 34,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07491756230592728,
+      -0.04305456951260567,
+      -0.07926957309246063
+    ],
+    "extensionRatio": 0.6074120977121603,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 35,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06970061361789703,
+      -0.05491754412651062,
+      -0.07665437459945679
+    ],
+    "extensionRatio": 0.5964913805334634,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 35,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06970061361789703,
+      -0.05491754412651062,
+      -0.07665437459945679
+    ],
+    "extensionRatio": 0.5964913805334634,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 36,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06497842073440552,
+      -0.06565096229314804,
+      -0.07223407179117203
+    ],
+    "extensionRatio": 0.5861973202491506,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 36,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06497842073440552,
+      -0.06565096229314804,
+      -0.07223407179117203
+    ],
+    "extensionRatio": 0.5861973202491506,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 37,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06116941571235657,
+      -0.07411160320043564,
+      -0.06719955056905746
+    ],
+    "extensionRatio": 0.5776039185699336,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 37,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06116941571235657,
+      -0.07411160320043564,
+      -0.06719955056905746
+    ],
+    "extensionRatio": 0.5776039185699336,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 38,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.058620452880859375,
+      -0.07957786321640015,
+      -0.06309523433446884
+    ],
+    "extensionRatio": 0.5717144758007586,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 38,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.058620452880859375,
+      -0.07957786321640015,
+      -0.06309523433446884
+    ],
+    "extensionRatio": 0.5717144758007586,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 39,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 39,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 0,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05692148953676224,
+      -0.07901934534311295,
+      -0.06531380116939545
+    ],
+    "extensionRatio": 0.5961705704195153,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 0,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.056890152394771576,
+      -0.07891632616519928,
+      -0.06546547263860703
+    ],
+    "extensionRatio": 0.5972243731542636,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 1,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.056559111922979355,
+      -0.08081824332475662,
+      -0.06339938938617706
+    ],
+    "extensionRatio": 0.5887950531105003,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 1,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05653051659464836,
+      -0.0807177722454071,
+      -0.06355269253253937
+    ],
+    "extensionRatio": 0.5898476682521989,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 2,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0554698184132576,
+      -0.08540152758359909,
+      -0.05813504755496979
+    ],
+    "extensionRatio": 0.5693102727535768,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 2,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.055448900908231735,
+      -0.08530769497156143,
+      -0.05829256772994995
+    ],
+    "extensionRatio": 0.5703595888236128,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 3,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.053570277988910675,
+      -0.09145036339759827,
+      -0.05017029121518135
+    ],
+    "extensionRatio": 0.5417227454588375,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 3,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05356147140264511,
+      -0.09136582911014557,
+      -0.05033346638083458
+    ],
+    "extensionRatio": 0.5427666269645933,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 4,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05079243332147598,
+      -0.0977093055844307,
+      -0.040286801755428314
+    ],
+    "extensionRatio": 0.5100350751174606,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 4,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05079992860555649,
+      -0.09763551503419876,
+      -0.0404559001326561
+    ],
+    "extensionRatio": 0.5110713239875255,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 5,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.04722358658909798,
+      -0.10317885875701904,
+      -0.02956439182162285
+    ],
+    "extensionRatio": 0.47816998528132737,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 5,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04725101962685585,
+      -0.1031162291765213,
+      -0.029738567769527435
+    ],
+    "extensionRatio": 0.4791965014641538,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 6,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.04325101524591446,
+      -0.10725077241659164,
+      -0.01940685324370861
+    ],
+    "extensionRatio": 0.4498912443179057,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 6,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04330015927553177,
+      -0.10719867050647736,
+      -0.01958431303501129
+    ],
+    "extensionRatio": 0.450906949240184,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 7,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.03967202454805374,
+      -0.10975144058465958,
+      -0.01143488846719265
+    ],
+    "extensionRatio": 0.42874454865283695,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 7,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03974061459302902,
+      -0.10970784723758698,
+      -0.011613539420068264
+    ],
+    "extensionRatio": 0.42975043564321463,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 8,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.037636250257492065,
+      -0.11081596463918686,
+      -0.007303154096007347
+    ],
+    "extensionRatio": 0.418087653724996,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 8,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03771589696407318,
+      -0.11077696084976196,
+      -0.007481804117560387
+    ],
+    "extensionRatio": 0.41908779251914235,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 9,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.037505801767110825,
+      -0.11087676137685776,
+      -0.007047286257147789
+    ],
+    "extensionRatio": 0.4174338789510175,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 9,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03758613392710686,
+      -0.11083804816007614,
+      -0.007225925102829933
+    ],
+    "extensionRatio": 0.41843361941467944,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 10,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.037505801767110825,
+      -0.11087676137685776,
+      -0.007047286257147789
+    ],
+    "extensionRatio": 0.4174338789510175,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 10,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03758613392710686,
+      -0.11083804816007614,
+      -0.007225925102829933
+    ],
+    "extensionRatio": 0.41843361941467944,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 11,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.037505801767110825,
+      -0.11087676137685776,
+      -0.007047286257147789
+    ],
+    "extensionRatio": 0.4174338789510175,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 11,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03758613392710686,
+      -0.11083804816007614,
+      -0.007225925102829933
+    ],
+    "extensionRatio": 0.41843361941467944,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 12,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.037505801767110825,
+      -0.11087676137685776,
+      -0.007047286257147789
+    ],
+    "extensionRatio": 0.4174338789510175,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 12,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03758613392710686,
+      -0.11083804816007614,
+      -0.007225925102829933
+    ],
+    "extensionRatio": 0.41843361941467944,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 13,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.037505801767110825,
+      -0.11087676137685776,
+      -0.007047286257147789
+    ],
+    "extensionRatio": 0.4174338789510175,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 13,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03758613392710686,
+      -0.11083804816007614,
+      -0.007225925102829933
+    ],
+    "extensionRatio": 0.41843361941467944,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 14,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.039916593581438065,
+      -0.1096281185746193,
+      -0.011762002483010292
+    ],
+    "extensionRatio": 0.4267611690651142,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 14,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.03998589515686035,
+      -0.10958340018987656,
+      -0.011941968463361263
+    ],
+    "extensionRatio": 0.4277658516827081,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 15,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.04816010221838951,
+      -0.10280337184667587,
+      -0.02936120517551899
+    ],
+    "extensionRatio": 0.46335934518828875,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 15,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04819205030798912,
+      -0.10273673385381699,
+      -0.02954140491783619
+    ],
+    "extensionRatio": 0.4643797273618113,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 16,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05748837813735008,
+      -0.08846431225538254,
+      -0.051177747547626495
+    ],
+    "extensionRatio": 0.5142998229695349,
+    "toeRoll": 0.0016777068228398273
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 16,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05746878311038017,
+      -0.08828036487102509,
+      -0.05151627957820892
+    ],
+    "extensionRatio": 0.5163474384445289,
+    "toeRoll": 0.0016777068228398273
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 17,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06538701057434082,
+      -0.0722711831331253,
+      -0.06520285457372665
+    ],
+    "extensionRatio": 0.5461299817185684,
+    "toeRoll": 0.04271283509418712
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 17,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06523013114929199,
+      -0.07184714823961258,
+      -0.06582564860582352
+    ],
+    "extensionRatio": 0.5501257623804072,
+    "toeRoll": 0.04271283509418712
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 18,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07133027166128159,
+      -0.06385378539562225,
+      -0.06771032512187958
+    ],
+    "extensionRatio": 0.5414513156532639,
+    "toeRoll": 0.12308009228766816
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 18,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07120358198881149,
+      -0.06360644847154617,
+      -0.06807547807693481
+    ],
+    "extensionRatio": 0.5437246968225157,
+    "toeRoll": 0.12308009228766816
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 19,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06920532137155533,
+      -0.052765946835279465,
+      -0.07858999818563461
+    ],
+    "extensionRatio": 0.6094664307465915,
+    "toeRoll": 0.22188591722286632
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 19,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06918363273143768,
+      -0.05272424593567848,
+      -0.07863707840442657
+    ],
+    "extensionRatio": 0.609807643814278,
+    "toeRoll": 0.22188591722286632
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 20,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06400949507951736,
+      -0.03520054742693901,
+      -0.09172628074884415
+    ],
+    "extensionRatio": 0.7112255439014281,
+    "toeRoll": 0.31823674871936575
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 20,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06412842124700546,
+      -0.035442568361759186,
+      -0.0915498286485672
+    ],
+    "extensionRatio": 0.7096142653825197,
+    "toeRoll": 0.31823674871936575
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 21,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05681934952735901,
+      -0.012156662531197071,
+      -0.10185176134109497
+    ],
+    "extensionRatio": 0.8178762138161138,
+    "toeRoll": 0.39123902559674995
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 21,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05703014135360718,
+      -0.012599571608006954,
+      -0.1016799658536911
+    ],
+    "extensionRatio": 0.8156246882794171,
+    "toeRoll": 0.39123902559674995
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 22,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.04587634652853012,
+      0.01825280860066414,
+      -0.1063588410615921
+    ],
+    "extensionRatio": 0.9234360935258643,
+    "toeRoll": 0.42
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 22,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.04621531814336777,
+      0.017547260969877243,
+      -0.10633081197738647
+    ],
+    "extensionRatio": 0.921118630387604,
+    "toeRoll": 0.42
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 23,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05098439380526543,
+      0.004359754733741283,
+      -0.10550635308027267
+    ],
+    "extensionRatio": 0.8807258765333167,
+    "toeRoll": 0.42
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 23,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05114803835749626,
+      0.004013922996819019,
+      -0.10544086247682571
+    ],
+    "extensionRatio": 0.8793200815487707,
+    "toeRoll": 0.42
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 24,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06366061419248581,
+      -0.03621450439095497,
+      -0.09157422930002213
+    ],
+    "extensionRatio": 0.7107963749867461,
+    "toeRoll": 0.3640494100075732
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 24,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06368090957403183,
+      -0.03625734895467758,
+      -0.09154315292835236
+    ],
+    "extensionRatio": 0.7105142701446026,
+    "toeRoll": 0.3640494100075732
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 25,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06753890961408615,
+      -0.056813549250364304,
+      -0.07720572501420975
+    ],
+    "extensionRatio": 0.6054638395412457,
+    "toeRoll": 0.19104705073742498
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 25,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06753890961408615,
+      -0.056813549250364304,
+      -0.07720572501420975
+    ],
+    "extensionRatio": 0.6054638395412457,
+    "toeRoll": 0.19104705073742498
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 26,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06745459884405136,
+      -0.056342776864767075,
+      -0.07762328535318375
+    ],
+    "extensionRatio": 0.6082017537803848,
+    "toeRoll": 0.03181730259694621
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 26,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06745459884405136,
+      -0.056342776864767075,
+      -0.07762328535318375
+    ],
+    "extensionRatio": 0.6082017537803848,
+    "toeRoll": 0.03181730259694621
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 27,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06945890933275223,
+      -0.05444788187742233,
+      -0.07720684260129929
+    ],
+    "extensionRatio": 0.600393569054581,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 27,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06945890933275223,
+      -0.05444788187742233,
+      -0.07720684260129929
+    ],
+    "extensionRatio": 0.600393569054581,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 28,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07397467643022537,
+      -0.050022464245557785,
+      -0.0759967714548111
+    ],
+    "extensionRatio": 0.5859177561349365,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 28,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07397467643022537,
+      -0.050022464245557785,
+      -0.0759967714548111
+    ],
+    "extensionRatio": 0.5859177561349365,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 29,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08027968555688858,
+      -0.04374435544013977,
+      -0.07342756539583206
+    ],
+    "extensionRatio": 0.5707572360262526,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 29,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08027968555688858,
+      -0.04374435544013977,
+      -0.07342756539583206
+    ],
+    "extensionRatio": 0.5707572360262526,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 30,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08691028505563736,
+      -0.03864291310310364,
+      -0.06858082860708237
+    ],
+    "extensionRatio": 0.553452427231411,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 30,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08691028505563736,
+      -0.03864291310310364,
+      -0.06858082860708237
+    ],
+    "extensionRatio": 0.553452427231411,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 31,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.09221049398183823,
+      -0.03629917651414871,
+      -0.0626865103840828
+    ],
+    "extensionRatio": 0.5356771025321933,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 31,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.09221049398183823,
+      -0.03629917651414871,
+      -0.0626865103840828
+    ],
+    "extensionRatio": 0.5356771025321933,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 32,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.09424623101949692,
+      -0.038235142827034,
+      -0.0583585686981678
+    ],
+    "extensionRatio": 0.5181601962516854,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 32,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.09424623101949692,
+      -0.038235142827034,
+      -0.0583585686981678
+    ],
+    "extensionRatio": 0.5181601962516854,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 33,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.09233449399471283,
+      -0.04461531713604927,
+      -0.056866683065891266
+    ],
+    "extensionRatio": 0.5009759011914227,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 33,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.09233449399471283,
+      -0.04461531713604927,
+      -0.056866683065891266
+    ],
+    "extensionRatio": 0.5009759011914227,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 34,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08992733061313629,
+      -0.05085791274905205,
+      -0.05546671897172928
+    ],
+    "extensionRatio": 0.48570407197434584,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 34,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08992733061313629,
+      -0.05085791274905205,
+      -0.05546671897172928
+    ],
+    "extensionRatio": 0.48570407197434584,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 35,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08780186623334885,
+      -0.05579700320959091,
+      -0.054106704890728
+    ],
+    "extensionRatio": 0.47389176229607155,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 35,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08780186623334885,
+      -0.05579700320959091,
+      -0.054106704890728
+    ],
+    "extensionRatio": 0.47389176229607155,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 36,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08647553622722626,
+      -0.05865976959466934,
+      -0.05320737138390541
+    ],
+    "extensionRatio": 0.46714799069143165,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 36,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08647553622722626,
+      -0.05865976959466934,
+      -0.05320737138390541
+    ],
+    "extensionRatio": 0.46714799069143165,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 37,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 37,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 38,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 38,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 39,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 39,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 40,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 40,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 41,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 41,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 42,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 42,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 43,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 43,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 44,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 44,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 45,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 45,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 46,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 46,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 47,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 47,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 48,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 48,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 49,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 49,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 50,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 50,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 51,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 51,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 52,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 52,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 53,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 53,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08627583831548691,
+      -0.059077806770801544,
+      -0.053068846464157104
+    ],
+    "extensionRatio": 0.4661692644295316,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 54,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08630222827196121,
+      -0.058979976922273636,
+      -0.053134676069021225
+    ],
+    "extensionRatio": 0.46651412506045253,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 54,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08630222827196121,
+      -0.058979976922273636,
+      -0.053134676069021225
+    ],
+    "extensionRatio": 0.46651412506045253,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 55,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08638893812894821,
+      -0.058653898537158966,
+      -0.05335428565740585
+    ],
+    "extensionRatio": 0.46766641384303986,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 55,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08638893812894821,
+      -0.058653898537158966,
+      -0.05335428565740585
+    ],
+    "extensionRatio": 0.46766641384303986,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 56,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08652236312627792,
+      -0.05813683941960335,
+      -0.05370287969708443
+    ],
+    "extensionRatio": 0.46950327578713075,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 56,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08652236312627792,
+      -0.05813683941960335,
+      -0.05370287969708443
+    ],
+    "extensionRatio": 0.46950327578713075,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 57,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08646966516971588,
+      -0.05769290402531624,
+      -0.05426353961229324
+    ],
+    "extensionRatio": 0.4720080333728556,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 57,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08646966516971588,
+      -0.05769290402531624,
+      -0.05426353961229324
+    ],
+    "extensionRatio": 0.4720080333728556,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 58,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08527744561433792,
+      -0.058350205421447754,
+      -0.05543474107980728
+    ],
+    "extensionRatio": 0.4755377599993461,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 58,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08527744561433792,
+      -0.058350205421447754,
+      -0.05543474107980728
+    ],
+    "extensionRatio": 0.4755377599993461,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 59,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08305312693119049,
+      -0.06005297228693962,
+      -0.05697210133075714
+    ],
+    "extensionRatio": 0.48009616265180083,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 59,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08305312693119049,
+      -0.06005297228693962,
+      -0.05697210133075714
+    ],
+    "extensionRatio": 0.48009616265180083,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 60,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.08008285611867905,
+      -0.0625363364815712,
+      -0.058531612157821655
+    ],
+    "extensionRatio": 0.48581913977580804,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 60,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.08008285611867905,
+      -0.0625363364815712,
+      -0.058531612157821655
+    ],
+    "extensionRatio": 0.48581913977580804,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 61,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07667233049869537,
+      -0.06549812108278275,
+      -0.05984437093138695
+    ],
+    "extensionRatio": 0.4928848650648991,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 61,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07667233049869537,
+      -0.06549812108278275,
+      -0.05984437093138695
+    ],
+    "extensionRatio": 0.4928848650648991,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 62,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.07311653345823288,
+      -0.06863617897033691,
+      -0.06077050045132637
+    ],
+    "extensionRatio": 0.5013848564874928,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 62,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.07311653345823288,
+      -0.06863617897033691,
+      -0.06077050045132637
+    ],
+    "extensionRatio": 0.5013848564874928,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 63,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06966712325811386,
+      -0.07168582826852798,
+      -0.061299603432416916
+    ],
+    "extensionRatio": 0.5112370918855682,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 63,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06966712325811386,
+      -0.07168582826852798,
+      -0.061299603432416916
+    ],
+    "extensionRatio": 0.5112370918855682,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 64,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0665121003985405,
+      -0.07444632053375244,
+      -0.06151333823800087
+    ],
+    "extensionRatio": 0.5221439153790766,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 64,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0665121003985405,
+      -0.07444632053375244,
+      -0.06151333823800087
+    ],
+    "extensionRatio": 0.5221439153790766,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 65,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06377241760492325,
+      -0.07679024338722229,
+      -0.06153329089283943
+    ],
+    "extensionRatio": 0.5335857517377051,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 65,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06377241760492325,
+      -0.07679024338722229,
+      -0.06153329089283943
+    ],
+    "extensionRatio": 0.5335857517377051,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 66,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06151312217116356,
+      -0.07865668088197708,
+      -0.061475720256567
+    ],
+    "extensionRatio": 0.5448461366306487,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 66,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06151312217116356,
+      -0.07865668088197708,
+      -0.061475720256567
+    ],
+    "extensionRatio": 0.5448461366306487,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 67,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.06068653613328934,
+      -0.08226105570793152,
+      -0.057447947561740875
+    ],
+    "extensionRatio": 0.5278957244844571,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 67,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.06065327674150467,
+      -0.0821833461523056,
+      -0.05759411305189133
+    ],
+    "extensionRatio": 0.5288809147403838,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 68,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05964480713009834,
+      -0.08504074066877365,
+      -0.05441119521856308
+    ],
+    "extensionRatio": 0.5177079408708349,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 68,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05962175503373146,
+      -0.08495602011680603,
+      -0.05456855893135071
+    ],
+    "extensionRatio": 0.5187122702207707,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 69,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.058545295149087906,
+      -0.08816484361886978,
+      -0.05049171298742294
+    ],
+    "extensionRatio": 0.5031460862878869,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 69,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.058541007339954376,
+      -0.088063545525074,
+      -0.05067313089966774
+    ],
+    "extensionRatio": 0.5041853188495861,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 70,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.057902831584215164,
+      -0.08972442150115967,
+      -0.048443716019392014
+    ],
+    "extensionRatio": 0.4959606759520352,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 70,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05791091546416283,
+      -0.08961249142885208,
+      -0.048640862107276917
+    ],
+    "extensionRatio": 0.49701912764861655,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 71,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05789262801408768,
+      -0.08974859863519669,
+      -0.04841112717986107
+    ],
+    "extensionRatio": 0.4958461014813355,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 71,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.057900913059711456,
+      -0.08963649719953537,
+      -0.04860854521393776
+    ],
+    "extensionRatio": 0.49690487062310107,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 72,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05791734531521797,
+      -0.08961278945207596,
+      -0.0486326590180397
+    ],
+    "extensionRatio": 0.49692911972047676,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 72,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.057924918830394745,
+      -0.08950082957744598,
+      -0.048829399049282074
+    ],
+    "extensionRatio": 0.4979878884828617,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 73,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05803244933485985,
+      -0.08889203518629074,
+      -0.04980405047535896
+    ],
+    "extensionRatio": 0.5027412521679031,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 73,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.058036383241415024,
+      -0.08878093212842941,
+      -0.04999731481075287
+    ],
+    "extensionRatio": 0.5038000201153027,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 74,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.0581640750169754,
+      -0.08770092576742172,
+      -0.05172513797879219
+    ],
+    "extensionRatio": 0.5125954453048385,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 74,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05816231667995453,
+      -0.08759119361639023,
+      -0.05191272124648094
+    ],
+    "extensionRatio": 0.5136540766199561,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 75,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.058226436376571655,
+      -0.08621358871459961,
+      -0.054100848734378815
+    ],
+    "extensionRatio": 0.525369516987902,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 75,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05821818485856056,
+      -0.08610550314188004,
+      -0.05428158864378929
+    ],
+    "extensionRatio": 0.5264277166431393,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 76,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.058166004717350006,
+      -0.08459621667861938,
+      -0.05665862187743187
+    ],
+    "extensionRatio": 0.5399068711928376,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 76,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05815141648054123,
+      -0.08448974788188934,
+      -0.056832205504179
+    ],
+    "extensionRatio": 0.5409644813306268,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 77,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.057974472641944885,
+      -0.08299750834703445,
+      -0.05916399508714676
+    ],
+    "extensionRatio": 0.5550043933110259,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 77,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.0579543299973011,
+      -0.08289242535829544,
+      -0.059330835938453674
+    ],
+    "extensionRatio": 0.5560611860587914,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 78,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.057685770094394684,
+      -0.08154389262199402,
+      -0.06142430379986763
+    ],
+    "extensionRatio": 0.5694185592862439,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 78,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.057683322578668594,
+      -0.08153362572193146,
+      -0.06144023686647415
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 79,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768333747982979,
+      -0.08153363317251205,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229165404474,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 79,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768333747982979,
+      -0.08153363317251205,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229165404474,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 80,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768332630395889,
+      -0.08153362572193146,
+      -0.061440255492925644
+    ],
+    "extensionRatio": 0.5695229832418582,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 80,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768332630395889,
+      -0.08153362572193146,
+      -0.061440255492925644
+    ],
+    "extensionRatio": 0.5695229832418582,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 81,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768333747982979,
+      -0.08153366297483444,
+      -0.06144023314118385
+    ],
+    "extensionRatio": 0.5695228231584591,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 81,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768333747982979,
+      -0.08153366297483444,
+      -0.06144023314118385
+    ],
+    "extensionRatio": 0.5695228231584591,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 82,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 82,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 83,
+    "side": "L",
+    "kneeOffsetPelvisLocal": [
+      0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 83,
+    "side": "R",
+    "kneeOffsetPelvisLocal": [
+      -0.05768334120512009,
+      -0.08153362572193146,
+      -0.06144024431705475
+    ],
+    "extensionRatio": 0.5695229432210126,
+    "toeRoll": 0.0
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "selectedForReview": "card-art-2801.png",
+  "ownerAccepted": false,
+  "riggingApproved": false,
+  "reason": "Lowest-strength candidate retains original low crouch, four feet, curled tail, horned muzzle, plate masses and red membranes most closely. No carried dark rectangular scenery patch.",
+  "notSelected": {
+    "card-art-2802.png": "More face/claw and plate simplification.",
+    "card-art-2803.png": "Excess geometric simplification; weaker card surface identity."
+  },
+  "remaining": "Inspect transparent master/native palette and owner style acceptance; not a completed model or animation."
+}

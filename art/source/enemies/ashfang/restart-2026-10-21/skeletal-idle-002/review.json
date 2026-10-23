@@ -1,0 +1,18 @@
+{
+  "status": "Owner-guide articulated idle with body/wing/tail response; visual review pending",
+  "ownerAccepted": false,
+  "frames": 64,
+  "fps": 16,
+  "travelPerCycleSourcePixels": 0.0,
+  "stanceFraction": 0.7,
+  "maxReachBeyondBoneLength": 0,
+  "maxPawTargetError": 3.1776437161565096e-14,
+  "minTriangleAreaRatio": 0.9584804177284241,
+  "maxStanceJointWorldDrift": 3.1776437161565096e-14,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "limitations": [
+    "One view only",
+    "Layer cuts/hidden overlap require review",
+    "Foot contact metric uses joints; raster appearance still needs inspection"
+  ]
+}

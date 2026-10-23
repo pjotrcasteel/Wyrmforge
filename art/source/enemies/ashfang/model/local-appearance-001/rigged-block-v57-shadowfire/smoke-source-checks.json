@@ -1,0 +1,128 @@
+{
+  "arena-flyovers": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "fire-flyover": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "flight-loop": {
+    "centers": {
+      "finite": true,
+      "loopError": 0.0
+    },
+    "radii": {
+      "finite": true,
+      "loopError": 0.0
+    },
+    "densities": {
+      "finite": true,
+      "loopError": 0.0
+    }
+  },
+  "flight-sequence": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "high-launch": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "landing": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "rear-breath": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "takeoff-flight-land": {
+    "centers": {
+      "finite": true,
+      "loopError": null
+    },
+    "radii": {
+      "finite": true,
+      "loopError": null
+    },
+    "densities": {
+      "finite": true,
+      "loopError": null
+    }
+  },
+  "walk": {
+    "centers": {
+      "finite": true,
+      "loopError": 0.0
+    },
+    "radii": {
+      "finite": true,
+      "loopError": 0.0
+    },
+    "densities": {
+      "finite": true,
+      "loopError": 0.0
+    }
+  }
+}

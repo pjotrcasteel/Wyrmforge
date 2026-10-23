@@ -1,0 +1,6 @@
+{
+  "accepted": false,
+  "riggingApproved": false,
+  "reason": "Repeated image-to-3D reconstruction still creates slab-like tail/floor and fused anatomy; cleaner masks do not make the source meet the card. Stop this method.",
+  "next": "Local reference-guided 2D art master before any further conversion or animation."
+}

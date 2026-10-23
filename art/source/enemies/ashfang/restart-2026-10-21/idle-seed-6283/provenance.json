@@ -1,0 +1,21 @@
+{
+  "status": "candidate-awaiting-large-and-native-visual-review",
+  "method": "Existing offline TRELLIS 1 / DINOv2; card-pixel conditioning; no procedural anatomy replacement",
+  "seed": 6283,
+  "mode": "idle",
+  "ownerAccepted": false,
+  "rigged": false,
+  "runtimeIntegrated": false,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "torch": "2.8.0+cu128",
+  "references": [
+    "pixel-idle-reference.png"
+  ],
+  "referenceHashes": [
+    "7b700b868dd54d93f8cb3269b795169ea87f5e4596c809ada63f2eeec7e06f55"
+  ],
+  "samplingSteps": 40,
+  "vertices": 38466,
+  "faces": 76978,
+  "peakAllocatedMiB": 11782.439453125
+}

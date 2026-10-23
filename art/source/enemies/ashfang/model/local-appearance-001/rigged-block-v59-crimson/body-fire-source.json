@@ -1,0 +1,170 @@
+{
+  "anchors": [
+    {
+      "vertices": [
+        4671,
+        4676,
+        817
+      ],
+      "height": 0.12
+    },
+    {
+      "vertices": [
+        785,
+        786,
+        791
+      ],
+      "height": 0.12
+    },
+    {
+      "vertices": [
+        756,
+        757,
+        762
+      ],
+      "height": 0.12
+    },
+    {
+      "vertices": [
+        4606,
+        724,
+        725
+      ],
+      "height": 0.12
+    },
+    {
+      "vertices": [
+        4585,
+        52,
+        68
+      ],
+      "height": 0.12
+    },
+    {
+      "vertices": [
+        451,
+        369,
+        435
+      ],
+      "height": 0.075
+    },
+    {
+      "vertices": [
+        4486,
+        274,
+        258
+      ],
+      "height": 0.075
+    },
+    {
+      "vertices": [
+        146,
+        4616,
+        162
+      ],
+      "height": 0.075
+    },
+    {
+      "vertices": [
+        457,
+        375,
+        441
+      ],
+      "height": 0.075
+    },
+    {
+      "vertices": [
+        4215,
+        278,
+        262
+      ],
+      "height": 0.075
+    },
+    {
+      "vertices": [
+        150,
+        4623,
+        166
+      ],
+      "height": 0.075
+    },
+    {
+      "vertices": [
+        4701,
+        972,
+        960
+      ],
+      "height": 0.1
+    },
+    {
+      "vertices": [
+        1092,
+        1093,
+        4719
+      ],
+      "height": 0.1
+    },
+    {
+      "vertices": [
+        1211,
+        1212,
+        1210
+      ],
+      "height": 0.1
+    }
+  ],
+  "profile": "crimson-inferno",
+  "flameHeightMultiplier": 1.55,
+  "flameWidthMultiplier": 1.4,
+  "method": "Surface-bound volumetric tongues; buoyant upward drift, rearward trail and local motion drag; deterministic periodic flicker",
+  "smoke": "Historical surface-bound expanding density spheres with buoyant rise and drift",
+  "clips": {
+    "arena-flyovers": {
+      "frames": 279,
+      "finite": true,
+      "loopError": null
+    },
+    "fire-flyover": {
+      "frames": 56,
+      "finite": true,
+      "loopError": null
+    },
+    "flight-loop": {
+      "frames": 33,
+      "finite": true,
+      "loopError": 0.0
+    },
+    "flight-sequence": {
+      "frames": 148,
+      "finite": true,
+      "loopError": null
+    },
+    "high-launch": {
+      "frames": 55,
+      "finite": true,
+      "loopError": null
+    },
+    "landing": {
+      "frames": 31,
+      "finite": true,
+      "loopError": null
+    },
+    "rear-breath": {
+      "frames": 73,
+      "finite": true,
+      "loopError": null
+    },
+    "takeoff-flight-land": {
+      "frames": 84,
+      "finite": true,
+      "loopError": null
+    },
+    "walk": {
+      "frames": 49,
+      "finite": true,
+      "loopError": 0.0
+    }
+  },
+  "gameplayDamage": false,
+  "ownerAccepted": false
+}

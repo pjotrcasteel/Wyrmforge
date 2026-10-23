@@ -1,0 +1,14 @@
+{
+  "screenshotCompositePrivate": true,
+  "liveGameplay": false,
+  "viewport": [
+    440,
+    955
+  ],
+  "density": 110,
+  "frames": 279,
+  "passBodyVisiblePixels": 0,
+  "playerRegionUnchangedAtStart": true,
+  "playerRescaled": false,
+  "fireFrames": 74
+}

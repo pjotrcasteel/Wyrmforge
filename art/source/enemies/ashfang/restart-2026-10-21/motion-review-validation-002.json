@@ -1,0 +1,36 @@
+{
+  "ownerAccepted": false,
+  "clips": {
+    "skeletal-idle-002": {
+      "frames": 64,
+      "rgba": true,
+      "dimensions": [
+        320,
+        192
+      ],
+      "edgeClipping": false
+    },
+    "layered-stalk-007": {
+      "frames": 64,
+      "rgba": true,
+      "dimensions": [
+        320,
+        192
+      ],
+      "edgeClipping": false
+    },
+    "card-breath-attack-002": {
+      "frames": 96,
+      "rgba": true,
+      "dimensions": [
+        416,
+        192
+      ],
+      "edgeClipping": false
+    }
+  },
+  "attackRestClosureVisiblePixelsExact": true,
+  "originalVisibleLimbRestErrorsAfterDrawOrderFix": 0,
+  "originalVisibleLimbRestErrorsBeforeFix": 491,
+  "remaining": "Connected pose transitions, more joint/art polish, collapse, flight/landing and other directions; no game integration or owner acceptance."
+}

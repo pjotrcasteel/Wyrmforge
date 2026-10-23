@@ -1,0 +1,1154 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 1,
+    "minZ": -0.19700011610984802,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 2,
+    "minZ": -0.19700004160404205,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 3,
+    "minZ": -0.19699999690055847,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 4,
+    "minZ": -0.19699999690055847,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 5,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 6,
+    "minZ": -0.19700002670288086,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 7,
+    "minZ": -0.19700008630752563,
+    "altitude": 0,
+    "lowestVertex": 27595,
+    "lowestDominantGroup": "hind.2.R",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 8,
+    "minZ": -0.19917745888233185,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00012791813239526704
+  },
+  {
+    "clip": "walk",
+    "frame": 9,
+    "minZ": -0.19988569617271423,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00027715595352307854
+  },
+  {
+    "clip": "walk",
+    "frame": 10,
+    "minZ": -0.19841615855693817,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00010659844366272253
+  },
+  {
+    "clip": "walk",
+    "frame": 11,
+    "minZ": -0.19764837622642517,
+    "altitude": 0,
+    "lowestVertex": 7626,
+    "lowestDominantGroup": "hind.1.R",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 12,
+    "minZ": -0.19700002670288086,
+    "altitude": 0,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 13,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 14,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 27595,
+    "lowestDominantGroup": "hind.2.R",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 15,
+    "minZ": -0.19699998199939728,
+    "altitude": 0,
+    "lowestVertex": 27595,
+    "lowestDominantGroup": "hind.2.R",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 16,
+    "minZ": -0.19700002670288086,
+    "altitude": 0,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 17,
+    "minZ": -0.19699998199939728,
+    "altitude": 0,
+    "lowestVertex": 27595,
+    "lowestDominantGroup": "hind.2.R",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "walk",
+    "frame": 18,
+    "minZ": -0.19886520504951477,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00012791813239526704
+  },
+  {
+    "clip": "walk",
+    "frame": 19,
+    "minZ": -0.20201073586940765,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0005756315957787016
+  },
+  {
+    "clip": "walk",
+    "frame": 20,
+    "minZ": -0.20310145616531372,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0007035497281739686
+  },
+  {
+    "clip": "walk",
+    "frame": 21,
+    "minZ": -0.20174278318881989,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0005756315957787016
+  },
+  {
+    "clip": "walk",
+    "frame": 22,
+    "minZ": -0.1982269585132599,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 6.395906619763352e-05
+  },
+  {
+    "clip": "walk",
+    "frame": 23,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 0,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 1,
+    "minZ": -0.1982184648513794,
+    "altitude": 0,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 6.395906619763352e-05
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 2,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 27595,
+    "lowestDominantGroup": "hind.2.R",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 3,
+    "minZ": -0.20042702555656433,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00029847564225562307
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 4,
+    "minZ": -0.20461757481098175,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0007248694169065132
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 5,
+    "minZ": -0.2089376151561737,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0017268947873361048
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 6,
+    "minZ": -0.21294133365154266,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.002835518601428419
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 7,
+    "minZ": -0.21627362072467804,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0034751092634047543
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 8,
+    "minZ": -0.21889668703079224,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.003965462104253278
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 9,
+    "minZ": -0.22053563594818115,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004178658991578723
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 10,
+    "minZ": -0.22099103033542633,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 11,
+    "minZ": -0.22106793522834778,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 12,
+    "minZ": -0.2211376130580902,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 13,
+    "minZ": -0.2211984246969223,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 14,
+    "minZ": -0.22124843299388885,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 15,
+    "minZ": -0.22128570079803467,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 16,
+    "minZ": -0.2213083803653717,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 17,
+    "minZ": -0.22131478786468506,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 18,
+    "minZ": -0.22130361199378967,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004349216501439079
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 19,
+    "minZ": -0.2212739884853363,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 20,
+    "minZ": -0.221225768327713,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 21,
+    "minZ": -0.22115953266620636,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 22,
+    "minZ": -0.22107663750648499,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 23,
+    "minZ": -0.2209792584180832,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004391855878904168
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 24,
+    "minZ": -0.22087028622627258,
+    "altitude": 0,
+    "lowestVertex": 8294,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00430657712397399
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 25,
+    "minZ": -0.22081272304058075,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00430657712397399
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 26,
+    "minZ": -0.2209131121635437,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004327896812706534
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 27,
+    "minZ": -0.22101058065891266,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004327896812706534
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 28,
+    "minZ": -0.22110377252101898,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 29,
+    "minZ": -0.22119136154651642,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 30,
+    "minZ": -0.2212720811367035,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004370536190171624
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 31,
+    "minZ": -0.22105790674686432,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00430657712397399
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 32,
+    "minZ": -0.21939124166965485,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.003944142415520734
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 33,
+    "minZ": -0.21633002161979675,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.003411150197207121
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 34,
+    "minZ": -0.2121340036392212,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.002451764204242618
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 35,
+    "minZ": -0.20722711086273193,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0013005010126852148
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 36,
+    "minZ": -0.202207550406456,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0005756315957787016
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 37,
+    "minZ": -0.1977752149105072,
+    "altitude": 0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 38,
+    "minZ": -0.19801288843154907,
+    "altitude": 0,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 6.395906619763352e-05
+  },
+  {
+    "clip": "rear-breath",
+    "frame": 39,
+    "minZ": -0.19700001180171967,
+    "altitude": 0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 0,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 1,
+    "minZ": -0.19962440431118011,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.00023451657605798955
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 2,
+    "minZ": -0.20541180670261383,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0013431403901503038
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 3,
+    "minZ": -0.21045978367328644,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.002750239846498241
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 4,
+    "minZ": -0.21445611119270325,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004008101481718367
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 5,
+    "minZ": -0.2171536535024643,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004647692143694702
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 6,
+    "minZ": -0.21838554739952087,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.005095405607078137
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 7,
+    "minZ": -0.21807566285133362,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.005010126852147958
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 8,
+    "minZ": -0.21624311804771423,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.004477134633834346
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 9,
+    "minZ": -0.21300125122070312,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0035390683296023877
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 10,
+    "minZ": -0.2085506021976471,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0022172476281846283
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 11,
+    "minZ": -0.20316633582115173,
+    "altitude": 0.0,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0007675087943716022
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 12,
+    "minZ": -0.19700005650520325,
+    "altitude": 0.0030589275310277876,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 13,
+    "minZ": -0.18540507555007935,
+    "altitude": 0.01809460275773059,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 14,
+    "minZ": -0.15187644958496094,
+    "altitude": 0.04323641792428306,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 15,
+    "minZ": -0.12060514092445374,
+    "altitude": 0.07574928779662575,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 16,
+    "minZ": -0.08487077057361603,
+    "altitude": 0.11289812714069919,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 17,
+    "minZ": -0.04730333387851715,
+    "altitude": 0.15194785072244396,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 18,
+    "minZ": -0.010533899068832397,
+    "altitude": 0.19016337330780061,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 19,
+    "minZ": 0.022805526852607727,
+    "altitude": 0.22480960966270966,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 20,
+    "minZ": 0.05008167028427124,
+    "altitude": 0.2531514745531117,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 21,
+    "minZ": 0.06866064667701721,
+    "altitude": 0.2724538827449473,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 22,
+    "minZ": 0.07590851187705994,
+    "altitude": 0.2799817490041569,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 23,
+    "minZ": 0.07592830061912537,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 24,
+    "minZ": 0.07592886686325073,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 25,
+    "minZ": 0.07592782378196716,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 26,
+    "minZ": 0.0759253203868866,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 27,
+    "minZ": 0.07592138648033142,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 28,
+    "minZ": 0.07591605186462402,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 29,
+    "minZ": 0.0759095549583435,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 30,
+    "minZ": 0.07590189576148987,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 31,
+    "minZ": 0.07589325308799744,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 32,
+    "minZ": 0.07588368654251099,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 33,
+    "minZ": 0.0758734941482544,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 34,
+    "minZ": 0.0758625864982605,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 35,
+    "minZ": 0.07585126161575317,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 36,
+    "minZ": 0.07583951950073242,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 37,
+    "minZ": 0.07582753896713257,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 38,
+    "minZ": 0.07581532001495361,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 39,
+    "minZ": 0.07580310106277466,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 40,
+    "minZ": 0.07579085230827332,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 41,
+    "minZ": 0.07577869296073914,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 42,
+    "minZ": 0.07576671242713928,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 43,
+    "minZ": 0.07575494050979614,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 44,
+    "minZ": 0.0757434070110321,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 45,
+    "minZ": 0.0757322907447815,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 46,
+    "minZ": 0.07572153210639954,
+    "altitude": 0.28,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 47,
+    "minZ": 0.0748245120048523,
+    "altitude": 0.27907783569885025,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 48,
+    "minZ": 0.06471097469329834,
+    "altitude": 0.2685694793082605,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 49,
+    "minZ": 0.045095622539520264,
+    "altitude": 0.24817656146213782,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 50,
+    "minZ": 0.01819567382335663,
+    "altitude": 0.22020317573986087,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 51,
+    "minZ": -0.01377248764038086,
+    "altitude": 0.1869534157208074,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 52,
+    "minZ": -0.04859323799610138,
+    "altitude": 0.15073137498435624,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 53,
+    "minZ": -0.08405199646949768,
+    "altitude": 0.11384114710988515,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 54,
+    "minZ": -0.11793497204780579,
+    "altitude": 0.07858682567677283,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 55,
+    "minZ": -0.14802882075309753,
+    "altitude": 0.04727250426439714,
+    "lowestVertex": 8653,
+    "lowestDominantGroup": "tail.3",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 56,
+    "minZ": -0.18171945214271545,
+    "altitude": 0.022202276452136797,
+    "lowestVertex": 23161,
+    "lowestDominantGroup": "fore.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 57,
+    "minZ": -0.19699996709823608,
+    "altitude": 0.0056802358193696325,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 58,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 59,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 60,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 61,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 62,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  },
+  {
+    "clip": "takeoff-flight-land",
+    "frame": 63,
+    "minZ": -0.19700001180171967,
+    "altitude": 0.0,
+    "lowestVertex": 23152,
+    "lowestDominantGroup": "hind.2.L",
+    "penetratingVertexFraction": 0.0
+  }
+]

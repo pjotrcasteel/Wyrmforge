@@ -1,0 +1,15 @@
+{
+  "identicalSampleFiles": {
+    "arena-flyovers-samples.npz": true,
+    "fire-flyover-samples.npz": true,
+    "flight-loop-samples.npz": true,
+    "flight-sequence-samples.npz": true,
+    "high-launch-samples.npz": true,
+    "landing-samples.npz": true,
+    "rear-breath-samples.npz": true,
+    "takeoff-flight-land-samples.npz": true,
+    "walk-samples.npz": true
+  },
+  "source": "art\\source\\enemies\\ashfang\\model\\local-appearance-001\\rigged-block-v47",
+  "materialOnlyChange": true
+}

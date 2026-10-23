@@ -1,0 +1,39 @@
+{
+  "walk": {
+    "finite": true,
+    "minZ": -0.19554036855697632
+  },
+  "rear-breath": {
+    "finite": true,
+    "minZ": -0.1955132633447647
+  },
+  "takeoff-flight-land": {
+    "finite": true,
+    "minZ": -0.19552290439605713
+  },
+  "flight-loop": {
+    "finite": true,
+    "minZ": 0.07677140831947327
+  },
+  "landing": {
+    "finite": true,
+    "minZ": -0.1955132633447647
+  },
+  "flight-sequence": {
+    "finite": true,
+    "minZ": -0.19552290439605713
+  },
+  "high-launch": {
+    "finite": true,
+    "minZ": -0.19552290439605713
+  },
+  "fire-flyover": {
+    "finite": true,
+    "minZ": 16.582984924316406
+  },
+  "arena-flyovers": {
+    "finite": true,
+    "minZ": -0.19552290439605713,
+    "maxDeltaFromRenderedV36": 0.0
+  }
+}

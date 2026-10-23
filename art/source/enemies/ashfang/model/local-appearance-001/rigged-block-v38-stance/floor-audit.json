@@ -1,0 +1,13 @@
+[
+  {
+    "clip": "walk",
+    "frame": 0,
+    "minZ": -0.19563280045986176,
+    "altitude": 0,
+    "rootAdvance": 0,
+    "tailCorrectionRadians": 0,
+    "lowestVertex": 2397,
+    "lowestDominantGroup": "fore.2.R",
+    "penetratingVertexFraction": 0.0
+  }
+]

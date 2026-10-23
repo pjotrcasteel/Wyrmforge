@@ -1,0 +1,6 @@
+{
+  "accepted": false,
+  "styleCloserToCard": true,
+  "reason": "Reference-guided 2D master restores the actual card proportions, but coarse-mask black background slabs persist. Prompt was truncated; shorten before next iteration.",
+  "next": "Use anatomical negative-space silhouette trace and a prompt within both token limits."
+}
