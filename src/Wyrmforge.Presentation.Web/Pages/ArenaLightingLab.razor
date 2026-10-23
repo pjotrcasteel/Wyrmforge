@@ -43,7 +43,7 @@
     <div class="lighting-layout">
         <section class="lighting-stage">
             <canvas @ref="canvas" aria-label="Ground lighting comparison with optional new tree candidate images" tabindex="0"></canvas>
-            <span class="lighting-help">Drag to pan · same approved ground and seed in both modes</span>
+            
             <span class="lighting-status">@(enabled ? "SHARED LIGHT" : "BASELINE") · @(shadows && enabled ? "SHADOWS" : "NO SHADOWS")</span>
         </section>
         <aside class="lighting-inspector">
@@ -60,6 +60,7 @@
             </label>
             <span class="feedback">@elmStatus</span>
             <h3>Acceptance scope</h3>
+            <p>Drag inside the canvas to pan; the light, tree anchors and approved ground share world coordinates.</p>
             <p>The same ambient and directional light applies to the approved ground and optional sprites.
                 Soft contact shading and very subtle directional cast shadows are composed beneath all trees.
                 Enable <strong>Show root anchors</strong> to inspect the trunk-foot pivot and clearance,
