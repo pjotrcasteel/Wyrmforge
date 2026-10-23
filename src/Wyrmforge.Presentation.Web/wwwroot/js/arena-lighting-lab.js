@@ -6,8 +6,10 @@ import {
 } from './arena-materials.js';
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS,
     FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from './arena-ground-foundation.js';
-import { resolveSceneLighting, contactShadowPlan, projectedShadowPlan, drawContactShadow, drawSceneLighting,
+import { resolveSceneLighting, contactShadowPlan, drawContactShadow,
     sortSpritesByFoot, spriteFootPlacement } from './arena-scene-lighting.js';
+import { makeTreeLightingAssets, treeFirelightPlan, treeProjectedSilhouettePlan,
+    drawTreeCastShadow, drawFirelitTree } from './arena-tree-firelighting.js';
 import { gothicNightPlan, drawGothicNight } from './arena-night-lighting.js';
 import { calibrationEmitters, drawCalibrationEmitterCores } from './arena-lighting-calibration.js';
 import { litWetMaterialPlan, drawLitWetMaterial, drawLocalNightMist } from './arena-l3-material-atmosphere.js';
@@ -44,25 +46,8 @@ function render(state) {
 
     const sprites = sortSpritesByFoot(Object.entries(slots).filter(([id]) => state.images[id])
         .map(([id, slot]) => ({ id, foot: { x: slot.x, y: slot.y }, ...slot })));
-    // World ground -> all cast shadows -> all root contact -> sorted sprites.
-    // Shadowing each sprite in its own drawing pass could obscure the branches
-    // of a farther tree. Neither shadow pass changes the ground material atlas.
-    for (const sprite of sprites)
-        drawContactShadow(ctx, projectedShadowPlan(sprite.foot, sprite.trunk, sprite.height, state.light));
-    for (const sprite of sprites)
-        drawContactShadow(ctx, contactShadowPlan(sprite.foot, sprite.trunk, state.light));
-    for (const sprite of sprites) {
-        const image = state.images[sprite.id];
-        // Preserve original alpha and register visible root baseline in world
-        // coordinates rather than using the full transparent Blender canvas.
-        const crop = image.crop;
-        const placement = spriteFootPlacement(sprite.foot, crop, sprite.height);
-        if (!placement) continue;
-        ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(image.image, crop.x, crop.y, crop.width, crop.height,
-            placement.x, placement.y, placement.width, placement.height);
-        ctx.imageSmoothingEnabled = false;
-    }
+    // A light source must illuminate the GROUND before the tree occludes it.
+    // Ground and sprite depth are independent; the approved atlas is untouched.
     // The lab uses the same night mask as live Hunts, but its mid-air Fireball
     // and optional torch are explicit TEST SOURCES, never real gameplay props.
     const flightProgress = state.animateFireball
@@ -71,13 +56,45 @@ function render(state) {
     const sources = calibrationEmitters({
         fireball: state.demoFireball, torch: state.demoTorch, progress: flightProgress,
     });
-    if (state.ground && state.light.enabled) {
+    const night = Boolean(state.ground && state.light.enabled);
+    if (night) {
         const view = { x: state.camera.x, y: state.camera.y, width, height };
         drawGothicNight(ctx, gothicNightPlan(null, sources, view,
             { darkness: state.darkness }), state.nightMask);
         if (state.wetResponse)
             drawLitWetMaterial(ctx, litWetMaterialPlan(state.board, FOUNDATION_COLUMNS,
                 FOUNDATION_ROWS, sources, state.seed));
+    }
+    // Real alpha silhouettes BLOCK incident light on the illuminated ground.
+    // The static radial root contact remains independent of the directional
+    // Fireball cast, which rotates/extends as the fire moves.
+    let castShadows = 0;
+    if (night && state.light.shadows) {
+        for (const sprite of sprites) {
+            const light = treeFirelightPlan(sprite.foot, sprite.height, sources);
+            const projection = treeProjectedSilhouettePlan(sprite.foot, sprite.height, light);
+            if (drawTreeCastShadow(ctx, state.images[sprite.id].assets, projection))
+                castShadows++;
+            drawContactShadow(ctx, contactShadowPlan(sprite.foot, sprite.trunk, state.light));
+        }
+    }
+    // Billboard self-shading is separate from illumination on the terrain:
+    // the actual source art catches fire on the near side, retaining a dark
+    // opposite face and original alpha/branches for depth.
+    for (const sprite of sprites) {
+        const image = state.images[sprite.id];
+        const light = treeFirelightPlan(sprite.foot, sprite.height, sources);
+        if (night && drawFirelitTree(ctx, image.assets, sprite.foot, light, state.darkness))
+            continue;
+        const crop = image.crop;
+        const placement = spriteFootPlacement(sprite.foot, crop, sprite.height);
+        if (!placement) continue;
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(image.image, crop.x, crop.y, crop.width, crop.height,
+            placement.x, placement.y, placement.width, placement.height);
+        ctx.imageSmoothingEnabled = false;
+    }
+    if (night) {
         if (state.mist) drawLocalNightMist(ctx, sources);
         drawCalibrationEmitterCores(ctx, sources);
     }
@@ -114,6 +131,8 @@ function render(state) {
     canvas.dataset.mist = String(state.mist);
     canvas.dataset.lightingObjects = String(sprites.length);
     canvas.dataset.lightingShadows = String(state.light.enabled && state.light.shadows ? sprites.length : 0);
+    canvas.dataset.treeCastShadows = String(castShadows);
+    canvas.dataset.treeSelfLighting = String(night ? sprites.length : 0);
     canvas.dataset.lightingApprovedGround = String(Boolean(state.ground));
     canvas.dataset.lightingAnchors = String(state.showAnchors);
     canvas.dataset.lightingPhysicsObjects = '0';
@@ -293,7 +312,9 @@ export async function loadArenaLightingSprite(canvas, input, slot) {
         if (!state.alive) return false;
         const crop = findAlphaBounds(image);
         if (!crop) return false;
-        state.images[slot] = { image, crop };
+        const assets = makeTreeLightingAssets(image, crop, slots[slot].height);
+        if (!assets) return false;
+        state.images[slot] = { image, crop, assets };
         schedule(state);
         return true;
     } catch {
@@ -309,6 +330,7 @@ export function readArenaLightingDiagnostics(canvas) {
     return { ready: Boolean(s.ground), seed: s.seed, light: s.light,
         demoFireball: s.demoFireball, demoTorch: s.demoTorch, wetResponse: s.wetResponse, mist: s.mist,
         sprites: Object.keys(s.images).sort(), showAnchors: s.showAnchors, physicsObjects: 0, legacyAssets: 0,
+        treeLighting: 'directional-firelit-billboards', treeOcclusion: 'source-alpha-projection',
         camera: { ...s.camera }, world: { ...world }, groundRecipe: 'approved-forest-trails' };
 }
 
