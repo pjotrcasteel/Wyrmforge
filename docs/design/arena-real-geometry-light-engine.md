@@ -31,6 +31,218 @@ actual warm fire, elemental spells and grounded practical light sources
 reveal nearby geometry. No global orange tint, fake ambient daylight or
 unbounded bloom. Essential combat UI/telegraphs must remain legible.
 
+## Universal visibility contract — one engine for every in-world pixel
+
+**OWNER LOCKED, 23 October 2026:** Not a Wet-Forest-only shader. The **same
+lighting/material/shadow/visibility engine** must own the appearance of all
+in-world visual geometry and animated pixel art in **Hunts, Town Square,
+interiors, any future scene or biome**: ground, buildings, NPCs, mage,
+Hollowed/Ashling/all enemies, trees, props, water, Wyrms and world VFX.
+No ordinary world sprite remains full-bright because it bypasses the engine.
+
+The rule is **physically motivated illumination, not a binary threshold**:
+as a light approaches, a receiver gets gradually brighter and acquires
+normal/material response; as it leaves, that receiver approaches dark. If
+ambient/sky/directional, local and emissive sources are ALL disabled in
+a diagnostic preset, **ordinary world imagery must resolve to black**,
+regardless of brightness embedded in source-color pixels. If material
+emission remains enabled, that surface may glow in darkness because it
+is itself a declared emitter. The HUD, menus, inventory text and screen-space
+accessibility/telegraph overlays are purposefully NOT world surfaces.
+
+Approximate scene model (stylization after linear-light composition):
+
+\`\`\`text
+lit linear RGB = albedo × (ambient + Σ[attenuated light × BRDF(normal, material)
+                                      × light-space shadow visibility])
+                + specular/reflection + deliberate emissive materials
+-> tone/exposure -> pixel-art sampling/quantization (when desirable) -> sRGB display
+\`\`\`
+
+The art identity is **Gothic darkness, not a mandatory pitch-black screen**
+during normal play. Moon/sky ambience, nearby fixtures and correctly
+registered emission are valid explicit sources, adjustable by scene.
+The night/zero-light inspector must not contain a secret player bloom or
+full-bright character exception. Player position, actionable threat
+telegraphs, UI and accessibility indications must still be fair: separate
+screen-space readability channels or actual authored emissive world
+indicators, NOT hidden global daylight that negates the engine.
+
+### Additional architecture gaps found during audit
+
+- **Lighting versus authored pixel colors:** all regular visual assets use
+  light-neutral albedo/color + independent material, normals/roughness,
+  height/depth and authored occluder/receiver data. An already-lit panorama
+  or enemy frame has highlights and shadows that cannot be "unbaked" by a
+  dynamic black overlay. Preserve original paintings and source assets;
+  create new *approved* derivative passes rather than overwriting them.
+- **A single linear-light working space:** albedo/emissive color textures
+  are decoded from sRGB; normal/height/roughness/masks are **non-color data**;
+  lighting and reflection accumulation are linear; output gets exactly one
+  tone/exposure and sRGB conversion. Prevent CSS brightness/filter
+  re-application and double night veils over scenes.
+- **One camera/depth/world coordinate convention:** sprites and meshes
+  share a fixed 2.5D camera, world X/Y/Z, feet/pivots, height, vertical
+  depth and optional billboard facing convention. NPC front/behind props
+  sorting and gameplay collision remain separately authored. A sprite's
+  ground foot collision doesn't describe its light-occluding canopy/body.
+- **One light/occlusion pipeline:** alpha-clipped layered foliage,
+  characters, roofs/architecture, particles, wet ground and props
+  cast/receive shadows as their representation permits. A sprite normal
+  map supplies orientation but **cannot itself cast volumetric shadows**;
+  use depth/height/occluder geometry, authored layers or reused low-poly
+  meshes when needed. Re-rendering one 2D global shadow mask and tinting
+  every asset is not a full material/occlusion engine.
+- **Transparent and emissive world VFX:** fire cores, runes, spell trails,
+  windows and crystals may visibly emit in otherwise dark scenes if their
+  material is emissive; to light neighboring surfaces they also register
+  LightEmitter data. Smoke/mist/alpha particles must compose with depth
+  and receive/scatter light as their selected quality tier permits. Do
+  not keep otherwise unlit VFX globally bright by ignoring scene visibility.
+- **Reflection and indirect illumination:** water, puddles, glazed stone,
+  armour and other reflective materials respond to the same light through
+  roughness/normals/reflectivity and an explicit reflection-quality tier.
+  A bright specular spot ≠ an actual reflected tree/actor. Probes, selected
+  planar captures or documented screen-space fallbacks are optional,
+  budgeted and testable. Baked AO/static indirect light may help mobile,
+  but dynamic direct fixtures cannot be counted twice as both baked
+  bright scenery and realtime light.
+- **Mobile art-style control:** fix the world-to-pixel ratio and light/shadow
+  sampling grid; clamp/quantize/dither lighting only after physically
+  coherent visibility. Ensure sprite nearest-neighbor sampling and light
+  edges are temporally stable under panning, swiping, animated sprites,
+  moving lights and device resolution. HDR/tone mapping should not
+  erase a previously-approved palette or flood the world with bloom.
+- **Scene audit and rollout are mandatory:** enumerate the *real draw paths*
+  of Town, NPCs, enemies, mage, arenas, dragon art, world effects and
+  painted foreground layers. Mark each as material-lit, needs geometry
+  or relightable art, emissive, or UI-only. Do not claim "one engine for
+  all pixel art" while any gameplay-facing world sprite bypasses it.
+  A staged rollout is fine; an isolated GPU proof is not a complete migration.
+
+### Evidence of current bypasses — confirmed on main 23 October 2026
+
+- \`Features/Forge/CanonicalTownView.razor\` currently composites
+  \`wwwroot/art/town/night-active.webp\` (a **pre-lit 1672×941** full-scene
+  painting), \`night-vacant-*.png\` for unavailable buildings,
+  school-specific Nexus artwork and DOM/canvas NPC layers. It cannot
+  dynamically shade bricks, arches, roofs, floor and passers-by as one
+  consistent material/depth scene.
+- \`wwwroot/css/town-canonical.css\`, \`wwwroot/js/town-lighting.js\`
+  and Nexus radiance code include distinct painting/brightness/clock
+  behavior. Town day/night Auto/Day/Night settings exist in canon;
+  confirm active runtime scripts on \`main\` before cutover, rather than
+  assuming switching code is disabled. A sun/moon setting becomes an
+  **environment LightProfile** processed by the same renderer, not a
+  separate day-lit panorama replacement.
+- \`wwwroot/js/arena-night-lighting.js\` uses a dark canvas mask
+  with radial holes and warm color overlay. \`arena-enemy-art.js\`,
+  \`arena-mage.js\` and \`hollow-sprites.js\` have source-specific
+  highlighting/filters. These are historical prototypes, NOT the
+  lighting authority when the new renderer is adopted.
+- The existing \`Hollowed\`/\`Ashling\` use rigged sprite/animation
+  approaches. **The present mage character/sprite is TEMPORARY and will
+  be replaced using the SAME character sprite/animation architecture
+  as Hollowed and Ashling.** Do not rebuild or "final-lighting-polish"
+  the disposable mage asset, create a new bespoke mage renderer, or
+  alter C# character/gameplay. The shared character \`LitSprite\`,
+  pose/frame normal/depth/occluder/material and animation binding
+  must support all three (and future characters) via data; test
+  Hollowed and Ashling now, verify the replacement mage on adoption.
+- \`RefugeTownActors\`, \`night-navigation.json\`,
+  \`refuge-foreground-cutouts.js\` and \`town-v2-nexus.js\`
+  contain existing authored NPC foot-collision, zoning, parallax and
+  foreground-occlusion rules. **These are useful scene metadata to
+  preserve and transform**, not reasons to discard the whole town.
+
+## Town Square relighting — mandatory project slice, not a filter
+
+**Rebuild the Town Square's *renderable asset decomposition*, NOT its
+approved layout, art identity, navigation or gameplay.** A single pre-lit
+night/day panorama bakes the illuminance, material and shadow direction
+into ordinary color pixels. It is impossible to obtain physically
+consistent moving firelight, accurate actor shadow receiving, varied
+roughness or correct building depth by merely overlaying another GPU
+light pass on that flattened result.
+
+**Preserve:** three horizontal districts and default central view, all
+four building Active/Vacant states and unlock logic, six independent
+Arcane Nexus school artworks with mastery intensity, World Gate,
+well/noticeboard, walking NPCs, their feet-depth masking/collision,
+existing named paths/occluders, interactive hotspots, original approved
+panoramas and eight active/vacant source paintings. Do not overwrite
+owner-approved art or substitute new architecture without approval.
+
+**Build in parallel as a gated migration:**
+
+1. Archive a reference screenshot matrix of current game town:
+   four building states, six Nexus school variants, NPC foreground/
+   well/board occlusion, daytime and nighttime settings, phone 320/390
+   and desktop. Record approved source assets/locations and camera.
+2. Create new **relightable scene layers** from original geometry/art:
+   neutral paving/stone ground, building walls/roofs/windows/doors,
+   well, noticeboard posts, trees/flowerbeds, gate and foreground
+   occlusion. Each has world transform/height, material, receiver/caster
+   geometry (or tiered sprite depth/normal passes), appropriate
+   alpha, material IDs and independently authored emissive surfaces.
+   Do not infer actual solid/light geometry from RGB image alone.
+   Use new editable source files/approved derivative layers; leave
+   canonical images untouched until owner accepts replacements.
+3. Every fixture/source registers its **same typed LightEmitter**:
+   gate lanterns, street torches, active building windows, Blacksmith
+   forge, Nexus color per active school/mastery. Vacant buildings
+   have NO occupants/source fixtures unless world state says so.
+   Emitted light can reach ground, architecture, NPCs and foreground
+   props and be blocked by roof/wall/foliage depth. The existing Nexus
+   recolored artwork cannot *pretend* to illuminate the ground;
+   its registered engine light must actually do so.
+4. The existing device-local **Auto/Day/Night** town preference
+   becomes a shared environment \`LightProfile\` (sun/moon angle,
+   sky ambient/intensity, exposure), using ONE renderer and ONE
+   material set. Hunts can be night-only using the same system with
+   a different environment profile. Never bake/select a different
+   entire town image as the new lighting technique.
+5. Town NPCs use the same character-sprite lighting material as
+   Hollowed and Ashling; share frame/pose transform, authored normal/
+   depth/occluder, cast/receive and emissive rules. Preserve NPC
+   route/foot collisions and accepted visibility masking across
+   the well and both noticeboard posts.
+6. Validate world-wide zero-light diagnostic (no fixture, no
+   moon/ambient, no emissive): all **world** art is black while
+   UI/hotspots are still safely navigable through explicit
+   non-world accessibility controls. With a torch, walls and
+   characters brighten only within visible non-occluded range.
+   Compare identical camera and geometry in day/night profiles.
+   Ensure building vacancy/unlock state alters both artwork and
+   emitter registry without ghost light; no duplicate illumination
+   from baked highlights.
+7. Benchmark the separated static geometry/layers, dynamic NPCs,
+   shadow lights and reflections on real phones. A generic render
+   bridge for Town should share common \`LightingSystem\` modules
+   with Hunts; **never create a second \`TownLightingEngine\`**.
+
+**Schedule impact:** G0/G1 universal renderer and a representative
+mini-town corner (one lantern, wall/roof, NPC, paving and wet puddle)
+must validate the contract *before* migrating the entire panorama.
+Actual town decompositions/camera/art signoff is its own staged G4/G5
+migration with gameplay interaction regression gates. Document the
+necessary source reauthoring openly rather than promising the flat
+panorama can be automatically relit.
+
+### Universal-engine acceptance matrix (add to G1 and final migration)
+
+| Test | Required result |
+| --- | --- |
+| **Black-world diagnostic** | All sources, ambient and emissions zero: **all world-space assets black**, not just the Wet Forest; HUD/debug unaffected |
+| **New light + ordinary asset** | Register torch/crystal/rune with descriptors ONLY; it illuminates Hunt terrain, town wall/paving, NPC/enemy and reflective puddle without modifying renderer source |
+| **Walls and occlusion** | Same source is blocked by walls/roof/foliage; NPC/tree/character cast and receive coherent moving shadows, no light through solid scenery |
+| **Animated actor** | Hollowed and Ashling receive proper pose-aware light and cast; mage will share identical bindings **after its replacement**, not special casing the temporary mage |
+| **Town school state** | Changing active Nexus school/mastery changes emitted light color/intensity and lit nearby surfaces through engine; vacant means no unauthorized window/rune light |
+| **Town day/night preference** | Shared environment profile changes sun/moon/ambient within engine; architecture, actor materials, collision, camera and progress remain identical |
+| **Water/reflection** | Reflections and glints follow true source location/occlusion, roughness and water normals; no permanent painted reflection |
+| **Pixel-art style** | Correct color-space/tone, frame-to-frame stable light boundaries, crisp sprites, no indiscriminate blurry HDR glow |
+| **Interaction** | Existing town hotspots, NPC walkability, foreground masking, building unlocks, mobile swipe and accessibility remain unchanged after renderer cutover |
+
 ## System boundary: three reusable contracts, no per-asset renderer rules
 
 ### 1. Light emitter (declarative component)
