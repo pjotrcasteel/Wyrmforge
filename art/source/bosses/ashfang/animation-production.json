@@ -1,5 +1,5 @@
 {
-  "status": "Aggressive performance revision 002 in production after owner rejected weak motion in foundation 001",
+  "status": "Aggressive source and directional export complete; final full-player and atlas-retrieval checks pending",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -77,17 +77,19 @@
   "authoredClips": 41,
   "currentMotionSource": "archive/motion-library-014/ashfang-animations.blend",
   "sourceValidationPassed": true,
-  "exportStatus": "Rendering performance revision 002 in four independent GPU batches; foundation 001 preserved",
+  "exportStatus": "41 clips; 7736 directional frames; 656 atlases; all master pixels verified",
   "resumeNote": "PAUSED.md",
   "packedMaster": "archive/motion-foundation-002-packed/ashfang-animation-foundation.blend",
   "rigFamily": "zagmatorah-112/v1",
   "scaleTwoProofPassed": true,
   "exportProgress": {
+    "completedPackedClips": 41,
     "expectedClips": 41,
+    "completedPackedDirectionalFrames": 7736,
     "expectedDirectionalFrames": 7736,
-    "status": "incomplete; render continues",
-    "completedPackedClips": 16,
-    "completedPackedDirectionalFrames": 4080
+    "masterAtlases": 328,
+    "runtimeAtlases": 328,
+    "status": "complete candidate"
   },
   "browserValidationPassed": true,
   "remaining": [
