@@ -49,6 +49,7 @@ test('magic source pixels take on all five other school hues', () => {
 test('architecture and non-Nexus portions of the panorama are never repainted', () => {
     assert.equal(recolorNexusPixel(...spellPurple, 'fire', 24, 1000, 200), null);
     assert.equal(recolorNexusPixel(...spellPurple, 'fire', 24, 310, 650), null);
+    assert.equal(recolorNexusPixel(...spellPurple, 'fire', 24, 310, 353), null, 'Blacksmith boundary must never be repainted');
     assert.equal(recolorNexusPixel(95, 74, 82, 'fire', 24, 310, 117), null, 'stone must be unchanged');
     assert.equal(recolorNexusPixel(66, 118, 212, 'fire', 24, 310, 117), null, 'blue window must be unchanged');
     assert.equal(recolorNexusPixel(210, 85, 59, 'fire', 24, 310, 117), null, 'torch must be unchanged');
