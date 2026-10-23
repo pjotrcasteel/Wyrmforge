@@ -109,21 +109,68 @@ def taper_segment(name, start, end, radius_start, radius_end, mat, rng, segments
 
 
 def clusters(rng, origin, radius, amount, leaf_materials):
-    for index in range(amount):
-        x = rng.gauss(0, .56) * radius
-        y = rng.gauss(0, .56) * radius
-        z = rng.uniform(-.29, .40) * radius
-        size = radius * rng.uniform(.22, .42)
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=1,
-            location=origin + Vector((x, y, z)))
-        obj = bpy.context.object
-        obj.name = f"Foliage_cluster_{index:03}"
-        obj.scale = (size * rng.uniform(.95, 1.45),
-                     size * rng.uniform(.6, 1.02),
-                     size * rng.uniform(.48, .82))
-        obj.rotation_euler[2] = rng.uniform(-math.pi, math.pi)
-        obj.data.materials.append(rng.choice(leaf_materials))
+    """Real leaf silhouettes with air between clusters, not low-poly foliage blobs.
 
+    One editable mesh per branch crown, made of individually oriented, bent
+    four-triangle leaves. Leaf palette and geometry vary deterministically.
+    The mesh has no background, ground decal, baked shadow or billboard atlas.
+    """
+    vertices, faces, face_materials = [], [], []
+    up = Vector((0, 0, 1))
+    for group in range(amount):
+        center = origin + Vector((
+            rng.gauss(0, .57) * radius,
+            rng.gauss(0, .57) * radius,
+            rng.uniform(-.36, .38) * radius,
+        ))
+        # The first/last sprays are deliberately sparse: holes make the crown
+        # read as branching foliage instead of a single solid oval mass.
+        leaf_count = rng.randint(13, 24)
+        for leaf in range(leaf_count):
+            anchor = center + Vector((
+                rng.gauss(0, .16) * radius,
+                rng.gauss(0, .16) * radius,
+                rng.gauss(0, .12) * radius,
+            ))
+            direction = Vector((
+                rng.uniform(-1, 1),
+                rng.uniform(-1, 1),
+                rng.uniform(-.25, .72),
+            )).normalized()
+            side = direction.cross(up)
+            if side.length < .15:
+                side = direction.cross(Vector((0, 1, 0)))
+            side.normalize()
+            size = radius * rng.uniform(.17, .33)
+            width = size * rng.uniform(.24, .42)
+            twist = rng.uniform(-.28, .28)
+            middle = anchor + direction * (size * .53) + up * (size * twist)
+            tip = anchor + direction * size + up * (size * twist * .35)
+            first = len(vertices)
+            vertices.extend((
+                anchor,
+                middle + side * width,
+                middle + up * (size * .09),
+                middle - side * width,
+                tip,
+            ))
+            faces.extend((
+                (first, first + 1, first + 2),
+                (first, first + 2, first + 3),
+                (first + 1, first + 4, first + 2),
+                (first + 2, first + 4, first + 3),
+            ))
+            face_materials.extend([rng.randrange(len(leaf_materials))] * 4)
+
+    mesh = bpy.data.meshes.new("Organic individual oak leaves")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new("Leaf sprays - independently editable", mesh)
+    bpy.context.collection.objects.link(obj)
+    for leaf_material in leaf_materials:
+        obj.data.materials.append(leaf_material)
+    for polygon, index in zip(obj.data.polygons, face_materials):
+        polygon.material_index = index
 
 def build_tree(config):
     rng = random.Random(config["seed"])
@@ -162,9 +209,9 @@ def build_tree(config):
     branches = []
     for n in range(12 if living else 16):
         t = .30 + .62 * (n / (16 if living else 19))
-        around = n * 2.4 + rng.uniform(-.3, .3)
+        around = n * 2.4 + rng.uniform(-.85 if not living else -.38, .85 if not living else .38)
         start = trunk_start.lerp(trunk_top, t)
-        length = (1.9 if living else 2.4) * (1.2 - t * .25) * rng.uniform(.72, 1.25)
+        length = (1.9 if living else 2.4) * (1.2 - t * .25) * rng.uniform(.45 if not living else .72, 1.28)
         end = start + Vector((math.cos(around) * length,
                               math.sin(around) * length,
                               rng.uniform(.6, 1.8)))
@@ -172,7 +219,7 @@ def build_tree(config):
         taper_segment("Asymmetric skeletal branch", start, end,
             .20 * (1 - t * .5), .025 if living else .012,
             bark if rng.random() > .2 else exposed, rng)
-        for fork in range(2 if living else 3):
+        for fork in range(2 if living else rng.randrange(0, 3)):
             side = end + Vector((rng.uniform(-.85, .85),
                                  rng.uniform(-.85, .85),
                                  rng.uniform(.4, 1.25)))
