@@ -236,15 +236,30 @@
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
 
 
-/* Six separately baked canonical Nexus art variants. Transparent everywhere
-   outside the real magic. Never filter the original approved town painting. */
+/* Six independently painted, user-approved Nexus building variants.
+   Alpha plate pixels are in the left 560 x 450 of the authoritative 1672 x 941
+   night town panorama. Other buildings, vacant artwork and navigation are untouched. */
 .game-shell.refuge-home .refuge-town-nexus-school-art {
-    position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;
+    position:absolute;left:0;top:0;z-index:1;
+    display:block;width:33.49282%;height:47.82147%;
     object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none;
 }
 .game-shell.refuge-home .refuge-town-nexus-school-art--mastery {
-    opacity:calc(var(--nexus-radiance-strength, .16) * .24);
+    opacity:calc(var(--nexus-radiance-strength, .16) * .20);
     mix-blend-mode:screen;
+    /* Illuminate only existing magical crystals, portals and runes—not roofs,
+       masonry, other buildings or the ground. These are lighting masks, not
+       color filters; all six source paintings are already different artwork. */
+    -webkit-mask-image:
+        radial-gradient(ellipse 8% 10% at 55% 28%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 12% at 76% 65%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 8% at 42% 83%,#000 46%,transparent 100%),
+        radial-gradient(ellipse 5% 6% at 11% 75%,#000 43%,transparent 100%);
+    mask-image:
+        radial-gradient(ellipse 8% 10% at 55% 28%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 12% at 76% 65%,#000 48%,transparent 100%),
+        radial-gradient(ellipse 7% 8% at 42% 83%,#000 46%,transparent 100%),
+        radial-gradient(ellipse 5% 6% at 11% 75%,#000 43%,transparent 100%);
 }
 @media (prefers-reduced-motion:reduce) {
     .game-shell.refuge-home .refuge-town-nexus-school-art--mastery {animation:none;}
