@@ -79,16 +79,29 @@
                 <input type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
             </label>
             <span class="feedback">@oakStatus</span>
+            <label>Ancient oak camera-space normal PNG (optional)
+                <input id="oak-normal-map" type="file" accept="image/png" @ref="oakNormalPicker" @onchange="LoadOakNormal" />
+            </label>
+            <span class="feedback">@oakNormalStatus</span>
             <label>Dead elm PNG
                 <input type="file" accept="image/png,image/webp" @ref="elmPicker" @onchange="LoadElm" />
             </label>
             <span class="feedback">@elmStatus</span>
+            <label>Dead elm camera-space normal PNG (optional)
+                <input id="elm-normal-map" type="file" accept="image/png" @ref="elmNormalPicker" @onchange="LoadElmNormal" />
+            </label>
+            <span class="feedback">@elmNormalStatus</span>
             <h3>Acceptance scope</h3>
             <p>Drag inside the canvas to pan; the light, tree anchors and approved ground share world coordinates.</p>
             <p>The Fireball moves above the ground while warm light reveals the same approved material
                 textures, optional original tree sprites, and local atmosphere. Disable flight animation
                 to scrub its position and compare identical screenshots at 320px and 390px.</p>
-            <p><strong>L4 tree depth:</strong> actual opaque canopy/branch silhouettes now block the
+            <p><strong>L4 tree depth:</strong> upload the original RGBA candidate first,
+                then its matching <code>*-camera-normals.png</code> from the updated
+                <a href="https://github.com/pjotrcasteel/Wyrmforge/pull/307">editable Blender source pipeline</a>.
+                Actual 3D surface normals allow Fireball light to wrap across bark and
+                branches; without a normal PNG, a weaker 2D direction-gradient fallback is used.</p>
+            <p><strong>Cast shadow:</strong> actual opaque canopy/branch silhouettes now block the
                 light on the illuminated ground. Fireball direction moves those shadows, and the
                 facing trunk and foliage catch warm light while the opposite side stays dark.
                 The <strong>Ground + cast shadows</strong> switch shows that difference directly.
@@ -110,6 +123,8 @@
     private ElementReference canvas;
     private ElementReference oakPicker;
     private ElementReference elmPicker;
+    private ElementReference oakNormalPicker;
+    private ElementReference elmNormalPicker;
     private IJSObjectReference? module;
     private int seed = 1204;
     private int ambientPercent = 90;
@@ -125,12 +140,14 @@
     private bool showAnchors;
     private string oakStatus = "No image selected";
     private string elmStatus = "No image selected";
+    private string oakNormalStatus = "No normal map selected; 2D fallback";
+    private string elmNormalStatus = "No normal map selected; 2D fallback";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
-            "./js/arena-lighting-lab.js?v=20261023-l4-silhouette-1");
+            "./js/arena-lighting-lab.js?v=20261023-l4-3d-normals-1");
         await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
     }
 
@@ -166,6 +183,20 @@
         elmStatus = module is not null && await module.InvokeAsync<bool>(
             "loadArenaLightingSprite", canvas, elmPicker, "elm")
             ? "Original candidate loaded (review only)" : "Invalid or missing image";
+    }
+
+    private async Task LoadOakNormal(ChangeEventArgs _)
+    {
+        oakNormalStatus = module is not null && await module.InvokeAsync<bool>(
+            "loadArenaLightingNormal", canvas, oakNormalPicker, "oak")
+            ? "Genuine Blender normals loaded (review only)" : "Load the matching oak RGBA PNG first";
+    }
+
+    private async Task LoadElmNormal(ChangeEventArgs _)
+    {
+        elmNormalStatus = module is not null && await module.InvokeAsync<bool>(
+            "loadArenaLightingNormal", canvas, elmNormalPicker, "elm")
+            ? "Genuine Blender normals loaded (review only)" : "Load the matching elm RGBA PNG first";
     }
 
     public async ValueTask DisposeAsync()
