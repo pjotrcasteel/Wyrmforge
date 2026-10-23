@@ -30,10 +30,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var painting = scene.Locator("[data-nexus-school-art]");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
-        await Expect(painting).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/fire\.png"));
+        await Expect(painting).ToHaveAttributeAsync("src", new Regex(@"nexus-approved/fire\.webp"));
         await Page.WaitForFunctionAsync(@"() => {
             const image = document.querySelector('[data-nexus-school-art]');
-            return image?.complete && image.naturalWidth === 1672;
+            return image?.complete && image.naturalWidth === 560 && image.naturalHeight === 450;
         }");
         await Expect(scene.Locator("[data-nexus-school-mastery]")).ToHaveCountAsync(0);
         await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
@@ -73,23 +73,23 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var scene = Page.Locator(".refuge-canonical-scene");
         var asset = scene.Locator("[data-nexus-school-art]");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
-        await Expect(asset).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/" + key + @"\.png"));
+        await Expect(asset).ToHaveAttributeAsync("src", new Regex(@"nexus-approved/" + key + @"\.webp"));
         await Expect(asset).ToBeVisibleAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const image = document.querySelector('[data-nexus-school-art]');
-            return image?.complete && image.naturalWidth === 1672;
+            return image?.complete && image.naturalWidth === 560 && image.naturalHeight === 450;
         }");
         Assert.IsTrue(await asset.EvaluateAsync<bool>(@"img => {
-            if (!img.complete || img.naturalWidth !== 1672 || img.naturalHeight !== 941) return false;
+            if (!img.complete || img.naturalWidth !== 560 || img.naturalHeight !== 450) return false;
             const canvas = document.createElement('canvas');
-            canvas.width = 1672; canvas.height = 941;
+            canvas.width = 560; canvas.height = 450;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img,0,0);
             const magic = ctx.getImageData(300,110,30,40).data;
             const containsMagic = magic.some((value,index) => index%4===3 && value>150);
             return containsMagic &&
-                ctx.getImageData(800,400,1,1).data[3]===0 &&
-                ctx.getImageData(1200,200,1,1).data[3]===0;
+                ctx.getImageData(559,20,1,1).data[3]===0 &&
+                ctx.getImageData(550,445,1,1).data[3]===0;
         }"), "The school must have visible baked magic and transparent pixels everywhere outside the Nexus.");
         await Expect(scene.Locator(".refuge-town-night-base")).ToHaveAttributeAsync("src", new Regex("night-active.webp"));
         await Expect(scene.Locator(".refuge-town-nexus-pixels")).ToHaveCountAsync(0);
@@ -118,10 +118,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 await Page.Locator("[data-nexus-preview-school='" + key + "']").ClickAsync();
             await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
             await Expect(scene.Locator("[data-nexus-school-art]")).ToHaveAttributeAsync(
-                "src", new Regex(@"nexus-schools/" + key + @"\.png"));
+                "src", new Regex(@"nexus-approved/" + key + @"\.webp"));
             await Page.WaitForFunctionAsync(@"() => {
                 const image = document.querySelector('[data-nexus-school-art]');
-                return image?.complete && image.naturalWidth === 1672;
+                return image?.complete && image.naturalWidth === 560 && image.naturalHeight === 450;
             }");
             await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
             await ScreenshotAsync($"nexus-debug-{key}-390.png");

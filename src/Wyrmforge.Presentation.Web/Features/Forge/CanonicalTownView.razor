@@ -16,19 +16,21 @@
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
-        @* Six individually baked, first-party school images, aligned to the exact
-           canonical panorama. No runtime painting, hue filters or CSS recoloring.
-           Images precede vacancy art so other buildings can cover their own areas. *@
+        @* Six original, owner-approved building paintings—not runtime recolors.
+           Cropped assets are registered to x=0..560, y=0..450 of the canonical
+           1672x941 panorama and precede independent vacant building overlays. *@
         @if (NexusArtworkUnlocked && DisplayNexusSchool is { } artworkSchool)
         {
-            var painting = $"art/town/nexus-schools/{artworkSchool.ToString().ToLowerInvariant()}.png?v=1";
+            var schoolName = artworkSchool.ToString().ToLowerInvariant();
+            var painting = $"art/town/nexus-approved/{schoolName}.webp?v=1";
             <img class="refuge-town-nexus-school-art" data-nexus-school-art="true"
-                 data-nexus-school="@artworkSchool.ToString().ToLowerInvariant()"
-                 src="@painting" width="1672" height="941" alt="" aria-hidden="true" draggable="false" />
-            @if (NexusMasteryPoints > 0 && artworkSchool != PassiveSchool.Arcane)
+                 data-nexus-school="@schoolName" src="@painting"
+                 width="560" height="450" alt="" aria-hidden="true" draggable="false" />
+            @if (NexusMasteryPoints > 0)
             {
                 <img class="refuge-town-nexus-school-art refuge-town-nexus-school-art--mastery"
-                     data-nexus-school-mastery="true" src="@painting" width="1672" height="941"
+                     data-nexus-school-mastery="true" data-nexus-school="@schoolName"
+                     src="@painting" width="560" height="450"
                      style="@TownNexusRadiance.Style(NexusMasteryPoints)"
                      alt="" aria-hidden="true" draggable="false" />
             }
