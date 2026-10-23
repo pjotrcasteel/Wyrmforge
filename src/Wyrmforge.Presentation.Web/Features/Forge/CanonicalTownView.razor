@@ -11,12 +11,12 @@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
     <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
-         data-nexus-school="@(NexusSchool?.ToString().ToLowerInvariant() ?? "none")"
+         data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
          data-nexus-mastery-points="@NexusMasteryPoints">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
-        @if (!NexusUnlocked)
+        @if (!NexusArtworkUnlocked)
         {
             <img class="refuge-town-vacant-layer" src="art/town/night-vacant-ArcaneNexus.png?v=140"
                  style="left:0%;top:0%;width:36.9617%;height:61.8491%" alt="" draggable="false" />
@@ -39,14 +39,23 @@
 
         @* A localized colored light, not an edit/filter of the approved town painting.
            Render beneath the NPC/cutout strata; do not cover an unbuilt Nexus. *@
-        @if (NexusUnlocked && NexusSchool is not null)
+        @if (NexusArtworkUnlocked && DisplayNexusSchool is { } displaySchool)
         {
-            @* Tint only the existing magical dome aperture and portal, never the masonry. *@
-            <div class="refuge-town-nexus-chroma" data-nexus-emitter-color="true"
-                 data-nexus-school="@NexusSchool.Value.ToString().ToLowerInvariant()" aria-hidden="true"></div>
-            <div class="refuge-town-nexus-radiance" data-nexus-radiance="true"
-                 data-nexus-school="@NexusSchool.Value.ToString().ToLowerInvariant()"
-                 style="@TownNexusRadiance.Style(NexusMasteryPoints)" aria-hidden="true"></div>
+            @* Arcane stays exactly as painted. Other schools recolor only existing
+               violet magic pixels, without generating or editing building artwork. *@
+            @if (displaySchool != PassiveSchool.Arcane)
+            {
+                <div class="refuge-town-nexus-chroma" data-nexus-emitter-color="true"
+                     data-nexus-school="@displaySchool.ToString().ToLowerInvariant()" aria-hidden="true"></div>
+            }
+            <canvas class="refuge-town-nexus-pixels" data-nexus-pixels="true"
+                    width="1672" height="941" aria-hidden="true"></canvas>
+            @if (NexusArtworkUnlocked)
+            {
+                <div class="refuge-town-nexus-radiance" data-nexus-radiance="true"
+                     data-nexus-school="@displaySchool.ToString().ToLowerInvariant()"
+                     style="@TownNexusRadiance.Style(NexusMasteryPoints)" aria-hidden="true"></div>
+            }
         }
 
         @if (showTownV2)
@@ -196,6 +205,19 @@
                 data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
                 @onclick="() => OnGate.InvokeAsync()"></button>
     </div>
+    @if (NexusPreviewSchool is not null)
+    {
+        <div class="refuge-town-nexus-preview-controls" role="group" aria-label="Debug Nexus building palette">
+            <button type="button" data-nexus-preview-school="auto"
+                    @onclick="() => OnNexusPreviewChanged.InvokeAsync(null)">Auto</button>
+            @foreach (var school in Enum.GetValues<PassiveSchool>())
+            {
+                <button type="button" @key="school" data-nexus-preview-school="@school.ToString().ToLowerInvariant()"
+                        aria-pressed="@(NexusPreviewSchool == school ? "true" : "false")"
+                        @onclick="() => OnNexusPreviewChanged.InvokeAsync(school)">@school</button>
+            }
+        </div>
+    }
     @if (showTownMetrics)
     {
         <output id="refuge-town-performance" class="refuge-town-performance"
@@ -240,6 +262,8 @@
     private DotNetObjectReference<CanonicalTownView>? routeClickReference;
     private bool foregroundMounted;
     private bool showTownV2;
+    private IJSObjectReference? nexusVariantModule;
+    private string? lastNexusRenderKey;
     private IJSObjectReference? townV2Module;
     private bool townV2Mounted;
 
@@ -288,6 +312,29 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (NexusArtworkUnlocked && DisplayNexusSchool is { } school)
+        {
+            var renderKey = school.ToString() + ":" + NexusMasteryPoints;
+            if (lastNexusRenderKey != renderKey)
+            {
+                try
+                {
+                    nexusVariantModule ??= await JS.InvokeAsync<IJSObjectReference>(
+                        "import", "./js/town-nexus-variants.js?v=1");
+                    await nexusVariantModule.InvokeVoidAsync("syncNexusVariant", ".refuge-canonical-scene");
+                    lastNexusRenderKey = renderKey;
+                }
+                catch (JSException exception)
+                {
+                    Logger.LogWarning(exception, "Nexus palette not available; retaining localized CSS color fallback.");
+                }
+            }
+        }
+        else
+        {
+            lastNexusRenderKey = null;
+        }
+
         if (showTownV2)
         {
             if (townV2Mounted) return;
@@ -386,12 +433,18 @@
             _ = townV2Module.InvokeVoidAsync("disposeTownV2Nexus", ".refuge-canonical-scene");
         if (townV2Module is not null)
             _ = townV2Module.DisposeAsync();
+        if (nexusVariantModule is not null)
+            _ = nexusVariantModule.DisposeAsync();
         if (foregroundModule is not null)
             _ = foregroundModule.DisposeAsync();
     }
 
     [Parameter] public bool NexusUnlocked { get; set; }
     [Parameter] public PassiveSchool? NexusSchool { get; set; }
+    [Parameter] public PassiveSchool? NexusPreviewSchool { get; set; }
+    [Parameter] public EventCallback<PassiveSchool?> OnNexusPreviewChanged { get; set; }
+    private PassiveSchool? DisplayNexusSchool => NexusPreviewSchool ?? NexusSchool;
+    private bool NexusArtworkUnlocked => NexusUnlocked || NexusPreviewSchool is not null;
     [Parameter] public int NexusMasteryPoints { get; set; }
     [Parameter] public bool ForgeUnlocked { get; set; }
     [Parameter] public bool CodexUnlocked { get; set; }

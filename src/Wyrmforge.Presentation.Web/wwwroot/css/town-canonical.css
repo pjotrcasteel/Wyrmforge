@@ -252,12 +252,22 @@
         radial-gradient(ellipse 11% 19% at 53% 17%,#000 51%,transparent 100%),
         radial-gradient(ellipse 8% 20% at 76% 82%,#000 54%,transparent 100%);
 }
-.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="fire"] { --nexus-emitter:255 177 59 }
+.game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="fire"] { --nexus-emitter:235 65 56 }
 .game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="frost"] { --nexus-emitter:160 238 255 }
 .game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="storm"] { --nexus-emitter:240 225 138 }
 .game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="arcane"] { --nexus-emitter:222 170 255 }
 .game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="death"] { --nexus-emitter:186 247 151 }
 .game-shell.refuge-home .refuge-town-nexus-chroma[data-nexus-school="binding"] { --nexus-emitter:175 251 231 }
+
+/* Pixel-replaced luminous source art: transparent outside selected violet magic.
+   Coordinates are the full canonical panorama; the original image stays unchanged. */
+.game-shell.refuge-home .refuge-town-nexus-pixels {
+    position:absolute;inset:0;z-index:0;width:100%;height:100%;
+    display:block;pointer-events:none;user-select:none;
+}
+.game-shell.refuge-home .refuge-canonical-scene[data-nexus-pixels-ready="true"] .refuge-town-nexus-chroma {
+    display:none;
+}
 
 /* Arcane Nexus magic grows with points invested in the currently followed school.
    The approved town image and vacant/active artwork remain completely unchanged.
@@ -280,16 +290,16 @@
     animation:nexus-magical-light 7s ease-in-out infinite;
 }
 .game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="fire"] {
-    --nexus-light: 242 83 32;
-    --nexus-light-core: 255 177 59;
+    --nexus-light: 190 35 29;
+    --nexus-light-core: 245 77 61;
 }
 .game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="frost"] {
     --nexus-light: 71 191 247;
     --nexus-light-core: 185 241 255;
 }
 .game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="storm"] {
-    --nexus-light: 105 141 252;
-    --nexus-light-core: 240 225 138;
+    --nexus-light: 213 173 42;
+    --nexus-light-core: 251 226 107;
 }
 .game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="arcane"] {
     --nexus-light: 153 96 242;
@@ -309,4 +319,40 @@
 }
 @media (prefers-reduced-motion:reduce) {
     .game-shell.refuge-home .refuge-town-nexus-radiance { animation:none; }
+}
+
+/* Slightly unstable Fire magic, constrained to its own light layer.
+   Accessibility preference turns this off; investment remains authoritative. */
+.game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="fire"] {
+    animation:nexus-fire-flicker 5.6s step-end infinite;
+}
+@keyframes nexus-fire-flicker {
+    0%,8%,15%,46%,53%,79%,100% { transform:scale(1); }
+    9%,48% { transform:scale(.985); }
+    13%,51%,81% { transform:scale(1.018); }
+}
+
+/* Only when Settings > Debug selects a preview. Never changes game/unlock hitboxes. */
+.game-shell.refuge-home .refuge-town-nexus-preview-controls {
+    position:fixed;left:8px;bottom:calc(73px + env(safe-area-inset-bottom, 0px));
+    z-index:12051;display:flex;flex-wrap:wrap;gap:4px;
+    max-width:min(355px,calc(100vw - 16px));padding:5px;
+    border:1px solid #d1af8a9c;border-radius:7px;
+    background:#101824f2;box-shadow:0 4px 16px #0008;
+    pointer-events:auto;touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button {
+    min-height:42px;padding:6px 9px;border:1px solid #aa9578a0;
+    border-radius:4px;background:#283240;color:#f3e5cc;
+    font:600 11px/1.2 system-ui,sans-serif;cursor:pointer;
+    touch-action:manipulation;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button[aria-pressed="true"] {
+    border-color:#fff;background:#a1815b;color:#101824;
+}
+.game-shell.refuge-home .refuge-town-nexus-preview-controls button:focus-visible {
+    outline:2px solid #fff;outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce) {
+    .game-shell.refuge-home .refuge-town-nexus-radiance[data-nexus-school="fire"] {animation:none;}
 }
