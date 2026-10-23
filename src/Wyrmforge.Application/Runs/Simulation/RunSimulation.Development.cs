@@ -1,4 +1,5 @@
 ﻿using Wyrmforge.Application.Runs.Development;
+using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Domain.Progression.GreatHunt;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Spells;
@@ -22,6 +23,8 @@ public sealed partial class RunSimulation
         while (depthState.Depth < 2) depthState.PushDeeper();
         mapState = CreateSeededMapState(depthState.Depth);
         EnsurePlayerPosition(setup.Width, setup.Height);
+        if (setup.Environment)
+            arenaEnvironment = ArenaEnvironmentState.Create(mapState.Seed, mapState.Nodes.First(node => node.Type == WyrmrealmNodeType.Dragon));
 
         // A repeatable, evolved boss-ready spell; no Forge grants or saved progression.
         var spell = SpellCatalog.Get(setup.Spell);

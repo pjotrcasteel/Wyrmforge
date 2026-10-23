@@ -50,7 +50,7 @@
         <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
         <div class="hunt-lab-stage" aria-live="polite">
             <strong>@status</strong>
-            <span>@(paused ? "PAUSED" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
+            <span>@(paused ? "PAUSED" : ManualControl ? "LIVE CONTROLS • PRACTICE • NO PROGRESS" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
         </div>
     </section>
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
@@ -74,13 +74,15 @@
     private int seed = 1337;
     private bool invulnerable = true;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
-    [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool Casting { get; set; } = true;
+    [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastingQuery { get; set; }
+    private bool Casting = true;
     private bool paused;
     private string status = "PREPARING THE WYRMREALM";
     private RunAgentPersonality personality = RunAgentPersonality.Kiter;
 
     protected override void OnParametersSet()
     {
+        Casting = CastingQuery ?? true;
         if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
         if (AscendantQuery is { } a) variant = a ? "ascendant" : "ordinary";
         if (PhaseQuery is 1 or 2) phase = PhaseQuery.Value;
@@ -127,7 +129,7 @@
         };
         var build = SelfPlayBuildCatalog.All.First();
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting };
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting, Environment = true };
         simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(build.SelectedNodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";
