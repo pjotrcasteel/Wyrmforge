@@ -70,7 +70,7 @@ public sealed partial class RunSimulation
         UpdateDragonCombat(activeDragon, scaledDelta);
 
         var contactDamage = activeDragon.Definition.Combat.ContactDamagePerSecond * depthState.DragonDamageMultiplier;
-        if (delta > 0 && Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayerContact(contactDamage);
+        if (CanTargetActiveDragon && !ashfangFlight.Active && delta > 0 && Vector2D.Distance(activeDragon.Position, player.Position) <= activeDragon.Radius + player.Radius) DamagePlayerContact(contactDamage);
     }
 
     private void UpdateDragonEntrance(DragonState activeDragon, double delta, double width, double height)
@@ -92,6 +92,7 @@ public sealed partial class RunSimulation
 
     private void BeginDragonPhaseBreak(DragonState activeDragon)
     {
+        ashfangFlight.Reset();
         ashfangBehavior.Interrupt();
         activeDragon.TelegraphRemaining = 0;
         activeDragon.AttackCooldown = 1;
@@ -118,6 +119,7 @@ public sealed partial class RunSimulation
             dragonHuntHazards.RemoveAt(index);
         }
 
+        if (activeDragon.Definition.Id == DragonId.Ashfang && ashfangFlight.Active) return;
         if (!dragonHuntState.TickPressure(delta, activeDragon.Phase)) return;
         ScheduleDragonHuntPressure(activeDragon, width, height);
     }
@@ -138,6 +140,7 @@ public sealed partial class RunSimulation
 
     private void UpdateDragonHuntSignature(double delta, DragonState activeDragon, double width, double height)
     {
+        if (activeDragon.Definition.Id == DragonId.Ashfang && ashfangFlight.Active) return;
         if (!dragonHuntState.TickSignature(delta, activeDragon.Phase)) return;
         var signature = dragonHuntState.Profile?.Signature ?? throw new InvalidOperationException("Active dragon hunt requires a signature profile.");
         var radius = signature.Radius.For(activeDragon.Phase);
@@ -177,7 +180,7 @@ public sealed partial class RunSimulation
 
     private void UpdateDragonCombat(DragonState activeDragon, double delta)
     {
-        if (activeDragon.Definition.Id == DragonId.Ashfang) { UpdateAshfangCombat(activeDragon, delta); return; }
+        if (activeDragon.Definition.Id == DragonId.Ashfang) { if (!UpdateAshfangFlight(activeDragon, delta)) UpdateAshfangCombat(activeDragon, delta); return; }
         if (activeDragon.IsTelegraphing)
         {
             activeDragon.TelegraphRemaining -= delta;
@@ -192,6 +195,7 @@ public sealed partial class RunSimulation
 
     private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
+        ashfangFlight.Reset();
         ashfangBehavior.Interrupt();
         dragonAttackSequence = 0;
         dragonLastAttackAt = -1;
@@ -359,6 +363,7 @@ public sealed partial class RunSimulation
 
     private void ResetDragonHunt()
     {
+        ashfangFlight.Reset();
         ashfangBehavior.Interrupt();
         dragonDefeat = null;
         dragonHuntHazards.Clear();
@@ -388,6 +393,9 @@ public sealed partial class RunSimulation
         {
             IsAscendant = ascendantActive, Tier = activeDragon.Tier, EntityId = activeDragon.Id,
             AttackSequence = dragonAttackSequence,
+            FlightStage = definition.Id == DragonId.Ashfang ? ashfangFlight.Stage : null,
+            FlightProgress = ashfangFlight.Progress,
+            Targetable = CanTargetActiveDragon,
             Action = definition.Id == DragonId.Ashfang ? ashfangBehavior.Action : null,
             ActionPhase = definition.Id == DragonId.Ashfang ? ashfangBehavior.Phase : null,
             ActionProgress = ashfangBehavior.Progress,
@@ -417,7 +425,7 @@ public sealed partial class RunSimulation
 
     private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards
         .Select(hazard => new DragonHuntHazardRenderSnapshot(hazard.Position.X, hazard.Position.Y, hazard.Radius, hazard.Progress, hazard.School, hazard.Signature,
-            hazard.DelayRemaining <= 0))
+            hazard.DelayRemaining <= 0) { FromAbove = hazard.FromAbove })
         .ToArray();
 
     private static Vector2D ArenaPoint(DragonHuntPoint point, double width, double height) => new(point.X * width, point.Y * height);
@@ -436,8 +444,9 @@ public sealed partial class RunSimulation
         double delaySeconds,
         SpellId visualSpell,
         SpellSchool school,
-        DragonHuntSignatureKind? signature)
+        DragonHuntSignatureKind? signature, bool fromAbove = false)
     {
+        public bool FromAbove { get; } = fromAbove;
         public Vector2D Position { get; } = position;
         public double Radius { get; } = radius;
         public double Damage { get; } = damage;

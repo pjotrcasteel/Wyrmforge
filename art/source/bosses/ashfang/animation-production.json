@@ -175,5 +175,17 @@
     ],
     "remoteReceipt": "reviews/pixel-style-002/remote-receipt.json",
     "remoteVerified": true
+  },
+  "runtimeIntegration": {
+    "status": "implemented-awaiting-live-browser-validation",
+    "manifest": "exports/runtime-001/manifest.json",
+    "clips": 18,
+    "frames": 3272,
+    "atlasSheets": 144,
+    "tierIBaseline": "tier-I-scale-baseline.json",
+    "behavior": "reactive deterministic C# predator policy, committed warning/strike/recovery; aerial shadow/fire-rain/landing",
+    "renderer": "src/Wyrmforge.Presentation.Web/wwwroot/js/ashfang-sprites.js",
+    "notes": "RUNTIME-INTEGRATION.md",
+    "deployed": false
   }
 }

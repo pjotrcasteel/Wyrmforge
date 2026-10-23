@@ -50,3 +50,11 @@ test('Action phases map to authored impact poses and retain locked facing',()=>{
  const bite=m.selectAshfangMotion({...snapshot,dragon:{...dragon,action:'bite',actionPhase:'strike',actionProgress:0}},null,.05);
  assert.equal(bite.progress,.45);
 });
+test('Overhead phase draws only the shadow and takeoff/landing keep authoritative progress',()=>{
+ const takeoff=m.selectAshfangMotion({...snapshot,dragon:{...dragon,flightStage:'takeoff',flightProgress:.4}},null,.05);
+ assert.equal(takeoff.clip,'takeoff');assert.equal(takeoff.progress,.4);
+ const overhead=m.selectAshfangMotion({...snapshot,dragon:{...dragon,flightStage:'overhead',flightProgress:.4}},null,.05);
+ assert.equal(overhead.clip,'fly');assert.equal(overhead.shadow,true);
+ const land=m.selectAshfangMotion({...snapshot,dragon:{...dragon,flightStage:'land',flightProgress:.8}},null,.05);
+ assert.equal(land.clip,'land');assert.equal(land.progress,.8);assert.ok(!land.shadow);
+});

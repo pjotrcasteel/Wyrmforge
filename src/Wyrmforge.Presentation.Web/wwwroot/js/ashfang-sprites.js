@@ -25,6 +25,11 @@ export function selectAshfangMotion(snapshot,previous,dt){
   clip=hunt.entranceBeat===2?'fly':'land';progress=hunt.entranceBeatProgress;
   direction=spriteDirection(dx,dy,direction);
  }else if(hunt?.stage===3){clip='roar';progress=hunt.stageProgress;direction=spriteDirection(snapshot.player.x-dragon.x,snapshot.player.y-dragon.y,direction);}
+ else if(dragon.flightStage&&dragon.flightStage!=='ground'){
+  clip=dragon.flightStage==='takeoff'?'takeoff':dragon.flightStage==='overhead'?'fly':dragon.flightStage==='land'?'land':'idle';progress=dragon.flightStage==='overhead'?null:dragon.flightProgress;
+  direction=spriteDirection(dragon.directionX,dragon.directionY,direction);
+  return {clip,direction,progress,shadow:dragon.flightStage==='overhead',hidden:false};
+ }
  else if(dragon.action&&dragon.action!=='idle'&&dragon.actionPhase!=='ready'){
   direction=spriteDirection(dragon.directionX,dragon.directionY,direction);
   const phase=dragon.actionProgress;
@@ -70,6 +75,7 @@ export function updateAshfang(state,snapshot,seconds,reducedMotion=false){
   const desired=selectAshfangMotion(snapshot,old,dt);
   if(manifest){texture(desired.clip,desired.direction);
    if(desired.clip==='fly')texture('land',desired.direction);
+   if(desired.clip==='takeoff')texture('fly',desired.direction);
    if(desired.clip==='breath_start')texture('breath_loop',desired.direction);
    if(desired.clip==='breath_loop')texture('breath_end',desired.direction);
   }
@@ -105,15 +111,30 @@ function drawBody(ctx,state,p,death=false){
   im=state.lastDecoded.image;f=state.lastDecoded.frame;
  }else state.lastDecoded={image:im,frame:f};
  const scale=manifest.worldCell/manifest.cell*(p.radius/manifest.tierIRadius),[sx,sy,w,h]=f.rect;
- ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=death?Math.max(0,Math.min(1,8-p.age)):1;if(p.frozen)ctx.filter='sepia(1) saturate(1.6) hue-rotate(135deg)';
- ctx.drawImage(im,sx,sy,w,h,Math.round(p.x-f.pivot[0]*scale),Math.round(p.y-f.pivot[1]*scale),w*scale,h*scale);ctx.restore();
+ ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=death?Math.max(0,Math.min(1,8-p.age)):1;if(p.shadow){ctx.globalAlpha*=.27;ctx.filter='brightness(0)';}else if(p.frozen)ctx.filter='sepia(1) saturate(1.6) hue-rotate(135deg)';
+ ctx.drawImage(im,sx,sy,w,h,Math.round(p.x-f.pivot[0]*scale),Math.round(p.y-f.pivot[1]*scale*(p.shadow?.35:1)),w*scale,h*scale*(p.shadow?.35:1));ctx.restore();
  state.lastDraw={clip:sample.clip,frame:sample.index,direction:p.direction,worldCell:manifest.worldCell*(p.radius/manifest.tierIRadius)};return true;
 }
-export function drawAshfang(ctx,state){const p=state.entity;if(p&&!p.hidden){ctx.save();ctx.fillStyle='rgba(4,6,9,.3)';ctx.beginPath();ctx.ellipse(p.x,p.y+2,p.radius*.44,p.radius*.13,0,0,Math.PI*2);ctx.fill();ctx.restore();}return drawBody(ctx,state,p);}
+export function drawAshfang(ctx,state){const p=state.entity;if(p&&!p.hidden&&!p.shadow){ctx.save();ctx.fillStyle='rgba(4,6,9,.3)';ctx.beginPath();ctx.ellipse(p.x,p.y+2,p.radius*.44,p.radius*.13,0,0,Math.PI*2);ctx.fill();ctx.restore();}return drawBody(ctx,state,p);}
+export function drawAshfangRain(ctx,snapshot,reducedMotion){
+ for(const h of snapshot.huntHazards??[]){
+  if(!h.fromAbove||!h.armed)continue;
+  const progress=h.progress;
+  // Falling embers reach the center at the same normalized moment the
+  // authoritative ground warning expires. Never draw a hit before it resolves.
+  ctx.save();ctx.globalAlpha=.35+.6*progress;
+  const height=(1-progress)*190;
+  for(let i=0;i<(reducedMotion?1:4);i++){
+   const x=h.x+(i-1.5)*7,y=h.y-height-i*12;
+   ctx.fillStyle=i%2?'#f7e4ac':'#de803f';ctx.fillRect(Math.round(x),Math.round(y),5,11);ctx.fillStyle='#9b4937';ctx.fillRect(Math.round(x+1),Math.round(y-15),3,14);
+  }
+  ctx.restore();
+ }
+}
 export function drawAshfangDeath(ctx,state){return drawBody(ctx,state,state.death,true);}
 export function drawAshfangFire(ctx,state,snapshot,reducedMotion){
  const p=state.entity,d=snapshot.dragon;
- if(!p||!d||(d.action&&d.action!=='breath')||snapshot.hunt?.stage!==2||d.attackElapsed<0||d.attackElapsed>=.22||snapshot.dragonBreath||d.frozen)return;
+ if(!p||!d||p.shadow||(d.action&&d.action!=='breath')||snapshot.hunt?.stage!==2||d.attackElapsed<0||d.attackElapsed>=.22||snapshot.dragonBreath||d.frozen)return;
  const sample=sampleFrame(state,p);if(!sample)return;
  const f=sample.frame,scale=manifest.worldCell/512*(p.radius/60),x=p.x+(f.mouth[0]-f.pivot[0])*scale,y=p.y+(f.mouth[1]-f.pivot[1])*scale;
  const ex=d.x+d.directionX*340,ey=d.y+d.directionY*340,age=d.attackElapsed;

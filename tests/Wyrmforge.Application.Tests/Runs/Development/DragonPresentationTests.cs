@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Development;
 using Wyrmforge.Application.Runs.SelfPlay;
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Player;
@@ -89,6 +90,34 @@ public sealed class DragonPresentationTests
         Assert.AreEqual("recover",run.CreateSnapshot().Dragon!.ActionPhase);
         Invoke(run,"ResolvePlayerDamage");
         Assert.AreEqual(afterHit,player.Health,.000001);
+    }
+    [TestMethod]
+    public void AerialPassRemovesGroundTargetAndCreatesWarnedRainThenLands()
+    {
+        var run=Create();var dragon=Dragon(run);
+        var hunt=(DragonHuntState)typeof(RunSimulation).GetField("dragonHuntState",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(run)!;
+        hunt.TickStage(10);
+        typeof(RunSimulation).GetField("arenaWidth",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(run,402d);
+        typeof(RunSimulation).GetField("arenaHeight",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(run,874d);
+        Invoke(run,"UpdateAshfangFlight",dragon,8.01);
+        Assert.AreEqual("takeoff",run.CreateSnapshot().Dragon!.FlightStage);
+        Invoke(run,"UpdateAshfangFlight",dragon,1.4);
+        var overhead=run.CreateSnapshot();
+        Assert.AreEqual("overhead",overhead.Dragon!.FlightStage);Assert.IsFalse(overhead.Dragon.Targetable);
+        Assert.IsTrue(overhead.HuntHazards!.Any(h=>h.FromAbove&&h.Progress==0));
+        var targets=(bool)typeof(RunSimulation).GetProperty("HasCombatTargets",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(run)!;
+        Assert.IsFalse(targets);
+        var health=dragon.Health;
+        typeof(RunSimulation).GetMethod("DamageTarget",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(run,[dragon,999d,null,null]);
+        Assert.AreEqual(health,dragon.Health);
+        Invoke(run,"UpdateAshfangFlight",dragon,4.8);
+        Assert.AreEqual("land",run.CreateSnapshot().Dragon!.FlightStage);
+        Invoke(run,"UpdateAshfangFlight",dragon,1.0);
+        Assert.IsTrue(run.CreateSnapshot().Dragon!.Targetable);
+        Invoke(run,"UpdateAshfangFlight",dragon,.5);
+        Assert.AreEqual("recover",run.CreateSnapshot().Dragon!.FlightStage);
+        Invoke(run,"UpdateAshfangFlight",dragon,1.2);
+        Assert.AreEqual("ground",run.CreateSnapshot().Dragon!.FlightStage);
     }
 }
 
