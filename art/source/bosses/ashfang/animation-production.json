@@ -81,11 +81,13 @@
   "resumeNote": "PAUSED.md",
   "packedMaster": "archive/motion-foundation-002-packed/ashfang-animation-foundation.blend",
   "rigFamily": "zagmatorah-112/v1",
-  "scaleTwoProofPassed": false,
+  "scaleTwoProofPassed": true,
   "exportProgress": {
     "expectedClips": 41,
     "expectedDirectionalFrames": 7736,
-    "status": "rendering"
+    "status": "incomplete; render continues",
+    "completedPackedClips": 16,
+    "completedPackedDirectionalFrames": 4080
   },
   "browserValidationPassed": true,
   "remaining": [
@@ -94,11 +96,10 @@
     "Owner motion review and game integration"
   ],
   "remoteVerification": {
-    "assetCheckpoint": "bffd886b064396b213c27960645a28538f4d7d95",
-    "independentlyRetrievedAndSha256VerifiedLfsObjects": 801,
-    "allFinalAtlases": 656,
-    "packedMasterSha256": "38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b",
-    "receipt": "remote-lfs-verification.json"
+    "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
+    "packedMasterRetrievedAndReopened": true,
+    "finalAtlasRetrieval": "pending",
+    "previousFoundationReceipt": "remote-lfs-verification.json (foundation 001 checkpoint)"
   },
   "previousFoundation": "exports/motion-foundation-001 (owner rejected performance as too weak)"
 }

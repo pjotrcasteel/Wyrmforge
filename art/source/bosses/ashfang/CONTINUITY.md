@@ -103,3 +103,8 @@ Completed 41 actions on the original 112-bone rig: 7448 frames in eight directio
 Packed master SHA256 38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b. Player: exports/motion-foundation-001/index.html. Reproduction: ANIMATION-REPRODUCE.md. Evidence: reviews/motion-library-008/review.md. Main checked at 21f28ecd, with no conflicting art/creature canon changes. Concurrent work preserved. Owner material/motion acceptance, live game integration, separate VFX and actual Hunt/phone validation remain. Draft PR #299 stays unmerged.
 
 Final remote asset checkpoint bffd886b064396b213c27960645a28538f4d7d95 verified. Independent LFS cache retrieved and SHA256-verified 801 objects including all 656 final atlases. See remote-lfs-verification.json. GPU rendering finished successfully.
+
+
+## 23 October - owner rejects weak performance; aggressive revision 002
+
+Owner retained appearance but requested exaggerated, predatory movements, faster acceleration, raised diagonal claw rakes, reaching bite, chest-led roar, hind-leg push/rapid-wing takeoff, threatening run and dramatic death. Published hunting/biomechanics and primary dragon-production references recorded in PERFORMANCE-PASS.md. Original rig/anatomy unchanged. Revision 014 passes source/packed/remote motion and anatomy checks; scale-two idle/walk/fly comparison passes. Standalone master c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df independently retrieved and reopened. Revisions 009-013 preserve diagnostic attempts, not accepted motions. Four GPU batches are rendering the expected 7736 frames; 16 clips/4080 frames packed as explicitly incomplete checkpoint. Original foundation 001 preserved. Keep PR299 draft; no game or owner acceptance implied.

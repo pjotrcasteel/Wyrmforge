@@ -30,10 +30,8 @@
   "M6": "Uniform scale-two idle, walk and flight proof passes for projected poses, pivots, attachments and root-travel scaling. No higher-tier geometry authored.",
   "M7": "No game integration or physical-device acceptance.",
   "remoteVerification": {
-    "assetCheckpoint": "bffd886b064396b213c27960645a28538f4d7d95",
-    "independentlyRetrievedAndSha256VerifiedLfsObjects": 801,
-    "allFinalAtlases": 656,
-    "packedMasterSha256": "38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b",
-    "receipt": "remote-lfs-verification.json"
+    "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
+    "packedMasterRetrievedAndReopened": true,
+    "finalAtlasRetrieval": "pending"
   }
 }

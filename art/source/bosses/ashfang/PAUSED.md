@@ -1,3 +1,3 @@
-# Animation source/export checkpoint - 23 October 2026
+# Aggressive performance revision active - 23 October 2026
 
-Production resumed at the owner request and all 41 motions / 7448 directional frames are rendered and packed. GPU jobs have finished. The previous pause checkpoint remains immutable in archive/motion-render-checkpoint-001. See ANIMATION-REPRODUCE.md and reviews/motion-library-008/review.md for the packed source, export player and validation evidence. Owner art/motion acceptance and live game integration remain separate.
+The owner rejected the first foundation as weak and requested an exaggerated, predatory performance. Foundation 002 is rendering in four GPU batches from motion-library-014. The previous foundation 001 remains complete and preserved for comparison. Current aggressive native source and standalone packed master are remotely backed up; final revised atlas production is in progress. Do not interpret the previous completion notice as completion of this new revision. See animation-production.json and PERFORMANCE-PASS.md.

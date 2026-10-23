@@ -13,7 +13,8 @@ for folder in a.input:
 assert header and header['cell']==512
 expected_dirs=['E','SE','S','SW','W','NW','N','NE'];assert header['directions']==expected_dirs
 if not a.partial:assert set(sources)==set(specs['clips']),('Missing clips',set(specs['clips'])-set(sources))
-manifest={'schema':'wyrmforge-directional-atlas/1','name':'Ashfang Tier I — animation foundation','creatureId':'ashfang','rigFamily':'zagmatorah-112/v1','sourceSha256':header['sourceSha256'],'sourceForward':'-X','up':'+Z','directions':expected_dirs,'directionAngles':header['directionAngles'],'fps':12,'sourceFps':24,'cell':256,'masterCell':512,'orthoScaleModelUnits':22,'modelScale':header['modelScale'],'complete':not a.partial and len(sources)==len(specs['clips']),'ownerAcceptedMotion':False,'runtimeIntegrated':False,'clips':{}}
+manifest={'schema':'wyrmforge-directional-atlas/1','name':'Ashfang Tier I — animation foundation','creatureId':'ashfang','performanceRevision':specs.get('performanceRevision',1),'rigFamily':'zagmatorah-112/v1','sourceSha256':header['sourceSha256'],'sourceForward':'-X','up':'+Z','directions':expected_dirs,'directionAngles':header['directionAngles'],'fps':12,'sourceFps':24,'cell':256,'masterCell':512,'orthoScaleModelUnits':22,'modelScale':header['modelScale'],'complete':not a.partial and len(sources)==len(specs['clips']),'ownerAcceptedMotion':False,'runtimeIntegrated':False,'clips':{}}
+if specs.get('performanceRevision',1)>1:manifest['name']='Ashfang | aggressive performance 002'
 qa={'sourceHash':header['sourceSha256'],'expectedClips':len(specs['clips']),'clips':{},'files':{},'frames':0,'clippedFrames':[],'emptyFrames':[],'masterPixelChecks':0}
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def vector(v,factor):return [round(x*factor,5) for x in v]
