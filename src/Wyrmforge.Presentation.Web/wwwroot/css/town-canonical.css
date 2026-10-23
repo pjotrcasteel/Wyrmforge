@@ -236,8 +236,8 @@
 .game-shell.refuge-home .refuge-town-v2-toolbar output {max-width:150px;overflow-wrap:anywhere}
 
 
-/* Six separately baked canonical Nexus art variants. Transparent everywhere
-   outside the real magic. Never filter the original approved town painting. */
+/* Six distinct approved Nexus architectural art plates, registered to the exact
+   1672x941 panorama. Alpha removes all non-Nexus areas; no CSS color filters. */
 .game-shell.refuge-home .refuge-town-nexus-school-art {
     position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;
     object-fit:fill;pointer-events:none;user-select:none;-webkit-user-drag:none;
