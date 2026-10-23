@@ -36,10 +36,17 @@ public sealed class ArenaLightingBrowserTests : PageTest
         await Expect(canvas).ToHaveAttributeAsync("data-fire-calibration", "false");
         Assert.AreNotEqual(lit, await CanvasPixelHashAsync(canvas),
             "Real darkness must visibly respond when its fire source disappears.");
+        // Pure 90% black over unchanged approved ground must leave near-black
+        // channels across the actual pixels; no broad bright ambient remains.
+        var darkMaximum = await CanvasMaximumRgbAsync(canvas);
+        Assert.IsLessThanOrEqualTo(28, darkMaximum,
+            "With no flame, every approved ground pixel must be genuinely near-black.");
         await calibrationFire.CheckAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-fire-calibration", "true");
         Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas),
             "Restoring the same physical light and ground must restore the exact original image.");
+        Assert.IsGreaterThan(darkMaximum + 45, await CanvasMaximumRgbAsync(canvas),
+            "Real firelight must produce bright, high-contrast light against genuine darkness.");
 
         var target = Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS")
             ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
@@ -66,6 +73,15 @@ public sealed class ArenaLightingBrowserTests : PageTest
             Path = Path.Combine(target, $"arena-gothic-night-original-ground-{width}.png"),
         });
     }
+
+    private static Task<int> CanvasMaximumRgbAsync(ILocator canvas) =>
+        canvas.EvaluateAsync<int>(@"canvas => {
+            const p = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            let max = 0;
+            for (let i = 0; i < p.length; i += 4)
+                max = Math.max(max, p[i], p[i + 1], p[i + 2]);
+            return max;
+        }");
 
     private static Task<uint> CanvasPixelHashAsync(ILocator canvas) =>
         canvas.EvaluateAsync<uint>(@"canvas => {
