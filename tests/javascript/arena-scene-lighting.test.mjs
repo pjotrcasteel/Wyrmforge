@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolveSceneLighting, contactShadowPlan, projectedShadowPlan, drawContactShadow, drawSceneLighting,
-    sortSpritesByFoot } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-scene-lighting.js';
+    sortSpritesByFoot, spriteFootPlacement } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-scene-lighting.js';
 import { groundFoundationBoard } from '../../src/Wyrmforge.Presentation.Web/wwwroot/js/arena-ground-foundation.js';
 
 const read = path => readFileSync(
@@ -97,6 +97,21 @@ test('soft contact ellipse is painted behind independent sprites, not into mater
     assert.ok(ctx.operations.includes('radial'));
     assert.equal(ctx.operations.filter(x => Array.isArray(x) && x[0] === 'scale').length, 1);
     assert.equal(ctx.operations.at(-1), 'restore');
+});
+
+test('L2 sprite placement registers the opaque trunk base, not the lowest thin roots', () => {
+    const foot = { x: 415, y: 755 };
+    const crop = { width: 452, height: 530, footInsetPixels: 30 };
+    const drawn = spriteFootPlacement(foot, crop, 235);
+    assert.ok(drawn.y > 755 - 235, 'Root projections may extend below the solid trunk pivot');
+    assert.ok(Math.abs(drawn.y + drawn.height - 755 - 30 * 235 / 530) < 1e-9);
+    assert.ok(Math.abs(drawn.x + drawn.width * .5 - 415) < 1e-9);
+    assert.deepEqual(foot, { x: 415, y: 755 });
+    assert.deepEqual(spriteFootPlacement(foot, crop, 235), drawn);
+    const legacy = spriteFootPlacement(foot, { width: 452, height: 530 }, 235);
+    assert.equal(legacy.y + legacy.height, 755);
+    assert.equal(spriteFootPlacement(foot, { width: 0, height: 530 }, 235), null);
+    assert.equal(spriteFootPlacement({ x: Number.NaN, y: 0 }, crop, 235), null);
 });
 
 test('sprites sort by foot anchor, not crown height; input is not mutated', () => {
