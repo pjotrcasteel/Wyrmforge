@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - tools/art/step3_wet_forest.py
+      - tools/art/verify_step3_wet_forest.py
       - art/source/environment/wet-forest/catalog.json
       - .github/workflows/arena-step3-render.yml
   workflow_dispatch:
@@ -59,10 +60,13 @@ jobs:
               assert meta['render']['transparent']
               print(name, 'source bytes', blend.stat().st_size, 'PNG bytes', png.stat().st_size)
           PY
+      - name: Inspect real transparent pixels and silhouette framing
+        run: python3 tools/art/verify_step3_wet_forest.py artifacts/wet-forest
       - name: Preserve editable .blend files and review PNGs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: arena-step3-original-wet-forest-candidates
           path: artifacts/wet-forest/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
