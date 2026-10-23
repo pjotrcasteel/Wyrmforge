@@ -37,6 +37,9 @@
         <label>Seed
             <input type="number" @bind="seed" />
         </label>
+        <label>Hunter loadout
+            <select @bind="loadout"><option value="tier1">Tier I hunter</option><option value="stress">Overpowered stress build</option></select>
+        </label>
         <label>Agent
             <select @bind="personality">
                 @foreach (var value in Enum.GetValues<RunAgentPersonality>()) { <option value="@value">@value</option> }
@@ -72,6 +75,8 @@
     private string variant = "ascendant";
     private int phase = 1;
     private int seed = 1337;
+    [Parameter, SupplyParameterFromQuery(Name = "loadout")] public string? LoadoutQuery { get; set; }
+    private string loadout = "tier1";
     private bool invulnerable = true;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastingQuery { get; set; }
@@ -83,6 +88,7 @@
     protected override void OnParametersSet()
     {
         Casting = CastingQuery ?? true;
+        loadout = LoadoutQuery == "stress" ? "stress" : "tier1";
         if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
         if (AscendantQuery is { } a) variant = a ? "ascendant" : "ordinary";
         if (PhaseQuery is 1 or 2) phase = PhaseQuery.Value;
@@ -128,9 +134,10 @@
             _ => SpellId.ArcaneOrb,
         };
         var build = SelfPlayBuildCatalog.All.First();
+        var nodes = loadout == "stress" ? build.SelectedNodes : new HashSet<string>();
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting, Environment = true };
-        simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(build.SelectedNodes, setup);
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
+        simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(nodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";
     }

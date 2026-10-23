@@ -28,10 +28,10 @@ public sealed partial class RunSimulation
 
         // A repeatable, evolved boss-ready spell; no Forge grants or saved progression.
         var spell = SpellCatalog.Get(setup.Spell);
-        while (build.Spells[setup.Spell] < spell.MaxRank) build.Spells.LearnOrUpgrade(setup.Spell);
+        while (build.Spells[setup.Spell] < (setup.BossReadySpell ? spell.MaxRank : 1)) build.Spells.LearnOrUpgrade(setup.Spell);
         build.Spells.TryFocus(setup.Spell);
         var evolution = SpellEvolutionCatalog.All.First(choice => choice.Spell == setup.Spell && !choice.RequiresForgeUnlock && !choice.RequiresMasteryUnlock);
-        build.Evolutions.Select(evolution.Id, build.Spells);
+        if (setup.BossReadySpell) build.Evolutions.Select(evolution.Id, build.Spells);
         RefreshBuildModifiers(true);
         RefreshBuildHud();
 
