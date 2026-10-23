@@ -6,7 +6,7 @@ import {
 } from './arena-materials.js';
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS,
     FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from './arena-ground-foundation.js';
-import { resolveSceneLighting, contactShadowPlan, drawContactShadow, drawSceneLighting,
+import { resolveSceneLighting, contactShadowPlan, projectedShadowPlan, drawContactShadow, drawSceneLighting,
     sortSpritesByFoot } from './arena-scene-lighting.js';
 
 const states = new WeakMap();
@@ -41,12 +41,17 @@ function render(state) {
 
     const sprites = sortSpritesByFoot(Object.entries(slots).filter(([id]) => state.images[id])
         .map(([id, slot]) => ({ id, foot: { x: slot.x, y: slot.y }, ...slot })));
+    // World ground -> all cast shadows -> all root contact -> sorted sprites.
+    // Shadowing each sprite in its own drawing pass could obscure the branches
+    // of a farther tree. Neither shadow pass changes the ground material atlas.
+    for (const sprite of sprites)
+        drawContactShadow(ctx, projectedShadowPlan(sprite.foot, sprite.trunk, sprite.height, state.light));
+    for (const sprite of sprites)
+        drawContactShadow(ctx, contactShadowPlan(sprite.foot, sprite.trunk, state.light));
     for (const sprite of sprites) {
-        const plan = contactShadowPlan(sprite.foot, sprite.trunk, state.light);
-        drawContactShadow(ctx, plan);
         const image = state.images[sprite.id];
-        // The original PNG has a transparent frame. Use actual alpha bounds
-        // so the visible roots, not the PNG rectangle, touch the foot pivot.
+        // Preserve original alpha and register visible root baseline in world
+        // coordinates rather than using the full transparent Blender canvas.
         const crop = image.crop;
         const drawHeight = sprite.height;
         const drawWidth = drawHeight * crop.width / crop.height;
@@ -57,6 +62,27 @@ function render(state) {
         ctx.imageSmoothingEnabled = false;
     }
     if (state.ground) drawSceneLighting(ctx, world, state.light);
+    // Technical calibration overlay; never enabled in the normal renderer.
+    if (state.showAnchors) {
+        ctx.save();
+        ctx.lineWidth = 1.5;
+        ctx.font = '11px system-ui';
+        for (const sprite of sprites) {
+            ctx.strokeStyle = '#ebce91';
+            ctx.beginPath();
+            ctx.arc(sprite.foot.x, sprite.foot.y, sprite.trunk * .5, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(sprite.foot.x - 9, sprite.foot.y);
+            ctx.lineTo(sprite.foot.x + 9, sprite.foot.y);
+            ctx.moveTo(sprite.foot.x, sprite.foot.y - 9);
+            ctx.lineTo(sprite.foot.x, sprite.foot.y + 9);
+            ctx.stroke();
+            ctx.fillStyle = '#f8efdc';
+            ctx.fillText(sprite.id + ' · root anchor', sprite.foot.x + 12, sprite.foot.y + 14);
+        }
+        ctx.restore();
+    }
     ctx.restore();
 
     canvas.dataset.lightingReady = String(Boolean(state.ground));
@@ -64,6 +90,7 @@ function render(state) {
     canvas.dataset.lightingObjects = String(sprites.length);
     canvas.dataset.lightingShadows = String(state.light.enabled && state.light.shadows ? sprites.length : 0);
     canvas.dataset.lightingApprovedGround = String(Boolean(state.ground));
+    canvas.dataset.lightingAnchors = String(state.showAnchors);
     canvas.dataset.lightingPhysicsObjects = '0';
     canvas.dataset.lightingLegacyAssets = '0';
     canvas.dataset.lightingSeed = String(state.seed);
@@ -111,6 +138,7 @@ export function initializeArenaLighting(canvas, seed = 1204, options = {}) {
     const width = Math.max(1, rect.width), height = Math.max(1, rect.height);
     const state = {
         canvas, alive: true, seed: seed | 0, light: resolveSceneLighting(options),
+        showAnchors: options.showAnchors === true,
         camera: { x: clamp(480 - width / 2, 0, Math.max(0, world.width - width)),
             y: clamp(770 - height / 2, 0, Math.max(0, world.height - height)) },
         source: null, ground: null, images: {}, pointer: null, pending: false, listeners: [],
@@ -163,6 +191,7 @@ export function configureArenaLighting(canvas, seed, options = {}) {
         if (state.source) buildGround(state);
     }
     state.light = nextLight;
+    state.showAnchors = options.showAnchors === true;
     schedule(state);
 }
 
@@ -213,7 +242,7 @@ export function readArenaLightingDiagnostics(canvas) {
     const s = states.get(canvas);
     if (!s) return null;
     return { ready: Boolean(s.ground), seed: s.seed, light: s.light,
-        sprites: Object.keys(s.images).sort(), physicsObjects: 0, legacyAssets: 0,
+        sprites: Object.keys(s.images).sort(), showAnchors: s.showAnchors, physicsObjects: 0, legacyAssets: 0,
         camera: { ...s.camera }, world: { ...world }, groundRecipe: 'approved-forest-trails' };
 }
 
