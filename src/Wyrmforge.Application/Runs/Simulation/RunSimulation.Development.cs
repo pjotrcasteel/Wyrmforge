@@ -32,6 +32,9 @@ public sealed partial class RunSimulation
         RefreshBuildModifiers(true);
         RefreshBuildHud();
 
+        if (!setup.Casting)
+            foreach (var spellId in spellCooldowns.Keys) spellCooldowns[spellId] = double.PositiveInfinity;
+
         attractedDragon = setup.Wyrm;
         SpawnDragon(DragonCatalog.Get(setup.Wyrm), setup.Width, setup.Height);
         if (setup.Phase == 2 && dragon is { } activeDragon) activeDragon.Health = activeDragon.MaxHealth * 0.5;

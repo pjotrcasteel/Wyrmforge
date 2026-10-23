@@ -68,6 +68,11 @@ export function updateAshfang(state,snapshot,seconds,reducedMotion=false){
  if(isAshfang(dragon)){
   if(snapshot.paused||dragon.frozen){if(old)return;}
   const desired=selectAshfangMotion(snapshot,old,dt);
+  if(manifest){texture(desired.clip,desired.direction);
+   if(desired.clip==='fly')texture('land',desired.direction);
+   if(desired.clip==='breath_start')texture('breath_loop',desired.direction);
+   if(desired.clip==='breath_loop')texture('breath_end',desired.direction);
+  }
   const sample=advanceAshfangGraph(old,desired,state.clock),changed=!old||old.clip!==sample.clip||old.id!==dragon.entityId;
   const moved=old&&Math.hypot(dragon.x-old.x,dragon.y-old.y)>.001;
   const distance=old?Math.hypot(dragon.x-old.x,dragon.y-old.y):0;
@@ -94,13 +99,17 @@ function sampleFrame(state,p,death=false){
 }
 function drawBody(ctx,state,p,death=false){
  if(!p||p.hidden)return false;const sample=sampleFrame(state,p,death);if(!sample)return false;
- const im=texture(sample.clip,p.direction);if(!im?.complete||!im.naturalWidth||errors.has(sample.clip+'/'+p.direction))return false;
- const f=sample.frame,scale=manifest.worldCell/manifest.cell*(p.radius/manifest.tierIRadius),[sx,sy,w,h]=f.rect;
+ let im=texture(sample.clip,p.direction),f=sample.frame;
+ if(!im?.complete||!im.naturalWidth||errors.has(sample.clip+'/'+p.direction)){
+  if(!state.lastDecoded)return false;
+  im=state.lastDecoded.image;f=state.lastDecoded.frame;
+ }else state.lastDecoded={image:im,frame:f};
+ const scale=manifest.worldCell/manifest.cell*(p.radius/manifest.tierIRadius),[sx,sy,w,h]=f.rect;
  ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha*=death?Math.max(0,Math.min(1,8-p.age)):1;if(p.frozen)ctx.filter='sepia(1) saturate(1.6) hue-rotate(135deg)';
  ctx.drawImage(im,sx,sy,w,h,Math.round(p.x-f.pivot[0]*scale),Math.round(p.y-f.pivot[1]*scale),w*scale,h*scale);ctx.restore();
  state.lastDraw={clip:sample.clip,frame:sample.index,direction:p.direction,worldCell:manifest.worldCell*(p.radius/manifest.tierIRadius)};return true;
 }
-export function drawAshfang(ctx,state){return drawBody(ctx,state,state.entity);}
+export function drawAshfang(ctx,state){const p=state.entity;if(p&&!p.hidden){ctx.save();ctx.fillStyle='rgba(4,6,9,.3)';ctx.beginPath();ctx.ellipse(p.x,p.y+2,p.radius*.44,p.radius*.13,0,0,Math.PI*2);ctx.fill();ctx.restore();}return drawBody(ctx,state,p);}
 export function drawAshfangDeath(ctx,state){return drawBody(ctx,state,state.death,true);}
 export function drawAshfangFire(ctx,state,snapshot,reducedMotion){
  const p=state.entity,d=snapshot.dragon;

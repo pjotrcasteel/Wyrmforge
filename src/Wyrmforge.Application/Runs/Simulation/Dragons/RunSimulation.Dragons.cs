@@ -326,7 +326,7 @@ public sealed partial class RunSimulation
     private void DefeatDragon(DragonState defeatedDragon)
     {
         if (!ReferenceEquals(dragon, defeatedDragon)) return;
-        dragonDefeat = CreateDragonSnapshot(defeatedDragon);
+        dragonDefeat = CreateDragonBodySnapshot(defeatedDragon);
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
@@ -368,10 +368,10 @@ public sealed partial class RunSimulation
     private DragonRenderSnapshot? CreateDragonSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
-        return CreateDragonSnapshot(activeDragon);
+        return CreateDragonBodySnapshot(activeDragon);
     }
 
-    private DragonRenderSnapshot CreateDragonSnapshot(DragonState activeDragon)
+    private DragonRenderSnapshot CreateDragonBodySnapshot(DragonState activeDragon)
     {
         var definition = activeDragon.Definition;
         // Only the invoked rite carries its trophy title; a ladder Ascendant or Elder is named for its tier.
@@ -451,3 +451,4 @@ public sealed partial class RunSimulation
         public double Progress => 1 - Math.Clamp(Remaining / Duration, 0, 1);
     }
 }
+

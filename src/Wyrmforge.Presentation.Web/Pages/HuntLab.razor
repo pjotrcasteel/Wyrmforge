@@ -42,6 +42,7 @@
                 @foreach (var value in Enum.GetValues<RunAgentPersonality>()) { <option value="@value">@value</option> }
             </select>
         </label>
+        <label class="practice-toggle"><input type="checkbox" @bind="Casting" /> Hunter casting</label>
         <label class="practice-toggle"><input type="checkbox" @bind="invulnerable" /> Invulnerable watch mode</label>
         <button @onclick="Restart">APPLY & REPLAY</button>
     </section>
@@ -73,6 +74,7 @@
     private int seed = 1337;
     private bool invulnerable = true;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool Casting { get; set; } = true;
     private bool paused;
     private string status = "PREPARING THE WYRMREALM";
     private RunAgentPersonality personality = RunAgentPersonality.Kiter;
@@ -125,7 +127,7 @@
         };
         var build = SelfPlayBuildCatalog.All.First();
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable);
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting };
         simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(build.SelectedNodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";
