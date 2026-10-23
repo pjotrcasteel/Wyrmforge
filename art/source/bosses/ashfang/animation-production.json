@@ -1,5 +1,5 @@
 {
-  "status": "Foundation003 complete source/export candidate; final remote atlas retrieval pending",
+  "status": "Foundation003 complete source/export candidate and verified remote backup; owner review/game integration remain",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -107,9 +107,10 @@
     "unchangedReusedClips": 30,
     "exportComplete": true,
     "runtimeIntegrated": false,
-    "freshlyRenderedDirectionalFrames": 2756,
-    "reusedDirectionalFrames": 4980,
-    "review": "reviews/motion-foundation-003/review.md"
+    "freshlyRenderedDirectionalFrames": 2656,
+    "reusedDirectionalFrames": 5080,
+    "review": "reviews/motion-foundation-003/review.md",
+    "remoteReceipt": "reviews/motion-foundation-003/remote-receipt.json"
   },
   "currentExport": "exports/motion-foundation-003",
   "previousRemoteVerification": {
@@ -123,9 +124,15 @@
     "allTrackedLfsObjectsVerified": true
   },
   "remoteVerification": {
-    "status": "Packed master independently retrieved and validated; final atlas receipt pending",
+    "pass": true,
+    "assetCheckpoint": "253a3566ef11fa3638ce1256dbcb67cc7e1fbd62",
+    "trackedLfsAssetReferencesVerified": 2127,
+    "uniqueLfsObjectsVerified": 1647,
+    "finalAtlasFilesVerified": 656,
     "packedMasterSha256": "13173a60ee0f71276f75abe52ed22b9c17f74680d33bf6e2bbaa123aa886bed0",
-    "nativeReport": "reviews/motion-foundation-003/remote-native-validation.json",
-    "motionReport": "reviews/motion-foundation-003/remote-motion-validation.json"
+    "independentCache": "artifacts/remote-lfs-verification",
+    "remoteNativeValidation": "remote-native-validation.json",
+    "remoteMotionValidation": "remote-motion-validation.json",
+    "allTrackedLfsHashesMatch": true
   }
 }
