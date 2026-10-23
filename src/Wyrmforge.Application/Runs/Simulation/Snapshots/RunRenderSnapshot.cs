@@ -22,6 +22,8 @@ public sealed record RunRenderSnapshot(
     IReadOnlyList<ExperienceShardRenderSnapshot>? ExperienceShards = null,
     IReadOnlyList<ExperiencePickupRenderSnapshot>? ExperiencePickups = null)
 {
+    public bool PresentationPaused { get; init; }
+    public DragonRenderSnapshot? DragonDefeat { get; init; }
     public SplashPulseRenderSnapshot? PowerBurst { get; init; }
     public TrailRenderSnapshot? Trail { get; init; }
     public ArenaEnvironmentRenderSnapshot? Environment { get; init; }

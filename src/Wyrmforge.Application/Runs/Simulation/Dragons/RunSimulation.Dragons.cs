@@ -28,6 +28,9 @@ public sealed partial class RunSimulation
     // First Hunt it is a full hunt with harvest, refuge and extraction.
     private bool regionOpening;
     internal void EnableRegionOpening(bool enabled) => regionOpening = enabled;
+    private int dragonAttackSequence;
+    private double dragonLastAttackAt = -1;
+    private DragonRenderSnapshot? dragonDefeat;
     private bool dragonPending;
     private bool dragonEncounterStarted;
 
@@ -187,6 +190,9 @@ public sealed partial class RunSimulation
 
     private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
+        dragonAttackSequence = 0;
+        dragonLastAttackAt = -1;
+        dragonDefeat = null;
         dragonEncounterStarted = true;
         dragonPending = false;
         enemies.Clear();
@@ -254,6 +260,7 @@ public sealed partial class RunSimulation
     private void StartDragonAttack(DragonState activeDragon)
     {
         var attack = activeDragon.Definition.Combat.Attack;
+        dragonAttackSequence++;
         activeDragon.TelegraphRemaining = attack.TelegraphSeconds.For(activeDragon.Phase);
         switch (attack.Pattern)
         {
@@ -276,6 +283,7 @@ public sealed partial class RunSimulation
     {
         var attack = activeDragon.Definition.Combat.Attack;
         activeDragon.TelegraphRemaining = 0;
+        dragonLastAttackAt = elapsed;
         activeDragon.AttackCooldown = attack.CooldownSeconds.For(activeDragon.Phase);
         switch (attack.Pattern)
         {
@@ -315,6 +323,7 @@ public sealed partial class RunSimulation
     private void DefeatDragon(DragonState defeatedDragon)
     {
         if (!ReferenceEquals(dragon, defeatedDragon)) return;
+        dragonDefeat = CreateDragonSnapshot(defeatedDragon);
         dragonsSlain++;
         var definition = defeatedDragon.Definition;
         defeatedDragonIds.Add(definition.Id);
@@ -347,6 +356,7 @@ public sealed partial class RunSimulation
 
     private void ResetDragonHunt()
     {
+        dragonDefeat = null;
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
     }
@@ -354,6 +364,11 @@ public sealed partial class RunSimulation
     private DragonRenderSnapshot? CreateDragonSnapshot()
     {
         if (dragon is not { Health: > 0 } activeDragon) return null;
+        return CreateDragonSnapshot(activeDragon);
+    }
+
+    private DragonRenderSnapshot CreateDragonSnapshot(DragonState activeDragon)
+    {
         var definition = activeDragon.Definition;
         // Only the invoked rite carries its trophy title; a ladder Ascendant or Elder is named for its tier.
         var rite = ascendantActive && SelectedHunt is null ? AscendantRiteCatalog.Get(definition.Id) : null;
@@ -366,7 +381,13 @@ public sealed partial class RunSimulation
         return new DragonRenderSnapshot(name, rite is null ? definition.Title : $"The {rite.Trophy}",
             definition.School, activeDragon.Position.X, activeDragon.Position.Y, activeDragon.Radius, activeDragon.Health, activeDragon.MaxHealth,
             activeDragon.Phase, activeDragon.Statuses.Has(CombatStatusId.Frozen), CreateStatusSnapshots(activeDragon.Statuses))
-        { IsAscendant = ascendantActive, Tier = activeDragon.Tier };
+        {
+            IsAscendant = ascendantActive, Tier = activeDragon.Tier, EntityId = activeDragon.Id,
+            AttackSequence = dragonAttackSequence,
+            AttackElapsed = dragonLastAttackAt < 0 ? -1 : elapsed - dragonLastAttackAt,
+            TelegraphProgress = activeDragon.IsTelegraphing ? Math.Clamp(1 - activeDragon.TelegraphRemaining / definition.Combat.Attack.TelegraphSeconds.For(activeDragon.Phase), 0, 1) : 0,
+            DirectionX = activeDragon.BreathDirection.X, DirectionY = activeDragon.BreathDirection.Y,
+        };
     }
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()

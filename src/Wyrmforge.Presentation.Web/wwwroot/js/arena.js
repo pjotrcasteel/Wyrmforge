@@ -8,6 +8,7 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
+import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, drawAshfangFire, ashfangDiagnostics } from './ashfang-sprites.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
@@ -30,6 +31,7 @@ export function initializeArena(canvas, dotNetReference) {
     preloadPaintedEnemies();
     preloadHollowSprites();
     ashlingSprites.preload();
+    preloadAshfang();
     const state = createState(canvas, dotNetReference);
     arenas.set(canvas, state);
     state.detachInput = attachArenaInput(state);
@@ -58,6 +60,7 @@ export function readArenaDiagnostics(canvas) {
         deathBursts: state.latestSnapshot?.deathBursts ?? [],
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
+        ashfang: ashfangDiagnostics(state.ashfang),
         dragon: state.latestSnapshot?.dragon ?? null,
         dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
         performance: { fps:state.displayFps, simulationHz:state.displaySimulationHz, simulationMilliseconds:state.displaySimulationMilliseconds, bridgeMilliseconds:state.displayBridgeMilliseconds },
@@ -88,6 +91,7 @@ function createState(canvas, dotNetReference) {
         paintedCorpses: {},
         hollow: createHollowState(),
         ashling: ashlingSprites.createState(),
+        ashfang: createAshfangState(),
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
         keys: new Set(),
         pointerId: null,
@@ -247,6 +251,7 @@ function draw(state, snapshot, width, height) {
     const enemyPoses = updateEnemyMotions(state.enemyMotion, snapshot.enemies, visualSeconds, state.reducedMotion.matches);
     updateHollowSprites(state.hollow,snapshot,visualSeconds,state.reducedMotion.matches);
     ashlingSprites.update(state.ashling,snapshot,visualSeconds,state.reducedMotion.matches);
+    updateAshfang(state.ashfang,snapshot,visualSeconds,state.reducedMotion.matches);
     drawPaintedCorpses(ctx, state.paintedCorpses, visualSeconds,hollowSpritesReady(),ashlingSprites.ready());
     drawHollowCorpses(ctx,state.hollow,state.reducedMotion.matches);
     ashlingSprites.drawCorpses(ctx,state.ashling,state.reducedMotion.matches);
@@ -258,7 +263,10 @@ function draw(state, snapshot, width, height) {
                 null, 7, corpse.facing);
     // Correct 2.5D ordering by WORLD foot position. A mage/enemy walking north of
     // a ruined wall goes behind its facade; walking south brings it forward.
+    const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
     const depthLayers = [
+        ...(snapshot.dragon && !entranceOmen ? [{kind: 'dragon', depth:snapshot.dragon.y, dragon:snapshot.dragon}] : []),
+        ...(state.ashfang.death ? [{kind:'dragonDeath',depth:state.ashfang.death.y}] : []),
         ...snapshot.enemies.map(enemy => ({ kind: 'enemy', depth: enemy.y + (enemy.radius || 0), enemy })),
         { kind: 'mage', depth: snapshot.player.y + (snapshot.player.radius || 0) },
         ...getArenaCloisterElevations(snapshot.environment, worldWidth, worldHeight, visualSeconds),
@@ -266,6 +274,10 @@ function draw(state, snapshot, width, height) {
     for (const layer of sortSceneDepthLayers(depthLayers)) {
         if (layer.kind === 'masonry') {
             drawArenaCloisterElevation(ctx, layer);
+        } else if (layer.kind === 'dragon') {
+            drawDragon(ctx, layer.dragon, state.reducedMotion.matches, snapshot.dragonBreath, state.ashfang);
+        } else if (layer.kind === 'dragonDeath') {
+            drawAshfangDeath(ctx,state.ashfang);
         } else if (layer.kind === 'enemy') {
             const enemy = layer.enemy;
             drawEnemy(ctx, enemy, sampleSpellLight(spellLights, enemy.x, enemy.y),
@@ -293,8 +305,7 @@ function draw(state, snapshot, width, height) {
         ctx.stroke();
         ctx.restore();
     }
-    const entranceOmen = snapshot.hunt?.stage === 1 && snapshot.hunt?.entranceBeat === 1;
-    if (snapshot.dragon && !entranceOmen) drawDragon(ctx, snapshot.dragon, state.reducedMotion.matches, snapshot.dragonBreath);
+    drawAshfangFire(ctx,state.ashfang,snapshot,state.reducedMotion.matches);
     // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
@@ -1013,7 +1024,8 @@ function drawDragonBreath(ctx, breath, school) {
     ctx.stroke();
 }
 
-function drawDragon(ctx, dragon, reducedMotion = false, breath = null) {
+function drawDragon(ctx, dragon, reducedMotion = false, breath = null, ashfang = null) {
+    if (ashfang && drawAshfang(ctx,ashfang)) return;
     const palette = schoolPalette(dragon.school);
     ctx.save();
     ctx.translate(dragon.x, dragon.y);

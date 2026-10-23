@@ -98,7 +98,7 @@
         if (simulation is null) CreateEncounter(width, height);
         var current = simulation!;
         var snapshot = current.CreateSnapshot();
-        if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot);
+        if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot with { Paused = paused || snapshot.Paused, PresentationPaused = paused });
         var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
         snapshot = current.Tick(delta, agent!.ChooseMovement(observation), width, height);
         var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
