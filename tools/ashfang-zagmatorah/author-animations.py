@@ -53,7 +53,7 @@ def rootmove(v):solver.pose.bones['Spine03'].location+=restq['Spine03'].inverted
 # Performance pass: bigger silhouettes, compressed attack spacing, slower weight recovery.
 # Preserve authored anatomy and contact solutions; do not multiply every joint blindly.
 PERFORMANCE_INTERVALS={'run':28,'run_start':24,'run_stop':28,'roar':80,'takeoff':56,'death':96,'death_alt':104}
-PERFORMANCE_TRAVEL={'walk':3.0,'stalk':2.0,'run':5.8,'pounce':8.0}
+PERFORMANCE_TRAVEL={'walk':3.0,'stalk':2.0,'run':5.4,'pounce':8.0}
 SPECS=[(n,PERFORMANCE_INTERVALS.get(n,i),loop,PERFORMANCE_TRAVEL.get(n,travel),
         {'hit':.48} if n in ('claw_left','claw_right') else {'hit':[.33,.67]} if n=='claw_combo' else
         {'hit':.45} if n=='bite' else {'voice':.30} if n=='roar' else
@@ -74,7 +74,7 @@ def setpose(name,t):
  if blend:
   for b in solver.pose.bones:
    loc,q,scale=flight[b.name];b.rotation_quaternion=Quaternion().slerp(q,blend)
- altitude=5.0 if air else 5.0*(1-(1-max(0,min(1,(t-.38)/.25)))**2) if name=='takeoff' else 5.0*(1-smooth((t-.35)/.5))+1.4*math.sin(math.pi*blend) if name=='land' else 0
+ altitude=5.0 if air else 5.0*(1-(1-max(0,min(1,(t-.38)/.15)))**2) if name=='takeoff' else 5.0*(1-smooth((t-.35)/.5))+1.4*math.sin(math.pi*blend) if name=='land' else 0
  if altitude:rootmove((0,0,altitude))
  for con in ground_cons:con.influence=1-max(blend,smooth(altitude/.8))
  for limbside,(target,home) in targets.items():target.location=home
@@ -85,7 +85,7 @@ def setpose(name,t):
   for digit,angle in [('01',.5),('02',.28),('03',.12)]:rot('Wing'+digit+'01_'+side,(1,0,0),sgn*angle*(1-blend))
  if name in ('walk','stalk','run'):
   stride=PERFORMANCE_TRAVEL[name];duty=.7 if name!='run' else .32
-  rootmove((0,0,(-.25 if name=='stalk' else .02)+(.10 if name!='run' else .32)*math.cos(math.tau*t*2)))
+  rootmove((0,0,(-.25 if name=='stalk' else .02)+(.10 if name!='run' else .30)*math.cos(math.tau*t*2)))
   offsets={('fore','l'):0,('hind','r'):.25,('fore','r'):.5,('hind','l'):.75}
   if name=='run':offsets={('fore','l'):0,('fore','r'):.06,('hind','l'):.5,('hind','r'):.56}
   for key,(target,home) in targets.items():
@@ -96,7 +96,7 @@ def setpose(name,t):
   rot('Spine01',(0,0,1),.065*wave);rot('Neck03',(0,0,1),-.055*wave)
   if name=='run':rot('Spine01',(0,1,0),.10*math.sin(math.tau*t*2));rot('Neck03',(0,1,0),-.13-.10*math.sin(math.tau*t*2))
  elif name in ('walk_start','walk_stop','run_start','run_stop'):
-  running=name.startswith('run');stride=5.8 if running else 3.;duty=.32 if running else .7;stopping=name.endswith('stop');gain=1-smooth(t) if stopping else smooth(t);rootmove((0,0,(.34 if running else .12)*gain))
+  running=name.startswith('run');stride=5.4 if running else 3.;duty=.32 if running else .7;stopping=name.endswith('stop');gain=1-smooth(t) if stopping else smooth(t);rootmove((0,0,(.32 if running else .12)*gain))
   if running:rot('Neck03',(0,1,0),-.13*gain)
   offsets={('fore','l'):0,('hind','r'):.25,('fore','r'):.5,('hind','l'):.75} if not running else {('fore','l'):0,('fore','r'):.06,('hind','l'):.5,('hind','r'):.56}
   order={('fore','l'):0,('hind','r'):.22,('fore','r'):.44,('hind','l'):.66}
@@ -117,7 +117,7 @@ def setpose(name,t):
   rot('Spine01',(0,0,1),sign*.15*v);rot('Neck03',(0,0,1),sign*.22*v)
   for i in range(1,9):rot('Tail%02d'%i,(0,0,1),-sign*.06*bell(t,0,.5,1))
  elif name=='pounce':
-  crouch=bell(t,0,.2,.42);flightphase=math.sin(math.pi*max(0,min(1,(t-.3)/.38))) if .3<t<.68 else 0;rootmove((0,0,-.55*crouch+2.3*flightphase-.35*bell(t,.65,.73,.92)))
+  crouch=bell(t,0,.2,.42);flightphase=math.sin(math.pi*max(0,min(1,(t-.3)/.38))) if .3<t<.68 else 0;rootmove((0,0,-.46*crouch+2.3*flightphase-.35*bell(t,.65,.73,.92)))
   airweight=smooth((t-.26)/.08)*(1-smooth((t-.64)/.08))
   for con in ground_cons:con.influence=1-airweight
   for side in ('l','r'):rot('UpperLeg_'+side,(0,1,0),-.5*flightphase);rot('UpperArm_'+side,(0,1,0),.28*flightphase)
@@ -159,8 +159,8 @@ def setpose(name,t):
    rot('UpperArm_'+side,(1,0,0),sgn*.92*flap*blend);rot('ForeArm_'+side,(1,0,0),-sgn*.30*max(0,flap)*blend);rot('Arm_'+side,(1,0,0),-sgn*.24*math.sin(math.tau*t-.5)*blend)
   if name.startswith('bank_'):rot('Spine03',(1,0,0),(.3 if name.endswith('left') else -.3)*bell(t,0,.5,1))
  if name=='takeoff':
-  load=bell(t,0,.29,.44);rear=bell(t,.05,.31,.67);rootmove((.35*load,0,-.62*load));rot('Spine03',(0,1,0),.34*rear)
-  for con in ground_cons:con.influence=1-smooth((t-.34)/.10)
+  load=bell(t,0,.29,.44);rear=bell(t,.05,.31,.67);rootmove((.35*load,0,-.62*load));rot('Spine03',(0,1,0),.34*rear);rot('Tail01',(0,1,0),-.32*rear)
+  for con in ground_cons:con.influence=1-smooth((t-.385)/.075)
   for con in wing_cons:con.influence=1-smooth((t-.34)/.12)
   for side in ('l','r'):target,home=targets[('fore',side)];target.location=home+Vector((.25*rear,0,1.2*rear))
  if name=='land':rootmove((0,0,-.48*bell(t,.57,.74,.98)))
