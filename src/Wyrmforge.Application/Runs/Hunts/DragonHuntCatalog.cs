@@ -183,4 +183,3 @@ public static class DragonHuntCatalog
 
     public static DragonHuntProfile Get(DragonId id) => All.Single(profile => profile.Dragon == id);
 }
-
