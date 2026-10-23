@@ -30,7 +30,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var painting = scene.Locator("[data-nexus-school-art]");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
-        await Expect(painting).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/fire\.png"));
+        await Expect(painting).ToHaveAttributeAsync("src", new Regex(@"nexus-approved/fire\.webp"));
         await Page.WaitForFunctionAsync(@"() => {
             const image = document.querySelector('[data-nexus-school-art]');
             return image?.complete && image.naturalWidth === 1672;
@@ -73,7 +73,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         var scene = Page.Locator(".refuge-canonical-scene");
         var asset = scene.Locator("[data-nexus-school-art]");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
-        await Expect(asset).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/" + key + @"\.png"));
+        await Expect(asset).ToHaveAttributeAsync("src", new Regex(@"nexus-approved/" + key + @"\.webp"));
         await Expect(asset).ToBeVisibleAsync();
         await Page.WaitForFunctionAsync(@"() => {
             const image = document.querySelector('[data-nexus-school-art]');
@@ -118,7 +118,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
                 await Page.Locator("[data-nexus-preview-school='" + key + "']").ClickAsync();
             await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
             await Expect(scene.Locator("[data-nexus-school-art]")).ToHaveAttributeAsync(
-                "src", new Regex(@"nexus-schools/" + key + @"\.png"));
+                "src", new Regex(@"nexus-approved/" + key + @"\.webp"));
             await Page.WaitForFunctionAsync(@"() => {
                 const image = document.querySelector('[data-nexus-school-art]');
                 return image?.complete && image.naturalWidth === 1672;
