@@ -1,0 +1,18 @@
+{
+  "precedingSourceSha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d",
+  "fix": "remove duplicate r02 offset from mixed r03 key",
+  "technicalOnly": true,
+  "ownerAccepted": false,
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r03/ashfang-primary-key-corrected.blend",
+      "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+      "bytes": 2881315
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03-key-corrected.blend",
+      "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+      "bytes": 2881315
+    }
+  ]
+}

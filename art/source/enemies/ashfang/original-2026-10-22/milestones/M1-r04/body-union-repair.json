@@ -1,0 +1,17 @@
+{
+  "precedingSourceSha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5",
+  "repair": "Non-manifold wing-stalk cut junctions",
+  "ownerAccepted": false,
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-primary-repaired.blend",
+      "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+      "bytes": 5214554
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04-repaired.blend",
+      "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+      "bytes": 5214554
+    }
+  ]
+}

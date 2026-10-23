@@ -1,0 +1,21 @@
+{
+  "revision": "M1-r06",
+  "precedingSourceSha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82",
+  "headless": true,
+  "ownerAccepted": false,
+  "manualSculpt": false,
+  "runtimeIntegrated": false,
+  "intentionalOverlaps": "Primary skull processes, teeth and membrane roots; not final deformation topology",
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r06/ashfang-primary.blend",
+      "bytes": 9099282,
+      "sha256": "7888465c04ef9a682cbd0ebe50f054876fc00b70758cc1523e2f83f47130ccb3"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r06.blend",
+      "bytes": 9099282,
+      "sha256": "7888465c04ef9a682cbd0ebe50f054876fc00b70758cc1523e2f83f47130ccb3"
+    }
+  ]
+}

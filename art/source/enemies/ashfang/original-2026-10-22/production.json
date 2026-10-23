@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "creatureId": "ashfang",
+  "productionId": "original-2026-10-22",
+  "branch": "codex/ashfang-original-production",
+  "baseMain": "1e6305662c42713aad69455036e47d87c5a451ae",
+  "sourceCard": "user_handover_files/concepts/Fire/10-ashfang-the-cinder-wyrm.png",
+  "sourceCardSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
+  "geometryProvenance": "Original authored geometry only; no prior dragon meshes, reconstruction or free model imports",
+  "authoring": {
+    "blender": "4.5.14 LTS",
+    "up": "+Z",
+    "forward": "-Y",
+    "groundZ": 0,
+    "units": "METRIC"
+  },
+  "storage": {
+    "largeSourceBackend": "Git LFS; independent native download/hash/reopen verified through r06",
+    "numericQuotaVerified": true,
+    "paidOverageAuthorized": false,
+    "retrievalVerified": true,
+    "retrievalSourceCommit": "f2741738c9464fd788eb5b29041da0e3da146d6b"
+  },
+  "milestones": {
+    "M0": "source foundation verified for primary studies; optional paint/video tools deferred",
+    "M1": "Incomplete; r06 reviewed and rejected by agent; paused at direct-sculpt capability gap under owner headless-only constraint",
+    "M2": "blocked-on-owner-M1-acceptance",
+    "M3": "not-started",
+    "M4": "not-started",
+    "M5": "not-started",
+    "M6": "not-started",
+    "M7": "not-started",
+    "M8": "not-started"
+  },
+  "technicalPass": true,
+  "agentVisualStatus": "R05/r06 fail card-specific primary anatomy. R06 adds stepped cheek artifact; retain as rejected study, not approved working improvement.",
+  "ownerAccepted": false,
+  "runtimeIntegrated": false,
+  "assets": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary-preunion.blend",
+      "bytes": 463801,
+      "sha256": "bab0a3e1f96084e8a3e81ea85313fed1f60fc00e7b6f7e1968743f38ea7b1e1d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary.blend",
+      "bytes": 1450348,
+      "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working.blend",
+      "bytes": 1450348,
+      "sha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r02/ashfang-before-cranial-union.blend",
+      "bytes": 1448975,
+      "sha256": "2705012a9146a93f2733bdd5734e4812a34f16becaf32cf89d3564a8aa34d61e"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r02/ashfang-primary.blend",
+      "bytes": 2578460,
+      "sha256": "503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r02.blend",
+      "bytes": 2578460,
+      "sha256": "503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r03/ashfang-primary.blend",
+      "bytes": 2881972,
+      "sha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03.blend",
+      "bytes": 2881972,
+      "sha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r03/ashfang-primary-key-corrected.blend",
+      "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+      "bytes": 2881315
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03-key-corrected.blend",
+      "sha256": "57fdf7182f7664d900697f2ce27801c04ffa544024bbf05d94598812f5647b1c",
+      "bytes": 2881315
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/ashfang-facial-preunion.blend",
+      "bytes": 5056134,
+      "sha256": "6a0a1fa7af0783c7018e5dde9bed7edfba4191bc5b9a2a28da23427c782303aa"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r05/ashfang-primary.blend",
+      "bytes": 6252347,
+      "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
+      "bytes": 6252347,
+      "sha256": "d1b9c910b870a317242f70fd82121e5b9dbcc733cb65a00ed367c7999a4eca82"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-before-anatomical-restructure.blend",
+      "bytes": 2881459,
+      "sha256": "568f3e60f3ac79a4ef5b37febc2d5e22ef18b4f81d66a8c773a8092e0e287785"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-planar-preboolean.blend",
+      "bytes": 4309285,
+      "sha256": "c9171c71b896d54d747e70de8837077a845a0eab8f62826e858b739aad8e3e57"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-primary.blend",
+      "bytes": 4348975,
+      "sha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04.blend",
+      "bytes": 4348975,
+      "sha256": "027e2c5ab9cbf47d196945b3e40ec72790e185a4b4aca34f7d346426123b57d5"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r04/ashfang-primary-repaired.blend",
+      "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+      "bytes": 5214554
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r04-repaired.blend",
+      "sha256": "00f53049e21e4f1b80d4d7e246050485db4dd7c06284f89a1ad7e0bfdac39c19",
+      "bytes": 5214554
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r06/ashfang-primary.blend",
+      "bytes": 9099282,
+      "sha256": "7888465c04ef9a682cbd0ebe50f054876fc00b70758cc1523e2f83f47130ccb3"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r06.blend",
+      "bytes": 9099282,
+      "sha256": "7888465c04ef9a682cbd0ebe50f054876fc00b70758cc1523e2f83f47130ccb3"
+    }
+  ],
+  "nextTask": "When owner authorizes desktop work, open preserved r05 native, save a new revision, sculpt integrated brow/cheek/muzzle and shoulder/haunch planes directly. Preserve r06 as rejected comparison. Do not advance M2 or claim headless edits are manual sculpting.",
+  "authoritativeWorkingProject": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r05.blend",
+  "operatingMode": "Headless only until owner says otherwise; pause before any necessary desktop input",
+  "productionStatus": "paused-needs-direct-viewport-sculpting",
+  "latestStudyProject": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r06/ashfang-primary.blend"
+}

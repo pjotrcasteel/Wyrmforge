@@ -1,0 +1,23 @@
+{
+  "revision": "M1-r03",
+  "sourceSha256": "503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c",
+  "precedingNative": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r02/ashfang-primary.blend",
+  "sculptComplete": false,
+  "rigged": false,
+  "ownerAccepted": false,
+  "geometryImported": false,
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r03/ashfang-primary.blend",
+      "bytes": 2881972,
+      "sha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r03.blend",
+      "bytes": 2881972,
+      "sha256": "c339d8b7da0dcf59406bb6160eab0452362a26ec596c5530ffa46463ff8b933d"
+    }
+  ],
+  "sourceArchive": "New path-scoped Git LFS; prior Git binaries/history untouched",
+  "rootOverlapNotice": "Primary bony landmarks intentionally penetrate skin; not final retopology"
+}

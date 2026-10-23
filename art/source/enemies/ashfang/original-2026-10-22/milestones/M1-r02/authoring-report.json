@@ -1,0 +1,28 @@
+{
+  "source": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r01/ashfang-primary.blend",
+  "sourceSha256": "6ce00401a851c3112ed2027123e6fa3c0c56e57113665b41560d7765584d1e98",
+  "revision": "M1-r02",
+  "geometryImported": false,
+  "sculptComplete": false,
+  "rigged": false,
+  "ownerAccepted": false,
+  "files": [
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r02/ashfang-before-cranial-union.blend",
+      "bytes": 1448975,
+      "sha256": "2705012a9146a93f2733bdd5734e4812a34f16becaf32cf89d3564a8aa34d61e"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/milestones/M1-r02/ashfang-primary.blend",
+      "bytes": 2578460,
+      "sha256": "503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c"
+    },
+    {
+      "path": "art/source/enemies/ashfang/original-2026-10-22/working/ashfang-working-r02.blend",
+      "bytes": 2578460,
+      "sha256": "503199d0b6eda7c95d277eff5caaf38add26a868b4e5596427cbede49aeb008c"
+    }
+  ],
+  "pilotNativeBytes": 11417106,
+  "pilotStorageWithinLimit": true
+}

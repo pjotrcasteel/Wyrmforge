@@ -1,0 +1,34 @@
+{
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.13.0",
+  "cpu": "AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD",
+  "ram": {
+    "totalBytes": 66095271936,
+    "availableBytes": 44400824320
+  },
+  "diskFreeBytes": 1595416608768,
+  "toolsOnPath": {
+    "blender": null,
+    "krita": null,
+    "ffmpeg": null,
+    "git": "C:\\Program Files\\Git\\cmd\\git.EXE"
+  },
+  "gpu": {
+    "exitCode": 0,
+    "stdout": "name, driver_version, memory.total [MiB], temperature.gpu\nNVIDIA GeForce RTX 5090, 617.42, 32607 MiB, 31",
+    "stderr": ""
+  },
+  "sourceCardSha256": "dfc6593f74ed4d0edff3a549344860893dd93d8c599dd3ea43135a161dc889ba",
+  "git": {
+    "exitCode": 0,
+    "stdout": "1e6305662c42713aad69455036e47d87c5a451ae",
+    "stderr": ""
+  },
+  "lfs": {
+    "exitCode": 0,
+    "stdout": "git-lfs/3.7.1 (GitHub; windows amd64; go 1.25.1; git b84b3384)",
+    "stderr": ""
+  },
+  "lfsQuotaVerified": false,
+  "paidOverageAuthorized": false
+}
