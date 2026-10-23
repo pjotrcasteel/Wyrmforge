@@ -42,6 +42,28 @@ the firelit face of a tree from its unlit face.
   canonical C# simulation/collision, original tree .blend files, or live Hunt
   terrain/forest renderer.
 
+## Genuine 3D surface-normal pass (source pipeline)
+
+The original Blender Step-3 [PR #307](https://github.com/pjotrcasteel/Wyrmforge/pull/307)
+has been extended to export **camera-space normals from its real 3D mesh**
+at the exact same 768×768 orthographic projection and original transparency.
+This export is generated using an unsaved, temporary Blender material override
+(`tools/art/render_tree_camera_normals.py`) and **never overwrites the editable
+original .blend** or bakes scenery into the albedo.
+
+The normals are contained in the successful
+[Blender workflow 40022049054](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40022049054).
+In `/arena-lighting`, select the original PNG for each tree, then optionally its
+`*-camera-normals.png`. The lighting layer decodes per-pixel surface orientation
+and recalculates fire-facing diffuse highlights dynamically as the Fireball
+moves. Original pixel alpha and geometry remain unchanged. The source candidates
+are still **unapproved** and are not default production artwork.
+
+The 2D gradient fallback remains only for the older artifact without normal maps.
+Real 3D normal maps are the preferred technical review baseline; judge them separately
+from the silhouette shadow. Normal-based diffuse lighting is still not true
+self-shadowed geometry, volumetric scattering, or gameplay occlusion.
+
 ## Explicit limitations / next gate
 
 A source-alpha 2.5D billboard projection is **not real 3D self-shadowing**,
