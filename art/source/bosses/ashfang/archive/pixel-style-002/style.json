@@ -6,11 +6,6 @@
     512
   ],
   "defaultVariant": "fine",
-  "worldCell": 256,
-  "worldPixelsPerNativePixel": {
-    "fine": 1,
-    "bold": 2
-  },
   "cameraElevation": 35.26438968,
   "orthoSpan": 22,
   "palette": [
@@ -81,5 +76,6 @@
   ],
   "palettePolicy": "Two fixed constant color ramps across all frames/facings; no per-frame palette or dithering.",
   "coverage": "Binary alpha at native render resolution.",
-  "sha256": "fc0c4ba9bb76b0acab25efd97429409115fb9b78d1500716923a6850ba165bb6"
+  "sha256": "fc0c4ba9bb76b0acab25efd97429409115fb9b78d1500716923a6850ba165bb6",
+  "sizePolicy": "Owner-adjustable body/limb-to-player ratio; tail excluded,3x provisional default. Fixed402x874 logical phone preview; camera scales all scene elements."
 }
