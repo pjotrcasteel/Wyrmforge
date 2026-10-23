@@ -16,12 +16,12 @@
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
-        @* Six individually baked, first-party school images, aligned to the exact
-           canonical panorama. No runtime painting, hue filters or CSS recoloring.
-           Images precede vacancy art so other buildings can cover their own areas. *@
+        @* Six separately authored, approved Nexus building images are registered to the
+           unchanged canonical panorama. No runtime pixel recoloring or CSS hue filters.
+           The rest of the town and all vacant building art stay unchanged. *@
         @if (NexusArtworkUnlocked && DisplayNexusSchool is { } artworkSchool)
         {
-            var painting = $"art/town/nexus-schools/{artworkSchool.ToString().ToLowerInvariant()}.png?v=1";
+            var painting = $"art/town/nexus-approved/{artworkSchool.ToString().ToLowerInvariant()}.webp?v=2";
             <img class="refuge-town-nexus-school-art" data-nexus-school-art="true"
                  data-nexus-school="@artworkSchool.ToString().ToLowerInvariant()"
                  src="@painting" width="1672" height="941" alt="" aria-hidden="true" draggable="false" />
