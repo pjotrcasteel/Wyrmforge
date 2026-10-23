@@ -22,8 +22,8 @@
 
 **All arenas and Hunts take place at night.** The mood is Gothic high contrast: shadows should visually approach **true black** and fire is the dominant warm illumination, not broad daylight or a generic orange screen wash. Keep an intentionally small, neutral player-readability halo and render enemy attack warnings above the darkness; a black environment is **not** permission for invisible projectiles, unreadable enemies or inaccessible play on mobile.
 
-- One shared, world-anchored darkness pass shades **approved ground, physical forest/stone assets, enemies, the mage and Wyrms together**. The ground painting itself remains unchanged. Night is not a gameplay mechanic or an alternate biome; **every arena is night by default**.
-- Only **real light emitters** reveal the dark world: player cast/projectile/impact, actual C#-derived burning trees, fire Wyrm breath; other elemental spells retain appropriately colored local light. No decorative permanent fake fireplaces or bright permanent ambient gradients.
+- In the **target renderer**, one shared world-space material/lighting/depth pass determines the visibility of approved ground, physical scenery, enemies, the **eventual replacement mage**, Wyrms and VFX together. Ground source painting stays preserved, but its albedo must be relightable; a global Canvas darkness mask is only historical prototype behavior. **Every Hunt/arena is night by default; Town retains its separately approved Day/Auto/Night environment profiles through the SAME engine.**
+- Only **explicitly registered world light** reveals otherwise unlit surfaces: controlled sky/moon ambient; actual C# cast/projectile/impact, burning trees and Wyrm breath; world/town fixtures and other colored elemental spells. An emissive material can glow independently but must register light to illuminate neighbours. No fake permanent light sources, undeclared full-bright characters or broad permanent ambient gradients.
 - Fire has locally warm color and intensity sufficient to reveal surfaces and silhouettes, with radial falloff. Extinguishing or moving the actual source immediately changes illumination. Background and deep shadows should remain near-black; prevent blown-out highlights and expensive screen-wide glow.
 - For portrait mobile combat, prioritize legibility of mage, foe silhouettes, telegraphs, pickups and navigational cues. Do not apply opaque night veils above HUD and essential combat warnings. Use one bounded, recyclable viewport mask and a strict cap on active dynamic sources.
 - The Lighting Lab may use a clearly labeled **calibration flame** to review unapproved source assets; that flame never enters a live Hunt, C# world state, drops, collision or saved progress.
@@ -45,7 +45,80 @@
 - **Architecture and targets:** C# simulation/source state is authoritative; shaders/render adapters own illumination only. Use an isolated GPU/WebGL fixed-camera 2.5D proof, then select/optimize the native iOS/Android renderer based on profiling. Not a mandate to turn WyrmForge into a browser game, nor a commitment to Unreal, Unity or unlimited dynamic shadow lights.
 - **Mobile budgets:** shadow selection and quality are independent of emissive intensity/visibility. Cap shadow-casting lights for phones (omnidirectional point shadows can need six views), provide stable fallback illumination and LOD without hard-coding prop types. Real iPhone/Android frame pacing, memory and battery must be measured.
 
-**Acceptance gate G1:** point + spot + restrained directional/ambient; at least two simultaneous local sources; lit ground, water/puddle, rock/wall, actual **Hollowed** and original oak with **real leaves shadowing other leaves**; water specular/reflection follows the moving light; Hollowed moves into/out of actual illumination; add a new emitter-only object without renderer edits; test fire left/right/behind/off, water reflection on/off, shadow toggles, no-light legibility and 320/390px views. `G1` is not satisfied by a good-looking tree alone. [Full contract, implementation sequence and failure tests](../design/arena-real-geometry-light-engine.md).
+**Acceptance gate G1:** point + spot + restrained directional/ambient; at least two simultaneous local sources; lit ground, water/puddle, rock/wall, actual **Hollowed and Ashling**, representative **Town wall/lantern and NPC**, and original oak with **real leaves shadowing other leaves**; water specular/reflection follows the moving light; Hollowed moves into/out of actual illumination; add a new emitter-only object without renderer edits; test fire left/right/behind/off, water reflection on/off, shadow toggles, no-light legibility and 320/390px views. `G1` is not satisfied by a good-looking tree alone. [Full contract, implementation sequence and failure tests](../design/arena-real-geometry-light-engine.md).
+
+### One engine controls visibility in every world scene — LOCKED, 23 October 2026
+
+**Highest-level visual rule:** no in-world surface—town panorama, building,
+Hollowed, Ashling, other enemy, Wyrm, player, town NPC, tree, water, smoke,
+wall, road, prop or in-world VFX—may remain full-bright simply because
+its existing painted pixels were drawn. It must pass through the SAME
+scene material/lighting/depth renderer. A genuinely unlit object becomes
+nearly black; nearby real sources gradually reveal it, including its
+normal-mapped form, reflected highlights and received/cast shadows.
+**Zero ambient + zero emitter + zero material emission = black world pixels**
+in a mandatory diagnostic preset. This is a *continuous radiance calculation*,
+not a crude hide/show threshold. HUD, text, menus and explicit accessibility/
+combat telegraphs are non-world passes and retain readability.
+
+- **ALL scenes:** this rule applies to Town Square, future indoor areas,
+  *all* Hunts/biomes, buildings, NPCs, player and creatures. The general
+  \`LightEmitter\` / \`LitRenderable\` / material and shadow contracts are
+  shared. A new object registers data rather than receiving new per-kind
+  shader/Canvas/CSS code. An emissive surface can glow while world is
+  otherwise black, but must also register an emitter to light its neighbours.
+- **Artist-intended style:** use an explicit dim night sky/moon/environment
+  profile for normal Gothic Hunts, rather than secret character illumination.
+  Day/Night/Auto in Town can use different environmental light profiles
+  **in the same renderer**; the existing owner-approved settings are not
+  revoked by the all-Hunts-at-night decision. Essential combat readability
+  is preserved by explicit UI/telegraph/accessibility layers, not universal
+  full-bright enemy art. Ensure fair warning before damage from darkness.
+- **Sprite actors:** use the **existing Hollowed/Ashling rigged-sprite
+  animation setup as the common character pipeline**. The current mage
+  artwork is a **temporary placeholder to be replaced**, using that same
+  animation/frame/pose/material setup. Do not create a custom permanent
+  mage lighting implementation around the disposable sprite. Actor
+  frame normals/height/occluder data must be authored or exported
+  consistently. Normal maps make surfaces respond to lighting but
+  **do not on their own create real dynamic cast shadows**.
+- **Town Square:** current 1672×941 pre-lit night panorama, day variant,
+  active/vacant building patches and foreground cutouts are renderable
+  reference art, NOT relightable geometry. The long-term Town scene
+  needs newly derived neutral albedo, separate walls/roofs/floor/props,
+  correct depth/occluders, material/roughness/normal passes and
+  fixture/Nexus emissions. Preserve all original approved paintings,
+  four building states/unlocks, six Nexus school variants + mastery,
+  the gate, well/board, routes, NPC interactions, collision and
+  foreground masking. **Rebuild the presentation assets, not town
+  gameplay or the approved architecture**; owner signs off before
+  replacing existing assets on the active screen.
+- **Materials and effects:** water/puddles reflect lights and nearby
+  world through an explicitly budgeted reflection strategy; stone,
+  armour, leaves and bark use their own roughness/normal data. Transparent
+  smoke and spell effects compose with world depth and visibility;
+  UI-only effects do not. No baked direct torch illumination counted
+  a second time alongside a registered live fixture.
+- **Lighting/pixel fidelity:** linear-space accumulation of source
+  lighting (sRGB albedo and non-color normal/roughness maps), correct
+  alpha, one output tonemap/encoding, documented art-to-world pixel
+  scale and stable pixelated shadow sampling/dither. A filtered black
+  overlay is not a substitute for proper receiving/occluding materials.
+- **Acceptance:** G1 demonstrates the shared interface and black-world
+  switch using representative Hunt ground, Hollowed, Ashling, rock,
+  original tree, a Town lantern/wall/roof/NPC sample and reflective water.
+  Adding any new light requires only source/component registration.
+  G5 cutover cannot claim completion until *every world renderer*
+  uses the engine; legacy panorama/Canvas tint bypasses must be
+  removed or explicitly documented as not-yet-migrated scenes.
+
+[Full scene-by-scene gap audit, town migration and generic renderer
+acceptance](../design/arena-real-geometry-light-engine.md).
+**Change note, 23 Oct:** owner widened the engine requirement from Wet
+Forest objects to *every in-world pixel-art surface*, explicitly including
+Town Square and the replacement mage that will use Hollowed/Ashling
+sprite architecture. This requires future town art decomposition, not
+an immediate destructive replacement of approved paintings.
 
 ### Visual and technical contract
 
@@ -53,7 +126,7 @@
 2. **Ground contact, shadows and occlusion.** Implement subtle contact shadows and broad restrained ambient-occlusion grounding at actual trunk/root or rock-body footprints. Shadows fall on the *existing approved ground*, not on an opaque rectangle beneath a sprite. Keep canopy alpha separate from physical collision; sort tree trunk, optional canopy/front-layer, actors and props by correctly authored foot/root anchors. Never fake gameplay collision through shadow masks.
 3. **Material-aware response.** Preserve the six approved Gothic ground materials and their blends. Wet mud and stone may take restrained damp highlights, while bark, moss and leaves remain largely diffuse and dark; avoid glossy plastic vegetation or globally color-filtering painted assets. Any normals/height/roughness maps are optional and must be derived from approved editable art, with a convincing fallback when absent.
 4. **Depth and air.** Add subtle distance-dependent tint, mist and depth separation only once the lighting/grounding baseline is coherent. Maintain player/enemy silhouettes, projectiles, dodge cues, loot, exits and boss telegraphs in small portrait viewports; reduced-effects paths must remain readable.
-5. **Elemental illumination later.** Design a small, bounded dynamic-light input so a Fireball, burning tree, Ashfang's breath, lightning or evolving Wyrm influence can illuminate nearby **ground and entities together**. Support local color, falloff and optional shadow modulation without creating a new authoritative fire/collision system. Tie timing and positions to C# gameplay snapshots, not independent client-side random effects.
+5. **All emitters use one engine.** From G1, the universal test registry handles Fireball, torch, wall fixture, moon/ambient, spot and dynamically extinguished sources through descriptors. At G2 connect actual C# casts, burning trees, Ashfang breath, lightning, town Nexus/forge/windows and later elemental events to the **same** type-safe source/scene snapshot, illuminating ground, water, actors and props together. All cast/receive visibility and light budgets live centrally; never add authoritative client-side fire/collision logic.
 6. **Platform neutrality.** World/arena state, terrain recipes, occluder/contact footprints and light-emitter events remain deterministic and platform-neutral in C# when integrated. Visual renderer adapters may choose Canvas/WebGL, mobile GPU shaders or a native backend **after on-device measurement**. The browser-only Materials/Arena Labs and off-line Python comps are replaceable reviews, not the iOS/Android product architecture. Favor baked/cached static lighting and a tightly bounded set of dynamic lights; test overdraw, memory, frame pacing and battery before choosing the technique.
 
 ### Reusable lighting-engine delivery gates — supersede old L0–L5
@@ -65,7 +138,7 @@
 | **G2 — authoritative C# integration** | Snapshot-driven light sources for actual spells, burning entities, Wyrm breath and scene fixtures, no JS gameplay authority. | Deterministic movement, expiry/replay, no combat-state mutation. |
 | **G3 — richer materials and atmosphere** | AO, bark/stone/foliage response, optional leaf transmission, subtle wet highlights and mist, extended-source approximation where justified. | Diverse materials react to the **same** light consistently without global wash or fake local effect stacks. |
 | **G4 — mobile optimization** | Shadow budgets/culling/LOD, renderer portability and stable fallbacks. | Actual iOS/Android device frame time, battery, thermal, overdraw and readability evidence. |
-| **G5 — live Hunt adoption** | General lighting engine used by accepted scene objects and real battle light sources. | Visual sign-off, gameplay/CI regression, source material approval and device testing. |
+| **G5 — all-scene adoption** | One renderer across accepted Town Square relightable assets, Hunts, Hollowed/Ashling/other actors and replacement mage, world VFX/fixtures and future biomes. Preserve town interactions and gameplay. | Black-world scene audits, town active/vacant/Nexus/day/night checks, all-Hunt regressions and device/owner art sign-off. |
 
 Previous L0–L3 Canvas/night/root/material effects and #327 tree-specific projections are **interim evidence**, not the lighting system. Neither a projected ground shadow nor a single firelit tree satisfies a reusable engine acceptance test.
 

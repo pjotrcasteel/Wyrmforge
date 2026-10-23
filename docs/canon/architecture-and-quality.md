@@ -128,6 +128,77 @@ The current presentation uses Blazor WebAssembly and a canvas-based JavaScript r
 - **G1 proof:** moving Fireball, static torch, directional/spot example, overlapping sources, and a newly added glowing fixture **without modifying engine renderer code**. Approved ground, reflective puddle/water, rock/wall, actual existing Hollowed and original 3D tree all receive one shared light. Water's specular light follows source position, with reflection OFF A/B; Hollowed enters/exits illumination, shades across authored normals and casts a ground shadow without its own lighting code. Rock and leaf layers cast dynamic shadows; leaf-on-leaf/tree-on-trunk, light-space depth/visibility, near-black/no-light enemy behavior and 320/390px evidence are mandatory. Provide separate *world illumination* and *combat readability/telegraph* passes so dark encounters stay fair without faking daylight.
 - **G4 device gate:** profiling on real iOS/Android is required for frame times, battery, memory, overdraw, LOD, caster budgets and compatibility. Render every light with real shadows only when affordable; non-shadowed light still illuminates as a documented fallback, without faking physics or global daylight.
 
+### Scene-wide lighting/visibility and rendering cutover — LOCKED, 23 October 2026
+
+The **one central GPU lighting engine** must be the only authority for
+illumination/visibility of **ALL world-space objects** in Town, Hunts,
+other biomes and future interior scenes. Ordinary world albedo must not
+bypass illumination simply because it is drawn as a static DOM \`img\`,
+rigged sprite frame, alpha-mask cutout, Canvas overlay or 3D mesh.
+The lit material path (including shading, depth/occlusion, reflections
+and scene environment) is shared. A material marked emissive or a
+screen-space UI/telegraph may be visible without incident light;
+those exceptions must be explicit rather than accidental.
+
+- **Scene-universal \`SceneRenderSnapshot\` (conceptual):** in addition to
+  typed \`LightEmitter\`, provide stable IDs, scene/environment profile,
+  world transforms, material IDs, normal/roughness/depth or mesh binding,
+  current animation/pose, alpha cutout, cast/receive flags, emissive
+  properties and authorized scene fixtures. In the Town, unlock/vacancy
+  and Nexus school/mastery determine fixture IDs/lifetimes. In Hunts,
+  spells/fire/Wyrm states determine source lifetimes. No entity-kind
+  hardcoded switch in the light renderer.
+- **Common \`LitSprite\` adapter:** bind rigged frame, direction,
+  pose-specific pivots/normals/occluders to material/depth rendering.
+  Existing Hollowed/Ashling animation architecture is the starting
+  reference. The current mage sprite is **temporary and will be
+  replaced using the SAME setup**; do not make special mage light
+  handlers or commit to the current mage artwork.
+- **World vs screen space:** all scene elements (actors, building
+  overlays, fog, footprints, particles, ground, foreground) join the
+  world renderer. Explicit non-world HUD/menus/accessibility overlays
+  compose afterward. A complete zero-light test disables all scene
+  environment, local and emissive sources and expects black world
+  pixels; gameplay warning/UI tests have their own intentionally
+  readable channel. Ordinary Gothic night retains an explicit small
+  moon/sky contribution and fair attack indicators.
+- **Linear-light / pixel-stable renderer:** annotate sRGB albedo/emissive
+  maps, non-color normals/depth/roughness/alpha; evaluate illumination
+  and specular/reflections in linear RGB with consistent world units,
+  exposure, color management, shadow grid and pixel-art quantization.
+  Avoid bright pre-lit layer under dark vignette, double lighting,
+  CSS filters, full-frame blur or lighting-altering sprite fallback.
+  Ensure nearest sampling for pixel source does not become
+  inconsistently aliased when camera and shadow maps move.
+- **Migration guard:** first inventory all in-world draw paths and
+  per-frame shaders/Canvas helpers. Mark transition adapters and
+  which scenes still bypass GPU lighting. Retire the legacy masks
+  (including Arena \`drawGothicNight\`, mage/enemy light-tint
+  helpers and image-swapped Town) on **each approved scene cutover**.
+  One engine contract can be proven and staged, but don't advertise
+  the full game as migrated until every scene passes zero-light,
+  moving-light, shadows/reflections and owner/device tests.
+- **Town art conversion:** preserve original 1672×941 panorama, approved
+  architecture, building source paintings and six Nexus artworks.
+  Author a separate relightable material/depth/occlusion layer set:
+  paving, roofs, walls, windows, gate, well, board, flowerbeds,
+  fixtures and NPCs. Preserve \`night-navigation.json\`, A*,
+  collision feet discs, well/board posts, camera/swipe, building
+  state and unlocks. Town \`Auto/Day/Night\` selects *environment
+  lighting profile* in the shared renderer while Hunts default
+  to night; neither requires a second lighting engine.
+- **Performance and correctness:** stable caster/light budgeting,
+  animation-pose light mapping, correct depth/transparent effects,
+  no light leaks through roofs, visible water reflection response and
+  scene-specific GPU frame-time targets. Cross-scene integration
+  tests verify vacancy/Nexus color & mastery, enemy visibility,
+  actor shadows, town navigation and device settings along with
+  existing save/physics behavior. Compare mobile WebGL proof AND
+  eventual native renderer fidelity—do not assume identical results.
+
+[Full multi-scene audit and migration acceptance](../design/arena-real-geometry-light-engine.md) ·
+[Town Square rendering-migration canon](town-and-ux.md#future-town-square-presentation-migration--one-universal-lighting-engine-locked-23-october-2026).
+
 ### Material Lab is a preview, not the mobile engine — reaffirmed 22 October 2026
 
 **iOS and Android are the production targets.** GitHub Pages, Blazor and JavaScript Canvas currently enable fast visual iteration, but are **not** the target game architecture by default. Do not optimize the project into an increasingly browser-dependent game.

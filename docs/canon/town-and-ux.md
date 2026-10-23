@@ -11,6 +11,78 @@
 - Preserve the eight owner-approved active/vacant source PNGs in `user_handover_files/concepts/buildings/`, and their coherent night town composition. Vacant means empty and unpowered (no lights, fire or static NPC); active artwork genuinely lights up. **Never use a CSS dark wash, filter, blackout rectangle or stretch an image** to fake vacancy or fill a screen. Original artwork is immutable without approval. Approved art source details: [canonical building checkpoint](../art/refuge-canonical-buildings-game-screen-2026-10-20.md).
 - Day/night adaptation is approved: **Auto** uses local browser/device time, with explicit **Day** and **Night** overrides in Settings; avoid hardcoded server time, location permission or unapproved game-clock pressure. The device-local Auto/Day/Night implementation has merged via [PR #173](https://github.com/pjotrcasteel/Wyrmforge/pull/173). **Day is 07:00–18:59 and Night 19:00–06:59** according to browser/device local time; Settings overrides persist, and town lighting does not change any building unlock.
 
+## Future Town Square presentation migration — one universal lighting engine (LOCKED, 23 October 2026)
+
+**Product-owner direction (NOT current shipped behavior):** the Town
+Square is part of the exact same scene-lighting world as every Hunt.
+**The lighting engine, not an already-bright picture, determines what
+world pixels are visible.** Wall, roof, window, flowerbed, cobbles,
+well, noticeboard, World Gate, NPC, shopfront, active Nexus, lamp and
+reflective paving share the same light/emitter/material/occlusion system.
+The current 1672×941 approved pre-lit panorama and active/vacant image
+overlays **are not suited to reliable dynamic relighting in place**.
+They remain owner-approved visual *references and preserved source
+assets* while a replacement relightable scene is authored.
+
+**This is an art/render asset migration, NOT town gameplay redesign.**
+Retain exactly: three horizontal districts/default centre, four building
+hotspots and Active/Vacant/unlock predicates, six selected Nexus school
+artworks with mastery, current World Gate, all accepted architectural
+silhouettes and decorative composition, NPC routing/workstations,
+collision polygons, feet-depth foreground overlaps (well, both board
+posts, garden), swipe navigation, town save state and accessibility.
+Do not delete/alter original 8 building paintings, panorama art,
+source navigation JSON or developer-debug tooling.
+
+**New relightable Town scene requirements:**
+
+1. Produce separated neutral-color floor, architecture, roofs/walls,
+   doors/windows, well/board/posts, gate, plants and foreground
+   material/geometry layers with authored world coordinates, height,
+   normal/roughness, shadow caster/receiver and appropriate pixel
+   sampling. Keep lighting separate from albedo. Do not automatically
+   infer correct normals/geometry from a flattened painted WEBP.
+2. Fixtures emit through the SAME generic registry as Hunt Fireballs:
+   torches, street lanterns, Blacksmith forge, lit windows, Nexus
+   school crystal/radiance, other authorized world fire. Fixtures
+   may glow as emissive surfaces **and** illuminate paving, walls,
+   NPCs, water and props; vacant buildings do not retain ghost
+   window/forge/Nexus illumination. Nexus mastery changes actual
+   emitted intensity, not only an artwork/CSS overlay.
+3. **Town Auto/Day/Night remains valid.** The preference chooses
+   sun/moon/ambient/environment profile inside one renderer. It does
+   *not* swap full pre-lit backgrounds as the final light algorithm.
+   Hunts are always night; Town may display owner-approved daylight
+   using the same materials and scene geometry. No gameplay clock
+   or building unlock should be changed by a visual environment toggle.
+4. All town NPCs (and the eventual replacement mage) use the same
+   rigged character sprite/pose/material pipeline as Hollowed/Ashling:
+   per-frame normals/depth or geometry, independent received and cast
+   shadows, correct feet-root, clipping and light response. Character
+   art should become dark when unilluminated rather than remaining
+   full-bright on top of the panorama.
+5. First validate a **small non-destructive Town corner** in the
+   isolated GPU lighting lab (paving + rock/wall + lantern + NPC +
+   roof/foreground occluder + wet puddle). Then build a complete
+   relightable scene through visual signoff; maintain current
+   production presentation until approved replacement.
+6. Acceptance: compare 320/390px and desktop identical geometry in
+   day/night; zero ambient/emission/light diagnostic makes WORLD
+   black while screen-space UI/hotspots remain usable; fixtures
+   light across the real world and get blocked by walls; NPCs cast
+   onto paving and correctly pass behind both board posts and
+   the well. Active/vacant, Nexus school/mastery, swipe, all named
+   exits, path connectivity, save/unlock states and frame time
+   remain intact. Do not claim G5 completion until Town and Hunts
+   both use the same lighting engine.
+
+The detailed [scene-wide lighting contract, repository audit and Town
+asset migration plan](../design/arena-real-geometry-light-engine.md)
+is subordinate to [art canon](art-and-animation.md#one-engine-controls-visibility-in-every-world-scene--locked-23-october-2026).
+The current image-based Town rules below remain operational truth
+until the replacement has passed owner approval and been integrated;
+they must not be mistaken for the long-term light-engine architecture.
+
 ## Ambient townspeople and painted-world navigation (updated 20 October 2026)
 
 - **Current behaviour:** autonomous pedestrians use seeded C# decisions and a terrain-aware pathfinder. The visual placeholders are deliberately larger until character art is accepted.
