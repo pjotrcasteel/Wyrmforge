@@ -46,7 +46,7 @@ function fakeContext() {
         fillRect(...args) { operations.push(['fill', ...args]); },
         createRadialGradient() { operations.push('radial'); return gradient(); },
         createLinearGradient(...args) { operations.push(['linear', ...args]); return gradient(); },
-        set fillStyle(value) { operations.push(['color', value]); },
+        set fillStyle(value) { operations.push(['color', typeof value === 'string' ? value : 'gradient']); },
     };
     return ctx;
 }
@@ -74,7 +74,7 @@ test('soft contact ellipse is painted behind independent sprites, not into mater
     const plan = contactShadowPlan({ x: 300, y: 400 }, 50, { enabled: true });
     assert.equal(drawContactShadow(ctx, plan), true);
     assert.ok(ctx.operations.includes('radial'));
-    assert.deepEqual(ctx.operations.filter(x => Array.isArray(x) && x[0] === 'scale').length, 1);
+    assert.equal(ctx.operations.filter(x => Array.isArray(x) && x[0] === 'scale').length, 1);
     assert.equal(ctx.operations.at(-1), 'restore');
 });
 
