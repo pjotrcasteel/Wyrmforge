@@ -7,7 +7,7 @@ import {
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS,
     FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from './arena-ground-foundation.js';
 import { resolveSceneLighting, contactShadowPlan, projectedShadowPlan, drawContactShadow, drawSceneLighting,
-    sortSpritesByFoot } from './arena-scene-lighting.js';
+    sortSpritesByFoot, spriteFootPlacement } from './arena-scene-lighting.js';
 
 const states = new WeakMap();
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -53,12 +53,11 @@ function render(state) {
         // Preserve original alpha and register visible root baseline in world
         // coordinates rather than using the full transparent Blender canvas.
         const crop = image.crop;
-        const drawHeight = sprite.height;
-        const drawWidth = drawHeight * crop.width / crop.height;
+        const placement = spriteFootPlacement(sprite.foot, crop, sprite.height);
+        if (!placement) continue;
         ctx.imageSmoothingEnabled = true;
         ctx.drawImage(image.image, crop.x, crop.y, crop.width, crop.height,
-            sprite.foot.x - drawWidth / 2, sprite.foot.y - drawHeight,
-            drawWidth, drawHeight);
+            placement.x, placement.y, placement.width, placement.height);
         ctx.imageSmoothingEnabled = false;
     }
     if (state.ground) drawSceneLighting(ctx, world, state.light);
@@ -210,7 +209,28 @@ function findAlphaBounds(image) {
             minX = Math.min(minX, x); minY = Math.min(minY, y);
             maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
         }
-    return maxX < 0 ? null : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    if (maxX < 0) return null;
+
+    // Radial roots can extend 10-30 source pixels below the opaque collar.
+    // Detect the lowest *solid center-trunk row* rather than trusting alpha
+    // bbox bottom. This is per original PNG and does not repaint source art.
+    const center = Math.round((minX + maxX) * .5);
+    const halfWidth = Math.min(32, Math.max(9, Math.floor((maxX - minX) / 12)));
+    let solidBase = maxY;
+    for (let y = maxY; y >= minY; y--) {
+        let opaque = 0, samples = 0;
+        for (let x = center - halfWidth; x <= center + halfWidth; x++) {
+            if (x < 0 || x >= sample.width) continue;
+            samples++;
+            if (data[(y * sample.width + x) * 4 + 3] >= 192) opaque++;
+        }
+        if (samples > 0 && opaque / samples >= .67) {
+            solidBase = y;
+            break;
+        }
+    }
+    return { x: minX, y: minY, width: maxX - minX + 1,
+        height: maxY - minY + 1, footInsetPixels: maxY - solidBase };
 }
 
 // Never upload user art or persist object URLs. Previews are selected from the
