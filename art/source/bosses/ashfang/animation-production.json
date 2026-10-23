@@ -72,5 +72,15 @@
   "currentMotionSource": "archive/motion-library-008/ashfang-animations.blend",
   "sourceValidationPassed": true,
   "exportStatus": "Partial render checkpoint only; spritesheets not yet packed",
-  "resumeNote": "PAUSED.md"
+  "resumeNote": "PAUSED.md",
+  "packedMaster": "archive/motion-foundation-001-packed/ashfang-animation-foundation.blend",
+  "rigFamily": "zagmatorah-112/v1",
+  "scaleTwoProofPassed": true,
+  "exportProgress": {
+    "completedPackedClips": 26,
+    "expectedClips": 41,
+    "completedPackedDirectionalFrames": 4512,
+    "expectedDirectionalFrames": 7448,
+    "status": "incomplete; rendering continues"
+  }
 }

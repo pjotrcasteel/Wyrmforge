@@ -7,22 +7,27 @@
   "storage": "Git LFS; user confirmed available capacity 2026-10-23",
   "blender": "4.5.14 LTS",
   "renderer": "Cycles OptiX NVIDIA GeForce RTX 5090; three views completed per review",
-  "currentCandidate": "archive/tier-I-skin-010-packed/ashfang-tier-I.blend",
+  "currentCandidate": "archive/motion-foundation-001-packed/ashfang-animation-foundation.blend",
   "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
   "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
   "M0": "Import, packed dependency reopen, remote LFS retrieval and SHA256 verification passed. Structural issues documented; deformation/motion not validated.",
   "M1": "Skin pass rendered: clean charcoal scale shaders, scorched oxblood membranes and selective ember fractures on the exact owner-approved source anatomy. Material proposal is not owner-approved.",
-  "M2_M7": "not started",
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Owner material review",
-    "Real authored creature motion and extreme-pose validation",
-    "Higher tiers if subsequently requested",
-    "Runtime VFX and eventual sprite/game integration with mobile acceptance"
+    "Complete 7448 directional frame export and packing",
+    "Verify all exported motion/directions and tier-scale proof",
+    "Independent remote source/atlas retrieval",
+    "Owner review and subsequent game integration"
   ],
   "ownerAcceptedAnatomy": true,
   "ownerAcceptedMaterials": false,
   "skinWorkStatus": "Skin proposal prepared for visual review; final render and remote retrieval evidence recorded in reviews/tier-I-skin-010.",
-  "fireAndSmoke": "Reserved for game VFX; no flame, smoke, particle or cinder geometry in the character master."
+  "fireAndSmoke": "Reserved for game VFX; no flame, smoke, particle or cinder geometry in the character master.",
+  "M2": "Preserved original 112-bone deform hierarchy; temporary IK controls baked and removed. Source motion checks pass.",
+  "M3": "41 authored actions and variants, including locomotion/breath/flight transitions and held death variants. Candidate motion; no owner acceptance inferred.",
+  "M4": "Eight-direction renders and atlas packing in progress.",
+  "M5": "Offline review player: initial atlas playback, pause, step, direction phase carry and 390px layout checks pass; full library review pending.",
+  "M6": "Uniform scale-two idle, walk and flight proof passes for projected poses, pivots, attachments and root-travel scaling. No higher-tier geometry authored.",
+  "M7": "No game integration or physical-device acceptance."
 }

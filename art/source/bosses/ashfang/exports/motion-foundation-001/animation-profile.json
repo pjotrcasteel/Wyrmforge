@@ -2,7 +2,29 @@
   "schema": "wyrmforge-animation-foundation/1",
   "rigFamily": "zagmatorah-112/v1",
   "units": "source model units; multiply travel and socket offsets by tier/model-to-game scale",
-  "locomotion": {},
+  "locomotion": {
+    "walk": {
+      "clip": "walk",
+      "frames": 24,
+      "duration": 2.0,
+      "stride": 1.8,
+      "phaseSource": "authoritative displacement"
+    },
+    "stalk": {
+      "clip": "stalk",
+      "frames": 32,
+      "duration": 2.6666666666666665,
+      "stride": 1.2,
+      "phaseSource": "authoritative displacement"
+    },
+    "run": {
+      "clip": "run",
+      "frames": 16,
+      "duration": 1.3333333333333333,
+      "stride": 3.4,
+      "phaseSource": "authoritative displacement"
+    }
+  },
   "actions": {
     "idle": {
       "clip": "idle",
@@ -82,6 +104,151 @@
       "events": {},
       "headingChangeDegrees": 0
     },
+    "walk_stop": {
+      "clip": "walk_stop",
+      "frames": 17,
+      "duration": 1.3333333333333333,
+      "fps": 12.75,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "run_start": {
+      "clip": "run_start",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 13.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "run_stop": {
+      "clip": "run_stop",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 13.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "walk": {
+      "clip": "walk",
+      "frames": 24,
+      "duration": 2.0,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "footfalls": [
+          0,
+          0.25,
+          0.5,
+          0.75
+        ]
+      },
+      "headingChangeDegrees": 0
+    },
+    "stalk": {
+      "clip": "stalk",
+      "frames": 32,
+      "duration": 2.6666666666666665,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "footfalls": [
+          0,
+          0.25,
+          0.5,
+          0.75
+        ]
+      },
+      "headingChangeDegrees": 0
+    },
+    "run": {
+      "clip": "run",
+      "frames": 16,
+      "duration": 1.3333333333333333,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "footfalls": [
+          0.04,
+          0.18,
+          0.54,
+          0.68
+        ]
+      },
+      "headingChangeDegrees": 0
+    },
+    "turn_left": {
+      "clip": "turn_left",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12.6,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "turn": 0.5
+      },
+      "headingChangeDegrees": -45
+    },
+    "turn_right": {
+      "clip": "turn_right",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12.6,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "turn": 0.5
+      },
+      "headingChangeDegrees": 45
+    },
+    "pounce": {
+      "clip": "pounce",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12.5,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "launch": 0.3,
+        "impact": 0.68
+      },
+      "headingChangeDegrees": 0
+    },
     "tail_right": {
       "clip": "tail_right",
       "frames": 25,
@@ -109,6 +276,140 @@
       "priority": 50,
       "events": {
         "voice": 0.32
+      },
+      "headingChangeDegrees": 0
+    },
+    "breath_start": {
+      "clip": "breath_start",
+      "frames": 17,
+      "duration": 1.3333333333333333,
+      "fps": 12.75,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "mouth_ready": 1
+      },
+      "headingChangeDegrees": 0
+    },
+    "breath_loop": {
+      "clip": "breath_loop",
+      "frames": 24,
+      "duration": 2.0,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "vfx": "continuous mouth attachment"
+      },
+      "headingChangeDegrees": 0
+    },
+    "breath_end": {
+      "clip": "breath_end",
+      "frames": 17,
+      "duration": 1.3333333333333333,
+      "fps": 12.75,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "vfx_stop": 0
+      },
+      "headingChangeDegrees": 0
+    },
+    "breath_sweep": {
+      "clip": "breath_sweep",
+      "frames": 33,
+      "duration": 2.6666666666666665,
+      "fps": 12.375,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "vfx_start": 0.23,
+        "vfx_stop": 0.77
+      },
+      "headingChangeDegrees": 0
+    },
+    "takeoff": {
+      "clip": "takeoff",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12.5,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "liftoff": 0.36
+      },
+      "headingChangeDegrees": 0
+    },
+    "fly": {
+      "clip": "fly",
+      "frames": 16,
+      "duration": 1.3333333333333333,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "downstroke": 0.25
+      },
+      "headingChangeDegrees": 0
+    },
+    "hover": {
+      "clip": "hover",
+      "frames": 20,
+      "duration": 1.6666666666666667,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "downstroke": 0.25
+      },
+      "headingChangeDegrees": 0
+    },
+    "glide": {
+      "clip": "glide",
+      "frames": 24,
+      "duration": 2.0,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "bank_left": {
+      "clip": "bank_left",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12.6,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "bank": 0.5
       },
       "headingChangeDegrees": 0
     }
