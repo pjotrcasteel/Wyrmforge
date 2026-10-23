@@ -88,7 +88,32 @@ public sealed class ArenaLightingBrowserTests : PageTest
         await Page.Locator(".lighting-inspector input[type='file']").Nth(1).SetInputFilesAsync(elm);
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-objects", "2");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-physics-objects", "0");
+        await Expect(canvas).ToHaveAttributeAsync("data-tree-self-lighting", "2");
+        await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "2");
         var lit = await CanvasPixelHashAsync(canvas);
+        await SaveScreenshotAsync(canvas, $"arena-l4-source-tree-lit-shadows-{width}.png");
+
+        await Page.Locator("#toggle-shadows").UncheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "0");
+        Assert.AreNotEqual(lit, await CanvasPixelHashAsync(canvas),
+            "Removing the actual tree silhouette cast must change ground pixels beneath the firelight.");
+        await SaveScreenshotAsync(canvas, $"arena-l4-source-tree-no-shadows-{width}.png");
+        await Page.Locator("#toggle-shadows").CheckAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "2");
+        Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas),
+            "Reinstating the exact original tree masks must restore the frozen lit scene.");
+
+        // Light moves in WORLD SPACE, so a tree's projected silhouette moves
+        // opposite the Fireball while the lit tree face also changes direction.
+        await Page.Locator("#fireball-progress").FillAsync("15");
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.150");
+        await SaveScreenshotAsync(canvas, $"arena-l4-shadow-fireball-left-{width}.png");
+        await Page.Locator("#fireball-progress").FillAsync("85");
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.850");
+        await SaveScreenshotAsync(canvas, $"arena-l4-shadow-fireball-right-{width}.png");
+        await Page.Locator("#fireball-progress").FillAsync("50");
+        await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.500");
+        Assert.AreEqual(lit, await CanvasPixelHashAsync(canvas));
         await SaveScreenshotAsync(canvas, $"arena-l3-original-trees-airborne-fire-{width}.png");
 
         await Page.Locator("#toggle-anchors").CheckAsync();
