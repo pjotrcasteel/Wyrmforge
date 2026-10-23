@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+<!-- Individually registered fire art from the six-school design accepted on 2026-10-23.
+     Canonical town world pixels, collision, unlocks and other buildings are unchanged. -->
+<defs>
+  <clipPath id="town-nexus-only" clipPathUnits="userSpaceOnUse"><path d="M 5 273 L 40 257 65 233 94 201 107 161 121 149 128 128 142 120 153 119 164 111 172 97 198 95 215 79 226 73 245 66 256 58 278 56 292 57 323 52 346 60 362 75 373 88 382 106 387 139 386 158 448 157 464 163 476 170 482 187 480 212 488 223 500 233 514 256 518 332 525 350 524 370 547 386 554 411 552 426 506 441 474 440 434 430 403 431 369 428 335 430 301 419 257 420 221 418 185 412 152 414 123 412 87 409 45 403 2 389 1 318 Z"/></clipPath>
+  <clipPath id="approved-school-panel" clipPathUnits="userSpaceOnUse"><rect x="320" y="0" width="320" height="267"/></clipPath>
+</defs>
+<g clip-path="url(#town-nexus-only)">
+  <g transform="matrix(1.712000 -0.043200 0.043200 1.712000 -575.761000 34.363000)">
+    <image href="../nexus-approved-six-source.webp" x="0" y="0" width="960" height="534"
+           preserveAspectRatio="none" clip-path="url(#approved-school-panel)"/>
+  </g>
+</g>
+</svg>
