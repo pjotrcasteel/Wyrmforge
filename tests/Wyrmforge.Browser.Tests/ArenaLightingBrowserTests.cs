@@ -16,6 +16,10 @@ public sealed class ArenaLightingBrowserTests : PageTest
         var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
         await Page.GotoAsync(baseUrl.TrimEnd('/') + "/arena-lighting",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        // Startup ignition fades out after Blazor is ready. Element screenshots
+        // taken during that fade show misleading ghost text over real terrain.
+        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
+            null, new PageWaitForFunctionOptions { Timeout = 30000 });
         var canvas = Page.Locator(".lighting-stage canvas");
         await Expect(canvas).ToBeVisibleAsync();
         await Page.WaitForFunctionAsync(@"() => {
@@ -73,6 +77,10 @@ public sealed class ArenaLightingBrowserTests : PageTest
         var baseUrl = Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
         await Page.GotoAsync(baseUrl.TrimEnd('/') + "/arena-lighting",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        // Startup ignition fades out after Blazor is ready. Element screenshots
+        // taken during that fade show misleading ghost text over real terrain.
+        await Page.WaitForFunctionAsync("() => !document.getElementById('wyrmforge-ignition')",
+            null, new PageWaitForFunctionOptions { Timeout = 30000 });
         var canvas = Page.Locator(".lighting-stage canvas");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-ready", "true",
             new LocatorAssertionsToHaveAttributeOptions { Timeout = 45000 });
