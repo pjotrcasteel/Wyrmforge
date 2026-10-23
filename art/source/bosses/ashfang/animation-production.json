@@ -134,5 +134,41 @@
     "remoteNativeValidation": "remote-native-validation.json",
     "remoteMotionValidation": "remote-motion-validation.json",
     "allTrackedLfsHashesMatch": true
+  },
+  "pixelStyleProof": {
+    "status": "bounded4-motion candidate; owner style review pending",
+    "source": "archive/pixel-style-001/ashfang-pixel-style.blend",
+    "export": "exports/pixel-proof-001",
+    "review": "reviews/pixel-style-001/review.md",
+    "route": "/arena-lab/ashfang/",
+    "motions": [
+      "idle",
+      "claw_right",
+      "fly",
+      "roar"
+    ],
+    "nativeFrames": 3264,
+    "nativeRenderDensities": [
+      48,
+      96,
+      128,
+      256
+    ],
+    "directions": 8,
+    "fixedPaletteColors": 21,
+    "usedColors": 18,
+    "targetGroundedViewportWidth": [
+      0.15,
+      0.25
+    ],
+    "calibrationFraction": 0.2,
+    "browserValidation": "reviews/pixel-style-001/browser/browser-report.json",
+    "ownerAccepted": false,
+    "runtimeIntegrated": false,
+    "remaining": [
+      "Owner style review and any pixel touchups",
+      "After style approval: process remaining37 actions",
+      "Actual Hunt and physical device integration"
+    ]
   }
 }

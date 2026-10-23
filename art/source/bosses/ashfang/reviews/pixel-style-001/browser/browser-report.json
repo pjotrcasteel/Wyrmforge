@@ -1,0 +1,49 @@
+{
+  "pass": true,
+  "actualArenaGround": true,
+  "actualMageRenderer": true,
+  "actualHollowRenderer": true,
+  "atlasFiles": 160,
+  "screenScales": [
+    {
+      "width": 320,
+      "viewport": 296,
+      "reference": 0.2001953125,
+      "visible": 0.17447916666666669,
+      "lod": "mobile-fine"
+    },
+    {
+      "width": 390,
+      "viewport": 366,
+      "reference": 0.19910134904371585,
+      "visible": 0.1735257285974499,
+      "lod": "mobile-fine"
+    },
+    {
+      "width": 440,
+      "viewport": 416,
+      "reference": 0.2001953125,
+      "visible": 0.17447916666666666,
+      "lod": "mobile-fine"
+    },
+    {
+      "width": 1100,
+      "viewport": 1056,
+      "reference": 0.2001953125,
+      "visible": 0.19140625,
+      "lod": "fine"
+    }
+  ],
+  "phasePreservingFacing": true,
+  "step": true,
+  "pause": true,
+  "depthToggle": true,
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "horizontalOverflow": false,
+  "physicalPhoneAcceptance": false,
+  "runtimeIntegrated": false,
+  "errors": []
+}
