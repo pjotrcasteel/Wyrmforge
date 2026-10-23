@@ -92,6 +92,24 @@ export function drawSceneLighting(ctx, world, lighting) {
     return true;
 }
 
+// Bind the tree's opaque trunk base to the authored world-space foot, not
+// the lowest thin root tip in an RGBA alpha bounding box. Any root extensions
+// remain drawn below the pivot while depth ordering still uses the trunk foot.
+export function spriteFootPlacement(foot, crop, targetHeight) {
+    if (!Number.isFinite(foot?.x) || !Number.isFinite(foot?.y) ||
+        !Number.isFinite(crop?.width) || !Number.isFinite(crop?.height) ||
+        crop.width <= 0 || crop.height <= 0 ||
+        !Number.isFinite(targetHeight) || targetHeight <= 0) return null;
+    const width = targetHeight * crop.width / crop.height;
+    const inset = clamp(Number.isFinite(crop.footInsetPixels) ? crop.footInsetPixels : 0,
+        0, crop.height * .12) * targetHeight / crop.height;
+    return Object.freeze({
+        x: foot.x - width * .5,
+        y: foot.y - targetHeight + inset,
+        width, height: targetHeight,
+    });
+}
+
 // Pure foot-sorting contract: canopy image bounds must NEVER become colliders.
 export function sortSpritesByFoot(sprites) {
     return [...sprites].filter(s => s && Number.isFinite(s.foot?.y))
