@@ -1,5 +1,5 @@
 {
-  "status": "Aggressive source/export revision 002 complete candidate; owner review and game integration remain",
+  "status": "Foundation 003 source validated; 11 revised clips rendering, 30 unchanged actions proven exact",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -107,5 +107,15 @@
     "finalEvidenceCheckpoint": "3064b0ff4024cf4c00a0597bc5247da88b2fbac2",
     "allTrackedLfsObjectsVerified": true
   },
-  "previousFoundation": "exports/motion-foundation-001 (owner rejected performance as too weak)"
+  "previousFoundation": "exports/motion-foundation-001 (owner rejected performance as too weak)",
+  "activeRefinement": {
+    "source": "archive/motion-library-018/ashfang-animations.blend",
+    "packedSource": "archive/motion-foundation-003-packed/ashfang-animation-foundation.blend",
+    "sourceValidation": "reviews/motion-foundation-003/source-validation.json",
+    "reuseProof": "reviews/motion-foundation-003/unchanged-action-proof.json",
+    "revisedClips": 11,
+    "unchangedReusedClips": 30,
+    "exportComplete": false,
+    "runtimeIntegrated": false
+  }
 }
