@@ -240,7 +240,8 @@
    1672x941 town panorama. Each file clips itself to the Nexus footprint.
    No CSS color filter, blur, global alpha tint, or recoloring of other buildings. */
 .game-shell.refuge-home .refuge-town-nexus-approved-variant {
-    position:absolute;inset:0;z-index:1;width:100%;height:100%;
+    position:absolute;left:0;top:0;z-index:1;
+    width:33.492823%;height:47.821467%;
     display:block;pointer-events:none;user-select:none;
     object-fit:fill;-webkit-user-drag:none;
 }
