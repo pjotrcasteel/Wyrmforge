@@ -71,13 +71,19 @@ public sealed class PyromancerVisualAcceptanceTests : PageTest
         var selector = inspector.Locator(".web-amplifier-socket select");
         await Expect(selector).ToBeEnabledAsync();
         await Expect(selector.Locator($"option[value='{mutationName}']")).ToHaveCountAsync(1);
+        // On phones the inspector follows the map in document flow, not inside
+        // .atlas-stage. Validate the actual tap target and viewport instead.
+        await selector.ScrollIntoViewIfNeededAsync();
         Assert.IsTrue(await selector.EvaluateAsync<bool>(@"el => {
             const rect = el.getBoundingClientRect();
-            const stage = document.querySelector('.atlas-stage').getBoundingClientRect();
             const inspector = el.closest('.node-inspector').getBoundingClientRect();
             return rect.width >= 160 && rect.height >= 44
-                && inspector.left >= stage.left - 2 && inspector.right <= stage.right + 2;
-        }"), "Mutation socket must remain tappable and inside the Fire Web frame.");
+                && rect.left >= inspector.left - 2 && rect.right <= inspector.right + 2
+                && rect.left >= -2 && rect.right <= document.documentElement.clientWidth + 2
+                && rect.top >= -2 && rect.bottom <= window.innerHeight + 2;
+        }"), "Mutation socket must fit the phone viewport and provide a 44px tap target.");
+        // Trial click verifies the actual select is interactable, not merely sized.
+        await selector.ClickAsync(new LocatorClickOptions { Trial = true });
 
         await selector.SelectOptionAsync(mutationName);
         await Expect(selector).ToHaveValueAsync(mutationName);
