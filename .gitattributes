@@ -5,3 +5,4 @@ art/source/bosses/ashfang/archive/**/*.blend filter=lfs diff=lfs merge=lfs -text
 art/source/bosses/ashfang/archive/**/*.png filter=lfs diff=lfs merge=lfs -text
 art/source/bosses/ashfang/archive/**/*.fbx filter=lfs diff=lfs merge=lfs -text
 art/source/bosses/ashfang/archive/**/*.zip filter=lfs diff=lfs merge=lfs -text
+art/source/bosses/ashfang/exports/**/*.png filter=lfs diff=lfs merge=lfs -text

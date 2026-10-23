@@ -1,0 +1,157 @@
+{
+  "schema": "wyrmforge-animation-foundation/1",
+  "rigFamily": "zagmatorah-112/v1",
+  "units": "source model units; multiply travel and socket offsets by tier/model-to-game scale",
+  "locomotion": {},
+  "actions": {
+    "idle": {
+      "clip": "idle",
+      "frames": 24,
+      "duration": 2.0,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "alert": {
+      "clip": "alert",
+      "frames": 24,
+      "duration": 2.0,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "look": {
+      "clip": "look",
+      "frames": 36,
+      "duration": 3.0,
+      "fps": 12.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "alert_start": {
+      "clip": "alert_start",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 13.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "alert_end": {
+      "clip": "alert_end",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 13.0,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "walk_start": {
+      "clip": "walk_start",
+      "frames": 17,
+      "duration": 1.3333333333333333,
+      "fps": 12.75,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "headingChangeDegrees": 0
+    },
+    "tail_right": {
+      "clip": "tail_right",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12.5,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "hit": 0.55
+      },
+      "headingChangeDegrees": 0
+    },
+    "roar": {
+      "clip": "roar",
+      "frames": 33,
+      "duration": 2.6666666666666665,
+      "fps": 12.375,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "voice": 0.32
+      },
+      "headingChangeDegrees": 0
+    }
+  },
+  "transitions": [
+    [
+      "idle",
+      "walk_start",
+      "walk",
+      "walk_stop",
+      "idle"
+    ],
+    [
+      "idle",
+      "run_start",
+      "run",
+      "run_stop",
+      "idle"
+    ],
+    [
+      "idle",
+      "alert_start",
+      "alert",
+      "alert_end",
+      "idle"
+    ],
+    [
+      "idle",
+      "breath_start",
+      "breath_loop",
+      "breath_end",
+      "idle"
+    ],
+    [
+      "idle",
+      "takeoff",
+      "fly",
+      "land",
+      "idle"
+    ]
+  ],
+  "loopHandoffPhase": 0,
+  "effects": "Fire, smoke and impacts are separate game VFX. Mouth direction and socket positions are per-frame.",
+  "authority": "C# owns movement, damage, ability timing and interruptions. Sprite event markers do not cause gameplay results.",
+  "runtimeIntegrated": false
+}
