@@ -1,0 +1,10 @@
+{
+  "pass": true,
+  "assetCheckpoint": "0dc3c428d0e996089154591d9285c549513e8303",
+  "atlasFiles": 160,
+  "preservedAndWebAtlasReferencesVerified": 320,
+  "nativeSourceSha256": "6c15cc49512477c40044a94448fc7e66d437ac4151b376864e10382af34b8040",
+  "independentNativeReopen": "remote-native-validation.json",
+  "trackedLfsReferencesVerified": 2448,
+  "uniqueObjectsVerified": 1776
+}
