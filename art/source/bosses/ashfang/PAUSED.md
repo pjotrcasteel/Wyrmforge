@@ -1,3 +1,3 @@
-# Animation production resumed — 23 October 2026
+# Animation source/export checkpoint - 23 October 2026
 
-Owner resumed and requested completion without milestone stops. Previous pause checkpoint remains immutable in archive/motion-render-checkpoint-001. Current source: archive/motion-library-008/ashfang-animations.blend. Source validation passes for 41 actions. Finish both GPU batches, pack all eight directions, review playback and metadata, and verify remote delivery. No game assets have been replaced.
+Production resumed at the owner request and all 41 motions / 7448 directional frames are rendered and packed. GPU jobs have finished. The previous pause checkpoint remains immutable in archive/motion-render-checkpoint-001. See ANIMATION-REPRODUCE.md and reviews/motion-library-008/review.md for the packed source, export player and validation evidence. Owner art/motion acceptance and live game integration remain separate.

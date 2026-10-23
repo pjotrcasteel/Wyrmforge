@@ -6,7 +6,7 @@
   "archive": "archive/",
   "storage": "Git LFS; user confirmed available capacity 2026-10-23",
   "blender": "4.5.14 LTS",
-  "renderer": "Cycles OptiX NVIDIA GeForce RTX 5090; three views completed per review",
+  "renderer": "Cycles OptiX RTX 5090; all 41 actions in eight directions rendered",
   "currentCandidate": "archive/motion-foundation-001-packed/ashfang-animation-foundation.blend",
   "immutableOriginal": "archive/M0-001/original/zagmatorah-original-import.blend",
   "originalSource": "archive/M0-001/original/download/source/Zagmatorah.fbx",
@@ -15,10 +15,9 @@
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Complete 7448 directional frame export and packing",
-    "Verify all exported motion/directions and tier-scale proof",
-    "Independent remote source/atlas retrieval",
-    "Owner review and subsequent game integration"
+    "Independent final remote atlas retrieval verification",
+    "Owner art/motion review",
+    "Game integration, separate VFX and actual Hunt/phone validation"
   ],
   "ownerAcceptedAnatomy": true,
   "ownerAcceptedMaterials": false,
@@ -26,8 +25,8 @@
   "fireAndSmoke": "Reserved for game VFX; no flame, smoke, particle or cinder geometry in the character master.",
   "M2": "Preserved original 112-bone deform hierarchy; temporary IK controls baked and removed. Source motion checks pass.",
   "M3": "41 authored actions and variants, including locomotion/breath/flight transitions and held death variants. Candidate motion; no owner acceptance inferred.",
-  "M4": "Eight-direction renders and atlas packing in progress.",
-  "M5": "Offline review player: initial atlas playback, pause, step, direction phase carry and 390px layout checks pass; full library review pending.",
+  "M4": "Complete candidate: 7448 frames, 328 lossless 512px master atlases and 328 downsampled 256px runtime atlases; every master cell pixel-verified; zero clipped or empty frames.",
+  "M5": "Offline Edge review passes all 328 runtime images, playback, pause, step, direction phase carry, eight views, held death and 390px layout. Visual contacts inspected for all 41 actions. No actual Hunt/physical-phone acceptance.",
   "M6": "Uniform scale-two idle, walk and flight proof passes for projected poses, pivots, attachments and root-travel scaling. No higher-tier geometry authored.",
   "M7": "No game integration or physical-device acceptance."
 }

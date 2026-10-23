@@ -1,5 +1,5 @@
 {
-  "status": "resumed; completing directional render and atlas production",
+  "status": "Source and eight-direction export candidate complete; owner review and game integration remain",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -11,6 +11,12 @@
     "idle",
     "alert",
     "look",
+    "alert_start",
+    "alert_end",
+    "walk_start",
+    "walk_stop",
+    "run_start",
+    "run_stop",
     "walk",
     "stalk",
     "run",
@@ -71,16 +77,24 @@
   "authoredClips": 41,
   "currentMotionSource": "archive/motion-library-008/ashfang-animations.blend",
   "sourceValidationPassed": true,
-  "exportStatus": "Partial render checkpoint only; spritesheets not yet packed",
+  "exportStatus": "41 clips; 7448 frames; 656 atlases; all master pixels verified",
   "resumeNote": "PAUSED.md",
   "packedMaster": "archive/motion-foundation-001-packed/ashfang-animation-foundation.blend",
   "rigFamily": "zagmatorah-112/v1",
   "scaleTwoProofPassed": true,
   "exportProgress": {
-    "completedPackedClips": 26,
+    "completedPackedClips": 41,
     "expectedClips": 41,
-    "completedPackedDirectionalFrames": 4512,
+    "completedPackedDirectionalFrames": 7448,
     "expectedDirectionalFrames": 7448,
-    "status": "incomplete; rendering continues"
-  }
+    "masterAtlases": 328,
+    "runtimeAtlases": 328,
+    "status": "complete candidate"
+  },
+  "browserValidationPassed": true,
+  "remaining": [
+    "Owner art/motion review",
+    "Game integration and separate VFX",
+    "Actual Hunt and physical-phone validation"
+  ]
 }

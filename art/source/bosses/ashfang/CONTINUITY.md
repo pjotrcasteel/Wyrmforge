@@ -94,3 +94,10 @@ Owner-approved anatomy is maintained. Materials remain a review proposal; animat
 
 ## 23 October — owner authorizes full reusable animation foundation
 Owner requested all locomotion, pounce, claw, roar, breath, flight transitions/reactions/death and useful variants, with shared rig/action reuse for larger, more epic tiers. Build on the current skin master. Scale travel and named attachments coherently; do not author higher-tier geometry or bake fire/smoke into sprites. Prove one grounded gait before expanding; all export/acceptance status remains explicit in animation-production.json.
+
+
+## 23 October - complete animation source/export candidate
+
+Completed 41 actions on the original 112-bone rig: 7448 frames in eight directions, 328 lossless 512px master atlases and 328 runtime 256px atlases. All master cells pixel-verified; no empty/clipped frames. Offline Edge checks pass all 328 runtime images, playback/pause/step, direction phase carry, held death and 390px layout. Source/packed/remote motion checks and actual scale-two idle/walk/fly proofs pass. All-action visual contacts and animated overview preserved.
+
+Packed master SHA256 38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b. Player: exports/motion-foundation-001/index.html. Reproduction: ANIMATION-REPRODUCE.md. Evidence: reviews/motion-library-008/review.md. Main checked at 21f28ecd, with no conflicting art/creature canon changes. Concurrent work preserved. Owner material/motion acceptance, live game integration, separate VFX and actual Hunt/phone validation remain. Draft PR #299 stays unmerged.

@@ -30,124 +30,142 @@
       "clip": "idle",
       "frames": 24,
       "duration": 2.0,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "alert": {
       "clip": "alert",
       "frames": 24,
       "duration": 2.0,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "look": {
       "clip": "look",
       "frames": 36,
       "duration": 3.0,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "alert_start": {
       "clip": "alert_start",
       "frames": 13,
       "duration": 1.0,
-      "fps": 13.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "alert_end": {
       "clip": "alert_end",
       "frames": 13,
       "duration": 1.0,
-      "fps": 13.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "walk_start": {
       "clip": "walk_start",
       "frames": 17,
       "duration": 1.3333333333333333,
-      "fps": 12.75,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "walk_stop": {
       "clip": "walk_stop",
       "frames": 17,
       "duration": 1.3333333333333333,
-      "fps": 12.75,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "run_start": {
       "clip": "run_start",
       "frames": 13,
       "duration": 1.0,
-      "fps": 13.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "run_stop": {
       "clip": "run_stop",
       "frames": 13,
       "duration": 1.0,
-      "fps": 13.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "walk": {
       "clip": "walk",
       "frames": 24,
       "duration": 2.0,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
@@ -161,13 +179,36 @@
           0.75
         ]
       },
+      "markers": [
+        {
+          "name": "footfalls",
+          "phase": 0,
+          "seconds": 0.0
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.25,
+          "seconds": 0.5
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.5,
+          "seconds": 1.0
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.75,
+          "seconds": 1.5
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "stalk": {
       "clip": "stalk",
       "frames": 32,
       "duration": 2.6666666666666665,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
@@ -181,13 +222,36 @@
           0.75
         ]
       },
+      "markers": [
+        {
+          "name": "footfalls",
+          "phase": 0,
+          "seconds": 0.0
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.25,
+          "seconds": 0.6666666666666666
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.5,
+          "seconds": 1.3333333333333333
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.75,
+          "seconds": 2.0
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "run": {
       "clip": "run",
       "frames": 16,
       "duration": 1.3333333333333333,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
@@ -201,13 +265,36 @@
           0.68
         ]
       },
+      "markers": [
+        {
+          "name": "footfalls",
+          "phase": 0.04,
+          "seconds": 0.05333333333333333
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.18,
+          "seconds": 0.24
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.54,
+          "seconds": 0.72
+        },
+        {
+          "name": "footfalls",
+          "phase": 0.68,
+          "seconds": 0.9066666666666667
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "turn_left": {
       "clip": "turn_left",
       "frames": 21,
       "duration": 1.6666666666666667,
-      "fps": 12.6,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -216,13 +303,21 @@
       "events": {
         "turn": 0.5
       },
+      "markers": [
+        {
+          "name": "turn",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": -45
     },
     "turn_right": {
       "clip": "turn_right",
       "frames": 21,
       "duration": 1.6666666666666667,
-      "fps": 12.6,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -231,13 +326,21 @@
       "events": {
         "turn": 0.5
       },
+      "markers": [
+        {
+          "name": "turn",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 45
     },
     "pounce": {
       "clip": "pounce",
       "frames": 25,
       "duration": 2.0,
-      "fps": 12.5,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -247,13 +350,126 @@
         "launch": 0.3,
         "impact": 0.68
       },
+      "markers": [
+        {
+          "name": "launch",
+          "phase": 0.3,
+          "seconds": 0.6
+        },
+        {
+          "name": "impact",
+          "phase": 0.68,
+          "seconds": 1.36
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
-    "tail_right": {
-      "clip": "tail_right",
+    "claw_left": {
+      "clip": "claw_left",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "hit": 0.47
+      },
+      "markers": [
+        {
+          "name": "hit",
+          "phase": 0.47,
+          "seconds": 0.7833333333333333
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "claw_right": {
+      "clip": "claw_right",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "hit": 0.47
+      },
+      "markers": [
+        {
+          "name": "hit",
+          "phase": 0.47,
+          "seconds": 0.7833333333333333
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "claw_combo": {
+      "clip": "claw_combo",
+      "frames": 33,
+      "duration": 2.6666666666666665,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "hit": [
+          0.31,
+          0.64
+        ]
+      },
+      "markers": [
+        {
+          "name": "hit",
+          "phase": 0.31,
+          "seconds": 0.8266666666666667
+        },
+        {
+          "name": "hit",
+          "phase": 0.64,
+          "seconds": 1.7066666666666666
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "bite": {
+      "clip": "bite",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "hit": 0.5
+      },
+      "markers": [
+        {
+          "name": "hit",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "tail_left": {
+      "clip": "tail_left",
       "frames": 25,
       "duration": 2.0,
-      "fps": 12.5,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -262,13 +478,44 @@
       "events": {
         "hit": 0.55
       },
+      "markers": [
+        {
+          "name": "hit",
+          "phase": 0.55,
+          "seconds": 1.1
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "tail_right": {
+      "clip": "tail_right",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "hit": 0.55
+      },
+      "markers": [
+        {
+          "name": "hit",
+          "phase": 0.55,
+          "seconds": 1.1
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "roar": {
       "clip": "roar",
       "frames": 33,
       "duration": 2.6666666666666665,
-      "fps": 12.375,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -277,13 +524,21 @@
       "events": {
         "voice": 0.32
       },
+      "markers": [
+        {
+          "name": "voice",
+          "phase": 0.32,
+          "seconds": 0.8533333333333333
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "breath_start": {
       "clip": "breath_start",
       "frames": 17,
       "duration": 1.3333333333333333,
-      "fps": 12.75,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -292,13 +547,21 @@
       "events": {
         "mouth_ready": 1
       },
+      "markers": [
+        {
+          "name": "mouth_ready",
+          "phase": 1,
+          "seconds": 1.3333333333333333
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "breath_loop": {
       "clip": "breath_loop",
       "frames": 24,
       "duration": 2.0,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
@@ -307,13 +570,22 @@
       "events": {
         "vfx": "continuous mouth attachment"
       },
+      "markers": [],
+      "effectWindows": [
+        {
+          "socket": "mouth",
+          "effect": "fire-breath",
+          "start": 0,
+          "end": 1
+        }
+      ],
       "headingChangeDegrees": 0
     },
     "breath_end": {
       "clip": "breath_end",
       "frames": 17,
       "duration": 1.3333333333333333,
-      "fps": 12.75,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -322,13 +594,21 @@
       "events": {
         "vfx_stop": 0
       },
+      "markers": [
+        {
+          "name": "vfx_stop",
+          "phase": 0,
+          "seconds": 0.0
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "breath_sweep": {
       "clip": "breath_sweep",
       "frames": 33,
       "duration": 2.6666666666666665,
-      "fps": 12.375,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -338,13 +618,33 @@
         "vfx_start": 0.23,
         "vfx_stop": 0.77
       },
+      "markers": [
+        {
+          "name": "vfx_start",
+          "phase": 0.23,
+          "seconds": 0.6133333333333333
+        },
+        {
+          "name": "vfx_stop",
+          "phase": 0.77,
+          "seconds": 2.0533333333333332
+        }
+      ],
+      "effectWindows": [
+        {
+          "socket": "mouth",
+          "effect": "fire-breath",
+          "start": 0.23,
+          "end": 0.77
+        }
+      ],
       "headingChangeDegrees": 0
     },
     "takeoff": {
       "clip": "takeoff",
       "frames": 25,
       "duration": 2.0,
-      "fps": 12.5,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -353,13 +653,21 @@
       "events": {
         "liftoff": 0.36
       },
+      "markers": [
+        {
+          "name": "liftoff",
+          "phase": 0.36,
+          "seconds": 0.72
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "fly": {
       "clip": "fly",
       "frames": 16,
       "duration": 1.3333333333333333,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
@@ -368,13 +676,21 @@
       "events": {
         "downstroke": 0.25
       },
+      "markers": [
+        {
+          "name": "downstroke",
+          "phase": 0.25,
+          "seconds": 0.3333333333333333
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "hover": {
       "clip": "hover",
       "frames": 20,
       "duration": 1.6666666666666667,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
@@ -383,26 +699,36 @@
       "events": {
         "downstroke": 0.25
       },
+      "markers": [
+        {
+          "name": "downstroke",
+          "phase": 0.25,
+          "seconds": 0.4166666666666667
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "glide": {
       "clip": "glide",
       "frames": 24,
       "duration": 2.0,
-      "fps": 12.0,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": true,
       "hold": false,
       "priority": 50,
       "events": {},
+      "markers": [],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     },
     "bank_left": {
       "clip": "bank_left",
       "frames": 21,
       "duration": 1.6666666666666667,
-      "fps": 12.6,
+      "fps": 12,
       "sampleFps": 12,
       "mode": "fullBody",
       "loop": false,
@@ -411,6 +737,261 @@
       "events": {
         "bank": 0.5
       },
+      "markers": [
+        {
+          "name": "bank",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "bank_right": {
+      "clip": "bank_right",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "bank": 0.5
+      },
+      "markers": [
+        {
+          "name": "bank",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "air_breath": {
+      "clip": "air_breath",
+      "frames": 33,
+      "duration": 2.6666666666666665,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "vfx_start": 0.25,
+        "vfx_stop": 0.75
+      },
+      "markers": [
+        {
+          "name": "vfx_start",
+          "phase": 0.25,
+          "seconds": 0.6666666666666666
+        },
+        {
+          "name": "vfx_stop",
+          "phase": 0.75,
+          "seconds": 2.0
+        }
+      ],
+      "effectWindows": [
+        {
+          "socket": "mouth",
+          "effect": "fire-breath",
+          "start": 0.25,
+          "end": 0.75
+        }
+      ],
+      "headingChangeDegrees": 0
+    },
+    "land": {
+      "clip": "land",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "touchdown": 0.68
+      },
+      "markers": [
+        {
+          "name": "touchdown",
+          "phase": 0.68,
+          "seconds": 1.36
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "hit_front": {
+      "clip": "hit_front",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 80,
+      "events": {
+        "recoil": 0.2
+      },
+      "markers": [
+        {
+          "name": "recoil",
+          "phase": 0.2,
+          "seconds": 0.2
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "hit_left": {
+      "clip": "hit_left",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 80,
+      "events": {
+        "recoil": 0.2
+      },
+      "markers": [
+        {
+          "name": "recoil",
+          "phase": 0.2,
+          "seconds": 0.2
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "hit_right": {
+      "clip": "hit_right",
+      "frames": 13,
+      "duration": 1.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 80,
+      "events": {
+        "recoil": 0.2
+      },
+      "markers": [
+        {
+          "name": "recoil",
+          "phase": 0.2,
+          "seconds": 0.2
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "stagger": {
+      "clip": "stagger",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 80,
+      "events": {
+        "stumble": 0.35
+      },
+      "markers": [
+        {
+          "name": "stumble",
+          "phase": 0.35,
+          "seconds": 0.7
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "recover": {
+      "clip": "recover",
+      "frames": 25,
+      "duration": 2.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "markers": [],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "death": {
+      "clip": "death",
+      "frames": 37,
+      "duration": 3.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": true,
+      "priority": 100,
+      "events": {
+        "collapse": 0.55,
+        "hold": 1
+      },
+      "markers": [
+        {
+          "name": "collapse",
+          "phase": 0.55,
+          "seconds": 1.6500000000000001
+        },
+        {
+          "name": "hold",
+          "phase": 1,
+          "seconds": 3.0
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "death_alt": {
+      "clip": "death_alt",
+      "frames": 41,
+      "duration": 3.3333333333333335,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": true,
+      "priority": 100,
+      "events": {
+        "collapse": 0.6,
+        "hold": 1
+      },
+      "markers": [
+        {
+          "name": "collapse",
+          "phase": 0.6,
+          "seconds": 2.0
+        },
+        {
+          "name": "hold",
+          "phase": 1,
+          "seconds": 3.3333333333333335
+        }
+      ],
+      "effectWindows": [],
       "headingChangeDegrees": 0
     }
   },
