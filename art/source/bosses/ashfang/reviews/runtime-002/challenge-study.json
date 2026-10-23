@@ -1,0 +1,638 @@
+[
+  {
+    "seed": 42,
+    "mode": "stationary",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 13.95,
+    "remainingHealth": 0,
+    "bossRemaining": 791,
+    "hurts": [
+      {
+        "at": 4.75,
+        "amount": 38,
+        "action": "breath",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [],
+        "hazards": []
+      },
+      {
+        "at": 7.65,
+        "amount": 20,
+        "action": "claw_right",
+        "phase": "windup",
+        "flight": "ground",
+        "effects": [
+          "cinder"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": null,
+            "Radius": 82,
+            "Progress": 0.9722222222222224
+          }
+        ]
+      },
+      {
+        "at": 10.3,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 13.95,
+        "amount": 4,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "overhead",
+        "effects": [
+          "meteor"
+        ],
+        "hazards": [
+          {
+            "FromAbove": true,
+            "EffectKind": null,
+            "Radius": 45.1,
+            "Progress": 0.9523809523809527
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "seed": 42,
+    "mode": "Casual",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 30.6,
+    "remainingHealth": 0,
+    "bossRemaining": 490,
+    "hurts": [
+      {
+        "at": 19.2,
+        "amount": 20,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "land",
+        "effects": [
+          "meteor",
+          "meteor",
+          "landing"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": "landing",
+            "Radius": 99,
+            "Progress": 0.9473684210526319
+          }
+        ]
+      },
+      {
+        "at": 22.35,
+        "amount": 38,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "claw_right"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 24.75,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 30.6,
+        "amount": 4,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      }
+    ]
+  },
+  {
+    "seed": 42,
+    "mode": "Kiter",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 30.65,
+    "remainingHealth": 0,
+    "bossRemaining": 490,
+    "hurts": [
+      {
+        "at": 19.2,
+        "amount": 20,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "land",
+        "effects": [
+          "meteor",
+          "meteor",
+          "landing"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": "landing",
+            "Radius": 99,
+            "Progress": 0.9473684210526319
+          }
+        ]
+      },
+      {
+        "at": 22.35,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 24.75,
+        "amount": 38,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 30.65,
+        "amount": 4,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      }
+    ]
+  },
+  {
+    "seed": 42,
+    "mode": "ReadableDodge",
+    "victory": true,
+    "playerDefeated": false,
+    "duration": 52.05,
+    "remainingHealth": 100,
+    "bossRemaining": 0,
+    "hurts": []
+  },
+  {
+    "seed": 721,
+    "mode": "stationary",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 13.95,
+    "remainingHealth": 0,
+    "bossRemaining": 791,
+    "hurts": [
+      {
+        "at": 4.75,
+        "amount": 38,
+        "action": "breath",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [],
+        "hazards": []
+      },
+      {
+        "at": 7.65,
+        "amount": 20,
+        "action": "claw_right",
+        "phase": "windup",
+        "flight": "ground",
+        "effects": [
+          "cinder"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": null,
+            "Radius": 82,
+            "Progress": 0.9722222222222224
+          }
+        ]
+      },
+      {
+        "at": 10.3,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 13.95,
+        "amount": 4,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "overhead",
+        "effects": [
+          "meteor"
+        ],
+        "hazards": [
+          {
+            "FromAbove": true,
+            "EffectKind": null,
+            "Radius": 45.1,
+            "Progress": 0.9523809523809527
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "seed": 721,
+    "mode": "Casual",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 30.65,
+    "remainingHealth": 0,
+    "bossRemaining": 490,
+    "hurts": [
+      {
+        "at": 22.35,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 24.75,
+        "amount": 38,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 30.65,
+        "amount": 24,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      }
+    ]
+  },
+  {
+    "seed": 721,
+    "mode": "Kiter",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 34.05,
+    "remainingHealth": 0,
+    "bossRemaining": 410.5,
+    "hurts": [
+      {
+        "at": 23,
+        "amount": 8.400000000000006,
+        "action": "pounce",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [],
+        "hazards": []
+      },
+      {
+        "at": 24.65,
+        "amount": 26,
+        "action": "claw_right",
+        "phase": "windup",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "cinder"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": null,
+            "Radius": 54,
+            "Progress": 0.9684210526315792
+          }
+        ]
+      },
+      {
+        "at": 31.75,
+        "amount": 50,
+        "action": "breath",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "cinder"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": null,
+            "Radius": 62,
+            "Progress": 0.9444444444444446
+          }
+        ]
+      },
+      {
+        "at": 34.05,
+        "amount": 15.599999999999994,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "ground",
+        "effects": [
+          "cinder"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": null,
+            "Radius": 108,
+            "Progress": 0.9411764705882355
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "seed": 721,
+    "mode": "ReadableDodge",
+    "victory": true,
+    "playerDefeated": false,
+    "duration": 52.05,
+    "remainingHealth": 100,
+    "bossRemaining": 0,
+    "hurts": []
+  },
+  {
+    "seed": 1337,
+    "mode": "stationary",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 13.95,
+    "remainingHealth": 0,
+    "bossRemaining": 791,
+    "hurts": [
+      {
+        "at": 4.75,
+        "amount": 38,
+        "action": "breath",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [],
+        "hazards": []
+      },
+      {
+        "at": 7.65,
+        "amount": 20,
+        "action": "claw_right",
+        "phase": "windup",
+        "flight": "ground",
+        "effects": [
+          "cinder"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": null,
+            "Radius": 82,
+            "Progress": 0.9722222222222224
+          }
+        ]
+      },
+      {
+        "at": 10.3,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 13.95,
+        "amount": 4,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "overhead",
+        "effects": [
+          "meteor"
+        ],
+        "hazards": [
+          {
+            "FromAbove": true,
+            "EffectKind": null,
+            "Radius": 45.1,
+            "Progress": 0.9523809523809527
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "seed": 1337,
+    "mode": "Casual",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 30.6,
+    "remainingHealth": 0,
+    "bossRemaining": 490,
+    "hurts": [
+      {
+        "at": 19.2,
+        "amount": 20,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "land",
+        "effects": [
+          "meteor",
+          "meteor",
+          "landing"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": "landing",
+            "Radius": 99,
+            "Progress": 0.9473684210526319
+          }
+        ]
+      },
+      {
+        "at": 22.35,
+        "amount": 38,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "claw_right"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 24.75,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 30.6,
+        "amount": 4,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      }
+    ]
+  },
+  {
+    "seed": 1337,
+    "mode": "Kiter",
+    "victory": false,
+    "playerDefeated": true,
+    "duration": 30.6,
+    "remainingHealth": 0,
+    "bossRemaining": 490,
+    "hurts": [
+      {
+        "at": 19.2,
+        "amount": 20,
+        "action": "idle",
+        "phase": "ready",
+        "flight": "land",
+        "effects": [
+          "meteor",
+          "meteor",
+          "landing"
+        ],
+        "hazards": [
+          {
+            "FromAbove": false,
+            "EffectKind": "landing",
+            "Radius": 99,
+            "Progress": 0.9473684210526319
+          }
+        ]
+      },
+      {
+        "at": 22.35,
+        "amount": 38,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "claw_right"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 24.75,
+        "amount": 38,
+        "action": "bite",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "cinder",
+          "bite"
+        ],
+        "hazards": []
+      },
+      {
+        "at": 30.6,
+        "amount": 4,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "cinder",
+          "claw_right"
+        ],
+        "hazards": []
+      }
+    ]
+  },
+  {
+    "seed": 1337,
+    "mode": "ReadableDodge",
+    "victory": true,
+    "playerDefeated": false,
+    "duration": 52.15,
+    "remainingHealth": 62,
+    "bossRemaining": 0,
+    "hurts": [
+      {
+        "at": 21.6,
+        "amount": 38,
+        "action": "claw_right",
+        "phase": "strike",
+        "flight": "ground",
+        "effects": [
+          "claw_right"
+        ],
+        "hazards": []
+      }
+    ]
+  }
+]

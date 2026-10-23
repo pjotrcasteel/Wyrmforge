@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Wyrmforge.Application.Abstractions.Randomness;
 using Wyrmforge.Application.Runs.Development;
+using Wyrmforge.Application.Runs.Hunts;
 using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.Domain.Combat.Dragons;
 using Wyrmforge.Domain.Combat.Geometry;
@@ -68,5 +69,17 @@ public sealed class AshfangBossIterationTests
     public void DevelopmentAshfangUsesFireEcologyInsteadOfDefaultArcaneRunes()
     {
         var run=Create(environment:true);Assert.AreEqual("fire",run.CreateSnapshot().Environment!.Element);
+    }
+    [TestMethod]
+    public void PlayerTargetedPressureAndBreathAllowAnUnboostedHunterToEscapeAfterReaction()
+    {
+        var player=new PlayerState();
+        foreach(var phase in new[]{1,2}){
+            var pressure=DragonHuntCatalog.Ashfang.Pressure;
+            var budget=(pressure.Cadence.TelegraphSeconds.For(phase)-.15)*player.Speed;
+            Assert.IsGreaterThan(pressure.Radius.For(phase)+player.Radius,budget);
+            var brain=new AshfangBehaviorState();brain.Begin("breath",Vector2D.Zero,new(330,0),DragonCatalog.Ashfang.Combat.Attack.TelegraphSeconds.For(phase));
+            Assert.IsGreaterThan(brain.Range*Math.Sin(brain.HalfAngle)+player.Radius,(brain.Duration-.15)*player.Speed);
+        }
     }
 }

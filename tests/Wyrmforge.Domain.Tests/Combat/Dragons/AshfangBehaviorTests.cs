@@ -37,4 +37,12 @@ public sealed class AshfangBehaviorTests
         var a=CreatureDecisions.SurroundSlot(Vector2D.Zero,92,0);var b=CreatureDecisions.SurroundSlot(Vector2D.Zero,92,Math.PI);
         Assert.AreEqual(92,a.Length,.000001);Assert.AreEqual(92,b.Length,.000001);Assert.IsGreaterThan(180,Vector2D.Distance(a,b));
     }
+    [TestMethod]
+    public void CloseRangeMemoryOpensBreathVarietyAndResetsForANewEncounter()
+    {
+        var brain=new AshfangBehaviorState();brain.Begin("claw_right",Vector2D.Zero,new(100,0),.8);brain.Finish();
+        brain.Begin("bite",Vector2D.Zero,new(100,0),.8);brain.Finish();
+        Assert.AreEqual("breath",brain.Decide(100,true,1));
+        brain.Reset();Assert.AreEqual("claw_right",brain.Decide(100,true,1));
+    }
 }

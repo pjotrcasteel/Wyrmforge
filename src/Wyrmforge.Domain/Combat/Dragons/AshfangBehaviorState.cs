@@ -35,7 +35,7 @@ public sealed class AshfangBehaviorState
         Action = action; LastAction = action; Origin = origin; Target = target; Direction = Vector2D.DirectionTo(origin, target);
         Range = action switch { "claw_right" => 155, "bite" => 180, "pounce" => 390, _ => 340 };
         HalfAngle = action switch { "claw_right" => .85, "bite" => .3, _ => .4 };
-        Enter("windup", action == "breath" ? breathWindup : action == "pounce" ? .9 : .7);
+        Enter("windup", action == "breath" ? Math.Max(.95, breathWindup) : action == "pounce" ? .9 : .7);
     }
     public bool Tick(double delta)
     {

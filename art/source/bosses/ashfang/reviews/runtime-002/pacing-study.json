@@ -4,7 +4,7 @@
     "loadout": "tier1",
     "maxHealth": 1100,
     "victory": true,
-    "duration": 50.8,
+    "duration": 50.95,
     "damageEvents": 32,
     "firstHits": [
       {
@@ -173,7 +173,7 @@
     "loadout": "tier1",
     "maxHealth": 1100,
     "victory": true,
-    "duration": 50.8,
+    "duration": 50.95,
     "damageEvents": 32,
     "firstHits": [
       {
@@ -342,7 +342,7 @@
     "loadout": "tier1",
     "maxHealth": 1100,
     "victory": true,
-    "duration": 50.8,
+    "duration": 50.95,
     "damageEvents": 32,
     "firstHits": [
       {
