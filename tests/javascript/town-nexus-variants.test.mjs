@@ -1,26 +1,31 @@
 import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { test } from 'node:test';
 
 const root = process.cwd();
 const source = path => readFileSync(join(root, path), 'utf8');
-const dir = 'src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-schools';
 const schools = ['arcane', 'fire', 'frost', 'storm', 'death', 'binding'];
 
-test('six physical school PNGs are baked and have canonical source dimensions', () => {
+test('six original approved school images are separately stored as registered RGBA WebP', () => {
+    const hashes = new Set();
     for (const school of schools) {
-        const path = join(root, dir, school + '.png');
-        assert.ok(existsSync(path), school + ' visual asset missing: run tools/art/build-nexus-school-assets.py');
+        const path = join(root, 'src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-approved', school + '.webp');
+        assert.ok(existsSync(path), school + ' approved visual asset is missing');
         const bytes = readFileSync(path);
-        assert.equal(bytes.subarray(1, 4).toString('ascii'), 'PNG', school);
-        assert.equal(bytes.readUInt32BE(16), 1672, school);
-        assert.equal(bytes.readUInt32BE(20), 941, school);
-        assert.equal(bytes[25], 6, 'must be RGBA with transparent non-Nexus regions');
+        assert.equal(bytes.subarray(0, 4).toString('ascii'), 'RIFF', school);
+        assert.equal(bytes.subarray(8, 12).toString('ascii'), 'WEBP', school);
+        assert.equal(bytes.subarray(12, 16).toString('ascii'), 'VP8X', school);
+        assert.equal(bytes.readUIntLE(24, 3) + 1, 1672, school);
+        assert.equal(bytes.readUIntLE(27, 3) + 1, 941, school);
+        assert.ok((bytes[20] & 0x10) !== 0, school + ' must include transparent alpha');
+        hashes.add(createHash('sha256').update(bytes).digest('hex'));
     }
+    assert.equal(hashes.size, schools.length, 'All six schools must have distinct original artwork');
 });
 
-test('the canonical six schools use independently loaded images and Arcane is unchanged', () => {
+test('canonical schools use explicit approved art while the underlying panorama remains unchanged', () => {
     const scene = source('src/Wyrmforge.Presentation.Web/Features/Forge/CanonicalTownView.razor');
     const control = source('src/Wyrmforge.Presentation.Web/Features/Forge/ForgeView.razor');
     assert.match(scene, /nexus-schools\/\{/);
