@@ -1,6 +1,8 @@
 // L4 opt-in lighting lab: an original RGBA tree is an OCCLUDER with depth,
 // not a flat brightened rectangle. All light coordinates use canonical world
 // space. Candidate PNGs remain unapproved and never enter gameplay collision.
+import { shadeTreeCameraNormals } from './arena-sprite-normal-lighting.js';
+
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 const finite = value => Number.isFinite(value);
 
@@ -72,7 +74,34 @@ export function makeTreeLightingAssets(image, crop, targetHeight, documentRef = 
     maskCtx.fillRect(0, 0, width, height);
     maskCtx.globalCompositeOperation = 'source-over';
     return { base, mask, shading: create(), width, height,
+        originalPixels: new Uint8ClampedArray(baseCtx.getImageData(0, 0, width, height).data),
+        normals: null, shadedFrame: null,
         footInset: Math.min(crop.footInsetPixels ?? 0, crop.height * .12) * height / crop.height };
+}
+
+// The source normal map is exported from the SAME 3D geometry and SAME camera
+// as the original transparent tree PNG; only camera-space vectors are sampled.
+// Input remains a review-only local file until source artwork is approved.
+export function attachTreeCameraNormalMap(assets, image, crop, documentRef = document) {
+    if (!assets || !image || !crop || crop.width <= 0 || crop.height <= 0) return false;
+    const surface = documentRef.createElement('canvas');
+    surface.width = assets.width;
+    surface.height = assets.height;
+    const painter = surface.getContext('2d', { willReadFrequently: true });
+    if (!painter) return false;
+    painter.imageSmoothingEnabled = true;
+    painter.drawImage(image, crop.x, crop.y, crop.width, crop.height,
+        0, 0, assets.width, assets.height);
+    const normals = painter.getImageData(0, 0, assets.width, assets.height).data;
+    let coverage = 0;
+    for (let i = 3; i < normals.length; i += 4)
+        if (normals[i] > 6 && assets.originalPixels[i] > 6) coverage++;
+    if (coverage < assets.width * assets.height * .015) return false;
+    const shadeCtx = assets.shading.getContext('2d');
+    if (!shadeCtx) return false;
+    assets.normals = new Uint8ClampedArray(normals);
+    assets.shadedFrame = shadeCtx.createImageData(assets.width, assets.height);
+    return true;
 }
 
 export function drawTreeCastShadow(ctx, assets, plan) {
@@ -97,6 +126,15 @@ export function drawFirelitTree(ctx, assets, foot, light, darkness = .90) {
     const painter = layer.getContext('2d');
     if (!painter) return false;
     painter.clearRect(0, 0, width, height);
+    if (assets.normals && assets.shadedFrame) {
+        shadeTreeCameraNormals(assets.originalPixels, assets.normals,
+            light, darkness, assets.shadedFrame.data);
+        painter.putImageData(assets.shadedFrame, 0, 0);
+        ctx.save();
+        ctx.drawImage(layer, foot.x - width * .5, foot.y - height + footInset);
+        ctx.restore();
+        return true;
+    }
     painter.drawImage(assets.base, 0, 0);
     painter.globalCompositeOperation = 'source-atop';
     // Preserve the source painting, darken its *opaque tree pixels* in true
