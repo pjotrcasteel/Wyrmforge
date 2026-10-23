@@ -297,26 +297,38 @@ def build_tree(config):
                       rng.uniform(.19, .34), rng, bark)
 
 
-    # Each branch owns a unique offset, length, fork shape and material.
-    branches = []
-    for n in range(12 if living else 16):
-        t = .30 + .62 * (n / (16 if living else 19))
-        around = n * 2.4 + rng.uniform(-.85 if not living else -.38, .85 if not living else .38)
+    # An oak crown follows a loose spiral; the dead elm is fundamentally
+    # different: a few snapped, bent limbs, gaps and uneven growth history.
+    count = 12 if living else 11
+    for n in range(count):
+        t = .30 + .62 * (n / 16) if living else rng.uniform(.25, .84)
+        around = n * 2.4 + rng.uniform(-.38, .38) if living else (
+            n * 1.77 + rng.uniform(-.95, .95) + (.7 if n % 3 == 0 else -.25))
         start = trunk_start.lerp(trunk_top, t)
-        length = (1.9 if living else 2.4) * (1.2 - t * .25) * rng.uniform(.45 if not living else .72, 1.28)
+        length = (1.9 if living else 2.65) * (1.2 - t * .25) * (
+            rng.uniform(.72, 1.28) if living else rng.uniform(.43, 1.45))
         end = start + Vector((math.cos(around) * length,
                               math.sin(around) * length,
-                              rng.uniform(.6, 1.8)))
-        branches.append((start, end))
-        taper_segment("Asymmetric skeletal branch", start, end,
-            .20 * (1 - t * .5), .025 if living else .012,
-            bark if rng.random() > .2 else exposed, rng)
+                              rng.uniform(.6, 1.8) if living else rng.uniform(.05, 1.4)))
+        if living:
+            taper_segment("Asymmetric oak branch", start, end,
+                .20 * (1 - t * .5), .025, bark, rng)
+        else:
+            elbow = start.lerp(end, rng.uniform(.37, .67))
+            elbow += Vector((rng.uniform(-.38, .38), rng.uniform(-.38, .38),
+                             rng.uniform(-.55, .22)))
+            base_radius = .22 * (1 - t * .4)
+            taper_segment("Twisting snapped elm leader", start, elbow,
+                          base_radius, .085, bark, rng)
+            taper_segment("Fractured elm leader tip", elbow, end,
+                          .085, rng.uniform(.008, .038), exposed, rng)
         for fork in range(2 if living else rng.randrange(0, 3)):
             side = end + Vector((rng.uniform(-.85, .85),
                                  rng.uniform(-.85, .85),
                                  rng.uniform(.4, 1.25)))
-            taper_segment("Branch secondary fork", start.lerp(end, .65), side,
-                .068, .008, exposed if not living else bark, rng)
+            taper_segment("Secondary living twig" if living else "Dead limb fracture",
+                start.lerp(end, .65), side, .068, .008,
+                bark if living else exposed, rng)
         if living:
             clusters(rng, end + Vector((0, 0, .1)), rng.uniform(.85, 1.35),
                 14 + rng.randrange(12), leaves)
@@ -324,10 +336,16 @@ def build_tree(config):
     if living:
         clusters(rng, trunk_top + Vector((0, 0, .4)), 1.35, 22, leaves)
     else:
-        # Rough broken crown has no artificial symmetrical canopy.
-        taper_segment("Fractured upper leader", trunk_top,
-            trunk_top + Vector((.18, -.13, height * .20)),
-            .18, .015, exposed, rng)
+        # A shattered, leaning main leader; no Christmas-tree spear.
+        fracture = trunk_top + Vector((-.55, .29, height * .10))
+        taper_segment("Leaning snapped elm crown", trunk_top, fracture,
+                      .18, .065, bark, rng)
+        for n in range(3):
+            splinter = fracture + Vector((
+                rng.uniform(-.25, .25), rng.uniform(-.23, .23),
+                rng.uniform(.16, .55)))
+            taper_segment("Splintered pale heartwood", fracture, splinter,
+                          .045, .008, exposed, rng, segments=7, rings=5)
 
     # Small clinging moss on the actual root-collar mesh only; no painted
     # patches, spherical pebbles or fake moss disks underneath the sprite.
