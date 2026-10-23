@@ -102,7 +102,8 @@ test('isolated lab reuses exact accepted board + quilt + transitions with opt-in
     assert.match(lab, /const crop = image\.crop/);
     assert.match(lab, /sortSpritesByFoot/);
     assert.match(lab, /drawContactShadow\(ctx, plan\)/);
-    assert.match(lab, /drawSceneLighting\(ctx, world, state\.light\)/);
+    assert.match(lab, /drawGothicNight\(ctx, gothicNightPlan\(null, sources/);
+    assert.match(lab, /kind: 'fire'/);
     assert.match(lab, /URL\.revokeObjectURL/);
     assert.match(page, /@page "\/arena-lighting"/);
     assert.match(page, /loadArenaLightingSprite/);
