@@ -7,7 +7,7 @@
 <main class="lighting-lab">
     <header>
         <div>
-            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / L3 NIGHT / MATERIALS / FIREBALL</span>
+            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / L4 FIRELIT TREES / SILHOUETTE SHADOWS</span>
             <h1>Wet Forest — Fireball & Night</h1>
             <p>Test a moving, airborne Fireball and optional torch in deep Gothic night, with wet-ground response and local mist on the <strong>actual approved ground compositor</strong>.
                 The two tree candidates are loaded locally, remain unapproved and never enter Hunts.</p>
@@ -88,13 +88,18 @@
             <p>The Fireball moves above the ground while warm light reveals the same approved material
                 textures, optional original tree sprites, and local atmosphere. Disable flight animation
                 to scrub its position and compare identical screenshots at 320px and 390px.</p>
+            <p><strong>L4 tree depth:</strong> actual opaque canopy/branch silhouettes now block the
+                light on the illuminated ground. Fireball direction moves those shadows, and the
+                facing trunk and foliage catch warm light while the opposite side stays dark.
+                The <strong>Ground + cast shadows</strong> switch shows that difference directly.
+                This is a 2.5D original-alpha projection, not a finished rigged 3D shadow map.</p>
             <p>Wet highlights occur only on approved mud, paving and marsh cells, inside actual calibration
                 light pools. Mist is subtle and local, never a global grey wash. Root anchors and L2
                 cast/contact shadows remain independently inspectable.</p>
             <p><strong>Not implemented:</strong> normal maps, local spell lights, actual C# gameplay snapshots,
                 native GPU optimization, enemy rendering, physical collision, or final art approval.
                 No calibration emitter is part of a live Hunt.</p>
-            <p class="notice">L3 isolated art/lighting study. No legacy trees, props, cobblestones or sprite replacements.</p>
+            <p class="notice">L4 isolated tree-lighting study. No legacy trees, props, cobblestones or sprite replacements.</p>
         </aside>
     </div>
 </main>
@@ -125,7 +130,7 @@
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
-            "./js/arena-lighting-lab.js?v=20261023-l3-fireball-1");
+            "./js/arena-lighting-lab.js?v=20261023-l4-silhouette-1");
         await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
     }
 
