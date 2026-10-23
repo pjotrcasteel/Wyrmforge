@@ -44,7 +44,13 @@ def material(name, dark, light, noise_scale, roughness=0.88):
     bsdf = nodes.new("ShaderNodeBsdfPrincipled")
     bsdf.inputs["Roughness"].default_value = roughness
     links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
+    coordinates = nodes.new("ShaderNodeTexCoord")
+    stretched_grain = nodes.new("ShaderNodeVectorMath")
+    stretched_grain.operation = 'MULTIPLY'
+    stretched_grain.inputs[1].default_value = (3.1, 3.1, .38)
+    links.new(coordinates.outputs["Generated"], stretched_grain.inputs[0])
     tex = nodes.new("ShaderNodeTexNoise")
+    links.new(stretched_grain.outputs["Vector"], tex.inputs["Vector"])
     tex.inputs["Scale"].default_value = noise_scale
     tex.inputs["Detail"].default_value = 5.0
     tex.inputs["Roughness"].default_value = 0.73
@@ -56,9 +62,13 @@ def material(name, dark, light, noise_scale, roughness=0.88):
     links.new(tex.outputs["Fac"], ramp.inputs["Fac"])
     links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
     bump = nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.14
-    bump.inputs["Distance"].default_value = 0.045
-    links.new(tex.outputs["Fac"], bump.inputs["Height"])
+    bump.inputs["Strength"].default_value = 0.24
+    bump.inputs["Distance"].default_value = 0.055
+    fissures = nodes.new("ShaderNodeTexNoise")
+    fissures.inputs["Scale"].default_value = 41.0
+    fissures.inputs["Detail"].default_value = 2.0
+    links.new(stretched_grain.outputs["Vector"], fissures.inputs["Vector"])
+    links.new(fissures.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
 
@@ -172,12 +182,95 @@ def clusters(rng, origin, radius, amount, leaf_materials):
     for polygon, index in zip(obj.data.polygons, face_materials):
         polygon.material_index = index
 
+def root_buttress(name, angle, distance, width, rng, bark):
+    """Unbroken twisting root with a broad flared buttress and a buried tip.
+
+    The flattened ellipsoidal rings make a plausible grounded root instead of
+    two pointed cylinder segments; all portions remain editable in Blender.
+    """
+    sections = 18
+    sides = 12
+    vertices = []
+    faces = []
+    bend = rng.uniform(-.43, .43)
+    drift = rng.uniform(-.22, .22)
+    for step in range(sections + 1):
+        t = step / sections
+        theta = angle + bend * math.sin(t * math.pi) + drift * t
+        reach = distance * (t ** .84)
+        center = Vector((
+            math.cos(theta) * reach,
+            math.sin(theta) * reach,
+            .095 + .28 * (1 - t) ** 3 - .060 * t + .018 * math.sin(math.pi * 2 * t),
+        ))
+        across = Vector((-math.sin(theta), math.cos(theta), 0))
+        lateral = max(.015, width * ((1 - t) ** 1.8) + .02 * (1 - t))
+        vertical = max(.012, lateral * (.73 - .27 * t))
+        for side in range(sides):
+            a = math.tau * side / sides
+            crinkle = 1 + .06 * math.sin(a * 5 + t * 11 + angle)
+            vertices.append(center + across * math.cos(a) * lateral * crinkle
+                            + Vector((0, 0, math.sin(a) * vertical)))
+    for step in range(sections):
+        for side in range(sides):
+            i = step * sides + side
+            j = step * sides + (side + 1) % sides
+            faces.append((i, j, j + sides, i + sides))
+    faces.extend([tuple(reversed(range(sides))),
+                  tuple(sections * sides + i for i in range(sides))])
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(bark)
+    for face in obj.data.polygons:
+        face.use_smooth = True
+    return obj
+
+
+def trunk_flare(config, rng, bark):
+    """Uneven buttressed collar growing into the lower trunk, without a decal."""
+    ring_count, sides = 17, 24
+    vertices, faces = [], []
+    for ring in range(ring_count + 1):
+        t = ring / ring_count
+        z = .065 + 2.15 * t
+        core = config["width"] * (1.0 + .51 * (1 - t) ** 3)
+        for side in range(sides):
+            angle = math.tau * side / sides
+            lobes = 1 + (.21 * (1 - t) ** 2) * math.cos(angle * 7 + .32)
+            uneven = 1 + .045 * math.cos(angle * 3 + t * 4)
+            radial = core * lobes * uneven
+            vertices.append((
+                .026 * t + math.cos(angle) * radial,
+                .025 * t + math.sin(angle) * radial,
+                z + .055 * math.cos(angle * 7) * (1 - t),
+            ))
+    for ring in range(ring_count):
+        for side in range(sides):
+            i = ring * sides + side
+            j = ring * sides + (side + 1) % sides
+            faces.append((i, j, j + sides, i + sides))
+    faces += [tuple(reversed(range(sides))),
+              tuple(ring_count * sides + k for k in range(sides))]
+    mesh = bpy.data.meshes.new("Asymmetric living root collar")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new("Buttressed trunk base", mesh)
+    bpy.context.collection.objects.link(obj)
+    obj.data.materials.append(bark)
+    for polygon in obj.data.polygons:
+        polygon.use_smooth = True
+
+
 def build_tree(config):
     rng = random.Random(config["seed"])
     height = config["height"]
     living = config["foliage"]
-    bark = material("Original wet bark · layered ridges",
-        (.049, .040, .033), (.245, .188, .132), 4.6)
+    bark = material("Old wet fissured bark · longitudinal striations",
+        (.034, .029, .024) if living else (.057, .054, .047),
+        (.195, .147, .103) if living else (.232, .215, .177), 6.5)
     exposed = material("Original exposed wood · fracture grain",
         (.105, .080, .062), (.36, .28, .18), 6.2)
     moss = material("Original woodland moss",
@@ -193,17 +286,16 @@ def build_tree(config):
     taper_segment("Main root collar and trunk", trunk_start, trunk_top,
         config["width"], .18, bark, rng, segments=17, rings=34)
 
-    # Eight overlapping root buttresses, taper below the future physical
-    # collision footprint. The renderer will sort against the root baseline.
-    for root in range(9):
-        phi = root * math.tau / 9 + rng.uniform(-.21, .21)
-        length = rng.uniform(1.10, 2.05)
-        tip = Vector((math.cos(phi) * length,
-                      math.sin(phi) * length, rng.uniform(.025, .16)))
-        midpoint = Vector((math.cos(phi) * length * .52,
-                           math.sin(phi) * length * .52, .10))
-        taper_segment("Exposed root base", root_centre, midpoint, .20, .085, bark, rng)
-        taper_segment("Exposed root taper", midpoint, tip, .10, .012, bark, rng)
+    # An uneven flared root collar and curved roots replace the old radial
+    # straight-spike starburst. The roots join the trunk but do not paint soil.
+    trunk_flare(config, rng, bark)
+    root_count = 7 if living else 6
+    for root in range(root_count):
+        phi = root * math.tau / root_count + rng.uniform(-.37, .37)
+        distance = rng.uniform(1.15, 2.35) if living else rng.uniform(.83, 1.7)
+        root_buttress(f"Curving anchored root {root:02d}", phi, distance,
+                      rng.uniform(.19, .34), rng, bark)
+
 
     # Each branch owns a unique offset, length, fork shape and material.
     branches = []
@@ -237,15 +329,18 @@ def build_tree(config):
             trunk_top + Vector((.18, -.13, height * .20)),
             .18, .015, exposed, rng)
 
-    # Modest moss at the roots, never an external ground decal.
-    for n in range(16):
+    # Small clinging moss on the actual root-collar mesh only; no painted
+    # patches, spherical pebbles or fake moss disks underneath the sprite.
+    for n in range(25 if living else 7):
         phi = rng.uniform(0, math.tau)
-        r = rng.uniform(.1, .78)
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,
-            radius=rng.uniform(.06, .15),
-            location=(r * math.cos(phi), r * math.sin(phi), rng.uniform(.1, .55)))
-        bpy.context.object.name = "Root-attached moss tuft"
-        bpy.context.object.data.materials.append(moss)
+        r = rng.uniform(.27, config["width"] * 1.20)
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2,
+            radius=rng.uniform(.028, .09),
+            location=(r * math.cos(phi), r * math.sin(phi), rng.uniform(.14, .91)))
+        tuft = bpy.context.object
+        tuft.name = "Clinging bark moss"
+        tuft.scale = (1.0, .7, rng.uniform(.35, .65))
+        tuft.data.materials.append(moss)
 
 
 def setup_camera(height):
