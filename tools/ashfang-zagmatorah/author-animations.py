@@ -253,7 +253,7 @@ for name,intervals,loop,travel,events in selected:
     if bag:
      for curve in bag.fcurves:
       for key in curve.keyframe_points:key.interpolation='LINEAR'
- report['clips'][name]={'action':action.name,'sourceFrames':intervals+1,'intervals':intervals,'duration':intervals/24,'loop':loop,'travelPerCycle':travel,'events':events,'headingChangeDegrees':-45 if name=='turn_left' else 45 if name=='turn_right' else 0,'rootMotion':[travel*(smooth((f/intervals-.3)/.38) if name=='pounce' else 1-(1-min(1,(f/intervals)/.64))**3 if name=='land' else f/intervals) for f in range(intervals+1)],'magmaLife':[1-smooth((f/intervals-.30)/.52) if name.startswith('death') else 1. for f in range(intervals+1)],'stanceDuty':.32 if name=='run' else .7,'phaseOffsets':{'foreLeft':0,'foreRight':.06,'hindLeft':.5,'hindRight':.56} if name=='run' else {'foreLeft':0,'foreRight':.5,'hindLeft':.75,'hindRight':.25},'cameraLift':[5*bell(f/intervals,.34,.48,.78) if name=='takeoff' else 0 for f in range(intervals+1)],'maxIKTargetError':max(contact_errors,default=0),'landmarks':positions}
+ report['clips'][name]={'action':action.name,'sourceFrames':intervals+1,'intervals':intervals,'duration':intervals/24,'loop':loop,'travelPerCycle':travel,'events':events,'headingChangeDegrees':-45 if name=='turn_left' else 45 if name=='turn_right' else 0,'rootMotion':[travel*(smooth((f/intervals-.3)/.38) if name=='pounce' else 1-(1-min(1,(f/intervals)/.64))**3 if name=='land' else f/intervals) for f in range(intervals+1)],'magmaLife':[1-smooth((f/intervals-.30)/.52) if name.startswith('death') else 1. for f in range(intervals+1)],'stanceDuty':.32 if name=='run' else .7,'phaseOffsets':{'foreLeft':0,'foreRight':.06,'hindLeft':.5,'hindRight':.56} if name=='run' else {'foreLeft':0,'foreRight':.5,'hindLeft':.75,'hindRight':.25},'cameraLift':[5.5*bell(f/intervals,.25,.44,.82) if name=='takeoff' else 0 for f in range(intervals+1)],'maxIKTargetError':max(contact_errors,default=0),'landmarks':positions}
  print('BAKED',name,intervals+1,'IK',max(contact_errors,default=0),flush=True)
 # Temporary IK targets and solver do not ship. Every pose is editable on the original deform hierarchy.
 for ob in helpers+[solver]:bpy.data.objects.remove(ob,do_unlink=True)
@@ -265,3 +265,4 @@ for im in bpy.data.images:
  if im.packed_file:im.unpack(method='REMOVE')
  im.filepath='//../M0-001/original/download/textures/'+name
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'ashfang-animations.blend'),compress=True,relative_remap=False);report['seconds']=time.time()-start;report['sha256']=hashlib.sha256((out/'ashfang-animations.blend').read_bytes()).hexdigest();(out/'motions.json').write_text(json.dumps(report,indent=2));print('ANIMATION_SOURCE_SAVED',report['seconds'],flush=True)
+
