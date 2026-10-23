@@ -19,10 +19,20 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
-      - name: Install free Blender renderer
+      - name: Install pinned standalone Blender (no slow Ubuntu dependency downloads)
+        shell: bash
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender
+          set -euo pipefail
+          version=4.3.2
+          archive="blender-$version-linux-x64.tar.xz"
+          release="https://download.blender.org/release/Blender4.3"
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 600 "$release/$archive" --output "$RUNNER_TEMP/$archive"
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 120 "$release/blender-$version.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          expected="$(grep -F "$archive" "$RUNNER_TEMP/blender.sha256" | grep -Eo '[0-9a-fA-F]{64}' | head -1)"
+          test -n "$expected"
+          echo "$expected  $RUNNER_TEMP/$archive" | sha256sum --check -
+          tar -xJf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-$version-linux-x64" >> "$GITHUB_PATH"
           blender --version | head -2
       - name: Render independent original living tree
         run: |
