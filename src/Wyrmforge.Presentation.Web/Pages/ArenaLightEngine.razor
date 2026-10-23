@@ -1,0 +1,54 @@
+@page "/arena-light-engine"
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JavaScript
+
+<main class="gpu-proof">
+    <h1>Shared light engine</h1>
+    <p>G0–G1 isolated GPU proof. Town and Hunts are unchanged. Actor normal/depth exports and original oak validation remain pending.</p>
+    <nav aria-label="Light inspection">
+        <label>Environment <select @bind="profile" @bind:after="Sync"><option>night</option><option>day</option><option>auto</option><option>zero</option></select></label>
+        <label><input type="checkbox" @bind="fireball" @bind:after="Sync" /> Fireball</label>
+        <label><input type="checkbox" @bind="torch" @bind:after="Sync" /> Torch</label>
+        <label><input type="checkbox" @bind="spot" @bind:after="Sync" /> Spot</label>
+        <label><input type="checkbox" @bind="rune" @bind:after="Sync" /> Register rune</label>
+        <label><input type="checkbox" @bind="shadows" @bind:after="Sync" /> Shadows</label>
+        <label><input type="checkbox" @bind="reflections" @bind:after="Sync" /> Direct specular</label>
+        <label>Light position <input type="range" min="0" max="100" @bind="progress" @bind:event="oninput" @bind:after="Sync" /></label>
+        <label>Walk frame <input type="range" min="0" max="15" @bind="frame" @bind:event="oninput" @bind:after="Sync" /></label>
+    </nav>
+    @if (error is not null) { <p role="alert">@error</p> }
+    <canvas @ref="canvas" aria-label="Shared GPU world lighting proof"></canvas>
+    <p>Screen-space readability remains visible even with all world light and emission off. The Town corner is diagnostic geometry, not replacement Town artwork.</p>
+</main>
+
+@code {
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private string profile = "night";
+    private string? error;
+    private bool fireball = true, torch = true, spot = true, rune, shadows = true, reflections = true;
+    private int progress = 25, frame;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            module = await JavaScript.InvokeAsync<IJSObjectReference>("import", "./js/lighting/proof-scene.js");
+            await module.InvokeVoidAsync("initializeProof", canvas);
+        }
+        catch (JSException exception) { error = exception.Message; StateHasChanged(); }
+    }
+    private async Task Sync()
+    {
+        if (module is not null) await module.InvokeVoidAsync("configureProof", canvas,
+            new { profile, fireball, torch, spot, rune, shadows, reflections, progress = progress / 100.0, frame });
+    }
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+        try { await module.InvokeVoidAsync("disposeProof", canvas); }
+        catch (JSDisconnectedException) { }
+        await module.DisposeAsync();
+    }
+}

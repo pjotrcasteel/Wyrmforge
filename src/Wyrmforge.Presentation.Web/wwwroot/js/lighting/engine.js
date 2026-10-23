@@ -1,0 +1,158 @@
+import * as T from './vendor/three.module.js';
+import { validateSnapshot, selectLights } from './registry.js';
+
+/** Shared GPU adapter; accepts resource IDs and descriptors, never entity kinds. */
+export class LightingEngine {
+    constructor(canvas, { shadowViews = 8, maxLights = 8 } = {}) {
+        this.canvas = canvas;
+        this.renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, preserveDrawingBuffer: true });
+        this.renderer.outputColorSpace = T.SRGBColorSpace;
+        this.renderer.toneMapping = T.NeutralToneMapping;
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = T.PCFShadowMap;
+        this.renderer.setPixelRatio(1);
+        this.scene = new T.Scene();
+        this.scene.background = new T.Color(0);
+        this.camera = new T.OrthographicCamera(-5, 5, 7, -7, .1, 80);
+        this.camera.up.set(0, 0, 1);
+        this.camera.position.set(8, -12, 13);
+        this.camera.lookAt(0, 0, 1);
+        this.ambient = new T.AmbientLight();
+        this.scene.add(this.ambient);
+        this.objects = new Map(); this.lights = new Map();
+        this.geometries = new Map(); this.textures = new Map();
+        this.shadowViews = shadowViews; this.maxLights = maxLights;
+        this.alive = true;
+    }
+    registerGeometry(id, geometry) {
+        if (this.geometries.has(id)) throw new Error(`Duplicate geometry ${id}`);
+        this.geometries.set(id, geometry);
+    }
+    registerTexture(id, texture, colorData = true) {
+        if (this.textures.has(id)) throw new Error(`Duplicate texture ${id}`);
+        texture.colorSpace = colorData ? T.SRGBColorSpace : T.NoColorSpace;
+        texture.magFilter = texture.minFilter = T.NearestFilter;
+        texture.generateMipmaps = false;
+        this.textures.set(id, texture);
+    }
+    material(descriptor, receivesLight) {
+        const texture = id => id ? this.textures.get(id)?.clone() : null;
+        const material = new T.MeshPhysicalMaterial({
+            color: receivesLight ? descriptor.color : '#000000', map: texture(descriptor.albedo),
+            normalMap: texture(descriptor.normal), roughnessMap: texture(descriptor.roughnessMap),
+            roughness: descriptor.roughness, metalness: receivesLight ? descriptor.metalness : 0,
+            specularIntensity: receivesLight && descriptor.reflection !== 'off' ? descriptor.specular : 0,
+            emissive: descriptor.emission, emissiveIntensity: descriptor.emissionIntensity,
+            alphaTest: descriptor.alphaCutoff, side: descriptor.doubleSided ? T.DoubleSide : T.FrontSide,
+        });
+        material.shadowSide = descriptor.doubleSided ? T.DoubleSide : T.FrontSide;
+        for (const map of [material.map, material.normalMap, material.roughnessMap]) if (map) map.needsUpdate = true;
+        return material;
+    }
+    removeObject(id) {
+        const o = this.objects.get(id);
+        if (!o) return;
+        this.scene.remove(o.mesh);
+        if (o.caster) this.scene.remove(o.caster);
+        for (const map of [o.mesh.material.map, o.mesh.material.normalMap, o.mesh.material.roughnessMap]) map?.dispose();
+        o.mesh.material.dispose(); o.caster?.material.dispose();
+        this.objects.delete(id);
+    }
+    removeLight(id) {
+        const light = this.lights.get(id);
+        if (!light) return;
+        this.scene.remove(light, light.target);
+        light.shadow?.map?.dispose(); light.dispose?.();
+        this.lights.delete(id);
+    }
+    /** Whole authoritative visual snapshot; validate all resource references before mutation. */
+    apply(input) {
+        const s = validateSnapshot(input);
+        for (const m of s.materials) for (const key of ['albedo', 'normal', 'roughnessMap'])
+            if (m[key] && !this.textures.has(m[key])) throw new Error(`Missing texture ${m[key]}`);
+        for (const o of s.objects) for (const key of ['geometry', 'occluderGeometry'])
+            if (o[key] && !this.geometries.has(o[key])) throw new Error(`Missing geometry ${o[key]}`);
+        const selected = selectLights(s, this.shadowViews, this.maxLights);
+        for (const id of this.lights.keys()) if (!selected.some(l => l.id === id)) this.removeLight(id);
+        for (const d of selected) {
+            let light = this.lights.get(d.id);
+            if (light && light.userData.type !== d.type) { this.removeLight(d.id); light = null; }
+            if (!light) {
+                const constructors = { point: T.PointLight, spot: T.SpotLight, directional: T.DirectionalLight };
+                light = new constructors[d.type](); light.userData.type = d.type;
+                light.shadow.mapSize.set(512, 512); light.shadow.bias = -.00015; light.shadow.normalBias = .025;
+                light.shadow.camera.near = .05;
+                if (d.type === 'directional') Object.assign(light.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9 });
+                this.scene.add(light); if (light.target) this.scene.add(light.target);
+                this.lights.set(d.id, light);
+            }
+            light.color.set(d.color); light.intensity = d.intensity; light.distance = d.range; light.decay = 2;
+            light.position.fromArray(d.position); light.castShadow = d.shadow;
+            light.shadow.camera.far = d.range; light.shadow.camera.updateProjectionMatrix();
+            if (light.target) light.target.position.copy(light.position).add(new T.Vector3(...d.direction));
+            if (light.isSpotLight) { light.angle = d.coneAngle; light.penumbra = d.penumbra; }
+        }
+        const materialById = new Map(s.materials.map(m => [m.id, m]));
+        for (const id of this.objects.keys()) if (!s.objects.some(o => o.id === id)) this.removeObject(id);
+        for (const d of s.objects) {
+            const md = materialById.get(d.material);
+            const signature = JSON.stringify([d.geometry, d.occluderGeometry, md, d.receivesLight]);
+            let object = this.objects.get(d.id);
+            if (object && object.signature !== signature) { this.removeObject(d.id); object = null; }
+            if (!object) {
+                const mesh = new T.Mesh(this.geometries.get(d.geometry), this.material(md, d.receivesLight));
+                let caster;
+                if (d.occluderGeometry) {
+                    // Separate authored solid caster; never reuses collision or infers volume from albedo.
+                    const hidden = new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+                    caster = new T.Mesh(this.geometries.get(d.occluderGeometry), hidden);
+                    this.scene.add(caster);
+                }
+                object = { mesh, caster, signature }; this.objects.set(d.id, object); this.scene.add(mesh);
+            }
+            for (const mesh of [object.mesh, object.caster].filter(Boolean)) {
+                mesh.position.fromArray(d.position); mesh.rotation.set(...d.rotation); mesh.scale.fromArray(d.scale);
+            }
+            object.mesh.castShadow = d.castsShadow && !object.caster;
+            if (object.caster) object.caster.castShadow = d.castsShadow;
+            object.mesh.receiveShadow = d.receivesShadow;
+            object.mesh.material.emissiveIntensity = s.environment.emission ? md.emissionIntensity : 0;
+            if (d.frame) for (const map of [object.mesh.material.map, object.mesh.material.normalMap]) if (map) {
+                map.offset.fromArray(d.frame.offset); map.repeat.fromArray(d.frame.repeat); map.updateMatrix();
+            }
+        }
+        this.ambient.color.set(s.environment.color); this.ambient.intensity = s.environment.ambient;
+        this.renderer.toneMappingExposure = s.environment.exposure;
+        this.snapshot = s; this.selected = selected;
+    }
+    render(width = this.canvas.clientWidth, height = this.canvas.clientHeight) {
+        if (!this.alive) return;
+        // One world sample per CSS pixel at 390px, bounded regardless of device DPR.
+        const w = Math.max(1, Math.min(390, Math.round(width))), h = Math.max(1, Math.round(height * w / width));
+        if (this.canvas.width !== w || this.canvas.height !== h) this.renderer.setSize(w, h, false);
+        this.camera.left = -5; this.camera.right = 5;
+        this.camera.top = 5 * h / w; this.camera.bottom = -5 * h / w;
+        this.camera.updateProjectionMatrix();
+        this.renderer.render(this.scene, this.camera);
+    }
+    pixels() {
+        const gl = this.renderer.getContext(), data = new Uint8Array(this.canvas.width * this.canvas.height * 4);
+        gl.readPixels(0, 0, this.canvas.width, this.canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        return data;
+    }
+    diagnostics() {
+        return { backend: 'WebGL2 / Three 0.186.1', objects: this.objects.size,
+            lights: this.selected?.map(l => ({ id: l.id, shadow: l.shadow, views: l.shadowViews })),
+            drawCalls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles,
+            textures: this.renderer.info.memory.textures, geometries: this.renderer.info.memory.geometries,
+            productionPathsMigrated: 0 };
+    }
+    dispose() {
+        this.alive = false;
+        for (const id of this.objects.keys()) this.removeObject(id);
+        for (const id of this.lights.keys()) this.removeLight(id);
+        for (const geometry of this.geometries.values()) geometry.dispose();
+        for (const texture of this.textures.values()) texture.dispose();
+        this.renderer.dispose();
+    }
+}
