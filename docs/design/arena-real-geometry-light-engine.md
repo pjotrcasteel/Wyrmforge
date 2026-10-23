@@ -61,7 +61,7 @@ can illuminate surfaces without a rendered torch mesh.
 
 Any renderer-visible object describes **what it is made of**, not which spells
 it knows: world transform, mesh or depth-capable 2.5D geometry, albedo,
-normals, roughness, optional AO and emissive map, `ReceivesLight`,
+normals, optional authored height/depth, roughness, **specular/reflectivity, metalness when appropriate, water/transparency or reflection mode**, AO and emissive map, `ReceivesLight`,
 `CastsShadow`, shadow participation/quality, optional alpha-cutoff for leaves
 and appropriate double-sided behavior. Sprites may use authored height/depth
 and normal data *when sufficient*, but genuinely overlapping foliage needs
@@ -83,7 +83,7 @@ A central lighting subsystem consumes a registry/immutable render snapshot of
 emitters, renderables, and environmental settings (ambient/sky fill, exposure,
 optional moon/directional key). It performs transforms, culling, attenuation,
 shadow caster selection, shadow maps, material response, occlusion,
-composition and diagnostics. It is **one engine** shared by all assets,
+**reflection/specular selection, visibility/exposure control**, composition and diagnostics. It is **one engine** shared by all assets,
 not a second renderer attached to every character or biome.
 
 Suggested conceptual flow:
@@ -94,8 +94,9 @@ Authoritative C# RunSimulation / scene state
   -> renderer adapter (WebGL GPU proof now; native adapter later)
   -> central LightRegistry / visible-light & caster selection
   -> geometry/depth/alpha-cutout shadow passes
-  -> shared material shaders (ground / foliage / rock / actor)
-  -> physically coherent near-black scene + emissive VFX + readable UI
+  -> shared material shaders (ground / foliage / rock / actor / water)
+  -> material-controlled direct specular + reflection sources/probes where needed
+  -> near-black visible-world lighting + emissive VFX + legibility-safe combat UI
 ```
 
 Static authored world lamps/torches register like moving spell emitters;
@@ -112,10 +113,82 @@ test-only emitters, **clearly labeled**, without inventing production gameplay.
 | **Emissive surfaces** | Lava vein / spell core / rune | G1 source appearance; adds real scene illumination only if configured as an emitter |
 | **Area/extended sources** | Large furnace/open flame | G3+ quality extension or documented cluster/approximation; do not claim real soft area shadows before testing |
 
-The interface should be **extensible** without promising every form of
-global illumination, reflections or Unreal-style real-time GI on phone hardware.
+The interface should be **extensible** and provide **useful reflections** without promising unlimited mirror-quality reflections, real-time global illumination or Unreal Lumen on phone hardware.
 Multiple lights illuminate concurrently; dynamic **shadow casting is separately
 budgeted**. Do not turn all extra lights into fake painted shadows.
+
+## Surface response, reflections, and actor visibility — mandatory cross-object behavior
+
+**G1 needs a minimal specular/reflection-capable material path**, not a
+water-specific Fireball glow. G3 can raise reflection fidelity and add more
+expensive techniques, but the engine must be designed for this from G0.
+
+- **Correct difference:** authored normal maps change local surface normals,
+  providing diffuse/specular highlights and depth cues on a pixel-art sprite.
+  **A normal map cannot, by itself, make an object cast real geometry/depth
+  shadows** or know when another leaf/arm blocks light. To cast dynamic
+  shadows from detail, add shadow-capable mesh/alpha-cutout geometry or
+  a deliberate height/depth representation (parallax/self-shadow approaches
+  only where valid). This distinction is documented in standard renderer
+  material/shadow APIs; don't label normal-map highlights "cast shadows".
+- **Material interface:** provide controls such as `NormalMap`,
+  `HeightOrDepth` (optional), `Roughness`, `Specular`, optional
+  `Metallic`, `Reflectivity`/`ReflectionMode`,
+  `Transparency` and `Emission`. Texture coordinates, world orientation
+  and pixel scale must be consistent across atlases and meshes.
+- **Water is a first-class lit/reflective material:** direct Fireball and
+  torch highlights follow their world positions; water/puddles may also
+  reflect nearby silhouettes, scenery or source shapes via a **documented
+  tiered method**. Start with real material specular + water-normal ripple;
+  use cheap probes/scene captures for broader reflections and selective
+  lower-resolution planar reflection for important still ponds if measured
+  affordable. A specular sparkle is **not** equivalent to a true reflected
+  enemy/tree, and an unverified screen-space-only method cannot reflect
+  off-screen objects. Provide reflection OFF/A/B and correct occlusion.
+  No fake mirrored Fireball sprite pasted on water.
+- **Actual actors, especially Hollowed:** convert an **existing original
+  Hollowed sprite/animation reference** to a lit-material receiver with
+  authored/exported normal/depth data and a separate plausible caster
+  silhouette. Lighting reveals real body form, armour and limbs as they
+  enter range; it changes their shaded orientation and ground cast.
+  Preserve sprites/animations/identities and **do not redesign Hollowed** or
+  give them permanent custom glow just to make them visible.
+- **Darkness is real:** outside all emitters, ground, objects and Hollowed
+  should become near-black except a deliberately minimal night ambient/
+  moon contribution and a small neutral player visibility allowance.
+  **Not every enemy must always be visible**. But gameplay must remain fair:
+  mandatory attack telegraphs, damage cues, player orientation, exits and
+  accessibility accommodations live in a separately controlled readability
+  pass that is testable and does not brighten the entire world. No invisible
+  unblockable hit merely because its attacker was outside illumination.
+  Decide predictable warning behavior during G1 and verify it at phone scale.
+- **Pixel-art-aware rendering:** preserve authored pixels/edges, avoid
+  indiscriminate smoothing/bloom and plastic PBR. Evaluate nearest-neighbor
+  or intentionally bounded upscale, quantized/light-band/dithered shading
+  where it supports the existing art, crisp animated outlines, shallow
+  reflections and coherent temporal behavior. Aesthetic pixel constraint
+  changes *presentation fidelity*, not the correctness of light visibility.
+
+**G1 is a multi-material demonstration, not a completed Unreal-scale water
+engine.** Required now: Hollowed actually reacts to lights and shadows,
+and water reflects a moving point/torch through the **same generic light/material
+path**; leave costly scene-accurate water reflections to proven optional G3
+tiers if necessary. Do not let the reflection extension defer the fundamental
+G1 registry/geometry self-shadow proof.
+
+### Research grounding (not borrowed assets)
+
+- [Three.js MeshStandardMaterial](https://threejs.org/docs/pages/MeshStandardMaterial.html):
+  normal maps change fragment lighting; roughness controls reflection response.
+- [Unity URP 2D lights](https://docs.unity.com/en-us/engine/6000.7/manual/unity2d/2d-urp/2d-index/2dlight-properties):
+  separate normal-map lighting and Shadow Caster geometry; the same 2D
+  light can illuminate sprites without each sprite implementing the light.
+- [Unreal physically based materials](https://dev.epicgames.com/documentation/en-us/unreal-engine/physically-based-materials-in-unreal-engine):
+  roughness/specular/metallic material parameters, not emitter-specific shaders.
+- [Three.js Reflector](https://threejs.org/docs/pages/Reflector.html) and
+  [Unity reflection probes](https://docs.unity.com/en-us/engine/6000.0/manual/lighting-overview/lighting/reflection-probes/introduction):
+  reflection-camera captures and probe-based approximations have different
+  accuracy, cost and visibility limits.
 
 ## Why tree-only normal maps failed
 
@@ -178,11 +251,13 @@ unapproved candidates into production.
    overlapping local lights** must combine consistently; no ghost light
    after removal.
 4. **Prove several different receivers and occluders:** actual approved
-   wet ground; a solid rock/wall; *original 3D* ancient oak trunk/branches
-   with cutout leaf layers. Prefer an existing mage/enemy receiver as an
-   optional next small test if it is cheap to include. The same Fireball
-   lights all of them, rock/tree cast onto ground, leaves cast onto
-   leaves/branches/trunk. Materials vary naturally without custom emitter code.
+   wet ground; a solid rock/wall; the **existing Hollowed enemy** (using
+   actual approved sprites and properly authored normals/depth/caster data);
+   a **shallow water/puddle material** with specular reflections; and
+   *original 3D* ancient oak trunk/branches with cutout leaf layers.
+   The same Fireball lights all of them; Hollowed casts and receives dynamic
+   shadows, rock/tree cast onto ground, and leaves cast onto other leaves,
+   branches and trunk. Materials vary naturally without custom emitter code.
 5. **Prove add-an-object without engine edits:** add a new sample
    "glowing rune"/"lit crystal" using only descriptors/assets. It should
    light rock, ground, tree and any other eligible object in range.
@@ -193,7 +268,9 @@ unapproved candidates into production.
    Views: lit, albedo, normals, actual geometry, light-space depth,
    shadow visibility, light bounds, per-object emitter registry.
    Presets: Fireball left/right/behind/off, torch only, overlapping
-   Fireball+torch, moving Spot, no emitters, shadows off, new rune.
+   Fireball+torch, moving Spot, no emitters, shadows off, new rune,
+   **Hollowed outside/entering/leaving the light**, and **Fireball reflection
+   in still/rippled water with reflection enabled/disabled**.
    Report pixel/frame metrics without claiming final physical QA.
 7. **Review & refine:** visually inspect the *actual* screenshots,
    especially internal leaf self-shadow and light changes on non-tree
@@ -208,9 +285,12 @@ unapproved candidates into production.
 | **Move, disable, remove** | Light and appropriate dynamic shadows move/disappear immediately; IDs stable, no leaks/phantom glows |
 | **Fireball + torch overlap** | Both affect shared terrain, tree and rock; intensities combine without global daylight or blown-out artifacts |
 | **Point, Spot and directional** | Distinct defined shapes/directions/ranges respected; future unsupported area lights degrade explicitly, never silently masquerade |
-| **Different materials** | Wet ground, rock, bark, leaves react appropriately under the SAME light, not one uniform paint overlay |
+| **Different materials** | Wet ground, water, rock, bark, leaves and actual Hollowed/enemy sprite react appropriately under the SAME light, not one uniform paint overlay |
 | **Occlusion** | Rock casts on ground, tree casts ground shadows, real leaves cast on other leaves, branches and trunk with Fireball direction reversal |
 | **Shadows OFF** | Illumination persists but visibility/occlusion differences disappear; no hidden fixed shadow masks |
+| **Hollowed enemy receives light** | Actual Hollowed transitions from near-black unlit to visibly normal-lit as Fireball approaches; side-facing contours and its ground cast respond correctly, independently of tree-specific code |
+| **Water / reflective material** | One source produces moving, view-appropriate highlights/reflection on water or puddle; rock/foliage remain matte; disabling reflection removes it without disabling diffuse lighting |
+| **Zero light + readability** | World goes near-black; Hollowed outside light is mostly concealed, not mysteriously fully lit, while player orientation, actionable attack telegraphs and accessibility cues remain intentionally readable and testable |
 | **No emitters / budget fallback** | Near-black readable night; caster budget may reduce shadow quality but must not invent lights, change gameplay or break combat visibility |
 | **New object uses engine** | Sample rune/second prop emits without modifying engine shaders/dispatch; casts/receives flags work independently |
 
@@ -226,7 +306,7 @@ overlap makes night daylight, or the underlying approved ground changes.
 | **G0 — inventory + contract** | Inspect existing repo; define reusable light/renderable/scene descriptors, units and backend | Actual source SHA, integration seams, written renderer-neutral contract |
 | **G1 — working generic GPU lighting (NEXT)** | Light registry, point/spot/directional, multiple emitters, varied receivers, real occlusion with at least one complex alpha-cutout tree and a rock/wall | Acceptance matrix + 320/390px screenshots; independently add/remove a new emitter without renderer edits |
 | **G2 — authoritative C# bridge** | Typed snapshot source mapping, stable lifecycle and environment settings; adapter boundary for browser/native | Deterministic replay, movement, extinction and no gameplay mutation/regressions |
-| **G3 — advanced material/light response** | AO, two-sided leaf transmission, roughness, wet materials, localized fog, emissive effects, optional area-source approximations | Material-specific A/B, night preserved, no neon/plastic/filter stack |
+| **G3 — advanced material/light response** | AO, two-sided leaf transmission, roughness, reflection fidelity tiers (specular → probes → selective planar water), wet materials, localized fog, emissive effects and optional extended-source approximation | Material-specific A/B, correctly moving reflections and preserved Gothic night; no neon/plastic/filter stack |
 | **G4 — mobile and scale** | LOD, caster selection, caching/adaptive shadow quality, renderer-native choice | Real iOS/Android FPS, thermal/battery, memory and combat readability |
 | **G5 — live Hunt adoption** | One proven engine backend integrated across existing objects, biomes and effects with canonical authority | Combat, Wyrm, spell, save, collision, UI tests and owner/device review |
 
