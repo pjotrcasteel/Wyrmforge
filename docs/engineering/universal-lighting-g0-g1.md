@@ -1,0 +1,101 @@
+# Universal lighting G0–G1 implementation record
+
+Baseline: `5a4933f83a5c55c9c736ee2da948e8940d5e0e88` (main, 24 October 2026).
+Authority: [design and acceptance matrix](../design/arena-real-geometry-light-engine.md),
+[art](../canon/art-and-animation.md), [architecture](../canon/architecture-and-quality.md),
+[town](../canon/town-and-ux.md), [roadmap](../canon/roadmap.md).
+
+## Source reconciliation
+
+PR #307 remains open at `8c963f8351a758b0fb468fd1340088ff7b904abf`.
+Its editable oak source generator and Blender artifacts are the required tree source;
+no old forest substitutes are approved. PR #327 remains a separate open Canvas
+normal/alpha projection experiment, not a GPU backend. Neither is merged here.
+Concurrent Town coverage (#312) and Ashfang (#299) work stays separate.
+
+## Actual renderer inventory and cutover seams
+
+All paths below are relative to `src/Wyrmforge.Presentation.Web`.
+**None of these production world paths has migrated.** The isolated proof is not
+universal adoption. G5 must close every row, including secondary dispatch paths.
+
+| Path / owner | Current draw path | Required conversion |
+| --- | --- | --- |
+| `Features/Arena/ArenaView.razor`, `wwwroot/js/arena.js` | Main Canvas compositor and sorted actor/elevation layers | Consume one scene snapshot; retain C# state/input |
+| `arena-environment.js`, `arena-territory-art.js`, `arena-territory-walls.js`, `arena-cloister-art.js` | Ground, walls, exits, elevations, painted reflections | Material geometry, authored height and occluders; exit indicators classified explicitly |
+| `arena-wet-forest-{art,dressing,sites,vegetation}.js` | Existing biome-specific Canvas geometry/art | Inventory all draws at cutover; never reintroduce rejected assets into new arena |
+| `arena-materials.js`, `arena-ground-{foundation,trails}.js`, `arena-approved-ground-preview.js` | Approved six-material quilt/blending and trail recipe | Preserve paintings/recipe; upload composed albedo; eventual native adapter |
+| `arena-mage.js`, `arena-mage-frames.js` | Temporary procedural/sprite actor | Replace art using shared rigged LitSprite binding; do not polish temporary art |
+| `hollow-sprites.js`, `ashling-sprites.js`, `rigged-sprites.js`, `sprite-animation.js`, `sprite-layer-compositor.js` | Existing atlas/frame/anchor/animation; Canvas filter effects | Same animation samples; matching per-pose normal/depth/caster exports needed |
+| `painted-enemies.js`, `arena-enemy-art.js`, `art-atlas.js` | Other creatures, Wyrms and corpses with fallbacks | All fallback and death paths must become lit renderables |
+| `arena-spell-vfx.js`, `arena-fire-pixels.js`, `arena-lightning-vfx.js`, `arena-frost-vfx.js` | Projectiles, impacts, trails, spell particles | Explicit emissive/lit materials and emitter lifecycle, no full-bright bypass |
+| `arena-{elite,reliquary,bellwarden,winterbell,glass-reliquary}-vfx.js`, `arena-enemy-telegraphs.js` | Mixed bodies, ground FX and warnings | Separate world surfaces from declared screen-space threat/readability channels |
+| `player-danger.js`, `arena-recovery.js`, inline draws in `arena.js` | Player cues, aim, wards, shards, breath, hazards, floating text | Classify each draw; world loot/breath lit; actionable warnings/HUD explicitly exempt |
+| `arena-{night,spell,scene}-lighting.js`, `arena-l3-material-atmosphere.js` | Canvas masks, source sampling and overlays | Retire only at scene cutover; never stack on GPU output |
+| `Features/Forge/CanonicalTownView.razor`, `wwwroot/css/town-canonical.css` | Pre-lit panorama, vacancy plates, school/mastery plates, cutouts | New approved neutral layers and depth; preserve original paintings and hotspots |
+| `Features/Forge/RefugeTownActors.razor`, `refuge-town.js`, `town-v2-nexus.js`, `refuge-foreground-cutouts.js` | DOM/SVG/Canvas NPCs, foreground and masks | Shared LitSprite; preserve foot navigation and exact well/board masking |
+| `town-lighting.js` | Device-local day/night settings | Map preference to shared environment; no panorama swap in future renderer |
+| `hunt-map.js`, `Features/Map/WyrmrealmMapView.razor` | Illustrated navigation chart | Screen-space map UI, not a traversable world scene; review decorative effects explicitly |
+| `spellcraft-circle.js`, `bestiary-portraits.js`, Forge cards, HUD/menus | UI illustrations/canvases | Explicit screen-space exemption; never reused as full-bright world art |
+| `arena-lab.js`, `arena-lighting-lab.js`, sprite/building labs | Isolated historical review tools | Label as legacy; not gameplay adoption evidence |
+| Future interiors/biomes | No implemented shared scene adapter | Require same contracts from introduction |
+
+## Backend and portable contracts
+
+Use pinned Three.js 0.186.1 WebGL2 for the isolated `/arena-light-engine` route.
+Vendor its unmodified ES modules and MIT license for offline runtime; no CDN.
+This is a replaceable adapter, not a decision about the native iOS/Android engine.
+
+Scene descriptors contain stable IDs, owner IDs, world transforms, material and
+geometry resource IDs, separate light/shadow receipt and casting, explicit
+emission, authoritative snapshot time and expiry. Complete snapshots replace
+registry membership atomically: absence removes, disabled/expired sources emit
+nothing. Priority then stable ID determines bounded shadow allocation, never
+entity kind. Point shadows cost six views; spot/directional one.
+
+Coordinates: right-handed X right, Y ground depth, Z up; one unit = one metre in
+this proof. Feet lie at Z=0. Orthographic fixed camera; sprites are vertical
+planes, no camera-facing rotation per frame. Existing game pixel coordinates
+need an explicit G2 conversion (not a change to C# collision). Demo sprites use
+manifest anchor and worldSize/48. Color inputs are sRGB hex/textures, non-color
+normal/roughness maps remain linear data; Three accumulates linear radiance and
+performs one neutral tone map and sRGB output. Local intensity is candela with
+inverse-square falloff and finite cutoff; directional intensity uses backend
+illuminance units. Fixed internal pixel grid uses nearest upscaling, no CSS
+brightness/night filter or bloom. Emission does not implicitly register light.
+
+Materials share MeshPhysicalMaterial for diffuse/normal/roughness/specular.
+Initial reflection tier is **direct-light BRDF specular**, not a scene capture
+or a reflected actor. OFF removes specular response while preserving diffuse.
+Planar/probe reflection is G3. No albedo-derived fake normals are acceptable.
+`receivesLight=false` means emission-only black base, not unshaded full-bright.
+Occluders are render geometry, independent from collision. Alpha cutoff is shared
+by beauty and shadow passes. Current atlas color can prove silhouettes, but
+**missing authored normals/depth cannot be described as complete actor lighting**.
+
+Research: [Three color management](https://threejs.org/manual/pages/color-management.html)
+for input/working/output separation; [physical material](https://threejs.org/docs/pages/MeshPhysicalMaterial.html)
+for specular/roughness; [Godot lights/shadows](https://docs.godotengine.org/en/stable/tutorials/2d/2d_lights_and_shadows.html)
+for the separation of normals from occluders and pixel-grid sampling. These are
+engineering principles, not copied art or a choice of native runtime.
+
+## Separate Town relightable rebuild
+
+G4 first archives 320/390/desktop reference matrices: all four active/vacant pairs,
+six Nexus schools/mastery, day/night, NPC behind well/both posts, routes and gate.
+Preserve original eight paintings, panorama, source navigation, three districts,
+default centre, unlock predicates, hotspots/swipes, saves and collision.
+Author new neutral paving/walls/roof/windows/gate/well/board/vegetation layers,
+independent material/depth/caster data and fixtures. Never infer geometry from
+flattened RGB. Owner approves derivatives before production cutover. Fixture
+membership derives from existing unlocks; school/mastery alters real emitters.
+G5 compares identical camera/state across day/night/zero, interaction and route
+regressions and physical devices. No production Town asset is changed in G0–G1.
+
+## Validation status
+
+Implementation and evidence are tracked below as work progresses. G1 remains
+incomplete until original oak leaf-on-leaf shadows, authored actor material
+passes and every required diagnostic/mobile comparison have passed. Physical
+iOS/Android profiling and artistic approval cannot be inferred from CI or
+software-rendered Chromium screenshots.
