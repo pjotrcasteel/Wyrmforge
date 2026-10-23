@@ -414,12 +414,14 @@ public sealed partial class RunSimulation
 
     private DragonBreathRenderSnapshot? CreateDragonBreathSnapshot()
     {
-        if (dragon is not { IsTelegraphing: true } activeDragon || !dragonHuntState.CanDragonAct) return null;
+        if (dragon is not { Health: > 0 } activeDragon || !dragonHuntState.CanDragonAct) return null;
+        var releasing = activeDragon.Definition.Id == DragonId.Ashfang && ashfangBehavior.Action == "breath" && ashfangBehavior.Phase == "strike";
+        if (!activeDragon.IsTelegraphing && !releasing) return null;
         var attack = activeDragon.Definition.Combat.Attack;
         if (attack.Pattern != DragonAttackPattern.Cone) return null;
         return new DragonBreathRenderSnapshot(activeDragon.Position.X, activeDragon.Position.Y, activeDragon.BreathDirection.X, activeDragon.BreathDirection.Y,
             activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.Range : attack.Geometry.Range,
-            activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.HalfAngle : attack.Geometry.HalfAngle);
+            activeDragon.Definition.Id == DragonId.Ashfang ? ashfangBehavior.HalfAngle : attack.Geometry.HalfAngle) { Active = releasing };
     }
 
     private DragonHuntRenderSnapshot? CreateDragonHuntSnapshot()

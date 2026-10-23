@@ -363,8 +363,8 @@ function draw(state, snapshot, width, height) {
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
-    ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
+    ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     drawPlayerDanger(ctx, { ...snapshot.player, x: snapshot.player.x - camera.x, y: snapshot.player.y - camera.y }, danger, width, height);
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
@@ -1039,9 +1039,9 @@ function drawDragonBreath(ctx, breath, school, dragon = null) {
     ctx.moveTo(breath.x, breath.y);
     ctx.arc(breath.x, breath.y, breath.range, angle - breath.halfAngle, angle + breath.halfAngle);
     ctx.closePath();
-    ctx.fillStyle = `rgba(${palette.rgb}, 0.16)`;
+    ctx.fillStyle = `rgba(${palette.rgb}, ${breath.active?.05:.16})`;
     ctx.fill();
-    ctx.strokeStyle = `rgba(${palette.rgb}, 0.65)`;
+    ctx.strokeStyle = `rgba(${palette.rgb}, ${breath.active?.4:.65})`;
     ctx.lineWidth = 2;
     ctx.stroke();
 }

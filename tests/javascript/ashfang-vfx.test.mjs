@@ -16,6 +16,15 @@ test('Mouth fire follows actual committed cone and socket, with preparation/reco
 test('Rendering effects does not advance snapshots; reduced motion preserves exact warning boundaries',()=>{
  const draws=[];const ctx={globalAlpha:1,fillStyle:'',strokeStyle:'',lineWidth:1,save(){},restore(){},beginPath(){},arc(...a){draws.push(['arc',...a]);},fill(){},stroke(){},fillRect(){},moveTo(){},lineTo(){},closePath(){},createRadialGradient(){return {addColorStop(){}};}};
  const s={dragon,ashfangEffects:[{id:7,kind:'meteor',x:80,y:100,radius:48,progress:.1}],huntHazards:[{x:80,y:100,radius:48,progress:.7,fromAbove:true,armed:true}]};const original=JSON.stringify(s);
- for(const reduced of [false,true]){m.drawAshfangWarning(ctx,s.huntHazards[0],reduced);m.drawAshfangGroundEffects(ctx,s,reduced);m.drawAshfangAirEffects(ctx,s,sockets,reduced);}
+ for(const reduced of [false,true]){m.drawAshfangWarning(ctx,s.huntHazards[0],reduced);m.drawAshfangGroundEffects(ctx,s,reduced);m.drawAshfangAirEffects(ctx,{...s,dragon:{...dragon,action:"claw_right"}},sockets,reduced);}
  assert.equal(JSON.stringify(s),original);assert(draws.every(a=>a[3]===48));assert.equal(m.ashfangVfxDiagnostics(s,sockets).rainWarnings,1);assert.equal(m.ashfangVfxDiagnostics(s,sockets).effects,1);
+});
+
+test('fire raster uses stable ember ramps and advects coherently without repeated vector diamonds',()=>{
+ const a=m.ashfangFlameRaster(3),b=m.ashfangFlameRaster(3),c=m.ashfangFlameRaster(4);
+ assert.deepEqual(a.pixels,b.pixels);assert.notDeepEqual(a.pixels,c.pixels);
+ assert(a.width<128&&a.height<128);let visible=0,empty=0;
+ const allowed=new Set(['116,55,52','190,96,60','222,128,63','239,167,78','243,206,120','247,228,172']);
+ for(let i=0;i<a.pixels.length;i+=4)if(a.pixels[i+3]){visible++;assert(allowed.has([...a.pixels.slice(i,i+3)].join(',')));}else empty++;
+ assert(visible>500&&empty>500,'fire has a connected plume with readable dark gaps');
 });

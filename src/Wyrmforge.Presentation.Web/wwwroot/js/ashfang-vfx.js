@@ -55,6 +55,35 @@ function smoke(ctx,x,y,size,opacity,seed){
  const points=[];for(let i=0;i<8;i++){const a=i/8*TAU,rad=size*(.75+rand(seed+i)*.3);points.push([x+Math.cos(a)*rad,y+Math.sin(a)*rad*.7]);}
  polygon(ctx,points,P.ash);ctx.restore();
 }
+const flameFrames=new Map();
+function hash(x,y){let v=Math.imul(x,374761393)^Math.imul(y,668265263);v=Math.imul(v^(v>>>13),1274126177);return ((v^(v>>>16))>>>0)/4294967295;}
+function noise(x,y){const ix=Math.floor(x),iy=Math.floor(y);let fx=x-ix,fy=y-iy;fx=fx*fx*(3-2*fx);fy=fy*fy*(3-2*fy);const a=hash(ix,iy)*(1-fx)+hash(ix+1,iy)*fx,b=hash(ix,iy+1)*(1-fx)+hash(ix+1,iy+1)*fx;return a*(1-fy)+b*fy;}
+export function ashfangFlameRaster(frame=0){
+ const width=99,height=112,pixels=new Uint8ClampedArray(width*height*4);
+ const colors=[[116,55,52],[190,96,60],[222,128,63],[239,167,78],[243,206,120],[247,228,172]];
+ for(let y=0;y<height;y++){
+  const t=y/(height-1),span=1.5+t*47;
+  for(let x=0;x<width;x++){
+   const cross=x-(width-1)/2;
+   const curl=(noise(y/13,frame*.17)-.5)*span*.48;
+   const central=1-Math.abs((cross+curl)/span);if(central<-.12)continue;
+   const flow=y/7-frame*.74;
+   const broad=noise(x/7,flow),fine=noise(x/2.7+31,y/4-frame*1.1);
+   const heat=central*.53+(broad-.5)*.48+(fine-.5)*.20+.32-t*.09;
+   if(heat<.22)continue;
+   const index=heat>.88&&t<.22?5:heat>.74?4:heat>.58?3:heat>.43?2:heat>.32?1:0;
+   const alpha=clamp((heat-.22)*3.8)*clamp((1-t)*7)*(index<2?.72:.96);
+   const offset=(y*width+x)*4;pixels[offset]=colors[index][0];pixels[offset+1]=colors[index][1];pixels[offset+2]=colors[index][2];pixels[offset+3]=Math.round(alpha*255);
+  }
+ }
+ return {width,height,pixels};
+}
+function flameTexture(frame){
+ if(flameFrames.has(frame))return flameFrames.get(frame);
+ const raster=ashfangFlameRaster(frame),canvas=document.createElement('canvas');canvas.width=raster.width;canvas.height=raster.height;
+ const ctx=canvas.getContext('2d'),data=ctx.createImageData(raster.width,raster.height);data.data.set(raster.pixels);ctx.putImageData(data,0,0);
+ flameFrames.set(frame,canvas);while(flameFrames.size>4)flameFrames.delete(flameFrames.keys().next().value);return canvas;
+}
 function flame(ctx,f,reducedMotion){
  const {mouth:m,end,direction:d,progress:p}=f;
  if(f.stage==='windup'){
@@ -69,29 +98,16 @@ function flame(ctx,f,reducedMotion){
   return;
  }
  const envelope=Math.min(1,.45+p/.1,.45+(1-p)/.1),length=Math.hypot(end.x-m.x,end.y-m.y);
- const ax=(end.x-m.x)/length,ay=(end.y-m.y)/length,nx=-ay,ny=ax;
- ctx.save();
- const lanes=reducedMotion?3:5,segments=reducedMotion?9:15;
- // Separate advecting tongues break up the fan. Dark gaps retain the floor
- // and the hunter silhouette; the fixed ground rim remains the damage truth.
- for(let lane=0;lane<lanes;lane++){
-  const side=lanes===3?(lane-1)*.6:(lane-2)*.34;
-  for(let i=0;i<segments;i++){
-   const seed=lane*73+i,t=(i/segments+(reducedMotion?0:p*1.65)+rand(seed)*.04)%1;
-   const spread=Math.tan(f.halfAngle)*340*t;
-   const curl=reducedMotion?0:Math.sin(t*13+p*21+lane)*spread*.13;
-   const x=m.x+(end.x-m.x)*t+nx*(side*spread+curl),y=m.y+(end.y-m.y)*t+ny*(side*spread+curl);
-   const half=(5+13*t)*(1-Math.abs(side)*.2),tail=12+25*t;
-   const transform=(a,b)=>[x+ax*a+nx*b,y+ay*a+ny*b];
-   ctx.globalAlpha=envelope*(.6+.25*rand(seed+9))*(1-.25*t);
-   polygon(ctx,[transform(-tail*.5,-half*.5),transform(-tail*.16,-half),transform(tail*.35,-half*.45),transform(tail*.8,0),transform(tail*.15,half*.65),transform(-tail*.35,half)],Math.abs(side)>.5?P.ember:P.fire);
-   if(Math.abs(side)<.4&&i%3!==0){ctx.globalAlpha*=.78;polygon(ctx,[transform(-tail*.1,-half*.3),transform(tail*.55,0),transform(-tail*.12,half*.35),transform(-tail*.3,0)],t<.55?P.hot:P.ember);}
-   if(lane===Math.floor(lanes/2)&&t<.17){ctx.fillStyle=P.core;block(ctx,x,y,3+3*(1-t),3);}
-  }
- }
+ const angle=Math.atan2(end.y-m.y,end.x-m.x)-Math.PI/2;
+ const texture=flameTexture(reducedMotion?4:Math.floor(p*12));
+ ctx.save();ctx.imageSmoothingEnabled=false;ctx.globalAlpha=.9*envelope;
+ ctx.translate(m.x,m.y);ctx.rotate(angle);
+ ctx.drawImage(texture,-148,0,296,length);
+ ctx.restore();ctx.save();
+ const nx=-(end.y-m.y)/length,ny=(end.x-m.x)/length;
  for(let i=0;i<(reducedMotion?2:6);i++){
   const t=.65+rand(i)*.35,side=(i%2?1:-1),spread=Math.tan(f.halfAngle)*340*t;
-  smoke(ctx,m.x+(end.x-m.x)*t+nx*spread*.8*side,m.y+(end.y-m.y)*t+ny*spread*.8*side-7,6+9*t,envelope*.18,i);
+  smoke(ctx,m.x+(end.x-m.x)*t+nx*spread*.8*side,m.y+(end.y-m.y)*t+ny*spread*.8*side-7,6+9*t,envelope*.20,i);
  }
  ctx.globalAlpha=.7*envelope;
  for(let i=0;i<(reducedMotion?4:15);i++){const t=(p*2+i*.071)%1,spread=(rand(i)-.5)*100*t;ctx.fillStyle=i%4?P.ember:P.hot;block(ctx,m.x+(end.x-m.x)*t+nx*spread,m.y+(end.y-m.y)*t+ny*spread-5,2+i%2);}

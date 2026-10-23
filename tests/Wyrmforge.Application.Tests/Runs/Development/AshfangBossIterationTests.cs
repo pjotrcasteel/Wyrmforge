@@ -44,6 +44,8 @@ public sealed class AshfangBossIterationTests
     {
         var run=Create(invulnerable:false);var dragon=Field<DragonState>(run,"dragon");var player=Field<PlayerState>(run,"player");var brain=Field<AshfangBehaviorState>(run,"ashfangBehavior");
         dragon.Position=Vector2D.Zero;player.Position=new(0,250);brain.Begin("breath",Vector2D.Zero,new(300,0),.8);brain.Strike();
+        Field<DragonHuntState>(run,"dragonHuntState").TickStage(10);
+        Assert.IsTrue(run.CreateSnapshot().DragonBreath!.Active);
         var health=player.Health;Invoke(run,"UpdateAshfangCombat",dragon,.1);Invoke(run,"ResolvePlayerDamage");Assert.AreEqual(health,player.Health);
         player.Position=new(220,0);Invoke(run,"UpdateAshfangCombat",dragon,.1);Invoke(run,"ResolvePlayerDamage");Assert.IsLessThan(health,player.Health);
         var after=player.Health;typeof(RunSimulation).GetField("playerDamageGuardRemaining",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(run,0d);

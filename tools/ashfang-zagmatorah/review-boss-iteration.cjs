@@ -12,7 +12,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
    window.readFight=()=>window.arena.readArenaDiagnostics(document.querySelector('.hunt-lab canvas'));
    window.captureTimer=setInterval(()=>{
     const d=window.readFight();if(!d)return;
-    window.samples.push({at:d.hud?.seconds,health:d.hud?.health,boss:d.dragon?.health,phase:d.dragon?.phase,action:d.dragon?.action,actionPhase:d.dragon?.actionPhase,flight:d.dragon?.flightStage,fx:d.ashfangVfx,effects:d.ashfangEffects.map(e=>({kind:e.kind,progress:e.progress})),pose:d.ashfang.lastDraw,errors:d.ashfang.errors,renderingFailed:d.renderingFailed});
+    window.samples.push({fps:d.performance?.fps,at:d.hud?.seconds,health:d.hud?.health,boss:d.dragon?.health,phase:d.dragon?.phase,action:d.dragon?.action,actionPhase:d.dragon?.actionPhase,flight:d.dragon?.flightStage,fx:d.ashfangVfx,effects:d.ashfangEffects.map(e=>({kind:e.kind,progress:e.progress})),pose:d.ashfang.lastDraw,errors:d.ashfang.errors,renderingFailed:d.renderingFailed});
     if(window.pendingCapture||d.paused)return;
     const p=d.dragon?.actionProgress??0;
     const goals={
@@ -40,6 +40,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
     assert.equal(d.ashfangVfx.fireStage,'strike');const before=JSON.stringify({pose:d.ashfang.entity,effects:d.ashfangEffects});await page.waitForTimeout(300);const still=await page.evaluate(()=>window.readFight());assert.equal(JSON.stringify({pose:still.ashfang.entity,effects:still.ashfangEffects}),before,'pause freezes sprite and effect progress');
     await page.screenshot({path:path.join(out,'live-boss-phone.png'),fullPage:true});
    }
+   if(key==='fire'&&process.argv.includes('--quick-fire')){console.log('QUICK_FIRE_CAPTURE');return;}
    await page.evaluate(key=>{window.captured[key]=true;window.pendingCapture=null;},key);
    await page.getByRole('button',{name:'▶ Resume',exact:true}).click();
    if(key==='death'){victory=true;break;}
@@ -65,7 +66,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
   await page.waitForFunction(()=>window.arena.readArenaDiagnostics(document.querySelector('.hunt-lab canvas'))?.ended,null,{timeout:35000});
   const defeated=await page.evaluate(()=>window.arena.readArenaDiagnostics(document.querySelector('.hunt-lab canvas')));assert.equal(defeated.hud.health,0);assert(defeated.dragon.health>0);
   assert.equal(errors.length,0,errors.join('\n'));
-  fs.writeFileSync(path.join(out,'browser-report.json'),JSON.stringify({pass:true,actualCSharpCombat:true,loadout:'Tier I rank1 no evolution',health:1100,victory:true,captures,simulationSeconds:Math.max(...samples.map(s=>s.at??0)),samples:samples.length,layouts,reducedMotion:true,pauseFreezesEffects:true,manualDefaultFullDamage:true,standingStillLoses:true,physicalPhoneAcceptance:false,errors},null,2));
+  fs.writeFileSync(path.join(out,'browser-report.json'),JSON.stringify({pass:true,actualCSharpCombat:true,loadout:'Tier I rank1 no evolution',health:1100,victory:true,captures,simulationSeconds:Math.max(...samples.map(s=>s.at??0)),samples:samples.length,minimumMeasuredFps:Math.min(...samples.map(s=>s.fps).filter(v=>v>0)),layouts,reducedMotion:true,pauseFreezesEffects:true,manualDefaultFullDamage:true,standingStillLoses:true,physicalPhoneAcceptance:false,errors},null,2));
   console.log('ASHFANG_BOSS_ITERATION_PASS',Object.keys(captures).join(','),Math.max(...samples.map(s=>s.at??0)));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
