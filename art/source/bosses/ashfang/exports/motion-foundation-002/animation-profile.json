@@ -1,0 +1,145 @@
+{
+  "schema": "wyrmforge-animation-foundation/1",
+  "rigFamily": "zagmatorah-112/v1",
+  "units": "source model units; multiply travel and socket offsets by tier/model-to-game scale",
+  "locomotion": {},
+  "actions": {
+    "look": {
+      "clip": "look",
+      "frames": 36,
+      "duration": 3.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "markers": [],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "roar": {
+      "clip": "roar",
+      "frames": 41,
+      "duration": 3.3333333333333335,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "voice": 0.3
+      },
+      "markers": [
+        {
+          "name": "voice",
+          "phase": 0.3,
+          "seconds": 1.0
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "death": {
+      "clip": "death",
+      "frames": 49,
+      "duration": 4.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": true,
+      "priority": 100,
+      "events": {
+        "collapse": 0.56,
+        "hold": 0.85
+      },
+      "markers": [
+        {
+          "name": "collapse",
+          "phase": 0.56,
+          "seconds": 2.24
+        },
+        {
+          "name": "hold",
+          "phase": 0.85,
+          "seconds": 3.4
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "death_alt": {
+      "clip": "death_alt",
+      "frames": 53,
+      "duration": 4.333333333333333,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": true,
+      "priority": 100,
+      "events": {
+        "collapse": 0.56,
+        "hold": 0.85
+      },
+      "markers": [
+        {
+          "name": "collapse",
+          "phase": 0.56,
+          "seconds": 2.4266666666666667
+        },
+        {
+          "name": "hold",
+          "phase": 0.85,
+          "seconds": 3.683333333333333
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    }
+  },
+  "transitions": [
+    [
+      "idle",
+      "walk_start",
+      "walk",
+      "walk_stop",
+      "idle"
+    ],
+    [
+      "idle",
+      "run_start",
+      "run",
+      "run_stop",
+      "idle"
+    ],
+    [
+      "idle",
+      "alert_start",
+      "alert",
+      "alert_end",
+      "idle"
+    ],
+    [
+      "idle",
+      "breath_start",
+      "breath_loop",
+      "breath_end",
+      "idle"
+    ],
+    [
+      "idle",
+      "takeoff",
+      "fly",
+      "land",
+      "idle"
+    ]
+  ],
+  "loopHandoffPhase": 0,
+  "effects": "Fire, smoke and impacts are separate game VFX. Mouth direction and socket positions are per-frame.",
+  "authority": "C# owns movement, damage, ability timing and interruptions. Sprite event markers do not cause gameplay results.",
+  "runtimeIntegrated": false
+}
