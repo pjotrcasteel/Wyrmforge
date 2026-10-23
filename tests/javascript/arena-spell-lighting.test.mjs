@@ -71,3 +71,14 @@ test('staff-tip light grows through windup, peaks on release, and fades through 
     assert.ok(released.strength > finishing.strength);
     assert.notEqual(winding.x, released.x, 'Light follows the actual authored staff grip.');
 });
+
+test('boss windup/fire and impact lights remain finite and recover safely from missing presentation fields',()=>{
+    const dragon={school:1,x:100,y:100,directionX:1,directionY:0,action:'breath',actionPhase:'windup',actionProgress:.5,flightStage:'ground'};
+    for(const actionPhase of ['windup','strike']){
+        const lights=buildSpellLights({dragon:{...dragon,actionPhase},ashfangEffects:[{kind:'meteor',x:170,y:120,radius:45,progress:.05}]});
+        assert.equal(lights.length,2);assert(lights.every(l=>Number.isFinite(l.strength)&&Number.isFinite(l.radius)));
+        assert(lights.some(l=>l.type==='boss-fire'&&l.strength>=0&&l.strength<=.32));
+    }
+    const partial=buildSpellLights({dragon:{...dragon,actionProgress:undefined,directionX:undefined}});
+    assert(partial.every(l=>Number.isFinite(l.x)&&Number.isFinite(l.strength)));
+});

@@ -5,7 +5,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
  const browser=await chromium.launch({channel:'msedge',headless:true});
  try{
   const page=await browser.newPage({viewport:{width:402,height:874},deviceScaleFactor:2});const errors=[];
-  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')console.log('PAGE_ERROR',m.text());});page.on('requestfailed',r=>{if(r.url().includes('/ashfang/'))console.log('ASSET_FAILED',r.url(),r.failure());});
+  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'){console.log('PAGE_ERROR',m.text());if(m.text().includes('arena drawing failed'))errors.push(m.text());}});page.on('requestfailed',r=>{if(r.url().includes('/ashfang/'))console.log('ASSET_FAILED',r.url(),r.failure());});
   await page.goto('http://127.0.0.1:8880/hunt-lab?wyrm=Ashfang&ascendant=false&play=true&cast=true&invulnerable=true');
   await page.evaluate(async()=>{
    window.arena=await import('/js/arena.js');window.samples=[];window.captured={};window.pendingCapture=null;
@@ -32,7 +32,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
    await page.waitForFunction(()=>window.pendingCapture!=null,null,{timeout:100000});
    const key=await page.evaluate(()=>window.pendingCapture);
    await page.getByRole('button',{name:'Ⅱ Pause',exact:true}).click();await page.waitForTimeout(90);
-   const d=await page.evaluate(()=>window.readFight());assert(!d.renderingFailed);
+   const d=await page.evaluate(()=>window.readFight());if(d.renderingFailed)fs.writeFileSync(path.join(out,'failure-samples.json'),JSON.stringify(d,null,2));assert(!d.renderingFailed);
    captures[key]={imageErrors:d.ashfang.errors,renderingFailed:d.renderingFailed,time:d.hud.seconds,boss:d.dragon?.health??0,fx:d.ashfangVfx,effects:d.ashfangEffects,pose:d.ashfang.lastDraw};
    if(key==='failure'){fs.writeFileSync(path.join(out,'failure-samples.json'),JSON.stringify(d,null,2));throw Error('Live failure: '+JSON.stringify({images:d.ashfang.errors,render:d.renderingFailed}));}
    await page.locator('.hunt-lab-surface').screenshot({path:path.join(out,key+'-phone.png')});

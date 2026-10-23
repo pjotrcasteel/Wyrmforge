@@ -133,6 +133,9 @@ function frame(state, timestamp) {
         if (!state.renderingFailed) console.error('Wyrmforge arena drawing failed; simulation continues.', error);
         state.renderingFailed = true;
         // Canvas rendering must never silently stop player movement and the C# simulation.
+        // Reset the canvas state stack as well as its transform: a failed
+        // nested light/effect must not leave later frames in screen blending.
+        state.canvas.width = state.canvas.width;
         state.context.setTransform(1, 0, 0, 1, 0, 0);
         state.context.fillStyle = '#14111b';
         state.context.fillRect(0, 0, state.canvas.width, state.canvas.height);
