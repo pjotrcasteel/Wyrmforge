@@ -1,6 +1,7 @@
 using Wyrmforge.Application.Runs.Navigation;
 using Wyrmforge.Application.Runs.Simulation.Snapshots;
 using Wyrmforge.Domain.Combat.Geometry;
+using Wyrmforge.Domain.Spells;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
@@ -53,7 +54,7 @@ public sealed class ArenaEnvironmentState
         this.district = district;
     }
 
-    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false)
+    public static ArenaEnvironmentState Create(int mapSeed, WyrmrealmMapNode node, bool generatorPreview = false, SpellSchool? regionSchool = null)
     {
         ArgumentNullException.ThrowIfNull(node);
         var stage = node.Stage;
@@ -64,8 +65,8 @@ public sealed class ArenaEnvironmentState
         var biome = node.Territory?.Name ?? "River valley";
         var landmark = WyrmrealmHabitatCatalog.DisplayName(node.Habitat);
         // Region/Wyrm ecology owns environmental magic; reward attunement must never repaint the land.
-        var element = generatorPreview ? WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant()
-            : node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane";
+        var element = regionSchool?.ToString().ToLowerInvariant() ?? (generatorPreview ? WyrmrealmHabitatCatalog.School(node.Habitat).ToString().ToLowerInvariant()
+            : node.AttunementSchool?.ToString().ToLowerInvariant() ?? "arcane");
         // Each node belongs to a different local district even when its overarching biome is unchanged.
         // No combat RNG is consumed, and adjacent opening stages alternate instead of replaying one scene.
         var districtIndex = ((mapSeed & int.MaxValue) % 3 + stage + node.Lane + (node.Site?.RoadIndex ?? 0)) % 3;

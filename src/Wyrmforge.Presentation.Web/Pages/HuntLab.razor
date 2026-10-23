@@ -13,12 +13,13 @@
 
 <main class="hunt-lab">
     <header class="hunt-lab-head">
-        <div><span>WYRMFORGE • DEVELOPER CINEMATIC</span>
-            <h1>Watch the Great Hunt fight itself.</h1>
-            <p>The actual combat renderer, deterministic simulation and movement agent. No account progress, loot or playtest report is credited.</p>
+        <div><span>WYRMFORGE • BOSS ENCOUNTER</span>
+            <h1>@(ManualControl ? "Face the wyrm." : "Watch the Great Hunt.")</h1>
+            <p>@(ManualControl ? "Move with WASD, arrows or drag in the arena. Your spell auto-casts. Read the attacks, dodge, and punish his recovery." : "Watch the live fight. Encounter settings let you test builds and phases.")</p>
         </div>
         <div class="hunt-lab-actions"><button @onclick="Restart">↻ Restart encounter</button><button @onclick="Pause">@(paused ? "▶ Resume" : "Ⅱ Pause")</button><a href="balance-lab">← Balance Lab</a><a href="arena-lab">Arena Lab</a></div>
     </header>
+    <details class="hunt-lab-options"><summary>Encounter settings</summary>
     <section class="hunt-lab-settings">
         <label>Wyrm
             <select @bind="selectedWyrm">
@@ -37,19 +38,24 @@
         <label>Seed
             <input type="number" @bind="seed" />
         </label>
+        <label>Hunter loadout
+            <select @bind="loadout"><option value="tier1">Tier I hunter</option><option value="stress">Overpowered stress build</option></select>
+        </label>
         <label>Agent
             <select @bind="personality">
                 @foreach (var value in Enum.GetValues<RunAgentPersonality>()) { <option value="@value">@value</option> }
             </select>
         </label>
-        <label class="practice-toggle"><input type="checkbox" @bind="invulnerable" /> Invulnerable watch mode</label>
+        <label class="practice-toggle"><input type="checkbox" @bind="Casting" /> Hunter casting</label>
+        <label class="practice-toggle"><input type="checkbox" @bind="invulnerable" /> Invulnerable practice</label>
         <button @onclick="Restart">APPLY & REPLAY</button>
     </section>
+    </details>
     <section class="hunt-lab-surface" aria-label="Live developer Wyrm encounter">
         <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
         <div class="hunt-lab-stage" aria-live="polite">
             <strong>@status</strong>
-            <span>@(paused ? "PAUSED" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
+            <span>@(paused ? "PAUSED" : ManualControl ? invulnerable ? "LIVE CONTROLS • INVULNERABLE PRACTICE" : "LIVE CONTROLS • FULL DAMAGE" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
         </div>
     </section>
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
@@ -71,13 +77,22 @@
     private string variant = "ascendant";
     private int phase = 1;
     private int seed = 1337;
-    private bool invulnerable = true;
+    [Parameter, SupplyParameterFromQuery(Name = "loadout")] public string? LoadoutQuery { get; set; }
+    private string loadout = "tier1";
+    [Parameter, SupplyParameterFromQuery(Name = "invulnerable")] public bool? InvulnerableQuery { get; set; }
+    private bool invulnerable;
+    [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
+    [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastingQuery { get; set; }
+    private bool Casting = true;
     private bool paused;
     private string status = "PREPARING THE WYRMREALM";
     private RunAgentPersonality personality = RunAgentPersonality.Kiter;
 
     protected override void OnParametersSet()
     {
+        Casting = CastingQuery ?? true;
+        invulnerable = InvulnerableQuery ?? !ManualControl;
+        loadout = LoadoutQuery == "stress" ? "stress" : "tier1";
         if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
         if (AscendantQuery is { } a) variant = a ? "ascendant" : "ordinary";
         if (PhaseQuery is 1 or 2) phase = PhaseQuery.Value;
@@ -98,9 +113,9 @@
         if (simulation is null) CreateEncounter(width, height);
         var current = simulation!;
         var snapshot = current.CreateSnapshot();
-        if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot);
+        if (paused || current.IsEnded || snapshot.Dragon is null) return Task.FromResult(snapshot with { Paused = paused || snapshot.Paused, PresentationPaused = paused });
         var observation = new RunAgentObservation(snapshot, [], [], [], [], [], current.Depth, 0, false);
-        snapshot = current.Tick(delta, agent!.ChooseMovement(observation), width, height);
+        snapshot = current.Tick(delta, ManualControl ? new MovementInput(movementX, movementY, aimX, aimY) : agent!.ChooseMovement(observation), width, height);
         var nextStatus = snapshot.Dragon is { } boss ? $"{boss.Name} • P{boss.Phase} • {Math.Ceiling(boss.Health)} HP"
             : current.CreateEvaluationSummary().DragonIds.Contains(selectedWyrm) ? "WYRM DEFEATED • NO TROPHY AWARDED" : "ENCOUNTER COMPLETE";
         if (current.IsEnded) nextStatus = "AGENT DEFEATED • RESTART TO WATCH AGAIN";
@@ -123,9 +138,10 @@
             _ => SpellId.ArcaneOrb,
         };
         var build = SelfPlayBuildCatalog.All.First();
+        var nodes = loadout == "stress" ? build.SelectedNodes : new HashSet<string>();
         var setup = new DevelopmentHuntSetup(wyrm, variant == "ascendant" && AscendantRiteCatalog.IsAvailable(wyrm), phase, spell, seed,
-            Math.Max(240, width), Math.Max(240, height), invulnerable);
-        simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(build.SelectedNodes, setup);
+            Math.Max(240, width), Math.Max(240, height), invulnerable) { Casting = Casting, Environment = true, BossReadySpell = loadout == "stress" };
+        simulation = new RunSimulationFactory(new SeededRandomSource(1)).CreateDevelopmentHunt(nodes, setup);
         agent = new HeuristicRunAgent(personality, seed, build.PreferredSchool);
         status = $"INVOCATION • {(setup.Ascendant ? "ASCENDANT " : string.Empty)}{wyrm}";
     }

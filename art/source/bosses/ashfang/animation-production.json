@@ -1,0 +1,199 @@
+{
+  "status": "Foundation003 complete source/export candidate and verified remote backup; owner review/game integration remain",
+  "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
+  "rig": "Zahmatorah_Skeleton",
+  "deformBones": 112,
+  "source": "archive/tier-I-skin-010-packed/ashfang-tier-I.blend",
+  "higherTierPolicy": "Reuse the same deform hierarchy and normalized timings; scale root travel and attachments with model scale. Horns/armor attach to named bones, fire/smoke remain separate VFX. Higher-tier artwork is not part of this export.",
+  "fpsSource": 24,
+  "fpsExport": 12,
+  "motions": [
+    "idle",
+    "alert",
+    "look",
+    "alert_start",
+    "alert_end",
+    "walk_start",
+    "walk_stop",
+    "run_start",
+    "run_stop",
+    "walk",
+    "stalk",
+    "run",
+    "turn_left",
+    "turn_right",
+    "pounce",
+    "claw_left",
+    "claw_right",
+    "claw_combo",
+    "bite",
+    "tail_left",
+    "tail_right",
+    "roar",
+    "breath_start",
+    "breath_loop",
+    "breath_end",
+    "breath_sweep",
+    "takeoff",
+    "fly",
+    "hover",
+    "glide",
+    "bank_left",
+    "bank_right",
+    "air_breath",
+    "land",
+    "hit_front",
+    "hit_left",
+    "hit_right",
+    "stagger",
+    "recover",
+    "death",
+    "death_alt"
+  ],
+  "research": [
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/15772640/",
+      "principle": "Wing forelimbs can participate in terrestrial support and propulsion; use distinct fore/hind support phases rather than quadruped hindleg copies."
+    },
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/17671313/",
+      "principle": "Flight uses a broad extended downstroke and a more retracted upstroke; wing joints must articulate rather than rotating a flat wing rigidly."
+    }
+  ],
+  "ownerAuthorizedAllActions": true,
+  "ownerAcceptedMotion": false,
+  "runtimeIntegrated": false,
+  "walkProof": {
+    "native": "archive/motion-proof-001/ashfang-animations.blend",
+    "renderedWalkFrames": 24,
+    "renderedFlightFrames": 16,
+    "direction": "SE",
+    "independentlyChangingFrames": true,
+    "clipping": false,
+    "maxWalkIKTargetError": 1.578116690501419e-06,
+    "agentReview": "Limb motion and folded/extended wing motion visible; planted-control error negligible. Full library and all directions remain to be reviewed.",
+    "ownerAcceptedMotion": false
+  },
+  "authoredClips": 41,
+  "currentMotionSource": "archive/motion-library-018/ashfang-animations.blend",
+  "sourceValidationPassed": true,
+  "exportStatus": "41 clips; 7736 directional frames; 656 atlases; all master pixels verified",
+  "resumeNote": "PAUSED.md",
+  "packedMaster": "archive/motion-foundation-003-packed/ashfang-animation-foundation.blend",
+  "rigFamily": "zagmatorah-112/v1",
+  "scaleTwoProofPassed": true,
+  "exportProgress": {
+    "completedPackedClips": 41,
+    "expectedClips": 41,
+    "completedPackedDirectionalFrames": 7736,
+    "expectedDirectionalFrames": 7736,
+    "masterAtlases": 328,
+    "runtimeAtlases": 328,
+    "status": "complete candidate"
+  },
+  "browserValidationPassed": true,
+  "remaining": [
+    "Owner motion review",
+    "Game integration and separate VFX",
+    "Actual Hunt and physical-phone validation"
+  ],
+  "previousFoundation": "exports/motion-foundation-002 (preserved comparison; owner requested focused refinements)",
+  "activeRefinement": {
+    "source": "archive/motion-library-018/ashfang-animations.blend",
+    "packedSource": "archive/motion-foundation-003-packed/ashfang-animation-foundation.blend",
+    "sourceValidation": "reviews/motion-foundation-003/source-validation.json",
+    "reuseProof": "reviews/motion-foundation-003/unchanged-action-proof.json",
+    "revisedClips": 11,
+    "unchangedReusedClips": 30,
+    "exportComplete": true,
+    "runtimeIntegrated": false,
+    "freshlyRenderedDirectionalFrames": 2656,
+    "reusedDirectionalFrames": 5080,
+    "review": "reviews/motion-foundation-003/review.md",
+    "remoteReceipt": "reviews/motion-foundation-003/remote-receipt.json"
+  },
+  "currentExport": "exports/motion-foundation-003",
+  "previousRemoteVerification": {
+    "assetCheckpoint": "f132c46b114bd70bde7ffa2d66739a1a44eb198c",
+    "playerCheckpoint": "aace0d49c0297dacfc573da76409311ea713d410",
+    "independentlyRetrievedAndSha256VerifiedLfsObjects": 1465,
+    "allFinalAtlases": 656,
+    "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
+    "receipt": "remote-lfs-verification.json",
+    "finalEvidenceCheckpoint": "3064b0ff4024cf4c00a0597bc5247da88b2fbac2",
+    "allTrackedLfsObjectsVerified": true
+  },
+  "remoteVerification": {
+    "pass": true,
+    "assetCheckpoint": "253a3566ef11fa3638ce1256dbcb67cc7e1fbd62",
+    "trackedLfsAssetReferencesVerified": 2127,
+    "uniqueLfsObjectsVerified": 1647,
+    "finalAtlasFilesVerified": 656,
+    "packedMasterSha256": "13173a60ee0f71276f75abe52ed22b9c17f74680d33bf6e2bbaa123aa886bed0",
+    "independentCache": "artifacts/remote-lfs-verification",
+    "remoteNativeValidation": "remote-native-validation.json",
+    "remoteMotionValidation": "remote-motion-validation.json",
+    "allTrackedLfsHashesMatch": true
+  },
+  "pixelStyleProof": {
+    "status": "four-motion pixel style candidate; TierI visual size owner-approved",
+    "source": "archive/pixel-style-002/ashfang-pixel-style.blend",
+    "export": "exports/pixel-proof-002",
+    "review": "reviews/pixel-style-002/review.md",
+    "route": "/arena-lab/ashfang/",
+    "motions": [
+      "idle",
+      "claw_right",
+      "fly",
+      "roar"
+    ],
+    "nativeFrames": 1632,
+    "nativeRenderDensities": [
+      256,
+      512
+    ],
+    "directions": 8,
+    "fixedPaletteEntries": 64,
+    "usedColors": 52,
+    "phoneLogicalViewport": [
+      402,
+      874
+    ],
+    "manualSizeRange": [
+      1,
+      6
+    ],
+    "approvedTierIPreviewSetting": 2,
+    "approvedSizeCalibration": "tier-I-scale-baseline.json",
+    "sizeApprovedByOwner": true,
+    "artStyleApprovedByOwner": false,
+    "runtimeIntegrated": false,
+    "remaining": [
+      "Owner pixel-style review/touchups",
+      "After style approval: remaining37 actions",
+      "Actual Hunt and physical-device integration"
+    ],
+    "remoteReceipt": "reviews/pixel-style-002/remote-receipt.json",
+    "remoteVerified": true
+  },
+  "runtimeIntegration": {
+    "status": "locally-validated-playable-branch",
+    "manifest": "exports/runtime-001/manifest.json",
+    "clips": 18,
+    "frames": 3272,
+    "atlasSheets": 144,
+    "tierIBaseline": "tier-I-scale-baseline.json",
+    "behavior": "reactive deterministic C# predator policy, committed warning/strike/recovery; aerial shadow/fire-rain/landing",
+    "renderer": "src/Wyrmforge.Presentation.Web/wwwroot/js/ashfang-sprites.js",
+    "notes": "RUNTIME-INTEGRATION.md",
+    "deployed": false,
+    "browserReceipt": "reviews/runtime-001/browser-report.json",
+    "remoteReceipt": "reviews/runtime-001/remote-receipt.json",
+    "tests": {
+      "application": 629,
+      "domain": 375,
+      "javascript": 365
+    },
+    "physicalPhoneAcceptance": false
+  }
+}

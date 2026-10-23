@@ -9,10 +9,10 @@ public static class DragonHuntCatalog
         DragonId.Ashfang,
         new DragonHuntEntranceProfile(DragonHuntEntranceStyle.SkyDive, 0.55, 0.85, 1.20, new DragonHuntPoint(0.5, -0.12), new DragonHuntPoint(0.5, 0.2)),
         DragonHuntArenaTrait.CinderScar,
-        1.05,
+        1.8,
         new DragonHuntPressureProfile(
             DragonHuntPressureOrigin.Player,
-            new DragonHuntPressureCadence(new DragonPhaseValues(4.2, 3.15), new DragonPhaseValues(0.72, 0.52)),
+            new DragonHuntPressureCadence(new DragonPhaseValues(4.2, 3.15), new DragonPhaseValues(0.72, 0.85)),
             new DragonPhaseValues(82, 108),
             new DragonPhaseValues(20, 28),
             1,

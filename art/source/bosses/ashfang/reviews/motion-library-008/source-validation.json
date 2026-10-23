@@ -1,0 +1,771 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\motion-library-008\\ashfang-animations.blend",
+  "sourceSha256": "4bd4e64d6ca53276d0ed5af953614a3f24caebc98c5968724235537690660e4a",
+  "clips": {
+    "idle": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 1.3677570819854736,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.722629616477292,
+        130.8277869184612,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "alert": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 1.3677570819854736,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.722629616477292,
+        124.28189875564254,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "look": {
+      "sourceFrames": 73,
+      "uniquePoses": 72,
+      "maxVertexMovement": 1.368576169013977,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.723428622159105,
+        131.2399106546443,
+        480.2765713778409,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "alert_start": {
+      "sourceFrames": 25,
+      "uniquePoses": 25,
+      "maxVertexMovement": 1.3662923574447632,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.72990944602273,
+        126.24649218012812,
+        480.2700905539773,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "alert_end": {
+      "sourceFrames": 25,
+      "uniquePoses": 25,
+      "maxVertexMovement": 1.3662923574447632,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.72990944602273,
+        126.10359319989485,
+        480.2700905539773,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "walk_start": {
+      "sourceFrames": 33,
+      "uniquePoses": 33,
+      "maxVertexMovement": 1.3687591552734375,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01689666509628296,
+      "allDirectionBounds": [
+        31.764266690340918,
+        130.06769902299783,
+        480.23573330965905,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "walk_stop": {
+      "sourceFrames": 33,
+      "uniquePoses": 33,
+      "maxVertexMovement": 1.3690248727798462,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.017116785049438477,
+      "allDirectionBounds": [
+        31.73603515625001,
+        129.74277750038425,
+        480.26396484375,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "run_start": {
+      "sourceFrames": 25,
+      "uniquePoses": 25,
+      "maxVertexMovement": 1.3675132989883423,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01689666509628296,
+      "allDirectionBounds": [
+        31.771235795454572,
+        129.02257119339913,
+        480.2287642045454,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "run_stop": {
+      "sourceFrames": 25,
+      "uniquePoses": 25,
+      "maxVertexMovement": 1.3681797981262207,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.017061442136764526,
+      "allDirectionBounds": [
+        31.75015092329548,
+        128.7800876923061,
+        480.24984907670455,
+        392.3595893288982
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "walk": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 1.3677335977554321,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": 2.3752282673324675e-06,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01704329252243042,
+      "allDirectionBounds": [
+        31.698015802556824,
+        130.03490105497633,
+        480.3019841974432,
+        392.4340644909544
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "stalk": {
+      "sourceFrames": 65,
+      "uniquePoses": 64,
+      "maxVertexMovement": 1.3686755895614624,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": 2.676241912918526e-06,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.018786221742630005,
+      "allDirectionBounds": [
+        31.689737215909105,
+        121.95077410759211,
+        480.3102627840909,
+        387.16017165528405
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "run": {
+      "sourceFrames": 33,
+      "uniquePoses": 32,
+      "maxVertexMovement": 1.9455219507217407,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": 3.113166059780263e-06,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.018258124589920044,
+      "allDirectionBounds": [
+        31.657555042613666,
+        127.67288737925216,
+        480.3424449573863,
+        392.4104428804437
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "turn_left": {
+      "sourceFrames": 41,
+      "uniquePoses": 41,
+      "maxVertexMovement": 8.611565589904785,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01689666509628296,
+      "allDirectionBounds": [
+        21.14399630366526,
+        126.99314243953899,
+        490.8560036963347,
+        398.61791953453974
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "turn_right": {
+      "sourceFrames": 41,
+      "uniquePoses": 41,
+      "maxVertexMovement": 8.611564636230469,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.02512606978416443,
+      "allDirectionBounds": [
+        20.66008893303527,
+        126.3244881710969,
+        491.33991106696476,
+        398.6180010827157
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "pounce": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 2.6435434818267822,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.05231964588165283,
+      "allDirectionBounds": [
+        31.67133789062501,
+        92.03583936361858,
+        480.328662109375,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "claw_left": {
+      "sourceFrames": 41,
+      "uniquePoses": 40,
+      "maxVertexMovement": 1.701688289642334,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.017043739557266235,
+      "allDirectionBounds": [
+        31.72527077414773,
+        130.94604216702425,
+        480.2747292258523,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "claw_right": {
+      "sourceFrames": 41,
+      "uniquePoses": 40,
+      "maxVertexMovement": 1.715829610824585,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01707598567008972,
+      "allDirectionBounds": [
+        31.72527077414773,
+        130.94828728133228,
+        480.2747292258523,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "claw_combo": {
+      "sourceFrames": 65,
+      "uniquePoses": 64,
+      "maxVertexMovement": 1.7200943231582642,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01702365279197693,
+      "allDirectionBounds": [
+        31.722629616477292,
+        131.01711546865332,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "bite": {
+      "sourceFrames": 41,
+      "uniquePoses": 40,
+      "maxVertexMovement": 1.3944021463394165,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.017689049243927002,
+      "allDirectionBounds": [
+        31.93889382102273,
+        131.17225863727583,
+        480.0611061789773,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "tail_left": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 8.79190731048584,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.016943901777267456,
+      "allDirectionBounds": [
+        31.72771218039773,
+        130.89807816684643,
+        480.2722878196023,
+        392.2727876710926
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "tail_right": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 6.4969987869262695,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.021329760551452637,
+      "allDirectionBounds": [
+        32.13811257102273,
+        130.89656500854147,
+        479.8618874289773,
+        392.2727876710926
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "roar": {
+      "sourceFrames": 65,
+      "uniquePoses": 64,
+      "maxVertexMovement": 1.37518310546875,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.017062485218048096,
+      "allDirectionBounds": [
+        28.3783025568182,
+        118.13303337759902,
+        483.6216974431818,
+        393.1007639773437
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "breath_start": {
+      "sourceFrames": 33,
+      "uniquePoses": 33,
+      "maxVertexMovement": 1.3684940338134766,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.722629616477292,
+        131.09778407692653,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "breath_loop": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 1.3677570819854736,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.722629616477292,
+        132.1583157018639,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "breath_end": {
+      "sourceFrames": 33,
+      "uniquePoses": 33,
+      "maxVertexMovement": 1.3684940338134766,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.722629616477292,
+        131.302830349335,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "breath_sweep": {
+      "sourceFrames": 65,
+      "uniquePoses": 64,
+      "maxVertexMovement": 1.3684940338134766,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01721435785293579,
+      "allDirectionBounds": [
+        31.722629616477292,
+        131.20924691164177,
+        480.2773703835227,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "takeoff": {
+      "sourceFrames": 49,
+      "uniquePoses": 49,
+      "maxVertexMovement": 9.918615341186523,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.019461244344711304,
+      "allDirectionBounds": [
+        22.09793994388326,
+        17.963662989063522,
+        489.90206005611674,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "fly": {
+      "sourceFrames": 33,
+      "uniquePoses": 32,
+      "maxVertexMovement": 3.9102728366851807,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": 0.6732809543609619,
+      "allDirectionBounds": [
+        15.193400675500754,
+        22.36439218067747,
+        496.80659932449925,
+        409.13032524621065
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "hover": {
+      "sourceFrames": 41,
+      "uniquePoses": 40,
+      "maxVertexMovement": 3.9102728366851807,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": 0.6732809543609619,
+      "allDirectionBounds": [
+        15.13858169497243,
+        22.36439218067747,
+        496.86141830502754,
+        409.13032524621065
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "glide": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 1.1756057739257812,
+      "loop": true,
+      "loopSeamMaxVertexError": 0.0,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": 3.5021095275878906,
+      "allDirectionBounds": [
+        20.245111761468365,
+        50.9697603001685,
+        491.7548882385316,
+        366.9528203622338
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "bank_left": {
+      "sourceFrames": 41,
+      "uniquePoses": 40,
+      "maxVertexMovement": 2.9263713359832764,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": 1.8501009941101074,
+      "allDirectionBounds": [
+        16.406009707708677,
+        45.65096310320257,
+        495.5939902922913,
+        364.278712510293
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "bank_right": {
+      "sourceFrames": 41,
+      "uniquePoses": 40,
+      "maxVertexMovement": 3.001556873321533,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": 1.511951208114624,
+      "allDirectionBounds": [
+        23.105884124940275,
+        29.188314999659013,
+        488.8941158750597,
+        400.04967309136373
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "air_breath": {
+      "sourceFrames": 65,
+      "uniquePoses": 64,
+      "maxVertexMovement": 3.913771867752075,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": 0.6732809543609619,
+      "allDirectionBounds": [
+        15.12025115696585,
+        22.36439218067747,
+        496.8797488430341,
+        409.165443062079
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "land": {
+      "sourceFrames": 49,
+      "uniquePoses": 49,
+      "maxVertexMovement": 9.235610008239746,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01869109272956848,
+      "allDirectionBounds": [
+        20.767579176518126,
+        19.042607423685354,
+        491.2324208234819,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "hit_front": {
+      "sourceFrames": 25,
+      "uniquePoses": 24,
+      "maxVertexMovement": 1.4017101526260376,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01778799295425415,
+      "allDirectionBounds": [
+        27.632364169034105,
+        123.64453116092292,
+        484.3676358309659,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "hit_left": {
+      "sourceFrames": 25,
+      "uniquePoses": 24,
+      "maxVertexMovement": 1.4017101526260376,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01778799295425415,
+      "allDirectionBounds": [
+        27.632364169034105,
+        123.64453116092292,
+        484.3676358309659,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "hit_right": {
+      "sourceFrames": 25,
+      "uniquePoses": 24,
+      "maxVertexMovement": 1.4017101526260376,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01778799295425415,
+      "allDirectionBounds": [
+        27.632364169034105,
+        123.64453116092292,
+        484.3676358309659,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "stagger": {
+      "sourceFrames": 49,
+      "uniquePoses": 48,
+      "maxVertexMovement": 1.4385409355163574,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.01788446307182312,
+      "allDirectionBounds": [
+        27.561563387784105,
+        123.065786628301,
+        484.4384366122159,
+        392.3066389711725
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "recover": {
+      "sourceFrames": 49,
+      "uniquePoses": 49,
+      "maxVertexMovement": 1.3918676376342773,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": null,
+      "minimumGroundZ": -0.017679452896118164,
+      "allDirectionBounds": [
+        27.903182705965918,
+        122.41527510558208,
+        484.09681729403405,
+        392.2727959546979
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "death": {
+      "sourceFrames": 73,
+      "uniquePoses": 63,
+      "maxVertexMovement": 2.675114154815674,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": 0.0,
+      "minimumGroundZ": -0.016895979642868042,
+      "allDirectionBounds": [
+        26.723694957386385,
+        131.14633934450657,
+        485.2763050426136,
+        423.2109117432232
+      ],
+      "clipping": false,
+      "finite": true
+    },
+    "death_alt": {
+      "sourceFrames": 81,
+      "uniquePoses": 69,
+      "maxVertexMovement": 4.060462951660156,
+      "loop": false,
+      "loopSeamMaxVertexError": null,
+      "stanceWorldDrift": null,
+      "heldDeathVertexDrift": 0.0,
+      "minimumGroundZ": -0.016895979642868042,
+      "allDirectionBounds": [
+        29.78142311789773,
+        131.15116528992013,
+        482.2185768821023,
+        422.8706706970223
+      ],
+      "clipping": false,
+      "finite": true
+    }
+  },
+  "transitions": {
+    "idle -> walk_start": 0.0,
+    "walk_start -> walk": 9.840408665695577e-07,
+    "walk -> walk_stop": 9.840408665695577e-07,
+    "walk_stop -> idle": 0.0,
+    "idle -> run_start": 0.0,
+    "run_start -> run": 9.840408665695577e-07,
+    "run -> run_stop": 9.840408665695577e-07,
+    "run_stop -> idle": 0.0,
+    "idle -> alert_start": 1.1925908438570332e-06,
+    "alert_start -> alert": 0.0,
+    "alert -> alert_end": 0.0,
+    "alert_end -> idle": 1.1925908438570332e-06,
+    "idle -> breath_start": 1.1925908438570332e-06,
+    "breath_start -> breath_loop": 0.0,
+    "breath_loop -> breath_end": 0.0,
+    "breath_end -> idle": 1.1925908438570332e-06,
+    "idle -> takeoff": 0.0,
+    "takeoff -> fly": 0.0,
+    "fly -> land": 0.0,
+    "land -> idle": 0.0
+  },
+  "rigBones": 112,
+  "meshVertices": 19841,
+  "temporaryConstraints": 0,
+  "runtimeIntegrated": false,
+  "pass": true
+}

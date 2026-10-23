@@ -1,0 +1,188 @@
+{
+  "previousSha256": "4c0593e61191bed1776b1f5fcd3a1a601f3a1c5e3d3e3fb3f8c3452291c610ec",
+  "sourceSha256": "87ed466d56d35447a26e530d9542419aa80c894f4a4b4d4ad4643bea39ec5475",
+  "clips": {
+    "alert": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "alert_end": {
+      "sourceFrames": 25,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "alert_start": {
+      "sourceFrames": 25,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "bite": {
+      "sourceFrames": 41,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "breath_end": {
+      "sourceFrames": 33,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "breath_loop": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "breath_start": {
+      "sourceFrames": 33,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "breath_sweep": {
+      "sourceFrames": 65,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "claw_combo": {
+      "sourceFrames": 65,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "claw_left": {
+      "sourceFrames": 41,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "claw_right": {
+      "sourceFrames": 41,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "hit_front": {
+      "sourceFrames": 25,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "hit_left": {
+      "sourceFrames": 25,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "hit_right": {
+      "sourceFrames": 25,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "idle": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "look": {
+      "sourceFrames": 73,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "pounce": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "recover": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "run": {
+      "sourceFrames": 29,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "run_start": {
+      "sourceFrames": 25,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "run_stop": {
+      "sourceFrames": 29,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "stagger": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "stalk": {
+      "sourceFrames": 65,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "tail_left": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "tail_right": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "turn_left": {
+      "sourceFrames": 41,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "turn_right": {
+      "sourceFrames": 41,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "walk": {
+      "sourceFrames": 49,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "walk_start": {
+      "sourceFrames": 33,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    },
+    "walk_stop": {
+      "sourceFrames": 33,
+      "maximumVertexComponentError": 0.0,
+      "maximumBoneMatrixComponentError": 0.0,
+      "pass": true
+    }
+  },
+  "tolerance": 0.0001,
+  "pass": true
+}

@@ -1,0 +1,18 @@
+{
+  "repaired": [
+    "DragonEye_Albedo.png",
+    "DragonEye_Normal.png",
+    "DragonEye_Opacity.png",
+    "DragonEye_Roughness.png",
+    "DragonSkin_Albedo.png",
+    "DragonSkin_Normal.png",
+    "DragonSkin_Roughness.png",
+    "DragonWing_Albedo.png",
+    "DragonWing_Normal.png",
+    "DragonWing_Opacity.png",
+    "DragonWing_Roughness.png"
+  ],
+  "cause": "save_as_mainfile relative_remap rebased paths already authored for destination",
+  "fix": "Save explicit destination-relative paths with relative_remap=False",
+  "geometryRigPoseChanged": false
+}

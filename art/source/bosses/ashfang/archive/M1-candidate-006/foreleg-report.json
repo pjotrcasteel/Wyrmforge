@@ -1,0 +1,19 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\M1-candidate-005\\ashfang-master-working.blend",
+  "sourceSha256": "0fe1cfbd7640e03a67ceeb9c40c53d7d018b487ed62bc2df22e562f47d6f8886",
+  "sha256": "e5419f7ebc0cb715aab11b3a598c1c52e7cd7fb72bc58c2d4423b26e581af95f",
+  "retainedLimbVertices": {
+    "l": 1074,
+    "r": 1072
+  },
+  "newBones": 30,
+  "sourceTopologyPreserved": true,
+  "sharedRelativeTextures": "../M0-001/original/download/textures/",
+  "ownerAccepted": false,
+  "limitations": [
+    "Adapted hindleg topology is provisional foreleg anatomy",
+    "Open shoulder transition needs integration",
+    "No authored gait or accepted deformation test",
+    "Original wing carriage still overlaps front body"
+  ]
+}

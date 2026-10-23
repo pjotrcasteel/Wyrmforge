@@ -1,0 +1,35 @@
+{
+  "pass": true,
+  "actualCSharpSimulation": true,
+  "normalHuntRenderer": true,
+  "manualMovement": true,
+  "pause": true,
+  "approvedWorldCell": 448.53076140099125,
+  "textureCacheLimit": 8,
+  "clips": [
+    "fly",
+    "land",
+    "run_stop",
+    "walk_start",
+    "idle",
+    "claw_right",
+    "bite",
+    "takeoff",
+    "walk",
+    "walk_stop",
+    "pounce"
+  ],
+  "actions": [
+    "idle",
+    "claw_right",
+    "bite",
+    "pounce"
+  ],
+  "samples": 415,
+  "victorySamples": 178,
+  "death": true,
+  "shadowOnlyFlight": true,
+  "authoritativeRainHazards": true,
+  "physicalPhoneAcceptance": false,
+  "errors": []
+}

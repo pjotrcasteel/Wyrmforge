@@ -13,6 +13,10 @@ public sealed record DevelopmentHuntSetup(
     double Height,
     bool Invulnerable = false)
 {
+    public bool BossReadySpell { get; init; } = true;
+    public bool Environment { get; init; }
+    public bool Casting { get; init; } = true;
+
     public void Validate()
     {
         if (!Enum.IsDefined(Wyrm) || !Enum.IsDefined(Spell)) throw new ArgumentOutOfRangeException(nameof(Wyrm));

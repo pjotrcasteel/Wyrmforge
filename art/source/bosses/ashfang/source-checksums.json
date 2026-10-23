@@ -1,0 +1,92 @@
+[
+  {
+    "path": "source\\Zagmatorah.fbx",
+    "bytes": 3195964,
+    "sha256": "8c229ad4e7a4c3b341bc20a566b18a35c27f36082a4388b0eedbb02e61cc8650"
+  },
+  {
+    "path": "textures\\DragonEye_Albedo.png",
+    "bytes": 2445960,
+    "sha256": "b818463e259935e241128a3a55fb3e040c27cb43d12b29a28917fe044236cd1a"
+  },
+  {
+    "path": "textures\\DragonEye_AO.png",
+    "bytes": 74163,
+    "sha256": "d3e33c9a94599d296a81556c8d83dd35164cdc7bd3e29b3a5a98ecd0266120ae"
+  },
+  {
+    "path": "textures\\DragonEye_Metalic.png",
+    "bytes": 25568,
+    "sha256": "8dfe8458b658521e72fc2e23cd6ce3f49c8b66ffa288e876770b85b60c71ee12"
+  },
+  {
+    "path": "textures\\DragonEye_Normal.png",
+    "bytes": 10455152,
+    "sha256": "59a8e08c91002b33addfc63f4d120df92e946df773aa8ab00eb04a50d30596b7"
+  },
+  {
+    "path": "textures\\DragonEye_Opacity.png",
+    "bytes": 25554,
+    "sha256": "cb10c91a9c2e1b7888b6a41bf0f0f10e2ea150e61eba82ed729455550fbb07a6"
+  },
+  {
+    "path": "textures\\DragonEye_Roughness.png",
+    "bytes": 25565,
+    "sha256": "d9be3314e9471900982343dad33db51c066aa15976b730eab30207eb85fdd050"
+  },
+  {
+    "path": "textures\\DragonSkin_Albedo.png",
+    "bytes": 17082142,
+    "sha256": "7cb7a74949a0865230b220be911e7e9eb1152aa60cc044cc6fe4982338c4546e"
+  },
+  {
+    "path": "textures\\DragonSkin_AO.png",
+    "bytes": 4762486,
+    "sha256": "9c3ebc97af3a2a1bd27590cdff64a41c959fb5640a2de0262b188148e59fdbb1"
+  },
+  {
+    "path": "textures\\DragonSkin_Metalic.png",
+    "bytes": 283260,
+    "sha256": "2ca99833ba572100266be0d6b4f97021f41e6fc54e04ec36417a803b5a781ba5"
+  },
+  {
+    "path": "textures\\DragonSkin_Normal.png",
+    "bytes": 46785443,
+    "sha256": "4bfbc045c7270ac73faa60ebf224a0218779678e4539652c50a77a085bce95a4"
+  },
+  {
+    "path": "textures\\DragonSkin_Roughness.png",
+    "bytes": 6412185,
+    "sha256": "5cdedfb178c856a483bf5db3eb96200b31dd89bb216a86529fb8adefae50e1f3"
+  },
+  {
+    "path": "textures\\DragonWing_Albedo.png",
+    "bytes": 12175180,
+    "sha256": "1cb9ab09372c0668867f075349a754b0db8981ccbcbfed45a58079dcfe58f9af"
+  },
+  {
+    "path": "textures\\DragonWing_AO.png",
+    "bytes": 2368143,
+    "sha256": "fd2b8b1f9e00323ab8d4d2663a62e2f2fdd0929359d824eec6a0b07de9a88173"
+  },
+  {
+    "path": "textures\\DragonWing_Metalic.png",
+    "bytes": 2116,
+    "sha256": "927db41fbb13d2a6cae8c1ecf70cfb8557c5923b12b8325d464287fd85ce2372"
+  },
+  {
+    "path": "textures\\DragonWing_Normal.png",
+    "bytes": 35645023,
+    "sha256": "b11cc499602e6b9c81eb390f6bfca481bb20786e21892a9f9ddafb5d3160183b"
+  },
+  {
+    "path": "textures\\DragonWing_Opacity.png",
+    "bytes": 202513,
+    "sha256": "a4219dfc43fabadf56f6315228eaa9635e2c9560e6b751af0b279b91230a6505"
+  },
+  {
+    "path": "textures\\DragonWing_Roughness.png",
+    "bytes": 4422321,
+    "sha256": "64a4f56cd68e18dd7b38cf69e4e1be8721aac77ad8878a8c8f7bc41e09c93b77"
+  }
+]

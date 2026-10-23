@@ -1,0 +1,21 @@
+{
+  "source": "C:\\Wyrmforge\\ashfang-zagmatorah\\art\\source\\bosses\\ashfang\\archive\\M1-candidate-006\\ashfang-master-working.blend",
+  "sourceSha256": "e5419f7ebc0cb715aab11b3a598c1c52e7cd7fb72bc58c2d4423b26e581af95f",
+  "sha256": "de74ff280a092312df4d66880aadbf1839c57a1337bea25075aa38dba9a58966",
+  "staticPose": {
+    "wingUpperArmDegrees": 48,
+    "jawDegrees": 12
+  },
+  "forelegIsolationMaxVertexTravel": {
+    "Zagmatorah": 0.0,
+    "Ashfang provisional foreleg l": 0.3830920021360482,
+    "Ashfang provisional foreleg r": 0.0
+  },
+  "technicalIsolationPass": true,
+  "ownerAccepted": false,
+  "limits": [
+    "A single isolation test is not full deformation acceptance",
+    "Foreleg seams, muscle shape, wing/jaw intersections and stance need visual correction",
+    "No animation authored"
+  ]
+}

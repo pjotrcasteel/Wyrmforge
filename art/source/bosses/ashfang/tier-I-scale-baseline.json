@@ -1,0 +1,15 @@
+{
+  "sizeApprovedByOwner": true,
+  "artStyleApproved": false,
+  "previewSetting": 2,
+  "worldCell": 448.53076140099125,
+  "cameraZoom": 0.75,
+  "phoneLogicalViewport": [
+    402,
+    874
+  ],
+  "playerReferenceHeight": 42,
+  "referenceImage": "references/tier-I-size-owner-approved-2026-10-23.png",
+  "referenceSha256": "9f4386949e61169416ac66c94ed31775d92292009beed2a3961bb920394c3d9a",
+  "policy": "Preserve the rendered appearance in the owner screenshot. The2x label is a preview calibration, not an assertion about total silhouette width/height/area. Higher tiers scale relative to this approved TierI worldCell; multipliers remain unassigned."
+}
