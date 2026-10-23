@@ -139,7 +139,8 @@ test('isolated lab reuses exact accepted board + quilt + transitions with opt-in
     assert.match(lab, /sortSpritesByFoot/);
     assert.match(lab, /state.showAnchors/);
     assert.match(lab, /drawContactShadow\(ctx, contactShadowPlan\(/);
-    assert.match(lab, /drawContactShadow\(ctx, projectedShadowPlan\(/);
+    assert.match(lab, /drawTreeCastShadow\(ctx, state\.images\[sprite\.id\]\.assets, projection\)/);
+    assert.match(lab, /drawFirelitTree\(ctx, image\.assets, sprite\.foot, light/);
     assert.match(lab, /drawGothicNight\(ctx, gothicNightPlan\(null, sources, view/);
     assert.match(lab, /spriteFootPlacement\(sprite\.foot, crop/);
     assert.match(lab, /URL\.revokeObjectURL/);

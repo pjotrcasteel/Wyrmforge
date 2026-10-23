@@ -7,7 +7,7 @@
 <main class="lighting-lab">
     <header>
         <div>
-            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / L3 NIGHT / MATERIALS / FIREBALL</span>
+            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / L4 FIRELIT TREES / SILHOUETTE SHADOWS</span>
             <h1>Wet Forest — Fireball & Night</h1>
             <p>Test a moving, airborne Fireball and optional torch in deep Gothic night, with wet-ground response and local mist on the <strong>actual approved ground compositor</strong>.
                 The two tree candidates are loaded locally, remain unapproved and never enter Hunts.</p>
@@ -72,29 +72,49 @@
         </section>
         <aside class="lighting-inspector">
             <h2>Original tree candidates</h2>
-            <p>Use <a href="https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39959218973">
-                the Step 3 render artifact</a> from the source-only asset PR. Select each transparent
-                <code>*-candidate.png</code> after extracting the archive. Images stay in this browser tab.</p>
+            <p>Use <a href="https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40022049054">
+                the new Step 3 render artifact with real normal maps</a> from the source-only asset PR.
+                Extract its original <code>*-candidate.png</code> and matching
+                <code>*-camera-normals.png</code>. Select the candidate PNG first,
+                then its normal pass. Nothing is uploaded or promoted into Hunts.</p>
             <label>Ancient oak PNG
-                <input type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
+                <input id="oak-png" type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
             </label>
             <span class="feedback">@oakStatus</span>
+            <label>Ancient oak camera-space normal PNG (optional)
+                <input id="oak-normal-map" type="file" accept="image/png" @ref="oakNormalPicker" @onchange="LoadOakNormal" />
+            </label>
+            <span class="feedback">@oakNormalStatus</span>
             <label>Dead elm PNG
-                <input type="file" accept="image/png,image/webp" @ref="elmPicker" @onchange="LoadElm" />
+                <input id="elm-png" type="file" accept="image/png,image/webp" @ref="elmPicker" @onchange="LoadElm" />
             </label>
             <span class="feedback">@elmStatus</span>
+            <label>Dead elm camera-space normal PNG (optional)
+                <input id="elm-normal-map" type="file" accept="image/png" @ref="elmNormalPicker" @onchange="LoadElmNormal" />
+            </label>
+            <span class="feedback">@elmNormalStatus</span>
             <h3>Acceptance scope</h3>
             <p>Drag inside the canvas to pan; the light, tree anchors and approved ground share world coordinates.</p>
             <p>The Fireball moves above the ground while warm light reveals the same approved material
                 textures, optional original tree sprites, and local atmosphere. Disable flight animation
                 to scrub its position and compare identical screenshots at 320px and 390px.</p>
+            <p><strong>L4 tree depth:</strong> upload the original RGBA candidate first,
+                then its matching <code>*-camera-normals.png</code> from the updated
+                <a href="https://github.com/pjotrcasteel/Wyrmforge/pull/307">editable Blender source pipeline</a>.
+                Actual 3D surface normals allow Fireball light to wrap across bark and
+                branches; without a normal PNG, a weaker 2D direction-gradient fallback is used.</p>
+            <p><strong>Cast shadow:</strong> actual opaque canopy/branch silhouettes now block the
+                light on the illuminated ground. Fireball direction moves those shadows, and the
+                facing trunk and foliage catch warm light while the opposite side stays dark.
+                The <strong>Ground + cast shadows</strong> switch shows that difference directly.
+                This is a 2.5D original-alpha projection, not a finished rigged 3D shadow map.</p>
             <p>Wet highlights occur only on approved mud, paving and marsh cells, inside actual calibration
                 light pools. Mist is subtle and local, never a global grey wash. Root anchors and L2
                 cast/contact shadows remain independently inspectable.</p>
             <p><strong>Not implemented:</strong> normal maps, local spell lights, actual C# gameplay snapshots,
                 native GPU optimization, enemy rendering, physical collision, or final art approval.
                 No calibration emitter is part of a live Hunt.</p>
-            <p class="notice">L3 isolated art/lighting study. No legacy trees, props, cobblestones or sprite replacements.</p>
+            <p class="notice">L4 isolated tree-lighting study. No legacy trees, props, cobblestones or sprite replacements.</p>
         </aside>
     </div>
 </main>
@@ -105,6 +125,8 @@
     private ElementReference canvas;
     private ElementReference oakPicker;
     private ElementReference elmPicker;
+    private ElementReference oakNormalPicker;
+    private ElementReference elmNormalPicker;
     private IJSObjectReference? module;
     private int seed = 1204;
     private int ambientPercent = 90;
@@ -120,12 +142,14 @@
     private bool showAnchors;
     private string oakStatus = "No image selected";
     private string elmStatus = "No image selected";
+    private string oakNormalStatus = "No normal map selected; 2D fallback";
+    private string elmNormalStatus = "No normal map selected; 2D fallback";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
-            "./js/arena-lighting-lab.js?v=20261023-l3-fireball-1");
+            "./js/arena-lighting-lab.js?v=20261023-l4-3d-normals-1");
         await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
     }
 
@@ -161,6 +185,20 @@
         elmStatus = module is not null && await module.InvokeAsync<bool>(
             "loadArenaLightingSprite", canvas, elmPicker, "elm")
             ? "Original candidate loaded (review only)" : "Invalid or missing image";
+    }
+
+    private async Task LoadOakNormal(ChangeEventArgs _)
+    {
+        oakNormalStatus = module is not null && await module.InvokeAsync<bool>(
+            "loadArenaLightingNormal", canvas, oakNormalPicker, "oak")
+            ? "Genuine Blender normals loaded (review only)" : "Load the matching oak RGBA PNG first";
+    }
+
+    private async Task LoadElmNormal(ChangeEventArgs _)
+    {
+        elmNormalStatus = module is not null && await module.InvokeAsync<bool>(
+            "loadArenaLightingNormal", canvas, elmNormalPicker, "elm")
+            ? "Genuine Blender normals loaded (review only)" : "Load the matching elm RGBA PNG first";
     }
 
     public async ValueTask DisposeAsync()

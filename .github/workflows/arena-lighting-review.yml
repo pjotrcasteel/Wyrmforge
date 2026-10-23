@@ -1,4 +1,4 @@
-name: Arena V2 Gothic Night L3 Fireball Review
+name: Arena V2 L4 Tree Shadow and Real Normal Lighting Review
 
 on:
   pull_request:
@@ -10,6 +10,8 @@ on:
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-night-lighting.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-lighting-calibration.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-l3-material-atmosphere.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-tree-firelighting.js'
+      - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena-sprite-normal-lighting.js'
       - 'src/Wyrmforge.Presentation.Web/wwwroot/js/arena.js'
       - 'tests/Wyrmforge.Browser.Tests/ArenaLightingBrowserTests.cs'
       - '.github/workflows/arena-lighting-review.yml'
@@ -58,7 +60,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: arena-step3-original-wet-forest-candidates
-          run-id: 39959218973
+          run-id: 40022049054
           repository: pjotrcasteel/Wyrmforge
           github-token: ${{ github.token }}
           path: artifacts/tree-candidates
@@ -70,7 +72,7 @@ jobs:
           else
             echo "::warning::Unapproved candidate art not available; tree-composite tests will report a skip."
           fi
-      - name: Verify L3 Fireball night contrast, optional original trees and ground restoration
+      - name: Verify L4 real tree shadows, optional Blender normals and Fireball direction
         env:
           WYRMFORGE_BASE_URL: http://127.0.0.1:4173/
           WYRMFORGE_BROWSER_ARTIFACTS: ${{ github.workspace }}/artifacts/lighting
@@ -82,7 +84,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arena-l3-fireball-night-mobile-evidence
+          name: arena-l4-firelit-tree-normal-mobile-evidence
           path: |
             artifacts/lighting/
             artifacts/browser-server.log
