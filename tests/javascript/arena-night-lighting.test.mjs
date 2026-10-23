@@ -31,6 +31,10 @@ test('fire spells emit warm, larger and more intense night light than cold spell
     assert.ok(fire.relief > frost.relief);
     assert.deepEqual(fire.color, [255, 139, 66]);
     assert.deepEqual(frost.color, [160, 210, 255]);
+    assert.equal(gothicNightLightSources({}, [{ ...testFire, strength: 0 }]).length, 0,
+        'Extinguished spell sources must produce no phantom lingering light.');
+    assert.ok(fire.relief > .70 && fire.relief < 1,
+        'A real Fireball should meaningfully cut through the black night.');
 });
 
 test('real Fire Wyrm breath and authoritative burning-tree state illuminate without invented fire', () => {
