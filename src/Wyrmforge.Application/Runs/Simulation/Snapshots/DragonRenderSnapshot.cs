@@ -6,6 +6,7 @@ namespace Wyrmforge.Application.Runs.Simulation.Snapshots;
 public sealed record DragonRenderSnapshot(string Name, string Title, SpellSchool School, double X, double Y, double Radius, double Health, double MaxHealth, int Phase, bool Frozen,
     IReadOnlyList<CombatStatusRenderSnapshot> Statuses)
 {
+    public bool HitFlash { get; init; }
     public string? FlightStage { get; init; }
     public double FlightProgress { get; init; }
     public bool Targetable { get; init; } = true;

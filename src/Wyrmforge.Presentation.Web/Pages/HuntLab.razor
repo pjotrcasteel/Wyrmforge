@@ -13,12 +13,13 @@
 
 <main class="hunt-lab">
     <header class="hunt-lab-head">
-        <div><span>WYRMFORGE • DEVELOPER CINEMATIC</span>
-            <h1>@(ManualControl ? "Face Ashfang in live combat." : "Watch the Great Hunt fight itself.")</h1>
-            <p>The actual combat renderer, deterministic simulation and movement agent. No account progress, loot or playtest report is credited.</p>
+        <div><span>WYRMFORGE • BOSS ENCOUNTER</span>
+            <h1>@(ManualControl ? "Face the wyrm." : "Watch the Great Hunt.")</h1>
+            <p>@(ManualControl ? "Move with WASD, arrows or drag in the arena. Your spell auto-casts. Read the attacks, dodge, and punish his recovery." : "Watch the live fight. Encounter settings let you test builds and phases.")</p>
         </div>
         <div class="hunt-lab-actions"><button @onclick="Restart">↻ Restart encounter</button><button @onclick="Pause">@(paused ? "▶ Resume" : "Ⅱ Pause")</button><a href="balance-lab">← Balance Lab</a><a href="arena-lab">Arena Lab</a></div>
     </header>
+    <details class="hunt-lab-options"><summary>Encounter settings</summary>
     <section class="hunt-lab-settings">
         <label>Wyrm
             <select @bind="selectedWyrm">
@@ -46,14 +47,15 @@
             </select>
         </label>
         <label class="practice-toggle"><input type="checkbox" @bind="Casting" /> Hunter casting</label>
-        <label class="practice-toggle"><input type="checkbox" @bind="invulnerable" /> Invulnerable watch mode</label>
+        <label class="practice-toggle"><input type="checkbox" @bind="invulnerable" /> Invulnerable practice</label>
         <button @onclick="Restart">APPLY & REPLAY</button>
     </section>
+    </details>
     <section class="hunt-lab-surface" aria-label="Live developer Wyrm encounter">
         <canvas @ref="canvas" class="hunt-lab-canvas" aria-label="Automated live Wyrm arena"></canvas>
         <div class="hunt-lab-stage" aria-live="polite">
             <strong>@status</strong>
-            <span>@(paused ? "PAUSED" : ManualControl ? "LIVE CONTROLS • PRACTICE • NO PROGRESS" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
+            <span>@(paused ? "PAUSED" : ManualControl ? invulnerable ? "LIVE CONTROLS • INVULNERABLE PRACTICE" : "LIVE CONTROLS • FULL DAMAGE" : invulnerable ? "AUTOPILOT • PRACTICE • NO PROGRESS" : "AUTOPILOT • FULL DAMAGE • NO PROGRESS")</span>
         </div>
     </section>
     <p class="hunt-lab-note">This uses the game's real canvas renderer for cinematic inspection. The agent may lose when invulnerability is disabled. Balance Lab measures repeatable portrait/landscape outcomes independently; an autopilot is not proof of human comfort or fun.</p>
@@ -77,7 +79,8 @@
     private int seed = 1337;
     [Parameter, SupplyParameterFromQuery(Name = "loadout")] public string? LoadoutQuery { get; set; }
     private string loadout = "tier1";
-    private bool invulnerable = true;
+    [Parameter, SupplyParameterFromQuery(Name = "invulnerable")] public bool? InvulnerableQuery { get; set; }
+    private bool invulnerable;
     [Parameter, SupplyParameterFromQuery(Name = "play")] public bool ManualControl { get; set; }
     [Parameter, SupplyParameterFromQuery(Name = "cast")] public bool? CastingQuery { get; set; }
     private bool Casting = true;
@@ -88,6 +91,7 @@
     protected override void OnParametersSet()
     {
         Casting = CastingQuery ?? true;
+        invulnerable = InvulnerableQuery ?? !ManualControl;
         loadout = LoadoutQuery == "stress" ? "stress" : "tier1";
         if (Enum.TryParse<DragonId>(WyrmQuery, true, out var id) && Enum.IsDefined(id)) selectedWyrm = id;
         if (AscendantQuery is { } a) variant = a ? "ascendant" : "ordinary";

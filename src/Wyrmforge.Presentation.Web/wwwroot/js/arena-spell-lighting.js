@@ -64,6 +64,15 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
     for (const impact of snapshot.elementalImpacts ?? [])
         add(impact, 'impact', .8 * (1 - clamp(Number(impact.progress) || 0, 0, 1)), 106);
 
+    const dragon=snapshot.dragon;
+    if(Number(dragon?.school)===1&&dragon.action==='breath'&&['windup','strike'].includes(dragon.actionPhase)&&dragon.flightStage==='ground'){
+        candidates.push({x:dragon.x+dragon.directionX*100,y:dragon.y+dragon.directionY*100,radius:165,
+            strength:dragon.actionPhase==='strike'?.62:.16*clamp(dragon.actionProgress),type:'boss-fire',surge:false,...spellLightProfile(1)});
+    }
+    for(const effect of snapshot.ashfangEffects??[]){
+        if(['meteor','cinder'].includes(effect.kind)&&effect.progress<.16)candidates.push({x:effect.x,y:effect.y,radius:effect.radius*2.4,
+            strength:.65*(1-effect.progress/.16),type:'boss-impact',surge:false,...spellLightProfile(1)});
+    }
     // Bound the worst-case cost when several projectiles and impacts overlap on mobile.
     // Impact gets priority over an older projectile only when it is visibly brighter.
     return candidates.filter(light => !viewport ||

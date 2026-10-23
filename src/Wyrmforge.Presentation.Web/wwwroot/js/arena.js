@@ -8,7 +8,8 @@ import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
 import { preloadHollowSprites, hollowSpritesReady, createHollowState, updateHollowSprites, drawHollowEnemy, drawHollowCorpses, hollowDiagnostics } from './hollow-sprites.js';
-import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, drawAshfangFire, drawAshfangRain, ashfangDiagnostics } from './ashfang-sprites.js';
+import { preloadAshfang, createAshfangState, updateAshfang, drawAshfang, drawAshfangDeath, ashfangSockets, ashfangDiagnostics } from './ashfang-sprites.js';
+import { drawAshfangWarning, drawAshfangGroundEffects, drawAshfangAirEffects, ashfangVfxDiagnostics } from './ashfang-vfx.js';
 import { ashlingSprites } from './ashling-sprites.js';
 import { drawEnemyTelegraph, drawHostileProjectileGround, drawHostileProjectileEmber, drawShieldGuard, drawAshRemains, drawWraithRipple } from './arena-enemy-telegraphs.js';
 import { drawReliquaryGround, drawReliquaryEmergence, drawReliquaryHushVeil, drawReliquaryBar } from './arena-reliquary-vfx.js';
@@ -61,6 +62,8 @@ export function readArenaDiagnostics(canvas) {
         hollow: hollowDiagnostics(state.hollow),
         ashling: ashlingSprites.diagnostics(state.ashling),
         ashfang: ashfangDiagnostics(state.ashfang),
+        ashfangVfx: ashfangVfxDiagnostics(state.latestSnapshot??{},ashfangSockets(state.ashfang)),
+        ashfangEffects: state.latestSnapshot?.ashfangEffects??[],
         dragon: state.latestSnapshot?.dragon ?? null,
         dragonBreath: state.latestSnapshot?.dragonBreath ?? null,
         huntHazards: state.latestSnapshot?.huntHazards ?? [],
@@ -224,7 +227,11 @@ function draw(state, snapshot, width, height) {
     drawArenaExit(ctx, snapshot.exit, visualSeconds);
     drawRecoveryGuide(ctx, snapshot, camera, width, height, visualSeconds, state.reducedMotion.matches);
 
-    for (const hazard of snapshot.huntHazards ?? []) drawHuntHazard(ctx, hazard);
+    drawAshfangGroundEffects(ctx,snapshot,state.reducedMotion.matches);
+    for (const hazard of snapshot.huntHazards ?? []) {
+        if(Number(snapshot.dragon?.school)===1)drawAshfangWarning(ctx,hazard,state.reducedMotion.matches);
+        else drawHuntHazard(ctx,hazard);
+    }
     for (const remains of snapshot.ashRemains ?? []) drawAshRemains(ctx, remains);
     for (const ripple of snapshot.wraithRipples ?? []) drawWraithRipple(ctx, ripple, visualSeconds);
     for (const patch of snapshot.blackIce ?? []) drawBlackIce(ctx, patch, state.reducedMotion.matches ? 0 : visualSeconds);
@@ -307,8 +314,7 @@ function draw(state, snapshot, width, height) {
         ctx.stroke();
         ctx.restore();
     }
-    drawAshfangFire(ctx,state.ashfang,snapshot,state.reducedMotion.matches);
-    drawAshfangRain(ctx,snapshot,state.reducedMotion.matches);
+    drawAshfangAirEffects(ctx,snapshot,ashfangSockets(state.ashfang),state.reducedMotion.matches);
     // A second weaker pass tints nearby monster silhouettes without washing out their attacks.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
     for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
@@ -356,7 +362,7 @@ function draw(state, snapshot, width, height) {
     drawExitGuide(ctx, snapshot.exit, camera, width, height);
     // Combat vitals now share one accessible responsive HTML HUD with the encounter objective.
     drawReliquaryHushVeil(ctx, snapshot.reliquary, width, height);
-    if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width);
+    if (battleActive) drawBossBar(ctx, snapshot.dragon, snapshot.hunt, width, state.ashfang.hpTrail);
     else {
         drawReliquaryBar(ctx, snapshot.reliquary, width);
         drawBellWardenBar(ctx, snapshot.bellWarden, width);
@@ -1178,7 +1184,7 @@ function drawDragonEyes(ctx, radius, palette) {
     ctx.fill();
 }
 
-function drawBossBar(ctx, dragon, hunt, width) {
+function drawBossBar(ctx, dragon, hunt, width, healthTrail = null) {
     const palette = schoolPalette(dragon.school);
     const outerWidth = Math.min(350, width - 132);
     const x = (width - outerWidth) / 2;
@@ -1211,6 +1217,7 @@ function drawBossBar(ctx, dragon, hunt, width) {
     ctx.fillStyle = 'rgba(9, 7, 12, 0.88)';
     roundRect(ctx, innerX, barY, innerWidth, 8, 4);
     ctx.fill();
+    if(Number(dragon.school)===1&&healthTrail!=null){ctx.fillStyle='#d6ad79';roundRect(ctx,innerX,barY,innerWidth*healthTrail,8,4);ctx.fill();}
     ctx.fillStyle = dragon.phase === 2 ? palette.phase : palette.body;
     roundRect(ctx, innerX, barY, innerWidth * Math.max(0, dragon.health / dragon.maxHealth), 8, 4);
     ctx.fill();

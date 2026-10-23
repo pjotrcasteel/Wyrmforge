@@ -12,5 +12,6 @@ public sealed record DragonHuntHazardRenderSnapshot(
     DragonHuntSignatureKind? Signature = null,
     bool Armed = true)
 {
+    public string? EffectKind { get; init; }
     public bool FromAbove { get; init; }
 }

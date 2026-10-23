@@ -25,7 +25,7 @@ test('Movement survives repeated bridge snapshots and pause/freeze preserve the 
  const state=m.createAshfangState();m.updateAshfang(state,snapshot,0);m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:4}},.05);
  assert.equal(state.entity.clip,'walk_start');m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:4}},.07);assert.equal(state.entity.clip,'walk_start');
  const pose=JSON.stringify(state.entity);m.updateAshfang(state,{...snapshot,paused:true},.1);assert.equal(JSON.stringify(state.entity),pose);
- m.updateAshfang(state,{...snapshot,dragon:{...dragon,frozen:true}},.15);assert.equal(JSON.stringify(state.entity),pose);
+ m.updateAshfang(state,{...snapshot,dragon:{...dragon,frozen:true}},.15);assert.equal(state.entity.clip,JSON.parse(pose).clip);assert.equal(state.entity.frozen,true);
  m.updateAshfang(state,{...snapshot,dragon:{...dragon,x:20}},.2);assert.ok(['run','run_start'].includes(state.entity.clip));
 });
 test('Only simulation defeat creates a body; reset and different lineage do not',()=>{

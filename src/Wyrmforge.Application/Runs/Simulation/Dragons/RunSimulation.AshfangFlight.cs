@@ -23,8 +23,20 @@ public sealed partial class RunSimulation
         }
         if(completed)
         {
+            if(ashfangFlight.Stage=="overhead")
+            {
+                var margin=active.Radius+24;
+                var landing=new Vector2D(Math.Clamp(player.Position.X,margin,Math.Max(margin,arenaWidth-margin)),Math.Clamp(player.Position.Y,margin,Math.Max(margin,arenaHeight-margin)));
+                if(arenaEnvironment is not null)landing=arenaEnvironment.RestrictMovement(ashfangFlight.Origin,landing,arenaWidth,arenaHeight,active.Radius);
+                ashfangFlight.LockLanding(landing);
+            }
             ashfangFlight.Advance(active.Phase);
-            if(ashfangFlight.Stage=="land")active.Position=ashfangFlight.Landing;
+            if(ashfangFlight.Stage=="land")
+            {
+                active.Position=ashfangFlight.Landing;
+                var damage=dragonHuntState.Profile!.Pressure.Damage.For(active.Phase)*depthState.DragonDamageMultiplier;
+                dragonHuntHazards.Add(new DragonHuntHazardState(active.Position,active.Radius*1.65,damage,.95,0,SpellId.FireBolt,active.Definition.School,null,false,"landing"));
+            }
             if(!ashfangFlight.Active){active.AttackCooldown=.8;return true;}
         }
         if(ashfangFlight.Stage=="overhead")

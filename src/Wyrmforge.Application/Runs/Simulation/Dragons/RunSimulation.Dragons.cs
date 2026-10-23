@@ -94,6 +94,7 @@ public sealed partial class RunSimulation
     {
         ashfangFlight.Reset();
         ashfangBehavior.Interrupt();
+        if (activeDragon.Definition.Id == DragonId.Ashfang) RegisterAshfangEffect("roar", activeDragon.Position, activeDragon.Radius * 2);
         activeDragon.TelegraphRemaining = 0;
         activeDragon.AttackCooldown = 1;
         dragonHuntHazards.Clear();
@@ -174,7 +175,9 @@ public sealed partial class RunSimulation
 
     private void ResolveDragonHuntHazard(DragonHuntHazardState hazard)
     {
-        RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
+        if (dragon?.Definition.Id == DragonId.Ashfang)
+            RegisterAshfangEffect(hazard.EffectKind ?? (hazard.FromAbove ? "meteor" : "cinder"), hazard.Position, hazard.Radius);
+        else RegisterElementalImpact(hazard.Position, hazard.VisualSpell);
         if (Vector2D.Distance(player.Position, hazard.Position) <= hazard.Radius) DamagePlayer(hazard.Damage);
     }
 
@@ -196,7 +199,8 @@ public sealed partial class RunSimulation
     private void SpawnDragon(DragonDefinition definition, double width, double height)
     {
         ashfangFlight.Reset();
-        ashfangBehavior.Interrupt();
+        ashfangBehavior.Reset();
+        ashfangEffects.Clear();
         dragonAttackSequence = 0;
         dragonLastAttackAt = -1;
         dragonDefeat = null;
@@ -364,8 +368,9 @@ public sealed partial class RunSimulation
     private void ResetDragonHunt()
     {
         ashfangFlight.Reset();
-        ashfangBehavior.Interrupt();
+        ashfangBehavior.Reset();
         dragonDefeat = null;
+        ashfangEffects.Clear();
         dragonHuntHazards.Clear();
         dragonHuntState.Reset();
     }
@@ -393,6 +398,7 @@ public sealed partial class RunSimulation
         {
             IsAscendant = ascendantActive, Tier = activeDragon.Tier, EntityId = activeDragon.Id,
             AttackSequence = dragonAttackSequence,
+            HitFlash = hitFlashRemaining.ContainsKey(activeDragon.Id),
             FlightStage = definition.Id == DragonId.Ashfang ? ashfangFlight.Stage : null,
             FlightProgress = ashfangFlight.Progress,
             Targetable = CanTargetActiveDragon,
@@ -425,7 +431,7 @@ public sealed partial class RunSimulation
 
     private IReadOnlyList<DragonHuntHazardRenderSnapshot> CreateDragonHuntHazardSnapshots() => dragonHuntHazards
         .Select(hazard => new DragonHuntHazardRenderSnapshot(hazard.Position.X, hazard.Position.Y, hazard.Radius, hazard.Progress, hazard.School, hazard.Signature,
-            hazard.DelayRemaining <= 0) { FromAbove = hazard.FromAbove })
+            hazard.DelayRemaining <= 0) { FromAbove = hazard.FromAbove, EffectKind = hazard.EffectKind })
         .ToArray();
 
     private static Vector2D ArenaPoint(DragonHuntPoint point, double width, double height) => new(point.X * width, point.Y * height);
@@ -444,8 +450,9 @@ public sealed partial class RunSimulation
         double delaySeconds,
         SpellId visualSpell,
         SpellSchool school,
-        DragonHuntSignatureKind? signature, bool fromAbove = false)
+        DragonHuntSignatureKind? signature, bool fromAbove = false, string? effectKind = null)
     {
+        public string? EffectKind { get; } = effectKind;
         public bool FromAbove { get; } = fromAbove;
         public Vector2D Position { get; } = position;
         public double Radius { get; } = radius;

@@ -5,6 +5,7 @@ namespace Wyrmforge.Application.Runs.Simulation;
 
 public sealed partial class RunSimulation
 {
+    private bool ashfangBreathHit;
     private readonly AshfangBehaviorState ashfangBehavior = new();
 
     private void UpdateAshfangCombat(DragonState active, double delta)
@@ -21,16 +22,23 @@ public sealed partial class RunSimulation
                 var proposed = ashfangBehavior.Origin + (destination - ashfangBehavior.Origin) * progress;
                 active.Position = arenaEnvironment is null ? proposed : arenaEnvironment.RestrictMovement(active.Position, proposed, arenaWidth, arenaHeight, active.Radius);
             }
+            if (ashfangBehavior.Phase == "strike" && ashfangBehavior.Action == "breath" && !ashfangBreathHit)
+                ashfangBreathHit = ResolveAshfangStrike(active);
             if (!completed) return;
             if (ashfangBehavior.Phase == "windup")
             {
                 ashfangBehavior.Strike();
                 dragonLastAttackAt = elapsed;
-                if (ashfangBehavior.Action != "pounce") ResolveAshfangStrike(active);
+                if (ashfangBehavior.Action != "pounce")
+                {
+                    if (ashfangBehavior.Action != "breath") RegisterAshfangEffect(ashfangBehavior.Action,
+                        active.Position + ashfangBehavior.Direction * (ashfangBehavior.Range * .65), ashfangBehavior.Range, ashfangBehavior.Direction);
+                    ashfangBreathHit = ResolveAshfangStrike(active);
+                }
             }
             else if (ashfangBehavior.Phase == "strike")
             {
-                if (ashfangBehavior.Action == "pounce") ResolveAshfangStrike(active);
+                if (ashfangBehavior.Action == "pounce") { RegisterAshfangEffect("pounce", active.Position, 74); ResolveAshfangStrike(active); }
                 ashfangBehavior.Recover();
             }
             else { ashfangBehavior.Finish(); active.AttackCooldown = .8; }
@@ -44,6 +52,7 @@ public sealed partial class RunSimulation
             var action = ashfangBehavior.Decide(Vector2D.Distance(active.Position, player.Position), clearPath, active.Phase);
             if (action != "approach")
             {
+                ashfangBreathHit = false;
                 ashfangBehavior.Begin(action, active.Position, player.Position, active.Definition.Combat.Attack.TelegraphSeconds.For(active.Phase));
                 active.BreathDirection = ashfangBehavior.Direction;
                 active.TelegraphRemaining = ashfangBehavior.Remaining;
@@ -62,7 +71,7 @@ public sealed partial class RunSimulation
         }
     }
 
-    private void ResolveAshfangStrike(DragonState active)
+    private bool ResolveAshfangStrike(DragonState active)
     {
         var offset = player.Position - active.Position;
         var distance = offset.Length;
@@ -70,9 +79,10 @@ public sealed partial class RunSimulation
             ? Vector2D.Distance(player.Position, ashfangBehavior.Target) <= 70 && Vector2D.Distance(active.Position, ashfangBehavior.Target) <= active.Radius + player.Radius + 12
             : distance <= ashfangBehavior.Range && (distance <= double.Epsilon ||
               (offset.X * ashfangBehavior.Direction.X + offset.Y * ashfangBehavior.Direction.Y) / distance >= Math.Cos(ashfangBehavior.HalfAngle));
-        if (!hits) return;
+        if (!hits) return false;
         var attack = active.Definition.Combat.Attack;
         RegisterElementalImpact(player.Position, attack.VisualSpell);
         DamagePlayer(attack.Damage.For(active.Phase) * depthState.DragonDamageMultiplier);
+        return true;
     }
 }
