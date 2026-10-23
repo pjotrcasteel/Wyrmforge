@@ -3,7 +3,7 @@
 > **Implementation plan, updated 23 October 2026 after owner clarification.**
 > Binding requirements: [Art & animation](../canon/art-and-animation.md#proper-lighting-engine-and-foliage-self-shadowing--locked-23-october-2026),
 > [Architecture & quality](../canon/architecture-and-quality.md) and
-> [P5 roadmap](../canon/roadmap.md#arena-v2-art-specific-sequence--23-october-2026-locked).
+> [P5 roadmap](../canon/roadmap.md#arena-v2-lighting-engine-dependency-within-p5--23-october-2026-locked).
 > This is a Work-session guide, **not** a claim that an engine has shipped.
 
 ## Mission: a LIGHTING SYSTEM for the entire game, not a tree effect
