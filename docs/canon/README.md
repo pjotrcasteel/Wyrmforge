@@ -17,7 +17,7 @@
 
 ## Active Wet Forest visual-workstream handoff (23 October 2026)
 
-**Next lighting task:** prove one original Blender ancient oak casting **real moving leaf-on-leaf and branch-on-trunk shadows** using GPU shadow visibility, not just a ground cast or 2D normal gradients. Read [the G0–G1 Work-session implementation plan](../design/arena-real-geometry-light-engine.md), then its binding [art acceptance](art-and-animation.md#proper-lighting-engine-and-foliage-self-shadowing--locked-23-october-2026) and [P5 dependency ordering](roadmap.md#arena-v2-art-specific-sequence--23-october-2026-locked). This is an **active isolated research/engineering slice**, not a claim that the lighting engine, native renderer or original tree art is shipped.
+**Next lighting task:** implement a **generic, data-driven 2.5D GPU scene lighting engine**. Any current/future object can register emitter properties, while approved ground, rock, structures, characters and trees receive and/or occlude through the same engine. First prove Fireball + torch + cone/directional illumination on several surfaces, and add a new glowing object **without renderer edits**. Real leaf-on-leaf shadows from the original 3D oak are a required stress test, **not** a tree-specific architecture. Read the [G0–G1 Work-session implementation plan](../design/arena-real-geometry-light-engine.md), the binding [art acceptance](art-and-animation.md#proper-lighting-engine-and-foliage-self-shadowing--locked-23-october-2026) and the [P5 dependency ordering](roadmap.md#arena-v2-lighting-engine-dependency-within-p5--23-october-2026-locked). This is a planned research/engineering slice, not proof of a shipped engine or native renderer.
 
 ## Authority and maintenance rules
 
