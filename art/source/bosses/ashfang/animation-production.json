@@ -1,5 +1,5 @@
 {
-  "status": "authoring",
+  "status": "Walk/flight source proof reviewed; expanding to full library",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -56,5 +56,16 @@
   ],
   "ownerAuthorizedAllActions": true,
   "ownerAcceptedMotion": false,
-  "runtimeIntegrated": false
+  "runtimeIntegrated": false,
+  "walkProof": {
+    "native": "archive/motion-proof-001/ashfang-animations.blend",
+    "renderedWalkFrames": 24,
+    "renderedFlightFrames": 16,
+    "direction": "SE",
+    "independentlyChangingFrames": true,
+    "clipping": false,
+    "maxWalkIKTargetError": 1.578116690501419e-06,
+    "agentReview": "Limb motion and folded/extended wing motion visible; planted-control error negligible. Full library and all directions remain to be reviewed.",
+    "ownerAcceptedMotion": false
+  }
 }
