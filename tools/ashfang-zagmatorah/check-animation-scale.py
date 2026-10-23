@@ -19,5 +19,5 @@ for name,c2 in m2['clips'].items():
   frame=r2['sourceFrame'];r1=lookup.get(frame,lookup[1]);im1=np.array(Image.open(root/r1['path']).convert('RGBA')).astype(float);im2=np.array(Image.open(roots2[name]/r2['path']).convert('RGBA')).astype(float)
   error=float(np.abs(im2-im1).mean());pixel=max(abs(r2['pivot'][i]-r1['pivot'][i]) for i in range(2));attach=max(abs(r2['attachments'][k][i]-r1['attachments'][k][i]) for k in r1['attachments'] for i in range(2));checks.append({'sourceFrame':frame,'meanPixelChannelDifference':error,'pivotPixelError':pixel,'attachmentPixelError':attach,'rootTravelError':abs(r2['rootMotion']-source_motions['clips'][name]['rootMotion'][frame-1]*2)})
  report['clips'][name]=checks
-report['pass']=bool(report['clips']) and all(v['meanPixelChannelDifference']<.5 and v['pivotPixelError']<.002 and v['attachmentPixelError']<.002 and v['rootTravelError']<.0001 for c in report['clips'].values() for v in c)
+report['pass']=report['allExpectedClipsAvailable'] and set(report['clips'])=={'idle','walk','fly'} and all(v['meanPixelChannelDifference']<.5 and v['pivotPixelError']<.002 and v['attachmentPixelError']<.002 and v['rootTravelError']<.0001 for c in report['clips'].values() for v in c)
 Path(args.output).write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))

@@ -11,7 +11,7 @@ Run from this task worktree. Use Blender 4.5.14 LTS and Python with Pillow/NumPy
 ```powershell
 $blender = 'C:\Wyrmforge\artifacts\toolchains\blender-4.5.14\blender-4.5.14-windows-x64\blender.exe'
 $python = 'C:\Users\Pjotr\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
-& $blender -b art/source/bosses/ashfang/archive/tier-I-skin-010-packed/ashfang-tier-I.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/author-animations.py -- --output art/source/bosses/ashfang/archive/motion-NEW
+& $blender -b art/source/bosses/ashfang/archive/tier-I-skin-010-packed/ashfang-tier-I.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/author-animations-foundation-002.py -- --output art/source/bosses/ashfang/archive/motion-NEW
 & $blender -b art/source/bosses/ashfang/archive/motion-library-014/ashfang-animations.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/validate-animations.py -- --motions art/source/bosses/ashfang/archive/motion-library-014/motions.json --output artifacts/ashfang/revalidate-002.json
 & $blender -b art/source/bosses/ashfang/archive/motion-library-014/ashfang-animations.blend --disable-autoexec --python-exit-code 1 --python tools/ashfang-zagmatorah/render-animations.py -- --output artifacts/ashfang/NEW-render --motions art/source/bosses/ashfang/archive/motion-library-014/motions.json --size 512 --samples 24
 & $python tools/ashfang-zagmatorah/pack-animations.py --input artifacts/ashfang/NEW-render --motions art/source/bosses/ashfang/archive/motion-library-014/motions.json --output art/source/bosses/ashfang/exports/NEW --verify

@@ -1,0 +1,9 @@
+# Foundation 003 - rendering in progress
+
+Owner-directed refinement preserves the approved original anatomy and foundation002 aggression. Source018 supersedes diagnostic015-017: all41 source clips pass floor clearance, all-direction framing and20 handoffs. Both deaths have zero pelvis rise. Roar reaches72.24 degrees head pitch; takeoff frame10 looks up59.41 degrees and frame13 body pitch76.95 degrees. All six aerial states have under0.08 degrees gaze yaw. Landing rear contacts precede forelimbs. Native material driver multiplies magma/eye emission by action-keyed magmaLife1 to0; living actions restore1.
+
+Takeoff uses a per-frame vertical camera lift with matching exported ground pivot, preserving pixel density and actual world rise. Thirty unaffected actions match previous source014 exactly at every source frame, and an unchanged idle RGBA render is pixel-identical to002. Those frames are explicitly reused with provenance;11 revised clips are freshly rendered in eight directions. Packed003 preserves original112bones/19841vertices, UVs, weights, tail mask and20 embedded images.
+
+Reference principles: [Oxford hawk landing study](https://www.ox.ac.uk/news/2022-06-30-hawk-has-landed-braking-mid-air-prioritise-safety-over-energy-or-speed) describes swooping approach with late pitch-up braking. [Wing-to-leg force transition research](https://pubmed.ncbi.nlm.nih.gov/24855670/) supports wing braking before feet absorb touchdown. Adaptation adds the wyvern forelimb pivot. Source text was consulted; no video viewing or copied footage/assets is claimed.
+
+Remaining: complete GPU renders, pack003, inspect browser playback and cooling, scale proof and independent remote source/atlas retrieval. DraftPR299; no gameplay integration or owner motion acceptance implied. Previous001/002 preserved.
