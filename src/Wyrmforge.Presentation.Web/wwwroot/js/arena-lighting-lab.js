@@ -6,8 +6,9 @@ import {
 } from './arena-materials.js';
 import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS,
     FOUNDATION_WIDTH, FOUNDATION_HEIGHT } from './arena-ground-foundation.js';
-import { resolveSceneLighting, contactShadowPlan, drawContactShadow, drawSceneLighting,
+import { resolveSceneLighting, contactShadowPlan, drawContactShadow,
     sortSpritesByFoot } from './arena-scene-lighting.js';
+import { gothicNightPlan, drawGothicNight } from './arena-night-lighting.js';
 
 const states = new WeakMap();
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -56,11 +57,23 @@ function render(state) {
             drawWidth, drawHeight);
         ctx.imageSmoothingEnabled = false;
     }
-    if (state.ground) drawSceneLighting(ctx, world, state.light);
+    // Calibration lamp is NOT a game object, only a source-light reference.
+    // Same darkness + light reaction as the actual night Hunt renderer.
+    if (state.ground && state.light.enabled) {
+        const sources = state.demoFire ? [{
+            x: 482, y: 750, radius: 230, relief: .98,
+            color: [255, 139, 66], kind: 'fire',
+        }] : [];
+        drawGothicNight(ctx, gothicNightPlan(null, sources, {
+            x: state.camera.x, y: state.camera.y, width, height,
+        }, { darkness: state.darkness }), state.nightMask);
+    }
     ctx.restore();
 
     canvas.dataset.lightingReady = String(Boolean(state.ground));
     canvas.dataset.lightingEnabled = String(state.light.enabled);
+    canvas.dataset.gothicNight = String(state.light.enabled);
+    canvas.dataset.fireCalibration = String(state.demoFire);
     canvas.dataset.lightingObjects = String(sprites.length);
     canvas.dataset.lightingShadows = String(state.light.enabled && state.light.shadows ? sprites.length : 0);
     canvas.dataset.lightingApprovedGround = String(Boolean(state.ground));
@@ -111,6 +124,8 @@ export function initializeArenaLighting(canvas, seed = 1204, options = {}) {
     const width = Math.max(1, rect.width), height = Math.max(1, rect.height);
     const state = {
         canvas, alive: true, seed: seed | 0, light: resolveSceneLighting(options),
+        darkness: Number.isFinite(options.darkness) ? options.darkness : .90,
+        demoFire: options.demoFire === true, nightMask: document.createElement('canvas'),
         camera: { x: clamp(480 - width / 2, 0, Math.max(0, world.width - width)),
             y: clamp(770 - height / 2, 0, Math.max(0, world.height - height)) },
         source: null, ground: null, images: {}, pointer: null, pending: false, listeners: [],
@@ -163,6 +178,8 @@ export function configureArenaLighting(canvas, seed, options = {}) {
         if (state.source) buildGround(state);
     }
     state.light = nextLight;
+    state.darkness = Number.isFinite(options.darkness) ? options.darkness : .90;
+    state.demoFire = options.demoFire === true;
     schedule(state);
 }
 
@@ -222,6 +239,6 @@ export function disposeArenaLighting(canvas) {
     if (!s) return;
     s.alive = false;
     for (const remove of s.listeners) remove();
-    s.images = {}; s.ground = null; s.source = null;
+    s.images = {}; s.ground = null; s.source = null; s.nightMask = null;
     states.delete(canvas);
 }
