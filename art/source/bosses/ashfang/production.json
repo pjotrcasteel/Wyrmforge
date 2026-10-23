@@ -35,6 +35,8 @@
     "independentlyRetrievedAndSha256VerifiedLfsObjects": 1465,
     "allFinalAtlases": 656,
     "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
-    "receipt": "remote-lfs-verification.json"
+    "receipt": "remote-lfs-verification.json",
+    "finalEvidenceCheckpoint": "3064b0ff4024cf4c00a0597bc5247da88b2fbac2",
+    "allTrackedLfsObjectsVerified": true
   }
 }
