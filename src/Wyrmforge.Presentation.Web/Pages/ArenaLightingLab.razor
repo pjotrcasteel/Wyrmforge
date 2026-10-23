@@ -7,9 +7,9 @@
 <main class="lighting-lab">
     <header>
         <div>
-            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / LIGHTING L0–L1</span>
-            <h1>Wet Forest — Lighting Foundation</h1>
-            <p>A/B test ambient light and contact shadows on the <strong>actual approved ground compositor</strong>.
+            <span class="eyebrow">WYRMFORGE / ARENA REBUILD V2 / GOTHIC NIGHT</span>
+            <h1>Wet Forest — Night & Firelight</h1>
+            <p>A/B test near-black Gothic darkness and localized firelight on the <strong>actual approved ground compositor</strong>.
                 The two tree candidates are loaded locally, remain unapproved and never enter Hunts.</p>
         </div>
         <a href="arena-lab">← Ground-only lab</a>
@@ -18,14 +18,18 @@
     <section class="lighting-controls" aria-label="Lighting comparison">
         <label class="switch">
             <input type="checkbox" @bind="enabled" @bind:after="SyncLighting" />
-            Unified light @(enabled ? "ON" : "OFF (baseline)")
+            Gothic night @(enabled ? "ON" : "OFF (source-art comparison)")
         </label>
         <label class="switch">
             <input type="checkbox" @bind="shadows" @bind:after="SyncLighting" />
             Contact shadows
         </label>
-        <label>Ambient darkness <strong>@ambientPercent%</strong>
-            <input type="range" min="0" max="50" step="1" @bind="ambientPercent" @bind:event="oninput" @bind:after="SyncLighting" />
+        <label class="switch">
+            <input type="checkbox" @bind="demoFire" @bind:after="SyncLighting" />
+            Calibration fire (preview only)
+        </label>
+        <label>Night darkness <strong>@ambientPercent%</strong>
+            <input type="range" min="65" max="97" step="1" @bind="ambientPercent" @bind:event="oninput" @bind:after="SyncLighting" />
         </label>
         <label>Light direction <strong>@sunAngle°</strong>
             <input type="range" min="0" max="359" step="1" @bind="sunAngle" @bind:event="oninput" @bind:after="SyncLighting" />
@@ -40,7 +44,7 @@
         <section class="lighting-stage">
             <canvas @ref="canvas" aria-label="Ground lighting comparison with optional new tree candidate images" tabindex="0"></canvas>
             <span class="lighting-help">Drag to pan · same approved ground and seed in both modes</span>
-            <span class="lighting-status">@(enabled ? "SHARED LIGHT" : "BASELINE") · @(shadows && enabled ? "SHADOWS" : "NO SHADOWS")</span>
+            <span class="lighting-status">@(enabled ? "GOTHIC NIGHT" : "BASELINE") · @(shadows && enabled ? "SHADOWS" : "NO SHADOWS")</span>
         </section>
         <aside class="lighting-inspector">
             <h2>Original tree candidates</h2>
@@ -56,11 +60,11 @@
             </label>
             <span class="feedback">@elmStatus</span>
             <h3>Acceptance scope</h3>
-            <p>The same ambient and directional lighting applies to the ground and any loaded sprites.
+            <p>The same night darkness applies to the ground and any loaded sprites. Calibration fire is a temporary light reference, not a real source or placed object.
                 Shadows are soft, based on authored trunk-root contact footprints, not canopy alpha or collision.</p>
             <p><strong>Not implemented:</strong> normal maps, local spell lights, actual C# gameplay snapshots,
                 native GPU optimization, enemy rendering, physical collision, or final art approval.</p>
-            <p class="notice">L0–L1 isolated study. No legacy trees, props, cobblestones or sprite replacements.</p>
+            <p class="notice">Isolated night study. No legacy trees, props, cobblestones or sprite replacements.</p>
         </aside>
     </div>
 </main>
@@ -73,9 +77,10 @@
     private ElementReference elmPicker;
     private IJSObjectReference? module;
     private int seed = 1204;
-    private int ambientPercent = 24;
+    private int ambientPercent = 90;
     private int sunAngle = 315;
-    private bool enabled;
+    private bool enabled = true;
+    private bool demoFire = true;
     private bool shadows = true;
     private string oakStatus = "No image selected";
     private string elmStatus = "No image selected";
@@ -84,7 +89,7 @@
     {
         if (!firstRender) return;
         module = await JavaScript.InvokeAsync<IJSObjectReference>("import",
-            "./js/arena-lighting-lab.js?v=20261023-l1-1");
+            "./js/arena-lighting-lab.js?v=20261023-night-1");
         await module.InvokeVoidAsync("initializeArenaLighting", canvas, seed, Profile());
     }
 
@@ -92,6 +97,8 @@
     {
         enabled,
         shadows,
+        demoFire,
+        darkness = ambientPercent / 100.0,
         ambient = ambientPercent / 100.0,
         sunDegrees = sunAngle,
     };
