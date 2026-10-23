@@ -43,8 +43,8 @@ export function treeProjectedSilhouettePlan(foot, height, light) {
         x: foot.x, y: foot.y,
         skewX: -light.dirX * stretch,
         scaleY: .20 - light.dirY * stretch * .72,
-        opacity: clamp(.20 + light.intensity * .57, .20, .82),
-        blur: clamp(height * .019, 2, 5),
+        opacity: clamp(.26 + light.intensity * .74, .26, .94),
+        blur: clamp(height * .010, 1.5, 3.3),
     });
 }
 
@@ -113,9 +113,9 @@ export function drawFirelitTree(ctx, assets, foot, light, darkness = .90) {
         const middle = width * .5;
         const gradient = painter.createLinearGradient(side, height * .35,
             width - side, height * .35);
-        const intensityNear = clamp(brightness * .77, 0, .78);
+        const intensityNear = clamp(brightness * .88, 0, .88);
         gradient.addColorStop(0, `rgba(255,177,102,${intensityNear.toFixed(3)})`);
-        gradient.addColorStop(.42, `rgba(220,123,65,${(intensityNear * .38).toFixed(3)})`);
+        gradient.addColorStop(.42, `rgba(220,123,65,${(intensityNear * .24).toFixed(3)})`);
         gradient.addColorStop(1, 'rgba(12,16,22,0)');
         painter.fillStyle = gradient;
         painter.fillRect(0, 0, width, height);
