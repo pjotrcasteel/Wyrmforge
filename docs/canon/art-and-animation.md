@@ -12,6 +12,38 @@
 - Shared locomotion and combat-action layers may blend only from real source motion with correct root/foot contact. Death overrides other actions; legal simulation remains in C#. [Current implementation record](../art/shared-sprite-animation-layers-2026-10-20.md).
 - Research at least two independent attributable visual references before creating materially new art. Sources inform design principles, never authorize copied copyrighted material.
 
+## Arena Rebuild V2 — shared lighting before further forest asset production (LOCKED, 23 October 2026)
+
+**Decision (approved design direction; NOT implemented):** The Wet Forest must gain a **unified lighting and grounding foundation before bulk production/integration of new vegetation, rocks, logs and other arena props**. First use the two original, independently editable Step-3 tree candidates (ancient oak and dead elm) as test subjects. Do not mistake art prototypes or an off-line composition for live Hunt renderer acceptance.
+
+**Why now:** The original tree renders looked pasted over the approved ground. This is partly because temporary mobile review compositions repeat raw 112-pixel source swatches and do **not** exercise the Arena Materials Lab's actual seamless-material compositor. Even in the real arena, uncoordinated ambient color, direction, contact shadow, wet-surface response and depth will cause disconnected objects. A lighting system **cannot fix** incorrect perspective, tree silhouettes, feet/anchors, tree scale, alpha quality or material painting; those remain separate art acceptance gates.
+
+### Visual and technical contract
+
+1. **One scene lighting model.** Use a consistent world-space key-light direction, ambient sky/fill color and intensity, camera/projection, exposure and atmospheric palette for **ground, trees, foliage, rocks, player, monsters and effects**. Do not separately bake incompatible daylight directions into each sprite. Authoring/export uses the same defined lighting rig; accepted RGBA cut-outs do not include baked ground patches.
+2. **Ground contact, shadows and occlusion.** Implement subtle contact shadows and broad restrained ambient-occlusion grounding at actual trunk/root or rock-body footprints. Shadows fall on the *existing approved ground*, not on an opaque rectangle beneath a sprite. Keep canopy alpha separate from physical collision; sort tree trunk, optional canopy/front-layer, actors and props by correctly authored foot/root anchors. Never fake gameplay collision through shadow masks.
+3. **Material-aware response.** Preserve the six approved Gothic ground materials and their blends. Wet mud and stone may take restrained damp highlights, while bark, moss and leaves remain largely diffuse and dark; avoid glossy plastic vegetation or globally color-filtering painted assets. Any normals/height/roughness maps are optional and must be derived from approved editable art, with a convincing fallback when absent.
+4. **Depth and air.** Add subtle distance-dependent tint, mist and depth separation only once the lighting/grounding baseline is coherent. Maintain player/enemy silhouettes, projectiles, dodge cues, loot, exits and boss telegraphs in small portrait viewports; reduced-effects paths must remain readable.
+5. **Elemental illumination later.** Design a small, bounded dynamic-light input so a Fireball, burning tree, Ashfang's breath, lightning or evolving Wyrm influence can illuminate nearby **ground and entities together**. Support local color, falloff and optional shadow modulation without creating a new authoritative fire/collision system. Tie timing and positions to C# gameplay snapshots, not independent client-side random effects.
+6. **Platform neutrality.** World/arena state, terrain recipes, occluder/contact footprints and light-emitter events remain deterministic and platform-neutral in C# when integrated. Visual renderer adapters may choose Canvas/WebGL, mobile GPU shaders or a native backend **after on-device measurement**. The browser-only Materials/Arena Labs and off-line Python comps are replaceable reviews, not the iOS/Android product architecture. Favor baked/cached static lighting and a tightly bounded set of dynamic lights; test overdraw, memory, frame pacing and battery before choosing the technique.
+
+### Delivery sequence and gates
+
+| Step | Output | Acceptance criterion |
+|---|---|---|
+| L0 — baseline | Compare the **real approved ground compositor** with two RGBA tree candidates, using an identical seed, camera and framing at 320×568 and 390×844. | Art and simulation do not change; document current mismatched light, shadows, scale and anchors. A Python quilt composition is not accepted as ground-engine evidence. |
+| L1 — shared ambient/key | A small isolated renderer lighting experiment where ground and both trees use the same scene settings. | Coherent directional and ambient color; a/B toggle; no recoloring or degradation of approved material texture/blends. |
+| L2 — grounding | Correct foot-pivot depth sorting, trunk-only collision *design* and soft contact shadows / local occlusion. | Trees appear attached to wet mud and grass, no square underlays, feet remain visible, actors sort consistently; no new physical obstacles until later authoritative C# integration. |
+| L3 — material/depth | Restrained wet-material response and subtle atmosphere, all optional/tunable. | Same photographed/seeded scene readable at real iPhone and Android gameplay size; spell and monster contrast survives day/night and fog. |
+| L4 — gameplay integration | A source-neutral lighting input from authoritative C# arena snapshots with a renderer-specific implementation and optional Fire/Ashfang light source. | Deterministic lighting-event parameters/replay; lights match actual attacks and burning objects; no gameplay-state mutations from renderer. Profile real iOS/Android devices and confirm acceptable frame time, overdraw, memory and battery. |
+| L5 — resume Step 3+ | Once the first two trees pass integrated ground/lighting visual review, produce more original understory, deadwood, roots, mossy boulders and fallen logs. | Individual artwork and composite review, editable source retained, plausible clearance for Vampire-Survivors-scale hordes, no reuse of rejected old assets. |
+
+**Preserve approved foundation:** Step 1's six painted materials/blends and Step 2's connected ground-only trail candidates remain protected. The rejected old trees/cobblestone/camp/prop/collision systems must never return through a lighting shortcut. Do not modify live Hunts or treat the new asset foundry as shipped: [source-only Step 3 PR #307](https://github.com/pjotrcasteel/Wyrmforge/pull/307) includes the two review candidates and Blender authoring workflow, not a new lighting engine.
+
+**Acceptance authority:** Automated checks validate file integrity, deterministic settings and regression behavior; visual approval requires the *actual* arena renderer on 320/390px portrait plus physical iOS/Android performance/readability evidence. A passing CI run, appealing image or green pixel-diff check alone does not approve artwork or lighting.
+
+**Change note — 23 Oct 2026:** Owner explicitly prioritized shared environmental lighting and grounding **ahead of additional Wet Forest asset production** after viewing the disconnected tree/ground compositions. This changes the **arena art pipeline order**, not the entire product P0–P9 priority scheme, and does not assert the feature has shipped.
+
 ## Historical approved world-art gallery (not a current town layout specification)
 
 ### Approved world concept — 14 October 2026
