@@ -841,3 +841,7 @@ prove eight facings, walking contact, recognisable anatomy and animation transit
 Lab pathing probes have no simulated combat, so playback is strictly movement/idle; attack
 and death clips remain the regular-Hunt authoritative render path. Existing source bytes and
 enemy mechanics are unchanged, preserving continuity with earlier accepted work.
+
+### Ashfang Tier I visual size approved - 23 October 2026
+
+The owner selected the rendered size at the phone preview’s **2× setting**, evidenced by `art/source/bosses/ashfang/references/tier-I-size-owner-approved-2026-10-23.png`. This visual calibration supersedes both the earlier viewport-width quota and the oversized5× trial. Preserve the approved screenshot’s model-to-player relationship, fixed402×874 phone viewport and0.75 game camera. `tier-I-scale-baseline.json` records exact world-cell calibration; the2× UI label is not a literal statement about the complete silhouette’s width, height or area. All animation/facing proportions share this scale. Future tiers grow relative to this TierI baseline, with their multipliers still to be authored. This approves size only, not all pixel styling, remaining actions or runtime integration.

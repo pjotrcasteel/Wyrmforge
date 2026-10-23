@@ -1,0 +1,100 @@
+{
+  "pass": true,
+  "actualArenaGround": true,
+  "actualMageRenderer": true,
+  "actualHollowRenderer": true,
+  "atlasFiles": 96,
+  "screenScales": [
+    {
+      "browserWidth": 320,
+      "phoneViewport": [
+        402,
+        874
+      ],
+      "ratio": 2.0000020858015324,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "browserWidth": 390,
+      "phoneViewport": [
+        402,
+        874
+      ],
+      "ratio": 2.0000020858015324,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "browserWidth": 440,
+      "phoneViewport": [
+        402,
+        874
+      ],
+      "ratio": 2.0000020858015324,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "browserWidth": 1100,
+      "phoneViewport": [
+        402,
+        874
+      ],
+      "ratio": 2.0000020858015324,
+      "playerScreenHeight": 31.5
+    }
+  ],
+  "sliderChecks": [
+    {
+      "value": 1,
+      "ratio": 1,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "value": 2,
+      "ratio": 2,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "value": 2.7,
+      "ratio": 2.7,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "value": 3,
+      "ratio": 3,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "value": 5,
+      "ratio": 5,
+      "playerScreenHeight": 31.5
+    },
+    {
+      "value": 6,
+      "ratio": 6,
+      "playerScreenHeight": 31.5
+    }
+  ],
+  "manualToggle": true,
+  "resetSize": true,
+  "approvedTierIBaseline": 2,
+  "phonePhysicalPixels": [
+    1206,
+    2622
+  ],
+  "phoneLogicalViewport": [
+    402,
+    874
+  ],
+  "phasePreservingFacing": true,
+  "step": true,
+  "pause": true,
+  "depthToggle": true,
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "horizontalOverflow": false,
+  "physicalPhoneAcceptance": false,
+  "runtimeIntegrated": false,
+  "errors": []
+}

@@ -77,5 +77,5 @@
   "palettePolicy": "Two fixed constant color ramps across all frames/facings; no per-frame palette or dithering.",
   "coverage": "Binary alpha at native render resolution.",
   "sha256": "fc0c4ba9bb76b0acab25efd97429409115fb9b78d1500716923a6850ba165bb6",
-  "sizePolicy": "Owner-adjustable body/limb-to-player ratio; tail excluded,3x provisional default. Fixed402x874 logical phone preview; camera scales all scene elements."
+  "sizePolicy": "Exact owner-approved TierI screenshot calibration in tier-I-scale-baseline.json. Preview default/reset2x; adjustable1\u20136x. Label is not literal full-silhouette height/area."
 }

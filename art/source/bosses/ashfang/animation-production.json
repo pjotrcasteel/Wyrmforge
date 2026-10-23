@@ -136,10 +136,10 @@
     "allTrackedLfsHashesMatch": true
   },
   "pixelStyleProof": {
-    "status": "bounded4-motion candidate; owner style review pending",
-    "source": "archive/pixel-style-001/ashfang-pixel-style.blend",
-    "export": "exports/pixel-proof-001",
-    "review": "reviews/pixel-style-001/review.md",
+    "status": "four-motion pixel style candidate; TierI visual size owner-approved",
+    "source": "archive/pixel-style-002/ashfang-pixel-style.blend",
+    "export": "exports/pixel-proof-002",
+    "review": "reviews/pixel-style-002/review.md",
     "route": "/arena-lab/ashfang/",
     "motions": [
       "idle",
@@ -147,30 +147,31 @@
       "fly",
       "roar"
     ],
-    "nativeFrames": 3264,
+    "nativeFrames": 1632,
     "nativeRenderDensities": [
-      48,
-      96,
-      128,
-      256
+      256,
+      512
     ],
     "directions": 8,
-    "fixedPaletteColors": 21,
-    "usedColors": 18,
-    "targetGroundedViewportWidth": [
-      0.15,
-      0.25
+    "fixedPaletteEntries": 64,
+    "usedColors": 52,
+    "phoneLogicalViewport": [
+      402,
+      874
     ],
-    "calibrationFraction": 0.2,
-    "browserValidation": "reviews/pixel-style-001/browser/browser-report.json",
-    "ownerAccepted": false,
+    "manualSizeRange": [
+      1,
+      6
+    ],
+    "approvedTierIPreviewSetting": 2,
+    "approvedSizeCalibration": "tier-I-scale-baseline.json",
+    "sizeApprovedByOwner": true,
+    "artStyleApprovedByOwner": false,
     "runtimeIntegrated": false,
     "remaining": [
-      "Owner style review and any pixel touchups",
-      "After style approval: process remaining37 actions",
-      "Actual Hunt and physical device integration"
-    ],
-    "remoteReceipt": "reviews/pixel-style-001/remote-receipt.json",
-    "remoteVerified": true
+      "Owner pixel-style review/touchups",
+      "After style approval: remaining37 actions",
+      "Actual Hunt and physical-device integration"
+    ]
   }
 }

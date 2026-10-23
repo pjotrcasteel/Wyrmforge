@@ -1,3 +1,15 @@
+# Current owner-approved TierI size calibration
+
+The owner selected the **2x preview setting as rendered in the saved screenshot**, not a literal measurement of the complete tail/body silhouette. `tier-I-scale-baseline.json` is the exact size reference: worldCell448.53076140099125,0.75 game camera,402x874 logical phone viewport. Future tier multipliers apply to this baseline. The slider remains1–6x; default/reset/manual-off use2x. Its chosen value is saved locally and reflected in the shareable `?size=` URL parameter. The obsolete `bossSize` query is ignored/migrated. No per-frame/per-facing sprite fitting.
+
+The iPhone17Pro-shaped preview uses a1206x2622 backing canvas and approximate rounded-frame/island chrome, based on Apple display specs linked in the page. This is browser sizing review, not physical iPhone acceptance. Camera zoom affects all actors/ground together; the game-camera view stays fixed while the slider changes only the boss.
+
+Current fine/bold source002 uses native512/256 renders and64 fixed palette entries;52 used.1632 exact source frames and96 atlas sheets cover idle,claw_right,fly,roar in all8 views, plus source003 comparison. It has not converted the remaining37 actions. Pixel-style approval is separate from the newly approved size.
+
+---
+
+## Earlier correction notes (superseded sizing trials)
+
 # Corrective large-boss2.5D pixel proof002
 
 Latest owner direction supersedes the earlier viewport quota: the grounded body must read roughly5x the actual player's visible height. Use42px mage reference height and the SE idle head/chest/pelvis/limb projected span (exclude long tail and atlas padding). One world scale applies to every facing and animation. Camera zoom transforms the ground, mage, Hollow and boss together. Arena view keeps a massive boss; Fit whole dragon zooms the complete scene without changing relative sizes.
