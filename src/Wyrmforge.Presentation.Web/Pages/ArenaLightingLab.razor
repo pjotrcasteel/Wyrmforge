@@ -72,9 +72,11 @@
         </section>
         <aside class="lighting-inspector">
             <h2>Original tree candidates</h2>
-            <p>Use <a href="https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39959218973">
-                the Step 3 render artifact</a> from the source-only asset PR. Select each transparent
-                <code>*-candidate.png</code> after extracting the archive. Images stay in this browser tab.</p>
+            <p>Use <a href="https://github.com/pjotrcasteel/Wyrmforge/actions/runs/40022049054">
+                the new Step 3 render artifact with real normal maps</a> from the source-only asset PR.
+                Extract its original <code>*-candidate.png</code> and matching
+                <code>*-camera-normals.png</code>. Select the candidate PNG first,
+                then its normal pass. Nothing is uploaded or promoted into Hunts.</p>
             <label>Ancient oak PNG
                 <input id="oak-png" type="file" accept="image/png,image/webp" @ref="oakPicker" @onchange="LoadOak" />
             </label>
