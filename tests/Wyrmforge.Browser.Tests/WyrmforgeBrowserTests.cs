@@ -31,7 +31,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
         await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
         await Expect(painting).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/fire\.png"));
-        Assert.IsTrue(await painting.EvaluateAsync<bool>("img => img.complete && img.naturalWidth === 1672"));
+        await Page.WaitForFunctionAsync(@"() => {
+            const image = document.querySelector('[data-nexus-school-art]');
+            return image?.complete && image.naturalWidth === 1672;
+        }");
         await Expect(scene.Locator("[data-nexus-school-mastery]")).ToHaveCountAsync(0);
         await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
         await ScreenshotAsync($"nexus-fire-baked-unlearned-{width}.png");
@@ -72,6 +75,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
         await Expect(asset).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/" + key + @"\.png"));
         await Expect(asset).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const image = document.querySelector('[data-nexus-school-art]');
+            return image?.complete && image.naturalWidth === 1672;
+        }");
         Assert.IsTrue(await asset.EvaluateAsync<bool>(@"img => {
             if (!img.complete || img.naturalWidth !== 1672 || img.naturalHeight !== 941) return false;
             const canvas = document.createElement('canvas');
@@ -112,8 +119,10 @@ public sealed class WyrmforgeBrowserTests : PageTest
             await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
             await Expect(scene.Locator("[data-nexus-school-art]")).ToHaveAttributeAsync(
                 "src", new Regex(@"nexus-schools/" + key + @"\.png"));
-            Assert.IsTrue(await scene.Locator("[data-nexus-school-art]").EvaluateAsync<bool>(
-                "img => img.complete && img.naturalWidth === 1672"));
+            await Page.WaitForFunctionAsync(@"() => {
+                const image = document.querySelector('[data-nexus-school-art]');
+                return image?.complete && image.naturalWidth === 1672;
+            }");
             await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
             await ScreenshotAsync($"nexus-debug-{key}-390.png");
         }
