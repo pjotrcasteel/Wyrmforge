@@ -9,7 +9,7 @@ import { groundFoundationBoard, FOUNDATION_COLUMNS, FOUNDATION_ROWS,
 import { resolveSceneLighting, contactShadowPlan, drawContactShadow,
     sortSpritesByFoot, spriteFootPlacement } from './arena-scene-lighting.js';
 import { makeTreeLightingAssets, treeFirelightPlan, treeProjectedSilhouettePlan,
-    drawTreeCastShadow, drawFirelitTree } from './arena-tree-firelighting.js';
+    drawTreeCastShadow, drawFirelitTree, attachTreeCameraNormalMap } from './arena-tree-firelighting.js';
 import { gothicNightPlan, drawGothicNight } from './arena-night-lighting.js';
 import { calibrationEmitters, drawCalibrationEmitterCores } from './arena-lighting-calibration.js';
 import { litWetMaterialPlan, drawLitWetMaterial, drawLocalNightMist } from './arena-l3-material-atmosphere.js';
@@ -133,6 +133,7 @@ function render(state) {
     canvas.dataset.lightingShadows = String(state.light.enabled && state.light.shadows ? sprites.length : 0);
     canvas.dataset.treeCastShadows = String(castShadows);
     canvas.dataset.treeSelfLighting = String(night ? sprites.length : 0);
+    canvas.dataset.treeNormalMaps = String(Object.values(state.images).filter(image => image.assets?.normals).length);
     canvas.dataset.lightingApprovedGround = String(Boolean(state.ground));
     canvas.dataset.lightingAnchors = String(state.showAnchors);
     canvas.dataset.lightingPhysicsObjects = '0';
@@ -324,13 +325,40 @@ export async function loadArenaLightingSprite(canvas, input, slot) {
     }
 }
 
+// Optional matching 3D normal PNG is selected locally from Step-3 Blender
+// artifact; it never replaces or recolors the original candidate RGBA image.
+export async function loadArenaLightingNormal(canvas, input, slot) {
+    const state = states.get(canvas);
+    const original = state?.images[slot];
+    const file = input?.files?.[0];
+    if (!original || !file || file.type !== 'image/png' || file.size > 8 * 1024 * 1024)
+        return false;
+    const url = URL.createObjectURL(file);
+    try {
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        if (!state.alive || image.naturalWidth !== original.image.naturalWidth ||
+            image.naturalHeight !== original.image.naturalHeight) return false;
+        const attached = attachTreeCameraNormalMap(original.assets, image, original.crop);
+        if (attached) schedule(state);
+        return attached;
+    } catch {
+        return false;
+    } finally {
+        URL.revokeObjectURL(url);
+    }
+}
+
 export function readArenaLightingDiagnostics(canvas) {
     const s = states.get(canvas);
     if (!s) return null;
     return { ready: Boolean(s.ground), seed: s.seed, light: s.light,
         demoFireball: s.demoFireball, demoTorch: s.demoTorch, wetResponse: s.wetResponse, mist: s.mist,
         sprites: Object.keys(s.images).sort(), showAnchors: s.showAnchors, physicsObjects: 0, legacyAssets: 0,
-        treeLighting: 'directional-firelit-billboards', treeOcclusion: 'source-alpha-projection',
+        treeLighting: 'source-normal-map-or-billboard-fallback',
+        sourceNormalMaps: Object.keys(s.images).filter(key => s.images[key].assets?.normals).sort(),
+        treeOcclusion: 'source-alpha-projection',
         camera: { ...s.camera }, world: { ...world }, groundRecipe: 'approved-forest-trails' };
 }
 
