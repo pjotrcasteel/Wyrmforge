@@ -17,6 +17,9 @@
 
 - **Ashfang performance direction (owner feedback, 23 October 2026):** the first complete motion library reads too weak. Retain the appearance/anatomy, but revise all motion for substantially exaggerated animal aggression, strong anticipation, explosive acceleration and weighted follow-through. Claws raise and rake diagonally toward the opposite paw with claws outward; bite reaches forward and clamps; roar uses the whole body; takeoff pivots/squats onto the hind legs then pushes off with a rapid wing downstroke; running is a threatening bound; deaths have a dramatic struggle and collapse. Irregular-looking attention snaps remain authored and target-focused. This direction does not approve a motion revision or change C# gameplay authority.
 
+- **Ashfang flight/finish refinement (owner feedback, 23 October 2026):** retain foundation 002's stronger motion and approved appearance. Roar points the open jaws skyward without a hop. Takeoff spreads wings from player frame 7, looks up at frame 10, drives two rapid downstrokes around frames 11 and 13, and launches into an upright arrow silhouette around frames 12–13 (12 fps review). All aerial states face forward. Landing brakes with the wings, touches rear feet first, then pivots onto the wing forelimbs. Death gives a final skyward roar, collapses without a hop, and cools the emissive magma/eyes to black. These are source-art requirements; runtime acceptance remains separate.
+
+
 ## Historical approved world-art gallery (not a current town layout specification)
 
 ### Approved world concept â€” 14 October 2026

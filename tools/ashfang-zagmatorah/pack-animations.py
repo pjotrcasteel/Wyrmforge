@@ -15,7 +15,7 @@ assert header and header['cell']==512
 expected_dirs=['E','SE','S','SW','W','NW','N','NE'];assert header['directions']==expected_dirs
 if not a.partial:assert set(sources)==set(specs['clips']),('Missing clips',set(specs['clips'])-set(sources))
 manifest={'schema':'wyrmforge-directional-atlas/1','name':'Ashfang Tier I — animation foundation','creatureId':'ashfang','performanceRevision':specs.get('performanceRevision',1),'rigFamily':'zagmatorah-112/v1','sourceSha256':header['sourceSha256'],'sourceForward':'-X','up':'+Z','directions':expected_dirs,'directionAngles':header['directionAngles'],'fps':12,'sourceFps':24,'cell':256,'masterCell':512,'orthoScaleModelUnits':22,'cameraCenter':header.get('cameraCenter',[3.8,0,2.4]),'cameraElevation':header.get('cameraElevation',35.26438968),'modelScale':header['modelScale'],'complete':not a.partial and len(sources)==len(specs['clips']),'ownerAcceptedMotion':False,'runtimeIntegrated':False,'clips':{}}
-if specs.get('performanceRevision',1)>1:manifest['name']='Ashfang | aggressive performance 002'
+if specs.get('performanceRevision',1)>1:manifest['name']='Ashfang | skyward flight and cooling 003' if specs.get('performanceRevision',1)>2 else 'Ashfang | aggressive performance 002'
 qa={'sourceHash':header['sourceSha256'],'expectedClips':len(specs['clips']),'clips':{},'files':{},'frames':0,'clippedFrames':[],'emptyFrames':[],'masterPixelChecks':0}
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def vector(v,factor):return [round(x*factor,5) for x in v]
@@ -30,7 +30,7 @@ for name in specs['clips']:
    if bbox is None:qa['emptyFrames'].append(str(path));continue
    if min(bbox[:2])<=1 or max(bbox[2:])>=511:qa['clippedFrames'].append(str(path))
    x=(i%columns)*512;y=(i//columns)*512;master.paste(im,(x,y));small=im.resize((256,256),Image.Resampling.LANCZOS);runtime.paste(small,(x//2,y//2));direction2d=r['mouthDirection2D'];length=math.hypot(*direction2d)
-   frames.append({'index':i,'sourceFrame':r['sourceFrame'],'time':round((r['sourceFrame']-1)/24,6),'rect':[x//2,y//2,256,256],'masterRect':[x,y,512,512],'pivot':vector(r['pivot'],.5),'attachments':{key:vector(value,.5) for key,value in r['attachments'].items()},'mouthDirection2D':vector(direction2d,1/length if length else 0),'rootMotion':r['rootMotion'],'rootHeight':r['rootHeight'],'footContacts':r['footContacts'],'masterPixelSha256':h})
+   frames.append({'index':i,'sourceFrame':r['sourceFrame'],'time':round((r['sourceFrame']-1)/24,6),'rect':[x//2,y//2,256,256],'masterRect':[x,y,512,512],'pivot':vector(r['pivot'],.5),'attachments':{key:vector(value,.5) for key,value in r['attachments'].items()},'mouthDirection2D':vector(direction2d,1/length if length else 0),'rootMotion':r['rootMotion'],'rootHeight':r['rootHeight'],'magmaLife':r.get('magmaLife',1),'footContacts':r['footContacts'],'masterPixelSha256':h})
   master.save(master_path,compress_level=3);runtime.save(runtime_path,compress_level=3)
   if a.verify:
    saved=Image.open(master_path).convert('RGBA')

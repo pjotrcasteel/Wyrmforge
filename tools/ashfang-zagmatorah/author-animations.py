@@ -18,6 +18,19 @@ for modifier in body.modifiers:
  if modifier.type=='ARMATURE':modifier.object=rig
 if body.parent==solver:body.parent=rig
 rest={b.name:b.matrix_local.copy() for b in solver.data.bones};restq={k:v.to_quaternion() for k,v in rest.items()};helpers=[];targets={};ik=[];ground_cons=[];orientations=[];wing_cons=[];poles=[]
+# The creator's open-wing pose looks sideways. Keep its wing/leg silhouette,
+# but use a centered, level gaze for every flight-related action.
+for name in ('Neck03','Neck02','Neck01','Head','UpperHead','LowerHead'):
+ loc,q,scale=flight[name];flight[name]=(loc,Quaternion(),scale)
+loc,q,scale=flight['Head'];flight['Head']=(loc,restq['Head'].inverted()@Quaternion((0,1,0),.42)@restq['Head'],scale)
+rig['magmaLife']=1.0;rig.id_properties_ui('magmaLife').update(min=0,max=1,description='Living magma intensity; death actions cool to black.')
+for material in body.data.materials:
+ if not material.use_nodes or material.name not in ('Ashfang volcanic charcoal scales','DragonEye'):continue
+ tree=material.node_tree;bs=next(n for n in tree.nodes if n.type=='BSDF_PRINCIPLED');socket=bs.inputs['Emission Strength'];original=socket.links[0].from_socket if socket.is_linked else None
+ fade=tree.nodes.new('ShaderNodeMath');fade.name='Death cooling - magma life';fade.operation='MULTIPLY';fade.inputs[0].default_value=socket.default_value
+ if original:tree.links.new(original,fade.inputs[0])
+ fade.inputs[1].default_value=1;curve=fade.inputs[1].driver_add('default_value');curve.driver.type='AVERAGE';variable=curve.driver.variables.new();variable.name='life';variable.type='SINGLE_PROP';variable.targets[0].id=rig;variable.targets[0].data_path='["magmaLife"]'
+ tree.links.new(fade.outputs[0],socket)
 for side in ('l','r'):
  for limb,bone,count in [('fore','Arm_',4),('hind','FeetConnection_',5)]:
   name=bone+side;pb=solver.pose.bones[name];target=bpy.data.objects.new('Temporary '+limb+' '+side,None);scene.collection.objects.link(target);target.location=pb.bone.tail_local.copy()
@@ -53,12 +66,13 @@ def rootmove(v):solver.pose.bones['Spine03'].location+=restq['Spine03'].inverted
 # Performance pass: bigger silhouettes, compressed attack spacing, slower weight recovery.
 # Preserve authored anatomy and contact solutions; do not multiply every joint blindly.
 PERFORMANCE_INTERVALS={'run':28,'run_start':24,'run_stop':28,'roar':80,'takeoff':56,'death':96,'death_alt':104}
-PERFORMANCE_TRAVEL={'walk':3.0,'stalk':2.0,'run':5.4,'pounce':8.0}
+PERFORMANCE_TRAVEL={'walk':3.0,'stalk':2.0,'run':5.4,'pounce':8.0,'land':4.0}
 SPECS=[(n,PERFORMANCE_INTERVALS.get(n,i),loop,PERFORMANCE_TRAVEL.get(n,travel),
         {'hit':.48} if n in ('claw_left','claw_right') else {'hit':[.33,.67]} if n=='claw_combo' else
         {'hit':.45} if n=='bite' else {'voice':.30} if n=='roar' else
-        {'liftoff':.38,'downstroke':.46} if n=='takeoff' else
-        {'collapse':.56,'hold':.85} if n.startswith('death') else events)
+        {'wing_spread':6/28,'look_up':9/28,'downstroke':[10/28,12/28],'liftoff':10/28,'arrow_up':12/28} if n=='takeoff' else
+        {'braking_downstroke':.40,'hind_touchdown':.64,'fore_touchdown':.84,'touchdown':.64} if n=='land' else
+        {'voice':.22,'collapse':.62,'hold':.85,'cool_start':.30,'cool_end':.82} if n.startswith('death') else events)
        for n,i,loop,travel,events in SPECS]
 
 def pathpose(t,keys):
@@ -69,17 +83,17 @@ def setpose(name,t):
  for b in solver.pose.bones:b.location=(0,0,0);b.rotation_quaternion=(1,0,0,0);b.scale=(1,1,1)
  for orient,home_rotation in orientations:orient.rotation_quaternion=home_rotation
  life=1-smooth((t-.65)/.2) if name.startswith('death') else 1
- wave=math.sin(math.tau*t);air=name in ('fly','hover','glide','bank_left','bank_right','air_breath');blend=1 if air else (smooth((t-.12)/.37) if name=='takeoff' else 1-smooth(t/.6) if name=='land' else 0)
+ wave=math.sin(math.tau*t);air=name in ('fly','hover','glide','bank_left','bank_right','air_breath');blend=1 if air else (smooth((t-6/28)/.14) if name=='takeoff' else 1-smooth((t-.5)/.42) if name=='land' else 0)
  altitude=0
  if blend:
   for b in solver.pose.bones:
    loc,q,scale=flight[b.name];b.rotation_quaternion=Quaternion().slerp(q,blend)
- altitude=5.0 if air else 5.0*(1-(1-max(0,min(1,(t-.38)/.15)))**2) if name=='takeoff' else 5.0*(1-smooth((t-.35)/.5))+1.4*math.sin(math.pi*blend) if name=='land' else 0
+ altitude=5.0 if air else pathpose(t,[(0,0),(9/28,0),(10/28,2.6),(11/28,6.7),(12/28,8.5),(.52,8.5),(.84,5),(1,5)]) if name=='takeoff' else pathpose(t,[(0,5),(.2,4.9),(.4,4.3),(.56,1),(.64,0),(.72,-.32),(.86,-.12),(1,0)]) if name=='land' else 0
  if altitude:rootmove((0,0,altitude))
  for con in ground_cons:con.influence=1-max(blend,smooth(altitude/.8))
  for limbside,(target,home) in targets.items():target.location=home
  # Breathing, alertness and a delayed tail wave never substitute for limb gait.
- rootmove((0,0,life*(.05 if not air else .18)*math.sin(math.tau*t)))
+ if name not in ('roar','death','death_alt'):rootmove((0,0,life*(.05 if not air else .18)*math.sin(math.tau*t)))
  for i in range(1,11):rot('Tail%02d'%i,(0,0,1),life*(.022+.003*i)*math.sin(math.tau*t-i*.4))
  for side,sgn in [('l',-1),('r',1)]:
   for digit,angle in [('01',.5),('02',.28),('03',.12)]:rot('Wing'+digit+'01_'+side,(1,0,0),sgn*angle*(1-blend))
@@ -144,8 +158,8 @@ def setpose(name,t):
   for i in range(1,11):rot('Tail%02d'%i,(0,0,1),sign*(.18+.023*i)*bell(t,max(0,.02+i*.015),.46+i*.015,1))
  elif name=='roar':
   inhale=bell(t,0,.22,.35);power=pathpose(t,[(0,0),(.20,.15),(.31,1),(.67,.94),(1,0)]);pulse=math.sin(math.tau*(t-.30)*9)*bell(t,.28,.46,.8)
-  rootmove((.38*inhale-.22*power,0,-.25*inhale+.30*power));rot('Spine01',(0,1,0),.23*power);rot('Spine02',(0,1,0),.12*power)
-  rot('Neck03',(0,1,0),.43*power);rot('Neck02',(0,1,0),.25*power);rot('Head',(0,1,0),-.36*power+.035*pulse);rot('Neck01',(0,0,1),.055*pulse)
+  rootmove((.38*inhale-.22*power,0,-.25*inhale));rot('Spine01',(0,1,0),.23*power);rot('Spine02',(0,1,0),.12*power)
+  rot('Neck03',(0,1,0),.43*power);rot('Neck02',(0,1,0),.25*power);rot('Head',(0,1,0),.65*power+.035*pulse);rot('Neck01',(0,0,1),.055*pulse)
   rot('LowerHead',(0,1,0),-1.05*power-.035*pulse);rot('Tongue01',(0,1,0),-.22*power)
   for side,sign in [('l',-1),('r',1)]:target,home=targets[('fore',side)];target.location=home+Vector((.15,sign*.25,1.1*power))
  elif name.startswith('breath') or name=='air_breath':
@@ -154,32 +168,41 @@ def setpose(name,t):
   if name=='breath_sweep':rot('Neck03',(0,0,1),.62*math.sin(math.pi*(t-.5))*v);rot('Neck01',(0,0,1),.38*math.sin(math.pi*(t-.5))*v)
  if blend:
   flap=0 if name in ('glide','bank_left','bank_right') else math.sin(math.tau*t)
-  if name=='takeoff':flap=pathpose(t,[(0,0),(.31,1),(.39,1),(.48,-1),(.61,.7),(.72,-.65),(.84,.45),(1,0)])
+  if name=='takeoff':flap=pathpose(t,[(0,0),(9/28,1),(10/28,-1),(11/28,.9),(12/28,-1),(.52,.6),(.63,-.45),(.78,.2),(1,0)])
+  if name=='land':flap=pathpose(t,[(0,0),(.24,.8),(.32,1),(.40,-.85),(.48,.65),(.61,.3),(.72,0),(1,0)])
   for side,sgn in [('l',-1),('r',1)]:
    rot('UpperArm_'+side,(1,0,0),sgn*.92*flap*blend);rot('ForeArm_'+side,(1,0,0),-sgn*.30*max(0,flap)*blend);rot('Arm_'+side,(1,0,0),-sgn*.24*math.sin(math.tau*t-.5)*blend)
   if name.startswith('bank_'):rot('Spine03',(1,0,0),(.3 if name.endswith('left') else -.3)*bell(t,0,.5,1))
  if name=='takeoff':
-  load=bell(t,0,.29,.44);rear=bell(t,.05,.31,.67);rootmove((.35*load,0,-.62*load));rot('Spine03',(0,1,0),.34*rear);rot('Tail01',(0,1,0),-.32*rear)
-  for con in ground_cons:con.influence=1-smooth((t-.34)/.10)
+  load=bell(t,0,.29,10/28);rear=pathpose(t,[(0,0),(.15,.16),(9/28,.50),(11/28,1.05),(12/28,1.28),(.52,1.28),(.84,0),(1,0)]);rootmove((.35*load,0,-.62*load));rot('Spine03',(0,1,0),rear);rot('Tail01',(0,1,0),-rear*(1-smooth((t-.345)/.11)))
+  rot('Head',(0,1,0),.60*bell(t,.28,9/28,.45))
+  for con in ground_cons:con.influence=1-smooth((t-.23)/.055)
   for foot in ('Feet_l','Feet_r','FeetConnection_l','FeetConnection_r'):
-   for con in solver.pose.bones[foot].constraints:con.influence=1-smooth((t-.385)/.075)
-  for con in wing_cons:con.influence=1-smooth((t-.34)/.12)
-  for side in ('l','r'):target,home=targets[('fore',side)];target.location=home+Vector((.25*rear,0,1.2*rear))
- if name=='land':rootmove((0,0,-.48*bell(t,.57,.74,.98)))
+   for con in solver.pose.bones[foot].constraints:con.influence=1-smooth((t-.325)/.04)
+  for con in wing_cons:con.influence=1-smooth((t-.30)/.085)
+  for side in ('l','r'):target,home=targets[('fore',side)];target.location=home+Vector((.25*load,0,1.4*bell(t,.12,.31,.40)))
+ if name=='land':
+  brake=bell(t,.12,.48,.90);rot('Spine03',(0,1,0),.50*brake);rot('Tail01',(0,1,0),-.48*brake);rot('Head',(0,1,0),-.30*brake)
+  for con in ground_cons:con.influence=smooth((t-.73)/.14)
+  for foot in ('Feet_l','Feet_r','FeetConnection_l','FeetConnection_r'):
+   for con in solver.pose.bones[foot].constraints:con.influence=smooth((t-.53)/.11)
+  for con in wing_cons:con.influence=smooth((t-.48)/.15)
+  for side in ('l','r'):target,home=targets[('fore',side)];target.location=home+Vector((0,0,1.4*(1-smooth((t-.64)/.20))))
  if name.startswith('hit_') or name in ('stagger','recover'):
   v=bell(t,0,.18,1) if name.startswith('hit_') else bell(t,0,.38,1) if name=='stagger' else 1-smooth(t)
   rot('Spine01',(0,1,0),-.23*v);rot('Neck03',(0,1,0),.36*v);rootmove((.38*v,0,-.28*v))
   if name in ('hit_left','hit_right'):rot('Neck02',(0,0,1),(.25 if name=='hit_left' else -.25)*v)
  if name.startswith('death'):
-  sign=1 if name=='death' else -1;shock=bell(t,0,.11,.27);rear=bell(t,.10,.29,.53);v=smooth((t-.38)/.22);settle=bell(t,.57,.64,.82)
+  sign=1 if name=='death' else -1;shock=bell(t,0,.07,.16);rear=pathpose(t,[(0,0),(.12,.65),(.22,1),(.34,1),(.47,0),(1,0)]);v=smooth((t-.40)/.22);settle=bell(t,.60,.68,.82)
   for con in ground_cons:con.influence=1-v
-  rootmove((.35*shock-.45*v,0,.55*rear-1.45*v+.14*settle));rot('Spine03',(1,0,0),sign*(.08*shock+.80*v-.07*settle));rot('Spine03',(0,1,0),.22*rear)
-  rot('Spine01',(0,1,0),.17*rear-.12*v);rot('Neck03',(0,1,0),.42*rear-.35*v);rot('Neck02',(0,0,1),sign*(.18*shock+.22*rear));rot('LowerHead',(0,1,0),-.8*rear-.22*v)
+  rootmove((.35*shock-.45*v,0,-1.45*v));rot('Spine03',(1,0,0),sign*(.08*shock+.80*v-.04*settle));rot('Spine03',(0,1,0),.22*rear)
+  rot('Spine01',(0,1,0),.23*rear-.12*v);rot('Spine02',(0,1,0),.12*rear);rot('Neck03',(0,1,0),.43*rear-.35*v);rot('Neck02',(0,1,0),.25*rear);rot('Head',(0,1,0),.65*rear);rot('LowerHead',(0,1,0),-1.05*rear-.22*v);rot('Tongue01',(0,1,0),-.22*rear)
+  for side in ('l','r'):target,home=targets[('fore',side)];target.location=home+Vector((0,0,.8*rear))
   for side,sgn in [('l',-1),('r',1)]:
    rot('UpperLeg_'+side,(0,1,0),1.05*v);rot('ForeLeg_'+side,(0,1,0),-1.95*v);rot('FeetConnection_'+side,(0,1,0),.9*v);rot('UpperArm_'+side,(1,0,0),sgn*(.85*rear+.65*v));rot('ForeArm_'+side,(0,1,0),-.35*rear+.6*v);rot('Arm_'+side,(0,1,0),.6*v)
   for i in range(1,11):rot('Tail%02d'%i,(0,0,1),-sign*.055*v)
-  for con in wing_cons:con.influence=1-.65*rear
-  rot('Tail01',(0,1,0),-.40*v);rot('Tail04',(0,1,0),.40*v)
+  for con in wing_cons:con.influence=1
+  rot('Tail01',(0,1,0),-.22*rear-.40*v);rot('Tail04',(0,1,0),.10*v)
  if not name.startswith('death'):
   dz=(restq['Spine03']@solver.pose.bones['Spine03'].location).z;rot('Tail01',(0,1,0),(-.10-max(0,-dz)*.35)*(1-blend));rot('Tail02',(0,1,0),.04*(1-blend))
  # Predatory attention: authored, uneven impulses with a clear target focus.
@@ -200,7 +223,7 @@ def setpose(name,t):
  bpy.context.view_layer.update()
  for pole,parent_name,local in poles:pole.location=solver.pose.bones[parent_name].matrix@local
  bpy.context.view_layer.update()
-selected=SPECS if a.clips=='all' else [s for s in SPECS if s[0] in a.clips.split(',')];report={'source':str(source),'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fps':24,'performanceRevision':2,'cameraCenter':[3.8,0,5.4],'clips':{},'rigDeformBones':112,'runtimeIntegrated':False,'motionAcceptedByOwner':False};start=time.time()
+selected=SPECS if a.clips=='all' else [s for s in SPECS if s[0] in a.clips.split(',')];report={'source':str(source),'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),'fps':24,'performanceRevision':3,'cameraCenter':[3.8,0,5.4],'clips':{},'rigDeformBones':112,'runtimeIntegrated':False,'motionAcceptedByOwner':False};start=time.time()
 for name,intervals,loop,travel,events in selected:
  action=bpy.data.actions.new('Ashfang|'+name);action.use_fake_user=True;action['loop']=loop;action['durationSeconds']=intervals/24;action['travelPerCycle']=travel;action['eventsJson']=json.dumps(events)
  for event,times in events.items():
@@ -208,7 +231,7 @@ for name,intervals,loop,travel,events in selected:
    if isinstance(phase,(int,float)):marker=action.pose_markers.new(event+('_'+str(number+1) if isinstance(times,list) else ''));marker.frame=round(phase*intervals)+1
  rig.animation_data_create();rig.animation_data.action=action;contact_errors=[];positions=[]
  for frame in range(intervals+1):
-  t=frame/intervals;setpose(name,t);matrices={b.name:b.matrix.copy() for b in solver.pose.bones}
+  t=frame/intervals;rig['magmaLife']=1-smooth((t-.30)/.52) if name.startswith('death') else 1.;rig.keyframe_insert(data_path='["magmaLife"]',frame=frame+1);setpose(name,t);matrices={b.name:b.matrix.copy() for b in solver.pose.bones}
   for pb in rig.pose.bones:
    kwargs={'matrix':matrices[pb.name],'matrix_local':pb.bone.matrix_local,'invert':True}
    if pb.parent:kwargs.update(parent_matrix=matrices[pb.parent.name],parent_matrix_local=pb.parent.bone.matrix_local)
@@ -230,7 +253,7 @@ for name,intervals,loop,travel,events in selected:
     if bag:
      for curve in bag.fcurves:
       for key in curve.keyframe_points:key.interpolation='LINEAR'
- report['clips'][name]={'action':action.name,'sourceFrames':intervals+1,'intervals':intervals,'duration':intervals/24,'loop':loop,'travelPerCycle':travel,'events':events,'headingChangeDegrees':-45 if name=='turn_left' else 45 if name=='turn_right' else 0,'rootMotion':[travel*(f/intervals if name!='pounce' else smooth((f/intervals-.3)/.38)) for f in range(intervals+1)],'stanceDuty':.32 if name=='run' else .7,'phaseOffsets':{'foreLeft':0,'foreRight':.06,'hindLeft':.5,'hindRight':.56} if name=='run' else {'foreLeft':0,'foreRight':.5,'hindLeft':.75,'hindRight':.25},'maxIKTargetError':max(contact_errors,default=0),'landmarks':positions}
+ report['clips'][name]={'action':action.name,'sourceFrames':intervals+1,'intervals':intervals,'duration':intervals/24,'loop':loop,'travelPerCycle':travel,'events':events,'headingChangeDegrees':-45 if name=='turn_left' else 45 if name=='turn_right' else 0,'rootMotion':[travel*(smooth((f/intervals-.3)/.38) if name=='pounce' else 1-(1-min(1,(f/intervals)/.64))**3 if name=='land' else f/intervals) for f in range(intervals+1)],'magmaLife':[1-smooth((f/intervals-.30)/.52) if name.startswith('death') else 1. for f in range(intervals+1)],'stanceDuty':.32 if name=='run' else .7,'phaseOffsets':{'foreLeft':0,'foreRight':.06,'hindLeft':.5,'hindRight':.56} if name=='run' else {'foreLeft':0,'foreRight':.5,'hindLeft':.75,'hindRight':.25},'cameraLift':[5*bell(f/intervals,.34,.48,.78) if name=='takeoff' else 0 for f in range(intervals+1)],'maxIKTargetError':max(contact_errors,default=0),'landmarks':positions}
  print('BAKED',name,intervals+1,'IK',max(contact_errors,default=0),flush=True)
 # Temporary IK targets and solver do not ship. Every pose is editable on the original deform hierarchy.
 for ob in helpers+[solver]:bpy.data.objects.remove(ob,do_unlink=True)

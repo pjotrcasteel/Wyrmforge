@@ -10,7 +10,7 @@ def mesh_coords():
 for name,spec in specs['clips'].items():
  action=bpy.data.actions[spec['action']];rig.animation_data.action=action;rig.animation_data.action_slot=action.slots[0];frames=range(1,spec['intervals']+2);boxes=[512,512,0,0];minz=999;hashes=set();contacts={};hold=[];first=None;last=None;maxmotion=0
  for frame in frames:
-  scene.frame_set(frame);bpy.context.view_layer.update();v=mesh_coords();assert np.isfinite(v).all();minz=min(minz,float(v[:,2].min()));hashes.add(hashlib.sha256(v.tobytes()).hexdigest());first=v.copy() if first is None else first;last=v.copy();maxmotion=max(maxmotion,float(np.linalg.norm(v-first,axis=1).max()));q=v-center
+  scene.frame_set(frame);bpy.context.view_layer.update();v=mesh_coords();assert np.isfinite(v).all();minz=min(minz,float(v[:,2].min()));hashes.add(hashlib.sha256(v.tobytes()).hexdigest());first=v.copy() if first is None else first;last=v.copy();maxmotion=max(maxmotion,float(np.linalg.norm(v-first,axis=1).max()));q=v-(center+np.array([0,0,spec.get('cameraLift',[0]*spec['sourceFrames'])[frame-1]]))
   for right,up in basis:
    px=256+q@right*512/22;py=256-q@up*512/22;boxes=[min(boxes[0],float(px.min())),min(boxes[1],float(py.min())),max(boxes[2],float(px.max())),max(boxes[3],float(py.max()))]
   t=(frame-1)/spec['intervals']
