@@ -14,7 +14,7 @@
 
 ## Arena Rebuild V2 — shared lighting before further forest asset production (LOCKED, 23 October 2026)
 
-**Decision (approved design direction; NOT implemented):** The Wet Forest must gain a **unified lighting and grounding foundation before bulk production/integration of new vegetation, rocks, logs and other arena props**. First use the two original, independently editable Step-3 tree candidates (ancient oak and dead elm) as test subjects. Do not mistake art prototypes or an off-line composition for live Hunt renderer acceptance.
+**Decision (LOCKED, refined 23 October 2026):** Before producing/integrating additional Wet Forest vegetation, rocks, logs and props, **prove genuinely occluded GPU lighting on real tree geometry**, beginning with one original ancient oak under one moving Fireball. The dead elm verifies the second test asset. Near-black night and real directional, internal *leaf-on-leaf / branch-on-trunk* shadows are required. Earlier L0–L3 ground/night experiments exist; they are not evidence that a proper lighting engine or dynamic foliage self-shadowing has shipped. Full implementation guide: [real-geometry lighting engine](../design/arena-real-geometry-light-engine.md).
 
 **Why now:** The original tree renders looked pasted over the approved ground. This is partly because temporary mobile review compositions repeat raw 112-pixel source swatches and do **not** exercise the Arena Materials Lab's actual seamless-material compositor. Even in the real arena, uncoordinated ambient color, direction, contact shadow, wet-surface response and depth will cause disconnected objects. A lighting system **cannot fix** incorrect perspective, tree silhouettes, feet/anchors, tree scale, alpha quality or material painting; those remain separate art acceptance gates.
 
@@ -30,6 +30,19 @@
 
 **Implementation evidence belongs in feature PRs.** A dark Canvas demo is not proof of actual iOS/Android frame pacing, correct source art or owner-accepted final night composition. Preserve the existing L0–L5 acceptance gates and do not rush additional forest assets.
 
+### Proper lighting engine and foliage self-shadowing — LOCKED, 23 October 2026
+
+**Non-negotiable acceptance change:** A normal map says which direction a leaf/bark pixel faces; it **does not** say whether another leaf or branch blocks the light. A flat alpha shadow projected onto the ground likewise does **not** count as canopy self-shadowing. The old Canvas vignette, gradient and billboard experiments are insufficient as the lighting engine. **Do not add more generic color overlays to disguise this limitation.**
+
+- **Real geometry first, one tree:** retain the original editable Blender `.blend` ancient oak (and later dead elm). Export simplified trunk/branch geometry and alpha-clipped leaves to a GPU scene with the fixed WyrmForge orthographic 2.5D camera, stable foot/root anchoring and ground coordinates. Source trees remain unapproved until actual visual sign-off. Do not discard editable files.
+- **Three distinct visibility layers:** (1) normals/roughness determine how a surface reacts to direct light; (2) dynamic depth/shadow-map visibility from the Fireball determines **leaf onto leaf, leaf onto branch, branch onto trunk and tree onto ground**; (3) baked AO and optional restrained thin-leaf transmission add believable internal crown depth. Surface normals or ambient occlusion are **not substitutes** for moving shadows.
+- **True light casting:** a moving Fireball (with height above ground) changes both the warm illuminated face and actual occluded regions of the tree, including internal crown, root and ground shadows. Remove fire → no phantom glow or dynamic cast. Preserve natural near-black unlit areas and readable combat warnings.
+- **Renderer strategy:** prototype one scene using actual GPU shadows (isolated WebGL2/Three.js or equivalent proven GPU implementation); evaluate native mobile presentation **after measurement**. The existing C# simulation remains authoritative for real emitters and combat; the browser lighting proof is not an excuse to make WyrmForge a web-only game or port gameplay code into a different runtime without compatibility design.
+- **G1 visual gate:** same camera/seed/approved ground in Fireball **left, right, behind, extinguished and shadow-on/off** shots at 320×568 and 390×844; debug view for normals, light-space depth, shadow visibility and geometry. Leaves must shade **other leaves**, not just the floor. Review visual output and real iOS/Android performance before promoting art.
+- **Scope protection:** keep the approved six ground materials/blends and Step-2 trails; no old trees, roads, camp props, fake collision, invented decorative fire or new production tree replacement. Preserve active #307 source and #327 L4 experiment; neither automatically graduates to a shipped feature.
+
+**Priority:** This **one-tree GPU self-shadowing vertical slice is the next step within the Wet Forest/P5 art workstream**; it does **not** reorder the game's unrelated P0–P9 priorities. [Exact milestones, file/CI instructions and acceptance matrix](../design/arena-real-geometry-light-engine.md).
+
 ### Visual and technical contract
 
 1. **One scene lighting model.** Use a consistent world-space key-light direction, ambient sky/fill color and intensity, camera/projection, exposure and atmospheric palette for **ground, trees, foliage, rocks, player, monsters and effects**. Do not separately bake incompatible daylight directions into each sprite. Authoring/export uses the same defined lighting rig; accepted RGBA cut-outs do not include baked ground patches.
@@ -39,22 +52,24 @@
 5. **Elemental illumination later.** Design a small, bounded dynamic-light input so a Fireball, burning tree, Ashfang's breath, lightning or evolving Wyrm influence can illuminate nearby **ground and entities together**. Support local color, falloff and optional shadow modulation without creating a new authoritative fire/collision system. Tie timing and positions to C# gameplay snapshots, not independent client-side random effects.
 6. **Platform neutrality.** World/arena state, terrain recipes, occluder/contact footprints and light-emitter events remain deterministic and platform-neutral in C# when integrated. Visual renderer adapters may choose Canvas/WebGL, mobile GPU shaders or a native backend **after on-device measurement**. The browser-only Materials/Arena Labs and off-line Python comps are replaceable reviews, not the iOS/Android product architecture. Favor baked/cached static lighting and a tightly bounded set of dynamic lights; test overdraw, memory, frame pacing and battery before choosing the technique.
 
-### Delivery sequence and gates
+### Lighting-engine delivery sequence and gates — supersedes earlier L0–L5 projection-only acceptance
 
-| Step | Output | Acceptance criterion |
+| Gate | Required result | Proof |
 |---|---|---|
-| L0 — baseline | Compare the **real approved ground compositor** with two RGBA tree candidates, using an identical seed, camera and framing at 320×568 and 390×844. | Art and simulation do not change; document current mismatched light, shadows, scale and anchors. A Python quilt composition is not accepted as ground-engine evidence. |
-| L1 — shared ambient/key | A small isolated renderer lighting experiment where ground and both trees use the same scene settings. | Coherent directional and ambient color; a/B toggle; no recoloring or degradation of approved material texture/blends. |
-| L2 — grounding | Correct foot-pivot depth sorting, trunk-only collision *design* and soft contact shadows / local occlusion. | Trees appear attached to wet mud and grass, no square underlays, feet remain visible, actors sort consistently; no new physical obstacles until later authoritative C# integration. |
-| L3 — material/depth | Restrained wet-material response and subtle atmosphere, all optional/tunable. | Same photographed/seeded scene readable at real iPhone and Android gameplay size; spell and monster contrast survives day/night and fog. |
-| L4 — gameplay integration | A source-neutral lighting input from authoritative C# arena snapshots with a renderer-specific implementation and optional Fire/Ashfang light source. | Deterministic lighting-event parameters/replay; lights match actual attacks and burning objects; no gameplay-state mutations from renderer. Profile real iOS/Android devices and confirm acceptable frame time, overdraw, memory and battery. |
-| L5 — resume Step 3+ | Once the first two trees pass integrated ground/lighting visual review, produce more original understory, deadwood, roots, mossy boulders and fallen logs. | Individual artwork and composite review, editable source retained, plausible clearance for Vampire-Survivors-scale hordes, no reuse of rejected old assets. |
+| **G0 — inventory** | Reconcile `main`, #307 Blender source, #327 prototype, accepted camera/ground/assets. | Source SHA/artifact and specific gaps; no new production assets. |
+| **G1 — true foliage self-shadowing (NEXT)** | One original ancient oak as **actual GPU 3D/leaf geometry**, one moving Fireball, dynamic leaf↔leaf↔trunk and ground shadows. | Frozen left/right/behind/off + shadow toggle, light-space depth/visibility debug, portrait screenshots, owner visual check. |
+| **G2 — shared light contract** | Deterministic C# snapshot emitter → GPU renderer adapter for scene-wide ground/actors/vegetation light. | Source positions/lifetimes match simulation; no JS authority changes. |
+| **G3 — material and atmosphere** | Bark roughness, baked AO, restrained two-sided leaf/transmission, wet-material highlights and local mist. | No washed-out Gothic night, glow blankets or plastic trees. |
+| **G4 — portable mobile optimization** | Bounded shadow casters, near/mid/far LOD and native renderer decision based on physical devices. | Real iOS/Android frame pacing, thermal, overdraw, memory, readability. |
+| **G5 — controlled live Hunt integration** | Add visually accepted trees/lighting adapter with C# game authority unchanged. | Fireball/Wyrm/foes, collisions, saves, input, telegraphs and CI/device regression evidence. |
+
+L0–L3 ambient/root/material and #327 billboard-albedo/normal experiments are **historical interim results, not G1 acceptance**. Green CI and a cast outline on the ground are insufficient if the leaves do not cast shadows onto each other. Do not continue widening the Canvas filter approach.
 
 **Preserve approved foundation:** Step 1's six painted materials/blends and Step 2's connected ground-only trail candidates remain protected. The rejected old trees/cobblestone/camp/prop/collision systems must never return through a lighting shortcut. Do not modify live Hunts or treat the new asset foundry as shipped: [source-only Step 3 PR #307](https://github.com/pjotrcasteel/Wyrmforge/pull/307) includes the two review candidates and Blender authoring workflow, not a new lighting engine.
 
 **Acceptance authority:** Automated checks validate file integrity, deterministic settings and regression behavior; visual approval requires the *actual* arena renderer on 320/390px portrait plus physical iOS/Android performance/readability evidence. A passing CI run, appealing image or green pixel-diff check alone does not approve artwork or lighting.
 
-**Change note — 23 Oct 2026:** Owner explicitly prioritized shared environmental lighting and grounding **ahead of additional Wet Forest asset production** after viewing the disconnected tree/ground compositions. This changes the **arena art pipeline order**, not the entire product P0–P9 priority scheme, and does not assert the feature has shipped.
+**Change note — 23 Oct 2026:** First the owner prioritized shared environmental lighting and grounding ahead of further Wet Forest assets. After L3/L4 screenshots still showed flat leaves and missing internal shade, the owner required a **real GPU geometry/shadow-map engine with foliage self-occlusion**, making G1 the next art-workstream milestone. This does not reorder P0–P9 priorities or assert the engine is shipped.
 
 ## Historical approved world-art gallery (not a current town layout specification)
 
