@@ -1,0 +1,9 @@
+# Ashfang native-pixel style proof - in progress
+
+Scope: idle, claw_right, fly and roar in all eight facings; not the full41-action pixel finishing pass and not gameplay integration. Preserve approved foundation003 source/anatomy/motion. Native128px render,256world-pixel rectangle, fixed21-color charcoal/ash and scorched-red/ember ramps, binary alpha, no dithering,35.264-degree elevated orthographic camera. Native look stored in archive/pixel-style-001/ashfang-pixel-style.blend.
+
+References: [Motion Twin artist Thomas Vasseur](https://www.gamedeveloper.com/production/art-design-deep-dive-using-a-3d-pipeline-for-2d-animation-in-i-dead-cells-i-) describes low-resolution cel-shaded exports from reusable3D motion and explicitly notes temporal flicker as a limitation; preserve deformation while inspecting real consecutive frames. [Aseprite palette documentation](https://www.aseprite.org/docs/color-mode/) defines fixed palette/indexed color constraints; use one constant palette for every direction and clip rather than independent per-frame quantization. No artwork/assets copied. Existing game mage, Hollow and approved arena material paintings supply the actual in-repo style/scale references.
+
+Main21f28ecd checked. Open PRs include299 (this source work),294/293/186/136 (preserved other creature work),287 (separate environment concepts),301 (town),218/209 (progression),128(audio). ArenaLab currently ground-only; character proof must be a separate route, sharing actual ground drawing and actual mage/Hollow functions, not modifying the ground-only screen.
+
+Remaining: native render/visual iteration, palette/alpha/atlas metadata validation, actual arena art proof at390/desktop and eight facings, temporal review, independent remote asset verification. Owner style approval remains required before full library finishing.
