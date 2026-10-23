@@ -1,0 +1,1166 @@
+{
+  "verifiedBranchHead": "02ec74ff3129020fccb65b47cee470d7a1700110",
+  "method": "Independent Git LFS download cache; SHA256 and bytes matched. Native scene reopened with downloaded texture dependencies.",
+  "atlasReferences": 192,
+  "nativeSources": 1,
+  "files": [
+    {
+      "path": "art/source/bosses/ashfang/archive/pixel-style-002/ashfang-pixel-style.blend",
+      "sha256": "fc0c4ba9bb76b0acab25efd97429409115fb9b78d1500716923a6850ba165bb6",
+      "bytes": 18486388,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/E.png",
+      "sha256": "e1136f460dc06c9dd20578d0a241adaf0115eed08944ae1503a317bbdc27cc02",
+      "bytes": 104255,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/N.png",
+      "sha256": "a5e1ce363e82b7b5fe3c6874aa69abf0458473b684ec76198059d54d35aee62c",
+      "bytes": 99339,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/NE.png",
+      "sha256": "a3a73e8ec4098000afc161fe47d86b84af6b9b2435c29c7eb1e2f99c366f6072",
+      "bytes": 110026,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/NW.png",
+      "sha256": "2395db7d1900e5060e9daf854bdf9d3062a49c136ab8cedd20a3fa5da5177577",
+      "bytes": 110514,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/S.png",
+      "sha256": "f5fcf9ed7b56269ff2b7a789259cfcc92b376c9d043dada0273efe1cdba20bb1",
+      "bytes": 99647,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/SE.png",
+      "sha256": "9cec6ab47003d976a41f828315f4168796cfdc8cc6ac3087021cd9497822ab4a",
+      "bytes": 110784,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/SW.png",
+      "sha256": "b4d40cd3d0228861795c10efa755ade80f8e20906612a5e463e330584b5c5a78",
+      "bytes": 107142,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/claw_right/W.png",
+      "sha256": "0f0fff15fb5b78c57dbaf2030388ae66ecaeecd4dfd6925ed4f75f306ac70a9d",
+      "bytes": 107069,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/E.png",
+      "sha256": "52363f58d5e901b2c2d8eb88d06209726da05efaf330f85f0b76bfb0c8149619",
+      "bytes": 116563,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/N.png",
+      "sha256": "a0d3afb1eee2d98c5b46aacfe63cba7fe93da2a5a543217947e28fcd60359023",
+      "bytes": 106432,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/NE.png",
+      "sha256": "f8f2ce39cce07cc70daf280b873ec4067589bddad608182a2e759940d1792968",
+      "bytes": 116799,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/NW.png",
+      "sha256": "159b84a9e27fec3b8b4202808766e4b0a9fd9b16822c9f4c73c8690b7c43d51a",
+      "bytes": 105711,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/S.png",
+      "sha256": "ae8c7e6c5d439b9b5ef2f62e7644eead98f9ee2ed112a39e49fe1fa3c53123eb",
+      "bytes": 111744,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/SE.png",
+      "sha256": "a417d8d3ebf4a94906863b2e5d9aa9fedcccd2fbdd5c0c7da997f584a5c9778b",
+      "bytes": 112301,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/SW.png",
+      "sha256": "63d43ced7575e034fdd7093b3ddde2f7b3267b6c21a8ca7440aef67851b2af08",
+      "bytes": 103457,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/fly/W.png",
+      "sha256": "32181f8af358cdc70a5d32591752616b42f4a78a19a053fcd8fe9125c4a101ad",
+      "bytes": 104482,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/E.png",
+      "sha256": "0d6672f874294eed0ad91bc11b5795e898b0849f701a09fa5c4abb53eb6dd02c",
+      "bytes": 99348,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/N.png",
+      "sha256": "30eb292b49027ddf5f42b4d7a3b5b6b74573d3271873afd7476e55a147df13df",
+      "bytes": 87751,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/NE.png",
+      "sha256": "d0b6891c958c90a8bb539eb979706e7aaac216044643041e03bb48783a834a40",
+      "bytes": 99167,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/NW.png",
+      "sha256": "9eba1d83e9b97a1ab6251c3c42e32edd75b26c12a60c425168bbee54f966e449",
+      "bytes": 102597,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/S.png",
+      "sha256": "d3520d3d551ac62d56b3bc1cb75088c557a94b07d01c943f82719048d2b9a087",
+      "bytes": 83713,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/SE.png",
+      "sha256": "1ffb8e9b9f513255444cab1594ff70b2731b839c7d38e5e38a4400a28475ac8d",
+      "bytes": 100124,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/SW.png",
+      "sha256": "30ef3e906db890709e69ca9d37e86cc299c881cdf26aea196b08ccfe90245f48",
+      "bytes": 95209,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/idle/W.png",
+      "sha256": "c1baa8ff57e2062cab9e9fbe7ab38693d6613ace1f4a4ac6ec83f8aba90adf82",
+      "bytes": 96275,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/E.png",
+      "sha256": "e0cfa3f1cb06f44287849129ad95e83baacb0cc261499c102e53945d755608a2",
+      "bytes": 199393,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/N.png",
+      "sha256": "7ba3c8b8de8690471c5e8c54279f08f671614bd29d308b1c9f4890c8de9c983a",
+      "bytes": 175582,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/NE.png",
+      "sha256": "99eef6bfd555a313637a759e606c803a59ed347f67358242213fcb209fc0a2a8",
+      "bytes": 207616,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/NW.png",
+      "sha256": "aa0bfe5be23471515608fc4f223d93e4bd2e31063c027a9e517ca88ed8e9d918",
+      "bytes": 208244,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/S.png",
+      "sha256": "2cc2692842244467f19af591b6d056e5b91b542ad63dbdb4828b1209cc4f0217",
+      "bytes": 177696,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/SE.png",
+      "sha256": "79fd0cfb48f21b006a38688da773449bf385298d2bbba6584141c4590d191097",
+      "bytes": 199987,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/SW.png",
+      "sha256": "2c652a4472cd057b77848bae38882400b6b19da422c169a386aba97b8d9a2c00",
+      "bytes": 198233,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/bold/roar/W.png",
+      "sha256": "a7ecdac2cca6340126fa488078cd92beee7529fc3568fb77ef2161a396ec2f87",
+      "bytes": 197364,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/E.png",
+      "sha256": "f413d0302368aabdd4be0b8e092d98abd5cea40375f6ea344ae99604c80d256f",
+      "bytes": 306841,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/N.png",
+      "sha256": "b64d1fbb7ad03cb45eb55f4e578ae94bdab603559d72d91d0d065233c0423096",
+      "bytes": 283755,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/NE.png",
+      "sha256": "458dd70ca3af6a863cd9fb9cbc678ad301f95c1599c7ea031e1a6bcc9a43e2de",
+      "bytes": 326179,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/NW.png",
+      "sha256": "57c788fae00f3c6a3af9a7390f223e97c9d888881ce4d9682ff6f036fcb14375",
+      "bytes": 317630,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/S.png",
+      "sha256": "3d05bb53d46588871655f23defaa62e3cff09fb637c4e4af7f1c785ceb815b72",
+      "bytes": 297403,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/SE.png",
+      "sha256": "a886cb0fdf78cdb97c4112998bfc04fe40864fc115b428daab9a2a43bbb76f76",
+      "bytes": 323975,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/SW.png",
+      "sha256": "51ee6cc9c874200d2dade14f963a448c5754c9f0072852d1b2d0b6c91785ae40",
+      "bytes": 319863,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/claw_right/W.png",
+      "sha256": "2523b6cf1029579ab2a184eb9ffe43cd01070395674f8d6c178db3f8dff0dbd7",
+      "bytes": 310834,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/E.png",
+      "sha256": "fc849bb278a9dba972e5c6d32d6897e3f93c9be5e59f53dd43dcd26e7fbdd1e3",
+      "bytes": 331690,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/N.png",
+      "sha256": "cf66f8a3d27587a67412a8a35f2aa7d952f0688dbaa6d436e3186186ffd0666d",
+      "bytes": 306110,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/NE.png",
+      "sha256": "8a126d2b36e3059b0f8e1f0bcd5bf64ab4612551bc3caa43c1ee932364ab63e4",
+      "bytes": 333958,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/NW.png",
+      "sha256": "43d1fd57a8d54a0d6f25e6a4f214a4a8a829e708c1486ef5875990fca1ec9ef4",
+      "bytes": 297234,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/S.png",
+      "sha256": "e29032e7120211dbf7f743dd1f32199f3945761346034169e542d23e082afed6",
+      "bytes": 319884,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/SE.png",
+      "sha256": "fb41af5a731888d55f105da5d05d43e01e4640e4bbbdf1b8bbd85fb9f84486dd",
+      "bytes": 318983,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/SW.png",
+      "sha256": "f4e5f6b61c1a00485c1d2f56ee7e8c3f2c14a937eae9e41f84b5e176a2fc9dec",
+      "bytes": 301678,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/fly/W.png",
+      "sha256": "c77171d2874b5ae7db67737d201b804f5bd0978162f4d1b70183af2a6593618f",
+      "bytes": 296324,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/E.png",
+      "sha256": "ee35755b7d8e80028619d03a59ab7334226a492cf492d15d9b11a3c5ec463bb8",
+      "bytes": 288310,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/N.png",
+      "sha256": "7a64ccb7f3f139266a3ab12655d142dbc1d60dd0789a4df8b0245f2565dadb96",
+      "bytes": 252430,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/NE.png",
+      "sha256": "74b027083512e5a1eed1b3835c74351851d339fce819e927f8c5846b527c8a7c",
+      "bytes": 295375,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/NW.png",
+      "sha256": "894b52e9879cb1b1e27350b3ae307752623f4756bbcc9e9b8cce8f396ee69e4f",
+      "bytes": 288926,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/S.png",
+      "sha256": "7b4fdba12541802807edf3aac4fa0139e83c9d203992fb7f755b9fbbbd5124c7",
+      "bytes": 245283,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/SE.png",
+      "sha256": "f5dc53ed8b87a5c99c35da84ab17ad6e6613ca268e7f10acf502ddf364db1b7b",
+      "bytes": 288515,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/SW.png",
+      "sha256": "e292368508d20a27e76614926702d91939d86dd977364e92580d0b91b39c9e22",
+      "bytes": 284156,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/idle/W.png",
+      "sha256": "09c163d5f171c12f1351f44d818505ad24353d112ca3ae626e37426b5eae26b3",
+      "bytes": 277370,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/E.png",
+      "sha256": "1cc89160d084a4eb00ba4b4f7daf0aba633376260c5e7e2d4f7084c650014550",
+      "bytes": 580094,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/N.png",
+      "sha256": "ba7591fd28c7e67649d2d86d262312684d67a5d0c6698cc1be07c2f8c144a953",
+      "bytes": 497871,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/NE.png",
+      "sha256": "713a489026e5eb3af3270bcb3db0d328741226d423b25a6eb21f1a0b45f4bda2",
+      "bytes": 610351,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/NW.png",
+      "sha256": "564c82b3fb61e6d1e5dd97b72c508bc2f63b977b31158b022f8a08d868b500e2",
+      "bytes": 612033,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/S.png",
+      "sha256": "baee77fc2017ee4bf4aa092783f9b4deb93bf2916e1189869a18a5caeec6c7d8",
+      "bytes": 550152,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/SE.png",
+      "sha256": "b140c35c41c4efb697dc60156db7689e6fe99920dcfa92bf0b2ff445ee14267c",
+      "bytes": 587517,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/SW.png",
+      "sha256": "636e5a1ccf9d4c18e387b5a09f8115bfd5d4ef6b82f1ba36c3d850390b2cc81a",
+      "bytes": 586325,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/fine/roar/W.png",
+      "sha256": "bf5c07de34347bcbe5665c77c8366db1277215f97189a06ed62328933dd6abc6",
+      "bytes": 573774,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/E.png",
+      "sha256": "0081f25a0bcf2025f23b5f99237f4dab9257ff5b212ca7407f7e5ebc77adab0a",
+      "bytes": 224978,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/N.png",
+      "sha256": "80d37e873b0e8fb9cf5633fb9b5120ecc143809f7c8c82df712dd10b252b203b",
+      "bytes": 193588,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/NE.png",
+      "sha256": "1604ef8b7297e9ed164ef6aeaa4f6ebb851a5ed3ff29bb9fec8f70534b62fa24",
+      "bytes": 219924,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/NW.png",
+      "sha256": "2ff7813b8fd11d76349ec32e91f905a03ddf924591aced3fa4110bcb84a06092",
+      "bytes": 229236,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/S.png",
+      "sha256": "ae057080baa809885d567ccff5d1a8a4876e0a2ae8b0833f78d528231e961770",
+      "bytes": 192070,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/SE.png",
+      "sha256": "74d4851904ea04986e8fa1e745ca78a2169c9ed053d5fbed91c9c55e32b057cc",
+      "bytes": 217616,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/SW.png",
+      "sha256": "32d334610ec05a973a892b509fd8107f85396d0b2b7a8a490b0bb4816d437164",
+      "bytes": 232464,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/claw_right/W.png",
+      "sha256": "e2bd7c8497d8d5f32f7ddebc1d56530aeb8881b617fb12e3dd89710da3070b3b",
+      "bytes": 245302,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/E.png",
+      "sha256": "7a6ca6bec52dc07c256aaff681753d0ee536f6917e2834fc4dac14d1b342d2c8",
+      "bytes": 251573,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/N.png",
+      "sha256": "607d2a5f8a2b369faae90bea16a300b01cc370a7d249619d3847b92443d3bfcd",
+      "bytes": 221825,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/NE.png",
+      "sha256": "56c44229bd2e0efcc5b5fb63fe48ee5cc5d2cf62def9bd22d1c950500c419b0b",
+      "bytes": 250587,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/NW.png",
+      "sha256": "43a0f3549a09d17ce45b22813a9ddbdbcd8338ef97f1907c38e5b2782b68daf5",
+      "bytes": 223526,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/S.png",
+      "sha256": "aa42dc59b5499467c410da8cf08a6b8037e067f39ec74cc234384b7cc8369e15",
+      "bytes": 230022,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/SE.png",
+      "sha256": "c3d6ac2965e2116f3110ddc395158288f22bce7f0811e9e54737c891c2afa19c",
+      "bytes": 238014,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/SW.png",
+      "sha256": "630e48a96cc9bbd6cd77903bba65d69dd25d6d31a8096efacac99728440ff417",
+      "bytes": 233113,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/fly/W.png",
+      "sha256": "60ff84027715baff6eb088bf5cd108e360545c8ffe306ffcf3e84ba326211589",
+      "bytes": 231985,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/E.png",
+      "sha256": "950a9295b02602b28afeec30751d6d2d1ec063ea78162228b5208caff803e8d8",
+      "bytes": 249841,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/N.png",
+      "sha256": "8e3e413c66b23e7f18cbac85b401926678b2b9732e11839bd44ad7960e89b34d",
+      "bytes": 199865,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/NE.png",
+      "sha256": "bdf664e14adfa76e2bcbbdc8ad3d14897637817931b0dc6bd30c3f7a3ec5247b",
+      "bytes": 233945,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/NW.png",
+      "sha256": "5a16a4a3605c48f9b22f4cd4c571b71dd6d1c607e50973303202cee0506c765e",
+      "bytes": 237194,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/S.png",
+      "sha256": "2ad530d7fc19c47ad94ed7805e79184817750f0d7eb1f601cc17fc1e26ea8687",
+      "bytes": 198154,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/SE.png",
+      "sha256": "fd6ec6c09a8e160940f688acb3135170db7f8711fbd7d4789e7ba8bd2e1f034a",
+      "bytes": 238176,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/SW.png",
+      "sha256": "af2a44f3260796c88beaff0085d5854a507762ff7089ee508388895030e28392",
+      "bytes": 235882,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/idle/W.png",
+      "sha256": "db0b2aca002021ee6473ba98dab875dc24cf1ac9832460ca05cbacc52172fb51",
+      "bytes": 252852,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/E.png",
+      "sha256": "7dd44b359c646a7237fde046972c545afc861627b4b7534e721440d3951c07d3",
+      "bytes": 465470,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/N.png",
+      "sha256": "d26afce125b66dc73693f18a6ad6d54ac54cb9ba0431fc568d6e2f5032e6894a",
+      "bytes": 380101,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/NE.png",
+      "sha256": "ef3964f6bbdd13ea6b91ae9d7497d1b7b3a17b78156bbd8ec867df1844729184",
+      "bytes": 458457,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/NW.png",
+      "sha256": "77aa20eab07f0fa25118423c387840d137ebfdeef453c6ede1cbbba3d94792f3",
+      "bytes": 459734,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/S.png",
+      "sha256": "18ec570a049917b54b598d454c47d2e874bd106dcab0f6b6d009af446fd86a61",
+      "bytes": 381165,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/SE.png",
+      "sha256": "9167a4c2cffbde4bd346e32696b7a565317a6115d10d67a99e697234aec5ed00",
+      "bytes": 428577,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/SW.png",
+      "sha256": "5d5c8d823ec9c52edd9cdc0d73a0f10fe88f0b370d443349c771799012bf2014",
+      "bytes": 430323,
+      "verified": true
+    },
+    {
+      "path": "art/source/bosses/ashfang/exports/pixel-proof-002/source/roar/W.png",
+      "sha256": "f7f82d5a138dc8d49be6c34192d703de3a6539e87ae23f589af33f0d2ba20d25",
+      "bytes": 465455,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/E.png",
+      "sha256": "e1136f460dc06c9dd20578d0a241adaf0115eed08944ae1503a317bbdc27cc02",
+      "bytes": 104255,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/N.png",
+      "sha256": "a5e1ce363e82b7b5fe3c6874aa69abf0458473b684ec76198059d54d35aee62c",
+      "bytes": 99339,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/NE.png",
+      "sha256": "a3a73e8ec4098000afc161fe47d86b84af6b9b2435c29c7eb1e2f99c366f6072",
+      "bytes": 110026,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/NW.png",
+      "sha256": "2395db7d1900e5060e9daf854bdf9d3062a49c136ab8cedd20a3fa5da5177577",
+      "bytes": 110514,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/S.png",
+      "sha256": "f5fcf9ed7b56269ff2b7a789259cfcc92b376c9d043dada0273efe1cdba20bb1",
+      "bytes": 99647,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/SE.png",
+      "sha256": "9cec6ab47003d976a41f828315f4168796cfdc8cc6ac3087021cd9497822ab4a",
+      "bytes": 110784,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/SW.png",
+      "sha256": "b4d40cd3d0228861795c10efa755ade80f8e20906612a5e463e330584b5c5a78",
+      "bytes": 107142,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/claw_right/W.png",
+      "sha256": "0f0fff15fb5b78c57dbaf2030388ae66ecaeecd4dfd6925ed4f75f306ac70a9d",
+      "bytes": 107069,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/E.png",
+      "sha256": "52363f58d5e901b2c2d8eb88d06209726da05efaf330f85f0b76bfb0c8149619",
+      "bytes": 116563,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/N.png",
+      "sha256": "a0d3afb1eee2d98c5b46aacfe63cba7fe93da2a5a543217947e28fcd60359023",
+      "bytes": 106432,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/NE.png",
+      "sha256": "f8f2ce39cce07cc70daf280b873ec4067589bddad608182a2e759940d1792968",
+      "bytes": 116799,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/NW.png",
+      "sha256": "159b84a9e27fec3b8b4202808766e4b0a9fd9b16822c9f4c73c8690b7c43d51a",
+      "bytes": 105711,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/S.png",
+      "sha256": "ae8c7e6c5d439b9b5ef2f62e7644eead98f9ee2ed112a39e49fe1fa3c53123eb",
+      "bytes": 111744,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/SE.png",
+      "sha256": "a417d8d3ebf4a94906863b2e5d9aa9fedcccd2fbdd5c0c7da997f584a5c9778b",
+      "bytes": 112301,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/SW.png",
+      "sha256": "63d43ced7575e034fdd7093b3ddde2f7b3267b6c21a8ca7440aef67851b2af08",
+      "bytes": 103457,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/fly/W.png",
+      "sha256": "32181f8af358cdc70a5d32591752616b42f4a78a19a053fcd8fe9125c4a101ad",
+      "bytes": 104482,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/E.png",
+      "sha256": "0d6672f874294eed0ad91bc11b5795e898b0849f701a09fa5c4abb53eb6dd02c",
+      "bytes": 99348,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/N.png",
+      "sha256": "30eb292b49027ddf5f42b4d7a3b5b6b74573d3271873afd7476e55a147df13df",
+      "bytes": 87751,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/NE.png",
+      "sha256": "d0b6891c958c90a8bb539eb979706e7aaac216044643041e03bb48783a834a40",
+      "bytes": 99167,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/NW.png",
+      "sha256": "9eba1d83e9b97a1ab6251c3c42e32edd75b26c12a60c425168bbee54f966e449",
+      "bytes": 102597,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/S.png",
+      "sha256": "d3520d3d551ac62d56b3bc1cb75088c557a94b07d01c943f82719048d2b9a087",
+      "bytes": 83713,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/SE.png",
+      "sha256": "1ffb8e9b9f513255444cab1594ff70b2731b839c7d38e5e38a4400a28475ac8d",
+      "bytes": 100124,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/SW.png",
+      "sha256": "30ef3e906db890709e69ca9d37e86cc299c881cdf26aea196b08ccfe90245f48",
+      "bytes": 95209,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/idle/W.png",
+      "sha256": "c1baa8ff57e2062cab9e9fbe7ab38693d6613ace1f4a4ac6ec83f8aba90adf82",
+      "bytes": 96275,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/E.png",
+      "sha256": "e0cfa3f1cb06f44287849129ad95e83baacb0cc261499c102e53945d755608a2",
+      "bytes": 199393,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/N.png",
+      "sha256": "7ba3c8b8de8690471c5e8c54279f08f671614bd29d308b1c9f4890c8de9c983a",
+      "bytes": 175582,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/NE.png",
+      "sha256": "99eef6bfd555a313637a759e606c803a59ed347f67358242213fcb209fc0a2a8",
+      "bytes": 207616,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/NW.png",
+      "sha256": "aa0bfe5be23471515608fc4f223d93e4bd2e31063c027a9e517ca88ed8e9d918",
+      "bytes": 208244,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/S.png",
+      "sha256": "2cc2692842244467f19af591b6d056e5b91b542ad63dbdb4828b1209cc4f0217",
+      "bytes": 177696,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/SE.png",
+      "sha256": "79fd0cfb48f21b006a38688da773449bf385298d2bbba6584141c4590d191097",
+      "bytes": 199987,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/SW.png",
+      "sha256": "2c652a4472cd057b77848bae38882400b6b19da422c169a386aba97b8d9a2c00",
+      "bytes": 198233,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/bold/roar/W.png",
+      "sha256": "a7ecdac2cca6340126fa488078cd92beee7529fc3568fb77ef2161a396ec2f87",
+      "bytes": 197364,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/E.png",
+      "sha256": "f413d0302368aabdd4be0b8e092d98abd5cea40375f6ea344ae99604c80d256f",
+      "bytes": 306841,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/N.png",
+      "sha256": "b64d1fbb7ad03cb45eb55f4e578ae94bdab603559d72d91d0d065233c0423096",
+      "bytes": 283755,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/NE.png",
+      "sha256": "458dd70ca3af6a863cd9fb9cbc678ad301f95c1599c7ea031e1a6bcc9a43e2de",
+      "bytes": 326179,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/NW.png",
+      "sha256": "57c788fae00f3c6a3af9a7390f223e97c9d888881ce4d9682ff6f036fcb14375",
+      "bytes": 317630,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/S.png",
+      "sha256": "3d05bb53d46588871655f23defaa62e3cff09fb637c4e4af7f1c785ceb815b72",
+      "bytes": 297403,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/SE.png",
+      "sha256": "a886cb0fdf78cdb97c4112998bfc04fe40864fc115b428daab9a2a43bbb76f76",
+      "bytes": 323975,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/SW.png",
+      "sha256": "51ee6cc9c874200d2dade14f963a448c5754c9f0072852d1b2d0b6c91785ae40",
+      "bytes": 319863,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/claw_right/W.png",
+      "sha256": "2523b6cf1029579ab2a184eb9ffe43cd01070395674f8d6c178db3f8dff0dbd7",
+      "bytes": 310834,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/E.png",
+      "sha256": "fc849bb278a9dba972e5c6d32d6897e3f93c9be5e59f53dd43dcd26e7fbdd1e3",
+      "bytes": 331690,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/N.png",
+      "sha256": "cf66f8a3d27587a67412a8a35f2aa7d952f0688dbaa6d436e3186186ffd0666d",
+      "bytes": 306110,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/NE.png",
+      "sha256": "8a126d2b36e3059b0f8e1f0bcd5bf64ab4612551bc3caa43c1ee932364ab63e4",
+      "bytes": 333958,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/NW.png",
+      "sha256": "43d1fd57a8d54a0d6f25e6a4f214a4a8a829e708c1486ef5875990fca1ec9ef4",
+      "bytes": 297234,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/S.png",
+      "sha256": "e29032e7120211dbf7f743dd1f32199f3945761346034169e542d23e082afed6",
+      "bytes": 319884,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/SE.png",
+      "sha256": "fb41af5a731888d55f105da5d05d43e01e4640e4bbbdf1b8bbd85fb9f84486dd",
+      "bytes": 318983,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/SW.png",
+      "sha256": "f4e5f6b61c1a00485c1d2f56ee7e8c3f2c14a937eae9e41f84b5e176a2fc9dec",
+      "bytes": 301678,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/fly/W.png",
+      "sha256": "c77171d2874b5ae7db67737d201b804f5bd0978162f4d1b70183af2a6593618f",
+      "bytes": 296324,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/E.png",
+      "sha256": "ee35755b7d8e80028619d03a59ab7334226a492cf492d15d9b11a3c5ec463bb8",
+      "bytes": 288310,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/N.png",
+      "sha256": "7a64ccb7f3f139266a3ab12655d142dbc1d60dd0789a4df8b0245f2565dadb96",
+      "bytes": 252430,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/NE.png",
+      "sha256": "74b027083512e5a1eed1b3835c74351851d339fce819e927f8c5846b527c8a7c",
+      "bytes": 295375,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/NW.png",
+      "sha256": "894b52e9879cb1b1e27350b3ae307752623f4756bbcc9e9b8cce8f396ee69e4f",
+      "bytes": 288926,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/S.png",
+      "sha256": "7b4fdba12541802807edf3aac4fa0139e83c9d203992fb7f755b9fbbbd5124c7",
+      "bytes": 245283,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/SE.png",
+      "sha256": "f5dc53ed8b87a5c99c35da84ab17ad6e6613ca268e7f10acf502ddf364db1b7b",
+      "bytes": 288515,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/SW.png",
+      "sha256": "e292368508d20a27e76614926702d91939d86dd977364e92580d0b91b39c9e22",
+      "bytes": 284156,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/idle/W.png",
+      "sha256": "09c163d5f171c12f1351f44d818505ad24353d112ca3ae626e37426b5eae26b3",
+      "bytes": 277370,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/E.png",
+      "sha256": "1cc89160d084a4eb00ba4b4f7daf0aba633376260c5e7e2d4f7084c650014550",
+      "bytes": 580094,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/N.png",
+      "sha256": "ba7591fd28c7e67649d2d86d262312684d67a5d0c6698cc1be07c2f8c144a953",
+      "bytes": 497871,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/NE.png",
+      "sha256": "713a489026e5eb3af3270bcb3db0d328741226d423b25a6eb21f1a0b45f4bda2",
+      "bytes": 610351,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/NW.png",
+      "sha256": "564c82b3fb61e6d1e5dd97b72c508bc2f63b977b31158b022f8a08d868b500e2",
+      "bytes": 612033,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/S.png",
+      "sha256": "baee77fc2017ee4bf4aa092783f9b4deb93bf2916e1189869a18a5caeec6c7d8",
+      "bytes": 550152,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/SE.png",
+      "sha256": "b140c35c41c4efb697dc60156db7689e6fe99920dcfa92bf0b2ff445ee14267c",
+      "bytes": 587517,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/SW.png",
+      "sha256": "636e5a1ccf9d4c18e387b5a09f8115bfd5d4ef6b82f1ba36c3d850390b2cc81a",
+      "bytes": 586325,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/fine/roar/W.png",
+      "sha256": "bf5c07de34347bcbe5665c77c8366db1277215f97189a06ed62328933dd6abc6",
+      "bytes": 573774,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/E.png",
+      "sha256": "0081f25a0bcf2025f23b5f99237f4dab9257ff5b212ca7407f7e5ebc77adab0a",
+      "bytes": 224978,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/N.png",
+      "sha256": "80d37e873b0e8fb9cf5633fb9b5120ecc143809f7c8c82df712dd10b252b203b",
+      "bytes": 193588,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/NE.png",
+      "sha256": "1604ef8b7297e9ed164ef6aeaa4f6ebb851a5ed3ff29bb9fec8f70534b62fa24",
+      "bytes": 219924,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/NW.png",
+      "sha256": "2ff7813b8fd11d76349ec32e91f905a03ddf924591aced3fa4110bcb84a06092",
+      "bytes": 229236,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/S.png",
+      "sha256": "ae057080baa809885d567ccff5d1a8a4876e0a2ae8b0833f78d528231e961770",
+      "bytes": 192070,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/SE.png",
+      "sha256": "74d4851904ea04986e8fa1e745ca78a2169c9ed053d5fbed91c9c55e32b057cc",
+      "bytes": 217616,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/SW.png",
+      "sha256": "32d334610ec05a973a892b509fd8107f85396d0b2b7a8a490b0bb4816d437164",
+      "bytes": 232464,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/claw_right/W.png",
+      "sha256": "e2bd7c8497d8d5f32f7ddebc1d56530aeb8881b617fb12e3dd89710da3070b3b",
+      "bytes": 245302,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/E.png",
+      "sha256": "7a6ca6bec52dc07c256aaff681753d0ee536f6917e2834fc4dac14d1b342d2c8",
+      "bytes": 251573,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/N.png",
+      "sha256": "607d2a5f8a2b369faae90bea16a300b01cc370a7d249619d3847b92443d3bfcd",
+      "bytes": 221825,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/NE.png",
+      "sha256": "56c44229bd2e0efcc5b5fb63fe48ee5cc5d2cf62def9bd22d1c950500c419b0b",
+      "bytes": 250587,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/NW.png",
+      "sha256": "43a0f3549a09d17ce45b22813a9ddbdbcd8338ef97f1907c38e5b2782b68daf5",
+      "bytes": 223526,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/S.png",
+      "sha256": "aa42dc59b5499467c410da8cf08a6b8037e067f39ec74cc234384b7cc8369e15",
+      "bytes": 230022,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/SE.png",
+      "sha256": "c3d6ac2965e2116f3110ddc395158288f22bce7f0811e9e54737c891c2afa19c",
+      "bytes": 238014,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/SW.png",
+      "sha256": "630e48a96cc9bbd6cd77903bba65d69dd25d6d31a8096efacac99728440ff417",
+      "bytes": 233113,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/fly/W.png",
+      "sha256": "60ff84027715baff6eb088bf5cd108e360545c8ffe306ffcf3e84ba326211589",
+      "bytes": 231985,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/E.png",
+      "sha256": "950a9295b02602b28afeec30751d6d2d1ec063ea78162228b5208caff803e8d8",
+      "bytes": 249841,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/N.png",
+      "sha256": "8e3e413c66b23e7f18cbac85b401926678b2b9732e11839bd44ad7960e89b34d",
+      "bytes": 199865,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/NE.png",
+      "sha256": "bdf664e14adfa76e2bcbbdc8ad3d14897637817931b0dc6bd30c3f7a3ec5247b",
+      "bytes": 233945,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/NW.png",
+      "sha256": "5a16a4a3605c48f9b22f4cd4c571b71dd6d1c607e50973303202cee0506c765e",
+      "bytes": 237194,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/S.png",
+      "sha256": "2ad530d7fc19c47ad94ed7805e79184817750f0d7eb1f601cc17fc1e26ea8687",
+      "bytes": 198154,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/SE.png",
+      "sha256": "fd6ec6c09a8e160940f688acb3135170db7f8711fbd7d4789e7ba8bd2e1f034a",
+      "bytes": 238176,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/SW.png",
+      "sha256": "af2a44f3260796c88beaff0085d5854a507762ff7089ee508388895030e28392",
+      "bytes": 235882,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/idle/W.png",
+      "sha256": "db0b2aca002021ee6473ba98dab875dc24cf1ac9832460ca05cbacc52172fb51",
+      "bytes": 252852,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/E.png",
+      "sha256": "7dd44b359c646a7237fde046972c545afc861627b4b7534e721440d3951c07d3",
+      "bytes": 465470,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/N.png",
+      "sha256": "d26afce125b66dc73693f18a6ad6d54ac54cb9ba0431fc568d6e2f5032e6894a",
+      "bytes": 380101,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/NE.png",
+      "sha256": "ef3964f6bbdd13ea6b91ae9d7497d1b7b3a17b78156bbd8ec867df1844729184",
+      "bytes": 458457,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/NW.png",
+      "sha256": "77aa20eab07f0fa25118423c387840d137ebfdeef453c6ede1cbbba3d94792f3",
+      "bytes": 459734,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/S.png",
+      "sha256": "18ec570a049917b54b598d454c47d2e874bd106dcab0f6b6d009af446fd86a61",
+      "bytes": 381165,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/SE.png",
+      "sha256": "9167a4c2cffbde4bd346e32696b7a565317a6115d10d67a99e697234aec5ed00",
+      "bytes": 428577,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/SW.png",
+      "sha256": "5d5c8d823ec9c52edd9cdc0d73a0f10fe88f0b370d443349c771799012bf2014",
+      "bytes": 430323,
+      "verified": true
+    },
+    {
+      "path": "src/Wyrmforge.Presentation.Web/wwwroot/art/review/ashfang-pixel-proof-002/source/roar/W.png",
+      "sha256": "f7f82d5a138dc8d49be6c34192d703de3a6539e87ae23f589af33f0d2ba20d25",
+      "bytes": 465455,
+      "verified": true
+    }
+  ]
+}

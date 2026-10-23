@@ -172,6 +172,8 @@
       "Owner pixel-style review/touchups",
       "After style approval: remaining37 actions",
       "Actual Hunt and physical-device integration"
-    ]
+    ],
+    "remoteReceipt": "reviews/pixel-style-002/remote-receipt.json",
+    "remoteVerified": true
   }
 }
