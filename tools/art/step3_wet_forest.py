@@ -203,7 +203,7 @@ def build_tree(config):
 
 def setup_camera(height):
     focus = Vector((0, 0, height * .43))
-    bpy.ops.object.camera_add(location=(10.2, -13.0, 12.2))
+    bpy.ops.object.camera_add(location=focus + Vector((10.2, -13.0, 8.6)))
     camera = bpy.context.object
     camera.name = "Shared 2.5D ortho camera — source of truth"
     direction = focus - camera.location
