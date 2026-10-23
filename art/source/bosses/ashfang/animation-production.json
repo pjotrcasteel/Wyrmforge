@@ -1,5 +1,5 @@
 {
-  "status": "Aggressive source and directional export complete; final full-player and atlas-retrieval checks pending",
+  "status": "Aggressive source/export revision 002 complete candidate; owner review and game integration remain",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -93,15 +93,17 @@
   },
   "browserValidationPassed": true,
   "remaining": [
-    "Complete aggressive directional export",
-    "Review actual playback and verify backup",
-    "Owner motion review and game integration"
+    "Owner motion review",
+    "Game integration and separate VFX",
+    "Actual Hunt and physical-phone validation"
   ],
   "remoteVerification": {
+    "assetCheckpoint": "f132c46b114bd70bde7ffa2d66739a1a44eb198c",
+    "playerCheckpoint": "aace0d49c0297dacfc573da76409311ea713d410",
+    "independentlyRetrievedAndSha256VerifiedLfsObjects": 1465,
+    "allFinalAtlases": 656,
     "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
-    "packedMasterRetrievedAndReopened": true,
-    "finalAtlasRetrieval": "pending",
-    "previousFoundationReceipt": "remote-lfs-verification.json (foundation 001 checkpoint)"
+    "receipt": "remote-lfs-verification.json"
   },
   "previousFoundation": "exports/motion-foundation-001 (owner rejected performance as too weak)"
 }

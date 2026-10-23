@@ -1,3 +1,3 @@
-# Aggressive source/export checkpoint - 23 October 2026
+# Aggressive performance source/export complete - 23 October 2026
 
-All 41 revised motions / 7736 directional frames are rendered and packed. GPU jobs have finished. Full player and independent atlas retrieval checks are being finalized. Original foundation 001 stays preserved for comparison; current candidate is foundation 002 / motion-library-014. See animation-production.json and ANIMATION-REPRODUCE-002.md.
+All 41 revised actions / 7736 directional frames are rendered, packed, pixel-verified and playback-checked. GPU jobs have finished. Current player: exports/motion-foundation-002/index.html. Packed master: archive/motion-foundation-002-packed/ashfang-animation-foundation.blend. Previous foundation 001 remains preserved for comparison. See reviews/motion-library-014/review.md and ANIMATION-REPRODUCE-002.md. Owner motion acceptance and actual game/VFX/Hunt/device integration remain separate.

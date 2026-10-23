@@ -15,8 +15,9 @@
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Final full-player and independent atlas retrieval checks",
-    "Owner motion review and later game/VFX/device integration"
+    "Owner motion review",
+    "Game integration and separate VFX",
+    "Actual Hunt and physical-phone validation"
   ],
   "ownerAcceptedAnatomy": true,
   "ownerAcceptedMaterials": false,
@@ -25,12 +26,15 @@
   "M2": "Preserved original 112-bone deform hierarchy; temporary IK controls baked and removed. Source motion checks pass.",
   "M3": "Aggressive revision 002: 41 actions with predatory attention snaps, raised diagonal rakes, forward bite/clamp/wrench, braced roar, bounding run and staged deaths.",
   "M4": "Aggressive revision 002 complete: 7736 frames, 328 lossless 512px master atlases and 328 runtime 256px atlases; every master cell pixel-verified, zero empty/clipped frames.",
-  "M5": "New revision key poses inspected; full-rate/all-direction playback pending.",
-  "M6": "Uniform scale-two idle, walk and flight proof passes for projected poses, pivots, attachments and root-travel scaling. No higher-tier geometry authored.",
+  "M5": "Full offline Edge review passes all 328 runtime atlases / 7736 frames, pause/step/phase carry/eight views/death hold, 23-state hunt performance sequence and 390px layout. All-action contact sheets inspected. No actual Hunt/physical-phone acceptance.",
+  "M6": "Revised scale-two idle, walk and flight comparison passes for projected poses/pivots/attachments and root travel. No higher-tier geometry authored.",
   "M7": "No game integration or physical-device acceptance.",
   "remoteVerification": {
+    "assetCheckpoint": "f132c46b114bd70bde7ffa2d66739a1a44eb198c",
+    "playerCheckpoint": "aace0d49c0297dacfc573da76409311ea713d410",
+    "independentlyRetrievedAndSha256VerifiedLfsObjects": 1465,
+    "allFinalAtlases": 656,
     "packedMasterSha256": "c4c83b1e00be3a4c23dd6f040052d96a5f9c749f647300c2bb206e563c9463df",
-    "packedMasterRetrievedAndReopened": true,
-    "finalAtlasRetrieval": "pending"
+    "receipt": "remote-lfs-verification.json"
   }
 }
