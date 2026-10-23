@@ -206,6 +206,7 @@ function drawWaiting(state, width, height) {
 
 function draw(state, snapshot, width, height) {
     const ctx = state.context;
+    ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const danger = playerDangerPresentation(state.playerDanger, snapshot, performance.now(), state.reducedMotion.matches);
     const camera = resolveArenaCamera(snapshot.world, snapshot.player, width, height);
     const visualSeconds = performance.now() / 1000;
@@ -359,6 +360,7 @@ function draw(state, snapshot, width, height) {
     drawSpellCastMotion(ctx, snapshot.castMotion, state.reducedMotion.matches);
 
     ctx.restore();
+    ctx.globalAlpha=1;ctx.filter='none';ctx.globalCompositeOperation='source-over';
     const battleActive = Boolean(snapshot.dragon) && (!snapshot.hunt || snapshot.hunt.stage === 2);
     drawPlayerDanger(ctx, { ...snapshot.player, x: snapshot.player.x - camera.x, y: snapshot.player.y - camera.y }, danger, width, height);
     // Draw navigation above the world but under the HUD. The arrow is not a touch target.

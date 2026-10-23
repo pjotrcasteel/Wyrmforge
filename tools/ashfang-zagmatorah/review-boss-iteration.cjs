@@ -5,7 +5,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
  const browser=await chromium.launch({channel:'msedge',headless:true});
  try{
   const page=await browser.newPage({viewport:{width:402,height:874},deviceScaleFactor:2});const errors=[];
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')console.log('PAGE_ERROR',m.text());});page.on('requestfailed',r=>{if(r.url().includes('/ashfang/'))console.log('ASSET_FAILED',r.url(),r.failure());});
   await page.goto('http://127.0.0.1:8880/hunt-lab?wyrm=Ashfang&ascendant=false&play=true&cast=true&invulnerable=true');
   await page.evaluate(async()=>{
    window.arena=await import('/js/arena.js');window.samples=[];window.captured={};window.pendingCapture=null;
@@ -16,6 +16,7 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
     if(window.pendingCapture||d.paused)return;
     const p=d.dragon?.actionProgress??0;
     const goals={
+     failure:d.renderingFailed||d.ashfang.errors.length>0,
      fire:d.ashfangVfx?.fireStage==='strike'&&p>.25&&p<.7,
      claw:d.ashfangEffects.some(e=>e.kind==='claw_right'&&e.progress<.5),
      rain:d.ashfang.entity?.shadow&&d.huntHazards.some(h=>h.fromAbove&&h.progress>.35&&h.progress<.75),
@@ -32,7 +33,8 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
    const key=await page.evaluate(()=>window.pendingCapture);
    await page.getByRole('button',{name:'Ⅱ Pause',exact:true}).click();await page.waitForTimeout(90);
    const d=await page.evaluate(()=>window.readFight());assert(!d.renderingFailed);
-   captures[key]={time:d.hud.seconds,boss:d.dragon?.health??0,fx:d.ashfangVfx,effects:d.ashfangEffects,pose:d.ashfang.lastDraw};
+   captures[key]={imageErrors:d.ashfang.errors,renderingFailed:d.renderingFailed,time:d.hud.seconds,boss:d.dragon?.health??0,fx:d.ashfangVfx,effects:d.ashfangEffects,pose:d.ashfang.lastDraw};
+   if(key==='failure'){fs.writeFileSync(path.join(out,'failure-samples.json'),JSON.stringify(d,null,2));throw Error('Live failure: '+JSON.stringify({images:d.ashfang.errors,render:d.renderingFailed}));}
    await page.locator('.hunt-lab-surface').screenshot({path:path.join(out,key+'-phone.png')});
    if(key==='fire'){
     assert.equal(d.ashfangVfx.fireStage,'strike');const before=JSON.stringify({pose:d.ashfang.entity,effects:d.ashfangEffects});await page.waitForTimeout(300);const still=await page.evaluate(()=>window.readFight());assert.equal(JSON.stringify({pose:still.ashfang.entity,effects:still.ashfangEffects}),before,'pause freezes sprite and effect progress');
@@ -45,7 +47,8 @@ const out='art/source/bosses/ashfang/reviews/runtime-002/browser';fs.mkdirSync(o
   const samples=await page.evaluate(()=>{clearInterval(window.captureTimer);return window.samples});
   assert(victory,'actual Tier I fight reaches victory');for(const key of ['fire','claw','rain','landing','enrage','death'])assert(captures[key],key+' captured');
   const live=samples.filter(s=>s.boss>0);assert(Math.max(...live.map(s=>s.at))>30,'no four-hit default victory');assert(live.some(s=>s.at>=8&&s.boss>550));
-  assert(samples.every(s=>!s.renderingFailed&&s.errors.length===0));assert(samples.every(s=>!s.pose||Math.abs(s.pose.worldCell-448.53076140099125)<.001));
+  const bad=samples.filter(s=>s.renderingFailed||s.errors.length);if(bad.length)fs.writeFileSync(path.join(out,'failure-samples.json'),JSON.stringify(bad.slice(0,6),null,2));
+  assert(samples.every(s=>!s.renderingFailed&&s.errors.length===0),JSON.stringify(bad.slice(0,2)));assert(samples.every(s=>!s.pose||Math.abs(s.pose.worldCell-448.53076140099125)<.001));
   const layouts=[];
   for(const width of [320,390,402,844]){await page.setViewportSize({width,height:width===844?390:874});await page.waitForTimeout(70);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));layouts.push(width);}
   await page.setViewportSize({width:402,height:874});await page.emulateMedia({reducedMotion:'reduce'});

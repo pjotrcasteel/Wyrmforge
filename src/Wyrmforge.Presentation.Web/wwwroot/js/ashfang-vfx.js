@@ -68,25 +68,34 @@ function flame(ctx,f,reducedMotion){
   for(let i=0;i<(reducedMotion?1:4);i++)smoke(ctx,m.x+d.x*(12+i*8),m.y-8-p*24-i*6,5+i*2,(1-p)*.26,i);
   return;
  }
- const envelope=Math.min(1,.45+p/.1,.45+(1-p)/.1),length=Math.hypot(end.x-m.x,end.y-m.y),nx=-d.y,ny=d.x;
- ctx.save();ctx.globalAlpha=.35*envelope;
- // Restrained diffuse fire light beneath the stream; never a full-screen wash.
- const glow=ctx.createRadialGradient(m.x,m.y,4,m.x,m.y,80);glow.addColorStop(0,'#de803f');glow.addColorStop(1,'rgba(116,55,52,0)');ctx.fillStyle=glow;ctx.fillRect(m.x-80,m.y-80,160,160);
- ctx.globalAlpha=.93*envelope;
- const slices=reducedMotion?16:42;
- for(let i=slices-1;i>=0;i--){
-  const t=i/(slices-1),x=m.x+(end.x-m.x)*t,y=m.y+(end.y-m.y)*t;
-  const width=5+Math.tan(f.halfAngle)*340*t*.78;
-  const jitter=reducedMotion?0:Math.sin(i*1.8+p*48)*(2+7*t);
-  const depth=length/slices+5,alongX=(end.x-m.x)/length,alongY=(end.y-m.y)/length;
-  const left=[x+nx*(width+jitter),y+ny*(width+jitter)],right=[x-nx*(width-jitter),y-ny*(width-jitter)];
-  polygon(ctx,[left,[left[0]+alongX*depth,left[1]+alongY*depth],[right[0]+alongX*depth,right[1]+alongY*depth],right],i%4===0?P.red:P.ember);
-  const inner=width*(.32+.1*Math.sin(i+p*25));
-  polygon(ctx,[[x+nx*inner,y+ny*inner],[x+alongX*depth+nx*inner,y+alongY*depth+ny*inner],[x+alongX*depth-nx*inner,y+alongY*depth-ny*inner],[x-nx*inner,y-ny*inner]],i%3===0?P.hot:P.fire);
-  if(t<.55){ctx.fillStyle=P.core;block(ctx,x+nx*jitter*.3,y+ny*jitter*.3,3+4*(1-t),3);}
+ const envelope=Math.min(1,.45+p/.1,.45+(1-p)/.1),length=Math.hypot(end.x-m.x,end.y-m.y);
+ const ax=(end.x-m.x)/length,ay=(end.y-m.y)/length,nx=-ay,ny=ax;
+ ctx.save();
+ const lanes=reducedMotion?3:5,segments=reducedMotion?9:15;
+ // Separate advecting tongues break up the fan. Dark gaps retain the floor
+ // and the hunter silhouette; the fixed ground rim remains the damage truth.
+ for(let lane=0;lane<lanes;lane++){
+  const side=lanes===3?(lane-1)*.6:(lane-2)*.34;
+  for(let i=0;i<segments;i++){
+   const seed=lane*73+i,t=(i/segments+(reducedMotion?0:p*1.65)+rand(seed)*.04)%1;
+   const spread=Math.tan(f.halfAngle)*340*t;
+   const curl=reducedMotion?0:Math.sin(t*13+p*21+lane)*spread*.13;
+   const x=m.x+(end.x-m.x)*t+nx*(side*spread+curl),y=m.y+(end.y-m.y)*t+ny*(side*spread+curl);
+   const half=(5+13*t)*(1-Math.abs(side)*.2),tail=12+25*t;
+   const transform=(a,b)=>[x+ax*a+nx*b,y+ay*a+ny*b];
+   ctx.globalAlpha=envelope*(.6+.25*rand(seed+9))*(1-.25*t);
+   polygon(ctx,[transform(-tail*.5,-half*.5),transform(-tail*.16,-half),transform(tail*.35,-half*.45),transform(tail*.8,0),transform(tail*.15,half*.65),transform(-tail*.35,half)],Math.abs(side)>.5?P.ember:P.fire);
+   if(Math.abs(side)<.4&&i%3!==0){ctx.globalAlpha*=.78;polygon(ctx,[transform(-tail*.1,-half*.3),transform(tail*.55,0),transform(-tail*.12,half*.35),transform(-tail*.3,0)],t<.55?P.hot:P.ember);}
+   if(lane===Math.floor(lanes/2)&&t<.17){ctx.fillStyle=P.core;block(ctx,x,y,3+3*(1-t),3);}
+  }
  }
- ctx.globalAlpha=.65*envelope;
- for(let i=0;i<(reducedMotion?5:18);i++){const t=(p*2+i*.071)%1,spread=(rand(i)-.5)*110*t;ctx.fillStyle=i%3?P.ember:P.hot;block(ctx,m.x+(end.x-m.x)*t+nx*spread,m.y+(end.y-m.y)*t+ny*spread-5,2+i%2);}
+ for(let i=0;i<(reducedMotion?2:6);i++){
+  const t=.65+rand(i)*.35,side=(i%2?1:-1),spread=Math.tan(f.halfAngle)*340*t;
+  smoke(ctx,m.x+(end.x-m.x)*t+nx*spread*.8*side,m.y+(end.y-m.y)*t+ny*spread*.8*side-7,6+9*t,envelope*.18,i);
+ }
+ ctx.globalAlpha=.7*envelope;
+ for(let i=0;i<(reducedMotion?4:15);i++){const t=(p*2+i*.071)%1,spread=(rand(i)-.5)*100*t;ctx.fillStyle=i%4?P.ember:P.hot;block(ctx,m.x+(end.x-m.x)*t+nx*spread,m.y+(end.y-m.y)*t+ny*spread-5,2+i%2);}
+
  ctx.restore();
 }
 function impact(ctx,e,reducedMotion){

@@ -66,8 +66,8 @@ export function buildSpellLights(snapshot, elapsed = 0, reducedMotion = false, v
 
     const dragon=snapshot.dragon;
     if(Number(dragon?.school)===1&&dragon.action==='breath'&&['windup','strike'].includes(dragon.actionPhase)&&dragon.flightStage==='ground'){
-        candidates.push({x:dragon.x+dragon.directionX*100,y:dragon.y+dragon.directionY*100,radius:165,
-            strength:dragon.actionPhase==='strike'?.62:.16*clamp(dragon.actionProgress),type:'boss-fire',surge:false,...spellLightProfile(1)});
+        candidates.push({x:dragon.x+dragon.directionX*100,y:dragon.y+dragon.directionY*100,radius:135,
+            strength:dragon.actionPhase==='strike'?.32:.10*clamp(dragon.actionProgress),type:'boss-fire',surge:false,...spellLightProfile(1)});
     }
     for(const effect of snapshot.ashfangEffects??[]){
         if(['meteor','cinder'].includes(effect.kind)&&effect.progress<.16)candidates.push({x:effect.x,y:effect.y,radius:effect.radius*2.4,
