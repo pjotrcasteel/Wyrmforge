@@ -75,6 +75,8 @@ public sealed class ArenaLightingBrowserTests : PageTest
         var assets = Environment.GetEnvironmentVariable("WYRMFORGE_STEP3_ASSETS");
         var oak = Path.Combine(assets ?? string.Empty, "ancient_oak", "ancient_oak-candidate.png");
         var elm = Path.Combine(assets ?? string.Empty, "dead_elm", "dead_elm-candidate.png");
+        var oakNormals = Path.Combine(assets ?? string.Empty, "ancient_oak", "ancient_oak-camera-normals.png");
+        var elmNormals = Path.Combine(assets ?? string.Empty, "dead_elm", "dead_elm-camera-normals.png");
         if (string.IsNullOrWhiteSpace(assets) || !File.Exists(oak) || !File.Exists(elm))
         {
             Console.WriteLine("Original Step-3 PNG artifact unavailable: only optional unapproved tree composition skipped.");
@@ -84,10 +86,20 @@ public sealed class ArenaLightingBrowserTests : PageTest
         var canvas = await OpenLightingLabAsync(width, height);
         await Page.Locator("#toggle-animate").UncheckAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-fireball-progress", "0.500");
-        await Page.Locator(".lighting-inspector input[type='file']").Nth(0).SetInputFilesAsync(oak);
-        await Page.Locator(".lighting-inspector input[type='file']").Nth(1).SetInputFilesAsync(elm);
+        await Page.Locator("#oak-png").SetInputFilesAsync(oak);
+        await Page.Locator("#elm-png").SetInputFilesAsync(elm);
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-objects", "2");
         await Expect(canvas).ToHaveAttributeAsync("data-lighting-physics-objects", "0");
+        if (File.Exists(oakNormals) && File.Exists(elmNormals))
+        {
+            var beforeNormals = await CanvasPixelHashAsync(canvas);
+            await Page.Locator("#oak-normal-map").SetInputFilesAsync(oakNormals);
+            await Page.Locator("#elm-normal-map").SetInputFilesAsync(elmNormals);
+            await Expect(canvas).ToHaveAttributeAsync("data-tree-normal-maps", "2");
+            Assert.AreNotEqual(beforeNormals, await CanvasPixelHashAsync(canvas),
+                "Actual Blender mesh normals must change the lit bark, not merely recolor the whole billboard.");
+        }
+        else Console.WriteLine("Actual normal-map export unavailable: original-alpha cast still tested.");
         await Expect(canvas).ToHaveAttributeAsync("data-tree-self-lighting", "2");
         await Expect(canvas).ToHaveAttributeAsync("data-tree-cast-shadows", "2");
         var lit = await CanvasPixelHashAsync(canvas);
