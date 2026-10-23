@@ -4,7 +4,7 @@ from pathlib import Path
 import bpy
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
-p=argparse.ArgumentParser();p.add_argument('--output',required=True);p.add_argument('--motions',required=True);p.add_argument('--clips',default='all');p.add_argument('--directions',default='E,SE,S,SW,W,NW,N,NE');p.add_argument('--size',type=int,default=512);p.add_argument('--samples',type=int,default=24);a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);out=Path(a.output).resolve();out.mkdir(parents=True,exist_ok=True);motions=json.loads(Path(a.motions).read_text());rig=bpy.data.objects['Zahmatorah_Skeleton'];rig.data.pose_position='POSE';scene=bpy.context.scene
+p=argparse.ArgumentParser();p.add_argument('--output',required=True);p.add_argument('--motions',required=True);p.add_argument('--clips',default='all');p.add_argument('--directions',default='E,SE,S,SW,W,NW,N,NE');p.add_argument('--size',type=int,default=512);p.add_argument('--samples',type=int,default=24);p.add_argument('--keyframes',type=int,default=0);a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);out=Path(a.output).resolve();out.mkdir(parents=True,exist_ok=True);motions=json.loads(Path(a.motions).read_text());rig=bpy.data.objects['Zahmatorah_Skeleton'];rig.data.pose_position='POSE';scene=bpy.context.scene
 scene.render.engine='CYCLES';scene.cycles.samples=a.samples;scene.cycles.use_denoising=True;scene.render.use_persistent_data=True
 prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_type='OPTIX';prefs.get_devices();assert any(d.type=='OPTIX' for d in prefs.devices)
 for d in prefs.devices:d.use=d.type=='OPTIX'
@@ -19,8 +19,9 @@ angles={'E':0,'SE':45,'S':90,'SW':135,'W':180,'NW':225,'N':270,'NE':315};clips=l
 def pixel(pos):
  q=world_to_camera_view(scene,cam,pos);return [round(q.x*a.size,4),round((1-q.y)*a.size,4)]
 for name in clips:
- spec=motions['clips'][name];action=bpy.data.actions[spec['action']];rig.animation_data.action=action;rig.animation_data.action_slot=action.slots[0];clip={'frames':[],'fps':12,'loop':spec['loop'],'duration':spec['duration'],'travelPerCycle':spec['travelPerCycle'],'events':spec['events'],'directions':{}};frames=list(range(1,spec['intervals']+1,2))
+ spec=motions['clips'][name];action=bpy.data.actions[spec['action']];rig.animation_data.action=action;rig.animation_data.action_slot=action.slots[0];clip={'frames':[],'fps':12,'loop':spec['loop'],'duration':spec['duration'],'travelPerCycle':spec['travelPerCycle'],'events':spec['events'],'headingChangeDegrees':spec.get('headingChangeDegrees',0),'directions':{}};frames=list(range(1,spec['intervals']+1,2))
  if not spec['loop']:frames.append(spec['intervals']+1)
+ if a.keyframes:frames=sorted(set(round(1+i*spec['intervals']/(a.keyframes-1)) for i in range(a.keyframes)))
  clip['frameCount']=len(frames);clip['sourceFrames']=frames
  for direction in dirs:
   angle=math.radians(90+angles[direction]);cam.location=center+Vector((math.cos(angle)*40,math.sin(angle)*40,40/math.sqrt(2)));aim(cam);bpy.context.view_layer.update();pivot=pixel(Vector((2.19,0,0)));records=[];folder=out/name/direction;folder.mkdir(parents=True,exist_ok=True)
@@ -29,7 +30,7 @@ for name in clips:
    if not path.exists():scene.render.filepath=str(path);bpy.ops.render.render(write_still=True)
    b=rig.pose.bones;mouth=(b['UpperHead'].tail+b['LowerHead'].tail)*.5;fwd=(b['UpperHead'].tail-b['UpperHead'].head).normalized();mouth+=fwd*.2
    attachments={'mouth':pixel(mouth),'head':pixel(b['Head'].head),'chest':pixel(b['Spine01'].head),'pelvis':pixel(b['Spine03'].head),'foreLeft':pixel(b['Arm_l'].tail),'foreRight':pixel(b['Arm_r'].tail),'hindLeft':pixel(b['Feet_l'].head),'hindRight':pixel(b['Feet_r'].head),'tailTip':pixel(b['Tail10'].tail)}
-   records.append({'frame':index,'sourceFrame':frame,'path':str(path.relative_to(out)).replace('\\','/'),'pivot':pivot,'attachments':attachments,'mouthDirection':[round(x,5) for x in fwd]})
+   records.append({'frame':index,'sourceFrame':frame,'path':str(path.relative_to(out)).replace('\\','/'),'pivot':pivot,'attachments':attachments,'mouthDirection':[round(x,5) for x in fwd],'mouthDirection2D':[round(v,5) for v in Vector(pixel(mouth+fwd))-Vector(pixel(mouth))],'rootMotion':spec.get('rootMotion',[0]*spec['sourceFrames'])[frame-1],'rootHeight':round(b['Spine03'].head.z-2.38,5),'footContacts':{k:abs(b[v].tail.z-.26)<.015 if k.startswith('fore') else abs(b[v].head.z-.18)<.015 for k,v in [('foreLeft','Arm_l'),('foreRight','Arm_r'),('hindLeft','Feet_l'),('hindRight','Feet_r')]}})
   clip['directions'][direction]=records
  manifest['clips'][name]=clip;(out/'render-manifest.json').write_text(json.dumps(manifest,indent=2));print('CLIP_RENDERED',name,len(frames)*len(dirs),'elapsed',round(time.time()-start,1),flush=True)
 manifest['elapsedSeconds']=time.time()-start;(out/'render-manifest.json').write_text(json.dumps(manifest,indent=2));print('ALL_RENDERED',manifest['elapsedSeconds'],flush=True)
