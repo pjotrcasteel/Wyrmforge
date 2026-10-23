@@ -10,12 +10,12 @@ prefs=bpy.context.preferences.addons['cycles'].preferences;prefs.compute_device_
 for d in prefs.devices:d.use=d.type=='OPTIX'
 scene.cycles.device='GPU';scene.render.resolution_x=a.size;scene.render.resolution_y=a.size;scene.render.resolution_percentage=100;scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.film_transparent=True
 scene.world=bpy.data.worlds.new('Animation neutral studio');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.12,.14,.18,1);scene.world.node_tree.nodes['Background'].inputs[1].default_value=.45
-center=Vector((3.8,0,2.4))*a.model_scale
+center=Vector(motions.get('cameraCenter',[3.8,0,2.4]))*a.model_scale
 def aim(ob):ob.rotation_euler=(center-ob.location).to_track_quat('-Z','Y').to_euler()
 for name,offset,power,size in [('Key',(-6,-8,12),2700,8),('Fill',(4,6,8),1900,7),('Rim',(8,-2,6),2200,6)]:
  data=bpy.data.lights.new(name,'AREA');data.energy=power*a.model_scale*a.model_scale;data.shape='DISK';data.size=size*a.model_scale;ob=bpy.data.objects.new(name,data);scene.collection.objects.link(ob);ob.location=center+Vector(offset)*a.model_scale;aim(ob)
 cam=bpy.data.objects.new('Sprite camera',bpy.data.cameras.new('Sprite camera'));scene.collection.objects.link(cam);scene.camera=cam;cam.data.type='ORTHO';cam.data.ortho_scale=22*a.model_scale
-angles={'E':0,'SE':45,'S':90,'SW':135,'W':180,'NW':225,'N':270,'NE':315};clips=list(motions['clips']) if a.clips=='all' else a.clips.split(',');dirs=a.directions.split(',');manifest={'schema':'wyrmforge-directional-source/1','source':bpy.data.filepath,'sourceSha256':hashlib.sha256(Path(bpy.data.filepath).read_bytes()).hexdigest(),'fps':12,'cell':a.size,'orthoScale':22,'modelScale':a.model_scale,'cameraElevation':35.26438968,'directions':dirs,'directionAngles':angles,'sourceForward':'-X','up':'+Z','rig':'Zahmatorah_Skeleton','clips':{},'runtimeIntegrated':False};start=time.time()
+angles={'E':0,'SE':45,'S':90,'SW':135,'W':180,'NW':225,'N':270,'NE':315};clips=list(motions['clips']) if a.clips=='all' else a.clips.split(',');dirs=a.directions.split(',');manifest={'schema':'wyrmforge-directional-source/1','source':bpy.data.filepath,'sourceSha256':hashlib.sha256(Path(bpy.data.filepath).read_bytes()).hexdigest(),'fps':12,'cell':a.size,'orthoScale':22,'cameraCenter':list(center/a.model_scale),'modelScale':a.model_scale,'cameraElevation':35.26438968,'directions':dirs,'directionAngles':angles,'sourceForward':'-X','up':'+Z','rig':'Zahmatorah_Skeleton','clips':{},'runtimeIntegrated':False};start=time.time()
 def save_manifest():
  temporary=out/'render-manifest.tmp';temporary.write_text(json.dumps(manifest,indent=2));temporary.replace(out/'render-manifest.json')
 def pixel(pos):

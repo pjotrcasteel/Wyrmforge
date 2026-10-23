@@ -2,7 +2,7 @@
 import argparse,hashlib,json,math,sys
 from pathlib import Path
 import bpy,numpy as np
-p=argparse.ArgumentParser();p.add_argument('--motions',required=True);p.add_argument('--output',required=True);a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);specs=json.loads(Path(a.motions).read_text());rig=bpy.data.objects['Zahmatorah_Skeleton'];body=bpy.data.objects['Zagmatorah'];scene=bpy.context.scene;scene.render.fps=24;rig.data.pose_position='POSE';report={'source':bpy.data.filepath,'sourceSha256':hashlib.sha256(Path(bpy.data.filepath).read_bytes()).hexdigest(),'clips':{},'transitions':{},'rigBones':len(rig.data.bones),'meshVertices':len(body.data.vertices),'temporaryConstraints':sum(len(b.constraints) for b in rig.pose.bones),'runtimeIntegrated':False};endpoints={};center=np.array([3.8,0,2.4]);el=math.atan(1/math.sqrt(2));basis=[]
+p=argparse.ArgumentParser();p.add_argument('--motions',required=True);p.add_argument('--output',required=True);a=p.parse_args(sys.argv[sys.argv.index('--')+1:]);specs=json.loads(Path(a.motions).read_text());rig=bpy.data.objects['Zahmatorah_Skeleton'];body=bpy.data.objects['Zagmatorah'];scene=bpy.context.scene;scene.render.fps=24;rig.data.pose_position='POSE';report={'source':bpy.data.filepath,'sourceSha256':hashlib.sha256(Path(bpy.data.filepath).read_bytes()).hexdigest(),'clips':{},'transitions':{},'rigBones':len(rig.data.bones),'meshVertices':len(body.data.vertices),'temporaryConstraints':sum(len(b.constraints) for b in rig.pose.bones),'runtimeIntegrated':False};endpoints={};center=np.array(specs.get('cameraCenter',[3.8,0,2.4]));el=math.atan(1/math.sqrt(2));basis=[]
 for deg in range(0,360,45):
  az=math.radians(90+deg);basis.append((np.array([-math.sin(az),math.cos(az),0]),np.array([-math.cos(az)*math.sin(el),-math.sin(az)*math.sin(el),math.cos(el)])))
 def mesh_coords():
@@ -15,7 +15,8 @@ for name,spec in specs['clips'].items():
    px=256+q@right*512/22;py=256-q@up*512/22;boxes=[min(boxes[0],float(px.min())),min(boxes[1],float(py.min())),max(boxes[2],float(px.max())),max(boxes[3],float(py.max()))]
   t=(frame-1)/spec['intervals']
   if name in ('walk','stalk','run'):
-   duty=.55 if name=='run' else .7;offsets={('fore','l'):0,('fore','r'):.12,('hind','l'):.5,('hind','r'):.62} if name=='run' else {('fore','l'):0,('hind','r'):.25,('fore','r'):.5,('hind','l'):.75}
+   duty=spec.get('stanceDuty',.55 if name=='run' else .7);offsets={('fore','l'):0,('fore','r'):.12,('hind','l'):.5,('hind','r'):.62} if name=='run' else {('fore','l'):0,('hind','r'):.25,('fore','r'):.5,('hind','l'):.75}
+   if 'phaseOffsets' in spec:offsets={('fore','l'):spec['phaseOffsets']['foreLeft'],('fore','r'):spec['phaseOffsets']['foreRight'],('hind','l'):spec['phaseOffsets']['hindLeft'],('hind','r'):spec['phaseOffsets']['hindRight']}
    for key,offset in offsets.items():
     phase=(t+offset)%1
     if phase<duty-1e-6:

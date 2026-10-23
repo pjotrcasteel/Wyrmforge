@@ -15,6 +15,8 @@
 
 - **Ashfang animation reuse (owner direction, 23 October 2026):** build a complete locomotion, combat, breath, flight-transition, reaction and death library on the accepted 112-bone Zagmatorah rig. Future tiers reuse this hierarchy and normalized action/event timings; model scale also scales root travel and VFX sockets. Additional horns or armor must retain compatible attachment/skin bindings and pass fresh deformation/framing review. Fire and smoke remain separate game VFX. Authorization to build the library does not imply motion or runtime acceptance.
 
+- **Ashfang performance direction (owner feedback, 23 October 2026):** the first complete motion library reads too weak. Retain the appearance/anatomy, but revise all motion for substantially exaggerated animal aggression, strong anticipation, explosive acceleration and weighted follow-through. Claws raise and rake diagonally toward the opposite paw with claws outward; bite reaches forward and clamps; roar uses the whole body; takeoff pivots/squats onto the hind legs then pushes off with a rapid wing downstroke; running is a threatening bound; deaths have a dramatic struggle and collapse. Irregular-looking attention snaps remain authored and target-focused. This direction does not approve a motion revision or change C# gameplay authority.
+
 ## Historical approved world-art gallery (not a current town layout specification)
 
 ### Approved world concept — 14 October 2026

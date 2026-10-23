@@ -1,11 +1,12 @@
 """Create visual review contacts from real exported atlas cells, without interpolation."""
-import json
+import json, argparse
 from pathlib import Path
 from PIL import Image, ImageDraw
 
 root = Path('art/source/bosses/ashfang')
-export = root / 'exports/motion-foundation-001'
-out = root / 'reviews/motion-library-008'
+p=argparse.ArgumentParser();p.add_argument('--export',default='art/source/bosses/ashfang/exports/motion-foundation-001');p.add_argument('--output',default='art/source/bosses/ashfang/reviews/motion-library-008');a=p.parse_args()
+export=Path(a.export)
+out=Path(a.output);out.mkdir(parents=True,exist_ok=True)
 manifest = json.loads((export / 'manifest.json').read_text(encoding='utf-8'))
 names = list(manifest['clips'])
 for page in range((len(names) + 9) // 10):
