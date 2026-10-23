@@ -1,3 +1,5 @@
-# Foundation 003 refinement in progress — 23 October 2026
+# Foundation003 source/export complete candidate
 
-Source 018 passes all 41 source actions, ground clearance, 20 seams and all-direction framing. Packed source preserves original anatomy and 20 embedded images. All 30 unaffected actions are exactly equal to source 014; an idle material render is pixel-identical. Eleven revised clips are rendering in eight directions. Previous 001 and 002 remain preserved. Remaining: complete renders, pack 003, inspect actual playback/cooling, scale proof, independently retrieve new remote source/assets. No game integration or owner motion acceptance implied.
+All41 motions,7736 directional frames and656 atlases are packed and pixel-verified. Eleven revised clips rendered fresh;30 unaffected clips reused after exact native deformation proof and identical living-material pixel check. Source, packed source and independently downloaded master pass anatomy/dependency/motion checks. Scale2 and full offline browser playback/lifecycle pass. GPU jobs complete. Final atlas remote retrieval is pending.
+
+Current player: exports/motion-foundation-003/index.html. Packed source: archive/motion-foundation-003-packed/ashfang-animation-foundation.blend. Previous001/002 preserved. See reviews/motion-foundation-003/review.md and ANIMATION-REPRODUCE-003.md. Owner review, game/VFX integration and actual Hunt/physical-phone validation remain separate.

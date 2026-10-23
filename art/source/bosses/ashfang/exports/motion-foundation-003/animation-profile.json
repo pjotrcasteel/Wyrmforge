@@ -741,6 +741,67 @@
       "effectWindows": [],
       "headingChangeDegrees": 0
     },
+    "glide": {
+      "clip": "glide",
+      "frames": 24,
+      "duration": 2.0,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": true,
+      "hold": false,
+      "priority": 50,
+      "events": {},
+      "markers": [],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "bank_left": {
+      "clip": "bank_left",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "bank": 0.5
+      },
+      "markers": [
+        {
+          "name": "bank",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "bank_right": {
+      "clip": "bank_right",
+      "frames": 21,
+      "duration": 1.6666666666666667,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": false,
+      "priority": 50,
+      "events": {
+        "bank": 0.5
+      },
+      "markers": [
+        {
+          "name": "bank",
+          "phase": 0.5,
+          "seconds": 0.8333333333333334
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
     "air_breath": {
       "clip": "air_breath",
       "frames": 33,
@@ -967,6 +1028,53 @@
           "name": "cool_end",
           "phase": 0.82,
           "seconds": 3.28
+        }
+      ],
+      "effectWindows": [],
+      "headingChangeDegrees": 0
+    },
+    "death_alt": {
+      "clip": "death_alt",
+      "frames": 53,
+      "duration": 4.333333333333333,
+      "fps": 12,
+      "sampleFps": 12,
+      "mode": "fullBody",
+      "loop": false,
+      "hold": true,
+      "priority": 100,
+      "events": {
+        "voice": 0.22,
+        "collapse": 0.62,
+        "hold": 0.85,
+        "cool_start": 0.3,
+        "cool_end": 0.82
+      },
+      "markers": [
+        {
+          "name": "voice",
+          "phase": 0.22,
+          "seconds": 0.9533333333333333
+        },
+        {
+          "name": "collapse",
+          "phase": 0.62,
+          "seconds": 2.6866666666666665
+        },
+        {
+          "name": "hold",
+          "phase": 0.85,
+          "seconds": 3.683333333333333
+        },
+        {
+          "name": "cool_start",
+          "phase": 0.3,
+          "seconds": 1.2999999999999998
+        },
+        {
+          "name": "cool_end",
+          "phase": 0.82,
+          "seconds": 3.553333333333333
         }
       ],
       "effectWindows": [],

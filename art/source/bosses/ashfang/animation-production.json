@@ -1,5 +1,5 @@
 {
-  "status": "Foundation 003 source validated; 11 revised clips rendering, 30 unchanged actions proven exact",
+  "status": "Foundation003 complete source/export candidate; final remote atlas retrieval pending",
   "scope": "Reusable same-rig action library and eight-direction alpha sprite exports; no live gameplay replacement",
   "rig": "Zahmatorah_Skeleton",
   "deformBones": 112,
@@ -75,11 +75,11 @@
     "ownerAcceptedMotion": false
   },
   "authoredClips": 41,
-  "currentMotionSource": "archive/motion-library-014/ashfang-animations.blend",
+  "currentMotionSource": "archive/motion-library-018/ashfang-animations.blend",
   "sourceValidationPassed": true,
   "exportStatus": "41 clips; 7736 directional frames; 656 atlases; all master pixels verified",
   "resumeNote": "PAUSED.md",
-  "packedMaster": "archive/motion-foundation-002-packed/ashfang-animation-foundation.blend",
+  "packedMaster": "archive/motion-foundation-003-packed/ashfang-animation-foundation.blend",
   "rigFamily": "zagmatorah-112/v1",
   "scaleTwoProofPassed": true,
   "exportProgress": {
@@ -97,7 +97,22 @@
     "Game integration and separate VFX",
     "Actual Hunt and physical-phone validation"
   ],
-  "remoteVerification": {
+  "previousFoundation": "exports/motion-foundation-002 (preserved comparison; owner requested focused refinements)",
+  "activeRefinement": {
+    "source": "archive/motion-library-018/ashfang-animations.blend",
+    "packedSource": "archive/motion-foundation-003-packed/ashfang-animation-foundation.blend",
+    "sourceValidation": "reviews/motion-foundation-003/source-validation.json",
+    "reuseProof": "reviews/motion-foundation-003/unchanged-action-proof.json",
+    "revisedClips": 11,
+    "unchangedReusedClips": 30,
+    "exportComplete": true,
+    "runtimeIntegrated": false,
+    "freshlyRenderedDirectionalFrames": 2756,
+    "reusedDirectionalFrames": 4980,
+    "review": "reviews/motion-foundation-003/review.md"
+  },
+  "currentExport": "exports/motion-foundation-003",
+  "previousRemoteVerification": {
     "assetCheckpoint": "f132c46b114bd70bde7ffa2d66739a1a44eb198c",
     "playerCheckpoint": "aace0d49c0297dacfc573da76409311ea713d410",
     "independentlyRetrievedAndSha256VerifiedLfsObjects": 1465,
@@ -107,15 +122,10 @@
     "finalEvidenceCheckpoint": "3064b0ff4024cf4c00a0597bc5247da88b2fbac2",
     "allTrackedLfsObjectsVerified": true
   },
-  "previousFoundation": "exports/motion-foundation-001 (owner rejected performance as too weak)",
-  "activeRefinement": {
-    "source": "archive/motion-library-018/ashfang-animations.blend",
-    "packedSource": "archive/motion-foundation-003-packed/ashfang-animation-foundation.blend",
-    "sourceValidation": "reviews/motion-foundation-003/source-validation.json",
-    "reuseProof": "reviews/motion-foundation-003/unchanged-action-proof.json",
-    "revisedClips": 11,
-    "unchangedReusedClips": 30,
-    "exportComplete": false,
-    "runtimeIntegrated": false
+  "remoteVerification": {
+    "status": "Packed master independently retrieved and validated; final atlas receipt pending",
+    "packedMasterSha256": "13173a60ee0f71276f75abe52ed22b9c17f74680d33bf6e2bbaa123aa886bed0",
+    "nativeReport": "reviews/motion-foundation-003/remote-native-validation.json",
+    "motionReport": "reviews/motion-foundation-003/remote-motion-validation.json"
   }
 }
