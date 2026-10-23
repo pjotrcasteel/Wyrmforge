@@ -262,7 +262,7 @@
 /* Pixel-replaced luminous source art: transparent outside selected violet magic.
    Coordinates are the full canonical panorama; the original image stays unchanged. */
 .game-shell.refuge-home .refuge-town-nexus-pixels {
-    position:absolute;inset:0;z-index:1;width:100%;height:100%;
+    position:absolute;inset:0;z-index:0;width:100%;height:100%;
     display:block;pointer-events:none;user-select:none;
 }
 .game-shell.refuge-home .refuge-canonical-scene[data-nexus-pixels-ready="true"] .refuge-town-nexus-chroma {
