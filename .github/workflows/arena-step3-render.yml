@@ -34,7 +34,7 @@ jobs:
           echo "$expected  $RUNNER_TEMP/$archive" | sha256sum --check -
           tar -xJf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/blender-$version-linux-x64" >> "$GITHUB_PATH"
-          blender --version | head -2
+          "$RUNNER_TEMP/blender-$version-linux-x64/blender" --version | head -2
       - name: Render independent original living tree
         run: |
           blender -b -t 4 --python tools/art/step3_wet_forest.py -- \
