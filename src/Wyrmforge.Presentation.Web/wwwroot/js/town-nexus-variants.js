@@ -14,7 +14,7 @@ const SOURCE_WIDTH = 1672;
 const SOURCE_HEIGHT = 941;
 // All the Nexus' glass, crystals and portal are inside this rectangle.
 // The rest of the panorama (including other buildings) is never sampled or painted.
-const NEXUS_MAGIC_BOUNDS = Object.freeze({ x: 58, y: 36, width: 498, height: 368 });
+const NEXUS_MAGIC_BOUNDS = Object.freeze({ x: 58, y: 36, width: 498, height: 315 });
 const readyScenes = new WeakMap();
 
 function rgbToHsl(r, g, b) {
