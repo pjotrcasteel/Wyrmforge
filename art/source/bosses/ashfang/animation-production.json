@@ -177,7 +177,7 @@
     "remoteVerified": true
   },
   "runtimeIntegration": {
-    "status": "implemented-awaiting-live-browser-validation",
+    "status": "locally-validated-playable-branch",
     "manifest": "exports/runtime-001/manifest.json",
     "clips": 18,
     "frames": 3272,
@@ -186,6 +186,14 @@
     "behavior": "reactive deterministic C# predator policy, committed warning/strike/recovery; aerial shadow/fire-rain/landing",
     "renderer": "src/Wyrmforge.Presentation.Web/wwwroot/js/ashfang-sprites.js",
     "notes": "RUNTIME-INTEGRATION.md",
-    "deployed": false
+    "deployed": false,
+    "browserReceipt": "reviews/runtime-001/browser-report.json",
+    "remoteReceipt": "reviews/runtime-001/remote-receipt.json",
+    "tests": {
+      "application": 629,
+      "domain": 375,
+      "javascript": 365
+    },
+    "physicalPhoneAcceptance": false
   }
 }

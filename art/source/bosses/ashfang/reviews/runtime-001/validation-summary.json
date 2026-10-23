@@ -1,0 +1,22 @@
+{
+  "webBuild": {
+    "pass": true,
+    "warnings": 0,
+    "errors": 0
+  },
+  "tests": {
+    "application": 629,
+    "domain": 375,
+    "javascript": 365,
+    "failures": 0
+  },
+  "nativeFrames": 3272,
+  "motions": 18,
+  "directions": 8,
+  "atlasSheets": 144,
+  "remoteAtlasReferences": 288,
+  "browserReceipt": "browser-report.json",
+  "remoteReceipt": "remote-receipt.json",
+  "physicalPhoneAcceptance": false,
+  "deployed": false
+}
