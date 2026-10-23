@@ -1,5 +1,42 @@
 # Wyrmforge
 
+## Prototype 0.0.175 — Pyromancer combat coherence
+
+- All three systems work together: Fireball core leveling grows permanent base damage (+8% per level) and opens mutation slots; Research unlocks compatible mutations; Arcane Web adds stat bonuses and socketable mutation amplification.
+- Conflagration area bonuses and Immolation duration bonuses now affect actual hit areas / burn ground lifetime, not just labels. Burn tick damage is the separate `BurnDamage` bonus.
+- Four legacy Fireball-specific one-point Web enhancements are now generic Fire minor nodes, with stable node IDs and save compatibility. Major socket bindings remain mutation-specific.
+- [Fire-only implementation and acceptance requirements](docs/playtesting/2026-10-22-pyromancer-combat-coherence.md).
+
+
+## Prototype 0.0.174 — Pyromancer Immolation causes real burning damage
+
+- Four Immolation minor nodes now grant **burning-ground damage**, distinct from generic direct spell damage and mutation duration.
+- Burning-ground ticks apply the same additive build-stat pipeline as all other passives, so the bonus is authoritative in combat and remains relevant across school switches when a Fire burn is active.
+- Domain tests verify additive +14% burn damage from the four nodes without increasing other spell damage or duration. Fireball mutations and amplification retain their independent rules.
+
+
+
+
+## Prototype 0.0.173 — Socket an equipped mutation into a Web amplifier
+
+- Conflagration's Crown of Ash amplifies the **Detonation explosion radius** by ×1.20; Immolation's Furnace enhances **Scorched Earth burning duration** by ×1.25, only when the mutation is equipped.
+- The Web inspector assigns an already equipped compatible mutation to an unlocked major node; it never researches a mutation or unlocks a Main Spell mutation slot.
+- Amplifier assignments persist with the character and saved hunt loadouts. Hunts snapshot assignments at start and the simulation applies them to the assigned mutation's effect only, with a generic ×1.50 cap and no recursive processing.
+- State, deterministic-effect scope, UI persistence and hunt preparation are covered by dedicated tests. Both prior and new saved builds/loadouts remain readable.
+- [Implementation contract and validation criteria](docs/playtesting/2026-10-22-mutation-amplifier-sockets.md).
+
+
+
+
+
+## Prototype 0.0.172 — Grand Arcane Web: Pyromancer expansion
+
+- Three visual and mechanical point tiers: minor (1), medium (2), major (3); inherited point costs and saves are preserved.
+- Pyromancer gains 12 playable Conflagration/Immolation nodes, diverging area and sustained-pressure paths, alternate links to prior Fire landmarks, and imposing Major nodes.
+- No separate points header or Pyromancer map toolbar; points and zoom/recenter controls float within the map. Six outer school emblems and node spacing remain.
+- [Product contract, precise implementation boundary, and acceptance checklist](docs/playtesting/2026-10-22-grand-arcane-web-tiers.md). Generic mutation amplifier sockets are the next working slice, not placeholders in this release.
+
+
 ## Prototype 0.0.168 — Routed Arcane paths and debug character reset
 
 - Arcane Web uses school stems, branching milestones and curved connections between schools, with no decorative spokes through skills. Stable progression and saved builds retain their rules.

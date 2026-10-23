@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using Microsoft.Playwright.MSTest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,6 +11,141 @@ public sealed class WyrmforgeBrowserTests : PageTest
 {
     private string BaseUrl => Environment.GetEnvironmentVariable("WYRMFORGE_BASE_URL") ?? "http://127.0.0.1:4173/";
     private string ArtifactDirectory => Environment.GetEnvironmentVariable("WYRMFORGE_BROWSER_ARTIFACTS") ?? Path.Combine(Path.GetTempPath(), "wyrmforge-browser");
+
+    [TestMethod]
+    [DataRow(320, 568)]
+    [DataRow(390, 844)]
+    public async Task Mobile_TownArcaneNexus_UsesBakedFireAssetAndSchoolMastery(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            if (!localStorage.getItem('nexusAssetSeeded')) {
+                localStorage.setItem('nexusAssetSeeded','1');
+                localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));
+            }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        var scene = Page.Locator(".refuge-canonical-scene");
+        var painting = scene.Locator("[data-nexus-school-art]");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-mastery-points", "0");
+        await Expect(painting).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/fire\.png"));
+        await Page.WaitForFunctionAsync(@"() => {
+            const image = document.querySelector('[data-nexus-school-art]');
+            return image?.complete && image.naturalWidth === 1672;
+        }");
+        await Expect(scene.Locator("[data-nexus-school-mastery]")).ToHaveCountAsync(0);
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-fire-baked-unlearned-{width}.png");
+
+        await Page.EvaluateAsync(@"() => localStorage.setItem('wyrmforge.arcaneBuild.v1',
+            JSON.stringify({Budget:24,Nodes:['fire-start','fire-1','fire-2','fire-major','wildfire']}))");
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
+        var points = int.Parse(await scene.GetAttributeAsync("data-nexus-mastery-points") ?? "0");
+        Assert.IsGreaterThan(0, points);
+        var mastery = scene.Locator("[data-nexus-school-mastery]");
+        await Expect(mastery).ToBeVisibleAsync();
+        var strength = await mastery.EvaluateAsync<double>("img => Number(getComputedStyle(img).opacity)");
+        Assert.IsGreaterThan(0, strength);
+        Assert.IsLessThan(0.3, strength, "School lighting must not wash out the original masonry.");
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-fire-baked-invested-{width}.png");
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Expect(Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" })).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    [DataRow("Pyromancer", "fire")]
+    [DataRow("Cryomancer", "frost")]
+    [DataRow("Stormcaller", "storm")]
+    [DataRow("Arcanist", "arcane")]
+    public async Task TownArcaneNexus_UsesActualAssetPerSchoolWithoutAlteringPanorama(string school, string key)
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync($@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','{school}');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({{Budget:24,Nodes:[]}}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        var scene = Page.Locator(".refuge-canonical-scene");
+        var asset = scene.Locator("[data-nexus-school-art]");
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
+        await Expect(asset).ToHaveAttributeAsync("src", new Regex(@"nexus-schools/" + key + @"\.png"));
+        await Expect(asset).ToBeVisibleAsync();
+        await Page.WaitForFunctionAsync(@"() => {
+            const image = document.querySelector('[data-nexus-school-art]');
+            return image?.complete && image.naturalWidth === 1672;
+        }");
+        Assert.IsTrue(await asset.EvaluateAsync<bool>(@"img => {
+            if (!img.complete || img.naturalWidth !== 1672 || img.naturalHeight !== 941) return false;
+            const canvas = document.createElement('canvas');
+            canvas.width = 1672; canvas.height = 941;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img,0,0);
+            const magic = ctx.getImageData(300,110,30,40).data;
+            const containsMagic = magic.some((value,index) => index%4===3 && value>150);
+            return containsMagic &&
+                ctx.getImageData(800,400,1,1).data[3]===0 &&
+                ctx.getImageData(1200,200,1,1).data[3]===0;
+        }"), "The school must have visible baked magic and transparent pixels everywhere outside the Nexus.");
+        await Expect(scene.Locator(".refuge-town-night-base")).ToHaveAttributeAsync("src", new Regex("night-active.webp"));
+        await Expect(scene.Locator(".refuge-town-nexus-pixels")).ToHaveCountAsync(0);
+        await Expect(scene.Locator(".refuge-town-nexus-chroma")).ToHaveCountAsync(0);
+        await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+        await ScreenshotAsync($"nexus-school-{key}-390.png");
+    }
+
+    [TestMethod]
+    public async Task Mobile_NexusDebugSelector_PreviewsSixImageAssetsWithoutChangingCharacter()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "More options" }).ClickAsync();
+        await Page.Locator("#debug-nexus-palette").SelectOptionAsync("Frost");
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Back to main menu" }).ClickAsync();
+
+        var scene = Page.Locator(".refuge-canonical-scene");
+        foreach (var key in new[] { "frost", "storm", "death", "binding", "arcane", "fire" })
+        {
+            if (key != "frost")
+                await Page.Locator("[data-nexus-preview-school='" + key + "']").ClickAsync();
+            await Expect(scene).ToHaveAttributeAsync("data-nexus-school", key);
+            await Expect(scene.Locator("[data-nexus-school-art]")).ToHaveAttributeAsync(
+                "src", new Regex(@"nexus-schools/" + key + @"\.png"));
+            await Page.WaitForFunctionAsync(@"() => {
+                const image = document.querySelector('[data-nexus-school-art]');
+                return image?.complete && image.naturalWidth === 1672;
+            }");
+            await Page.Locator(".refuge-canonical-viewport").EvaluateAsync("el => window.wyrmforgeTown.show(0, false)");
+            await ScreenshotAsync($"nexus-debug-{key}-390.png");
+        }
+        await Page.Locator("[data-nexus-preview-school='auto']").ClickAsync();
+        await Expect(scene).ToHaveAttributeAsync("data-nexus-school", "fire");
+        await Expect(Page.Locator(".refuge-town-nexus-preview-controls")).ToHaveCountAsync(0);
+        Assert.AreEqual("Pyromancer",
+            await Page.EvaluateAsync<string>("localStorage.getItem('wyrmforge.characterSchool.v1')"));
+    }
+
+    [TestMethod]
+    public async Task Mobile_LockedNexus_HasNoMagicSchoolImageUntilUnlocked()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','0');
+            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
+            localStorage.setItem('wyrmforge.arcaneBuild.v1',JSON.stringify({Budget:24,Nodes:[]}));");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await Expect(Page.Locator(".refuge-town-spot--nexus")).ToHaveAttributeAsync("data-town-state", "vacant");
+        await Expect(Page.Locator("[data-nexus-school-art]")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".refuge-town-vacant-layer[src*='ArcaneNexus']")).ToHaveCountAsync(1);
+    }
 
     [TestMethod]
     public async Task Mobile_TownV2_NexusMaskMovesOneNpcWithoutLegacyGeometry()
@@ -405,6 +541,42 @@ public sealed class WyrmforgeBrowserTests : PageTest
     }
 
     [TestMethod]
+    public async Task ArcaneWeb_MajorMutationAmplifier_SavesCompatibleEquippedMutation()
+    {
+        await Page.SetViewportSizeAsync(390, 844);
+        // This script also executes after ReloadAsync; never reset the state we are asserting survives it.
+        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
+            if (!localStorage.getItem('wyrmforge.arcaneBuild.v1')) {
+                localStorage.setItem('wyrmforge.arcaneBuild.v1', JSON.stringify({Budget:24,
+                    Nodes:['fire-start','fire-1','fire-ember-drift','fire-scorching-winds',
+                        'fire-cinder-halo','fire-conflagration','fire-ashfront','fire-spread-crown']}));
+            }
+            if (!localStorage.getItem('wyrmforge.fireballCore.v1')) {
+                localStorage.setItem('wyrmforge.fireballCore.v1',
+                    JSON.stringify({Level:1,Discovered:[2],Slots:[2,null,null,null,null]}));
+            }");
+        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+
+        await Page.Locator(".web-node[data-node-id='fire-spread-crown']").EvaluateAsync("el => el.click()");
+        var slot = Page.Locator(".web-amplifier-socket select");
+        await Expect(slot).ToBeEnabledAsync();
+        await slot.SelectOptionAsync("Detonation");
+        var saved = await Page.EvaluateAsync<string>("() => localStorage.getItem('wyrmforge.arcaneBuild.v1') ?? ''");
+        StringAssert.Contains(saved, "fire-spread-crown");
+        StringAssert.Contains(saved, "Detonation");
+
+        await Page.ReloadAsync(new PageReloadOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await EnterTownIfNeededAsync();
+        await OpenTownBuildingAsync("Arcane Nexus");
+        await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
+        await Page.Locator(".web-node[data-node-id='fire-spread-crown']").EvaluateAsync("el => el.click()");
+        await Expect(Page.Locator(".web-amplifier-socket select")).ToHaveValueAsync("Detonation");
+    }
+
+    [TestMethod]
     [DataRow(320, 568)]
     [DataRow(390, 844)]
     public async Task Mobile_ArenaLab_GroundFoundationHasNoLegacyAssetsOrCollision(int width, int height)
@@ -413,7 +585,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl.TrimEnd('/') + "/arena-lab?seed=1441&stage=5&habitat=WetForest",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Ground Foundation" }))
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Natural Terrain & Forest Trails" }))
             .ToBeVisibleAsync();
         var canvas = Page.Locator(".arena-stage canvas");
         await Expect(canvas).ToBeVisibleAsync();
@@ -422,30 +594,35 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-assets", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-roads", "0");
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-collision", "0");
-        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "natural");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "trails");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-trails", "2");
         await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Hit prop" })).ToHaveCountAsync(0);
         await Expect(Page.GetByRole(AriaRole.Checkbox, new() { Name = "Pathing mobs" })).ToHaveCountAsync(0);
         await Expect(Page.Locator(".arena-stage .legacy-tree")).ToHaveCountAsync(0);
 
         var diagnostics = await Page.EvaluateAsync<System.Text.Json.JsonElement>(@"async () => {
-            const m = await import('./js/arena-ground-foundation.js?v=20261022-ground-reset-1');
+            const m = await import('./js/arena-ground-foundation.js?v=20261022-forest-trails-1');
             return m.readGroundFoundationDiagnostics(document.querySelector('.arena-stage canvas'));
         }");
         Assert.AreEqual(0, diagnostics.GetProperty("assets").GetInt32());
         Assert.AreEqual(0, diagnostics.GetProperty("mobs").GetInt32());
         Assert.AreEqual(0, diagnostics.GetProperty("obstacles").GetInt32());
         Assert.AreEqual(0, diagnostics.GetProperty("roads").GetInt32());
+        Assert.AreEqual(2, diagnostics.GetProperty("trailBranches").GetInt32());
         Assert.AreEqual(960, diagnostics.GetProperty("worldWidth").GetInt32());
 
         await Page.GetByRole(AriaRole.Button, new() { Name = "All grass" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "grass");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Natural ground" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "natural");
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-trails", "0");
         Directory.CreateDirectory(ArtifactDirectory);
         await canvas.ScreenshotAsync(new LocatorScreenshotOptions
         {
             Path = Path.Combine(ArtifactDirectory, $"arena-foundation-ground-only-{width}.png"),
         });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Forest trails" }).ClickAsync();
+        await Expect(canvas).ToHaveAttributeAsync("data-foundation-mode", "trails");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Different ground ↻" }).ClickAsync();
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-seed", "1442");
         Assert.IsNull(await Page.EvaluateAsync<string?>("() => localStorage.getItem('wyrmforge.arenaLabProgress')"));
@@ -458,7 +635,7 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Page.GotoAsync(BaseUrl.TrimEnd('/') +
             "/arena-lab?seed=1441%26stage%3D5%26habitat%3DWetForest",
             new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Arena Ground Foundation" }))
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Natural Terrain & Forest Trails" }))
             .ToBeVisibleAsync();
         var canvas = Page.Locator(".arena-stage canvas");
         await Expect(canvas).ToHaveAttributeAsync("data-foundation-seed", "1204");
@@ -985,10 +1162,25 @@ public sealed class WyrmforgeBrowserTests : PageTest
         }"), "Nexus purposes must remain readable, tappable, and contained at 320px and 390px.");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
 
-        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".school-wheel-navigation, .nexus-equipped, .nexus-rack-details, .build-heading, .atlas-toolbar")).ToHaveCountAsync(0);
+        await Expect(Page.Locator(".atlas-stage > .web-points-hud")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".atlas-stage > .web-floating-controls .atlas-action")).ToHaveCountAsync(4);
+        Assert.IsTrue(await Page.Locator(".web-points-hud").EvaluateAsync<bool>(@"chip => {
+            const stage = chip.closest('.atlas-stage').getBoundingClientRect();
+            const rect = chip.getBoundingClientRect();
+            return rect.left >= stage.left && rect.right <= stage.right
+                && rect.top >= stage.top && rect.bottom <= stage.bottom;
+        }"), "Arcane point counter must float inside the Web without displacing the canvas.");
         var viewport = Page.GetByRole(AriaRole.Region, new() { Name = "Arcane specialization map" });
         await viewport.ScrollIntoViewIfNeededAsync();
         await Expect(viewport).ToHaveAttributeAsync("data-scale", "0.95");
+        Assert.IsGreaterThan(12, await Page.Locator(".web-node[data-tier='minor']").CountAsync());
+        Assert.IsGreaterThan(4, await Page.Locator(".web-node[data-tier='medium']").CountAsync());
+        Assert.IsGreaterThan(4, await Page.Locator(".web-node[data-tier='major']").CountAsync());
+        await Expect(Page.Locator(".web-node[data-node-id='fire-spread-crown'][data-tier='major']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='fire-conflagration'][data-tier='medium']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-node[data-node-id='fire-ember-drift'][data-tier='minor']")).ToHaveCountAsync(1);
+        await Expect(Page.Locator(".web-region-label")).ToHaveCountAsync(2);
         var minimumSeparation = await Page.EvaluateAsync<double>(@"() => {
             const nodes = [...document.querySelectorAll('.web-node')].map(n => ({ x:parseFloat(n.style.left), y:parseFloat(n.style.top) }));
             return Math.min(...nodes.flatMap((a,i) => nodes.slice(i+1).map(b => Math.hypot(a.x-b.x,a.y-b.y))));
@@ -1441,8 +1633,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
         Assert.AreEqual("hidden", await Page.Locator("[data-game-version]").EvaluateAsync<string>("element => getComputedStyle(element).visibility"));
         await Expect(Page.Locator(".fireball-mini-pips i")).ToHaveCountAsync(10);
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +0%");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+8%");
         await Page.GetByRole(AriaRole.Button, new() { Name = "Upgrade to Lv 2" }).ClickAsync();
         await Expect(Page.Locator(".fireball-heading h2")).ToContainTextAsync("Lv 2");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("Base damage: +8%");
+        await Expect(Page.Locator(".fireball-damage-growth")).ToContainTextAsync("+16%");
         await Expect(Page.Locator(".fireball-socket.sealed")).ToHaveCountAsync(3);
         await Page.ReloadAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
         await EnterTownIfNeededAsync();

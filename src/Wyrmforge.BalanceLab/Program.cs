@@ -6,6 +6,11 @@ using Wyrmforge.Application.Runs.Simulation;
 using Wyrmforge.BalanceLab;
 
 var options = BalanceLabOptions.Parse(args);
+if (options.FireProgression)
+{
+    await FireProgressionStudy.RunAsync(options);
+    return;
+}
 if (options.Laboratory)
 {
     await LaboratoryStudy.RunAsync(options);

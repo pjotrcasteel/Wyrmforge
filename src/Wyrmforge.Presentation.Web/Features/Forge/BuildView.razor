@@ -5,32 +5,33 @@
 @inject IJSRuntime JavaScript
 
 <section class="build-view school-wheel-view">
-    <header class="build-heading">
-        <div class="build-points"><strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span></div>
-        <button class="atlas-quest-link" @onclick="() => OnQuests.InvokeAsync()">Earn points · Hunter XP</button>
-    </header>
-    @if (Selection.ReservedPoints > 0)
-    {
-        <details class="reserved-points"><summary>@Selection.ReservedPoints reserved</summary>
-            @foreach (var reservation in Selection.Reserved)
-            {
-                <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
-            }
-        </details>
-    }
-
     <div class="web-layout @(inspectorOpen ? "inspecting" : string.Empty)">
         <div class="atlas-stage">
-            <div class="atlas-toolbar">
-                <span class="web-current-school">@ArcaneSchoolCatalog.Get(ActiveSchool).Name</span>
-                <div class="build-actions">
-                    <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
-                    <button class="atlas-action center-action" aria-label="Center current school" title="Center current school" @onclick="ResetViewAsync">◎</button>
-                    <button class="atlas-action" aria-label="Zoom in" title="Zoom in" @onclick="() => ZoomAsync(0.15)">+</button>
-                    <button class="atlas-action" aria-label="Show whole Arcane Web" title="Whole Web" @onclick="ShowOverviewAsync">⤢</button>
-                </div>
-            </div>
+            @* Keep progression visible without spending a full row above the map. The counter opens Hunter XP. *@
+            <button type="button" class="build-points web-points-hud"
+                    aria-label="@($"{PointsLeft} Arcane points available out of {Selection.PointBudget}. Earn more through Hunter XP.")"
+                    title="Earn Arcane points · Hunter XP" @onclick="() => OnQuests.InvokeAsync()">
+                <strong>@PointsLeft</strong><span>available / @Selection.PointBudget</span>
+            </button>
 
+            @if (Selection.ReservedPoints > 0)
+            {
+                <details class="reserved-points">
+                    <summary>@Selection.ReservedPoints reserved</summary>
+                    @foreach (var reservation in Selection.Reserved)
+                    {
+                        <span>@ArcaneSchoolCatalog.Get(reservation.Key).Name: @reservation.Value · available when that school is active</span>
+                    }
+                </details>
+            }
+
+            @* Navigation stays accessible, but no longer steals vertical space or labels the active sector twice. *@
+            <nav class="web-floating-controls" aria-label="Arcane Web navigation">
+                <button class="atlas-action" aria-label="Zoom out" title="Zoom out" @onclick="() => ZoomAsync(-0.15)">−</button>
+                <button class="atlas-action" aria-label="Zoom in" title="Zoom in" @onclick="() => ZoomAsync(0.15)">+</button>
+                <button class="atlas-action center-action" aria-label="Center current school" title="Center current school" @onclick="ResetViewAsync">◎</button>
+                <button class="atlas-action" aria-label="Show whole Arcane Web" title="Whole Web" @onclick="ShowOverviewAsync">⤢</button>
+            </nav>
 
             <div class="arcane-web-viewport" data-wheel="six-schools" data-world-size="@ArcaneWheelLayout.Size"
                  data-start-x="@Coordinate(ArcaneWheelLayout.Center)" data-start-y="@Coordinate(ArcaneWheelLayout.Center - 400)"
@@ -51,6 +52,12 @@
                             </button>
                         }
 
+                        @* Region inscriptions reinforce long-term routes; they do not intercept node taps or drags. *@
+                        <span class="web-region-label region-conflagration" aria-hidden="true"
+                              style="@PointStyle(ArcaneWheelLayout.RegionLabel(PassiveSchool.Fire, ActiveSchool, -990, 570))">CONFLAGRATION</span>
+                        <span class="web-region-label region-immolation" aria-hidden="true"
+                              style="@PointStyle(ArcaneWheelLayout.RegionLabel(PassiveSchool.Fire, ActiveSchool, 1050, 980))">IMMOLATION</span>
+
                         <svg class="web-connections" viewBox="0 0 3200 3200" aria-hidden="true">
                             @foreach (var connection in PassiveTreeCatalog.Connections)
                             {
@@ -61,7 +68,7 @@
 
                         @foreach (var node in PassiveTreeCatalog.All)
                         {
-                            <button data-node-id="@node.Id" class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
+                            <button data-node-id="@node.Id" data-tier="@PassiveNodeTiers.For(node).ToString().ToLowerInvariant()" class="@NodeClass(node)" style="@NodeStyle(node)" title="@($"{node.Name} — {node.Description}")"
                                 aria-label="@NodeAriaLabel(node)" aria-pressed="@IsSelected(node)" @onclick="() => InspectNode(node)">
                                 @if (node.Kind == PassiveNodeKind.Travel)
                                 {
@@ -105,6 +112,38 @@
                 </div>
             </div>
             <p class="inspector-effect">@FocusedNode.Description</p>
+            @if (FocusedAmplifier is { } amplifier)
+            {
+                <section class="web-amplifier-socket" aria-label="Mutation amplifier socket">
+                    <div class="web-amplifier-heading">
+                        <strong>Mutation amplifier socket</strong>
+                        <small>×@amplifier.Factor.ToString("0.##", CultureInfo.InvariantCulture) @amplifier.Capability</small>
+                    </div>
+                    <label for="web-amplifier-mutation">Amplify equipped mutation</label>
+                    <select id="web-amplifier-mutation" value="@AssignedFireballMutation"
+                            disabled="@(!IsSelected(FocusedNode) || CompatibleFireballMutations.Count == 0)"
+                            @onchange="AssignFocusedAmplifierAsync">
+                        <option value="">No mutation assigned</option>
+                        @foreach (var id in CompatibleFireballMutations)
+                        {
+                            <option value="@id">@FireballCoreCatalog.Get(id).Name</option>
+                        }
+                    </select>
+                    @if (!IsSelected(FocusedNode))
+                    {
+                        <small>Learn this major node before choosing a mutation.</small>
+                    }
+                    else if (CompatibleFireballMutations.Count == 0)
+                    {
+                        <small>Equip a compatible mutation in Main Spell first.</small>
+                    }
+                    else
+                    {
+                        <small>Only the selected mutation's @amplifier.Capability.ToString().ToLowerInvariant() effect receives this boost.</small>
+                    }
+                </section>
+            }
+
             @if (FocusedNode.Requirement?.FireballMutation is { } requiredMutation)
             {
                 <p class="mutation-effect-state" role="status">@(Selection.Selected.Contains(FocusedNode.Id) && FireballCore?.Equipped.Contains(requiredMutation) == true && CharacterSchool == Wyrmforge.Domain.Spells.DivineArchetype.Pyromancer

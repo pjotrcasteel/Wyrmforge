@@ -67,7 +67,7 @@
                 <span class="fireball-school-icon" aria-hidden="true"></span>
                 <div>
                     <h3>Upgrade Fireball</h3>
-                    <p>Unlock another mutator socket.</p>
+                    <p>Increase base damage and unlock another mutator socket.</p>
                     <p class="fireball-progression-help">Mutators are discovered in Research and equipped into unlocked sockets.</p>
                 </div>
             </div>
@@ -89,6 +89,10 @@
                     <span aria-hidden="true">➜</span>
                     <div><strong>Lv @(Core.Level + 1)</strong><span class="fireball-mini-pips" role="img" aria-label="Next level @(Core.Level + 1) of 5">@for (var pip = 1; pip <= 5; pip++) { <i class="@(pip <= Core.Level + 1 ? "lit" : "dark")" aria-hidden="true"></i> }</span></div>
                 </div>
+                <p class="fireball-damage-growth" aria-label="Core base damage upgrade">
+                    Base damage: +@((int)Math.Round((FireballCoreCatalog.DamageMultiplier(Core.Level) - 1) * 100))%
+                    → +@((int)Math.Round((FireballCoreCatalog.DamageMultiplier(Core.Level + 1) - 1) * 100))%
+                </p>
                 <h4>Required Materials</h4>
                 <div class="fireball-materials" aria-label="Required materials">
                     @foreach (var need in FireballCoreCatalog.UpgradeTo(Core.Level + 1))

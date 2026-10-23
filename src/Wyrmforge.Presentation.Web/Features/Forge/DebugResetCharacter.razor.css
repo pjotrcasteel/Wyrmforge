@@ -9,3 +9,8 @@ dialog p { color:#d0bca8; font:400 .95rem/1.5 system-ui,sans-serif; }
 .confirm-reset { background:#53302c !important; }
 button:focus-visible { outline:2px solid #e5bc7e; outline-offset:3px; }
 button:disabled { opacity:.5; cursor:wait; }
+
+.debug-nexus-label {display:block;margin:12px 0 7px;color:#e5cda5;font:600 .9rem Georgia,serif;}
+#debug-nexus-palette {display:block;min-height:44px;width:min(100%,350px);padding:8px 10px;
+    border:1px solid #976b4b;border-radius:2px;background:#24191f;color:#ead6b9;font:600 .95rem system-ui,sans-serif;}
+.debug-nexus-description {max-width:370px;font:400 .78rem/1.45 system-ui,sans-serif;color:#bdad9c;}

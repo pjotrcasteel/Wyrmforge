@@ -2,7 +2,7 @@ using Wyrmforge.Domain.Combat.Geometry;
 
 namespace Wyrmforge.Application.Runs.Simulation;
 
-internal sealed class BurningGroundState(Vector2D position, double damagePerTick, double durationMultiplier = 1)
+internal sealed class BurningGroundState(Vector2D position, double damagePerTick, double durationMultiplier = 1, double radiusMultiplier = 1)
 {
     private const double TickEpsilon = 0.000000001;
     private double tickRemaining = TickIntervalSeconds;
@@ -16,6 +16,8 @@ internal sealed class BurningGroundState(Vector2D position, double damagePerTick
     public Vector2D Position { get; } = position;
 
     public double DamagePerTick { get; } = damagePerTick;
+
+    public double EffectiveRadius { get; } = Radius * Math.Clamp(radiusMultiplier, 1, 2);
 
     public double RemainingSeconds { get; private set; } = DurationSeconds * Math.Clamp(durationMultiplier, 1, 2);
 

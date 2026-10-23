@@ -12,4 +12,5 @@ public enum BuildStatId
     BonusChains,
     MutationRadius,
     MutationDuration,
+    BurnDamage,
 }

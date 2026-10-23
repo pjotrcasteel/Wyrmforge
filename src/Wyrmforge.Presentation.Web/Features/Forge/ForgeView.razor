@@ -11,6 +11,7 @@
 @using Wyrmforge.Domain.Progression.Laboratory
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.Loadouts
+@using Wyrmforge.Domain.Progression.PassiveTree
 
 <main class="game-shell @(section == ShellSection.Build ? "menu-nexus" : string.Empty) @(section == ShellSection.Run ? (enteredTown || SkipTitle ? "menu-home refuge-home" : "menu-home arrival-home") : string.Empty)">
     @if (section == ShellSection.Run)
@@ -104,6 +105,10 @@
                                        HallUnlocked="@Progress.LeaderboardUnlocked"
                                        FirstHunt="@Progress.TutorialRun"
                                        NexusPointsAvailable="@(Selection.PointBudget > Selection.SpentPoints)"
+                                       NexusSchool="@TownNexusSchool"
+                                        NexusPreviewSchool="@nexusPreviewSchool"
+                                        OnNexusPreviewChanged="SelectNexusPreview"
+                                       NexusMasteryPoints="@TownNexusMasteryPoints"
                                        OnGate="() => ActivateTownLocationAsync(ShellSection.Gate)"
                                         OnBuilding="ActivateCanonicalBuildingAsync" />
                     @if (townLockNotice is { } notice)
@@ -149,12 +154,12 @@
                 }
                 else if (SpellcraftOpen)
                 {
-                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
+                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout"
                         FocusNodeId="@nexusFocus" />
                 }
                 else
                 {
-                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
+                    <BuildView CharacterSchool="@(CharacterSchool ?? DivineArchetype.Pyromancer)" FireballCore="FireballCore" Selection="Selection" MutationAmplifiers="MutationAmplifiers" OnAssignFireballAmplifier="OnAssignFireballAmplifier" OnSelectionChanged="OnSelectionChanged" OnQuests="OnQuests" Loadouts="Loadouts" SaveLoadout="SaveLoadout" ApplyLoadout="ApplyLoadout" ClearLoadout="ClearLoadout" />
                 }
                 break;
             case ShellSection.Forge:
@@ -192,7 +197,7 @@
                         }
                         <button @onclick="() => OnFeedback.InvokeAsync()">Feedback</button>
                         <a href="combat-lab">Developer Combat Lab</a>
-                        <DebugResetCharacter OnReset="OnResetCharacter" />
+                        <DebugResetCharacter OnReset="OnResetCharacter" NexusPreviewSchool="@nexusPreviewSchool" OnNexusPreviewChanged="SelectNexusPreview" />
                     </section>
                 </div>
                 break;
@@ -251,6 +256,8 @@
     [Parameter] public Func<LaboratoryMutationId, Task<bool>> StabilizeMutation { get; set; } = _ => Task.FromResult(false);
     [Parameter] public Func<LaboratoryMutationId, ArcaneMutationSocketId?, Task> EquipMutation { get; set; } = (_, _) => Task.CompletedTask;
     [Parameter] public Func<LaboratoryMutationId?, Task> TrackMutation { get; set; } = _ => Task.CompletedTask;
+    [Parameter] public MutationAmplifierSockets MutationAmplifiers { get; set; } = MutationAmplifierCatalog.CreateSockets();
+    [Parameter] public Func<string, FireballMutationId?, Task<bool>> OnAssignFireballAmplifier { get; set; } = (_, _) => Task.FromResult(false);
     [Parameter] public HuntLoadoutBook? Loadouts { get; set; }
     [Parameter] public Func<int, Task> SaveLoadout { get; set; } = _ => Task.CompletedTask;
     [Parameter] public Func<int, Task<HuntLoadoutApplyResult?>> ApplyLoadout { get; set; } = _ => Task.FromResult<HuntLoadoutApplyResult?>(null);
@@ -278,6 +285,8 @@
 
     private ShellSection section = ShellSection.Run;
     private string? nexusFocus;
+    private PassiveSchool? nexusPreviewSchool;
+    private void SelectNexusPreview(PassiveSchool? school) => nexusPreviewSchool = school;
     private NexusFacet facet = NexusFacet.Signature;
     private LaboratoryMutationId? spellcraftFocus;
     private static readonly NavigationItem[] Navigation =
@@ -288,6 +297,11 @@
         new(ShellSection.Forge, "anvil", "Forge"),
         new(ShellSection.Codex, "book", "Codex"),
     ];
+
+    private PassiveSchool? TownNexusSchool => CharacterSchool is { } school ? ArcaneSchoolCatalog.For(school) : null;
+    private int TownNexusMasteryPoints => (nexusPreviewSchool ?? TownNexusSchool) is { } school
+        ? TownNexusRadiance.Points(school, Selection.Selected)
+        : 0;
 
     private string SignatureName => CharacterSchool is { } school
         ? DivineArchetypeCatalog.Get(school).ExistingSignature is { } signature

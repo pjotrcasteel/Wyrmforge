@@ -2,6 +2,7 @@
 @using System.Net.Http
 @using System.Text.Json
 @using Microsoft.JSInterop
+@using Wyrmforge.Domain.Progression.PassiveTree
 @inject NavigationManager Navigation
 @inject ILogger<CanonicalTownView> Logger
 @inject IJSRuntime JS
@@ -9,11 +10,31 @@
 @* Night town vacancy follows actual game progress, not a local preview toggle. *@
 <div class="refuge-canonical-viewport" role="region" tabindex="0"
      aria-label="Refuge town: swipe between West, World Gate and East">
-    <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square">
+    <div class="refuge-canonical-scene" aria-label="Night-time Refuge town square"
+         data-nexus-school="@(DisplayNexusSchool?.ToString().ToLowerInvariant() ?? "none")"
+         data-nexus-mastery-points="@NexusMasteryPoints">
         <img class="refuge-town-night-base" src="art/town/night-active.webp?v=140"
              alt="" draggable="false" fetchpriority="high" />
 
-        @if (!NexusUnlocked)
+        @* Six individually baked, first-party school images, aligned to the exact
+           canonical panorama. No runtime painting, hue filters or CSS recoloring.
+           Images precede vacancy art so other buildings can cover their own areas. *@
+        @if (NexusArtworkUnlocked && DisplayNexusSchool is { } artworkSchool)
+        {
+            var painting = $"art/town/nexus-schools/{artworkSchool.ToString().ToLowerInvariant()}.png?v=1";
+            <img class="refuge-town-nexus-school-art" data-nexus-school-art="true"
+                 data-nexus-school="@artworkSchool.ToString().ToLowerInvariant()"
+                 src="@painting" width="1672" height="941" alt="" aria-hidden="true" draggable="false" />
+            @if (NexusMasteryPoints > 0 && artworkSchool != PassiveSchool.Arcane)
+            {
+                <img class="refuge-town-nexus-school-art refuge-town-nexus-school-art--mastery"
+                     data-nexus-school-mastery="true" src="@painting" width="1672" height="941"
+                     style="@TownNexusRadiance.Style(NexusMasteryPoints)"
+                     alt="" aria-hidden="true" draggable="false" />
+            }
+        }
+
+        @if (!NexusArtworkUnlocked)
         {
             <img class="refuge-town-vacant-layer" src="art/town/night-vacant-ArcaneNexus.png?v=140"
                  style="left:0%;top:0%;width:36.9617%;height:61.8491%" alt="" draggable="false" />
@@ -181,6 +202,19 @@
                 data-sound-cue="none" aria-label="@GateLabel" title="Enter the World Gate"
                 @onclick="() => OnGate.InvokeAsync()"></button>
     </div>
+    @if (NexusPreviewSchool is not null)
+    {
+        <div class="refuge-town-nexus-preview-controls" role="group" aria-label="Debug Nexus building palette">
+            <button type="button" data-nexus-preview-school="auto"
+                    @onclick="() => OnNexusPreviewChanged.InvokeAsync(null)">Auto</button>
+            @foreach (var school in Enum.GetValues<PassiveSchool>())
+            {
+                <button type="button" @key="school" data-nexus-preview-school="@school.ToString().ToLowerInvariant()"
+                        aria-pressed="@(NexusPreviewSchool == school ? "true" : "false")"
+                        @onclick="() => OnNexusPreviewChanged.InvokeAsync(school)">@school</button>
+            }
+        </div>
+    }
     @if (showTownMetrics)
     {
         <output id="refuge-town-performance" class="refuge-town-performance"
@@ -376,6 +410,12 @@
     }
 
     [Parameter] public bool NexusUnlocked { get; set; }
+    [Parameter] public PassiveSchool? NexusSchool { get; set; }
+    [Parameter] public PassiveSchool? NexusPreviewSchool { get; set; }
+    [Parameter] public EventCallback<PassiveSchool?> OnNexusPreviewChanged { get; set; }
+    private PassiveSchool? DisplayNexusSchool => NexusPreviewSchool ?? NexusSchool;
+    private bool NexusArtworkUnlocked => NexusUnlocked || NexusPreviewSchool is not null;
+    [Parameter] public int NexusMasteryPoints { get; set; }
     [Parameter] public bool ForgeUnlocked { get; set; }
     [Parameter] public bool CodexUnlocked { get; set; }
     [Parameter] public bool HallUnlocked { get; set; }

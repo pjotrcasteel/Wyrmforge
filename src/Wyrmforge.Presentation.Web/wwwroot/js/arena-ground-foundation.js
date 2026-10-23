@@ -1,11 +1,13 @@
-// Phase 1: ground foundation ONLY. No arena environment, legacy props,
-// navigation, monsters, player sprites, road recipe, shadows or collision.
+// Arena Rebuild phase 2: ground-only organic trails and clearings.
+// Still NO arena environment, old tree assets, props, roads, player,
+// navigation, monsters, shadows or collision; no new per-frame effects.
 // This is a throwaway Canvas viewer for the approved material paintings;
 // native iOS/Android gameplay will consume portable recipe data instead.
 import {
     CELL, GROUND_ATLAS_URL, buildGroundQuiltAtlas, naturalGroundPreview,
     drawReferenceGroundBoard, drawGroundMaterialTransitions,
 } from './arena-materials.js';
+import { composeForestTrailGround } from './arena-ground-trails.js';
 
 export const FOUNDATION_COLUMNS = 60;
 export const FOUNDATION_ROWS = 96;
@@ -14,10 +16,14 @@ export const FOUNDATION_HEIGHT = FOUNDATION_ROWS * CELL;
 const states = new WeakMap();
 const clamp = (value, lo, hi) => Math.min(hi, Math.max(lo, value));
 
-export function groundFoundationBoard(seed, natural = true, columns = FOUNDATION_COLUMNS, rows = FOUNDATION_ROWS) {
+export function groundFoundationBoard(seed, mode = 'trails', columns = FOUNDATION_COLUMNS, rows = FOUNDATION_ROWS) {
     if (!Number.isInteger(columns) || !Number.isInteger(rows) ||
         columns < 1 || rows < 1 || columns * rows > 65536) return new Uint8Array();
-    return natural ? naturalGroundPreview(seed, columns, rows) : new Uint8Array(columns * rows);
+    // Boolean inputs are retained for existing Step-1 tests and integrations.
+    if (mode === false || mode === 'grass') return new Uint8Array(columns * rows);
+    const natural = naturalGroundPreview(seed, columns, rows);
+    if (mode === 'trails') return composeForestTrailGround(natural, seed, columns, rows)?.board ?? natural;
+    return natural; // Unmodified Step-1 reference, available for A/B review.
 }
 
 export function clampGroundCamera(camera, viewportWidth, viewportHeight) {
@@ -50,7 +56,8 @@ function render(state) {
     state.camera = view;
     if (state.scene) ctx.drawImage(state.scene, -Math.round(view.x), -Math.round(view.y));
     canvas.dataset.foundationReady = String(Boolean(state.scene));
-    canvas.dataset.foundationMode = state.natural ? 'natural' : 'grass';
+    canvas.dataset.foundationMode = state.mode;
+    canvas.dataset.foundationTrails = state.mode === 'trails' ? '2' : '0';
     canvas.dataset.foundationSeed = String(state.seed);
     canvas.dataset.foundationAssets = '0';
     canvas.dataset.foundationCollision = '0';
@@ -65,7 +72,7 @@ function requestRender(state) {
 
 function buildScene(state) {
     if (!state.alive || !state.source) return;
-    const board = groundFoundationBoard(state.seed, state.natural);
+    const board = groundFoundationBoard(state.seed, state.mode);
     if (!state.atlas || state.atlasSeed !== state.seed) {
         state.atlas = buildGroundQuiltAtlas(state.source, state.seed, undefined, false);
         state.atlasSeed = state.seed;
@@ -104,10 +111,10 @@ async function loadApprovedSource(state) {
     }
 }
 
-export function initializeGroundFoundation(canvas, seed = 1204, natural = true) {
+export function initializeGroundFoundation(canvas, seed = 1204, mode = 'trails') {
     if (states.has(canvas)) return;
     const state = {
-        alive: true, canvas, seed: seed | 0, natural: Boolean(natural), source: null,
+        alive: true, canvas, seed: seed | 0, mode, source: null,
         scene: null, atlas: null, atlasSeed: null, scheduled: false,
         camera: { x: 0, y: 0 }, pointer: null,
         listeners: [],
@@ -149,14 +156,14 @@ export function initializeGroundFoundation(canvas, seed = 1204, natural = true) 
     void loadApprovedSource(state);
 }
 
-export function configureGroundFoundation(canvas, seed, natural = true) {
+export function configureGroundFoundation(canvas, seed, mode = 'trails') {
     const state = states.get(canvas);
     if (!state) return;
     const nextSeed = seed | 0;
-    const nextNatural = Boolean(natural);
-    if (state.seed === nextSeed && state.natural === nextNatural) return;
+    const nextMode = ['trails', 'natural', 'grass'].includes(mode) ? mode : 'natural';
+    if (state.seed === nextSeed && state.mode === nextMode) return;
     state.seed = nextSeed;
-    state.natural = nextNatural;
+    state.mode = nextMode;
     state.scene = null;
     requestRender(state);
     if (state.source) buildScene(state);
@@ -166,7 +173,7 @@ export function readGroundFoundationDiagnostics(canvas) {
     const s = states.get(canvas);
     if (!s) return null;
     return {
-        seed: s.seed, mode: s.natural ? 'natural' : 'grass',
+        seed: s.seed, mode: s.mode, trailBranches: s.mode === 'trails' ? 2 : 0,
         ready: Boolean(s.scene), worldWidth: FOUNDATION_WIDTH, worldHeight: FOUNDATION_HEIGHT,
         assets: 0, obstacles: 0, mobs: 0, roads: 0, props: 0,
         camera: { ...s.camera },
