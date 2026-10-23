@@ -9,7 +9,7 @@ Date: 23 October 2026. This is an **implementation/evidence checkpoint**, not an
 | 1. Integrate and deploy Fire specialization | **Complete** | Consolidated PR #290 merged to `main`, version 0.0.177; all four PR CI workflows and post-merge deployment/balance/browser workflows succeeded | None for implementation |
 | 2. Main Spell / Research / Arcane Web contract | **Implemented and tested** | Real Fireball core-level damage; equipment slots; researched mutations; learned Fire minors and major mutation-specific socket binding; combat modifier integration; deterministic C# tests | Confirm felt progression with player |
 | 3. Saves and mobile browser safeguards | **Automated checks green** | Socket assignments and legacy saves, loadouts and Hunt snapshots tested; Chromium and WebKit checks green at Fire PR #290 | Physical iPhone touch/scroll/reload review |
-| 4. Early/mid/advanced Fire combat balance | **First Wyrm-reaching study complete; larger sample pending** | Merged #305/#313 run four legal Fire builds using the same seeds and four agent styles; a 420-second study reached Wyrms in 29/32 runs | Complete expanded 128-run matched-seed study; review Wyrm time, survival, essence securing and cohort differences before any tuning |
+| 4. Early/mid/advanced Fire combat balance | **128-run Wyrm-reaching study complete; human gameplay review pending** | Merged #305/#313 run four legal Fire builds using the same seeds and four agent styles; a 420-second study reached Wyrms in 29/32 runs | Review actual iPhone Hunt feel and Wyrm telegraph clarity before making further tuning decisions |
 | 5. Art, power feedback and mobile acceptance | **Human acceptance pending** | Web map has tiers, large asymmetric Fire branches and test-verified interaction | Compare 320/390px screenshots and test on iPhone: tier silhouettes, legibility, pan/zoom, major-socket interaction, actual combat power payoff |
 | 6. Arcane Nexus school radiance | **Implemented, validated and deployed; physical visual acceptance pending** | PR #292 merged with green Validate/Chromium/WebKit; main subsequently deployed successfully at 0.0.179 | Verify the dome/portal glow, touch behavior and brightness progression visually on an iPhone |
 
@@ -46,6 +46,24 @@ The **420-second, 2-seed acceptance run is now complete** (PR #313, 8 observatio
 | Heart of Furnace Lv5 | 74.9 | 8/8 | 297s | 61% |
 
 This shows a meaningful Fire power progression and Wyrm contact, **not final balance**. Crown of Ash's 6/8 contact versus Detonation's 7/8 must not be interpreted as a regression from only eight runs. The next acceptance slice uses eight shared seeds (32 observations per cohort), retaining matched agent personalities and the 420-second horizon. The upgraded report includes conditional median first-Wyrm contact and secured essence counts alongside kills/min, depth and minimum health. Review those together before any combat tuning. A manual 720-second end-to-end study can follow if player feedback warrants it.
+
+## Expanded 128-run matched-seed study — verified
+
+[GitHub Actions evidence](https://github.com/pjotrcasteel/Wyrmforge/actions/runs/39874324914/artifacts/12467487789)
+was generated successfully on 23 October 2026: 8 shared seeds × 4 personalities × 4 legal Fire builds, each capped at 420 simulated seconds.
+The raw JSON includes all 128 outcomes; the report tracks contact-censored first-Wyrm medians and secured Essences.
+
+| Cohort | Runs | Median kills/min | Wyrm contact | Conditional median first Wyrm | Defeated | Secured Essences | Median minimum HP |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Fresh Fireball Lv1 | 32 | 40.6 | 26/32 | 339s | 6 | 25 | 41% |
+| Mid Detonation Lv3 | 32 | 52.1 | 26/32 | 310s | 3 | 25 | 64% |
+| Crown of Ash Lv5 | 32 | 61.7 | 26/32 | 302s | 1 | 26 | 59% |
+| Heart of Furnace Lv5 | 32 | 63.5 | 26/32 | 292s | 3 | 26 | 67% |
+
+This larger sample shows Fire advancement in both kill rate and time to first Wyrm, plus fewer observed defeats than the fresh Fireball cohort. The equal 26/32 contact fractions do not show equivalent damage or combat feel.
+The majority of runs reached the 420-second time cap; **do not treat censored duration as a finished Hunt**.
+Essences are totals per cohort, not per-run medians. First-Wyrm times are conditional on contact.
+Keep tuning frozen until iPhone gameplay, mutation readability and Wyrm encounter telegraphs are judged by a human. This is a **ready-for-now automated balance checkpoint**, not proof of final balance.
 
 A Wyrm reached in self-play is still not proof that its telegraphs are fair or the rewards satisfying; physical mobile playtesting remains separate.
 
