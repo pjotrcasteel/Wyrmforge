@@ -24,8 +24,8 @@ test('contact shadows are grounded in foot pivots and bounded trunk widths only'
     const p = contactShadowPlan(anchor, 40, profile);
     assert.ok(p.x > anchor.x);
     assert.ok(Math.abs(p.y - anchor.y) < 0.00001);
-    assert.equal(p.radiusX, 31.2);
-    assert.equal(p.radiusY, 13.2);
+    assert.ok(Math.abs(p.radiusX - 31.2) < 1e-9);
+    assert.ok(Math.abs(p.radiusY - 13.2) < 1e-9);
     assert.ok(p.opacity >= .16 && p.opacity <= .31);
     assert.deepEqual(p, contactShadowPlan(anchor, 40, profile));
     assert.deepEqual(anchor, { x: 120, y: 185 });
