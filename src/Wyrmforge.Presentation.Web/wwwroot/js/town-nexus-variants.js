@@ -105,12 +105,13 @@ export async function syncNexusVariant(selector) {
     if (!Object.hasOwn(NEXUS_VARIANTS, school)) return;
     const points = Number(scene.dataset.nexusMasteryPoints) || 0;
     const key = school + ':' + points;
-    if (readyScenes.get(scene) === key) return;
+    if (readyScenes.get(scene) === key && canvas.dataset.variantKey === key) return;
     if (!source.complete || source.naturalWidth === 0) await source.decode();
     if (!scene.isConnected || source.naturalWidth !== SOURCE_WIDTH ||
         source.naturalHeight !== SOURCE_HEIGHT) return;
     if (!paintSchool(canvas, source, school, points)) return;
     readyScenes.set(scene, key);
+    canvas.dataset.variantKey = key;
     // The original radial color blend is a fallback only until pixel art is ready.
     scene.dataset.nexusPixelsReady = 'true';
 }
