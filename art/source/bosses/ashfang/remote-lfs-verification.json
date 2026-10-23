@@ -684,6 +684,72 @@
     "verified": true
   },
   {
+    "path": "art/source/bosses/ashfang/archive/motion-foundation-001-packed/ashfang-animation-foundation.blend",
+    "sha256": "38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b",
+    "bytes": 282812636,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-001/ashfang-animations.blend",
+    "sha256": "0be0f64d3d0524f99e43f7a5d99fd48d3358054e7d36b2c1f333f74dc9820f7e",
+    "bytes": 15802179,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-002/ashfang-animations.blend",
+    "sha256": "fde0b2495f4491ea8f0e6203ec8295757797408cd05978431140afc92387acbf",
+    "bytes": 15974122,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-003/ashfang-animations.blend",
+    "sha256": "a4411e68870e522c96f8e0de3fec03c29d7db7cc31ac4347823902c1d5c0309c",
+    "bytes": 15983120,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-004/ashfang-animations.blend",
+    "sha256": "59b1d62798de65c9946910f36de09e5b98d4d40abca6849c186d07bec8bee329",
+    "bytes": 16126203,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-005/ashfang-animations.blend",
+    "sha256": "835342d5110e5921e87f8723eb328a212eac32b2c35f772fa28b4467dce61051",
+    "bytes": 16095772,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-006/ashfang-animations.blend",
+    "sha256": "015ac0a2de8c49b10ad4743c5e4bd7ffff7e6e496083d8f65fbaed9eff75a5dc",
+    "bytes": 16092737,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-007/ashfang-animations.blend",
+    "sha256": "bf3405c80e6026497871f310adacf96b178da039ec0b6dd0826572cb14bb0d76",
+    "bytes": 17586206,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-library-008/ashfang-animations.blend",
+    "sha256": "4bd4e64d6ca53276d0ed5af953614a3f24caebc98c5968724235537690660e4a",
+    "bytes": 17597574,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-proof-001/ashfang-animations.blend",
+    "sha256": "d54845807fa92a42bd365c41587d41dbcb0dad4a9b153399552b26561b7dada5",
+    "bytes": 2658101,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/archive/motion-render-checkpoint-001/render-progress.zip",
+    "sha256": "600bc2c26102f3f342cb414a4aab3e8e51b13ec2aebf9a2e3b07382e02d617a4",
+    "bytes": 93145752,
+    "verified": true
+  },
+  {
     "path": "art/source/bosses/ashfang/archive/source-fidelity-001/ashfang-master-working.blend",
     "sha256": "81e0bb96e05b15b43478ca6e033b8a67097ac66546409dc42509b841616ce98c",
     "bytes": 137028889,
@@ -795,6 +861,3948 @@
     "path": "art/source/bosses/ashfang/archive/tier-I-skin-fire-001/review-skin/three-quarter.png",
     "sha256": "d7da73fac13ad3cc7925d42a2659f08673dc9da5b1698b6067cd0ac7c86078fc",
     "bytes": 225817,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/E.png",
+    "sha256": "4d065e3523b647c9799fa6a47857ca12529958ac6ca1b643812216c5bb83cb75",
+    "bytes": 3138340,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/N.png",
+    "sha256": "08c33cc4a8136e3422892ec6adf716e33c0cd911f27d8e8a27037865597fe3b0",
+    "bytes": 2908902,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/NE.png",
+    "sha256": "724752f5d785b468c36539e5f18c79ce2beabfa66bf2f5641eabaa52d5419caa",
+    "bytes": 2999648,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/NW.png",
+    "sha256": "9ffa3e173c3f1290b6242d480f1084d5a9a239466d237c04f59fb83be5fa1782",
+    "bytes": 2937429,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/S.png",
+    "sha256": "c3c6a4543b1c37ed5205088659522f4ce5fb2b618cac21b399b8057298133a04",
+    "bytes": 3058460,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/SE.png",
+    "sha256": "77dd8fb2586c3162e11e438789ffdf4feb7bab03f9f3e96ae3a300b11634fe07",
+    "bytes": 3190374,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/SW.png",
+    "sha256": "d626bcb96ed63f0b94c24cfba3ec46d54858a6d0b56fcdace2abd504720d880a",
+    "bytes": 2901177,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/air_breath/W.png",
+    "sha256": "6e101f78ead62f44dc412c80ce0a61f14d0c7663b1b22775c9776d693fafed28",
+    "bytes": 2953064,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/E.png",
+    "sha256": "bf64d532176a6525de727b002f545470bfc01b4e980967268aabbac452358d85",
+    "bytes": 1669765,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/N.png",
+    "sha256": "138dbbc0ff3eab19dfe32bcf0e86fd70fe9ee572552d0ffe23251e9154c12842",
+    "bytes": 1773127,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/NE.png",
+    "sha256": "1cf037ad03fdfd62dc6ce098987da3c57c48afd749e9d0e2bafd666387b33290",
+    "bytes": 1726070,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/NW.png",
+    "sha256": "7d2775c21de0b73a691e98f21b633f6bc13d50fd32aa2b543b84b42c95d45163",
+    "bytes": 1705350,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/S.png",
+    "sha256": "87a75c88c606a1ddd5406c20efde8aa713dfd976627ca1191e79886dab01e39a",
+    "bytes": 1776184,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/SE.png",
+    "sha256": "da100b75d188a1c366b630c69d5302658baa87cf4616f576966e349debc4e03e",
+    "bytes": 1721334,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/SW.png",
+    "sha256": "2fe6920725bbafa2a6a1ece7d9f1ba3b06185d6a0bda48ac9295dc05dc3a17c5",
+    "bytes": 1756363,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert/W.png",
+    "sha256": "29c77d9fb0262f9e9b11e8d68eb910b9c070083ea9a84cddbf1f134a1e46d7e4",
+    "bytes": 1690028,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/E.png",
+    "sha256": "25d35b03818033df97da00107e7babd3e2dd253cb4514b1416a844228732f259",
+    "bytes": 923530,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/N.png",
+    "sha256": "8cee307a5ddb1aa7c7341a97d89c2d74e8a445be925b68fef13dd5821482fbf6",
+    "bytes": 977188,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/NE.png",
+    "sha256": "f666b7d17d3ff79426bab7cea184f369a6bbd22cfa9ae36f5edaf0e3af7886e5",
+    "bytes": 944709,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/NW.png",
+    "sha256": "0b20a097ac6e7b86d4ca31e683db054f34a26f6209b023261c01c9847e399c2e",
+    "bytes": 946087,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/S.png",
+    "sha256": "5020dd3f9fe0769a2372c75384b89c15bf0554bfb7618f3b6e91a6df5484975a",
+    "bytes": 989659,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/SE.png",
+    "sha256": "db07beae7371a0bcc1189b501ad151944f0ab3d03a65301f8c6a15f204eeca2f",
+    "bytes": 957049,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/SW.png",
+    "sha256": "c87c917c08bed2c207512f2bb475bf79ca9478ea32aef5da6d9daf1f53ec0483",
+    "bytes": 975406,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_end/W.png",
+    "sha256": "b823b063e7c202312e19f427944f57672a79c910b772eb5402fd8d7c784525e9",
+    "bytes": 931747,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/E.png",
+    "sha256": "cda820c0388598b648e5e8ab5b11eefb69e416bcfe0b81ba15b8b3167c4a0cb6",
+    "bytes": 924183,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/N.png",
+    "sha256": "977346f6f985df0ed0fa6183f66d3abfc5165b08a1931295999e8501f58ae132",
+    "bytes": 975313,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/NE.png",
+    "sha256": "43ee41c8b503adbf29830cd9076769e1d7750652a68a7f1a95cd8df6b1a937b2",
+    "bytes": 951489,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/NW.png",
+    "sha256": "9ca70aead06152c87292e86dfd49e9566f03ebff199f2a0351f3db70da79c857",
+    "bytes": 945579,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/S.png",
+    "sha256": "f675e5dca9ef1940dd01387e2d06cf429af796359c19347b0647dca71606b510",
+    "bytes": 988734,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/SE.png",
+    "sha256": "f1596dd485fb2ba68347a96b4f728107f0a5559a06ad5a2ee0efa515e9da1f59",
+    "bytes": 958790,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/SW.png",
+    "sha256": "bd5697f31d61aff60194064056eafbd30b62ba813e8e68243babc5e8b4834b4f",
+    "bytes": 974936,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/alert_start/W.png",
+    "sha256": "9233e569968b1016fef0919b81bf903d3b74c25ca46589e78d0686214acd1766",
+    "bytes": 928129,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/E.png",
+    "sha256": "40a3cfc7bb243395dc6a35a7cf07f0e5be9774b1fd6c4c5f7b90236830fbb2bf",
+    "bytes": 1837786,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/N.png",
+    "sha256": "534dc181b87755d2c9fdec4adf6082d670c3c4e76d31dfca394a0d428a59ad33",
+    "bytes": 1863185,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/NE.png",
+    "sha256": "bf9be34eb2f7a277ad5090e84e7a1b58ff7b57244a8ca95bb5a7a5aea5c53676",
+    "bytes": 1795759,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/NW.png",
+    "sha256": "7a023c11e249dc9631f67a03c44b466260c757bb76c212c072a7ec63120ba6df",
+    "bytes": 1948397,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/S.png",
+    "sha256": "252b6ae626dfff95ab7c1e6322fd0e2ff9915797679e81b81b164ce195d8fac5",
+    "bytes": 1927815,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/SE.png",
+    "sha256": "7c24f5af396b84d88401c99cb969108cc70084ec6e4133f04b389d0cb18a6fa0",
+    "bytes": 1922382,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/SW.png",
+    "sha256": "4b72031600981013740385bea92cb982f5ead8869e3232c099964b95260b5221",
+    "bytes": 1957008,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_left/W.png",
+    "sha256": "71f4049155f933c15a1cfdf5d4d965c4143aed87a39feba174fad394133fff42",
+    "bytes": 2033901,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/E.png",
+    "sha256": "fbff408526e6f24d3726e53ccbe07d6c3bde1f4698551eacb72dbf65250a7e78",
+    "bytes": 2131692,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/N.png",
+    "sha256": "1d9d53a56fdc8a1f19852376bf638bcbcdbe9d663d7a0e0a6b42911c27948931",
+    "bytes": 1859918,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/NE.png",
+    "sha256": "43a8993edfdb59daf3f97227aa69908355b232c0a74608e5a682340c042880a4",
+    "bytes": 1988379,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/NW.png",
+    "sha256": "bef1fe860a6e1b955d7cb28183083874e2e031cc1965c537602a3c9f7f930029",
+    "bytes": 1736477,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/S.png",
+    "sha256": "cd6ee41820b521e38d9a2580393b54df8ce0896c22e98c157a41d5bc991b45fb",
+    "bytes": 1985778,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/SE.png",
+    "sha256": "2d26308cb5dead83e7fbb1b25c8b4f02a8313ab8d04f1bf306d6255d8057a214",
+    "bytes": 2186957,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/SW.png",
+    "sha256": "de8eaaf9fb22c571507c53565ee566d4cea3a6dcae4cf6a0c3339cd7a177aa5b",
+    "bytes": 1770299,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bank_right/W.png",
+    "sha256": "744867c2ee7231575cb90e2f48d68af2e06b503689f614dff254396df3fc35aa",
+    "bytes": 1727397,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/E.png",
+    "sha256": "c850c115b0c8178c2abb4f9eaef1c597daab4d3a00a68e8ee2c2064355aa97f0",
+    "bytes": 1554166,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/N.png",
+    "sha256": "706270b2e81d1e273aa99554c0859e86df25f1f0d3d1db82d9bb23a9e06f43d0",
+    "bytes": 1618495,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/NE.png",
+    "sha256": "4f26519a730eee22661e06cfdee7f52e8bfab1df98937665cf29013a4c3aa7ac",
+    "bytes": 1595992,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/NW.png",
+    "sha256": "393a0ba8f0f91fe46d437f9661ea01d0aec817355c56c418c68a0aef2870f1f7",
+    "bytes": 1577926,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/S.png",
+    "sha256": "5ca2befea94b788a3f37020b530847922a4a581c4a093dd831b300c66c0e31f6",
+    "bytes": 1646751,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/SE.png",
+    "sha256": "43506e17e8171aa505c21e9c9ea1640c0aeb10d5f84f438ba912f911b3e6b40c",
+    "bytes": 1601171,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/SW.png",
+    "sha256": "961a0ff1597659712816035186a7ed049cf3b0285bad53a77008ce4a664863d6",
+    "bytes": 1623230,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/bite/W.png",
+    "sha256": "6eb02d9732581bcb2d86481118ca8bb0e1e59202f50896a31c3314e2f3b0cb66",
+    "bytes": 1562706,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/E.png",
+    "sha256": "f2406c0d743ab631c030055b23309b6e5d5d82f787f3eccd216f304a8ae3683b",
+    "bytes": 1199583,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/N.png",
+    "sha256": "79c22a55e6d26fe72ac4ef7daf684ee8bb10da7a2aaf500f9266d18dcce58eb7",
+    "bytes": 1251103,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/NE.png",
+    "sha256": "06c156e7acdbae35a0ecbf2470b568a3eba07dc05b3aabdc0f5c5d629aa1c7ef",
+    "bytes": 1230557,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/NW.png",
+    "sha256": "b935abde55e27b05c4cc6685bec0c3baeef868fa50c899f24692483c04cf4d64",
+    "bytes": 1217825,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/S.png",
+    "sha256": "23ac1f4bafa310214e3f6be49024c9b0ea4a99fe53862f70d9ee66191641ce0d",
+    "bytes": 1295469,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/SE.png",
+    "sha256": "6ba00394deb30a11ced831d80d20633b1f40ecc440d098786f8671e98a38c51d",
+    "bytes": 1239933,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/SW.png",
+    "sha256": "fefeb689f41afa579e452b247098ccb4d1f099ae1ea6d6d4f5a53cfe35670375",
+    "bytes": 1267025,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_end/W.png",
+    "sha256": "540c44d3103a16c12ff9cbfb07ef7fc6552f51bda8d1e5cf954a5f10c468d1a7",
+    "bytes": 1200826,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/E.png",
+    "sha256": "d5f7bb319ae82cf8b31ac3055a79fcaf4b4acf48a67ec2a76e9174286a49ef0b",
+    "bytes": 1654346,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/N.png",
+    "sha256": "06be586bf6cf0e6cd8d3df1a2de4ed3659a86684c65efaaf7bc92f79929496f2",
+    "bytes": 1751042,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/NE.png",
+    "sha256": "cc13e61e2563a096f5f676bbc81036d29060b5926622e90f0a326c5d0429930f",
+    "bytes": 1710105,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/NW.png",
+    "sha256": "3c63fa91fe4af770740949d5e82cdb722b848e072b8e30cb5e597146d6678e0e",
+    "bytes": 1701943,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/S.png",
+    "sha256": "130dd46b872358c045e088be0af5fbbcb16a5e8847f5b7eeb770d9eed268b62a",
+    "bytes": 1790958,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/SE.png",
+    "sha256": "78197f5151d848aa58b81d42615192c497a6654f642cfd90fd975d1e1212ec0e",
+    "bytes": 1719208,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/SW.png",
+    "sha256": "840155de5770466805fc9ce99d63eb05f8a86ce44eb60a63f3bde910f0240297",
+    "bytes": 1756820,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_loop/W.png",
+    "sha256": "fcbc6537cde126df3a3aa99c8c4d2275c88bb5df057a210726b45a8d345755f6",
+    "bytes": 1689545,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/E.png",
+    "sha256": "cbc3ec7108e5684379bd87ab02ddf50f1bba2207fc4c76cd01d03e2469309333",
+    "bytes": 1196368,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/N.png",
+    "sha256": "a57919f4725bca4c12c9315d56c2483fef3b9ba790339620885d1942d2e5fb0b",
+    "bytes": 1258464,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/NE.png",
+    "sha256": "e8bec469a0fd3c408d4991422d6650a58fe28db5e5970c903b6f8aefe56e0403",
+    "bytes": 1223250,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/NW.png",
+    "sha256": "5718095c456bbd9bbd5375b27f76361a30f404197f64875e04440088b0e66318",
+    "bytes": 1214949,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/S.png",
+    "sha256": "5b2bb9508c7b664e0f0ccd6b984e49a2e67df33ffcdcfdc90f9982600a7f0670",
+    "bytes": 1293708,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/SE.png",
+    "sha256": "15ec36cb039a63a01ec02c9ecb355066581ec1f447c9a59bab0019e7f3713b46",
+    "bytes": 1239732,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/SW.png",
+    "sha256": "669b5a2d2bfa2d314532d5752050ce6dadb5ff81e9e3094d87aee166de771c8c",
+    "bytes": 1266603,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_start/W.png",
+    "sha256": "4addd0d0f3d0905c4b448533022640e34aa0d700cab8f26d975a85d8db2098bb",
+    "bytes": 1202689,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/E.png",
+    "sha256": "b5c21b49633020b6e21903b110e0ca794bcc76b2bdfa1821e34d72a1f7e0b8f7",
+    "bytes": 2369881,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/N.png",
+    "sha256": "58db630f8a7578d3b97bc477a1a55231509c5b0707be0d24e9f5c397b211ccd1",
+    "bytes": 2485129,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/NE.png",
+    "sha256": "03d9df708dfe9389e18062245cb1f0f3f045227251d33646c8374d158451512a",
+    "bytes": 2437152,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/NW.png",
+    "sha256": "faf09b48f7809d429f398b536cb589c31eeece7255a4e983bf3efb5f3be87abd",
+    "bytes": 2410109,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/S.png",
+    "sha256": "1ef9583e9b62ce39bae75604adf0798fd7b47529e6d3316171560159e7111f76",
+    "bytes": 2532116,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/SE.png",
+    "sha256": "314d4f1a1ac546604fb57097f7970f02a940f8f9a769fd3300de182ce0daf700",
+    "bytes": 2445452,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/SW.png",
+    "sha256": "4647d175bbc25bbf2eecbe728349619690ea9e95495929450f7fed260ee9fd0a",
+    "bytes": 2486990,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/breath_sweep/W.png",
+    "sha256": "e05b558a94e824a3ef6c3ade26d3a6ba06e26a0201403bd98a25bb3e95eec2c8",
+    "bytes": 2387627,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/E.png",
+    "sha256": "2fbfb86d3f63ba570b39e59b9a9ca6d400458fea8711bdf92d4e4267f7335978",
+    "bytes": 2401217,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/N.png",
+    "sha256": "c24628e5978fecfd8aef378b5b1a1ad5ab7685dac4f6cfc65a1593068da5156d",
+    "bytes": 2542592,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/NE.png",
+    "sha256": "85323bbf054a26562124255e8f2b783066ecac97f5fee305d27e9a0e42b47d25",
+    "bytes": 2483472,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/NW.png",
+    "sha256": "2a4c8920ebb4f877b224c2abd6b0dbdbdcc3bb627379c93d234e8753617acaf8",
+    "bytes": 2443990,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/S.png",
+    "sha256": "ffbf62fa442435dbc1a3b8be891a51397b6064296baaa05a6328b8f3e69bef0d",
+    "bytes": 2604806,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/SE.png",
+    "sha256": "638de8964f09ab10756ba25902983a1c640b685041f55574dfd416f421d54070",
+    "bytes": 2494320,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/SW.png",
+    "sha256": "e038abb88b6b41b8fb126e77680514ca64b3116b30b209c88eda7ad86fed730a",
+    "bytes": 2534151,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_combo/W.png",
+    "sha256": "a8c8761f5b4158ea0034fe997950448c3218742f7820cee248f4eb9bec17fae7",
+    "bytes": 2408937,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/E.png",
+    "sha256": "b3eeec73cd25d186d027cb2ab10ed0e1978862e9e2072605855a27c349d3bfa4",
+    "bytes": 1548223,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/N.png",
+    "sha256": "5f0a5e335ac7d6fa65c099b790217adfe4fb8a51692837cfdb2721fdd3f7b585",
+    "bytes": 1623374,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/NE.png",
+    "sha256": "c174b71505ddeb06c9626a3b0fa60d80e7a3e9fe742d2ad6ffbbc4e3a860da51",
+    "bytes": 1586797,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/NW.png",
+    "sha256": "64d79b3820918ab6e83c2c4d7e3d9694120354dd6398b772636b1f0afc6c433a",
+    "bytes": 1564023,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/S.png",
+    "sha256": "9950bec0297888a5cabf6ecd8546eab80734631390b067fe427f377e1898332a",
+    "bytes": 1665408,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/SE.png",
+    "sha256": "a02408b17d82ddd484f91d28158c07740df58b9faebf00182a045a2ebbf95cef",
+    "bytes": 1598663,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/SW.png",
+    "sha256": "c76f24b02d43150e6dda42a90ffbf5b62194e274df6be5b1fc21f9299cd78b62",
+    "bytes": 1610493,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_left/W.png",
+    "sha256": "cd615d14b4ca19abfeafb9d1e9c80c7c65daf4e70c431af047fdabc9cc081696",
+    "bytes": 1537093,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/E.png",
+    "sha256": "f287a83fce62cc967f2fb26884ede7b9c93e082e0ab26f91cc28341d552e47cf",
+    "bytes": 1529948,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/N.png",
+    "sha256": "6d893158ecb4210998a61242a6fb601514beecabe0ffad3ea9f9bb0641da688a",
+    "bytes": 1629123,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/NE.png",
+    "sha256": "5911fd2699e283e660f403a17ac679a1c523a60f06c8808709dae843a4d3b1e8",
+    "bytes": 1592929,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/NW.png",
+    "sha256": "5ec67d0ef1a0323c4240e5cabbe90b7f35cc4afdb9f326040312ab8dd714d245",
+    "bytes": 1569102,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/S.png",
+    "sha256": "69f3864ecfee391a6bd1a98ca97e72363bab9f4735e34bf0e5007d67c48e6cc8",
+    "bytes": 1655554,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/SE.png",
+    "sha256": "bfc7029b6ff3456ebf26e3e8d7baf979b2820c43cfa2c363d4b141b6f922991b",
+    "bytes": 1591258,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/SW.png",
+    "sha256": "c69a60195235cbb73db70199382d6009e0d2212e42b7721dbcc1a56b448843ef",
+    "bytes": 1631728,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/claw_right/W.png",
+    "sha256": "175bbde4811164b6984de72f147170b95552958f76d7282644408b85f6d38806",
+    "bytes": 1559728,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/E.png",
+    "sha256": "2205ee21b72811d5e51a743c7f76bf9676112a53b6f2135c6fa5bd0aedb6395b",
+    "bytes": 2455094,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/N.png",
+    "sha256": "e2419f343e5698b72b3b4083b1fbcff5240737433c11b31edd9095087291ab3f",
+    "bytes": 2765427,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/NE.png",
+    "sha256": "a49fed1f957224e21f45dc38808db2d06ad98473f413f5273bf43d5098bbac57",
+    "bytes": 2589545,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/NW.png",
+    "sha256": "d78e94d6253c8e0ca4f3c0525113020585d00558dc774af2e5cdfeb79b7dcfc7",
+    "bytes": 2675209,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/S.png",
+    "sha256": "00a5e93ff25f588b1440ea14df66b70b0cc60d8cfbdc2811f6d8ce4e5703a896",
+    "bytes": 2855234,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/SE.png",
+    "sha256": "2ff60e85f18602e8adf14e64177683ebe18b7d8fb237a571501bcdec45c2c6ea",
+    "bytes": 2637282,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/SW.png",
+    "sha256": "b639711285e0da6906e7f89a874df87005ab3ec437f5ee32a3c02edac2b6abd7",
+    "bytes": 2717119,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death/W.png",
+    "sha256": "d269a57819636cb9475cc49c6cea0ce6c61955ae73617d3f9d5f675a35d8da1e",
+    "bytes": 2586995,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/E.png",
+    "sha256": "22c847567117f75671bc67772d639a233c399ce918d785712ab1dd6752828fcd",
+    "bytes": 2857287,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/N.png",
+    "sha256": "9f7c0c0f02052fd89468e7f3d43de0ae9c940059a81b33db49f68977e4e2e53e",
+    "bytes": 3055130,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/NE.png",
+    "sha256": "ea8188ef72e019b9923da4c0b3cb95c813298d74969f77926164fc7122d29252",
+    "bytes": 3001053,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/NW.png",
+    "sha256": "c4531428d84ee4647f10d99c4794bd6dfdc773a71207459f30797ed17300c54e",
+    "bytes": 2824488,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/S.png",
+    "sha256": "569c2a552e20700f156bb59a8ea133e44ba4a0c9e4e43684e010d3a0ba4b43ea",
+    "bytes": 3146734,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/SE.png",
+    "sha256": "281f4fa86d73889f88d0e57394dce5d9010dd3f7f0eb352e6d0bf066835d69d9",
+    "bytes": 2925933,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/SW.png",
+    "sha256": "04b2f3b8f1738fea5d5d6427085ef60bd3f0dd533f140752eb28a0b1cfcf5c84",
+    "bytes": 3017920,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/death_alt/W.png",
+    "sha256": "542d967275a099c2e1e7453bd34ee7684cedef82077c555abdc0e8dd0e9b41c5",
+    "bytes": 2739622,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/E.png",
+    "sha256": "e6c289d5137df756a28373b5f02e3c9eed31d28775abc9b31bf9b9ed98d36241",
+    "bytes": 1486719,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/N.png",
+    "sha256": "f914a925c03b61f36b87423920845ac4c1d2a14b47dcc1fe7483652245e09612",
+    "bytes": 1380192,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/NE.png",
+    "sha256": "132a82718b80445720b30c3f458ca61a966ad99366beb7cfea2e6ebe9c840e48",
+    "bytes": 1415039,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/NW.png",
+    "sha256": "1b3b9c19dd5d9eea500f15342bc986fa4ff5a93c55c62427c066d997eaebd969",
+    "bytes": 1395517,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/S.png",
+    "sha256": "b8744c81dfd673bb3b631abae9b311012c4c31273f5fd0171e473f2e852aa30a",
+    "bytes": 1448387,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/SE.png",
+    "sha256": "e1c96e3b2c0a3c31d79548df3ec946d85b9ea78175e41c6191e70b9e5c535965",
+    "bytes": 1515494,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/SW.png",
+    "sha256": "cb1b4ac483f03f6c91c22365fe3c6055dae5165d411b29b25207e135af2dfea5",
+    "bytes": 1377823,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/fly/W.png",
+    "sha256": "24d85c279f2acc4e2932210b0b95bc10e5921b2dd8385131d1a07dbc49a1bb13",
+    "bytes": 1400474,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/E.png",
+    "sha256": "83433cabbf964b1d8df1aa1500f696f1ba4f953dd2070cf4dff4bcc6776c3d75",
+    "bytes": 2227550,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/N.png",
+    "sha256": "c8de3507b6216ca406232b072b288aabf3232d1caeecb68e7de7071e98698be7",
+    "bytes": 2077646,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/NE.png",
+    "sha256": "8a793af62197a15e2ab92d7b3a0ba34b822f6d1345f549224fa32dcab255e296",
+    "bytes": 2107048,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/NW.png",
+    "sha256": "3bdb416ccb8f816768b56bdcfeef818264945f06ec457b15f4fc6e157ad9f792",
+    "bytes": 2052374,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/S.png",
+    "sha256": "d500253dbc6227e457398d6504fc23888a4342d2b4a74976475f5b1645e4ae3b",
+    "bytes": 2168900,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/SE.png",
+    "sha256": "103c821ee3b0c89fc1b71e805d3f78c2abdd868a157e2e9b8372183d0cec4d9c",
+    "bytes": 2317490,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/SW.png",
+    "sha256": "e95b444855aea20b277c9218f7955433007390660324e74b771e2492c09e0908",
+    "bytes": 2093681,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/glide/W.png",
+    "sha256": "5632fdadc457188dcd108e493f69a5e0327eaa072c9cdfd9eccd8e2b3d40e76c",
+    "bytes": 2120523,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/E.png",
+    "sha256": "4e73276dc28a07686e358ce807d15ccf6f306f259265b2e83beb90a7fbefdeb9",
+    "bytes": 961711,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/N.png",
+    "sha256": "6cae84282819692c2c7c54b6509bd4d715906d9fb0ea99e9ec91bc479370345a",
+    "bytes": 1005748,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/NE.png",
+    "sha256": "2c337ae5d2d5a3b41977b2c2f130261aa2cee317d5c24ae33a08bd659d905163",
+    "bytes": 990674,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/NW.png",
+    "sha256": "f2e716573c9fc7fb5f0d275ccfeb60432e32d547d5d6dbf3a9d663c18ca40349",
+    "bytes": 978604,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/S.png",
+    "sha256": "77f2c8929259cdbd2120d236da57bbfbfec5a0a065eacb3d490160b8daed5bec",
+    "bytes": 1034472,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/SE.png",
+    "sha256": "ac2d51e0617f8c8ce5734315579b4d108bd5351cfa01b931a9f995cde8acc782",
+    "bytes": 999891,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/SW.png",
+    "sha256": "11b0a8bfc1defd072d8141eff5d99210bebc6db10d524e348c0c77cbcb214ddd",
+    "bytes": 1020474,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_front/W.png",
+    "sha256": "4de4d81a67dce3e5c7755c07d4544e5c316c1b1d27dd7cf8ad38f6b76a7e2a26",
+    "bytes": 969898,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/E.png",
+    "sha256": "35019aca572812107d42f0a22c128be2daca0cedc657c4bda82c4d8d57ed35de",
+    "bytes": 959797,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/N.png",
+    "sha256": "0d43554e5da11075d179729d30c1da0ca29ee10680965228333840f60b435283",
+    "bytes": 1007911,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/NE.png",
+    "sha256": "d188c4ca9437d938324c39358074e1ac2f7fbf6c58500698e722d62dde4c7769",
+    "bytes": 992240,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/NW.png",
+    "sha256": "59ac55482f80e69724afc912fffa4ce32285644ed9748f5fd060cbbad005b8e5",
+    "bytes": 978688,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/S.png",
+    "sha256": "fb1632bd5618084827c36b9ade45b391b959f232da82d222ed05369ea9c3bb52",
+    "bytes": 1037248,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/SE.png",
+    "sha256": "860a0630f3727f28775143edc3dde5cb7983093204ba8eb7b7899a86328da14c",
+    "bytes": 996540,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/SW.png",
+    "sha256": "15df2761ca4f93441da4b3b46e1465cfd59cff00728838a21a5df9eaa34652f9",
+    "bytes": 1017967,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_left/W.png",
+    "sha256": "3c7784634dd944537f670a7c302ad5e02329ec21174c6b5a26389ee92c905f86",
+    "bytes": 970788,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/E.png",
+    "sha256": "fc23c21d6537f1523309eb449739ad5969c95254be86d2ce6c5203b5d5a61f72",
+    "bytes": 964802,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/N.png",
+    "sha256": "8936286bee40b88a121d5a6e768b19eee6e79b0efb5d6b3359c7e6d2518e4b18",
+    "bytes": 1009011,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/NE.png",
+    "sha256": "983e09464195aca9e562f5c58123dd5ad42d491054d93efb0e7e3682780f3bbe",
+    "bytes": 993940,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/NW.png",
+    "sha256": "b151f797292df7e5b730de8c015ee13919d3dcae61c3c2fa54a166dfc56d94b7",
+    "bytes": 978532,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/S.png",
+    "sha256": "cb2596a4d7ffc0c41073bbf52be2bbd10f1d5e2dd2eb39704f4456c47e55b11e",
+    "bytes": 1036310,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/SE.png",
+    "sha256": "28c4714e5e98674b4c5bf784436f53dfbdbb807dfdb534779d6086139eec1b0c",
+    "bytes": 1001170,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/SW.png",
+    "sha256": "f6e96494ea145fb210ed37f9a5088b1946ab5f4db14b1044f53c8c370f26a5b1",
+    "bytes": 1022566,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hit_right/W.png",
+    "sha256": "044364bbbd2a98d73ab99372f325bfd96acd1bac76362fc0ba05f68c041b4883",
+    "bytes": 968480,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/E.png",
+    "sha256": "de992258ad08d1f828406e2057b204896fbb1aaf475adfd23c6c370023195634",
+    "bytes": 1916316,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/N.png",
+    "sha256": "3187f1e7c453d95900d2f5eb46d3893bc9fbde87ca274dacaf35d2d0dee1d38c",
+    "bytes": 1768954,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/NE.png",
+    "sha256": "8be19d17daf54da0bb527258cf85ee0ec60fea1c045d66caa6319fdc3b7b63ba",
+    "bytes": 1826062,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/NW.png",
+    "sha256": "1684897d958ca0349097135eaf2099b0815180b11da5b92e74746cce646ee049",
+    "bytes": 1786324,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/S.png",
+    "sha256": "8523b784ef678ab171d6278768990d1d9273f265f9da4992f804069ab8a1e8df",
+    "bytes": 1853123,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/SE.png",
+    "sha256": "86c66f330899fdee1ee8f95c56bd7d6efce4971bbd79841bf6612d2832f188ef",
+    "bytes": 1944938,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/SW.png",
+    "sha256": "9405169ce4759a5ec24d19baa996fdd6dcb4cc00b27ba21d8011385bbf7d4071",
+    "bytes": 1756919,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/hover/W.png",
+    "sha256": "c4f8990b193f0ccc573ab6351d35b2018db837ce1f97786b9c36fbcf773ebfec",
+    "bytes": 1792515,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/E.png",
+    "sha256": "a0d561c9005079270ab183196283db7717bb79a6c0c5c6308a4182df0a1d2f00",
+    "bytes": 1654707,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/N.png",
+    "sha256": "c20500a2e975300a956f90d27c0d022f2dff4f4d8e760b0086566871d53296b3",
+    "bytes": 1758073,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/NE.png",
+    "sha256": "0cac162df50950ea73aa43af072da2fb3dab361d613562275184ef334f77c614",
+    "bytes": 1708577,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/NW.png",
+    "sha256": "ffb870bda8f187be7c559669d8c780546615cc204d608712705538acfa9cd528",
+    "bytes": 1702889,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/S.png",
+    "sha256": "ccdea0f8fe70f9e86571cf2c75a3c3955a4a17df83bde7ec02e743c444ad08fe",
+    "bytes": 1783059,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/SE.png",
+    "sha256": "e8e9050f29be8c6a2adbdc68d461134c0e1497b0c1851f989643ac0afdfa8779",
+    "bytes": 1719712,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/SW.png",
+    "sha256": "1169ead4275a4adcc10ec41721e38f1737665c924783cab0d5fa96cba0ce51da",
+    "bytes": 1753940,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/idle/W.png",
+    "sha256": "e75601ca0b0d83cb37abc5b18e47924e49bfe5b546d5e1e1ee2416d1c2055f8f",
+    "bytes": 1684938,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/E.png",
+    "sha256": "5521ca4aea45f3c2a5dfcaa862dff5895e2962bab8be087e1c9269be8c138833",
+    "bytes": 2065880,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/N.png",
+    "sha256": "ab9026f2d71892fbd46402596d75b589b6b35884ba70e269ea3bb9f94b947e33",
+    "bytes": 2097603,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/NE.png",
+    "sha256": "512372806857c87a33b9174820a0dcf4ea9ad16a01f8c5f8d7eb24b46be8db1b",
+    "bytes": 2095141,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/NW.png",
+    "sha256": "2667b1cf24e16cde03689ebf84a1a2eddc8aa70ba715aef9047c943c83437d2b",
+    "bytes": 2021837,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/S.png",
+    "sha256": "b5037e62ac9b719a841b5d89c5f44d717d75e325c00157e309721bf828ac5f48",
+    "bytes": 2153744,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/SE.png",
+    "sha256": "ee72cd7c838dd04f2cc7c6e2282339eb0259746eb827ea60d39199aecf3e7d4d",
+    "bytes": 2129629,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/SW.png",
+    "sha256": "67c74f8800edbbdb955136cdb1a6c814491f779cf3ab2f6b78f9fda1deea00a8",
+    "bytes": 2061056,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/land/W.png",
+    "sha256": "e0ae6739b2d1012a9f744410feec737e654c08685587837a950fc170dff3a240",
+    "bytes": 2034906,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/E.png",
+    "sha256": "84e0675f1b8d36da4a347a6221e94010232c14f74e3ce8a5db2903f0a223c06c",
+    "bytes": 2523007,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/N.png",
+    "sha256": "a8e24c485769227f5d377d176175dc297222876fb87f9169f9fb1893e976e76b",
+    "bytes": 2672850,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/NE.png",
+    "sha256": "d0eabc2929214cfe893e68541ecee1f170d2ae877c7e1f577253b29b31032281",
+    "bytes": 2598466,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/NW.png",
+    "sha256": "51b6948c9afa2a8d758a1c87901b6b4eb8f68a203182f417ed7c3be3e71df6d5",
+    "bytes": 2571062,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/S.png",
+    "sha256": "735b60b0801f677e07fb70c47e9da91129a5ecdbe553bef61bc7e954ca0659cf",
+    "bytes": 2718074,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/SE.png",
+    "sha256": "68a72c2fab72f228bb0f4feebac25672c872f2746185650cb88a65c2f1a5fd0c",
+    "bytes": 2618037,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/SW.png",
+    "sha256": "8421390cbf4248f9fe59ed32895c6930bc61d7e28730b84c8b2b43a8daafbb58",
+    "bytes": 2662034,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/look/W.png",
+    "sha256": "a67146e161c8634a9140bcb00336b013755394d10cbd4a4986d50eac0180a75c",
+    "bytes": 2544925,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/E.png",
+    "sha256": "ea5226bb1b06624b6cd65d9d590a22eb36e66a6fcff03797cf306edba42b46fb",
+    "bytes": 1865359,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/N.png",
+    "sha256": "564bad27030bab8334ffae0b739be8f175df2afd05a848fab03e30737eceaacc",
+    "bytes": 1970704,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/NE.png",
+    "sha256": "2b0c5664bbd7eb19189cfdd911ee0b5713adb69ee44d417938a7f5199b295717",
+    "bytes": 1936825,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/NW.png",
+    "sha256": "8f5ddfde3a1b9b65bcc3360ce967b3dafdbaffc6ec83c6a22f8dfe2a9083e7fc",
+    "bytes": 1903562,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/S.png",
+    "sha256": "f84d8d3ee3283f3022d40fa7d450aa0487c4dc4c3956b52831c166bb9e2541bb",
+    "bytes": 2001432,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/SE.png",
+    "sha256": "eaad6f6b00221b973079a9e9592c435920f42c48662ae5528a6784d64c162f36",
+    "bytes": 1914287,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/SW.png",
+    "sha256": "33aa47279158a6963d5d5002401d0c3a8bbcdfa5e721751a0d825784bfb0358d",
+    "bytes": 1947211,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/pounce/W.png",
+    "sha256": "6ea6b4a99b65f071ce56de353826ea3a638f6809f13f09115073dc1e8eefb58e",
+    "bytes": 1880118,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/E.png",
+    "sha256": "1611959b55242b0e0128632e288bb6e23085315fb043835a0650f43fafd64e6c",
+    "bytes": 1824691,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/N.png",
+    "sha256": "e1e2a977f0e1bd992fb6736d5e275d305ec4713f71a094e384ed3916dba35278",
+    "bytes": 1907964,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/NE.png",
+    "sha256": "ce406afe8e492452ae4ed471980b2df60cbd2a733a39139a2a8666037d06459c",
+    "bytes": 1875007,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/NW.png",
+    "sha256": "84fd217a3ac59a508f4fd725205044932dec4428c364e0e54c37191bd3425a9e",
+    "bytes": 1859770,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/S.png",
+    "sha256": "285a0032b098fd3194b67401bd91f78f17722cb7c53917ca0c4464346e3a432d",
+    "bytes": 1955841,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/SE.png",
+    "sha256": "fd97ca238f62a2b5cd6dbb2b3b113f757482e3fbc8d2dc3c66b6ad32a10c05ed",
+    "bytes": 1897601,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/SW.png",
+    "sha256": "681a107f703a9c277248930c627f3e065b525c98ed471203aff537dcbe282e78",
+    "bytes": 1935473,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/recover/W.png",
+    "sha256": "75e2b1b3e9af51b6b1d26b98ffbefd7a5a7b3c77e5edbce4f44b2cfe6a8d1fee",
+    "bytes": 1850123,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/E.png",
+    "sha256": "1f89af05079a774455c5b67a283d9731e76c7c455621231b4b67ff8fb40d4f78",
+    "bytes": 2415164,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/N.png",
+    "sha256": "ce82b70d9960bcc22c800eaa27de0eef53e6904cf9dc24c4cc52d70de9005769",
+    "bytes": 2540951,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/NE.png",
+    "sha256": "7cc9ebb6050ad3d86c68e5100691bfe7daf965ce154339e3000bd6023be85384",
+    "bytes": 2489077,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/NW.png",
+    "sha256": "a98b0a42eecb23b5d6fcb2339934d269ee57dc9f2785338dc44dfe4f69b03cd4",
+    "bytes": 2464179,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/S.png",
+    "sha256": "f7eaecca113f73d71e6f56cbd6e4f9c8432e916dfd86de4e15e40947f9948f89",
+    "bytes": 2556383,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/SE.png",
+    "sha256": "ef7b5554ca43e8266fbd17cbd5e9e6ae797f36267ee30082ae78d29c7ea9abcd",
+    "bytes": 2470946,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/SW.png",
+    "sha256": "474560c7654ce917b40f94bb8e002950babe5aa08bd51daaef9c59553952d6d0",
+    "bytes": 2522722,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/roar/W.png",
+    "sha256": "74ccc9a37e0d9ed3da176e325d8660bb725c874abb7aeb22244378adc85a17c3",
+    "bytes": 2429860,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/E.png",
+    "sha256": "db7717ea42b231f7dd25830e6466146faabc8a3e36dff0d58daf7551f00999f5",
+    "bytes": 1156150,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/N.png",
+    "sha256": "17eb5fd5be84512e3100ba0db2a64f0ed346242268927a240501b77e6ff0bb70",
+    "bytes": 1240409,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/NE.png",
+    "sha256": "4e6d1e501af34ee4e0cd95eeddf3a18ee0478c8babed90a4e34a8365ce5aefe4",
+    "bytes": 1211038,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/NW.png",
+    "sha256": "4c58c486f3f48364ca85302bda0bb1d353e1a4cb444416e813fdce12323ff46b",
+    "bytes": 1188212,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/S.png",
+    "sha256": "31ea0a83a8a9d92d6b9c0efda0d8944e3bbf31adb0041b40b0fee61c1200db3b",
+    "bytes": 1281237,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/SE.png",
+    "sha256": "29dc5c3419a13c1372a8b5b59dbc9b60fac9fa60db508af1c0afd7cb2ce5de46",
+    "bytes": 1214518,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/SW.png",
+    "sha256": "d23ec84ce89928a4d12c8ff5843805c589083474ad2305a8f0c4e353b159fd00",
+    "bytes": 1244212,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run/W.png",
+    "sha256": "741aa7590e17f6f51f9b95f8aab121fb61e32b951bd38c73430fc399c1752aa0",
+    "bytes": 1166909,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/E.png",
+    "sha256": "40eeacf6af4895c5c4f672190f84e5f3db574d9c7e9bb2f233c460e9fd83b8fa",
+    "bytes": 960711,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/N.png",
+    "sha256": "7be2dab545842f4ffc32bd623067e769545df11de3b8a5370cefee5602daf857",
+    "bytes": 1009856,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/NE.png",
+    "sha256": "7cf4d69aef56c9df2872d647a0b9d62badeafec04184146b2bbc06ed2e9865fd",
+    "bytes": 982663,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/NW.png",
+    "sha256": "e519eb782979da5183392e87e40bcdc0557b2cf49c286b33b4b226070e06ba45",
+    "bytes": 983162,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/S.png",
+    "sha256": "328f2c513a84e4b68306e00a662320a9c92f26e948b85313123db7a5b8dbab01",
+    "bytes": 1044298,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/SE.png",
+    "sha256": "c0183a7c5fad9b2fa2c8ee036d4fefc4e4a88a2b48fa43fa8019d1e6a52610f5",
+    "bytes": 990436,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/SW.png",
+    "sha256": "713d1110bf9ffa3a7412575fd6ed7f7f219d911e092e243c757e10d1478f70a9",
+    "bytes": 1026950,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_start/W.png",
+    "sha256": "4e14181a81ba0a2b3cb4342f15de263b71db87dbe4be549d1dcbb7cdb559ddec",
+    "bytes": 974012,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/E.png",
+    "sha256": "0c01c12b178e5a33355b908f2ea247d28927767df766a3b657993d4c78e17ff8",
+    "bytes": 961162,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/N.png",
+    "sha256": "d4a5017e221ef5d1dddf50f7625092fcb8984033fc4af268a9a43fa977323345",
+    "bytes": 1011735,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/NE.png",
+    "sha256": "29bda1fc518dd9e23a03f5d17a875c32d7feb2cef0c0e4e0858f3d635c39d802",
+    "bytes": 984281,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/NW.png",
+    "sha256": "2dd983537e3099b0aaa9334aeeca3c962e73dd14bd6d5880abae84db40dddd20",
+    "bytes": 983601,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/S.png",
+    "sha256": "f8e4f5c568b0900ea683974bce58ced1dc06f3dcddd4a2502195f8fcde98ed99",
+    "bytes": 1034487,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/SE.png",
+    "sha256": "fc33fe0a99006554841698bfa0626d72a5b8e97a7f59b82b78a85ef641c58ecf",
+    "bytes": 995973,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/SW.png",
+    "sha256": "0cdfb3fbcb5779f7acfbbec96b1e73839a8f952f7efdd1a86305ddd9ab9d5d9a",
+    "bytes": 1015930,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/run_stop/W.png",
+    "sha256": "2997d033a8f8f767b59b03cfb5951ab5943a113c11307a440f1fb84bbbca73d8",
+    "bytes": 971626,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/E.png",
+    "sha256": "b0590794f7958f4244496fb554b6e6badb83d6c1aec8364813c3a5ebdc176751",
+    "bytes": 1826597,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/N.png",
+    "sha256": "b3555d1d05b7fbe31065d7ab4d5dd879d4678889e9cc2287c0bf8fd43c103677",
+    "bytes": 1917340,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/NE.png",
+    "sha256": "1372f09b49dd398cb3efccde659805696443eed95760ff54de69ab75edbbcf79",
+    "bytes": 1882039,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/NW.png",
+    "sha256": "e675d1a6fb710a7a54b4e82a1c1f22e5b7509e86c63ade7cb0d26c06c410ecee",
+    "bytes": 1865472,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/S.png",
+    "sha256": "280becc4c4a7b7ede4eb4c009eb5a6c3e5d15471daf6c5c8cae905dcdf7f5d3b",
+    "bytes": 1962562,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/SE.png",
+    "sha256": "bdbd89958d8f7490e4d9afa4c2b071c4761a09624b8211acebde623146a0e2c0",
+    "bytes": 1899441,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/SW.png",
+    "sha256": "734de8d20e194cc7705e17e89be9bc1ae8da18faf0d6900b4d952bfb4a02e352",
+    "bytes": 1938683,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stagger/W.png",
+    "sha256": "86f34accdb65c91d12fbab41cc7e440be919bafe9c0683cae5dbd2d7a32c3e61",
+    "bytes": 1849651,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/E.png",
+    "sha256": "b902f185db76ead124b6459eb8580480fc105a1f973022622ba040cd603666be",
+    "bytes": 2323351,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/N.png",
+    "sha256": "8957825c23e0075f81fd309129ef2cb21729667422e8f540cc0faf60b1506da5",
+    "bytes": 2457175,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/NE.png",
+    "sha256": "d3d4c01d2fbefb0eadde17dd8827a9e2cb1cb2b820af2e0756dacbf704710a28",
+    "bytes": 2418168,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/NW.png",
+    "sha256": "199d44fc84286b6fa7cac4400673814913ea7588e69ede71d34503774b7af675",
+    "bytes": 2382898,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/S.png",
+    "sha256": "e66fb3a316ef64c9526cca86797dc65d9b70d5fad7fd6df824e619bdc1a14df2",
+    "bytes": 2540279,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/SE.png",
+    "sha256": "71e95b26a96d9344bf9199078a07d8b3f443ed06f0c3b2e6a26a493a8b058e6c",
+    "bytes": 2424838,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/SW.png",
+    "sha256": "2e6c5efaeedb7a0eec4fb46f8e140e485c7f2b0862d7b1118cbc19973ca2e035",
+    "bytes": 2487914,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/stalk/W.png",
+    "sha256": "52424b5c5fb6652260d5615db23faf62ccfb4dc8266df8195a15908f3318b67d",
+    "bytes": 2359815,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/E.png",
+    "sha256": "b4d3264683f73730e8409bd55043efee81d60a60ed74d50610558a7fdd75060f",
+    "bytes": 1863441,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/N.png",
+    "sha256": "d55ac14522701040f027df7595c47977cb4b9740b7e663d2ded8d6e880b2f3de",
+    "bytes": 1923878,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/NE.png",
+    "sha256": "4b67f8355c8ce0c19c55632a93dde31805ed78fce491e2796094f147f5bd2551",
+    "bytes": 1940475,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/NW.png",
+    "sha256": "37ecbda15631088524606983151cbc40e717bec9e81b851a83afa1cb749d1df4",
+    "bytes": 1874947,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/S.png",
+    "sha256": "12458ff779102785e001149518d51216cd7c8f66e4ceec21de6b024842ba1f2e",
+    "bytes": 1955421,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/SE.png",
+    "sha256": "6ca0e71693ca3ef12e99f37206227d34fec140017db0b44255b016d7add67547",
+    "bytes": 1842917,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/SW.png",
+    "sha256": "ef76781380ad67b56f6e4d0b99e16c1379c87648195cf7515ef16613848929a4",
+    "bytes": 1993241,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_left/W.png",
+    "sha256": "5125e5bd67df5d91294346e45c04cf597092c5ca6ffeb294f6071d2f2609daf4",
+    "bytes": 1893525,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/E.png",
+    "sha256": "4556e8378b532ba1591308ce363b6e6a8ecb8831c9c3d3b827df2809f536fc53",
+    "bytes": 1867967,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/N.png",
+    "sha256": "62bec6c550fe87da6cdaa180b015aaa9e66c72c58ab119b324b7833044e3ef12",
+    "bytes": 1936502,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/NE.png",
+    "sha256": "5c69f9a3daaaba13facbe7c057ea7fd5f16ed909fadaf4f9ea1bb12fb05055ff",
+    "bytes": 1900336,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/NW.png",
+    "sha256": "d4b5464b798e8d725466038c33dba2ab9a823e969ffcf13e54bfcbebdf8b4371",
+    "bytes": 1921839,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/S.png",
+    "sha256": "b1931c37725869c1d629a06705f7b18bc8b797fb5ed5acebe63e9f537318b601",
+    "bytes": 1965649,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/SE.png",
+    "sha256": "bb6301dfda8bff1bb98ddf6a99c9623886675a7e57b6d1143567837060c7bae3",
+    "bytes": 1971904,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/SW.png",
+    "sha256": "7bffa9a38c5f55e469c8da3e8448b725d9d6134553c184ceaee55121a321c9c8",
+    "bytes": 1878278,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/tail_right/W.png",
+    "sha256": "ca0fbc71a8bc22e473107fe2993b359a315bb1e85ba6449367b7a78f235922d9",
+    "bytes": 1852625,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/E.png",
+    "sha256": "70c16318a45075504dcd6cb92b26da22583cf8b0619c21c281f9466d5d153795",
+    "bytes": 2086374,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/N.png",
+    "sha256": "b62490ba938faad91983d0a9abdecf098764bcffe7f90012370b434c4c91506c",
+    "bytes": 2095995,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/NE.png",
+    "sha256": "2901105a7f7690cba84409f13a7b0e162ab8e04df508d1c931948736670fe117",
+    "bytes": 2094864,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/NW.png",
+    "sha256": "d1afaa3857f8cb592b3b1404776ee45464de826dd88b0e2f2242b351a6458306",
+    "bytes": 2050608,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/S.png",
+    "sha256": "d7f348ee5c6240f4eae1524c5f496353be3fc16b456459e3940a6fc2cee2afe9",
+    "bytes": 2182226,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/SE.png",
+    "sha256": "08fe0e2c5146bc68756911f122dee7bb9ec7576acc86ae3a1e41b3267585a757",
+    "bytes": 2162578,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/SW.png",
+    "sha256": "58947b341ed82d4087f52b2db3414f9f1f7c8755fa2e2a24f0111317297fc600",
+    "bytes": 2092414,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/takeoff/W.png",
+    "sha256": "b17f6d41da18a5de50f62d241453312e3c7838532b941bd50025764b21e0a2d0",
+    "bytes": 2059579,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/E.png",
+    "sha256": "207af74d973ba172baabf2d71867d0a3765d8adec317582808a985860bb744ff",
+    "bytes": 1604554,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/N.png",
+    "sha256": "4c33ba3da46e8fefa1b7ca4bf1a6e053ecfc8d8aa16bf8011a3f3a6102d523ec",
+    "bytes": 1676049,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/NE.png",
+    "sha256": "63136e4f022aa617ea6af23c29207c8c464e5c93563b5dd1de602a76a0eb8cc8",
+    "bytes": 1650126,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/NW.png",
+    "sha256": "dd4a564a18b941fdbb20aed2729405639a038efa9f96ee7158903fd9373bf951",
+    "bytes": 1624736,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/S.png",
+    "sha256": "c762c6161bc0f37f7c14983245cd9df531da5c1bccc8396648d560af10f248e8",
+    "bytes": 1720196,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/SE.png",
+    "sha256": "f1ab95ca4f0331d5de3b7e3f449e5a832aa2a31804c5a66f3de0c52618152a87",
+    "bytes": 1602218,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/SW.png",
+    "sha256": "61b89e42d29159f505ad7b785a85ea36bc5344b0716f56bcf91960934597173f",
+    "bytes": 1699053,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_left/W.png",
+    "sha256": "3c54ca4f3aed301848ab76f36c0646d92a6e0cc2779d6e3677ee70ae004412e8",
+    "bytes": 1626811,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/E.png",
+    "sha256": "498d755507d4cf141d2a8b04bb8e7a8e8e539923a3e58cf5224ab5e8d6518408",
+    "bytes": 1547639,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/N.png",
+    "sha256": "c5fe3662eb81de9fe7c4463c65409a5b4f25b8c6697d5f4e6cfb24d73af44c90",
+    "bytes": 1656141,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/NE.png",
+    "sha256": "6c13d5233a7a3069c5ee3f113e4d85920ed5afbdb3fc2eeabf77c7fffd4bb2c0",
+    "bytes": 1573410,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/NW.png",
+    "sha256": "9ee1a22ae89ca00f49f9514357b606fafe4d6c49ff8da37264e4b37900c80728",
+    "bytes": 1590624,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/S.png",
+    "sha256": "235c9d9feb66099b82f35b3e1294d32ad1fe320a715c665e02967708b3575715",
+    "bytes": 1633441,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/SE.png",
+    "sha256": "09080d22a82f78877570a05dd5e71967d5e844f488ad7e8245fec14504e5194a",
+    "bytes": 1603613,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/SW.png",
+    "sha256": "60f26a30b2f738121048d9afc8406b646095a744eb633c6c7484c37a11746cca",
+    "bytes": 1571965,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/turn_right/W.png",
+    "sha256": "ecdb5da8a1c242869370b8cf2fa96f0105956ba64147530faa9c97e97c1ee4c0",
+    "bytes": 1529721,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/E.png",
+    "sha256": "87cec4ee864dfaace95c5c19e1331f42d8a0d45923f91048312bc02a08bd8e13",
+    "bytes": 1751661,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/N.png",
+    "sha256": "f26296ca231357b7dfa188c912eaf56b959c0f76cea45ae895329b401e80eab5",
+    "bytes": 1866755,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/NE.png",
+    "sha256": "a6fba0b27e2c8fa66135eaf3217a33f30bc8e83d301ea8bfabbfcf29f89848d6",
+    "bytes": 1819463,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/NW.png",
+    "sha256": "13ef49800f9d696d96b17038aba03bee0bad36f436ec532d644bc6a765ff3aa8",
+    "bytes": 1789387,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/S.png",
+    "sha256": "3a61353bddbc72b7b788c942fba17e058b969a099a79ac243584b6020a813a23",
+    "bytes": 1904503,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/SE.png",
+    "sha256": "5dc0947310e1ee4e5f3503a0855eb27e7495b409cdd2156272fd759ced66b8a7",
+    "bytes": 1815480,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/SW.png",
+    "sha256": "b4a31cf8062de630dcfeeb5c6a9c0c4f9fb695f79ef439da3fd77717e727bb4e",
+    "bytes": 1860587,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk/W.png",
+    "sha256": "41422cb0b88f7085c3c4c7ad625f712e816845425b9143dd1535a1c3e1988522",
+    "bytes": 1768901,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/E.png",
+    "sha256": "9db205b4a423710efabdefc411c1faafde9ee34c9c13f9ea2f547e98f0073a5e",
+    "bytes": 1225318,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/N.png",
+    "sha256": "e5e1e1c0c90c73f3ffb466164990459e2a42f7f1bb0d4503bf86495334615ecd",
+    "bytes": 1299478,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/NE.png",
+    "sha256": "bcf4e7ca7f1dc7e7728b0818e8f0c90372727b51887b6561ede843a9348d6791",
+    "bytes": 1262930,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/NW.png",
+    "sha256": "da37493bc04e338e081c32f02eb1bd06b4d7ff2f85b60dee3cb29ac884c23c48",
+    "bytes": 1260060,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/S.png",
+    "sha256": "9bd4fe80be927e317ccb469fd1c9b9bf69e1276bb6156214db9e756891b09f47",
+    "bytes": 1331393,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/SE.png",
+    "sha256": "d649c709020347d8acfc66db875791f996d6e997e05ada03e9631356e1e3c8d3",
+    "bytes": 1259465,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/SW.png",
+    "sha256": "0fb1b3197caf63a74a05551b0d91d0f200079ef6f158255ad58f4a90fcea5c72",
+    "bytes": 1309245,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_start/W.png",
+    "sha256": "dd65c717622a204dc2aadcebd475f71a77b2e943c9ad14b10ae1efb5236b204d",
+    "bytes": 1251201,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/E.png",
+    "sha256": "aa1fd150cd9ef2988013feaecc836140e7dd962f8d8ea2b906ee1d441b63780c",
+    "bytes": 1223602,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/N.png",
+    "sha256": "c1b24562d854a424fc11b24d67f2f9a165eba50b757d18cb7de00d3e64885669",
+    "bytes": 1302470,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/NE.png",
+    "sha256": "0e17c4565e78891fd7146c41430764adc48cc93b2f9b10ca7bb839ed65533a72",
+    "bytes": 1266833,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/NW.png",
+    "sha256": "759fe14b347722508b9a6c66cc3afb233b8f70f6ef2ac2bd1636a81c174883b6",
+    "bytes": 1265738,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/S.png",
+    "sha256": "d0bbcadfefb1be17bd1515b3da10efe9787dbb99c9dfb6337ee2cfa41e2316db",
+    "bytes": 1326963,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/SE.png",
+    "sha256": "f41b7d9d0738b81dcbcc8bf2b771e5cb6eb621b33cdba2221050e747f70bdca9",
+    "bytes": 1258088,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/SW.png",
+    "sha256": "bc0bbafc535ce63c4fd54a072a2c7a2b247875fed52f8b441c38300b91f426b8",
+    "bytes": 1313424,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/master-512/walk_stop/W.png",
+    "sha256": "ac698e5c4c4ede43b388494f18a0916f80e6dc3a633d8e63a2e81df98997977c",
+    "bytes": 1256833,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/E.png",
+    "sha256": "e7e984d60ff1afd2362ba2dab523eea2e9d9b674add75537e19afcddff6fc6ba",
+    "bytes": 536879,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/N.png",
+    "sha256": "d0a91539c1b7cf16d297d832c9f4339911dc0a1330b86e1be6e4d8f21c6bf962",
+    "bytes": 503435,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/NE.png",
+    "sha256": "40f703c8cbd302d80c114c4711e127476f51f22da5170f16301c02cd225a258b",
+    "bytes": 526792,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/NW.png",
+    "sha256": "6b2a3f92212e4ec3f19824003588930fd0dfe0f76709e2cc19560819bbba0da7",
+    "bytes": 494136,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/S.png",
+    "sha256": "382bc95b1e90a8a2210e8418989f362c86f421b776abb0f1e97ca1f89cfd366a",
+    "bytes": 514312,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/SE.png",
+    "sha256": "39791e31e70f632b2f345da945403586fdbc2ce57af283a5b247f2eab32b421b",
+    "bytes": 530683,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/SW.png",
+    "sha256": "9b00245ec0a98383ce575201815ce24da05be698ce289703800bc03fbdcd95a9",
+    "bytes": 499507,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/air_breath/W.png",
+    "sha256": "c619e82501b3b52bf978c4500e567c9ee37f4bc8e3abb69d766ac464f4be86fa",
+    "bytes": 490801,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/E.png",
+    "sha256": "dd5ba728e0d8677e0025e690309ffcd0ce1c1b6348132681314d545f4f80013b",
+    "bytes": 243723,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/N.png",
+    "sha256": "b7aaf36c8d1ce9ec9f750831ea00c7c64c416a4b9d419681abcab64627c66c77",
+    "bytes": 192715,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/NE.png",
+    "sha256": "b28fb32bbd250e66b7f89293ce2e1d1b6dec12e680dff3be3db209a8cbff248f",
+    "bytes": 230469,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/NW.png",
+    "sha256": "42eb2422187e6d620a6fd95d28d960308b7d043d9922862b5cf3386003c834f8",
+    "bytes": 229909,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/S.png",
+    "sha256": "551fd21bdcc25424b7ab4afa776970afb9e6983cee6c085159122de170171dc8",
+    "bytes": 188948,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/SE.png",
+    "sha256": "38e60b40e7297fa7a470ebbe10a3fc26c4bec180f4dea9d70c04b70bb7177c6a",
+    "bytes": 230096,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/SW.png",
+    "sha256": "6bb48da40ae3b82c936b69b37972c5fc5bd17b8ade72197d206473c90a3c41ef",
+    "bytes": 230701,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert/W.png",
+    "sha256": "a7d3fe7918c7aa010bbba7b2553038494b7bd0e25be2bee9d37c9b2a384276a5",
+    "bytes": 248148,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/E.png",
+    "sha256": "f47fb63476063da63ba0e412d3513a2baed3dbb1292cd8b342e4c7348f7390e0",
+    "bytes": 136536,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/N.png",
+    "sha256": "999bc5f3b98b465e2746a8688116dfa0e644dad7a0d0fd044bda8f82b0c1701d",
+    "bytes": 106464,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/NE.png",
+    "sha256": "b92e9c0e7f484233cef82875f0165395f3f3c58620a28e6d7ffdcd98e21a3754",
+    "bytes": 126608,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/NW.png",
+    "sha256": "0d0459f0dc93b8fc2c2f25991c5b5a8b40fb4b6e25d761fb2f6cbd42c0bf523c",
+    "bytes": 129323,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/S.png",
+    "sha256": "67f34050486d81ef00897518372bfc5fce119436095b38cd28561b2f98d2ac91",
+    "bytes": 107184,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/SE.png",
+    "sha256": "189ae886becee8cbf3ce236b2a5d69fbc337738f829b9f250f1eb42c8658ad65",
+    "bytes": 130542,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/SW.png",
+    "sha256": "b4252813154825a176eb345e1868539c5321976a38f4a4847e87deb1160238ea",
+    "bytes": 130077,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_end/W.png",
+    "sha256": "3d54be5c87d116a195eb734036ae8844d0d77cbe410e390cc285e61892c7b873",
+    "bytes": 138272,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/E.png",
+    "sha256": "86cdd04f4c089a8cd2025c370eb464bf01c108354b3cc58a36197b8ac11940dd",
+    "bytes": 137029,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/N.png",
+    "sha256": "311b878765c22a26adad04cc461ff4d3ece87468c54f8499ff3ab6ba10f2643a",
+    "bytes": 105720,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/NE.png",
+    "sha256": "e3b912626908bf1a6f90ab24d587243bac35b92e84051bacc89752be591811a0",
+    "bytes": 127695,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/NW.png",
+    "sha256": "187caaec706aaf37273ca8a4aa7e8b86e8fab8f6fcabbbc34f4e704db066c9f6",
+    "bytes": 129417,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/S.png",
+    "sha256": "7b3e3a06c00ff2cabd6b59cafea3c250e24e15a6db754721c9fcc6eca4650ba3",
+    "bytes": 107016,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/SE.png",
+    "sha256": "9d6fc2e72f4542dc9251ddc789c424bf13d9dc22895eae31971d6b56aebe47bc",
+    "bytes": 131066,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/SW.png",
+    "sha256": "c828bd633c918bea3becd648d2b9747ba47dd546c507b6af70d3b91427796efb",
+    "bytes": 130012,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/alert_start/W.png",
+    "sha256": "039f47b55dc1875b10b108c6f1425e32f73efce606ec5112395bba26a214fe80",
+    "bytes": 137427,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/E.png",
+    "sha256": "8f9fa25f3ab630e638ab2bf248e8ef4674bf9c7083db6aba3fdb4ce70962cbe5",
+    "bytes": 306000,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/N.png",
+    "sha256": "64451af5015504c6dc0b399af2b0f496a5a13878ddfea866818fd8d7c8264051",
+    "bytes": 322991,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/NE.png",
+    "sha256": "785794ab33c954b5891c91b84db50df91edda6437ff4bb6090b80b7f56207ab1",
+    "bytes": 306167,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/NW.png",
+    "sha256": "f08f51f3f52284c00992d9ca145ce0cffb5b362e5e86d170beeba0a5dbf6561b",
+    "bytes": 338937,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/S.png",
+    "sha256": "90e061d50bd57a26027661fab6c45405f0928b1d1b96857c6b4e9a3d90ca8242",
+    "bytes": 331667,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/SE.png",
+    "sha256": "cc9dea128d80ad97bfd0485430d8b63bae16c6567034f8da08515344a8d62d0f",
+    "bytes": 313606,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/SW.png",
+    "sha256": "ea10411175c67078a534f3ab447b36a3f83912f861fd9710364eec2ff0a8e28c",
+    "bytes": 352235,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_left/W.png",
+    "sha256": "6dcb797ace289b559d62ba22bdd949ccabb4f002f050d44046f56accf3312baf",
+    "bytes": 352910,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/E.png",
+    "sha256": "0a5cefb0f3f8a7e59c0daab1a4a3df8e761d919a44f928e979211b7097b52f18",
+    "bytes": 379050,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/N.png",
+    "sha256": "e8b257b136d9dcc8a6be73ce0bf5c85803bf08e5247509851757b33e7ea79eba",
+    "bytes": 317731,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/NE.png",
+    "sha256": "153c611b2484df9fad208a70f149ff5adce5a643ad6aa9778c1fd37e1dec9b0c",
+    "bytes": 359844,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/NW.png",
+    "sha256": "c50e48b934ca451eb102c3a0561c56ce0944c5c04c4823b344283dbb9e03c899",
+    "bytes": 289291,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/S.png",
+    "sha256": "a4f8ce8bbe0fec9f56af1afe60d0d907e866998dab89ce82fb140e925cc2f519",
+    "bytes": 335206,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/SE.png",
+    "sha256": "74ebace64d887d1f135d070933132a505258a4401f979111867687b0d842eeee",
+    "bytes": 374197,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/SW.png",
+    "sha256": "e9f15fd440917a5fad04e65007577790dd5bec97791f09950f387272e174e3da",
+    "bytes": 292362,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bank_right/W.png",
+    "sha256": "d6ed74a1c9cebe5967be4b3b2680d146d3a298ee6dacc8780fe64090cbdc2961",
+    "bytes": 277132,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/E.png",
+    "sha256": "9e4f194a12b5aab1fe84ab6eab344bd4f51aa5d1c2dc3d5cc5e7fff0a899e5cc",
+    "bytes": 242278,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/N.png",
+    "sha256": "9997f8c5d4123ce83527f9a8d7edd045089950eaeda480503f0045ce729baf00",
+    "bytes": 190542,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/NE.png",
+    "sha256": "0745b6a9b0e525fde0b6f998f23f8ba4b08966cd1bd48bdf3d5ff386a836b6f1",
+    "bytes": 227514,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/NW.png",
+    "sha256": "7130390b50b3911fa5315c4fa86720206ec47c4492e4a8062f3785d0e3b9c1c2",
+    "bytes": 228988,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/S.png",
+    "sha256": "22950710ce089d25b4413f5b0eb1c9644cfef014aabe28eb1a66d32b6626c5ac",
+    "bytes": 191215,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/SE.png",
+    "sha256": "ffedc707e3a192f7f7b0145e968152bee1e047896afb26860e2b025274613b00",
+    "bytes": 230237,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/SW.png",
+    "sha256": "f61d8c3d2f445461fae6513a6b78b6034dd1d713dd13b93f77e3edcd823a3174",
+    "bytes": 229903,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/bite/W.png",
+    "sha256": "b0edeb0a57336320f2ad21161a03c2b34bb22392fc9936bf8b63d9b98e7b2d35",
+    "bytes": 243828,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/E.png",
+    "sha256": "63572020e56cd446d2d6eae6108636644f79b9090af15d8362d69cf749e6a899",
+    "bytes": 176466,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/N.png",
+    "sha256": "079c81924b3b77c7be942764ec314dda9b51c65e9fa75b804ba870de0d6efd5c",
+    "bytes": 133761,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/NE.png",
+    "sha256": "3998fa6c81540934bfe8429ec425088e93e94eaee41d4a51d1c73a05833a0df1",
+    "bytes": 163558,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/NW.png",
+    "sha256": "b22bc678a99ea0b21df6e8d44b4ff07a48f9310b87d33fecda49454cc5ddb46c",
+    "bytes": 163909,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/S.png",
+    "sha256": "2dc1740954b6f2340efecb45ecc669bef3e100eecf12f274e303119fb7e603c9",
+    "bytes": 141752,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/SE.png",
+    "sha256": "35a6f4ed21107be82bd474a89e75e3ad1fcee215683de563f752366559fad845",
+    "bytes": 167127,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/SW.png",
+    "sha256": "d3559a540999c8b447376e2704c3c8aee240e31b0f1556d94628e35c70b1f109",
+    "bytes": 167040,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_end/W.png",
+    "sha256": "cdf12353ac3797f2f7dc97aed44b04d45f0b426b7ab1670543c085c5fcbafa0b",
+    "bytes": 175074,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/E.png",
+    "sha256": "8f39caa01fe3266264e7903358c77217c5999d8b9c10b5db26f162ab27e30d5b",
+    "bytes": 242529,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/N.png",
+    "sha256": "013589aa68f4bb079cd98d86ee63e9a6f6f4cdf0d42c79566fc025d63be3dc19",
+    "bytes": 187920,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/NE.png",
+    "sha256": "4004c6b105523b639072eaf1afa96fdb034585e24949b54facebbdd039d59980",
+    "bytes": 227739,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/NW.png",
+    "sha256": "b66ab53a6a94fda58d6ed5c8545544a28a7d9209e57934336a42253596e40725",
+    "bytes": 227483,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/S.png",
+    "sha256": "4a1019917b26f8541889edea1826f89cd117c34c43e6afe452420c9e630899d7",
+    "bytes": 192972,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/SE.png",
+    "sha256": "6c4988b2d6da9da50e6aae8f26c9d9df9876e32260392fc431282ab1d1228392",
+    "bytes": 228895,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/SW.png",
+    "sha256": "c3bd3c402d7f4cabf54a4037f52014bb8074730ce319f8054cb1bff8202ad145",
+    "bytes": 231177,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_loop/W.png",
+    "sha256": "933afe09d7372def8047012b93d777f3d03465967b027ec55ecfc06c69c1d9d6",
+    "bytes": 247962,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/E.png",
+    "sha256": "558143dc1ad18ccaaf38e1a83dfc5127a9210edbca083031c9db7dcd33bbbec0",
+    "bytes": 175329,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/N.png",
+    "sha256": "a3b50334253419acf2ffce3a9d60bc04936f18183d8ab538a593318c8b6a6f7a",
+    "bytes": 134943,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/NE.png",
+    "sha256": "da49c78dee31c1263e37d3c5f814a864573a4f662efc1a7a567fdb8f4cfecba6",
+    "bytes": 162011,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/NW.png",
+    "sha256": "d84b07eebe19ec91303c00bf179107402d67facc40ce68c64b4b5cd684fff1cb",
+    "bytes": 162509,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/S.png",
+    "sha256": "5b2608712f33aeb432bdf0d26e1a99786128126f7971d183d14655312c72373a",
+    "bytes": 141203,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/SE.png",
+    "sha256": "d180e8d569acb2a12ffa24225531b5d168eb37ee063a83cb45b123554895a84a",
+    "bytes": 167396,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/SW.png",
+    "sha256": "75075b4f8d1ea8d2c59b867c4fd35f25f389ca9b25a885b23a26993c5b06a1ed",
+    "bytes": 166623,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_start/W.png",
+    "sha256": "81b90ba79da87573d5c1f9c731f08bcb344d0b087bd7807c5bb731793f62ac65",
+    "bytes": 175726,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/E.png",
+    "sha256": "1ce6f9a458579c88049c7075231393bab2f857730b041a89619d134bb35731ef",
+    "bytes": 357010,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/N.png",
+    "sha256": "ef8a49c8ce7ca74f5d2a84688338a17bf2be27ad628ba2063fa5870e977206c0",
+    "bytes": 279054,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/NE.png",
+    "sha256": "ecf609718aa6990d602843177097e620f264f7eaab97df938fd1fd8e6e77c84d",
+    "bytes": 334797,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/NW.png",
+    "sha256": "c156de61a44f398be5771aa96be9625e68aa638d20a68359dd2aa10b612e8377",
+    "bytes": 331634,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/S.png",
+    "sha256": "d138d77c220ce27d5b15bf2df629b3defb9c37dad5b87370cea8eb8c78e06fa8",
+    "bytes": 284747,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/SE.png",
+    "sha256": "cb221b0e16ef8aa3816a88868d5078b7355671831d261a1b34400947cc854fb2",
+    "bytes": 335991,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/SW.png",
+    "sha256": "ca4994c75c80d37585574204f2ce4a83ec60db1b9201ead30a6ca8ee81c3d280",
+    "bytes": 338667,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/breath_sweep/W.png",
+    "sha256": "de3689bc76e628507d0891d03c801a241613c86623e2483e747c21203ced37f3",
+    "bytes": 358813,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/E.png",
+    "sha256": "4773f2bf529e3595e0255d14ff22edca591ac06a728346374496057600f03308",
+    "bytes": 372218,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/N.png",
+    "sha256": "bc4b755b1f5a14adc0440675a91d12c311ba84505c90ba105b5e069b249527e6",
+    "bytes": 293250,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/NE.png",
+    "sha256": "1da66058a268165af5feebfb0bde5f90a9997b18626947551286fa81ff57751d",
+    "bytes": 349975,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/NW.png",
+    "sha256": "845eb2f20dc3f844c39bb53d9352a18044a43da5141e8d1714ad819c61d889f4",
+    "bytes": 350940,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/S.png",
+    "sha256": "f01e0351520ec885cca3a81eede0e5372e8451e91e5a98aecf8f98b7c87f5eea",
+    "bytes": 301739,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/SE.png",
+    "sha256": "839db9bd1bee852f00465ee09fe5a7332fd5d6f27186c0359b82e0841831d55c",
+    "bytes": 352562,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/SW.png",
+    "sha256": "edee7529878a958f5d55658e0589dd616fa90367e565f6c5c775e88ec3c48982",
+    "bytes": 354216,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_combo/W.png",
+    "sha256": "a476d334c9aec7f3567f873acc0f0a8f770dc9e3c33b6fd5c372f4056964b390",
+    "bytes": 373306,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/E.png",
+    "sha256": "f532283074725fc61ee0e408e56440e7d17077913fe1ffb777490a59df87faed",
+    "bytes": 240296,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/N.png",
+    "sha256": "32c86589341b4e7859e70c0580cad013d002051fb8b8506705183ef48c602356",
+    "bytes": 188555,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/NE.png",
+    "sha256": "941e72f81d0a0eeb664fb5fad31645baa744244a4cddae586d0746c41c7e31ca",
+    "bytes": 222633,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/NW.png",
+    "sha256": "7ab7054d7dda713574504bff1ae24d88a28b0329c0628b25f22812fbe219c55f",
+    "bytes": 227229,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/S.png",
+    "sha256": "4779579885ce26f0947620b1170d7591093b886d71cb46480030836b38f73f37",
+    "bytes": 192368,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/SE.png",
+    "sha256": "018996eb716598e3e51b81db14a319ab446d9502b66f1ef37858ebae3b6061b0",
+    "bytes": 229407,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/SW.png",
+    "sha256": "1dc0130737f75d1d15d4668d7eefab6c015da9853ee0e08243263509751def87",
+    "bytes": 223224,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_left/W.png",
+    "sha256": "a13761d1a113eca67bbc911925482777dce07aa004249b1ec841d05dfeff01f8",
+    "bytes": 238423,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/E.png",
+    "sha256": "30cedf0fbd09b2ba101206f6498e2551cc85ff761301e5c0785688bbc6245e02",
+    "bytes": 237254,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/N.png",
+    "sha256": "cb04940108e9b65dcc3da2593928e56af078b5c7705693d6c2fb40659d6392ab",
+    "bytes": 188913,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/NE.png",
+    "sha256": "6375fe3f114d499824058d90f6b5fb7e47fb756ea6206edb47e1e5bbc008a63e",
+    "bytes": 225574,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/NW.png",
+    "sha256": "9b0770f284c755ff1128777db0d0f57a50ecb584fd4c32ada1c25118f38ee963",
+    "bytes": 224537,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/S.png",
+    "sha256": "d65d28959649dea7483c548aec2172f3a2468f77fbf1073ab324f11e01658c43",
+    "bytes": 192259,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/SE.png",
+    "sha256": "e61cff248e6aa96ece8a0dd9074a8f472e54dbb15762a675970daaae087a6c4c",
+    "bytes": 222548,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/SW.png",
+    "sha256": "1739c04be79e56b580aaa28c156d32d0aad2fdb9566e2557cc98acea5d8f026c",
+    "bytes": 229636,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/claw_right/W.png",
+    "sha256": "70c2df1f51b1cdb35e39ac0f7f43bcfb039a9327ea9e43b4c6a3676ca205fff0",
+    "bytes": 241716,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/E.png",
+    "sha256": "3ad2e1ae2fee112c95e86629651bd0a967c659dfde188afa3d58abcdb9198471",
+    "bytes": 339335,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/N.png",
+    "sha256": "8c7f1109d653b64e29aff4dfe51f87d8f2bb779968705483f6ea3bf19881dfb7",
+    "bytes": 299999,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/NE.png",
+    "sha256": "6b06d4a8441bd8486aba47179494d9f951414f6b0f85845c024e2a7f55419ad4",
+    "bytes": 338299,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/NW.png",
+    "sha256": "c462835adee0bdc7d75b0068428807f578a3ef1a8c96ecb59e123b121f19162a",
+    "bytes": 355430,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/S.png",
+    "sha256": "3b7972ebbf4831943ae464db0233ffd832fb8cf797b6723c55ee00a41e9b2cf1",
+    "bytes": 331091,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/SE.png",
+    "sha256": "495afffdfe4702a0c7a1c43c41302992913966a92f79bd38038b815dfa112257",
+    "bytes": 338587,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/SW.png",
+    "sha256": "535194e20c7bddb4fe97076defe894917cc4d4b42fcd0071903fb35d83948251",
+    "bytes": 376927,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death/W.png",
+    "sha256": "f06c1b3fa8edee62096f799f6548f6c03abe3c7c861d8573d5e0f79b0df17c8d",
+    "bytes": 373904,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/E.png",
+    "sha256": "3567eedda845f8fb043cd4d6d60e06d70c6b14686813ebe88b96974ed7bdb458",
+    "bytes": 410208,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/N.png",
+    "sha256": "d575eda22ebae6ecd891e633047bdd7caa76fbe35da95d3b8b93030d37a08040",
+    "bytes": 332169,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/NE.png",
+    "sha256": "891a5dbcf9d1794771d427c36e18e444c6786c8b2eaa915cae780ec14e0deee3",
+    "bytes": 390088,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/NW.png",
+    "sha256": "201150175b8bcaf15f609b15e99d3e7fe87dffd125294eed61a55579e0e7c9b9",
+    "bytes": 376020,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/S.png",
+    "sha256": "882bc534d80fb949a93da82f06d37c0e2a3fc62154363b251aa0c6c19c3a90c0",
+    "bytes": 365371,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/SE.png",
+    "sha256": "3365d9343d760c75b330f7f09799201c74812aed0048ab684bba4e900949151f",
+    "bytes": 411816,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/SW.png",
+    "sha256": "8ead121b55f946fbb2ef1ededb2fa7dd66ab9f58764da32cf125ef4f35f7473b",
+    "bytes": 376022,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/death_alt/W.png",
+    "sha256": "31fe01db12978e00c21c08ef50c5aeabe0d5d40bf1f2233ce48409452f909083",
+    "bytes": 378537,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/E.png",
+    "sha256": "6f6ec619bc1f06d8fa266cef1518ac455721ad33c6ee7ab70b416fe19d575163",
+    "bytes": 248802,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/N.png",
+    "sha256": "ddc6e5add53406ed780b76645ba9d96169cd9662332bc661aac800ccf30c68f2",
+    "bytes": 233908,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/NE.png",
+    "sha256": "b3a152162c0eb17c9268e80c42a789140ff7de7b5bbff07322a9ef685c32db7e",
+    "bytes": 244354,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/NW.png",
+    "sha256": "70b83470cb4523b8792ce0e6efbd6dc6bb2fb53dcce1f7caea38aac7f1f0ed32",
+    "bytes": 228744,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/S.png",
+    "sha256": "f56c9313e9045dbc147862ad620985c81220040d07760659a8b411879c1e3ef0",
+    "bytes": 238869,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/SE.png",
+    "sha256": "8307ebbe9a040c48708eb4877100295cbc8d6bc8c27a2cff3c411bf6624599df",
+    "bytes": 246726,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/SW.png",
+    "sha256": "4052ce939e7dec2b2d6a20ccad26b6ff2bdbeccda527196a0c91c809396362d8",
+    "bytes": 233417,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/fly/W.png",
+    "sha256": "447b133699f5b164f4ba61986a109d3031943acf08ccc908889f78fc056efa21",
+    "bytes": 227410,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/E.png",
+    "sha256": "adc531a8862e393466b89c256f4ce9afe99c3c09fa79fb02e5483be6c2b7bb07",
+    "bytes": 380452,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/N.png",
+    "sha256": "5541fb6718abed43272ec8cc10458da3144c020bfc9013430482f9dc7774dd75",
+    "bytes": 356236,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/NE.png",
+    "sha256": "8628e028e7bfa9f6c9a6a2be64b1d3cff1c5ac8af82c632eef0ed947a2189128",
+    "bytes": 368848,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/NW.png",
+    "sha256": "f081cedd96f70549d9416e6f56f6fa339dbeac5e70c0f223b75c6fedcc4efac5",
+    "bytes": 349144,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/S.png",
+    "sha256": "371962e6487544e1204be382728e7b0f1d9cff2cdf22416b29f4bcd472153f3d",
+    "bytes": 369820,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/SE.png",
+    "sha256": "4d52d0d96682c89a446c3735e2c86c4718c27325256189ce7acd558038084164",
+    "bytes": 384431,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/SW.png",
+    "sha256": "f316e4bf54a5a240f440b832acaa3bb0293db9f6be723593265b1ac6d230cfa4",
+    "bytes": 360453,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/glide/W.png",
+    "sha256": "e88d1b7d154e607ab22dc817cc8df16344bcf9c6f8116b3158645eb65a869598",
+    "bytes": 350650,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/E.png",
+    "sha256": "27685db97efa4ea82c438e1ff21195d9f55635542db48ccbdc907f3af213ecfd",
+    "bytes": 150124,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/N.png",
+    "sha256": "49cd17bf0371c693793394bcc770e0bbde6163eb11eeaeca7a10f950856bdd25",
+    "bytes": 117519,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/NE.png",
+    "sha256": "b83fc7e3c1d0748cafd50102ddfc60c43dc3c1d9e26cef9b8bc81d5b45b4202c",
+    "bytes": 140327,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/NW.png",
+    "sha256": "3aaff09cd1c875522c107de549174414987677ec51cfb68c42a9d624e2be6198",
+    "bytes": 141655,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/S.png",
+    "sha256": "ea9cd917cae409c1dfd217f8b64c2f6b4315833eb0a557cdc065833c140dfd84",
+    "bytes": 121026,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/SE.png",
+    "sha256": "b1ab9bc9c1dbb0bd7bcfb416d404cac3919d336516c3883c7b429e42f6f715ad",
+    "bytes": 143149,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/SW.png",
+    "sha256": "15bfda9ccc4ae9c09e63e98f9aae06c2f2dbbe36ad8743b2606ac809278d37b3",
+    "bytes": 143452,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_front/W.png",
+    "sha256": "18ecaae6d7a4f8e495ed8228ac71d50edf95016e49aa7e41b1ac71e85eeeda46",
+    "bytes": 151500,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/E.png",
+    "sha256": "14115d0c4fdd655d8727291bae307ec0b55c6e98a51f969542f986c42e0e7e08",
+    "bytes": 149555,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/N.png",
+    "sha256": "f987e32ab1bbe77370cea9307378300c26011354127d8bd8f1b57d9355bef075",
+    "bytes": 117890,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/NE.png",
+    "sha256": "952aef821d9ac51a24f011d83c5149c7ba3dec5fe5ab712843f3d328cf9b98d3",
+    "bytes": 139130,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/NW.png",
+    "sha256": "42f5f18c82331e26e02b84659c3285400aa5af2b9e81c925bbf513a5ce2e9e6d",
+    "bytes": 142957,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/S.png",
+    "sha256": "b2e43d61791db52964bd1052f61a812e402d311ddc4814665aea032b66986163",
+    "bytes": 121839,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/SE.png",
+    "sha256": "2b307772b15ebd9fc55d869d9d99a6ae3afe99e773441c1ffb924daea5dfe317",
+    "bytes": 143949,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/SW.png",
+    "sha256": "65cf5e3ae7ca4f791ecbd78ed03f915d2b93f84d8023191581f32e9047c0c2f8",
+    "bytes": 142202,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_left/W.png",
+    "sha256": "52ab8886ffb2f5524cc554f9b8ba2997fafffd56c8a8f44b15d2be9d18fe59f9",
+    "bytes": 152086,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/E.png",
+    "sha256": "68a71a8943d7c9cee1b08cec2d9cd2b9da67dfe50f96174de3a6597c574994e2",
+    "bytes": 150792,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/N.png",
+    "sha256": "2197ecee27cb5f0da5314b95474f510ced7329d15c420ac021e0b6465d825de0",
+    "bytes": 117950,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/NE.png",
+    "sha256": "9b83baefb0e0d08098f93013100316bc1e0ba369108a5099a9b831c423f3a8cb",
+    "bytes": 141525,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/NW.png",
+    "sha256": "c100cd7f507d7dfe171f0813c823da578b4df5115baf517cccf2bd7a815dec45",
+    "bytes": 140720,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/S.png",
+    "sha256": "f6dab087c66b64a43cb30321e958022fb043ad082710817b5e3890014cb1a038",
+    "bytes": 121459,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/SE.png",
+    "sha256": "d0a21e333d04befe93f0500fa4cee8f9d231e16cd6eaebaae7998f229f48b7d6",
+    "bytes": 141862,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/SW.png",
+    "sha256": "ab2945ff7a55aabb0895e81c3716769c64a46822d27e5e60004b2deb89dccda8",
+    "bytes": 144748,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hit_right/W.png",
+    "sha256": "757bd2e60714881c14bdcbd99abb6d659b2c53437c7a43a9695dc1ae606d52a3",
+    "bytes": 151229,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/E.png",
+    "sha256": "b7f59f60b295ba390c2c89418390d3627af69784271d1632a7e41a726db08700",
+    "bytes": 325175,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/N.png",
+    "sha256": "02410948b87875fed9ed71a549d4155ec7af3ebccab9591926b60db8751513a3",
+    "bytes": 304305,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/NE.png",
+    "sha256": "3d2ff8abbb38bf7fd6adbea53ab4880438d472767d124ed49eeccbfab848596c",
+    "bytes": 317519,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/NW.png",
+    "sha256": "a1b71fdec4fb12f2634df9d7b7cf591d23d838c25d49be272c1f3f51c63f239a",
+    "bytes": 297427,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/S.png",
+    "sha256": "e8e1fe29ae2602f9de5c90272e6994eb03505b64f12e7dd1c2811a48f6650eeb",
+    "bytes": 309668,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/SE.png",
+    "sha256": "625a4b3a139327b79da7c1de202e47d1d175d8b30ca106740affa9b2112f6566",
+    "bytes": 320163,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/SW.png",
+    "sha256": "2279946dca888b9ff63046fb1151a9f979a2cf58e520c83c104ec9a09180c1bf",
+    "bytes": 302481,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/hover/W.png",
+    "sha256": "499ff926ee51c92d6b0a5b2f0f7de1bcacffbf439c38108d54934e7f529df9fd",
+    "bytes": 295572,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/E.png",
+    "sha256": "cd4305f55277a10562366f12624e2a6f5a71f500c31c8d756a51a95f4fb8c5c5",
+    "bytes": 241617,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/N.png",
+    "sha256": "4437cc9495f305ddb7c674bfda8f545950a12c019250208e48c99fdbfc0e3815",
+    "bytes": 189867,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/NE.png",
+    "sha256": "dbed231a2ad49e62d7728e89d968652a1e431431175d494131fd5794c5e20595",
+    "bytes": 227483,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/NW.png",
+    "sha256": "230929c41f4e6b8d18f585d46e7982f0c37286bd74813854807b2d689eae6381",
+    "bytes": 228428,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/S.png",
+    "sha256": "f6345ea2305ad01e7423c721862be04e60a18477a9b37b04ed4012d5c33c3a23",
+    "bytes": 191188,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/SE.png",
+    "sha256": "9cff0a43220afcfc675f4dd40377df2bf5eaf22a1afb3ee3ad6695d2b224edf2",
+    "bytes": 228574,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/SW.png",
+    "sha256": "d9a5e5cc3732a392dfc7adb5f3d9dc8f710cb59d5762f8c0b1f1d6e499f74315",
+    "bytes": 229447,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/idle/W.png",
+    "sha256": "e6dbda457feee4916d9033faabbe5aade19dde2a01805d178587252d274ee642",
+    "bytes": 245964,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/E.png",
+    "sha256": "74ed2583dbe2b99dad70ab9ec88855d153cfaab518dee8173e823e202425640a",
+    "bytes": 344226,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/N.png",
+    "sha256": "1f9302c1c89ed63a9d46c02b1686e90e87c40159d306bd862957f021ca20c1e7",
+    "bytes": 291296,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/NE.png",
+    "sha256": "fbfff0300e4c97d0bdd91c9b0a702fa2d1caf4d3ed561dac0e1bb53d2d680db2",
+    "bytes": 330857,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/NW.png",
+    "sha256": "ce29ca3033abe6669c48705ac101086a73dc4708bd84ab2a249253b120e29f5c",
+    "bytes": 327380,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/S.png",
+    "sha256": "51a7668eb79d77c52a0a7b4b1073274b2ea2539aef112c7e03bf3014531b184a",
+    "bytes": 295333,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/SE.png",
+    "sha256": "614ecda48ba039d601ccbe9fe9d4ae4028816bec64d92378392eef9ee4e8c862",
+    "bytes": 324777,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/SW.png",
+    "sha256": "022ba9062fb5fd80227c6662ab1810d82d88c89745a6e522ffbb7a9d3cc857ae",
+    "bytes": 318004,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/land/W.png",
+    "sha256": "a09ff6902b436278340344885c0cacfb697a928ffdb58daeb6b2a474f1352a81",
+    "bytes": 335023,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/E.png",
+    "sha256": "dc4033f1c82f2e0cc12e615a26b3bb65b0fb3c61a0e77686aecec5953f0aa148",
+    "bytes": 370697,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/N.png",
+    "sha256": "11a0dfd319aa7a18669f7b1a84849a0cfaedd7a1adba80a865ad1370b8e16899",
+    "bytes": 290644,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/NE.png",
+    "sha256": "4fc042326a184aed0eb94ea760cdbe38bf162682dcc2e391ce5d9bbb444e6332",
+    "bytes": 345559,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/NW.png",
+    "sha256": "77bb1269a62ffd61854a9a2f9455f49304195591067b8895b88430e93d0116a5",
+    "bytes": 346198,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/S.png",
+    "sha256": "31eb3bb2ea3e3d1ac39128895aff3a98c613f867e6b99b1ad7a20e8c7948fa5f",
+    "bytes": 294618,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/SE.png",
+    "sha256": "5ad4ba9805f70b63630e8b166b1feca2513fad05c6b804f11a7f91655bc963b1",
+    "bytes": 351339,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/SW.png",
+    "sha256": "083b0a70a7d948bdb623c27d25f17c4e61bdd5b67dc707383c8504d3f3496c16",
+    "bytes": 350505,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/look/W.png",
+    "sha256": "afca6bb178f4719ff9e5e2c7d1638b25a55e23a9eac79c30be536d26ad200f5b",
+    "bytes": 373685,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/E.png",
+    "sha256": "dc2873d206f04a20dcbf78e07e93ba209f5104afcc39e583d6b17cbbb2543a42",
+    "bytes": 297200,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/N.png",
+    "sha256": "53283cca545109fc38817a92b0e17de1a6cacf92221c93e47d0ae546ea062aa0",
+    "bytes": 235899,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/NE.png",
+    "sha256": "a09c6d04a2d32fd44697f9f0b99fe10f31ed413238e8fbba1216c817773125d9",
+    "bytes": 282903,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/NW.png",
+    "sha256": "cf99264e3bb07681d82299747d12e9e022ba0258043dd0e947bba86e92366cae",
+    "bytes": 284448,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/S.png",
+    "sha256": "45b59532116ac79b8ec62145f4566847b5cd7426627a536f08c3d722544b7c90",
+    "bytes": 234100,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/SE.png",
+    "sha256": "e8ccaf531f80ad32b5cd4709d783cd52d28f08a772fbd6a5b65036dd0c696ffb",
+    "bytes": 277232,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/SW.png",
+    "sha256": "c464a4f35717fbc77c2a6536d0a719dcb8430ae95bd14809246bfa90b422a4e1",
+    "bytes": 277511,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/pounce/W.png",
+    "sha256": "14408b2d8b2eb1f5809c50cc56fe70ad118f0824cd1e3ca017f0960c5ae58201",
+    "bytes": 298782,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/E.png",
+    "sha256": "a8b966bd2e67b303f0251479467ddc8f8321eef00cfd287a35b32848f65da74c",
+    "bytes": 282328,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/N.png",
+    "sha256": "31a7c008db278df69bc98b07f7f618a820515c3ffe10cca2b78620507c65d9c6",
+    "bytes": 219687,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/NE.png",
+    "sha256": "34d98118e84947bada998b18f2ea5410364ce68bc825bc351ee42b670bedb3a7",
+    "bytes": 263799,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/NW.png",
+    "sha256": "2be48bdcec592ade726a7d3495cf065c9a01231f0a1c38a7059d8536feebaa3e",
+    "bytes": 266491,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/S.png",
+    "sha256": "40026393d7e305126ffa698f885cf1de4c78488fa120534e367589fc6ce5f21a",
+    "bytes": 225136,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/SE.png",
+    "sha256": "816d65e771bfa2a555abbebc03efff1daa7127babf6ba63348c822b850374309",
+    "bytes": 270273,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/SW.png",
+    "sha256": "a283b28e332b227d2240ce96ce4ed9c6da66bb41a33aec1503aec7b4b557fc39",
+    "bytes": 271795,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/recover/W.png",
+    "sha256": "d4398b784f03d6bfe319ec867cb646076e8ed4f8534be0cf17e9380e569b1b48",
+    "bytes": 285642,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/E.png",
+    "sha256": "e3b614903ee2060166847659d0af776fa4b6d820f6aeed7334fb413c5466f5b0",
+    "bytes": 373426,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/N.png",
+    "sha256": "425c2758fe129e56f95fbcc4da795ea479dd92fd38260b190a55d485d81593bb",
+    "bytes": 293647,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/NE.png",
+    "sha256": "7cb7b725b0bcefaf1580cb82381e1436fee3622b6b431490b5152cf744060be1",
+    "bytes": 350709,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/NW.png",
+    "sha256": "2ae84c8e986c2372ff66746e1e4fb1c0163cce9130a93c3c6b7737914afe864d",
+    "bytes": 352940,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/S.png",
+    "sha256": "bd9b640b19d9385af536bbf512a23a7e7e0de23f013065cb0414a593ab7b138e",
+    "bytes": 291433,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/SE.png",
+    "sha256": "d925f783652c8ee54a1a7a60a0ec235963df06071081f9c526b7f62428c9680a",
+    "bytes": 349146,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/SW.png",
+    "sha256": "21acb8aedd71c9b26dca91f3be66ca87aa00fd427029539e95baf7fef69cd487",
+    "bytes": 349569,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/roar/W.png",
+    "sha256": "ab74d352b4b075f253bc39aaa09eaaa91c4c133793b51230d0998c8cabf9ccf6",
+    "bytes": 374286,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/E.png",
+    "sha256": "0f34b3d7a13ac1459d4ad2bb418b0e347d7e703658a021ebb0119977ce7536d7",
+    "bytes": 178361,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/N.png",
+    "sha256": "c8d71ce77bc1c1e72f18bc70dbbcbaa87b73d7b94eac649c449bbbcc244b5ba0",
+    "bytes": 145882,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/NE.png",
+    "sha256": "83928f8816a5c4f8320da8236101351a858a5f7b457bf594ad98b7c4dc5657ef",
+    "bytes": 172109,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/NW.png",
+    "sha256": "2dd02d234e387f0f8530bdddb6a1a4a1ad89459c04b48604b75bb73ce55ac82a",
+    "bytes": 173573,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/S.png",
+    "sha256": "1ca908231d669f8259ff2796b886cf35433477f17eb1688014f744626c4bf084",
+    "bytes": 151793,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/SE.png",
+    "sha256": "ffd9aec7612f7fbcb50453af08a9e81b346687e1d245a55ee81194782b9eb1d9",
+    "bytes": 175317,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/SW.png",
+    "sha256": "d2a0ab08897d3e260f7ca567d35484c596d135d5d5549675c42cbad7a1aea568",
+    "bytes": 175553,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run/W.png",
+    "sha256": "5adaef08f7ceda43ca9f1d33df67c9ef77b425fd4f3d06fc1b45444ac3d8b0d8",
+    "bytes": 180604,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/E.png",
+    "sha256": "1ba9f55bf92071b80dd7a7df9e618a241d9325efb93a4def4ca9c0d51f67839f",
+    "bytes": 149036,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/N.png",
+    "sha256": "c9cd91f0d84322412991a73b8a23dcc0d2a3276dc09269c9f08f1edcc35d3d25",
+    "bytes": 117124,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/NE.png",
+    "sha256": "5b4114e3f3c3d82dae81d9453ef100d25fa58532d1d3ba6b23380f642f498d0b",
+    "bytes": 138409,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/NW.png",
+    "sha256": "bed4f085bd6605b9789c116b9863ebbec6e742a25f63c5c2bb7023942d8df82b",
+    "bytes": 142552,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/S.png",
+    "sha256": "8c3388e13054fb1cd2ab85591fc1f43c6fd36d4f0e297f32f4ae67973ed8cdc5",
+    "bytes": 122024,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/SE.png",
+    "sha256": "faa6068d7da63e2eb3335c737b863057d4aedd56f1b31f95ebd9d5b34501f0bc",
+    "bytes": 141076,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/SW.png",
+    "sha256": "3af809340e746108331a4e3f0f42e773a3a372817d5d4d7d93343f759775bc46",
+    "bytes": 144847,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_start/W.png",
+    "sha256": "68907db5f3b62c7704c5dac280263f869581d22d0e44d9fe1dbec77769a289cc",
+    "bytes": 152775,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/E.png",
+    "sha256": "23ebaf331622dd24dc5b80cfcdc60d26c3d662c7965c2437191d16df65eb20d6",
+    "bytes": 149875,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/N.png",
+    "sha256": "1d62fe333714e1e59f96abcab54b813177f4704137a605db0aa92060c3d6507d",
+    "bytes": 118737,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/NE.png",
+    "sha256": "d5bda35628448f083c539c91374226b496e658ad4ef2f669f0d72d14c8c0d335",
+    "bytes": 139878,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/NW.png",
+    "sha256": "f4d062c70b480355f815af55331875cf4fdbd1c5089021619eea05ca33ec314f",
+    "bytes": 140785,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/S.png",
+    "sha256": "d121e27f2b043a6fa274b7c07ba9479588aafa9cfb635a87b8a31ff2ef7b8364",
+    "bytes": 119779,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/SE.png",
+    "sha256": "e59c30c96ac46fd819a6a640dd5e891c7e068c5e81a623cdd207ae45c1963c48",
+    "bytes": 142009,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/SW.png",
+    "sha256": "8b3429e22c22ac4578d27ab9b9f3c1857d446d38b0eb62d311f467a6c96d7aef",
+    "bytes": 141593,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/run_stop/W.png",
+    "sha256": "98497b0c98cd85bb05a0ae4f179125984b6451246684d8777664765a091c9cec",
+    "bytes": 151617,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/E.png",
+    "sha256": "f0b36c65f43924eb789cfd99b2f2d9e15e6e80d10d5f315ce8f9f2747513ff70",
+    "bytes": 283934,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/N.png",
+    "sha256": "d11ab6870c3d01447679a9262814583a0bb3c1951969a607b0849d3295972e0b",
+    "bytes": 220579,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/NE.png",
+    "sha256": "83c6fa71caf6396ad16391d5aef216cd33208e3c1ffeb9e692b0b556de5992fb",
+    "bytes": 266480,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/NW.png",
+    "sha256": "1075d8eff970f5d1610626542c43e191d62288417308d161ad1605390db1ea12",
+    "bytes": 268536,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/S.png",
+    "sha256": "7fc1d78fa51b0fe9222bc3e99fade4a373cf448813e8bf59a429c2e9198b6010",
+    "bytes": 226516,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/SE.png",
+    "sha256": "99c3fd55d40c4bee6b5f2e0bb3eff23ad53d18b381a32de9bece276d0741963c",
+    "bytes": 271531,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/SW.png",
+    "sha256": "710d62fd85b34ad9ebeef0217af0279a1dcfecc2c7b546eb5b1dd71db2e498ff",
+    "bytes": 273283,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stagger/W.png",
+    "sha256": "311fcf177918f2c917e03ec5f962e3b87039df3fa9bcbe2ceaad9defa16428de",
+    "bytes": 287198,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/E.png",
+    "sha256": "bdda1d9905bf7bceb5c8c77f612925b8080fcd2772254e3b238e6af203f41459",
+    "bytes": 363056,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/N.png",
+    "sha256": "e680707fe2ddb03707243672db5cda9a0859dfab8804afbc5c38132ffc66a03b",
+    "bytes": 292110,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/NE.png",
+    "sha256": "36b58018876f8103e68a3a28b668bd0792fbb0e0fdf816dbc57063f254c27069",
+    "bytes": 345583,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/NW.png",
+    "sha256": "df3b8367cc38645c8fdbd4fb650827c93f6738aed2870eefd8eeb0537edd674a",
+    "bytes": 345767,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/S.png",
+    "sha256": "f2a561ffee8a0a1011af320e04586a87108ae4d61d4b79339e01401c5b67ff11",
+    "bytes": 298382,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/SE.png",
+    "sha256": "16e591fc9d129e988f0a614beba0fb8d0e09f244474b69226616145e795d34bb",
+    "bytes": 349054,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/SW.png",
+    "sha256": "322e047e24c38094a0e40fdfc21d1a0a684c93d129ebddd01628fd8cfb98278d",
+    "bytes": 350744,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/stalk/W.png",
+    "sha256": "31e4e5481fdf6991357fdd04654b8a2e6c872b4cecf90dffefb5236964597150",
+    "bytes": 366895,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/E.png",
+    "sha256": "6cc9cd1fe69b55137f21187f0cf5b01d1b31a206c9db09adf6d75416e290963f",
+    "bytes": 287616,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/N.png",
+    "sha256": "2dc6a9c5b2916356f687d8dca8ee0bedd755cd6a3822b8b9ab51c3328f54477e",
+    "bytes": 238970,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/NE.png",
+    "sha256": "7073e9a4013599a6e4c91ef1d0a10a82ddaefb1ffb799de21b22bc028e3c4042",
+    "bytes": 268812,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/NW.png",
+    "sha256": "ffb86a724926b1ddfb81ea49bf9f78cf2d3ca606f40cbdfd937f8a0c12125eee",
+    "bytes": 276321,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/S.png",
+    "sha256": "1824074c1027141c018f89aac2d6564096b4a17727802eb393942880558960ad",
+    "bytes": 240467,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/SE.png",
+    "sha256": "514bfb038efaa53d1b50043d8e60eb6f3b48636a8354fa9c3c98fcce02c0ecac",
+    "bytes": 266953,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/SW.png",
+    "sha256": "3f4338bd1984cd8679db5256e2be20ff7c2f00bcf91a1812bc5aa8c1be95bac6",
+    "bytes": 274332,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_left/W.png",
+    "sha256": "569f0d7644da0056dc508833dd12ca205808d09cce2fd8fd7813f346cd43fc07",
+    "bytes": 293976,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/E.png",
+    "sha256": "b8479ba9202f0b5aa22432030117d5e8e1658d1c901115b06594b492026940a5",
+    "bytes": 292186,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/N.png",
+    "sha256": "1426662d00d64555737097facaf54d63e815e14019275194613ef1f4ecf00666",
+    "bytes": 238809,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/NE.png",
+    "sha256": "93052fe5652ea6277c0dcf2422e7fd05f6632a4595fbdbb35afaa32cc473e3fa",
+    "bytes": 274079,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/NW.png",
+    "sha256": "d6fcb7961f4c39f11a393137225acfe4b11d2257ee2d64130e056a1554c0be16",
+    "bytes": 269887,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/S.png",
+    "sha256": "cc147a295791f3db32d2f6fb62b2d1e05bf0a31aad9c4e7b8006355f7d68f1d0",
+    "bytes": 241671,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/SE.png",
+    "sha256": "97ad2acb8fda4b3eeacce2035d81787ed7fbfb79cfedfa811fadb9943ef135ee",
+    "bytes": 272638,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/SW.png",
+    "sha256": "1846bbe4a5cfc51ee32de830acb635bf0b4101a27dc5734e211d5841339ad193",
+    "bytes": 268282,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/tail_right/W.png",
+    "sha256": "e62e883a0ad41314e0c39a63251b9e2c9992f2a0e4033bf02ec6f067dffd4dc2",
+    "bytes": 288644,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/E.png",
+    "sha256": "b20cdbd842b797aaac0e1e36e23a723917416be76b295958606dc018a8d7e88f",
+    "bytes": 347324,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/N.png",
+    "sha256": "3bb2427c917cf6cbc26d544c5877bdf1ed51c36d384b7c3b31057de5b47dcae4",
+    "bytes": 297686,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/NE.png",
+    "sha256": "e4ce18ab2e69669562189dec7a8c589be1237367ab46c7a1fe246eef9038ca60",
+    "bytes": 335284,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/NW.png",
+    "sha256": "5aacc84a9123e93a70ff62e6bb8c3dbd86e95061bf1380e1620fbbef568e8923",
+    "bytes": 329098,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/S.png",
+    "sha256": "8fe06efc821e2a2bb667681120614796a5714428cf0065033bc6e89d4bcb5658",
+    "bytes": 307372,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/SE.png",
+    "sha256": "abc261c72b8e53ef522ff76fe90e6cd509d40dc73d9e348aa9579988fd22391e",
+    "bytes": 331786,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/SW.png",
+    "sha256": "136c6323bd6212dea94c5d865fd56dfcd8db5ee937ef39f2f431d19646bab393",
+    "bytes": 327531,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/takeoff/W.png",
+    "sha256": "9456c7e1fdbf2efc1f7fcfbf6f66b95224dee377a738d015116d89ead763fb24",
+    "bytes": 336808,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/E.png",
+    "sha256": "e25f9fcd9d7ce9db8f7fdf716107c43a9e4fbac1f625efb08b5b1fe491bf72a5",
+    "bytes": 248509,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/N.png",
+    "sha256": "e05dc2a253b38e3608cfd19010d20ef57e46586ebeba26d35d86580012cb0044",
+    "bytes": 225378,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/NE.png",
+    "sha256": "9d0bbd8110b966300497da759939e7ee04d4298a1bc1e062f57e7549735810ef",
+    "bytes": 223542,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/NW.png",
+    "sha256": "de09f49a24d13346648e2bd1dd0b39b8a772becdda3a2b5f9de9cd129cb8b37f",
+    "bytes": 256599,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/S.png",
+    "sha256": "087f9876fae16fb75b11c0c42f6f951bc828ae804a4e78d88a333da4c11466b3",
+    "bytes": 229963,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/SE.png",
+    "sha256": "2cb0bab4e0ca9c6bb0380139463cb3c051e1d0614ec8ecbfcc44012f1fb603af",
+    "bytes": 247080,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/SW.png",
+    "sha256": "3ce3d72f7623f4189c7ac79581c7902253c8d0e8090e24d5a0c6db7572cb5a3b",
+    "bytes": 232553,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_left/W.png",
+    "sha256": "efa634705fe9f11323cf2d3265d172c8a69b4fd968d9786763134922e751bf90",
+    "bytes": 249657,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/E.png",
+    "sha256": "b827e1cf208c31cbbb78afd51623c49c30e162c911fec94559d2c58204e5bfdb",
+    "bytes": 232362,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/N.png",
+    "sha256": "ba76a3c8c718a46182a96c22674a83e66d0a2acbed5033275f2862380e91260e",
+    "bytes": 205321,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/NE.png",
+    "sha256": "58b18c7b37b6e6d26ff4e605e6cdb556aa1d35259f0d1476413c235a6daf9562",
+    "bytes": 234882,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/NW.png",
+    "sha256": "fa330f16fe0faefdf5a6fc3c2b5f82b1dac924ad52ffb15b4763602d472a942e",
+    "bytes": 206243,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/S.png",
+    "sha256": "b7bcfb3153f741c5e60856ddb67abe8d359d98b336e4e4198a2df6af3d13f4f9",
+    "bytes": 197389,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/SE.png",
+    "sha256": "c44e9cc65ac8b228c27c2eb5d877691a820571579f1f295f75c74ef8d2a9fd95",
+    "bytes": 205281,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/SW.png",
+    "sha256": "f072e92e872fbf003784b16151fcf707f02739f6aeca6b18881461f276a7c4d9",
+    "bytes": 234547,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/turn_right/W.png",
+    "sha256": "e916c1cb59ec4d932fc6677d982cd421d9aa20f75338c0a2a51766e8ff387751",
+    "bytes": 227463,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/E.png",
+    "sha256": "2b0cfeac4ddec007018b6441d757ffbdc3131ec55de1976f4bc511fa69ed5bdc",
+    "bytes": 272645,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/N.png",
+    "sha256": "78a1a3fa5249dd553bb14a15451b6748042439f7d058f7418bc196104a4f53a8",
+    "bytes": 221200,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/NE.png",
+    "sha256": "247c0a0d96947b51b9e28c14a31abd2eaf7854393c8c02fe8ae5a47490518bbd",
+    "bytes": 260561,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/NW.png",
+    "sha256": "4468fc7132ea4ac2eb142ac6fa7a0e125d6762099ddcbf5e4e04e1a9f46a8bb6",
+    "bytes": 261378,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/S.png",
+    "sha256": "73bae11e8ee0f98359d4400c8f2f8f562be859c572fe34ded8bc33a4af39c03e",
+    "bytes": 224779,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/SE.png",
+    "sha256": "b0448e24129c8e68cc9692f01607e106bc06b3ff77ca90aeb32bd088bba1a046",
+    "bytes": 261977,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/SW.png",
+    "sha256": "ba69034f6a2286f6137fec2068a970d0367bab2955baae557654da6e29e5c73e",
+    "bytes": 262497,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk/W.png",
+    "sha256": "4134b56d6d600c2233f039b6b2200b9825aa2e9cdc5bf7fa5b988bed8cb0e1d9",
+    "bytes": 274733,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/E.png",
+    "sha256": "795a552dd2f15a39fad04fb96cd763080c19a0cb9ff790d7ad8bc7e23f5149d2",
+    "bytes": 185233,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/N.png",
+    "sha256": "9dc79b1510f18ec1576655ad05413dfc8604b59764d96ff92ca057417f27eb16",
+    "bytes": 149003,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/NE.png",
+    "sha256": "d04fa0659102c1a308327f35fc45fd6fa98e32f5e60d0e49d8c327cf446a8917",
+    "bytes": 174150,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/NW.png",
+    "sha256": "8f24f7775042b839488ceb02ae40abda14c50fb556be3780261de5106f9d6970",
+    "bytes": 179408,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/S.png",
+    "sha256": "4c45d1fa8a37bc179fc2a2c25f578a6e3305ab06009f0cbb28e5a206c6857fdf",
+    "bytes": 152670,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/SE.png",
+    "sha256": "6d73b8be65b525f78a6126efd311360e3c974be27b73ecf542a26f4be40eafb2",
+    "bytes": 175251,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/SW.png",
+    "sha256": "d8abda10599cfb7d7c7435f927080c2fc9d0cb1251866c0fd1261c4949f84b87",
+    "bytes": 180778,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_start/W.png",
+    "sha256": "4a7f3f4e896935ce1dd0c35ad44372963ed6ebda2b90f75f6828a91323eb3bd8",
+    "bytes": 191848,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/E.png",
+    "sha256": "87bdb77a9c47d91df679bab7c2b97d0fc9814a9b0aeaefcf352626c15def391c",
+    "bytes": 185770,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/N.png",
+    "sha256": "f8396411df2d7289f4a5a250aaa065c833521f30e386cb8f91daadcb45e0a9ea",
+    "bytes": 151661,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/NE.png",
+    "sha256": "53870b7806a231b291b611fa2e24182f845788d6fa1dcc2d8546251066706869",
+    "bytes": 176587,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/NW.png",
+    "sha256": "a225347ec453faed74b82a976d4ce20e4feeff1fc7827708fcd8d004624ca47c",
+    "bytes": 180921,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/S.png",
+    "sha256": "ea60b39ce6071988396dc20e7c6a8e59ba11adfcf2ca580f110c7d32183e0f13",
+    "bytes": 152448,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/SE.png",
+    "sha256": "2b0cc573f5b8edfbb7a95c762b531de7fe67ef107421ddb619efa983b58bd22a",
+    "bytes": 174955,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/SW.png",
+    "sha256": "d13de3b968153a041782ba534325edeb0cf218ab2b1fad4d8d307eb7f718eb6f",
+    "bytes": 181980,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/exports/motion-foundation-001/runtime-256/walk_stop/W.png",
+    "sha256": "5a027215760af5ec636d98129be6ce0b3974f23c35ecc3fa47b8ab28f43e7769",
+    "bytes": 193841,
+    "verified": true
+  },
+  {
+    "path": "art/source/bosses/ashfang/reviews/motion-library-008/motion-overview.gif",
+    "sha256": "52a62eb53b578d1cc64000d5f21ec13f8d343652d5b137ced2c96a7e3404988d",
+    "bytes": 9092050,
     "verified": true
   }
 ]

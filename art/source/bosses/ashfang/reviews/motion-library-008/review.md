@@ -28,3 +28,7 @@ Scale-two idle, walking and flight renders preserve projected poses/pivots/attac
 - `browser/browser-report.json`: actual offline atlas loading/playback, pause, stepping, direction phase carry, death hold and 390px viewport checks. Viewport emulation is not physical-device acceptance.
 
 Remaining work after source/export delivery: owner art/motion review, game adapter and authoritative action integration, separate VFX, encounter tuning and real Hunt/phone validation. Draft PR #299 stays unmerged.
+
+## Final remote receipt
+
+Asset checkpoint `bffd886b064396b213c27960645a28538f4d7d95` was pushed and its remote branch head verified. A separate LFS cache retrieved and SHA256-verified all 801 tracked LFS objects, including all 656 final atlases and the packed animated master. See `../../remote-lfs-verification.json`. GPU render jobs completed successfully; no render remains running.

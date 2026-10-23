@@ -96,5 +96,12 @@
     "Owner art/motion review",
     "Game integration and separate VFX",
     "Actual Hunt and physical-phone validation"
-  ]
+  ],
+  "remoteVerification": {
+    "assetCheckpoint": "bffd886b064396b213c27960645a28538f4d7d95",
+    "independentlyRetrievedAndSha256VerifiedLfsObjects": 801,
+    "allFinalAtlases": 656,
+    "packedMasterSha256": "38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b",
+    "receipt": "remote-lfs-verification.json"
+  }
 }

@@ -15,9 +15,9 @@
   "ownerAccepted": false,
   "runtimeIntegrated": false,
   "remaining": [
-    "Independent final remote atlas retrieval verification",
     "Owner art/motion review",
-    "Game integration, separate VFX and actual Hunt/phone validation"
+    "Game integration and separate VFX",
+    "Actual Hunt and physical-phone validation"
   ],
   "ownerAcceptedAnatomy": true,
   "ownerAcceptedMaterials": false,
@@ -28,5 +28,12 @@
   "M4": "Complete candidate: 7448 frames, 328 lossless 512px master atlases and 328 downsampled 256px runtime atlases; every master cell pixel-verified; zero clipped or empty frames.",
   "M5": "Offline Edge review passes all 328 runtime images, playback, pause, step, direction phase carry, eight views, held death and 390px layout. Visual contacts inspected for all 41 actions. No actual Hunt/physical-phone acceptance.",
   "M6": "Uniform scale-two idle, walk and flight proof passes for projected poses, pivots, attachments and root-travel scaling. No higher-tier geometry authored.",
-  "M7": "No game integration or physical-device acceptance."
+  "M7": "No game integration or physical-device acceptance.",
+  "remoteVerification": {
+    "assetCheckpoint": "bffd886b064396b213c27960645a28538f4d7d95",
+    "independentlyRetrievedAndSha256VerifiedLfsObjects": 801,
+    "allFinalAtlases": 656,
+    "packedMasterSha256": "38a0125d782e7cc7c0e6121779cd35e57e2175770d9348738477873b59a9076b",
+    "receipt": "remote-lfs-verification.json"
+  }
 }
