@@ -1,12 +1,12 @@
 # Fireball material and animation authoring gate — Draft PR #336
 
-## Integration on hold (LOCKED, 24 October 2026)
+## V5 early Hunt integration; universal lighting later (REVISED, 25 October 2026)
 
-**All Fireball visual/runtime integration must wait** until the one shared lighting/material/visibility engine in [PR #332](https://github.com/pjotrcasteel/Wyrmforge/pull/332) is **finished, merged and validated for production world VFX**. This includes new Fireball sprites, mutation composition, emitters, materials and effects in Hunts, Nexus, Town, arena/lighting labs and runtime previews. Do **not** use a temporary Canvas/CSS glow, separate Fireball shader/light engine or full-bright effect to bypass the dependency.
+The earlier blanket runtime hold is **superseded**. The owner wants V5 in-game soon; the current draft PR renders its **base Fireball** via the existing Hunt Canvas renderer, reusing the C# projectile and its current lighting conditions. `wwwroot/js/arena-fireball-v5.js` consumes the source's versioned albedo/emissive image strips and falls back to old pixel fire if unavailable. This is a **draft visual improvement only**, not completion of full mutation composition or physically lit materials. Cinder Needle and Frostfire retain their existing visuals.
 
-**Permitted now:** isolated editable source art and animations, Aseprite and five material channels, validation tests, offline frame studies and clearly labelled *non-gameplay* 320/390px composites. Existing C# spell state/behavior and approved live art are preserved.
+**Before merging:** pass CI, review real 320px/390px in-game captures and obtain owner approval. **Deferred solely until PR #332 completes:** shared GPU light sources, physically lit materials, shadow/occlusion, reflectivity and world-wide visibility. No new bespoke lighting or invented gameplay effects.
 
-**Only after PR #332 is ready:** connect real C# spell event identities to the shared renderer, validate real in-engine GIFs and mobile/zero-light behavior, then request explicit owner approval before enabling the new art. [Blocked TODO and acceptance sequence](../../../../docs/canon/roadmap.md#fireball-visual-integration--blocked-until-shared-lighting-engine-completion-locked-24-october-2026).
+[Roadmap sequencing](../../../../docs/canon/roadmap.md#fireball-v5-in-game-first-full-universal-lighting-afterward--locked-25-october-2026).
 
 The four playable mutations produce **16 mechanical combinations**. This area has **no runtime wiring** and contains **no substitute procedural art**. It is the handoff contract for the owner-approved animation/source files.
 

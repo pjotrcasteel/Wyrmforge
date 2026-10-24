@@ -1,6 +1,6 @@
 # Base Fireball V5 — reviewed direction, unapproved art candidate
 
-**Editable Aseprite and all five PNG material exports are versioned here as unapproved source candidates. Not installed in production.**
+**Editable source and all five material exports are versioned. A draft-only legacy Hunt V5 preview uses albedo/emissive; the PR is not merged or approved for release.**
 
 The owner called V4 "better". V5 retains V4's fragmented ember shape and 16 looping frames, but the user has NOT approved shipping the spell. This candidate is neither a runtime material nor a replacement for the accepted Nexus/Hunt visuals.
 
@@ -16,14 +16,14 @@ The generator is the editable source representation for this checkpoint. It rege
 
 The 24 October source study was verified locally by regenerating all seven binary outputs exactly (including Aseprite) and comparing byte hashes with the source ZIP. Across 16 frames, the cutout alpha matched the union of the albedo/emissive alpha channels; no cutout mismatch was observed.
 
-## Integration hold — owner decision (LOCKED, 24 October 2026)
+## Base V5 gameplay preview — revised 25 October 2026
 
-**Do not integrate these V5 assets into Hunts, Nexus, Town, any lighting/arena lab or live preview path** until shared lighting [PR #332](https://github.com/pjotrcasteel/Wyrmforge/pull/332) is **finished, merged and validated for production world VFX**. Off-game material/animation authoring and art review can continue. After the engine gate passes, use only its common lighting/material/occluder pipeline with C# authoritative Fireball events, then record real 320px/390px in-engine evidence and secure explicit final approval. [Canonical blocked TODO](../../../../../../docs/canon/roadmap.md#fireball-visual-integration--blocked-until-shared-lighting-engine-completion-locked-24-october-2026).
+The absolute 24 October integration pause is superseded. The user wants this Fireball in Hunts **before** PR #332 finishes. The draft PR uses **only the existing Canvas projectile renderer** to display the 16-frame V5 albedo and emissive strips, falling back to the current pixel painter if loading fails; no new lighting, shadows, damage/collision logic or event stream. This is not yet merged or owner-approved; genuine 320/390px Hunt captures and performance checks are required. The other channels remain source material for the **later unified GPU-lighting implementation**. No local lighting workaround is permitted. [Updated roadmap](../../../../../../docs/canon/roadmap.md#fireball-v5-in-game-first-full-universal-lighting-afterward--locked-25-october-2026).
 
 ## Important limitations
 
 - The generated art is a candidate that **still needs manual pixel polish**; this is not a substitute for owner-authored accepted animation.
 - It is a 16-frame *in-flight* body ONLY. No cast/impact/aftermath art and no Meteor/Needle hybrid are approved.
 - Do not use a GIF composited over the real screenshot as "in-game footage".
-- For the eventual renderer, keep one physical Fireball tied to its C# FireballSourceId and mutation bitmask. All world lighting must come from PR #332's shared material/light engine.
+- The temporary renderer uses the real C# Fireball projectile only. Actual relighting must later use PR #332's single shared material/light engine.
 - The root Fireball release manifest deliberately retains `status: awaiting-authored-source` and `assets: {}`; the strict art release gate **must continue to reject** this candidate.

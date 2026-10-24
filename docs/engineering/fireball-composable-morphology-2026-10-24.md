@@ -7,16 +7,15 @@
 - [Art and animation](../canon/art-and-animation.md): Gothic art, world-space material/light/shadow interactions. User-facing visual quality is a release gate.
 - Shared universal GPU lighting is being developed separately in PR #332. **Never** build a second independent lighting system.
 
-## Owner decision — runtime Fireball integration BLOCKED until shared lighting is finished (24 October 2026)
+## Revised owner decision — ship basic Fireball sprite first, GPU relighting later (25 October 2026)
 
-**LOCKED DEPENDENCY:** Do not integrate **any new Fireball visual asset, mutation effect, material channel, emissive source or preview path** into Hunts, Nexus, Town or any arena/lighting lab until the universal lighting engine in [PR #332](https://github.com/pjotrcasteel/Wyrmforge/pull/332) (or its accepted successor) is **finished, merged and validated for production world-space VFX**. Merely completing an experimental G0–G1 renderer, achieving green CI on draft PR #332, or having V5 source sheets is **not** sufficient. The engine must own actual world visibility, emission, receivers, occlusion and lifecycle before Fireball is wired anywhere.
+**The 24 October full visual-integration pause is superseded.** WyrmForge must not stop development while shared lighting PR #332 is unfinished. Draft PR #336 can render the 16-frame **V5 base projectile** via the existing Hunt Canvas drawing path with legacy illumination untouched. This is a contained art swap, NOT a second lighting engine, not a new visual gameplay event and not universal GPU integration.
 
-| Until dependency clears | After shared engine is ready |
-| --- | --- |
-| Continue isolated Gothic pixel-art authoring, Aseprite/source exports, animation/material tests, owner art review and **clearly labelled off-game** 320/390px comparisons. Preserve existing live VFX and deterministic C# mutation mechanics. | Connect C#-authoritative cast, projectile, impact, ground-fire and source/mutation IDs to the single shared emitter/material/occluder/visibility pipeline. No second lighting engine or cosmetic shortcut. |
-| **No** new renderer binding, V5 source-art swap, Fireball-specific CSS/Canvas/WebGL effects, light registration or lab/preview adapter. | Capture real 320/390px in-engine GIFs, including normal/zero-light, water, terrain, characters, burn/char and mobile performance. Obtain explicit owner approval before shipping. |
+**Implemented draft-only:** `arena-fireball-v5.js` loads existing 16-frame albedo/emissive image strips, uses the real C# Fireball projectile's position/rotation/radius/source ID and renders one image per physical projectile; missing images fall back to the prior pixel painter. Only spell ID 1 (not Cinder Needle spell ID 4 or Frostfire) uses V5. Existing impact/ground effects, save/state and lighting remain unchanged. `arena.js` supplies the already-existing visual clock. Pixel cutout/normal/height sources remain in the candidate directory for the future GPU backend; no new illumination is registered.
 
-**TODO:** [Canonical blocked-integration checklist](../canon/roadmap.md#fireball-visual-integration--blocked-until-shared-lighting-engine-completion-locked-24-october-2026). Keep PR #336 draft and the production `assets` manifest empty until all engine/art/integration acceptance gates have passed. This pause does **not** undo existing C# gameplay mechanics or require work in PR #332.
+**Still required before early merge:** validate CI; record real 320px and 390px in-engine footage at normal Hunt scale, review the new effect against real enemies/terrain, mobile performance and reduced-motion; secure owner visual approval. None of the earlier offline composites counts as in-game proof.
+
+**Separate future TODO (BLOCKED on completed PR #332):** one shared GPU-lit material and emitter/occluder integration, including true lighting of terrain, Hollowed/Ashling, water reflection and source-driven char/burn appearance. No separate Canvas/CSS lighting workaround. Replace the temporary compatibility adapter at the shared-renderer cutover. [Canonical roadmap](../canon/roadmap.md#fireball-v5-in-game-first-full-universal-lighting-afterward--locked-25-october-2026).
 
 ## Retained technical foundation
 - `FireballVisualRecipe` projects the actual equipped playable mutations into a deterministic, versioned identifier, explicit physical shape and flags. Does not change saved state, economy, cast timing, damage or hit rules.
@@ -35,9 +34,9 @@ The unapproved `fireball-morphology.js`, `fireball-preview.js`, and accompanying
 ## Art acceptance gate before any new production wiring
 1. Review canonical Hollowed/Ashling actor assets and the actual in-game original Fireball source, current lighting integration requirements, material taxonomy and mobile pixel scale.
 2. Design a coherent authored Fireball body and mutation effects as editable pixel art/material assets, not generated canvas rectangles or CSS color filters. Use a single physical body that morphs by effects and real event phases.
-3. **Before the shared engine is complete:** review only isolated source art, animated material channels and clearly labelled 320px/390px **offline composites**. Never call these recordings of gameplay.
-4. **Block all Fireball rendering/preview integration**, even lab-only, until PR #332 is finished, merged and validated for world VFX. No second GPU light engine or Canvas/CSS workaround.
-5. **Only after that engine gate:** connect Fireball's actual C# events through its shared material/emitter/occluder pipeline, capture **real in-engine GIFs** for base, Meteor Heart, Detonation, Scorched Earth, Cinder Needle and required combinations in Nexus/Hunts at 320px/390px, and obtain explicit owner visual approval before release.
+3. Start with V5 base Fireball frame playback in the **existing** renderer with no new lighting, then capture *actual in-engine* 320px/390px Hunt GIFs before approving this temporary visual replacement. Offline composites remain labelled as such.
+4. Complete mutation/cast/impact/afterburn source art independently; use only existing C#-authorized gameplay events and the legacy renderer where appropriate. CI and owner approval precede merging each art improvement.
+5. When the completed PR #332 is production-ready, replace legacy adapters with shared GPU material/emitter/occluder/visibility integration and separately validate true relighting at 320px/390px.
 
 **Do not merge until new visual direction is approved, tests are green and the game is visibly no worse than baseline.**
 
