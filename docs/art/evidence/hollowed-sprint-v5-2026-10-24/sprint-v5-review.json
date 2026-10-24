@@ -1,0 +1,15 @@
+{
+  "approved": false,
+  "source": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-pixel-v3/hollow-rigged.blend",
+  "authoring": "art/source/enemies/hollow/rigged-poc/model/local-appearance-004/rigged-sprint-v5-candidate/hollow-rigged.blend",
+  "movement": {
+    "frames": 16,
+    "fps": 22,
+    "stanceFraction": 0.4,
+    "sweepModelUnits": 0.25,
+    "liftModelUnits": 0.225
+  },
+  "poses": 16,
+  "multiview": "4 azimuth samples are diagnostic only, NOT 8 directional runtime atlas",
+  "caution": "Needs foot slip test against C# speed and original source-derived normal export"
+}
