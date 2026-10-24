@@ -352,7 +352,10 @@ class WizardBuilder:
                     # Weighted secondary spring anchors maintain the open-front
                     # skirt silhouette. Cloth is still free to bend/lag below.
                     t=j/max(1,row_count-1)
-                    pin.add([idx],max(.08,.28*(1.0-t)**2),'REPLACE')
+                    # A structured wool coat is not a free-falling cape.
+                    # High but nonrigid pins retain the authored silhouette;
+                    # the secondary cloth motion is left to the loose hem.
+                    pin.add([idx],.72+.16*(1.0-t)**2,'REPLACE')
         ar=ob.modifiers.new('Armature carries sewn waistband','ARMATURE')
         ar.object=self.arm
         cloth=ob.modifiers.new('Dynamic cloth | body collision','CLOTH')
