@@ -60,3 +60,12 @@ test('switching to a different pool size safely resets the bag without stale ind
     for (let offset = 0; offset < reduced.length; offset += 3)
         assert.deepEqual(reduced.slice(offset, offset + 3).sort(), [0, 1, 2]);
 });
+
+
+test('gameplay actually uses the shuffle bag for both Fireball casting and spell impacts', () => {
+    assert.match(source, /const castIndex = name === 'fire'[\s\S]*?nextFireballTake\('fire-cast'/);
+    assert.match(source, /const index = school === 'fire' \? nextFireballTake\('fire-hit'/);
+    assert.match(source, /recordedEntry\(name, 'cast', castIndex\)/);
+    assert.match(source, /playRecordedEntry\(options\[index\]/);
+    assert.match(source, /for \(const take of \[\.\.\.\(fireball\?\.variants/);
+});
