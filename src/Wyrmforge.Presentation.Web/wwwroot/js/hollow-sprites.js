@@ -1,10 +1,12 @@
 // Presentation only: C# remains authoritative for movement, contact damage and death.
 import { createSpriteAnimationState, updateSpriteAnimation } from './sprite-animation.js';
 import { createSpriteLayerCompositor } from './sprite-layer-compositor.js';
+import { createHollowVariantAssets, selectHollowArmVariant } from './hollow-arm-variants.js';
 const base = new URL('../art/enemies/hollow-rigged/', import.meta.url);
 const rows = ['N','NE','E','SE','S','SW','W','NW'];
 const headings = ['E','SE','S','SW','W','NW','N','NE'];
 const textures = new Map();
+const armVariants = createHollowVariantAssets(new URL('variants/',base));
 let manifest, loading, profile, compositor;
 export function preloadHollowSprites() {
     return loading ??= fetch(new URL('manifest.json',base)).then(r=>{
@@ -19,6 +21,9 @@ export function preloadHollowSprites() {
             image.onerror=()=>resolve(false);image.src=new URL(`${clip.image}?v=${clip.hash}`,base).href;
         })));
         if(decoded.every(Boolean)){manifest=data;profile=animationProfile;compositor=createSpriteLayerCompositor(metadata,data.clips,textures,{maxTiles:96});}
+        // New arm-only packet is independently validated and atomically loaded;
+        // the old approved actor remains an offline/decode fallback.
+        await armVariants.preload();
         return hollowSpritesReady();
     }).catch(()=>false); // Existing painted/native art is the offline fallback.
 }
@@ -54,7 +59,8 @@ export function updateHollowSprites(state,snapshot,seconds,reducedMotion=false){
         if(Number(enemy.kind)!==0)continue;
         const id=enemy.entityId;present.add(id);
         let pose=state.entities.get(id);
-        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,attackAt:null,age:0,lastMove:-1,animation:createSpriteAnimationState()};state.entities.set(id,pose);}
+        if(!pose){pose={x:enemy.x,y:enemy.y,distance:0,direction:'S',clip:'walk',frame:0,variant:selectHollowArmVariant(id),
+            attackAt:null,age:0,lastMove:-1,animation:createSpriteAnimationState()};state.entities.set(id,pose);}
         const dx=enemy.x-pose.x,dy=enemy.y-pose.y,distance=Math.hypot(dx,dy);
         const advancing=!snapshot.paused&&!snapshot.ended&&!enemy.frozen;
         if(advancing)pose.age+=dt;
@@ -99,6 +105,14 @@ export function drawHollowEnemy(ctx,enemy,state){
     if(Number(enemy.kind)!==0)return false;
     const pose=state.entities.get(enemy.entityId);
     if(!pose)return false;
+    // New no-cape sources do not share the old support/action region masks.
+    // Draw the exact new authored action frame, never composite it with old
+    // body pixels; death keeps the existing 24-frame source until approved.
+    const palette=enemy.hitFlash?'brightness(1.8) saturate(.25)':enemy.frozen?
+        'sepia(1) saturate(1.7) hue-rotate(135deg)':'none';
+    if(pose.clip!=='death'&&armVariants.ready()&&
+        armVariants.draw(ctx,pose.variant,pose.clip,pose.frame,pose.direction,
+            enemy.x,enemy.y,enemy.radius,enemy.opacity??1,palette))return true;
     const legacyPreview=globalThis.location?.pathname?.includes('/enemy-lab')&&new URLSearchParams(globalThis.location.search).get('blend')==='whole';
     if(pose.layered&&compositor&&!legacyPreview){
         const tile=compositor.compose(pose.animation.sample);
@@ -119,7 +133,7 @@ export function drawHollowCorpses(ctx,state,reducedMotion=false){
     }
 }
 export function hollowDiagnostics(state){
-    return {ready:hollowSpritesReady(),layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
+    return {ready:hollowSpritesReady(),variantPackReady:armVariants.ready(),layers:compositor?{...compositor.stats,estimatedBytes:compositor.estimatedBytes()}:null,entities:[...state.entities].map(([entityId,p])=>({entityId,variant:p.variant,clip:p.clip,frame:p.frame,direction:p.direction,baseFrame:p.baseFrame,phase:p.animation?.phase,layered:p.layered})),
         corpses:[...state.corpses.values()].map(p=>({entityId:p.entityId,direction:p.direction,age:state.clock-p.at,frame:Math.min(23,Math.floor((state.clock-p.at)*12))}))};
 }
 // Preserve playback/fallback diagnostics while the asset bundle is loading.
