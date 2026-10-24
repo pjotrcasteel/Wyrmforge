@@ -74,6 +74,21 @@ def main():
                     if not np.any(caster[ys, xs]):
                         raise AssertionError(f"{folder}/{clip}/{DIRECTIONS[row]}/{frame}: missing geometry")
                     total += 1
+            if folder == "ashling-rigged":
+                assert layer["emissiveMask"] and layer["emissiveSource"]
+                emissive_path = (directory/layer["emissiveMask"]).resolve()
+                eye_source = ROOT/layer["emissiveSource"]
+                assert checksum(eye_source) == layer["emissiveSourceSha256"]
+                assert checksum(emissive_path) == layer["emissiveMaskSha256"]
+                eye = np.asarray(Image.open(emissive_path).convert("L"))
+                assert eye.shape == expected
+                assert not np.any((eye > 0) & (original_alpha == 0)), "Emission outside original albedo"
+                assert not np.any((eye > 0) & (caster == 0)), "Emission without original posed mesh"
+                assert np.any(eye > 0), "Source-derived eyes missing"
+                if clip == "death":
+                    assert not np.any(eye[:, 13*cell:]), "Dead eyes must extinguish by authored frame 13"
+            else:
+                assert layer["emissiveMask"] is None
             for name in ("normal", "depth", "caster"):
                 if f"{name}Sha256" in layer:
                     assert checksum(paths[name]) == layer[f"{name}Sha256"], (folder, clip, name)
