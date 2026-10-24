@@ -16,6 +16,8 @@ function capture() {
         rotate(a) { calls.push(['rotate',a]); },
         drawImage(...args) { calls.push(['drawImage',...args]); },
         fillRect(...args) { calls.push(['fillRect',...args]); },
+        beginPath() {}, closePath() {}, moveTo() {}, lineTo() {}, quadraticCurveTo() {},
+        ellipse() {}, stroke() {}, fill() {}, arc() {},
     };
     return {ctx, calls};
 }

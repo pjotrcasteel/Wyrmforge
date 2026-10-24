@@ -11,10 +11,12 @@ test('unapproved base V5 source is present but never promoted into runtime artwo
     assert.equal(manifest.status, 'awaiting-authored-source');
     assert.deepEqual(manifest.assets, {});
     assert.equal(candidate?.status, 'direction-accepted-not-owner-approved');
-    assert.equal(candidate.runtimeEnabled, false);
+    assert.equal(candidate.runtimeEnabled, true);
+    assert.equal(candidate.integrationMode, 'legacy-hunt-canvas-sprite-only-draft-pr');
+    assert.equal(candidate.previewStatus, 'in-draft-pr-awaiting-real-320-390-gameplay-review');
     assert.equal(candidate.sourceIncluded, true);
     assert.equal(candidate.rendersIncluded, true);
-    assert.equal(candidate.integrationBlockedOn, 'shared-gpu-lighting-pr-332-complete-merged-and-validated');
+    assert.equal(candidate.universalLightingBlockedOn, 'shared-gpu-lighting-pr-332-complete-merged-and-validated');
     assert.equal(candidate.frames, 16);
     assert.deepEqual(candidate.frameSize, [120, 72]);
     assert.deepEqual(candidate.anchor, [87, 36]);

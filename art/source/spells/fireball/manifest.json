@@ -13,7 +13,7 @@
     "cutout"
   ],
   "assets": {},
-  "notice": "Not a runtime atlas. No artwork is owner-approved for composited mutation roles yet.",
+  "notice": "Full multi-phase Fireball art is not approved. V5 base projectile is enabled only in draft PR #336 via legacy Hunt Canvas, without additional lighting or new gameplay effects.",
   "candidates": {
     "core-original": {
       "status": "direction-accepted-not-owner-approved",
@@ -39,10 +39,12 @@
       ],
       "cadenceMilliseconds": 83,
       "worldSize": "pending-gameplay-scale-review",
-      "runtimeEnabled": false,
+      "runtimeEnabled": true,
       "sourceIncluded": true,
       "rendersIncluded": true,
-      "integrationBlockedOn": "shared-gpu-lighting-pr-332-complete-merged-and-validated"
+      "integrationMode": "legacy-hunt-canvas-sprite-only-draft-pr",
+      "previewStatus": "in-draft-pr-awaiting-real-320-390-gameplay-review",
+      "universalLightingBlockedOn": "shared-gpu-lighting-pr-332-complete-merged-and-validated"
     }
   }
 }
