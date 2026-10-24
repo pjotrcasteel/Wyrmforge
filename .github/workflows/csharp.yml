@@ -40,6 +40,9 @@ jobs:
           python3 tools/art/build-nexus-school-assets.py
           git diff --exit-code -- src/Wyrmforge.Presentation.Web/wwwroot/art/town/nexus-schools/
 
+      - name: Check automatic Pages version calculation
+        run: python3 -m unittest discover -s tools/release -p 'test_*.py'
+
       - name: Check playtest and collector JavaScript
         run: |
           node --test tests/javascript/*.test.mjs
