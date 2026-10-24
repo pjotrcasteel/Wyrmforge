@@ -1,0 +1,64 @@
+name: Wet Forest CC0 ambience audition
+
+on:
+  push:
+    branches:
+      - audio/phase1-menu-foley-audition
+    paths:
+      - tools/audio/build_wet_forest.py
+      - .github/workflows/wet-forest-soundscape.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install offline-production dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python3 -m pip install --break-system-packages --disable-pip-version-check numpy
+      - name: Download explicitly CC0 source recordings for offline processing
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tools/audio/wet-forest-sources
+          curl -fL --retry 3 --connect-timeout 15 --max-time 120 --user-agent "WyrmForge-Audio-Builder/1.0" \
+            "https://opengameart.org/sites/default/files/wind%20woosh%20loop.ogg" \
+            -o tools/audio/wet-forest-sources/wind.ogg
+          curl -fL --retry 3 --connect-timeout 15 --max-time 120 --user-agent "WyrmForge-Audio-Builder/1.0" \
+            "https://opengameart.org/sites/default/files/dungeon_ambient_1_0.ogg" \
+            -o tools/audio/wet-forest-sources/drips.ogg
+          curl -fL --retry 3 --connect-timeout 15 --max-time 120 --user-agent "WyrmForge-Audio-Builder/1.0" \
+            "https://opengameart.org/sites/default/files/tree_creak_0.ogg" \
+            -o tools/audio/wet-forest-sources/creak.ogg
+          sha256sum tools/audio/wet-forest-sources/*.ogg
+      - name: Build low-cost 36-second Ogg and MP3
+        run: python3 tools/audio/build_wet_forest.py
+      - name: Publish source-verified Ogg, manifest, and direct Safari preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/wet-forest-bed.ogg
+          git add src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/manifest.json
+          git add docs/audio/previews/wet-forest-ambience.mp3 docs/audio/previews/wet-forest-provenance.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(audio): check in offline Wet Forest Ogg and Safari listening preview"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+      - name: Retain phone listening artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wet-forest-audition
+          path: |
+            src/Wyrmforge.Presentation.Web/wwwroot/audio/recorded/wet-forest-bed.ogg
+            docs/audio/previews/wet-forest-ambience.mp3
+            docs/audio/previews/wet-forest-provenance.json
