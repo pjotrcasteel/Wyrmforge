@@ -56,6 +56,18 @@ def run(output,render,walk_sequence):
             verify("ClothPins" in obj.vertex_groups,"cloth has no pinned vertex group")
             verify(len(obj.data.vertices)>10,"empty cloth mesh")
     verify(len(cloth)>=2,"expected robe and cape cloth surfaces")
+    for name in cloth:
+        obj=bpy.data.objects[name]
+        driven=obj.vertex_groups.get("pelvis" if "coat" in name.lower() else "chest")
+        verify(driven is not None,"garment missing armature driver")
+        unweighted=0
+        for vertex in obj.data.vertices:
+            try: weight=driven.weight(vertex.index)
+            except RuntimeError: weight=0
+            if weight<.99: unweighted+=1
+        verify(unweighted==0,name+" has "+str(unweighted)+
+               " source vertices stranded when pelvis/torso moves")
+
     coat=bpy.data.objects.get("Open-front weighty coat / continuous physics")
     verify(coat is not None and coat.type=="MESH","original robe mesh absent")
     outward=0
