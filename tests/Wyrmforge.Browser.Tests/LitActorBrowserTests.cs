@@ -27,7 +27,7 @@ public sealed class LitActorBrowserTests : PageTest
 
         foreach (var clip in new[] { "walk", "attack", "death" })
         {
-            var last = clip == "walk" ? 15 : clip == "attack" ? 15 : 23;
+            var last = clip == "walk" ? 15 : clip == "attack" ? 21 : 27;
             await SetAsync(new { hollowed = clip, ashling = clip, frame = 0, lightX = -1.0, zero = false });
             var start = await HashAsync();
             await CaptureAsync(width, height, clip + "-start-left");
@@ -43,6 +43,14 @@ public sealed class LitActorBrowserTests : PageTest
             await CaptureAsync(width, height, clip + "-zero");
             await SetAsync(new { zero = false, frame = 0, lightX = -1.0 });
             Assert.AreEqual(start, await HashAsync(), "Restoring a static pose and source must produce identical pixels.");
+            // Same real GPU source/frame sampling in ALL compass rows, not mirrored
+            // or inferred from whichever 3/4 view happened to be visible.
+            foreach (var direction in new[] { "N", "NE", "E", "SE", "S", "SW", "W", "NW" })
+            {
+                await SetAsync(new { direction, frame = last / 2, lightX = .2 });
+                await CaptureAsync(width, height, $"{clip}-{direction}-direction");
+            }
+            await SetAsync(new { direction = "S", frame = 0, lightX = -1.0 });
         }
 
         await SetAsync(new { hollowed = "attack", ashling = "attack", frame = 9, shadows = true });
