@@ -1,4 +1,3 @@
-import { drawComposedFireProjectile, drawComposedFireImpact } from './fireball-morphology.js';
 // Single-source pixel fire. No additional projectile, hitbox, damage or RNG.
 // Every ember belongs to a canonical projectile or collision from C#.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -9,9 +8,8 @@ export function firePixelProfile(event){
         pieces:3+rank*2+(event?.surge?5:0),surge:event?.surge===true,
         inferno:event?.inferno===true};
 }
-export function drawFirePixelProjectile(ctx,event,reducedMotion=false,recipe=null){
+export function drawFirePixelProjectile(ctx,event,reducedMotion=false){
     if(!event)return;
-    if(recipe?.version===1){drawComposedFireProjectile(ctx,event,recipe,reducedMotion);return;}
     const {rank,radius:r,tail,surge,inferno}=firePixelProfile(event);
     ctx.save();
     if(!reducedMotion){
@@ -57,9 +55,8 @@ export function fireBurstProfile(impact){
         radius:(11+rank*6)*(.45+t*.84)*(impact?.surge?1.36:1),
         alpha:1-t,surge:impact?.surge===true};
 }
-export function drawFirePixelImpact(ctx,impact,reducedMotion=false,recipe=null){
+export function drawFirePixelImpact(ctx,impact,reducedMotion=false){
     if(!impact)return;
-    if(recipe?.version===1){drawComposedFireImpact(ctx,impact,recipe,reducedMotion);return;}
     const profile=fireBurstProfile(impact);
     if(profile.alpha<=0)return;
     const {rank,segments,surge}=profile;

@@ -1,35 +1,31 @@
-# Fireball composable morphology — implementation checkpoint (24 October 2026)
+# Fireball composable mutations — technical-only checkpoint (24 October 2026)
 
-Status: **draft PR #336**, not shipped. Authority: [canonical Magic & Combat](../canon/magic-and-combat.md) and [Art & Animation](../canon/art-and-animation.md). This document is implementation evidence, not a new design specification.
+**Status: DRAFT PR #336 — ART ROLLED BACK. Not merged.**
 
-## Reused systems
-- `FireballCoreState`: owns research, Lv.1–5 real sockets, saved equipped mutations and upgrade spending. No changes to its schema or rules.
-- `RunSimulation.Fireball.cs`: owns which effects are active and snapshots prepared Web amplifier factors. Unchanged combat calculations and legal target/hit behavior.
-- Existing `SpellBlueprint` validators continue to govern their **different** Form/Infusion/Reaction composition domain; this PR does not reinterpret those seats as Fireball slots.
-- Nexus retains existing approved layout, mutation research cards, sockets, material counts and contextual lower panel.
+## Source of truth
+- [Magic and combat](../canon/magic-and-combat.md): existing five physical Fireball mutation sockets, research and real combat effects.
+- [Art and animation](../canon/art-and-animation.md): Gothic art, world-space material/light/shadow interactions. User-facing visual quality is a release gate.
+- Shared universal GPU lighting is being developed separately in PR #332. **Never** build a second independent lighting system.
 
-## Implemented in this draft
-- `FireballVisualRecipe`: stable, versioned C# **presentation projection** from real Fireball mutations, with deterministic bit identity, resolved physical core shape, and explicit detonation/ground-fire descriptors. Only implemented catalogue entries may contribute.
-- `RunRenderSnapshot.FireballVisual`: one recipe for prepared Fireball identity. Existing per-projectile and per-impact C# positions, angles, ranks, and real collisions remain authoritative. Cinder Needle's legacy standalone `SpellId.CinderNeedle` must **not** inherit Fireball's unrelated equipped mutations.
-- `fireball-morphology.js`: **same** pixel-art drawing for Nexus core and Fireball projectiles. Meteor Heart forms fractured volcanic rock, Cinder Needle condenses flame, both together get an explicit dense molten-spine shape; Detonation adds pre-impact fissures and fragments, while Scorched Earth visibly sheds molten bits. No independent extra casts.
-- `BurningGroundRenderSnapshot`: actual hazard radius and remaining seconds from C# instead of collapsing ground fire into fake 0.2-second `EssenceBurst` pulses. Paints jagged, bounded ground fractures while the field really exists.
-- `ElementalImpactRenderSnapshot.SplashRadius`: passes exact projectile splash geometry into Fireball impact composition; walls keep 0 and never claim splash damage.
+## Retained technical foundation
+- `FireballVisualRecipe` projects the actual equipped playable mutations into a deterministic, versioned identifier, explicit physical shape and flags. Does not change saved state, economy, cast timing, damage or hit rules.
+- `RunRenderSnapshot.FireballVisual` exposes the prepared visual recipe without modifying existing snapshot consumers.
+- `BurningGroundRenderSnapshot` reports the authoritative C# zone radius, position and remaining lifetime.
+- `ElementalImpactRenderSnapshot.SplashRadius` carries real C# projectile blast radius; non-damaging wall contacts do not invent splash.
+- Domain and Application regressions for composition and hazard identity remain.
 
-## Deliberate non-goals and risks
-- The **combat execution pipeline has not been rewritten** as a generic interpreter: existing C# mutation arithmetic remains the truth. This PR connects one presentation projection to it.
-- Projectile impacts now carry the **actual C# splash radius**; damaging enemy-hit Detonation uses it for bounded fragment travel. Non-damaging wall contacts have splash radius 0 and cannot invent a real explosion. Other cosmetic shock shapes and existing splash telegraphs remain distinct from authoritative collision.
-- New Fireball art is a **procedural draft**, not owner-approved animation/source art. Review the actual live Nexus, gameplay and 320/390px captures before replacing the art canon.
-- This PR does not implement Phoenix Volley, Piercing Ember, Seeker Ember, Wildfire, Ash Harvest, Ember Recall, or any hybrid. It never renders them as usable.
-- The generic GPU lighting engine is being developed in **PR #332**. This PR touches no GPU shaders, scene light registries, G0–G1 validation geometry or actor atlas assets. Adding gameplay-sourced burning-ground emitters to that engine belongs to **G2**, after integration with #332. Do not create a new `FireballLightingEngine`.
-- Browser display, real iOS/Android readability and GPU material/depth acceptance are still pending.
+## Production rendering explicitly restored
+The first visual prototype was rejected after actual Nexus and 320/390px GIF screenshot review: flat blocky Fireball anatomy, tiny cartoon-like preview effects, over-simple cracked ground and poor Gothic style cohesion. **None of this is acceptable as WyrmForge art.**
 
-## Acceptance checklist
-- [ ] Validate Wyrmforge (.NET Domain/Application and browser build)
-- [ ] JavaScript unit tests including `fireball-morphology.test.mjs`
-- [ ] Browser smoke and Arcane WebKit
-- [ ] 320x568 and 390x844 Nexus core and actual Hunt screenshots inspected
-- [ ] Shared G2 emitters integrated when #332 reaches supported integration gate
-- [ ] Physical device and owner art sign-off
+To protect approved live artwork, this checkpoint restores `FireballRitualView.razor`, its styles, `arena.js`, `arena-spell-vfx.js`, `arena-fire-pixels.js` and the established browser acceptance test **byte-for-byte to main**.
 
-## Rollback and compatibility
-New fields are additive and consumers may ignore absent `fireballVisual` / `burningGrounds` snapshots. Saves, research ownership, Web assignments, current materials, permanent signatures, game simulation, town visuals, Hollowed/Ashling and mage art are unchanged. Existing standalone Fireball source artwork stays in Git.
+The unapproved `fireball-morphology.js`, `fireball-preview.js`, and accompanying prototype JS tests are removed from the branch entirely. They cannot render in Town, Nexus or Hunts. The separate G0–G1 light-engine PR #332 is untouched.
+
+## Art acceptance gate before any new production wiring
+1. Review canonical Hollowed/Ashling actor assets and the actual in-game original Fireball source, current lighting integration requirements, material taxonomy and mobile pixel scale.
+2. Design a coherent authored Fireball body and mutation effects as editable pixel art/material assets, not generated canvas rectangles or CSS color filters. Use a single physical body that morphs by effects and real event phases.
+3. Show **recorded in-engine GIFs** for base, Meteor Heart, Detonation, Scorched Earth, Cinder Needle, and the combined Meteor + Detonation + Scorched result, at 320px and 390px, in both Nexus and actual Hunt against existing characters/terrain. Never present standalone mockups as in-game proof.
+4. Get explicit visual approval **before** binding a new renderer into production paths. Keep experimental art behind a lab-only route in another workstream if necessary.
+5. Integrate real GPU emitters/materials/occluders through the existing engine at its integration milestone, rather than a second lighting workaround.
+
+**Do not merge until new visual direction is approved, tests are green and the game is visibly no worse than baseline.**

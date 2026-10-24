@@ -1634,16 +1634,12 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await OpenTownBuildingAsync("Arcane Nexus");
 
         await Expect(Page.Locator(".fireball-ritual")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".fireball-hero-canvas")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".fireball-hero-art")).ToBeVisibleAsync();
         Assert.IsTrue(await Page.Locator(".fireball-chamber").EvaluateAsync<bool>(
             "element => getComputedStyle(element).backgroundImage.includes('arcane-nexus/ritual-chamber.svg')"),
             "The live Nexus must load its independent Gothic chamber layer.");
-        await Page.WaitForFunctionAsync(@"() => {
-            const canvas = document.querySelector('.fireball-hero-canvas');
-            if (!canvas || canvas.dataset.artwork !== 'canonical' || canvas.width !== 192 || canvas.height !== 192) return false;
-            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
-            return pixels.some((value, index) => index % 4 === 3 && value > 0);
-        }");
+        Assert.IsTrue(await Page.Locator(".fireball-hero-art").EvaluateAsync<bool>("img => img.complete && img.naturalWidth > 0"),
+            "The approved Fireball artwork must actually load, rather than silently falling back to CSS.");
         Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= window.innerWidth + 2"),
             "The Arcane Nexus must not overflow a 390px portrait viewport.");
         await Expect(Page.Locator(".fireball-context h3")).ToHaveTextAsync("Upgrade Fireball");
@@ -1700,56 +1696,6 @@ public sealed class WyrmforgeBrowserTests : PageTest
         await Expect(Page.Locator(".fireball-socket--1")).ToContainTextAsync("Detonation");
         await Page.GetByRole(AriaRole.Tab, new() { Name = "Arcane Web" }).ClickAsync();
         Assert.IsGreaterThan(40, await Page.Locator(".web-node").CountAsync());
-    }
-
-    [TestMethod]
-    [DataRow(320, 568)]
-    [DataRow(390, 844)]
-    public async Task Mobile_FireballNexus_CombinedMutationsShareFourPhasePreview(int width, int height)
-    {
-        await Page.SetViewportSizeAsync(width, height);
-        await Page.AddInitScriptAsync(@"localStorage.setItem('wyrmforge.firstHunt.v1','3');
-            localStorage.setItem('wyrmforge.characterSchool.v1','Pyromancer');
-            localStorage.setItem('wyrmforge.fireballCore.v1',
-                JSON.stringify({Level:3,Discovered:[1,2,3],Slots:[1,2,3,null,null]}));");
-        await Page.GotoAsync(BaseUrl, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
-        await EnterTownIfNeededAsync();
-        await OpenTownBuildingAsync("Arcane Nexus");
-
-        await Expect(Page.Locator(".fireball-socket.filled")).ToHaveCountAsync(3);
-        await Page.Locator(".fireball-sequence > summary").ClickAsync();
-        var canvas = Page.Locator(".fireball-sequence-canvas");
-        await Expect(canvas).ToBeVisibleAsync();
-        await Page.WaitForFunctionAsync(@"async () => {
-            const module = await import('./js/fireball-morphology.js');
-            return module.fireballArtworkReady();
-        }");
-        Assert.IsTrue(await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= innerWidth + 2"),
-            "The combined preview must fit a portrait phone without horizontal overflow.");
-
-        // The Nexus stage uses one module shared with Hunt morphology. Stage sample positions
-        // are strictly illustrative; all actual impact/hazard geometry remains C#-owned.
-        var script = @"async (progress) => {
-            const module = await import('./js/fireball-preview.js?v=1');
-            const stage = document.querySelector('.fireball-sequence-canvas');
-            const recipe = {version:1,level:3,mutationMask:7,coreShape:'meteor',
-                detonation:true,scorchedEarth:true,cacheKey:'fireball-v1-l3-m007'};
-            return module.drawFireballSequenceFrame(stage, recipe, progress, true);
-        }";
-        Directory.CreateDirectory(ArtifactDirectory);
-        foreach (var (progress, phase) in new[] { (0.10, "Cast"), (0.35, "Travel"),
-            (0.64, "Impact"), (0.88, "Aftermath") })
-        {
-            Assert.AreEqual(phase, await Page.EvaluateAsync<string>(script, progress));
-            await canvas.ScreenshotAsync(new LocatorScreenshotOptions
-            {
-                Path = Path.Combine(ArtifactDirectory, $"fireball-composition-{phase.ToLowerInvariant()}-{width}.png"),
-            });
-        }
-
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Replay Cast → Travel → Impact → Aftermath" }).ClickAsync();
-        await Page.WaitForFunctionAsync(@"() => ['Cast','Travel','Impact','Aftermath','Ready']
-            .includes(document.querySelector('.fireball-sequence-canvas')?.dataset.phase)");
     }
 
     [TestMethod]

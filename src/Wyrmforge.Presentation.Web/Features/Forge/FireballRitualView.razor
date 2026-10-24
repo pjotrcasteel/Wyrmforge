@@ -1,8 +1,5 @@
 @using Wyrmforge.Domain.Progression.Signature
 @using Wyrmforge.Domain.Progression.DragonEssences
-@using Microsoft.JSInterop
-@inject IJSRuntime JS
-@implements IAsyncDisposable
 
 <section class="fireball-ritual" aria-label="Fireball spellcraft">
     <header class="fireball-heading">
@@ -17,11 +14,13 @@
 
     <div class="fireball-chamber">
         <div class="fireball-altar" aria-label="Fireball core and mutation sockets">
-            <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "")"
+            <button type="button" class="fireball-center @(selectedSlot is null ? "selected" : "") @(Has(FireballMutationId.MeteorHeart) ? "heavy" : "") @(Has(FireballMutationId.Detonation) ? "explosive" : "") @(Has(FireballMutationId.ScorchedEarth) ? "scorched" : "")"
                     aria-label="Fireball core, level @Core.Level. View upgrade requirements"
                     aria-pressed="@(selectedSlot is null)" @onclick="SelectCore">
                 <span class="fireball-body" aria-hidden="true">
-                    <canvas class="fireball-hero-canvas" width="192" height="192" @ref="fireballCanvas" aria-hidden="true"></canvas>
+                    <img class="fireball-hero-art" src="art/fireball-ritual-hero.png" alt="" draggable="false" loading="eager" />
+                    <span class="fireball-impact" aria-hidden="true"></span>
+                    <span class="fireball-ground" aria-hidden="true"></span>
                 </span>
                 <span class="fireball-center-label">Fireball core</span>
             </button>
@@ -60,18 +59,6 @@
             }
         </div>
     </div>
-
-    <details class="fireball-sequence" aria-label="Fireball visual sequence">
-        <summary>Preview Fireball animation</summary>
-        <div class="fireball-sequence-content">
-            <canvas class="fireball-sequence-canvas" width="320" height="160" @ref="sequenceCanvas"
-                    role="img" aria-label="Illustrative Fireball cast, travel, impact and aftermath"></canvas>
-            <button type="button" class="fireball-sequence-replay" @onclick="ReplaySequenceAsync">
-                Replay Cast → Travel → Impact → Aftermath
-            </button>
-            <p>This is a visual demonstration. Real collisions, blast radius and burning-ground lifetime are controlled by the Hunt simulation.</p>
-        </div>
-    </details>
 
     <section class="fireball-context" aria-live="polite" aria-label="Fireball actions" tabindex="-1" @ref="contextElement">
         @if (selectedSlot is null)
@@ -260,10 +247,6 @@
     private int? inspectedLockedSlot;
     private string? notice;
     private ElementReference contextElement;
-    private ElementReference fireballCanvas;
-    private ElementReference sequenceCanvas;
-    private IJSObjectReference? previewModule;
-    private IJSObjectReference? sequenceModule;
     private bool focusContext;
 
     private bool Has(FireballMutationId mutation) => Core.Equipped.Contains(mutation);
@@ -352,39 +335,9 @@
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            previewModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-morphology.js?v=1");
-            sequenceModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fireball-preview.js?v=1");
-        }
-        var recipe = FireballVisualRecipe.Resolve(Core);
-        if (previewModule is not null)
-            await previewModule.InvokeVoidAsync("drawFireballNexusPreview", fireballCanvas, recipe);
-        if (sequenceModule is not null)
-            await sequenceModule.InvokeVoidAsync("syncFireballSequencePreview", sequenceCanvas, recipe);
         if (!focusContext) return;
         focusContext = false;
         await contextElement.FocusAsync();
-    }
-
-    private async Task ReplaySequenceAsync()
-    {
-        if (sequenceModule is null) return;
-        await sequenceModule.InvokeVoidAsync("playFireballSequencePreview", sequenceCanvas, FireballVisualRecipe.Resolve(Core));
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            if (sequenceModule is not null)
-            {
-                await sequenceModule.InvokeVoidAsync("disposeFireballSequencePreview", sequenceCanvas);
-                await sequenceModule.DisposeAsync();
-            }
-            if (previewModule is not null) await previewModule.DisposeAsync();
-        }
-        catch (JSDisconnectedException) { /* Navigation may detach the editor during disposal. */ }
     }
 
     private async Task UpgradeAsync()

@@ -4,7 +4,6 @@ import { drawArenaEnvironment, drawArenaExit, drawArenaCloisterReflections, getA
 import { sortSceneDepthLayers } from './arena-cloister-art.js';
 import { drawRecoveryGuide } from './arena-recovery.js';
 import { drawSpellCastMotion, drawSpellProjectile, drawSpellImpact } from './arena-spell-vfx.js';
-import { drawBurningGround } from './fireball-morphology.js';
 import { drawMage, updateMageWalk } from './arena-mage.js';
 import { drawEnemyPixelArt, createEnemyMotionState, updateEnemyMotions, enemyFacing } from './arena-enemy-art.js';
 import { preloadPaintedEnemies, drawPaintedEnemy, drawPaintedWyrm, updatePaintedCorpses, drawPaintedCorpses, mireHoundPixelPreviewEnabled } from './painted-enemies.js';
@@ -314,7 +313,7 @@ function draw(state, snapshot, width, height) {
         snapshot.dragon?.school ?? snapshot.hunt?.school);
     // A second weaker pass colors nearby silhouettes without whitening shadows.
     drawSpellLightSpill(ctx, spellLights, lightViewport, 'actors');
-    for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches, snapshot.fireballVisual);
+    for (const impact of snapshot.elementalImpacts) drawSpellImpact(ctx, impact, state.reducedMotion.matches);
     for (const death of snapshot.deathBursts) drawDeathBurst(ctx, death);
 
     for (const ember of snapshot.hostileProjectiles ?? []) drawHostileProjectileEmber(ctx, ember);
@@ -322,11 +321,9 @@ function draw(state, snapshot, width, height) {
     drawWinterBellAir(ctx, snapshot);
     drawGlassReliquaryAir(ctx, snapshot, state.reducedMotion.matches ? 0 : visualSeconds);
     for (const cloud of snapshot.snowClouds ?? []) drawSnowCloud(ctx, cloud, state.reducedMotion.matches ? 0 : visualSeconds);
-    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches, snapshot.fireballVisual);
+    for (const projectile of snapshot.projectiles) drawSpellProjectile(ctx, projectile, state.reducedMotion.matches);
 
     for (const trace of snapshot.lightning) drawLightningTrace(ctx, trace, visualSeconds, state.reducedMotion.matches);
-
-    for (const ground of snapshot.burningGrounds ?? []) drawBurningGround(ctx, ground, state.reducedMotion.matches);
 
     for (const burst of snapshot.essenceBursts) {
         const alpha = Math.min(1, burst.life / 0.2);
